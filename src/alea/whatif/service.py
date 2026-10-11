@@ -245,7 +245,7 @@ def _network_checksum(network: pypsa.Network, source: str | Path | pypsa.Network
 	deterministically — verified on this stack, so the same network gives the
 	same checksum in a fresh process.
 	"""
-	if isinstance(source, (str, Path)):
+	if isinstance(source, str | Path):
 		return sha256_file(Path(source))
 
 	import hashlib

@@ -272,7 +272,6 @@ def network_from_tables(
 			return frame[name].to_numpy(dtype=float)
 		return np.full(len(frame), default, dtype=np.float64)
 
-	n = len(frame)
 	susceptance = column_or(0.0, susceptance_column)
 	if np.any(susceptance == 0.0):
 		raise ValueError(

@@ -280,7 +280,7 @@ def integrate(
 	conflicts: list[Conflict] = []
 	for field, existing in sorted((known_values or {}).items()):
 		candidate = payload.get(field)
-		if not isinstance(candidate, (int, float)) or isinstance(candidate, bool):
+		if not isinstance(candidate, int | float) or isinstance(candidate, bool):
 			continue
 		conflict = Conflict.between(field, float(candidate), float(existing), tolerance=tolerance)
 		if conflict.relative_difference > tolerance:

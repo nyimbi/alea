@@ -46,7 +46,7 @@ class Country(BaseModel):
 
 	model_config = ConfigDict(extra="forbid", frozen=True)
 
-	iso2: CountryIso
+	iso2: str  # a registry key: never None, unlike a signal's CountryIso
 	iso3: str
 	name: str
 	power_pool: PowerPool

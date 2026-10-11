@@ -27,8 +27,8 @@ import numpy as np
 import pypsa
 from pydantic import BaseModel, ConfigDict
 
-from alea._core import validate_aggregation as _kernel_validate
 from alea._core import aggregate as _kernel_aggregate
+from alea._core import validate_aggregation as _kernel_validate
 from alea.io.artefacts import artefact_exists, read_artefact, write_artefact
 from alea.logging import get_logger
 from alea.provenance.models import Basis, DerivedProvenance

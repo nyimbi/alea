@@ -135,7 +135,7 @@ def set_multi_period(
 	network.investment_period_weightings["objective"] = [
 		1.0 / ((1.0 + DISCOUNT_RATE) ** (horizon - first)) for horizon in horizons
 	]
-	logger.info("multi_period_set", horizons=horizons, weights=weights)
+	_log.info("multi_period_set", horizons=horizons, weights=weights)
 
 
 DISCOUNT_RATE = 0.05

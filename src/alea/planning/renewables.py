@@ -24,7 +24,6 @@ import pypsa
 from alea.logging import get_logger
 from alea.planning.schemas import PROFILE, check_carriers
 from alea.provenance.models import Basis, DerivedProvenance
-from alea.registry import Carrier
 
 logger = get_logger(__name__)
 

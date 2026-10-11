@@ -206,13 +206,16 @@ def solve(
 	horizon: Annotated[int | None, typer.Option("--horizon", help="Planning horizon year.")] = None,
 ) -> None:
 	"""Solve a capacity-expansion problem."""
-	from alea.planning.solve import solve_scenario
+	from alea.planning.service import solve_scenario
 
 	run_id, logger = _run("cli.solve", network=str(network), horizon=horizon)
 	loaded = _load(config, None, None)
-	result = solve_scenario(loaded, network=network, out=out, horizon=horizon, logger=logger)
+	result = solve_scenario(loaded, network=network, out=out, horizon=horizon, logger_=logger)
 	logger.info("done", run_id=run_id, objective=result.objective)
-	typer.echo(f"solved: objective={result.objective:,.0f} -> {result.path}")
+	# No status check here: `solve_scenario` raises `ExpansionError` for anything
+	# that is not optimal, so reaching this line means the status is one of the
+	# accepted spellings and the objective is a real answer.
+	typer.echo(f"solved: objective={result.objective:,.0f} in {result.seconds:.1f}s")
 
 
 @app.command()
@@ -223,13 +226,16 @@ def report(
 	out: OutOption = ...,
 ) -> None:
 	"""Generate a periodic report."""
-	from alea.reporting.build import build_report
+	from alea.reporting.service import build_report
 
 	run_id, logger = _run("cli.report", kind=kind, date=date)
 	loaded = _load(config, None, None)
-	result = build_report(kind, loaded, out, date=date, logger=logger)
-	logger.info("done", run_id=run_id)
-	typer.echo(f"{kind}: {result.path}")
+	result = build_report(kind, loaded, out, date=date, run_id=run_id)
+	logger.info("done", run_id=run_id, report_id=result.report_id)
+	for path in result.paths:
+		typer.echo(f"{kind}: {path}")
+	for warning in result.warnings:
+		typer.secho(f"warning: {warning}", fg=typer.colors.YELLOW, err=True)
 
 
 @app.command()
@@ -237,14 +243,41 @@ def scan(
 	source_id: Annotated[str | None, typer.Argument(help="Restrict to one source.")] = None,
 	config: ConfigOption = None,
 ) -> None:
-	"""Run one intelligence-scanning pass."""
-	from alea.scanning.run import run_scan
+	"""Run one intelligence-scanning pass.
+
+	``--source`` narrows the run to one connector by name. The connectors that
+	need a credential are skipped unless the credential is in the environment,
+	rather than failing the whole run: a news pass with no NewsAPI key is a
+	smaller pass, not a broken one.
+	"""
+	import asyncio
+
+	from alea.scanning.connectors import default_connectors
+	from alea.scanning.service import ScanningService
 
 	run_id, logger = _run("cli.scan", source=source_id)
 	loaded = _load(config, None, None)
-	result = run_scan(loaded, source_id=source_id, logger=logger)
-	logger.info("done", run_id=run_id, signals=result.signals)
-	typer.echo(f"scan: {result.signals} signals, {result.queued} queued for review")
+	connectors = default_connectors()
+	if source_id is not None:
+		connectors = [c for c in connectors if c.source_name == source_id]
+		if not connectors:
+			known = ", ".join(sorted(c.source_name for c in default_connectors()))
+			typer.secho(f"unknown source {source_id!r}; known: {known}", fg=typer.colors.RED, err=True)
+			raise typer.Exit(code=2)
+
+	async def _scan() -> Any:
+		service = ScanningService(connectors, config=loaded)
+		try:
+			return await service.run()
+		finally:
+			await service.aclose()
+
+	result = asyncio.run(_scan())
+	logger.info("done", run_id=run_id, signals=result.signals_extracted)
+	typer.echo(
+		f"scan: {result.signals_extracted} signals from {result.documents_kept} documents, "
+		f"{result.signals_enqueued} queued for review"
+	)
 
 
 @app.command()

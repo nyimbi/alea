@@ -86,7 +86,7 @@ def build_network(
 	without demand would make that gate unrunnable.
 	"""
 	assert config is not None, "config must not be None"
-	log = logger_ or logger
+	log = logger_ or _log
 	base = Path(root)
 	provenances: list[DerivedProvenance] = []
 	notes: list[str] = []
@@ -160,7 +160,7 @@ def solve_scenario(
 	has measured is refused here, where nothing has been spent yet.
 	"""
 	assert config is not None, "config must not be None"
-	log = logger_ or logger
+	log = logger_ or _log
 	out_path = Path(out)
 	out_path.mkdir(parents=True, exist_ok=True)
 
@@ -176,7 +176,7 @@ def solve_scenario(
 
 		inputs = [f"sha256:{sha256_file(path)}"]
 	else:
-		built, report, provenances = build_network(config, logger=log)
+		built, report, provenances = build_network(config, logger_=log)
 		inputs = [p.inputs[0] for p in provenances if p.inputs]
 
 	if config.solve.time_aggregation > 1:
@@ -184,7 +184,7 @@ def solve_scenario(
 		log.info("aggregation_gate_passed", network=network_id(built), periods=config.solve.time_aggregation)
 
 	horizons = [horizon] if horizon is not None else None
-	result = solve_expansion(built, config, horizons=horizons, logger=log)
+	result = solve_expansion(built, config, horizons=horizons, logger_=log)
 
 	target = out_path / f"{network_id(built)}-{horizon or 'all'}.nc"
 	result.network.export_to_netcdf(str(target))
@@ -208,7 +208,7 @@ def dispatch_scenario(
 ) -> DispatchResult:
 	"""Solve hourly dispatch on a network with fixed capacity."""
 	assert config is not None, "config must not be None"
-	log = logger_ or logger
+	log = logger_ or _log
 	out_path = Path(out)
 	out_path.mkdir(parents=True, exist_ok=True)
 

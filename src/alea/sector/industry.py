@@ -22,12 +22,11 @@ import pandas as pd
 
 from alea.config.models import SectorConfig
 from alea.logging import get_logger
-from alea.registry import Carrier
-from alea.sector._util import annual_series, as_index, total_hours, twh_per_year_to_mwh
+from alea.sector._util import annual_series, as_index, total_hours
 from alea.sector.views import CouplingView, Parameter, Sector, SectorBuild
 
 if TYPE_CHECKING:
-	import pypsa
+	pass
 
 logger = get_logger(__name__)
 

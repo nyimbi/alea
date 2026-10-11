@@ -18,7 +18,6 @@ import pandas as pd
 import pypsa
 
 from alea.logging import get_logger
-from alea.planning.schemas import DEMAND
 from alea.provenance.models import Basis, DerivedProvenance
 
 logger = get_logger(__name__)

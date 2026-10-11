@@ -43,6 +43,20 @@ class ScenarioConfig(AleaConfig):
 	"""Raster aggregation resolution. 0.01 deg is the Ghana study's best value."""
 
 	@model_validator(mode="after")
+	def _countries_are_named(self) -> ScenarioConfig:
+		# `CountryIso` is `str | None` because a *signal* may arrive without a
+		# country. A scenario is the opposite: it exists to say what to model,
+		# and one naming no country models nothing. Without this, `[null]`
+		# validates and then crashes wherever the list is joined or looked up.
+		missing = [i for i, iso in enumerate(self.countries) if iso is None]
+		if missing:
+			raise ValueError(
+				f"scenario.countries has no country at index {missing[0]}; a "
+				f"scenario must name the countries to model"
+			)
+		return self
+
+	@model_validator(mode="after")
 	def _horizons_ascend(self) -> ScenarioConfig:
 		if self.planning_horizons != sorted(self.planning_horizons):
 			raise ValueError(

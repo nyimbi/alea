@@ -128,29 +128,26 @@ def aggregate(
 		best = min(centres, key=lambda c: float(np.sum((medoids[p] - medoids[c]) ** 2)))
 		period_to_rep.append(best)
 
-	# Map each period's index back to its representative's first timestep, then
-	# label every timestep of that period.
+	# Every chosen centre is a representative period; its first timestep is the
+	# representative index. The label is the position of the centre in the
+	# medoid list, so a centre that ends up with no period still yields a
+	# representative (its weight is then zero and the tail may fill it).
+	reps_first = [members[c][0] for c in centres]
 	assignments = np.zeros(n_timesteps, dtype=np.uint32)
-	weights = np.zeros(n_periods, dtype=np.float64)
-	reps_first: list[int] = []
-	label_of: dict[int, int] = {}
+	weights = np.zeros(len(centres), dtype=np.float64)
 	for p in range(n_whole):
-		rep = period_to_rep[p]
-		if rep not in label_of:
-			label_of[rep] = len(reps_first)
-			reps_first.append(members[rep][0])
-		label = label_of[rep]
+		label = centres.index(period_to_rep[p])
 		for t in members[p]:
 			assignments[t] = label
 		weights[label] += float(len(members[p]))
+
 	# The tail timesteps that do not form a whole period attach to the nearest
-	# representative's period, preserving the exact sum.
+	# representative, preserving the exact sum.
 	tail = list(range(n_whole * period_length, n_timesteps))
 	for t in tail:
-		best = min(reps_first, key=lambda first: float(np.sum((series[t] - series[first]) ** 2)))
-		label = label_of[best]
-		assignments[t] = label
-		weights[label] += 1.0
+		best = min(range(len(reps_first)), key=lambda k: float(np.sum((series[t] - series[reps_first[k]]) ** 2)))
+		assignments[t] = best
+		weights[best] += 1.0
 
 	representatives = np.asarray(reps_first, dtype=np.uint32)
 	assert len(representatives) == n_periods

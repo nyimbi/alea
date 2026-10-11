@@ -20,7 +20,6 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 
-from alea._core import kernels
 from alea.config.models import SectorConfig
 from alea.logging import get_logger
 from alea.registry import Carrier
@@ -34,7 +33,6 @@ from alea.sector._util import (
 )
 from alea.sector.views import (
 	CouplingView,
-	LinkRow,
 	MassBalance,
 	Parameter,
 	Sector,

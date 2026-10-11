@@ -37,11 +37,10 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from alea.config.models import Config
 from alea.logging import get_logger
 from alea.registry import Carrier, CarrierClass, get_technology
-from alea.sector._util import as_index
 from alea.sector.views import CouplingView, Parameter, Sector, SectorBuild
 
 if TYPE_CHECKING:
-	import pypsa
+	pass
 
 logger = get_logger(__name__)
 
@@ -820,7 +819,6 @@ def build_renewables(
 	one technology missing.
 	"""
 	assert bus, "the renewable portfolio needs a bus"
-	index = as_index(snapshots)
 	if not config.renewables:
 		return SectorBuild(
 			sector=Sector.RENEWABLES,
@@ -845,23 +843,49 @@ def build_renewables(
 			)
 		builder = globals()[builder_name]
 		carrier = get_technology(carrier_name).carrier
-		profile = profiles.get(carrier_name) or profiles.get(carrier.value)
-		source = sources.get(carrier_name) or sources.get(carrier.value, "")
-		layout = layouts.get(carrier_name) or layouts.get(carrier.value, "")
+		# ``or`` cannot be used to fall back between the two spellings: a Series
+		# profile has no truth value, so ``profiles.get(name) or ...`` raises
+		# "truth value of a Series is ambiguous" the moment a profile is passed.
+		# The lookup must test for ``None`` explicitly.
+		profile = profiles.get(carrier_name)
+		if profile is None:
+			profile = profiles.get(carrier.value)
+		source = sources.get(carrier_name)
+		if source is None:
+			source = sources.get(carrier.value, "")
+		layout = layouts.get(carrier_name)
+		if layout is None:
+			layout = layouts.get(carrier.value, "")
 		kwargs = _kwargs_for(builder_name, technology_kwargs, carrier_name)
 
+		# Only pass a kwarg the builder actually declares. A dispatchable
+		# technology (geothermal, biomass, PHS) has no capacity factor, and a
+		# hardcoded branch that assumed every builder takes one raised
+		# "unexpected keyword argument" the first time such a carrier was
+		# enabled. Driving it off the signature means a new builder is correct
+		# by construction rather than by remembering to update a branch here.
+		accepted = _accepted_kwargs(builder)
 		if builder_name in ("hydro_ror_view", "hydro_reservoir_view"):
-			kwargs["inflow_profile"] = profile
-			kwargs["inflow_source"] = source
-			kwargs["layout_notes"] = layout
+			provided = {
+				"inflow_profile": profile,
+				"inflow_source": source,
+				"layout_notes": layout,
+			}
 		elif builder_name == "marine_view":
-			kwargs["carrier"] = carrier
-			kwargs["capacity_factor"] = profile
-			kwargs["capacity_factor_source"] = source
+			provided = {
+				"carrier": carrier,
+				"capacity_factor": profile,
+				"capacity_factor_source": source,
+			}
 		else:
-			kwargs["capacity_factor"] = profile
-			kwargs["capacity_factor_source"] = source
-			kwargs["layout_notes"] = layout
+			provided = {
+				"capacity_factor": profile,
+				"capacity_factor_source": source,
+				"layout_notes": layout,
+			}
+		for key, value in provided.items():
+			if key in accepted:
+				kwargs[key] = value
 
 		views.append(builder(bus, **kwargs))
 		built.add(carrier)
@@ -954,6 +978,25 @@ def _kwargs_for(
 	}
 	allowed = flat_keys.get(builder_name, ("p_nom", "extendable", "capital_cost", "name"))
 	return {key: value for key, value in technology_kwargs.items() if key in allowed}
+
+
+def _accepted_kwargs(builder: Any) -> frozenset[str]:
+	"""The keyword names a view builder declares.
+
+	Used so the build loop passes a profile only to a builder that takes one.
+	Reading the signature rather than listing which builders do is what keeps a
+	dispatchable technology -- which has no capacity factor -- from being handed
+	one and raising on a keyword it never accepted.
+	"""
+	import inspect
+
+	parameters = inspect.signature(builder).parameters
+	return frozenset(
+		name
+		for name, parameter in parameters.items()
+		if parameter.kind
+		in (parameter.KEYWORD_ONLY, parameter.POSITIONAL_OR_KEYWORD)
+	)
 
 
 def kenya_portfolio_gate(rows: list[Any], *, carriers: list[str] | None = None) -> None:

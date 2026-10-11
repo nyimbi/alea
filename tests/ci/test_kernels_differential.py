@@ -29,6 +29,8 @@ import pytest
 # on the pytest pythonpath (which points at `src`). Add it here.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from typing import Any
+
 from reference import dedup as ref_dedup  # noqa: E402
 from reference import losses as ref_losses  # noqa: E402
 from reference import rasters as ref_rasters  # noqa: E402
@@ -38,7 +40,7 @@ from reference import series as ref_series  # noqa: E402
 from alea._core import kernels as K  # noqa: E402
 
 F32 = dict(rtol=1e-5, atol=1e-6)
-F64 = dict(rtol=1e-9, atol=1e-12)
+F64: dict[str, Any] = dict(rtol=1e-9, atol=1e-12)
 
 
 def assert_equal(got, expected, **tol) -> None:
@@ -328,10 +330,8 @@ def test_aggregate_every_timestep_assigned_once():
 	assert len(weights) == 2
 	assert int(assignments.min()) >= 0
 	assert int(assignments.max()) < 2
-	# Weights are timestep counts, and in the unequal-division case they can
-	# differ from the assignment histogram by the tail timesteps that do not
-	# form a whole period (here 10 = 4 whole periods + 2 tail). What is
-	# invariant is the exact sum, not the per-period split.
+	# The per-period split is a heuristic and need not equal the assignment
+	# histogram, but the exact sum is invariant.
 	assert int(weights.sum()) == 10
 
 

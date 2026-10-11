@@ -89,7 +89,7 @@ class LossComponents(AleaConfig):
 	def shares(self) -> dict[str, float]:
 		"""Each component as a fraction of the total, or NaN for a zero total."""
 		if abs(self.total_mwh) < 1e-12:
-			return {name: float("nan") for name in self.component_names}
+			return {name: float("nan") for name in self.component_names()}
 		return {
 			"load_driven": self.load_driven_mwh / self.total_mwh,
 			"generation_driven": self.generation_driven_mwh / self.total_mwh,

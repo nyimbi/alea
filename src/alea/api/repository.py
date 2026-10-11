@@ -24,7 +24,8 @@ because a call site that forgets is the one that matters.
 from __future__ import annotations
 
 import json
-from typing import Any
+from datetime import datetime
+from typing import Any, cast
 
 import pandas as pd
 
@@ -191,12 +192,21 @@ def _text(row: Any, column: str, default: str = "") -> str:
 	return default if value is None else str(value)
 
 
-def _moment(row: Any, column: str) -> Any:
-	"""A required timestamp column."""
+def _moment(row: Any, column: str) -> datetime:
+	"""A required timestamp column.
+
+	``pd.Timestamp`` is kept for its parser -- it accepts the ISO strings, epoch
+	seconds and ``datetime`` objects the artefacts carry, which ``datetime``
+	alone does not -- but its return type is ``datetime | NaTType``, and ``NaT``
+	is a missing value, not a moment. Converting through ``to_pydatetime``
+	yields a real ``datetime`` or raises for an unparseable value, and the cast
+	states the invariant the artefacts are written under: a required timestamp
+	column holds a timestamp.
+	"""
 	value = _optional(row, column)
 	if value is None:
 		raise ArtefactError(f"{column}: a required timestamp is missing")
-	return pd.Timestamp(value).to_pydatetime()
+	return cast("datetime", pd.Timestamp(value).to_pydatetime())
 
 
 class Repository:
@@ -308,7 +318,7 @@ class Repository:
 			countries=[str(c) for c in data.get("countries", [])],
 			planning_horizons=[int(h) for h in data.get("planning_horizons", [])],
 			clusters=[int(c) for c in data.get("clusters", [])],
-			created_at=pd.Timestamp(created).to_pydatetime(),
+			created_at=cast("datetime", pd.Timestamp(created).to_pydatetime()),
 			description=_text(data, "description"),
 		)
 
@@ -335,7 +345,7 @@ class Repository:
 			total_capacity_mw=_value(data, "total_capacity_mw", "MW", provenance),
 			capacity_mix=mix,
 			network_checksum=_text(data, "network_checksum"),
-			solved_at=pd.Timestamp(data["solved_at"]).to_pydatetime()
+			solved_at=cast("datetime", pd.Timestamp(data["solved_at"]).to_pydatetime())
 			if data.get("solved_at")
 			else None,
 		)
@@ -637,9 +647,12 @@ class Repository:
 			cadence=_text(data, "cadence", cadence),
 			report_date=report_date,
 			title=_text(data, "title", f"{cadence} report {report_date}"),
-			generated_at=pd.Timestamp(
-				data.get("generated_at") or data.get("created_at") or report_date
-			).to_pydatetime(),
+			generated_at=cast(
+				"datetime",
+				pd.Timestamp(
+					data.get("generated_at") or data.get("created_at") or report_date
+				).to_pydatetime(),
+			),
 			checksum=_text(data, "checksum"),
 			formats=[str(f) for f in data.get("formats", [])],
 		)
@@ -693,13 +706,16 @@ def _filter(frame: pd.DataFrame, **conditions: str | None) -> pd.DataFrame:
 	have, and the caller sees the unfiltered set rather than a 500.
 	"""
 	assert frame is not None, "cannot filter no frame"
-	rows = frame
+	rows: pd.DataFrame = frame
 	for column, value in conditions.items():
 		if value is None:
 			continue
 		if column not in rows.columns:
 			continue
-		rows = rows[rows[column].astype(str).str.upper() == str(value).upper()]
+		# Boolean-masking a DataFrame always yields a DataFrame, but pandas'
+		# stubs type ``__getitem__`` to return the union of everything it can
+		# return, so the annotation has to say which branch this is.
+		rows = cast("pd.DataFrame", rows[rows[column].astype(str).str.upper() == str(value).upper()])
 	return rows
 
 

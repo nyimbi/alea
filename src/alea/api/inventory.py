@@ -98,37 +98,45 @@ def _mounted_modules() -> set[str]:
 	return {name for _, name, _ in pkgutil.iter_modules(package.__path__)}
 
 
-def assert_every_router_mounted(app: FastAPI) -> None:
-	"""Check that no route module in the package was left out of ``ROUTERS``.
+def assert_every_router_mounted(app: FastAPI, *, prefix: str) -> None:
+	"""Check that every route module in the package reaches the application.
 
 	The route walk sees what the application serves; this sees what the package
-	offers. The two sets are what has to agree. Without it, a new
+	offers, and the two sets are what has to agree. Without it a new
 	``routes/<name>.py`` that nobody added to ``ROUTERS`` is invisible: nothing
 	imports it, nothing fails, and the endpoint exists only in the source tree.
+
+	Each router's own paths are compared against the served paths with the
+	application prefix removed, rather than against the prefixed paths, so a
+	router that is mounted under a different prefix is still checked for the
+	routes it carries.
 	"""
 	assert app is not None, "assert_every_router_mounted called with no application"
+	assert prefix, "the application prefix is needed to compare router paths"
 	from alea.api.routes import ROUTERS
 
-	module_names = _mounted_modules()
-	served_paths = route_paths(app)
+	served = {
+		path[len(prefix):] if path.startswith(prefix) else path
+		for path in route_paths(app)
+	}
 	unmounted: list[str] = []
-	for name in sorted(module_names):
+	for name in sorted(_mounted_modules()):
 		module: ModuleType = importlib.import_module(f"alea.api.routes.{name}")
 		router = getattr(module, "router", None)
 		if router is None:
 			continue
 		if router not in ROUTERS:
-			unmounted.append(name)
+			unmounted.append(f"{name} (module is not in ROUTERS)")
 			continue
-		# A module can be in ROUTERS and still contribute nothing if its own
-		# router is empty, which reads as mounted and is not.
+		# A module can be in ROUTERS and still contribute nothing, if its own
+		# router is empty -- which reads as mounted and is not.
 		for route in getattr(router, "routes", []):
 			path = getattr(route, "path", None)
-			if path and path not in served_paths and path not in {"", "/"}:
+			if path and path not in served:
 				unmounted.append(f"{name} ({path})")
 	if unmounted:
 		raise AssertionError(
-			f"route modules not mounted on the application: {unmounted}; "
+			f"route modules that do not reach the application: {unmounted}; "
 			f"add them to ROUTERS in alea/api/routes/__init__.py"
 		)
 
@@ -141,7 +149,6 @@ def assert_inventory(app: FastAPI, *, minimum: int = 30) -> list[RouteInfo]:
 	unwrap breaks, this raises before the total is trusted.
 	"""
 	assert app is not None, "assert_inventory called with no application"
-	assert_every_router_mounted(app)
 	inventory = route_inventory(app)
 	paths = {(method, route.path) for route in inventory for method in route.methods}
 	if KNOWN_ROUTE not in paths:

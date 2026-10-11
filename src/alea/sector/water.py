@@ -25,7 +25,6 @@ from typing import TYPE_CHECKING
 import pandas as pd
 
 from alea.logging import get_logger
-from alea.registry import Carrier
 from alea.sector._util import annual_series, as_index, series_over, total_hours
 from alea.sector.views import CouplingView, Parameter, Sector, SectorBuild
 
@@ -99,6 +98,15 @@ def desalination_view(
 	# the water bus in the same units as the product a utility actually reports.
 	m3_per_mwh = M3_PER_MWH_AT_1_KWH_PER_M3 / specific_energy_kwh_per_m3
 
+	# ``p_nom`` is the input power at bus0, in MW -- not the output in m³/h. The
+	# plant's rated output is ``capacity_m3_per_hour``, so its electrical rating
+	# is that divided by the efficiency. Setting p_nom to the m³/h figure leaves
+	# it 285x too large at 3.5 kWh/m³, and because p_min_pu then demands a
+	# proportional minimum draw the plant's floor exceeds the whole system's
+	# supply and the network is infeasible for a reason nothing in the tables
+	# names.
+	p_nom_mw = capacity_m3_per_hour / m3_per_mwh
+
 	view = CouplingView(
 		asset="Link",
 		name=name,
@@ -120,7 +128,7 @@ def desalination_view(
 			)
 		},
 		attributes={
-			"p_nom": float(capacity_m3_per_hour),
+			"p_nom": float(p_nom_mw),
 			"p_nom_extendable": bool(extendable),
 			"capital_cost": float(capital_cost),
 			"p_min_pu": float(minimum_load_fraction),

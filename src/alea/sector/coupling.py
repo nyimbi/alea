@@ -29,9 +29,15 @@ import pandas as pd
 from alea.config.models import Config
 from alea.logging import get_logger
 from alea.registry import Carrier
-from alea.sector import heat, hydrogen, industry, renewables, transport, water
-from alea.sector._util import as_index
-from alea.sector.views import CouplingReport, CouplingView, LinkRow, SectorBuild
+from alea.sector import heat, hydrogen, industry, transport, water
+from alea.sector._util import as_index, weighted_energy
+from alea.sector.views import (
+	CouplingReport,
+	CouplingView,
+	LinkRow,
+	MassBalance,
+	SectorBuild,
+)
 
 if TYPE_CHECKING:
 	import pypsa
@@ -90,9 +96,13 @@ def _component(network: pypsa.Network, name: str) -> Any | None:
 	a view's ``asset`` is ``"Link"``, and a lookup that accepts only one of them
 	reports a component the network carries as unknown.
 	"""
-	if name in network.components.keys():
+	# `.keys()` is required, not stylistic: `ComponentsStore.__contains__` raises
+	# DeprecationWarning, and this project's pytest config turns warnings into
+	# errors, so `name in network.components` would fail the test rather than
+	# answer the question. SIM118 wants the bare `in`; the bare `in` is a raise.
+	if name in network.components.keys():  # noqa: SIM118
 		return network.components[name]
-	for key in network.components.keys():
+	for key in network.components.keys():  # noqa: SIM118
 		if network.components[key].name == name:
 			return network.components[key]
 	return None
@@ -535,6 +545,85 @@ def _ensure_bus(network: pypsa.Network, row: LinkRow) -> None:
 		network.add("Bus", str(bus), carrier=row.carrier)
 
 
+def generic_balance(
+	network: pypsa.Network,
+	*,
+	bus: str,
+	carrier: str = "",
+	tolerance_frac: float = 1e-4,
+) -> MassBalance:
+	"""Conservation across any bus, without a carrier-specific balance.
+
+	The sign convention is uniform across every port: a link's ``p_port`` is
+	positive when the port draws from its bus, so the flow *into* the bus is
+	``-p_port`` for ``bus0`` and ``bus1``-``bus3`` alike. Summing that over every
+	component attached to the bus gives the net inflow, which must be zero at
+	every snapshot.
+
+	This exists because a gate that checks only the carriers someone wrote a
+	balance for is a gate with a hole in it (the plan's rule). Hydrogen and heat
+	have specialised balances whose terms mean something specific; everything
+	else -- steel, cement, chemicals, water -- is swept by this one.
+	"""
+	assert bus, "a balance needs a bus"
+	weights = network.snapshot_weightings["stores"].to_numpy(dtype=float)
+
+	produced = 0.0
+	consumed = 0.0
+	if len(network.generators) and "p" in network.generators_t:
+		gens = network.generators[network.generators["bus"] == bus].index
+		if len(gens):
+			produced += weighted_energy(network.generators_t.p[gens], weights)
+	if len(network.loads) and "p" in network.loads_t:
+		loads = network.loads[network.loads["bus"] == bus].index
+		if len(loads):
+			consumed += weighted_energy(network.loads_t.p[loads], weights)
+	if len(network.storage_units) and "p" in network.storage_units_t:
+		units = network.storage_units[network.storage_units["bus"] == bus].index
+		if len(units):
+			# StorageUnit p > 0 is discharge, i.e. energy into the bus.
+			produced += weighted_energy(network.storage_units_t.p[units], weights)
+
+	# Every link port attached to this bus. Port 1 is the primary output and must
+	# be included -- omitting it (the loop once ran over "", "2", "3") reports
+	# every product bus as consuming with nothing producing, which reads as a
+	# huge imbalance rather than as the missing term it is.
+	if len(network.links):
+		link_in = 0.0
+		for port in ("", "1", "2", "3"):
+			bus_column = f"bus{port}" if port else "bus0"
+			flow_column = f"p{port}" if port else "p0"
+			if bus_column not in network.links.columns:
+				continue
+			if flow_column not in network.links_t:
+				continue
+			links = network.links[network.links[bus_column] == bus].index
+			if len(links):
+				link_in += -weighted_energy(network.links_t[flow_column][links], weights)
+		if link_in >= 0.0:
+			produced += link_in
+		else:
+			consumed += -link_in
+
+	storage_delta = 0.0
+	if len(network.stores) and "e" in network.stores_t:
+		stores = network.stores[network.stores["bus"] == bus].index
+		if len(stores):
+			energy = network.stores_t.e[stores]
+			storage_delta = float((energy.iloc[-1] - energy.iloc[0]).sum())
+
+	residual = produced - consumed - storage_delta
+	return MassBalance(
+		carrier=carrier or str(bus),
+		produced_mwh=produced,
+		consumed_mwh=consumed,
+		storage_delta_mwh=storage_delta,
+		exported_mwh=0.0,
+		residual_mwh=residual,
+		tolerance_mwh=max(abs(produced) * tolerance_frac, 1e-6),
+	)
+
+
 def energy_balance_report(
 	network: pypsa.Network,
 	*,
@@ -543,8 +632,8 @@ def energy_balance_report(
 	"""Per-carrier energy balances for the coupled network.
 
 	Hydrogen and heat have their own specialised balances because their terms
-	mean something specific. This is the generic sweep, and it exists so a
-	carrier nobody wrote a balance for is still checked: the gate says *every*
+	mean something specific. Everything else is swept by ``generic_balance``, so
+	a carrier nobody wrote a balance for is still checked: the gate says *every*
 	carrier balances, and a balance implemented only for the carriers someone
 	remembered is a gate with a hole in it.
 	"""
@@ -558,7 +647,7 @@ def energy_balance_report(
 		elif name == "heat":
 			balance = heat.heat_energy_balance(network, bus_heat=bus)
 		else:
-			continue
+			balance = generic_balance(network, bus=bus, carrier=name)
 		out[name] = {
 			"carrier": balance.carrier,
 			"produced_mwh": balance.produced_mwh,
@@ -580,6 +669,7 @@ __all__ = [
 	"base_digest",
 	"couple",
 	"energy_balance_report",
+	"generic_balance",
 	"sector_buses",
 	"views_from_rows",
 ]

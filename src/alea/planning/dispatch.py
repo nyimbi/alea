@@ -95,7 +95,7 @@ def freeze_capacity(network: pypsa.Network) -> int:
 				table.loc[extendable, "e_nom"] = table.loc[extendable, "e_nom_opt"]
 				table.loc[extendable, "e_nom_extendable"] = False
 				frozen += int(extendable.sum())
-	logger.info("capacity_frozen", components=frozen)
+	_log.info("capacity_frozen", components=frozen)
 	return frozen
 
 
@@ -147,7 +147,7 @@ def solve_dispatch(
 		peak_generation_mw=checks["peak_mw"],
 		unserved_energy_mwh=checks["unserved_mwh"],
 	)
-	logger.info(
+	_log.info(
 		"dispatch_solved",
 		objective=result.objective,
 		seconds=round(seconds, 2),

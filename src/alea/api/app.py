@@ -187,10 +187,13 @@ def create_app(config: Config) -> FastAPI:
 	# an included router in a class whose own ``path`` is None, so counting
 	# ``app.routes`` entries reports the wrappers and undercounts the routes by
 	# everything the routers carry (11-layer8 §9). assert_inventory canaries the
-	# walk against a route known to exist before the total is trusted.
-	from alea.api.inventory import assert_inventory
+	# walk against a route known to exist before the total is trusted, and then
+	# checks that every route module in the package actually reached the app --
+	# a router left out of ROUTERS is otherwise invisible.
+	from alea.api.inventory import assert_every_router_mounted, assert_inventory
 
 	assert_inventory(app)
+	assert_every_router_mounted(app, prefix=API_PREFIX)
 	return app
 
 

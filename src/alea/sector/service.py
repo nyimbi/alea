@@ -35,8 +35,8 @@ from alea.logging import get_logger, new_run_id
 from alea.provenance.models import Basis, Licence, Provenance
 from alea.registry import technologies
 from alea.sector._util import as_index
-from alea.sector.coupling import add_sector_buses, base_digest, couple
-from alea.sector.views import CouplingReport, LinkRow, Sector
+from alea.sector.coupling import base_digest, couple
+from alea.sector.views import CouplingReport, Sector
 
 if TYPE_CHECKING:
 	import pypsa

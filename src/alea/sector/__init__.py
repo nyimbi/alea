@@ -37,6 +37,7 @@ from alea.sector.coupling import (
 	base_digest,
 	couple,
 	energy_balance_report,
+	generic_balance,
 	sector_buses,
 )
 from alea.sector.heat import (
@@ -51,6 +52,7 @@ from alea.sector.hydrogen import (
 	build_hydrogen,
 	electrolysis_view,
 	export_view,
+	h2_kg_to_mwh,
 	h2_mass_balance,
 	storage_view,
 )
@@ -172,10 +174,12 @@ __all__ = [
 	"desalination_view",
 	"electrolysis_view",
 	"energy_balance_report",
+	"generic_balance",
 	"ev_driving_load_view",
 	"ev_fleet_view",
 	"export_view",
 	"geothermal_view",
+	"h2_kg_to_mwh",
 	"h2_mass_balance",
 	"h2_vehicle_demand_view",
 	"heat_energy_balance",
@@ -198,6 +202,7 @@ __all__ = [
 	"steel_h2_dri_view",
 	"steel_scrap_eaf_view",
 	"thermal_storage_view",
+	"storage_view",
 	"v2g_cycles",
 	"v2g_view",
 	"water_demand_view",

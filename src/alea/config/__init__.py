@@ -11,8 +11,8 @@ from alea.config.models import (
 	PathsConfig,
 	RenewableConfig,
 	ReportingConfig,
-	ScenarioConfig,
 	ScanningConfig,
+	ScenarioConfig,
 	SectorConfig,
 	SolveConfig,
 )

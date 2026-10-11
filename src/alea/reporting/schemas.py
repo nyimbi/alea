@@ -435,14 +435,14 @@ def find_bare_numbers(node: Any, path: str = "context") -> list[str]:
 	# A coverage window is not a report value: its numbers describe what the
 	# data covers and how late it is, and a template reaches them only through
 	# ``describe()``, which formats them into prose. Dates are not numbers.
-	if isinstance(node, (DataWindow, datetime, date, bool)):
+	if isinstance(node, DataWindow | datetime | date | bool):
 		return found
-	if isinstance(node, (int, float)):
+	if isinstance(node, int | float):
 		found.append(path)
 	elif isinstance(node, Mapping):
 		for key, value in node.items():
 			found.extend(find_bare_numbers(value, f"{path}.{key}"))
-	elif isinstance(node, (list, tuple, set)):
+	elif isinstance(node, list | tuple | set):
 		for index, value in enumerate(node):
 			found.extend(find_bare_numbers(value, f"{path}[{index}]"))
 	elif dataclasses.is_dataclass(node) and not isinstance(node, type):

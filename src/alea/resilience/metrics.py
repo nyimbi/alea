@@ -30,8 +30,6 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-import numpy as np
-
 from alea.logging import get_logger
 from alea.provenance.models import Basis
 from alea.resilience.views import (

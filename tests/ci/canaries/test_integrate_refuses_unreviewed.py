@@ -17,8 +17,6 @@ import subprocess
 import sys
 from datetime import datetime
 
-import pytest
-
 from alea.scanning.integrate import UnreviewedSignalError, integrate
 from alea.signals.models import Signal, SignalType
 from tests.ci.canaries import REPO, assert_raises, planted
