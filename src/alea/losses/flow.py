@@ -154,6 +154,10 @@ def solve_series(
 	Losses are computed per snapshot from that snapshot's flows. This is what
 	makes the mitigation ranking honest: a loss reduction summed over the actual
 	hourly series, not one snapshot multiplied by 8760 (07-layer4 §7.1).
+
+	The values are **MW**, not MWh: one DC solve yields the loss at an instant.
+	Converting to energy is the caller's job, and it needs
+	``LossConfig.snapshot_hours`` to do it.
 	"""
 	cfg = config or LossConfig()
 	matrix = np.asarray(injections_mw, dtype=np.float64)

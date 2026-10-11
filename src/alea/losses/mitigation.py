@@ -99,9 +99,11 @@ def _rebuild_susceptance(
 
 
 def annual_savings_from_snapshots(
-	base_losses_mwh: NDArray[np.float64],
-	option_losses_mwh: NDArray[np.float64],
+	base_losses_mw: NDArray[np.float64],
+	option_losses_mw: NDArray[np.float64],
 	price_usd_per_mwh: NDArray[np.float64] | float,
+	*,
+	snapshot_hours: float = 1.0,
 ) -> tuple[float, float]:
 	"""Sum the per-snapshot loss reduction times that snapshot's price.
 
@@ -110,9 +112,15 @@ def annual_savings_from_snapshots(
 	series, and a price that varies by hour (a market price, or a time-of-use
 	tariff) must be applied per snapshot or the saving is measured against the
 	wrong hour.
+
+	``base_losses_mw`` and ``option_losses_mw`` are **MW**: one DC solve gives
+	the loss at an instant. ``snapshot_hours`` converts that to energy, so a
+	sub-hourly or multi-hour dispatch does not scale the saving by whatever
+	factor the caller's index happened to imply.
 	"""
-	base = np.asarray(base_losses_mwh, dtype=float)
-	after = np.asarray(option_losses_mwh, dtype=float)
+	assert snapshot_hours > 0.0, f"snapshot_hours must be positive, got {snapshot_hours}"
+	base = np.asarray(base_losses_mw, dtype=float)
+	after = np.asarray(option_losses_mw, dtype=float)
 	if base.shape != after.shape:
 		raise ValueError(f"base {base.shape} and option {after.shape} must align")
 	price = np.asarray(price_usd_per_mwh, dtype=float)
@@ -120,7 +128,7 @@ def annual_savings_from_snapshots(
 		price = np.full(base.shape, float(price), dtype=float)
 	if price.shape != base.shape:
 		raise ValueError(f"price {price.shape} must be scalar or match {base.shape}")
-	reduction = base - after
+	reduction = (base - after) * snapshot_hours
 	return float(np.sum(reduction)), float(np.sum(reduction * price))
 
 
@@ -154,7 +162,7 @@ def evaluate_option(
 	option_losses, _ = solve_series(modified, injections, cfg)
 
 	reduction_mwh, savings_usd = annual_savings_from_snapshots(
-		base_losses, option_losses, price
+		base_losses, option_losses, price, snapshot_hours=cfg.snapshot_hours
 	)
 	if savings_usd < cfg.min_savings_usd_per_year:
 		payback: float | None = None

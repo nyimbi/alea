@@ -47,6 +47,17 @@ class LossConfig(AleaConfig):
 
 	decomposition_tolerance: float = Field(default=DECOMPOSITION_TOLERANCE, gt=0.0)
 
+	snapshot_hours: float = Field(default=1.0, gt=0.0)
+	"""Hours each snapshot represents.
+
+	The DC solve returns a loss in **MW** for one snapshot. Every field here
+	named ``*_mwh`` is that MW summed over snapshots, which is MWh only when a
+	snapshot is exactly one hour. Nothing in the payload used to record the
+	timestep, so a 15-minute or 3-hourly dispatch silently scaled every loss by
+	4 or by a third while the field name kept asserting MWh. Defaulting to 1.0
+	keeps an hourly series unchanged and makes any other resolution an explicit,
+	recorded choice rather than an accident of the caller's index."""
+
 
 class LossComponents(AleaConfig):
 	"""A three-component loss decomposition that sums to its total.

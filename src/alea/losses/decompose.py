@@ -143,18 +143,24 @@ def measure(
 	reference_net = reference_network or network
 	topology_net = topology_network or reference_net
 
-	actual = float(sum(_snapshot_loss(network, dispatch[i], cfg) for i in range(dispatch.shape[0])))
-	reference_loss = float(
-		sum(_snapshot_loss(reference_net, reference[i], cfg) for i in range(reference.shape[0]))
+	# Each snapshot's loss is in MW; the hours it stands for turn the four sums
+	# into the energies the decomposition's field names claim.
+	hours = cfg.snapshot_hours
+	actual = float(sum(_snapshot_loss(network, dispatch[i], cfg) for i in range(dispatch.shape[0]))) * hours
+	reference_loss = (
+		float(sum(_snapshot_loss(reference_net, reference[i], cfg) for i in range(reference.shape[0])))
+		* hours
 	)
 	# Actual load on the reference network: the loss the load causes, measured
 	# from the no-load case. This is what makes the parts sum.
-	load_only = float(
-		sum(_snapshot_loss(reference_net, dispatch[i], cfg) for i in range(dispatch.shape[0]))
+	load_only = (
+		float(sum(_snapshot_loss(reference_net, dispatch[i], cfg) for i in range(dispatch.shape[0])))
+		* hours
 	)
 	# Actual topology at the reference dispatch.
-	topology_only = float(
-		sum(_snapshot_loss(topology_net, reference[i], cfg) for i in range(reference.shape[0]))
+	topology_only = (
+		float(sum(_snapshot_loss(topology_net, reference[i], cfg) for i in range(reference.shape[0])))
+		* hours
 	)
 	return DecompositionInputs(
 		actual_losses_mwh=actual,

@@ -53,6 +53,9 @@ class SweepResult:
 	overloaded_branches: NDArray[np.uint32]
 	diverged: NDArray[np.bool_]
 	branch_names: tuple[str, ...]
+	snapshot_hours: float = 1.0
+	"""Hours per snapshot, from ``LossConfig``. The kernel returns the shortfall
+	in MW at each snapshot, so a sum is MWh only at one hour per snapshot."""
 
 	@property
 	def n_contingencies(self) -> int:
@@ -66,16 +69,17 @@ class SweepResult:
 	def base_ens_mwh(self) -> float:
 		"""ENS in the base case, summing over snapshots.
 
-		NaN where the base case did not converge is skipped rather than
-		propagated: a diverged snapshot contributes no measurable base ENS, and
-		turning it into zero would understate the total.
+		The base case has every branch in, so nothing is stranded and this is
+		zero for a network the solve can carry. It is still computed rather than
+		assumed: a base case that could not converge is a finding, and reporting
+		it as zero would hide the network rather than the number.
 		"""
 		base = self.energy_not_served_mwh[0]
-		return float(np.nansum(base))
+		return float(np.nansum(base) * self.snapshot_hours)
 
 	def ens_with_out(self, branch: int) -> float:
 		"""ENS summed over snapshots with one branch out."""
-		return float(np.nansum(self.energy_not_served_mwh[branch + 1]))
+		return float(np.nansum(self.energy_not_served_mwh[branch + 1]) * self.snapshot_hours)
 
 
 def sweep(
@@ -122,6 +126,7 @@ def sweep(
 		overloaded_branches=np.asarray(raw["overloaded_branches"], dtype=np.uint32),
 		diverged=np.asarray(raw["diverged"], dtype=bool),
 		branch_names=network.branch_names,
+		snapshot_hours=cfg.snapshot_hours,
 	)
 
 	# The gate: the sweep is a pure function of its inputs. A failing
@@ -162,10 +167,14 @@ def tlens(
 	and, on ties, by branch index ascending, so two runs of the same network
 	produce the same order regardless of how the sort happened to break ties.
 
-	A branch whose outages **all** diverge has no measurable ENS — the solve
-	found no path, which is a more severe finding than a large ENS, not a
-	smaller one. Such branches are ranked by the fraction of diverged snapshots
-	so they sort to the top rather than to the bottom.
+	A branch whose outage islands the network has a *large* increase in ENS, not
+	an unmeasurable one: the kernel reports the stranded load as the ENS rather
+	than as NaN, so the worst branches rank first by the same arithmetic as
+	every other branch. Divergence is carried alongside as its own count, so a
+	reader can tell a branch that islands the network from one that merely
+	overloads it. Only a branch whose every snapshot diverged *and* stranded
+	nothing has no ENS to compare, and it reports NaN rather than a spurious
+	zero so it sorts by severity instead of to the bottom.
 	"""
 	cfg = config or LossConfig()
 	result = sweep(network, injections_mw, cfg)
@@ -175,7 +184,7 @@ def tlens(
 		with_out = result.ens_with_out(branch)
 		increase = with_out - base
 		diverged = int(result.diverged[branch + 1].sum())
-		if diverged == result.n_snapshots:
+		if diverged == result.n_snapshots and not np.isfinite(with_out):
 			# No finite ENS to compare; keep the increase as NaN so the ranking
 			# can order these branches by severity rather than by a spurious
 			# zero.
@@ -223,6 +232,7 @@ def tlens(
 			"slack_bus": cfg.slack_bus,
 			"n_snapshots": result.n_snapshots,
 			"n_branches": network.n_branches,
+			"snapshot_hours": cfg.snapshot_hours,
 		},
 	)
 	logger.info(
@@ -242,7 +252,7 @@ def summary(
 	"""A compact N-1 summary for an artefact sidecar."""
 	cfg = config or LossConfig()
 	result = sweep(network, injections_mw, cfg)
-	ens_by_contingency = np.nansum(result.energy_not_served_mwh, axis=1)
+	ens_by_contingency = np.nansum(result.energy_not_served_mwh, axis=1) * cfg.snapshot_hours
 	worst = int(np.argmax(ens_by_contingency))
 	return ContingencySummary(
 		n_contingencies=result.n_contingencies,
@@ -252,7 +262,7 @@ def summary(
 		worst_ens_mwh=float(ens_by_contingency[worst]),
 		diverged_fraction=float(result.diverged.mean()),
 		overloaded_fraction=float((result.overloaded_branches > 0).mean()),
-		parameters={"slack_bus": cfg.slack_bus},
+		parameters={"slack_bus": cfg.slack_bus, "snapshot_hours": cfg.snapshot_hours},
 	)
 
 

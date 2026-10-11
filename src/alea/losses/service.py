@@ -62,6 +62,7 @@ def _network_parameters(network: Network, config: LossConfig) -> dict[str, Any]:
 		"n_branches": network.n_branches,
 		"slack_bus": config.slack_bus,
 		"price_usd_per_mwh": config.price_usd_per_mwh,
+		"snapshot_hours": config.snapshot_hours,
 	}
 
 
@@ -166,7 +167,7 @@ def losses_to_artefact(
 	payload = {
 		"losses_mw": [float(value) for value in losses],
 		"loss_fraction": [float(value) if np.isfinite(value) else None for value in fractions],
-		"total_losses_mwh": float(np.sum(losses)),
+		"total_losses_mwh": float(np.sum(losses) * cfg.snapshot_hours),
 		"mean_loss_fraction": float(np.nanmean(fractions)) if np.any(np.isfinite(fractions)) else None,
 		"n_snapshots": int(losses.shape[0]),
 		**_network_parameters(network, cfg),
