@@ -15,3 +15,7 @@ models/
 *.nc
 *.nc.aux
 Cargo.lock
+tmp/
+# Built by `maturin develop`; the wheel is built from source, so the
+# extension is a build artefact like `target/` and `dist/` above.
+src/alea/_core/*.so

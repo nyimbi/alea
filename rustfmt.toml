@@ -1,0 +1,12 @@
+# This project indents with tabs, in Rust as in Python. rustfmt's default is
+# four spaces, so `cargo fmt --check` fails on every file while the code is
+# exactly as it should be -- the same conflict that makes `ruff format` unusable
+# here (see the note in scripts/check.py).
+#
+# `hard_tabs` is a nightly-only option. On stable it is ignored rather than
+# rejected, so this file is inert until the toolchain moves; `cargo fmt --check`
+# is therefore not in the local check runner, and `cargo fmt` is not run at all.
+# Recording the intent here keeps the reason next to the setting.
+hard_tabs = true
+tab_spaces = 4
+max_width = 100
