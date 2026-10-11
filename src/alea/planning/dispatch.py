@@ -25,7 +25,7 @@ import pypsa
 
 from alea.config.models import Config
 from alea.logging import get_logger
-from alea.planning.expansion import check_solver_available
+from alea.planning.expansion import check_solver_available, has_dispatch
 from alea.provenance.models import Basis, DerivedProvenance
 
 _log = get_logger(__name__)
@@ -177,13 +177,24 @@ def check_energy_balance(
 	division by zero for a small country.
 	"""
 	assert network is not None, "network must not be None"
-	if not len(network.generators_t.p):
+	if not has_dispatch(network):
 		raise DispatchError("network has no dispatch; solve it first")
 
 	generation = float(network.generators_t.p.to_numpy().sum())
-	load = float(network.loads_t.p_set.to_numpy().sum()) if len(network.loads_t.p_set) else 0.0
+	# A dynamic ``loads_t.p_set`` is already MW per snapshot, so its sum is MWh.
+	# A static ``loads.p_set`` is a *power* held constant across the horizon, so
+	# it has to be multiplied by the snapshot weights before it is comparable
+	# with generation. Summing the static column instead understates demand by
+	# the number of snapshots — which on a solved network looks like a
+	# catastrophic energy-balance failure rather than a units error.
+	if not network.loads_t.p_set.empty:
+		load = float(network.loads_t.p_set.to_numpy().sum())
+	else:
+		weights = network.snapshot_weightings.get("objective")
+		static = float(network.loads["p_set"].astype(float).sum())
+		load = static * float(weights.sum()) if weights is not None else static * len(network.snapshots)
 	losses = 0.0
-	if len(network.lines_t.p0):
+	if not network.lines_t.p0.empty:
 		losses = float(network.lines_t.p0.to_numpy().sum() + network.lines_t.p1.to_numpy().sum())
 	unserved = float(network.generators_t.p.filter(like="load_shedding").to_numpy().sum()) if any(
 		"load_shedding" in str(c) for c in network.generators_t.p.columns
@@ -207,7 +218,7 @@ def check_energy_balance(
 		"losses_mwh": losses,
 		"curtailment_mwh": curtailment,
 		"curtailment_share": curtailment / available if available > 0 else 0.0,
-		"peak_mw": float(network.generators_t.p.to_numpy().sum(axis=1).max()) if len(network.generators_t.p) else 0.0,
+		"peak_mw": float(network.generators_t.p.to_numpy().sum(axis=1).max()) if has_dispatch(network) else 0.0,
 		"unserved_mwh": unserved,
 	}
 
@@ -220,7 +231,7 @@ def curtailment_mwh(network: pypsa.Network) -> float:
 	tells a reader whether the network can absorb the renewables built on it.
 	"""
 	assert network is not None, "network must not be None"
-	if not len(network.generators_t.p_max_pu):
+	if network.generators_t.p_max_pu.empty:
 		return 0.0
 	total = 0.0
 	for column in network.generators_t.p_max_pu.columns:
@@ -238,7 +249,7 @@ def curtailment_mwh(network: pypsa.Network) -> float:
 def marginal_prices(network: pypsa.Network) -> pd.DataFrame:
 	"""Locational marginal prices, buses x snapshots, currency/MWh."""
 	assert network is not None, "network must not be None"
-	if not len(network.buses_t.marginal_price):
+	if network.buses_t.marginal_price.empty:
 		raise DispatchError("network has no marginal prices; solve it first")
 	return network.buses_t.marginal_price
 
@@ -251,7 +262,7 @@ def generation_by_carrier(network: pypsa.Network) -> pd.DataFrame:
 	consumers come to disagree.
 	"""
 	assert network is not None, "network must not be None"
-	if not len(network.generators_t.p):
+	if not has_dispatch(network):
 		raise DispatchError("network has no dispatch; solve it first")
 	frame = network.generators_t.p.copy()
 	frame.columns = [str(network.generators.at[c, "carrier"]) for c in frame.columns]

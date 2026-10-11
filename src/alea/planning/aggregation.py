@@ -31,6 +31,7 @@ from alea._core import aggregate as _kernel_aggregate
 from alea._core import validate_aggregation as _kernel_validate
 from alea.io.artefacts import artefact_exists, read_artefact, write_artefact
 from alea.logging import get_logger
+from alea.planning import expansion
 from alea.provenance.models import Basis, DerivedProvenance
 
 logger = get_logger(__name__)
@@ -204,7 +205,7 @@ def total_emissions(network: pypsa.Network) -> float:
 	from alea.registry import Carrier, get_technology
 
 	assert network is not None, "network must not be None"
-	if not len(network.generators_t.p):
+	if not expansion.has_dispatch(network):
 		raise AggregationError("network has no dispatch; solve it before comparing")
 	total = 0.0
 	for column in network.generators_t.p.columns:
@@ -220,7 +221,7 @@ def total_emissions(network: pypsa.Network) -> float:
 def peak_price(network: pypsa.Network) -> float:
 	"""The highest marginal price across buses and snapshots."""
 	assert network is not None, "network must not be None"
-	if not len(network.buses_t.marginal_price):
+	if network.buses_t.marginal_price.empty:
 		raise AggregationError("network has no marginal prices; solve it before comparing")
 	return float(network.buses_t.marginal_price.to_numpy().max())
 

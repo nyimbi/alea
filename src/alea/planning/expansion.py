@@ -404,6 +404,26 @@ def capacity_mix_table(network: pypsa.Network) -> pd.DataFrame:
 	return grouped.reset_index(drop=True)
 
 
+def has_dispatch(network: pypsa.Network) -> bool:
+	"""Whether a solve produced generator dispatch.
+
+	``.empty`` and not ``len()``. A PyPSA dynamic table is indexed by snapshots
+	and has one column per component, so an *unsolved* network of any size still
+	reports one row per snapshot: ``len(n.generators_t.p)`` is 3 on a
+	three-snapshot network that has never been optimised. Every guard written as
+	``if not len(network.generators_t.p)`` therefore passed on exactly the input
+	it was written to refuse, and the code then read an empty frame — a total of
+	0.0, or a maximum over an empty axis. ``.empty`` is True when there are no
+	*columns*, which is the property that means "nothing has been solved".
+
+	The predicate lives here rather than in each caller because the same wrong
+	guard appeared in nine places across this package, which is how a mistake
+	becomes a convention.
+	"""
+	assert network is not None, "network must not be None"
+	return not network.generators_t.p.empty
+
+
 def loss_share(network: pypsa.Network) -> float:
 	"""Transmission losses as a share of generation.
 
@@ -413,7 +433,7 @@ def loss_share(network: pypsa.Network) -> float:
 	does not, the benchmark is wrong for them and that is worth publishing.
 	"""
 	assert network is not None, "network must not be None"
-	if not len(network.generators_t.p):
+	if not has_dispatch(network):
 		raise ExpansionError("network has no dispatch; solve it first")
 	generation = float(network.generators_t.p.to_numpy().sum())
 	if generation <= 0:
@@ -423,7 +443,11 @@ def loss_share(network: pypsa.Network) -> float:
 	# two-bus network with a known 1.294 MW loss before this was written; the
 	# sign is not guessable from the names and getting it wrong makes every
 	# published loss share negative.
-	losses = float(network.lines_t.p0.to_numpy().sum() + network.lines_t.p1.to_numpy().sum()) if len(network.lines_t.p0) else 0.0
+	losses = (
+		float(network.lines_t.p0.to_numpy().sum() + network.lines_t.p1.to_numpy().sum())
+		if not network.lines_t.p0.empty
+		else 0.0
+	)
 	return losses / generation
 
 
@@ -457,6 +481,7 @@ __all__ = [
 	"capacity_mix_table",
 	"check_no_free_capacity",
 	"check_solver_available",
+	"has_dispatch",
 	"loss_share",
 	"optimal_investments",
 	"set_multi_period",
