@@ -18,8 +18,6 @@ from functools import lru_cache
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from alea.signals.models import CountryIso
-
 
 class CompletenessTier(StrEnum):
 	"""How much of the data a country needs actually exists."""
