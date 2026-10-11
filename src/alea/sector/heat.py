@@ -472,12 +472,19 @@ def heat_energy_balance(
 			consumed += weighted_energy(network.links_t.p0[from_bus], weights)
 
 	storage_delta = 0.0
-	if len(network.stores) and "e" in network.stores_t:
+	if len(network.stores) and "p" in network.stores_t:
 		stores = network.stores[network.stores["bus"] == bus_heat].index
 		if len(stores):
-			energy = network.stores_t.e[stores]
-			# An energy-level difference is already energy; no snapshot weight.
-			storage_delta = float((energy.iloc[-1] - energy.iloc[0]).sum())
+			# Store p > 0 is discharge, so the sign is flipped to keep
+			# ``storage_delta`` as net energy into storage. The energy-level
+			# difference (``e.iloc[-1] - e.iloc[0]``) is not used: for a store
+			# with a non-zero initial level it counts the starting stock as if it
+			# had been charged during the horizon and the balance misses by it.
+			storage_delta -= weighted_energy(network.stores_t.p[stores], weights)
+	if len(network.storage_units) and "p" in network.storage_units_t:
+		units = network.storage_units[network.storage_units["bus"] == bus_heat].index
+		if len(units):
+			storage_delta -= weighted_energy(network.storage_units_t.p[units], weights)
 
 	residual = produced - consumed - storage_delta
 	balance = EnergyBalance(

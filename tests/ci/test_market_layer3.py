@@ -205,3 +205,46 @@ def test_fuel_price_series_records_that_the_config_has_no_price():
 	"""The absence is documented on the function that does carry prices."""
 	doc = fuel.fuel_price_series.__doc__ or ""
 	assert "no fuel price" in doc
+
+
+# --------------------------------------------------------------------------
+# ZonalZoneResult: a zone in blackout is not a zone with zero unserved energy
+# --------------------------------------------------------------------------
+
+
+def test_a_zone_in_blackout_satisfies_its_own_balance():
+	"""``unserved_mwh`` is demand the zone could not meet, not a supply term.
+
+	The validator used to require ``generation + net_import - unserved == demand``
+	while ``_zone_results`` sets ``net_import = demand - generation - unserved``.
+	Substituting the constructor into the check gives ``unserved == 0``, so the
+	schema could not represent a zone in blackout at all -- and every fixture
+	had ``unserved = 0``, which is why no test noticed.
+	"""
+	from alea.market.views import ZonalZoneResult
+
+	# 40 MW of demand, 25 MW generated, 5 MW imported, 10 MW unserved.
+	zone = ZonalZoneResult(
+		zone_id="KE",
+		demand_mw=40.0,
+		generation_mw=25.0,
+		net_import_mw=5.0,
+		price_usd_per_mwh=90.0,
+		unserved_mwh=10.0,
+	)
+	assert zone.unserved_mwh == 10.0
+
+
+def test_a_zone_whose_unserved_energy_is_unaccounted_for_is_refused():
+	"""The balance is still enforced; it is the sign that changed."""
+	from alea.market.views import ZonalZoneResult
+
+	with pytest.raises(ValueError, match="not demand"):
+		ZonalZoneResult(
+			zone_id="KE",
+			demand_mw=40.0,
+			generation_mw=25.0,
+			net_import_mw=0.0,  # 25 + 0 + 10 = 35, not 40
+			price_usd_per_mwh=90.0,
+			unserved_mwh=10.0,
+		)

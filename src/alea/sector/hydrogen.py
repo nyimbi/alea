@@ -403,8 +403,16 @@ def h2_mass_balance(
 	if len(network.loads) and "p" in network.loads_t:
 		loads = network.loads[network.loads["bus"] == bus_hydrogen].index
 		if len(loads):
-			consumed = weighted_energy(network.loads_t.p[loads], weights)
+			# Exports are counted as their own term, not as part of ``consumed``.
+			# ``MassBalance`` computes ``produced - consumed - storage - exported``
+			# -- the terms are additive -- so an export load left inside
+			# ``consumed`` is subtracted twice and the balance reports a residual
+			# equal to the export volume, which reads as a leak rather than as the
+			# arithmetic error it is.
 			exports = [name for name in loads if name in export_names]
+			domestic = [name for name in loads if name not in export_names]
+			if domestic:
+				consumed = weighted_energy(network.loads_t.p[domestic], weights)
 			if exports:
 				exported = weighted_energy(network.loads_t.p[exports], weights)
 	if len(network.links) and "p0" in network.links_t:
@@ -413,13 +421,18 @@ def h2_mass_balance(
 			consumed += weighted_energy(network.links_t.p0[from_bus], weights)
 
 	storage_delta = 0.0
-	if len(network.stores) and "e" in network.stores_t:
+	if len(network.stores) and "p" in network.stores_t:
 		stores = network.stores[network.stores["bus"] == bus_hydrogen].index
 		if len(stores):
-			energy = network.stores_t.e[stores]
-			# Net energy *into* the store over the horizon, an energy already, so
-			# no snapshot weighting applies to it.
-			storage_delta = float((energy.iloc[-1] - energy.iloc[0]).sum())
+			# Store p > 0 is discharge, i.e. energy *out* of the store, so the
+			# sign is flipped to keep ``storage_delta`` as net energy into
+			# storage. The energy-level difference is deliberately not used:
+			# ``e.iloc[0]`` is the level at the first snapshot, which equals
+			# ``e_initial`` only for a store that starts empty, so
+			# ``e.iloc[-1] - e.iloc[0]`` reports a full store's initial stock as
+			# if it had been charged during the horizon and the balance fails to
+			# close by exactly that stock.
+			storage_delta -= weighted_energy(network.stores_t.p[stores], weights)
 	if len(network.storage_units) and "p" in network.storage_units_t:
 		units = network.storage_units[network.storage_units["bus"] == bus_hydrogen].index
 		if len(units):

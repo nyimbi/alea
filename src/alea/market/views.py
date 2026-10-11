@@ -159,19 +159,26 @@ class ZonalZoneResult(MarketModel):
 	demand_mw: NonNegativeFinite
 	generation_mw: NonNegativeFinite
 	net_import_mw: FiniteFloat
-	"""Positive when the zone imports: ``demand - generation``."""
+	"""Positive when the zone imports: ``demand - generation - unserved``. An
+	unserved MWh is demand the zone's own generation and its scheduled imports
+	failed to meet, so it sits on the demand side of the balance, not the supply
+	side."""
 	price_usd_per_mwh: FiniteFloat
 	unserved_mwh: NonNegativeFinite
 	dispatched: dict[str, float] = Field(default_factory=dict)
 
 	@model_validator(mode="after")
 	def _generation_and_imports_meet_demand(self) -> ZonalZoneResult:
-		balance = self.generation_mw + self.net_import_mw - self.unserved_mwh
+		# demand = generation + net imports + unserved. Unserved energy is demand
+		# that was not met, so it *adds* to the requirement; subtracting it would
+		# let a zone in blackout look balanced and let the schema reject the
+		# honest arithmetic. See ``market.clearing._zone_results``.
+		balance = self.generation_mw + self.net_import_mw + self.unserved_mwh
 		tolerance = 1e-6 * max(1.0, self.demand_mw)
 		if abs(balance - self.demand_mw) > tolerance:
 			raise ValueError(
 				f"zone {self.zone_id}: generation ({self.generation_mw}) + imports "
-				f"({self.net_import_mw}) - unserved ({self.unserved_mwh}) = {balance}, "
+				f"({self.net_import_mw}) + unserved ({self.unserved_mwh}) = {balance}, "
 				f"not demand ({self.demand_mw})"
 			)
 		return self

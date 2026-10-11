@@ -108,25 +108,48 @@ def _component(network: pypsa.Network, name: str) -> Any | None:
 	return None
 
 
-def base_digest(network: pypsa.Network) -> str:
+def base_digest(
+	network: pypsa.Network,
+	*,
+	restrict_to: pypsa.Network | None = None,
+) -> str:
 	"""A content digest of the base electricity network.
 
 	Deterministic by construction: the tables are sorted before hashing, so two
 	runs that added the same components in a different order hash identically,
 	and pandas' hashing is a hash of values rather than of ``repr`` (AD-8).
 
-	Only the *base* tables are covered. The coupled network's own assets are
-	excluded because they are the thing being added; the question this answers is
-	whether the electricity model changed, not whether the coupling did.
+	``restrict_to`` names the network whose base assets the digest covers: every
+	table is reduced to that network's rows *and* columns, so a digest of a
+	*coupled* network covers the assets the electricity model already had and
+	ignores the assets sector coupling added. Without it the digest of a coupled
+	network differs from the base by every sector asset, and the additivity gate
+	can only ever pass by being computed over the wrong network -- which is
+	exactly the tautology it had: ``after`` was the digest of the untouched
+	original, so ``before == after`` held no matter what the coupling layer did
+	to the copy it returned.
+
+	A base asset whose values moved, or that was dropped, reindexes to NaNs and
+	hashes differently; a column the coupling layer added to a base table, or a
+	row it added, is dropped by the restriction and does not register. That is
+	the distinction the gate is about: the electricity model is unchanged, the
+	multi-energy model is larger.
 	"""
 	assert network is not None, "a digest needs a network"
 	digest = hashlib.sha256()
 	for name in sorted(BASE_COMPONENTS):
 		component = _component(network, name)
+		base = _component(restrict_to, name) if restrict_to is not None else None
+		digest.update(name.encode())
 		if component is None:
+			# A base table the coupled network dropped entirely. Recorded so the
+			# removal registers, rather than reading as a component that was
+			# never there.
+			digest.update(b"removed" if base is not None and not base.static.empty else b"empty")
 			continue
 		static = component.static
-		digest.update(name.encode())
+		if base is not None:
+			static = static.reindex(index=base.static.index, columns=base.static.columns)
 		if static.empty:
 			digest.update(b"empty")
 			continue
@@ -138,6 +161,11 @@ def base_digest(network: pypsa.Network) -> str:
 		dynamic = component.dynamic
 		for key in sorted(dynamic):
 			frame = dynamic[key]
+			if base is not None:
+				base_frame = base.dynamic.get(key)
+				if base_frame is None or getattr(base_frame, "empty", True):
+					continue
+				frame = frame.reindex(index=base_frame.index, columns=base_frame.columns)
 			if frame is None or getattr(frame, "empty", True):
 				continue
 			digest.update(key.encode())
@@ -515,7 +543,13 @@ def couple(
 		)
 	apply_views(coupled, views)
 
-	after = base_digest(network)
+	# The "after" digest is taken over the *coupled* network restricted to the
+	# base's own assets. Taking it over ``network`` -- the untouched original --
+	# made the gate a tautology: the digest could not move because nothing ever
+	# wrote to the object it read. Restricting the coupled digest to the base's
+	# rows and columns is what lets a mutation of a base asset (or a dropped
+	# one) show up while the sector assets the layer legitimately added do not.
+	after = base_digest(coupled, restrict_to=network)
 	report = CouplingReport(
 		builds=builds,
 		base_digest_before=before,
@@ -659,11 +693,15 @@ def generic_balance(
 			consumed += -link_in
 
 	storage_delta = 0.0
-	if len(network.stores) and "e" in network.stores_t:
+	if len(network.stores) and "p" in network.stores_t:
 		stores = network.stores[network.stores["bus"] == bus].index
 		if len(stores):
-			energy = network.stores_t.e[stores]
-			storage_delta = float((energy.iloc[-1] - energy.iloc[0]).sum())
+			# Store p > 0 is discharge, so the sign is flipped to keep
+			# ``storage_delta`` as net energy into storage. The energy-level
+			# difference (``e.iloc[-1] - e.iloc[0]``) is not used: for a store
+			# with a non-zero initial level it counts the starting stock as if it
+			# had been charged during the horizon and the balance misses by it.
+			storage_delta -= weighted_energy(network.stores_t.p[stores], weights)
 
 	residual = produced - consumed - storage_delta
 	return MassBalance(

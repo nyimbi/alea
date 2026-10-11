@@ -362,3 +362,219 @@ def test_the_unprofiled_water_demand_path_is_unchanged():
 	view = water_demand_view("water", annual_demand_m3=8_760_000.0, snapshots=SNAPSHOTS)
 	assert sum(view.time_series["p_set"]) == pytest.approx(4000.0)
 	assert "m3/year over the modelled horizon" in view.notes
+
+
+# --- Defect 7: the additivity gate hashed the untouched original, not the copy. ---
+
+
+def _network_with_base_generator() -> pypsa.Network:
+	network = _network()
+	network.add("Generator", "base_gen", bus="KE_elec", p_nom=100.0, carrier="AC")
+	return network
+
+
+def test_the_additivity_gate_notices_a_mutated_base_asset():
+	"""``base_digest`` restricted to the base's assets must move on a mutation.
+
+	The gate was a tautology: ``after`` was the digest of the untouched original
+	network, so it could never differ from ``before`` however the coupling layer
+	changed the copy it returned. This pins the comparison that makes the gate
+	real -- a base asset whose value moved is detected.
+	"""
+	from alea.sector.coupling import base_digest
+
+	network = _network_with_base_generator()
+	before = base_digest(network)
+	coupled = network.copy()
+	coupled.generators.loc["base_gen", "p_nom"] = 999.0
+	assert base_digest(coupled, restrict_to=network) != before
+
+
+def test_a_coupling_layer_that_dropped_a_base_asset_is_refused():
+	from alea.sector.coupling import base_digest
+
+	network = _network_with_base_generator()
+	before = base_digest(network)
+	coupled = network.copy()
+	coupled.remove("Generator", "base_gen")
+	after = base_digest(coupled, restrict_to=network)
+	with pytest.raises(ValueError, match="changed the base"):
+		CouplingReport(builds=[], base_digest_before=before, base_digest_after=after, rows=[])
+
+
+def test_the_additivity_gate_ignores_the_assets_the_layer_added():
+	"""A sector asset on a base table is not a mutation of the base."""
+	from alea.sector.coupling import base_digest
+
+	network = _network_with_base_generator()
+	before = base_digest(network)
+	coupled = network.copy()
+	coupled.add("Generator", "solar_pv", bus="KE_elec", p_nom=5.0, carrier="solar")
+	assert base_digest(coupled, restrict_to=network) == before
+
+
+# --- Defect 8: the hydrogen and heat balances did not close. ---
+
+
+def _solved_hydrogen_network() -> pypsa.Network:
+	from alea.sector.coupling import add_sector_buses, apply_views
+	from alea.sector.hydrogen import demand_view, electrolysis_view, export_view, storage_view
+
+	network = _network()
+	network.add("Generator", "grid", bus="KE_elec", p_nom=1e5, marginal_cost=10.0, carrier="AC")
+	add_sector_buses(network, "KE", electricity_bus="KE_elec")
+	apply_views(
+		network,
+		[
+			electrolysis_view(
+				"KE_elec",
+				"KE_h2",
+				efficiency_lhv=0.65,
+				efficiency_source="IRENA 2024",
+				p_nom=0.0,
+				extendable=True,
+			),
+			export_view("KE_h2", volume_twh_per_year=1.0, snapshots=SNAPSHOTS, name="h2_export"),
+			demand_view(
+				"KE_h2",
+				annual_demand_twh=0.5,
+				snapshots=SNAPSHOTS,
+				source="industry",
+				name="h2_industry",
+			),
+			storage_view(
+				"KE_h2",
+				e_nom=0.0,
+				standing_loss_per_hour=0.0,
+				standing_loss_source="vessel",
+				extendable=True,
+				name="h2_storage",
+			),
+		],
+	)
+	network.optimize(solver_name="highs", log_to_console=False)
+	return network
+
+
+def test_the_hydrogen_balance_closes_with_export_and_storage():
+	"""Exports are their own term and storage is net energy into the store.
+
+	The balance subtracted the export load twice (once in ``consumed``, once as
+	``exported``) and computed ``storage_delta`` as ``e.iloc[-1] - e.iloc[0]``,
+	which counts a store's initial stock as a horizon charge. Together they left
+	a residual that read as a leak; this pins the closing balance.
+	"""
+	from alea.sector.hydrogen import h2_mass_balance
+
+	network = _solved_hydrogen_network()
+	balance = h2_mass_balance(network, bus_hydrogen="KE_h2", export_loads=["h2_export"])
+	assert balance.exported_mwh > 0.0
+	assert balance.consumed_mwh > 0.0
+	assert balance.closes, balance
+
+
+def test_the_hydrogen_balance_notices_a_planted_leak():
+	"""Canary: the closing balance is not closing by construction."""
+	from alea.sector.hydrogen import h2_mass_balance
+
+	network = _solved_hydrogen_network()
+	network.loads_t.p["h2_industry"] *= 1.1  # a leak nobody accounted for
+	balance = h2_mass_balance(network, bus_hydrogen="KE_h2", export_loads=["h2_export"])
+	assert not balance.closes, balance
+
+
+def test_the_heat_balance_closes_with_thermal_storage():
+	from alea.sector.coupling import add_sector_buses, apply_views
+	from alea.sector.heat import (
+		heat_demand_view,
+		heat_energy_balance,
+		heat_pump_view,
+		thermal_storage_view,
+	)
+
+	network = _network()
+	network.add("Generator", "grid", bus="KE_elec", p_nom=1e5, marginal_cost=10.0, carrier="AC")
+	add_sector_buses(network, "KE", electricity_bus="KE_elec")
+	apply_views(
+		network,
+		[
+			heat_pump_view(
+				"KE_elec", "KE_heat", cop=3.0, cop_source="ERA5 temperature series", p_nom=0.0, extendable=True
+			),
+			thermal_storage_view(
+				"KE_heat",
+				e_nom=0.0,
+				standing_loss_per_hour=0.0,
+				standing_loss_source="tank",
+				extendable=True,
+				name="thermal_storage",
+			),
+			heat_demand_view(
+				"KE_heat", annual_demand_twh=1.0, snapshots=SNAPSHOTS, source="municipal"
+			),
+		],
+	)
+	network.optimize(solver_name="highs", log_to_console=False)
+	balance = heat_energy_balance(network, bus_heat="KE_heat")
+	assert balance.exported_mwh == 0.0
+	assert balance.closes, balance
+
+
+# --- Defect 9: the geothermal cross-check had no caller. ---
+
+
+def _kenya_renewables_config() -> Config:
+	return _kenya_config(
+		solar=RenewableConfig(enabled=True),
+		onwind=RenewableConfig(enabled=True),
+		geothermal=RenewableConfig(enabled=True),
+		hydro=RenewableConfig(enabled=True),
+	)
+
+
+def test_the_geothermal_cross_check_is_computed_and_carried_by_the_build():
+	"""The cross-check function existed but nothing invoked it; now it runs.
+
+	The modelled potential is read from the view that reached the portfolio, so
+	the cross-check is against the number on the network, not against the
+	argument that produced it.
+	"""
+	from alea.sector.renewables import build_renewables
+
+	build = build_renewables(_kenya_renewables_config(), bus="KE_elec", snapshots=SNAPSHOTS, **_full_portfolio_options())
+	assert build.geothermal_crosscheck is not None
+	check = build.geothermal_crosscheck
+	assert check.modelled_mw == 3000.0
+	assert check.kenya_installed_mw == 950.0
+	assert check.within_tolerance
+
+
+def test_the_geothermal_cross_check_refuses_a_potential_below_installed():
+	from alea.sector.renewables import build_renewables
+
+	options = _full_portfolio_options()
+	options["geothermal"] = {"potential_mw": 500.0, "potential_source": "Geothermal Atlas for Africa"}
+	with pytest.raises(ValueError, match="fails the Kenya cross-check"):
+		build_renewables(_kenya_renewables_config(), bus="KE_elec", snapshots=SNAPSHOTS, **options)
+
+
+def test_the_geothermal_cross_check_refuses_a_potential_far_from_the_atlas():
+	from alea.sector.renewables import build_renewables
+
+	options = _full_portfolio_options()
+	options["renewables"] = {"geothermal_atlas_potential_mw": 1000.0}
+	# 3000 modelled against a 1000 atlas figure is +200%, far outside 25%.
+	with pytest.raises(ValueError, match="fails the Kenya cross-check"):
+		build_renewables(_kenya_renewables_config(), bus="KE_elec", snapshots=SNAPSHOTS, **options)
+
+
+def test_the_cross_check_reaches_the_coupling_artefact():
+	"""Criterion 5 is an artefact: it must be readable from the result, not only
+	computed in passing."""
+	from alea.sector.service import geothermal_crosscheck
+
+	config = _kenya_renewables_config()
+	_, report = couple(config, _network(), renewables=_full_portfolio_options())
+	check = geothermal_crosscheck(report)
+	assert check is not None
+	assert check.within_tolerance
