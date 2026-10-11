@@ -55,7 +55,7 @@ def apply_parameters(base: pypsa.Network, params: ScenarioParameters) -> pypsa.N
 	assert isinstance(base, pypsa.Network)
 
 	before = _network_fingerprint(base)
-	network = base.copy()
+	network = _detach_solver_model(base).copy()
 	_ensure_base_snapshot(network)
 	snapshot = _read_base_snapshot(network)
 
@@ -80,6 +80,27 @@ def apply_parameters(base: pypsa.Network, params: ScenarioParameters) -> pypsa.N
 # --------------------------------------------------------------------------
 # Base snapshot
 # --------------------------------------------------------------------------
+
+
+def _detach_solver_model(network: pypsa.Network) -> pypsa.Network:
+	"""A network whose linopy model is gone, so it can be copied.
+
+	PyPSA refuses ``copy()`` on a network that still holds its solver model
+	("Copying a solved network with an attached solver model is not supported").
+	Every what-if base *is* a solved network — that is the whole premise of the
+	layer, a base case that scenarios perturb — so without this the engine
+	cannot be constructed over the only input it has. The model is the LP
+	formulation, not the network: dropping it loses no data, and the next
+	``optimize`` rebuilds it.
+
+	Detached on the network passed in rather than on a copy, because the copy is
+	what fails. The base's *tables* are what the immutability assertion covers,
+	and the model is not one of them.
+	"""
+	model = getattr(network, "model", None)
+	if model is not None and getattr(model, "solver_model", None) is not None:
+		model.solver_model = None
+	return network
 
 
 def _ensure_base_snapshot(network: pypsa.Network) -> None:
@@ -141,10 +162,18 @@ def _restore(series: pd.Series, base: dict[str, float]) -> pd.Series:
 
 
 def _apply_demand_growth(network: pypsa.Network, params: ScenarioParameters) -> None:
-	"""Scale every load by ``(1 + g) ** (year - first_year)``."""
+	"""Scale every load by ``(1 + g) ** (year - first_year)``.
+
+	The multi-period assertion comes *before* the empty check, and that order is
+	the whole point: ``loads_t.p_set`` is empty on a network whose demand is a
+	static ``loads.p_set``, which is PyPSA's default and what the fleet and
+	demand builders produce. Checking emptiness first returned early on exactly
+	the single-period network the assertion exists to catch, so the parameter
+	was a silent no-op on the shape it was written to refuse.
+	"""
 	if params.demand_growth == 0.0:
 		return
-	if network.loads.empty or network.loads_t.p_set.empty:
+	if network.loads.empty:
 		return
 
 	years = _snapshot_years(network)
@@ -157,9 +186,30 @@ def _apply_demand_growth(network: pypsa.Network, params: ScenarioParameters) -> 
 			f"parameter would silently do nothing"
 		)
 
-	factors = (1.0 + params.demand_growth) ** (years - distinct[0])
-	network.loads_t.p_set = network.loads_t.p_set.mul(
-		pd.Series(factors, index=network.loads_t.p_set.index), axis=0
+	factors = pd.Series(
+		(1.0 + params.demand_growth) ** (years - distinct[0]),
+		index=network.snapshots,
+		dtype=float,
+	)
+	demand = _demand_series(network)
+	network.loads_t.p_set = demand.mul(factors, axis=0)
+
+
+def _demand_series(network: pypsa.Network) -> pd.DataFrame:
+	"""Per-snapshot demand for every load, dynamic where present.
+
+	A load's ``p_set`` may live in ``loads.p_set`` (one value, constant across
+	snapshots) or in ``loads_t.p_set`` (a profile). A network built by the fleet
+	and demand stages uses the static form, so reading only the dynamic table
+	misses every load on the networks this layer actually sees.
+	"""
+	if not network.loads_t.p_set.empty:
+		return network.loads_t.p_set.astype(float)
+	static = network.loads["p_set"].astype(float)
+	return pd.DataFrame(
+		{name: static[name] for name in network.loads.index},
+		index=network.snapshots,
+		dtype=float,
 	)
 
 

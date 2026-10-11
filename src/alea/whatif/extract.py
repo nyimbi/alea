@@ -246,9 +246,9 @@ def _curtailment_mwh(network: pypsa.Network) -> float:
 
 	dynamic = getattr(network, "generators_t", None)
 	dispatch = getattr(dynamic, "p", None) if dynamic is not None else None
-	p_max_pu = getattr(dynamic, "p_max_pu", None) if dynamic is not None else None
-	if dispatch is None or dispatch.empty or p_max_pu is None or p_max_pu.empty:
+	if dispatch is None or dispatch.empty:
 		return 0.0
+	p_max_pu = _availability(network, generators)
 
 	weights = network.snapshot_weightings.get("objective")
 	curtailed = 0.0
@@ -263,6 +263,28 @@ def _curtailment_mwh(network: pypsa.Network) -> float:
 		excess = (potential - actual).clip(lower=0.0)
 		curtailed += float(excess.sum()) if weights is None else float((excess * weights).sum())
 	return max(0.0, curtailed)
+
+
+def _availability(network: pypsa.Network, generators: pd.DataFrame) -> pd.DataFrame:
+	"""Per-snapshot availability for every generator, dynamic where present.
+
+	A generator's ``p_max_pu`` may be a static column or a dynamic profile.
+	Reading only ``generators_t.p_max_pu`` reported zero curtailment for every
+	generator carrying the static form — which is the default, and what a
+	network built without a renewables stage uses. The docstring above says a
+	network with no potential recorded reports zero; the defect was that it said
+	that about networks that *had* recorded one.
+	"""
+	dynamic = getattr(network, "generators_t", None)
+	profile = getattr(dynamic, "p_max_pu", None) if dynamic is not None else None
+	if profile is not None and not profile.empty:
+		return profile.astype(float)
+	static = generators["p_max_pu"].astype(float)
+	return pd.DataFrame(
+		{name: static[name] for name in generators.index},
+		index=network.snapshots,
+		dtype=float,
+	)
 
 
 def _price_statistics(network: pypsa.Network) -> tuple[float | None, float | None]:
