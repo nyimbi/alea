@@ -96,7 +96,10 @@ def config_validate(
 	run_id, logger = _run("cli.config.validate", config=str(config))
 	loaded = _load(config, scenario, set_)
 	if not quiet:
-		countries = ", ".join(loaded.scenario.countries)
+		# `ScenarioConfig` refuses a country that is None, so the `str` cast is
+		# exact rather than a hope; `CountryIso` is `str | None` only because a
+		# *signal* may arrive without one.
+		countries = ", ".join(str(iso) for iso in loaded.scenario.countries)
 		typer.echo(f"config ok: countries={countries}")
 		typer.echo(f"  horizons: {loaded.scenario.planning_horizons}")
 		typer.echo(f"  clusters: {loaded.scenario.clusters}")
@@ -180,8 +183,8 @@ def fetch(
 @app.command()
 def build(
 	stage: Annotated[str, typer.Argument(help="Stage name, e.g. 'fleet', 'demand'.")],
+	out: OutOption,
 	config: ConfigOption = None,
-	out: OutOption = ...,
 	force: ForceOption = False,
 ) -> None:
 	"""Build one processed dataset from the raw layer."""
@@ -200,9 +203,9 @@ def build(
 
 @app.command()
 def solve(
+	out: OutOption,
 	config: ConfigOption = None,
 	network: Annotated[Path | None, typer.Option("--network", help="Input network.")] = None,
-	out: OutOption = ...,
 	horizon: Annotated[int | None, typer.Option("--horizon", help="Planning horizon year.")] = None,
 ) -> None:
 	"""Solve a capacity-expansion problem."""
@@ -221,9 +224,9 @@ def solve(
 @app.command()
 def report(
 	kind: Annotated[str, typer.Argument(help="Report cadence: daily, weekly, monthly, quarterly, annual.")],
+	out: OutOption,
 	config: ConfigOption = None,
 	date: Annotated[str | None, typer.Option("--date", help="Report date, ISO 8601.")] = None,
-	out: OutOption = ...,
 ) -> None:
 	"""Generate a periodic report."""
 	from alea.reporting.service import build_report

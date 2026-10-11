@@ -116,7 +116,10 @@ def set_multi_period(
 	"""
 	assert network is not None, "network must not be None"
 	index = build_multi_period_snapshots(horizons, period_length=period_length, base_year=base_year)
-	network.set_snapshots(index)
+	# Multi-investment-period snapshots are a MultiIndex by design; pypsa's stub
+	# types `snapshots` as a bare `Sequence`, which a MultiIndex satisfies at
+	# runtime but not in the stub's generic parameter.
+	network.set_snapshots(index)  # type: ignore[arg-type]
 
 	weights: list[float] = []
 	for i, horizon in enumerate(horizons):
@@ -268,6 +271,10 @@ def solve_expansion(
 			f"caller must see it"
 		)
 
+	# The status check above rejects anything but optimal, so a solution exists.
+	# pypsa types `objective` as `float | None` because an unsolved network has
+	# none; this assertion is the runtime half of that guarantee.
+	assert network.objective is not None, f"{solver} reported {status!r} but set no objective"
 	objective = float(network.objective)
 	result = SolveResult(
 		objective=objective,
@@ -390,7 +397,10 @@ def capacity_mix_table(network: pypsa.Network) -> pd.DataFrame:
 	if frame.empty:
 		return pd.DataFrame(columns=pd.Index(["carrier", "capacity_mw"], dtype="object"))
 	grouped = frame.groupby("carrier", as_index=False)["capacity_mw"].sum()
-	grouped = grouped.sort_values("capacity_mw", ascending=False)
+	# The frame is built from `rows` with mixed dtypes (str/int/float/bool), so
+	# pyright cannot match `sort_values` to a column-key overload. The column is
+	# float by construction above.
+	grouped = grouped.sort_values("capacity_mw", ascending=False)  # type: ignore[call-overload]
 	return grouped.reset_index(drop=True)
 
 

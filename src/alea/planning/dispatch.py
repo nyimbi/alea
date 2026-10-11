@@ -135,6 +135,10 @@ def solve_dispatch(
 	if status not in ("ok", "optimal", "Optimal"):
 		raise DispatchError(f"{solver} returned status={status!r} ({condition})")
 
+	# `status` above is optimal, so a solution exists and the objective is set.
+	# pypsa types it `float | None` because an unsolved network has neither, and
+	# this assertion is also the runtime check that the two agree.
+	assert network.objective is not None, f"{solver} reported {status!r} but set no objective"
 	checks = check_energy_balance(network)
 	result = DispatchResult(
 		objective=float(network.objective),

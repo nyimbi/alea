@@ -272,6 +272,16 @@ def network_from_tables(
 			return frame[name].to_numpy(dtype=float)
 		return np.full(len(frame), default, dtype=np.float64)
 
+	def bus_indices(name: str) -> NDArray[np.uint32]:
+		"""Positional bus indices for one branch column, as uint32.
+
+		The lookup is written as a comprehension rather than `Series.map(index)`:
+		`map` with a dict is a lookup, but pandas-stubs types the argument as a
+		callable. The unknown-bus check above guarantees every value is a key, so
+		a KeyError here would mean that check was bypassed.
+		"""
+		return np.asarray([index[str(value)] for value in frame[name]], dtype=np.uint32)
+
 	susceptance = column_or(0.0, susceptance_column)
 	if np.any(susceptance == 0.0):
 		raise ValueError(
@@ -280,13 +290,13 @@ def network_from_tables(
 		)
 	return Network(
 		susceptance=susceptance_matrix(
-			frame[from_column].map(index).to_numpy(dtype=np.uint32),
-			frame[to_column].map(index).to_numpy(dtype=np.uint32),
+			bus_indices(from_column),
+			bus_indices(to_column),
 			susceptance,
 			len(bus_list),
 		),
-		branch_from=frame[from_column].map(index).to_numpy(dtype=np.uint32),
-		branch_to=frame[to_column].map(index).to_numpy(dtype=np.uint32),
+		branch_from=bus_indices(from_column),
+		branch_to=bus_indices(to_column),
 		branch_susceptance=susceptance,
 		resistance_ohm=column_or(0.01, resistance_column),
 		voltage_kv=column_or(132.0, voltage_column),

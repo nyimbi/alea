@@ -182,7 +182,9 @@ def attach_loads(
 			f"network, e.g. {', '.join(str(m) for m in missing[:5])}"
 		)
 
-	network.set_snapshots(pd.DatetimeIndex(profiles.index))
+	# pypsa's stub types `snapshots` as a bare `Sequence`; a DatetimeIndex is one,
+	# but its generic parameter leaves the annotation unassignable.
+	network.set_snapshots(pd.DatetimeIndex(profiles.index))  # type: ignore[arg-type]
 	for bus in profiles.columns:
 		name = f"load_{bus}"
 		network.add("Load", name, bus=str(bus))

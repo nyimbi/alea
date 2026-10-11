@@ -17,7 +17,11 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
-from alea._core import _rust
+# `_rust` is a maturin-built extension (`alea._core._rust`), so it has no stub;
+# pyright cannot resolve a symbol off it and reports the import itself. The
+# module is real at runtime and `tests/ci/test_core_import.py` gates its
+# surface, so the ignore is scoped to the static checker only.
+from alea._core import _rust  # type: ignore[attr-defined]
 
 # Re-export the extension's own version so an artefact can record which kernel
 # build produced it without importing the private module.

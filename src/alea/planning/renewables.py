@@ -221,7 +221,7 @@ def attach_renewables(
 		stats[carrier] = validate_capacity_factors(frame, carrier=carrier, allow_nan=allow_nan)
 
 		if network.snapshots.empty or len(network.snapshots) != len(frame):
-			network.set_snapshots(pd.DatetimeIndex(frame.index))
+			network.set_snapshots(pd.DatetimeIndex(frame.index))  # type: ignore[arg-type]
 		for bus in frame.columns:
 			name = f"{carrier}_{bus}"
 			network.add(

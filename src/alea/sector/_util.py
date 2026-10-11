@@ -43,7 +43,10 @@ def as_index(snapshots: pd.DatetimeIndex | Sequence[pd.Timestamp] | None) -> pd.
 			"sector coupling needs the network's snapshots; a builder without "
 			"them cannot produce a series that aligns with the network"
 		)
-	index = pd.DatetimeIndex(snapshots)
+	# pypsa's stub types `snapshots` as `Sequence[Unknown]`, which pyright will
+	# not accept a DatetimeIndex for even though `as_index` is exactly the
+	# normaliser for it. See the same note at `Network.set_snapshots`.
+	index = pd.DatetimeIndex(snapshots)  # type: ignore[arg-type]
 	if index.empty:
 		raise ValueError("snapshots is empty")
 	if not index.is_monotonic_increasing:

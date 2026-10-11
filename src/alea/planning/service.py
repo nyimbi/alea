@@ -244,9 +244,12 @@ def network_summary(network: pypsa.Network) -> dict[str, Any]:
 		"orphan_buses": len(orphan_buses(network)),
 		"capacity_mix": capacity_mix_table(network).to_dict(orient="records"),
 	}
-	if getattr(network, "objective", None) is not None:
+	# Bound to a local so the None check narrows the type; `getattr` in the
+	# condition alone does not narrow the attribute access below it.
+	objective = getattr(network, "objective", None)
+	if objective is not None:
 		try:
-			summary["objective"] = float(network.objective)
+			summary["objective"] = float(objective)
 			summary["loss_share"] = loss_share(network)
 		except ExpansionError:
 			pass

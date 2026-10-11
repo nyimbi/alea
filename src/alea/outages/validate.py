@@ -25,7 +25,7 @@ it were meaningful.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable
 from datetime import datetime
 from typing import Any
 
@@ -77,8 +77,8 @@ def align_truth(
 	predicted: NDArray[np.float64],
 	truth: NDArray[np.float64],
 	*,
-	times: Sequence[datetime] | None = None,
-	truth_times: Sequence[datetime] | None = None,
+	times: Iterable[datetime] | None = None,
+	truth_times: Iterable[datetime] | None = None,
 ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
 	"""Align prediction and truth on shared instants, refusing a mismatch.
 
@@ -90,8 +90,11 @@ def align_truth(
 	p = np.asarray(predicted, dtype=float)
 	t = np.asarray(truth, dtype=float)
 	if times is not None and truth_times is not None:
-		p_index = pd.DatetimeIndex(times)
-		t_index = pd.DatetimeIndex(truth_times)
+		# Materialised to a list first: the parameter is `Iterable`, and a
+		# one-shot generator would be consumed by the length check below and
+		# then silently absent from the index.
+		p_index = pd.DatetimeIndex(list(times))
+		t_index = pd.DatetimeIndex(list(truth_times))
 		if len(p_index) != p.shape[0] or len(t_index) != t.shape[0]:
 			raise ValidationError(
 				f"instant counts ({len(p_index)}, {len(t_index)}) do not match "
@@ -141,8 +144,8 @@ def detection_metrics(
 	*,
 	threshold: float | None = None,
 	parameters: dict[str, Any] | None = None,
-	times: Sequence[datetime] | None = None,
-	truth_times: Sequence[datetime] | None = None,
+	times: Iterable[datetime] | None = None,
+	truth_times: Iterable[datetime] | None = None,
 ) -> DetectionMetrics:
 	"""AUC, PR-AUC, precision/recall/F1 and the base rate.
 
@@ -179,9 +182,12 @@ def detection_metrics(
 		pr_auc=float(average_precision_score(y_true, p[np.isfinite(p)])),
 		accuracy=float((y_pred == y_true).mean()),
 		base_rate=float(y_true.mean()),
-		precision=float(precision_score(y_true, y_pred, zero_division=0)),
-		recall=float(recall_score(y_true, y_pred, zero_division=0)),
-		f1=float(f1_score(y_true, y_pred, zero_division=0)),
+		# `zero_division` is annotated `str` in sklearn 1.9's bundled stubs but the
+		# documented and implemented domain is `{"warn", 0.0, 1.0, nan}`; 0 is a
+		# float value the stub omits. The call is correct as written.
+		precision=float(precision_score(y_true, y_pred, zero_division=0)),  # type: ignore[arg-type]
+		recall=float(recall_score(y_true, y_pred, zero_division=0)),  # type: ignore[arg-type]
+		f1=float(f1_score(y_true, y_pred, zero_division=0)),  # type: ignore[arg-type]
 		threshold=cut,
 		n_total=int(len(y_true)),
 		n_positive=int(y_true.sum()),
@@ -213,8 +219,8 @@ def validate_detector(
 	truth: NDArray[np.float64],
 	config: ViirsConfig | None = None,
 	*,
-	times: Sequence[datetime] | None = None,
-	truth_times: Sequence[datetime] | None = None,
+	times: Iterable[datetime] | None = None,
+	truth_times: Iterable[datetime] | None = None,
 	ground_truth: str = GRIDWATCH_SOURCE_ID,
 ) -> ValidationOutcome:
 	"""Measure the detector against ground truth, or record why it cannot.

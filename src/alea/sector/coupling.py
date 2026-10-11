@@ -383,7 +383,11 @@ def couple(
 	"""
 	assert network is not None, "couple needs a base network"
 	assert config is not None, "couple needs a config"
-	index = as_index(snapshots if snapshots is not None else network.snapshots)
+	# `network.snapshots` is a `DatetimeIndex | Index | MultiIndex` union; the
+	# MultiIndex arm is what pyright objects to, and a coupled network is never
+	# multi-period (that is a planning-layer concern), so the DatetimeIndex arm
+	# is the one that holds here.
+	index = as_index(snapshots if snapshots is not None else network.snapshots)  # type: ignore[arg-type]
 	if not index.equals(pd.DatetimeIndex(network.snapshots)):
 		raise ValueError(
 			"the supplied snapshots differ from the network's; sector series are "
