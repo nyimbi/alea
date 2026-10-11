@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
+from pathlib import Path
 from typing import Any, cast
 
 import pandas as pd
@@ -354,6 +355,19 @@ class Repository:
 		"""The checksum of a solved result, for a cache key."""
 		return self.checksum(f"{self._scenario_dir(scenario_id)}/results/{horizon}.json")
 
+	def scenario_network_path(self, scenario_id: str) -> Path | None:
+		"""The base network a what-if solve varies, or ``None`` when absent.
+
+		The catalogue publishes the network beside the record
+		(``alea.planning.catalogue``), because a scenario that records a network
+		checksum and no network is a scenario whose base cannot be re-solved.
+		Returned as a path rather than a loaded network: Layer 5's engine takes a
+		path, and loading a network to hand it on would put a live object across
+		the seam AD-4 forbids.
+		"""
+		path = resolve(f"{self._scenario_dir(scenario_id)}/network.nc")
+		return path if path.exists() else None
+
 	# -- market ------------------------------------------------------------
 
 	def prices(self, *, country: str | None = None) -> list[PriceRowOut]:
@@ -510,7 +524,19 @@ class Repository:
 	def loss_decomposition(
 		self, *, country: str, period_start: str | None = None, period_end: str | None = None
 	) -> LossDecompositionOut | None:
-		"""A country's loss decomposition, or ``None``."""
+		"""A country's loss decomposition, or ``None``.
+
+		``period_start``/``period_end`` select among the decompositions published
+		for that country. The route advertised both from the day it was written
+		and this method read neither: it took ``rows.iloc[0]`` and returned
+		whichever row happened to sort first, so a caller asking for 2020 got a
+		2023 period with a 200 and nothing saying the period was ignored. A
+		filter that names a period and returns another is worse than no filter.
+
+		A period with no published decomposition returns ``None``, which the route
+		turns into a 404 naming the country -- the same answer as a country with
+		nothing published, because from the caller's side they are the same fact.
+		"""
 		assert country, "a loss decomposition is per country"
 		read = self._table("data/processed/losses/decomposition.parquet")
 		if read is None:
@@ -519,6 +545,10 @@ class Repository:
 		rows = _filter(frame, country_iso=country)
 		if rows.empty:
 			return None
+		if period_start is not None or period_end is not None:
+			rows = _within_period(rows, period_start=period_start, period_end=period_end)
+			if rows.empty:
+				return None
 		row = rows.iloc[0]
 		components = [
 			LossComponentOut(
@@ -717,6 +747,37 @@ def _filter(frame: pd.DataFrame, **conditions: str | None) -> pd.DataFrame:
 		# return, so the annotation has to say which branch this is.
 		rows = cast("pd.DataFrame", rows[rows[column].astype(str).str.upper() == str(value).upper()])
 	return rows
+
+
+def _within_period(
+	rows: pd.DataFrame, *, period_start: str | None, period_end: str | None
+) -> pd.DataFrame:
+	"""Rows whose period overlaps ``[period_start, period_end]``.
+
+	Overlap, not containment: a decomposition published for calendar 2023
+	overlaps a request for ``2023-06-01..2023-06-30``, and a containment test
+	would drop it and report that no decomposition exists for a period squarely
+	inside one. An unparseable bound is a caller error and raises rather than
+	being dropped -- silently ignoring it is the defect this function replaces.
+
+	A frame with no ``period_start`` column cannot be filtered, and returning
+	it unfiltered would be the original defect wearing a guard; the caller gets
+	every row and no way to tell. That case raises.
+	"""
+	for column in ("period_start", "period_end"):
+		if column not in rows.columns:
+			raise ArtefactError(
+				f"a period was requested but the decomposition artefact has no "
+				f"{column!r} column, so the filter cannot be applied"
+			)
+	starts = pd.to_datetime(rows["period_start"], errors="raise")
+	ends = pd.to_datetime(rows["period_end"], errors="raise")
+	selected = pd.Series(True, index=rows.index)
+	if period_start is not None:
+		selected &= ends >= pd.Timestamp(period_start)
+	if period_end is not None:
+		selected &= starts <= pd.Timestamp(period_end)
+	return cast("pd.DataFrame", rows[selected])
 
 
 def _nested(row: Any, column: str) -> list[dict[str, Any]]:

@@ -389,22 +389,70 @@ class ScenarioParametersIn(ApiModel):
 
 	Every field is optional: a scenario is a delta against the base network, and
 	an unset field means "leave it alone" rather than "zero".
+
+	The field set is exactly ``alea.whatif.params.ScenarioParameters``'s, because
+	these names are mapped straight onto the engine and a name the engine does not
+	have is a lever the caller can pull that does nothing. The previous set here
+	was invented alongside the API: it had no ``coal_eaf``, ``gas_price_multiplier``,
+	``hydrogen_export_twh_per_year``, ``ssp_pathway`` or ``drought_multiplier``,
+	and it had ``solar_capex_multiplier``, ``wind_capex_multiplier``,
+	``transmission_expansion_multiplier`` and ``fuel_price_multiplier``, none of
+	which the engine can apply. A request naming one of those validated, solved,
+	and returned a result identical to the base scenario with no indication why.
+
+	Names match the engine's rather than being translated, so a reader of either
+	file sees the same lever. ``demand_growth`` is a fraction, not a percentage:
+	the engine's own field is a fraction and a percent/fraction mismatch is a
+	100x error that reads as a plausible number.
 	"""
 
-	carbon_price_usd_per_tco2: float | None = Field(default=None, ge=0.0)
-	demand_growth_pct: float | None = None
-	renewable_multiplier: float | None = Field(default=None, gt=0.0)
-	fuel_price_multiplier: float | None = Field(default=None, gt=0.0)
-	transmission_expansion_multiplier: float | None = Field(default=None, ge=0.0)
-	battery_capex_multiplier: float | None = Field(default=None, gt=0.0)
-	solar_capex_multiplier: float | None = Field(default=None, gt=0.0)
-	wind_capex_multiplier: float | None = Field(default=None, gt=0.0)
+	demand_growth: float | None = Field(default=None, ge=-0.05, le=0.15)
+	coal_eaf: float | None = Field(default=None, ge=0.0, le=2.0)
+	carbon_price_usd_per_tco2: float | None = Field(default=None, ge=0.0, le=1000.0)
+	gas_price_multiplier: float | None = Field(default=None, gt=0.0, le=10.0)
+	renewable_multiplier: float | None = Field(default=None, gt=0.0, le=10.0)
+	hydrogen_export_twh_per_year: float | None = Field(default=None, ge=0.0)
+	battery_cost_multiplier: float | None = Field(default=None, gt=0.0, le=5.0)
+	ssp_pathway: str | None = None
+	drought_multiplier: float | None = Field(default=None, gt=0.0, le=3.0)
 
 	@model_validator(mode="after")
 	def _a_scenario_changes_something(self) -> ScenarioParametersIn:
 		if all(value is None for value in self.model_dump().values()):
 			raise ValueError("a what-if scenario with no parameters is not a scenario")
 		return self
+
+	@classmethod
+	def one(cls, name: str, value: float) -> ScenarioParametersIn:
+		"""One lever set, named. The frontier sweep's constructor.
+
+		Deliberately not ``cls(**{name: value})``: unpacking a ``dict[str, float]``
+		makes the type checker consider *every* field a candidate for a float,
+		``ssp_pathway`` included, and a construct that can assign a float to a
+		pathway string is one that eventually does. ``model_validate`` takes the
+		mapping and the field's own validator rejects a bad value at the boundary.
+		"""
+		if name not in cls.model_fields:
+			raise KeyError(
+				f"unknown scenario parameter {name!r}; known: "
+				f"{', '.join(sorted(cls.model_fields))}"
+			)
+		return cls.model_validate({name: value})
+
+	def to_engine(self) -> Any:
+		"""The engine's parameter value, with unset levers left at the default.
+
+		The mapping is by name, so a field added here without a matching engine
+		field is caught by the engine's own ``extra='forbid'`` rather than being
+		ignored -- which is the failure this method replaces.
+		"""
+		from alea.whatif.params import ScenarioParameters
+
+		set_values = {
+			name: value
+			for name, value in self.model_dump(exclude_none=True).items()
+		}
+		return ScenarioParameters.model_validate(set_values)
 
 
 class WhatIfSolveRequest(ApiModel):
@@ -432,10 +480,19 @@ class WhatIfFrontierRequest(ApiModel):
 	base_scenario_id: str
 	parameter: Literal[
 		"carbon_price_usd_per_tco2",
-		"demand_growth_pct",
+		"demand_growth",
 		"renewable_multiplier",
-		"fuel_price_multiplier",
+		"gas_price_multiplier",
+		"coal_eaf",
+		"battery_cost_multiplier",
+		"drought_multiplier",
+		"hydrogen_export_twh_per_year",
 	]
+	"""Numeric levers only. ``ssp_pathway`` is a category, and a frontier axis
+	interpolated between ``SSP2-4.5`` and ``SSP5-8.5`` is not a pathway -- the
+	sweep would either crash on the first point or, worse, coerce a midpoint
+	into a string that names no scenario."""
+
 	start: float
 	stop: float
 	points: int = Field(default=10, ge=2, le=100)

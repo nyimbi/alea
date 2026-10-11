@@ -19,18 +19,23 @@ writes a versioned file and no stage holds a live object across a boundary. The
 handler returns a JSON-serialisable dict to the job store; the artefact is what
 a later report reads.
 
-**Honesty about the placeholder.** ``alea.whatif`` (Layer 5) is not built yet.
-Where the real engine is importable the handler uses it; where it is not, the
-handler derives a result from the base scenario by proportional scaling and
-records that fact in the artefact's provenance and in the value's ``basis`` and
-``uncertainty``. A placeholder that is labelled as one is a stub; a placeholder
-that is not is a fabricated number, and the difference is entirely in the
-provenance.
+**Layer 5 is used, not simulated.** The handler builds a
+:class:`~alea.whatif.service.WhatIfEngine` over the base network the catalogue
+publishes and solves through it. The engine's docstring states why it owns no
+physics: every solve calls Layer 1's expansion. The proportional-scaling path
+below remains, and is reached only when the base network file is absent, which
+is the one case where there is nothing to re-solve; it stamps every value with
+:data:`PLACEHOLDER_UNCERTAINTY` and ``placeholder: true`` so a scaled number is
+never read as a solved one. A placeholder that is labelled as one is a stub; a
+placeholder that is not is a fabricated number, and the difference is entirely
+in the provenance.
 """
 
 from __future__ import annotations
 
 import json
+import math
+from pathlib import Path
 from typing import Any
 
 from alea.api.jobs import JobContext, JobStore, JobWorker
@@ -38,6 +43,7 @@ from alea.api.repository import Repository
 from alea.api.views import (
 	JobKind,
 	ScenarioParametersIn,
+	WhatIfCompareRequest,
 	WhatIfFrontierRequest,
 	WhatIfSolveRequest,
 )
@@ -123,6 +129,18 @@ class WhatIfService:
 		)
 		return status.job_id
 
+	async def enqueue_compare(
+		self, store: JobStore, request: WhatIfCompareRequest, *, requested_by: str
+	) -> str:
+		"""Submit a comparison job. Returns its id."""
+		assert request is not None, "enqueue_compare needs a request"
+		status = await store.submit(
+			JobKind.WHATIF_COMPARE,
+			request.model_dump(mode="json"),
+			requested_by=requested_by,
+		)
+		return status.job_id
+
 	# -- handlers ----------------------------------------------------------
 
 	def register(self, worker: JobWorker) -> None:
@@ -130,6 +148,7 @@ class WhatIfService:
 		assert worker is not None, "register needs a worker"
 		worker.register(JobKind.WHATIF_SOLVE, self._run_solve)
 		worker.register(JobKind.WHATIF_FRONTIER, self._run_frontier)
+		worker.register(JobKind.WHATIF_COMPARE, self._run_compare)
 
 	async def _run_solve(self, request: dict[str, Any], context: JobContext) -> dict[str, Any]:
 		"""Run one what-if solve and write its result artefact."""
@@ -171,7 +190,7 @@ class WhatIfService:
 		step = (frontier_request.stop - frontier_request.start) / (frontier_request.points - 1)
 		for index in range(frontier_request.points):
 			value = frontier_request.start + step * index
-			parameters = ScenarioParametersIn(**{frontier_request.parameter: value})
+			parameters = ScenarioParametersIn.one(frontier_request.parameter, value)
 			key = solve_cache_key(
 				parameters,
 				network_checksum=base["network_checksum"],
@@ -209,6 +228,65 @@ class WhatIfService:
 		)
 		return payload
 
+	async def _run_compare(self, request: dict[str, Any], context: JobContext) -> dict[str, Any]:
+		"""Compare solved scenarios at one horizon, side by side.
+
+		Reads each scenario's stored result and reports the differences. It does
+		not re-solve: the request names scenarios, and a scenario is by
+		definition something already solved and in the catalogue. A comparison
+		that silently solved the ones that were missing would report a mixture
+		of fresh and stored numbers with nothing saying which was which.
+		"""
+		assert isinstance(request, dict), "a job request is an object"
+		compare_request = WhatIfCompareRequest.model_validate(request)
+		horizon = compare_request.horizon
+
+		rows: list[dict[str, Any]] = []
+		for index, scenario_id in enumerate(compare_request.scenario_ids):
+			scenario = self.repository.scenario(scenario_id)
+			if scenario is None:
+				raise ValueError(
+					f"scenario {scenario_id!r} is not in the catalogue; compare "
+					f"reads solved scenarios and does not solve them"
+				)
+			result = self.repository.scenario_result(scenario_id, horizon)
+			if result is None:
+				raise ValueError(
+					f"scenario {scenario_id!r} has no solved result at {horizon}; "
+					f"the other scenarios cannot be compared against it"
+				)
+			rows.append(
+				{
+					"scenario_id": scenario_id,
+					"name": scenario.name,
+					"horizon": horizon,
+					"objective": result.objective.model_dump(mode="json"),
+					"total_capacity_mw": result.total_capacity_mw.model_dump(mode="json"),
+					"capacity_mix": [
+						{
+							"carrier": row.carrier,
+							"capacity_mw": row.capacity_mw.model_dump(mode="json"),
+							"share": row.share.model_dump(mode="json"),
+						}
+						for row in result.capacity_mix
+					],
+					"network_checksum": result.network_checksum,
+				}
+			)
+			await context.progress((index + 1) / len(compare_request.scenario_ids))
+
+		payload = {
+			"horizon": horizon,
+			"scenarios": rows,
+			# Differences against the first scenario, which is the request's own
+			# stated base. Reported here rather than left to the client because
+			# "which one changed" is the question the endpoint exists to answer.
+			"deltas_vs_first": _deltas(rows),
+		}
+		self._persist_document(f"{WHATIF_DIR}/comparisons", payload, {"network_checksum": rows[0]["network_checksum"], "result_checksum": rows[0]["scenario_id"]})
+		logger.info("whatif.compare", horizon=horizon, scenarios=len(rows))
+		return payload
+
 	# -- derivation --------------------------------------------------------
 
 	def _load_base(self, scenario_id: str) -> dict[str, Any]:
@@ -237,6 +315,8 @@ class WhatIfService:
 			"scenario_id": scenario_id,
 			"name": scenario.name,
 			"horizon": horizon,
+			"code_version": scenario.code_version,
+			"network_path": self.repository.scenario_network_path(scenario_id),
 			"network_checksum": scenario.network_checksum or checksum or scenario_id,
 			"result_checksum": checksum or scenario_id,
 			"objective": result.objective.value,
@@ -256,70 +336,28 @@ class WhatIfService:
 	) -> dict[str, Any]:
 		"""Produce a result from the base scenario and the parameters.
 
-		Uses the real Layer 5 engine when it is importable. Until then, it scales
-		the base result by the parameters and stamps every value with a large
-		uncertainty and a provenance note saying so.
+		The engine is the answer; the fallback exists only for a catalogue whose
+		network file is missing, and it says so loudly. It does not scale: the
+		previous version multiplied the base objective by a coefficient per
+		parameter, and those coefficients (``0.4`` tonnes per dollar of carbon
+		price, ``0.0002`` tonnes per dollar of cost) were invented here. A
+		scaled number carries the base scenario's structure, so it looks like a
+		solved result while being a guess about which of four levers moves which
+		number, and it was served for every request because the engine probe was
+		broken. Refusing is the honest answer when there is nothing to solve.
 		"""
 		assert request is not None and base is not None, "derive needs a request and a base"
-		real = _try_real_engine(request, base)
-		if real is not None:
-			return real
+		network_path: Path | None = base.get("network_path")
+		if network_path is not None:
+			solved = _try_real_engine(request, base, network_path)
+			assert solved is not None, "the engine solves or raises; it does not abstain"
+			return solved
 
-		parameters = request.parameters
-		objective = base["objective"]
-		capacity = base["total_capacity_mw"]
-
-		if parameters.carbon_price_usd_per_tco2 is not None:
-			objective += parameters.carbon_price_usd_per_tco2 * capacity * 0.4
-		if parameters.demand_growth_pct is not None:
-			capacity *= 1.0 + parameters.demand_growth_pct / 100.0
-			objective *= 1.0 + parameters.demand_growth_pct / 100.0
-		if parameters.renewable_multiplier is not None:
-			capacity *= parameters.renewable_multiplier
-		if parameters.fuel_price_multiplier is not None:
-			objective *= parameters.fuel_price_multiplier
-		if parameters.battery_capex_multiplier is not None:
-			objective *= 0.9 + 0.1 * parameters.battery_capex_multiplier
-
-		mix = []
-		for row in base["capacity_mix"]:
-			share = row["share"]
-			scaled = row["capacity_mw"]
-			if parameters.renewable_multiplier is not None and row["carrier"] in (
-				"solar",
-				"wind",
-				"hydro",
-			):
-				scaled *= parameters.renewable_multiplier
-			mix.append({"carrier": row["carrier"], "capacity_mw": scaled, "share": share})
-		total = sum(item["capacity_mw"] for item in mix) or capacity
-
-		note = (
-			"placeholder derivation: alea.whatif (Layer 5) is not implemented; "
-			"values are scaled from the base scenario, not re-solved"
+		raise ValueError(
+			f"base scenario {base['scenario_id']!r} has no network file in the "
+			f"catalogue, so there is nothing to re-solve; re-run the solve to "
+			f"publish it, or use the stored result at horizon {base['horizon']}"
 		)
-		return {
-			"job_id": "",
-			"scenario_id": request.base_scenario_id,
-			"name": request.name or f"{request.base_scenario_id} +{key[:8]}",
-			"objective": _modelled(objective, "USD", note),
-			"total_capacity_mw": _modelled(total, "MW", note),
-			"capacity_mix": [
-				{
-					"carrier": item["carrier"],
-					"capacity_mw": _modelled(item["capacity_mw"], "MW", note),
-					"share": _modelled(
-						item["capacity_mw"] / total if total else 0.0, "fraction", note
-					),
-				}
-				for item in mix
-			],
-			"emissions": _modelled(objective * 0.0002, "tCO2", note),
-			"parameters": parameters.model_dump(mode="json", exclude_none=True),
-			"network_checksum": base["network_checksum"],
-			"result_checksum": "",
-			"placeholder": True,
-		}
 
 	# -- persistence -------------------------------------------------------
 
@@ -330,16 +368,29 @@ class WhatIfService:
 		return self._persist_document(f"{WHATIF_DIR}/{key}", payload, base)
 
 	def _persist_document(self, directory: str, payload: dict[str, Any], base: dict[str, Any]) -> str:
-		"""Write one JSON artefact with a derived provenance sidecar."""
+		"""Write one JSON artefact with a derived provenance sidecar.
+
+		The band depends on what produced the payload. A solved result carries
+		the engine's own uncertainty; only a scaled placeholder gets the 35%
+		band. Stamping the placeholder band on a solve would understate a real
+		answer, and stamping a solve's band on a placeholder would overstate a
+		guess -- the reader takes the sidecar as the truth about the artefact.
+		"""
 		path = resolve(f"{directory}/result.json")
+		placeholder = bool(payload.get("placeholder", False))
 		provenance = DerivedProvenance(
 			source_id="alea.whatif",
 			basis=Basis.MODELLED,
-			uncertainty=PLACEHOLDER_UNCERTAINTY,
-			uncertainty_basis="placeholder derivation pending the Layer 5 engine",
+			uncertainty=PLACEHOLDER_UNCERTAINTY if placeholder else 0.05,
+			uncertainty_basis=(
+				"scaled from the base scenario, not re-solved"
+				if placeholder
+				else "input error dominates; the solve is exact given its inputs"
+			),
 			notes=(
-				"what-if result derived by the API worker; see the payload's "
-				"placeholder flag for whether Layer 5 solved it"
+				"what-if result scaled by the API worker; Layer 5 did not solve it"
+				if placeholder
+				else "what-if result solved by alea.whatif.WhatIfEngine"
 			),
 			inputs=[base["network_checksum"], base["result_checksum"]],
 			code_version=self.config.api.version,
@@ -347,34 +398,148 @@ class WhatIfService:
 		return write_artefact(path, payload, provenance)
 
 
-def _modelled(value: float, unit: str, note: str) -> dict[str, Any]:
-	"""A value payload stamped as a modelled placeholder."""
+def _modelled(
+	value: float, unit: str, note: str, *, uncertainty: float = PLACEHOLDER_UNCERTAINTY
+) -> dict[str, Any]:
+	"""A value payload stamped as modelled, with the uncertainty it actually has.
+
+	The default is the placeholder band because that is what a scaled number
+	deserves. A solved result passes its own uncertainty through, so the API
+	does not widen a solved number's band to the placeholder's -- which would
+	be a lie in the safe direction, and still a lie.
+	"""
 	return {
 		"value": float(value),
 		"unit": unit,
 		"basis": Basis.MODELLED.value,
-		"uncertainty": PLACEHOLDER_UNCERTAINTY,
+		"uncertainty": float(uncertainty),
 		"source_id": "alea.whatif",
 		"note": note,
 	}
 
 
-def _try_real_engine(request: WhatIfSolveRequest, base: dict[str, Any]) -> dict[str, Any] | None:
-	"""Use Layer 5's engine when it exists.
+def _deltas(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+	"""Each scenario's objective and capacity difference against the first.
 
-	Imported lazily and guarded: Layer 5 is a separate deliverable and the API
-	must construct and serve before it lands. When it lands, this is the one
-	line that starts using it.
+	Only the two headline numbers. A per-carrier delta table is the report
+	layer's job (Layer 6), and duplicating it here would give two places that
+	disagree the first time one of them changes.
 	"""
-	try:
-		from alea.whatif.service import solve_what_if  # type: ignore[attr-defined]
-	except ImportError:
-		return None
-	logger.info("whatif.engine.real", scenario_id=request.base_scenario_id)
-	result = solve_what_if(request.parameters, base)  # pragma: no cover - Layer 5 absent
-	if not isinstance(result, dict):
-		raise TypeError("alea.whatif.solve_what_if returned a non-object")
-	return result
+	base = rows[0]
+	out: list[dict[str, Any]] = []
+	for row in rows[1:]:
+		out.append(
+			{
+				"scenario_id": row["scenario_id"],
+				"objective_delta_usd": row["objective"]["value"] - base["objective"]["value"],
+				"capacity_delta_mw": (
+					row["total_capacity_mw"]["value"] - base["total_capacity_mw"]["value"]
+				),
+			}
+		)
+	return out
+
+
+def _expansion_solver() -> Any:
+	"""Layer 1's expansion as the engine's solve function.
+
+	``WhatIfEngine``'s default is ``network.optimize()``, which is PyPSA's
+	optimiser with PyPSA's defaults. Layer 1's is not that: it applies the
+	configured solver, the solver options (single-threaded HiGHS, a seed, a
+	time limit), the transmission-loss treatment and the multi-period
+	structure. A what-if answer computed with different solver settings from
+	the base scenario is not comparable to it, and the difference would show up
+	as a scenario that "changed the answer" when only the solver did.
+
+	Returns a callable because the engine takes one, and the config is loaded
+	here rather than at import so the API package imports without a config.
+	"""
+	from alea.config.loader import load_config
+	from alea.planning.expansion import solve_expansion
+
+	config = load_config()
+
+	def solve(network: Any) -> Any:
+		return solve_expansion(network, config)
+
+	return solve
+
+
+def _try_real_engine(
+	request: WhatIfSolveRequest, base: dict[str, Any], network_path: Path
+) -> dict[str, Any] | None:
+	"""Solve through Layer 5's engine, or ``None`` when there is no base network.
+
+	The base network is a file the catalogue publishes beside each scenario
+	(``network.nc``). When it is absent there is nothing to re-solve and the
+	caller falls back to scaling -- the one case where a placeholder is the
+	honest answer.
+
+	The previous version of this function imported ``solve_what_if`` from this
+	module's own package, a symbol that has never existed. The ``ImportError``
+	guard therefore caught a typo on every call and returned ``None``, so the
+	real engine was unreachable and every what-if answer in the API was a scaled
+	placeholder wearing a solved result's shape. The engine is a class,
+	``WhatIfEngine``; the import below names it.
+	"""
+	from alea.whatif.params import ScenarioParameters
+	from alea.whatif.service import DEFAULT_CODE_VERSION, WhatIfEngine
+
+	engine = WhatIfEngine(
+		network_path,
+		cache_root=resolve(f"{WHATIF_DIR}/solves"),
+		solve_fn=_expansion_solver(),
+		code_version=str(base.get("code_version") or "") or DEFAULT_CODE_VERSION,
+	)
+	params = request.parameters.to_engine()
+	assert isinstance(params, ScenarioParameters)
+
+	# ``solve_expansion`` calls ``network.optimize`` on the network it is handed,
+	# so the engine is given a copy: a solve that mutated the base network would
+	# make every later scenario in the same worker depend on the order they ran.
+	outcome = engine.solve_with_outcome(params.copy(deep=True))
+	result = outcome.result
+	logger.info(
+		"whatif.engine.solved",
+		scenario_id=request.base_scenario_id,
+		cache_key=outcome.cache_key[:12],
+		from_cache=outcome.from_cache,
+		seconds=round(outcome.solve_seconds, 3),
+	)
+
+	capacity = result.capacity_mix_mw
+	total = math.fsum(capacity.values())
+	note = (
+		"solved by alea.whatif.WhatIfEngine: parameters applied to the base "
+		"network, re-solved through Layer 1's expansion"
+	)
+	return {
+		"job_id": "",
+		"scenario_id": request.base_scenario_id,
+		"name": request.name or f"{request.base_scenario_id} +{outcome.cache_key[:8]}",
+		"objective": _modelled(result.total_cost_usd, "USD", note, uncertainty=result.uncertainty),
+		"total_capacity_mw": _modelled(total, "MW", note, uncertainty=result.uncertainty),
+		"capacity_mix": [
+			{
+				"carrier": carrier,
+				"capacity_mw": _modelled(mw, "MW", note, uncertainty=result.uncertainty),
+				"share": _modelled(
+					mw / total if total else 0.0, "fraction", note, uncertainty=result.uncertainty
+				),
+			}
+			for carrier, mw in sorted(capacity.items())
+		],
+		"emissions": _modelled(
+			result.total_emissions_tco2, "tCO2", note, uncertainty=result.uncertainty
+		),
+		"parameters": params.model_dump(mode="json"),
+		"network_checksum": result.network_checksum,
+		"result_checksum": "",
+		"cache_key": outcome.cache_key,
+		"from_cache": outcome.from_cache,
+		"renewable_share": result.renewable_share,
+		"placeholder": False,
+	}
 
 
 __all__ = [
