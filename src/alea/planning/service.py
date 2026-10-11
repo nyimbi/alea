@@ -150,6 +150,8 @@ def solve_scenario(
 	network: str | Path | pypsa.Network | None = None,
 	out: str | Path = "results/networks",
 	horizon: int | None = None,
+	scenario_id: str | None = None,
+	publish: bool = True,
 	logger_: Any = None,
 ) -> SolveResult:
 	"""Solve a capacity-expansion problem.
@@ -158,12 +160,20 @@ def solve_scenario(
 	in which case one is built from the processed artefacts. The aggregation gate
 	runs before the solve, not after: a config that selects a fast path nobody
 	has measured is refused here, where nothing has been spent yet.
+
+	``publish`` writes the solved scenario into the API's catalogue
+	(``alea.planning.catalogue``). It is on by default because a solved scenario
+	that is not in the catalogue is invisible to every scenario route and cannot
+	be used as a what-if base -- which is how the API shipped reading an empty
+	directory. Set it off for a throwaway solve. ``scenario_id`` names the entry;
+	it defaults to the network's own id, which is stable across rebuilds.
 	"""
 	assert config is not None, "config must not be None"
 	log = logger_ or _log
 	out_path = Path(out)
 	out_path.mkdir(parents=True, exist_ok=True)
 
+	network_source: Path | None = None
 	if isinstance(network, pypsa.Network):
 		built = network
 		inputs = ["sha256:network:in-memory"]
@@ -172,6 +182,7 @@ def solve_scenario(
 		if not path.exists():
 			raise PlanningError(f"network {path} does not exist")
 		built = pypsa.Network(str(path))
+		network_source = path
 		from alea.io.artefacts import sha256_file
 
 		inputs = [f"sha256:{sha256_file(path)}"]
@@ -188,14 +199,35 @@ def solve_scenario(
 
 	target = out_path / f"{network_id(built)}-{horizon or 'all'}.nc"
 	result.network.export_to_netcdf(str(target))
+	mix = capacity_mix_table(result.network).to_dict(orient="records")
 	provenance = solve_result_provenance(result, config, inputs=inputs)
 	write_artefact(
 		out_path / f"{network_id(built)}-{horizon or 'all'}.json",
-		{**result.as_dict(), "capacity_mix": capacity_mix_table(result.network).to_dict(orient="records")},
+		{**result.as_dict(), "capacity_mix": mix},
 		provenance,
 		format="json",
 	)
 	log.info("scenario_solved", path=str(target), objective=result.objective)
+
+	if publish:
+		# The catalogue entry is what makes the solve visible to the API. Its
+		# failure must not discard a solve that took forty minutes, so it is
+		# logged and not raised: the artefacts above are already on disk and the
+		# operator can publish separately.
+		from alea.planning.catalogue import publish_scenario
+
+		try:
+			publish_scenario(
+				scenario_id or network_id(built),
+				config,
+				result.network,
+				result,
+				capacity_mix=mix,
+				network_path=network_source or target,
+				code_version=config.api.version,
+			)
+		except (ValueError, KeyError) as exc:
+			log.warning("scenario_publish_failed", error=str(exc))
 	return result
 
 
