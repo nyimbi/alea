@@ -1,0 +1,10 @@
+{% extends "base.html.j2" %}
+{% import "_macros.html.j2" as m %}
+{# The weekly report is where the loss decomposition and the critical-line
+   watch appear. Losses are the number most likely to be quoted without its
+   basis, because a loss figure is often a proxy from a system total. #}
+{% block body %}
+{% for section in report.sections %}
+	{{ m.section_block(section, charts) }}
+{% endfor %}
+{% endblock %}

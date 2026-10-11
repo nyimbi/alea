@@ -1,0 +1,11 @@
+{% extends "base.html.j2" %}
+{% import "_macros.html.j2" as m %}
+{# The daily report leads with the outage forecast and states the VIIRS
+   coverage window. A daily report that says "outages yesterday" while the
+   satellite data is a day behind is reporting an incomplete picture as a
+   complete one, so the window is printed above the numbers, not in a note. #}
+{% block body %}
+{% for section in report.sections %}
+	{{ m.section_block(section, charts) }}
+{% endfor %}
+{% endblock %}

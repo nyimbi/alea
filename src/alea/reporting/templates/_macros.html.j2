@@ -1,0 +1,60 @@
+{# SPDX-License-Identifier: MIT
+   Shared rendering macros.
+
+   These are the only places in the template set where a value becomes text,
+   and every one of them attaches the basis marker. A number printed without
+   going through `value` is the defect this whole layer is built to prevent,
+   so the cadence templates call these macros rather than formatting by hand. #}
+
+{% macro value(v) -%}
+	<span class="value-{{ v.basis.value }}">{{ v.formatted }}</span><sup class="marker marker-{{ v.basis.value }}" title="{{ v.tooltip }}">{{ v.marker }}</sup>
+{%- endmacro %}
+
+{% macro cell(v) -%}
+	{% if v is string %}{{ v }}{% else %}{{ value(v) }}{% if v.interval %}<span class="interval">({{ v.interval_text }})</span>{% endif %}{% endif %}
+{%- endmacro %}
+
+{% macro table_block(table) -%}
+	<table class="report-table">
+		<caption>{{ table.title }}{% if table.unit %} <span class="unit">({{ table.unit }})</span>{% endif %}</caption>
+		<thead>
+			<tr>{% for column in table.columns %}<th>{{ column }}</th>{% endfor %}</tr>
+		</thead>
+		<tbody>
+		{% for row in table.rows %}
+			<tr>{% for item in row %}<td>{{ cell(item) }}</td>{% endfor %}</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+	{% if table.note %}<p class="notes">{{ table.note }}</p>{% endif %}
+{%- endmacro %}
+
+{% macro chart_block(chart, svg) -%}
+	<figure class="chart">
+		{{ svg | safe }}
+		<figcaption class="unit">{{ chart.title }}{% if chart.unit %} ({{ chart.unit }}){% endif %}</figcaption>
+	</figure>
+{%- endmacro %}
+
+{% macro section_block(section, charts) -%}
+<section class="report-section">
+	<h2>{{ section.title }}</h2>
+	{% if section.prose %}<p class="prose">{{ section.prose }}</p>{% endif %}
+	{% if section.values %}
+	<dl class="values">
+		{% for v in section.values %}
+		<dt>{{ v.label }}</dt>
+		<dd>{{ value(v) }} <span class="unit">{{ v.unit }}</span>{% if v.interval %}<span class="interval">({{ v.interval_text }})</span>{% endif %}</dd>
+		{% endfor %}
+	</dl>
+	{% endif %}
+	{% for chart in section.charts %}
+		{% set key = section.slug ~ "/" ~ chart.slug %}
+		{% if key in charts %}{{ chart_block(chart, charts[key]) }}{% endif %}
+	{% endfor %}
+	{% for table in section.tables %}{{ table_block(table) }}{% endfor %}
+	{% if section.notes %}
+	<ul class="notes">{% for note in section.notes %}<li>{{ note }}</li>{% endfor %}</ul>
+	{% endif %}
+</section>
+{%- endmacro %}

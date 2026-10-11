@@ -1,0 +1,9 @@
+{% extends "base.html.j2" %}
+{% import "_macros.html.j2" as m %}
+{# The quarterly report is the investment and scenario view. Projections to
+   2060 are forecasts, not measurements, and the marker says so on every one. #}
+{% block body %}
+{% for section in report.sections %}
+	{{ m.section_block(section, charts) }}
+{% endfor %}
+{% endblock %}

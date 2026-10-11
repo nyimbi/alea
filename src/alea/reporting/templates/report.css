@@ -1,0 +1,251 @@
+/* SPDX-License-Identifier: MIT */
+/* ALEA report stylesheet.
+
+   One rule matters more than the rest: a proxy value must be visually
+   distinct from a measured one. The marker is a superscript, and each basis
+   also carries its own ink, so the distinction survives a greyscale print and
+   a reader who does not know the markers yet still sees that something is
+   different about that number. */
+
+:root {
+	--ink: #1f2933;
+	--muted: #52606d;
+	--rule: #d9e2ec;
+	--paper: #ffffff;
+	--measured: #1f2933;
+	--modelled: #2f6f9f;
+	--proxy: #b54708;
+	--forecast: #5b3f9e;
+	--warn-bg: #fff7ed;
+	--warn-rule: #f0b27a;
+}
+
+@page {
+	size: A4;
+	margin: 18mm 16mm 20mm 16mm;
+}
+
+html {
+	font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+	font-size: 11pt;
+	color: var(--ink);
+	background: var(--paper);
+}
+
+body {
+	margin: 0 auto;
+	max-width: 46rem;
+	line-height: 1.45;
+}
+
+header.report-head {
+	border-bottom: 2px solid var(--ink);
+	padding-bottom: 0.6rem;
+	margin-bottom: 1.4rem;
+}
+
+header.report-head h1 {
+	font-size: 1.5rem;
+	margin: 0 0 0.2rem 0;
+	letter-spacing: -0.01em;
+}
+
+.report-meta {
+	color: var(--muted);
+	font-size: 0.82rem;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.2rem 1.1rem;
+}
+
+.summary {
+	font-size: 1.02rem;
+	margin: 0 0 1.6rem 0;
+}
+
+section.report-section {
+	margin: 0 0 1.8rem 0;
+	break-inside: avoid-page;
+}
+
+section.report-section > h2 {
+	font-size: 1.12rem;
+	border-bottom: 1px solid var(--rule);
+	padding-bottom: 0.25rem;
+	margin: 0 0 0.7rem 0;
+}
+
+.prose {
+	margin: 0 0 0.8rem 0;
+}
+
+dl.values {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 0.15rem 1rem;
+	margin: 0 0 0.9rem 0;
+}
+
+dl.values dt {
+	color: var(--muted);
+	font-size: 0.86rem;
+}
+
+dl.values dd {
+	margin: 0;
+	font-variant-numeric: tabular-nums;
+}
+
+table.report-table {
+	border-collapse: collapse;
+	width: 100%;
+	margin: 0 0 0.9rem 0;
+	font-size: 0.88rem;
+}
+
+table.report-table caption {
+	caption-side: top;
+	text-align: left;
+	font-size: 0.86rem;
+	color: var(--muted);
+	padding-bottom: 0.25rem;
+}
+
+table.report-table th,
+table.report-table td {
+	border-bottom: 1px solid var(--rule);
+	padding: 0.3rem 0.5rem;
+	text-align: left;
+	font-variant-numeric: tabular-nums;
+}
+
+table.report-table th {
+	color: var(--muted);
+	font-weight: 600;
+	font-size: 0.82rem;
+}
+
+.unit {
+	color: var(--muted);
+	font-size: 0.78rem;
+	margin-left: 0.25rem;
+}
+
+.interval {
+	color: var(--muted);
+	font-size: 0.78rem;
+	margin-left: 0.4rem;
+}
+
+figure.chart {
+	margin: 0 0 1rem 0;
+}
+
+figure.chart svg {
+	max-width: 100%;
+	height: auto;
+}
+
+/* The basis markers. Superscript, never decoration: a marker is the report
+   telling the reader how the number came to exist. */
+sup.marker {
+	font-size: 0.72em;
+	margin-left: 0.06em;
+	vertical-align: super;
+}
+
+sup.marker-measured {
+	color: var(--measured);
+}
+
+sup.marker-modelled {
+	color: var(--modelled);
+}
+
+sup.marker-proxy {
+	color: var(--proxy);
+	font-weight: 700;
+}
+
+sup.marker-forecast {
+	color: var(--forecast);
+}
+
+.value-measured {
+	color: var(--measured);
+}
+
+.value-modelled {
+	color: var(--modelled);
+}
+
+.value-proxy {
+	color: var(--proxy);
+}
+
+.value-forecast {
+	color: var(--forecast);
+}
+
+.notes {
+	color: var(--muted);
+	font-size: 0.82rem;
+	margin: 0.4rem 0 0 0;
+	padding-left: 1.1rem;
+}
+
+.warnings,
+.data-windows,
+.unverified {
+	border: 1px solid var(--warn-rule);
+	background: var(--warn-bg);
+	padding: 0.6rem 0.9rem;
+	margin: 0 0 1.2rem 0;
+	font-size: 0.86rem;
+}
+
+.warnings h2,
+.data-windows h2,
+.unverified h2 {
+	font-size: 0.95rem;
+	margin: 0 0 0.4rem 0;
+}
+
+.unverified table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.unverified td {
+	padding: 0.15rem 0.4rem;
+	vertical-align: top;
+}
+
+.legend {
+	margin: 0 0 1.2rem 0;
+	font-size: 0.82rem;
+	color: var(--muted);
+}
+
+.legend span {
+	margin-right: 1rem;
+	white-space: nowrap;
+}
+
+footer.report-foot {
+	border-top: 1px solid var(--rule);
+	padding-top: 0.7rem;
+	color: var(--muted);
+	font-size: 0.76rem;
+}
+
+footer.report-foot dl {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 0.1rem 0.8rem;
+	margin: 0;
+}
+
+footer.report-foot dt {
+	font-weight: 600;
+}

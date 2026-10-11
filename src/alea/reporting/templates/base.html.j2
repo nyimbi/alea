@@ -1,0 +1,82 @@
+{# SPDX-License-Identifier: MIT
+   The shared report skeleton.
+
+   Every number this template prints comes from a ReportValue, so its basis
+   marker travels with it. The macros below are the only places a value is
+   turned into text, and each one attaches the marker -- there is no path in
+   this file that prints a bare number. #}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ report.title }}</title>
+<link rel="stylesheet" href="report.css">
+</head>
+<body>
+{% import "_macros.html.j2" as m %}
+
+<header class="report-head">
+	<h1>{{ report.title }}</h1>
+	<div class="report-meta">
+		<span>{{ report.period_label }}</span>
+		<span>{{ report.cadence.value }} report</span>
+		<span>{{ report.timezone }}</span>
+		{% if report.countries %}<span>{{ report.countries | join(", ") }}</span>{% endif %}
+	</div>
+</header>
+
+{% if report.summary %}<p class="summary">{{ report.summary }}</p>{% endif %}
+
+<div class="legend">
+	<span>Measured</span>
+	<span>Modelled <sup class="marker marker-modelled">ᵐ</sup></span>
+	<span>Proxy <sup class="marker marker-proxy">ᵖ</sup></span>
+	<span>Forecast <sup class="marker marker-forecast">ᶠ</sup></span>
+	<span>An unmarked number is measured.</span>
+</div>
+
+{% if report.warnings %}
+<div class="warnings">
+	<h2>What this report does not cover</h2>
+	<ul>
+	{% for warning in report.warnings %}<li>{{ warning }}</li>{% endfor %}
+	</ul>
+</div>
+{% endif %}
+
+{% if report.data_windows %}
+<div class="data-windows">
+	<h2>Data coverage</h2>
+	<ul>
+	{% for window in report.data_windows %}<li>{{ window.describe() }}</li>{% endfor %}
+	</ul>
+</div>
+{% endif %}
+
+{% if report.unresolved_unverified %}
+<div class="unverified">
+	<h2>Unverified figures</h2>
+	<p>These are literature benchmarks that have not been confirmed against a source. They are not established results.</p>
+	<table>
+	{% for claim in report.unresolved_unverified %}
+		<tr><td>{{ claim.claim }}</td><td>{{ claim.milestone }}</td></tr>
+	{% endfor %}
+	</table>
+</div>
+{% endif %}
+
+{% block body %}{% endblock %}
+
+<footer class="report-foot">
+	<dl>
+		<dt>Report id</dt><dd>{{ report.report_id }}</dd>
+		<dt>Run id</dt><dd>{{ report.run_id or "—" }}</dd>
+		<dt>Generated</dt><dd>{{ generated.strftime("%Y-%m-%d %H:%M:%SZ") }}</dd>
+		<dt>Period</dt><dd>{{ report.period_label }}</dd>
+		<dt>Values</dt><dd>{{ report.values | length }} ({{ report.proxied_values | length }} proxy)</dd>
+	</dl>
+	<p>Every number carries its basis. A proxy estimate is not a measurement, and the marker says which is which. Sources and uncertainty are listed per section.</p>
+</footer>
+
+</body>
+</html>

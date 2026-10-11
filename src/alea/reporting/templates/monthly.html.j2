@@ -1,0 +1,11 @@
+{% extends "base.html.j2" %}
+{% import "_macros.html.j2" as m %}
+{# The monthly report carries the SAIDI/SAIFI statistics. Where a country is
+   absent from the continental datasets the reliability figures are proxies,
+   and they render with the proxy marker beside the metered ones so a reader
+   comparing two rows can see that one is a measurement and one is not. #}
+{% block body %}
+{% for section in report.sections %}
+	{{ m.section_block(section, charts) }}
+{% endfor %}
+{% endblock %}

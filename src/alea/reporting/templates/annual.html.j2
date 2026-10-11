@@ -1,0 +1,11 @@
+{% extends "base.html.j2" %}
+{% import "_macros.html.j2" as m %}
+{# The annual report is the one that gets cited, so it carries the fullest
+   provenance and the most prominent [UNVERIFIED] handling. Every literature
+   benchmark still unconfirmed at this point is printed with its status in the
+   block above, or it is not printed at all. #}
+{% block body %}
+{% for section in report.sections %}
+	{{ m.section_block(section, charts) }}
+{% endfor %}
+{% endblock %}
