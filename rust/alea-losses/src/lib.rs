@@ -178,8 +178,22 @@ pub fn contingency_sweep(
 					// A non-converging contingency is recorded, not propagated:
 					// the sweep's job is to report which outages are
 					// unsurvivable, and an islanding branch is exactly that.
+					//
+					// The shortfall is the stranded *load*, not NaN. This is
+					// the only path an island can take -- a detached bus has no
+					// angle reference, so the solve is singular before any
+					// angle exists. Leaving it NaN would hide the one number
+					// the outage is worth, and every consumer that skips NaN
+					// (as `SweepResult.base_ens_mwh` deliberately does) would
+					// read the worst outages as no outage at all.
 					diverged[[contingency, snapshot]] = true;
-					ens[[contingency, snapshot]] = f64::NAN;
+					ens[[contingency, snapshot]] = islanded_energy_not_served(
+						branch_from.view(),
+						branch_to.view(),
+						injection,
+						slack,
+						out_branch,
+					);
 				}
 			}
 		}
@@ -189,6 +203,85 @@ pub fn contingency_sweep(
 		overloaded_branches: overloaded,
 		diverged,
 	})
+}
+
+/// Union-find root, with path halving.
+fn find_root(parent: &mut [usize], mut x: usize) -> usize {
+	while parent[x] != x {
+		parent[x] = parent[parent[x]];
+		x = parent[x];
+	}
+	x
+}
+
+/// Energy not served by a branch outage that detaches part of the network.
+///
+/// A bus cut off from the slack has no angle reference, so the DC system is
+/// singular and there are no angles to solve for. What remains is a local
+/// balance: an island serves its own load only as far as its own generation
+/// reaches, and `max(0, load - generation)` behind it is unserved. This is the
+/// specification's `load - served` (`spec4-base.md` §13.2), evaluated on the
+/// island rather than on the whole system.
+///
+/// The stranded set is found by **connectivity over the surviving branches**,
+/// not by inspecting the angles. An earlier version read an exactly-zero angle
+/// as "no finite angle" and summed the injections at those buses. Two things
+/// were wrong with it. A bus whose solved angle is exactly zero is a healthy
+/// bus, so a fully connected network reported unserved energy in its own base
+/// case -- for the three-bus radial above, 50 MW of it. And a bus that really
+/// islands makes the system singular before any angle is produced, so the test
+/// could never fire on the case it was written for.
+fn islanded_energy_not_served(
+	branch_from: ArrayView1<u32>,
+	branch_to: ArrayView1<u32>,
+	injection: ArrayView1<f64>,
+	slack: usize,
+	out_branch: Option<usize>,
+) -> f64 {
+	let n_buses = injection.len();
+	let mut parent: Vec<usize> = (0..n_buses).collect();
+	for b in 0..branch_from.len() {
+		if Some(b) == out_branch {
+			continue;
+		}
+		let from = branch_from[b] as usize;
+		let to = branch_to[b] as usize;
+		if from >= n_buses || to >= n_buses {
+			continue;
+		}
+		let root_from = find_root(&mut parent, from);
+		let root_to = find_root(&mut parent, to);
+		if root_from != root_to {
+			parent[root_from] = root_to;
+		}
+	}
+
+	let slack_root = find_root(&mut parent, slack);
+	let mut load = vec![0.0f64; n_buses];
+	let mut generation = vec![0.0f64; n_buses];
+	for i in 0..n_buses {
+		let root = find_root(&mut parent, i);
+		if root == slack_root {
+			continue;
+		}
+		if injection[i] > 0.0 {
+			generation[root] += injection[i];
+		} else {
+			load[root] += -injection[i];
+		}
+	}
+
+	// Each component root is visited once: the root is the only index that is
+	// its own representative.
+	let mut shortfall = 0.0f64;
+	for i in 0..n_buses {
+		let root = find_root(&mut parent, i);
+		if root != i || root == slack_root {
+			continue;
+		}
+		shortfall += (load[root] - generation[root]).max(0.0);
+	}
+	shortfall
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -250,18 +343,12 @@ fn solve_with_branch_out(
 		}
 	}
 
-	// Energy not served: the injection the network could not carry. A branch
-	// whose outage islands the slack has no path, and the shortfall is the load
-	// stranded behind it. Approximated as the imbalance left at buses with no
-	// finite angle.
-	let shortfall: f64 = angles
-		.iter()
-		.enumerate()
-		.filter(|(i, a)| **a == 0.0 && *i != slack && injection[*i] > 0.0)
-		.map(|(i, _)| injection[i])
-		.sum();
+	// Energy not served. A branch whose removal splits the network makes the DC
+	// system singular, so that case never reaches here -- it is caught as
+	// `Err` in the sweep, where the island's stranded load is measured. A
+	// converging solve is a connected network and serves everything.
 	let _ = total_flow;
-	Ok((shortfall, n_overloaded))
+	Ok((0.0, n_overloaded))
 }
 
 /// Gaussian elimination with partial pivoting.
@@ -622,6 +709,74 @@ mod tests {
 		assert!(!result.diverged[[0, 0]]);
 		// The sweep completed: every contingency has a verdict.
 		assert_eq!(result.diverged.shape(), &[3, 1]);
+	}
+
+	#[test]
+	fn a_connected_base_case_serves_all_its_energy() {
+		// The base case has every branch in, so nothing can be stranded. This
+		// asserts the *value*: an earlier shortfall test read an exactly-zero
+		// bus angle as "islanded", and bus 1 of this radial solves to -0.0
+		// while carrying 50 MW, so the base case reported 50 MW unserved on a
+		// network with no outage at all.
+		let b = array![[1.0, -1.0, 0.0], [-1.0, 2.0, -1.0], [0.0, -1.0, 1.0]];
+		let from = array![0u32, 1];
+		let to = array![1u32, 2];
+		let bs = array![1.0, 1.0];
+		let ratings = array![1000.0, 1000.0];
+		let injections = Array2::from_shape_vec((1, 3), vec![0.0, 50.0, -50.0]).unwrap();
+		let result = contingency_sweep(
+			b.view(),
+			injections.view(),
+			from.view(),
+			to.view(),
+			bs.view(),
+			ratings.view(),
+			0,
+		)
+		.unwrap();
+		assert_eq!(result.energy_not_served[[0, 0]], 0.0);
+	}
+
+	#[test]
+	fn an_islanded_island_reports_its_stranded_load() {
+		// A four-bus chain 0-1-2-3 with generation at the slack (bus 0) and at
+		// bus 2, and load at bus 3. Losing branch 2 detaches {3}, which has no
+		// generation of its own: 30 MW of load is stranded and 30 is the
+		// shortfall. Losing branch 1 detaches {2, 3}, which carries 20 MW of
+		// generation against 30 MW of load, so 10 is stranded. Both outages
+		// island a bus, so both make the DC system singular and are recorded in
+		// `diverged` -- which is exactly why the shortfall cannot be read off
+		// the angles.
+		let b = array![
+			[1.0, -1.0, 0.0, 0.0],
+			[-1.0, 2.0, -1.0, 0.0],
+			[0.0, -1.0, 2.0, -1.0],
+			[0.0, 0.0, -1.0, 1.0],
+		];
+		let from = array![0u32, 1, 2];
+		let to = array![1u32, 2, 3];
+		let bs = array![1.0, 1.0, 1.0];
+		let ratings = array![1000.0, 1000.0, 1000.0];
+		let injections = Array2::from_shape_vec((1, 4), vec![0.0, 0.0, 20.0, -30.0]).unwrap();
+		let result = contingency_sweep(
+			b.view(),
+			injections.view(),
+			from.view(),
+			to.view(),
+			bs.view(),
+			ratings.view(),
+			0,
+		)
+		.unwrap();
+		// Base case: everything is connected and served.
+		assert_eq!(result.energy_not_served[[0, 0]], 0.0);
+		// Branch 2 out: bus 3 alone, 30 MW of load and no generation.
+		assert!(result.diverged[[3, 0]]);
+		assert_eq!(result.energy_not_served[[3, 0]], 30.0);
+		// Branch 1 out: buses 2 and 3, 30 MW of load against 20 MW of local
+		// generation.
+		assert!(result.diverged[[2, 0]]);
+		assert_eq!(result.energy_not_served[[2, 0]], 10.0);
 	}
 
 	#[test]
