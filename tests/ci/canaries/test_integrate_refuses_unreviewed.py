@@ -16,6 +16,7 @@ from __future__ import annotations
 import subprocess
 import sys
 from datetime import datetime
+from typing import Any
 
 from alea.scanning.integrate import UnreviewedSignalError, integrate
 from alea.signals.models import Signal, SignalType
@@ -24,8 +25,8 @@ from tests.ci.canaries import REPO, assert_raises, planted
 INTEGRATE_PY = REPO / "src" / "alea" / "scanning" / "integrate.py"
 
 
-def _signal(**overrides: object) -> Signal:
-	base: dict[str, object] = {
+def _signal(**overrides: Any) -> Signal:
+	base: dict[str, Any] = {
 		"signal_type": SignalType.GENERATION_INVESTMENT,
 		"confidence": 0.8,
 		"source_document_id": "doc-1",

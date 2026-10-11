@@ -144,7 +144,9 @@ def _wide(frame: pd.DataFrame, value: str) -> pd.DataFrame:
 	"""Pivot a long schema frame to (timestamp index, bus columns)."""
 	pivot = frame.pivot_table(index="timestamp", columns="bus_id", values=value, aggfunc="sum")
 	pivot.index = pd.DatetimeIndex(pivot.index)
-	return pivot.sort_index()
+	# Column labels are bus ids read from the input, so they are strings; the
+	# stub types the pivot's columns as `Scalar`.
+	return pivot.sort_index().rename(columns=str)
 
 
 def build(out: Path) -> dict[str, Any]:
@@ -174,7 +176,7 @@ def build(out: Path) -> dict[str, Any]:
 	attach_renewables(
 		network,
 		{
-			carrier: _wide(group, "capacity_factor")
+			str(carrier): _wide(group, "capacity_factor")
 			for carrier, group in profiles.groupby("carrier", sort=True)
 		},
 		capital_cost_usd_per_mw={"solar": 700_000.0, "onwind": 1_200_000.0},

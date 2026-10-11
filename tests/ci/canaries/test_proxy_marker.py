@@ -17,7 +17,7 @@ from __future__ import annotations
 import subprocess
 import sys
 
-from alea.provenance.models import Basis, Provenance
+from alea.provenance.models import Basis, Licence, Provenance
 from alea.reporting.schemas import (
 	MARKERS,
 	MEASURED_MARKER,
@@ -34,7 +34,7 @@ def _provenance(basis: Basis, *, uncertainty: float = 0.0) -> Provenance:
 	return Provenance(
 		source_id="canary",
 		source_url="https://example.org/canary",
-		licence="CC-BY-4.0",
+		licence=Licence.CC_BY_4_0,
 		basis=basis,
 		uncertainty=uncertainty,
 		uncertainty_basis="proxy" if uncertainty else "",
@@ -102,7 +102,8 @@ def test_the_caller_cannot_supply_a_basis():
 			value=1200.0,
 			unit="MW",
 			provenance=_provenance(Basis.PROXY, uncertainty=0.3),
-			basis=Basis.MEASURED,
+			basis=Basis.MEASURED,  # type: ignore[call-arg]  # the planted defect: `basis` is derived
+
 		),
 	)
 

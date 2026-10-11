@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from alea._core import _rust
+from alea._core import _rust  # type: ignore[attr-defined]  # maturin extension, no stub
 from alea._core import kernels as K
 
 # The wrapper's `__all__` carries helpers (`available`, the exception classes)

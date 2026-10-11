@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 from alea.io.artefacts import ArtefactError, raw_path, sha256_bytes, store_raw
-from alea.provenance.models import Basis, Provenance
+from alea.provenance.models import Basis, Licence, Provenance
 from tests.ci.canaries import REPO, planted
 
 PAYLOAD = b"observed capacity, 2026-01-01\n"
@@ -26,7 +26,7 @@ def _provenance() -> Provenance:
 	return Provenance(
 		source_id="canary",
 		source_url="https://example.org/canary",
-		licence="CC-BY-4.0",
+		licence=Licence.CC_BY_4_0,
 		basis=Basis.MEASURED,
 		uncertainty=0.0,
 		notes="canary",

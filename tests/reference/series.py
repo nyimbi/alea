@@ -103,8 +103,12 @@ def aggregate(
 	Returns `(assignments, representatives, weights)` with weights summing to
 	`n_timesteps` exactly.
 	"""
-	series = np.asarray(series, dtype=np.float64)
-	n_timesteps = series.shape[0]
+	# Rebound to a float64 view: the arithmetic below is float64 throughout, and
+	# a float32 accumulator would round the weights this function exists to
+	# prove are exact. The declared parameter type is the *kernel's* contract
+	# (it takes float32); the reference widens on entry.
+	values = np.asarray(series, dtype=np.float64)
+	n_timesteps = values.shape[0]
 	if n_timesteps == 0:
 		return (
 			np.zeros(0, dtype=np.uint32),
@@ -120,7 +124,7 @@ def aggregate(
 		return assignments, representatives, weights
 
 	# Unequal division: seeded medoid clustering over whole periods.
-	medoids, members = _period_medoids(series, period_length)
+	medoids, members = _period_medoids(values, period_length)
 	n_whole = medoids.shape[0]
 	centres = _kmeans_plus_plus(medoids, n_periods, seed)
 	period_to_rep = []
@@ -145,7 +149,10 @@ def aggregate(
 	# representative, preserving the exact sum.
 	tail = list(range(n_whole * period_length, n_timesteps))
 	for t in tail:
-		best = min(range(len(reps_first)), key=lambda k: float(np.sum((series[t] - series[reps_first[k]]) ** 2)))
+		best = min(
+			range(len(reps_first)),
+			key=lambda k: float(np.sum((values[t] - values[reps_first[k]]) ** 2)),
+		)
 		assignments[t] = best
 		weights[best] += 1.0
 
@@ -158,11 +165,11 @@ def aggregate(
 
 def load_duration_curve(series: NDArray[np.float32]) -> NDArray[np.float32]:
 	"""Sorted-descending values per column."""
-	series = np.asarray(series, dtype=np.float64)
-	n_cols = series.shape[1]
-	out = np.empty_like(series, dtype=np.float64)
+	values = np.asarray(series, dtype=np.float64)
+	n_cols = values.shape[1]
+	out = np.empty_like(values, dtype=np.float64)
 	for c in range(n_cols):
-		column = sorted((float(v) for v in series[:, c]), reverse=True)
+		column = sorted((float(v) for v in values[:, c]), reverse=True)
 		out[:, c] = column
 	return out.astype(np.float32)
 

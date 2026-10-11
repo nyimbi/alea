@@ -78,10 +78,14 @@ def vza_baseline(
 
 	Returns `[12, n_bins, y, x]`, NaN where a bin had no observation.
 	"""
-	radiance = np.asarray(radiance, dtype=np.float64)
-	sensor_zenith = np.asarray(sensor_zenith, dtype=np.float64)
+	# Rebound to float64: the arithmetic below is float64 throughout. A fresh
+	# name rather than reassigning the parameter, so the declared float32 (the
+	# kernel's contract) stays visible and pyright does not read the widening as
+	# a type error.
+	radiance_f = np.asarray(radiance, dtype=np.float64)
+	zenith_f = np.asarray(sensor_zenith, dtype=np.float64)
 	month = np.asarray(month)
-	n_time, ny, nx = radiance.shape
+	n_time, ny, nx = radiance_f.shape
 	n_bins = _n_bins(bin_size_deg)
 	out = np.full((12, n_bins, ny, nx), np.nan, dtype=np.float64)
 
@@ -93,10 +97,10 @@ def vza_baseline(
 			continue
 		for y in range(ny):
 			for x in range(nx):
-				val = float(radiance[t, y, x])
+				val = float(radiance_f[t, y, x])
 				if not np.isfinite(val):
 					continue
-				b = _bin_of(float(sensor_zenith[t, y, x]), bin_size_deg, n_bins)
+				b = _bin_of(float(zenith_f[t, y, x]), bin_size_deg, n_bins)
 				if b is None:
 					continue
 				buckets.setdefault((m - 1, b, y, x), []).append(val)
@@ -130,13 +134,13 @@ def detect_outages(
 
 	Returns 1.0 flagged, 0.0 observed and clear, **NaN cloudy or unusable**.
 	"""
-	radiance = np.asarray(radiance, dtype=np.float64)
-	baseline = np.asarray(baseline, dtype=np.float64)
+	radiance_f = np.asarray(radiance, dtype=np.float64)
+	baseline_f = np.asarray(baseline, dtype=np.float64)
 	month = np.asarray(month)
-	sensor_zenith = np.asarray(sensor_zenith, dtype=np.float64)
+	zenith_f = np.asarray(sensor_zenith, dtype=np.float64)
 	cloud_bits = np.asarray(cloud_bits)
-	n_time, ny, nx = radiance.shape
-	n_bins = baseline.shape[1]
+	n_time, ny, nx = radiance_f.shape
+	n_bins = baseline_f.shape[1]
 	out = np.full((n_time, ny, nx), np.nan, dtype=np.float64)
 
 	for t in range(n_time):
@@ -148,11 +152,11 @@ def detect_outages(
 				# Unusable: cloudy, out-of-range zenith, or a missing input.
 				if not is_clear(int(cloud_bits[t, y, x]), max_cloud_confidence):
 					continue
-				b = _bin_of(float(sensor_zenith[t, y, x]), bin_size_deg, n_bins)
+				b = _bin_of(float(zenith_f[t, y, x]), bin_size_deg, n_bins)
 				if b is None:
 					continue
-				rad = float(radiance[t, y, x])
-				base = float(baseline[m - 1, b, y, x])
+				rad = float(radiance_f[t, y, x])
+				base = float(baseline_f[m - 1, b, y, x])
 				if not (np.isfinite(rad) and np.isfinite(base)):
 					continue
 				out[t, y, x] = 1.0 if rad < threshold * base else 0.0
@@ -170,16 +174,16 @@ def aggregate_to_zones(
 	is finite (clear, observed) enter the count, so the fraction's denominator
 	is clear pixels, not all pixels.
 	"""
-	anomaly = np.asarray(anomaly, dtype=np.float64)
+	anomaly_f = np.asarray(anomaly, dtype=np.float64)
 	zone_ids = np.asarray(zone_ids)
-	n_time, ny, nx = anomaly.shape
+	n_time, ny, nx = anomaly_f.shape
 	out = np.full((n_time, n_zones), np.nan, dtype=np.float64)
 	for t in range(n_time):
 		counts = [0] * n_zones
 		flagged = [0] * n_zones
 		for y in range(ny):
 			for x in range(nx):
-				val = float(anomaly[t, y, x])
+				val = float(anomaly_f[t, y, x])
 				if not np.isfinite(val):
 					continue
 				z = int(zone_ids[y, x])
