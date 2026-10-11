@@ -826,6 +826,8 @@ def build_renewables(
 	capacity_factor_sources: dict[str, str] | None = None,
 	layout_notes: dict[str, str] | None = None,
 	require_kenya_portfolio: bool = True,
+	geothermal_kenya_installed_mw: float = 950.0,
+	geothermal_atlas_potential_mw: float | None = None,
 	**technology_kwargs: Any,
 ) -> SectorBuild:
 	"""Build the renewable portfolio a config asks for.
@@ -932,10 +934,51 @@ def build_renewables(
 			)
 
 	rows = [view.as_row() for view in views]
-	build = SectorBuild(sector=Sector.RENEWABLES, rows=rows, views=views, enabled=True)
+	build = SectorBuild(
+		sector=Sector.RENEWABLES,
+		rows=rows,
+		views=views,
+		enabled=True,
+		geothermal_crosscheck=_geothermal_crosscheck(
+			views,
+			kenya_installed_mw=geothermal_kenya_installed_mw,
+			atlas_potential_mw=geothermal_atlas_potential_mw,
+		),
+	)
 	logger.info("renewables.built", assets=len(rows), carriers=len(built))
 	assert rows, "an enabled renewable portfolio produced no generators"
 	return build
+
+
+def _geothermal_crosscheck(
+	views: list[CouplingView],
+	*,
+	kenya_installed_mw: float,
+	atlas_potential_mw: float | None,
+) -> GeothermalCrossCheck | None:
+	"""The geothermal cross-check for the portfolio, or ``None`` when absent.
+
+	This is the caller ``crosscheck_geothermal`` did not have: the function and
+	its ``require`` gate existed and were exported, but nothing invoked them, so
+	the criterion -- Kenya's decisive resource cross-checked -- held only as an
+	unexercised definition. The modelled potential is the geothermal view's own
+	sourced ``potential`` parameter, so the cross-check is computed from the
+	number that reached the network rather than from the argument that produced
+	it.
+	"""
+	for view in views:
+		if view.carrier != Carrier.GEOTHERMAL.value:
+			continue
+		potential = view.parameters.get("potential")
+		if potential is None:
+			return None
+		check = crosscheck_geothermal(
+			modelled_mw=potential.value,
+			kenya_installed_mw=kenya_installed_mw,
+			atlas_potential_mw=atlas_potential_mw,
+		)
+		return check.require()
+	return None
 
 
 def _kwargs_for(

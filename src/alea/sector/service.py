@@ -106,11 +106,27 @@ def assert_efficiency_has_source(report: CouplingReport) -> None:
 	"""
 	for row in report.rows:
 		for column, value in row.values.items():
-			# No ``cop`` here: a heat pump's COP lands on the ``efficiency``
-			# column (heat.py), so ``cop`` would name a column no view emits. The
-			# degradation cost is a ``marginal_cost`` parameter and is checked by
-			# ``assert_v2g_has_degradation_cost`` instead.
-			if column.split("_")[0] not in {"efficiency", "standing_loss"}:
+			# The same column set and the same matching the ``LinkRow`` validator
+			# uses -- every ``efficiency``/``efficiency2``/... port and every
+			# other physical column. This check exists precisely for a row that
+			# bypassed that validator (``model_construct``, or a row read back
+			# from a file), so a narrower set here than there leaves the bypass
+			# open for the ports it omits: an industrial link's co-product
+			# efficiency or a methanol link's negative CO2 coefficient would pass
+			# unsourced. There is deliberately no ``cop``: a heat pump's COP lands
+			# on ``efficiency`` (heat.py), so ``cop`` would name a column no view
+			# emits. The degradation cost is a ``marginal_cost`` parameter and is
+			# checked by ``assert_v2g_has_degradation_cost`` instead.
+			if column.split("_")[0] not in {
+				"efficiency",
+				"efficiency2",
+				"efficiency3",
+				"efficiency4",
+				"standing_loss",
+				"specific_energy",
+				"p_max_pu",
+				"p_min_pu",
+			}:
 				continue
 			if not isinstance(value, int | float):
 				continue
@@ -119,6 +135,26 @@ def assert_efficiency_has_source(report: CouplingReport) -> None:
 					f"{row.name!r}.{column}={value} has no source; an efficiency "
 					f"nobody can trace is how a sector result becomes "
 					f"indefensible (05-layer2 §4)"
+				)
+		# A physical column carried as a series is gated the same way. The row
+		# validator covers both; a bypassed row that named its series keys but
+		# dropped their sources would otherwise pass here.
+		for column in row.time_series_keys:
+			if column.split("_")[0] not in {
+				"efficiency",
+				"efficiency2",
+				"efficiency3",
+				"efficiency4",
+				"standing_loss",
+				"specific_energy",
+				"p_max_pu",
+				"p_min_pu",
+			}:
+				continue
+			if column not in row.parameter_sources:
+				raise ValueError(
+					f"{row.name!r}.{column} is carried as a series with no source; "
+					f"every efficiency and COP is traceable (05-layer2 §4)"
 				)
 
 
@@ -179,6 +215,20 @@ def assert_kenya_portfolio(report: CouplingReport) -> None:
 	renewable_rows = [row for row in report.rows if row.sector is Sector.RENEWABLES]
 	if renewable_rows:
 		kenya_portfolio_gate(renewable_rows)
+
+
+def geothermal_crosscheck(report: CouplingReport) -> Any | None:
+	"""The Kenya geothermal cross-check the renewable build carried, if any.
+
+	``crosscheck_geothermal`` was exported and its ``require`` gate existed, but
+	nothing called it -- so criterion 5 held as a definition rather than as an
+	artefact. It is now computed in ``build_renewables`` and read back here for
+	the provenance and the coupling artefact.
+	"""
+	for build in report.builds:
+		if build.sector is Sector.RENEWABLES and build.geothermal_crosscheck is not None:
+			return build.geothermal_crosscheck
+	return None
 
 
 def couple_network(
@@ -274,6 +324,7 @@ def sector_provenance(
 	from alea.provenance.models import ProvenanceRecord
 
 	record = ProvenanceRecord(entries=entries)
+	crosscheck = geothermal_crosscheck(result.report)
 	return DerivedProvenance(
 		source_id="sector_coupling",
 		licence=Licence.CC_BY_4_0,
@@ -296,6 +347,18 @@ def sector_provenance(
 			"industry_steel": config.sector.industry_steel,
 			"industry_cement": config.sector.industry_cement,
 			"industry_chemicals": config.sector.industry_chemicals,
+			"geothermal_crosscheck": (
+				{
+					"modelled_mw": crosscheck.modelled_mw,
+					"kenya_installed_mw": crosscheck.kenya_installed_mw,
+					"atlas_potential_mw": crosscheck.atlas_potential_mw,
+					"within_tolerance": crosscheck.within_tolerance,
+					"relative_error": crosscheck.relative_error,
+					"source": crosscheck.source,
+				}
+				if crosscheck is not None
+				else None
+			),
 		},
 		notes=(
 			"Every physical parameter's source is recorded in "
@@ -357,6 +420,7 @@ def write_coupling_artefact(
 	mostly-null columns is harder to read and no smaller at this size.
 	"""
 	assert result.report.rows, "a coupling artefact with no assets is not a result"
+	crosscheck = geothermal_crosscheck(result.report)
 	payload = {
 		"assets": coupling_rows(result),
 		"base_digest_before": result.report.base_digest_before,
@@ -368,6 +432,19 @@ def write_coupling_artefact(
 			for build in result.report.builds
 			if not build.enabled
 		],
+		"geothermal_crosscheck": (
+			{
+				"modelled_mw": crosscheck.modelled_mw,
+				"kenya_installed_mw": crosscheck.kenya_installed_mw,
+				"atlas_potential_mw": crosscheck.atlas_potential_mw,
+				"tolerance_frac": crosscheck.tolerance_frac,
+				"relative_error": crosscheck.relative_error,
+				"within_tolerance": crosscheck.within_tolerance,
+				"source": crosscheck.source,
+			}
+			if crosscheck is not None
+			else None
+		),
 		"efficiency_sources": result.source_pairs,
 		"technologies_known": len(technologies()),
 		"run_id": result.run_id,
@@ -420,6 +497,7 @@ __all__ = [
 	"build_sector_coupling",
 	"couple_network",
 	"coupling_rows",
+	"geothermal_crosscheck",
 	"sector_provenance",
 	"source_pairs",
 	"write_coupling_artefact",

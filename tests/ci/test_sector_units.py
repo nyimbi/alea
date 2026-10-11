@@ -9,6 +9,8 @@ output. So each test asserts the *conversion*, not the presence of a parameter.
 
 from __future__ import annotations
 
+from typing import Any
+
 import pandas as pd
 import pypsa
 import pytest
@@ -45,7 +47,7 @@ def _profiles() -> dict[str, pd.Series]:
 	}
 
 
-def _full_portfolio_options() -> dict[str, object]:
+def _full_portfolio_options() -> dict[str, Any]:
 	return {
 		"capacity_factors": _profiles(),
 		"capacity_factor_sources": {
@@ -561,11 +563,15 @@ def test_the_geothermal_cross_check_refuses_a_potential_below_installed():
 def test_the_geothermal_cross_check_refuses_a_potential_far_from_the_atlas():
 	from alea.sector.renewables import build_renewables
 
-	options = _full_portfolio_options()
-	options["renewables"] = {"geothermal_atlas_potential_mw": 1000.0}
 	# 3000 modelled against a 1000 atlas figure is +200%, far outside 25%.
 	with pytest.raises(ValueError, match="fails the Kenya cross-check"):
-		build_renewables(_kenya_renewables_config(), bus="KE_elec", snapshots=SNAPSHOTS, **options)
+		build_renewables(
+			_kenya_renewables_config(),
+			bus="KE_elec",
+			snapshots=SNAPSHOTS,
+			geothermal_atlas_potential_mw=1000.0,
+			**_full_portfolio_options(),
+		)
 
 
 def test_the_cross_check_reaches_the_coupling_artefact():
@@ -578,3 +584,72 @@ def test_the_cross_check_reaches_the_coupling_artefact():
 	check = geothermal_crosscheck(report)
 	assert check is not None
 	assert check.within_tolerance
+
+
+# --- Defect 10: the service-level efficiency gate gated fewer columns than the row. ---
+
+
+def test_the_service_gate_catches_a_second_port_efficiency_the_validator_would():
+	"""A bypassed row with an unsourced ``efficiency2`` is refused.
+
+	``assert_efficiency_has_source`` exists for a row that reached the report
+	without passing the ``LinkRow`` validator. Its column set was narrower than
+	the validator's, so an industrial link's co-product efficiency (``efficiency2``
+	on a cement CCUS or methanol link) slipped past it -- the bypass it exists to
+	catch, open for the columns it did not name.
+	"""
+	from alea.sector.service import assert_efficiency_has_source
+
+	row = LinkRow.model_construct(
+		asset="Link",
+		name="cement_ccus",
+		sector=Sector.INDUSTRY,
+		carrier="cement",
+		bus0="",
+		bus1="",
+		bus2="",
+		bus3="",
+		values={"efficiency": 0.5, "efficiency2": 0.9},
+		time_series_keys=[],
+		parameter_sources={"efficiency": "IEA 2024"},
+		source="a citation",
+		provenance_id="p",
+		notes="",
+	)
+	report = CouplingReport.model_construct(
+		builds=[], base_digest_before="d", base_digest_after="d", rows=[row]
+	)
+	with pytest.raises(ValueError, match="efficiency2"):
+		assert_efficiency_has_source(report)
+
+
+# --- Criterion 10: the sector config extends Layer 1 rather than replacing it. ---
+
+
+def test_the_sector_layer_extends_a_layer_one_config_without_replacing_it():
+	"""Enabling sectors changes only the sector block.
+
+	The governing rule (05-layer2 §1) is that sector coupling is a config layer
+	over Layer 1. This asserts the schema consequence: a config with sectors
+	enabled carries every Layer 1 concern -- scenario, solve, costs -- unchanged,
+	so a sector-coupled run is the electricity run plus sectors and not a
+	different scenario that happens to mention them.
+	"""
+	from alea.config.loader import load_config
+
+	layer1 = load_config("config/config.kenya.yaml")
+	coupled = load_config(
+		"config/config.kenya.yaml",
+		overrides=[
+			"sector.enabled=true",
+			"sector.hydrogen_enabled=true",
+			"sector.electrolyser_efficiency_source=IRENA 2024 electrolyser cost study",
+		],
+	)
+	assert coupled.sector.enabled
+	assert coupled.sector.hydrogen_enabled
+	# Every Layer 1 concern is identical: the sector block was added, not swapped in.
+	assert coupled.scenario == layer1.scenario
+	assert coupled.solve == layer1.solve
+	assert coupled.costs == layer1.costs
+	assert coupled.paths == layer1.paths

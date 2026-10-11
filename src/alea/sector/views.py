@@ -256,6 +256,15 @@ class SectorBuild(BaseModel):
 	disabled and one that produced nothing because it is broken look identical
 	in the output otherwise."""
 
+	geothermal_crosscheck: Any = None
+	"""Kenya's geothermal potential against its references, when it applies.
+
+	Held on the build rather than recomputed by each caller so the cross-check
+	that gated the portfolio is the one a reader of the result can re-examine.
+	Typed ``Any`` to keep ``views`` free of an import from ``renewables``, which
+	imports this module; the value is a ``GeothermalCrossCheck``.
+	"""
+
 	@model_validator(mode="after")
 	def _skips_are_explained(self) -> SectorBuild:
 		if not self.enabled and not self.reason:
