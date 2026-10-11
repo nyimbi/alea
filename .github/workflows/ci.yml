@@ -1,0 +1,79 @@
+# ALEA continuous integration.
+#
+# This workflow deliberately contains no checks. Every check is defined in
+# `scripts/check.py`, which runs locally and is the way the suite is meant to be
+# used; this file only reproduces that environment on a clean machine and calls
+# it. A second definition of "the checks" written here would drift from the
+# local one, and the drift shows up as a push that fails for a reason nobody can
+# reproduce at their desk.
+#
+# It lives at the repository root. GitHub reads workflows only from
+# `<root>/.github/workflows/`, so the same file one directory down parses and
+# never runs -- the checks look configured and are unenforced for as long as
+# nobody reads the run history. The run history is the evidence.
+#
+# Locally: `make check` (everything), `make check-quick` (no Rust, no solve).
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: check (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.90.0"
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Install the project
+        run: uv sync --all-extras
+
+      - name: Build the Rust extension
+        # maturin, not a bare `cargo build`. An `extension-module` crate needs
+        # `-undefined dynamic_lookup`, which maturin sets and cargo does not; a
+        # bare cargo build of this workspace fails at link with
+        # "symbol(s) not found for architecture arm64".
+        run: uv run maturin develop --release
+
+      - name: Check
+        # The runner reads each verdict from the process return code and writes
+        # output to tmp/check-logs/. It never greps a summary line out of a pipe.
+        run: uv run python scripts/check.py
+
+      - name: Upload the check logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: check-logs-${{ matrix.os }}
+          path: tmp/check-logs
+          if-no-files-found: ignore
