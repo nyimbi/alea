@@ -14,3 +14,4 @@ reports/
 models/
 *.nc
 *.nc.aux
+Cargo.lock

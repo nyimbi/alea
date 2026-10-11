@@ -1,0 +1,40 @@
+[workspace]
+resolver = "2"
+members = [
+	"rust/alea-common",
+	"rust/alea-rasters",
+	"rust/alea-dedup",
+	"rust/alea-series",
+	"rust/alea-losses",
+	"rust/alea-risk",
+	"rust/alea-python",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.90"
+license = "MIT"
+authors = ["ALEA contributors"]
+repository = "https://github.com/nyimbiodero/alea"
+
+[workspace.dependencies]
+pyo3 = { version = "0.23", features = ["extension-module", "abi3-py312"] }
+numpy = "0.23"
+ndarray = { version = "0.16", features = ["rayon"] }
+rayon = "1.10"
+thiserror = "2.0"
+rand = "0.8"
+rand_chacha = "0.3"
+proptest = "1.5"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+# panic is deliberately NOT "abort". PyO3 turns a Rust panic into a Python
+# exception by catching the unwind; with abort, the first bad shape would kill
+# the interpreter and take the run's context with it.
+
+[profile.bench]
+inherits = "release"

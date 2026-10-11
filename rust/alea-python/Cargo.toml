@@ -1,0 +1,20 @@
+[package]
+name = "alea-python"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lib]
+name = "alea_core"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+alea-common = { path = "../alea-common" }
+alea-rasters = { path = "../alea-rasters" }
+alea-dedup = { path = "../alea-dedup" }
+alea-series = { path = "../alea-series" }
+alea-losses = { path = "../alea-losses" }
+alea-risk = { path = "../alea-risk" }
+pyo3.workspace = true
+numpy.workspace = true
