@@ -25,7 +25,10 @@ from alea.io.artefacts import (
 	write_artefact,
 )
 from alea.io.sources import Access, get_fetcher, get_source
+from alea.logging import get_logger
 from alea.provenance.models import DerivedProvenance, Provenance
+
+_log = get_logger(__name__)
 
 
 @dataclass(frozen=True)
@@ -167,6 +170,7 @@ def build_stage(
 	though it is newer than everything else, and a stage that ran today against
 	the same inputs is current even though a clock says otherwise.
 	"""
+	_register_all()
 	target = Path(out)
 	if stage_name not in _BUILDERS:
 		raise KeyError(
@@ -221,8 +225,43 @@ def write_stage(
 	return write_artefact(path, data, provenance, format=format)  # type: ignore[arg-type]
 
 
+_REGISTRATION_MODULES = (
+	"alea.losses.service",
+	"alea.outages.service",
+	"alea.resilience.service",
+	"alea.sector.service",
+)
+"""Modules that declare stage builders with ``@stage``.
+
+A registry populated by decorators is populated only when the declaring module
+is imported, and ``build_stage`` imports none of them: the CLI reported
+``unknown stage 'tlens'; registered: none`` for a stage whose own file says
+``@stage("tlens")``. The stage was written, decorated and unreachable. This
+tuple is the import list that closes the gap, kept beside the registry it fills
+so a new stage module is added in the one place a reader looks for it.
+"""
+
+
+def _register_all() -> None:
+	"""Import every stage-declaring module, so their decorators run.
+
+	Import failures are swallowed: a stage module that cannot import (a missing
+	optional dependency) must not make every *other* stage undiscoverable, which
+	would be the same failure this function exists to fix. ``registered_stages``
+	is the observable that says what actually registered.
+	"""
+	import importlib
+
+	for module in _REGISTRATION_MODULES:
+		try:
+			importlib.import_module(module)
+		except ImportError as exc:  # pragma: no cover - depends on the environment
+			_log.warning("stage_registration_failed", module=module, error=str(exc))
+
+
 def registered_stages() -> list[str]:
-	"""Stage names with a builder."""
+	"""Stage names with a builder, after importing the declaring modules."""
+	_register_all()
 	return sorted(_BUILDERS)
 
 

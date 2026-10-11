@@ -14,8 +14,9 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 import typer
 
@@ -64,16 +65,97 @@ def _load(config: Path | None, scenario: str | None, overrides: list[str] | None
 		raise typer.Exit(code=2) from exc
 
 
-def _run(component: str, **context: Any) -> tuple[str, Any]:
-	"""Log the entry line and return (run_id, logger).
+class _Run:
+	"""A pipeline invocation, recorded on entry and on exit.
 
-	The run id appears on both entry and exit so a log can be joined to the
-	artefacts a run produced even when the process dies in between.
+	``alea.api.runs.RunLog`` reads ``results/runs.jsonl`` and its docstring says
+	the CLI appends an entry line and closes it with an exit line. The CLI
+	appended neither: ``_run`` bound a run id to a structlog logger and returned,
+	so every ``GET /runs/{id}`` was a 404 for a run that had happened, and no
+	artefact could be joined back to the invocation that produced it.
+
+	Used as a context manager so the exit line is written on the way out of the
+	``with``, including when the body raises -- a run that failed is a run, and
+	the record's ``status`` is what says which. A process killed outright still
+	writes no exit line, which the reader already handles by treating a record
+	without one as ``running``.
 	"""
-	run_id = new_run_id()
-	logger = get_logger(component).bind(run_id=run_id)
-	logger.info("start", version=__version__, **context)
-	return run_id, logger
+
+	def __init__(self, component: str, **context: Any) -> None:
+		self.component = component
+		self.context = context
+		self.run_id = new_run_id()
+		self.logger = get_logger(component).bind(run_id=self.run_id)
+		self.artefacts: list[str] = []
+		self.started_at = datetime.now(UTC)
+
+	def __enter__(self) -> _Run:
+		self.logger.info("start", version=__version__, **self.context)
+		self._append(status="running")
+		return self
+
+	def __exit__(self, exc_type: Any, exc: Any, traceback: Any) -> Literal[False]:
+		status = "failed" if exc_type is not None else "succeeded"
+		self.logger.info("done", status=status)
+		self._append(
+			status=status,
+			finished_at=datetime.now(UTC),
+			detail="" if exc is None else f"{type(exc).__name__}: {exc}",
+		)
+		return False
+
+	def record(self, *paths: Any) -> None:
+		"""Name an artefact this run produced.
+
+		Called by a command that knows its output; the join from a published
+		number back to its run is the reason the log exists.
+		"""
+		self.artefacts.extend(str(path) for path in paths)
+
+	def _append(self, *, status: str, finished_at: datetime | None = None, detail: str = "") -> None:
+		"""Append one JSON-Lines record.
+
+		Failure to write the log must not fail the run: the work is done and its
+		artefacts are on disk, and losing the log line is a smaller loss than
+		losing the result. It is logged and swallowed.
+		"""
+		record = {
+			"run_id": self.run_id,
+			"component": self.component,
+			"status": status,
+			"started_at": self.started_at.isoformat(),
+			"finished_at": finished_at.isoformat() if finished_at else None,
+			"artefacts": list(self.artefacts),
+			"detail": detail,
+			"version": __version__,
+			"context": {key: str(value) for key, value in self.context.items()},
+		}
+		try:
+			path = _run_log_path()
+			path.parent.mkdir(parents=True, exist_ok=True)
+			with path.open("a", encoding="utf-8") as handle:
+				handle.write(json.dumps(record, sort_keys=True) + "\n")
+		except OSError as write_exc:  # pragma: no cover - depends on the filesystem
+			self.logger.warning("run_log_unwritable", error=str(write_exc))
+
+
+def _run_log_path() -> Path:
+	"""Where the run log lives, honouring ``--config``'s paths when loadable.
+
+	Resolved from the config when one can be read and from the repository
+	default otherwise: a ``config validate`` that fails because the config is
+	broken must still record that it ran and failed, which is precisely the run
+	a reader will look for.
+	"""
+	from alea.api.runs import RUN_LOG
+	from alea.config.paths import resolve
+
+	return resolve(RUN_LOG)
+
+
+def _run(component: str, **context: Any) -> _Run:
+	"""Begin a run. Use as ``with _run(...) as run:``."""
+	return _Run(component, **context)
 
 
 # --------------------------------------------------------------------------
@@ -93,18 +175,19 @@ def config_validate(
 	Unknown keys are the point. A typo that reaches a solve costs hours; the
 	loader forbids extras, so this names the key in a second.
 	"""
-	run_id, logger = _run("cli.config.validate", config=str(config))
-	loaded = _load(config, scenario, set_)
-	if not quiet:
-		# `ScenarioConfig` refuses a country that is None, so the `str` cast is
-		# exact rather than a hope; `CountryIso` is `str | None` only because a
-		# *signal* may arrive without one.
-		countries = ", ".join(str(iso) for iso in loaded.scenario.countries)
-		typer.echo(f"config ok: countries={countries}")
-		typer.echo(f"  horizons: {loaded.scenario.planning_horizons}")
-		typer.echo(f"  clusters: {loaded.scenario.clusters}")
-		typer.echo(f"  solver:   {loaded.solve.solver} (losses={loaded.solve.transmission_losses})")
-	logger.info("done", run_id=run_id)
+	with _run("cli.config.validate", config=str(config)):
+		loaded = _load(config, scenario, set_)
+		if not quiet:
+			# `ScenarioConfig` refuses a country that is None, so the `str` cast is
+			# exact rather than a hope; `CountryIso` is `str | None` only because a
+			# *signal* may arrive without one.
+			countries = ", ".join(str(iso) for iso in loaded.scenario.countries)
+			typer.echo(f"config ok: countries={countries}")
+			typer.echo(f"  horizons: {loaded.scenario.planning_horizons}")
+			typer.echo(f"  clusters: {loaded.scenario.clusters}")
+			typer.echo(
+				f"  solver:   {loaded.solve.solver} (losses={loaded.solve.transmission_losses})"
+			)
 
 
 @config_app.command("show")
@@ -114,9 +197,9 @@ def config_show(
 	set_: SetOption = None,
 ) -> None:
 	"""Print the fully merged configuration as JSON."""
-	_run("cli.config.show", config=str(config))
-	loaded = _load(config, scenario, set_)
-	typer.echo(json.dumps(loaded.model_dump(mode="json"), indent=2, sort_keys=True))
+	with _run("cli.config.show", config=str(config)):
+		loaded = _load(config, scenario, set_)
+		typer.echo(json.dumps(loaded.model_dump(mode="json"), indent=2, sort_keys=True))
 
 
 # --------------------------------------------------------------------------
@@ -127,30 +210,32 @@ def config_show(
 @registry_app.command("export")
 def registry_export(out: OutOption) -> None:
 	"""Write both registries to JSON."""
-	run_id, logger = _run("cli.registry.export", out=str(out))
-	payload = {
-		"countries": [c.model_dump(mode="json") for c in registry().values()],
-		"technologies": [t.model_dump(mode="json") for t in technologies().values()],
-	}
-	out.parent.mkdir(parents=True, exist_ok=True)
-	out.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
-	logger.info("done", run_id=run_id, countries=len(payload["countries"]))
-	typer.echo(f"wrote {len(payload['countries'])} countries to {out}")
+	with _run("cli.registry.export", out=str(out)) as run:
+		payload = {
+			"countries": [c.model_dump(mode="json") for c in registry().values()],
+			"technologies": [t.model_dump(mode="json") for t in technologies().values()],
+		}
+		out.parent.mkdir(parents=True, exist_ok=True)
+		out.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+		run.record(out)
+		typer.echo(f"wrote {len(payload['countries'])} countries to {out}")
 
 
 @registry_app.command("check")
 def registry_check() -> None:
 	"""Assert the registry invariants and exit non-zero if any fails."""
-	_run("cli.registry.check")
-	counts = tier_counts()
-	total = sum(counts.values())
-	if total != 55:
-		typer.secho(f"registry holds {total} countries, expected 55", fg=typer.colors.RED, err=True)
-		raise typer.Exit(code=1)
-	typer.echo(f"countries: {total}")
-	for tier, count in sorted(counts.items(), key=lambda kv: kv[0].value):
-		typer.echo(f"  {tier.value:9s} {count}")
-	typer.echo(f"technologies: {len(technologies())}")
+	with _run("cli.registry.check"):
+		counts = tier_counts()
+		total = sum(counts.values())
+		if total != 55:
+			typer.secho(
+				f"registry holds {total} countries, expected 55", fg=typer.colors.RED, err=True
+			)
+			raise typer.Exit(code=1)
+		typer.echo(f"countries: {total}")
+		for tier, count in sorted(counts.items(), key=lambda kv: kv[0].value):
+			typer.echo(f"  {tier.value:9s} {count}")
+		typer.echo(f"technologies: {len(technologies())}")
 
 
 # --------------------------------------------------------------------------
@@ -168,16 +253,16 @@ def fetch(
 	"""Retrieve one source into the immutable raw layer."""
 	from alea.io.pipeline import fetch_source
 
-	run_id, logger = _run("cli.fetch", source=source_id)
-	loaded = _load(config, None, None)
-	root = out or Path(loaded.paths.raw)
-	try:
-		result = fetch_source(source_id, root, force=force, logger=logger)
-	except KeyError as exc:
-		typer.secho(f"unknown source: {exc}", fg=typer.colors.RED, err=True)
-		raise typer.Exit(code=2) from exc
-	logger.info("done", run_id=run_id, checksum=result.checksum)
-	typer.echo(f"{source_id}: {result.checksum[:12]} ({result.bytes_written} bytes)")
+	with _run("cli.fetch", source=source_id) as run:
+		loaded = _load(config, None, None)
+		root = out or Path(loaded.paths.raw)
+		try:
+			result = fetch_source(source_id, root, force=force, logger=run.logger)
+		except KeyError as exc:
+			typer.secho(f"unknown source: {exc}", fg=typer.colors.RED, err=True)
+			raise typer.Exit(code=2) from exc
+		run.record(result.path)
+		typer.echo(f"{source_id}: {result.checksum[:12]} ({result.bytes_written} bytes)")
 
 
 @app.command()
@@ -190,15 +275,15 @@ def build(
 	"""Build one processed dataset from the raw layer."""
 	from alea.io.pipeline import build_stage
 
-	run_id, logger = _run("cli.build", stage=stage)
-	loaded = _load(config, None, None)
-	try:
-		result = build_stage(stage, loaded, out, force=force, logger=logger)
-	except KeyError as exc:
-		typer.secho(f"unknown stage: {exc}", fg=typer.colors.RED, err=True)
-		raise typer.Exit(code=2) from exc
-	logger.info("done", run_id=run_id, checksum=result.checksum)
-	typer.echo(f"{stage}: {result.checksum[:12]} -> {result.path}")
+	with _run("cli.build", stage=stage) as run:
+		loaded = _load(config, None, None)
+		try:
+			result = build_stage(stage, loaded, out, force=force, logger=run.logger)
+		except KeyError as exc:
+			typer.secho(f"unknown stage: {exc}", fg=typer.colors.RED, err=True)
+			raise typer.Exit(code=2) from exc
+		run.record(result.path)
+		typer.echo(f"{stage}: {result.checksum[:12]} -> {result.path}")
 
 
 @app.command()
@@ -211,14 +296,16 @@ def solve(
 	"""Solve a capacity-expansion problem."""
 	from alea.planning.service import solve_scenario
 
-	run_id, logger = _run("cli.solve", network=str(network), horizon=horizon)
-	loaded = _load(config, None, None)
-	result = solve_scenario(loaded, network=network, out=out, horizon=horizon, logger_=logger)
-	logger.info("done", run_id=run_id, objective=result.objective)
-	# No status check here: `solve_scenario` raises `ExpansionError` for anything
-	# that is not optimal, so reaching this line means the status is one of the
-	# accepted spellings and the objective is a real answer.
-	typer.echo(f"solved: objective={result.objective:,.0f} in {result.seconds:.1f}s")
+	with _run("cli.solve", network=str(network), horizon=horizon) as run:
+		loaded = _load(config, None, None)
+		result = solve_scenario(
+			loaded, network=network, out=out, horizon=horizon, logger_=run.logger
+		)
+		run.record(out)
+		# No status check here: `solve_scenario` raises `ExpansionError` for
+		# anything that is not optimal, so reaching this line means the status is
+		# one of the accepted spellings and the objective is a real answer.
+		typer.echo(f"solved: objective={result.objective:,.0f} in {result.seconds:.1f}s")
 
 
 @app.command()
@@ -231,14 +318,14 @@ def report(
 	"""Generate a periodic report."""
 	from alea.reporting.service import build_report
 
-	run_id, logger = _run("cli.report", kind=kind, date=date)
-	loaded = _load(config, None, None)
-	result = build_report(kind, loaded, out, date=date, run_id=run_id)
-	logger.info("done", run_id=run_id, report_id=result.report_id)
-	for path in result.paths:
-		typer.echo(f"{kind}: {path}")
-	for warning in result.warnings:
-		typer.secho(f"warning: {warning}", fg=typer.colors.YELLOW, err=True)
+	with _run("cli.report", kind=kind, date=date) as run:
+		loaded = _load(config, None, None)
+		result = build_report(kind, loaded, out, date=date, run_id=run.run_id)
+		run.record(*result.paths.values())
+		for path in result.paths:
+			typer.echo(f"{kind}: {path}")
+		for warning in result.warnings:
+			typer.secho(f"warning: {warning}", fg=typer.colors.YELLOW, err=True)
 
 
 @app.command()
@@ -258,29 +345,32 @@ def scan(
 	from alea.scanning.connectors import default_connectors
 	from alea.scanning.service import ScanningService
 
-	run_id, logger = _run("cli.scan", source=source_id)
-	loaded = _load(config, None, None)
-	connectors = default_connectors()
-	if source_id is not None:
-		connectors = [c for c in connectors if c.source_name == source_id]
-		if not connectors:
-			known = ", ".join(sorted(c.source_name for c in default_connectors()))
-			typer.secho(f"unknown source {source_id!r}; known: {known}", fg=typer.colors.RED, err=True)
-			raise typer.Exit(code=2)
+	with _run("cli.scan", source=source_id):
+		loaded = _load(config, None, None)
+		connectors = default_connectors()
+		if source_id is not None:
+			connectors = [c for c in connectors if c.source_name == source_id]
+			if not connectors:
+				known = ", ".join(sorted(c.source_name for c in default_connectors()))
+				typer.secho(
+					f"unknown source {source_id!r}; known: {known}",
+					fg=typer.colors.RED,
+					err=True,
+				)
+				raise typer.Exit(code=2)
 
-	async def _scan() -> Any:
-		service = ScanningService(connectors, config=loaded)
-		try:
-			return await service.run()
-		finally:
-			await service.aclose()
+		async def _scan() -> Any:
+			service = ScanningService(connectors, config=loaded)
+			try:
+				return await service.run()
+			finally:
+				await service.aclose()
 
-	result = asyncio.run(_scan())
-	logger.info("done", run_id=run_id, signals=result.signals_extracted)
-	typer.echo(
-		f"scan: {result.signals_extracted} signals from {result.documents_kept} documents, "
-		f"{result.signals_enqueued} queued for review"
-	)
+		result = asyncio.run(_scan())
+		typer.echo(
+			f"scan: {result.signals_extracted} signals from {result.documents_kept} documents, "
+			f"{result.signals_enqueued} queued for review"
+		)
 
 
 @app.command()
@@ -293,11 +383,14 @@ def serve(
 	"""Serve the REST API."""
 	import uvicorn
 
-	_run("cli.serve", host=host, port=port)
-	loaded = _load(config, None, None)
-	from alea.api.app import create_app
+	# The run record is written before the server starts and its exit line when
+	# the server stops, so the log says a serve is in progress for as long as it
+	# is -- which is the fact a reader asking "what is running" wants.
+	with _run("cli.serve", host=host, port=port):
+		loaded = _load(config, None, None)
+		from alea.api.app import create_app
 
-	uvicorn.run(create_app(loaded), host=host, port=port, reload=reload)
+		uvicorn.run(create_app(loaded), host=host, port=port, reload=reload)
 
 
 @app.command()

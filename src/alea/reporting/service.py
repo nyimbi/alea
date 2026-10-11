@@ -562,6 +562,14 @@ def build_report(
 		deliveries = deliver_report(built, config)
 		built = _replace_deliveries(built, deliveries)
 
+	# The API's report routes read `reports/<cadence>/index.json` and the dated
+	# `<date>.json` document beside it (`alea.api.repository.reports`). Nothing
+	# wrote either, so every report listing returned `total: 0` while the HTML
+	# and PDF sat in the same directory. The index is a plain JSON file rather
+	# than an artefact: a provenance sidecar on an index that describes
+	# artefacts would be circular.
+	_publish_index(built, output_dir)
+
 	logger.info(
 		"report.built",
 		cadence=kind.value,
@@ -572,6 +580,57 @@ def build_report(
 		seconds=round(built.duration_seconds, 2),
 	)
 	return built
+
+
+def _publish_index(built: BuildResult, output_dir: Path) -> None:
+	"""Write the dated document and update ``index.json`` for this cadence.
+
+	The API reads these; a report a dashboard cannot list is a report nobody
+	reads. ``checksum`` is the HTML's own hash, so a client can tell whether the
+	rendered file changed without downloading it, and ``formats`` is what was
+	actually written rather than what was requested -- a PDF that failed to
+	render must not be advertised.
+	"""
+	import json
+
+	formats = sorted(built.paths)
+	document = {
+		"cadence": built.cadence,
+		"report_date": built.as_of.isoformat(),
+		"title": f"{built.cadence.capitalize()} report {built.as_of.isoformat()}",
+		"generated_at": datetime.now(UTC).isoformat(),
+		"checksum": _file_checksum(built.path),
+		"formats": formats,
+		"report_id": built.report_id,
+		"warnings": list(built.warnings),
+	}
+	output_dir.mkdir(parents=True, exist_ok=True)
+	(output_dir / f"{built.as_of.isoformat()}.json").write_text(
+		json.dumps(document, indent=2, sort_keys=True), encoding="utf-8"
+	)
+
+	index_path = output_dir / "index.json"
+	entries: list[dict[str, Any]] = []
+	if index_path.exists():
+		existing = json.loads(index_path.read_text(encoding="utf-8"))
+		if isinstance(existing, dict) and isinstance(existing.get("reports"), list):
+			entries = [e for e in existing["reports"] if isinstance(e, dict)]
+	# Re-rendering one date replaces its entry: the index lists reports, not
+	# render runs, and two entries for one date would make the listing show the
+	# same report twice.
+	entries = [e for e in entries if e.get("report_date") != document["report_date"]]
+	entries.append(document)
+	entries.sort(key=lambda e: str(e.get("report_date", "")), reverse=True)
+	index_path.write_text(
+		json.dumps({"reports": entries}, indent=2, sort_keys=True), encoding="utf-8"
+	)
+
+
+def _file_checksum(path: Path) -> str:
+	"""sha256 of a rendered file, or ``""`` when it is not there."""
+	if not path.exists():
+		return ""
+	return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _rename(path: Path, stem: str) -> Path:
