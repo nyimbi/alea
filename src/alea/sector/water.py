@@ -22,6 +22,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
+import numpy as np
 import pandas as pd
 
 from alea.logging import get_logger
@@ -204,17 +205,37 @@ def water_demand_view(
 	source: str = "05-layer2 §2.5 (municipal water demand)",
 	name: str = "water_demand",
 ) -> CouplingView:
-	"""Municipal and industrial water demand as a ``Load`` on the water bus."""
+	"""Municipal and industrial water demand as a ``Load`` on the water bus.
+
+	A supplied ``profile`` is a *shape*, not a volume: it is scaled so its
+	weighted integral equals the annual demand over the modelled horizon. Passing
+	the shape through unscaled would discard ``annual_demand_m3`` -- the annual
+	volume would then be whatever the profile happened to integrate to, and the
+	figure the caller stated would be decorative.
+	"""
 	assert bus_water, "water demand needs a water bus"
 	assert annual_demand_m3 >= 0.0, "demand must be non-negative"
 	index = as_index(snapshots)
 	hours = total_hours(index, weights)
 	scaled_m3 = annual_demand_m3 * (hours / 8760.0)
-	p_set = (
-		annual_series(scaled_m3, index, weights)
-		if profile is None
-		else series_over(profile.to_numpy(), index, "p_set")
-	)
+
+	if profile is None:
+		p_set = annual_series(scaled_m3, index, weights)
+		notes = f"{annual_demand_m3:,.0f} m3/year over the modelled horizon"
+	else:
+		shape = series_over(profile.to_numpy(), index, "p_set")
+		weight_values = np.ones(len(index)) if weights is None else np.asarray(weights, dtype=np.float64)
+		shape_total = float((shape.to_numpy() * weight_values).sum())
+		if shape_total <= 0.0:
+			raise ValueError(
+				"the water demand profile integrates to zero over the horizon; a "
+				"shape with no volume cannot carry an annual demand"
+			)
+		p_set = shape * (scaled_m3 / shape_total)
+		notes = (
+			f"{annual_demand_m3:,.0f} m3/year, shaped profile scaled to the "
+			f"annual total"
+		)
 
 	view = CouplingView(
 		asset="Load",
@@ -225,7 +246,7 @@ def water_demand_view(
 		attributes={"bus": bus_water, "p_set": float(p_set.iloc[0]) if len(p_set) else 0.0},
 		time_series={"p_set": p_set.to_list()},
 		source=source,
-		notes=f"{annual_demand_m3:,.0f} m3/year over the modelled horizon",
+		notes=notes,
 	)
 	assert len(view.time_series["p_set"]) == len(index)
 	return view
@@ -268,6 +289,14 @@ def pumping_view(
 	specific_kwh_per_m3 = joules_per_m3 / 3.6e6 / efficiency
 	m3_per_mwh = M3_PER_MWH_AT_1_KWH_PER_M3 / specific_kwh_per_m3
 
+	# ``p_nom`` is the input power at bus0, in MW -- not the output in m³/h, the
+	# same as the desalination link. A pump rated 1000 m³/h against a 400 m head
+	# draws about 1.4 MW, not 1000, and setting p_nom to the m³/h figure makes the
+	# electrical link three orders of magnitude larger than any pump on the
+	# network. Dividing the rated output by the link's own efficiency converts it,
+	# exactly as desalination_view does.
+	p_nom_mw = capacity_m3_per_hour / m3_per_mwh
+
 	view = CouplingView(
 		asset="Link",
 		name=name,
@@ -288,7 +317,7 @@ def pumping_view(
 			)
 		},
 		attributes={
-			"p_nom": float(capacity_m3_per_hour),
+			"p_nom": float(p_nom_mw),
 			"p_nom_extendable": bool(extendable),
 			"capital_cost": float(capital_cost),
 			"p_min_pu": 0.0,

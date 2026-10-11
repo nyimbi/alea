@@ -204,15 +204,16 @@ class LinkRow(BaseModel):
 	@model_validator(mode="after")
 	def _physical_parameters_are_sourced(self) -> LinkRow:
 		# Every physical column -- constant or series -- carries a citation. A
-		# capacity is a scenario choice and is exempt; an efficiency is not.
+		# capacity is a scenario choice and is exempt; an efficiency is not. There
+		# is deliberately no ``cop`` here: a heat pump's COP is emitted as
+		# ``efficiency`` (the PyPSA column it lands in), so a ``cop`` name would
+		# gate a column no view ever produces.
 		physical = {
 			"efficiency",
 			"efficiency2",
 			"efficiency3",
 			"efficiency4",
 			"standing_loss",
-			"cop",
-			"degradation_cost",
 			"specific_energy",
 			"p_max_pu",
 			"p_min_pu",

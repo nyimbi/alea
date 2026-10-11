@@ -29,7 +29,7 @@ import pandas as pd
 from alea.config.models import Config
 from alea.logging import get_logger
 from alea.registry import Carrier
-from alea.sector import heat, hydrogen, industry, transport, water
+from alea.sector import heat, hydrogen, industry, renewables, transport, water
 from alea.sector._util import as_index, weighted_energy
 from alea.sector.views import (
 	CouplingReport,
@@ -469,6 +469,28 @@ def couple(
 			**_subset(sector_options, "water"),
 		)
 	)
+	# The renewable portfolio is the sixth sector and the one that attaches to
+	# the electricity bus itself: CSP, offshore wind, geothermal, hydro, biomass
+	# and marine are generators on ``elec``, not assets on a bus of their own.
+	# Leaving it out of this list left ``SECTOR_BUS_SUFFIX["renewables"]``
+	# creating a bus nothing attached to, so Kenya's decisive technology --
+	# geothermal -- was unreachable through ``couple`` at all. It takes the whole
+	# ``Config`` rather than ``config.sector`` because the portfolio is configured
+	# under ``config.renewables``.
+	builds.append(
+		renewables.build_renewables(
+			config,
+			bus=electricity,
+			snapshots=index,
+			# The portfolio's resource profiles and its `technology_kwargs` are a
+			# nested block; the rest are named arguments, because the nested form
+			# cannot reach a keyword-only parameter (`capacity_factors`). The
+			# shapes differ on purpose so the call sites read differently and a
+			# caller passing `capacity_factors` at the top level is not silently
+			# swallowed.
+			**_renewable_options(sector_options),
+		)
+	)
 
 	rows: list[LinkRow] = []
 	views: list[CouplingView] = []
@@ -518,6 +540,33 @@ def _subset(options: dict[str, Any], sector: str) -> dict[str, Any]:
 	return {}
 
 
+def _renewable_options(options: dict[str, Any]) -> dict[str, Any]:
+	"""The renewable portfolio's options, from a flat or nested mapping.
+
+	``capacity_factors``, ``capacity_factor_sources`` and ``layout_notes`` are
+	named (keyword-only) parameters on ``build_renewables``; every other key is a
+	per-carrier technology block, matching ``_kwargs_for``'s own convention
+	(``{"geothermal": {"potential_mw": ...}}``). The nested ``renewables={...}``
+	block therefore carries the three named series under their own names and each
+	carrier under its carrier name. This matters because the named ones are
+	keyword-only, so a block that put them under a ``technology_kwargs`` key
+	would leave ``build_renewables`` without them and raise "unexpected keyword
+	argument" the moment a portfolio was configured through ``couple``.
+	"""
+	nested_raw = options.get("renewables")
+	nested = dict(nested_raw) if isinstance(nested_raw, dict) else {}
+	out: dict[str, Any] = {}
+	for name in ("capacity_factors", "capacity_factor_sources", "layout_notes"):
+		if name in nested:
+			out[name] = nested.pop(name)
+		elif name in options:
+			out[name] = options[name]
+	# Anything left in the block is a carrier -> kwargs mapping, and a flat
+	# ``technology_kwargs`` mapping is accepted as well.
+	out.update(nested)
+	if isinstance(options.get("technology_kwargs"), dict):
+		out.update(options["technology_kwargs"])
+	return out
 
 
 

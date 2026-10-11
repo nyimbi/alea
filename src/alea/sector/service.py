@@ -106,7 +106,11 @@ def assert_efficiency_has_source(report: CouplingReport) -> None:
 	"""
 	for row in report.rows:
 		for column, value in row.values.items():
-			if column.split("_")[0] not in {"efficiency", "cop", "standing_loss"}:
+			# No ``cop`` here: a heat pump's COP lands on the ``efficiency``
+			# column (heat.py), so ``cop`` would name a column no view emits. The
+			# degradation cost is a ``marginal_cost`` parameter and is checked by
+			# ``assert_v2g_has_degradation_cost`` instead.
+			if column.split("_")[0] not in {"efficiency", "standing_loss"}:
 				continue
 			if not isinstance(value, int | float):
 				continue
@@ -134,7 +138,13 @@ def assert_v2g_has_degradation_cost(config: Config, report: CouplingReport) -> N
 			"network disagree about whether the fleet can export"
 		)
 	for row in v2g_rows:
-		cost = row.parameter_sources.get("degradation_cost")
+		# The degradation cost is recorded under ``marginal_cost`` -- the column
+		# PyPSA actually charges the link on -- so the source and the value come
+		# from the same key. Reading the source from a ``degradation_cost``
+		# parameter while the value lived in ``marginal_cost`` was a bridge
+		# between two names, and a row that renamed either one would have passed
+		# this gate while carrying an unsourced cost.
+		cost = row.parameter_sources.get("marginal_cost")
 		value = row.values.get("marginal_cost", 0.0)
 		if not cost or not isinstance(value, int | float) or value <= 0.0:
 			raise ValueError(

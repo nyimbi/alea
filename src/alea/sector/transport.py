@@ -189,6 +189,12 @@ def v2g_view(
 	config validator also does. A caller reaching this function directly has not
 	constructed a ``SectorConfig``, and the guarantee has to hold at the point
 	the asset is created or it does not hold.
+
+	The cost is recorded as a ``marginal_cost`` parameter, not a
+	``degradation_cost`` one: ``apply_view`` writes ``<column>_source`` for every
+	parameter, and only a parameter named for the column PyPSA actually charges
+	produces the ``marginal_cost_source`` the plan requires. A parameter under a
+	name PyPSA ignores would carry the source in a column nothing reads.
 	"""
 	assert bus_electricity and bus_ev, "V2G needs both an electricity and an EV bus"
 	assert discharge_power_mw >= 0.0, "discharge power must be non-negative"
@@ -218,7 +224,7 @@ def v2g_view(
 				unit="MWh_el/MWh_batt",
 				source=inverter_efficiency_source,
 			),
-			"degradation_cost": Parameter(
+			"marginal_cost": Parameter(
 				value=degradation_usd_per_mwh,
 				unit="USD/MWh_batt",
 				source=DEGRADATION_SOURCE,
@@ -250,7 +256,7 @@ def v2g_view(
 			f"{degradation_usd_per_mwh:g} USD/MWh degradation cost"
 		),
 	)
-	assert view.parameters["degradation_cost"].value > 0.0
+	assert view.parameters["marginal_cost"].value > 0.0
 	return view
 
 

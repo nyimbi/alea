@@ -688,10 +688,23 @@ def biomass_view(
 	constraint in almost every African biomass study. Both are sourced: a
 	biomass plant with no fuel limit is a plant that runs at full output all
 	year and competes with nothing.
+
+	``fuel_cost_usd_per_mwh`` is the price of *fuel* energy, and PyPSA's
+	``marginal_cost`` is USD per MWh of *output*, so the two differ by the
+	conversion efficiency: a plant at 0.35 efficiency spends 1/0.35 = 2.86 MWh of
+	fuel per MWh generated and its marginal cost is that multiple of the fuel
+	price. Setting the fuel price directly understates the cost by that factor
+	and makes biomass look far cheaper than it is. ``market.fuel`` performs the
+	same division for the electricity fleet.
 	"""
 	assert potential_mw > 0.0, "biomass potential must be positive"
+	assert 0.0 < efficiency <= 1.0, f"efficiency must be in (0, 1], got {efficiency}"
 	if not fuel_cost_source.strip() or not potential_source.strip():
 		raise ValueError("biomass requires both a fuel-cost source and a potential source")
+
+	# Fuel energy per unit of output energy; the marginal cost is the fuel price
+	# scaled by it.
+	marginal_cost_usd_per_mwh_out = fuel_cost_usd_per_mwh / efficiency
 
 	view = _renewable_generator(
 		name=name,
@@ -703,7 +716,7 @@ def biomass_view(
 		p_nom=p_nom if p_nom > 0.0 else potential_mw,
 		extendable=extendable,
 		capital_cost=capital_cost,
-		marginal_cost=fuel_cost_usd_per_mwh,
+		marginal_cost=marginal_cost_usd_per_mwh_out,
 		p_min_pu=0.0,
 		p_min_pu_source="",
 		notes=(
@@ -729,6 +742,16 @@ def biomass_view(
 					value=fuel_cost_usd_per_mwh,
 					unit="USD/MWh_fuel",
 					source=fuel_cost_source,
+				),
+				"marginal_cost": Parameter(
+					value=marginal_cost_usd_per_mwh_out,
+					unit="USD/MWh_el",
+					source=fuel_cost_source,
+					notes=(
+						f"fuel cost {fuel_cost_usd_per_mwh:g} USD/MWh_fuel divided by "
+						f"the {efficiency:g} conversion efficiency; PyPSA charges "
+						f"marginal cost per MWh of output, not of fuel"
+					),
 				),
 			}
 		}
