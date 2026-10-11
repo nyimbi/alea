@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pandas as pd
@@ -118,18 +118,21 @@ def write_fixture_artefact(
 
 
 def _day_stamp(cadence: ReportCadence) -> str:
-	"""The date a cadence's artefact is stamped with: its period end."""
-	if cadence is ReportCadence.DAILY:
-		return f"{AS_OF - timedelta(days=1):%Y-%m-%d}"
-	if cadence is ReportCadence.WEEKLY:
-		return f"{AS_OF - timedelta(days=1):%Y-%m-%d}"
-	if cadence is ReportCadence.MONTHLY:
-		return f"{AS_OF.replace(day=1) - timedelta(days=1):%Y-%m-%d}"
-	if cadence is ReportCadence.QUARTERLY:
-		end = AS_OF.replace(day=1) - timedelta(days=1)
-		month = 3 * ((end.month - 1) // 3) + 1
-		return f"{date(end.year, month, 1) - timedelta(days=1):%Y-%m-%d}"
-	return f"{date(AS_OF.year - 1, 12, 31):%Y-%m-%d}"
+	"""The date a cadence's artefact is stamped with.
+
+	Every section pattern in all five cadence modules is ``.../{date}.parquet``,
+	and ``assemble_context`` formats it with the cadence's ``period_end`` -- not
+	the report's ``as_of``. So the fixture must carry the period end, and it
+	asks the service for it rather than reimplementing the arithmetic. An
+	earlier version of this helper computed a period end by hand and got it
+	wrong for the weekly, quarterly and annual cadences at once; a fixture that
+	guesses at the reader's rule fails the moment the rule is anything but
+	"yesterday".
+	"""
+	from alea.reporting.schemas import period_for
+
+	_, period_end = period_for(cadence, AS_OF)
+	return f"{period_end:%Y-%m-%d}"
 
 
 def _fixture_plan(cadence: ReportCadence) -> dict[str, tuple[FixtureValue, ...]]:
@@ -212,13 +215,20 @@ def write_all_fixture_sets(results_root: str | Path) -> dict[ReportCadence, list
 
 
 def declared_artefacts(cadence: ReportCadence, as_of: date) -> list[str]:
-	"""Every ``artefact=`` pattern a cadence declares, resolved to a path string."""
+	"""Every ``artefact=`` pattern a cadence declares, resolved to a path string.
+
+	Resolved against the cadence's ``period_end`` for ``as_of``, which is the
+	date the reader will format the pattern with.
+	"""
+	from alea.reporting.schemas import period_for
+
+	_, period_end = period_for(cadence, as_of)
 	specs, _ = cadence_specs(cadence)
 	return [
 		spec.artefact.format(
-			date=f"{as_of:%Y-%m-%d}",
-			month=f"{as_of:%Y-%m}",
-			year=f"{as_of:%Y}",
+			date=f"{period_end:%Y-%m-%d}",
+			month=f"{period_end:%Y-%m}",
+			year=f"{period_end:%Y}",
 		)
 		for spec in specs
 	]
