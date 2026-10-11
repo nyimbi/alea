@@ -226,6 +226,19 @@ pub fn detect_outages(
 			range: "(0, inf)",
 		});
 	}
+	// `month` indexes the baseline's first axis below. A value outside 1..=12
+	// indexes past it and panics rather than returning an error -- a panic
+	// crossing the PyO3 boundary is not a typed exception, and it takes the
+	// process down. `vza_baseline` validates the same input; this path did not.
+	for (t, &m) in month.iter().enumerate() {
+		if !(1..=12).contains(&m) {
+			return Err(AleaError::OutOfRange {
+				name: "month",
+				value: format!("{m} at index {t}"),
+				range: "1..=12",
+			});
+		}
+	}
 
 	let n_bins = baseline.shape()[1];
 	let (n_time, ny, nx) = (shape[0], shape[1], shape[2]);
@@ -592,6 +605,29 @@ mod tests {
 		let zenith = Array3::<f32>::zeros((2, 2, 3));
 		let month = array![1u8, 2];
 		assert!(vza_baseline(radiance.view(), zenith.view(), month.view(), 5.0, 0.25).is_err());
+	}
+
+	#[test]
+	fn detect_outages_refuses_a_bad_month_instead_of_panicking() {
+		// `month` indexes the baseline's first axis. Month 13 indexes past it,
+		// and before the guard went in this panicked -- a panic crossing the
+		// PyO3 boundary is not a typed error and takes the process down.
+		let radiance = array![[[0.1f32]]];
+		let baseline = Array4::<f32>::from_elem((12, N_VZA_BINS, 1, 1), 1.0);
+		let month = array![13u8];
+		let zenith = Array3::<f32>::zeros((1, 1, 1));
+		let clear = array![[[0u8]]];
+		let result = detect_outages(
+			radiance.view(),
+			baseline.view(),
+			month.view(),
+			zenith.view(),
+			clear.view(),
+			5.0,
+			0.6,
+			0,
+		);
+		assert!(result.is_err(), "month 13 must be an error, not a panic");
 	}
 
 	#[test]
