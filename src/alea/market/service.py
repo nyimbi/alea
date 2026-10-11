@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 
 from alea._uuid7 import uuid7str
-from alea.io.artefacts import write_artefact
+from alea.io.artefacts import read_artefact, stage_is_current, write_artefact
 from alea.logging import get_logger
 from alea.market.agents import Agent, build_stack
 from alea.market.capture import capture_by_technology
@@ -84,8 +84,18 @@ def clear_scenario(
 	The competitive benchmark is written into the provenance parameters, so a
 	clearing price in the artefact can always be read against the price the same
 	fleet would have cleared at with no strategic markup.
+
+	``force`` follows the pipeline's idempotence convention: a scenario already
+	current for these inputs is read back rather than re-cleared, and ``force``
+	re-clears and rewrites it. It is threaded here rather than left to the
+	caller because a scenario that is current is *defined* by the inputs the
+	artefact records, and that check belongs at the write path.
 	"""
 	assert agents, "no agents to clear a market from"
+	if not force and inputs and stage_is_current(out, list(inputs)):
+		existing, _ = read_artefact(out)
+		logger.info("clear_scenario.skip", out=str(out))
+		return ClearingResult.model_validate(existing)
 	stack = build_stack(agents)
 	result = clear_market(
 		stack,
@@ -173,24 +183,32 @@ def capture_scenario(
 	out: str | Path,
 	*,
 	inputs: Sequence[str],
+	period: str | None = None,
 ) -> dict[str, Any]:
 	"""Capture prices per technology and write the result.
 
 	Technologies that generated nothing carry ``null`` (the artefact encoding of
-	NaN), never zero. See ``market.capture``.
+	NaN), never zero. See ``market.capture``. When ``period`` is a pandas offset
+	alias each carrier maps to a list of per-period capture prices; otherwise
+	there is a single period over the whole series.
 	"""
 	assert not generation_mw.empty, "no generation to compute capture prices from"
-	captures = capture_by_technology(generation_mw, price_usd_per_mwh)
+	captures = capture_by_technology(generation_mw, price_usd_per_mwh, period=period)
 	payload = {
-		carrier: capture.model_dump(mode="json") for carrier, capture in sorted(captures.items())
+		carrier: [capture.model_dump(mode="json") for capture in periods]
+		for carrier, periods in sorted(captures.items())
 	}
 	provenance = _derived(
 		inputs,
 		parameters={
-			"periods": int(len(generation_mw)),
+			"period": period,
+			"periods": max((len(p) for p in captures.values()), default=0),
+			"snapshots": int(len(generation_mw)),
 			"carriers": sorted(str(c) for c in generation_mw.columns),
 			"no_generation_carriers": sorted(
-				c for c, capture in captures.items() if capture.capture_price_usd_per_mwh is None
+				carrier
+				for carrier, periods in captures.items()
+				if all(p.capture_price_usd_per_mwh is None for p in periods)
 			),
 		},
 		notes="revenue-weighted capture prices; NaN (null) where a carrier generated nothing",

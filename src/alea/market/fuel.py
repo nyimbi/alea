@@ -55,6 +55,11 @@ def fuel_price_series(
 	but a caller supplying a modelled or proxy fuel price must say so -- the
 	``Provenance`` model refuses non-zero uncertainty with no basis, and a proxy
 	with zero uncertainty.
+
+	There is deliberately no config lookup beside this. ``CostsConfig`` carries
+	only the FX rates it knows (EUR/USD, KES/USD) and no fuel price, so a price
+	must be supplied here as a series; a caller that wanted one from the config
+	would have found a fabricated zero instead.
 	"""
 	assert prices, f"a fuel price series for {fuel}/{country_iso} needs at least one year"
 	for year, value in prices.items():
@@ -71,23 +76,6 @@ def fuel_price_series(
 		notes=notes or f"{fuel} price for {country_iso}, {min(prices)}-{max(prices)}",
 	)
 	return FuelPriceSeries(fuel=fuel, country_iso=country_iso, prices=prices, provenance=provenance)
-
-
-def fuel_price_from_config(
-	config_costs: object,
-	fuel: str,
-	country_iso: str,
-	year: int,
-) -> float | None:
-	"""A single fuel price drawn from a config, or ``None`` when unavailable.
-
-	The config carries the two FX rates it knows (EUR/USD, KES/USD) and no fuel
-	price, so this is deliberately thin: it exists to make the *absence* of a
-	configured fuel price explicit rather than silent. A caller that needs a
-	price and finds ``None`` must supply a series, not default to zero.
-	"""
-	_ = (config_costs, fuel, country_iso, year)
-	return None
 
 
 def marginal_cost(
@@ -190,7 +178,6 @@ def marginal_cost_table(
 
 __all__ = [
 	"FUEL_PRICE_SOURCE_ID",
-	"fuel_price_from_config",
 	"fuel_price_series",
 	"marginal_cost",
 	"marginal_cost_table",

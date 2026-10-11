@@ -88,18 +88,39 @@ def capture_rate(
 	return capture, time_weighted, capture / time_weighted
 
 
+def _period_positions(index: pd.Index, period: str | None) -> list[NDArray[np.intp]]:
+	"""Row positions for each period, in ascending period order.
+
+	Without ``period`` the whole index is a single period. With a pandas offset
+	alias the index is bucketed by that alias. Positions come back as arrays
+	rather than contiguous ranges, so an unsorted index still groups correctly.
+	"""
+	rows = np.arange(len(index), dtype=np.intp)
+	if period is None:
+		return [rows]
+	assert isinstance(index, pd.DatetimeIndex), (
+		f"period={period!r} needs a DatetimeIndex, got {type(index).__name__}"
+	)
+	grouped = pd.Series(rows, index=index)
+	return [group.to_numpy(dtype=np.intp) for _, group in grouped.groupby(pd.Grouper(freq=period))]
+
+
 def capture_by_technology(
 	generation_mw: pd.DataFrame,
 	price_usd_per_mwh: pd.Series | NDArray[np.float64],
 	*,
 	period: str | None = None,
-) -> dict[str, CapturePrice]:
+) -> dict[str, list[CapturePrice]]:
 	"""Capture prices for every column of a generation frame.
 
-	``generation_mw`` is ``(time, carrier)``; ``price`` is ``(time,)``. When
-	``period`` is given (a pandas offset alias such as ``"YE"``), the frame is
-	resampled and one ``CapturePrice`` per carrier is returned for the whole
-	series; otherwise a single result per carrier over all rows is returned.
+	``generation_mw`` is ``(time, carrier)``; ``price`` is ``(time,)``. Each
+	carrier maps to one ``CapturePrice`` per period, ordered by period start;
+	without ``period`` there is a single period spanning the whole series.
+
+	``period`` is a pandas offset alias such as ``"YE"``. The index is grouped
+	by that alias and capture is computed *within* each period, so a capture
+	rate can be read as a time series rather than one number for the study. The
+	parameter is not decorative: a caller that asks for periods gets periods.
 
 	The per-carrier aggregation uses ``nansum`` over time so a NaN hour does not
 	vanish the carrier's whole period, while the capture price itself stays NaN
@@ -110,30 +131,44 @@ def capture_by_technology(
 		f"{len(generation_mw)} generation rows for {len(price)} prices"
 	)
 
-	out: dict[str, CapturePrice] = {}
+	index = generation_mw.index
+	windows = _period_positions(index, period)
+	out: dict[str, list[CapturePrice]] = {}
 	for carrier in generation_mw.columns:
 		generation = np.asarray(generation_mw[carrier], dtype=np.float64)
-		capture, time_weighted, rate = capture_rate(generation, price)
-		observations = int(np.count_nonzero(np.nan_to_num(generation) > 0.0))
-		period_start = period_end = None
-		if isinstance(generation_mw.index, pd.DatetimeIndex) and len(generation_mw) > 0:
-			period_start = generation_mw.index[0].to_pydatetime()
-			period_end = generation_mw.index[-1].to_pydatetime()
-		out[str(carrier)] = CapturePrice.from_float(
-			carrier=str(carrier),
-			generation_mwh=float(np.nansum(generation)),
-			capture_price_usd_per_mwh=capture,
-			time_weighted_price_usd_per_mwh=time_weighted,
-			capture_rate=rate,
-			n_observations=observations,
-			period_start=period_start,
-			period_end=period_end,
-		)
+		periods: list[CapturePrice] = []
+		for positions in windows:
+			window_generation = generation[positions]
+			window_price = price[positions]
+			capture, time_weighted, rate = capture_rate(window_generation, window_price)
+			observations = int(np.count_nonzero(np.nan_to_num(window_generation) > 0.0))
+			period_start = period_end = None
+			if isinstance(index, pd.DatetimeIndex) and positions.size > 0:
+				period_start = index[int(positions[0])].to_pydatetime()
+				period_end = index[int(positions[-1])].to_pydatetime()
+			periods.append(
+				CapturePrice.from_float(
+					carrier=str(carrier),
+					generation_mwh=float(np.nansum(window_generation)),
+					capture_price_usd_per_mwh=capture,
+					time_weighted_price_usd_per_mwh=time_weighted,
+					capture_rate=rate,
+					n_observations=observations,
+					period_start=period_start,
+					period_end=period_end,
+				)
+			)
+		out[str(carrier)] = periods
 
 	logger.info(
 		"capture_by_technology",
 		carriers=len(out),
-		with_observation=sum(1 for c in out.values() if c.capture_price_usd_per_mwh is not None),
+		periods=len(windows),
+		with_observation=sum(
+			1
+			for periods in out.values()
+			if any(p.capture_price_usd_per_mwh is not None for p in periods)
+		),
 	)
 	return out
 
