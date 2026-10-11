@@ -133,7 +133,7 @@ class Signal(BaseModel):
 	requires_review: bool = True
 
 	@model_validator(mode="after")
-	def _coordinates_come_in_pairs(self) -> "Signal":
+	def _coordinates_come_in_pairs(self) -> Signal:
 		# A half-coordinate is the signature of a geocoder that failed halfway:
 		# latitude without longitude cannot be mapped, and longitude without
 		# latitude is the same defect from the other side. A field_validator on
