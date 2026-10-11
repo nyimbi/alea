@@ -16,7 +16,10 @@ from enum import IntEnum
 from functools import lru_cache
 from typing import Any
 
+from alea.logging import get_logger
 from alea.provenance.models import Basis, Licence
+
+_log = get_logger(__name__)
 
 
 class Priority(IntEnum):
@@ -344,6 +347,27 @@ Fetcher = Callable[[Source], bytes]
 
 _FETCHERS: dict[str, Fetcher] = {}
 
+_FETCHER_MODULES = ("alea.io.fetchers",)
+"""Modules that declare fetchers with ``@fetcher``.
+
+A registry populated by decorators is populated only when the declaring module
+is imported, and nothing imports ``alea.io.fetchers``: the register listed ten
+automated sources and ``registered_fetchers()`` returned none of them until a
+caller imported a private module by name. The stage registry in
+``alea.io.pipeline`` had the identical gap; this closes it the same way.
+"""
+
+
+def _register_fetchers() -> None:
+	"""Import every fetcher-declaring module, so their decorators run."""
+	import importlib
+
+	for module in _FETCHER_MODULES:
+		try:
+			importlib.import_module(module)
+		except ImportError as exc:  # pragma: no cover - depends on the environment
+			_log.warning("fetcher_registration_failed", module=module, error=str(exc))
+
 
 def fetcher(source_id: str) -> Callable[[Fetcher], Fetcher]:
 	"""Register a fetcher for a source id."""
@@ -357,6 +381,7 @@ def fetcher(source_id: str) -> Callable[[Fetcher], Fetcher]:
 
 def get_fetcher(source_id: str) -> Fetcher:
 	"""The registered fetcher for a source. Raises when none is registered."""
+	_register_fetchers()
 	source = get_source(source_id)
 	if source.unavailable:
 		raise KeyError(
@@ -375,6 +400,7 @@ def get_fetcher(source_id: str) -> Fetcher:
 
 def registered_fetchers() -> list[str]:
 	"""Source ids with a fetcher. The register and this list may differ."""
+	_register_fetchers()
 	return sorted(_FETCHERS)
 
 
