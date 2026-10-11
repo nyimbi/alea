@@ -269,7 +269,11 @@ fn solve_with_branch_out(
 /// A singular system is reported as [`AleaError::Singular`], naming the solve.
 /// A disconnected island produces exactly this and it must not be silently
 /// turned into a zero angle, which reads as "no flow" rather than "no path".
-fn solve_linear(matrix: ArrayView2<f64>, rhs: ArrayView1<f64>, name: &'static str) -> Result<Array1<f64>> {
+fn solve_linear(
+	matrix: ArrayView2<f64>,
+	rhs: ArrayView1<f64>,
+	name: &'static str,
+) -> Result<Array1<f64>> {
 	let n = matrix.shape()[0];
 	let mut a = matrix.to_owned();
 	let mut b = rhs.to_owned();
@@ -398,7 +402,10 @@ pub fn decompose_losses(
 		("actual_losses", actual_losses),
 		("reference_losses", reference_losses),
 		("losses_with_actual_load_only", losses_with_actual_load_only),
-		("losses_with_actual_topology_only", losses_with_actual_topology_only),
+		(
+			"losses_with_actual_topology_only",
+			losses_with_actual_topology_only,
+		),
 	] {
 		if !value.is_finite() {
 			return Err(AleaError::OutOfRange {
@@ -562,7 +569,10 @@ mod tests {
 		let b = array![[1.0, -1.0, 0.0], [-1.0, 1.0, 0.0], [0.0, 0.0, 0.0]];
 		let injection = array![0.0, 0.0, 10.0];
 		let result = dc_power_flow(b.view(), injection.view(), 0);
-		assert!(matches!(result, Err(AleaError::Singular { .. })), "{result:?}");
+		assert!(
+			matches!(result, Err(AleaError::Singular { .. })),
+			"{result:?}"
+		);
 	}
 
 	#[test]
@@ -583,7 +593,10 @@ mod tests {
 		)
 		.unwrap();
 		assert_eq!(b, b_before, "the susceptance matrix must be untouched");
-		assert_eq!(injections, injections_before, "the injections must be untouched");
+		assert_eq!(
+			injections, injections_before,
+			"the injections must be untouched"
+		);
 	}
 
 	#[test]

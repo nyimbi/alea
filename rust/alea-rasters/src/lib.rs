@@ -20,10 +20,10 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
-use alea_common::{
-	expect_shape1, expect_shape2, expect_shape3, expect_shape4, AleaError, Result,
+use alea_common::{expect_shape1, expect_shape2, expect_shape3, expect_shape4, AleaError, Result};
+use ndarray::{
+	Array1, Array2, Array3, Array4, ArrayView1, ArrayView2, ArrayView3, ArrayView4, Axis,
 };
-use ndarray::{Array1, Array2, Array3, Array4, ArrayView1, ArrayView2, ArrayView3, ArrayView4, Axis};
 
 /// Default VZA bin width in degrees.
 ///
@@ -196,6 +196,13 @@ fn quantile_of(values: &mut [f32], q: f32, scratch: &mut Vec<f32>) -> f32 {
 /// a cloudy pixel is aggregated as "no information", a clear pixel is
 /// aggregated as "information". Collapsing the two into 0 makes cloud look like
 /// reliable supply.
+// Eight arguments, five of them parallel arrays over the same grid. That is the
+// shape the VIIRS product arrives in and the shape every caller has: the Python
+// wrapper, the reference implementation and the differential test all pass the
+// same five arrays positionally. Bundling them into a struct would be
+// indirection that changes four signatures to satisfy a count, not a design
+// improvement -- so the count is allowed, and this comment is the reason.
+#[allow(clippy::too_many_arguments)]
 pub fn detect_outages(
 	radiance: ArrayView3<f32>,
 	baseline: ArrayView4<f32>,
@@ -210,7 +217,10 @@ pub fn detect_outages(
 	expect_shape3(sensor_zenith.shape(), [shape[0], shape[1], shape[2]])?;
 	expect_shape3(cloud_bits.shape(), [shape[0], shape[1], shape[2]])?;
 	expect_shape1(month.shape(), [shape[0]])?;
-	expect_shape4(baseline.shape(), [12, baseline.shape()[1], shape[1], shape[2]])?;
+	expect_shape4(
+		baseline.shape(),
+		[12, baseline.shape()[1], shape[1], shape[2]],
+	)?;
 
 	if max_cloud_confidence > 1 {
 		return Err(AleaError::OutOfRange {
@@ -495,7 +505,10 @@ mod tests {
 		// reading this crate implements, so a future edit cannot silently
 		// invert the detector.
 		assert!(is_clear(0b00, 0), "00 is confident clear and must be kept");
-		assert!(!is_clear(0b01, 0), "01 is probably clear, excluded at ceiling 0");
+		assert!(
+			!is_clear(0b01, 0),
+			"01 is probably clear, excluded at ceiling 0"
+		);
 		assert!(is_clear(0b01, 1), "01 is admitted at ceiling 1");
 		assert!(!is_clear(0b10, 1), "10 is probably cloudy");
 		assert!(!is_clear(0b11, 1), "11 is confident cloudy");

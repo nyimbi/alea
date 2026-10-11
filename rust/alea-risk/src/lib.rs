@@ -364,10 +364,24 @@ mod tests {
 		let stds = array![1.0, 1.0];
 		let cholesky_factor = cholesky(array![[1.0, 0.0], [0.0, 1.0]].view()).unwrap();
 		let transform = |draw: ArrayView1<f64>| array![draw[0] + draw[1]];
-		let a = monte_carlo(means.view(), stds.view(), cholesky_factor.view(), &transform, 100, 5)
-			.unwrap();
-		let b = monte_carlo(means.view(), stds.view(), cholesky_factor.view(), &transform, 100, 5)
-			.unwrap();
+		let a = monte_carlo(
+			means.view(),
+			stds.view(),
+			cholesky_factor.view(),
+			&transform,
+			100,
+			5,
+		)
+		.unwrap();
+		let b = monte_carlo(
+			means.view(),
+			stds.view(),
+			cholesky_factor.view(),
+			&transform,
+			100,
+			5,
+		)
+		.unwrap();
 		assert_eq!(a, b);
 	}
 
@@ -377,10 +391,24 @@ mod tests {
 		let stds = array![1.0];
 		let cholesky_factor = cholesky(Array2::<f64>::eye(1).view()).unwrap();
 		let transform = |draw: ArrayView1<f64>| array![draw[0]];
-		let a = monte_carlo(means.view(), stds.view(), cholesky_factor.view(), &transform, 50, 1)
-			.unwrap();
-		let b = monte_carlo(means.view(), stds.view(), cholesky_factor.view(), &transform, 50, 2)
-			.unwrap();
+		let a = monte_carlo(
+			means.view(),
+			stds.view(),
+			cholesky_factor.view(),
+			&transform,
+			50,
+			1,
+		)
+		.unwrap();
+		let b = monte_carlo(
+			means.view(),
+			stds.view(),
+			cholesky_factor.view(),
+			&transform,
+			50,
+			2,
+		)
+		.unwrap();
 		assert_ne!(a, b);
 	}
 
@@ -390,14 +418,28 @@ mod tests {
 		let stds = array![2.0];
 		let cholesky_factor = cholesky(Array2::<f64>::eye(1).view()).unwrap();
 		let transform = |draw: ArrayView1<f64>| array![draw[0]];
-		let paths =
-			monte_carlo(means.view(), stds.view(), cholesky_factor.view(), &transform, 200_000, 9)
-				.unwrap();
+		let paths = monte_carlo(
+			means.view(),
+			stds.view(),
+			cholesky_factor.view(),
+			&transform,
+			200_000,
+			9,
+		)
+		.unwrap();
 		let mean = paths.column(0).mean().unwrap();
-		let variance = paths.column(0).iter().map(|v| (v - mean).powi(2)).sum::<f64>()
+		let variance = paths
+			.column(0)
+			.iter()
+			.map(|v| (v - mean).powi(2))
+			.sum::<f64>()
 			/ (paths.nrows() - 1) as f64;
 		assert!((mean - 10.0).abs() < 0.05, "mean {mean}");
-		assert!((variance.sqrt() - 2.0).abs() < 0.05, "std {}", variance.sqrt());
+		assert!(
+			(variance.sqrt() - 2.0).abs() < 0.05,
+			"std {}",
+			variance.sqrt()
+		);
 	}
 
 	#[test]
@@ -406,10 +448,15 @@ mod tests {
 		let stds = array![-1.0];
 		let cholesky_factor = Array2::<f64>::eye(1);
 		let transform = |draw: ArrayView1<f64>| array![draw[0]];
-		assert!(
-			monte_carlo(means.view(), stds.view(), cholesky_factor.view(), &transform, 10, 0)
-				.is_err()
-		);
+		assert!(monte_carlo(
+			means.view(),
+			stds.view(),
+			cholesky_factor.view(),
+			&transform,
+			10,
+			0
+		)
+		.is_err());
 	}
 
 	#[test]
@@ -449,6 +496,9 @@ mod tests {
 		let portfolio = portfolio_returns(returns.view(), weights.view()).unwrap();
 		let (_, cvar) = var_cvar(portfolio.view(), 0.95).unwrap();
 		let total: f64 = contributions.iter().sum();
-		assert!((total - cvar).abs() < 0.05 * cvar.max(1e-9), "{total} vs {cvar}");
+		assert!(
+			(total - cvar).abs() < 0.05 * cvar.max(1e-9),
+			"{total} vs {cvar}"
+		);
 	}
 }

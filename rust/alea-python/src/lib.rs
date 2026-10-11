@@ -206,6 +206,13 @@ fn optimal_bands_rows(threshold: f64, num_perm: usize) -> PyResult<(usize, usize
 // alea-series
 // --------------------------------------------------------------------------
 
+/// `(assignments, representatives, weights)` from [`aggregate`].
+type AggregationArrays<'py> = (
+	Bound<'py, PyArray1<u32>>,
+	Bound<'py, PyArray1<u32>>,
+	Bound<'py, PyArray1<f64>>,
+);
+
 /// Aggregate a series into representative periods.
 ///
 /// Returns `(assignments, representatives, weights)`. The weights sum to
@@ -218,7 +225,7 @@ fn aggregate<'py>(
 	n_periods: usize,
 	period_length: usize,
 	seed: u64,
-) -> PyResult<(Bound<'py, PyArray1<u32>>, Bound<'py, PyArray1<u32>>, Bound<'py, PyArray1<f64>>)> {
+) -> PyResult<AggregationArrays<'py>> {
 	let series = series.as_array();
 	let result = py
 		.allow_threads(|| alea_series::aggregate(series, n_periods, period_length, seed))
@@ -276,7 +283,10 @@ fn validate_aggregation<'py>(
 		.map_err(to_py_err)?;
 	let dict = pyo3::types::PyDict::new(py);
 	dict.set_item("total_cost_error_pct", validation.total_cost_error_pct)?;
-	dict.set_item("capacity_mix_l1_error_pct", validation.capacity_mix_l1_error_pct)?;
+	dict.set_item(
+		"capacity_mix_l1_error_pct",
+		validation.capacity_mix_l1_error_pct,
+	)?;
 	dict.set_item("emissions_error_pct", validation.emissions_error_pct)?;
 	dict.set_item("peak_price_error_pct", validation.peak_price_error_pct)?;
 	Ok(dict)
@@ -357,8 +367,14 @@ fn contingency_sweep<'py>(
 		})
 		.map_err(to_py_err)?;
 	let dict = pyo3::types::PyDict::new(py);
-	dict.set_item("energy_not_served", result.energy_not_served.into_pyarray(py))?;
-	dict.set_item("overloaded_branches", result.overloaded_branches.into_pyarray(py))?;
+	dict.set_item(
+		"energy_not_served",
+		result.energy_not_served.into_pyarray(py),
+	)?;
+	dict.set_item(
+		"overloaded_branches",
+		result.overloaded_branches.into_pyarray(py),
+	)?;
 	dict.set_item("diverged", result.diverged.into_pyarray(py))?;
 	Ok(dict)
 }
@@ -396,8 +412,12 @@ fn transmission_losses(
 	resistance: PyReadonlyArray1<'_, f64>,
 	voltage_kv: PyReadonlyArray1<'_, f64>,
 ) -> PyResult<f64> {
-	alea_losses::transmission_losses(flows.as_array(), resistance.as_array(), voltage_kv.as_array())
-		.map_err(to_py_err)
+	alea_losses::transmission_losses(
+		flows.as_array(),
+		resistance.as_array(),
+		voltage_kv.as_array(),
+	)
+	.map_err(to_py_err)
 }
 
 // --------------------------------------------------------------------------
@@ -440,11 +460,11 @@ fn correlation_from_covariance<'py>(
 
 /// The empirical probability that a loss exceeds a threshold.
 #[pyfunction]
-fn exceedance_probability(
-	returns: PyReadonlyArray1<'_, f64>,
-	threshold: f64,
-) -> PyResult<f64> {
-	Ok(alea_risk::exceedance_probability(returns.as_array(), threshold))
+fn exceedance_probability(returns: PyReadonlyArray1<'_, f64>, threshold: f64) -> PyResult<f64> {
+	Ok(alea_risk::exceedance_probability(
+		returns.as_array(),
+		threshold,
+	))
 }
 
 /// Portfolio return series from per-asset returns and weights.

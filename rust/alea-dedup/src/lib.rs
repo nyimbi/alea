@@ -54,10 +54,7 @@ pub fn shingles(text: &str, k: usize) -> Vec<Vec<u8>> {
 	if k == 0 {
 		return Vec::new();
 	}
-	let words: Vec<String> = text
-		.split_whitespace()
-		.map(|w| w.to_lowercase())
-		.collect();
+	let words: Vec<String> = text.split_whitespace().map(|w| w.to_lowercase()).collect();
 	if words.is_empty() {
 		return Vec::new();
 	}
@@ -135,7 +132,7 @@ pub fn optimal_bands_rows(threshold: f64, num_perm: usize) -> (usize, usize) {
 	let mut best = (1usize, num_perm);
 	let mut best_score = f64::NEG_INFINITY;
 	for bands in 1..=num_perm {
-		if num_perm % bands != 0 {
+		if !num_perm.is_multiple_of(bands) {
 			continue;
 		}
 		let rows = num_perm / bands;
@@ -214,8 +211,8 @@ impl LshIndex {
 	/// The band key for one band of a signature.
 	fn band_key(&self, signature: &[u64], band: usize) -> u64 {
 		let mut key = splitmix64(band as u64 ^ self.seed);
-		for slot in band * self.rows..(band + 1) * self.rows {
-			key = splitmix64(key ^ signature[slot]);
+		for &value in &signature[band * self.rows..(band + 1) * self.rows] {
+			key = splitmix64(key ^ value);
 		}
 		key
 	}
@@ -251,7 +248,10 @@ impl LshIndex {
 
 		for band in 0..self.bands {
 			let key = self.band_key(signature, band);
-			self.tables[band].entry(key).or_default().push(id.to_string());
+			self.tables[band]
+				.entry(key)
+				.or_default()
+				.push(id.to_string());
 		}
 		self.signatures.insert(id.to_string(), signature.to_vec());
 		duplicates
@@ -455,9 +455,18 @@ mod tests {
 	#[test]
 	fn deduplicate_groups_by_input_order() {
 		let documents = vec![
-			("official".to_string(), "ghana grid company announces a tariff review for the coming quarter".to_string()),
-			("news".to_string(), "ghana grid company announces a tariff review for the coming quarter".to_string()),
-			("other".to_string(), "tanzania signs a power purchase agreement for a wind farm".to_string()),
+			(
+				"official".to_string(),
+				"ghana grid company announces a tariff review for the coming quarter".to_string(),
+			),
+			(
+				"news".to_string(),
+				"ghana grid company announces a tariff review for the coming quarter".to_string(),
+			),
+			(
+				"other".to_string(),
+				"tanzania signs a power purchase agreement for a wind farm".to_string(),
+			),
 		];
 		let groups = deduplicate(&documents, 3, 128, 0.5, 0).unwrap();
 		assert_eq!(groups.len(), 2);
@@ -470,8 +479,14 @@ mod tests {
 		// The same corpus and seed must give the same grouping, twice, in the
 		// same process. Cross-process determinism is covered by the CI job.
 		let documents = vec![
-			("x".to_string(), "repeated words repeated words repeated words here".to_string()),
-			("y".to_string(), "repeated words repeated words repeated words here".to_string()),
+			(
+				"x".to_string(),
+				"repeated words repeated words repeated words here".to_string(),
+			),
+			(
+				"y".to_string(),
+				"repeated words repeated words repeated words here".to_string(),
+			),
 		];
 		let first = deduplicate(&documents, 3, 64, 0.5, 42).unwrap();
 		let second = deduplicate(&documents, 3, 64, 0.5, 42).unwrap();
@@ -484,6 +499,9 @@ mod tests {
 		assert_ne!(splitmix64(1), 1);
 		let a = splitmix64(12345);
 		let b = splitmix64(12346);
-		assert!(a.abs_diff(b) > 1_000_000, "adjacent inputs must not be adjacent");
+		assert!(
+			a.abs_diff(b) > 1_000_000,
+			"adjacent inputs must not be adjacent"
+		);
 	}
 }

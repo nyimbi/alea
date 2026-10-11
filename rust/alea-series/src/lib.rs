@@ -263,18 +263,14 @@ pub fn aggregate(
 	for (period, &candidate) in chosen.iter().enumerate() {
 		let start = candidate * period_length;
 		let end = (start + period_length).min(n_timesteps);
-		for t in start..end {
-			assignments[t] = period as u32;
-		}
+		assignments[start..end].fill(period as u32);
 		representatives.push(start as u32);
 	}
 	// Timesteps past the last whole block belong to the final period.
 	if let Some(last) = chosen.last() {
 		let end = ((last + 1) * period_length).min(n_timesteps);
 		let final_period = (n_periods - 1) as u32;
-		for t in end..n_timesteps {
-			assignments[t] = final_period;
-		}
+		assignments[end..n_timesteps].fill(final_period);
 	}
 
 	let result = AggregationResult {
@@ -393,6 +389,11 @@ impl AggregationValidation {
 /// the L1 distance between the two *normalised* mixes, so it is in percent of
 /// total capacity and a small technology moving a lot does not hide behind a
 /// large one moving a little.
+// Four (full, aggregated) pairs, deliberately adjacent rather than grouped: the
+// whole point of this function is to compare each pair, and reading them
+// interleaved is how a reviewer checks that the right two are being differenced.
+// A struct would separate each measurement from its counterpart.
+#[allow(clippy::too_many_arguments)]
 pub fn validate_aggregation(
 	full_capacity: &[f64],
 	aggregated_capacity: &[f64],
@@ -518,7 +519,9 @@ mod tests {
 			validate_aggregation(&full, &shifted, 1000.0, 1030.0, 10.0, 10.0, 5.0, 5.0).unwrap();
 		assert!(validation.capacity_mix_l1_error_pct > 10.0);
 		assert!(!validation.passes(AcceptanceThresholds::default()));
-		assert!(validation.verdict(AcceptanceThresholds::default()).starts_with("FAIL"));
+		assert!(validation
+			.verdict(AcceptanceThresholds::default())
+			.starts_with("FAIL"));
 	}
 
 	#[test]
