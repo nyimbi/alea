@@ -53,6 +53,10 @@ dependencies = [
 	"pyyaml>=6.0",
 	"python-dateutil>=2.9",
 	"tenacity>=8.2",
+	"typer>=0.12",
+	"structlog>=24.1",
+	"matplotlib>=3.8",
+	"joblib>=1.4",
 ]
 
 [project.optional-dependencies]
@@ -97,5 +101,6 @@ filterwarnings = ["error::DeprecationWarning"]
 
 [tool.pyright]
 include = ["src", "tests"]
+extraPaths = ["src"]
 pythonVersion = "3.14"
 typeCheckingMode = "standard"

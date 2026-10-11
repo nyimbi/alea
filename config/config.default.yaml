@@ -1,0 +1,109 @@
+# ALEA default configuration.
+#
+# Every key here is also a model default in src/alea/config/models.py. This file
+# exists so that a deployment can see, in one place, what it is running with —
+# and so that a scenario overlay has something to overlay.
+#
+# Precedence, lowest to highest: model defaults, this file, the environment file
+# named by --config, the scenario overlay named by --scenario, --set overrides.
+
+scenario:
+  # ISO 3166-1 alpha-2. The registry refuses an unregistered code.
+  countries: [KE]
+  # Spatial clusters per horizon. Ascending.
+  clusters: [55]
+  planning_horizons: [2030, 2040, 2050, 2060]
+  base_year: 2025
+  # 0.01 deg is the Ghana study's best-validated raster resolution.
+  spatial_resolution_deg: 0.01
+
+solve:
+  solver: highs
+  # Losses are on. The PyPSA-Eur benchmark (neglecting losses overestimates
+  # optimal expansion by ~20%) is [UNVERIFIED] for African networks and is
+  # confirmed at M1 by solving Kenya both ways.
+  transmission_losses: true
+  linearized_unit_commitment: false
+  multi_investment_periods: true
+  # 1 means full hourly resolution. Any value above 1 requires a passing
+  # aggregation validation artefact for the network (AD-9).
+  time_aggregation: 1
+  solver_options: {}
+  solver_timeout_s: 3600
+
+sector:
+  enabled: false
+  hydrogen_enabled: false
+  electrolyser_efficiency_lhv: 0.65
+  # Required whenever hydrogen_enabled. An efficiency nobody can trace is how a
+  # hydrogen result becomes indefensible.
+  electrolyser_efficiency_source: ""
+  hydrogen_export_twh_per_year: 0.0
+  heat_pumps_enabled: false
+  heat_pump_cop: 3.0
+  heat_pump_cop_source: ""
+  ev_smart_charging: false
+  v2g_enabled: false
+  # Required > 0 whenever v2g_enabled: free storage is not a modelling result.
+  v2g_degradation_usd_per_mwh: 0.0
+  industry_steel: false
+  industry_cement: false
+  industry_chemicals: false
+
+costs:
+  base_currency: USD
+  # A rate without its date is not a rate. Both or neither.
+  eur_usd: null
+  eur_usd_date: null
+  kes_usd: null
+  kes_usd_date: null
+
+scanning:
+  enabled: false
+  raw_text_retention_days: 90
+  dedup_threshold: 0.7
+  dedup_num_perm: 128
+  # Required. Python's hash() is randomised per process, so an unseeded MinHash
+  # gives a different dedup result on every run.
+  dedup_seed: 0
+  llm_model: claude-sonnet-5-5
+  llm_temperature: 0.0
+  llm_cache: true
+  # null means every signal is reviewed by a human. A threshold is introduced
+  # only after a measured precision justifies it, per signal type.
+  auto_accept_threshold: null
+
+reporting:
+  enabled: false
+  timezone: UTC
+  email_enabled: false
+  smtp_host: ""
+  smtp_port: 587
+  smtp_user: ""
+  email_from: ""
+  daily_hour: 6
+  weekly_day: mon
+  pdf_enabled: true
+
+api:
+  enabled: false
+  title: ALEA API
+  version: 0.1.0
+  rate_limit_per_minute: 60
+  job_store_path: results/jobs.sqlite
+  cache_ttl_seconds: 3600
+
+paths:
+  raw: data/raw
+  interim: data/interim
+  processed: data/processed
+  resources: resources
+  results: results
+  reports: reports
+  models: models
+
+logging:
+  level: INFO
+  json_output: false
+
+renewables: {}

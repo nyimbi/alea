@@ -1,0 +1,25 @@
+# Kenya — the development target.
+#
+# HIGH completeness, the specification's case study, and the network the
+# aggregation validation (AD-9) is run against: a TSAM solve must land within 2%
+# on cost and 5% on capacity mix of the full-resolution solve before any
+# aggregated result is published for another country.
+
+scenario:
+  countries: [KE]
+  clusters: [10, 20, 55]
+  planning_horizons: [2030, 2040, 2050]
+  base_year: 2025
+
+solve:
+  solver: highs
+  transmission_losses: true
+  time_aggregation: 1
+
+costs:
+  base_currency: USD
+  kes_usd: 129.5
+  kes_usd_date: "2026-10-01"
+
+logging:
+  level: INFO

@@ -1,0 +1,80 @@
+# Continental — all 55 AU member states, all five power pools.
+#
+# This is the tier the specification's hardware budget assumes (128 cores,
+# 512 GB RAM, 10 TB). It will not solve on a laptop; it exists so that the
+# shape of the continental run is expressible and so that the cluster ladder
+# is explicit.
+
+scenario:
+  countries:
+    - DZ
+    - EG
+    - LY
+    - MR
+    - MA
+    - TN
+    - BJ
+    - BF
+    - CV
+    - CI
+    - GM
+    - GH
+    - GN
+    - GW
+    - LR
+    - ML
+    - NE
+    - NG
+    - SN
+    - SL
+    - TG
+    - AO
+    - BI
+    - CM
+    - CF
+    - TD
+    - CG
+    - CD
+    - GQ
+    - GA
+    - ST
+    - KM
+    - DJ
+    - ER
+    - ET
+    - KE
+    - MG
+    - MW
+    - MU
+    - MZ
+    - RW
+    - SC
+    - SO
+    - SS
+    - SD
+    - TZ
+    - UG
+    - BW
+    - SZ
+    - LS
+    - NA
+    - ZA
+    - ZM
+    - ZW
+    - EH
+  clusters: [60, 128, 256, 512]
+  planning_horizons: [2030, 2040, 2050, 2060]
+  base_year: 2025
+  # Coarser than the country runs: 0.01 deg over the continent is ~200 million
+  # cells, and the continental tier trades resolution for the ability to finish.
+  spatial_resolution_deg: 0.05
+
+solve:
+  solver: highs
+  transmission_losses: true
+  time_aggregation: 1
+  solver_timeout_s: 86400
+
+logging:
+  level: INFO
+  json_output: true
