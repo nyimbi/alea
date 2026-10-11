@@ -237,7 +237,6 @@ def susceptance_matrix(
 def network_from_tables(
 	buses: Any,
 	branches: Any,
-	config: LossConfig | None = None,
 	*,
 	from_column: str = "bus0",
 	to_column: str = "bus1",
@@ -253,6 +252,10 @@ def network_from_tables(
 	``from_column`` and ``to_column`` name buses. A branch naming an unknown bus
 	raises rather than being dropped, because a dropped branch is a silently
 	different network.
+
+	Every default below is a network property, not a solver policy, so there is
+	no ``config`` parameter: one was accepted here and read nowhere, which made
+	it a knob a caller would set and a reader would believe.
 	"""
 	import pandas as pd
 

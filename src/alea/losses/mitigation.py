@@ -41,7 +41,6 @@ logger = get_logger(__name__)
 def apply_option(
 	network: Network,
 	option: MitigationOption,
-	config: LossConfig | None = None,
 ) -> Network:
 	"""A new network with the option's edits applied.
 
@@ -49,8 +48,12 @@ def apply_option(
 	reason the contingency sweep takes branch status as an immutable input. An
 	option that edits the network in place is an option whose effect leaks into
 	the next option evaluated.
+
+	No ``config`` parameter: every field this function writes comes from the
+	option and the network, so a ``LossConfig`` here was accepted, defaulted and
+	discarded. A knob that cannot change the output is worse than a missing one,
+	because a caller reads it as a capability.
 	"""
-	cfg = config or LossConfig()
 	touched = (
 		np.asarray(option.branches, dtype=int)
 		if option.branches
@@ -73,7 +76,6 @@ def apply_option(
 		# susceptance term is modelled, because the DC approximation has no
 		# voltage magnitude to change.
 		susceptance[touched] += option.added_susceptance_pu
-	_ = cfg
 	return Network(
 		susceptance=_rebuild_susceptance(network, susceptance),
 		branch_from=network.branch_from,
@@ -148,7 +150,7 @@ def evaluate_option(
 	)
 
 	base_losses, _ = solve_series(network, injections, cfg)
-	modified = apply_option(network, option, cfg)
+	modified = apply_option(network, option)
 	option_losses, _ = solve_series(modified, injections, cfg)
 
 	reduction_mwh, savings_usd = annual_savings_from_snapshots(
