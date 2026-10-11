@@ -7,9 +7,13 @@ no network: a determinism check that depends on a live source is a check that
 fails when the source is down, and the failure reads as nondeterminism.
 
 What it exercises is every stage whose output a published number is derived
-from -- topology, fleet attachment, demand, renewables, expansion under HiGHS --
-plus the three places the plan already names as nondeterminism sites: a content
-hash, a seeded MinHash, and a market-clearing tie-break.
+from -- topology, fleet attachment, demand, renewables, expansion under HiGHS,
+two-level deduplication, and market clearing -- plus the three places the plan
+already names as nondeterminism sites: a content hash (``_digest``), a seeded
+MinHash (``minhash``), and a market-clearing tie-break (``clear_market``). Each
+of the three writes a digest into the summary, so a regression in any of them
+shows up as a line in the two-process ``diff -r`` rather than as a claim in this
+docstring that nothing implements.
 
 The diff is byte-level. ``json.dumps(sort_keys=True)`` is not decoration: an
 unsorted dump of a dict whose insertion order varies makes two identical runs
@@ -22,19 +26,26 @@ import argparse
 import hashlib
 import json
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pandas as pd
+from numpy.typing import NDArray
 
+from alea._core.kernels import minhash
 from alea.config.loader import load_config
+from alea.market.clearing import clear_market
+from alea.market.views import Bid
 from alea.planning.demand import attach_loads, disaggregate_to_buses
 from alea.planning.expansion import capacity_mix_table, loss_share, solve_expansion
 from alea.planning.fleet import attach_generators
 from alea.planning.renewables import attach_renewables
 from alea.planning.schemas import DEMAND, FLEET, PROFILE, TOPOLOGY
 from alea.planning.topology import build_topology
+from alea.scanning.connectors.base import RawDocument, make_document
+from alea.scanning.ingest import deduplicate_documents
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -75,8 +86,130 @@ FLEET_ROWS = pd.DataFrame(
 )
 
 
+# A fixed corpus for the near-duplicate path. Two outlets carry the same wire
+# copy (so their five-word shingles overlap heavily and MinHash groups them),
+# and a third is unrelated. The grouping depends on the seeded kernel, so an
+# unseeded MinHash -- or a set-ordered shingle stream -- reorders or regroups
+# these across processes and the digest moves.
+WIRE_COPY = (
+	"Kenya Power announced a 100 MW geothermal expansion at Olkaria on "
+	"2029-06-01, adding firm capacity to the national grid."
+)
+WIRE_REPEAT = (
+	"Kenya Power announced a 100 MW geothermal expansion at Olkaria on "
+	"2029-06-01, adding firm capacity to the national grid today."
+)
+UNRELATED = (
+	"A solar developer signed a 20-year power purchase agreement for a 50 MW "
+	"plant in northern Kenya, priced in USD."
+)
+# Two documents deliberately tie on the detail rule's first three terms --
+# equal text length, equal entity count, equal publication -- so the group
+# representative is decided by the lowest `document_id`, which is the term the
+# specification omits and AD-8 names. If that term were dropped, the choice
+# would fall to input order and the digest would move across processes.
+TIE_A = "A 100 MW plant in Kenya reached commercial operation in 2029."
+TIE_B = "A 100 MW plant in Kenya reached commercial operation in 2029."
+TIE_WHEN = datetime(2029, 7, 1, tzinfo=UTC)
+
+# A two-unit stack with an exact price tie, and demand that splits across it.
+# The merit order must break the tie on `unit_id`, never on list order: the
+# fixture lists BETA first, so a stack sorted on price alone keeps BETA ahead
+# of ALPHA and dispatches 60 MW of BETA and 40 MW of ALPHA -- the same total at
+# the same price, a different dispatch dict, a different digest. The tie is
+# marginal on purpose: if both tied units cleared in full the dispatch would be
+# identical whichever order they were taken in, and the fixture would assert
+# nothing about the tie-break it exists to exercise.
+BID_ROWS = [
+	("U-BETA", 60.0, 60.0),
+	("U-ALPHA", 60.0, 60.0),
+]
+DEMAND_MW = 100.0
+VOLL_USD_PER_MWH = 2000.0
+
+
 def _hours() -> pd.DatetimeIndex:
 	return pd.date_range(START, periods=N_HOURS, freq="h")
+
+
+def _corpus() -> list[RawDocument]:
+	"""The fixed near-duplicate corpus, in a fixed order.
+
+	Every field except ``retrieved_at`` is pinned, and ``retrieved_at`` is
+	normalised by ``make_document`` to the same clock read, so ``document_id``
+	-- the identity hash -- is a function of the text alone. The fixture does
+	not call the network: a determinism check that depends on a live source
+	fails when the source is down, and the failure reads as nondeterminism.
+	"""
+
+	def doc(source: str, url: str, title: str, text: str, published: datetime) -> RawDocument:
+		return make_document(
+			source_name=source,
+			url=url,
+			title=title,
+			text=text,
+			published_at=published,
+			retrieved_at=TIE_WHEN,
+		)
+
+	when = datetime(2029, 6, 1, tzinfo=UTC)
+	return [
+		doc("wire", "https://example.test/a", "Olkaria expansion", WIRE_COPY, when),
+		doc("news", "https://example.test/b", "Olkaria expansion reported", WIRE_REPEAT, when),
+		doc("solar", "https://example.test/c", "Solar PPA signed", UNRELATED, when),
+		doc("tie-a", "https://example.test/d", "Tie A", TIE_A, TIE_WHEN),
+		doc("tie-b", "https://example.test/e", "Tie B", TIE_B, TIE_WHEN),
+	]
+
+
+def _minhash_digest(texts: list[str]) -> str:
+	"""sha256 of the concatenated MinHash signatures of ``texts``.
+
+	``minhash`` returns a ``uint64`` array; the seed is fixed at the call, so
+	the signature is a function of the text and nothing else. An unseeded
+	MinHash folds Python's per-process string hash in and this digest moves.
+	"""
+	signatures: list[NDArray[np.uint64]] = [minhash(text, seed=0) for text in texts]
+	payload = b"".join(sig.tobytes() for sig in signatures)
+	return hashlib.sha256(payload).hexdigest()[:32]
+
+
+def _dedup_summary() -> dict[str, Any]:
+	"""Run the two-level dedup path and reduce its report to stable numbers.
+
+	The report's group membership and representative are read back, not just
+	its counts: two runs that keep the same *number* of documents but keep
+	different ones have a nondeterminism the counts would hide.
+	"""
+	kept, report = deduplicate_documents(_corpus())
+	return {
+		"input_count": int(report.input_count),
+		"exact_duplicates": int(report.exact_duplicates),
+		"near_duplicates": int(report.near_duplicates),
+		"kept_ids": list(report.kept_ids),
+		"group_representatives": [str(g.representative_id) for g in report.groups],
+		"minhash_digest": _minhash_digest([doc.text for doc in kept]),
+	}
+
+
+def _clearing_summary() -> dict[str, Any]:
+	"""Clear one market over a stack with a deliberate price tie."""
+	bids = [
+		Bid(unit_id=unit_id, quantity_mw=quantity, price_usd_per_mwh=price)
+		for unit_id, price, quantity in BID_ROWS
+	]
+	result = clear_market(bids, DEMAND_MW, value_of_lost_load_usd_per_mwh=VOLL_USD_PER_MWH)
+	return {
+		"clearing_price_usd_per_mwh": round(float(result.clearing_price_usd_per_mwh), 10),
+		"unserved_mwh": round(float(result.unserved_mwh), 10),
+		# Sorted for the same reason the dump is: the dispatch dict's insertion
+		# order follows the stack, and a diff must see the dispatch, not its
+		# order.
+		"dispatched": {
+			str(unit_id): round(float(mw), 10)
+			for unit_id, mw in sorted(result.dispatched.items())
+		},
+	}
 
 
 def _load_frame(buses: list[str]) -> pd.DataFrame:
@@ -202,6 +335,12 @@ def build(out: Path) -> dict[str, Any]:
 		"load_digest": _digest(loads),
 		"profile_digest": _digest(profiles),
 		"generation_mwh": round(float(network.generators_t.p.to_numpy().sum()), 6),
+		# The two paths this harness previously claimed to exercise and did
+		# not. They are plain dicts here rather than digests so a divergence
+		# names the field that moved, but the summary is hashed whole by the
+		# byte-level `diff -r` either way.
+		"dedup": _dedup_summary(),
+		"clearing": _clearing_summary(),
 	}
 
 	out.mkdir(parents=True, exist_ok=True)

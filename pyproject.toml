@@ -105,6 +105,19 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 ignore = ["E501", "E101", "W191"]
 
 [tool.pytest.ini_options]
+# Only `tests/ci` is collected, deliberately. The two other test directories
+# hold no pytest-style tests:
+#   * `tests/determinism/run.py` is a script with a `main()`, not a test module.
+#     It is invoked directly by `scripts/determinism.py` (the group
+#     `scripts/check.py` runs), which builds the fixture in two processes and
+#     diffs them. Collecting it here would import a module with import-time
+#     side effects for no test.
+#   * `tests/reference/` holds the independent Python reference kernels, not
+#     tests. They are exercised by `tests/ci/test_kernels_differential.py`,
+#     which is collected: that module puts `tests/` on `sys.path` and compares
+#     each reference against the compiled kernel. A reference with no caller
+#     there would be a reference nothing checks, which is why the differential
+#     suite covers every module in that directory.
 testpaths = ["tests/ci"]
 pythonpath = ["src", "."]
 asyncio_mode = "auto"
