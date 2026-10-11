@@ -229,7 +229,6 @@ notebooks = [
     { name = "jupyterlab" },
 ]
 solvers = [
-    { name = "highspy" },
     { name = "pulp" },
 ]
 
@@ -246,7 +245,6 @@ requires-dist = [
     { name = "geopandas", specifier = ">=1.0" },
     { name = "gymnasium", specifier = ">=0.29" },
     { name = "h5py", specifier = ">=3.10" },
-    { name = "highspy", marker = "extra == 'solvers'", specifier = ">=1.7" },
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.27" },
     { name = "imbalanced-learn", specifier = ">=0.12" },
     { name = "ipykernel", marker = "extra == 'notebooks'", specifier = ">=6.29" },

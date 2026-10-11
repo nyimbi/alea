@@ -171,7 +171,7 @@ uv sync --extra dev
 Optional extras:
 
 ```sh
-uv sync --extra solvers     # HiGHS via highspy, pulp
+uv sync --extra solvers     # pulp, for the older LP-file route
 uv sync --extra notebooks   # JupyterLab
 ```
 
@@ -469,9 +469,10 @@ Performance targets:
 | What-if solve (single) | < 2 hours |
 | Daily report generation | < 5 minutes |
 
-**Solver selection.** HiGHS (MIT, in-process via `highspy`) handles problems
-under ~500k variables. Gurobi or CPLEX is required above 5M variables, where the
-continental capacity-expansion problem sits.
+**Solver selection.** HiGHS arrives free: `pypsa` 1.4 declares `highspy` as a
+direct dependency, so it comes with the planning core and needs no licence or
+extra. Gurobi or CPLEX is required above ~5M variables, where the continental
+capacity-expansion problem sits.
 
 ---
 

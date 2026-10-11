@@ -60,8 +60,10 @@ dependencies = [
 # locks every extra, an unsatisfiable one here fails the entire lock rather than
 # just that extra. The spec's outage models are xgboost/lightgbm anyway; add
 # tensorflow back only alongside a Python downgrade.
-# Command-line solvers. HiGHS ships in-process via highspy and needs no extra.
-solvers = ["highspy>=1.7", "pulp>=2.8"]
+# Solver. HiGHS is not an extra: pypsa 1.4 declares highspy as a direct
+# dependency, so it arrives with the planning core and is available in a
+# dev-only install. pulp is here for the older LP-file route only.
+solvers = ["pulp>=2.8"]
 notebooks = ["jupyterlab>=4.0", "ipykernel>=6.29"]
 dev = ["pytest>=8.0", "pytest-cov>=5.0", "pytest-httpserver>=1.0", "pytest-asyncio>=0.24", "httpx>=0.27", "ruff>=0.5", "pyright>=1.1"]
 
