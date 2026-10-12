@@ -44,7 +44,8 @@ from alea.io.artefacts import ArtefactError, sha256_file
 from alea.io.pipeline import BuildContext, stage, write_stage
 from alea.io.sources import Access, get_source
 from alea.logging import get_logger, new_run_id
-from alea.planning.schemas import TOPOLOGY
+from alea.planning.fleet import DEFAULT_LIFETIME_YEARS
+from alea.planning.schemas import FLEET, TOPOLOGY
 from alea.provenance.models import Basis, DerivedProvenance
 from alea.registry import Carrier
 
@@ -540,11 +541,44 @@ def build_fleet(config: Config, out: Path, context: BuildContext) -> DerivedProv
 	if frame.empty:
 		raise ArtefactError("fleet: no plant has a positive capacity")
 
-	commission = _pick(raw, "commission_year", "commissioning_year", "Commissioned", "Year")
+	# The two columns `attach_generators` reads for a generator's vintage and its
+	# technical life. They were written as `commission_year` (no `-ing`) and not
+	# written at all, and `FLEET.check` -- which `attach_generators` runs as its
+	# first statement -- refused both: every `build_network` from a staged fleet
+	# raised `SchemaError: fleet: missing required column(s) commissioning_year,
+	# lifetime_years`. The pipeline could not build a network from its own
+	# output, and the fixture in `tests/ci/test_planning_inputs.py` wrote the
+	# schema's spelling by hand, so the gate was green and the seam was broken.
+	#
+	# The names are the schema's (`planning/schemas.py`) and the plan's
+	# (`02-data-pipeline.md` §2's fleet table), which are the same names the
+	# consumer already read.
+	commission = _pick(raw, "commissioning_year", "commission_year", "Commissioned", "Year")
 	technology = _pick(raw, "technology", "Technology", "type")
-	frame["commission_year"] = (
-		pd.to_numeric(raw[commission], errors="coerce") if commission else np.nan
+	commissioned = (
+		pd.to_numeric(raw[commission], errors="coerce")
+		if commission
+		else pd.Series(np.nan, index=frame.index)
 	)
+	# `int` is the schema's dtype and a NaN is not one. `attach_generators` reads
+	# this column with `int(row[...])`, which raises on a NaN, so an export that
+	# omits a plant's vintage would fail the build one row in. The default is the
+	# scenario's *base year*, not zero: a plant the register lists is one that is
+	# operating now, and `build_year=0` under `set_multi_period` is a generator
+	# retired thirty years before the first horizon -- a fleet that silently
+	# vanishes from the expansion. A zero here would also survive
+	# `expansion.py`'s `fillna(periods[0])`, because it is not NaN.
+	default_year = int(context.parameters.get("commissioning_year_default", config.scenario.base_year))
+	frame["commissioning_year"] = commissioned.fillna(default_year).astype(int)
+	n_undated = int(commissioned.isna().sum())
+
+	lifetime = _pick(raw, "lifetime_years", "lifetime", "Lifetime")
+	years = (
+		pd.to_numeric(raw[lifetime], errors="coerce")
+		if lifetime
+		else pd.Series(np.nan, index=frame.index)
+	)
+	frame["lifetime_years"] = years.fillna(DEFAULT_LIFETIME_YEARS).astype(int)
 	frame["technology"] = raw[technology].astype(str) if technology else frame["carrier"]
 	# `status` is not in the export's own columns in most snapshots: a plant the
 	# export lists is operating, and saying so explicitly beats leaving the
@@ -571,6 +605,15 @@ def build_fleet(config: Config, out: Path, context: BuildContext) -> DerivedProv
 			f"fleet: the export holds no plant in {', '.join(sorted(countries))}"
 		)
 
+	# The stage checks its own output against the schema its consumer reads, the
+	# way `build_topology` checks `TOPOLOGY` a few hundred lines up. Without it
+	# the two spellings of a column name drift apart silently and the break
+	# surfaces in `attach_generators` as a `SchemaError` naming the *consumer*,
+	# which reads as the consumer being wrong -- `commission_year` against
+	# `commissioning_year` cost exactly that, and nothing in the suite noticed
+	# because the fixtures wrote the consumer's spelling by hand.
+	FLEET.check(frame, artefact="fleet")
+
 	provenance = _provenance(
 		config,
 		context,
@@ -582,6 +625,12 @@ def build_fleet(config: Config, out: Path, context: BuildContext) -> DerivedProv
 			"carriers": sorted(set(frame["carrier"])),
 			"countries": sorted(set(frame["country_iso"])),
 			"export": str(path),
+			# Recorded because a fleet whose vintages are defaulted is a fleet
+			# whose retirement dates are a convention, and a capacity-expansion
+			# answer over a horizon is sensitive to when a plant retires.
+			"commissioning_year_default": default_year,
+			"n_plants_undated": n_undated,
+			"lifetime_years_default": DEFAULT_LIFETIME_YEARS,
 		},
 		basis=Basis.MEASURED,
 		notes=(

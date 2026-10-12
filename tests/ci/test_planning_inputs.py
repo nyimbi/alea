@@ -25,6 +25,9 @@ dimensional error the loss kernel carried, and the same reason it survived.
 
 from __future__ import annotations
 
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -34,7 +37,7 @@ import xarray as xr
 
 from alea.config.loader import load_config
 from alea.config.models import Config
-from alea.io.artefacts import ArtefactError, write_artefact
+from alea.io.artefacts import ArtefactError, read_artefact, write_artefact
 from alea.planning.inputs import (
 	COSTS_ARTEFACT,
 	DEMAND_ARTEFACT,
@@ -45,6 +48,7 @@ from alea.planning.inputs import (
 	load_renewable_profiles,
 	network_inputs,
 )
+from tests.ci.canaries import REPO, planted
 
 HOURS = pd.date_range("2030-01-01", periods=24, freq="h", tz="UTC", name="timestamp_utc")
 NAIVE_HOURS = HOURS.tz_localize(None)
@@ -676,3 +680,225 @@ def test_demand_hourly_names_the_source_register_only_when_it_is_the_problem():
 	context = BuildContext(out=Path("/tmp/x"), inputs=[], parameters={})
 	with pytest.raises(KeyError, match="unknown source"):
 		_require_raw(_config(Path("/tmp")), context, "worldpop")
+
+
+# --------------------------------------------------------------------------
+# The seam: the stage's own output, read by its own consumer
+# --------------------------------------------------------------------------
+
+
+def _write_fleet_export(tmp_path: Path, *, dated: bool = True) -> Path:
+	"""A powerplantmatching export at the path the stage resolves by convention.
+
+	Deliberately not a `fleet.parquet`: writing the *stage's* output by hand is
+	what hid the break this section gates. The stage is the producer, so the
+	gate runs it.
+	"""
+	raw = tmp_path / "raw" / "powerplantmatching" / "manual"
+	raw.mkdir(parents=True, exist_ok=True)
+	columns: dict[str, object] = {
+		"plant_id": ["p0", "p1"],
+		"name": ["plant 0", "plant 1"],
+		"country_iso": ["KE", "KE"],
+		"lat": [0.0, 0.0],
+		"lon": [0.0, 0.1],
+		"capacity_mw": [500.0, 500.0],
+		"carrier": ["coal", "coal"],
+	}
+	if dated:
+		# The export's own spellings, which are not the schema's: `Commissioned`
+		# and `Lifetime`. The stage renames them, and that rename is the seam.
+		columns["Commissioned"] = [1990, 1990]
+		columns["Lifetime"] = [40, 40]
+	pd.DataFrame(columns).to_parquet(raw / "powerplants.parquet")
+	return raw.parent.parent
+
+
+def _stage_config(tmp_path: Path) -> Config:
+	"""A config whose raw and processed lakes are both under ``tmp_path``."""
+	processed = tmp_path / "processed"
+	processed.mkdir(parents=True, exist_ok=True)
+	return load_config(
+		overrides=[f"paths.raw={tmp_path / 'raw'}", f"paths.processed={processed}"]
+	)
+
+
+def test_the_fleet_stage_writes_what_its_consumer_reads(tmp_path: Path):
+	"""The seam, end to end: `build_fleet` -> `build_network`.
+
+	The stage wrote ``commission_year`` and no lifetime column; `FLEET.check`,
+	which `attach_generators` runs as its first statement, requires
+	``commissioning_year`` and ``lifetime_years``. So every `build_network` from
+	a staged fleet raised ``SchemaError: fleet: missing required column(s)
+	commissioning_year, lifetime_years`` -- the pipeline could not build a
+	network from its own output at all.
+
+	Nothing in the suite noticed, and the reason is the fixture shape this test
+	exists to replace: `_write_fleet` above writes the *consumer's* spelling by
+	hand, so the gate tested `attach_generators` against a frame the producer
+	never writes. A gate over a hand-written input cannot see a producer that
+	disagrees with it. This one runs the producer.
+	"""
+	from alea.io.pipeline import build_stage
+	from alea.planning.service import build_network
+
+	_write_fleet_export(tmp_path, dated=True)
+	config = _stage_config(tmp_path)
+	processed = tmp_path / "processed"
+
+	# topology, the other artefact `build_network` reads.
+	lon = [0.0, 0.1]
+	write_artefact(
+		processed / "topology.parquet",
+		pd.DataFrame(
+			{
+				"line_id": ["l0"],
+				"from_lon": lon[:-1],
+				"from_lat": [0.0],
+				"to_lon": lon[1:],
+				"to_lat": [0.0],
+				"voltage_kv": [400.0],
+				"length_km": [11.0],
+				"capacity_mva": [1000.0],
+			}
+		),
+		_provenance("transmission_lines"),
+		format="parquet",
+	)
+
+	build_stage("fleet", config, processed / "fleet.parquet")
+	frame, _ = read_artefact(processed / "fleet.parquet")
+	# The export's `Commissioned`/`Lifetime` reached the artefact under the
+	# schema's names, which is the rename this test is about.
+	assert frame["commissioning_year"].tolist() == [1990, 1990]
+	assert frame["lifetime_years"].tolist() == [40, 40]
+
+	network, report, _ = build_network(config)
+	assert report.fleet["n_attached"] == 2, "the staged fleet did not attach"
+	assert network.generators["build_year"].tolist() == [1990, 1990]
+	assert network.generators["lifetime"].tolist() == [40.0, 40.0]
+
+
+def test_an_undated_plant_is_commissioned_at_the_base_year(tmp_path: Path):
+	"""The default, and why it is the base year rather than zero.
+
+	An export that omits a vintage must still produce an ``int`` column -- the
+	schema says ``int`` and `attach_generators` reads it with ``int(row[...])``,
+	which raises on a NaN. Zero is the obvious sentinel and it is the wrong one:
+	under `set_multi_period` a generator with ``build_year=0`` is retired decades
+	before the first horizon, so the whole fleet would silently vanish from the
+	expansion. The default is the scenario's own base year, and the count of
+	rows that took it is recorded.
+	"""
+	from alea.io.artefacts import read_provenance
+	from alea.io.pipeline import build_stage
+
+	_write_fleet_export(tmp_path, dated=False)
+	config = _stage_config(tmp_path)
+	out = tmp_path / "processed" / "fleet.parquet"
+
+	build_stage("fleet", config, out)
+	frame, _ = read_artefact(out)
+	assert frame["commissioning_year"].tolist() == [config.scenario.base_year] * 2
+	assert frame["commissioning_year"].dtype.kind == "i", "the schema says int"
+	assert frame["lifetime_years"].tolist() == [30, 30]
+
+	provenance = read_provenance(out)
+	parameters = provenance.parameters
+	assert parameters["n_plants_undated"] == 2, (
+		"a defaulted vintage is a convention, and an unrecorded one is a "
+		"retirement date nobody can defend"
+	)
+	assert parameters["commissioning_year_default"] == config.scenario.base_year
+
+
+#: Builds the staged fleet in a **fresh interpreter** and reports what happened.
+#:
+#: A subprocess rather than an in-process call because `build_fleet` is already
+#: bound in this process by the time the canary mutates its source: `planted`
+#: rewrites the file and purges the `.pyc`, but `sys.modules` still holds the
+#: module object the mutation never reached, so an in-process canary would
+#: exercise the *correct* code and pass for the wrong reason.
+_FLEET_PROGRAM = """
+import sys
+from pathlib import Path
+
+from alea.config.loader import load_config
+from alea.io.pipeline import build_stage
+
+root = Path(sys.argv[1])
+config = load_config(
+    overrides=[f"paths.raw={root / 'raw'}", f"paths.processed={root / 'processed'}"]
+)
+try:
+    build_stage("fleet", config, root / "processed" / "fleet-canary.parquet", force=True)
+except Exception as exc:
+    print(f"refused:{type(exc).__name__}:{exc}")
+else:
+    print("accepted")
+"""
+
+
+def _fleet_outcome(root: Path) -> str:
+	"""``"accepted"`` or ``"refused:..."``, from a subprocess against the tree.
+
+	The *last* line, not the whole of stdout: `build_stage` logs its summary to
+	stdout before it returns or raises, so the marker is never the first line and
+	a `startswith` over the whole capture would fail on a stage that worked.
+	"""
+	env = {**os.environ, "PYTHONPATH": str(REPO)}
+	completed = subprocess.run(
+		[sys.executable, "-c", _FLEET_PROGRAM, str(root)],
+		capture_output=True,
+		text=True,
+		check=False,
+		env=env,
+		cwd=str(REPO),
+	)
+	assert completed.returncode == 0, completed.stderr
+	lines = [line for line in completed.stdout.splitlines() if line.strip()]
+	assert lines, f"the subprocess printed nothing; stderr: {completed.stderr}"
+	return lines[-1].strip()
+
+
+def test_the_stage_refuses_its_own_output_when_the_rename_is_lost(tmp_path: Path):
+	"""The canary for the two gates above.
+
+	Plants the exact defect that shipped -- the stage writing ``commission_year``
+	while its consumer's schema requires ``commissioning_year`` -- and asserts
+	the producer-side `FLEET.check` refuses it. The message is asserted, not just
+	the exception type, because the message is what names the schema: without it
+	"something raised" would pass against a stage failing for an unrelated
+	reason.
+
+	Blinding the check as well would need a second simultaneous mutation in the
+	same file, and two nested `planted` calls deadlock -- `fcntl.flock` is held
+	per open file description, so the same process blocks against itself. The
+	message assertion pins `FLEET.check` as the refuser instead, which is what
+	the blinding would have shown.
+	"""
+	stages = REPO / "src" / "alea" / "io" / "stages.py"
+	shipped = '\tframe["commissioning_year"] = commissioned.fillna(default_year).astype(int)'
+	lost = '\tframe["commission_year"] = commissioned.fillna(default_year).astype(int)'
+	assert shipped in stages.read_text(), "canary target not found"
+
+	_write_fleet_export(tmp_path, dated=True)
+	_stage_config(tmp_path)
+
+	assert _fleet_outcome(tmp_path).startswith("accepted"), (
+		"the shipped stage refused its own output, so the canary below would "
+		"pass for a reason unrelated to the rename"
+	)
+
+	with planted(stages, shipped, lost):
+		outcome = _fleet_outcome(tmp_path)
+		assert outcome.startswith("refused"), (
+			"the stage wrote a column its consumer's schema does not require and "
+			"nothing refused it; the producer-side check is not the gate it "
+			"claims to be"
+		)
+		assert "missing required column" in outcome, (
+			f"the refusal did not come from the schema check: {outcome}"
+		)
+
+	assert _fleet_outcome(tmp_path).startswith("accepted"), "the restore did not put it back"
