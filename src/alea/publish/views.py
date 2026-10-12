@@ -140,7 +140,7 @@ OUTAGE_VALIDATION = ArtefactSchema(
 		ColumnSpec(name="auc", dtype="float", unit="AUC", description="ROC AUC."),
 		ColumnSpec(name="precision", dtype="float", unit="fraction", description="Precision."),
 		ColumnSpec(name="recall", dtype="float", unit="fraction", description="Recall."),
-		ColumnSpec(name="sample_size", dtype="int", description="Rows scored."),
+		ColumnSpec(name="sample_size", dtype="int", unit="count", description="Rows scored."),
 	),
 )
 
@@ -241,6 +241,7 @@ RESILIENCE_CONTINGENCY = ArtefactSchema(
 		ColumnSpec(
 			name="overloaded_elements",
 			dtype="int",
+			unit="count",
 			description="Elements overloaded in the post-contingency state.",
 		),
 		ColumnSpec(name="severity", dtype="str", description="Severity band."),

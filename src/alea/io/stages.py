@@ -47,7 +47,7 @@ from alea.logging import get_logger, new_run_id
 from alea.planning.fleet import DEFAULT_LIFETIME_YEARS
 from alea.planning.schemas import FLEET, TOPOLOGY
 from alea.provenance.models import Basis, DerivedProvenance
-from alea.registry import Carrier
+from alea.registry import Carrier, get_technology
 
 _log = get_logger(__name__)
 
@@ -71,10 +71,14 @@ disaggregation whose ``alpha`` is unrecorded produces a map nobody can defend.
 """
 
 HOURS_PER_YEAR = 8760
-"""Non-leap hours in a year. The horizon the hourly demand series covers."""
+"""Non-leap hours in a year.
 
-HOURS_PER_MONTH = 730
-"""Mean hours per month, for scaling a monthly capacity factor to an hourly one."""
+Kept as the *name* for the defect the hourly index must not be built from: the
+demand series is the calendar year (see `_hourly_shape`), and
+`tests/ci/test_planning_inputs.py` plants an index of exactly this many hours to
+prove the gate catches it. The constant is the canary's spelling of that defect
+and is why it is not simply 8760 inline.
+"""
 
 FUEL_COLUMNS = ("country_iso", "fuel", "year", "price_usd_per_mwh")
 """The ``fuel_prices`` schema of §3, in order."""
@@ -661,39 +665,30 @@ def _iso2(value: Any) -> str:
 def _carrier_name(value: Any) -> str:
 	"""Map an upstream fuel string onto a registry carrier.
 
-	An unmapped string is passed through unchanged so the unknown-carrier gate
-	above names it, rather than being folded into a default carrier where nobody
-	would ever see it.
+	Delegates to `alea.registry.technologies.get_technology`, which is the one
+	table that knows what an upstream fuel string means. This function used to
+	carry its own copy of that table and the two had drifted: the registry maps
+	``hydroelectric``, ``reservoir``, ``photovoltaic``, ``pumped storage``,
+	``li-ion``, ``bess`` and nine others, and the stage's copy mapped none of
+	them. So an export holding a hydro plant named ``Hydroelectric`` -- which is
+	powerplantmatching's own spelling, and the reason the registry's table has
+	that key at all -- reached the unknown-carrier gate below and failed the
+	whole build, with a message telling the operator to add a carrier that was
+	already registered.
+
+	Two tables for one mapping is the defect; the fix is to keep one. An
+	unmapped string is still passed through unchanged, so the gate names it
+	rather than folding it into a default carrier where nobody would see it.
 	"""
-	text = str(value).strip().lower().replace(" ", "_").replace("-", "_")
-	aliases = {
-		"hard_coal": "coal",
-		"lignite": "coal",
-		"natural_gas": "gas",
-		"ccgt": "gas",
-		"ocgt": "gas",
-		"oil_diesel": "oil",
-		"diesel": "oil",
-		"heavy_fuel_oil": "oil",
-		"hfo": "oil",
-		"pv": "solar",
-		"solar_pv": "solar",
-		"csp": "csp",
-		"solar_thermal": "csp",
-		"wind": "onwind",
-		"onshore_wind": "onwind",
-		"offshore_wind": "offwind",
-		"hydro": "hydro",
-		"hydro_ror": "ror",
-		"run_of_river": "ror",
-		"pumped_hydro": "PHS",
-		"bioenergy": "biomass",
-		"biogas": "biomass",
-		"geothermal": "geothermal",
-		"nuclear": "nuclear",
-		"waste": "waste",
-	}
-	return aliases.get(text, text)
+	text = str(value).strip()
+	if not text:
+		return text
+	try:
+		return get_technology(text).carrier.value
+	except KeyError:
+		# Not an alias and not a carrier name. Normalised the way the old table
+		# normalised, so the refusal message reads the same as it always did.
+		return text.lower().replace(" ", "_").replace("-", "_")
 
 
 # --------------------------------------------------------------------------
@@ -955,13 +950,21 @@ def _share(values: pd.Series) -> pd.Series:
 def _hourly_shape(config: Config, year: int) -> pd.Series:
 	"""The national hourly demand shape, in MW, for one year.
 
-	A modelled diurnal-seasonal profile normalised to 1 MWh/MW-year, scaled by
+	A modelled diurnal-seasonal profile normalised to a mean of 1 MW, scaled by
 	the caller to the measured national total. Deterministic by construction:
 	AD-8 forbids unseeded randomness, and a synthetic series that changes
 	between runs makes every downstream comparison meaningless.
+
+	The index is the whole calendar year, not ``HOURS_PER_YEAR`` hours from the
+	first of January. A fixed 8760 ends a leap year at 30 December 23:00, so
+	2040 and 2060 -- two of the four default horizons -- carried no load for
+	their last 24 hours, and `02-data-pipeline.md` §4.2's
+	``test_demand_hourly_covers_horizon`` is the gate that asks for exactly
+	this. The normaliser is the index's own length for the same reason: a
+	series normalised to 8760 over 8784 hours is a year that is 0.27% short.
 	"""
 	index = pd.date_range(
-		f"{year}-01-01 00:00", periods=HOURS_PER_YEAR, freq="h", tz="UTC", name="timestamp_utc"
+		f"{year}-01-01 00:00", f"{year}-12-31 23:00", freq="h", tz="UTC", name="timestamp_utc"
 	)
 	hour = index.hour.to_numpy(dtype=float)
 	doy = index.dayofyear.to_numpy(dtype=float)
@@ -969,7 +972,7 @@ def _hourly_shape(config: Config, year: int) -> pd.Series:
 	diurnal = 0.72 + 0.22 * np.exp(-((hour - 7.0) ** 2) / 8.0) + 0.34 * np.exp(-((hour - 19.0) ** 2) / 10.0)
 	seasonal = 1.0 + 0.10 * np.cos(2.0 * np.pi * (doy - 20.0) / 365.25)
 	shape = diurnal * seasonal
-	shape = shape / float(shape.sum()) * HOURS_PER_YEAR
+	shape = shape / float(shape.sum()) * float(len(index))
 	assert np.isfinite(shape).all(), "demand shape has a non-finite value"
 	return pd.Series(shape, index=index, name="shape")
 

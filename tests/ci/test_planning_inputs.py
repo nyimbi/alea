@@ -902,3 +902,120 @@ def test_the_stage_refuses_its_own_output_when_the_rename_is_lost(tmp_path: Path
 		)
 
 	assert _fleet_outcome(tmp_path).startswith("accepted"), "the restore did not put it back"
+
+
+# --------------------------------------------------------------------------
+# The hourly series covers the horizon it claims to
+# --------------------------------------------------------------------------
+
+
+def _write_hourly(tmp_path: Path, *, year: int) -> tuple[Path, pd.DataFrame]:
+	"""Build ``demand_hourly`` for ``year`` and return the artefact and its frame."""
+	from alea.io.pipeline import BuildContext
+	from alea.io.stages import build_demand_hourly
+
+	processed = tmp_path / "processed"
+	processed.mkdir(parents=True, exist_ok=True)
+	write_artefact(
+		processed / "demand_national.parquet",
+		pd.DataFrame({"country_iso": ["KE"], "year": [year], "demand_twh": [12.0]}),
+		_provenance("demand_national"),
+		format="parquet",
+	)
+	weights = tmp_path / "weights.csv"
+	pd.DataFrame(
+		{"bus_id": ["KE_0", "KE_1"], "population": [0.6, 0.4], "gdp": [0.7, 0.3]}
+	).to_csv(weights, index=False)
+
+	out = processed / "demand_hourly.parquet"
+	config = load_config(
+		overrides=[f"paths.raw={tmp_path / 'raw'}", f"paths.processed={processed}"]
+	)
+	context = BuildContext(
+		out=out, inputs=["<fixture>"], parameters={"bus_weights": str(weights), "year": year}
+	)
+	build_demand_hourly(config, out, context)
+	frame, _ = read_artefact(out)
+	return out, frame
+
+
+@pytest.mark.parametrize("year", [2030, 2040, 2050, 2060])
+def test_demand_hourly_covers_horizon(tmp_path: Path, year: int):
+	"""`02-data-pipeline.md` §4.2's ``test_demand_hourly_covers_horizon``.
+
+	Every hour of the horizon year carries load, and no hour outside it does.
+	The gate the plan names, and the one that would have caught a shipped
+	defect: the series was a fixed ``HOURS_PER_YEAR`` (8760) hours from the
+	first of January, so 2040 and 2060 -- leap years, and two of the four
+	default horizons -- ended at 30 December 23:00 and carried no load for
+	their last 24 hours. A network built on that series prices 8784 hours of
+	system with 8760 hours of demand, and nothing about the answer looks wrong.
+
+	Both directions are asserted. A series that only ever grows would pass a
+	"no gaps" check while covering a year it was not asked for.
+	"""
+	_, frame = _write_hourly(tmp_path, year=year)
+	covered = pd.DatetimeIndex(pd.to_datetime(frame["timestamp_utc"]).unique()).sort_values()
+	expected = pd.date_range(f"{year}-01-01", f"{year}-12-31 23:00", freq="h", tz="UTC")
+
+	missing = expected.difference(covered)
+	assert len(missing) == 0, (
+		f"{len(missing)} hour(s) of {year} carry no demand, e.g. {list(missing[:3])}; "
+		f"the series is a fixed hour count rather than the calendar year"
+	)
+	assert len(covered) == len(expected), (
+		f"the series holds {len(covered)} hours for a year of {len(expected)}"
+	)
+	assert covered.min() == expected[0] and covered.max() == expected[-1], (
+		f"the series spans {covered.min()} to {covered.max()}, not the year"
+	)
+	# Every bus, every hour: a gap on one bus alone is the same defect with a
+	# smaller footprint, and `pivot_table` in `load_demand_profiles` fills it
+	# with a NaN the solver reads as a zero load.
+	per_bus = frame.groupby("bus_id")["timestamp_utc"].nunique()
+	assert set(per_bus) == {len(expected)}, f"a bus does not cover the year: {per_bus.to_dict()}"
+	assert not frame["demand_mw"].isna().any(), "the demand series has a NaN"
+
+
+def test_a_leap_year_is_where_the_hour_count_gate_can_fail(tmp_path: Path):
+	"""The canary for the gate above: it must be able to fail at all.
+
+	``test_demand_hourly_covers_horizon`` passes for every non-leap horizon
+	whether or not the stage uses a fixed hour count, so a canary that only
+	exercised 2030 would prove nothing. This plants the shipped defect -- the
+	fixed ``HOURS_PER_YEAR`` index -- and runs *the gate itself* in a fresh
+	interpreter, asserting it exits non-zero. A subprocess because the mutation
+	cannot reach an already-imported module, and the gate itself rather than a
+	re-measurement of the hour count because a proxy that re-implements the
+	check is a canary of the proxy.
+	"""
+	stages = REPO / "src" / "alea" / "io" / "stages.py"
+	shipped = (
+		'\t\tf"{year}-01-01 00:00", f"{year}-12-31 23:00", freq="h", tz="UTC", '
+		'name="timestamp_utc"'
+	)
+	fixed = '\t\tf"{year}-01-01 00:00", periods=HOURS_PER_YEAR, freq="h", tz="UTC", name="timestamp_utc"'
+	assert shipped in stages.read_text(), "canary target not found: the index is not the calendar year"
+
+	env = {**os.environ, "PYTHONPATH": str(REPO)}
+	gate = [
+		sys.executable, "-m", "pytest", "-q", "-p", "no:randomly",
+		"tests/ci/test_planning_inputs.py::test_demand_hourly_covers_horizon",
+	]
+	clean = subprocess.run(gate, capture_output=True, text=True, check=False, env=env, cwd=str(REPO))
+	assert clean.returncode == 0, (
+		f"the gate does not pass on the shipped tree, so the canary below would "
+		f"prove nothing:\n{clean.stdout[-2000:]}"
+	)
+
+	with planted(stages, shipped, fixed):
+		mutated = subprocess.run(
+			gate, capture_output=True, text=True, check=False, env=env, cwd=str(REPO)
+		)
+	assert mutated.returncode != 0, (
+		"the gate passed against a fixed 8760-hour index, so it cannot tell a "
+		"covered leap year from a short one"
+	)
+	assert "carry no demand" in mutated.stdout, (
+		f"the gate failed for a reason other than the missing hours:\n{mutated.stdout[-2000:]}"
+	)
