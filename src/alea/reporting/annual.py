@@ -7,14 +7,17 @@ inherited from ``spec/`` that is still unverified at this point is either
 resolved against a source or printed with its status and the milestone at
 which it will be resolved. It is never printed as though it were established.
 
-The ``UNVERIFIED`` list below is the report's own register, keyed to the
-milestones in 00-architecture §9. An entry marked resolved is one confirmed
-against a source; an unresolved one appears in the report's unverified block,
-not in its tables.
+The ``UNVERIFIED`` list below is derived from :data:`alea.quality.claims.REGISTER`,
+which is where the ten claims of `12-quality.md` §6.1 live. It was a local
+constant here holding four of the ten, reachable only from this cadence, with
+nothing recording that any had been reviewed -- a register inside one report is
+a register no milestone can review. Deriving it means the annual report prints
+the whole register and the milestone gate reads the same ten entries.
 """
 
 from __future__ import annotations
 
+from alea.quality.claims import REGISTER
 from alea.reporting.schemas import UnverifiedClaim
 from alea.reporting.service import DataWindowSpec, SectionSpec
 
@@ -87,24 +90,18 @@ SECTIONS: tuple[SectionSpec, ...] = (
 # time (web search was unavailable). Each carries the milestone at which it
 # must be confirmed. An unresolved entry is printed in the report's unverified
 # block; it is never printed as an established result.
-UNVERIFIED: tuple[UnverifiedClaim, ...] = (
-	UnverifiedClaim(
-		claim="Transmission-loss omission overestimates optimal expansion by ~20% (PyPSA-Eur)",
-		milestone="M1",
-	),
-	UnverifiedClaim(
-		claim="Outage prediction AUC 0.8346 on the Ghana dataset",
-		milestone="M2",
-	),
-	UnverifiedClaim(
-		claim="Outage prediction accuracy 89.41% for Johannesburg",
-		milestone="M2",
-	),
-	UnverifiedClaim(
-		claim="Loss prediction accuracy 99% with precision/recall/F1 above 98% (Adrar)",
-		milestone="M2",
-	),
+UNVERIFIED: tuple[UnverifiedClaim, ...] = tuple(
+	UnverifiedClaim(claim=entry.claim, milestone=entry.milestone, resolved=entry.resolved)
+	for entry in REGISTER
 )
+"""Every claim in `12-quality.md` §6.1, derived rather than restated.
+
+Ten entries, not four: the four that were here were the subset this cadence's
+author had in mind, and a register that lives in one report is a register the
+other nine claims are absent from. A resolved entry is one confirmed against a
+source; an unresolved one appears in the report's unverified block, never in its
+tables.
+"""
 
 WINDOWS: tuple[DataWindowSpec, ...] = ()
 

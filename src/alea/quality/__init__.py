@@ -8,6 +8,15 @@ this package is where both become structural rather than conventional.
 
 from __future__ import annotations
 
+from alea.quality.claims import (
+	MILESTONES,
+	REGISTER,
+	Claim,
+	Review,
+	due_at,
+	milestone_of,
+	review,
+)
 from alea.quality.service import (
 	benchmark_artefact,
 	missing_validation_targets,
@@ -30,16 +39,23 @@ from alea.quality.views import (
 
 __all__ = [
 	"BENCHMARK_TARGET_CORES",
+	"MILESTONES",
+	"REGISTER",
 	"VALIDATION_KEYS",
 	"VALIDATION_TARGETS",
 	"BenchmarkArtefact",
+	"Claim",
 	"Hardware",
+	"Review",
 	"ValidationArtefact",
 	"ValidationStatus",
 	"ValidationTarget",
 	"benchmark_artefact",
 	"benchmark_targets",
+	"due_at",
+	"milestone_of",
 	"missing_validation_targets",
+	"review",
 	"validation_artefact",
 	"validation_coverage",
 	"write_benchmark",

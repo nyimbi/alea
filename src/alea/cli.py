@@ -34,8 +34,10 @@ app = typer.Typer(
 
 config_app = typer.Typer(no_args_is_help=True, help="Inspect and validate configuration.")
 registry_app = typer.Typer(no_args_is_help=True, help="Inspect the country and technology registries.")
+quality_app = typer.Typer(no_args_is_help=True, help="Validation coverage and the unverified register.")
 app.add_typer(config_app, name="config")
 app.add_typer(registry_app, name="registry")
+app.add_typer(quality_app, name="quality")
 
 ConfigOption = Annotated[
 	Path | None,
@@ -508,6 +510,49 @@ def health(
 		typer.echo(f"ok: {countries}")
 		typer.echo(f"  results: {results}")
 		typer.echo(f"  last run: {last.run_id if last else 'none'}")
+
+
+@quality_app.command("claims")
+def quality_claims(
+	milestone: Annotated[
+		str | None,
+		typer.Option("--milestone", "-m", help="Run the review as of this milestone, e.g. M2."),
+	] = None,
+	quiet: Annotated[bool, typer.Option("--quiet", "-q", help="Print nothing; exit with the verdict.")] = False,
+) -> None:
+	"""The `[UNVERIFIED]` register, and the review §9 criterion 5 asks for.
+
+	`12-quality.md` §9: "the `[UNVERIFIED]` register is reviewed at every
+	milestone". The review lists the claims whose milestone has arrived and that
+	are still unresolved, because -- in the plan's own words -- "a claim that
+	stays in the codebase unverified past its milestone is a claim that will be
+	quoted."
+
+	With ``--milestone`` it exits non-zero when anything is due, so a milestone
+	check can gate on it. Without, it prints the register.
+	"""
+	from alea.quality.claims import REGISTER, review
+
+	if milestone:
+		result = review(milestone)
+		if result.due:
+			for claim in result.due:
+				typer.secho(
+					f"due at {claim.milestone}: #{claim.number} {claim.claim} "
+					f"({claim.resolution})",
+					fg=typer.colors.YELLOW,
+					err=True,
+				)
+			if not quiet:
+				typer.echo(f"{len(result.due)} claim(s) unresolved at {milestone}")
+			raise typer.Exit(code=1)
+		if not quiet:
+			typer.echo(f"{milestone}: every claim due by now is resolved")
+		return
+
+	for claim in REGISTER:
+		status = "resolved" if claim.resolved else "UNVERIFIED"
+		typer.echo(f"{claim.number:2d}  {claim.milestone}  {status:10s}  {claim.claim}")
 
 
 @app.command()
