@@ -406,16 +406,32 @@ UNWIRED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"wiring task."
 		),
 		"data/processed/losses/decomposition.parquet": (
-			"Needs `network_arrays.json` and `dispatch.parquet` under "
-			"`paths.processed`. `@stage(\"tlens\")` reads both and **nothing writes "
-			"either**; no rule invokes that stage. The decomposition has the same "
-			"missing inputs."
+			"The inputs exist now -- `@stage(\"network_arrays\")` writes "
+			"`network_arrays.json` and `dispatch.parquet` and `rules/losses.smk` runs "
+			"it -- but no stage calls `decomposition_to_artefact`, and the layer "
+			"result is **degenerate under its own defaults**. Measured on a meshed "
+			"mixed-voltage fixture: `load_driven == total` and "
+			"`generation_driven == topology_driven == 0.0`, for every network. "
+			"`reference_network` defaults to the actual network, so "
+			"`losses_with_actual_load_only` equals `actual_losses`; `topology_network` "
+			"defaults to the reference network, so `T - R` is zero by construction. A "
+			"table written from that asserts \"100% of losses are load-driven\" for "
+			"every country -- the specification's `_topology_driven = 0 # Placeholder` "
+			"defect relocated rather than repaired. Wiring it needs a decision about "
+			"what the reference network is (the plan names loss-optimal line "
+			"switching, and no switching solver exists) before a stage can supply one. "
+			"`test_the_decomposition_needs_a_reference_network_to_attribute_anything` "
+			"pins this."
 		),
 		"data/processed/losses/mitigation.parquet": (
-			"Needs the same dispatch series and network arrays as the "
-			"decomposition: `mitigation_to_artefact` ranks options against the "
-			"losses each avoids, so it needs the decomposition's inputs before it "
-			"can have an output. Same missing producer."
+			"The dispatch series and network arrays it needs exist now. The remaining "
+			"gap is the option list: `mitigation_to_artefact` ranks "
+			"`MitigationOption`s, and no artefact, config section or resource supplies "
+			"one. A mitigation ranking is over *candidate measures* -- reconductoring "
+			"a branch, upgrading a voltage, adding a parallel circuit -- and nothing "
+			"records which measures are candidates for which branch. Synthesising one "
+			"per branch would fabricate engineering options with capex figures nobody "
+			"supplied, so this table waits on a data arrival, not a wiring task."
 		),
 		"data/processed/resilience/metrics.parquet": (
 			"Needs `interruptions.parquet` and `zone_population.parquet`. "
@@ -424,8 +440,13 @@ UNWIRED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"must arrive with its own provenance, so inventing it is not an option."
 		),
 		"data/processed/resilience/contingency.parquet": (
-			"Needs the N-1 sweep over a solved network's arrays. Same missing "
-			"`network_arrays.json` and dispatch as the loss tables."
+			"The arrays and dispatch it needs exist now, and the layer computes the "
+			"sweep (`alea.losses.contingency.sweep`), but the serving schema is "
+			"per-element rows -- `element_id`, `load_shed_mw`, `overloaded_elements` -- "
+			"and `contingency_to_artefact` writes `summary()`, one aggregate "
+			"`ContingencySummary` for the whole sweep. A projection needs the "
+			"per-element record the sweep holds internally and the writer discards, "
+			"so the gap is a stage that reads the sweep rather than the summary."
 		),
 	}
 )

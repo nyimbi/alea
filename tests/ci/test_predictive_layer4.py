@@ -109,6 +109,141 @@ def test_a_zero_total_decomposition_reports_nan_shares_not_zero():
 	assert all(np.isnan(value) for value in components.shares.values())
 
 
+def _four_bus_meshed() -> Network:
+	"""A meshed, mixed-voltage network, and a topology with one branch out.
+
+	Meshed and mixed-voltage for the reason `tests/ci/test_network_arrays.py`
+	records: a DC solve is invariant to a *uniform* scaling of susceptance, and a
+	radial network's flows do not depend on susceptance at all, so a fixture
+	whose branches all sit at one voltage cannot tell a changed network from an
+	unchanged one. A uniform-scale probe was the first thing tried here and it
+	reported every case identical -- including the cases that differ.
+	"""
+	from alea.losses.flow import susceptance_matrix
+
+	branch_from = np.array([0, 1, 2, 3], dtype=np.uint32)
+	branch_to = np.array([1, 2, 3, 0], dtype=np.uint32)
+	susceptance = np.array([220.0**2 / 20.0, 132.0**2 / 10.0, 132.0**2 / 15.0, 132.0**2 / 25.0])
+	resistance = np.array([1.0, 0.5, 0.8, 1.2])
+	voltage = np.array([220.0, 132.0, 132.0, 132.0])
+	ratings = np.array([500.0, 300.0, 400.0, 350.0])
+	names = ("AB", "BC", "CD", "DA")
+
+	def build(branch_susceptance: np.ndarray) -> Network:
+		return Network(
+			susceptance=susceptance_matrix(branch_from, branch_to, branch_susceptance, 4),
+			branch_from=branch_from,
+			branch_to=branch_to,
+			branch_susceptance=branch_susceptance,
+			resistance_ohm=resistance,
+			voltage_kv=voltage,
+			ratings_mw=ratings,
+			branch_names=names,
+		)
+
+	actual = build(susceptance)
+	# CD out: a near-zero susceptance rather than a removed branch, because the
+	# kernel takes a dense matrix and a branch that is "out" is one carrying no
+	# flow. The arrays the workflow writes are the same shape.
+	without_cd = susceptance.copy()
+	without_cd[2] = 1e-9
+	return actual, build(without_cd)
+
+
+def test_the_decomposition_needs_a_reference_network_to_attribute_anything():
+	"""The layer result is degenerate under its own defaults, and this pins it.
+
+	Measured, not reasoned: on the fixture below, ``measure``'s defaults return
+	``load_driven == total`` and ``generation_driven == topology_driven == 0.0``,
+	for every network. Two defaults cause it. ``reference_network`` defaults to
+	the actual network, so ``losses_with_actual_load_only`` is
+	``actual_losses``; ``topology_network`` defaults to the reference network, so
+	``T - R`` is zero *by construction* rather than because the topology is
+	loss-optimal.
+
+	That is the specification's ``_topology_driven`` returning ``0  #
+	Placeholder`` relocated rather than repaired: the number is right and the
+	reason is absent. A serving table written from a default call would assert
+	"100% of losses are load-driven" for every country, which is
+	`alea.publish.views.UNWIRED`'s recorded reason for leaving
+	``data/processed/losses/decomposition.parquet`` unwired. When a stage learns
+	to supply a reference network, this test fails and the register shrinks with
+	it -- which is what keeps the entry from outliving the gap.
+	"""
+	from alea.losses.decompose import decompose, measure
+
+	network, _ = _four_bus_meshed()
+	dispatch = np.array([[900.0, -300.0, -250.0, -350.0], [450.0, -150.0, -125.0, -175.0]])
+	cfg = LossConfig(slack_bus=0, snapshot_hours=1.0)
+
+	components = decompose(measure(network, dispatch, cfg), cfg)
+	assert components.total_mwh > 0.0, "the fixture must lose something to attribute"
+	assert components.load_driven_mwh == pytest.approx(components.total_mwh)
+	assert components.generation_driven_mwh == pytest.approx(0.0)
+	assert components.topology_driven_mwh == pytest.approx(0.0)
+	# The shares say the same thing, and it is the claim a table would carry.
+	assert components.shares["load_driven"] == pytest.approx(1.0)
+
+
+def test_a_reference_dispatch_alone_changes_nothing():
+	"""``reference_dispatch_mw`` is inert while ``topology_network`` is None.
+
+	It enters ``reference_losses`` and ``losses_with_actual_topology_only``
+	identically, and the kernel takes their difference, so it cancels. This is
+	the half of the degeneracy that is *not* a default: a caller who supplies a
+	reference dispatch and nothing else still gets a single-driver attribution.
+	The canary for the gate above -- a repair that only plumbs a reference
+	dispatch would leave it passing while the defect stands.
+	"""
+	from alea.losses.decompose import decompose, measure
+
+	network, _ = _four_bus_meshed()
+	dispatch = np.array([[900.0, -300.0, -250.0, -350.0], [450.0, -150.0, -125.0, -175.0]])
+	# The same total load, a different generation distribution.
+	reference = np.array([[900.0, -600.0, -150.0, -150.0], [450.0, -300.0, -75.0, -75.0]])
+	cfg = LossConfig(slack_bus=0, snapshot_hours=1.0)
+
+	with_reference = decompose(measure(network, dispatch, cfg, reference_dispatch_mw=reference), cfg)
+	without = decompose(measure(network, dispatch, cfg), cfg)
+	assert with_reference.load_driven_mwh == pytest.approx(without.load_driven_mwh)
+	assert with_reference.generation_driven_mwh == pytest.approx(0.0)
+	assert with_reference.topology_driven_mwh == pytest.approx(0.0)
+
+
+def test_a_reference_network_does_attribute_to_more_than_one_driver():
+	"""The other half: a genuinely different reference network moves the split.
+
+	This is the canary for the two gates above. They assert a *degenerate*
+	result, and a gate that asserts a defect is only honest if a repair makes it
+	fail -- so this shows the same fixture attributing to two drivers once a
+	reference network is supplied. If the gates above ever pass while this one
+	does, the fixture stopped discriminating rather than the defect closing.
+	"""
+	from alea.losses.decompose import decompose, measure
+
+	network, without_cd = _four_bus_meshed()
+	dispatch = np.array([[900.0, -300.0, -250.0, -350.0], [450.0, -150.0, -125.0, -175.0]])
+	reference = np.array([[900.0, -600.0, -150.0, -150.0], [450.0, -300.0, -75.0, -75.0]])
+	cfg = LossConfig(slack_bus=0, snapshot_hours=1.0)
+
+	components = decompose(
+		measure(
+			network,
+			dispatch,
+			cfg,
+			reference_dispatch_mw=reference,
+			reference_network=without_cd,
+			topology_network=network,
+		),
+		cfg,
+	)
+	assert components.sum_of_parts_mwh == pytest.approx(components.total_mwh)
+	# A non-zero topology component is the whole point: it is what the
+	# specification's hardcoded zero never produced.
+	assert abs(components.topology_driven_mwh) > 1e-6
+	assert abs(components.load_driven_mwh - components.total_mwh) > 1e-6
+
+
 # --------------------------------------------------------------------------
 # Exit criterion 5 and §10: an accuracy figure never travels without its base rate
 # --------------------------------------------------------------------------
