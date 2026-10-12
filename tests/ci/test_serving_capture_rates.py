@@ -293,3 +293,32 @@ def test_the_register_moved_with_the_wiring():
 		"the table is wired and still recorded as a gap, so the register "
 		"overstates it"
 	)
+
+
+def test_the_stage_skips_a_second_run_on_the_same_network(tmp_path: Path):
+	"""02 §4.2's `test_stage_idempotent`, on the stage that resolves its own input.
+
+	This stage takes no declared ``--input`` from its rule: it resolves the
+	newest solved network itself, so `build_stage`'s own check can never fire
+	and the stage must call `skip_if_current` with the digest it read. A stage
+	that omits that call re-solves and rewrites on every `alea build`, which is
+	the defect the pipeline module documents -- "every `alea build` rebuilt" --
+	and it is invisible from a single run. The second run must return the
+	provenance the first wrote, not a new one.
+	"""
+	_solved_network(tmp_path)
+	config = _config(tmp_path)
+	out = tmp_path / PUBLISHED_TABLES["market_capture_rates"]
+	context = BuildContext_stub(
+		out, {"network_dir": str(tmp_path / "results" / "networks"), "technology": "solar"}
+	)
+	first = build_market_capture_rates(config, out, context)
+	written = out.stat().st_mtime_ns
+
+	second = build_market_capture_rates(config, out, context)
+	assert second.run_id == first.run_id, (
+		"the second run wrote a new artefact; the stage did not call "
+		"`skip_if_current` with the network digest it resolved, so every "
+		"`alea build` re-solves the dispatch"
+	)
+	assert out.stat().st_mtime_ns == written, "the second run rewrote the file"
