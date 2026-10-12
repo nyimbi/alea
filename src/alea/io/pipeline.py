@@ -241,6 +241,7 @@ _REGISTRATION_MODULES = (
 	"alea.io.stages",
 	"alea.losses.service",
 	"alea.outages.service",
+	"alea.quality.service",
 	"alea.resilience.service",
 	"alea.sector.service",
 )

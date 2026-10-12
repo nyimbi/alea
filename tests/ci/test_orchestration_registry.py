@@ -89,6 +89,28 @@ def test_the_stage_registry_is_non_empty_after_a_bare_import():
 	)
 
 
+def test_the_quality_stage_is_reachable_from_a_bare_import():
+	"""`12-quality.md` §9 criterion 4's stage must register like any other.
+
+	A `@stage` in a module `_REGISTRATION_MODULES` does not name is written,
+	decorated and unreachable -- the CLI reports ``unknown stage`` for a function
+	whose own file says ``@stage(...)``. The validation-coverage stage is the
+	observable for criterion 4, so its reachability is the difference between a
+	criterion that is met and one that only looks met.
+	"""
+	output = _run(
+		"from alea.io.pipeline import registered_stages;"
+		"import json;"
+		"print(json.dumps(registered_stages()))"
+	)
+	import json
+
+	assert "quality_validation" in set(json.loads(output)), (
+		"the quality validation stage did not register; `alea.quality.service` "
+		"is missing from `_REGISTRATION_MODULES`"
+	)
+
+
 def test_the_registry_holds_exactly_the_declared_stages():
 	"""The registry is the eleven datasets, discovered in a fresh interpreter.
 
