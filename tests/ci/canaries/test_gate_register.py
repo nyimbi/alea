@@ -106,21 +106,51 @@ def test_every_promised_gate_names_a_document():
 
 
 def test_the_check_mode_exits_non_zero_while_a_gate_is_unverified():
-	"""`--check` is the CI half: a gap must be a non-zero exit, not a report."""
+	"""`--check` is the CI half: a gap must be a non-zero exit, not a report.
+
+	The gap is *planted*, not read off the tree. The register reached zero on
+	2026-10-12, and the version of this canary that asserted the tree had a gap
+	then failed -- correctly, because the tree no longer did. A canary that needs
+	the tree to be broken is a canary that breaks the day the work is finished,
+	and the fix is to make the defect rather than wait for one.
+
+	Removing a citation is the smallest defect the register can see: one gate
+	falls from Verified to Uncanaried, and `--check` must notice.
+	"""
+	before = CANARY.read_text()
+	assert CITATION in before, "canary target not found"
+
 	register = _load()
-	unimplemented, uncanaried, _ = register.gaps()
-	assert unimplemented or uncanaried, (
-		"no gaps found at all, so this canary cannot prove --check fails; if the "
-		"register is genuinely complete, delete this assertion and say so"
+	assert register.main(["--check"]) == 0, (
+		"the register is not clean before the canary plants anything; this canary "
+		"cannot attribute the failure it is about to cause"
 	)
-	assert register.main(["--check"]) == 1, "--check exited 0 with gates unverified"
+
+	with planted(CANARY, CITATION, "``the retention gate``"):
+		register = _load()
+		_, uncanaried, _ = register.gaps()
+		assert uncanaried, "the planted defect produced no gap for --check to find"
+		assert register.main(["--check"]) == 1, (
+			"--check exited 0 with a gate that lost its canary"
+		)
+
+	# Restored, and the register must clear.
+	register = _load()
+	assert register.main(["--check"]) == 0, "the register did not recover after the restore"
 
 
 def test_the_markdown_register_marks_unverified_gates():
-	"""The rendered table must not print a gap as Verified."""
-	register = _load()
-	promised, found, _ = register.report()
-	table = register.render_markdown(promised, found)
-	for gate in register.gaps()[0][:5]:
-		line = next(line for line in table.splitlines() if f"`{gate}`" in line)
-		assert "Unimplemented" in line, f"{gate} renders as trusted: {line}"
+	"""The rendered table must not print a gap as Verified.
+
+	Same planting: the table is rendered from the mutated tree so there is a real
+	unverified gate in it, rather than trusting the tree to contain one.
+	"""
+	before = CANARY.read_text()
+	assert CITATION in before, "canary target not found"
+
+	with planted(CANARY, CITATION, "``the retention gate``"):
+		register = _load()
+		promised, found, _ = register.report()
+		table = register.render_markdown(promised, found)
+		line = next(line for line in table.splitlines() if f"`{GATE}`" in line)
+		assert "Uncanaried" in line, f"{GATE} renders as trusted: {line}"

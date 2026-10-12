@@ -174,3 +174,36 @@ def test_two_canaries_on_one_file_do_not_see_each_other(target: Path):
 	assert not errors, "concurrent canaries interfered:\n  " + "\n  ".join(errors)
 	assert target.read_text() == original, "the tree was left mutated after concurrent canaries"
 	assert not list(target.parent.glob("*.canary-backup")), "a backup was left behind"
+
+
+def test_the_harness_purges_bytecode_on_both_sides_of_a_mutation(tmp_path: Path) -> None:
+	"""The defect: a same-length mutation whose `.pyc` outlives the restore.
+
+	CPython invalidates a cached `.pyc` on the source's (mtime, size). A mutation
+	and its restore that are the same length and land in the same mtime tick
+	leave a cache that still matches, so the next interpreter loads the *defect*
+	from a source file that reads correctly.
+
+	`extra="forbid"` -> `extra="ignore"` is that shape, six bytes to six bytes,
+	and on 2026-10-12 it made three `test_config_rejects_typo.py` tests fail on a
+	clean tree with `models.py` plainly saying `forbid`.
+
+	A scratch module rather than a real one: the harness's own tests must not be
+	able to leave a stale cache in the package, which is the failure they exist
+	to catch.
+	"""
+	import py_compile
+
+	module = tmp_path / "subject_module.py"
+	module.write_text("VALUE = 'forbid'\n")
+	# A real `.pyc`, as an import would leave behind.
+	cached = Path(py_compile.compile(str(module), doraise=True))
+	assert cached.is_file(), "no bytecode was produced to invalidate"
+
+	with planted(module, "'forbid'", "'ignore'"):
+		assert not cached.exists(), "the mutation did not purge the stale bytecode"
+
+	# And the restore purges too, so the tree ends with the cache the source
+	# deserves rather than the one the mutation left.
+	assert not cached.exists(), "the restore left the mutation's bytecode trusted"
+	assert module.read_text() == "VALUE = 'forbid'\n"
