@@ -31,6 +31,7 @@ model; validation is a check on the result, and only one of those is enforced.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import os
@@ -118,9 +119,33 @@ class ExtractionConfig(BaseModel):
 	seed: int | None = None
 	"""Passed where supported. The cache is the guarantee; this is a courtesy."""
 	max_retries: int = Field(default=3, ge=1)
+	"""How many times a *transport* failure is retried before the extraction
+	gives up. A model that answers with unparseable text is not retried: §5.2
+	says a field that fails validation is flagged for review, "not repaired by
+	a second LLM call", and a parse failure is that case with more of the
+	document involved. A 429, a timeout, or a 5xx is the case this covers --
+	the answer was never given, so asking again is not a second opinion."""
+	backoff_s: float = Field(default=0.5, gt=0.0)
+	"""The first retry's delay. Doubled each attempt, so three retries wait
+	0.5s, 1s, 2s rather than hammering a gateway that just said 429."""
 	timeout_s: float = Field(default=30.0, gt=0.0)
 	cache: bool = True
 	prompt_version: str = PROMPT_VERSION
+
+
+def is_retryable(exc: Exception) -> bool:
+	"""Whether a failed provider call is worth repeating.
+
+	The distinction is whether the provider *answered*. A connection reset, a
+	timeout, a 429, or a 5xx means the request never produced an answer, so the
+	same request may succeed. A 400 or a 401 means it did answer and the answer
+	was "no" -- retrying sends the identical request to the identical rejection.
+	"""
+	assert isinstance(exc, Exception)
+	if isinstance(exc, httpx.HTTPStatusError):
+		status = exc.response.status_code
+		return status == 429 or status >= 500
+	return isinstance(exc, httpx.TransportError)
 
 
 class LlmResponse(BaseModel):
@@ -389,14 +414,7 @@ class LlmExtractor:
 					text=cached, model=self.config.model, from_cache=True
 				)
 
-		text = await self._client.complete(
-			SYSTEM_PROMPT,
-			user,
-			model=self.config.model,
-			temperature=self.config.temperature,
-			seed=self.config.seed,
-			timeout_s=self.config.timeout_s,
-		)
+		text = await self._complete_with_retries(user)
 		self.calls += 1
 		if self._cache is not None:
 			self._cache.put(
@@ -404,6 +422,48 @@ class LlmExtractor:
 			)
 		logger.info("llm_extract", model=self.config.model, prompt_version=self.config.prompt_version)
 		return self._parse(text), LlmResponse(text=text, model=self.config.model)
+
+	async def _complete_with_retries(self, user: str) -> str:
+		"""Call the provider, retrying transport failures up to ``max_retries``.
+
+		Only the transport is retried. ``httpx.HTTPStatusError`` for 4xx other
+		than 429 is raised at once -- a bad key or a bad request is not a
+		transient condition, and retrying it three times turns one clear failure
+		into four identical ones. The last attempt's exception propagates
+		unchanged, so the caller sees the provider's own error rather than a
+		wrapper that has to be unwrapped to read it.
+		"""
+		assert self.config.max_retries >= 1
+		attempts = self.config.max_retries
+		last: Exception | None = None
+		for attempt in range(attempts):
+			try:
+				return await self._client.complete(
+					SYSTEM_PROMPT,
+					user,
+					model=self.config.model,
+					temperature=self.config.temperature,
+					seed=self.config.seed,
+					timeout_s=self.config.timeout_s,
+				)
+			except (httpx.TransportError, httpx.HTTPStatusError) as exc:
+				if not is_retryable(exc):
+					raise
+				last = exc
+				if attempt == attempts - 1:
+					break
+				delay = self.config.backoff_s * (2**attempt)
+				logger.warning(
+					"llm_transport_retry",
+					attempt=attempt + 1,
+					of=attempts,
+					delay_s=delay,
+					error=str(exc),
+				)
+				await asyncio.sleep(delay)
+		assert last is not None, "the retry loop exited without a failure to report"
+		logger.error("llm_transport_failed", attempts=attempts, error=str(last))
+		raise last
 
 	@staticmethod
 	def _parse(text: str) -> dict[str, Any]:
@@ -444,5 +504,6 @@ __all__ = [
 	"LlmExtractor",
 	"LlmResponse",
 	"build_user_message",
+	"is_retryable",
 	"sanitise_document",
 ]

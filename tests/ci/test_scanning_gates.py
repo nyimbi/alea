@@ -62,7 +62,7 @@ from alea.scanning.connectors.base import FetchError, make_document
 from alea.scanning.connectors.tender import ScraperCanary, SelectorSpec
 from alea.scanning.extract import Extractor
 from alea.scanning.extract.deterministic import extract, looks_like_instruction
-from alea.scanning.extract.llm import ExtractionConfig, LlmCache
+from alea.scanning.extract.llm import ExtractionConfig, LlmCache, LlmExtractor
 from alea.scanning.extract.schema import assemble_signals
 from alea.scanning.ingest import (
 	deduplicate_documents,
@@ -804,6 +804,123 @@ def test_an_off_schema_response_is_refused_not_coerced():
 	# A fenced object is unwrapped: providers behind a gateway add the fence.
 	fenced = LlmExtractor._parse('```json\n{"signals": []}\n```')
 	assert fenced == {"signals": []}
+
+
+class FailingLlm:
+	"""The permitted mock, failing on demand. Counts attempts, not successes."""
+
+	def __init__(self, failures: int, *, status: int = 503) -> None:
+		self.failures = failures
+		self.status = status
+		self.attempts = 0
+
+	async def complete(
+		self,
+		system: str,
+		user: str,
+		*,
+		model: str,
+		temperature: float,
+		seed: int | None,
+		timeout_s: float,
+	) -> str:
+		self.attempts += 1
+		if self.attempts <= self.failures:
+			request = httpx.Request("POST", "https://llm.example/chat/completions")
+			response = httpx.Response(self.status, request=request)
+			raise httpx.HTTPStatusError(
+				f"{self.status} from the gateway", request=request, response=response
+			)
+		return json.dumps({"signals": []})
+
+
+def test_a_transport_failure_is_retried_up_to_max_retries():
+	"""§9 ``test_llm_transport_retries``. §5.2 declares ``max_retries``.
+
+	A declared retry count that nothing reads is a config field describing
+	behaviour the code does not have: the extractor would give up on the first
+	503 while its own configuration promised three attempts.
+	"""
+	import asyncio
+
+	client = FailingLlm(failures=2)
+	config = ExtractionConfig(model="m", max_retries=3, backoff_s=0.001, cache=False)
+	extractor = LlmExtractor(config, client=client)
+
+	async def run() -> tuple[dict, object]:
+		return await extractor.extract_raw("Kenya added 100 MW.")
+
+	payload, _ = asyncio.run(run())
+	assert payload == {"signals": []}
+	assert client.attempts == 3, (
+		f"two transport failures cost {client.attempts} attempts with "
+		f"max_retries=3; the declared retry count is not read"
+	)
+
+
+def test_the_retry_budget_is_exhausted_rather_than_exceeded():
+	"""``max_retries`` is a bound, and the last attempt's error is what surfaces."""
+	import asyncio
+
+	client = FailingLlm(failures=99)
+	config = ExtractionConfig(model="m", max_retries=2, backoff_s=0.001, cache=False)
+	extractor = LlmExtractor(config, client=client)
+
+	async def run() -> None:
+		await extractor.extract_raw("text")
+
+	with pytest.raises(httpx.HTTPStatusError) as raised:
+		asyncio.run(run())
+	assert raised.value.response.status_code == 503, (
+		"the caller did not receive the provider's own error"
+	)
+	assert client.attempts == 2, f"max_retries=2 produced {client.attempts} attempts"
+
+
+def test_a_request_the_provider_rejected_is_not_retried():
+	"""A 400 is an answer. Repeating it sends the same request to the same no.
+
+	The distinction the retry loop draws is whether the provider *answered*.
+	Retrying a bad request three times turns one clear failure into four, and
+	multiplies the cost of the mistake by the retry budget.
+	"""
+	import asyncio
+
+	client = FailingLlm(failures=99, status=400)
+	config = ExtractionConfig(model="m", max_retries=4, backoff_s=0.001, cache=False)
+	extractor = LlmExtractor(config, client=client)
+
+	async def run() -> None:
+		await extractor.extract_raw("text")
+
+	with pytest.raises(httpx.HTTPStatusError):
+		asyncio.run(run())
+	assert client.attempts == 1, (
+		f"a 400 was retried {client.attempts} times; a rejection is not a "
+		f"transient condition"
+	)
+
+
+def test_retryability_is_decided_by_whether_the_provider_answered():
+	"""The predicate the retry loop reads, asserted directly on both branches."""
+	import httpx as _httpx
+
+	from alea.scanning.extract.llm import is_retryable
+
+	def status_error(code: int) -> _httpx.HTTPStatusError:
+		request = _httpx.Request("POST", "https://llm.example/chat/completions")
+		return _httpx.HTTPStatusError(
+			f"{code}", request=request, response=_httpx.Response(code, request=request)
+		)
+
+	for code in (429, 500, 502, 503):
+		assert is_retryable(status_error(code)), f"{code} is transient"
+	for code in (400, 401, 403, 404, 422):
+		assert not is_retryable(status_error(code)), f"{code} is a rejection"
+
+	assert is_retryable(_httpx.ConnectError("connection reset"))
+	assert is_retryable(_httpx.ReadTimeout("timed out"))
+	assert not is_retryable(ValueError("not a transport failure"))
 
 
 # --------------------------------------------------------------------------

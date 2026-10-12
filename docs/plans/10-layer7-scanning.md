@@ -366,6 +366,7 @@ src/alea/scanning/
 | `test_dedup_deterministic` | Two processes, same duplicates | Remove the seed; must fail |
 | `test_shingles_ordered` | Shingle generation is ordered | Use a set; must fail |
 | `test_extraction_cache_hits` | Same document → same signal, one call | Break the cache; must fail |
+| `test_llm_transport_retries` | A transport failure is retried; a 400 is not | Ignore `max_retries`; must fail |
 | `test_llm_output_validated` | Invalid extracted field dropped, flagged | Inject bad coords; must be dropped |
 | `test_prompt_injection_ignored` | Injected instruction does not alter extraction | Inject; must not comply |
 | `test_review_is_append_only` | An edit creates a version, not a mutation | Mutate; must fail |

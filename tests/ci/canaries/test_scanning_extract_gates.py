@@ -128,3 +128,88 @@ def test_the_validation_gate_notices_a_coerced_response():
 	# Restored.
 	restored = next(line for line in _validation() if line.startswith("PARSED prose "))
 	assert "error=True" in restored
+
+
+# --------------------------------------------------------------------------
+# Gate: test_llm_transport_retries
+# --------------------------------------------------------------------------
+
+_RETRY_PROBE = textwrap.dedent(
+	"""
+	import asyncio, json
+	import httpx
+	from alea.scanning.extract.llm import ExtractionConfig, LlmExtractor
+
+	class Flaky:
+		def __init__(self, failures):
+			self.failures = failures
+			self.attempts = 0
+		async def complete(self, system, user, *, model, temperature, seed, timeout_s):
+			self.attempts += 1
+			if self.attempts <= self.failures:
+				request = httpx.Request("POST", "https://llm.example/chat/completions")
+				raise httpx.HTTPStatusError(
+					"503", request=request,
+					response=httpx.Response(503, request=request),
+				)
+			return json.dumps({"signals": []})
+
+	async def main():
+		client = Flaky(failures=2)
+		# cache=False, not just cache=None: `config.cache` defaults True, so a
+		# None here builds the repository cache and the probe then measures a
+		# cache hit as zero attempts.
+		config = ExtractionConfig(model="m", max_retries=3, backoff_s=0.001, cache=False)
+		extractor = LlmExtractor(config, client=client)
+		# The exception is swallowed, not ignored: an exhausted budget *raises*,
+		# which is the behaviour under test when the mutation pins the loop to
+		# one attempt. Reading the attempt count is the measurement either way.
+		try:
+			await extractor.extract_raw("Kenya added 100 MW.")
+		except Exception:
+			pass
+		print("ATTEMPTS", client.attempts)
+
+	asyncio.run(main())
+	"""
+)
+
+
+def _retry_attempts() -> int:
+	completed = subprocess.run(
+		[sys.executable, "-c", _RETRY_PROBE], capture_output=True, text=True, check=False
+	)
+	assert completed.returncode == 0, completed.stderr
+	marked = [line for line in completed.stdout.splitlines() if line.startswith("ATTEMPTS ")]
+	assert marked, f"the retry probe printed nothing:\n{completed.stdout}"
+	return int(marked[-1].split()[1])
+
+
+def test_the_retry_gate_notices_a_declared_budget_that_is_never_spent():
+	"""This is the canary for ``test_llm_transport_retries``, §9's retry gate.
+
+	Make the loop attempt once and watch the gate's attempt count drop.
+
+	The mutation is the defect exactly as it was found: ``max_retries`` is
+	declared, validated by Pydantic, and never read, so two transport failures
+	end the extraction on the first 503 while the configuration promises three
+	attempts. The gate asserts the attempt count, which is the only place the
+	promise is observable -- the caller sees the same successful payload either
+	way when the provider recovers within the budget.
+	"""
+	assert _retry_attempts() == 3, (
+		"the retry budget was already unspent before any mutation"
+	)
+
+	# The loop bound. `range(attempts)` -> `range(1)` makes the declared budget
+	# decorative without changing the signature the config is validated against.
+	target = "\t\tfor attempt in range(attempts):\n"
+	replacement = "\t\tfor attempt in range(1):\n"
+	with planted(LLM_PY, target, replacement):
+		assert _retry_attempts() == 1, (
+			"with the loop bound pinned to one the probe still attempted more; "
+			"the gate does not measure the retry budget"
+		)
+
+	# Restored.
+	assert _retry_attempts() == 3
