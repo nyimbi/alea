@@ -482,12 +482,19 @@ def _try_real_engine(
 	placeholder wearing a solved result's shape. The engine is a class,
 	``WhatIfEngine``; the import below names it.
 	"""
+	from alea.whatif.cache import DEFAULT_CACHE_ROOT
 	from alea.whatif.params import ScenarioParameters
 	from alea.whatif.service import DEFAULT_CODE_VERSION, WhatIfEngine
 
 	engine = WhatIfEngine(
 		network_path,
-		cache_root=resolve(f"{WHATIF_DIR}/solves"),
+		# `DEFAULT_CACHE_ROOT`, not `f"{WHATIF_DIR}/solves"`. The literal and the
+		# constant agree today, and two spellings of one path is how `alea whatif
+		# gc` comes to collect from a directory no engine writes: the command
+		# removes nothing, prints "removed 0", and reads as a clean cache. The
+		# two modules are asserted to share this constant by
+		# `test_whatif_gc_cli.py`.
+		cache_root=resolve(DEFAULT_CACHE_ROOT),
 		solve_fn=_expansion_solver(),
 		code_version=str(base.get("code_version") or "") or DEFAULT_CODE_VERSION,
 	)

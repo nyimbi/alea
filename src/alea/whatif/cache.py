@@ -33,6 +33,19 @@ from alea.whatif.params import ScenarioParameters
 CACHE_VERSION = "1"
 """Bump when the cache entry layout changes, so old entries stop being read."""
 
+DEFAULT_CACHE_ROOT = "results/whatif/solves"
+"""Where the solve cache lives, relative to the repository root.
+
+Declared once because two writers and a reader share it. `alea.api.whatif`
+builds the engine with ``cache_root=resolve(f"{WHATIF_DIR}/solves")`` and
+``alea whatif gc`` collects from here; an f-string and a literal that agree
+today are two spellings, and the failure they produce is quiet in the worst
+direction -- a gc pointed at a path nothing writes removes nothing, prints
+``removed 0``, and reads as a cache that was already clean. So the path is a
+constant both sides import, and `test_whatif_gc_cli.py` asserts neither has
+gone back to spelling it itself.
+"""
+
 
 def cache_key(
 	params: ScenarioParameters,
@@ -177,6 +190,11 @@ class SolveCache:
 		or a sweep: eviction during a sweep would change which scenarios are
 		computed and therefore the frontier, which is a reproducibility failure
 		wearing a housekeeping costume.
+
+		``keep_days=None`` removes nothing and is the guard rather than a
+		convenience: an unset window would otherwise mean "older than now", which
+		removes the whole cache. The CLI passes the window straight through, so
+		``--keep-days`` absent is a no-op and not an erasure.
 		"""
 		assert keep_days is None or keep_days >= 0, keep_days
 		if keep_days is None:
@@ -257,6 +275,7 @@ def key_is_process_stable(
 
 __all__ = [
 	"CACHE_VERSION",
+	"DEFAULT_CACHE_ROOT",
 	"SolveCache",
 	"cache_key",
 	"key_is_process_stable",

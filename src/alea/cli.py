@@ -35,9 +35,11 @@ app = typer.Typer(
 config_app = typer.Typer(no_args_is_help=True, help="Inspect and validate configuration.")
 registry_app = typer.Typer(no_args_is_help=True, help="Inspect the country and technology registries.")
 quality_app = typer.Typer(no_args_is_help=True, help="Validation coverage and the unverified register.")
+whatif_app = typer.Typer(no_args_is_help=True, help="What-if scenario cache maintenance.")
 app.add_typer(config_app, name="config")
 app.add_typer(registry_app, name="registry")
 app.add_typer(quality_app, name="quality")
+app.add_typer(whatif_app, name="whatif")
 
 ConfigOption = Annotated[
 	Path | None,
@@ -447,6 +449,69 @@ def report(
 			typer.echo(f"{kind}: {path}")
 		for warning in result.warnings:
 			typer.secho(f"warning: {warning}", fg=typer.colors.YELLOW, err=True)
+
+
+@whatif_app.command("gc")
+def whatif_gc(
+	keep_days: Annotated[
+		float | None,
+		typer.Option(
+			"--keep-days",
+			help=(
+				"Remove cache entries last written more than this many days ago. "
+				"Omitted means remove nothing, not everything."
+			),
+		),
+	] = None,
+	dry_run: Annotated[
+		bool,
+		typer.Option("--dry-run", help="Report what would be removed and remove nothing."),
+	] = False,
+	cache_root: Annotated[
+		Path | None,
+		typer.Option("--cache-root", help="Override the solve-cache directory."),
+	] = None,
+) -> None:
+	"""Garbage-collect the what-if solve cache.
+
+	`08-layer5-whatif.md` §2.4: the cache is content-addressed and therefore
+	never *invalidated* -- a changed network produces a new key -- so old entries
+	are collected only by this explicit command, "never by age-based eviction
+	during a run, because eviction during a sweep changes which scenarios are
+	computed and therefore the frontier".
+
+	The command is the other half of that sentence. `SolveCache.garbage_collect`
+	was written, documented as CLI-driven, and called by nothing: the method's own
+	docstring and the plan both name `alea whatif gc --keep-days N`, and the CLI
+	had no `whatif` group at all. A cache with no eviction path grows without
+	bound, and the plan's rule that eviction must not happen during a run is only
+	enforceable while there is somewhere else for it to happen.
+
+	**`--keep-days` omitted removes nothing.** That is `garbage_collect`'s own
+	guard, not a default invented here: a missing window read as "older than now"
+	would erase the whole cache, and a maintenance command whose no-argument form
+	is the destructive one is a command someone runs by accident.
+	"""
+	from alea.config.paths import resolve
+	from alea.whatif.cache import DEFAULT_CACHE_ROOT, SolveCache
+
+	with _run("cli.whatif.gc", keep_days=keep_days, dry_run=dry_run):
+		root = cache_root or resolve(DEFAULT_CACHE_ROOT)
+		cache = SolveCache(root)
+		before = len(cache.keys())
+		removed = cache.garbage_collect(keep_days=keep_days, dry_run=dry_run)
+
+		if keep_days is None:
+			typer.secho(
+				"no --keep-days given, so nothing was removed; pass a window to "
+				"collect",
+				fg=typer.colors.YELLOW,
+				err=True,
+			)
+		verb = "would remove" if dry_run else "removed"
+		typer.echo(f"{verb} {len(removed)} of {before} entries under {root}")
+		for key in removed:
+			typer.echo(f"  {key[:12]}")
 
 
 @app.command()
