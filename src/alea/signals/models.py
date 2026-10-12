@@ -14,7 +14,7 @@ updating the story detector's newsworthiness rules.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Annotated
 
@@ -114,7 +114,16 @@ class Signal(BaseModel):
 	source_document_id: str
 	source_url: str
 	source_name: str
-	extracted_at: datetime = Field(default_factory=datetime.now)
+	extracted_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+	"""When the signal was extracted, always timezone-aware.
+
+	Naive here would be worse than untidy: this value is written to SQLite as
+	``isoformat()`` and compared as a string, and it is what a reviewer reads to
+	decide whether a claim is current. A naive timestamp is silently local time,
+	so the same extraction on two hosts sorts differently and an event dated
+	"now" is off by the deployment's offset. ``datetime.now(UTC)`` rather than
+	``alea.io.artefacts.utcnow`` so this contract module does not import the
+	artefact store, which pulls in pandas and xarray."""
 
 	country_iso: CountryIso = None
 	region: str | None = None
@@ -145,6 +154,20 @@ class Signal(BaseModel):
 				f"latitude={self.latitude}, longitude={self.longitude}"
 			)
 		return self
+
+	@field_validator("extracted_at")
+	@classmethod
+	def _extraction_time_is_timezone_aware(cls, v: datetime) -> datetime:
+		# A caller-supplied naive timestamp is the same defect as the naive
+		# default was, and it arrives from the API's own read path
+		# (`datetime.fromisoformat` on a stored value). Refused rather than
+		# assumed to be UTC: an assumption here is a silent offset everywhere
+		# downstream.
+		if v.tzinfo is None or v.tzinfo.utcoffset(v) is None:
+			raise ValueError(
+				f"extracted_at must be timezone-aware, got naive {v.isoformat()}"
+			)
+		return v
 
 	@field_validator("confidence")
 	@classmethod
