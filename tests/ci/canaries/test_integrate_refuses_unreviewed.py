@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from alea.scanning.integrate import UnreviewedSignalError, integrate
@@ -138,5 +138,7 @@ def test_the_gate_reads_the_flag_rather_than_the_clock():
 	Time is not review. A gate that admitted anything extracted more than a day
 	ago would pass a news figure through on the strength of its date.
 	"""
-	old = _signal(requires_review=True, extracted_at=datetime(2019, 1, 1))
+	# Timezone-aware: `Signal` refuses a naive timestamp, so an unaware one here
+	# would fail for a reason that has nothing to do with what this asserts.
+	old = _signal(requires_review=True, extracted_at=datetime(2019, 1, 1, tzinfo=UTC))
 	assert_raises(UnreviewedSignalError, integrate, old)

@@ -162,21 +162,25 @@ class ScanningService:
 			precision_by_type=precisions,
 		)
 
-		enqueued = 0
 		auto_accepted = 0
 		model = self.extractor.llm.config.model if self.extractor.llm is not None else None
 		prompt_version = (
 			self.extractor.llm.config.prompt_version if self.extractor.llm is not None else None
 		)
-		for signal, breakdown, decision in scored:
-			await self.queue.enqueue(
-				signal,
-				priority=breakdown,
-				corroborating_ids=corroboration_by_signal.get(signal.signal_id, []),
-				model=model,
-				prompt_version=prompt_version,
-			)
-			enqueued += 1
+		# One transaction for the batch, so the count below is the count that
+		# committed. A per-signal loop that fails at entry 40 of 60 leaves 39
+		# rows written and no report, and the next run re-extracts everything
+		# without anyone learning the first batch half-landed.
+		queued = await self.queue.enqueue_many(
+			[
+				(signal, breakdown, corroboration_by_signal.get(signal.signal_id, []))
+				for signal, breakdown, _decision in scored
+			],
+			model=model,
+			prompt_version=prompt_version,
+		)
+		enqueued = len(queued)
+		for signal, _breakdown, decision in scored:
 			if decision.auto_accepted:
 				# An auto-acceptance is still a recorded decision: it appends a
 				# confirmed version naming the machine as the analyst, so the

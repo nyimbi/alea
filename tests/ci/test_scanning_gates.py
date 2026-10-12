@@ -1095,6 +1095,71 @@ def test_enqueue_is_idempotent_so_a_rerun_does_not_duplicate(tmp_path: Path):
 	asyncio.run(run())
 
 
+def test_a_scored_batch_is_enqueued_in_one_transaction(tmp_path: Path):
+	"""The batch either lands whole or not at all, and the count says which.
+
+	``ScanningService`` enqueues a scan's scored batch and then reports how many
+	it enqueued. A per-signal loop that fails midway leaves some rows written
+	and no report, so the next run re-extracts everything and nobody learns the
+	first batch half-landed. The transaction is what makes the reported count
+	the committed count.
+	"""
+	import asyncio
+
+	from alea.scanning.views import PriorityBreakdown
+
+	queue = ReviewQueue(path=tmp_path / "q.sqlite")
+
+	async def run() -> None:
+		entries = [
+			(_signal(source_document_id=f"doc-{i}"), PriorityBreakdown(total=float(i), components={}), [])
+			for i in range(5)
+		]
+		versions = await queue.enqueue_many(entries)
+		assert len(versions) == 5
+		assert await queue.pending_count() == 5
+
+		# A re-run of the same batch adds nothing and returns the same versions.
+		again = await queue.enqueue_many(entries)
+		assert [v.version for v in again] == [1] * 5
+		assert await queue.pending_count() == 5, (
+			"re-enqueueing the batch duplicated rows"
+		)
+		await queue.aclose()
+
+	asyncio.run(run())
+
+
+def test_a_failed_batch_writes_nothing(tmp_path: Path):
+	"""The transaction is the property, so a batch that cannot commit commits nothing.
+
+	The last entry carries no ``signal_id``, which ``enqueue`` asserts on. With
+	the batch in one transaction the assertion fires before any write reaches
+	the database, so the four valid signals ahead of it are not left queued.
+	"""
+	import asyncio
+
+	from alea.scanning.views import PriorityBreakdown
+
+	queue = ReviewQueue(path=tmp_path / "q.sqlite")
+
+	async def run() -> None:
+		good = [
+			(_signal(source_document_id=f"doc-{i}"), PriorityBreakdown(total=1.0), [])
+			for i in range(4)
+		]
+		broken = _signal()
+		object.__setattr__(broken, "signal_id", "")
+		with pytest.raises(AssertionError):
+			await queue.enqueue_many([*good, (broken, PriorityBreakdown(total=1.0), [])])
+		assert await queue.pending_count() == 0, (
+			"a batch that failed mid-way left earlier entries committed"
+		)
+		await queue.aclose()
+
+	asyncio.run(run())
+
+
 # --------------------------------------------------------------------------
 # Criterion 7 — unreviewed signals refused at integration
 # --------------------------------------------------------------------------

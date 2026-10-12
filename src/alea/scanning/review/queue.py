@@ -356,19 +356,72 @@ class ReviewQueue:
 		model: str | None = None,
 		prompt_version: str | None = None,
 	) -> list[SignalVersion]:
-		"""Enqueue a scored batch, skipping signals already present."""
-		out: list[SignalVersion] = []
+		"""Enqueue a scored batch in one transaction, skipping signals present.
+
+		One transaction rather than a loop of ``enqueue`` calls, and the
+		difference is not speed. A scan enqueues a batch and then reports what
+		it enqueued; a loop that fails on entry 40 of 60 leaves 39 rows written
+		and no report, so the next run re-extracts everything and the caller
+		never learns the first batch half-landed. Here either the batch is in
+		the queue or none of it is, and the count in ``ScanReport`` is the count
+		that committed.
+
+		Idempotence is preserved: a signal already present keeps its existing
+		version and is returned unchanged, so a re-run adds nothing.
+		"""
+		assert isinstance(entries, list)
+		versions: list[SignalVersion] = []
+		statements: list[tuple[str, tuple[Any, ...]]] = []
+		at = utcnow()
 		for signal, breakdown, corroborating in entries:
-			out.append(
-				await self.enqueue(
-					signal,
-					priority=breakdown,
-					corroborating_ids=corroborating,
-					model=model,
-					prompt_version=prompt_version,
+			assert signal.signal_id, "a signal without an id cannot be queued"
+			existing = await self.latest(signal.signal_id)
+			if existing is not None:
+				logger.debug(
+					"enqueue_noop", signal_id=signal.signal_id[:12], version=existing.version
+				)
+				versions.append(existing)
+				continue
+			version = SignalVersion(
+				signal_id=signal.signal_id,
+				version=1,
+				status=SignalStatus.PENDING,
+				signal=signal,
+				priority=breakdown.total,
+				priority_components=breakdown.components,
+				corroborating_ids=sorted(corroborating),
+				parent_version=None,
+				document_id=signal.source_document_id,
+				created_at=at,
+			)
+			statements.append(
+				(
+					self._INSERT_VERSION,
+					self._version_params(
+						signal=signal,
+						version=1,
+						status=SignalStatus.PENDING,
+						priority=breakdown.total,
+						components=breakdown.components,
+						corroborating_ids=sorted(corroborating),
+						parent_version=None,
+						document_id=signal.source_document_id,
+						model=model,
+						prompt_version=prompt_version,
+						at=at,
+					),
 				)
 			)
-		return out
+			versions.append(version)
+
+		if statements:
+			await self._run(self._execute_many, statements)
+			logger.info(
+				"signals_enqueued",
+				count=len(statements),
+				already_present=len(entries) - len(statements),
+			)
+		return versions
 
 	async def confirm(
 		self,
