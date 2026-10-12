@@ -105,6 +105,65 @@ def test_every_producer_names_something_that_exists():
 		)
 
 
+def _call_sites(name: str) -> int:
+	"""Call-shaped references to ``name`` in `src/alea`, outside its own definition.
+
+	A function the register names as the *missing piece* of a gap is not the
+	same as one that is wired: `clear_scenario` is defined, exported and called
+	by nothing but its own tests, so "the producer is a rule over a cleared
+	scenario" named a thing that does not happen.
+
+	Counting *mentions* would not measure that -- the name appears in `__all__`
+	and in `logger.info("clear_scenario", ...)` event labels, and a logger's
+	event name is not a call. So this counts lines where the name is followed by
+	an open paren and is not the definition or the class statement: the shape a
+	call or a construction has.
+	"""
+	pattern = re.compile(rf"\b{re.escape(name)}\s*\(")
+	count = 0
+	for path in (REPO / "src" / "alea").rglob("*.py"):
+		for line in path.read_text(encoding="utf-8").splitlines():
+			if line.lstrip().startswith(("def ", "class ")):
+				continue
+			if pattern.search(line):
+				count += 1
+	return count
+
+
+def test_the_market_report_entry_names_a_piece_that_is_really_missing():
+	"""The claim this entry made was checkable, and it was wrong.
+
+	The entry said the monthly producer was "a rule over a cleared scenario,
+	not a new model". The scenario does not exist to be a rule over:
+	`clear_scenario` has no caller in `src/alea` outside its own definition, and
+	`BiddingUnit` -- the unit a market fleet is built from -- is constructed
+	nowhere outside tests. So the missing piece is the fleet, not the rule, and
+	the register has to say so: 'needs a rule' and 'needs a model that does not
+	exist' are the two amounts of work the register exists to tell apart.
+
+	This pins the measurement, not the wording. When someone builds the fleet,
+	the count moves and this fails, which is the prompt to rewrite the entry --
+	the same discipline as the required-section map.
+	"""
+	reason = UNPRODUCED["market_report"]
+	assert "clear_scenario" in reason, (
+		"the market_report entry no longer names `clear_scenario`, the piece it "
+		"was corrected to name as missing; if the entry was rewritten, this gate "
+		"must be rewritten with it rather than deleted"
+	)
+	assert _call_sites("clear_scenario") == 0, (
+		"`clear_scenario` now has a caller in `src/alea`, so the monthly "
+		"producer's blocker is no longer 'there is no cleared scenario'. Update "
+		"the market_report entry to the new, smaller blocker -- and if the "
+		"section can now be produced, move the slug to `PRODUCERS`."
+	)
+	assert _call_sites("BiddingUnit") == 0, (
+		"`BiddingUnit` is now constructed in `src/alea`, so a market fleet can "
+		"be built from something and the market_report entry's 'no module builds "
+		"a market fleet' is stale. Update the entry."
+	)
+
+
 #: The required section each cadence cannot generate without, while it has no
 #: producer. Pinned rather than derived, because the derived form -- intersect
 #: the required set with `UNPRODUCED` -- is a tautology: every slug in it is in

@@ -162,9 +162,15 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"A required monthly section with no producer. `market/monthly/"
 			"{date}.parquet` is declared by `reporting/monthly.py` and written by "
 			"nothing, so the monthly report cannot be generated from the pipeline "
-			"either. The columns are clearing arithmetic -- volume and average "
-			"price by carrier -- so the producer is a rule over a cleared "
-			"scenario, not a new model."
+			"either. This entry used to say the producer was 'a rule over a "
+			"cleared scenario, not a new model', and that understated it: there "
+			"is no cleared scenario to be a rule over. `clear_scenario` is "
+			"defined and exported and called by nothing but its own tests, and "
+			"`BiddingUnit` is constructed nowhere outside them -- no module builds "
+			"a market fleet from a solved network, so the missing piece is the "
+			"fleet, and the rule and the volume/average-price projection come "
+			"after it. The projection itself is clearing arithmetic; the fleet is "
+			"not."
 		),
 		"capacity_update": (
 			"`planning/capacity/{date}.parquet`. `planning.capacity_mix_table` "
