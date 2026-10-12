@@ -31,11 +31,11 @@ FORECAST_ARTEFACT = "data/processed/outages/forecast.parquet"
 HISTORY_ARTEFACT = "data/processed/outages/history.parquet"
 VALIDATION_ARTEFACT = "data/processed/outages/validation.parquet"
 
-FORECAST_TTL_SECONDS = 3600.0
-"""An outage forecast is good for an hour; after that the weather has moved."""
-
-HISTORY_TTL_SECONDS = 86400.0
-"""History changes only when new events are ingested, so a day is safe."""
+# The lifetimes come from `ApiConfig`, not from constants here: §6 declares one
+# hour for a forecast and one day for history, and `cache_ttl_seconds` /
+# `cache_ttl_history_seconds` are where those are stated once. A route-local
+# constant would leave the config field decorative -- declared, documented,
+# parsed, and read by nothing -- which is how a TTL stops being a TTL.
 
 
 @router.get("/forecast", response_model=Page[OutageForecastRowOut], summary="Outage forecast")
@@ -63,7 +63,7 @@ async def forecast(
 		namespace="outages.forecast",
 		checksum=checksum,
 		params={"country": country.upper(), "grid_zone": grid_zone, "horizon_hours": horizon_hours},
-		ttl_seconds=FORECAST_TTL_SECONDS,
+		ttl_seconds=state.config.api.cache_ttl_seconds,
 		producer=lambda: _produce_forecast(state, country, grid_zone, horizon_hours),
 		from_payload=OutageForecastRowOut.model_validate,
 	)
@@ -101,7 +101,7 @@ async def history(
 		namespace="outages.history",
 		checksum=checksum,
 		params={"country": country.upper() if country else None, "grid_zone": grid_zone},
-		ttl_seconds=HISTORY_TTL_SECONDS,
+		ttl_seconds=state.config.api.cache_ttl_history_seconds,
 		producer=lambda: _produce_history(state, country, grid_zone),
 		from_payload=OutageHistoryRowOut.model_validate,
 	)

@@ -258,6 +258,17 @@ class ApiConfig(AleaConfig):
 	rate_limit_per_minute: int = Field(default=60, gt=0)
 	job_store_path: str = "results/jobs.sqlite"
 	cache_ttl_seconds: int = Field(default=3600, gt=0)
+	"""The default response-cache lifetime, in seconds. §6's "1 hour".
+
+	Applied to a cacheable response whose own lifetime is not declared below.
+	This is the knob an operator turns to trade freshness against load without
+	editing a route.
+	"""
+	cache_ttl_history_seconds: int = Field(default=86400, gt=0)
+	"""Historical outages: §6's "1 day", because history changes only when new
+	events are ingested."""
+	cache_ttl_topology_seconds: int = Field(default=86400, gt=0)
+	"""Topology: §6's "1 day", because the network changes on a rebuild."""
 
 
 class PathsConfig(AleaConfig):

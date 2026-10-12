@@ -33,6 +33,7 @@ written down here.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import re
 from collections.abc import Iterator
@@ -1226,6 +1227,57 @@ def _same_shape(served: str, documented: str) -> bool:
 # --------------------------------------------------------------------------
 # Criterion 9 -- the route inventory matches the spec endpoint table
 # --------------------------------------------------------------------------
+
+
+def test_the_configured_cache_ttl_reaches_the_response_store(
+	config: Config, scratch: Path
+) -> None:
+	"""§6's lifetimes come from the config, so a config change must move them.
+
+	``ApiConfig.cache_ttl_seconds`` was declared, documented, present in
+	``config.default.yaml``, validated by Pydantic -- and read by nothing. The
+	routes carried their own ``3600.0`` constants, so an operator editing the
+	config changed nothing, and §6's four lifetimes were two hard-coded numbers
+	and two absent ones.
+
+	Asserted against the row the store actually wrote, not against the argument
+	the route passed: a route that reads the config and then ignores it would
+	pass any check made at the call site.
+	"""
+	# A lifetime nothing else in the suite uses, so the value read back can only
+	# have come from this config.
+	api = config.api.model_copy(update={"cache_ttl_seconds": 7, "cache_ttl_history_seconds": 11})
+	patched = config.model_copy(update={"api": api})
+
+	app = create_app(patched)
+	with TestClient(app) as test_client:
+		minted = _key(test_client, "public")
+		for path in ("/api/v1/prices", "/api/v1/outages/history"):
+			response = test_client.get(path, headers=minted)
+			assert response.status_code == 200, f"{path}: {response.text}"
+
+		database = app.state.api.job_store.database
+		rows = asyncio.run(
+			database.fetchall("SELECT namespace, stored_at, expires_at FROM response_cache")
+		)
+
+	assert rows, "the routes wrote no cache row, so there is no lifetime to check"
+	observed = {
+		row["namespace"]: float(row["expires_at"]) - float(row["stored_at"]) for row in rows
+	}
+
+	# The market route takes the default, the history route its own declared
+	# lifetime. Checking both is what distinguishes "reads the config" from
+	# "reads one field of it".
+	assert observed.get("market.prices") == pytest.approx(7.0, abs=0.5), (
+		f"the store recorded {observed.get('market.prices')}s for a config "
+		f"declaring 7s; the route is not reading cache_ttl_seconds"
+	)
+	assert observed.get("outages.history") == pytest.approx(11.0, abs=0.5), (
+		f"the store recorded {observed.get('outages.history')}s for a config "
+		f"declaring 11s; the history route is not reading "
+		f"cache_ttl_history_seconds"
+	)
 
 
 def test_the_inventory_canaries_against_a_known_route(config: Config) -> None:

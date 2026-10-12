@@ -27,7 +27,6 @@ PRICES_ARTEFACT = "data/processed/market/prices.parquet"
 CAPTURE_ARTEFACT = "data/processed/market/capture_rates.parquet"
 PPA_ARTEFACT = "data/processed/market/ppa_benchmarks.parquet"
 
-MARKET_TTL_SECONDS = 3600.0
 
 
 @router.get("/prices", response_model=Page[PriceRowOut], summary="Wholesale prices")
@@ -52,7 +51,7 @@ async def prices(
 		namespace="market.prices",
 		checksum=checksum,
 		params={"country": country},
-		ttl_seconds=MARKET_TTL_SECONDS,
+		ttl_seconds=state.config.api.cache_ttl_seconds,
 		producer=lambda: _produce(state, country),
 		from_payload=PriceRowOut.model_validate,
 	)
@@ -83,7 +82,7 @@ async def capture_rates(
 		namespace="market.capture",
 		checksum=checksum,
 		params={"technology": technology},
-		ttl_seconds=MARKET_TTL_SECONDS,
+		ttl_seconds=state.config.api.cache_ttl_seconds,
 		producer=lambda: _produce_capture(state, technology),
 		from_payload=CaptureRateRowOut.model_validate,
 	)
@@ -116,7 +115,7 @@ async def ppa_benchmarks(
 		namespace="market.ppa",
 		checksum=checksum,
 		params={"country": country},
-		ttl_seconds=MARKET_TTL_SECONDS,
+		ttl_seconds=state.config.api.cache_ttl_seconds,
 		producer=lambda: _produce_ppa(state, country),
 		from_payload=PpaBenchmarkRowOut.model_validate,
 	)
