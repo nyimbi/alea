@@ -19,11 +19,17 @@ Pinned semantics encoded here, and why:
   `generation_driven` the remainder — so the sum is exact by definition rather
   than by luck.
 * **Transmission loss scales with current squared, over a three-phase line.**
-  With flows in MW and line-to-line voltages in kV, `I = flow * 1000 / V` amps
-  is the apparent current; the three-phase real loss is `R * I^2 / 3` watts,
-  so `P_loss = R * I^2 / 3000` MW, summed over branches. Dividing by three is
-  what the naive single-phase `R * I^2 / 1000` omits, and it is the difference
-  between a loss figure and three times one.
+  For apparent power `S` at line-to-line voltage `V`, the line current is
+  `I = S / (sqrt(3) V)` and the loss is the per-phase `I^2 R` summed over three
+  phases: `P_loss = 3 I^2 R = S^2 R / V^2`. With `S` in MW and `V` in kV the
+  current is in kA, and `1 kA^2 * ohm = 1 MW`, so no unit conversion is needed.
+
+  This reference carried `R * I^2 / 3000` -- 1000/3 too small -- and the kernel
+  carried the matching constant, so the differential test agreed with itself
+  and disagreed with the physics. It reported a 3-bus fixture losing 138% of
+  its generation. `07-layer4-predictive.md` §6.3 allows exactly one reference
+  to depend on the physics, and this is it: pypsa's AC power flow on a line
+  whose loss is hand-computable is what caught it.
 """
 
 from __future__ import annotations
@@ -108,14 +114,19 @@ def transmission_losses(
 	resistance: NDArray[np.float64],
 	voltage_kv: NDArray[np.float64],
 ) -> float:
-	"""Total transmission loss in MW, `sum(R * (flow*1000/V)^2 / 3000)`."""
+	"""Total transmission loss in MW, `sum(3 * (flow / (sqrt(3) * V))^2 * R)`.
+
+	The three-phase form reduces to `flow^2 * R / V^2`, which is what the
+	summation below evaluates. `flows` MW and `voltage_kv` kV give the current
+	in kA and the loss in MW directly.
+	"""
 	flows = np.asarray(flows, dtype=np.float64)
 	resistance = np.asarray(resistance, dtype=np.float64)
 	voltage_kv = np.asarray(voltage_kv, dtype=np.float64)
 	total = 0.0
 	for e in range(flows.shape[0]):
-		current = flows[e] * 1000.0 / voltage_kv[e]
-		total += resistance[e] * current * current / 3000.0
+		current = flows[e] / (np.sqrt(3.0) * voltage_kv[e])
+		total += 3.0 * resistance[e] * current * current
 	return float(total)
 
 

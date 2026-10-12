@@ -515,10 +515,34 @@ pub fn decompose_losses(
 
 /// Total transmission energy loss from branch flows and resistances.
 ///
-/// `flows` in MW, `resistance` in ohms, `voltage_kv` in kV. Loss in MW is
-/// `I^2 R`, with `I = P / (sqrt(3) * V)` for a three-phase line and `V` in kV
-/// so that `P` in MW gives `I` in kA and `I^2 R` in kW; the factor of 1000
-/// converts to MW.
+/// `flows` in MW, `resistance` in ohms, `voltage_kv` in kV. For a three-phase
+/// line carrying apparent power `S` at line-to-line voltage `V`, the line
+/// current is `I = S / (sqrt(3) V)` and the total copper loss is the per-phase
+/// `I^2 R` summed over three phases, `3 I^2 R`.
+///
+/// ```text
+/// P_loss = 3 * (S / (sqrt(3) V))^2 * R = S^2 * R / V^2
+/// ```
+///
+/// **No unit conversion is needed.** With `S` in MW and `V` in kV the current
+/// is in kA, and `1 kA^2 * ohm = 1 MW`, so `3 I^2 R` is already MW.
+///
+/// Three constants have been wrong here and only one is right:
+///
+/// * `I^2 R` with the line current -- a factor of 3 too small, because it
+///   counts one phase instead of three.
+/// * `I^2 R * 1000` -- the shipped form, 1000/3 = 333x too large. On a 3-bus
+///   fixture it produced a loss fraction of 1.377: 138% of generated energy
+///   lost in transmission, which is not a rounding question but an
+///   impossibility.
+/// * `3 I^2 R * 1000` -- 1000x too large, and the tempting repair: the `1000`
+///   converts kW to MW only if the current is in amps, and here it is in kA.
+///
+/// A differential test cannot catch any of these: the Python reference carried
+/// the same constant, so the two agreed with each other and disagreed with the
+/// physics. The check that found it was pypsa's AC power flow on a line whose
+/// loss is hand-computable (`07-layer4-predictive.md` §6.3), which is the one
+/// place the plan allows a reference to depend on the physics.
 pub fn transmission_losses(
 	flows: ArrayView1<f64>,
 	resistance: ArrayView1<f64>,
@@ -538,7 +562,7 @@ pub fn transmission_losses(
 			});
 		}
 		let current_ka = flows[b] / (3.0f64.sqrt() * v);
-		total += current_ka * current_ka * resistance[b] * 1000.0;
+		total += 3.0 * current_ka * current_ka * resistance[b];
 	}
 	Ok(total)
 }
@@ -862,6 +886,36 @@ mod tests {
 		let double =
 			transmission_losses(doubled_flows.view(), resistance.view(), voltage.view()).unwrap();
 		assert!((double / single - 4.0).abs() < 1e-9, "{double} / {single}");
+	}
+
+	#[test]
+	fn transmission_losses_matches_the_three_phase_formula() {
+		// A scaling-only test cannot see a wrong constant: it asserts
+		// `f(2x) == 4 f(x)`, which holds for any multiple of the true loss.
+		// This pins the *value*, from `P_loss = 3 I^2 R` with
+		// `I = S / (sqrt(3) V)`, which reduces to `S^2 R / V^2`.
+		//
+		// 100 MW over 1 ohm at 100 kV: 100^2 * 1 / 100^2 = 1 MW. The shipped
+		// form returned 1000/3 MW here -- 333x -- and reported a 3-bus fixture
+		// losing 138% of its generation.
+		let flows = array![100.0];
+		let resistance = array![1.0];
+		let voltage = array![100.0];
+		let loss = transmission_losses(flows.view(), resistance.view(), voltage.view()).unwrap();
+		assert!((loss - 1.0).abs() < 1e-9, "{loss} != 1.0 MW");
+	}
+
+	#[test]
+	fn transmission_losses_never_exceeds_the_flow_on_a_realistic_line() {
+		// The invariant that makes the bug impossible to reintroduce silently:
+		// a line cannot lose more power than it carries. At 220 kV with a
+		// realistic resistance the loss is a fraction of a percent, so any
+		// loss above the flow itself is a unit error, not a network property.
+		let flows = array![100.0];
+		let resistance = array![10.0];
+		let voltage = array![220.0];
+		let loss = transmission_losses(flows.view(), resistance.view(), voltage.view()).unwrap();
+		assert!(loss < 100.0, "loss {loss} MW exceeds the 100 MW flow");
 	}
 
 	#[test]

@@ -478,15 +478,49 @@ def test_decompose_losses_components_sum_to_total():
 
 
 def test_transmission_losses_hand_checkable():
-	# I = 100 * 1000 / 220; P = R * I^2 / 3000 for a three-phase line.
+	# Three-phase line: I_line = S / (sqrt(3) V), P_loss = 3 I^2 R.
+	# 100 MW over 0.1 ohm at 220 kV: I = 100 / (sqrt(3)*220) kA = 0.2624 kA,
+	# P = 3 * 0.2624^2 * 0.1 = 0.020661 MW. This equals S^2 R / V^2.
 	flows = np.array([100.0])
 	resistance = np.array([0.1])
 	voltage = np.array([220.0])
-	expected = 0.1 * (100.0 * 1000.0 / 220.0) ** 2 / 3000.0
+	expected = 100.0**2 * 0.1 / 220.0**2
 	np.testing.assert_allclose(K.transmission_losses(flows, resistance, voltage), expected, **F64)
 	np.testing.assert_allclose(
 		ref_losses.transmission_losses(flows, resistance, voltage), expected, **F64
 	)
+
+
+def test_transmission_losses_are_below_the_flow_they_carry():
+	"""A line cannot lose more power than it carries.
+
+	The invariant a wrong unit constant violates. The shipped kernel returned
+	`S^2 R / V^2 * 1000 / 3` -- 333x the physical loss -- so a 3-bus fixture
+	reported a loss fraction of 1.377, meaning 138% of generated energy lost in
+	transmission. A differential test could not see it: the Python reference
+	carried the same constant. This asserts a physical bound instead, which no
+	shared misreading can satisfy.
+
+	The check is against a *realistic* line, because the bound is a property of
+	the network rather than of the formula: 100 MW over 10 ohm at 220 kV is
+	0.21% loss, and any figure near or above the flow is a unit error.
+	"""
+	flows = np.array([100.0, 250.0, 40.0])
+	resistance = np.array([10.0, 4.0, 25.0])
+	voltage = np.array([220.0, 132.0, 400.0])
+	losses = np.asarray(
+		[
+			K.transmission_losses(np.array([f]), np.array([r]), np.array([v]))
+			for f, r, v in zip(flows, resistance, voltage, strict=True)
+		]
+	)
+	assert np.all(losses > 0.0), f"a loss cannot be negative or zero: {losses}"
+	assert np.all(losses < flows), (
+		f"loss {losses} MW is at or above the flow {flows} MW it is carried on; "
+		f"a unit constant is wrong"
+	)
+	# And the physical magnitude: 100 MW over 10 ohm at 220 kV is 0.21%.
+	np.testing.assert_allclose(losses[0], 100.0**2 * 10.0 / 220.0**2, **F64)
 
 
 def test_transmission_losses_randomised_and_scaling():
