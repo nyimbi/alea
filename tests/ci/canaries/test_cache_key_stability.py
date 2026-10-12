@@ -15,6 +15,8 @@ rather than living only here.
 The canary reverts `cache_key` to the string hash and asserts the cross-process
 check notices -- and, separately, that an in-process comparison does *not*,
 which is the whole reason the gate is shaped this way.
+
+The gate is the plan's `test_cache_key_stable_across_processes` (08-layer5 §9).
 """
 
 from __future__ import annotations

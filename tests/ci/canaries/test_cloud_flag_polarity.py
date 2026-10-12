@@ -86,6 +86,50 @@ def test_the_gate_rejects_dropping_clear_pixels():
 	assert_raises(AssertionError, assert_cloud_semantics, drops_clear)
 
 
+def test_the_ceiling_default_is_the_pinned_zero():
+	"""The gate `test_cloud_flag_semantics` (07-layer4 §10): only bits 0-1 == 0
+	are kept, so the configured ceiling is 0 and a wider one admits probably-clear
+	pixels that the pinned answer rejects.
+
+	A canary: raise the default ceiling and watch a probably-clear pixel, which
+	the shipped config treats as unusable, become usable.
+	"""
+	from alea.outages.views import ViirsConfig
+	from alea.outages.viirs import MAX_CLOUD_CONFIDENCE
+
+	assert MAX_CLOUD_CONFIDENCE == 0
+	assert ViirsConfig().max_cloud_confidence == MAX_CLOUD_CONFIDENCE
+	assert usable(PROBABLY_CLEAR, MAX_CLOUD_CONFIDENCE) is False
+	# The defect: a ceiling of 1 admits probably-clear, which the pinned 0 does not.
+	assert usable(PROBABLY_CLEAR, 1) is True
+
+
+def test_the_cloudy_pixel_becomes_nan_not_zero():
+	"""The gate `test_cloud_flag_semantics` (07-layer4 §10): cloudy -> NaN, not 0.
+
+	A cloudy pixel is *unknown*, not *lit*. The kernel returns NaN for it and
+	``zone_series`` turns a zone-hour with no clear pixels into NaN, so a cloudy
+	hour is excluded from a mean rather than pulling it down. The canary is the
+	other value: 0 would read as a calm, fully-lit zone.
+	"""
+	from datetime import UTC, datetime
+
+	from alea.outages.viirs import ViirsTile, zone_series
+
+	tile = ViirsTile(
+		radiance=np.zeros((1, 2, 2), np.float32),
+		sensor_zenith=np.zeros((1, 2, 2), np.float32),
+		cloud_bits=np.zeros((1, 2, 2), np.uint8),
+		month=np.array([1], np.uint8),
+		timestamps=(datetime(2030, 1, 1, tzinfo=UTC),),
+	)
+	zone_ids = np.ones((2, 2), dtype=np.uint32)
+	blind = zone_series(tile, np.full((1, 2, 2), np.nan, np.float32), zone_ids, 2)
+	assert np.isnan(blind[0, 1]), "an all-cloudy zone-hour must be NaN, not a number"
+	# The defect the gate guards: 0 would read as a calm, fully-lit zone.
+	assert not np.isclose(blind[0, 1], 0.0)
+
+
 def _raster(cloud_bits: list[int]) -> dict[str, np.ndarray]:
 	"""A one-pixel-per-confidence raster, all else held equal.
 

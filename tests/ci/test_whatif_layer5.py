@@ -234,7 +234,13 @@ def test_cache_key_includes_code_version():
 
 
 def test_the_key_is_stable_across_processes():
-	"""Criterion 1's premise, asserted directly across an interpreter boundary."""
+	"""Criterion 1's premise, asserted directly across an interpreter boundary.
+
+	§9 ``test_cache_key_stable_across_processes``: the same parameters give the
+	same key in two processes. The canary in
+	``tests/ci/canaries/test_cache_key_stability.py`` reverts the key to
+	``hash()`` and watches this fail.
+	"""
 	assert key_is_process_stable(ScenarioParameters(), "sha256:" + "ab" * 32, "0.1.0")
 
 
@@ -369,9 +375,12 @@ def test_apply_does_not_mutate_base():
 def test_apply_is_idempotent(tmp_path: Path):
 	"""Applying the same parameters twice equals applying them once.
 
-	The specification's ``p_nom_max *= multiplier`` compounds: applied twice it
-	squares the potential. Reading the base from the recorded snapshot is what
-	makes re-application a no-op.
+	§9 ``test_renewable_multiplier_absolute``: applied twice gives the same
+	result as once. The specification's ``p_nom_max *= multiplier`` compounds --
+	applied twice it squares the potential -- so this holds only because the base
+	is read from the recorded snapshot rather than from the current value. The
+	canary in ``tests/ci/canaries/test_whatif_renewable_gate.py`` reverts the
+	scaling to the compound form and watches this fail.
 	"""
 	base = _network()
 	params = ScenarioParameters(renewable_multiplier=2.5)

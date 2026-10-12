@@ -46,7 +46,7 @@ import pytest
 from alea.outages.maintenance import MaintenanceDataError, simulate_survival_data
 from alea.outages.weather import LeakageError, assert_causal_features
 from tests.ci.canaries import REPO, assert_raises, planted
-from tests.ci.canaries.test_temporal_leakage import ZONE, _causal_builder, _frame
+from tests.ci.canaries.test_temporal_leakage import ZONE, _frame
 
 WEATHER_PY = REPO / "src" / "alea" / "outages" / "weather.py"
 OUTAGE_VIEWS_PY = REPO / "src" / "alea" / "outages" / "views.py"
@@ -382,7 +382,6 @@ _CONTINGENCY_PROGRAM = (
 def test_the_gate_refuses_a_mutating_kernel():
 	"""The gate with a mutating kernel plugged in: it must raise."""
 	from alea._core import contingency_sweep as real_kernel
-
 	from alea.losses import contingency
 
 	network = _two_branch()
