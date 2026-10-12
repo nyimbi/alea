@@ -757,6 +757,49 @@ def test_an_unknown_parameter_is_refused():
 		ScenarioParameters.model_validate({"carbon_tax": 100.0})
 
 
+def test_the_cache_key_embeds_the_canonical_form_byte_for_byte():
+	"""``canonical_json`` is the parameter half of the key, not a parallel copy.
+
+	The key was assembled with its own ``json.dumps`` over ``params.canonical()``
+	while ``ScenarioParameters.canonical_json`` claimed in its docstring to be
+	"the cache key ... a hash of exactly this". Nothing called it, so the claim
+	was false and the two spellings were free to drift -- and a key that hashes
+	a different string than the one the method documents is a cache that misses
+	for a reason neither file shows.
+
+	Asserted against the dict form ``sort_keys`` produced, so the refactor that
+	removed the duplicate is proven not to have moved a single byte.
+	"""
+	import hashlib
+	import json
+
+	from alea.io.artefacts import sha256_bytes
+	from alea.whatif.cache import CACHE_VERSION
+
+	params = ScenarioParameters()
+	network = "sha256:" + "ab" * 32
+	code = "0.1.0"
+
+	expected_payload = json.dumps(
+		{
+			"cache_version": CACHE_VERSION,
+			"params": params.canonical(),
+			"network": network,
+			"code": code,
+		},
+		sort_keys=True,
+		separators=(",", ":"),
+		default=str,
+	)
+	assert cache_key(params, network, code) == sha256_bytes(expected_payload.encode("utf-8"))
+	assert hashlib.sha256(expected_payload.encode("utf-8")).hexdigest() == cache_key(
+		params, network, code
+	)
+
+	# And the embedded half is the method's own string, verbatim.
+	assert params.canonical_json() in expected_payload
+
+
 def test_the_cache_key_is_a_sha256_over_the_canonical_form(tmp_path: Path):
 	"""The key's shape is asserted once, so a change to it is a visible change.
 

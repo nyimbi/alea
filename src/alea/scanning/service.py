@@ -240,31 +240,6 @@ class ScanningService:
 		await self.aclose()
 
 
-def _dedup_groups(
-	documents: list[RawDocument],
-	kept: list[RawDocument],
-	config: ScanningConfig,
-) -> list[object]:
-	"""Recompute the duplicate grouping for corroboration.
-
-	Kept for callers that have only a document list and a config — the service
-	path threads the report through ``ingest`` instead, because recomputing it
-	would be a second kernel call whose result could differ if the seed ever
-	diverged from the config's.
-	"""
-	from alea.scanning.ingest import deduplicate_documents
-
-	if not documents:
-		return []
-	_, report = deduplicate_documents(
-		documents,
-		num_perm=config.dedup_num_perm,
-		threshold=config.dedup_threshold,
-		seed=config.dedup_seed,
-	)
-	return list(report.groups)
-
-
 def retention_report(*, config: Config, dry_run: bool = True) -> object:
 	"""Apply the raw-text retention policy from a config.
 

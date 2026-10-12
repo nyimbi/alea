@@ -115,20 +115,6 @@ def _lagged(
 	return shifted.groupby(frame[group], sort=False).transform(_roll) if group else _roll(shifted)
 
 
-def _hemisphere_sign(latitude: float) -> int:
-	"""+1 north of the equator, -1 south, 0 on it.
-
-	At the equator neither meteorological convention applies, so the caller
-	gets a sign of zero and the seasonal angle is undefined there — the honest
-	answer, and the reason the cyclical encoding is the default.
-	"""
-	if latitude > 0:
-		return 1
-	if latitude < 0:
-		return -1
-	return 0
-
-
 def add_month_encoding(
 	frame: pd.DataFrame,
 	config: WeatherConfig,
@@ -157,9 +143,11 @@ def add_month_encoding(
 				f"the seasonal angle is a function of where the zone is"
 			)
 		sign = np.sign(out[latitude_column].to_numpy(dtype=float)).astype(int)
-		# Shift south of the equator by half a cycle. A sign of 0 (on the
-		# equator) leaves the angle as the northern one; the season is not
-		# defined there and the caller should use the cyclical default.
+		# Shift south of the equator by half a cycle. `sign < 0` is the only
+		# branch, so a zone exactly on the equator takes the northern angle:
+		# `np.sign(0.0)` is 0, not -1, and the season is not defined there
+		# anyway. The caller should use the cyclical default, which is why it is
+		# the default.
 		shifted = np.where(sign < 0, (month.to_numpy() + 6 - 1) % 12 + 1, month.to_numpy())
 		angle = 2 * np.pi * shifted / 12.0
 		out["season_sin"] = np.sin(angle)

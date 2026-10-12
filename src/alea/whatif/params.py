@@ -90,11 +90,18 @@ class ScenarioParameters(BaseModel):
 		return self.model_dump(mode="json")
 
 	def canonical_json(self) -> str:
-		"""Canonical serialisation. The cache key is a hash of exactly this.
+		"""Canonical serialisation of the parameter set alone.
 
 		``sort_keys`` and the compact separators are what make the string a
 		function of the values alone: without them the same parameters could
 		serialise differently and hash to two keys.
+
+		``whatif.cache.cache_key`` embeds this string in the solve key it
+		hashes, so this is the one place the parameter half of that key is
+		spelled. A second copy of the ``json.dumps`` call in ``cache_key`` would
+		be a copy that can drift, and a key that hashes a different string than
+		the one this documents is a cache that misses for reasons nobody can
+		read off either file.
 		"""
 		payload = json.dumps(self.canonical(), sort_keys=True, separators=(",", ":"), default=str)
 		assert payload.startswith("{"), payload

@@ -50,16 +50,24 @@ def cache_key(
 	assert network_checksum, "a solve keyed without its network checksum is not reproducible"
 	assert code_version, "a solve keyed without its code version is not reproducible"
 
-	payload = json.dumps(
-		{
-			"cache_version": CACHE_VERSION,
-			"params": params.canonical(),
-			"network": network_checksum,
-			"code": code_version,
-		},
-		sort_keys=True,
-		separators=(",", ":"),
-		default=str,
+	# The parameter half is `canonical_json`, not a second `json.dumps` of the
+	# same mapping: two spellings of one serialisation are two things that can
+	# disagree, and the key would then be a hash of something no single file
+	# describes. The document is assembled as text so the parameter JSON is
+	# embedded verbatim rather than re-encoded as a JSON string value, and the
+	# keys are emitted in `sort_keys` order so the bytes are what the dict form
+	# produced. `test_the_cache_key_embeds_the_canonical_form_byte_for_byte`
+	# pins that equivalence.
+	payload = (
+		'{"cache_version":'
+		+ json.dumps(CACHE_VERSION, separators=(",", ":"))
+		+ ',"code":'
+		+ json.dumps(code_version, separators=(",", ":"))
+		+ ',"network":'
+		+ json.dumps(network_checksum, separators=(",", ":"))
+		+ ',"params":'
+		+ params.canonical_json()
+		+ "}"
 	)
 	return sha256_bytes(payload.encode("utf-8"))
 
