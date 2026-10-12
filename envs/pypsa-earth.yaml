@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: MIT
+#
+# The PyPSA-Earth environment -- the *only* conda environment in this repository.
+#
+# AD-1: ALEA and PyPSA-Earth never share an interpreter. ALEA runs on `uv` and
+# Python 3.14; PyPSA-Earth is a Snakemake workflow repository (not a pip package
+# -- PyPI returns 404) that carries the geospatial stack (GDAL, geopandas,
+# rasterio, atlite) and runs inside conda. The seam between them is files:
+# NetCDF networks, GeoJSON topology, Parquet tables, CSV profiles
+# (`04-layer1-planning.md` §2.2).
+#
+# This file is therefore *not* the ALEA environment, and nothing in the ALEA
+# pipeline is installed from it. There is no `alea` package here, no `src/`
+# mount and no import path -- which is AD-1 enforced by construction rather than
+# by discipline.
+#
+# It exists because `envs/` is in the repository layout (`00-architecture.md`
+# §6) and because a continental run needs the PyPSA-Earth version stated
+# somewhere a reader can find it. Kenya -- the development target and the case
+# study -- never needs this environment at all: `04-layer1-planning.md` §2.3
+# requires ALEA to build a network from its own processed datasets with zero
+# PyPSA-Earth output present.
+#
+# PyPSA-Earth appears only for continental-scale preprocessing, where its
+# Voronoi clustering is worth the conda dependency (`13-deployment.md` §3.1).
+# It is an optional accelerator, never a requirement.
+#
+# Usage, from a checkout of `pypsa-meets-earth/pypsa-earth` at the pinned tag:
+#
+#     conda env create -f envs/pypsa-earth.yaml
+#     conda activate pypsa-earth
+#
+# Python 3.11 rather than 3.14: the geospatial stack's wheels do not build on
+# 3.14, which is the other half of why the two environments cannot be one.
+
+name: pypsa-earth
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  # Pinned to the tag `04-layer1-planning.md` §2.1 names as the version of
+  # record: v0.9.0, as of 2026-09-03. A moving pin here means the accelerator's
+  # output is not attributable to a version, and a network built from an
+  # unattributed preprocessing step is not reproducible.
+  - pypsa-earth=0.9.0

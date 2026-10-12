@@ -1,21 +1,97 @@
+# Python
 __pycache__/
 *.py[cod]
 .venv/
-dist/
-build/
 *.egg-info/
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
 .DS_Store
+
+# Build artefacts
+dist/
+build/
 target/
-data/
-results/
-reports/
-models/
-*.nc
-*.nc.aux
-Cargo.lock
-tmp/
 # Built by `maturin develop`; the wheel is built from source, so the
 # extension is a build artefact like `target/` and `dist/` above.
 src/alea/_core/*.so
+
+# Scratch
+tmp/
+
+# Snakemake's own state. It holds the scheduler's cache, locks and metadata for
+# this machine's runs, not anything a clean clone reproduces from.
+.snakemake/
+
+# DVC. The cache is local and rebuildable; the control files (`.dvc/`,
+# `dvc.yaml`, `dvc.lock`) are what a clean clone reproduces from and are
+# committed.
+.dvc/cache/
+.dvc/tmp/
+
+# The data lake, narrowed.
+#
+# This section previously read `data/`, which ignored the manual exports the
+# stages read: `_require_raw` resolves a `Access.MANUAL` source to
+# `data/raw/<source_id>/manual/<file>`, and `02-data-pipeline.md` §1.1 says the
+# pipeline reads "the committed export" -- a committed file that a wholesale
+# `data/` ignore makes uncommittable. The stage then raises with a message
+# telling the operator to commit a file git will not accept.
+#
+# What is ignored is the fetched layer and the DVC-managed lake bodies, not the
+# lake. `data/raw/<source>/<checksum>/` is content-addressed and rebuildable;
+# `data/raw/<source>/manual/` is a reviewed human export and is tracked.
+data/raw/*/*/
+!data/raw/*/manual/
+# The fetch marker `rules/fetch.smk` writes: the scheduler's own bookkeeping for
+# this machine, not data.
+data/raw/*/.fetched
+data/processed/
+data/interim/
+
+# `results/` was ignored wholesale, which contradicts `01-foundations.md` §6:
+# "`resources/`, `results/` -- tracked where a result is load-bearing (a
+# published capacity mix), ignored where it is scratch." A DVC pointer file
+# (`.dvc`) is load-bearing: it is what a clean clone checks out the body from.
+results/*
+!results/*.dvc
+
+# `results/runs.jsonl` is deliberately *not* excepted, and the first draft of
+# this file excepted it. `alea.api.runs.RunLog` reads it, and the CLI's `_Run`
+# appends a line on *every* invocation -- including a `config validate` that
+# only prints. Tracking an append-only file that every command writes makes
+# `git status` dirty after every command, which is how a dirty check gets
+# widened until it is bypassed. The reader treats a missing file as "no runs",
+# so nothing requires it to be committed; it is runtime state that belongs to
+# the machine that produced it, like the fetch marker above.
+
+# The negation above is defeated if a later rule ignores a *parent* directory --
+# git does not descend into an excluded directory, so no `!` inside it can
+# re-include a file. Nothing here excludes `results/` itself; this comment is
+# the warning for whoever adds one.
+
+# The extraction cache. Content-addressed by prompt version, model, temperature
+# and the text itself (`alea.scanning.extract.llm.LlmCache.key`), so an entry is
+# reproducible from the call that made it and its whole purpose is to avoid
+# repeating a provider call. It is per-machine, like `.dvc/cache/` above, and
+# a committed cache would ship one operator's responses to every clone.
+resources/scanning/llm_cache/
+
+# Generated outputs. A report is rebuilt from the artefacts it cites, and a
+# model file is a build product of the solve that produced it.
+reports/*/
+models/
+
+# Deliberately NOT ignored, and both were:
+#
+#   `*.nc` / `*.nc.aux` -- `02-data-pipeline.md` §1.1 requires a small Kenya
+#   cutout committed as the CI fixture, and a blanket `*.nc` ignore excludes
+#   exactly that file. The large cutouts live under `data/`, which is ignored
+#   above; a NetCDF elsewhere in the tree is there on purpose.
+#
+#   `Cargo.lock` -- this workspace holds no binaries (every crate is a library
+#   or the `cdylib` behind `alea._core._rust`), so Cargo's guidance makes the
+#   lockfile optional. It is tracked anyway: the crate graph is compiled into a
+#   wheel that ships, `rust-toolchain.toml` and `uv.lock` already pin the other
+#   two halves of the toolchain, and a lockfile is the only thing that keeps two
+#   builds of one commit from resolving different crate versions.

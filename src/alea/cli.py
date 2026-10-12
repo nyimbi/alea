@@ -271,19 +271,69 @@ def build(
 	out: OutOption,
 	config: ConfigOption = None,
 	force: ForceOption = False,
+	set_: Annotated[
+		list[str] | None,
+		typer.Option(
+			"--set",
+			help=(
+				"Stage parameter, KEY=VALUE. Repeatable. Values parse as JSON "
+				"where they can and stay strings where they cannot, so "
+				"--set alpha=0.7 is a float and --set cutout_path=/data/x.nc is a "
+				"path. These reach the builder's BuildContext, not the config."
+			),
+		),
+	] = None,
 ) -> None:
-	"""Build one processed dataset from the raw layer."""
+	"""Build one processed dataset from the raw layer.
+
+	``--set`` carries the parameters a builder reads off its context: the
+	powerplantmatching export path, the disaggregation ``alpha``, a cutout path.
+	They are deliberately *not* config keys -- a config that grows a key per
+	stage parameter is a config nobody can validate -- and they are recorded in
+	the artefact's provenance either way, which is what makes the run
+	reproducible.
+	"""
 	from alea.io.pipeline import build_stage
 
 	with _run("cli.build", stage=stage) as run:
 		loaded = _load(config, None, None)
 		try:
-			result = build_stage(stage, loaded, out, force=force, logger=run.logger)
+			result = build_stage(
+				stage,
+				loaded,
+				out,
+				force=force,
+				logger=run.logger,
+				parameters=_parse_parameters(set_),
+			)
 		except KeyError as exc:
 			typer.secho(f"unknown stage: {exc}", fg=typer.colors.RED, err=True)
 			raise typer.Exit(code=2) from exc
 		run.record(result.path)
 		typer.echo(f"{stage}: {result.checksum[:12]} -> {result.path}")
+
+
+def _parse_parameters(pairs: list[str] | None) -> dict[str, Any]:
+	"""``["alpha=0.7", "cutout_path=/x.nc"]`` as a dict.
+
+	A value parses as JSON when it can, so ``alpha=0.7`` is a float,
+	``bounds=[1,2,3,4]`` a list, and ``cutout_path=/x.nc`` a string -- JSON has
+	no bare ``/x.nc``. A malformed pair raises rather than being dropped: a
+	parameter a rule meant to pass and did not is a stage built with the default
+	and reported as the requested one.
+	"""
+	if not pairs:
+		return {}
+	parameters: dict[str, Any] = {}
+	for pair in pairs:
+		key, separator, raw = pair.partition("=")
+		if not separator or not key.strip():
+			raise typer.BadParameter(f"--set expects KEY=VALUE, got {pair!r}")
+		try:
+			parameters[key.strip()] = json.loads(raw)
+		except ValueError:
+			parameters[key.strip()] = raw
+	return parameters
 
 
 @app.command()

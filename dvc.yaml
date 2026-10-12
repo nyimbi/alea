@@ -1,0 +1,181 @@
+# SPDX-License-Identifier: MIT
+#
+# DVC: what the pipeline versioned, and how to reproduce it.
+#
+# `01-foundations.md` §6 asks for `dvc add data/raw data/processed resources`
+# and a `dvc repro` that reproduces the Kenya fixture from a clean clone. This
+# file is the second half of that: `dvc add` versions the lake *bodies* (a
+# `.dvc` pointer file per directory), and the stages below are what `dvc repro`
+# runs to rebuild them.
+#
+# Two rules for this file:
+#
+#  1. **Every `cmd` is `uv run --directory <root> alea ...`, exactly as the
+#     Snakemake rule for the same stage.** AD-5 says the CLI is the only entry
+#     point, and it says so for DVC as much as for Snakemake. A `cmd` that
+#     imported a Python function would make `dvc repro` and
+#     `snakemake -c1 topology` two implementations of one stage, which is how
+#     they come to disagree.
+#
+#  2. **The deps and outs are the Snakemake rule's inputs and outputs.** DVC
+#     decides what is stale from them; a dep missing here is a stage DVC calls
+#     up to date against inputs it never read. The pair is asserted equal by
+#     `tests/ci/test_orchestration_workflow.py`, because two files that agree
+#     today are not one source of truth.
+#
+# `data/raw` and the manual exports are declared as deps but are not stage
+# outputs: they arrive from `alea fetch` or from a human, and `02-data-pipeline`
+# §1.1 makes the manual ones a reviewed step rather than a rule.
+
+stages:
+
+  topology:
+    desc: "Transmission lines from the World Bank grid map."
+    cmd: >-
+      uv run --directory . alea build topology
+      --out data/processed/topology.parquet
+      --config config/config.kenya.yaml
+      --set raw_root=data/raw
+    deps:
+      - data/raw/worldbank_grid_map
+    outs:
+      - data/processed/topology.parquet
+      # Written by the same stage: what a GIS reads. Declared so a change to it
+      # is visible to `dvc status` rather than only to the Parquet's reader.
+      - data/processed/topology.geojson
+
+  fleet:
+    desc: "The generation fleet from the committed powerplantmatching export."
+    cmd: >-
+      uv run --directory . alea build fleet
+      --out data/processed/fleet.parquet
+      --config config/config.kenya.yaml
+      --set raw_root=data/raw
+      --set powerplant_export=data/raw/powerplantmatching/manual/powerplants.parquet
+    deps:
+      - data/raw/powerplantmatching/manual/powerplants.parquet
+    outs:
+      - data/processed/fleet.parquet
+
+  demand_national:
+    desc: "Annual national demand totals from the committed AFREC export."
+    cmd: >-
+      uv run --directory . alea build demand_national
+      --out data/processed/demand_national.parquet
+      --config config/config.kenya.yaml
+      --set raw_root=data/raw
+      --set afrec_export=data/raw/afrec_demand/manual/afrec_demand.xlsx
+    deps:
+      - data/raw/afrec_demand/manual/afrec_demand.xlsx
+    outs:
+      - data/processed/demand_national.parquet
+
+  demand_hourly:
+    desc: "National demand split across buses at the §3.1 population/GDP blend."
+    cmd: >-
+      uv run --directory . alea build demand_hourly
+      --out data/processed/demand_hourly.parquet
+      --config config/config.kenya.yaml
+      --set raw_root=data/raw
+      --set demand_national=data/processed/demand_national.parquet
+      --set bus_weights=resources/weights/bus_weights.parquet
+      --set alpha=0.5
+    deps:
+      - data/processed/demand_national.parquet
+      - resources/weights/bus_weights.parquet
+    outs:
+      - data/processed/demand_hourly.parquet
+
+  cutout:
+    desc: "The ERA5 cutout covering the topology's own extent."
+    cmd: >-
+      uv run --directory . alea build cutout
+      --out data/processed/cutout.nc
+      --config config/config.kenya.yaml
+      --set raw_root=data/raw
+      --set cutout_path=data/processed/cutout.nc
+      --set topology=data/processed/topology.parquet
+    deps:
+      - data/processed/topology.parquet
+    outs:
+      - data/processed/cutout.nc
+      # atlite's sidecar. `02-data-pipeline.md` §1.1: checksumming the `.nc`
+      # alone yields a cutout that verifies and fails to open.
+      - data/processed/cutout.nc.aux
+
+  renewable_profiles:
+    desc: "Capacity factors per bus, from the cutout."
+    cmd: >-
+      uv run --directory . alea build renewable_profiles
+      --out data/processed/renewable_profiles.nc
+      --config config/config.kenya.yaml
+      --set cutout_path=data/processed/cutout.nc
+      --set topology=data/processed/topology.parquet
+    deps:
+      - data/processed/cutout.nc
+      - data/processed/topology.parquet
+    outs:
+      - data/processed/renewable_profiles.nc
+
+  hydro_profiles:
+    desc: "Monthly capacity factors per hydro plant."
+    cmd: >-
+      uv run --directory . alea build hydro_profiles
+      --out data/processed/hydro_profiles.parquet
+      --config config/config.kenya.yaml
+      --set raw_root=data/raw
+      --set hydro_export=data/raw/hydro_atlas/manual/hydro_profiles.parquet
+    deps:
+      - data/raw/hydro_atlas/manual/hydro_profiles.parquet
+    outs:
+      - data/processed/hydro_profiles.parquet
+
+  costs:
+    desc: "Technology capital and operating costs from the committed IRENA export."
+    cmd: >-
+      uv run --directory . alea build costs
+      --out data/processed/costs.parquet
+      --config config/config.kenya.yaml
+      --set raw_root=data/raw
+      --set irena_export=data/raw/irena_costs/manual/irena_costs.json
+    deps:
+      - data/raw/irena_costs/manual/irena_costs.json
+    outs:
+      - data/processed/costs.parquet
+
+  fuel_prices:
+    desc: "Fuel prices in USD/MWh, from the fetched Global Petrol Prices payload."
+    cmd: >-
+      uv run --directory . alea build fuel_prices
+      --out data/processed/fuel_prices.parquet
+      --config config/config.kenya.yaml
+      --set raw_root=data/raw
+    deps:
+      - data/raw/global_petrol_prices
+    outs:
+      - data/processed/fuel_prices.parquet
+
+  outage_history:
+    desc: "VIIRS-detected outage evidence per grid zone (Track B)."
+    cmd: >-
+      uv run --directory . alea build outage_history
+      --out data/processed/outage_history.parquet
+      --config config/config.kenya.yaml
+      --set raw_root=data/raw
+    deps:
+      - data/raw/viirs_vnp46a2
+    outs:
+      - data/processed/outage_history.parquet
+
+  outage_truth:
+    desc: "GridWatch ground truth (Track B)."
+    cmd: >-
+      uv run --directory . alea build outage_truth
+      --out data/processed/outage_truth.parquet
+      --config config/config.kenya.yaml
+      --set raw_root=data/raw
+      --set gridwatch_export=data/raw/gridwatch/manual/gridwatch.csv
+    deps:
+      - data/raw/gridwatch/manual/gridwatch.csv
+    outs:
+      - data/processed/outage_truth.parquet

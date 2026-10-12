@@ -12,7 +12,7 @@ these inputs and exits without writing when it does. ``--force`` overrides.
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -139,6 +139,17 @@ class BuildContext:
 	"""Checksums of the artefacts this stage read."""
 
 	logger: Any = None
+	parameters: dict[str, Any] = field(default_factory=dict)
+	"""Extra values a builder may read, from the CLI's repeatable ``--set``.
+
+	A stage parameter is not a config key. The config is validated against a
+	model with ``extra="forbid"``, so a key added for one stage's convenience is
+	a key every config must then carry -- and the alternative, reading it off the
+	environment, is a run whose behaviour is not in its own command line.
+	``build_stage`` forwards its ``parameters`` argument here and the builder
+	reads what it needs, defaulting when it is absent. The values reach the
+	artefact's provenance either way, which is what makes the run reproducible.
+	"""
 
 
 _BUILDERS: dict[str, StageBuilder] = {}
@@ -162,6 +173,7 @@ def build_stage(
 	inputs: list[str] | None = None,
 	force: bool = False,
 	logger: Any = None,
+	parameters: dict[str, Any] | None = None,
 ) -> BuildResult:
 	"""Build one processed dataset.
 
@@ -188,7 +200,7 @@ def build_stage(
 			skipped=True,
 		)
 
-	context = BuildContext(out=target, inputs=declared, logger=logger)
+	context = BuildContext(out=target, inputs=declared, logger=logger, parameters=dict(parameters or {}))
 	provenance = _BUILDERS[stage_name](config, target, context)
 	if provenance is None:
 		raise ArtefactError(f"stage {stage_name!r} returned no provenance")
@@ -226,6 +238,7 @@ def write_stage(
 
 
 _REGISTRATION_MODULES = (
+	"alea.io.stages",
 	"alea.losses.service",
 	"alea.outages.service",
 	"alea.resilience.service",
