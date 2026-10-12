@@ -161,10 +161,20 @@ def milestone_of(number: int) -> str:
 def due_at(milestone: str, *, resolved: tuple[int, ...] = ()) -> list[Claim]:
 	"""Claims whose milestone is ``milestone`` or earlier and that are unresolved.
 
-	``resolved`` names the claim numbers that have been dealt with, so the
-	review can be run against a set that differs from the module constant --
-	which is what makes the gate checkable rather than a restatement of a
-	hard-coded answer.
+	Two things mark a claim resolved, and both are honoured: the ``resolved``
+	flag on the entry itself, which is what the CLI's listing and the annual
+	report read, and the ``resolved`` argument, which lets the review be run
+	against a set that differs from the module constant -- which is what makes
+	the gate checkable rather than a restatement of a hard-coded answer.
+
+	**The flag was not read here, and that was a defect.** An operator
+	resolving a claim edits the entry's flag, because that is what the field's
+	own docstring says it is for and what ``alea quality claims`` displays. The
+	review ignored it and kept reporting the claim as due, so the one action the
+	register documents as closing a claim did not close it. Two sources of truth
+	for "resolved" is one source too many: the flag is the register's, and the
+	argument is the gate's override, and a claim is unresolved only when neither
+	says otherwise.
 	"""
 	if milestone not in MILESTONES:
 		raise ValueError(f"unknown milestone {milestone!r}")
@@ -172,7 +182,7 @@ def due_at(milestone: str, *, resolved: tuple[int, ...] = ()) -> list[Claim]:
 	return [
 		claim
 		for claim in REGISTER
-		if claim.milestone_index <= position and claim.number not in resolved
+		if claim.milestone_index <= position and claim.number not in resolved and not claim.resolved
 	]
 
 

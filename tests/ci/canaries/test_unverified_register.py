@@ -145,3 +145,30 @@ def test_the_report_gate_catches_the_annual_list_splitting_from_the_register():
 		)
 
 	assert _gate_passes(node), "the report gate did not recover after the restore"
+
+
+def test_the_review_gate_catches_a_resolved_flag_being_ignored():
+	"""The defect: the flag the operator sets is not the flag the review reads.
+
+	`due_at` filtered on its ``resolved`` argument and ignored ``Claim.resolved``
+	-- the field the CLI prints and the annual report carries. Resolving a claim
+	the way the register documents therefore left the review failing, and the
+	gate could not see it because it exercised only the argument. Reverting the
+	filter to the argument alone must fail the gate that resolves a claim through
+	its own flag.
+	"""
+	node = "test_a_resolved_flag_on_the_entry_closes_the_claim_too"
+	assert _gate_passes(node), "the review gate is already failing; the canary is moot"
+
+	target = (
+		"if claim.milestone_index <= position and claim.number not in resolved "
+		"and not claim.resolved"
+	)
+	replacement = "if claim.milestone_index <= position and claim.number not in resolved"
+	with planted(CLAIMS, target, replacement):
+		assert _gate_exit_code(node) != 0, (
+			"the review gate passed with `Claim.resolved` dropped from the filter; "
+			"it does not check that the entry's own flag closes a claim"
+		)
+
+	assert _gate_passes(node), "the review gate did not recover after the restore"

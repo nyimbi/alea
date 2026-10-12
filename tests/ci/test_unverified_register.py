@@ -141,6 +141,43 @@ def test_resolving_a_claim_removes_it_from_the_review():
 	)
 
 
+def test_a_resolved_flag_on_the_entry_closes_the_claim_too():
+	"""The field the CLI and the report read is the one that closes a claim.
+
+	Two ways to mark a claim resolved, and only the argument was honoured. The
+	entry's own ``resolved`` field is what ``alea quality claims`` prints as
+	"resolved" and what `reporting/annual.py` carries into the report, so an
+	operator resolving a claim edits *it* -- and the review kept reporting the
+	claim as due, which means the documented action did not do what it says.
+	This asserts the two agree, by resolving a claim the way the register says
+	to and checking the review drops it.
+	"""
+	from dataclasses import replace
+
+	claim = next(c for c in REGISTER if c.number == 4)
+	assert not claim.resolved, (
+		"claim 4 is flagged resolved in the register, so this test can no longer "
+		"tell a flag that closes a claim from a register that was edited to pass"
+	)
+	flipped = replace(claim, resolved=True)
+	patched = tuple(flipped if c.number == 4 else c for c in REGISTER)
+
+	import alea.quality.claims as claims_module
+
+	original = claims_module.REGISTER
+	claims_module.REGISTER = patched
+	try:
+		after = {c.number for c in due_at("M6")}
+	finally:
+		claims_module.REGISTER = original
+
+	assert 4 not in after, (
+		"a claim whose own `resolved` flag is set is still reported as due, so "
+		"the flag the CLI and the report read is dead and the only way to close "
+		"a claim is the review's argument"
+	)
+
+
 def test_a_claim_is_overdue_only_after_its_own_milestone():
 	"""Due at M2 means M2 is when it must be done, not when it was late."""
 	result = review("M2")
