@@ -332,7 +332,14 @@ def _stage_outage_validation(config: Config, out: Path, context: BuildContext) -
 	from alea.io.artefacts import ArtefactError, read_artefact
 
 	processed = resolve(config.paths.processed)
-	prediction_path = processed / "outage_detection.parquet"
+	# The detector's own artefact, at the path `processed("outage_history")`
+	# resolves to. This read used to name `outage_detection.parquet`, which
+	# nothing writes: the stage that runs the detector is `outage_history`, and
+	# its output is the zone series this validator scores. The name mismatch made
+	# the validator raise "no detection artefact" on every tree where the
+	# detector had in fact run -- a stage reporting a missing input that was
+	# sitting right beside it under another name.
+	prediction_path = processed / "outage_history.parquet"
 	truth_path = processed / "outage_truth.parquet"
 
 	if not truth_path.exists():

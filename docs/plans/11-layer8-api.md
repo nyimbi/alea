@@ -277,6 +277,67 @@ src/alea/api/
     └── ...
 ```
 
+### 7.1 The serving projection
+
+**The producer the API's contract implies and never named.** §1's rule is that no
+route computes -- every route reads an artefact. Nothing checked the other half:
+*something must write them*. All eleven tabular paths `api.repository` reads were
+written by nothing outside `api`, and the Layer 8 suite passed because
+`tests/ci/test_api_layer8.py` writes every one of them as a fixture. A test that
+builds its own inputs cannot detect that no production code builds them.
+
+```
+src/alea/publish/
+├── __init__.py
+├── views.py    # one ArtefactSchema per serving table; the contract
+└── service.py  # pure projections: layer result -> serving table
+```
+
+`views.py` holds the schemas and the registers, and `service.py` holds the
+projections. The split matters: the schema is read by both the projection and
+the repository, so it is the one place the two sides can be checked against each
+other rather than drifting.
+
+**A declared path is not a produced path.** This is the whole defect, and it is
+reproduced inside the fix if the registers are not honest. Four registers
+classify every path the repository reads, exactly once:
+
+| Register | Means |
+|---|---|
+| `PROJECTION_STAGES` | a registered stage writes this table. **Empty today.** |
+| `PRODUCED_ELSEWHERE` | a layer stage writes it directly (`topology.parquet`) |
+| `UNPROJECTABLE` | nothing computes the quantity; the view invented a product |
+| `UNWIRED` | a projection exists and no stage runs it, with the reason |
+
+`UNWIRED` is not coverage; it is a counted gap. `test_the_unwired_set_is_exactly_
+what_is_recorded` fails when a table is wired without the register shrinking, or
+joins the declared set without being counted -- so the gap is a number in the
+source, and it cannot grow silently. `UNPROJECTABLE` follows the same discipline
+as `UNIMPLEMENTED_FETCHERS` in `tests/ci/test_io_registry.py`.
+
+The gate reads `PROJECTION_STAGES` rather than inferring production from a name
+match, and that is deliberate: `outage_history` is both a serving table
+(`data/processed/outages/history.parquet`) and a layer stage, and the layer stage
+writes `data/processed/outage_history.parquet` -- a different path holding a
+different quantity. Inferring production from the shared name marked the serving
+table produced while nothing wrote it, which is the defect, inside its own gate.
+
+`UNPROJECTABLE` currently holds `losses/tlens.parquet`, whose `TlensRowOut` serves
+T&D loss percentages by country-year while `spec4-base.md` §22 lists
+`/losses/tlens` as a "Critical line ranking", which is what `TlensEntry` computes.
+The view invented a product and no source provides it -- a decision for the spec
+owner, not for this module.
+
+**What closes `UNWIRED`.** A stage per table, reading the layer's artefact at a
+conventional path. That needs Layers 3 and 4 to write conventional outputs:
+`tlens`, `resilience` and `outage_validation` today read six input paths
+(`network_arrays.json`, `dispatch.parquet`, `interruptions.parquet`,
+`zone_population.parquet`, `outage_history.parquet`, `outage_truth.parquet`) that
+nothing writes and no rule invokes. That is a pipeline task across Layers 3 and
+4, and the register is what keeps it visible rather than letting the tables read
+as served.
+
+
 ---
 
 ## 8. Gates
@@ -293,6 +354,18 @@ src/alea/api/
 | `test_cache_key_includes_checksum` | Different artefact → different key | Drop checksum; must fail |
 | `test_ussd_never_truncates` | USSD output ≤ 182 chars and complete | Truncate; must fail |
 | `test_openapi_valid` | Generated OpenAPI validates | Break a model; must fail |
+| `test_every_path_the_repository_reads_is_accounted_for` | Every artefact path the repository reads is in a register with a reason | Add a read; must fail |
+| `test_the_unwired_set_is_exactly_what_is_recorded` | The unwired set is exactly the recorded set | Wire a table without moving the register; must fail |
+| `test_every_projected_table_is_read_by_the_repository` | Every projection writes a path a route reads | Add a table; must fail |
+| `test_every_unprojectable_path_is_still_a_gap` | The gap register matches the uncovered set exactly | Fill a gap without editing the register; must fail |
+| `test_every_path_produced_elsewhere_names_a_registered_stage` | Each exemption names a stage that is registered | Rename the claimed stage; must fail |
+
+The last four are the gates for §7.1's projection. The first two are the two
+directions of the same crossing, and neither alone is sufficient: a gate that
+only checked that every read has a producer passes on a tree where every
+projection writes to a path no route reads -- a stage that runs for nobody, and
+one that looks identical to a working projection from that projection's own
+tests.
 
 ---
 
@@ -309,7 +382,8 @@ src/alea/api/
 | 7 | USSD and SMS adapters complete and bounded | `test_ussd_never_truncates` |
 | 8 | OpenAPI generated and valid | `test_openapi_valid` |
 | 9 | A route inventory matches the specification's endpoint table | Manual, once |
-| 10 | Every gate canaried | `tests/ci/canaries` |
+| 10 | Every artefact the API reads has a producer, or is a named gap | §7.1's four gates |
+| 11 | Every gate canaried | `tests/ci/canaries` |
 
 **Criterion 9 has a specific history worth avoiding.** An inventory of routes
 read from source is not an inventory of routes the app serves — a wrapper class
