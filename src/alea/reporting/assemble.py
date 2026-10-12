@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+from pandas.api.types import is_numeric_dtype
 
 from alea.io.artefacts import ArtefactError, read_artefact
 from alea.provenance.models import Basis, DerivedProvenance, Provenance
@@ -109,14 +110,33 @@ def values_from_artefact(
 	labels = (
 		data[LABEL_COLUMN].to_list() if LABEL_COLUMN in data.columns else [""] * len(data)
 	)
+	# Every other numeric column travels with the row, keyed by the artefact's
+	# own name for it. A section that declares two numeric columns reads two
+	# numbers from one row, and dropping the second here is what left the reader
+	# with nothing to put in the column but a copy of the first -- see
+	# `_rows_for` for the duplication that caused and the refusal that replaced
+	# it. `value` is the primary because the column is named `value`; the rest
+	# are the row's other quantities, not a hierarchy.
+	others = [
+		name
+		for name in data.columns
+		if name not in (column, UNIT_COLUMN, LABEL_COLUMN) and is_numeric_dtype(data[name])
+	]
 	return [
 		ReportValue(
 			value=float(raw),
 			unit=unit or str(row_unit),
 			provenance=provenance,
 			label=str(row_label),
+			extra=tuple(
+				(name, float(data[name].iloc[position]))
+				for name in others
+				if pd.notna(data[name].iloc[position])
+			),
 		)
-		for raw, row_unit, row_label in zip(values, units, labels, strict=True)
+		for position, (raw, row_unit, row_label) in enumerate(
+			zip(values, units, labels, strict=True)
+		)
 	]
 
 

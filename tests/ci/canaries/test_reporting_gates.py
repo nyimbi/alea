@@ -345,3 +345,54 @@ def test_no_unverified_benchmark():
 	assert_raises(ReportDataError, assert_no_unverified, "", poisoned)
 	# And in the rendered HTML, where a pasted figure actually lands.
 	assert find_unverified_token(_context(sections=[]), f"<p>{UNVERIFIED_TOKEN}</p>") != []
+
+
+# --------------------------------------------------------------------------
+# test_no_repeated_table_cell -- plant a duplicated cell; must fail
+# --------------------------------------------------------------------------
+
+
+def test_no_repeated_table_cell():
+	"""A row printing one number in two columns must fail the gate.
+
+	The defect this watches for was live and silent: `_rows_for` filled every
+	numeric column with the row's primary value, so ``Hours`` printed the peak
+	loading and SAIFI printed SAIDI. The gate's whole value is that it fails on
+	a duplicated cell, so the canary builds one directly -- a table whose two
+	numeric columns hold the same formatted number -- and asserts the gate
+	reports it.
+
+	A row whose numbers genuinely coincide is indistinguishable from this
+	defect, and that is deliberate: a reader cannot tell either, so the producer
+	must carry a distinct quantity per column or the report is not publishable.
+	"""
+	first = _value(value=1200.0, label="north-south")
+	second = _value(value=1200.0, label="north-south")
+	table = ReportTable(
+		slug="critical_lines",
+		title="Lines at or above rating",
+		columns=["Line", "Peak loading", "Hours", "Basis"],
+		rows=[[first.label, first, second, first.basis.value]],
+	)
+	section = ReportSection(
+		slug="critical_lines", title="Critical lines", values=[first], tables=[table]
+	)
+	problems = check_report_gates(_context(sections=[section]))
+	assert any("repeats a value" in problem for problem in problems), problems
+
+	# And the correct shape passes: two distinct quantities in the two columns.
+	distinct = _value(value=1440.0, label="north-south")
+	good = ReportTable(
+		slug="critical_lines",
+		title="Lines at or above rating",
+		columns=["Line", "Peak loading", "Hours", "Basis"],
+		rows=[[first.label, first, distinct, first.basis.value]],
+	)
+	clean = ReportSection(
+		slug="critical_lines", title="Critical lines", values=[first], tables=[good]
+	)
+	assert not [
+		problem
+		for problem in check_report_gates(_context(sections=[clean]))
+		if "repeats a value" in problem
+	], "the gate fires on a table whose columns carry distinct numbers"

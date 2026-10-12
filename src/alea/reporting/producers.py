@@ -136,12 +136,20 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"wired loss stage is `tlens`."
 		),
 		"critical_lines": (
-			"`losses.tlens_to_artefact` ranks branches by unserved energy and "
-			"writes `data/processed/tlens.json` -- the same ranking, at a "
-			"processed path and as JSON. The section declares "
-			"`outages/critical/{date}.parquet` under `results/`. The producer "
-			"exists and writes elsewhere; closing this is a path and a shape, "
-			"not a kernel."
+			"Needs a *loading* kernel, and there is none. The section asks for "
+			"each line's peak loading and the hours it spent at or above rating "
+			"(`weekly.py`: columns `Line, Peak loading, Hours, Basis`). This "
+			"register first recorded the blocker as 'a path and a shape, not a "
+			"kernel', pointing at `losses.tlens_to_artefact` -- and that was "
+			"wrong, measured against the kernel's own payload: `TlensEntry` "
+			"carries unserved energy (`ens_increase_mwh`, `share`) and overload "
+			"*counts* (`overloaded_snapshots`), not a loading ratio and not "
+			"hours. The nearest thing in the repository is "
+			"`market.views.CorridorResult.loading`, which is a cleared "
+			"corridor's loading inside a market result rather than a branch "
+			"rating. Closing this needs `|p0| / s_nom` per branch per snapshot "
+			"from the dispatch the network already carries, which is a small "
+			"kernel but a kernel, not a path."
 		),
 		"outage_events": (
 			"Needs detected outage *events* with start and end times. "

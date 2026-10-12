@@ -12,6 +12,17 @@ value.
 which is what makes the two paths produce the same report: a scheduled-only
 report cannot be backfilled, and backfill is required for the "actual versus
 forecast" comparison the monthly cadence makes.
+
+**The artefact contract, stated once.** A section declares its columns as
+headers -- ``["Line", "Peak loading", "Hours", "Basis"]`` -- and a producer
+writes one row per element with a ``value`` column, a ``unit`` and a ``label``,
+plus a column for every *other* quantity the section names. ``_rows_for`` binds
+each numeric column to the quantity whose name it matches, so ``Hours`` reads
+the artefact's ``hours`` column and not a copy of the loading. A section whose
+column names a quantity the row does not carry raises rather than repeating the
+primary into it: this is the one place the report can put a wrong number in a
+cell that looks right, and before the binding existed it did, in fourteen of the
+thirty-one declared sections.
 """
 
 from __future__ import annotations
@@ -47,6 +58,7 @@ from alea.reporting.schemas import (
 	ReportTable,
 	ReportValue,
 	UnverifiedClaim,
+	_normalise_column,
 	period_for,
 )
 
@@ -245,7 +257,7 @@ def _section_from_spec(
 		slug=spec.slug,
 		title=spec.table_title or spec.title,
 		columns=spec.columns,
-		rows=_rows_for(values, spec.columns),
+		rows=_rows_for(values, spec.columns, slug=spec.slug),
 		unit=spec.unit,
 	)
 	charts: list[ReportChart] = []
@@ -269,31 +281,83 @@ def _section_from_spec(
 	)
 
 
-def _rows_for(values: list[ReportValue], columns: list[str]) -> list[list[ReportValue | str]]:
+def _rows_for(
+	values: list[ReportValue],
+	columns: list[str],
+	*,
+	slug: str = "",
+) -> list[list[ReportValue | str]]:
 	"""Lay values out against a section's declared columns.
 
-	The first column is the value's label; the value itself goes in the
-	column whose header names it, so a section that declares ``["Country",
-	"SAIDI", "SAIFI", "Basis"]`` reads the label from the first cell. A layout
-	that does not match the declared columns is a template defect, not a data
-	one, and is caught by the table's own length check.
+	A section declares its columns as headers -- ``["Line", "Peak loading",
+	"Hours", "Basis"]`` -- and each value is one row of the artefact. The label
+	column takes the value's label; ``Basis`` takes its basis and ``Interval``
+	its interval; a numeric column takes the quantity it *names*.
+
+	**The name is the binding, and the refusal is the point.** This used to
+	write the value into every numeric column, so ``Peak loading`` and ``Hours``
+	both printed the loading, ``Demand``/``Renewable``/``Margin`` all printed
+	the demand, and SAIDI printed under SAIFI. Fourteen of the thirty-one
+	declared sections have more than one numeric column and every one of them
+	was wrong, in a published report, silently -- nothing failed because the
+	fixtures were written to feed exactly one value per row, which is the shape
+	the reader needed rather than the shape a producer writes. A section whose
+	numeric column names a quantity the value does not carry raises here rather
+	than repeating the primary into it: a cell that repeats its neighbour is a
+	number a reader will quote, and no downstream check can tell it from a real
+	one.
 	"""
 	rows: list[list[ReportValue | str]] = []
 	for value in values:
 		row: list[ReportValue | str] = []
-		for column in columns:
+		for position, column in enumerate(columns):
 			lowered = column.lower()
 			if lowered in ("basis", "source"):
 				row.append(value.basis.value)
 			elif lowered in ("interval", "ci"):
 				row.append(value.interval_text)
+			elif position == 0:
+				# The first column is the row's identity, not one of its
+				# quantities: a label, never a second copy of the value.
+				row.append(value.label or value.formatted)
 			else:
-				row.append(value)
-		if row and isinstance(row[0], ReportValue):
-			# The label belongs in the first cell, not a duplicate of the value.
-			row[0] = value.label or value.formatted
+				extra = value.extra_for(column)
+				if extra is not None:
+					row.append(
+						ReportValue(
+							value=extra,
+							unit=value.unit,
+							provenance=value.provenance,
+							label=column,
+						)
+					)
+					continue
+				# The primary goes only where the column names it. A column
+				# naming a quantity this row does not carry has no cell, and
+				# inventing one is how the duplication above happened.
+				if _normalise_column(column) == _normalise_column(value.unit) or (
+					len(_numeric_columns(columns)) == 1
+				):
+					row.append(value)
+					continue
+				raise ReportDataError(
+					f"{slug or 'section'}: column {column!r} names a quantity this "
+					f"row does not carry; the row holds {value.unit!r} and "
+					f"{[key for key, _ in value.extra] or 'nothing else'}. A cell "
+					f"that repeats the primary into a column it does not belong to "
+					f"is a wrong number in a published report"
+				)
 		rows.append(row)
 	return rows
+
+
+def _numeric_columns(columns: list[str]) -> list[str]:
+	"""A section's columns that carry a quantity rather than a label or a basis."""
+	return [
+		column
+		for column in columns[1:]
+		if column.lower() not in ("basis", "source", "interval", "ci")
+	]
 
 
 def assemble_context(
@@ -703,13 +767,18 @@ def check_report_gates(context: ReportContext, rendered_html: str = "") -> list[
 	plan names for this layer: no bare number, proxy values marked, precision
 	respecting uncertainty, chart and table agreeing, and no unverified figure.
 	"""
-	from alea.reporting.schemas import chart_table_disagreements, find_bare_numbers
+	from alea.reporting.schemas import (
+		chart_table_disagreements,
+		find_bare_numbers,
+		repeated_table_cells,
+	)
 
 	problems: list[str] = []
 	bare = find_bare_numbers(context)
 	if bare:
 		problems.append(f"bare numbers in context: {', '.join(bare[:5])}")
 	problems.extend(chart_table_disagreements(context))
+	problems.extend(repeated_table_cells(context))
 	problems.extend(f"unverified figure: {where}" for where in find_unverified_token(context, rendered_html))
 
 	for value in context.values:

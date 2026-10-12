@@ -23,7 +23,7 @@ import pytest
 from alea.config.loader import load_config
 from alea.config.models import Config
 from alea.reporting.schemas import ReportCadence
-from alea.reporting.service import build_report, cadence_specs
+from alea.reporting.service import build_report, cadence_specs, check_report_gates
 from tests.fixtures.reporting import (
 	AS_OF,
 	declared_artefacts,
@@ -108,3 +108,36 @@ def test_the_declared_artefact_paths_are_the_ones_the_fixtures_write(tmp_path: P
 	for cadence in ReportCadence:
 		for pattern in declared_artefacts(cadence, AS_OF):
 			assert (results_root / pattern).exists(), f"{cadence.value} reads {pattern}, not written"
+
+
+def test_no_table_cell_repeats_a_sibling(tmp_path: Path):
+	"""A row's numbers are distinct: no cell is a copy of the one beside it.
+
+	The defect this gates was measured, not imagined. `_rows_for` wrote the
+	row's primary value into *every* numeric column, so a section declaring
+	``["Line", "Peak loading", "Hours", "Basis"]`` printed the peak loading
+	under ``Hours``, and ``["Country", "SAIDI", "SAIFI", "Basis"]`` printed
+	SAIDI under SAIFI -- in a published report, in fourteen of the thirty-one
+	declared sections, with every gate green. Nothing failed because the
+	fixtures fed one value per row: the fixture manufactured the shape the
+	reader needed rather than the shape a producer writes, and a gate over that
+	fixture can only confirm the reader agrees with itself.
+
+	The assertion is on the *assembled context* rather than on `_rows_for`,
+	because the duplication was a property of the assembled report and a unit
+	test of the helper would have passed against the fixture that caused it. It
+	goes through `check_report_gates` rather than re-walking the rows, so the
+	canary in `tests/ci/canaries/test_reporting_gates.py` can plant the defect
+	and watch this same function report it.
+	"""
+	results_root = tmp_path / "results"
+	reports_root = tmp_path / "reports"
+	write_all_fixture_sets(results_root)
+	config = _config(results_root, reports_root)
+
+	for cadence in ReportCadence:
+		built = build_report(
+			cadence, config, out=reports_root / cadence.value, date=AS_OF, deliver=False
+		)
+		problems = check_report_gates(built.context)
+		assert not problems, f"{cadence.value}: {problems}"

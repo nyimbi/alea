@@ -96,6 +96,17 @@ def as_record(provenance: Provenance | ProvenanceRecord | Iterable[Provenance]) 
 	return ProvenanceRecord(entries=entries)
 
 
+def _normalise_column(name: str) -> str:
+	"""A column or field name reduced to comparable words.
+
+	``"Peak loading"``, ``"peak_loading"`` and ``"PeakLoading"`` all reduce to
+	``"peakloading"``, so a section's declared header and an artefact's own
+	column name match without either spelling the other's separator. Used to
+	bind a table cell to the quantity it names -- see ``ReportValue.extra_for``.
+	"""
+	return "".join(character for character in name.lower() if character.isalnum())
+
+
 def significant_figures(uncertainty: float) -> int:
 	"""Digits of a value that a relative uncertainty leaves standing.
 
@@ -151,6 +162,34 @@ class ReportValue:
 	"""Confidence interval as ``(low, high)``, in the value's own unit."""
 	significant_figures: int | None = None
 	"""Override the figure count derived from uncertainty. Rarely correct."""
+	extra: tuple[tuple[str, float], ...] = ()
+	"""Other numbers carried by the same row of the same artefact.
+
+	A section that declares more than one numeric column -- ``["Line", "Peak
+	loading", "Hours", "Basis"]`` -- reads two numbers per row, and the row is
+	one artefact record. ``value`` is the row's primary quantity and this holds
+	the rest, keyed by the artefact's own column name.
+
+	They exist because the alternative was measured and it is worse: before
+	this field the reader wrote the primary into *every* numeric column, so
+	``Peak loading`` and ``Hours`` both printed the loading and SAIDI printed
+	under SAIFI. Nothing could see it, because the fixtures were written to
+	feed exactly one value per row -- the fixture manufactured the shape the
+	reader needed. See ``_rows_for`` for the resolution and the refusal.
+	"""
+
+	def extra_for(self, name: str) -> float | None:
+		"""The extra quantity whose artefact column matches ``name``, or ``None``.
+
+		Matched case-insensitively on the words, so ``"Peak loading"`` resolves
+		the artefact's ``peak_loading`` column without either side having to
+		spell the other's separator.
+		"""
+		wanted = _normalise_column(name)
+		for key, number in self.extra:
+			if _normalise_column(key) == wanted:
+				return number
+		return None
 
 	def __post_init__(self) -> None:
 		if not math.isfinite(self.value):
@@ -449,6 +488,29 @@ def find_bare_numbers(node: Any, path: str = "context") -> list[str]:
 		for info in dataclasses.fields(node):
 			found.extend(find_bare_numbers(getattr(node, info.name), f"{path}.{info.name}"))
 	return found
+
+
+def repeated_table_cells(context: ReportContext) -> list[str]:
+	"""Table rows that print the same number in more than one column.
+
+	A row's quantities are distinct by construction, so a cell that repeats its
+	neighbour is a column the reader filled with something it did not have. That
+	is what happened before ``_rows_for`` bound a cell to the column that names
+	it: ``["Line", "Peak loading", "Hours", "Basis"]`` printed the loading twice
+	and ``["Country", "SAIDI", "SAIFI", "Basis"]`` printed SAIDI under SAIFI.
+	Checked on the formatted text, because a duplicate that survives formatting
+	is the one a reader quotes.
+	"""
+	problems: list[str] = []
+	for section in context.sections:
+		for table in section.tables:
+			for index, row in enumerate(table.rows):
+				printed = [cell.formatted for cell in row if isinstance(cell, ReportValue)]
+				if len(printed) != len(set(printed)):
+					problems.append(
+						f"table {table.slug} row {index} repeats a value across columns: {printed}"
+					)
+	return problems
 
 
 def chart_table_disagreements(context: ReportContext) -> list[str]:

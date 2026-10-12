@@ -83,20 +83,59 @@ def _provenance(spec: FixtureValue, source_id: str) -> DerivedProvenance:
 	)
 
 
-def _frame(rows: tuple[FixtureValue, ...]) -> pd.DataFrame:
-	return pd.DataFrame(
-		{
-			"label": [row.label for row in rows],
-			"value": [row.value for row in rows],
-			"unit": [row.unit for row in rows],
-		}
-	)
+#: Columns that carry no quantity: a section's first column is the row's
+#: identity, and these three are metadata the reader derives from provenance.
+NON_NUMERIC_COLUMNS = frozenset({"basis", "source", "interval", "ci"})
+
+
+def declared_quantities(columns: list[str]) -> list[str]:
+	"""A section's declared numeric column headers, in order.
+
+	The first is the row's primary quantity -- the reader binds it to the
+	artefact's ``value`` column -- and the rest are the row's other numbers,
+	which the fixture must write or the reader has nothing to put in the column
+	but a copy of the primary.
+	"""
+	return [
+		column
+		for position, column in enumerate(columns)
+		if position > 0 and column.lower() not in NON_NUMERIC_COLUMNS
+	]
+
+
+def _frame(rows: tuple[FixtureValue, ...], columns: list[str] | None = None) -> pd.DataFrame:
+	"""The rows as a frame, carrying every quantity the section declares.
+
+	**Why the extras exist, and why they are the point of this module.** The
+	frame used to hold one ``value`` column. Every section with more than one
+	numeric column then had no second number to read, and the reader filled the
+	extra columns with a copy of the first -- so ``["Line", "Peak loading",
+	"Hours", "Basis"]`` printed the loading twice and ``["Country", "SAIDI",
+	"SAIFI", "Basis"]`` printed SAIDI under SAIFI, in a published report, with
+	every gate green. The fixture could not see it because it manufactured the
+	shape the reader needed rather than the shape a producer writes.
+
+	So when the section's columns are known the frame carries one column per
+	declared quantity, named with the section's own header. The extras are the
+	primary scaled by a distinct factor, which is the smallest change that
+	makes a duplicated cell differ from a correct one -- a fixture whose extras
+	equalled the primary would let the duplication back in unnoticed.
+	"""
+	frame: dict[str, list[object]] = {
+		"label": [row.label for row in rows],
+		"value": [row.value for row in rows],
+		"unit": [row.unit for row in rows],
+	}
+	for offset, header in enumerate(declared_quantities(columns or []), start=2):
+		frame[header] = [round(row.value * offset, 6) for row in rows]
+	return pd.DataFrame(frame)
 
 
 def write_fixture_artefact(
 	path: str | Path,
 	rows: tuple[FixtureValue, ...] = DEFAULT_ROWS,
 	source_id: str = "reporting_fixture",
+	columns: list[str] | None = None,
 ) -> Path:
 	"""Write one fixture artefact plus its provenance sidecar.
 
@@ -104,11 +143,16 @@ def write_fixture_artefact(
 	one artefact's single provenance: an artefact carrying one proxy row is a
 	proxy for the whole section under the weakest-basis rule. A caller that
 	wants a measured-only section passes ``rows=(MEASURED,)``.
+
+	``columns`` is the declaring section's column list. Passing it makes the
+	frame carry every quantity the section reads, so a section with two numeric
+	columns is fed a two-number row rather than a one-number row the reader
+	would have to pad.
 	"""
 	assert rows, "a fixture artefact needs at least one row"
 	target = Path(path)
 	target.parent.mkdir(parents=True, exist_ok=True)
-	write_artefact(target, _frame(rows), _provenance(rows[0], source_id))
+	write_artefact(target, _frame(rows, columns), _provenance(rows[0], source_id))
 	return target
 
 
@@ -197,8 +241,20 @@ def write_fixture_set(cadence: ReportCadence, results_root: str | Path) -> list[
 	provenance sidecar is a build output, not source.
 	"""
 	root = Path(results_root)
+	specs, _ = cadence_specs(cadence)
+	stamp = _day_stamp(cadence)
+	# Columns by resolved path, so each fixture carries exactly the quantities
+	# its section declares. Resolved here rather than in the plan because the
+	# plan names paths with a concrete date and the spec names them with a
+	# template token; this is the one place both spellings are in hand. The
+	# tokens are formatted exactly as `_artefact_path` formats them, so a
+	# cadence that starts using ``{month}`` is covered rather than mis-keyed.
+	columns_for = {
+		spec.artefact.format(date=stamp, month=stamp[:7], year=stamp[:4]): list(spec.columns)
+		for spec in specs
+	}
 	written = [
-		write_fixture_artefact(root / relative, rows)
+		write_fixture_artefact(root / relative, rows, columns=columns_for.get(relative))
 		for relative, rows in _fixture_plan(cadence).items()
 	]
 	assert written, f"cadence {cadence.value} wrote no fixtures"
