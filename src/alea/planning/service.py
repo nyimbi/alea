@@ -20,6 +20,7 @@ import pandas as pd
 import pypsa
 
 from alea.config.models import Config
+from alea.config.paths import resolve
 from alea.io.artefacts import artefact_exists, read_artefact, write_artefact
 from alea.logging import get_logger
 from alea.planning.aggregation import (
@@ -38,6 +39,7 @@ from alea.planning.expansion import (
 	solve_result_provenance,
 )
 from alea.planning.fleet import attach_generators, fleet_provenance
+from alea.planning.inputs import network_inputs
 from alea.planning.renewables import attach_renewables, renewable_provenance
 from alea.planning.topology import build_topology
 from alea.provenance.models import DerivedProvenance
@@ -72,7 +74,7 @@ class BuildReport:
 def build_network(
 	config: Config,
 	*,
-	root: str | Path = "data/processed",
+	root: str | Path | None = None,
 	demand_profiles: pd.DataFrame | None = None,
 	renewable_profiles: dict[str, pd.DataFrame] | None = None,
 	capital_costs: dict[str, float] | None = None,
@@ -84,10 +86,16 @@ def build_network(
 	topology alone is a legitimate intermediate state -- it is what the
 	connectivity gate runs against -- and a build that refused to proceed
 	without demand would make that gate unrunnable.
+
+	``root`` defaults to the config's own ``paths.processed`` rather than to a
+	literal. The literal it used to carry meant a config that put the lake
+	somewhere else had its topology read from one tree and its demand from
+	another -- and `network_inputs`, which reads the config, would have been the
+	one that was right.
 	"""
 	assert config is not None, "config must not be None"
 	log = logger_ or _log
-	base = Path(root)
+	base = Path(root) if root is not None else resolve(config.paths.processed)
 	provenances: list[DerivedProvenance] = []
 	notes: list[str] = []
 
@@ -187,7 +195,20 @@ def solve_scenario(
 
 		inputs = [f"sha256:{sha256_file(path)}"]
 	else:
-		built, report, provenances = build_network(config, logger_=log)
+		# The processed lake, read back. `build_network` takes demand profiles,
+		# renewable profiles and capital costs, and every one of them defaulted
+		# to `None` here: the network the CLI built carried topology and a fleet
+		# and no load, so `solve_expansion` refused it for having nothing to
+		# expand and `results/networks/` stayed empty. The three artefacts were
+		# on disk the whole time.
+		demand, profiles, costs = network_inputs(config)
+		built, report, provenances = build_network(
+			config,
+			demand_profiles=demand,
+			renewable_profiles=profiles,
+			capital_costs=costs,
+			logger_=log,
+		)
 		inputs = [p.inputs[0] for p in provenances if p.inputs]
 
 	if config.solve.time_aggregation > 1:
