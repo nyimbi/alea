@@ -380,6 +380,45 @@ class ContingencyRowOut(ApiModel):
 
 
 # --------------------------------------------------------------------------
+# Topology
+# --------------------------------------------------------------------------
+
+
+class TopologyLineOut(ApiModel):
+	"""One transmission line as an endpoint pair.
+
+	Endpoints rather than a geometry, because this is the table the network
+	builder reads and the two must be the same artefact: a GIS that drew its own
+	line between two buses would be drawing a network nobody solves. The
+	GeoJSON the stage writes alongside carries the full path.
+	"""
+
+	line_id: str
+	from_lon: float = Field(ge=-180.0, le=180.0)
+	from_lat: float = Field(ge=-90.0, le=90.0)
+	to_lon: float = Field(ge=-180.0, le=180.0)
+	to_lat: float = Field(ge=-90.0, le=90.0)
+	voltage_kv: ValueOut
+	length_km: ValueOut
+	capacity_mva: ValueOut
+
+
+class TopologyOut(ApiModel):
+	"""A transmission network, as its lines and the extent they cover.
+
+	``bounds`` is the artefact's own bounding box, not one computed by the
+	client: it is what the cutout stage takes its ERA5 extent from
+	(``02-data-pipeline``), so a GIS and the weather pipeline must read the same
+	rectangle or the profiles do not cover the lines they are attached to.
+	"""
+
+	checksum: str
+	line_count: int = Field(ge=0)
+	bounds: list[float] = Field(min_length=4, max_length=4)
+	lines: list[TopologyLineOut]
+
+
+# --------------------------------------------------------------------------
 # What-if
 # --------------------------------------------------------------------------
 
@@ -953,6 +992,8 @@ __all__ = [
 	"SmsResponse",
 	"TechnologyOut",
 	"TlensRowOut",
+	"TopologyLineOut",
+	"TopologyOut",
 	"UssdRequest",
 	"UssdResponse",
 	"ValueBasis",

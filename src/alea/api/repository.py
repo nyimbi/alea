@@ -51,6 +51,8 @@ from alea.api.views import (
 	ScenarioResultOut,
 	ScenarioSummaryOut,
 	TlensRowOut,
+	TopologyLineOut,
+	TopologyOut,
 	ValueOut,
 )
 from alea.config.models import Config
@@ -71,6 +73,9 @@ SCENARIO_INDEX = "results/scenarios/index.json"
 """Where the scenario catalogue lives. One file, so a listing is one read."""
 
 NETWORK_DIR = "results/networks"
+
+TOPOLOGY_ARTEFACT = "data/processed/topology.parquet"
+"""The transmission lines the network builder reads (02-data-pipeline §3)."""
 
 
 class ArtefactUnavailable(Exception):
@@ -658,6 +663,52 @@ class Repository:
 		out.sort(key=lambda contingency: contingency.load_shed_mw.value, reverse=True)
 		return out
 
+	# -- topology ----------------------------------------------------------
+
+	def topology(self, *, country: str | None = None) -> TopologyOut | None:
+		"""The transmission network's lines, or ``None`` if it has not been built.
+
+		Read from the same ``topology.parquet`` the network builder reads, not
+		from the GeoJSON beside it. The two carry the same rows, but the Parquet
+		is the one with a provenance sidecar, so it is the one that can say what
+		basis the geometry has -- and the GIS adapter (11-layer8 §5) must serve
+		the network that gets solved, not a picture of one.
+		"""
+		read = self._table(TOPOLOGY_ARTEFACT)
+		if read is None:
+			return None
+		frame, provenance = read
+		rows = _filter(frame, country_iso=country)
+		if rows.empty:
+			return None
+
+		lines = [
+			TopologyLineOut(
+				line_id=_text(row, "line_id"),
+				from_lon=_number(row, "from_lon"),
+				from_lat=_number(row, "from_lat"),
+				to_lon=_number(row, "to_lon"),
+				to_lat=_number(row, "to_lat"),
+				voltage_kv=_value(row, "voltage_kv", "kV", provenance),
+				length_km=_value(row, "length_km", "km", provenance),
+				capacity_mva=_value(row, "capacity_mva", "MVA", provenance),
+			)
+			for _, row in rows.iterrows()
+		]
+		lons = pd.concat([rows["from_lon"], rows["to_lon"]], ignore_index=True)
+		lats = pd.concat([rows["from_lat"], rows["to_lat"]], ignore_index=True)
+		return TopologyOut(
+			checksum=self.checksum(TOPOLOGY_ARTEFACT) or "",
+			line_count=len(lines),
+			bounds=[
+				float(lons.min()),
+				float(lats.min()),
+				float(lons.max()),
+				float(lats.max()),
+			],
+			lines=lines,
+		)
+
 	# -- reports -----------------------------------------------------------
 
 	def reports(self, cadence: str) -> list[ReportOut]:
@@ -804,4 +855,10 @@ def _nested(row: Any, column: str) -> list[dict[str, Any]]:
 	return []
 
 
-__all__ = ["NETWORK_DIR", "SCENARIO_INDEX", "ArtefactUnavailable", "Repository"]
+__all__ = [
+	"NETWORK_DIR",
+	"SCENARIO_INDEX",
+	"TOPOLOGY_ARTEFACT",
+	"ArtefactUnavailable",
+	"Repository",
+]

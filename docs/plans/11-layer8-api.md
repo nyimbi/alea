@@ -235,6 +235,18 @@ def format_ussd_forecast(rows: list[OutageForecastRow]) -> str:
 keyed on the URL alone serves a result computed against a previous network —
 the same defect as Layer 5's cache key (08-layer5 §2.2).
 
+Each lifetime is a field on `ApiConfig` (`cache_ttl_seconds` and its `_history`
+and `_topology` siblings), read by the route that declares it. A route-local
+constant is a lifetime an operator cannot move, which is how §6's four
+lifetimes became two hard-coded numbers and two that existed only in this table.
+
+**Topology is an endpoint, not only a table row.** §5 names the QGIS adapter as
+one "over `/topology`", so `GET /api/v1/topology` serves the transmission lines
+and their extent, public tier, keyed on the artefact checksum. It is not
+paginated: a paginated geometry is a partially drawn grid, and a client
+rendering page one shows a connected-looking network with its interconnectors
+missing.
+
 ---
 
 ## 7. Module layout

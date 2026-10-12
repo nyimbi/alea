@@ -21,6 +21,7 @@ from alea.api.routes import (
 	resilience,
 	signals,
 	system,
+	topology,
 	whatif,
 )
 
@@ -31,6 +32,7 @@ from alea.api.routes import (
 # the plan's criterion 9 records, one level up from the route walk.
 ROUTERS: tuple[APIRouter, ...] = (
 	system.router,
+	topology.router,
 	planning.router,
 	market.router,
 	outages.router,

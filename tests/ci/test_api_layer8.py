@@ -85,6 +85,7 @@ SPEC_ENDPOINTS: tuple[tuple[str, str], ...] = (
 	("GET", "/api/v1/health"),
 	("GET", "/api/v1/version"),
 	("GET", "/api/v1/runs/{run_id}"),
+	("GET", "/api/v1/topology"),
 )
 
 
@@ -287,6 +288,25 @@ def _population_artefacts(root: Path) -> None:
 				"load_shed_mw": [50.0],
 				"overloaded_elements": [1],
 				"severity": ["high"],
+			}
+		),
+	)
+	# Two lines, so the bounds are a rectangle rather than a point: a route that
+	# returned one corner, or computed the box from the first row alone, would
+	# pass against a single line.
+	_write(
+		root,
+		"data/processed/topology.parquet",
+		pd.DataFrame(
+			{
+				"line_id": ["L1", "L2"],
+				"from_lon": [36.8, 37.4],
+				"from_lat": [-1.3, -0.2],
+				"to_lon": [37.4, 38.1],
+				"to_lat": [-0.2, 0.9],
+				"voltage_kv": [220.0, 400.0],
+				"length_km": [120.0, 210.0],
+				"capacity_mva": [396.0, 720.0],
 			}
 		),
 	)
@@ -500,6 +520,7 @@ def test_every_spec_endpoint_answers_a_real_request(client: TestClient, keys: di
 		("GET", "/api/v1/signals", "restricted", None),
 		("GET", "/api/v1/health", "public", None),
 		("GET", "/api/v1/version", "public", None),
+		("GET", "/api/v1/topology", "public", None),
 		("GET", "/api/v1/runs/run-1", "public", None),
 	]
 	for method, path, tier, body in requests:
@@ -777,14 +798,18 @@ def test_rate_limit_is_per_key(config: Config, scratch: Path) -> None:
 NON_QUANTITY_FIELDS = frozenset(
 	{
 		"attempts",
+		"bounds",
 		"clusters",
 		"confidence",
+		"from_lat",
+		"from_lon",
 		"horizon",
 		"horizon_hours",
 		"jobs_queued",
 		"jobs_running",
 		"lat",
 		"limit",
+		"line_count",
 		"lon",
 		"offset",
 		"overloaded_elements",
@@ -793,6 +818,8 @@ NON_QUANTITY_FIELDS = frozenset(
 		"progress",
 		"sample_size",
 		"tenor_years",
+		"to_lat",
+		"to_lon",
 		"total",
 		"uncertainty",
 		"uptime_seconds",
@@ -1244,15 +1271,23 @@ def test_the_configured_cache_ttl_reaches_the_response_store(
 	the route passed: a route that reads the config and then ignores it would
 	pass any check made at the call site.
 	"""
-	# A lifetime nothing else in the suite uses, so the value read back can only
-	# have come from this config.
-	api = config.api.model_copy(update={"cache_ttl_seconds": 7, "cache_ttl_history_seconds": 11})
+	# Three lifetimes nothing else in the suite uses, so the values read back can
+	# only have come from this config. Three distinct values, because two routes
+	# reading the same field would be indistinguishable from one route reading
+	# the wrong one.
+	api = config.api.model_copy(
+		update={
+			"cache_ttl_seconds": 7,
+			"cache_ttl_history_seconds": 11,
+			"cache_ttl_topology_seconds": 13,
+		}
+	)
 	patched = config.model_copy(update={"api": api})
 
 	app = create_app(patched)
 	with TestClient(app) as test_client:
 		minted = _key(test_client, "public")
-		for path in ("/api/v1/prices", "/api/v1/outages/history"):
+		for path in ("/api/v1/prices", "/api/v1/outages/history", "/api/v1/topology"):
 			response = test_client.get(path, headers=minted)
 			assert response.status_code == 200, f"{path}: {response.text}"
 
@@ -1266,9 +1301,9 @@ def test_the_configured_cache_ttl_reaches_the_response_store(
 		row["namespace"]: float(row["expires_at"]) - float(row["stored_at"]) for row in rows
 	}
 
-	# The market route takes the default, the history route its own declared
-	# lifetime. Checking both is what distinguishes "reads the config" from
-	# "reads one field of it".
+	# The market route takes the default, the history and topology routes their
+	# own declared lifetimes. Checking all three is what distinguishes "reads the
+	# config" from "reads one field of it".
 	assert observed.get("market.prices") == pytest.approx(7.0, abs=0.5), (
 		f"the store recorded {observed.get('market.prices')}s for a config "
 		f"declaring 7s; the route is not reading cache_ttl_seconds"
@@ -1277,6 +1312,11 @@ def test_the_configured_cache_ttl_reaches_the_response_store(
 		f"the store recorded {observed.get('outages.history')}s for a config "
 		f"declaring 11s; the history route is not reading "
 		f"cache_ttl_history_seconds"
+	)
+	assert observed.get("planning.topology") == pytest.approx(13.0, abs=0.5), (
+		f"the store recorded {observed.get('planning.topology')}s for a config "
+		f"declaring 13s; the topology route is not reading "
+		f"cache_ttl_topology_seconds"
 	)
 
 
