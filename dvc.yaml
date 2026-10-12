@@ -179,3 +179,32 @@ stages:
       - data/raw/gridwatch/manual/gridwatch.csv
     outs:
       - data/processed/outage_truth.parquet
+
+  network_arrays:
+    desc: "A solved network as the loss kernel's arrays and dispatch series."
+    cmd: >-
+      uv run --directory . alea build network_arrays
+      --out data/processed/network_arrays.json
+      --config config/config.kenya.yaml
+      --set network_dir=results/networks
+    deps:
+      # A directory, not a file: `alea solve` writes `{network_id}-{horizon}.nc`
+      # and the id is a content hash, so the filename is not knowable at parse
+      # time. Declaring the directory re-runs this stage whenever a solve lands
+      # or changes, which is exactly when the newest network might be different.
+      - results/networks
+    outs:
+      - data/processed/network_arrays.json
+      - data/processed/dispatch.parquet
+
+  tlens:
+    desc: "Branch ranking by the energy an outage would leave unserved."
+    cmd: >-
+      uv run --directory . alea build tlens
+      --out data/processed/tlens.json
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/network_arrays.json
+      - data/processed/dispatch.parquet
+    outs:
+      - data/processed/tlens.json

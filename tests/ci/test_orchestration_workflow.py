@@ -34,7 +34,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 RULES = REPO_ROOT / "rules"
 SNAKEFILE = REPO_ROOT / "Snakefile"
 
-# The eleven processed datasets, from `alea.io.stages.REGISTERED_STAGE_NAMES`.
+# The processed datasets the workflow produces, from
+# `alea.io.stages.REGISTERED_STAGE_NAMES` plus the two layer-4b stages.
 # Listed here rather than imported so that a stage silently disappearing from
 # the registry fails the comparison instead of shrinking both sides.
 STAGES = (
@@ -45,9 +46,11 @@ STAGES = (
 	"fleet",
 	"fuel_prices",
 	"hydro_profiles",
+	"network_arrays",
 	"outage_history",
 	"outage_truth",
 	"renewable_profiles",
+	"tlens",
 	"topology",
 )
 
@@ -72,6 +75,8 @@ SUFFIXES = {
 	"fuel_prices": ".parquet",
 	"outage_history": ".parquet",
 	"outage_truth": ".parquet",
+	"network_arrays": ".json",
+	"tlens": ".json",
 }
 
 
@@ -178,12 +183,22 @@ def test_snakemake_and_dvc_agree_on_each_stage_s_output():
 			disagreements.append(f"{stage}: no output block")
 			continue
 		body = output_block.group(1)
-		declared = re.findall(r'processed\(\s*"([a-z_]+)"', body)
-		if not declared:
+		# Both spellings of `processed`: one argument, resolved through
+		# `SUFFIXES`, and two, where the rule names the suffix itself because the
+		# stage's *second* output is not a stage name (`dispatch.parquet` beside
+		# `network_arrays.json`). Reading only the first argument silently
+		# resolved `processed("dispatch", ".parquet")` to
+		# `SUFFIXES["dispatch"]` -- a KeyError, which is at least loud, but the
+		# same omission on a name that *was* in `SUFFIXES` would have compared
+		# the wrong path and passed.
+		pairs = re.findall(
+			r'processed\(\s*"([a-z_]+)"\s*(?:,\s*"([^"]+)")?\s*\)', body
+		)
+		if not pairs:
 			# `cutout` names the `CUTOUT` constant, which is
 			# `processed("cutout")` resolved at parse time.
 			if "CUTOUT" in body:
-				declared = [stage]
+				pairs = [(stage, None)]
 			else:
 				disagreements.append(f"{stage}: rule output names no stage")
 				continue
@@ -192,7 +207,9 @@ def test_snakemake_and_dvc_agree_on_each_stage_s_output():
 		# satisfied by it too -- both were tried and both left this gate green
 		# when the Parquet was renamed to a typo. The rule's declaration is
 		# resolved to an exact path and the DVC outs must name it.
-		expected = {f"data/processed/{name}{SUFFIXES[name]}" for name in declared}
+		expected = {
+			f"data/processed/{name}{suffix or SUFFIXES[name]}" for name, suffix in pairs
+		}
 		if stage == "cutout":
 			# atlite writes its sidecar beside the NetCDF.
 			expected |= {f"{path}.aux" for path in expected}
@@ -343,11 +360,6 @@ STAGES_WITHOUT_RULES: dict[str, str] = {
 		"reads a solved network from `paths.results`, which is produced by "
 		"`alea solve` rather than by a stage. Its input is a solved scenario, so "
 		"the rule depends on a solve the workflow does not yet sequence."
-	),
-	"tlens": (
-		"reads `network_arrays.json` and `dispatch.parquet`, neither of which "
-		"anything writes. Same missing producers as `resilience`, and the same "
-		"Layer 4 task."
 	),
 }
 

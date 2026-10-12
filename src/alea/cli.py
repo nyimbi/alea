@@ -273,6 +273,18 @@ def build(
 	out: OutOption,
 	config: ConfigOption = None,
 	force: ForceOption = False,
+	input_: Annotated[
+		list[str] | None,
+		typer.Option(
+			"--input",
+			help=(
+				"An artefact this stage reads: a path, or a raw lake checksum "
+				"directory name. Repeatable. These are what the idempotence check "
+				"compares, so a stage run without them cannot be recognised as "
+				"current and rebuilds every time."
+			),
+		),
+	] = None,
 	set_: Annotated[
 		list[str] | None,
 		typer.Option(
@@ -294,6 +306,14 @@ def build(
 	stage parameter is a config nobody can validate -- and they are recorded in
 	the artefact's provenance either way, which is what makes the run
 	reproducible.
+
+	``--input`` is the other half of that: what the artefact was derived from.
+	Without it ``build_stage`` sees an empty declaration, its idempotence check
+	short-circuits, and every `alea build` rebuilds -- so ``02-data-pipeline.md``
+	§4.1 and Stage A1's criterion 8 were unenforceable from the CLI, which is
+	the only entry point the workflow has (AD-5). A path is hashed; a bare
+	checksum directory name is passed through as the raw layer already recorded
+	it.
 	"""
 	from alea.io.pipeline import build_stage
 
@@ -304,6 +324,7 @@ def build(
 				stage,
 				loaded,
 				out,
+				inputs=_resolve_inputs(input_),
 				force=force,
 				logger=run.logger,
 				parameters=_parse_parameters(set_),
@@ -313,6 +334,27 @@ def build(
 			raise typer.Exit(code=2) from exc
 		run.record(result.path)
 		typer.echo(f"{stage}: {result.checksum[:12]} -> {result.path}")
+
+
+def _resolve_inputs(declared: list[str] | None) -> list[str]:
+	"""``--input`` values as the checksums a stage's provenance records.
+
+	A path that exists is hashed, so ``--input data/processed/topology.parquet``
+	and a rule passing the same file agree on one value. Anything else is passed
+	through unchanged: the raw lake addresses a payload by its checksum
+	directory, and a rule that names one is naming a value the layer already
+	computed -- re-hashing the file inside it would produce a different string
+	for the same bytes.
+	"""
+	if not declared:
+		return []
+	from alea.io.artefacts import sha256_file
+
+	resolved: list[str] = []
+	for value in declared:
+		path = Path(value)
+		resolved.append(sha256_file(path) if path.is_file() else value)
+	return resolved
 
 
 def _parse_parameters(pairs: list[str] | None) -> dict[str, Any]:

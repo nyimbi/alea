@@ -42,6 +42,7 @@ include: "rules/hydro.smk"
 include: "rules/costs.smk"
 include: "rules/market.smk"
 include: "rules/outages.smk"
+include: "rules/losses.smk"
 
 # The default target. Snakemake takes the first rule when no target is named,
 # and "the first rule" is fragile in a file whose rule order is maintained by
@@ -65,3 +66,5 @@ rule all:
 		processed("fuel_prices"),
 		processed("outage_history"),
 		processed("outage_truth"),
+		processed("network_arrays"),
+		processed("tlens"),

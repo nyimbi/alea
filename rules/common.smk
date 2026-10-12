@@ -36,6 +36,7 @@ ROOT = Path(workflow.basedir)
 # and a Snakemake output path has to be a string at parse time.
 RAW = "data/raw"
 PROCESSED = "data/processed"
+RESULTS = "results"
 
 # The suffix each processed dataset is written with. `topology` writes a Parquet
 # file and a GeoJSON beside it and the Parquet is the tracked one, so the
@@ -52,6 +53,8 @@ SUFFIXES = {
 	"fuel_prices": ".parquet",
 	"outage_history": ".parquet",
 	"outage_truth": ".parquet",
+	"network_arrays": ".json",
+	"tlens": ".json",
 }
 
 # The bus weight table `demand_hourly` disaggregates against: population and GDP
@@ -72,6 +75,15 @@ MANUAL_EXPORTS = {
 	"gridwatch": f"{RAW}/gridwatch/manual/gridwatch.csv",
 	"irena_costs": f"{RAW}/irena_costs/manual/irena_costs.json",
 }
+
+# The solved network the layer-4 stages read. `alea solve` writes
+# `{network_id}-{horizon}.nc` here and `@stage("network_arrays")` converts the
+# newest one. The id is a content hash, so the filename is not knowable at parse
+# time -- hence a directory rather than a path, and `--set network_dir=` rather
+# than a declared input. A rule cannot name the file it will read, so the stage
+# resolves it and records what it resolved; that is the one place a stage's
+# inputs are not a Snakemake dependency.
+NETWORKS = f"{RESULTS}/networks"
 
 # The fetch marker `rules/fetch.smk` writes.
 FETCH_MARKER = ".fetched"
@@ -123,6 +135,13 @@ ABSENT_MESSAGES = {
 		"(`02-data-pipeline.md` §3.1), and there is no fetcher for that share "
 		f"vector, so it is a human artefact. Write it at {WEIGHTS} with columns "
 		"bus_id, population and gdp."
+	),
+	"solved_network": (
+		"No solved network is in results/networks. The layer-4 stages read a "
+		"*solved* network -- `@stage(\"network_arrays\")` converts one into the "
+		"loss kernel's arrays and dispatch series, and `tlens` decomposes those. "
+		"Run `alea solve --out results/networks` first; it needs the processed "
+		"lake, so `snakemake -c1` for the upstream targets is the step before it."
 	),
 }
 

@@ -20,6 +20,7 @@ from alea.config.models import Config
 from alea.io.artefacts import (
 	ArtefactError,
 	artefact_exists,
+	read_provenance,
 	stage_is_current,
 	store_raw,
 	write_artefact,
@@ -201,6 +202,7 @@ def build_stage(
 		)
 
 	context = BuildContext(out=target, inputs=declared, logger=logger, parameters=dict(parameters or {}))
+	recorded_before = _recorded_run_id(target)
 	provenance = _BUILDERS[stage_name](config, target, context)
 	if provenance is None:
 		raise ArtefactError(f"stage {stage_name!r} returned no provenance")
@@ -210,11 +212,64 @@ def build_stage(
 			f"stage {stage_name!r} returned without writing {target}; a stage "
 			f"that reports success without an artefact is a stage that did nothing"
 		)
+	# A builder whose inputs it resolves itself -- the newest solved network, a
+	# file named at runtime -- cannot be declared by the caller and so cannot be
+	# checked above. It calls `skip_if_current` and returns the provenance it
+	# found; the run id is what says so, and it is a value rather than a clock.
+	# `mtime` would call a stage that rewrote identical bytes current, and a
+	# stage that wrote different bytes stale, which is the wrong way round.
 	return BuildResult(
 		stage=stage_name,
 		checksum=_sidecar_checksum(target),
 		path=target,
+		skipped=recorded_before is not None and provenance.run_id == recorded_before,
 	)
+
+
+def _recorded_run_id(target: Path) -> str | None:
+	"""The run id in an artefact's sidecar, or None when there is no sidecar."""
+	sidecar = target.with_suffix(target.suffix + ".provenance.json")
+	if not sidecar.exists():
+		return None
+	import json
+
+	try:
+		return json.loads(sidecar.read_text(encoding="utf-8")).get("run_id")
+	except (OSError, ValueError):  # pragma: no cover - a corrupt sidecar
+		return None
+
+
+def skip_if_current(
+	out: Path,
+	inputs: list[str],
+	*,
+	stage_name: str,
+	logger: Any = None,
+) -> DerivedProvenance | None:
+	"""The existing provenance when ``out`` already records exactly ``inputs``.
+
+	For a stage whose inputs it resolves itself. The CLI cannot declare "the
+	newest solved network in this directory" -- that is a runtime fact, not a
+	path a rule can name -- so ``build_stage``'s own check, which compares a
+	caller's declaration against the sidecar, can never fire for such a stage.
+	The builder calls this first and returns what it gets, and ``build_stage``
+	reports the run as skipped because the run id is the one already recorded.
+
+	Every stage in the workflow was in this position: no rule passed ``--input``,
+	so ``declared`` was empty, the check short-circuited on it, and *every*
+	``alea build`` rebuilt. ``02-data-pipeline.md`` §4.1 asks every stage to
+	"check its output checksum against a recorded manifest and exit without work
+	if unchanged", and that was true of no stage the workflow runs.
+	"""
+	assert out is not None, "out must not be None"
+	if not inputs:
+		return None
+	if not stage_is_current(out, list(inputs)):
+		return None
+	existing = read_provenance(out)
+	if logger is not None:
+		logger.info("build.skip", stage=stage_name, out=str(out), resolved_inputs=len(inputs))
+	return existing
 
 
 def _sidecar_checksum(target: Path) -> str:
@@ -241,6 +296,7 @@ _REGISTRATION_MODULES = (
 	"alea.io.stages",
 	"alea.losses.service",
 	"alea.outages.service",
+	"alea.planning.arrays",
 	"alea.quality.service",
 	"alea.resilience.service",
 	"alea.sector.service",
@@ -286,6 +342,7 @@ __all__ = [
 	"build_stage",
 	"fetch_source",
 	"registered_stages",
+	"skip_if_current",
 	"stage",
 	"write_stage",
 ]
