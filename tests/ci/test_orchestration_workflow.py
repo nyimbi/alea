@@ -346,10 +346,12 @@ def test_the_default_config_is_one_the_cli_can_load(config_name: str):
 # registry.
 STAGES_WITHOUT_RULES: dict[str, str] = {
 	"outage_validation": (
-		"reads the detector's zone series and the GridWatch truth. Both exist as "
-		"artefacts (`outage_history`, `outage_truth`) but the validation writes a "
-		"JSON skip-or-metrics document that no rule declares; wiring it needs a "
-		"rule and a tracked output, not just an invocation."
+		"reads the detector's zone series and the GridWatch truth and writes a "
+		"JSON skip-or-metrics document to a caller-chosen path, so no rule "
+		"declares it and no tracked output carries it. It is not a rule away: "
+		"`validate_detector` returns one aggregate `DetectionMetrics`, the "
+		"serving table is per zone, and the truth artefact is per sensor with no "
+		"zone column. The served granularity is a product decision first."
 	),
 	"quality_validation": (
 		"reports validation coverage, which is a claim about the tree rather than "

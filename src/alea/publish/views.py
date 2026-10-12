@@ -398,8 +398,16 @@ UNWIRED: Final[MappingProxyType[str, str]] = MappingProxyType(
 		"data/processed/outages/validation.parquet": (
 			"`@stage(\"outage_validation\")` reads the detector's zone series and "
 			"the GridWatch truth and writes a JSON skip-or-metrics document, not "
-			"this table, and it has no rule. Projecting it needs that stage's "
-			"output reshaped and the stage invoked."
+			"this table, and it has no rule. The reshape is not the hard part: this "
+			"table is per **zone** (`grid_zone` is a declared column and the API "
+			"documents a row as 'accuracy for one grid zone'), the layer's "
+			"`validate_detector` returns one aggregate `DetectionMetrics`, and the "
+			"GridWatch truth is a per-sensor event table with no zone column. So a "
+			"zone row needs a sensor-to-zone join the truth artefact does not "
+			"carry, and the layer stage scores `zone_` columns[0] against the "
+			"truth's last column -- one zone against a sensor series. `07-layer4 "
+			"§2.5` asks for one Ghana AUC rather than per-zone rows, so the served "
+			"granularity is a product decision before it is a projection."
 		),
 		"data/processed/maintenance/predictions.parquet": (
 			"Needs a DGA/work-order frame `maintenance_to_artefact` fits. That data "

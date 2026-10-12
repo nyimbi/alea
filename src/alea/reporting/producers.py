@@ -159,9 +159,12 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 		),
 		# ---- monthly ----
 		"market_report": (
-			"A required monthly section with no producer. `market/months/"
-			"{date}.parquet` is declared and written by nothing, so the monthly "
-			"report cannot be generated from the pipeline either."
+			"A required monthly section with no producer. `market/monthly/"
+			"{date}.parquet` is declared by `reporting/monthly.py` and written by "
+			"nothing, so the monthly report cannot be generated from the pipeline "
+			"either. The columns are clearing arithmetic -- volume and average "
+			"price by carrier -- so the producer is a rule over a cleared "
+			"scenario, not a new model."
 		),
 		"capacity_update": (
 			"`planning/capacity/{date}.parquet`. `planning.capacity_mix_table` "
