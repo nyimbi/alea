@@ -13,8 +13,10 @@ the import list cannot silently empty it again.
 
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -99,3 +101,46 @@ def test_get_fetcher_refuses_a_manual_source_by_name():
 def test_get_fetcher_refuses_an_unknown_source():
 	with pytest.raises(KeyError, match="unknown source"):
 		get_fetcher("no_such_source")
+
+
+# The literal source ids the stage module resolves through `_require_raw`.
+# Parsed from the source rather than imported, because the point is to catch a
+# call site that names a source the register does not hold -- and importing the
+# module would only tell us it parses.
+_REQUIRE_RAW_PATTERN = re.compile(r"_require_raw\([^)]*?[\"']([a-z0-9_]+)[\"']", re.DOTALL)
+
+
+def test_every_source_a_stage_resolves_is_registered():
+	"""A stage naming a source the register does not hold is a dead branch.
+
+	`build_demand_hourly` carried a `worldpop` fallback: when no bus weight table
+	was passed it called `_require_raw(config, context, "worldpop")`, and
+	``worldpop`` is in no register, so the call raised ``unknown source`` before
+	reading anything. The branch read as a configured alternative -- WorldPop,
+	which `02-data-pipeline.md` §3.1 names -- while being an error path whose
+	message named a register entry that does not exist. Nothing caught it,
+	because no test reached the branch and the branch itself is syntactically
+	fine.
+
+	This is the class gate for that: every literal source id a stage resolves
+	must be in the register. It cannot tell a reachable call site from an
+	unreachable one -- a stage may legitimately guard a source behind a
+	parameter -- but it does catch the case where the *name* is wrong, which is
+	the one that produces a misleading refusal instead of a missing file.
+	"""
+	from alea.io.sources import sources
+
+	known = set(sources())
+	stage_module = Path(__file__).resolve().parents[2] / "src" / "alea" / "io" / "stages.py"
+	named = set(_REQUIRE_RAW_PATTERN.findall(stage_module.read_text(encoding="utf-8")))
+	assert named, (
+		"no `_require_raw` call sites were found in stages.py; the pattern no "
+		"longer matches how the module resolves a source, so this gate is blind"
+	)
+	unregistered = sorted(named - known)
+	assert not unregistered, (
+		f"these source ids are resolved by a stage and are not in the register: "
+		f"{unregistered}. `_require_raw` raises `unknown source` for each, so the "
+		f"branch cannot succeed -- and its message names a register entry that "
+		f"does not exist rather than the file that is missing."
+	)

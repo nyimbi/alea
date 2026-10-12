@@ -34,7 +34,7 @@ import xarray as xr
 
 from alea.config.loader import load_config
 from alea.config.models import Config
-from alea.io.artefacts import write_artefact
+from alea.io.artefacts import ArtefactError, write_artefact
 from alea.planning.inputs import (
 	COSTS_ARTEFACT,
 	DEMAND_ARTEFACT,
@@ -618,3 +618,61 @@ def test_the_built_network_solves_a_dispatch(tmp_path: Path):
 
 if __name__ == "__main__":  # pragma: no cover
 	raise SystemExit(pytest.main([__file__, "-q"]))
+
+
+# --------------------------------------------------------------------------
+# The stage that disaggregates: what it refuses, and what it refuses to name
+# --------------------------------------------------------------------------
+
+
+def _write_national(tmp_path: Path, *, twh: float = 12.0, year: int = 2030) -> None:
+	"""A `demand_national` artefact, at the path the stage reads by convention."""
+	write_artefact(
+		tmp_path / "demand_national.parquet",
+		pd.DataFrame(
+			{"country_iso": ["KE"], "year": [year], "demand_twh": [twh]}
+		),
+		_provenance("demand_national"),
+		format="parquet",
+	)
+
+
+def test_demand_hourly_refuses_without_a_weight_table(tmp_path: Path):
+	"""The refusal that replaced a fallback naming a source that does not exist.
+
+	`build_demand_hourly` used to fall back to
+	``_require_raw(config, context, "worldpop")`` when no weight table was
+	passed. ``worldpop`` is in no register, so the call raised ``unknown
+	source: worldpop; registered: ...`` -- a message about the source register
+	for an operator whose actual problem is that they did not pass a table. The
+	fallback read as a configured alternative and was an error path.
+
+	The assertion is on the *message*, not just on the exception type: the
+	operator's next move is to pass ``--set bus_weights=``, and a refusal that
+	names the register instead sends them to the wrong file.
+	"""
+	from alea.io.pipeline import BuildContext
+	from alea.io.stages import build_demand_hourly
+
+	_write_national(tmp_path)
+	out = tmp_path / "demand_hourly.parquet"
+	context = BuildContext(out=out, inputs=["<fixture>"], parameters={})
+	with pytest.raises(ArtefactError, match="no bus weight table"):
+		build_demand_hourly(_config(tmp_path), out, context)
+
+
+def test_demand_hourly_names_the_source_register_only_when_it_is_the_problem():
+	"""The canary for the gate above: the old call raised a *different* error.
+
+	Pinned so the distinction is on the record rather than in a commit message.
+	`_require_raw` with an unregistered id raises ``KeyError``, not
+	``ArtefactError`` -- so a test asserting only "it raises" would have passed
+	against the broken branch. The gate asserts the message, which is the part
+	that tells the operator what to do.
+	"""
+	from alea.io.pipeline import BuildContext
+	from alea.io.stages import _require_raw
+
+	context = BuildContext(out=Path("/tmp/x"), inputs=[], parameters={})
+	with pytest.raises(KeyError, match="unknown source"):
+		_require_raw(_config(Path("/tmp")), context, "worldpop")

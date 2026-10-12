@@ -234,6 +234,18 @@ weight(bus) = α · pop_share(bus) + (1 − α) · gdp_share(bus)
 artefact provenance**. A disaggregation whose α is unrecorded produces a map
 nobody can defend.
 
+**What is implemented, and the step this section leaves out.** `demand_hourly`
+consumes `pop_share(bus)` and `gdp_share(bus)` directly, as a table at
+`resources/weights/bus_weights.parquet`. It does **not** read a WorldPop raster,
+and it cannot: `worldpop` is in no register, has no fetcher, and the reduction
+from a raster to a per-bus share is unspecified here. That reduction is not a
+detail — it is a function of the bus geometry this run built, so it cannot be a
+fixed source artefact the way the topology or the fleet are. Until a step names
+it, the weight table is a human artefact and the stage refuses without one.
+(It previously carried a `worldpop` fallback that called `_require_raw` with an
+unregistered id, so the branch raised `unknown source` rather than reading
+anything; `tests/ci/test_io_registry.py` now gates that class.)
+
 For the seven CRITICAL-tier countries, the national total is itself a proxy —
 estimated from regional averages scaled by population. Those artefacts carry
 `uncertainty_basis="proxy"` and `uncertainty > 0`, and no report may present them

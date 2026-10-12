@@ -758,10 +758,16 @@ def _annual_demand(raw: pd.DataFrame, config: Config) -> pd.DataFrame:
 def build_demand_hourly(config: Config, out: Path, context: BuildContext) -> DerivedProvenance:
 	"""``demand_hourly`` -- national demand disaggregated to buses.
 
-	Needs ``demand_national`` and a bus weight vector (WorldPop population and
-	GDP shares, §3.1). Both are required: a disaggregation with no weights is a
+	Needs ``demand_national`` and a bus weight vector (population and GDP shares
+	per bus, §3.1). Both are required: a disaggregation with no weights is a
 	national total copied to every bus, which is a defensible-looking map that is
 	wrong by the whole spatial structure of the country.
+
+	The weights are a *human* artefact, not a registered source. §3.1 describes
+	them as WorldPop-derived, and the share of a country's population that falls
+	at each modelled bus is a quantity no fetcher produces -- it depends on the
+	bus geometry this run built. The stage therefore takes the table and refuses
+	without it, rather than naming a source the register does not hold.
 	"""
 	national_path = context.parameters.get("demand_national")
 	if not national_path:
@@ -777,10 +783,21 @@ def build_demand_hourly(config: Config, out: Path, context: BuildContext) -> Der
 		)
 	national, _ = _read_artefact_frame(national_path)
 	weights_path = context.parameters.get("bus_weights")
-	if weights_path:
-		population, product = _weights_from(Path(str(weights_path)))
-	else:
-		population, product = _weights_from(_require_raw(config, context, "worldpop"))
+	if not weights_path:
+		# There was a `worldpop` fallback here, and it could not run: `worldpop`
+		# is in no register, so `_require_raw` raised `unknown source` before it
+		# read anything. The branch was dead in the sense that mattered -- no
+		# caller reached it with a working source -- and a fallback that cannot
+		# succeed reads as a configured alternative while being an error path
+		# with a misleading message. The weight table is a human artefact
+		# (`rules/common.smk` says why), and the message says so.
+		raise ArtefactError(
+			"demand_hourly: no bus weight table. Disaggregating a national total "
+			"against no weights copies it to every bus, which is a defensible-"
+			"looking map wrong by the whole spatial structure of the country. "
+			"Pass --set bus_weights=<path> with columns bus_id, population and gdp"
+		)
+	population, product = _weights_from(Path(str(weights_path)))
 
 	alpha = float(context.parameters.get("alpha", DEFAULT_ALPHA))
 	if not 0.0 <= alpha <= 1.0:
@@ -792,9 +809,11 @@ def build_demand_hourly(config: Config, out: Path, context: BuildContext) -> Der
 		config, national, series, population, product, alpha=alpha, year=year
 	)
 
-	inputs = [*context.inputs, _checksum_of(national_path)]
-	if weights_path:
-		inputs.append(_checksum_of(Path(str(weights_path))))
+	inputs = [
+		*context.inputs,
+		_checksum_of(national_path),
+		_checksum_of(Path(str(weights_path))),
+	]
 	provenance = _provenance(
 		config,
 		context,
@@ -805,7 +824,7 @@ def build_demand_hourly(config: Config, out: Path, context: BuildContext) -> Der
 			"year": year,
 			"n_buses": int(len(population)),
 			"hours": int(len(frame)),
-			"weight_source": str(weights_path) if weights_path else "worldpop",
+			"weight_source": str(weights_path),
 			"weight_formula": "weight(bus) = (1 - alpha) * pop_share(bus) + alpha * gdp_share(bus)",
 			"disaggregation": "demand(bus, t) = national_demand(t) x weight(bus)",
 		},
