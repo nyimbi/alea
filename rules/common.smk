@@ -56,6 +56,7 @@ SUFFIXES = {
 	"network_arrays": ".json",
 	"tlens": ".json",
 	"critical_lines": ".parquet",
+	"sector_coupling": ".json",
 }
 
 # The bus weight table `demand_hourly` disaggregates against: population and GDP

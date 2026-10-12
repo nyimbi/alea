@@ -54,6 +54,7 @@ STAGES = (
 	"outage_truth",
 	"renewable_profiles",
 	"resilience_contingency",
+	"sector_coupling",
 	"tlens",
 	"topology",
 )
@@ -82,6 +83,7 @@ SUFFIXES = {
 	"network_arrays": ".json",
 	"tlens": ".json",
 	"critical_lines": ".parquet",
+	"sector_coupling": ".json",
 }
 
 
@@ -362,11 +364,6 @@ STAGES_WITHOUT_RULES: dict[str, str] = {
 		"reads `interruptions.parquet` and `zone_population.parquet`, neither of "
 		"which anything writes. A rule for it would fail on its first input, and "
 		"the missing producers are a Layer 4 task."
-	),
-	"sector_coupling": (
-		"reads a solved network from `paths.results`, which is produced by "
-		"`alea solve` rather than by a stage. Its input is a solved scenario, so "
-		"the rule depends on a solve the workflow does not yet sequence."
 	),
 }
 

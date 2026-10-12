@@ -29,7 +29,8 @@ import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
 
 from alea.config.models import Config
-from alea.io.artefacts import DerivedProvenance, write_artefact
+from alea.config.paths import resolve
+from alea.io.artefacts import ArtefactError, DerivedProvenance, write_artefact
 from alea.io.pipeline import stage
 from alea.logging import get_logger, new_run_id
 from alea.provenance.models import Basis, Licence, Provenance
@@ -467,23 +468,67 @@ def build_sector_coupling(
 ) -> DerivedProvenance:
 	"""The registered stage builder for the coupling artefact.
 
-	Reads the solved electricity network named in the context's parameters, adds
-	the sectors, writes the artefact. It does not solve: the network it reads is
-	already solved, and the coupled network is written beside the artefact for
-	Layer 1 to solve under its own gates.
+	Reads a solved electricity network, adds the sectors, writes the artefact. It
+	does not solve: the network it reads is already solved, and the coupled
+	network is written beside the artefact for Layer 1 to solve under its own
+	gates.
+
+	**The network is resolved the way `@stage("network_arrays")` resolves it**,
+	from ``parameters["network_dir"]`` newest-first, or from an explicit
+	``parameters["network_path"]``. It used to read
+	``getattr(context, "network_path", None) or config.paths.results``, and both
+	arms were wrong: a `BuildContext` carries ``parameters``, not a
+	``network_path`` attribute, so the first arm was always ``None``; and
+	``config.paths.results`` is the results *directory*, not a network file, so
+	``pypsa.Network(<directory>)`` would raise on the fallback. The stage was
+	registered and unrunnable, which is why the register recorded it as "its
+	input is a solved scenario, so the rule depends on a solve the workflow does
+	not yet sequence" -- but the workflow *does* sequence one: `rules/losses.smk`
+	declares ``provided("solved_network", NETWORKS)`` for the same input, and
+	``--set network_dir=`` is how a rule points a stage at it. This now reads the
+	same parameter, so the rule is an ordinary one.
+
+	The resolved digest is recorded as an input, as in `network_arrays`: the
+	network is the artefact this stage actually read, and "the newest solved
+	network in this directory" is a runtime fact a rule cannot write down.
 	"""
 	import pypsa
 
-	network_path = getattr(context, "network_path", None) or config.paths.results
-	base = pypsa.Network(network_path)
-	weights = getattr(context, "weights", None)
-	options = getattr(context, "sector_options", {}) or {}
+	from alea.io.artefacts import sha256_file
+	from alea.planning.arrays import NETWORK_DIR, _newest_network
+
+	network_dir = resolve(context.parameters.get("network_dir", NETWORK_DIR))
+	named = context.parameters.get("network_path")
+	path = Path(named) if named else _newest_network(network_dir)
+	if not path.exists():
+		raise ArtefactError(f"no solved network at {path}")
+
+	base = pypsa.Network(str(path))
+	weights = context.parameters.get("weights")
+	options = context.parameters.get("sector_options") or {}
+	digest = sha256_file(path)
+	inputs = [digest, *(value for value in context.inputs if value != digest)]
 	result = couple_network(config, base, weights=weights, **options)
-	provenance = sector_provenance(config, result, inputs=list(context.inputs))
+	if not result.report.rows:
+		# Every sector is off, so the coupling is a no-op on a copy of the base
+		# network. `write_coupling_artefact` refuses this too, but its assertion
+		# says only that an assetless artefact is not a result -- it does not say
+		# *why* there are no assets or what turns them on. The shipped config has
+		# `sector.enabled: false` and every sector flag false, so this is the
+		# default path, not an edge case: a caller who wired the rule and ran it
+		# would otherwise read a bare assertion.
+		raise ArtefactError(
+			"the coupling produced no assets: every sector is disabled. Set "
+			"`sector.enabled` and at least one sector flag (hydrogen, heat pumps, "
+			"EV/V2G, or an industry vector) in the config. A coupling artefact "
+			"with no assets would assert a coupled result for an electricity-only "
+			"network."
+		)
+	provenance = sector_provenance(config, result, inputs=inputs)
 	write_coupling_artefact(out, result, provenance)
 	coupled_path = Path(out).with_suffix(".coupled.nc")
 	result.network.export_to_netcdf(coupled_path)
-	logger.info("sector.coupled_network", path=str(coupled_path))
+	logger.info("sector.coupled_network", path=str(coupled_path), network=path.name)
 	return provenance
 
 

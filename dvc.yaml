@@ -197,6 +197,22 @@ stages:
       - data/processed/network_arrays.json
       - data/processed/dispatch.parquet
 
+  sector_coupling:
+    desc: "A solved network extended with the sectors the config enables."
+    cmd: >-
+      uv run --directory . alea build sector_coupling
+      --out data/processed/sector_coupling.json
+      --config config/config.kenya.yaml
+      --set network_dir=results/networks
+    deps:
+      # A directory, for the same reason `network_arrays` declares one: the
+      # solved network's filename is a content hash and is not knowable at parse
+      # time, so the stage resolves the newest and records what it resolved.
+      - results/networks
+    outs:
+      - data/processed/sector_coupling.json
+      - data/processed/sector_coupling.coupled.nc
+
   tlens:
     desc: "Branch ranking by the energy an outage would leave unserved."
     cmd: >-

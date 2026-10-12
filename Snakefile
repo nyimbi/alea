@@ -43,6 +43,7 @@ include: "rules/costs.smk"
 include: "rules/market.smk"
 include: "rules/outages.smk"
 include: "rules/losses.smk"
+include: "rules/sector.smk"
 include: "rules/publish.smk"
 
 # The default target. Snakemake takes the first rule when no target is named,
@@ -70,6 +71,11 @@ rule all:
 		processed("network_arrays"),
 		processed("tlens"),
 		processed("critical_lines"),
+		# `sector_coupling` is deliberately absent, like the fetch rules above.
+		# It refuses when every sector is disabled -- the shipped config's state
+		# (`sector.enabled: false`) -- so an unconditional entry here would make
+		# `snakemake all` fail on a default clone. Run it by name once a config
+		# enables a sector: `snakemake -c1 sector_coupling`.
 		processed("resilience/contingency", ".parquet"),
 		processed("market/prices", ".parquet"),
 		processed("market/capture_rates", ".parquet"),
