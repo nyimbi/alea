@@ -343,18 +343,22 @@ producer wearing an exemption -- the failure this register exists to catch.
 
 PROJECTION_STAGES: Final[MappingProxyType[str, str]] = MappingProxyType(
 	{
+		"market_capture_rates": "market_capture_rates",
 		"market_prices": "market_prices",
 		"resilience_contingency": "resilience_contingency",
 	}
 )
 """Tables a projection **stage** writes, keyed by table name to stage name.
 
-Two entries, and the register is what makes "wired" a claim someone makes
+Three entries, and the register is what makes "wired" a claim someone makes
 rather than an inference the gate draws. `resilience_contingency` was the
 first; `market_prices` joined it when the register's stated blocker turned out
 to be overstated -- the country comes from the run's own scenario
 (`_single_country`), which is where the wired table already read it, so the
-"missing bus-to-country mapping" was a config value rather than a dataset.
+"missing bus-to-country mapping" was a config value rather than a dataset;
+`market_capture_rates` joined it third, the arithmetic the implementation plan
+names as Layer 3's first build, and it serves one curve point because one solve
+has one VRE penetration -- the multi-point curve is the what-if sweep's output.
 
 The gate cannot decide a table is produced from a *name match* against the stage
 registry. `outage_history` is both a serving table (`data/processed/outages/
@@ -372,15 +376,12 @@ the first projection stage adds the entry here in the same change.
 
 UNWIRED: Final[MappingProxyType[str, str]] = MappingProxyType(
 	{
-		"data/processed/market/capture_rates.parquet": (
-			"Needs `market.capture.cannibalisation_curve` over a price series. No "
-			"stage invokes the market layer at all -- `rules/market.smk` is empty "
-			"by design (`06-layer3-market.md`: Layer 3 runs off the planning "
-			"layer's artefacts) and nothing has wired that step yet."
-		),
 		"data/processed/market/ppa_benchmarks.parquet": (
-			"Needs `market.ppa.ppa_curve`. Same missing invocation as the capture "
-			"curve: the market layer is a library with no stage and no rule."
+			"Needs `market.ppa.ppa_curve`, which takes a capture price per year -- "
+			"a series the pipeline does not yet produce. `market_capture_rates` is "
+			"wired and gives one capture price for the solve's horizon, so a PPA "
+			"curve over a single year is a one-tenor curve, not the tenor axis the "
+			"table serves. The producer is a multi-horizon solve, not an invocation."
 		),
 		"data/processed/outages/forecast.parquet": (
 			"Needs the weather feature frame `forecast_to_artefact` trains on. No "

@@ -6,14 +6,16 @@ Each projection is a pure function from a layer result to a DataFrame, plus
 with provenance. The split is deliberate: the pure half is what a test exercises
 without a pipeline, and ``project`` is what a stage calls.
 
-**No projection has a stage yet.** `UNWIRED` in `alea.publish.views` names every
-table that is declared and unproduced, with the reason. A stage would read the
-layer's artefact at a conventional path and call the projection; what is missing
-is that conventional path. `tlens`, `resilience` and `outage_validation` read
-six inputs under `paths.processed` that nothing writes and no rule invokes, so a
-projection stage for the loss or resilience tables would have nothing to read.
-Writing the stage against an input no producer creates would move the gap, not
-close it -- and it would read as closed, which is worse.
+**Which projections have a stage, and which do not.** `UNWIRED` in
+`alea.publish.views` names every table that is declared and unproduced, with the
+reason, and `PROJECTION_STAGES` names the ones a stage writes. A stage reads the
+layer's artefact at a conventional path and calls the projection here; what is
+missing for the rest is that conventional path. `tlens`, `resilience` and
+`outage_validation` read six inputs under `paths.processed` that nothing writes
+and no rule invokes, so a projection stage for the loss or resilience tables
+would have nothing to read. Writing the stage against an input no producer
+creates would move the gap, not close it -- and it would read as closed, which
+is worse.
 
 **Uncertainty travels with the table, and it must be stated.** The repository
 refuses to serve a modelled, forecast or proxy number whose uncertainty is zero

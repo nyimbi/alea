@@ -64,3 +64,31 @@ rule market_prices:
 				*params.flags,
 			)
 		)
+
+
+rule market_capture_rates:
+	"""The solved network's capture prices, at the path the API reads.
+
+	Same input and same self-resolved network as ``market_prices``: a capture
+	price is the price a carrier realised, so it is the same solve read for a
+	different quantity, and the two stages share `solve_dispatch` on the same
+	network rather than one feeding the other. The stage re-solves dispatch on
+	the network the expansion chose, which is what makes the prices marginal
+	prices and the capture a per-hour weighted average of them.
+	"""
+	input:
+		provided("solved_network", NETWORKS)
+	output:
+		processed("market/capture_rates", ".parquet")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"build", "market_capture_rates",
+				"--out", output[0],
+				"--config", CONFIG,
+				"--set", set_arg("network_dir", NETWORKS),
+				*params.flags,
+			)
+		)

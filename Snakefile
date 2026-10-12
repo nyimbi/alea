@@ -71,3 +71,5 @@ rule all:
 		processed("tlens"),
 		processed("critical_lines"),
 		processed("resilience/contingency", ".parquet"),
+		processed("market/prices", ".parquet"),
+		processed("market/capture_rates", ".parquet"),

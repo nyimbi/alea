@@ -47,6 +47,7 @@ STAGES = (
 	"fleet",
 	"fuel_prices",
 	"hydro_profiles",
+	"market_capture_rates",
 	"market_prices",
 	"network_arrays",
 	"outage_history",

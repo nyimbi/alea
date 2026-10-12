@@ -247,3 +247,15 @@ stages:
       - results/networks
     outs:
       - data/processed/market/prices.parquet
+
+  market_capture_rates:
+    desc: "The solved network's capture prices for the API's capture-rate route."
+    cmd: >-
+      uv run --directory . alea build market_capture_rates
+      --out data/processed/market/capture_rates.parquet
+      --config config/config.kenya.yaml
+      --set network_dir=results/networks
+    deps:
+      - results/networks
+    outs:
+      - data/processed/market/capture_rates.parquet
