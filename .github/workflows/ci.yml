@@ -56,6 +56,10 @@ jobs:
           enable-cache: true
 
       - name: Install the project
+        # `--all-extras` pulls `dev`, which is where maturin lives. It was a
+        # build-system requirement only, so `uv run maturin develop` below found
+        # no maturin and this workflow failed at the build step on every run --
+        # "Failed to spawn: maturin" -- leaving every check after it unrun.
         run: uv sync --all-extras
 
       - name: Build the Rust extension
