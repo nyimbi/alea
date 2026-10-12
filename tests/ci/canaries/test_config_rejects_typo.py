@@ -54,16 +54,28 @@ def test_forbidding_extra_keys_is_the_gate():
 	"""
 	import importlib
 
+	import alea.config.base as base_module
 	import alea.config.models as models_module
 
-	models = REPO / "src" / "alea" / "config" / "models.py"
+	# The mutation is on the **base**, not on `models`. `AleaConfig` moved to
+	# `alea.config.base` so the root model could compose the layer models without
+	# closing an import cycle, and every config model inherits the setting from
+	# there -- so a canary that patched `models.py` would find no `extra=` to
+	# plant, or worse, plant one on a class nobody validates against and report a
+	# gate that is blind when the gate is fine. The target is the file that
+	# defines the behaviour, not the file that happens to hold the subclass.
+	base = REPO / "src" / "alea" / "config" / "base.py"
 	typo = {**BASE, "planning_horizonss": [2030]}
 
 	# The gate, as shipped: the typo is refused.
 	with pytest.raises(ValidationError, match="extra_forbidden"):
 		models_module.ScenarioConfig(**typo)
 
-	with planted(models, 'extra="forbid"', 'extra="ignore"'):
+	with planted(base, 'extra="forbid"', 'extra="ignore"'):
+		# Both modules reload: `models` imported `AleaConfig` by name, so
+		# reloading the base alone leaves `ScenarioConfig` bound to the old class
+		# with the old config.
+		importlib.reload(base_module)
 		importlib.reload(models_module)
 		# With `extra="ignore"` the same construction succeeds: the gate is
 		# blind. This is the observation the canary exists to make.
@@ -78,6 +90,7 @@ def test_forbidding_extra_keys_is_the_gate():
 	# Reloaded *after* `planted` has restored the file. A reload inside the
 	# context manager would re-read the mutated source and leave the module
 	# holding `ignore` for every test that follows.
+	importlib.reload(base_module)
 	importlib.reload(models_module)
 	with pytest.raises(ValidationError, match="extra_forbidden"):
 		models_module.ScenarioConfig(**typo)

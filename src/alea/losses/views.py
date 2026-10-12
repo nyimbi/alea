@@ -22,7 +22,7 @@ from typing import Any
 
 from pydantic import Field, model_validator
 
-from alea.config.models import AleaConfig
+from alea.config.base import AleaConfig
 
 DECOMPOSITION_TOLERANCE = 1e-9
 """Relative tolerance the parts must sum to the total within. The Rust kernel

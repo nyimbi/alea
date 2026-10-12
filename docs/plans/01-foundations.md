@@ -157,6 +157,21 @@ neglecting losses overestimates optimal expansion by ~20%, and losses consume
 15–25% of generated energy in many African systems. A default of `False` would
 mean every published capacity mix was wrong by default.
 
+**Every layer that owns parameters owns a section, and the root `Config`
+declares it.** The list above is the config models the layers need, and the root
+composes all of them — `scenario`, `solve`, `sector`, `costs`, `scanning`,
+`reporting`, `api`, `paths`, `logging`, `renewables`, and `predictive`
+(`07-layer4-predictive.md`). A layer whose parameters are declared on its own
+model but absent from the root is a layer whose parameters cannot be set:
+`extra="forbid"` turns the section in YAML into a load error, and a service that
+reads it with `getattr(config, "<section>", None)` falls back to the class
+defaults without saying so. That is not a missing feature, it is a config that
+reads like one — the values are documented, validated, and recorded in
+provenance, and none of them can be moved. The check is per-section and it is
+mechanical: for each parameter a plan calls "config", confirm the root model
+carries its section, then confirm the *service resolves the configured value*
+rather than only that the field exists.
+
 ### 1.7 Gate
 
 ```sh

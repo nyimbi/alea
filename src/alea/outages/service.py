@@ -11,10 +11,13 @@ will be quoted out of context.
 Nothing here holds a live object across a stage boundary (AD-4). A stage reads
 versioned files and writes one.
 
-The predictive parameters come from :class:`PredictiveConfig`. Where the root
-:class:`Config` carries a ``predictive`` section it is used; otherwise the
-pinned defaults apply and are recorded either way. Adding that section to
-``alea.config.models`` is a one-line change outside this package.
+The predictive parameters come from ``Config.predictive``, a
+:class:`PredictiveConfig`. The section exists on the root model, so a
+``predictive:`` block in YAML, in a scenario overlay, or in a ``--set`` override
+reaches the detection path and is recorded in provenance. It did not always: the
+root model had no such field and ``extra="forbid"`` turned the block into a load
+error, so every parameter below was pinned to its class default while 07-layer4
+§2.1 claimed they were all config.
 """
 
 from __future__ import annotations
@@ -49,12 +52,25 @@ logger = get_logger(__name__)
 
 
 def predictive_config(config: Config | None = None) -> PredictiveConfig:
-	"""Layer 4a parameters from the root config, or the pinned defaults."""
-	if config is not None:
-		section = getattr(config, "predictive", None)
-		if isinstance(section, PredictiveConfig):
-			return section
-	return PredictiveConfig()
+	"""Layer 4a parameters from the root config, or the pinned defaults.
+
+	``config`` is optional so a caller with no loaded configuration -- a unit
+	test, a notebook -- gets the pinned defaults rather than an error. What it
+	must not do is *pretend* to read a section that is not there: the
+	``isinstance`` guard used to fall through silently for every ``Config`` ever
+	loaded, so a detection run recorded the defaults and the caller had no way to
+	tell that its override had been dropped. ``Config.predictive`` is now a
+	declared field, and a non-``PredictiveConfig`` in its place is a validation
+	error at load rather than a silent default at use.
+	"""
+	if config is None:
+		return PredictiveConfig()
+	section = config.predictive
+	assert isinstance(section, PredictiveConfig), (
+		f"Config.predictive is {type(section).__name__}, not a PredictiveConfig; "
+		f"the section's parameters would be silently discarded"
+	)
+	return section
 
 
 def _code_version() -> str:

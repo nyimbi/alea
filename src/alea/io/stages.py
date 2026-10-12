@@ -1774,6 +1774,18 @@ def _zones(config: Config, context: BuildContext, tiles: list[Any]) -> tuple[Any
 	context when a caller has a zone raster, and otherwise from a fixed
 	partition of the tile grid, which is enough to produce a series whose
 	semantics are stated rather than assumed.
+
+	**The fallback is a partition of the tile, not a degree grid**, and the
+	difference matters. The specification's `aggregate_to_zones(anomaly,
+	resolution="0.01_degree")` (spec4-base §12.2) and the config field that used
+	to carry that number both express the zone as a *geographic* cell, which a
+	granule can only be divided into against a geolocation: a 0.01 deg cell is a
+	position, and a tile offset is not. No plan specifies how a VNP46A2 granule
+	is georeferenced, so dividing by degrees here would be inventing the mapping
+	the specification left out. A caller with a real zone raster passes
+	``zone_ids`` and gets exactly the semantics the spec intends; the fallback is
+	labelled for what it is -- an equal partition of the tile -- so that a
+	published zone series states which one produced it.
 	"""
 	declared = context.parameters.get("zone_ids")
 	if declared is not None:

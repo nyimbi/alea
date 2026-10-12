@@ -7,10 +7,12 @@ buried in a function. The three VIIRS parameters in particular are recorded in
 provenance: an outage-detection AUC without its VZA bin size, quantile and
 threshold is not reproducible, and 07-layer4 §2.5 says so explicitly.
 
-The root ``Config`` in ``alea.config.models`` does not yet carry a
-``predictive`` section; wiring it in is a one-line addition outside this
-package. Until then a caller constructs ``PredictiveConfig`` directly, which
-keeps this module independently testable.
+``PredictiveConfig`` is the root ``Config``'s ``predictive`` section, so a
+parameter set in YAML reaches the detection path. This module imports only
+``AleaConfig`` from the config package -- not ``alea.config.models`` -- because
+the root model imports *this* module for the section's type, and importing the
+parent back would close a cycle that resolves only when the import order happens
+to define the name first.
 """
 
 from __future__ import annotations
@@ -19,7 +21,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import AfterValidator, Field, model_validator
 
-from alea.config.models import AleaConfig
+from alea.config.base import AleaConfig
 from alea.provenance.models import Basis
 
 

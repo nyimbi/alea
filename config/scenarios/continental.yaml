@@ -65,9 +65,6 @@ scenario:
   clusters: [60, 128, 256, 512]
   planning_horizons: [2030, 2040, 2050, 2060]
   base_year: 2025
-  # Coarser than the country runs: 0.01 deg over the continent is ~200 million
-  # cells, and the continental tier trades resolution for the ability to finish.
-  spatial_resolution_deg: 0.05
 
 solve:
   solver: highs

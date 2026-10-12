@@ -95,3 +95,9 @@ models/
 #   wheel that ships, `rust-toolchain.toml` and `uv.lock` already pin the other
 #   two halves of the toolchain, and a lockfile is the only thing that keeps two
 #   builds of one commit from resolving different crate versions.
+
+# The workspace search index. A local tool's cache of the tree it indexed --
+# 33 MB of vectors, rebuilt from source on demand, and stale the moment a file
+# changes. Committing it would put a binary blob in every clone and in every
+# diff that touches it, for no reader's benefit.
+.zvec-grep/

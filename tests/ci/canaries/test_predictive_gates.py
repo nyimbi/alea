@@ -218,6 +218,79 @@ def test_the_gate_refuses_a_latitude_dependent_default():
 
 
 # --------------------------------------------------------------------------
+# §2.1 the detection parameters are reachable -- pin them; must fail
+# --------------------------------------------------------------------------
+
+CONFIG_MODELS_PY = REPO / "src" / "alea" / "config" / "models.py"
+
+#: The root model's `predictive` field, and the absence of it. The defect is an
+#: *absent field*, so the canary removes the line rather than changing a value:
+#: a `predictive` section that the root model does not declare is rejected by
+#: `extra="forbid"`, and `predictive_config` then falls back to the class
+#: defaults -- which is precisely the shipped state this gate exists for.
+PREDICTIVE_FIELD = '\tpredictive: PredictiveConfig = Field(default_factory=PredictiveConfig)\n'
+
+GATE = "test_the_detection_parameters_are_reachable_from_the_root_config"
+
+
+def _gate_exit_code() -> int:
+	"""Run the real gate in a fresh interpreter and return its exit code.
+
+	The gate itself, not a probe that reimplements it. A canary that asserts its
+	own reading of the config proves the *mechanism* is load-bearing and says
+	nothing about whether the gate would notice -- and the gate is the artefact
+	the register counts. A pytest subprocess is slower than an inline probe and
+	is the only form that answers the question the canary asks.
+	"""
+	completed = subprocess.run(
+		[
+			sys.executable,
+			"-m",
+			"pytest",
+			"tests/ci/test_predictive_layer4.py",
+			"-q",
+			"-x",
+			"-k",
+			"reachable",
+		],
+		capture_output=True,
+		text=True,
+		check=False,
+		cwd=REPO,
+	)
+	return completed.returncode
+
+
+def test_the_reachability_gate_catches_a_root_config_without_the_section():
+	"""``test_the_detection_parameters_are_reachable_from_the_root_config`` must fail.
+
+	The gate is what stands between "the field exists" and "the field is read":
+	the shipped defect had neither, and the weaker version of this gate -- assert
+	``hasattr(Config, "predictive")`` -- would have passed a root model that
+	declared the section and a service that ignored it. The canary therefore
+	removes the field and runs the gate.
+
+	The planted defect surfaces as a load error rather than a wrong number,
+	because ``extra="forbid"`` rejects the override once the field is gone. Both
+	are failures and the gate does not distinguish them, which is correct: an
+	unreachable parameter and a rejected one are the same defect to the operator.
+	"""
+	assert PREDICTIVE_FIELD in CONFIG_MODELS_PY.read_text(), (
+		"canary target not found: the root Config no longer declares `predictive`, "
+		"so this canary would be planting a defect that is already present"
+	)
+	assert _gate_exit_code() == 0, "the gate does not pass on the shipped tree"
+
+	with planted(CONFIG_MODELS_PY, PREDICTIVE_FIELD, ""):
+		assert _gate_exit_code() != 0, (
+			"a root Config without a `predictive` field still passed the gate, so "
+			"the gate cannot tell a reachable parameter from an unreachable one"
+		)
+
+	assert _gate_exit_code() == 0, "the restore was not proven"
+
+
+# --------------------------------------------------------------------------
 # §3.3 test_class_imbalance_not_double_corrected -- apply both; must fail
 # --------------------------------------------------------------------------
 

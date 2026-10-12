@@ -353,6 +353,80 @@ def test_the_integer_season_is_the_defect_it_replaces():
 
 
 # --------------------------------------------------------------------------
+# §2.1: the detection parameters are config, and config means reachable
+# --------------------------------------------------------------------------
+
+
+def test_the_detection_parameters_are_reachable_from_the_root_config():
+	"""§2.1's "three parameters, all config, all recorded" is three claims.
+
+	The third is the one that was false. ``predictive_config`` read
+	``config.predictive`` through ``getattr``, the root ``Config`` had no such
+	field, and ``extra="forbid"`` made a ``predictive:`` block in YAML a load
+	error -- so every detection parameter was pinned to its class default and the
+	``isinstance`` guard swallowed the absence. A parameter an operator cannot
+	set is not config, and provenance recording it as a constant is not
+	recording.
+
+	The assertion is on the *value the service resolves*, not on the field's
+	existence: a root model that declared ``predictive`` and a service that read
+	something else would pass a field-existence check and fail this one.
+	"""
+	from alea.config.loader import load_config
+	from alea.outages.service import detection_parameters_for, predictive_config
+
+	# Every value differs from its default, so a fallback to the class default
+	# is visible rather than coincidentally equal.
+	config = load_config(
+		overrides=[
+			"predictive.viirs.bin_size_deg=3.0",
+			"predictive.viirs.baseline_quantile=0.5",
+			"predictive.viirs.detection_threshold=0.45",
+			"predictive.viirs.max_cloud_confidence=1",
+			"predictive.weather.month_encoding=integer",
+		]
+	)
+	resolved = predictive_config(config).viirs
+	assert resolved.bin_size_deg == 3.0, "the VZA bin size did not survive the root config"
+	assert resolved.baseline_quantile == 0.5, "the baseline quantile did not survive"
+	assert resolved.detection_threshold == 0.45, "the detection threshold did not survive"
+	assert resolved.max_cloud_confidence == 1, "the cloud ceiling did not survive"
+	assert predictive_config(config).weather.month_encoding == "integer"
+
+	# And the same values reach the artefact provenance, which is what §2.5
+	# means by reproducible: an AUC is comparable only against the parameters
+	# that produced it.
+	recorded = detection_parameters_for(config)
+	assert recorded["detection_threshold"] == 0.45
+	assert recorded["bin_size_deg"] == 3.0
+
+
+def test_the_default_config_file_sets_the_detection_parameters():
+	"""The section is in ``config.default.yaml``, so a deployment sees what it runs.
+
+	The loader merges model defaults with the file, so this asserts the *file*
+	carries the section rather than that the value exists: a file that omits it
+	still loads, and the deployment then cannot see the parameters it is running
+	with. Every key here is one §2.1 names as pinned.
+	"""
+	import yaml
+
+	from alea.config.loader import load_config
+	from alea.config.paths import default_config_path
+
+	written = yaml.safe_load(default_config_path().read_text(encoding="utf-8"))
+	section = written.get("predictive")
+	assert isinstance(section, dict), "config.default.yaml has no predictive section"
+	for key in ("bin_size_deg", "baseline_quantile", "detection_threshold", "max_cloud_confidence"):
+		assert key in section["viirs"], f"predictive.viirs.{key} is not in the default config file"
+
+	loaded = load_config()
+	assert loaded.predictive.viirs.bin_size_deg == section["viirs"]["bin_size_deg"], (
+		"the default file and the loaded config disagree about the VZA bin size"
+	)
+
+
+# --------------------------------------------------------------------------
 # §3.3: SMOTE and scale_pos_weight are never applied together
 # --------------------------------------------------------------------------
 

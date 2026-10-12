@@ -9,25 +9,11 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import Field, model_validator
 
+from alea.config.base import AleaConfig
+from alea.outages.views import PredictiveConfig
 from alea.signals.models import CountryIso
-
-
-class AleaConfig(BaseModel):
-	"""Base for every config model.
-
-	``extra='forbid'`` is not stylistic. ``frozen=True`` means a config is a
-	value: nothing downstream can mutate the configuration it was handed, so a
-	stage cannot change the parameters another stage will read.
-	"""
-
-	model_config = ConfigDict(
-		extra="forbid",
-		validate_by_name=True,
-		validate_by_alias=True,
-		frozen=True,
-	)
 
 
 class ScenarioConfig(AleaConfig):
@@ -39,8 +25,16 @@ class ScenarioConfig(AleaConfig):
 		default_factory=lambda: [2030, 2040, 2050, 2060], min_length=1
 	)
 	base_year: int = 2025
-	spatial_resolution_deg: float = Field(default=0.01, gt=0.0)
-	"""Raster aggregation resolution. 0.01 deg is the Ghana study's best value."""
+	# No `spatial_resolution_deg`. It was declared here, set in
+	# config.default.yaml and in the continental scenario, documented as "0.01 deg
+	# is the Ghana study's best value" -- and read by nothing. The number is the
+	# specification's `aggregate_to_zones(anomaly, resolution="0.01_degree")`
+	# (spec4-base §12.2), so it is a *detection* parameter and never belonged to a
+	# scenario: the scenario's resolution is `clusters`, which the network builder
+	# consumes. It is not wired to the detector either, because the resolution is
+	# only meaningful against a geolocation -- a 0.01 deg cell is a position, not
+	# a tile offset -- and no plan specifies how a granule is georeferenced. See
+	# `io.stages._zones`, which states the same gap at the point of use.
 
 	@model_validator(mode="after")
 	def _countries_are_named(self) -> ScenarioConfig:
@@ -306,6 +300,19 @@ class Config(AleaConfig):
 	paths: PathsConfig = Field(default_factory=PathsConfig)
 	logging: LoggingConfig = Field(default_factory=LoggingConfig)
 	renewables: dict[str, RenewableConfig] = Field(default_factory=dict)
+	predictive: PredictiveConfig = Field(default_factory=PredictiveConfig)
+	"""Layer 4a: outage detection, forecasting, maintenance, ensemble.
+
+	``alea.outages.service.predictive_config`` reads this section through
+	``getattr`` and falls back to the class defaults when it is absent -- which
+	it always was, because the root model had no such field and ``extra="forbid"``
+	made a ``predictive:`` block in YAML a load error rather than a setting. Every
+	detection parameter was therefore pinned to its default and an operator could
+	not move one: the VZA bin size, the baseline quantile, the detection
+	threshold and the cloud ceiling were config in name only. 07-layer4 §2.1
+	states the opposite -- "three parameters, all config, all recorded" -- and a
+	parameter nobody can set is a parameter the provenance records as a constant.
+	"""
 
 	@model_validator(mode="after")
 	def _aggregation_needs_a_single_network(self) -> Config:
@@ -327,6 +334,7 @@ __all__ = [
 	"CostsConfig",
 	"LoggingConfig",
 	"PathsConfig",
+	"PredictiveConfig",
 	"RenewableConfig",
 	"ReportingConfig",
 	"ScenarioConfig",

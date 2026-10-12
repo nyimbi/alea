@@ -23,7 +23,7 @@ from datetime import datetime
 
 from pydantic import Field, model_validator
 
-from alea.config.models import AleaConfig
+from alea.config.base import AleaConfig
 from alea.provenance.models import Basis
 
 DEFAULT_INTERRUPTION_THRESHOLD_MINUTES = 5.0

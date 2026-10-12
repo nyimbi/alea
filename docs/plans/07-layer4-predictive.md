@@ -47,6 +47,20 @@ quantile (0.25), detection threshold (0.6). The specification uses these values;
 they are the defaults and they are recorded in provenance so a result states
 which parameters produced it.
 
+**"All config" is three claims and the third was false.** The parameters were
+declared on `PredictiveConfig`, documented, and recorded in provenance -- and
+unreachable. The root `Config` had no `predictive` field, so
+`service.predictive_config`'s `isinstance` guard fell through on every loaded
+configuration and every detection run recorded the class defaults. `extra="forbid"`
+made it worse than silent: a `predictive:` block in YAML was a *load error*, so
+an operator who tried to set the threshold was told the key was a typo. A
+parameter nobody can move is a constant wearing a config's name, and provenance
+recording it is recording the constant. The gate is
+`test_the_detection_parameters_are_reachable_from_the_root_config`, and it
+asserts the value the *service resolves* rather than that the field exists --
+a root model that declared the section and a service that read something else
+passes a field-existence check and fails this one.
+
 ### 2.2 The cloud-flag contradiction, resolved
 
 `spec4-base.md` §12.2 writes:
@@ -383,6 +397,7 @@ src/alea/resilience/
 | `test_decomposition_sums_to_total` | Components sum to total (1e-9) | Inject a component error; must fail |
 | `test_tlens_rank_stable` | TLENS ranking deterministic across runs | Unseed; must fail |
 | `test_saidi_proxy_flagged` | Population-derived SAIDI carries `proxy` basis | Remove flag; must fail |
+| `test_the_detection_parameters_are_reachable_from_the_root_config` | §2.1's detection parameters survive the root config into provenance | Drop the root field; must fail |
 
 ---
 

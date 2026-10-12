@@ -14,8 +14,34 @@ scenario:
   clusters: [55]
   planning_horizons: [2030, 2040, 2050, 2060]
   base_year: 2025
-  # 0.01 deg is the Ghana study's best-validated raster resolution.
-  spatial_resolution_deg: 0.01
+
+predictive:
+  # Layer 4a. Every parameter an outage-detection number is a function of is
+  # here, because 07-layer4 §2.5 is explicit: an AUC without its VZA bin size,
+  # quantile and threshold is not reproducible.
+  viirs:
+    # Viewing-zenith-angle bin width, the specification's 5 deg to 70 deg.
+    bin_size_deg: 5.0
+    # First quartile, not the mean: robust to lunar reflection and fires while
+    # keeping sensitivity to darkening.
+    baseline_quantile: 0.25
+    # A pixel is flagged when radiance < threshold x baseline.
+    detection_threshold: 0.6
+    # QF_Cloud_Mask bits 0-1 ceiling. 0 keeps confident-clear only; anything
+    # wider admits probably-cloudy pixels, which read as "no outage".
+    max_cloud_confidence: 0
+  weather:
+    # cyclical = sin/cos of the month, no hemisphere assumption. `integer` is
+    # the specification's form and is backwards south of the equator.
+    month_encoding: cyclical
+    # Lagged by one hour, never zero: an unshifted feature contains the hour it
+    # predicts.
+    outage_history_window_hours: 720
+    scale_pos_weight: 10.0
+  maintenance:
+    # Refuse to fit without dissolved-gas columns, so a maintenance number is
+    # not transformer age wearing a maintenance label.
+    require_dga: true
 
 solve:
   solver: highs
