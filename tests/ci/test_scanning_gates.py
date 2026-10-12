@@ -58,7 +58,7 @@ from alea.scanning.connectors import (
 	TenderScraper,
 	x_recent_search,
 )
-from alea.scanning.connectors.base import make_document
+from alea.scanning.connectors.base import FetchError, make_document
 from alea.scanning.connectors.tender import ScraperCanary, SelectorSpec
 from alea.scanning.extract import Extractor
 from alea.scanning.extract.deterministic import extract, looks_like_instruction
@@ -364,6 +364,223 @@ def test_the_health_record_names_zero_selector_matches_when_content_but_no_items
 	)
 	assert health.selector_matches == 0
 	assert health.documents_found == 0
+
+
+# The connector asserts an injected fetcher carries its declared rate limit, so
+# the paged fixtures below share one value rather than repeating it and drifting.
+RATE = 1000.0
+
+
+def _paged_transport(pages: dict[int, str], param: str) -> tuple[httpx.MockTransport, list[str]]:
+	"""A transport answering by the ``param`` query value, recording each request.
+
+	The recorded URLs are the point as much as the bodies are: the defect this
+	section exists to catch is a crawl that reports several pages and requested
+	one, which is invisible in the documents returned.
+	"""
+	seen: list[str] = []
+
+	def handler(request: httpx.Request) -> httpx.Response:
+		seen.append(str(request.url))
+		raw = request.url.params.get(param)
+		number = int(raw) if raw is not None else 1
+		# Past the last page a real portal answers with an empty listing, not a
+		# 404: the crawl ends because the selectors find nothing, which is the
+		# path being tested. A 404 would exercise the transport-error path
+		# instead and the test would pass for the wrong reason.
+		body = pages.get(number, "<html><body><ul></ul></body></html>")
+		return httpx.Response(200, text=body, headers={"content-type": "text/html"})
+
+	return httpx.MockTransport(handler), seen
+
+
+def _listing(*titles: str) -> str:
+	"""A listing page with one ``li`` per title."""
+	rows = "".join(f'<li><a href="/t/{t}">{t}</a></li>' for t in titles)
+	return f"<html><body><ul>{rows}</ul></body></html>"
+
+
+def _paged_scraper(pages: dict[int, str], *, max_pages: int, page_param: str = "page"):
+	"""A ``TenderScraper`` over a paged transport, with the crawl's URLs recorded."""
+	transport, seen = _paged_transport(pages, page_param or "page")
+	fetcher = HttpFetcher(
+		RATE, client=httpx.AsyncClient(transport=transport), respect_robots=False
+	)
+	connector = TenderScraper(
+		name="egp",
+		listing_url="https://egp.example/list",
+		spec=SelectorSpec(
+			item="li", title="a", link="a",
+			base_url="https://egp.example", page_param=page_param,
+		),
+		rate_limit_per_second=RATE,
+		max_pages=max_pages,
+		fetcher=fetcher,
+	)
+	return connector, seen
+
+
+def test_max_pages_walks_every_page_it_promises():
+	"""``max_pages`` is a promise about requests, so assert the requests.
+
+	The defect: ``max_pages`` is accepted by the constructor and never read, so
+	``max_pages=3`` issues one GET and returns one page's documents. Nothing in
+	the returned list says so — the documents are real and the status is ``ok``
+	— which is why this asserts the recorded URLs rather than the result.
+	"""
+	import asyncio
+
+	pages = {1: _listing("a1", "a2"), 2: _listing("b1", "b2"), 3: _listing("c1")}
+	connector, seen = _paged_scraper(pages, max_pages=3)
+
+	async def run() -> list:
+		return await connector.fetch(SINCE)
+
+	documents = asyncio.run(run())
+	assert [d.title for d in documents] == ["a1", "a2", "b1", "b2", "c1"], (
+		f"a three-page crawl returned {[d.title for d in documents]}"
+	)
+	assert seen == [
+		"https://egp.example/list",
+		"https://egp.example/list?page=2",
+		"https://egp.example/list?page=3",
+	], f"the crawl requested {seen}"
+	health = connector.health_check()
+	assert health.status == "ok"
+	assert health.documents_found == 5
+
+
+def test_a_crawl_stops_when_a_page_yields_nothing_rather_than_fetching_the_rest():
+	"""Running out of listings is an ordinary end, not a reason to keep asking."""
+	import asyncio
+
+	pages = {1: _listing("a1"), 2: _listing("b1")}
+	connector, seen = _paged_scraper(pages, max_pages=5)
+
+	async def run() -> list:
+		return await connector.fetch(SINCE)
+
+	documents = asyncio.run(run())
+	assert [d.title for d in documents] == ["a1", "b1"]
+	assert len(seen) == 3, (
+		f"a crawl that exhausted the listings kept requesting: {seen}"
+	)
+
+
+def test_a_multi_page_crawl_with_no_declared_page_parameter_is_refused():
+	"""Guessing a page parameter is worse than not paging, so it is not guessed.
+
+	A portal that ignores ``?page=2`` answers page 1 again; a scraper that
+	guessed would fetch the same rows ``max_pages`` times, dedupe them away, and
+	report a healthy multi-page crawl that read one page. Refusing surfaces the
+	missing declaration at the point it matters.
+	"""
+	import asyncio
+
+	transport, seen = _paged_transport({1: _listing("a1")}, "page")
+	fetcher = HttpFetcher(
+		RATE, client=httpx.AsyncClient(transport=transport), respect_robots=False
+	)
+	connector = TenderScraper(
+		name="egp",
+		listing_url="https://egp.example/list",
+		spec=SelectorSpec(item="li", title="a", link="a"),
+		rate_limit_per_second=RATE,
+		max_pages=4,
+		fetcher=fetcher,
+	)
+
+	async def run() -> list:
+		return await connector.fetch(SINCE)
+
+	with pytest.raises(FetchError) as raised:
+		asyncio.run(run())
+	assert "page_param" in str(raised.value)
+	assert seen == [], "a refused crawl still touched the network"
+
+
+def test_single_page_behaviour_is_unchanged_by_the_pagination_declaration():
+	"""``max_pages=1`` is the default, and its request is the bare listing URL.
+
+	Portals that reject an explicit ``?page=1`` would break if page 0 carried
+	the parameter, so page 0 is the declared URL verbatim.
+	"""
+	import asyncio
+
+	pages = {1: _listing("a1", "a2")}
+	connector, seen = _paged_scraper(pages, max_pages=1)
+
+	async def run() -> list:
+		return await connector.fetch(SINCE)
+
+	assert len(asyncio.run(run())) == 2
+	assert seen == ["https://egp.example/list"], seen
+
+
+def test_a_later_page_that_matches_nothing_ends_the_crawl_but_an_empty_first_page_is_a_layout_change():
+	"""The two zero-match cases mean opposite things and are told apart.
+
+	Page 0 matching nothing while the page has content is a layout change — the
+	selector no longer finds the rows. Page 2 matching nothing is the portal
+	running out of listings. Collapsing them would either report an ordinary end
+	as a breakage or a breakage as an ordinary end.
+	"""
+	import asyncio
+
+	# First page matches; a later page has content but no `li` at all.
+	pages = {1: _listing("a1"), 2: "<html><body><p>No results for this query.</p></body></html>"}
+	connector, seen = _paged_scraper(pages, max_pages=3)
+
+	async def run() -> list:
+		return await connector.fetch(SINCE)
+
+	documents = asyncio.run(run())
+	assert [d.title for d in documents] == ["a1"], (
+		"a later page with no matches discarded the documents already collected"
+	)
+	assert connector.health_check().status == "ok"
+
+	# The same body on page 0 is the broken signal.
+	first_page_empty, _ = _paged_scraper(
+		{1: "<html><body><p>No results for this query.</p></body></html>"}, max_pages=3
+	)
+
+	async def run_empty() -> list:
+		return await first_page_empty.fetch(SINCE)
+
+	assert asyncio.run(run_empty()) == []
+	assert first_page_empty.health_check().status == "layout_changed"
+
+
+def test_a_declared_first_page_number_is_honoured():
+	"""A portal whose listings start at ``?page=0`` gets ``0``, not ``1``."""
+	import asyncio
+
+	pages = {0: _listing("a1"), 1: _listing("b1")}
+	transport, seen = _paged_transport(pages, "p")
+	fetcher = HttpFetcher(
+		RATE, client=httpx.AsyncClient(transport=transport), respect_robots=False
+	)
+	connector = TenderScraper(
+		name="marches",
+		listing_url="https://marches.example/appels",
+		spec=SelectorSpec(
+			item="li", title="a", link="a", base_url="https://marches.example",
+			page_param="p", first_page=0,
+		),
+		rate_limit_per_second=RATE,
+		max_pages=2,
+		fetcher=fetcher,
+	)
+
+	async def run() -> list:
+		return await connector.fetch(SINCE)
+
+	assert len(asyncio.run(run())) == 2
+	assert seen == [
+		"https://marches.example/appels",
+		"https://marches.example/appels?p=1",
+	], seen
 
 
 # --------------------------------------------------------------------------
