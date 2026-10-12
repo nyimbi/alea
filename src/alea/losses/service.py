@@ -247,11 +247,20 @@ def _stage_tlens(config: Config, out: Path, context: BuildContext) -> DerivedPro
 			f"dispatch has {matrix.shape[1]} columns but the network has "
 			f"{network.n_buses} buses"
 		)
+	# The configured section, with the reference bus taken from the solve options
+	# when the loss config does not name one. `slack_bus` is a property of the
+	# network the solve used, so the solve's option wins over a loss-section
+	# default; everything else -- the price a mitigation payback divides by, the
+	# snapshot length that keeps MW from being printed as MWh -- is the operator's
+	# and comes from the section.
+	losses = config.losses
+	if "slack_bus" not in losses.model_fields_set and "slack_bus" in config.solve.solver_options:
+		losses = losses.model_copy(update={"slack_bus": config.solve.solver_options["slack_bus"]})
 	_, payload = tlens_to_artefact(
 		network,
 		matrix,
 		out,
-		LossConfig(slack_bus=config.solve.solver_options.get("slack_bus", 0)),
+		losses,
 		inputs=context.inputs,
 	)
 	logger.info("losses.stage.tlens", branches=payload["n_branches"], checksum_prefix="")

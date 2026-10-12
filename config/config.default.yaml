@@ -43,6 +43,30 @@ predictive:
     # not transformer age wearing a maintenance label.
     require_dga: true
 
+losses:
+  # Value of a lost MWh. Mitigation payback divides by it, and the plan's §7 is
+  # explicit that a single-snapshot payback is "a number with no error bar that
+  # will be believed" -- so the price it is computed from must be settable.
+  # 0.0 means a payback is reported as NaN with a note, never as `inf`.
+  price_usd_per_mwh: 0.0
+  # Hours each snapshot represents. A DC solve returns a loss in MW for one
+  # snapshot; every `*_mwh` field is that MW summed over snapshots, which is MWh
+  # only when a snapshot is one hour. Any other resolution must be stated here
+  # or every loss is silently scaled.
+  snapshot_hours: 1.0
+
+resilience:
+  # §8: "The threshold is config, recorded, and reported with the metric." A
+  # 30-second reclosure is not an interruption, and two SAIDI figures at
+  # different thresholds are different quantities sharing a name.
+  interruption_threshold_minutes: 5.0
+  # Persons per household, for the WorldPop customer derivation. A proxy, and
+  # labelled as one wherever the derived count is published.
+  average_household_size: 4.5
+  # Fraction of households connected. Below 1 the customer count is a fraction
+  # of the population-derived households, which is itself a proxy.
+  electrification_rate: 1.0
+
 solve:
   solver: highs
   # Losses are on. The PyPSA-Eur benchmark (neglecting losses overestimates

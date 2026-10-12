@@ -12,7 +12,9 @@ from typing import Annotated, Any, Literal
 from pydantic import Field, model_validator
 
 from alea.config.base import AleaConfig
+from alea.losses.views import LossConfig
 from alea.outages.views import PredictiveConfig
+from alea.resilience.views import ResilienceConfig
 from alea.signals.models import CountryIso
 
 
@@ -312,6 +314,30 @@ class Config(AleaConfig):
 	threshold and the cloud ceiling were config in name only. 07-layer4 §2.1
 	states the opposite -- "three parameters, all config, all recorded" -- and a
 	parameter nobody can set is a parameter the provenance records as a constant.
+	"""
+
+	losses: LossConfig = Field(default_factory=LossConfig)
+	"""Layer 4b: loss decomposition, DC flow, TLENS, mitigation ranking.
+
+	§7 makes the payback the thing that matters -- "a single-snapshot payback is
+	a number with no error bar that will be believed" -- and the price it divides
+	by was unreachable, so every published payback used the default
+	``price_usd_per_mwh = 0.0``. A payback of zero capex over zero savings is
+	``NaN``, which §7 requires be *reported* with a note; the field's absence
+	made that the only reachable outcome. ``snapshot_hours`` is the same defect
+	with a sharper edge: it is the factor that keeps a MW loss from being printed
+	as MWh, and a caller could not set it.
+	"""
+
+	resilience: ResilienceConfig = Field(default_factory=ResilienceConfig)
+	"""Layer 4c: ENS, EENS, SAIDI, SAIFI.
+
+	§8 is explicit that the interruption threshold "is config, recorded, and
+	reported with the metric", because two SAIDI figures at different thresholds
+	are different quantities sharing a name. The threshold, the household size
+	and the electrification rate all defaulted, so the recorded threshold was a
+	constant and the SAIDI the platform published could not be matched to a
+	utility's own number even in principle.
 	"""
 
 	@model_validator(mode="after")

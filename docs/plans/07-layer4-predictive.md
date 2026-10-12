@@ -398,6 +398,19 @@ src/alea/resilience/
 | `test_tlens_rank_stable` | TLENS ranking deterministic across runs | Unseed; must fail |
 | `test_saidi_proxy_flagged` | Population-derived SAIDI carries `proxy` basis | Remove flag; must fail |
 | `test_the_detection_parameters_are_reachable_from_the_root_config` | §2.1's detection parameters survive the root config into provenance | Drop the root field; must fail |
+| `test_the_root_config_composes_every_layer_section` | §1.6: the root composes each layer's *own* model, not a copy of it | Re-declare the section in `config.models`; must fail |
+| `test_the_losses_section_reaches_the_tlens_stage` | §7's lost-MWh price and snapshot length reach the tlens artefact | Pass `LossConfig()` instead of the section; must fail |
+| `test_the_resilience_section_reaches_the_stage` | §8's interruption threshold reaches the artefact *and* changes the count | Pass `ResilienceConfig()`; must fail |
+
+**The last three exist because presence is not reachability.** `01-foundations`
+§1.6 says "Every layer that owns parameters owns a section, and the root
+`Config` declares it", and a root field alone does not satisfy it: a stage that
+reads `config.resilience` and a stage that constructs `ResilienceConfig()` are
+indistinguishable on the root model, and only the second is the defect. The
+three checks run the *shipped stage* against a scratch tree and read the
+parameters out of the artefact's provenance sidecar, which is the record a
+reader of the result consults. §7 and §8 each state that a parameter is config
+*and* recorded; the gate is the conjunction.
 
 ---
 

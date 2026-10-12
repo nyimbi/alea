@@ -220,11 +220,17 @@ def _stage_resilience(config: Config, out: Path, context: BuildContext) -> Deriv
 	if scenario_path.exists():
 		scenarios = scenarios_from_frame(pd.DataFrame(read_artefact(scenario_path)[0]))
 
+	# The configured section, not a bare `ResilienceConfig()`. §8 makes the
+	# interruption threshold config precisely because it changes the number:
+	# a 30-second reclosure is not an interruption, and two SAIDI figures at
+	# different thresholds are different quantities sharing a name. Constructing
+	# the defaults here made the threshold a constant the operator could not move
+	# while the provenance recorded it as though it were the run's parameter.
 	_, metrics = resilience_to_artefact(
 		events,
 		customers,
 		out,
-		ResilienceConfig(),
+		config.resilience,
 		scenarios=scenarios,
 		inputs=context.inputs,
 	)
