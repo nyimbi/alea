@@ -270,9 +270,21 @@ class CapturePrice(MarketModel):
 
 
 class CaptureCurvePoint(MarketModel):
-	"""One point on a cannibalisation curve."""
+	"""One point on a cannibalisation curve.
+
+	The point carries the capture *price* as well as the rate, because the rate
+	alone is a ratio and a ratio cannot be served: the serving table declares a
+	``capture_price`` column, and a curve point without the price leaves that
+	column with nothing to read. ``None`` means the carrier generated nothing at
+	that penetration, which is the same encoding :class:`CapturePrice` uses.
+	"""
 
 	vre_share: Annotated[float, Field(ge=0.0, le=1.0, allow_inf_nan=False)]
+	capture_price_usd_per_mwh: FiniteFloat | None
+	"""The carrier's revenue-weighted realised price at this penetration.
+	``None`` when it generated nothing, never 0: a zero is a claim it sold its
+	output at zero, which is false."""
+
 	capture_rate: FiniteFloat | None
 	cannibalisation: FiniteFloat | None
 	"""``1 - capture_rate``: the fraction of the time-weighted price a

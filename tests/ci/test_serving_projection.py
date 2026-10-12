@@ -336,18 +336,42 @@ def test_market_prices_refuses_an_unmapped_bus(root: Path):
 
 
 def test_capture_rates_keep_a_gap_as_nan(root: Path):
-	"""A point with no capture rate is written NaN, not dropped."""
-	from alea.market.views import CaptureCurvePoint
+	"""A point with no capture rate is written NaN, not dropped.
 
-	curve = [
-		CaptureCurvePoint(vre_share=0.1, capture_rate=0.95, cannibalisation=0.05),
-		CaptureCurvePoint(vre_share=0.2, capture_rate=None, cannibalisation=None),
-	]
+	The price column is asserted too. It was not, and that is why the shipped
+	defect survived this test: ``capture_price`` was NaN in *every* row because
+	``project_capture_rates`` read a field the point did not declare, and a test
+	that checks only the rate cannot tell a genuine gap from a rename.
+	"""
+	from alea.market.capture import cannibalisation_curve
+
+	# A curve whose price is known at every point, so any NaN in the written
+	# price column is the projection's defect rather than the curve's gap.
+	curve = cannibalisation_curve([(0.1, 60.0, 75.0), (0.4, 40.0, 80.0)])
 	frame = project_capture_rates(curve, technology="solar")
 	assert len(frame) == 2, "a dropped point is a curve that reads as complete"
+	assert not bool(frame["capture_price"].isna().any()), (
+		"a curve point with a known capture price wrote NaN: the projection is "
+		"reading a field the point does not carry"
+	)
 	written = _write(root, "market_capture_rates", frame)
 	assert len(written) == 2
-	assert bool(written["capture_rate"].isna().any())
+	assert _cell(written, "capture_price") == pytest.approx(60.0)
+	assert _cell(written, "capture_rate") == pytest.approx(0.8)
+
+	# A point that generated nothing is still written, with both quantities NaN:
+	# the gap is a finding, and a curve with its gaps removed reads as complete.
+	gapped = _write(
+		root,
+		"market_capture_rates",
+		project_capture_rates(
+			cannibalisation_curve([(0.1, 60.0, 75.0), (0.2, float("nan"), 78.0)]),
+			technology="solar",
+		),
+	)
+	assert len(gapped) == 2
+	assert bool(gapped["capture_rate"].isna().any())
+	assert bool(gapped["capture_price"].isna().any())
 
 
 def test_ppa_benchmarks_state_their_source(root: Path):
@@ -622,6 +646,66 @@ def test_the_schema_columns_match_what_the_repository_reads(root: Path):
 			f"{name}: the repository reads {sorted(missing)} and the serving schema "
 			f"does not declare them; the table would serve zeros for those columns"
 		)
+
+
+# --------------------------------------------------------------------------
+# The projection reads declared fields, not names a getattr default absorbs
+# --------------------------------------------------------------------------
+
+
+_GETATTR_NAME = re.compile(r"getattr\(\s*[^,()]+,\s*\"([a-z_][a-z0-9_]*)\"")
+_FIELD_DECLARATION = re.compile(r"^\t([a-z_][a-z0-9_]*)\s*:", re.MULTILINE)
+
+
+def _declared_field_names() -> set[str]:
+	"""Every field name declared by an annotated attribute across the package.
+
+	This is deliberately a superset: a name declared on *any* model anywhere in
+	`src/alea` counts. The gate's job is not to prove the projection reads the
+	right model -- a static scan cannot -- but to prove the name it reads exists
+	somewhere as a declared field, so a rename that lands in the model and not in
+	the projection cannot pass. A superset cannot produce a false failure, which
+	is the property that matters for a gate nobody can act on.
+	"""
+	names: set[str] = set()
+	sources = sorted((REPO / "src" / "alea").rglob("*.py"))
+	assert sources, "the package source tree moved; the gate would scan nothing"
+	for source in sources:
+		names.update(_FIELD_DECLARATION.findall(source.read_text(encoding="utf-8")))
+	return names
+
+
+def test_the_projections_read_fields_that_are_declared():
+	"""No projection reads a field name through a ``getattr`` default.
+
+	**The defect this closes.** ``project_capture_rates`` read
+	``getattr(point, "capture_price_usd_per_mwh", None)`` while
+	``CaptureCurvePoint`` declared no such field. The default absorbed the
+	mismatch: ``None`` became NaN in every row, the schema declared the column,
+	the repository read it, and the route exposed a permanently-null quantity
+	that looked like a legitimate gap. The test beside this one asserted only on
+	``capture_rate``, so the column was never checked and the defect shipped.
+
+	The rule is not "no ``getattr``". Three call sites are legitimate: they read
+	an *optional* field and default it, which is the documented behaviour rather
+	than a hidden one. The rule is that the name must be a field some model
+	declares -- so a rename in the model that is not mirrored in the projection
+	fails here instead of serving a column of NaN.
+	"""
+	source = (REPO / "src" / "alea" / "publish" / "service.py").read_text(encoding="utf-8")
+	reads = _GETATTR_NAME.findall(source)
+	assert reads, (
+		"no `getattr` attribute reads found in the projection module; the gate is "
+		"reading a source that no longer holds them and would pass against anything"
+	)
+	declared = _declared_field_names()
+	undeclared = sorted({name for name in reads if name not in declared})
+	assert not undeclared, (
+		f"the projections read {undeclared} through a `getattr` default, and no "
+		f"model in the package declares those names. A default absorbs a renamed "
+		f"or absent field: the column is written NaN and every consumer reads it "
+		f"as a gap rather than as a defect. Declare the field and read it directly."
+	)
 
 
 # --------------------------------------------------------------------------

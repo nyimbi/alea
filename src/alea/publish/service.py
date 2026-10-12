@@ -153,6 +153,13 @@ def project_capture_rates(curve: Sequence[Any], *, technology: str) -> pd.DataFr
 	``capture_rate`` is ``None`` where the carrier generated nothing. The row is
 	written with a NaN rate rather than dropped: a gap in the curve is a finding,
 	and a curve with its gaps removed reads as complete.
+
+	The price is read as a declared attribute, not through a ``getattr`` with a
+	``None`` default. The default was the defect: ``CaptureCurvePoint`` did not
+	declare ``capture_price_usd_per_mwh``, so every row of the served table was
+	NaN while the schema declared the column, the repository read it, and the
+	route exposed it. A default that absorbs a missing field turns a rename into
+	a silently empty column.
 	"""
 	assert technology, "a capture-rate row is per technology"
 	if not curve:
@@ -162,7 +169,7 @@ def project_capture_rates(curve: Sequence[Any], *, technology: str) -> pd.DataFr
 			"technology": technology,
 			"vre_penetration": float(point.vre_share),
 			"capture_rate": _nan(point.capture_rate),
-			"capture_price": _nan(getattr(point, "capture_price_usd_per_mwh", None)),
+			"capture_price": _nan(point.capture_price_usd_per_mwh),
 		}
 		for point in curve
 	]

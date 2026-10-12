@@ -182,6 +182,12 @@ def cannibalisation_curve(
 	3 deliverable a developer needs to size a project and a lender needs to
 	stress a PPA. Points whose capture price is undefined are kept with a NaN
 	rate rather than dropped, so a gap in the curve is visible.
+
+	``capture`` is carried onto the point, not merely divided by the
+	time-weighted price to make the rate. The rate is a ratio; the price is the
+	quantity a developer sizes against and the serving table serves, so a point
+	that kept the ratio and dropped the price would leave the served column
+	empty for a curve whose price was known all along.
 	"""
 	assert points, "a curve needs at least one point"
 	curve: list[CaptureCurvePoint] = []
@@ -193,6 +199,7 @@ def cannibalisation_curve(
 		curve.append(
 			CaptureCurvePoint(
 				vre_share=share,
+				capture_price_usd_per_mwh=None if not np.isfinite(capture) else capture,
 				capture_rate=None if not np.isfinite(rate) else rate,
 				cannibalisation=None if not np.isfinite(rate) else 1.0 - rate,
 			)

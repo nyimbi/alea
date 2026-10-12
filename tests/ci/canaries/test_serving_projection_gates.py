@@ -230,3 +230,44 @@ def test_the_gate_catches_a_schema_missing_a_column_the_repository_reads():
 		"a serving schema missing a column the repository reads still passed, so "
 		"the two sides can drift while both look correct",
 	)
+
+
+# --------------------------------------------------------------------------
+# The declared-field contract
+# --------------------------------------------------------------------------
+
+
+PUBLISH_SERVICE_PY = REPO / "src" / "alea" / "publish" / "service.py"
+
+
+def test_the_gate_catches_a_renamed_field_read_through_a_getattr_default():
+	"""The shipped defect, restored: a getattr whose name no model declares.
+
+	`project_capture_rates` read `capture_price_usd_per_mwh` through a `getattr`
+	with a `None` default, and `CaptureCurvePoint` declared no such field. This
+	plants the shape of that defect -- a read of a name that exists nowhere as a
+	declared field -- and asserts the gate refuses it.
+	"""
+	_assert_canary(
+		PUBLISH_SERVICE_PY,
+		'\t\t\t"capture_rate": _nan(point.capture_rate),\n',
+		'\t\t\t"capture_rate": _nan(getattr(point, "capture_rate_that_was_renamed", None)),\n',
+		"read_fields_that_are_declared",
+		"a projection reading a field name no model declares still passed, so a "
+		"rename in the model can serve a column of NaN while looking correct",
+	)
+
+
+def test_the_gate_still_accepts_a_getattr_on_a_declared_optional_field():
+	"""The gate's jurisdiction: a *name*, not the presence of a ``getattr``.
+
+	A gate that banned `getattr` outright would fail on the three call sites that
+	read an optional field and default it -- which is documented behaviour, not a
+	defect -- and the pressure that creates is to disable the gate. This canary
+	proves the rule is scoped to names: the shipped tree, with its three
+	legitimate reads, passes.
+	"""
+	assert _gate_exit_code("read_fields_that_are_declared") == 0, (
+		"the declared-field gate fails on the shipped tree, so it is scoped wider "
+		"than the defect it exists to catch"
+	)
