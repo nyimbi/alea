@@ -369,6 +369,30 @@ def expired_raw_payloads(
 	return out
 
 
+def raw_payload_count(
+	root: str | Path = "data/raw",
+	*,
+	source_ids: list[str] | None = None,
+) -> int:
+	"""How many raw payload directories exist, expired or not.
+
+	The denominator of the retention report. It must be the whole population,
+	not a differently-windowed subset: the report previously counted the kept
+	side with a one-day window, so a purge with a 90-day policy reported
+	``kept_payloads=1`` for a tree holding three payloads — a retention report
+	whose arithmetic does not add up is a report nobody can check.
+	"""
+	base = resolve(root)
+	if not base.exists():
+		return 0
+	total = 0
+	for source_dir in sorted(p for p in base.iterdir() if p.is_dir()):
+		if source_ids is not None and source_dir.name not in source_ids:
+			continue
+		total += sum(1 for p in source_dir.iterdir() if p.is_dir())
+	return total
+
+
 def purge_expired_raw(
 	root: str | Path = "data/raw",
 	*,
@@ -396,6 +420,9 @@ def purge_expired_raw(
 	expired = expired_raw_payloads(
 		root, retention_days=retention_days, now=moment, source_ids=source_ids
 	)
+	# Counted before the purge: after it, the kept population is whatever the
+	# deletion loop did not remove, and the denominator is gone.
+	population = raw_payload_count(root, source_ids=source_ids)
 	removed_bytes = 0
 	removed = 0
 	for _source_id, _checksum, directory, size in expired:
@@ -409,14 +436,13 @@ def purge_expired_raw(
 		removed += 1
 		removed_bytes += size
 
-	total = len(expired_raw_payloads(root, retention_days=1, now=moment, source_ids=source_ids))
 	report = RetentionReport(
 		root=str(resolve(root)),
 		retention_days=retention_days,
 		cutoff=cutoff,
 		removed_payloads=removed,
 		removed_bytes=removed_bytes,
-		kept_payloads=max(total - removed, 0),
+		kept_payloads=max(population - removed, 0),
 	)
 	logger.info(
 		"retention_purge",
@@ -444,6 +470,7 @@ __all__ = [
 	"ingest",
 	"near_duplicate_groups",
 	"purge_expired_raw",
+	"raw_payload_count",
 	"retention_report_payload",
 	"shingle_count",
 	"shingles",
