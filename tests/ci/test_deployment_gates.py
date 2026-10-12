@@ -6,6 +6,13 @@ are checked by the CI build. The rest are not build questions at all and were
 never answered because they were filed under "deployment" and deployment was
 assumed to mean Docker:
 
+* **Criterion 4, "`dvc repro` reproduces the Kenya fixture."** DVC is the
+  orchestrator; the property it protects is that a stage's artefact is a
+  function of its inputs. That is checked here against the real `topology`
+  stage, because a gate that needs a fetched 4 MB ArcGIS export only runs where
+  somebody has fetched it. §5.2 states the canary itself: "a canary perturbs an
+  input and asserts the checksum changes."
+
 * **Criterion 6, "review queue restore tested."** §5.3 calls the queue "the only
   irreplaceable operational state", so the drill snapshots it, destroys it, and
   restores it. The destruction is not incidental -- a restore over an intact
@@ -35,6 +42,9 @@ from pathlib import Path
 
 import pytest
 
+from alea.config.loader import load_config
+from alea.io.artefacts import store_raw
+from alea.io.pipeline import build_stage
 from alea.ops import (
 	AlertCondition,
 	AlertRoute,
@@ -50,6 +60,7 @@ from alea.ops import (
 	unpinned_images,
 	validation_skipped,
 )
+from alea.provenance.models import Basis, Licence, Provenance
 from alea.scanning.review.queue import ReviewQueue
 from alea.signals.models import Signal, SignalType
 
@@ -390,6 +401,162 @@ def test_the_seam_is_files_only():
 				if name == "pypsa_earth" or name.startswith("pypsa_earth."):
 					offenders.append(f"{path.relative_to(REPO)}:{node.lineno}: {name}")
 	assert not offenders, "the seam is no longer files-only:\n" + "\n".join(offenders)
+
+
+# --------------------------------------------------------------------------
+# Criterion 4 — a perturbed input moves the checksum
+# --------------------------------------------------------------------------
+
+
+def _feature_collection(n_lines: int) -> dict:
+	"""A synthetic World Bank grid payload with ``n_lines`` corridors.
+
+	The plan's criterion names the *Kenya fixture*, and this is that fixture's
+	shape rather than its bytes: the real export is a 4 MB ArcGIS dump and a gate
+	that needs it is a gate that only runs where somebody has fetched it. What
+	criterion 4 asserts is a property of the pipeline, not of Kenya -- the same
+	input reproduces its checksum and a changed input does not -- and a
+	two-corridor synthetic collection exercises it through the real stage.
+	"""
+	corridors = [
+		("L1", [36.8219, -1.2921], [39.6682, -4.0435], 400.0, 490.0, 1200.0),
+		("L2", [39.6682, -4.0435], [35.2698, -0.0917], 220.0, 330.0, 600.0),
+	]
+	return {
+		"type": "FeatureCollection",
+		"features": [
+			{
+				"type": "Feature",
+				"geometry": {"type": "LineString", "coordinates": [start, end]},
+				"properties": {
+					"id": line_id,
+					"voltage": voltage,
+					"length_km": length,
+					"capacity_mva": capacity,
+				},
+			}
+			for line_id, start, end, voltage, length, capacity in corridors[:n_lines]
+		],
+	}
+
+
+def _raw_provenance(source_id: str) -> Provenance:
+	return Provenance(
+		source_id="worldbank_grid_map",
+		source_url="https://energydata.info/dataset/africa-electricity-transmission-network",
+		licence=Licence.CC_BY_4_0,
+		basis=Basis.MEASURED,
+		uncertainty=0.0,
+		notes=f"criterion 4 fixture ({source_id})",
+	)
+
+
+def _build_topology(
+	tmp_path: Path,
+	tag: str,
+	payload: dict,
+	*,
+	out_subdir: str = "out",
+) -> str:
+	"""Store ``payload`` in a fresh raw lake and build ``topology`` from it.
+
+	``tag`` names the raw lake, so two calls with different tags are two
+	independent runs and two calls with the same tag share the lake -- which is
+	what makes the idempotence assertion meaningful rather than a comparison of
+	two directories that could not have collided.
+	"""
+	root = tmp_path / tag / "raw"
+	stored = store_raw(
+		"worldbank_grid_map",
+		json.dumps(payload).encode(),
+		_raw_provenance(tag),
+		root=root,
+	)
+	out = tmp_path / tag / out_subdir / "topology.parquet"
+	result = build_stage(
+		"topology",
+		load_config(REPO / "config" / "config.default.yaml"),
+		out,
+		inputs=[stored.parent.name],
+		parameters={"raw_root": str(root)},
+	)
+	assert not result.skipped, f"the fixture built nothing: {result.path} was already current"
+	return result.checksum
+
+
+def test_the_fixture_stage_reproduces_its_checksum(tmp_path: Path):
+	"""§9 criterion 4, first half: the same input reproduces the same bytes.
+
+	Two runs in two output directories, both reading the same content-addressed
+	raw payload. This is the half of the criterion that `dvc repro` is about, and
+	it is checked without DVC because DVC is the orchestrator, not the property.
+	"""
+	first = _build_topology(tmp_path, "run-a", _feature_collection(2))
+	second = _build_topology(tmp_path, "run-b", _feature_collection(2))
+	assert first == second, (
+		f"the topology stage is not reproducible: two runs over identical input "
+		f"gave {first[:12]} and {second[:12]}"
+	)
+
+
+def test_a_perturbed_input_moves_the_checksum(tmp_path: Path):
+	"""§9 criterion 4, the canary the plan names in its own words.
+
+	§5.2: "a canary perturbs an input and asserts the checksum changes. A
+	reproducibility gate that passes on a perturbed input is a gate that is not
+	checking anything."
+
+	The perturbation is a dropped corridor, not a changed byte: a checksum that
+	only ever sees the raw payload's hash would pass a byte-level perturbation of
+	a file it never hashed, and the artefact would then be addressed by a value
+	that does not cover the data in it. Dropping a corridor changes what the
+	stage *built*, so the assertion is on the output's own content hash.
+	"""
+	whole = _build_topology(tmp_path, "whole", _feature_collection(2))
+	perturbed = _build_topology(tmp_path, "perturbed", _feature_collection(1))
+	assert whole != perturbed, (
+		"dropping a transmission corridor left the topology checksum unchanged; "
+		"the artefact's checksum does not cover the data it holds"
+	)
+
+
+def test_a_stale_artefact_is_rebuilt_and_a_current_one_is_not(tmp_path: Path):
+	"""The idempotence check is on recorded inputs, not on a clock.
+
+	``stage_is_current`` compares the sidecar's input list. A stage that ran
+	against different inputs is stale even though it is newer than everything
+	else, and a stage that ran against the same inputs is current even though a
+	timestamp says otherwise. Both directions are asserted here because a gate
+	that only ever skips is a gate that never builds, and one that only ever
+	rebuilds is a gate that never skips.
+	"""
+	root = tmp_path / "lake" / "raw"
+	stored = store_raw(
+		"worldbank_grid_map",
+		json.dumps(_feature_collection(2)).encode(),
+		_raw_provenance("lake"),
+		root=root,
+	)
+	out = tmp_path / "lake" / "out" / "topology.parquet"
+	config = load_config(REPO / "config" / "config.default.yaml")
+	parameters = {"raw_root": str(root)}
+
+	first = build_stage("topology", config, out, inputs=[stored.parent.name], parameters=parameters)
+	assert not first.skipped
+	second = build_stage("topology", config, out, inputs=[stored.parent.name], parameters=parameters)
+	assert second.skipped, "the stage rebuilt against the inputs it already recorded"
+	assert second.checksum == first.checksum
+
+	# A different recorded input, same bytes on disk: the artefact is stale by
+	# its own provenance and must be rebuilt.
+	third = build_stage("topology", config, out, inputs=["0" * 64], parameters=parameters)
+	assert not third.skipped, (
+		"an artefact whose recorded inputs differ from the requested ones was "
+		"treated as current; the idempotence check is reading a timestamp"
+	)
+	assert third.checksum == first.checksum, (
+		"the rebuild changed the artefact although the payload did not"
+	)
 
 
 # --------------------------------------------------------------------------

@@ -269,7 +269,7 @@ nobody can reproduce.
 | 1 | ALEA image builds and runs on a clean host | CI build |
 | 2 | PyPSA-Earth image builds separately; no shared interpreter | Build test |
 | 3 | The seam is files only; ALEA runs with PyPSA-Earth absent | CI job |
-| 4 | `dvc repro` reproduces the Kenya fixture | Checksum match |
+| 4 | `dvc repro` reproduces the Kenya fixture | `test_a_perturbed_input_moves_the_checksum` |
 | 5 | Every long job survives a process restart | `test_job_survives_restart` |
 | 6 | Review queue restore tested | Restore drill |
 | 7 | Delivery recorded for every channel | `test_delivery_recorded` |
