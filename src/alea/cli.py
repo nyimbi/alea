@@ -444,6 +444,73 @@ def serve(
 
 
 @app.command()
+def health(
+	config: ConfigOption = None,
+	quiet: Annotated[bool, typer.Option("--quiet", "-q", help="Print nothing; exit with the verdict.")] = False,
+) -> None:
+	"""Check the local stores, and exit non-zero when one is unusable.
+
+	This is what the container's ``HEALTHCHECK`` runs (`13-deployment.md` §3.1),
+	so it must work without the API being up: an orchestrator probing a process
+	that is in the middle of restarting needs an answer from the process, not
+	from an HTTP client that will time out.
+
+	§6.2 asks ``/health`` to report the API, the job store, the artefact store
+	and the last successful pipeline run. The API is not part of this check --
+	the process running this command *is* the check -- so the three stores are
+	what is probed here, and the route adds the API's own liveness on top.
+	"""
+	import sqlite3
+
+	from alea.config.paths import resolve
+
+	loaded = _load(config, None, None)
+	problems: list[str] = []
+
+	# The job store and the review queue are the two SQLite databases. Opening
+	# each and counting a table is a real read: a file that exists but cannot be
+	# queried is a store that is not usable, and an existence check would call
+	# that healthy.
+	from alea.scanning.review.queue import DEFAULT_QUEUE_PATH
+
+	for label, relative, table in (
+		("job store", loaded.api.job_store_path, "jobs"),
+		("review queue", DEFAULT_QUEUE_PATH, "signal_versions"),
+	):
+		path = resolve(relative)
+		if not path.exists():
+			# Not a problem on a first boot: the store is created on first use.
+			continue
+		try:
+			connection = sqlite3.connect(path)
+			try:
+				connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()  # noqa: S608
+			finally:
+				connection.close()
+		except sqlite3.Error as exc:
+			problems.append(f"{label} at {path} is unreadable: {exc}")
+
+	results = resolve(loaded.paths.results)
+	if not results.exists():
+		problems.append(f"results root {results} does not exist")
+
+	from alea.api.runs import RunLog
+
+	runs = RunLog(loaded).list(limit=1)
+	last = runs[0] if runs else None
+
+	if problems:
+		for problem in problems:
+			typer.secho(f"unhealthy: {problem}", fg=typer.colors.RED, err=True)
+		raise typer.Exit(code=1)
+	if not quiet:
+		countries = ", ".join(str(c) for c in loaded.scenario.countries)
+		typer.echo(f"ok: {countries}")
+		typer.echo(f"  results: {results}")
+		typer.echo(f"  last run: {last.run_id if last else 'none'}")
+
+
+@app.command()
 def version() -> None:
 	"""Print the version."""
 	typer.echo(__version__)

@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: MIT
+#
+# The PyPSA-Earth workflow image. `13-deployment.md` §3.1, AD-1.
+#
+# This image exists to be *separate*. AD-1: PyPSA-Earth is an external workflow,
+# not a dependency, and "the seam between them is files -- NetCDF networks,
+# GeoJSON topology, CSV profiles -- never Python imports." The two images are
+# built independently and neither has an import path to the other, which is
+# what makes the decision structural rather than a convention someone has to
+# remember not to break.
+#
+# **Nothing here installs ALEA.** The workflow writes into a mounted volume and
+# ALEA reads it. `test_the_seam_is_files_only` asserts that ALEA imports and
+# runs with this image absent, which is the observable that says the separation
+# is real.
+#
+# condaforge/mambaforge
+FROM condaforge/mambaforge@sha256:050753d138b6708128c9bb45055a9d943f06363f32f63a96f7dd5f304ada52a6
+
+# PyPSA-Earth is pinned to a release, not to a branch. A workflow that resolves
+# to whatever `main` was on build day is a workflow whose two runs are not
+# comparable, and the whole point of §5.2's `dvc repro` is that they are.
+ARG PYPSA_EARTH_VERSION=v0.9.0
+
+RUN mamba create -y -n pypsa-earth -c conda-forge \
+	python=3.11 \
+	&& mamba clean -afy
+
+SHELL ["conda", "run", "-n", "pypsa-earth", "/bin/bash", "-c"]
+
+RUN pip install --no-cache-dir \
+	"pypsa-earth @ git+https://github.com/pypsa-meets-earth/pypsa-earth@${PYPSA_EARTH_VERSION}"
+
+# The mounted volume both images share. PyPSA-Earth writes; ALEA reads. No
+# shared interpreter, no shared Python environment, no import path.
+VOLUME ["/work"]
+
+WORKDIR /work
+ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "pypsa-earth"]
+CMD ["snakemake", "--help"]

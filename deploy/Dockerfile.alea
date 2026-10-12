@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: MIT
+#
+# The ALEA platform image. `13-deployment.md` §3.1.
+#
+# Two things about this file are deliberate and both are gates:
+#
+#  1. **Both `FROM` lines are pinned by digest, not tag.** §3.3: "a tag moves; a
+#     digest does not. A deployment whose base image changed between two builds
+#     is a deployment that cannot reproduce its own output." The digests below
+#     are `python:3.14-slim` as published on Docker Hub, resolved on 2026-10-12;
+#     `test_base_images_are_pinned_by_digest` reads this file and refuses a bare
+#     tag. The tag is kept in the comment beside each digest so a human can see
+#     which image the digest is, because a digest alone is unreadable.
+#
+#  2. **There is no PyPSA-Earth in this image.** AD-1 and §3.1: the two
+#     toolchains never share an interpreter, and the seam is files. This image
+#     installs the ALEA wheel and nothing from the PyPSA-Earth conda
+#     environment; `Dockerfile.pypsa-earth` is the other half and the two are
+#     built separately.
+
+# python:3.14-slim
+FROM python:3.14-slim@sha256:a2b82f3c48559aa0a8446d9af49826b6e2b2016f4cd2afabfe6013ec53729170 AS build
+
+# The Rust toolchain is in the build stage only. §3.2: the runtime image
+# installs a wheel, because "installing from source in the runtime image would
+# need the Rust toolchain in production, which is 1.5 GB of image for a build
+# that happened once."
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends curl build-essential \
+	&& rm -rf /var/lib/apt/lists/*
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+	| sh -s -- -y --default-toolchain 1.90.0 --profile minimal
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+RUN pip install --no-cache-dir "maturin>=1.15,<2.0"
+
+WORKDIR /build
+COPY Cargo.toml Cargo.lock rust-toolchain.toml rustfmt.toml ./
+COPY rust/ ./rust/
+COPY src/ ./src/
+COPY pyproject.toml README.md ./
+
+# `maturin build`, not `maturin develop`: a wheel is the artefact that crosses
+# into the runtime stage. abi3-py312 means one wheel serves every supported
+# Python (§3.2), so the runtime stage is free to move Python without rebuilding.
+RUN maturin build --release --out /wheels
+
+# python:3.14-slim, same digest as the build stage
+FROM python:3.14-slim@sha256:a2b82f3c48559aa0a8446d9af49826b6e2b2016f4cd2afabfe6013ec53729170 AS runtime
+
+# A non-root user, because the always-on node runs the scanning scheduler and
+# the API, and neither needs to write outside its own roots.
+RUN useradd --create-home --uid 10001 alea
+WORKDIR /app
+
+COPY --from=build /wheels/*.whl /tmp/wheels/
+RUN pip install --no-cache-dir /tmp/wheels/*.whl && rm -rf /tmp/wheels
+
+COPY config/ /app/config/
+COPY dvc.yaml Snakefile /app/
+COPY rules/ /app/rules/
+COPY scripts/ /app/scripts/
+
+RUN mkdir -p /app/data /app/results /app/resources /app/reports \
+	&& chown -R alea:alea /app
+USER alea
+
+# The health endpoint the orchestrator polls. §6.2: `/health` reports the API,
+# the job store, the artefact store, and the last successful pipeline run.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+	CMD alea health || exit 1
+
+ENTRYPOINT ["alea"]
+CMD ["--help"]
