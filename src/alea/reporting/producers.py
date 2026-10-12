@@ -275,10 +275,13 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 The reasons are longer than a sentence because the *blocker* is the useful
 fact: "needs a rule" and "needs a model that does not exist" are different
 amounts of work, and a register that says only "unwired" hides which one it is.
-Four sections are `required=True` (`week_ahead`, `market_report`,
-`market_outlook`, `continental_outlook`), and for those the report raises rather
-than warns -- so four of the five cadences cannot currently be generated from
-the pipeline at all.
+Five sections are `required=True` -- one per cadence: `outage_forecast`,
+`week_ahead`, `market_report`, `market_outlook`, `continental_outlook` -- and
+for those the report raises rather than warns. Every cadence's single required
+section is unproduced, so *no* cadence can currently be generated from the
+pipeline. The count was four here, and the daily cadence was the one it dropped;
+`test_reporting_producers.py` pins one-required-per-cadence so the prose cannot
+drift from the set it describes again.
 """
 
 

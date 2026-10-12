@@ -124,6 +124,30 @@ from the pipeline. The first to close shrinks this map by one."""
 
 
 @pytest.mark.parametrize("cadence", list(ReportCadence), ids=lambda c: c.value)
+def test_each_cadence_declares_exactly_one_required_section(cadence: ReportCadence):
+	"""The structural fact the register's prose paraphrases, pinned as a check.
+
+	`UNPRODUCED`'s module docstring said "Four sections are `required=True`" and
+	named four, dropping the daily cadence's `outage_forecast` -- so it also said
+	"four of the five cadences cannot be generated" where the measured state is
+	five of five. The prose is a *summary of this set*, and a summary that is not
+	checked drifts the way that one did. This pins the shape the summary rests
+	on: exactly one required section per cadence, so "one per cadence" is a fact
+	a reader can rely on and the count is `len(ReportCadence)`, not a number
+	someone retypes.
+	"""
+	specs, _ = cadence_specs(cadence)
+	required = [spec.slug for spec in specs if spec.required]
+	assert len(required) == 1, (
+		f"{cadence.value} declares {len(required)} required sections ({required}); "
+		f"the register's summary and the pinned required-section map both assume "
+		f"exactly one per cadence. A cadence with two is a cadence whose "
+		f"generatability depends on both, and a cadence with none is one the "
+		f"summary overstates."
+	)
+
+
+@pytest.mark.parametrize("cadence", list(ReportCadence), ids=lambda c: c.value)
 def test_a_required_section_with_no_producer_is_recorded(cadence: ReportCadence):
 	"""A required section that is absent raises; that must not be a surprise.
 
