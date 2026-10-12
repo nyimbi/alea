@@ -20,6 +20,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from alea.losses.contingency import sweep, tlens
@@ -30,10 +31,18 @@ from alea.outages.validate import ValidationError, binarise, detection_metrics
 from alea.outages.views import DetectionMetrics, ViirsConfig, WeatherConfig
 from alea.outages.viirs import (
 	GAP_FILLED_BAND,
+	MAX_CLOUD_CONFIDENCE,
 	RADIANCE_BAND,
+	ViirsTile,
 	extract_tile,
+	zone_series,
 )
-from alea.outages.weather import add_month_encoding
+from alea.outages.weather import (
+	ZONE_COLUMN,
+	add_month_encoding,
+	assert_causal_features,
+	build_features,
+)
 from alea.provenance.models import Basis
 from alea.resilience.metrics import compute_metrics, customers_from_population
 from alea.resilience.views import (
@@ -495,6 +504,68 @@ def test_the_tlens_ranking_is_stable_across_runs():
 	tied = {e.branch: e.ens_increase_mwh for e in ranking.entries if e.branch in (1, 2)}
 	assert tied[1] == pytest.approx(tied[2]), "the parallel branches did not tie"
 	assert first.index(1) < first.index(2), "tied branches were not ordered by index"
+
+
+# --------------------------------------------------------------------------
+# 07-layer4 §10: the two gates whose names the plan promises by hand
+# --------------------------------------------------------------------------
+
+
+def test_cloud_flag_semantics():
+	"""The gate `test_cloud_flag_semantics` (07-layer4 §10): only bits 0-1 == 0
+	are kept, and a cloudy pixel is NaN rather than 0.
+
+	Two properties in one gate because the plan's row states both: the polarity
+	of the confidence bits and the sentinel for an unusable pixel. A cloudy pixel
+	is *unknown*, not *lit* -- reading it as 0 credits the detector for an hour it
+	could not see, which is the failure the canary
+	`canaries/test_cloud_flag_polarity.py` plants in both directions.
+	"""
+	assert MAX_CLOUD_CONFIDENCE == 0, (
+		"the pinned ceiling moved; bits 0-1 == 0 is the plan's answer, and a wider "
+		"ceiling admits probably-clear pixels"
+	)
+	assert ViirsConfig().max_cloud_confidence == MAX_CLOUD_CONFIDENCE, (
+		"the default config no longer carries the pinned ceiling"
+	)
+
+	tile = ViirsTile(
+		radiance=np.zeros((1, 2, 2), np.float32),
+		sensor_zenith=np.zeros((1, 2, 2), np.float32),
+		cloud_bits=np.zeros((1, 2, 2), np.uint8),
+		month=np.array([1], np.uint8),
+		timestamps=(START,),
+	)
+	zone_ids = np.ones((2, 2), dtype=np.uint32)
+	blind = zone_series(tile, np.full((1, 2, 2), np.nan, np.float32), zone_ids, 2)
+	assert np.isnan(blind[0, 1]), "an all-cloudy zone-hour must be NaN, not a number"
+
+
+def test_no_temporal_leakage():
+	"""The gate `test_no_temporal_leakage` (07-layer4 §10): no feature at *t*
+	depends on *t* or later.
+
+	Run against the module's own builder rather than a hand-written one, because
+	the leak this guards is the one the shipped `shift(1)` prevents -- a builder
+	that reads its own row inflates every score without changing a line of
+	output, which is why the plan makes it a gate rather than a review note.
+	"""
+	frame = pd.DataFrame(
+		{
+			"timestamp": pd.date_range("2030-01-01", periods=96, freq="h"),
+			ZONE_COLUMN: "z1",
+			"outage": ((np.arange(96) % 13) == 0).astype(float),
+			"load_mw": 1000.0 + 50.0 * np.sin(np.arange(96) * 2 * np.pi / 24),
+			"temp_c": 25.0 + 3.0 * np.cos(np.arange(96) * 2 * np.pi / 24),
+		}
+	)
+	assert_causal_features(
+		lambda f: build_features(f, group_column=ZONE_COLUMN),
+		frame,
+		["outage_rate_lag", "outage_count_lag", "outage_max_lag"],
+		target_column="outage",
+		group_column=ZONE_COLUMN,
+	)
 
 
 if __name__ == "__main__":  # pragma: no cover

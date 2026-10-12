@@ -113,11 +113,16 @@ def groups() -> list[Group]:
 			_uv("pytest", "-q", "tests/ci/canaries"),
 			"every gate must be seen to fail on its planted defect",
 		),
-		# `scripts/gate_register.py --check` belongs here and is deliberately not
-		# yet: it currently reports 39 unimplemented and 20 uncanaried gates, and
-		# wiring a group that cannot pass teaches everyone to bypass the runner.
-		# It becomes a group the moment the register reports zero, which is the
-		# same condition `12-quality.md` §9 criteria 2 and 7 name.
+		# The register is derived, not maintained: it reads the plans for the gates
+		# they promise and the tests for the gates they implement, so a promised
+		# gate with no test, or a test with no canary, fails here without anyone
+		# having to remember to update a list. It became a group when it first
+		# reported zero, which is the condition this comment used to name.
+		Group(
+			"gates",
+			[sys.executable, str(ROOT / "scripts" / "gate_register.py"), "--check"],
+			"every promised gate has a test and a canary (12-quality §9 criteria 2 and 7)",
+		),
 		Group(
 			"determinism",
 			[sys.executable, str(ROOT / "scripts" / "determinism.py")],

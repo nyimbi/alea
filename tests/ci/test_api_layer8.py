@@ -627,7 +627,10 @@ def test_keys_stored_hashed(client: TestClient) -> None:
 
 	The specification's ``VALID_KEYS`` is a list of plaintext keys. Here the
 	store holds only scrypt hashes, and revocation is a state rather than a
-	delete, so a revoked key and a nonexistent one are told apart by their code.
+	delete, so a revoked key and a nonexistent one are told apart by their code --
+	§8 ``test_revoked_key_distinguishable``. The canary in
+	``tests/ci/canaries/test_api_gates.py`` collapses the two failure codes and
+	watches this fail.
 	"""
 	minted = client.post(
 		"/api/v1/keys",
@@ -671,6 +674,37 @@ def test_keys_are_tiered(client: TestClient, keys: dict) -> None:
 	assert client.get("/api/v1/signals", headers=keys["restricted"]).status_code == 200
 	assert client.get("/api/v1/keys", headers=keys["restricted"]).status_code == 403
 	assert client.get("/api/v1/keys", headers=keys["internal"]).status_code == 200
+
+
+# --------------------------------------------------------------------------
+# The cache key covers the artefact checksum (11-layer8 §6)
+# --------------------------------------------------------------------------
+
+
+def test_cache_key_includes_checksum() -> None:
+	"""§8 ``test_cache_key_includes_checksum``: a different artefact is a different key.
+
+	The plan's cache rule (§6): a key over the URL alone serves a result
+	computed against a previous network -- the same defect as Layer 5's
+	``hash()``-based key. The checksum is the component that makes that
+	impossible, so the key must move when the artefact does. The canary in
+	``tests/ci/canaries/test_api_gates.py`` drops the checksum from the key and
+	watches this fail.
+	"""
+	from alea.api.middleware import cache_key
+
+	params: dict[str, object] = {"country": "KE", "horizon_hours": 24}
+	one = cache_key("outages.forecast", checksum="sha256:" + "ab" * 32, params=params)
+	two = cache_key("outages.forecast", checksum="sha256:" + "cd" * 32, params=params)
+	assert one != two, "the key ignored the artefact checksum"
+
+	# The checksum is not the only component. An endpoint- or parameter-only
+	# key would collide the other way -- two different requests sharing an entry
+	# -- so both must move the key too.
+	assert cache_key("prices", checksum="sha256:" + "ab" * 32, params=params) != one
+	assert (
+		cache_key("outages.forecast", checksum="sha256:" + "ab" * 32, params={"country": "TZ"}) != one
+	)
 
 
 # --------------------------------------------------------------------------
@@ -1029,6 +1063,33 @@ def test_an_unfinished_job_result_is_a_conflict(config: Config, scratch: Path, k
 # --------------------------------------------------------------------------
 
 
+def ussd_gate_holds(message: str, *, omitted: int = 0) -> bool:
+	"""The properties `test_ussd_never_truncates` asserts about a message.
+
+	Extracted so the canary can drive the gate's own predicate against a
+	truncated message. A gate whose logic exists only inline, over a live client,
+	is a gate that cannot be shown failing -- and a gate nobody has watched fail
+	is not evidence (AD-10).
+
+	``omitted`` is the number of zones the renderer dropped, which the message
+	alone cannot tell us: a forecast that fits every zone legitimately carries no
+	omission marker, so requiring one unconditionally would fail on a short feed
+	and the gate would be switched off. When zones *were* dropped the marker is
+	mandatory -- an unmarked omission reads as though nothing else was at risk,
+	which is the failure §5.1 names.
+	"""
+	if len(message) > USSD_MAX_CHARS:
+		return False
+	if omitted and not ("+" in message and "more" in message):
+		return False
+	# Every named zone must be a complete name, never a cut one.
+	for token in message.split(": ", 1)[-1].split(", "):
+		name = token.rsplit(" ", 1)[0].rstrip("+0123456789 ")
+		if name and name != "+" and name.endswith("-"):
+			return False
+	return True
+
+
 def test_ussd_never_truncates(client: TestClient, keys: dict) -> None:
 	"""USSD output is at most 182 characters and never cuts a zone name.
 
@@ -1051,15 +1112,11 @@ def test_ussd_never_truncates(client: TestClient, keys: dict) -> None:
 		for index in range(30)
 	]
 	message = format_ussd_forecast(rows, country="KE")
-	assert len(message) <= USSD_MAX_CHARS, f"{len(message)} characters: {message!r}"
-	assert "+" in message and "more" in message, (
-		f"the message omitted zones without saying so: {message!r}"
+	# 30 rows are more than any screen holds, so zones were dropped and the
+	# marker is required.
+	assert ussd_gate_holds(message, omitted=len(rows)), (
+		f"the rendered message is not a complete one: {message!r}"
 	)
-	# Every named zone is a complete name, never a cut one.
-	for token in message.split(": ", 1)[-1].split(", "):
-		name = token.rsplit(" ", 1)[0].rstrip("+0123456789 ")
-		if name and name != "+":
-			assert not name.endswith("-"), f"a zone name was cut: {token!r}"
 
 	# And through the route, against the scratch forecast.
 	response = client.post(
@@ -1068,7 +1125,7 @@ def test_ussd_never_truncates(client: TestClient, keys: dict) -> None:
 		json={"session_id": "s1", "phone_number": "+254700000000", "text": "1"},
 	)
 	assert response.status_code == 200, response.text
-	assert len(response.json()["text"]) <= USSD_MAX_CHARS
+	assert ussd_gate_holds(response.json()["text"]), response.text
 
 
 def test_sms_is_bounded_and_reserves_its_link(client: TestClient, keys: dict) -> None:
@@ -1090,6 +1147,53 @@ def test_sms_is_bounded_and_reserves_its_link(client: TestClient, keys: dict) ->
 # --------------------------------------------------------------------------
 
 
+def _refs(node: object) -> list[str]:
+	"""Every ``$ref`` string anywhere in a document node."""
+	found: list[str] = []
+	if isinstance(node, dict):
+		for key, value in node.items():
+			if key == "$ref":
+				found.append(value)
+			else:
+				found.extend(_refs(value))
+	elif isinstance(node, list):
+		for value in node:
+			found.extend(_refs(value))
+	return found
+
+
+def openapi_gate_holds(spec: dict) -> bool:
+	"""The document properties `test_openapi_valid` asserts, as a predicate.
+
+	Extracted for the same reason as `ussd_gate_holds`: a gate that can only run
+	against the live app cannot be handed a broken document, so it can never be
+	watched failing. Every branch here is one the canary plants a defect for.
+
+	The route-inventory half stays in the test: it needs the app, not the
+	document, and a served route missing from the document is a different defect
+	from a malformed one.
+	"""
+	if not str(spec.get("openapi", "")).startswith("3."):
+		return False
+	if not spec.get("info", {}).get("title"):
+		return False
+	components = spec.get("components", {}).get("schemas", {})
+	for ref in _refs(spec):
+		if ref.startswith("#/") and ref.split("/")[-1] not in components:
+			return False
+	operation_ids: list[str] = []
+	for operations in spec.get("paths", {}).values():
+		for method, operation in operations.items():
+			if method not in ("get", "post", "put", "patch", "delete"):
+				continue
+			if not operation.get("responses"):
+				return False
+			if "operationId" not in operation:
+				return False
+			operation_ids.append(operation["operationId"])
+	return len(operation_ids) == len(set(operation_ids))
+
+
 def test_openapi_valid(config: Config) -> None:
 	"""The generated document is structurally sound and self-consistent.
 
@@ -1102,39 +1206,7 @@ def test_openapi_valid(config: Config) -> None:
 
 	app = create_app(config)
 	spec = app.openapi()
-	assert spec["openapi"].startswith("3."), spec["openapi"]
-	assert spec["info"]["title"], "the document has no title"
-
-	# Every local $ref resolves to a defined component.
-	components = spec["components"]["schemas"]
-
-	def refs(node: object) -> list[str]:
-		found: list[str] = []
-		if isinstance(node, dict):
-			for key, value in node.items():
-				if key == "$ref":
-					found.append(value)
-				else:
-					found.extend(refs(value))
-		elif isinstance(node, list):
-			for value in node:
-				found.extend(refs(value))
-		return found
-
-	for ref in refs(spec):
-		if ref.startswith("#/"):
-			name = ref.split("/")[-1]
-			assert name in components, f"dangling $ref: {ref}"
-
-	# Every operation has responses and a unique operation id.
-	operation_ids: list[str] = []
-	for path, operations in spec["paths"].items():
-		for method, operation in operations.items():
-			if method not in ("get", "post", "put", "patch", "delete"):
-				continue
-			assert operation.get("responses"), f"{method.upper()} {path} has no responses"
-			operation_ids.append(operation["operationId"])
-	assert len(operation_ids) == len(set(operation_ids)), "operation ids are not unique"
+	assert openapi_gate_holds(spec), "the generated document is not self-consistent"
 
 	# The document covers exactly the served routes (modulo path params).
 	documented = set(spec["paths"])

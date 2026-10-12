@@ -306,13 +306,15 @@ def test_every_connector_reports_health_that_distinguishes_broken_from_quiet():
 
 
 def test_a_canary_failure_is_reported_as_layout_changed_without_touching_the_network():
-	"""§3.3's failure mode: the canary is checked *before* the request.
+	"""The gate `test_scraper_layout_canary` (10-layer7 §9): a layout change is
+	reported, not ``[]``.
 
-	A canary whose fixture no longer parses means the live page will not either.
-	The connector must report ``layout_changed`` from the canary alone — the
+	§3.3's failure mode: the canary is checked *before* the request. A canary
+	whose fixture no longer parses means the live page will not either, and the
+	connector must report ``layout_changed`` from the canary alone — the
 	documented reason for checking first is that a request producing ``[]`` looks
-	like a quiet day. The stronger end-to-end version (feed changed HTML and
-	watch the *live* selector fail) is ``canaries/test_scraper_layout_canary.py``.
+	like a quiet day. The end-to-end half (feed changed HTML and watch the *live*
+	selector fail) is in ``canaries/test_scanning_connector_gates.py``.
 	"""
 	import asyncio
 

@@ -21,8 +21,10 @@ The gates are split in two by where the defect lives:
   dependency that makes them true -- an in-memory job store, a limiter that
   never refuses -- and showing the assertion fails.
 
-``test_the_source_scan_catches_a_planted_solve`` is the one source canary: the
-inline-solve gate reads files, so it needs a real file to read.
+``test_the_source_scan_catches_a_planted_solve`` and
+``test_the_cache_key_gate_catches_a_dropped_checksum`` are the source canaries:
+the inline-solve gate reads files and the cache key is computed in the package,
+so each needs a real file to read or reload.
 """
 
 from __future__ import annotations
@@ -37,7 +39,7 @@ from alea.api.app import create_app
 from alea.api.middleware import RateLimiter
 from alea.config.loader import load_config
 from alea.config.models import Config
-from tests.ci.canaries import planted
+from tests.ci.canaries import REPO, planted
 from tests.ci.test_api_layer8 import (
 	ADMIN_KEY,
 	_bare_quantity_offenders,
@@ -47,6 +49,8 @@ from tests.ci.test_api_layer8 import (
 	_population_artefacts,
 	_run_log,
 )
+
+MIDDLEWARE_PY = REPO / "src" / "alea" / "api" / "middleware.py"
 
 # --------------------------------------------------------------------------
 # A scratch application, matching the layer-8 test fixtures.
@@ -154,6 +158,44 @@ def test_the_source_scan_catches_a_planted_solve() -> None:
 		)
 
 
+def test_the_cache_key_gate_catches_a_dropped_checksum() -> None:
+	"""``test_cache_key_includes_checksum`` must fail when the checksum is dropped.
+
+	The defect is the specification's key: the endpoint and parameters, without
+	the artefact checksum. Dropping ``checksum`` from the canonical payload is
+	exactly that key -- two requests against different networks then collide --
+	and the gate's assertion that a different checksum gives a different key
+	fails. A real file is mutated because the key is computed in the package, not
+	handed to it.
+	"""
+	import importlib
+
+	import alea.api.middleware as middleware_module
+
+	source = MIDDLEWARE_PY.read_text()
+	target = '\t\t{"namespace": namespace, "checksum": checksum, "params": params},'
+	assert target in source, "canary target not found: the canonical payload line moved"
+
+	with planted(
+		MIDDLEWARE_PY,
+		target,
+		'\t\t{"namespace": namespace, "params": params},',
+	):
+		importlib.reload(middleware_module)
+		one = middleware_module.cache_key("outages.forecast", checksum="sha256:" + "ab" * 32, params={})
+		two = middleware_module.cache_key("outages.forecast", checksum="sha256:" + "cd" * 32, params={})
+		assert one == two, (
+			"the checksum-dropped key still distinguished two artefacts; the canary "
+			"did not reproduce the defect"
+		)
+
+	importlib.reload(middleware_module)
+	restored = middleware_module.cache_key
+	assert restored("outages.forecast", checksum="sha256:" + "ab" * 32, params={}) != restored(
+		"outages.forecast", checksum="sha256:" + "cd" * 32, params={}
+	)
+
+
 # --------------------------------------------------------------------------
 # Behavioural gates: invert the dependency and show the assertion fails.
 # --------------------------------------------------------------------------
@@ -184,11 +226,13 @@ def test_the_rate_limit_gate_catches_a_disabled_limiter(
 def test_the_revoked_key_gate_catches_collapsed_codes(
 	config: Config, scratch: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-	"""``test_keys_stored_hashed`` must fail if revoked and unknown collapse.
+	"""``test_revoked_key_distinguishable`` must fail if revoked and unknown collapse.
 
 	The plan requires a revoked key (403) to be distinguishable from one that
-	never existed (401). Collapsing them -- here by making the store report every
-	missing or revoked key as ``unknown_key`` with a 401 -- must break the gate.
+	never existed (401) -- §8 ``test_revoked_key_distinguishable``, asserted by
+	``test_keys_stored_hashed`` in the suite. Collapsing them -- here by making
+	the store report every missing or revoked key as ``unknown_key`` with a 401 --
+	must break the gate.
 	"""
 	from alea.api import auth
 
@@ -264,3 +308,117 @@ def test_the_durable_job_gate_catches_an_in_memory_store(
 			f"the forgetful store remembered the job ({status.status_code}); the "
 			f"canary did not reproduce the defect"
 		)
+
+
+# --------------------------------------------------------------------------
+# The two Layer 8 gates the register found uncanaried.
+#
+# Both are canaried against the gate's own predicate rather than the live app:
+# a gate that can only run against the running service cannot be handed the
+# broken artefact it exists to reject, so it can never be watched failing. The
+# predicates are `ussd_gate_holds` and `openapi_gate_holds`, and each branch of
+# them is one of these canaries.
+# --------------------------------------------------------------------------
+
+
+def _long_forecast_rows(count: int) -> list:
+	from datetime import UTC, datetime
+
+	from alea.api.views import OutageForecastRowOut, ValueOut
+
+	return [
+		OutageForecastRowOut(
+			country_iso="KE",
+			grid_zone=f"Zone-{index:02d}-long-name",
+			probability=ValueOut.measured(0.9 - index * 0.01, "probability"),
+			horizon_hours=24,
+			issued_at=datetime(2026, 1, 1, tzinfo=UTC),
+		)
+		for index in range(count)
+	]
+
+
+def test_the_ussd_gate_catches_a_silent_omission() -> None:
+	"""``test_ussd_never_truncates`` must fail when dropped zones go unmentioned.
+
+	The defect is the naive renderer: take the prefix that fits the screen and
+	say nothing about the rest. The message is then silent about the omission --
+	it reads as though nothing else was at risk, which is the failure 11-layer8
+	§5.1 names.
+	"""
+	from alea.api.adapters.ussd import format_ussd_forecast
+	from tests.ci.test_api_layer8 import ussd_gate_holds
+
+	rows = _long_forecast_rows(30)
+	good = format_ussd_forecast(rows, country="KE")
+	assert ussd_gate_holds(good, omitted=len(rows)), (
+		"the gate rejects the shipped renderer; the canary is moot"
+	)
+
+	# The defect: the same prefix, with the omission marker stripped.
+	assert "+" in good, "the shipped renderer dropped zones without a marker"
+	silent = good.split(" +")[0]
+	assert len(silent) <= len(good), "the planted message is not the defect"
+	assert not ussd_gate_holds(silent, omitted=len(rows)), (
+		"the USSD gate accepted a message that dropped zones without saying so"
+	)
+	# And it is only the marker the gate is reacting to: the same text is fine
+	# when nothing was omitted, which is what keeps the gate from failing a
+	# short feed and being switched off.
+	assert ussd_gate_holds(silent, omitted=0)
+
+
+def test_the_ussd_gate_catches_a_cut_zone_name() -> None:
+	"""The other half: a message inside the width that ends a name mid-word.
+
+	A cut name is a zone the operator cannot act on, and it is the failure a
+	length check alone misses.
+	"""
+	from tests.ci.test_api_layer8 import ussd_gate_holds
+
+	assert not ussd_gate_holds("KE risk 24h: Zone-01-long- 90%, Zone-02 89% +2 more"), (
+		"the USSD gate accepted a message ending a zone name mid-word"
+	)
+
+
+def test_the_openapi_gate_catches_a_dangling_ref(config: Config) -> None:
+	"""``test_openapi_valid`` must fail on a ``$ref`` that resolves to nothing.
+
+	The defect is planted in a *copy* of the generated document: a dangling
+	reference is the class the gate's first loop exists to catch, and it is the
+	one a schema rename leaves behind. Editing the copy rather than the source
+	exercises the gate's own predicate with no file to restore.
+	"""
+	from tests.ci.test_api_layer8 import openapi_gate_holds
+
+	spec = create_app(config).openapi()
+	assert openapi_gate_holds(spec), "the gate rejects the shipped document; the canary is moot"
+
+	broken = copy.deepcopy(spec)
+	first = next(iter(broken["components"]["schemas"]))
+	# Rename a component and leave every reference to it in place.
+	broken["components"]["schemas"][f"{first}_renamed"] = broken["components"]["schemas"].pop(first)
+	assert not openapi_gate_holds(broken), (
+		"the OpenAPI gate accepted a document with a dangling $ref; a renamed "
+		"schema would ship undetected"
+	)
+
+
+def test_the_openapi_gate_catches_an_operation_without_responses(config: Config) -> None:
+	"""The other half of the same gate: an operation with no ``responses``.
+
+	A document that omits responses still parses, so nothing but the gate catches
+	it -- and a client generated from it has no return type.
+	"""
+	from tests.ci.test_api_layer8 import openapi_gate_holds
+
+	spec = create_app(config).openapi()
+	assert openapi_gate_holds(spec), "the gate rejects the shipped document; the canary is moot"
+
+	broken = copy.deepcopy(spec)
+	path = next(iter(broken["paths"]))
+	method = next(m for m in broken["paths"][path] if m in ("get", "post", "put", "patch", "delete"))
+	del broken["paths"][path][method]["responses"]
+	assert not openapi_gate_holds(broken), (
+		"the OpenAPI gate accepted an operation with no responses"
+	)
