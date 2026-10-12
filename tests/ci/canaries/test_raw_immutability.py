@@ -7,10 +7,21 @@ but only if something checks. If `store_raw` trusted the directory name instead
 of re-hashing the file, an edited payload would be served forever under the
 checksum the provenance record attests to, and every number derived from it
 would be unreproducible with no indication why.
+
+**A canary must not `importlib.reload` the module it blinds.** The canary here
+did, in the parent process, and a reload builds new class objects: the
+``ArtefactError`` every other module imported became a stale binding, so
+`pytest.raises(ArtefactError)` stopped catching a genuine one and the failure
+surfaced in an unrelated test that ran later. It mutates the source and
+exercises it in a **subprocess** instead, which imports the mutated source
+cleanly and cannot leak a class identity into the suite.
 """
 
 from __future__ import annotations
 
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -55,39 +66,83 @@ def test_edited_bytes_under_a_checksum_directory_are_refused(tmp_path: Path):
 		store_raw("canary", PAYLOAD, _provenance(), root=tmp_path)
 
 
+#: Runs the tamper check against the tree as it stands on disk and prints the
+#: outcome. A **subprocess**, not an in-process `importlib.reload`, and that is
+#: the whole point of this canary's shape -- see the module docstring.
+_TAMPER_PROGRAM = """
+import tempfile
+from pathlib import Path
+from alea.io.artefacts import ArtefactError, store_raw
+from alea.provenance.models import Basis, Licence, Provenance
+
+payload = b"observed capacity, 2026-01-01\\n"
+prov = Provenance(
+    source_id="canary",
+    source_url="https://example.org/canary",
+    licence=Licence.CC_BY_4_0,
+    basis=Basis.MEASURED,
+    uncertainty=0.0,
+    notes="canary",
+)
+root = Path(tempfile.mkdtemp(prefix="canary-raw-"))
+stored = store_raw("canary", payload, prov, root=root)
+stored.write_bytes(b"tampered\\n")
+try:
+    store_raw("canary", payload, prov, root=root)
+except ArtefactError:
+    print("refused")
+else:
+    print("accepted")
+"""
+
+
+def _tamper_outcome() -> str:
+	"""``"refused"`` or ``"accepted"``, from a subprocess against the on-disk tree."""
+	env = {**os.environ, "PYTHONPATH": str(REPO)}
+	completed = subprocess.run(
+		[sys.executable, "-c", _TAMPER_PROGRAM],
+		capture_output=True,
+		text=True,
+		check=False,
+		env=env,
+	)
+	assert completed.returncode == 0, completed.stderr
+	return completed.stdout.strip()
+
+
 def test_the_rehash_is_the_gate():
-	"""Canary proper: remove the re-hash and watch the tamper check go blind."""
+	"""Canary proper: remove the re-hash and watch the tamper check go blind.
+
+	**Why a subprocess rather than an in-process `importlib.reload`.** This test
+	used to reload `alea.io.artefacts` in the parent process, twice. A reload
+	re-executes the module and builds **new class objects**, so the
+	``ArtefactError`` every other module bound at import time becomes a stale
+	one: `pytest.raises(ArtefactError)` then fails to catch an exception whose
+	type and message both look right, and the failure lands in whichever
+	unrelated test runs next. It did -- `test_planning_inputs.py` failed after
+	the canaries in every full-suite run, and passed in isolation, which reads
+	as a flake in a file the change never touched. The reload bought nothing
+	that a fresh interpreter does not: `planted` mutates the source, and a
+	subprocess imports the mutated source from scratch.
+	"""
 	artefacts = REPO / "src" / "alea" / "io" / "artefacts.py"
 	target = 'existing = payload_path.exists() and sha256_file(payload_path) == checksum'
 	assert target in artefacts.read_text(), "canary target not found"
 
-	import importlib
-	import tempfile
-
-	import alea.io.artefacts as artefacts_module
+	# The gate, as shipped.
+	assert _tamper_outcome() == "refused", "the shipped re-hash accepted a tampered payload"
 
 	with planted(artefacts, target, "existing = payload_path.exists()"):
-		importlib.reload(artefacts_module)
-		root = Path(tempfile.mkdtemp(prefix="canary-raw-"))
-		stored = artefacts_module.store_raw("canary", PAYLOAD, _provenance(), root=root)
-		stored.write_bytes(b"tampered\n")
 		# With the re-hash gone the tampered payload is accepted silently. This
-		# is the blindness the canary asserts; if it still raised, the re-hash
+		# is the blindness the canary asserts; if it still refused, the re-hash
 		# was not what the test above was measuring.
-		returned = artefacts_module.store_raw("canary", PAYLOAD, _provenance(), root=root)
-		assert returned == stored
-
-	# Reloaded *after* `planted` has restored the file. Reloading inside the
-	# context manager re-reads the mutated source and leaves the module blind
-	# for every test that follows.
-	importlib.reload(artefacts_module)
+		assert _tamper_outcome() == "accepted", (
+			"the tamper check still refused with the re-hash removed, so the "
+			"re-hash is not the gate this canary claims to watch"
+		)
 
 	# Restored: the gate works again.
-	root = Path(tempfile.mkdtemp(prefix="canary-raw-"))
-	stored = artefacts_module.store_raw("canary", PAYLOAD, _provenance(), root=root)
-	stored.write_bytes(b"tampered\n")
-	with pytest.raises(artefacts_module.ArtefactError, match="tampered"):
-		artefacts_module.store_raw("canary", PAYLOAD, _provenance(), root=root)
+	assert _tamper_outcome() == "refused", "the restore did not put the gate back"
 
 
 def test_raw_path_is_a_function_of_the_checksum(tmp_path: Path):
