@@ -229,6 +229,12 @@ def test_v2g_degradation_cost_lands_on_marginal_cost_with_its_source():
 
 
 def test_v2g_gate_reads_the_same_key_as_the_column():
+	"""§6 ``test_v2g_has_degradation_cost``: the gate reads the column PyPSA charges.
+
+	A V2G link whose degradation cost is sourced under a name PyPSA ignores has a
+	cost nobody applies. The gate reads ``marginal_cost`` -- the column the value
+	and its source both live in -- so the two cannot disagree.
+	"""
 	config = Config(
 		scenario=ScenarioConfig(countries=["KE"]),
 		sector=SectorConfig(v2g_enabled=True, v2g_degradation_usd_per_mwh=15.0),
@@ -243,7 +249,11 @@ def test_v2g_gate_reads_the_same_key_as_the_column():
 
 
 def test_v2g_gate_fails_when_only_the_old_name_carries_the_source():
-	"""The bridge between the two names is gone: a renamed source is caught."""
+	"""§6 ``test_v2g_has_degradation_cost``: the bridge between the two names is gone.
+
+	The cost is present under the old, ignored name and absent from
+	``marginal_cost``, and the gate refuses it: a renamed source is caught.
+	"""
 	row = _v2g_row()
 	# Move the source back to the old, ignored name, keeping the value column.
 	broken = row.model_copy(
@@ -459,7 +469,7 @@ def _solved_hydrogen_network() -> pypsa.Network:
 
 
 def test_the_hydrogen_balance_closes_with_export_and_storage():
-	"""Exports are their own term and storage is net energy into the store.
+	"""§6 ``test_hydrogen_mass_balance``: exports are their own term, storage is net energy in.
 
 	The balance subtracted the export load twice (once in ``consumed``, once as
 	``exported``) and computed ``storage_delta`` as ``e.iloc[-1] - e.iloc[0]``,
@@ -476,7 +486,10 @@ def test_the_hydrogen_balance_closes_with_export_and_storage():
 
 
 def test_the_hydrogen_balance_notices_a_planted_leak():
-	"""Canary: the closing balance is not closing by construction."""
+	"""§6 ``test_hydrogen_mass_balance``: the balance is not closing by construction.
+
+	Canary: a leak nobody accounted for must move the residual past tolerance.
+	"""
 	from alea.sector.hydrogen import h2_mass_balance
 
 	network = _solved_hydrogen_network()
@@ -486,6 +499,12 @@ def test_the_hydrogen_balance_notices_a_planted_leak():
 
 
 def test_the_heat_balance_closes_with_thermal_storage():
+	"""§6 ``test_energy_balance_closes``: heat balances with a thermal store.
+
+	Heat has no export term, and the balance states that as zero rather than
+	omitting it: a balance that quietly drops a term is indistinguishable from
+	one where the term is genuinely absent.
+	"""
 	from alea.sector.coupling import add_sector_buses, apply_views
 	from alea.sector.heat import (
 		heat_demand_view,
@@ -535,11 +554,12 @@ def _kenya_renewables_config() -> Config:
 
 
 def test_the_geothermal_cross_check_is_computed_and_carried_by_the_build():
-	"""The cross-check function existed but nothing invoked it; now it runs.
+	"""§6 ``test_geothermal_potential_crosscheck``: the modelled potential is cross-checked.
 
-	The modelled potential is read from the view that reached the portfolio, so
-	the cross-check is against the number on the network, not against the
-	argument that produced it.
+	The cross-check function existed but nothing invoked it; now it runs, and the
+	modelled potential is read from the view that reached the portfolio, so the
+	cross-check is against the number on the network, not against the argument
+	that produced it.
 	"""
 	from alea.sector.renewables import build_renewables
 
@@ -653,3 +673,94 @@ def test_the_sector_layer_extends_a_layer_one_config_without_replacing_it():
 	assert coupled.solve == layer1.solve
 	assert coupled.costs == layer1.costs
 	assert coupled.paths == layer1.paths
+
+
+def test_the_service_efficiency_gate_refuses_a_synthetic_unsourced_row():
+	"""§6 ``test_efficiency_has_source``: the gate refuses an unsourced efficiency.
+
+	The service gate exists for a row that reached the report without passing the
+	``LinkRow`` validator -- ``model_construct``, or a row read back from a file.
+	This is that row: a ``values["efficiency"]`` with no matching
+	``parameter_sources`` entry is a number nobody can trace, and the gate raises
+	on it rather than trusting the validator it was built to backstop.
+	"""
+	from alea.sector.service import assert_efficiency_has_source
+
+	row = LinkRow.model_construct(
+		asset="Link",
+		name="steel_dri",
+		sector=Sector.INDUSTRY,
+		carrier="steel",
+		bus0="",
+		bus1="",
+		bus2="",
+		bus3="",
+		values={"efficiency": 0.7},
+		time_series_keys=[],
+		parameter_sources={},
+		source="a citation",
+		provenance_id="p",
+		notes="",
+	)
+	report = CouplingReport.model_construct(
+		builds=[], base_digest_before="d", base_digest_after="d", rows=[row]
+	)
+	with pytest.raises(ValueError, match="no source"):
+		assert_efficiency_has_source(report)
+
+
+def test_a_sector_coupled_build_with_everything_disabled_is_layer_one():
+	"""§6 ``test_sector_is_additive``: sectors off is the electricity-only build.
+
+	The structural gate's other half: the coupled network with nothing enabled
+	must carry the base's own assets unchanged, and the build must add no sector
+	rows. A coupling layer that added an asset to a disabled sector would change
+	the electricity-only result the plan keeps as the fallback.
+	"""
+	network = _network_with_base_generator()
+	coupled, report = couple(Config(scenario=ScenarioConfig(countries=["KE"])), network)
+
+	assert report.rows == []
+	assert report.sectors == []
+	assert list(coupled.generators.index) == ["base_gen"]
+	assert report.base_unchanged
+
+
+def test_a_generic_carrier_balance_notices_a_planted_loss():
+	"""§6 ``test_energy_balance_closes``: a carrier balance closes, and a loss moves it.
+
+	``generic_balance`` sweeps every carrier nobody wrote a specialised balance
+	for -- steel, cement, chemicals, water. A link that injects into the bus and
+	draws a little more than it delivers is a loss the balance must see; if the
+	residual did not move, the gate would be arithmetic that closes by
+	construction.
+	"""
+	from alea.sector.coupling import add_sector_buses, apply_views, generic_balance
+	from alea.sector.industry import steel_scrap_eaf_view
+
+	network = _network()
+	network.add("Generator", "grid", bus="KE_elec", p_nom=1e5, marginal_cost=10.0, carrier="AC")
+	add_sector_buses(network, "KE", electricity_bus="KE_elec")
+	apply_views(
+		network,
+		[
+			steel_scrap_eaf_view(
+				"KE_elec",
+				"KE_steel",
+				efficiency=0.9,
+				efficiency_source="IEA 2024",
+				pathway_source="IEA steel roadmap",
+				extendable=True,
+			),
+		],
+	)
+	network.add("Load", "steel_demand", bus="KE_steel", p_set=50.0)
+	network.optimize(solver_name="highs", log_to_console=False)
+
+	balance = generic_balance(network, bus="KE_steel", carrier="steel")
+	assert balance.closes, balance
+
+	# A leak: the demand draws more steel than the link delivered.
+	network.loads_t.p["steel_demand"] *= 1.2
+	leaked = generic_balance(network, bus="KE_steel", carrier="steel")
+	assert not leaked.closes, leaked
