@@ -179,10 +179,14 @@ def test_the_network_key_gate_catches_a_dropped_network():
 		_params(), NETWORK_B, CODE
 	), "the network-key gate already fails on clean source"
 
-	target = '\t\t\t"network": network_checksum,\n'
+	# The mutation replaces the *value* rather than deleting the line: the
+	# payload is assembled as text, so a deleted line leaves `"network":,` and
+	# the canary would be hashing malformed JSON rather than a key that omits
+	# the network. A constant value is the same defect with a readable payload.
+	target = '\t\t+ json.dumps(network_checksum, separators=(",", ":"))\n'
 	assert target in CACHE_PY.read_text(), "canary target not found: the network line moved"
 
-	with planted(CACHE_PY, target, ""):
+	with planted(CACHE_PY, target, '\t\t+ json.dumps("", separators=(",", ":"))\n'):
 		importlib.reload(cache_module)
 		assert cache_module.cache_key(_params(), NETWORK_A, CODE) == cache_module.cache_key(
 			_params(), NETWORK_B, CODE
@@ -206,10 +210,10 @@ def test_the_code_version_key_gate_catches_a_dropped_version():
 		_params(), NETWORK_A, "0.1.1"
 	), "the code-version-key gate already fails on clean source"
 
-	target = '\t\t\t"code": code_version,\n'
+	target = '\t\t+ json.dumps(code_version, separators=(",", ":"))\n'
 	assert target in CACHE_PY.read_text(), "canary target not found: the code line moved"
 
-	with planted(CACHE_PY, target, ""):
+	with planted(CACHE_PY, target, '\t\t+ json.dumps("", separators=(",", ":"))\n'):
 		importlib.reload(cache_module)
 		assert cache_module.cache_key(_params(), NETWORK_A, "0.1.0") == cache_module.cache_key(
 			_params(), NETWORK_A, "0.1.1"
