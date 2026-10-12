@@ -12,9 +12,23 @@ docstring names. Tolerances are float32 for the f32 kernels and float64 for the
 f64 kernels.
 
 Reference-only tests cover the kernels whose *grouping* depends on a hash family
-the reference does not share (`minhash`, `deduplicate`) and the one kernel with
-no reference (`optimal_bands_rows`); those assert properties and invariants
-rather than values.
+the reference does not share (`minhash`, `deduplicate`); those assert properties
+and invariants rather than values.
+
+Every kernel has a reference, which is `03-rust-core.md` §9 criterion 3 and was
+not true until `optimal_bands_rows` and `contingency_sweep` got one. Both had
+been asserted structurally only, and both had a rule that a reader would get
+wrong from the contract alone:
+
+* `optimal_bands_rows` maximises the S-curve's *step* at the threshold, not the
+  textbook MMDS midpoint rule. The two disagree on 34 of 45 sampled inputs, so a
+  reference written from the textbook would have failed the differential test on
+  the majority of them and the failure would have looked like a kernel bug.
+* `contingency_sweep`'s `overloaded_branches` counts strict `flow > rating`, and
+  the two solvers disagree when the exact flow lands within one ULP of the
+  rating. The randomised case therefore draws ratings away from the flows it is
+  compared against; a rating set *equal* to a flow is a coin flip between two
+  correct implementations and is not a defect either way.
 """
 
 from __future__ import annotations
@@ -727,8 +741,25 @@ def test_deduplicate_is_deterministic():
 	assert first == second
 
 
+def test_optimal_bands_rows_matches_reference():
+	"""Every split is scored by the S-curve's step, not its midpoint.
+
+	`num_perm = 1` and prime `num_perm` are included deliberately: the only
+	split is `(1, num_perm)`, and a reference that initialised its best score to
+	`0.0` rather than `-inf` would return nothing for them, since the step at a
+	threshold of 0.9 is negative.
+	"""
+	for threshold in (0.3, 0.5, 0.7, 0.75, 0.8, 0.9, 0.95, 0.99):
+		for num_perm in (1, 2, 3, 7, 16, 32, 64, 128, 256, 1000):
+			got = K.optimal_bands_rows(threshold, num_perm)
+			expected = ref_dedup.optimal_bands_rows(threshold, num_perm)
+			assert got == expected, (
+				f"threshold={threshold} num_perm={num_perm}: kernel {got} != reference {expected}"
+			)
+
+
 def test_optimal_bands_rows_product_is_num_perm():
-	"""No reference: assert the structural contract the docstring states."""
+	"""The structural contract, asserted alongside the values above."""
 	for threshold in (0.5, 0.7, 0.8, 0.9):
 		for num_perm in (64, 128, 256):
 			bands, rows = K.optimal_bands_rows(threshold, num_perm)
@@ -737,7 +768,7 @@ def test_optimal_bands_rows_product_is_num_perm():
 
 
 # --------------------------------------------------------------------------
-# alea-losses: contingency sweep (structure, no value reference)
+# alea-losses: contingency sweep
 # --------------------------------------------------------------------------
 
 
@@ -773,3 +804,71 @@ def test_contingency_sweep_inputs_are_untouched():
 		susceptance, base_injection, branch_from, branch_to, branch_susceptance, ratings, 0
 	)
 	np.testing.assert_array_equal(susceptance, before)
+
+
+def test_contingency_sweep_hand_checkable_island():
+	"""A radial chain: losing the far branch strands the load behind it.
+
+	`0 - 1 - 2` with 50 MW of load at bus 2 and slack bus 0. Removing branch
+	`(1, 2)` detaches bus 2, so the DC system is singular before any angle
+	exists and the island's stranded load is what the sweep must report.
+	Removing `(0, 1)` strands buses 1 and 2 together, which is the same 50 MW:
+	generation at those buses is zero either way.
+	"""
+	susceptance = np.array([[1.0, -1.0, 0.0], [-1.0, 2.0, -1.0], [0.0, -1.0, 1.0]])
+	base_injection = np.array([[50.0, 0.0, -50.0]])
+	branch_from = np.array([0, 1], dtype=np.uint32)
+	branch_to = np.array([1, 2], dtype=np.uint32)
+	branch_susceptance = np.array([1.0, 1.0])
+	ratings = np.array([1000.0, 1000.0])
+	result = K.contingency_sweep(
+		susceptance, base_injection, branch_from, branch_to, branch_susceptance, ratings, 0
+	)
+	# Row 0 is the base case and serves everything.
+	assert result["energy_not_served"][0, 0] == pytest.approx(0.0)
+	assert not result["diverged"][0, 0]
+	# Both single outages island a bus; neither carries a NaN.
+	assert result["diverged"][1:, 0].all()
+	np.testing.assert_allclose(result["energy_not_served"][1:, 0], [50.0, 50.0])
+	assert not np.isnan(result["energy_not_served"]).any()
+	# An islanding contingency reports no overload count -- there are no angles
+	# to compute a flow from, and 0 is the honest figure rather than a guess.
+	assert (result["overloaded_branches"][1:, 0] == 0).all()
+
+
+def test_contingency_sweep_matches_reference_on_a_generic_network():
+	"""Values, not just structure, on networks whose ratings are off the flows.
+
+	The ratings are drawn away from the flows deliberately. `overloaded` counts
+	strict `flow > rating`, and when a rating lands within one ULP of a flow the
+	kernel's own Gaussian elimination and LAPACK disagree about which side of
+	the comparison the exact value falls on -- `1.0000000000000002 > 1.0` in one
+	and not the other. That is a boundary where two correct implementations
+	differ, so it is not a defect and not something to pin.
+	"""
+	generator = np.random.default_rng(7)
+	compared = 0
+	for _ in range(120):
+		n_buses = int(generator.integers(2, 7))
+		raw = generator.normal(size=(n_buses, n_buses))
+		susceptance = (raw + raw.T) / 2 + np.eye(n_buses) * n_buses
+		n_branches = int(generator.integers(1, max(2, n_buses)))
+		branch_from = generator.integers(0, n_buses, size=n_branches).astype(np.uint32)
+		branch_to = generator.integers(0, n_buses, size=n_branches).astype(np.uint32)
+		branch_susceptance = generator.uniform(0.5, 5.0, size=n_branches)
+		ratings = generator.uniform(0.05, 50.0, size=n_branches)
+		base_injection = generator.normal(size=(2, n_buses)) * 10.0
+
+		got = K.contingency_sweep(
+			susceptance, base_injection, branch_from, branch_to, branch_susceptance, ratings, 0
+		)
+		expected = ref_losses.contingency_sweep(
+			susceptance, base_injection, branch_from, branch_to, branch_susceptance, ratings, 0
+		)
+		compared += 1
+		np.testing.assert_allclose(
+			got["energy_not_served"], expected["energy_not_served"], rtol=1e-9, atol=1e-12
+		)
+		np.testing.assert_array_equal(got["overloaded_branches"], expected["overloaded_branches"])
+		np.testing.assert_array_equal(got["diverged"], expected["diverged"])
+	assert compared == 120
