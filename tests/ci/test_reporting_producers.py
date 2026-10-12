@@ -105,20 +105,44 @@ def test_every_producer_names_something_that_exists():
 		)
 
 
+#: The required section each cadence cannot generate without, while it has no
+#: producer. Pinned rather than derived, because the derived form -- intersect
+#: the required set with `UNPRODUCED` -- is a tautology: every slug in it is in
+#: `UNPRODUCED` by construction, so the assertion cannot fail and would keep
+#: passing if a cadence gained a second unproduced required section or lost its
+#: only one. The map is what makes closing a gap, or opening one, move a test.
+REQUIRED_WITHOUT_A_PRODUCER: dict[str, str] = {
+	"daily": "outage_forecast",
+	"weekly": "week_ahead",
+	"monthly": "market_report",
+	"quarterly": "market_outlook",
+	"annual": "continental_outlook",
+}
+"""One per cadence, and that is the measured state: every cadence has exactly
+one required section and none has a producer, so no cadence can be generated
+from the pipeline. The first to close shrinks this map by one."""
+
+
 @pytest.mark.parametrize("cadence", list(ReportCadence), ids=lambda c: c.value)
 def test_a_required_section_with_no_producer_is_recorded(cadence: ReportCadence):
 	"""A required section that is absent raises; that must not be a surprise.
 
 	A required section's artefact being missing is a hard `ReportDataError`, not
-	a warning -- so a cadence with an unproduced required section cannot be
-	generated from the pipeline at all. This asserts each such section is in the
-	register, so the number is measured rather than discovered at 06:00.
+	a warning -- so a cadence whose required section has no producer cannot be
+	generated from the pipeline at all. The pinned map states which section that
+	is per cadence, so this fails when the set changes in either direction: a
+	cadence that gains a second unproduced required section is a cadence further
+	from generating, and one that gains a producer is a line to delete.
 	"""
 	specs, _ = cadence_specs(cadence)
 	required = {spec.slug for spec in specs if spec.required}
-	missing = sorted(required & set(UNPRODUCED))
-	# Not an assertion that the set is empty -- it is four today. The assertion
-	# is that each one is recorded, which the partition test above enforces;
-	# this test states the *consequence* so a reader sees why it matters.
-	for slug in missing:
-		assert slug in UNPRODUCED, f"{cadence.value}'s required section {slug!r} is unrecorded"
+	unproduced = sorted(required & set(UNPRODUCED))
+
+	expected = REQUIRED_WITHOUT_A_PRODUCER.get(cadence.value)
+	assert unproduced == ([expected] if expected else []), (
+		f"{cadence.value}'s required-and-unproduced set is {unproduced}, and the "
+		f"pinned register says {expected!r}. A section that gained a producer "
+		f"moves out of `UNPRODUCED` and this map must drop it; a required section "
+		f"that lost its producer is a cadence that can no longer be generated, "
+		f"and the map must gain it."
+	)
