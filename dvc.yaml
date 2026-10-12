@@ -208,3 +208,15 @@ stages:
       - data/processed/dispatch.parquet
     outs:
       - data/processed/tlens.json
+
+  resilience_contingency:
+    desc: "The N-1 sweep as per-element serving rows for the API's contingency route."
+    cmd: >-
+      uv run --directory . alea build resilience_contingency
+      --out data/processed/resilience/contingency.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/network_arrays.json
+      - data/processed/dispatch.parquet
+    outs:
+      - data/processed/resilience/contingency.parquet

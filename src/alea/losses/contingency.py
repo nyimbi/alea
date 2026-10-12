@@ -81,6 +81,40 @@ class SweepResult:
 		"""ENS summed over snapshots with one branch out."""
 		return float(np.nansum(self.energy_not_served_mwh[branch + 1]) * self.snapshot_hours)
 
+	def load_shed_mw(self, branch: int) -> float:
+		"""The worst unserved load, in MW, with one branch out.
+
+		The **peak** over snapshots, not the sum. The kernel's
+		``energy_not_served_mwh`` holds MW per snapshot despite its name --
+		:meth:`ens_with_out` multiplies by ``snapshot_hours`` to turn it into the
+		energy the name claims -- so a sum is MWh and only a peak is MW. The
+		serving column is ``load_shed_mw``, and reporting a sum there would
+		overstate a contingency by the number of snapshots in the series: 8760x
+		for an hourly year, printed under a unit that says MW.
+		"""
+		values = self.energy_not_served_mwh[branch + 1]
+		finite = values[np.isfinite(values)]
+		if finite.size == 0:
+			return float("nan")
+		return float(np.max(finite))
+
+	def overloaded_elements(self, branch: int) -> int:
+		"""The most elements overloaded in any one snapshot with ``branch`` out.
+
+		A **count of elements**, from the kernel's ``overloaded_branches``, which
+		holds the overloaded-branch count per (contingency, snapshot) rather than
+		a flag. The worst snapshot's count, because the serving column is
+		``overloaded_elements`` and it sits beside a severity band derived from
+		MW: the number that describes the contingency is how many elements were
+		overloaded at once, not how many snapshots had any overload at all. Those
+		two differ whenever a sweep has more than one snapshot, and the second
+		would read as a count of elements while being a count of timestamps.
+		"""
+		values = self.overloaded_branches[branch + 1]
+		if values.size == 0:
+			return 0
+		return int(np.max(values))
+
 
 def sweep(
 	network: Network,
@@ -266,6 +300,40 @@ def summary(
 	)
 
 
+def element_records(
+	network: Network,
+	injections_mw: NDArray[np.float64],
+	config: LossConfig | None = None,
+) -> list[dict[str, Any]]:
+	"""One record per branch outage, for the serving projection.
+
+	The per-element form the sweep computes and :func:`summary` discards. A
+	summary names no element, so it is not a row any consumer can act on: the
+	API's ``ContingencyRowOut`` carries ``element_id`` and ``load_shed_mw``, and
+	a projection from an aggregate would have to invent both.
+
+	``element_type`` is ``"line"`` for every record. The kernel takes a branch
+	table and has no transformers -- ``Network`` is buses and branches, and
+	`alea.planning.arrays` refuses a ``Link`` for the same reason -- so a record
+	claiming otherwise would be a type the sweep cannot have produced.
+	"""
+	cfg = config or LossConfig()
+	result = sweep(network, injections_mw, cfg)
+	records: list[dict[str, Any]] = []
+	for branch in range(network.n_branches):
+		records.append(
+			{
+				"element_id": network.name_of(branch),
+				"element_type": "line",
+				"load_shed_mw": result.load_shed_mw(branch),
+				"overloaded_elements": result.overloaded_elements(branch),
+				"diverged_snapshots": int(result.diverged[branch + 1].sum()),
+				"ens_mwh": result.ens_with_out(branch),
+			}
+		)
+	return records
+
+
 def tlens_payload(ranking: TlensRanking) -> dict[str, Any]:
 	"""The ranking as a JSON-ready payload for an artefact."""
 	return {
@@ -280,6 +348,7 @@ def tlens_payload(ranking: TlensRanking) -> dict[str, Any]:
 
 __all__ = [
 	"SweepResult",
+	"element_records",
 	"summary",
 	"sweep",
 	"tlens",

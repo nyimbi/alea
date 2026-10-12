@@ -340,12 +340,15 @@ producer wearing an exemption -- the failure this register exists to catch.
 """
 
 
-PROJECTION_STAGES: Final[MappingProxyType[str, str]] = MappingProxyType({})
+PROJECTION_STAGES: Final[MappingProxyType[str, str]] = MappingProxyType(
+	{
+		"resilience_contingency": "resilience_contingency",
+	}
+)
 """Tables a projection **stage** writes, keyed by table name to stage name.
 
-Empty, and deliberately so: no projection has a stage yet. This is the register
-that makes "wired" a claim someone makes rather than an inference the gate
-draws, and the inference is why it exists.
+The first entry, and the register is what makes "wired" a claim someone makes
+rather than an inference the gate draws.
 
 The gate cannot decide a table is produced from a *name match* against the stage
 registry. `outage_history` is both a serving table (`data/processed/outages/
@@ -438,15 +441,6 @@ UNWIRED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"`@stage(\"resilience\")` reads both, nothing writes either, and the "
 			"stage has no rule. The population denominator is a proxy quantity that "
 			"must arrive with its own provenance, so inventing it is not an option."
-		),
-		"data/processed/resilience/contingency.parquet": (
-			"The arrays and dispatch it needs exist now, and the layer computes the "
-			"sweep (`alea.losses.contingency.sweep`), but the serving schema is "
-			"per-element rows -- `element_id`, `load_shed_mw`, `overloaded_elements` -- "
-			"and `contingency_to_artefact` writes `summary()`, one aggregate "
-			"`ContingencySummary` for the whole sweep. A projection needs the "
-			"per-element record the sweep holds internally and the writer discards, "
-			"so the gap is a stage that reads the sweep rather than the summary."
 		),
 	}
 )

@@ -297,6 +297,7 @@ _REGISTRATION_MODULES = (
 	"alea.losses.service",
 	"alea.outages.service",
 	"alea.planning.arrays",
+	"alea.publish.stages",
 	"alea.quality.service",
 	"alea.resilience.service",
 	"alea.sector.service",

@@ -50,6 +50,7 @@ STAGES = (
 	"outage_history",
 	"outage_truth",
 	"renewable_profiles",
+	"resilience_contingency",
 	"tlens",
 	"topology",
 )
@@ -192,7 +193,7 @@ def test_snakemake_and_dvc_agree_on_each_stage_s_output():
 		# same omission on a name that *was* in `SUFFIXES` would have compared
 		# the wrong path and passed.
 		pairs = re.findall(
-			r'processed\(\s*"([a-z_]+)"\s*(?:,\s*"([^"]+)")?\s*\)', body
+			r'processed\(\s*"([a-z_]+(?:/[a-z_]+)*)"\s*(?:,\s*"([^"]+)")?\s*\)', body
 		)
 		if not pairs:
 			# `cutout` names the `CUTOUT` constant, which is

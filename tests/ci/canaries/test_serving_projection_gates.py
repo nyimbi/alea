@@ -172,11 +172,17 @@ def test_the_gate_catches_a_wiring_claim_whose_stage_does_not_exist():
 	match. A claim that outlives its stage is the exemption failure in a
 	different register: the table reads as produced by something that is gone.
 	"""
+	# The entry is *added to* rather than replacing the shipped one, so the
+	# planted tree differs from the shipped tree in exactly one way: an
+	# unregistered producer. Replacing the dict would also move
+	# `resilience_contingency` out of the produced set, and the gate would fail
+	# on that instead -- a canary that fails for the right reason and the wrong
+	# one at once proves neither.
 	_assert_canary(
 		PUBLISH_VIEWS_PY,
-		"PROJECTION_STAGES: Final[MappingProxyType[str, str]] = MappingProxyType({})",
-		'PROJECTION_STAGES: Final[MappingProxyType[str, str]] = MappingProxyType(\n'
-		'\t{"market_prices": "a_stage_that_was_never_registered"}\n)',
+		'\t\t"resilience_contingency": "resilience_contingency",\n',
+		'\t\t"resilience_contingency": "resilience_contingency",\n'
+		'\t\t"market_prices": "a_stage_that_was_never_registered",\n',
 		"unwired_set_is_exactly_what_is_recorded",
 		"a wiring claim naming a stage that is not registered still passed, so a "
 		"table can read as produced by a producer that does not exist",

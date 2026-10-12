@@ -43,6 +43,7 @@ include: "rules/costs.smk"
 include: "rules/market.smk"
 include: "rules/outages.smk"
 include: "rules/losses.smk"
+include: "rules/publish.smk"
 
 # The default target. Snakemake takes the first rule when no target is named,
 # and "the first rule" is fragile in a file whose rule order is maintained by
@@ -68,3 +69,4 @@ rule all:
 		processed("outage_truth"),
 		processed("network_arrays"),
 		processed("tlens"),
+		processed("resilience/contingency", ".parquet"),
