@@ -1,14 +1,23 @@
 # SPDX-License-Identifier: MIT
-"""Layer 3 defects that were declared in a signature and never reached the body.
+"""Layer 3 gates: the exit criteria of 06-layer3 §10 that nothing pinned.
 
-Four of them, each the same shape: a parameter or field that reads as a
-capability and does nothing. A caller passing ``period="YE"`` got the whole
-series; a HEDGE strategy's forward price was never read; ``clear_scenario``
-accepted ``force`` and ignored it; ``fuel_price_from_config`` always returned
-``None`` while sitting in ``__all__``.
+Two halves. The first four tests are the defects commit 4785249 fixed: a
+parameter or field that read as a capability and did nothing. A caller passing
+``period="YE"`` got the whole series; a HEDGE strategy's forward price was never
+read; ``clear_scenario`` accepted ``force`` and ignored it;
+``fuel_price_from_config`` always returned ``None`` while sitting in ``__all__``.
 
-Each test below fails against the pre-fix code, so none of them is a test of the
-shape "the function exists".
+The rest are the Layer 3 exit criteria (06-layer3 §10) that had no gate at all:
+a hand-computed Kenya merit-order stack, zonal congestion on a congested
+fixture, the competitive cross-check against Layer 1's marginal price, capture
+prices for a Kenya solar/wind fixture, the analytic VaR cross-check, a
+hand-computed bankability fixture, and the PPA FX-rate record. Each fails
+without the behaviour it asserts; where a test could not be made to fail it says
+so in its own docstring rather than counting as coverage.
+
+Every test here reads a number the way a report would, and asserts the number,
+not the shape of the call. A gate that only checks a function returned is a gate
+on the function existing.
 """
 
 from __future__ import annotations
@@ -21,9 +30,14 @@ import pytest
 
 from alea.market import fuel
 from alea.market.agents import Agent, BiddingUnit
+from alea.market.bankability import bankability, irr, npv
 from alea.market.capture import capture_by_technology
+from alea.market.clearing import clear_market, clear_market_zonal
+from alea.market.ppa import ppa_benchmark, tenor_capture_price
+from alea.market.risk import normal_var_check, value_at_risk
 from alea.market.service import clear_scenario
 from alea.market.strategy import Strategy, StrategyKind
+from alea.market.views import Bid, FxRate, Interface
 
 
 def _two_year_solar() -> tuple[pd.DataFrame, pd.Series]:
@@ -248,3 +262,349 @@ def test_a_zone_whose_unserved_energy_is_unaccounted_for_is_refused():
 			price_usd_per_mwh=90.0,
 			unserved_mwh=10.0,
 		)
+
+
+# --------------------------------------------------------------------------
+# Exit criterion 1: a hand-computed Kenya merit-order stack
+# --------------------------------------------------------------------------
+
+
+def test_kenya_merit_order_clearing_matches_a_hand_computed_stack():
+	"""A five-unit Kenya-like stack, dispatched by hand.
+
+	Stack (price, MW): geothermal 10/100, hydro 15/80, coal 40/150, gas 70/120,
+	oil 120/60. Demand 260 MW. Merit order takes all of geothermal (100, cum
+	100), all of hydro (80, cum 180), then 80 of coal (cum 260). The marginal
+	unit is coal, so the uniform price is 40 and gas and oil are not dispatched.
+	"""
+	bids = [
+		Bid(unit_id="geothermal", quantity_mw=100.0, price_usd_per_mwh=10.0),
+		Bid(unit_id="hydro", quantity_mw=80.0, price_usd_per_mwh=15.0),
+		Bid(unit_id="coal", quantity_mw=150.0, price_usd_per_mwh=40.0),
+		Bid(unit_id="gas", quantity_mw=120.0, price_usd_per_mwh=70.0),
+		Bid(unit_id="oil", quantity_mw=60.0, price_usd_per_mwh=120.0),
+	]
+	result = clear_market(bids, 260.0, value_of_lost_load_usd_per_mwh=10_000.0)
+
+	assert result.clearing_price_usd_per_mwh == pytest.approx(40.0)
+	assert result.dispatched == {
+		"geothermal": pytest.approx(100.0),
+		"hydro": pytest.approx(80.0),
+		"coal": pytest.approx(80.0),
+	}
+	assert result.unserved_mwh == pytest.approx(0.0)
+	assert result.demand_met
+
+
+def test_a_short_stack_clears_at_voll_and_reports_the_shortfall():
+	"""Exit criterion 1's other half: a stack that cannot meet demand.
+
+	Removing 200 MW of capacity from a 260 MW demand leaves 60 MW unserved, and
+	the price is VoLL, not the marginal bid -- the last MWh served cost VoLL to
+	avoid shedding it. The clearing price of a short stack quoted without the
+	shortfall is a price for a system in blackout.
+	"""
+	bids = [
+		Bid(unit_id="geothermal", quantity_mw=100.0, price_usd_per_mwh=10.0),
+		Bid(unit_id="hydro", quantity_mw=80.0, price_usd_per_mwh=15.0),
+	]
+	result = clear_market(bids, 260.0, value_of_lost_load_usd_per_mwh=10_000.0)
+
+	assert result.unserved_mwh == pytest.approx(80.0)
+	assert result.clearing_price_usd_per_mwh == pytest.approx(10_000.0)
+	assert result.shortage_price_usd_per_mwh == pytest.approx(10_000.0)
+	assert not result.demand_met
+
+
+def test_a_price_tie_breaks_on_unit_id_not_list_order():
+	"""AD-8: two units at the same price must dispatch the same way every run."""
+	alpha = Bid(unit_id="U-ALPHA", quantity_mw=60.0, price_usd_per_mwh=50.0)
+	beta = Bid(unit_id="U-BETA", quantity_mw=60.0, price_usd_per_mwh=50.0)
+	# BETA listed first; demand 60 MW. The lexicographically smaller unit wins.
+	result = clear_market([beta, alpha], 60.0, value_of_lost_load_usd_per_mwh=10_000.0)
+	assert result.dispatched == {"U-ALPHA": pytest.approx(60.0)}
+
+
+# --------------------------------------------------------------------------
+# Exit criterion 2: zonal clearing produces congestion on a congested fixture
+# --------------------------------------------------------------------------
+
+
+def _three_zone_path() -> tuple[dict[str, list[Bid]], dict[str, float], list[Interface]]:
+	"""A path A-B-C, cheap at one end and dear at the other.
+
+	Both corridors have a 60 MW limit, so the economic trade from A to C exceeds
+	either one and both bind. This is the fixture on which the old
+	``_split_area`` failed to converge -- it stranded C with A.
+	"""
+	bids = {
+		"A": [Bid(unit_id="a1", quantity_mw=200.0, price_usd_per_mwh=10.0, zone_id="A")],
+		"B": [Bid(unit_id="b1", quantity_mw=200.0, price_usd_per_mwh=40.0, zone_id="B")],
+		"C": [Bid(unit_id="c1", quantity_mw=200.0, price_usd_per_mwh=80.0, zone_id="C")],
+	}
+	demand = {"A": 50.0, "B": 100.0, "C": 150.0}
+	interfaces = [
+		Interface(from_zone="A", to_zone="B", limit_mw=60.0, susceptance=1.0),
+		Interface(from_zone="B", to_zone="C", limit_mw=60.0, susceptance=1.0),
+	]
+	return bids, demand, interfaces
+
+
+def test_zonal_clearing_produces_congestion_on_a_congested_path():
+	"""Exit criterion 2. Both corridors bind; three zones, three prices."""
+	bids, demand, interfaces = _three_zone_path()
+	result = clear_market_zonal(
+		bids, demand, interfaces, value_of_lost_load_usd_per_mwh=10_000.0
+	)
+
+	assert result.converged, "the split iteration did not converge on a path graph"
+	assert result.is_split
+	assert result.zones["A"].price_usd_per_mwh == pytest.approx(10.0)
+	assert result.zones["B"].price_usd_per_mwh == pytest.approx(40.0)
+	assert result.zones["C"].price_usd_per_mwh == pytest.approx(80.0)
+	assert len(result.congested_interfaces) == 2
+	# Each corridor carries exactly its limit, from the cheap end to the dear.
+	for flow in result.interfaces:
+		assert abs(flow.flow_mw) == pytest.approx(60.0)
+	assert result.congestion_rent_usd > 0.0
+
+
+def test_an_uncongested_zonal_market_clears_at_one_price():
+	"""The control: ample corridors must not manufacture a split or a rent."""
+	bids = {
+		"A": [Bid(unit_id="a1", quantity_mw=100.0, price_usd_per_mwh=10.0, zone_id="A")],
+		"B": [Bid(unit_id="b1", quantity_mw=100.0, price_usd_per_mwh=50.0, zone_id="B")],
+	}
+	result = clear_market_zonal(
+		bids,
+		{"A": 20.0, "B": 30.0},
+		[Interface(from_zone="A", to_zone="B", limit_mw=500.0, susceptance=1.0)],
+		value_of_lost_load_usd_per_mwh=10_000.0,
+	)
+	assert not result.is_split
+	assert result.system_price_usd_per_mwh == pytest.approx(10.0)
+	assert result.congestion_rent_usd == pytest.approx(0.0)
+
+
+# --------------------------------------------------------------------------
+# Exit criterion 3: competitive strategy reproduces Layer 1's marginal price
+# --------------------------------------------------------------------------
+
+
+def test_a_competitive_clearing_reproduces_the_marginal_units_cost():
+	"""Exit criterion 3, the integration gate, on a single-bus fixture.
+
+	A merit-order stack clears at the marginal unit's bid. With every agent
+	competitive the bid *is* the marginal cost, so the clearing price equals the
+	marginal unit's cost -- the same number Layer 1's LP dual returns on the same
+	dispatch (verified against pypsa in this repo's own probe: a 50 MW cheap
+	unit, a 50 MW dear unit and 70 MW of load give an LMP of 30, the dear unit's
+	marginal_cost). If the two disagreed, a price forecast built on the market
+	layer would be measuring the discrepancy, not the market.
+
+	The markup control is the point: with the same fleet marked up 50%, the
+	clearing price moves, so the test is not passing on a coincidence.
+	"""
+	units = [
+		BiddingUnit(unit_id="cheap", carrier="geothermal", capacity_mw=50.0, marginal_cost_usd_per_mwh=10.0),
+		BiddingUnit(unit_id="dear", carrier="gas", capacity_mw=50.0, marginal_cost_usd_per_mwh=30.0),
+	]
+	competitive = [Agent(unit=unit) for unit in units]
+	result = clear_market(
+		[agent.bid() for agent in competitive], 70.0, value_of_lost_load_usd_per_mwh=10_000.0
+	)
+	assert result.clearing_price_usd_per_mwh == pytest.approx(30.0)
+
+	marked_up = [
+		Agent(unit=unit, strategy=Strategy.from_markup(0.5)) for unit in units
+	]
+	result_up = clear_market(
+		[agent.bid() for agent in marked_up], 70.0, value_of_lost_load_usd_per_mwh=10_000.0
+	)
+	assert result_up.clearing_price_usd_per_mwh == pytest.approx(45.0)
+	assert result_up.clearing_price_usd_per_mwh != result.clearing_price_usd_per_mwh
+
+
+# --------------------------------------------------------------------------
+# Exit criterion 4: capture prices for a Kenya solar/wind fixture
+# --------------------------------------------------------------------------
+
+
+def _kenya_solar_wind() -> tuple[pd.DataFrame, pd.Series]:
+	"""Two days, hourly. Solar generates midday, wind overnight.
+
+	The price peaks in the evening (19:00), so both VRE carriers generate off
+	peak and both capture below the time-weighted price -- the cannibalisation
+	the capture price exists to measure.
+	"""
+	index = pd.date_range("2030-01-01", periods=48, freq="h")
+	hour = index.hour.to_numpy()
+	price = pd.Series(20.0 + 40.0 * np.exp(-((hour - 19) ** 2) / 10.0), index=index)
+	generation = pd.DataFrame(
+		{
+			"solar": np.where((hour >= 10) & (hour <= 15), 50.0, 0.0),
+			"wind": np.where((hour >= 22) | (hour <= 5), 30.0, 0.0),
+		},
+		index=index,
+	)
+	return generation, price
+
+
+def test_kenya_solar_and_wind_capture_prices_are_computed():
+	"""Exit criterion 4. Both carriers generate, so both have a capture price."""
+	generation, price = _kenya_solar_wind()
+	captures = capture_by_technology(generation, price)
+
+	assert set(captures) == {"solar", "wind"}
+	time_weighted = captures["solar"][0].time_weighted_price_usd_per_mwh
+	assert time_weighted is not None
+	for carrier in ("solar", "wind"):
+		point = captures[carrier][0]
+		assert point.capture_price_usd_per_mwh is not None
+		assert point.capture_rate is not None
+		# Both generate off the evening peak, so both capture below the mean.
+		assert point.capture_price_usd_per_mwh < time_weighted
+		assert point.capture_rate < 1.0
+	# Solar's output sits closer to the trough than wind's, so it captures less.
+	solar_capture = captures["solar"][0].capture_price_usd_per_mwh
+	wind_capture = captures["wind"][0].capture_price_usd_per_mwh
+	assert solar_capture is not None and wind_capture is not None
+	assert solar_capture < wind_capture
+
+
+# --------------------------------------------------------------------------
+# Exit criterion 7: VaR/CVaR on a normal sample matches 1.645 sigma at 95%
+# --------------------------------------------------------------------------
+
+
+def test_var_matches_the_analytic_normal_quantile():
+	"""Exit criterion 7. A 200k-path standard normal must match 1.645 sigma.
+
+	The sample is seeded, so the comparison is exact to a few parts in a
+	thousand -- not a band wide enough to pass on anything.
+	"""
+	rng = np.random.default_rng(0)
+	sigma = 1.0
+	sample = rng.standard_normal(200_000) * sigma
+	result = value_at_risk(-sample, 0.95)
+
+	analytic = normal_var_check(sigma, 0.95)
+	assert analytic == pytest.approx(1.6449, abs=1e-4)
+	assert result.value_at_risk_usd == pytest.approx(analytic, rel=2e-3)
+	# CVaR for a normal is sigma * phi(z_alpha) / (1 - alpha) ~ 2.0627 sigma.
+	assert result.conditional_value_at_risk_usd == pytest.approx(2.0627, rel=5e-3)
+	assert result.conditional_value_at_risk_usd >= result.value_at_risk_usd >= 0.0
+
+
+def test_a_non_positive_definite_correlation_raises():
+	"""The Cholesky check (06-layer3 §7.2). An unchecked factor returns NaNs."""
+	from alea.market.risk import checked_cholesky
+
+	# Pairwise correlations +0.99, +0.99 and -0.99 are not jointly realisable.
+	bad = np.array(
+		[
+			[1.0, 0.99, 0.99],
+			[0.99, 1.0, -0.99],
+			[0.99, -0.99, 1.0],
+		]
+	)
+	with pytest.raises(RuntimeError, match="positive-definite"):
+		checked_cholesky(bad)
+
+
+# --------------------------------------------------------------------------
+# Exit criterion 8: bankability matches a hand-computed fixture
+# --------------------------------------------------------------------------
+
+
+def test_bankability_matches_a_hand_computed_fixture():
+	"""Exit criterion 8. A -1000 outlay then 250/yr for five years.
+
+	The project flows are the CFADS less the debt service, so the fixture is
+	stated in CFADS and service and the flows are the difference:
+	[-1000, 250, 250, 250, 250, 250]. The IRR solves 1000 = 250 * annuity(r, 5),
+	so the annuity factor is 4.0 and r = 7.9308%. NPV at 8% is -1.8225.
+	"""
+	cfads = [-1000.0, 400.0, 400.0, 400.0, 400.0, 400.0]
+	debt_service = [0.0, 150.0, 150.0, 150.0, 150.0, 150.0]
+	project_flows = [-1000.0, 250.0, 250.0, 250.0, 250.0, 250.0]
+
+	assert irr(project_flows) == pytest.approx(0.0793082612, rel=1e-6)
+	assert npv(project_flows, 0.08) == pytest.approx(-1.8224907, rel=1e-6)
+
+	result = bankability(cfads, debt_service, discount_rate=0.08)
+	assert result.project_irr == pytest.approx(0.0793082612, rel=1e-6)
+	assert result.npv_usd == pytest.approx(-1.8224907, rel=1e-6)
+	assert result.years == 6
+	# Period 0 has no debt service; the later periods cover at 400/150 = 2.667.
+	assert result.min_dscr == pytest.approx(400.0 / 150.0)
+
+
+def test_bankability_encodes_a_grace_period_ratio_as_none():
+	"""A period with no debt service has no ratio, and JSON cannot carry ``inf``.
+
+	``dscr`` returns ``inf`` for a fully-covered period with no service. The
+	schema's ratios are finite, so an unencoded ``inf`` made a standard
+	construction/grace period raise at construction -- a real schedule the model
+	could not represent. The artefact encodes it as ``None``, the same rule
+	capture prices follow for NaN.
+	"""
+	result = bankability([300.0, 300.0], [0.0, 100.0])
+	assert result.dscr == [None, pytest.approx(3.0)]
+	assert result.min_dscr == pytest.approx(3.0)
+	# The JSON round-trip is the point: ``inf`` cannot survive it, ``None`` can.
+	assert result.model_dump(mode="json")["dscr"] == [None, 3.0]
+
+
+# --------------------------------------------------------------------------
+# Exit criterion 10 / §6: every PPA price records its FX rate and date
+# --------------------------------------------------------------------------
+
+
+def test_a_ppa_price_records_its_fx_rate_and_date():
+	"""The currency trap (06-layer3 §6). A local price without a rate is refused."""
+	fx = FxRate(local_per_usd=145.0, rate_date="2026-01-15", source="CBK")
+	benchmark = ppa_benchmark(
+		"KE",
+		"solar",
+		10,
+		50.0,
+		fx=fx,
+		fx_basis_pct=0.02,
+		fx_basis_source="config.costs.kes_usd",
+		credit_spread_pct=0.03,
+		credit_source="sovereign CDS",
+	)
+
+	assert benchmark.fx is not None
+	assert benchmark.fx.rate_date == "2026-01-15"
+	assert benchmark.fx.local_per_usd == pytest.approx(145.0)
+	# USD price carries the credit spread, never the FX basis.
+	assert benchmark.price_usd_per_mwh == pytest.approx(50.0 * 1.03)
+	# The local price is the USD price converted at the recorded rate, then the
+	# FX basis applied: 51.5 * 145 * 1.02.
+	assert benchmark.price_local_per_mwh == pytest.approx(51.5 * 145.0 * 1.02)
+
+	# A local price with no rate cannot be built at all.
+	with pytest.raises(ValueError, match="FX rate"):
+		from alea.market.views import PpaBenchmark
+
+		PpaBenchmark(
+			country_iso="KE",
+			carrier="solar",
+			tenor_years=10,
+			base_capture_price_usd_per_mwh=50.0,
+			price_usd_per_mwh=50.0,
+			price_local_per_mwh=7_000.0,  # no fx
+		)
+
+
+def test_a_ppa_tenor_averages_the_window_not_year_one():
+	"""§6: a ten-year PPA is priced on the term, not on year one."""
+	by_year = {2030: 100.0, 2031: 90.0, 2032: 80.0, 2033: 70.0}
+	assert tenor_capture_price(by_year, tenor_years=2, start_year=2030) == pytest.approx(95.0)
+	assert tenor_capture_price(by_year, tenor_years=4, start_year=2030) == pytest.approx(85.0)
+	# A year whose capture is undefined is dropped, not counted as zero.
+	assert tenor_capture_price(
+		{2030: float("nan"), 2031: 90.0}, tenor_years=2, start_year=2030
+	) == pytest.approx(90.0)

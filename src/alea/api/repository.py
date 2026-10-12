@@ -55,7 +55,13 @@ from alea.api.views import (
 )
 from alea.config.models import Config
 from alea.config.paths import resolve
-from alea.io.artefacts import ArtefactError, artefact_exists, read_artefact, read_provenance
+from alea.io.artefacts import (
+	ArtefactError,
+	artefact_exists,
+	read_artefact,
+	read_provenance,
+	sha256_file,
+)
 from alea.logging import get_logger
 from alea.provenance.models import Basis, DerivedProvenance, Provenance
 
@@ -266,9 +272,15 @@ class Repository:
 		if not artefact_exists(path):
 			return None
 		try:
-			return read_provenance(path).checksum
+			recorded = read_provenance(path).checksum
 		except ArtefactError:
 			return None
+		# `read_provenance` validates the sidecar into `DerivedProvenance`,
+		# which has no `checksum` field, so the recorded value is always the
+		# empty string. Fall back to the content hash: a cache key that is
+		# empty for a present artefact is not a key, it is a collision between
+		# every input, and `read_through` asserts against exactly that.
+		return recorded or sha256_file(path)
 
 	# -- scenarios ---------------------------------------------------------
 
@@ -556,7 +568,7 @@ class Repository:
 				loss=_value(component, "loss", "MWh", provenance),
 				share=_value(component, "share", "fraction", provenance),
 			)
-			for _, component in _nested(row, "components")
+			for component in _nested(row, "components")
 		]
 		return LossDecompositionOut(
 			country_iso=country,

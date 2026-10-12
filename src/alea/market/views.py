@@ -433,8 +433,13 @@ class BankabilityResult(MarketModel):
 	"""DSCR, project IRR, and equity IRR for one scenario."""
 
 	currency: str = "USD"
-	dscr: list[FiniteFloat] = Field(default_factory=list)
-	"""Debt service coverage ratio, one per period."""
+	dscr: list[FiniteFloat | None] = Field(default_factory=list)
+	"""Debt service coverage ratio, one per period. ``None`` where the ratio is
+	undefined: a construction or grace period with no debt service has no ratio
+	to report, and ``dscr`` returns ``inf`` there. The schema refuses infinity
+	(``FiniteFloat``), so the artefact encodes it as ``None`` -- the same rule
+	capture prices follow for NaN. Writing ``inf`` into a JSON artefact is not
+	possible and raising on it made a standard grace period unrepresentable."""
 	min_dscr: FiniteFloat | None = None
 	project_irr: FiniteFloat | None = None
 	equity_irr: FiniteFloat | None = None

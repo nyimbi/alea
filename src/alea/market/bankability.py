@@ -131,7 +131,11 @@ def bankability(
 
 	result = BankabilityResult(
 		currency=currency,
-		dscr=ratios,
+		# ``inf`` is a covered period with no service to cover (a construction or
+		# grace period); it is not a finite ratio and JSON cannot carry it, so it
+		# is written as ``None``. ``min_dscr`` is computed from the finite ratios
+		# only, because an infinite ratio never binds the minimum.
+		dscr=[float(r) if np.isfinite(r) else None for r in ratios],
 		min_dscr=min(finite_ratios) if finite_ratios else None,
 		project_irr=irr(project_flows),
 		equity_irr=irr(equity),

@@ -232,10 +232,20 @@ class Strategy:
 				# Cournot benchmark in a test.
 				return marginal_cost_usd_per_mwh * (1.0 + self.supply_function_alpha)
 			case StrategyKind.HEDGE:
-				# A hedged unit bids low on its contracted volume: the contract
-				# fixes its revenue, so it wants to be dispatched.
+				# The contracted volume is already banked at the forward price, so
+				# the unit must cover only the cost of the *whole* unit less that
+				# revenue, spread over the uncontracted volume. With no cover the
+				# hedge is a no-op; with full cover it bids zero to stay on.
 				cover = self.contract_cover_fraction
-				return marginal_cost_usd_per_mwh * (1.0 - cover)
+				forward = self.forward_price_usd_per_mwh
+				if cover <= 0.0 or forward is None:
+					return marginal_cost_usd_per_mwh
+				if cover >= 1.0:
+					return 0.0
+				return max(
+					0.0,
+					marginal_cost_usd_per_mwh - (cover / (1.0 - cover)) * forward,
+				)
 		raise ValueError(f"unhandled strategy kind: {self.kind}")
 ```
 

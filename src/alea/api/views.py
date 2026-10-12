@@ -659,12 +659,45 @@ class SignalSummaryOut(ApiModel):
 	requires_review: bool
 
 
+def _extracted_quantity(signal: Signal, field: str, unit: str) -> ValueOut | None:
+	"""A signal's extracted quantity as a :class:`ValueOut`, or ``None``.
+
+	The uncertainty is ``1 - confidence``: a claim the extractor was 80% sure
+	of is a number that is 20% in doubt, and stating that is the whole point of
+	carrying the basis. It is never zero for a present value -- the contract
+	refuses a modelled number with no uncertainty -- because an extraction is
+	never exact, however confident the extractor was.
+	"""
+	value = getattr(signal, field, None)
+	if value is None:
+		return None
+	uncertainty = min(max(1.0 - float(signal.confidence), 1e-6), 1.0)
+	return ValueOut(
+		value=float(value),
+		unit=unit,
+		basis=ValueBasis.MODELLED,
+		uncertainty=uncertainty,
+		source_id=signal.signal_id,
+	)
+
+
 class SignalOut(SignalSummaryOut):
-	"""A full signal, with its evidence and its quantitative payload."""
+	"""A full signal, with its evidence and its quantitative payload.
+
+	``capacity_mw`` and ``investment_usd`` are :class:`ValueOut`, not bare
+	floats. A signal is an *extracted* claim -- a language model or a regex read
+	it out of a document -- so the number is by construction unconfirmed, and
+	serving it as ``{"capacity_mw": 2100}`` lets a consumer render ``2100 MW``
+	as though an analyst had checked it. The value contract (11-layer8 §3.3)
+	applies here exactly as it does to a solved capacity mix: the basis travels
+	with the number. A signal's quantity is modelled with the extraction's own
+	confidence as its uncertainty, which is the honest statement of how much the
+	number can be trusted before review.
+	"""
 
 	description: str = ""
-	capacity_mw: float | None = None
-	investment_usd: float | None = None
+	capacity_mw: ValueOut | None = None
+	investment_usd: ValueOut | None = None
 	technology: str | None = None
 	evidence_quotes: list[str] = Field(default_factory=list)
 	uncertainty_notes: str = ""
@@ -683,8 +716,8 @@ class SignalOut(SignalSummaryOut):
 			extracted_at=signal.extracted_at,
 			requires_review=signal.requires_review,
 			description=signal.description,
-			capacity_mw=signal.capacity_mw,
-			investment_usd=signal.investment_usd,
+			capacity_mw=_extracted_quantity(signal, "capacity_mw", "MW"),
+			investment_usd=_extracted_quantity(signal, "investment_usd", "USD"),
 			technology=signal.technology,
 			evidence_quotes=list(signal.evidence_quotes),
 			uncertainty_notes=signal.uncertainty_notes,
@@ -738,7 +771,14 @@ class ApiKeyOut(ApiModel):
 
 
 class CountryOut(ApiModel):
-	"""One AU member state."""
+	"""One AU member state.
+
+	``population`` stays a plain count. It is reference metadata read from the
+	registry, which records no basis or uncertainty for it, and wrapping it in a
+	:class:`ValueOut` would force an uncertainty to be invented -- the exact
+	fabrication the value contract exists to prevent. The contract applies to
+	the quantities the platform measures and models (see ``test_values_carry_basis``).
+	"""
 
 	iso2: str
 	iso3: str
@@ -751,7 +791,11 @@ class CountryOut(ApiModel):
 
 
 class TechnologyOut(ApiModel):
-	"""One generation, storage or conversion technology."""
+	"""One generation, storage or conversion technology.
+
+	``co2_intensity_t_per_mwh`` likewise stays a plain number for the same
+	reason: the registry holds a bare literature value with no basis recorded.
+	"""
 
 	carrier: str
 	name: str

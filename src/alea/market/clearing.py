@@ -25,6 +25,7 @@ by list order is a tie broken by dict iteration, and that changes between runs
 
 from __future__ import annotations
 
+from collections import deque
 from dataclasses import dataclass
 
 import numpy as np
@@ -225,7 +226,6 @@ def clear_market_zonal(
 		area_results = _clear_areas(
 			areas,
 			area_of,
-			zone_ids,
 			bids,
 			demand,
 			interfaces,
@@ -250,7 +250,7 @@ def clear_market_zonal(
 			if area_of[interface.from_zone] == area_of[interface.to_zone]:
 				# Same area: the corridor is unconstrained inside it. Split the
 				# area at this corridor and pin its transfer to the limit.
-				_split_area(areas, area_of, zone_ids, interface)
+				_split_area(areas, area_of, zone_ids, interfaces, interface, k)
 			# The overload means the economic transfer exceeds the limit, so the
 			# limit binds and the scheduled transfer sits at it.
 			transfer[k] = direction * interface.limit_mw
@@ -258,7 +258,6 @@ def clear_market_zonal(
 	area_results = _clear_areas(
 		areas,
 		area_of,
-		zone_ids,
 		bids,
 		demand,
 		interfaces,
@@ -316,39 +315,71 @@ def _split_area(
 	areas: list[set[str]],
 	area_of: dict[str, int],
 	zone_ids: list[str],
+	interfaces: list[Interface],
 	interface: Interface,
+	index: int,
 ) -> None:
-	"""Split an area in two at a corridor, moving the ``to`` side to a new area.
+	"""Split an area in two at a corridor, keeping the two sides connected.
 
-	The ``to_zone`` side becomes a new area; the ``from_zone`` side keeps the old
-	index. A zone whose area is neither endpoint is untouched.
+	The ``to_zone`` side becomes a new area, together with every zone reachable
+	from it without re-crossing the corridor being split. The ``from_zone`` side
+	keeps the old index.
+
+	The connectivity walk is not decoration. Moving only the ``to_zone`` splits a
+	*path* graph A-B-C at A-B into {A, C} and {B}, and C keeps the old area's
+	single price even though it is separated from A by the binding corridor. The
+	iteration then pins B-C too, re-splits a two-zone area at a corridor whose
+	endpoints are no longer in the same area, and never converges -- the plan's
+	own example, a corridor that binds, is the input on which it fails. Walking
+	the graph minus the split corridor puts C on B's side and converges.
 	"""
 	old_area = area_of[interface.from_zone]
 	new_area = len(areas)
 	areas.append(set())
+	moving = _connected_side(zone_ids, interfaces, area_of, old_area, interface, index)
 	for zone in zone_ids:
-		if area_of[zone] == old_area and zone != interface.from_zone and _same_side(
-			zone, interface, area_of
-		):
+		if area_of[zone] == old_area and zone in moving:
 			area_of[zone] = new_area
 	areas[old_area] = {z for z in zone_ids if area_of[z] == old_area}
 	areas[new_area] = {z for z in zone_ids if area_of[z] == new_area}
 
 
-def _same_side(zone: str, interface: Interface, area_of: dict[str, int]) -> bool:
-	"""Whether a zone should follow the ``to_zone`` side of a split.
+def _connected_side(
+	zone_ids: list[str],
+	interfaces: list[Interface],
+	area_of: dict[str, int],
+	area: int,
+	interface: Interface,
+	index: int,
+) -> set[str]:
+	"""The zones still reachable from ``interface.to_zone`` inside ``area``.
 
-	Only the ``to_zone`` moves: the corridor is between two zones, and the split
-	separates the ``to`` zone (and any zone already grouped with it) from the
-	``from`` zone. This is the minimal split that resolves the overload.
+	Reachability is over the corridors whose *both* endpoints sit in ``area``,
+	excluding the corridor being split. A zone left on the far side of a binding
+	corridor is the one that must move with it, and a zone with no other path
+	back is the one that must not.
 	"""
-	return zone == interface.to_zone
+	adjacency: dict[str, list[str]] = {zone: [] for zone in zone_ids}
+	for k, other in enumerate(interfaces):
+		if k == index:
+			continue
+		if area_of[other.from_zone] != area or area_of[other.to_zone] != area:
+			continue
+		adjacency[other.from_zone].append(other.to_zone)
+		adjacency[other.to_zone].append(other.from_zone)
+	seen = {interface.to_zone}
+	queue = deque([interface.to_zone])
+	while queue:
+		for neighbour in adjacency[queue.popleft()]:
+			if neighbour not in seen:
+				seen.add(neighbour)
+				queue.append(neighbour)
+	return seen
 
 
 def _clear_areas(
 	areas: list[set[str]],
 	area_of: dict[str, int],
-	zone_ids: list[str],
 	bids: dict[str, list[Bid]],
 	demand: dict[str, float],
 	interfaces: list[Interface],

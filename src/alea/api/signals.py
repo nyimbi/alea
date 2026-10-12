@@ -264,7 +264,13 @@ class SignalStore:
 		)
 		if row is None:
 			return None
-		return SignalOut.model_validate(json.loads(row["payload"]))
+		# The stored payload is a full ``Signal``, which carries fields the wire
+		# model does not serve (``event_date``, ``fuel_type``, ``region``, the
+		# coordinates). ``SignalOut`` forbids extras, so validating the payload
+		# against it raises and every read of a real signal is a 422. Project
+		# through ``from_signal`` instead: it validates the payload as a Signal
+		# and takes only the fields the API publishes.
+		return SignalOut.from_signal(Signal.model_validate(json.loads(row["payload"])))
 
 	async def require(self, signal_id: str) -> SignalOut:
 		signal = await self.get(signal_id)
