@@ -99,12 +99,43 @@ def _network() -> pypsa.Network:
 	return network
 
 
+def _lossy() -> pypsa.Network:
+	"""Two buses, one line, generation at one end and load at the other.
+
+	The fixture that makes a *loss* observable. `_solvable` places a generator
+	and a load on every bus, so no power crosses a line, ``lines_t.p`` is all
+	zeros and the energy balance is the identity for both signs of the loss
+	term — it cannot discriminate `generation - load - losses` from
+	`generation + losses - load`. On this fixture power must cross the line, the
+	line absorbs some of it, and the two readings differ by twice the loss.
+
+	The impedance is a plausible 132 kV line (11 km, r=0.5 ohm, x=10 ohm) and it
+	matters: PyPSA's lossy formulation drops the loss term when the voltage
+	angles it would need cannot be recovered, so a *too small* x makes the
+	dispatch infeasible rather than lossy. r=0.5/x=0.05 was measured infeasible;
+	r=0.5/x=10 is optimal with 1.6 MWh lost per 150 MWh delivered.
+	"""
+	network = pypsa.Network()
+	network.add("Bus", "north", v_nom=132.0)
+	network.add("Bus", "south", v_nom=132.0)
+	network.add("Line", "north-south", bus0="north", bus1="south", r=0.5, x=10.0, s_nom=200.0)
+	network.add("Generator", "coal", bus="north", carrier="coal", p_nom=500.0, marginal_cost=30.0)
+	network.add("Load", "load", bus="south", p_set=50.0)
+	network.set_snapshots(list(SNAPSHOTS))
+	return network
+
+
 def _solvable() -> pypsa.Network:
 	"""The topology fixture with generation and load per bus, so it balances.
 
 	Two carriers, not one: the aggregation gates measure a capacity *mix*, and a
 	single-carrier network has a mix of 100% that carrier by construction, so
 	every mix error against it is zero and the channel is untestable.
+
+	Note for the balance check: generation and load sit on the *same* bus here,
+	so nothing crosses a line and this fixture's losses are identically zero.
+	That is fine for what it tests (a static ``p_set`` is read at all) and it is
+	exactly why the loss *sign* needs `_lossy` instead.
 	"""
 	network = _network()
 	for bus in network.buses.index:
@@ -452,6 +483,132 @@ def test_the_energy_balance_reads_a_static_load():
 	report = check_energy_balance(network)
 	assert report["load_mwh"] == pytest.approx(5 * 100.0 * 24), "the static load was not read"
 	assert report["generation_mwh"] == pytest.approx(report["load_mwh"] + report["losses_mwh"], rel=1e-3)
+
+
+def test_the_energy_balance_subtracts_the_losses():
+	"""The balance closes as generation - load - losses, not + losses.
+
+	The check read ``generation + losses - load``. That is the same number as
+	the correct reading on any network whose losses are zero, which every
+	fixture here was, so the sign was wrong and invisible at once. On a network
+	that loses 1% of its load the check refused a correct dispatch by *twice*
+	the loss, and `solve_dispatch` freezes a solve's capacity and re-optimises,
+	so it refused exactly the dispatches it existed to verify.
+
+	This asserts the loss is non-zero first. Without that guard the test would
+	pass on a lossless fixture for both signs and prove nothing — the vacuous
+	fixture that hid the defect.
+	"""
+	from alea.planning.dispatch import check_energy_balance
+
+	network = _lossy()
+	status, condition = network.optimize(
+		solver_name="highs", log_to_console=False, transmission_losses=True
+	)
+	assert status == "ok", f"the lossy fixture did not solve: {status} ({condition})"
+
+	report = check_energy_balance(network)
+	assert report["losses_mwh"] > 1.0, (
+		f"the fixture lost {report['losses_mwh']:.6f} MWh, so it cannot "
+		"discriminate the sign of the loss term; the test would pass either way"
+	)
+	# The identity itself, spelled out, and the arithmetic that the wrong sign
+	# would produce, so a regression fails with the number rather than a diff.
+	assert report["generation_mwh"] == pytest.approx(
+		report["load_mwh"] + report["losses_mwh"], rel=1e-6
+	)
+	double_counted = report["load_mwh"] - report["losses_mwh"]
+	assert abs(report["generation_mwh"] - double_counted) > report["losses_mwh"], (
+		"generation matches the double-counted reading too; the fixture no longer "
+		"separates them"
+	)
+
+
+def test_freezing_away_all_the_capacity_is_refused():
+	"""Freezing reads ``p_nom_opt``, which is 0.0 on a never-solved network.
+
+	PyPSA initialises ``p_nom_opt`` to zero rather than to ``nan``, so freezing
+	an unsolved network discards the capacity it declared. Measured before the
+	guard: ``p_nom`` went 0.0 -> 0.0 and HiGHS returned ``status='warning'
+	(infeasible)`` -- an error naming the solver for a problem that is a missing
+	solve.
+
+	The refusal is deliberately *not* "there is an extendable component", which
+	would refuse the network `build_network` produces and `solve_dispatch`
+	exists to serve. It is "freezing left nothing to generate with", so the two
+	halves below are the whole contract: a capacity-less extendable network is
+	refused, and a fixed one dispatches.
+	"""
+	from alea.planning.dispatch import DispatchError, freeze_capacity, solve_dispatch
+
+	unsolved = _lossy()
+	unsolved.generators["p_nom_extendable"] = True
+	unsolved.generators["p_nom"] = 0.0
+	assert not has_dispatch(unsolved), "the fixture is not in the unsolved state"
+	with pytest.raises(DispatchError, match="discarded all"):
+		solve_dispatch(unsolved, Config(scenario=ScenarioConfig(countries=["KE"])))
+
+	fixed = _lossy()
+	assert not fixed.generators["p_nom_extendable"].astype(bool).any()
+	assert freeze_capacity(fixed) == 0, "a fully fixed network has nothing to freeze"
+	result = solve_dispatch(fixed, Config(scenario=ScenarioConfig(countries=["KE"])))
+	assert result.total_generation_mwh > 0.0
+
+
+def test_the_dispatch_artefact_is_what_the_daily_report_reads(tmp_path: Path):
+	"""`alea dispatch` writes the carrier table the report section declares.
+
+	The round trip, not the writer. `dispatch_scenario` wrote
+	``<id>-dispatch.json`` and nothing else, while `reporting/daily.py`'s
+	``generation_mix`` section declared ``planning/dispatch/{date}.parquet`` --
+	a path and a shape no producer wrote. Each half passed its own tests: the
+	section is exercised against a fixture that plants the file, and the writer
+	was exercised against its return value. Only reading one with the other
+	shows the gap.
+
+	Driven through the CLI because that is the only entry point AD-5 permits a
+	rule to call, and asserted by *reading the file back through
+	`values_from_artefact`* rather than by checking it exists: a file at the
+	right path in the wrong shape is exactly the defect this test is for.
+	"""
+	from typer.testing import CliRunner
+
+	from alea.cli import app
+	from alea.reporting.assemble import values_from_artefact
+
+	network = _lossy()
+	network.optimize(solver_name="highs", log_to_console=False, transmission_losses=True)
+	network_dir = tmp_path / "results" / "networks"
+	network_dir.mkdir(parents=True)
+	network.export_to_netcdf(str(network_dir / "abc-2030.nc"))
+	(tmp_path / "config.yaml").write_text(
+		f"paths:\n  results: {tmp_path / 'results'}\n", encoding="utf-8"
+	)
+
+	# `results/planning/dispatch`, which is what `_artefact_path` resolves the
+	# section's pattern against -- not `results/dispatch`, where the summary
+	# alone would have landed.
+	out = tmp_path / "results" / "planning" / "dispatch"
+	result = CliRunner().invoke(
+		app,
+		[
+			"dispatch",
+			"--network",
+			str(network_dir / "abc-2030.nc"),
+			"--out",
+			str(out),
+			"--config",
+			str(tmp_path / "config.yaml"),
+		],
+	)
+	assert result.exit_code == 0, result.output
+
+	stamped = out / "2030-01-01.parquet"
+	assert stamped.exists(), f"no artefact at the declared path; wrote {sorted(p.name for p in out.iterdir())}"
+	values = values_from_artefact(stamped, unit="MW")
+	assert values, "the carrier table read back empty; the section would render no rows"
+	carriers = {value.label for value in values}
+	assert "coal" in carriers, f"the carrier labels are not carrier names: {carriers}"
 
 
 # --------------------------------------------------------------------------

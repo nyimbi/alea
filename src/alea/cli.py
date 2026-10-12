@@ -403,6 +403,33 @@ def solve(
 
 
 @app.command()
+def dispatch(
+	out: OutOption,
+	config: ConfigOption = None,
+	network: Annotated[Path | None, typer.Option("--network", help="Solved network.")] = None,
+) -> None:
+	"""Solve hourly dispatch on a network with fixed capacity.
+
+	A separate subcommand from ``solve`` rather than a flag on it, because the
+	two answer different questions and one feeds the other: ``solve`` chooses
+	capacity over a horizon, ``dispatch`` asks how a chosen mix operates hour by
+	hour. AD-5 makes the CLI the only entry point a Snakemake rule calls, so a
+	rule that needs dispatch needs this subcommand and not a longer shell
+	string.
+	"""
+	from alea.planning.service import dispatch_scenario
+
+	with _run("cli.dispatch", network=str(network)) as run:
+		loaded = _load(config, None, None)
+		result = dispatch_scenario(loaded, network=network, out=out, logger_=run.logger)
+		run.record(out)
+		typer.echo(
+			f"dispatched: objective={result.objective:,.0f} in {result.seconds:.1f}s, "
+			f"curtailment={result.curtailment_share * 100:.2f}%"
+		)
+
+
+@app.command()
 def report(
 	kind: Annotated[str, typer.Argument(help="Report cadence: daily, weekly, monthly, quarterly, annual.")],
 	out: OutOption,

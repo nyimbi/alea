@@ -35,6 +35,27 @@ class DispatchError(RuntimeError):
 	"""The dispatch problem cannot be built or solved."""
 
 
+def _has_dispatchable_capacity(network: pypsa.Network) -> bool:
+	"""Whether any generator, storage unit or link can serve load at all.
+
+	Reads nominal capacity, not availability: a generator with ``p_nom`` of
+	zero can serve nothing, and that is the state freezing leaves an unsolved
+	network in. Lines are excluded deliberately -- a line with no ``s_nom``
+	still carries what the buses inject, so a network of zero-capacity lines is
+	degenerate but not undispatchable, while a network of zero-capacity
+	generators cannot serve a single MW of load.
+	"""
+	assert network is not None, "network must not be None"
+	for component in ("generators", "storage_units", "links"):
+		table = getattr(network, component, None)
+		if table is None or not len(table):
+			continue
+		for column in ("p_nom", "p_nom_opt"):
+			if column in table.columns and float(table[column].astype(float).sum()) > 0.0:
+				return True
+	return False
+
+
 @dataclass
 class DispatchResult:
 	"""What a dispatch produced, including the checks."""
@@ -70,6 +91,22 @@ def freeze_capacity(network: pypsa.Network) -> int:
 	solving without investment periods lets the optimiser add capacity at zero
 	cost in the last period, which reads as a dispatch result and is an
 	expansion one.
+
+	Freezing reads ``p_nom_opt``, and on a network that was never solved that
+	column is **0.0** -- PyPSA initialises it to zero rather than to ``nan``.
+	So freezing an unsolved network does not preserve the capacity it declares,
+	it discards it.
+
+	That is usually harmless, and deliberately so: a network `build_network`
+	produces is a supported dispatch input (`test_the_built_network_solves_a_
+	dispatch` asserts it), and it carries its fixed fleet alongside extendable
+	VRE at ``p_nom=0.0``, so freezing the VRE to zero is the identity on a
+	network whose coal still serves the load. What is *not* harmless is the case
+	where the extendable components are the only capacity there is: freezing
+	then leaves a network with load and nothing to serve it, and the solve
+	returns ``status='warning' (infeasible)`` -- an error that names the solver
+	for a problem that is a missing solve. The refusal is conditioned on that
+	consequence rather than on the mere presence of an extendable component.
 	"""
 	assert network is not None, "network must not be None"
 	frozen = 0
@@ -110,7 +147,22 @@ def solve_dispatch(
 	assert len(network.buses) > 0, "network has no buses"
 	assert len(network.loads) > 0, "network has no loads; there is nothing to dispatch against"
 	if freeze:
-		freeze_capacity(network)
+		frozen = freeze_capacity(network)
+		# Freezing an unsolved network discards the capacity it declared, because
+		# ``p_nom_opt`` is 0.0 until a solve sets it. When the extendable
+		# components were the only capacity, the result is a network with load
+		# and nothing to serve it, and HiGHS then reports ``status='warning'
+		# (infeasible)`` -- an error that names the solver for a problem that is
+		# a missing solve. Checked here rather than inside `freeze_capacity`
+		# because the predicate is "did freezing leave anything to generate
+		# with", which is a fact about the network *after* the freeze.
+		if frozen and not _has_dispatchable_capacity(network):
+			raise DispatchError(
+				f"freezing discarded all {frozen} extendable component(s): "
+				"`p_nom_opt` is 0.0 on a network that has never been solved, so "
+				"freezing deletes capacity rather than fixing it. Solve it first "
+				"(`alea solve`), or give the input network fixed capacity."
+			)
 
 	solver = config.solve.solver
 	check_solver_available(solver)
@@ -193,6 +245,20 @@ def check_energy_balance(
 		weights = network.snapshot_weightings.get("objective")
 		static = float(network.loads["p_set"].astype(float).sum())
 		load = static * float(weights.sum()) if weights is not None else static * len(network.snapshots)
+	# Line flow into a branch is *consumed* by it, so ``p0 + p1`` is the energy
+	# the lines absorbed, not the energy they delivered. It is a positive
+	# quantity that must be **subtracted** to close the balance:
+	# ``generation - load - losses == 0``. Measured on a two-bus network with
+	# losses on, ``p0 + p1`` equals ``buses_t.p.sum()`` to 1e-9, which is the
+	# injection the network retained — the same number.
+	#
+	# This line read ``generation + losses - load``, and the sign was invisible
+	# for as long as every fixture had zero loss: on a lossless network both
+	# readings are the identity. On a network that loses 1% of its load the
+	# check then refused a correct dispatch by *twice* the loss. `solve_dispatch`
+	# freezes a solve's capacity and re-optimises, and every network the CLI
+	# builds carries losses, so the check refused exactly the dispatches it
+	# existed to verify.
 	losses = 0.0
 	if not network.lines_t.p0.empty:
 		losses = float(network.lines_t.p0.to_numpy().sum() + network.lines_t.p1.to_numpy().sum())
@@ -200,7 +266,7 @@ def check_energy_balance(
 		"load_shedding" in str(c) for c in network.generators_t.p.columns
 	) else 0.0
 
-	error = generation + losses - load
+	error = generation - load - losses
 	scale = max(load, 1.0)
 	if abs(error) / scale > tolerance_share:
 		raise DispatchError(

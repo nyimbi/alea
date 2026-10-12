@@ -29,7 +29,12 @@ from alea.planning.aggregation import (
 	require_aggregation_validation,
 )
 from alea.planning.demand import attach_loads, demand_provenance
-from alea.planning.dispatch import DispatchResult, dispatch_provenance, solve_dispatch
+from alea.planning.dispatch import (
+	DispatchResult,
+	dispatch_provenance,
+	generation_by_carrier,
+	solve_dispatch,
+)
 from alea.planning.expansion import (
 	ExpansionError,
 	SolveResult,
@@ -255,16 +260,45 @@ def solve_scenario(
 def dispatch_scenario(
 	config: Config,
 	*,
-	network: str | Path | pypsa.Network,
+	network: str | Path | pypsa.Network | None = None,
 	out: str | Path = "results/dispatch",
 	logger_: Any = None,
 ) -> DispatchResult:
-	"""Solve hourly dispatch on a network with fixed capacity."""
+	"""Solve hourly dispatch on a network with fixed capacity.
+
+	Writes two artefacts from one solve. The summary at
+	``<network_id>-dispatch.json`` is the run's record: objective, curtailment,
+	the energy-balance residual. The carrier table at ``<date>.parquet`` is what
+	a *report* reads, and it is written here rather than by a second stage
+	because it is the same solve's output in the shape the reader wants.
+
+	The reader is `reporting/daily.py`'s ``generation_mix`` section, which
+	declares ``planning/dispatch/{date}.parquet`` -- so the file is named for its
+	date alone, under an ``--out`` of ``results/planning/dispatch``. The frame
+	carries ``value``/``unit``/``label`` columns, the contract
+	`values_from_artefact` enforces, and not a carrier-indexed one: a
+	carrier-indexed frame is a file the section reads and then refuses for a
+	missing ``value`` column, which reads as a broken report rather than as a
+	mismatched writer.
+
+	The stamp is the network's first snapshot, not the day the command ran: the
+	report cadence resolves ``{date}`` from the report's own ``as_of``, so a
+	table stamped with ``today`` is read by no report at all -- the daily cadence
+	reports on *yesterday*, and a run that stamped itself with today would be
+	looked for under yesterday's name forever.
+	"""
 	assert config is not None, "config must not be None"
 	log = logger_ or _log
 	out_path = Path(out)
 	out_path.mkdir(parents=True, exist_ok=True)
 
+	if network is None:
+		raise PlanningError(
+			"dispatch needs a network: pass --network, or a network the caller "
+			"already holds. There is no default, because dispatching the newest "
+			"solved network is a choice the caller makes, not one this function "
+			"makes for them."
+		)
 	built = network if isinstance(network, pypsa.Network) else _load_network(network)
 	result = solve_dispatch(built, config)
 	write_artefact(
@@ -273,8 +307,48 @@ def dispatch_scenario(
 		dispatch_provenance(result, config),
 		format="json",
 	)
+	write_artefact(
+		out_path / f"{_dispatch_stamp(built)}.parquet",
+		generation_mix_rows(built),
+		dispatch_provenance(result, config),
+		format="parquet",
+	)
 	log.info("dispatch_done", objective=result.objective, curtailment=result.curtailment_share)
 	return result
+
+
+def _dispatch_stamp(network: pypsa.Network) -> str:
+	"""The date a dispatch artefact is stamped with, from the network itself."""
+	assert network is not None, "network must not be None"
+	snapshots = network.snapshots
+	if len(snapshots) == 0:
+		raise PlanningError("network has no snapshots; a dispatch has no date to stamp")
+	first = pd.Timestamp(str(snapshots[0]))
+	return f"{first:%Y-%m-%d}"
+
+
+def generation_mix_rows(network: pypsa.Network) -> pd.DataFrame:
+	"""Dispatched energy by carrier, in the shape a report section reads.
+
+	``values_from_artefact`` wants one row per value with the number under
+	``value``, so the carrier table is melted rather than left wide. Mean MW per
+	carrier, matching the specification's ``_generation_mix``
+	(``n.generators_t.p.mean().groupby(n.generators.carrier).sum()``): a
+	day-ahead mix is an average power, and summing it would report MWh under a
+	column headed MW.
+	"""
+	assert network is not None, "network must not be None"
+	by_carrier = generation_by_carrier(network)
+	if by_carrier.empty:
+		return pd.DataFrame(columns=["label", "value", "unit"])
+	mean_mw = by_carrier.mean(axis=0)
+	return pd.DataFrame(
+		{
+			"label": [str(carrier) for carrier in mean_mw.index],
+			"value": mean_mw.to_numpy(dtype=float),
+			"unit": ["MW"] * len(mean_mw),
+		}
+	)
 
 
 def network_summary(network: pypsa.Network) -> dict[str, Any]:
@@ -345,6 +419,7 @@ __all__ = [
 	"PlanningError",
 	"build_network",
 	"dispatch_scenario",
+	"generation_mix_rows",
 	"load_validation_artefact",
 	"network_summary",
 	"solve_scenario",
