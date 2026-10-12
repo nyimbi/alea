@@ -299,6 +299,32 @@ second compares ALEA's DC-flow losses against an AC solve on the Kenya fixture �
 this is the one place a reference implementation may depend on pypsa's `pf`
 (AC power flow), because it is checking the DC approximation against the physics.
 
+**The exception was documented and never used, and the loss kernel was wrong by
+a factor of 1000/3 because of it.** `12-quality.md` §2 states the rule this
+section is the exception to — "a kernel that is self-consistently wrong passes
+every property test" — and every test of `transmission_losses` compared the
+kernel against `tests/reference/losses.py`, which carried the same constant. The
+two agreed with each other and disagreed with the physics. On a three-bus
+fixture the kernel reported a loss fraction of **1.377**: 138% of generated
+energy lost in transmission. The differential suite's "hand-checkable" case
+asserted the same wrong value, so the one test that could have caught it was
+pinning it.
+
+The repair is this section's own prescription. `tests/ci/test_loss_approximation.py`
+derives `S²R/V²` on paper, solves the same line with pypsa's AC power flow, and
+requires the kernel to land within the approximation's budget of both. Three
+independent expressions of one quantity; a shared constant cannot satisfy them.
+The DC figure is 0.95–0.99× the AC figure on the fixture lines, which is the
+DC-vs-AC gap this benchmark exists to measure and not a unit error.
+
+**Status: the error is recorded; the 2% claim is not yet discharged.** The gate
+bounds the *discrepancy* at 15%, loose enough to admit the physics the DC
+approximation neglects (reactive flow, voltage drop) and tight enough to catch a
+unit error, which is orders of magnitude larger. Whether the approximation is
+within **2%** on the Kenya fixture is an M1 measurement that needs the Kenya
+network; this gate is what makes the kernel correct enough for that measurement
+to mean anything.
+
 ### 6.4 TLENS
 
 Transmission Lines' contribution to Energy Not Supplied: for each line, the
@@ -401,6 +427,10 @@ src/alea/resilience/
 | `test_the_root_config_composes_every_layer_section` | §1.6: the root composes each layer's *own* model, not a copy of it | Re-declare the section in `config.models`; must fail |
 | `test_the_losses_section_reaches_the_tlens_stage` | §7's lost-MWh price and snapshot length reach the tlens artefact | Pass `LossConfig()` instead of the section; must fail |
 | `test_the_resilience_section_reaches_the_stage` | §8's interruption threshold reaches the artefact *and* changes the count | Pass `ResilienceConfig()`; must fail |
+| `test_the_kernel_agrees_with_the_closed_form` | §6.3: DC loss equals `S²R/V²`, the three-phase derivation | Scale the constant by 1000/3; must fail |
+| `test_the_kernel_agrees_with_ac_power_flow` | §6.3: DC loss within the approximation's budget of pypsa's AC solve | Scale the constant by 1000/3; must fail |
+| `test_a_line_never_loses_more_than_it_carries` | A line cannot lose more power than it carries | Scale the constant; must fail |
+| `test_a_realistic_line_loses_a_few_percent_not_a_multiple` | An ordinary line loses a few percent, not a multiple | Scale the constant; must fail |
 
 **The last three exist because presence is not reachability.** `01-foundations`
 §1.6 says "Every layer that owns parameters owns a section, and the root
@@ -424,7 +454,7 @@ reader of the result consults. §7 and §8 each state that a parameter is config
 | 4 | Weather model PR-AUC and base rate reported | M2 artefact |
 | 5 | No temporal leakage in any feature | `test_no_temporal_leakage` |
 | 6 | Loss decomposition sums to total | `test_decomposition_sums_to_total` |
-| 7 | Kenya lossless-vs-lossy difference recorded | M1 artefact |
+| 7 | Kenya lossless-vs-lossy difference recorded | M1 artefact; §6.3's DC-vs-AC gate is `test_the_kernel_agrees_with_ac_power_flow` |
 | 8 | TLENS on a 200-line network under 2 hours | Recorded timing |
 | 9 | Resilience metrics carry proxy flags where derived | `test_saidi_proxy_flagged` |
 | 10 | Every `[UNVERIFIED]` claim resolved or withdrawn | M2/M6 review |
