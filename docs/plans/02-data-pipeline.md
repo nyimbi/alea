@@ -271,7 +271,22 @@ without work if unchanged. `--force` overrides.
 - `test_fleet_carriers_known` — every `carrier` is in the technology registry.
 - `test_no_bare_unit_columns` — §2.3's naming rule.
 - `test_demand_hourly_covers_horizon` — no gaps in the hourly index.
+- `test_every_registered_stage_is_a_rule_or_a_named_exception` — every stage the
+  registry holds is either a rule the workflow runs or recorded with the reason
+  it is not. `test_every_stage_has_a_snakemake_rule` checks the eleven declared
+  stages have rules and not the converse, so a builder can register, be reachable
+  from `alea build`, and be run by nothing — which reads as a working stage.
 - Canary: inject a row with an unknown carrier; the schema gate must fail.
+
+**Five stages register and have no rule**: `tlens`, `resilience`,
+`outage_validation`, `sector_coupling`, `quality_validation`. They are named in
+`STAGES_WITHOUT_RULES` with the reason, and the gate above is what keeps the set
+from growing unnoticed. `tlens` and `resilience` read inputs
+(`network_arrays.json`, `dispatch.parquet`, `interruptions.parquet`,
+`zone_population.parquet`) that **nothing in the repository writes** — a rule for
+either would fail on its first input, and the missing producers are a Layer 4
+task, not a Stage A1 one.
+
 
 ---
 
@@ -301,6 +316,7 @@ a marginal modelling choice.
 | 7 | CRITICAL-tier proxies carry `uncertainty_basis="proxy"` | Provenance test |
 | 8 | Every stage is idempotent | Idempotence test |
 | 9 | Every placeholder link in `data3.md` is resolved or the source is dropped | Manual, recorded in the source registry |
+| 10 | Every registered stage is a rule the workflow runs, or a named exception | `test_every_registered_stage_is_a_rule_or_a_named_exception` |
 
 **Criterion 2 is the one to watch.** A fleet that covers 60% of national
 installed capacity will produce a capacity mix that looks plausible and is

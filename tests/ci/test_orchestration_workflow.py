@@ -310,3 +310,96 @@ def test_the_default_config_is_one_the_cli_can_load(config_name: str):
 		cwd=REPO_ROOT,
 	)
 	assert result.stdout.strip(), "the default config loaded with no countries"
+
+
+# Stages that register a builder but have no rule, and the reason each is not in
+# the workflow. A stage in this set is reachable through `alea build <name>` and
+# from no rule; naming it here is what stops the set growing unnoticed.
+#
+# The distinction from `STAGES` is the one this whole suite is about: `STAGES` is
+# what the workflow produces, and a registered stage outside it is a builder the
+# pipeline never runs. That is not automatically a defect -- a stage can be
+# deliberately manual, or read inputs no producer writes -- but it is a fact that
+# must be stated, because an unrun stage and a run one look identical from the
+# registry.
+STAGES_WITHOUT_RULES: dict[str, str] = {
+	"outage_validation": (
+		"reads the detector's zone series and the GridWatch truth. Both exist as "
+		"artefacts (`outage_history`, `outage_truth`) but the validation writes a "
+		"JSON skip-or-metrics document that no rule declares; wiring it needs a "
+		"rule and a tracked output, not just an invocation."
+	),
+	"quality_validation": (
+		"reports validation coverage, which is a claim about the tree rather than "
+		"a dataset in it. `12-quality.md` §9 criterion 4 reads it directly; making "
+		"it a Snakemake target would put a self-referential artefact in `rule all`."
+	),
+	"resilience": (
+		"reads `interruptions.parquet` and `zone_population.parquet`, neither of "
+		"which anything writes. A rule for it would fail on its first input, and "
+		"the missing producers are a Layer 4 task."
+	),
+	"sector_coupling": (
+		"reads a solved network from `paths.results`, which is produced by "
+		"`alea solve` rather than by a stage. Its input is a solved scenario, so "
+		"the rule depends on a solve the workflow does not yet sequence."
+	),
+	"tlens": (
+		"reads `network_arrays.json` and `dispatch.parquet`, neither of which "
+		"anything writes. Same missing producers as `resilience`, and the same "
+		"Layer 4 task."
+	),
+}
+
+
+def test_every_registered_stage_is_a_rule_or_a_named_exception():
+	"""A stage the workflow never runs is a fact, not an omission.
+
+	`test_every_stage_has_a_snakemake_rule` checks the eleven declared stages
+	have rules. It does not check the converse, so a builder can register, be
+	reachable from `alea build`, and be run by nothing -- which is
+	indistinguishable from a working stage when you read the registry.
+
+	This asserts the two sets agree: every registered stage is either a declared
+	workflow stage or named in `STAGES_WITHOUT_RULES` with the reason. The
+	registry is read in a fresh interpreter, so a stage that fails to register
+	does not silently drop out of the comparison.
+	"""
+	program = (
+		"from alea.io.pipeline import registered_stages;"
+		"import json;"
+		"print(json.dumps(registered_stages()))"
+	)
+	result = subprocess.run(
+		[sys.executable, "-c", program],
+		capture_output=True,
+		text=True,
+		check=True,
+		cwd=REPO_ROOT,
+	)
+	import json
+
+	registered = set(json.loads(result.stdout))
+	assert registered, "no stages registered; the registry import list is broken"
+
+	unnamed = sorted(registered - set(STAGES) - set(STAGES_WITHOUT_RULES))
+	assert not unnamed, (
+		f"these stages register but are in no rule and in no named exception: "
+		f"{unnamed}. `alea build` accepts them and the workflow never runs them, "
+		f"which reads as a working stage. Add a rule, or record it in "
+		f"`STAGES_WITHOUT_RULES` with the reason."
+	)
+	stale = sorted(set(STAGES_WITHOUT_RULES) - registered)
+	assert not stale, (
+		f"`STAGES_WITHOUT_RULES` names stages that do not register: {stale}. The "
+		f"exception outlived the stage it excused."
+	)
+	overlap = sorted(set(STAGES_WITHOUT_RULES) & set(STAGES))
+	assert not overlap, (
+		f"{overlap} are recorded as having no rule and as workflow stages; the two "
+		f"sets must not overlap."
+	)
+	for stage, reason in STAGES_WITHOUT_RULES.items():
+		assert len(reason) > 80, (
+			f"the exception for {stage!r} has a reason too short to be one: {reason!r}"
+		)
