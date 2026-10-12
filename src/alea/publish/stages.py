@@ -179,8 +179,86 @@ def build_resilience_contingency(
 	return provenance
 
 
+@stage("market_prices")
+def build_market_prices(config: Config, out: Path, context: BuildContext) -> DerivedProvenance:
+	"""Registered stage: a solved network's marginal prices as serving rows.
+
+	The register recorded this table's blocker as "needs a bus-to-country
+	mapping ... no artefact carries one". That was overstated for the case the
+	pipeline actually runs: `_single_country` reads the country from the run's
+	own scenario, which is where it has always come from for the one serving
+	table that was wired, and a single-country solve is what
+	`scenario.countries` names by default. A multi-country run is still refused,
+	and for the reason the register gave -- the network carries no per-bus
+	country, so labelling every bus with the first country would serve a Kenyan
+	price for a Nigerian bus.
+
+	Reads the solved network rather than the `network_arrays` bundle because the
+	bundle does not carry `buses_t.marginal_price`: it holds the loss kernel's
+	branch and dispatch arrays, and a price is neither. So this stage resolves
+	the network the same way `@stage("network_arrays")` does, newest-first, and
+	records the digest it read.
+	"""
+	from alea.io.artefacts import read_provenance, sha256_file
+	from alea.io.pipeline import skip_if_current
+	from alea.planning.arrays import NETWORK_DIR, _newest_network
+	from alea.planning.dispatch import marginal_prices
+	from alea.publish.service import project, project_prices
+
+	country_iso = _single_country(config)
+	network_dir = resolve(context.parameters.get("network_dir", NETWORK_DIR))
+	named = context.parameters.get("network_path")
+	path = Path(named) if named else _newest_network(network_dir)
+	if not path.exists():
+		raise ArtefactError(f"no solved network at {path}")
+
+	digest = sha256_file(path)
+	inputs = [digest, *(value for value in context.inputs if value != digest)]
+	existing = skip_if_current(out, inputs, stage_name="market_prices", logger=context.logger)
+	if existing is not None:
+		return existing
+
+	import pypsa
+
+	network = pypsa.Network(str(path))
+	prices = marginal_prices(network)
+	# Every bus maps to the run's single country, which is a fact about the
+	# scenario rather than an assumption about the geography: a multi-country
+	# run never reaches here.
+	mapping = {str(bus): country_iso for bus in prices.columns}
+	frame = project_prices(prices, countries=mapping)
+	project(
+		"market_prices",
+		frame,
+		out,
+		inputs=inputs,
+		parameters={
+			"country_iso": country_iso,
+			"n_buses": int(prices.shape[1]),
+			"n_snapshots": int(prices.shape[0]),
+			"network_file": path.name,
+			"currency": config.costs.base_currency,
+		},
+		notes=(
+			"Locational marginal prices from the solved network's duals. Every bus "
+			"is labelled with the scenario's single country: the network carries no "
+			"per-bus country, so a multi-country run is refused rather than "
+			"labelled with the first."
+		),
+	)
+	provenance = read_provenance(out)
+	logger.info(
+		"publish.stage.market_prices",
+		country=country_iso,
+		buses=int(prices.shape[1]),
+		out=str(out),
+	)
+	return provenance
+
+
 __all__ = [
 	"ARRAYS_ARTEFACT",
 	"DISPATCH_ARTEFACT",
+	"build_market_prices",
 	"build_resilience_contingency",
 ]

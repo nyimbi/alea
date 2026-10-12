@@ -342,13 +342,18 @@ producer wearing an exemption -- the failure this register exists to catch.
 
 PROJECTION_STAGES: Final[MappingProxyType[str, str]] = MappingProxyType(
 	{
+		"market_prices": "market_prices",
 		"resilience_contingency": "resilience_contingency",
 	}
 )
 """Tables a projection **stage** writes, keyed by table name to stage name.
 
-The first entry, and the register is what makes "wired" a claim someone makes
-rather than an inference the gate draws.
+Two entries, and the register is what makes "wired" a claim someone makes
+rather than an inference the gate draws. `resilience_contingency` was the
+first; `market_prices` joined it when the register's stated blocker turned out
+to be overstated -- the country comes from the run's own scenario
+(`_single_country`), which is where the wired table already read it, so the
+"missing bus-to-country mapping" was a config value rather than a dataset.
 
 The gate cannot decide a table is produced from a *name match* against the stage
 registry. `outage_history` is both a serving table (`data/processed/outages/
@@ -366,14 +371,6 @@ the first projection stage adds the entry here in the same change.
 
 UNWIRED: Final[MappingProxyType[str, str]] = MappingProxyType(
 	{
-		"data/processed/market/prices.parquet": (
-			"Needs a solved network's marginal prices keyed by bus and a bus-to-"
-			"country mapping. `project_prices` refuses without the mapping, and no "
-			"artefact carries one: buses have lon/lat and no country, and neither "
-			"the topology nor the fleet schema has a country column. A price row "
-			"labelled 'Nairobi' where the model says ISO 3166-1 alpha-2 filters to "
-			"nothing while looking correct."
-		),
 		"data/processed/market/capture_rates.parquet": (
 			"Needs `market.capture.cannibalisation_curve` over a price series. No "
 			"stage invokes the market layer at all -- `rules/market.smk` is empty "

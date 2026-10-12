@@ -220,3 +220,18 @@ stages:
       - data/processed/dispatch.parquet
     outs:
       - data/processed/resilience/contingency.parquet
+
+  market_prices:
+    desc: "The solved network's marginal prices for the API's price route."
+    cmd: >-
+      uv run --directory . alea build market_prices
+      --out data/processed/market/prices.parquet
+      --config config/config.kenya.yaml
+      --set network_dir=results/networks
+    deps:
+      # A directory, for the same reason `network_arrays` declares one: the
+      # stage resolves the newest solved network and its filename is a content
+      # hash, so the path is not knowable here.
+      - results/networks
+    outs:
+      - data/processed/market/prices.parquet
