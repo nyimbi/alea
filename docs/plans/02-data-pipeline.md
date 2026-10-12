@@ -285,19 +285,25 @@ without work if unchanged. `--force` overrides.
 - `test_demand_hourly_covers_horizon` — no gaps in the hourly index.
 - `test_every_registered_stage_is_a_rule_or_a_named_exception` — every stage the
   registry holds is either a rule the workflow runs or recorded with the reason
-  it is not. `test_every_stage_has_a_snakemake_rule` checks the eleven declared
-  stages have rules and not the converse, so a builder can register, be reachable
+  it is not. `test_every_stage_has_a_snakemake_rule` checks the declared stages
+  have rules and not the converse, so a builder can register, be reachable
   from `alea build`, and be run by nothing — which reads as a working stage.
 - Canary: inject a row with an unknown carrier; the schema gate must fail.
 
-**Five stages register and have no rule**: `tlens`, `resilience`,
-`outage_validation`, `sector_coupling`, `quality_validation`. They are named in
+**Four stages register and have no rule**: `resilience`, `outage_validation`,
+`sector_coupling`, `quality_validation`. They are named in
 `STAGES_WITHOUT_RULES` with the reason, and the gate above is what keeps the set
-from growing unnoticed. `tlens` and `resilience` read inputs
-(`network_arrays.json`, `dispatch.parquet`, `interruptions.parquet`,
-`zone_population.parquet`) that **nothing in the repository writes** — a rule for
-either would fail on its first input, and the missing producers are a Layer 4
-task, not a Stage A1 one.
+from growing unnoticed. `resilience` reads `interruptions.parquet` and
+`zone_population.parquet`, **neither of which anything writes** — a rule for it
+would fail on its first input, and the missing producers are a Layer 4 task, not
+a Stage A1 one.
+
+`tlens` and `critical_lines` are no longer in that set. Both read
+`network_arrays.json` and `dispatch.parquet`, which `rule network_arrays` now
+writes from a solved network, so each has a rule of its own. The register shrank
+by moving the slug rather than by deleting it: `losses/flow.loading_series` is
+the loading kernel `reporting/producers.py` recorded as missing, and
+`critical_lines` is the first weekly section to leave `UNPRODUCED`.
 
 
 ---

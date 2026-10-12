@@ -31,7 +31,7 @@ from numpy.typing import NDArray
 
 from alea._core import branch_flows, dc_power_flow, transmission_losses
 from alea.logging import get_logger
-from alea.losses.views import FlowResult, LossConfig
+from alea.losses.views import FlowResult, LoadingEntry, LoadingRanking, LossConfig
 
 logger = get_logger(__name__)
 
@@ -175,6 +175,123 @@ def solve_series(
 	return losses, fractions
 
 
+def loading_series(
+	network: Network,
+	injections_mw: NDArray[np.float64],
+	config: LossConfig | None = None,
+	*,
+	threshold: float = 1.0,
+) -> LoadingRanking:
+	"""Branch loading against each branch's own rating, over a snapshot series.
+
+	``|p0| / s_nom`` per branch per snapshot, which is the kernel the
+	``critical_lines`` report section's blocker named: the section asks for each
+	line's peak loading and the hours it spent at or above rating, and neither
+	the TLENS ranking (unserved energy and overload *counts*) nor the market
+	layer's ``CorridorResult.loading`` (a cleared corridor) is that quantity.
+
+	**Why this is a kernel and not a projection.** The network arrays carry
+	``ratings_mw`` and the dispatch carries the injections, so the two inputs
+	exist -- but nothing computes the ratio. Deriving it in the report would put
+	a DC solve in Layer 6, which computes nothing; deriving it in the projection
+	would give the API and the report two implementations of one number.
+
+	**The unit trap, and the fixture that discriminates it.** ``hours_at_or_above``
+	is hours, so it is the snapshot *count* times ``LossConfig.snapshot_hours``.
+	For an hourly series the count and the hours are the same integer and a test
+	written on one cannot tell a correct implementation from the count. The
+	caller's resolution is what makes them differ.
+
+	**A branch with no rating is not a branch loaded at zero.** ``ratings_mw``
+	defaults to ``inf`` for a line whose ``s_nom`` is absent
+	(``alea.planning.arrays``), and ``x / inf`` is 0.0 -- which would print a
+	critical-line table saying every unrated line sits at 0% loading. Those
+	branches are excluded from the ranking and counted in ``n_unrated``; a
+	network with *no* rated branch raises, because an empty ranking there would
+	read as "nothing is overloaded".
+	"""
+	cfg = config or LossConfig()
+	matrix = np.asarray(injections_mw, dtype=np.float64)
+	if matrix.ndim != 2 or matrix.shape[1] != network.n_buses:
+		raise ValueError(
+			f"injections must be [n_snapshots, {network.n_buses}], got {matrix.shape}"
+		)
+	if threshold <= 0.0:
+		raise ValueError(f"threshold must be positive, got {threshold}")
+
+	ratings = network.ratings_mw
+	rated = np.isfinite(ratings) & (ratings > 0.0)
+	if not np.any(rated):
+		raise ValueError(
+			f"no branch carries a finite positive rating; every one of the "
+			f"{network.n_branches} branches has s_nom absent, infinite or zero. A "
+			f"loading is |p0| / s_nom and there is no s_nom to divide by -- an "
+			f"empty critical-line list here would read as 'nothing is overloaded'"
+		)
+	if np.any(ratings[np.isfinite(ratings)] <= 0.0):
+		bad = np.flatnonzero(np.isfinite(ratings) & (ratings <= 0.0))
+		raise ValueError(
+			f"branches {bad.tolist()} carry a non-positive rating; a branch that "
+			f"can carry nothing is a data error, not an infinite loading"
+		)
+
+	# One solve per snapshot, accumulated into a [n_snapshots, n_branches] flow
+	# matrix. Looping branches outside would re-solve the network once per
+	# branch, which is n_branches times the work for the same answer.
+	flows = np.full((matrix.shape[0], network.n_branches), np.nan, dtype=np.float64)
+	for index in range(matrix.shape[0]):
+		flows[index] = solve_snapshot(network, matrix[index], cfg).flows_mw
+
+	loading = np.abs(flows) / np.where(rated, ratings, np.nan)
+	finite = np.isfinite(loading)
+	entries: list[LoadingEntry] = []
+	for branch in range(network.n_branches):
+		if not rated[branch]:
+			continue
+		column = loading[:, branch]
+		usable = column[finite[:, branch]]
+		diverged = int(matrix.shape[0] - usable.size)
+		peak = float(np.max(usable)) if usable.size else float("nan")
+		at_or_above = int(np.count_nonzero(usable >= threshold))
+		entries.append(
+			LoadingEntry(
+				branch=branch,
+				branch_name=network.name_of(branch),
+				from_bus=int(network.branch_from[branch]),
+				to_bus=int(network.branch_to[branch]),
+				peak_loading=peak,
+				hours_at_or_above=float(at_or_above) * cfg.snapshot_hours,
+				peak_flow_mw=float(peak * ratings[branch]) if np.isfinite(peak) else float("nan"),
+				rating_mw=float(ratings[branch]),
+				snapshots_at_or_above=at_or_above,
+				diverged_snapshots=diverged,
+			)
+		)
+
+	entries.sort(key=lambda entry: (-entry.peak_loading, entry.branch))
+	ranking = LoadingRanking(
+		entries=[entry for entry in entries if entry.peak_loading >= threshold],
+		n_snapshots=int(matrix.shape[0]),
+		n_branches=network.n_branches,
+		n_rated=int(np.count_nonzero(rated)),
+		threshold=threshold,
+		parameters={
+			"slack_bus": cfg.slack_bus,
+			"snapshot_hours": cfg.snapshot_hours,
+			"n_snapshots": int(matrix.shape[0]),
+			"threshold": threshold,
+		},
+	)
+	logger.info(
+		"losses.loading",
+		branches=network.n_branches,
+		rated=ranking.n_rated,
+		above=len(ranking.entries),
+		worst=ranking.worst_loading,
+	)
+	return ranking
+
+
 def losses_with_branch_out(
 	network: Network,
 	injection_mw: NDArray[np.float64],
@@ -316,6 +433,7 @@ def network_from_tables(
 
 __all__ = [
 	"Network",
+	"loading_series",
 	"losses_with_branch_out",
 	"network_from_tables",
 	"solve_series",

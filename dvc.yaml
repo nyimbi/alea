@@ -209,6 +209,18 @@ stages:
     outs:
       - data/processed/tlens.json
 
+  critical_lines:
+    desc: "Each branch's loading against its own rating, over the dispatch series."
+    cmd: >-
+      uv run --directory . alea build critical_lines
+      --out data/processed/critical_lines.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/network_arrays.json
+      - data/processed/dispatch.parquet
+    outs:
+      - data/processed/critical_lines.parquet
+
   resilience_contingency:
     desc: "The N-1 sweep as per-element serving rows for the API's contingency route."
     cmd: >-

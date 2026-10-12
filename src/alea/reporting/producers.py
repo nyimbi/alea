@@ -40,15 +40,23 @@ from typing import Final
 
 #: Sections with a producer, keyed by slug to the producer's name.
 #:
-#: Empty, and that is the measured state rather than a placeholder. Every
-#: section below is reachable from a *reader* and from no writer: the layer
-#: services exist (`market.clear_market`, `outages.forecast_to_artefact`,
+#: One entry, and the first. Every other section below is reachable from a
+#: *reader* and from no writer: the layer services exist
+#: (`market.clear_market`, `outages.forecast_to_artefact`,
 #: `losses.decomposition_to_artefact`, `resilience.resilience_to_artefact`,
 #: `sector.couple_network`) but none of them writes a dated artefact under
 #: ``paths.results``, and no Snakemake rule or DVC stage runs one to do so.
 #: Adding a producer moves its slug here in the same change, which is what
 #: makes the register shrink as the gap closes.
-PRODUCERS: Final[MappingProxyType[str, str]] = MappingProxyType({})
+PRODUCERS: Final[MappingProxyType[str, str]] = MappingProxyType(
+	{
+		# The first section to leave `UNPRODUCED`, and the reason the register
+		# had to be built before it could shrink: the blocker was recorded as
+		# "needs a loading kernel, and there is none", the kernel was written
+		# (`losses.flow.loading_series`), and the slug moved here with it.
+		"critical_lines": "losses.service.critical_lines_to_artefact",
+	}
+)
 
 
 #: Sections with no producer, keyed by slug to why, and what would close it.
@@ -134,22 +142,6 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"path. No rule runs it against `results/losses/decomposition/{date}"
 			".parquet`. The stage `@stage(\"losses\")` is not registered; the "
 			"wired loss stage is `tlens`."
-		),
-		"critical_lines": (
-			"Needs a *loading* kernel, and there is none. The section asks for "
-			"each line's peak loading and the hours it spent at or above rating "
-			"(`weekly.py`: columns `Line, Peak loading, Hours, Basis`). This "
-			"register first recorded the blocker as 'a path and a shape, not a "
-			"kernel', pointing at `losses.tlens_to_artefact` -- and that was "
-			"wrong, measured against the kernel's own payload: `TlensEntry` "
-			"carries unserved energy (`ens_increase_mwh`, `share`) and overload "
-			"*counts* (`overloaded_snapshots`), not a loading ratio and not "
-			"hours. The nearest thing in the repository is "
-			"`market.views.CorridorResult.loading`, which is a cleared "
-			"corridor's loading inside a market result rather than a branch "
-			"rating. Closing this needs `|p0| / s_nom` per branch per snapshot "
-			"from the dispatch the network already carries, which is a small "
-			"kernel but a kernel, not a path."
 		),
 		"outage_events": (
 			"Needs detected outage *events* with start and end times. "

@@ -40,6 +40,7 @@ SNAKEFILE = REPO_ROOT / "Snakefile"
 # the registry fails the comparison instead of shrinking both sides.
 STAGES = (
 	"costs",
+	"critical_lines",
 	"cutout",
 	"demand_hourly",
 	"demand_national",
@@ -79,6 +80,7 @@ SUFFIXES = {
 	"outage_truth": ".parquet",
 	"network_arrays": ".json",
 	"tlens": ".json",
+	"critical_lines": ".parquet",
 }
 
 
@@ -369,9 +371,9 @@ STAGES_WITHOUT_RULES: dict[str, str] = {
 def test_every_registered_stage_is_a_rule_or_a_named_exception():
 	"""A stage the workflow never runs is a fact, not an omission.
 
-	`test_every_stage_has_a_snakemake_rule` checks the eleven declared stages
-	have rules. It does not check the converse, so a builder can register, be
-	reachable from `alea build`, and be run by nothing -- which is
+	`test_every_stage_has_a_snakemake_rule` checks the declared stages have
+	rules. It does not check the converse, so a builder can register, be reachable
+	from `alea build`, and be run by nothing -- which is
 	indistinguishable from a working stage when you read the registry.
 
 	This asserts the two sets agree: every registered stage is either a declared

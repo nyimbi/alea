@@ -2,14 +2,15 @@
 """Canary for `test_every_registered_stage_is_a_rule_or_a_named_exception`.
 
 The gate exists because `test_every_stage_has_a_snakemake_rule` checks one
-direction only: the eleven declared stages have rules. Nothing checked the
+direction only: the declared stages have rules. Nothing checked the
 converse, so a builder could register, be reachable from `alea build`, and be
 run by no rule -- which is indistinguishable from a working stage when you read
 the registry.
 
-Five stages were in exactly that state. The canary plants a sixth: a `@stage`
-decorator in a module `_REGISTRATION_MODULES` already imports, so it registers
-and is in neither the workflow's stage list nor the named exceptions.
+Stages were in exactly that state, and four still are. The canary plants one
+more: a `@stage` decorator in a module `_REGISTRATION_MODULES` already imports,
+so it registers and is in neither the workflow's stage list nor the named
+exceptions.
 
 **The gate runs as the real gate**, in a fresh interpreter. The registry is
 populated by decorators at import, so a canary that read `_BUILDERS` in-process

@@ -128,6 +128,74 @@ class FlowResult(AleaConfig):
 	n_branches: int
 
 
+class LoadingEntry(AleaConfig):
+	"""One branch's loading against its own rating, over a snapshot series.
+
+	``peak_loading`` is ``max_t |p0(t)| / s_nom`` and is **dimensionless**: 1.0
+	is at rating. It is not a power, which is why it has no unit suffix -- the
+	weekly section prints it under the unit ``loading``.
+	"""
+
+	branch: int
+	branch_name: str = ""
+	from_bus: int
+	to_bus: int
+	peak_loading: float
+	hours_at_or_above: float
+	"""Hours at or above rating: ``snapshots_at_or_above * snapshot_hours``.
+
+	Never the snapshot *count*. A count printed under a column headed "Hours"
+	overstates by the series resolution -- 4x for a 15-minute dispatch, 8760x
+	for a year read as a count of hours -- and the two agree only for an hourly
+	series, which is exactly the case a test written on one cannot tell apart.
+	"""
+
+	peak_flow_mw: float
+	"""The flow magnitude at the peak-loading snapshot, ``peak_loading * s_nom``."""
+
+	rating_mw: float
+	snapshots_at_or_above: int
+	diverged_snapshots: int = 0
+	"""Snapshots whose solve did not return a finite flow. Recorded, never
+	propagated: a diverged snapshot is excluded from the peak and the count
+	rather than making both NaN."""
+
+
+class LoadingRanking(AleaConfig):
+	"""Every branch at or above its rating, worst first.
+
+	Deterministic (AD-8): entries sort by peak loading descending and, on ties,
+	by branch index ascending, so two runs of the same dispatch produce the same
+	critical-line list.
+
+	**An empty list means nothing was above rating, and the model is built so it
+	cannot mean anything else.** A branch with no finite rating -- what
+	`alea.planning.arrays` gives a line whose ``s_nom`` is absent -- is not in
+	``entries`` at all, and a run where *no* branch is rated raises rather than
+	returning an empty list: "no critical lines" and "no ratings to compare
+	against" are different findings and only one of them is good news.
+	"""
+
+	entries: list[LoadingEntry]
+	n_snapshots: int
+	n_branches: int
+	n_rated: int
+	"""Branches carrying a finite, positive rating."""
+
+	threshold: float = 1.0
+	parameters: dict[str, Any] = Field(default_factory=dict)
+
+	@property
+	def n_unrated(self) -> int:
+		"""Branches excluded for want of a rating."""
+		return self.n_branches - self.n_rated
+
+	@property
+	def worst_loading(self) -> float:
+		"""The highest peak loading in the ranking, or 0.0 when it is empty."""
+		return max((entry.peak_loading for entry in self.entries), default=0.0)
+
+
 class TlensEntry(AleaConfig):
 	"""One branch's contribution to energy not supplied."""
 
@@ -269,6 +337,8 @@ __all__ = [
 	"DECOMPOSITION_TOLERANCE",
 	"ContingencySummary",
 	"FlowResult",
+	"LoadingEntry",
+	"LoadingRanking",
 	"LossComponents",
 	"LossConfig",
 	"MitigationOption",

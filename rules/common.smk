@@ -55,6 +55,7 @@ SUFFIXES = {
 	"outage_truth": ".parquet",
 	"network_arrays": ".json",
 	"tlens": ".json",
+	"critical_lines": ".parquet",
 }
 
 # The bus weight table `demand_hourly` disaggregates against: population and GDP

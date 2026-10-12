@@ -75,3 +75,35 @@ rule tlens:
 				*params.flags,
 			)
 		)
+
+
+rule critical_lines:
+	"""Every branch's loading against its own rating, over the dispatch series.
+
+	The *second* reader of the two artefacts `network_arrays` writes, and the
+	reason `dispatch.parquet` is declared as that rule's second output: the
+	arrays number the buses and the dispatch's columns are in that order, so a
+	dispatch from a different solve is a different measurement, not a stale one.
+
+	The section this feeds is `weekly.py`'s ``critical_lines``, which reads
+	``results/outages/critical/{date}.parquet``. This rule writes the processed
+	form; the dated path under ``results/`` is the projection's `--out` and is
+	not this rule's business -- one artefact, one path, and the report's date is
+	the cadence's, not the workflow's.
+	"""
+	input:
+		processed("network_arrays"),
+		processed("dispatch", ".parquet")
+	output:
+		processed("critical_lines")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"build", "critical_lines",
+				"--out", output[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)

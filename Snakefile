@@ -69,4 +69,5 @@ rule all:
 		processed("outage_truth"),
 		processed("network_arrays"),
 		processed("tlens"),
+		processed("critical_lines"),
 		processed("resilience/contingency", ".parquet"),

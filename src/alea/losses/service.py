@@ -23,7 +23,7 @@ from alea.io.pipeline import BuildContext, stage, write_stage
 from alea.logging import get_logger, new_run_id
 from alea.losses.contingency import summary, tlens, tlens_payload
 from alea.losses.decompose import losses_by_component
-from alea.losses.flow import Network, solve_series
+from alea.losses.flow import Network, loading_series, solve_series
 from alea.losses.mitigation import rank_options, rank_payload
 from alea.losses.views import LossConfig, MitigationOption
 from alea.provenance.models import Basis, DerivedProvenance
@@ -182,6 +182,80 @@ def losses_to_artefact(
 	return checksum, payload
 
 
+def critical_lines_to_artefact(
+	network: Network,
+	injections_mw: NDArray[np.float64],
+	out: str | Path,
+	config: LossConfig | None = None,
+	*,
+	inputs: Sequence[str] | None = None,
+	threshold: float = 1.0,
+) -> tuple[str, list[dict[str, Any]]]:
+	"""Write the branches loaded at or above rating, in the report's shape.
+
+	The frame is what `reporting/weekly.py`'s ``critical_lines`` section reads:
+	one row per line with ``value`` (the peak loading), a ``peak_loading``
+	column the section's "Peak loading" header binds to, and an ``hours``
+	column its "Hours" header binds to. Both extra columns are load-bearing --
+	``_rows_for`` refuses to fill a numeric column whose quantity the row does
+	not carry, and before that refusal existed the reader printed the loading
+	under "Hours" in a published report.
+
+	``hours`` is hours, not a snapshot count: `loading_series` multiplies by
+	``LossConfig.snapshot_hours``, so a 15-minute dispatch reports a quarter of
+	the count it took. The unit the section declares is ``loading``, which is
+	dimensionless -- 1.0 is at rating -- so the frame carries no ``MW``.
+	"""
+	cfg = config or LossConfig()
+	ranking = loading_series(network, injections_mw, cfg, threshold=threshold)
+	rows = [
+		{
+			"label": entry.branch_name,
+			"value": entry.peak_loading,
+			"unit": "loading",
+			"peak_loading": entry.peak_loading,
+			"hours": entry.hours_at_or_above,
+			"rating_mw": entry.rating_mw,
+			"peak_flow_mw": entry.peak_flow_mw,
+		}
+		for entry in ranking.entries
+	]
+	import pandas as pd
+
+	frame = pd.DataFrame(
+		rows,
+		columns=[
+			"label",
+			"value",
+			"unit",
+			"peak_loading",
+			"hours",
+			"rating_mw",
+			"peak_flow_mw",
+		],
+	)
+	provenance = _provenance(
+		inputs if inputs is not None else [],
+		{
+			**_network_parameters(network, cfg),
+			"n_snapshots": ranking.n_snapshots,
+			"threshold": threshold,
+			"n_rated": ranking.n_rated,
+			"n_above": len(ranking.entries),
+		},
+		source_id="critical_lines",
+		notes=(
+			"branch loading |p0| / s_nom per branch per snapshot; the peak is over "
+			"the series and `hours` is the snapshot count times the snapshot "
+			"length, so a sub-hourly dispatch does not report its count as hours. "
+			"Branches with no finite rating are excluded and counted, never "
+			"reported as zero loading."
+		),
+	)
+	checksum = write_stage(Path(out), frame, provenance, format="parquet")
+	return checksum, rows
+
+
 def mitigation_to_artefact(
 	network: Network,
 	injections_mw: NDArray[np.float64],
@@ -272,6 +346,73 @@ def _stage_tlens(config: Config, out: Path, context: BuildContext) -> DerivedPro
 	)
 
 
+@stage("critical_lines")
+def _stage_critical_lines(config: Config, out: Path, context: BuildContext) -> DerivedProvenance:
+	"""Registered stage: branch loading over a network and dispatch artefact.
+
+	The same two inputs as ``tlens`` and the same resolution, because the two
+	read one solved network: the arrays number the buses and the dispatch's
+	columns are in that order, so a stage that resolved either differently would
+	be measuring a different network from its neighbour.
+
+	A missing input raises rather than producing an empty table. An empty
+	critical-line table is a *finding* -- nothing is above rating -- and a stage
+	that wrote one because its dispatch was absent would publish "no line is
+	overloaded" for a network it never looked at.
+	"""
+	from alea.config.paths import resolve
+	from alea.io.artefacts import ArtefactError, read_artefact
+
+	processed = resolve(config.paths.processed)
+	network_path = processed / "network_arrays.json"
+	dispatch_path = processed / "dispatch.parquet"
+
+	if not network_path.exists():
+		raise ArtefactError(f"no network arrays at {network_path}")
+	if not dispatch_path.exists():
+		raise ArtefactError(f"no dispatch series at {dispatch_path}")
+
+	network = _network_from_payload(read_artefact(network_path)[0])
+	dispatch, _ = read_artefact(dispatch_path)
+	import pandas as pd
+
+	matrix = pd.DataFrame(dispatch).select_dtypes("number").to_numpy(dtype=float)
+	if matrix.shape[1] != network.n_buses:
+		raise ArtefactError(
+			f"dispatch has {matrix.shape[1]} columns but the network has "
+			f"{network.n_buses} buses"
+		)
+	# Same precedence as `tlens`: the reference bus is a property of the network
+	# the solve used, so the solve's option wins over a loss-section default.
+	losses = config.losses
+	if "slack_bus" not in losses.model_fields_set and "slack_bus" in config.solve.solver_options:
+		losses = losses.model_copy(update={"slack_bus": config.solve.solver_options["slack_bus"]})
+	_, rows = critical_lines_to_artefact(
+		network,
+		matrix,
+		out,
+		losses,
+		inputs=context.inputs,
+	)
+	logger.info(
+		"losses.stage.critical_lines",
+		branches=network.n_branches,
+		above=len(rows),
+		snapshots=int(matrix.shape[0]),
+	)
+	return _provenance(
+		context.inputs,
+		{
+			"n_branches": network.n_branches,
+			"n_snapshots": int(matrix.shape[0]),
+			"n_above": len(rows),
+			"snapshot_hours": losses.snapshot_hours,
+		},
+		source_id="critical_lines",
+		notes="branch loading written by the registered stage",
+	)
+
+
 def _network_from_payload(payload: Any) -> Network:
 	"""Rebuild a :class:`Network` from a serialised array payload."""
 	import numpy as np
@@ -325,6 +466,7 @@ def file_checksum(path: str | Path) -> str:
 
 __all__ = [
 	"contingency_to_artefact",
+	"critical_lines_to_artefact",
 	"decomposition_to_artefact",
 	"file_checksum",
 	"losses_to_artefact",
