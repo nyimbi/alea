@@ -31,12 +31,12 @@ import pytest
 from alea.market import fuel
 from alea.market.agents import Agent, BiddingUnit
 from alea.market.bankability import bankability, irr, npv
-from alea.market.capture import capture_by_technology
+from alea.market.capture import capture_by_technology, capture_price
 from alea.market.clearing import clear_market, clear_market_zonal
 from alea.market.ppa import ppa_benchmark, tenor_capture_price
 from alea.market.risk import normal_var_check, value_at_risk
 from alea.market.service import clear_scenario
-from alea.market.strategy import Strategy, StrategyKind
+from alea.market.strategy import Strategy, StrategyKind, conduct_to_markup
 from alea.market.views import Bid, FxRate, Interface
 
 
@@ -297,7 +297,8 @@ def test_kenya_merit_order_clearing_matches_a_hand_computed_stack():
 
 
 def test_a_short_stack_clears_at_voll_and_reports_the_shortfall():
-	"""Exit criterion 1's other half: a stack that cannot meet demand.
+	"""§9 ``test_shortage_priced_at_voll``. Exit criterion 1's other half: a
+	stack that cannot meet demand.
 
 	Removing 200 MW of capacity from a 260 MW demand leaves 60 MW unserved, and
 	the price is VoLL, not the marginal bid -- the last MWh served cost VoLL to
@@ -317,12 +318,42 @@ def test_a_short_stack_clears_at_voll_and_reports_the_shortfall():
 
 
 def test_a_price_tie_breaks_on_unit_id_not_list_order():
-	"""AD-8: two units at the same price must dispatch the same way every run."""
+	"""§9 ``test_clearing_deterministic``. AD-8: two units at the same price must
+	dispatch the same way every run."""
 	alpha = Bid(unit_id="U-ALPHA", quantity_mw=60.0, price_usd_per_mwh=50.0)
 	beta = Bid(unit_id="U-BETA", quantity_mw=60.0, price_usd_per_mwh=50.0)
 	# BETA listed first; demand 60 MW. The lexicographically smaller unit wins.
 	result = clear_market([beta, alpha], 60.0, value_of_lost_load_usd_per_mwh=10_000.0)
 	assert result.dispatched == {"U-ALPHA": pytest.approx(60.0)}
+
+
+def test_clearing_meets_demand():
+	"""§9 ``test_clearing_meets_demand``: dispatched + unserved == demand.
+
+	The conservation identity the plan's canary names. Inject a short stack and
+	the shortfall must be *reported*, not silently dropped: a result that
+	dispatched 100 MW against 260 MW of demand and reported zero unserved is a
+	result with 160 MWh that vanished. That is exactly the result the
+	specification's example produced, because it dispatched every unit at
+	``min(capacity, total_demand)`` and never checked the residual.
+	"""
+	# An ample stack: everything is served, and the identity still closes.
+	ample = [
+		Bid(unit_id="geothermal", quantity_mw=200.0, price_usd_per_mwh=10.0),
+		Bid(unit_id="hydro", quantity_mw=200.0, price_usd_per_mwh=15.0),
+	]
+	served = clear_market(ample, 150.0, value_of_lost_load_usd_per_mwh=10_000.0)
+	assert served.total_dispatched_mw + served.unserved_mwh == pytest.approx(150.0)
+	assert served.unserved_mwh == pytest.approx(0.0)
+	assert served.demand_met
+
+	# A short stack: 100 MW offered against 260 MW of demand leaves 160 MWh
+	# unserved, and the identity is what catches a model that forgot to say so.
+	short = [Bid(unit_id="geothermal", quantity_mw=100.0, price_usd_per_mwh=10.0)]
+	result = clear_market(short, 260.0, value_of_lost_load_usd_per_mwh=10_000.0)
+	assert result.total_dispatched_mw + result.unserved_mwh == pytest.approx(260.0)
+	assert result.unserved_mwh == pytest.approx(160.0)
+	assert not result.demand_met
 
 
 # --------------------------------------------------------------------------
@@ -392,7 +423,8 @@ def test_an_uncongested_zonal_market_clears_at_one_price():
 
 
 def test_a_competitive_clearing_reproduces_the_marginal_units_cost():
-	"""Exit criterion 3, the integration gate, on a single-bus fixture.
+	"""§9 ``test_competitive_matches_merit_order``. Exit criterion 3, the
+	integration gate, on a single-bus fixture.
 
 	A merit-order stack clears at the marginal unit's bid. With every agent
 	competitive the bid *is* the marginal cost, so the clearing price equals the
@@ -425,6 +457,37 @@ def test_a_competitive_clearing_reproduces_the_marginal_units_cost():
 	assert result_up.clearing_price_usd_per_mwh != result.clearing_price_usd_per_mwh
 
 
+def test_alpha_calibration():
+	"""§9 ``test_alpha_calibration``: α=0 competitive, α=1 monopoly, calibrated.
+
+	The conduct parameter is only meaningful if its endpoints reproduce known
+	market outcomes; otherwise α is a knob with units of nothing (06-layer3
+	§4.1). On a single-unit synthetic network the two endpoints are analytically
+	known: at α=0 the unit bids its marginal cost and the clearing price *is* the
+	marginal cost; at α=1 it bids a monopoly markup over cost, so the clearing
+	price is twice the cost. A halfway α clears halfway between, and the implied
+	markup the calibration surface returns is α itself.
+	"""
+	cost = 10.0
+	unit = BiddingUnit(unit_id="monopolist", carrier="gas", capacity_mw=1_000.0, marginal_cost_usd_per_mwh=cost)
+
+	def clear_at(alpha: float) -> float:
+		agent = Agent(unit=unit, strategy=Strategy.from_conduct(alpha))
+		return clear_market([agent.bid()], 500.0, value_of_lost_load_usd_per_mwh=10_000.0).clearing_price_usd_per_mwh
+
+	# α=0 is the competitive benchmark: price equals marginal cost.
+	assert clear_at(0.0) == pytest.approx(cost)
+	# α=1 is the monopoly benchmark on this synthetic network: a 100% markup.
+	assert clear_at(1.0) == pytest.approx(2.0 * cost)
+	# The endpoints bracket the interior, and the conduct surface is the markup.
+	assert clear_at(0.5) == pytest.approx(1.5 * cost)
+	assert conduct_to_markup(0.0) == pytest.approx(0.0)
+	assert conduct_to_markup(1.0) == pytest.approx(1.0)
+	# The calibration is not a constant: the endpoints differ, which is what
+	# makes α a parameter rather than a decoration.
+	assert clear_at(1.0) != clear_at(0.0)
+
+
 # --------------------------------------------------------------------------
 # Exit criterion 4: capture prices for a Kenya solar/wind fixture
 # --------------------------------------------------------------------------
@@ -451,7 +514,8 @@ def _kenya_solar_wind() -> tuple[pd.DataFrame, pd.Series]:
 
 
 def test_kenya_solar_and_wind_capture_prices_are_computed():
-	"""Exit criterion 4. Both carriers generate, so both have a capture price."""
+	"""§9 ``test_capture_nan_on_no_generation``'s fixture also serves exit
+	criterion 4. Both carriers generate, so both have a capture price."""
 	generation, price = _kenya_solar_wind()
 	captures = capture_by_technology(generation, price)
 
@@ -472,13 +536,55 @@ def test_kenya_solar_and_wind_capture_prices_are_computed():
 	assert solar_capture < wind_capture
 
 
+def test_capture_nan_on_no_generation():
+	"""§9 ``test_capture_nan_on_no_generation``. Zero generation -> NaN, not 0.
+
+	The specification's example writes ``capture = revenue / generation if
+	generation > 0 else 0`` (06-layer3 §5.1). That zero is a specific claim --
+	the technology sold its output at zero -- which is false, and it drags every
+	portfolio average toward it. A technology that generated nothing has an
+	*undefined* capture price, and the artefact encodes NaN as ``None`` so it can
+	never be confused with a real zero. If this test passes with ``0.0``, the
+	defect is back.
+	"""
+	price = np.array([20.0, 40.0, 60.0, 80.0])
+	# A carrier that generated nothing all period.
+	assert np.isnan(capture_price(np.zeros(4), price))
+
+	# Through the frame, the artefact field is ``None`` -- not 0.0 -- and the
+	# rate is None with it, because an undefined capture has no rate.
+	generation = pd.DataFrame({"solar": np.zeros(4), "wind": np.full(4, 30.0)})
+	captures = capture_by_technology(generation, pd.Series(price))
+	solar = captures["solar"][0]
+	assert solar.capture_price_usd_per_mwh is None
+	assert solar.capture_rate is None
+	assert solar.generation_mwh == pytest.approx(0.0)
+	# The carrier that *did* generate still has a real price: the NaN is scoped
+	# to the carrier that generated nothing, not to the whole frame.
+	assert captures["wind"][0].capture_price_usd_per_mwh is not None
+	# And the encoding is load-bearing: a zero written where the value is
+	# undefined is refused by the model, so the field cannot silently carry one.
+	from alea.market.views import CapturePrice
+
+	with pytest.raises(ValueError, match="generated nothing"):
+		CapturePrice(
+			carrier="solar",
+			generation_mwh=0.0,
+			capture_price_usd_per_mwh=0.0,
+			time_weighted_price_usd_per_mwh=50.0,
+			capture_rate=0.0,
+			n_observations=0,
+		)
+
+
 # --------------------------------------------------------------------------
 # Exit criterion 7: VaR/CVaR on a normal sample matches 1.645 sigma at 95%
 # --------------------------------------------------------------------------
 
 
 def test_var_matches_the_analytic_normal_quantile():
-	"""Exit criterion 7. A 200k-path standard normal must match 1.645 sigma.
+	"""§9 ``test_var_sign_convention``. Exit criterion 7: a 200k-path standard
+	normal must match 1.645 sigma, with ``CVaR >= VaR >= 0``.
 
 	The sample is seeded, so the comparison is exact to a few parts in a
 	thousand -- not a band wide enough to pass on anything.
@@ -497,7 +603,8 @@ def test_var_matches_the_analytic_normal_quantile():
 
 
 def test_a_non_positive_definite_correlation_raises():
-	"""The Cholesky check (06-layer3 §7.2). An unchecked factor returns NaNs."""
+	"""§9 ``test_cholesky_checked``. The Cholesky check (06-layer3 §7.2). An
+	unchecked factor returns NaNs."""
 	from alea.market.risk import checked_cholesky
 
 	# Pairwise correlations +0.99, +0.99 and -0.99 are not jointly realisable.
@@ -562,7 +669,8 @@ def test_bankability_encodes_a_grace_period_ratio_as_none():
 
 
 def test_a_ppa_price_records_its_fx_rate_and_date():
-	"""The currency trap (06-layer3 §6). A local price without a rate is refused."""
+	"""§9 ``test_fx_rate_recorded``. The currency trap (06-layer3 §6): a local
+	price without a rate is refused."""
 	fx = FxRate(local_per_usd=145.0, rate_date="2026-01-15", source="CBK")
 	benchmark = ppa_benchmark(
 		"KE",
