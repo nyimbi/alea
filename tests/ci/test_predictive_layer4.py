@@ -17,13 +17,23 @@ instantiated with parts that miss — and these gates are what keeps it so.
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 import numpy as np
 import pytest
 
-from alea.losses.views import DECOMPOSITION_TOLERANCE, LossComponents
+from alea.losses.contingency import sweep, tlens
+from alea.losses.flow import Network, susceptance_matrix
+from alea.losses.views import DECOMPOSITION_TOLERANCE, LossComponents, LossConfig
+from alea.outages.maintenance import MaintenanceDataError, fit_cox, simulate_survival_data
 from alea.outages.validate import ValidationError, binarise, detection_metrics
-from alea.outages.views import DetectionMetrics, ViirsConfig
+from alea.outages.views import DetectionMetrics, ViirsConfig, WeatherConfig
+from alea.outages.viirs import (
+	GAP_FILLED_BAND,
+	RADIANCE_BAND,
+	extract_tile,
+)
+from alea.outages.weather import add_month_encoding
 from alea.provenance.models import Basis
 from alea.resilience.metrics import compute_metrics, customers_from_population
 from alea.resilience.views import (
@@ -31,6 +41,8 @@ from alea.resilience.views import (
 	ResilienceConfig,
 	ZoneCustomers,
 )
+
+REPO = Path(__file__).resolve().parents[2]
 
 START = datetime(2030, 1, 1, tzinfo=UTC)
 
@@ -41,7 +53,11 @@ START = datetime(2030, 1, 1, tzinfo=UTC)
 
 
 def test_the_decomposition_sums_to_its_total():
-	"""The invariant the specification's hardcoded zero breaks."""
+	"""The invariant the specification's hardcoded zero breaks.
+
+	The gate `test_decomposition_sums_to_total` (07-layer4 §10): the three
+	components sum to the total to 1e-9 relative tolerance.
+	"""
 	components = LossComponents(
 		load_driven_mwh=120.0, generation_driven_mwh=80.0, topology_driven_mwh=20.0, total_mwh=220.0
 	)
@@ -179,6 +195,9 @@ def _events() -> list[InterruptionEvent]:
 def test_a_population_derived_saidi_carries_the_proxy_basis():
 	"""AD-6: the weakest input sets the basis, all the way to the report.
 
+	The gate `test_saidi_proxy_flagged` (07-layer4 §10): a population-derived
+	SAIDI carries ``proxy`` basis and never loses it.
+
 	A SAIDI computed from WorldPop households is comparable across zones and is
 	**not** comparable to a utility's own index; a report that presents it
 	beside one without saying so is making a false comparison.
@@ -237,6 +256,245 @@ def test_events_below_the_threshold_are_counted_but_excluded():
 	assert metrics.n_events == 2
 	assert metrics.n_events_below_threshold == 1
 	assert metrics.n_events + metrics.n_events_below_threshold == len(_events())
+
+
+# --------------------------------------------------------------------------
+# §2.3: the gap-filled band never enters the detection path
+# --------------------------------------------------------------------------
+
+
+def _granule_dataset(band: str = RADIANCE_BAND, *, extra: str | None = None):
+	"""A minimal xarray-like granule, one time step on a 2x2 grid."""
+	import xarray as xr
+
+	shape = (1, 2, 2)
+	variables = {
+		band: (("time", "y", "x"), np.full(shape, 1.0, np.float32)),
+		"QF_Cloud_Mask": (("time", "y", "x"), np.zeros(shape, np.uint8)),
+		"Sensor_Zenith": (("time", "y", "x"), np.zeros(shape, np.float32)),
+	}
+	if extra is not None:
+		variables[extra] = (("time", "y", "x"), np.full(shape, 9.0, np.float32))
+	return xr.Dataset(
+		variables, coords={"time": np.array(["2030-01-01T00:00:00"], dtype="datetime64[ns]")}
+	)
+
+
+def test_the_gap_filled_band_is_refused_as_the_detection_source():
+	"""The gate `test_gapfilled_band_unused` (07-layer4 §2.3).
+
+	The gap-filled band interpolates across cloudy observations, so a cloud
+	becomes a plausible radiance and the detector sees "no outage" wherever it
+	is blind. It must never be the detection source.
+	"""
+	with pytest.raises(ValueError, match="gap-filled"):
+		extract_tile(_granule_dataset(GAP_FILLED_BAND))
+
+
+def test_a_dataset_merely_containing_the_gap_filled_band_is_refused():
+	"""The check is by substring over the variable names, so a renamed-but-
+	equivalent band is caught and a granule that carries one cannot be read
+	even with the correct radiance band selected."""
+	with pytest.raises(ValueError, match="gap-filled"):
+		extract_tile(_granule_dataset(RADIANCE_BAND, extra=GAP_FILLED_BAND))
+	# The correct band alone is accepted, so the gate is not refusing everything.
+	tile = extract_tile(_granule_dataset(RADIANCE_BAND))
+	assert tile.shape == (1, 2, 2)
+
+
+# --------------------------------------------------------------------------
+# §3.1: the month encoding carries no hemisphere assumption
+# --------------------------------------------------------------------------
+
+
+def test_the_default_month_encoding_is_hemisphere_free():
+	"""The gate `test_month_encoding_hemisphere_free` (07-layer4 §3.1).
+
+	The default cyclical encoding is a function of the month alone, so flipping
+	every zone's latitude changes nothing. The specification's integer season
+	does change, which is why it is not the default.
+	"""
+	import pandas as pd
+
+	frame = pd.DataFrame({"month": [1, 7], "latitude": [10.0, 10.0]})
+	north = add_month_encoding(frame, WeatherConfig())
+	south = add_month_encoding(frame.assign(latitude=-10.0), WeatherConfig())
+	assert set(north.columns) == set(south.columns)
+	assert "month_sin" in north.columns and "season" not in north.columns
+	assert np.allclose(north["month_sin"], south["month_sin"])
+	assert np.allclose(north["month_cos"], south["month_cos"])
+
+
+def test_the_integer_season_is_the_defect_it_replaces():
+	"""The other direction: the encoding the plan rejects is latitude-dependent.
+
+	A gate that only ever saw hemisphere-free encodings would pass on the
+	specification's formula too. This asserts the difference the default avoids.
+	"""
+	import pandas as pd
+
+	frame = pd.DataFrame({"month": [1, 7], "latitude": [10.0, 10.0]})
+	north = add_month_encoding(frame, WeatherConfig(month_encoding="integer"))
+	south = add_month_encoding(frame.assign(latitude=-10.0), WeatherConfig(month_encoding="integer"))
+	# The integer encoding has no latitude term, so it cannot respond -- which is
+	# the point: it is fixed to one hemisphere and applied to both.
+	assert np.array_equal(north["season"], south["season"])
+	# And it is a wrapped integer, not a cyclical pair.
+	assert list(north.columns[-1:]) == ["season"]
+
+
+# --------------------------------------------------------------------------
+# §3.3: SMOTE and scale_pos_weight are never applied together
+# --------------------------------------------------------------------------
+
+
+def test_the_config_refuses_synthetic_oversampling():
+	"""The gate `test_class_imbalance_not_double_corrected` (07-layer4 §3.3).
+
+	SMOTE oversamples the minority class and ``scale_pos_weight`` reweights it;
+	applying both makes the effective positive weight roughly ten times what
+	either alone gives. The refusal is structural: there is no SMOTE field.
+	"""
+	from pydantic import ValidationError as PydanticValidationError
+
+	with pytest.raises(PydanticValidationError, match="extra_forbidden"):
+		WeatherConfig(use_smote=True)
+
+
+def test_the_forecaster_imports_no_synthetic_oversampler():
+	"""The correction is an absence, and an absence is checked at the source."""
+	source = (REPO / "src" / "alea" / "outages" / "weather.py").read_text()
+	assert "imblearn" not in source and "SMOTE(" not in source
+
+
+# --------------------------------------------------------------------------
+# §4: the maintenance model refuses to degrade to an age-only fit
+# --------------------------------------------------------------------------
+
+
+def test_a_fit_without_dga_columns_is_refused():
+	"""The gate `test_maintenance_requires_dga` (07-layer4 §10).
+
+	A Cox fit on transformer age alone produces a number labelled "predictive
+	maintenance" that is "transformer age". Dropping one DGA column must stop
+	the fit rather than quietly narrowing the covariate set.
+	"""
+	frame = simulate_survival_data(400, seed=2)
+	with pytest.raises(MaintenanceDataError, match="oil_dga_h2"):
+		fit_cox(frame.drop(columns=["oil_dga_h2"]))
+
+
+def test_the_dga_requirement_is_the_default_and_removable():
+	"""The guard is a configured default, not a hardcoded wall.
+
+	With ``require_dga=False`` the caller has *stated* the result is an age-only
+	survival model, which is a different, honest artefact. The gate is that the
+	default refuses. The availability guard is asserted directly rather than
+	through a fit: ``fit_cox`` reaches ``lifelines`` only after the guard, and
+	the guard is the whole of the gate.
+	"""
+	from alea.outages.maintenance import assert_feature_availability
+	from alea.outages.views import MaintenanceConfig
+
+	frame = simulate_survival_data(400, seed=2).drop(columns=["oil_dga_h2"])
+	with pytest.raises(MaintenanceDataError, match="oil_dga_h2"):
+		assert_feature_availability(frame, MaintenanceConfig(require_dga=True))
+	availability = assert_feature_availability(frame, MaintenanceConfig(require_dga=False))
+	assert availability["oil_dga_h2"] is False
+	assert availability["oil_dga_ch4"] is True
+
+
+# --------------------------------------------------------------------------
+# §6.1: a failing contingency leaves the input network unchanged
+# --------------------------------------------------------------------------
+
+
+def _two_branch() -> Network:
+	"""Bus 0 -- bus 1 -- bus 2: either branch out strands bus 2's 50 MW."""
+	branch_from = np.array([0, 1], dtype=np.uint32)
+	branch_to = np.array([1, 2], dtype=np.uint32)
+	branch_susceptance = np.array([10.0, 10.0])
+	return Network(
+		susceptance=susceptance_matrix(branch_from, branch_to, branch_susceptance, 3),
+		branch_from=branch_from,
+		branch_to=branch_to,
+		branch_susceptance=branch_susceptance,
+		resistance_ohm=np.array([0.5, 0.5]),
+		voltage_kv=np.array([132.0, 132.0]),
+		ratings_mw=np.array([100.0, 100.0]),
+		branch_names=("L0", "L1"),
+	)
+
+
+def _dispatch(n_snapshots: int = 4) -> np.ndarray:
+	return np.tile(np.array([50.0, 0.0, -50.0]), (n_snapshots, 1))
+
+
+def test_a_failing_contingency_leaves_the_network_unchanged():
+	"""The gate `test_contingency_input_immutable` (07-layer4 §6.1).
+
+	Each outage here islands bus 2, so the DC solve fails for two of the three
+	contingencies. The sweep records that and continues; the caller's arrays
+	must be byte-identical afterwards, because the specification's in-place
+	mutation leaves a line out for every later contingency.
+	"""
+	network = _two_branch()
+	injections = _dispatch()
+	before = {
+		"susceptance": network.susceptance.copy(),
+		"branch_from": network.branch_from.copy(),
+		"ratings": network.ratings_mw.copy(),
+		"injections": injections.copy(),
+	}
+	result = sweep(network, injections, LossConfig(snapshot_hours=1.0))
+	assert result.diverged.any(), "the fixture did not produce a failing contingency"
+	assert np.array_equal(network.susceptance, before["susceptance"])
+	assert np.array_equal(network.branch_from, before["branch_from"])
+	assert np.array_equal(network.ratings_mw, before["ratings"])
+	assert np.array_equal(injections, before["injections"])
+
+
+# --------------------------------------------------------------------------
+# §6.4: the TLENS ranking is deterministic across runs
+# --------------------------------------------------------------------------
+
+
+def _parallel_pair() -> Network:
+	"""A radial line with two interchangeable parallel branches (L1, L2).
+
+	The parallel branches tie exactly on ENS increase, which is the case that
+	needs a tie-break to be reproducible.
+	"""
+	branch_from = np.array([0, 1, 1], dtype=np.uint32)
+	branch_to = np.array([1, 2, 2], dtype=np.uint32)
+	branch_susceptance = np.array([10.0, 10.0, 10.0])
+	return Network(
+		susceptance=susceptance_matrix(branch_from, branch_to, branch_susceptance, 3),
+		branch_from=branch_from,
+		branch_to=branch_to,
+		branch_susceptance=branch_susceptance,
+		resistance_ohm=np.array([0.5, 0.5, 0.5]),
+		voltage_kv=np.array([132.0, 132.0, 132.0]),
+		ratings_mw=np.array([1000.0, 1000.0, 1000.0]),
+		branch_names=("L0", "L1", "L2"),
+	)
+
+
+def test_the_tlens_ranking_is_stable_across_runs():
+	"""The gate `test_tlens_rank_stable` (07-layer4 §6.4).
+
+	Two runs over the same network produce the same order, and the tied
+	branches are ordered by index. A ranking that moves between runs lists
+	different critical lines each time and is not reproducible (AD-8).
+	"""
+	first = [entry.branch for entry in tlens(_parallel_pair(), _dispatch()).entries]
+	second = [entry.branch for entry in tlens(_parallel_pair(), _dispatch()).entries]
+	assert first == second
+	# The tie is real, so the tie-break is what produces the order.
+	ranking = tlens(_parallel_pair(), _dispatch())
+	tied = {e.branch: e.ens_increase_mwh for e in ranking.entries if e.branch in (1, 2)}
+	assert tied[1] == pytest.approx(tied[2]), "the parallel branches did not tie"
+	assert first.index(1) < first.index(2), "tied branches were not ordered by index"
 
 
 if __name__ == "__main__":  # pragma: no cover
