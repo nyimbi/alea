@@ -53,6 +53,22 @@ from alea.signals.models import Signal
 logger = get_logger(__name__)
 
 DEFAULT_QUEUE_PATH = "results/scanning/review.sqlite"
+_QUEUE_SUBDIR = "scanning"
+_QUEUE_FILENAME = "review.sqlite"
+
+
+def queue_path(results_root: str | Path) -> Path:
+	"""The review queue under a configured results root.
+
+	The stage that builds the policy tracker and the doctor that probes the
+	store must name the same file, and they read ``paths.results`` from
+	different places. Deriving it twice is the "two files that agree today are
+	not one source of truth" failure: the two spellings match until one of them
+	is changed, and then a run counts signals reviewed in a different tree and
+	the report is empty with nothing to say why.
+	"""
+	root = resolve(results_root)
+	return root / _QUEUE_SUBDIR / _QUEUE_FILENAME
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS signal_versions (
@@ -849,6 +865,7 @@ def _apply_edits(signal: Signal, edits: dict[str, Any]) -> Signal:
 
 __all__ = [
 	"DEFAULT_QUEUE_PATH",
+	"queue_path",
 	"QueueError",
 	"ReviewQueue",
 ]

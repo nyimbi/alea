@@ -99,6 +99,15 @@ PRODUCERS: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# header to the column naming it, and ``Capture price`` is not
 		# ``Average price``.
 		"market_summary": "market.service.weekly_market_to_artefact",
+		# The scanning layer's one report section, and the first entry here whose
+		# input is a *reviewed queue* rather than a file a stage produced. The
+		# blocker recorded above was right that `scanning.integrate` writes
+		# proposals to a review queue deliberately -- a proposal is not a fact
+		# until a human accepts it. What it missed is that the *confirmed* set is
+		# readable: `ReviewQueue.confirmed_signals()` returns exactly the signals
+		# a human or a recorded auto-acceptance has accepted, which is a fact and
+		# is what the section asks for.
+		"policy_tracker": "scanning.service.policy_tracker_to_artefact",
 	}
 )
 
@@ -165,6 +174,8 @@ PROJECTED: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# `reporting.schemas.period_for` resolves -- a projection stamped with
 		# its own run date would write a file no weekly report opens.
 		"market_summary": "project_market_summary",
+		# The monthly tracker, projected to `scanning/policy/{date}.parquet`.
+		"policy_tracker": "project_policy_tracker",
 	}
 )
 
@@ -299,13 +310,6 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"`data/processed/resilience/metrics.parquet` in `UNWIRED`, which is "
 			"unwired for a second reason: it needs `interruptions.parquet` and "
 			"`zone_population.parquet`, neither of which any stage writes."
-		),
-		"policy_tracker": (
-			"Needs the scanning layer's policy extractions. `scanning.ingest` "
-			"and `scanning.score_signals` exist; `scanning/integrate.py` writes "
-			"proposals to a review queue rather than to a dated artefact, which "
-			"is deliberate -- a proposal is not a fact until a human accepts it "
-			"-- so the section reads a path the design does not write."
 		),
 		# ---- quarterly ----
 		"investment_pipeline": (

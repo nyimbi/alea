@@ -59,8 +59,11 @@ SUFFIXES = {
 	"capacity_update": ".parquet",
 	"market_report": ".parquet",
 	"market_outlook": ".parquet",
+	"market_summary": ".parquet",
 	"generation_mix": ".parquet",
 	"price_forecast": ".parquet",
+	"policy_tracker": ".parquet",
+	"week_ahead": ".parquet",
 	"sector_coupling": ".json",
 }
 

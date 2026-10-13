@@ -17,7 +17,12 @@ Two things it deliberately does **not** do:
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any
+
+import pandas as pd
 
 from alea.config.models import Config, ScanningConfig
 from alea.io.artefacts import utcnow
@@ -240,6 +245,118 @@ class ScanningService:
 		await self.aclose()
 
 
+def policy_tracker_to_artefact(
+	out: str | Path,
+	*,
+	queue: ReviewQueue | None = None,
+	country: str | None = None,
+) -> pd.DataFrame:
+	"""Write the monthly policy tracker's frame from confirmed policy signals.
+
+	The frame `reporting/monthly.py`'s ``policy_tracker`` reads, whose columns
+	are ``["Country", "Change", "Basis"]``. One numeric column, so `_rows_for`
+	binds the primary directly and the row needs no extras -- the section is a
+	count per country.
+
+	**Which signals count, and why that is the whole design.** The register
+	recorded this section as reading "a path the design does not write", and the
+	half of that which is true is important: `scanning.integrate` stages a
+	*proposal* to `data/processed/scanning/proposals/`, and a proposal is not a
+	fact. Only a signal whose latest version a human (or the precision-threshold
+	auto-acceptance, which appends a recorded decision naming the machine as the
+	analyst) has confirmed reaches ``ReviewQueue.confirmed_signals()``. So this
+	reads the queue's confirmed set and never the staging directory: a tracker
+	built from proposals would publish unreviewed claims as policy changes.
+
+	**The count is of confirmed changes, and a country is the row.** A signal
+	with no ``country_iso`` is counted under ``"unspecified"`` rather than
+	dropped: a regional or continental policy change is still a change, and
+	dropping it would make the tracker's total disagree with the queue's
+	confirmed count for a reason no reader could see.
+
+	**The basis is FORECAST, not MEASURED.** A confirmed policy signal is a
+	claim someone read in a document, and it reaches a report through the
+	queue's own provenance. Calling it measured would let a news figure look
+	like a metered one at the point a reader trusts it most.
+
+	**The input is the queue's own checksum, and this function records it.**
+	The artefact derives from a review queue rather than from a file a stage
+	produced, so the queue is what it must name -- "which reviewed signals was
+	this count built from" is the question a reader asks of a tracker six
+	months later. `DerivedProvenance` refuses an empty input list and is right
+	to. It is read here rather than taken as an argument because the caller
+	that forgot was the pipeline's own stage, which passed ``[]`` whenever the
+	queue did not exist yet and so raised on every run against a fresh tree.
+	"""
+	from collections import Counter
+
+	from alea.io.artefacts import sha256_file
+	from alea.io.pipeline import write_stage
+	from alea.provenance.models import Basis, DerivedProvenance, Licence
+	from alea.signals.models import SignalType
+
+	review = queue or ReviewQueue()
+
+	async def _confirmed() -> list[Any]:
+		try:
+			return await review.confirmed_signals()
+		finally:
+			if queue is None:
+				await review.aclose()
+
+	signals = asyncio.run(_confirmed())
+
+	# Checksummed *after* the read, because the first connection is what
+	# creates the file. Hashing first would record ``absent`` for a queue that
+	# now exists, and the bytes the count was built from are the ones to name.
+	# A queue that is still absent was never created, which means nothing was
+	# ever enqueued: an empty confirmed set, not an error.
+	inputs = (
+		[f"sha256:{sha256_file(review.path)}"]
+		if review.path.exists()
+		else [f"absent:{review.path}"]
+	)
+	policies = [
+		signal
+		for signal in signals
+		if str(signal.signal_type) == SignalType.POLICY_CHANGE.value
+		and (country is None or signal.country_iso == country)
+	]
+
+	counts: Counter[str] = Counter()
+	for signal in policies:
+		counts[str(signal.country_iso or "unspecified")] += 1
+
+	rows = [
+		{"label": name, "value": float(total), "unit": "count"}
+		for name, total in sorted(counts.items())
+	]
+	provenance = DerivedProvenance(
+		source_id="scanning_policy_tracker",
+		retrieved_at=utcnow(),
+		licence=Licence.UNKNOWN,
+		basis=Basis.FORECAST,
+		uncertainty=0.0,
+		uncertainty_basis="",
+		notes=(
+			"confirmed policy-change signals only; a proposal still awaiting "
+			"review is not a fact and is not counted. The count is per country, "
+			"with a signal naming none counted as 'unspecified'"
+		),
+		inputs=inputs,
+		parameters={"confirmed_signals": len(signals), "policy_signals": len(policies)},
+	)
+	frame = pd.DataFrame(rows, columns=["label", "value", "unit"])
+	write_stage(Path(out), frame, provenance, format="parquet")
+	logger.info(
+		"policy_tracker_to_artefact",
+		out=str(out),
+		countries=len(rows),
+		policies=len(policies),
+	)
+	return frame
+
+
 def retention_report(*, config: Config, dry_run: bool = True) -> object:
 	"""Apply the raw-text retention policy from a config.
 
@@ -257,5 +374,6 @@ __all__ = [
 	"DEFAULT_LOOKBACK",
 	"ScanningService",
 	"decide_auto_accept",
+	"policy_tracker_to_artefact",
 	"retention_report",
 ]

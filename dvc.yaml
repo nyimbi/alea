@@ -458,6 +458,32 @@ stages:
     outs:
       - data/processed/market/capture_rates.parquet
 
+  policy_tracker:
+    desc: >-
+      Confirmed policy-change signals counted by country, for the monthly
+      policy tracker. Reads the review queue, not the staging directory: a
+      proposal still awaiting review is not a fact.
+    cmd: >-
+      uv run --directory . alea build policy_tracker
+      --out data/processed/policy_tracker.parquet
+      --config config/config.kenya.yaml
+    outs:
+      - data/processed/policy_tracker.parquet
+
+  project_policy_tracker:
+    desc: >-
+      The policy tracker at the dated path its report reads. A monthly report
+      covers the month that ended, so the projection resolves the cadence's
+      period rather than stamping the run date.
+    cmd: >-
+      uv run --directory . alea project monthly policy_tracker
+      --source data/processed/policy_tracker.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/policy_tracker.parquet
+    outs:
+      - results/scanning/policy
+
   project_market_summary:
     desc: >-
       The weekly market summary at the dated path its report reads. Optional to

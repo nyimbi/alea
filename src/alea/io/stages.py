@@ -1945,6 +1945,46 @@ def build_outage_truth(config: Config, out: Path, context: BuildContext) -> Deri
 	return provenance
 
 
+@stage("policy_tracker")
+def build_policy_tracker(config: Config, out: Path, context: BuildContext) -> DerivedProvenance:
+	"""``policy_tracker`` -- confirmed policy-change signals, counted by country.
+
+	The scanning layer's one report section, and the only artefact here whose
+	input is a *reviewed queue* rather than a file. `scanning.integrate` stages
+	proposals to `data/processed/scanning/proposals/`, and a proposal is not a
+	fact -- `ReviewQueue.confirmed_signals()` is the set a human or the recorded
+	auto-acceptance has accepted, so this stage reads that and never the staging
+	directory. A tracker built from proposals would publish unreviewed claims as
+	policy changes, which is the failure the layer's whole review design exists
+	to prevent.
+
+	The provenance is FORECAST rather than MEASURED for the same reason: a
+	confirmed policy signal is a claim someone read in a document.
+	"""
+	from alea.io.artefacts import read_provenance
+	from alea.scanning.review import ReviewQueue
+	from alea.scanning.review.queue import queue_path
+	from alea.scanning.service import policy_tracker_to_artefact
+
+	# The queue lives under the *configured* results directory, not at the
+	# module's default. `DEFAULT_QUEUE_PATH` is ``results/scanning/review.sqlite``
+	# relative to the repository root, so reading it directly made the stage
+	# blind to ``paths.results`` -- a run against a scratch tree would count
+	# signals reviewed in a different tree, and the section would render empty
+	# with nothing to say why.
+	queue_at = queue_path(config.paths.results)
+	# The producer records the queue's checksum itself; it is the only code
+	# that knows which queue it read. An absent queue is an empty confirmed
+	# set rather than an error: a tracker that has reviewed nothing is
+	# honestly empty.
+	frame = policy_tracker_to_artefact(out, queue=ReviewQueue(queue_at))
+	_log.info("stage.policy_tracker", countries=len(frame))
+	# The sidecar the producer wrote, not a second one built here: a stage that
+	# returns provenance it did not write describes an artefact that is not on
+	# disk.
+	return read_provenance(out)
+
+
 REGISTERED_STAGE_NAMES = (
 	"costs",
 	"cutout",
@@ -1955,6 +1995,7 @@ REGISTERED_STAGE_NAMES = (
 	"hydro_profiles",
 	"outage_history",
 	"outage_truth",
+	"policy_tracker",
 	"renewable_profiles",
 	"topology",
 )
@@ -1981,6 +2022,7 @@ __all__ = [
 	"build_hydro_profiles",
 	"build_outage_history",
 	"build_outage_truth",
+	"build_policy_tracker",
 	"build_renewable_profiles",
 	"build_topology",
 	"config_parameters",

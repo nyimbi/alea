@@ -301,6 +301,7 @@ _REGISTRATION_MODULES = (
 	"alea.publish.stages",
 	"alea.quality.service",
 	"alea.resilience.service",
+	"alea.scanning.service",
 	"alea.sector.service",
 )
 """Modules that declare stage builders with ``@stage``.

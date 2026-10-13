@@ -760,13 +760,14 @@ def health(
 	# each and counting a table is a real read: a file that exists but cannot be
 	# queried is a store that is not usable, and an existence check would call
 	# that healthy.
-	from alea.scanning.review.queue import DEFAULT_QUEUE_PATH
+	from alea.scanning.review.queue import queue_path
 
-	for label, relative, table in (
-		("job store", loaded.api.job_store_path, "jobs"),
-		("review queue", DEFAULT_QUEUE_PATH, "signal_versions"),
+	for label, path, table in (
+		("job store", resolve(loaded.api.job_store_path), "jobs"),
+		# Through the same helper the stage uses, so the doctor probes the file
+		# the pipeline actually writes rather than one that happens to match.
+		("review queue", queue_path(loaded.paths.results), "signal_versions"),
 	):
-		path = resolve(relative)
 		if not path.exists():
 			# Not a problem on a first boot: the store is created on first use.
 			continue

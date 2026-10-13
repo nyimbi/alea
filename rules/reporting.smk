@@ -312,6 +312,61 @@ rule project_market_summary:
 		)
 
 
+rule policy_tracker:
+	"""The monthly policy tracker, from the review queue's confirmed signals.
+
+	The only rule here whose input is a *reviewed queue* rather than a file the
+	pipeline produced. `scanning.integrate` stages proposals and a proposal is
+	not a fact, so the stage reads `ReviewQueue.confirmed_signals()` and never
+	the staging directory -- a tracker built from proposals would publish
+	unreviewed claims as policy changes.
+
+	No ``input:`` is declared. The queue at ``results/scanning/review.sqlite``
+	is written by `alea scan` and by analyst decisions, neither of which is a
+	Snakemake job, so declaring it would make this rule depend on a target no
+	rule produces. The stage records the queue's checksum in the artefact's own
+	provenance instead, which is where a reader looks for "which reviewed
+	signals was this count built from".
+	"""
+	output:
+		processed("policy_tracker")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"build", "policy_tracker",
+				"--out", output[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)
+
+
+rule project_policy_tracker:
+	"""`policy_tracker` at the dated path the monthly report reads.
+
+	A monthly report covers the month that just ended, which `period_for`
+	resolves from the cadence -- a projection stamped with its own run date
+	would write a file no monthly report opens.
+	"""
+	input:
+		processed("policy_tracker")
+	output:
+		report_artefact("monthly", "scanning/policy/{date}.parquet")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"project", "monthly", "policy_tracker",
+				"--source", input[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)
+
+
 rule project_week_ahead:
 	"""`week_ahead` at the dated path the weekly report reads.
 

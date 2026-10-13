@@ -23,6 +23,7 @@ data.
 from __future__ import annotations
 
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -57,6 +58,7 @@ STAGES = (
 	"network_arrays",
 	"outage_history",
 	"outage_truth",
+	"policy_tracker",
 	"price_forecast",
 	"renewable_profiles",
 	"resilience_contingency",
@@ -95,6 +97,7 @@ SUFFIXES = {
 	"market_report": ".parquet",
 	"market_summary": ".parquet",
 	"generation_mix": ".parquet",
+	"policy_tracker": ".parquet",
 	"price_forecast": ".parquet",
 	"sector_coupling": ".json",
 	"week_ahead": ".parquet",
@@ -115,6 +118,7 @@ PROJECTIONS = {
 	"project_market_outlook": "market_outlook",
 	"project_market_summary": "market_summary",
 	"project_generation_mix": "generation_mix",
+	"project_policy_tracker": "policy_tracker",
 	"project_price_forecast": "price_forecast",
 	"project_week_ahead": "week_ahead",
 }
@@ -129,6 +133,7 @@ PROJECTION_PATTERNS = {
 	"project_market_outlook": "market/outlook/{date}.parquet",
 	"project_market_summary": "market/summary/{date}.parquet",
 	"project_generation_mix": "planning/dispatch/{date}.parquet",
+	"project_policy_tracker": "scanning/policy/{date}.parquet",
 	"project_price_forecast": "market/prices/{date}.parquet",
 	"project_week_ahead": "planning/outlook/{date}.parquet",
 }
@@ -196,6 +201,42 @@ def test_every_stage_has_a_snakemake_rule():
 	declared = _declared_rules(_smk_text())
 	missing = sorted(set(STAGES) - declared)
 	assert not missing, f"no Snakemake rule declares these stages: {missing}"
+
+
+def test_the_workflow_parses():
+	"""The Snakefile builds a DAG, which is a stronger claim than "a rule exists".
+
+	Every other gate here reads the ``.smk`` files as *text*: `_declared_rules`
+	regexes the rule names out, and `SUFFIXES` is a literal copy of
+	`rules/common.smk`'s. So a stage whose suffix is missing from
+	``common.smk``'s map parses fine in the test and raises ``KeyError`` inside
+	``processed()`` when Snakemake actually loads the file -- and because the
+	test's own copy drifted in step, both agreed with each other and neither
+	agreed with the workflow.
+
+	That is not hypothetical. `week_ahead` shipped without a ``SUFFIXES`` entry,
+	`market_summary` was added beside it, and `snakemake -n` exited on
+	``KeyError: 'market_summary'`` in `rules/common.smk` line 168 while every
+	gate in this file passed. A gate that reads a file's text is not a gate that
+	the file works, so this one runs the parser.
+
+	``-n`` (dry run) so nothing executes: the claim is that the workflow
+	*loads* and resolves its DAG, not that its jobs succeed.
+	"""
+	snakemake = shutil.which("snakemake")
+	if snakemake is None:  # pragma: no cover - depends on the environment
+		pytest.skip("snakemake is not on PATH")
+	result = subprocess.run(
+		[snakemake, "-n", "--quiet"],
+		capture_output=True,
+		text=True,
+		cwd=REPO_ROOT,
+		timeout=600,
+	)
+	assert result.returncode == 0, (
+		"the workflow does not parse; `snakemake -n` exited "
+		f"{result.returncode}.\n{result.stdout[-4000:]}\n{result.stderr[-4000:]}"
+	)
 
 
 def test_every_stage_has_a_dvc_stage():
