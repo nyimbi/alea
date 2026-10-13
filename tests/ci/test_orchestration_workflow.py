@@ -60,6 +60,7 @@ STAGES = (
 	"outage_truth",
 	"policy_tracker",
 	"price_forecast",
+	"renewable_forecast",
 	"renewable_profiles",
 	"resilience_contingency",
 	"sector_coupling",
@@ -99,6 +100,7 @@ SUFFIXES = {
 	"generation_mix": ".parquet",
 	"policy_tracker": ".parquet",
 	"price_forecast": ".parquet",
+	"renewable_forecast": ".parquet",
 	"sector_coupling": ".json",
 	"week_ahead": ".parquet",
 }
@@ -120,6 +122,7 @@ PROJECTIONS = {
 	"project_generation_mix": "generation_mix",
 	"project_policy_tracker": "policy_tracker",
 	"project_price_forecast": "price_forecast",
+	"project_renewable_forecast": "renewable_forecast",
 	"project_week_ahead": "week_ahead",
 }
 
@@ -135,6 +138,7 @@ PROJECTION_PATTERNS = {
 	"project_generation_mix": "planning/dispatch/{date}.parquet",
 	"project_policy_tracker": "scanning/policy/{date}.parquet",
 	"project_price_forecast": "market/prices/{date}.parquet",
+	"project_renewable_forecast": "weather/renewables/{date}.parquet",
 	"project_week_ahead": "planning/outlook/{date}.parquet",
 }
 

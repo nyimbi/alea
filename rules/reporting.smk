@@ -390,3 +390,63 @@ rule project_week_ahead:
 				*params.flags,
 			)
 		)
+
+
+rule renewable_forecast:
+	"""The week's capacity factors, for the weekly renewable-forecast section.
+
+	The register recorded the blocker as "a *forecast* is a different quantity
+	from a *profile*". The distinction is real and the conclusion does not
+	follow: `planning.renewables.attach_renewable_profiles` writes the
+	atlite-derived capacity factor into each generator's ``p_max_pu``, so the
+	network's own availability frame *is* the weather model's output, and the
+	section's prose says "from the weather model". The stage reads it back
+	rather than re-running atlite, and records basis ``modelled`` -- which is
+	what it is, and what `week_ahead` recorded for the same quantity one
+	section over.
+
+	Reads the newest solved network for the same reason `week_ahead` does: a
+	carrier's share of the week is weighted by built capacity, which is
+	``p_nom_opt`` where a component is extendable.
+	"""
+	input:
+		provided("solved_network", NETWORKS)
+	output:
+		processed("renewable_forecast")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"build", "renewable_forecast",
+				"--out", output[0],
+				"--config", CONFIG,
+				"--set", set_arg("network_dir", NETWORKS),
+				*params.flags,
+			)
+		)
+
+
+rule project_renewable_forecast:
+	"""`renewable_forecast` at the dated path the weekly report reads.
+
+	The section declares ``weather/renewables/{date}.parquet``. The stamp is the
+	cadence's own period, resolved by `period_for` inside the projection, for the
+	same reason `project_week_ahead` asks rather than stamps: a literal date here
+	would name a file no weekly report opens.
+	"""
+	input:
+		processed("renewable_forecast")
+	output:
+		report_artefact("weekly", "weather/renewables/{date}.parquet")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"project", "weekly", "renewable_forecast",
+				"--source", input[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)

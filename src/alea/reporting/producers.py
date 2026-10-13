@@ -108,6 +108,18 @@ PRODUCERS: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# a human or a recorded auto-acceptance has accepted, which is a fact and
 		# is what the section asks for.
 		"policy_tracker": "scanning.service.policy_tracker_to_artefact",
+		# The weekly weather section. The blocker recorded above said a
+		# *forecast* is a different quantity from a *profile*, and the
+		# distinction is real while the conclusion did not follow: the network's
+		# own ``p_max_pu`` **is** the weather model's output, because
+		# `planning.renewables.attach_renewable_profiles` writes the
+		# atlite-derived capacity factor there. So the stage reads it back
+		# rather than re-running atlite, and records basis ``modelled`` -- which
+		# is what it is, and what `week_ahead` recorded for the same quantity one
+		# section over. The register entry named the artefact's *directory*
+		# (`data/processed/`) as the defect when the defect was that no rule
+		# projected it.
+		"renewable_forecast": "planning.arrays.build_renewable_forecast",
 	}
 )
 
@@ -176,6 +188,11 @@ PROJECTED: Final[MappingProxyType[str, str]] = MappingProxyType(
 		"market_summary": "project_market_summary",
 		# The monthly tracker, projected to `scanning/policy/{date}.parquet`.
 		"policy_tracker": "project_policy_tracker",
+		# The weekly weather section, projected to
+		# `weather/renewables/{date}.parquet`. The weekly cadence issues on
+		# Monday for the week that ended, so the projection resolves the period
+		# rather than stamping its own run date.
+		"renewable_forecast": "project_renewable_forecast",
 	}
 )
 
@@ -234,13 +251,6 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"write the coverage window alongside the rows."
 		),
 		# ---- weekly ----
-		"renewable_forecast": (
-			"`weather/renewables/{date}.parquet`. `planning.renewable_profiles` "
-			"writes capacity factors to `data/processed/`, which the network "
-			"builder reads -- not a dated forecast under `results/`. A "
-			"*forecast* is a different quantity from a *profile*: the profile is "
-			"a typical-year series and the section asks for the week ahead."
-		),
 		"loss_decomposition": (
 			"`losses.decomposition_to_artefact` writes the decomposition and is "
 			"exercised by `test_network_arrays.py`, but to a test's temporary "

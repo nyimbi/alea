@@ -220,6 +220,43 @@ def _classify(carriers: list[str]) -> tuple[list[CarrierClass | None], np.ndarra
 	return kinds, renewable, firm
 
 
+def _horizon_days(
+	snapshots: Any,
+	*,
+	days: int,
+	start: str | None,
+) -> tuple[list[pd.Timestamp], pd.DatetimeIndex]:
+	"""The days a bounded horizon covers, and each snapshot's own day.
+
+	Shared by `week_ahead_rows` and `renewable_forecast_rows`, because both
+	render a bounded window under a heading that promises one, and a second
+	spelling of "which snapshots are in the week" is the drift this repository's
+	registers are mostly about. Returns the selected days *and* the normalised
+	snapshot index, because a caller needs to mask the second by the first.
+
+	**``start`` is localised to the snapshots' own zone before it is compared.**
+	A caller writing ``start="2031-01-01"`` means a calendar date, and pandas
+	will not compare a naive Timestamp against an aware index -- it raises
+	``TypeError: Cannot compare tz-naive and tz-aware timestamps`` from inside
+	the comparison, which is a crash where the caller wanted either a window or
+	a refusal naming the horizon. The network's own zone is the only reading of
+	a bare date that is not an invention.
+	"""
+	day_of = _snapshot_times(snapshots).normalize()
+	first = (
+		pd.Timestamp(start).normalize().tz_localize(day_of.tz)
+		if start is not None and pd.Timestamp(start).tz is None
+		else (pd.Timestamp(start).normalize() if start is not None else day_of[0])
+	)
+	selected = [day for day in sorted(set(day_of)) if day >= first][:days]
+	if not selected:
+		raise BalanceError(
+			f"no snapshot falls on or after {first:%Y-%m-%d}; the network's horizon is "
+			f"{day_of[0]:%Y-%m-%d} to {day_of[-1]:%Y-%m-%d}"
+		)
+	return selected, day_of
+
+
 def week_ahead_rows(
 	network: pypsa.Network,
 	*,
@@ -287,26 +324,7 @@ def week_ahead_rows(
 	carriers = [str(value) for value in generators["carrier"]]
 	_kinds, renewable, firm = _classify(carriers)
 
-	times = _snapshot_times(snapshots)
-	day_of = times.normalize()
-	# `start` is localised to the snapshots' own zone before it is compared. A
-	# caller writing `start="2031-01-01"` means a calendar date, and pandas will
-	# not compare a naive Timestamp against an aware index -- it raises
-	# ``TypeError: Cannot compare tz-naive and tz-aware timestamps`` from inside
-	# a list comprehension, which is a crash where the caller wanted either a
-	# window or a refusal naming the horizon. The network's own zone is the only
-	# reading of a bare date that is not an invention.
-	first = (
-		pd.Timestamp(start).normalize().tz_localize(day_of.tz)
-		if start is not None and pd.Timestamp(start).tz is None
-		else (pd.Timestamp(start).normalize() if start is not None else day_of[0])
-	)
-	selected = [day for day in sorted(set(day_of)) if day >= first][:days]
-	if not selected:
-		raise BalanceError(
-			f"no snapshot falls on or after {first:%Y-%m-%d}; the network's horizon is "
-			f"{day_of[0]:%Y-%m-%d} to {day_of[-1]:%Y-%m-%d}"
-		)
+	selected, day_of = _horizon_days(snapshots, days=days, start=start)
 
 	demand_rows: list[float] = []
 	renewable_rows: list[float] = []
@@ -341,6 +359,130 @@ def week_ahead_rows(
 	return frame
 
 
+def renewable_forecast_rows(
+	network: pypsa.Network,
+	*,
+	days: int = 7,
+	start: str | None = None,
+) -> pd.DataFrame:
+	"""The week's capacity factors, one row per variable-renewable carrier.
+
+	`reporting/weekly.py`'s ``renewable_forecast`` reads
+	``weather/renewables/{date}.parquet`` with columns ``["Technology",
+	"Capacity factor", "Basis"]``. One numeric column, so ``_rows_for`` binds
+	the primary directly and the row needs no extras.
+
+	**The source is the network's own ``p_max_pu``, and the basis is
+	``modelled``.** The section's prose says "from the weather model", and that
+	is exactly what these are: `planning.renewables.attach_renewable_profiles`
+	attaches the atlite-derived per-bus capacity factor as each generator's
+	``p_max_pu``, so reading it back is reading the weather model's output
+	without re-running it. The register recorded the blocker as "a *forecast* is
+	a different quantity from a *profile*", and that is right about the
+	distinction and wrong about the consequence: `week_ahead` shipped the same
+	call one section over -- a modelled profile is what this repository has, and
+	calling it a forecast in the prose while recording ``modelled`` in the
+	provenance is the honest form. A genuine NWP-driven forecast would be a new
+	model, not a rewiring.
+
+	**One row per carrier, not per bus.** The section's first column is
+	"Technology" and its unit is a capacity factor, so the row is a carrier and
+	the number is that carrier's fleet-wide factor. It is the mean over the
+	carrier's generators weighted by *nameplate capacity*, not the mean of the
+	per-unit factors: a carrier with one 500 MW unit and twenty 5 MW units has
+	one capacity factor, and an unweighted mean would report the small units'
+	weather as though it were the fleet's.
+
+	**A carrier with no capacity is excluded, not reported as zero.** A
+	generator whose ``p_nom`` is zero has no capacity factor -- the quotient is
+	undefined, and ``0.0`` would render as a technology that produces nothing
+	rather than one that is not built.
+	"""
+	assert network is not None, "network must not be None"
+	if days <= 0:
+		raise BalanceError(f"a renewable forecast of {days} days is empty by construction")
+
+	snapshots = network.snapshots
+	if len(snapshots) == 0:
+		raise BalanceError("the network has no snapshots, so there is no week to look ahead to")
+	generators = network.generators
+	if len(generators) == 0:
+		raise BalanceError(
+			"the network has no generators, so there is no carrier to report a "
+			"capacity factor for"
+		)
+
+	carriers = [str(value) for value in generators["carrier"]]
+	_kinds, renewable, _firm = _classify(carriers)
+	if not renewable.any():
+		raise BalanceError(
+			"the network has no variable-renewable generator; a renewable forecast "
+			"with no renewable carrier is an empty table under a heading that "
+			"promises one. The registry classes carriers, and none of this "
+			f"network's ({sorted(set(carriers))}) is VRE"
+		)
+
+	capacity = generator_capacity_mw(generators)
+	available = availability_frame(network, generators).to_numpy(dtype=float)
+	assert available.shape == (len(snapshots), len(generators)), (
+		"the availability matrix does not align with the snapshots and generators"
+	)
+
+	selected, day_of = _horizon_days(snapshots, days=days, start=start)
+	# Positions rather than a boolean mask: `np.ix_` takes index arrays, and a
+	# boolean one there is the shape pyright rejects and numpy would broadcast
+	# as a mask over the wrong axis.
+	hours = np.flatnonzero(np.isin(day_of.to_numpy(), np.asarray(selected)))
+
+	rows: list[dict[str, Any]] = []
+	variable = sorted(
+		{carrier for carrier, is_vre in zip(carriers, renewable, strict=True) if is_vre}
+	)
+	for carrier in variable:
+		columns = [
+			position
+			for position, (name, is_vre) in enumerate(zip(carriers, renewable, strict=True))
+			if is_vre and name == carrier
+		]
+		built = np.array(
+			[position for position in columns if capacity[position] > 0.0], dtype=np.intp
+		)
+		if built.size == 0:
+			logger.info("balance.renewable_forecast.no_capacity", carrier=carrier)
+			continue
+		weights = capacity[built]
+		# Per snapshot, the fleet-wide factor: the capacity-weighted mean of the
+		# per-unit factors. `available` is already a fraction of nameplate, so
+		# the weighting is the same arithmetic as a system-wide capacity factor.
+		factors = available[np.ix_(hours, built)] @ weights / float(weights.sum())
+		rows.append(
+			{
+				"label": carrier,
+				"value": float(factors.mean()),
+				"unit": "capacity factor",
+				"n_generators": float(built.size),
+				"capacity_mw": float(weights.sum()),
+			}
+		)
+
+	if not rows:
+		raise BalanceError(
+			"every variable-renewable carrier in this network has zero nameplate "
+			"capacity, so no capacity factor is defined; reporting 0.0 would render "
+			"as a technology that produces nothing rather than one that is not built"
+		)
+
+	frame = pd.DataFrame(rows, columns=["label", "value", "unit", "n_generators", "capacity_mw"])
+	logger.info(
+		"balance.renewable_forecast",
+		carriers=int(len(frame)),
+		days=int(len(selected)),
+		first=str(selected[0]),
+		last=str(selected[-1]),
+	)
+	return frame
+
+
 def _is_shedding(carrier: str) -> bool:
 	"""Whether a carrier is the model's stand-in for unserved demand."""
 	try:
@@ -354,6 +496,7 @@ __all__ = [
 	"availability_frame",
 	"generator_capacity_mw",
 	"load_series",
+	"renewable_forecast_rows",
 	"numeric_column",
 	"week_ahead_rows",
 ]

@@ -595,6 +595,84 @@ def build_week_ahead(config: Config, out: Path, context: BuildContext) -> Derive
 	return read_provenance(out)
 
 
+@stage("renewable_forecast")
+def build_renewable_forecast(config: Config, out: Path, context: BuildContext) -> DerivedProvenance:
+	"""Registered stage: the week's capacity factors per variable-renewable carrier.
+
+	`reporting/weekly.py`'s ``renewable_forecast`` reads
+	``weather/renewables/{date}.parquet``, and the register recorded the blocker
+	as "a *forecast* is a different quantity from a *profile*". The distinction
+	is real and the conclusion does not follow: the section's prose says "from
+	the weather model", and the network's ``p_max_pu`` **is** that model's
+	output -- `planning.renewables.attach_renewable_profiles` puts the
+	atlite-derived capacity factor there. So this reads it back rather than
+	re-running atlite, and records basis ``modelled``, which is what it is.
+	`week_ahead` made the same call one section over.
+
+	**Why it reads a solved network.** Capacity is ``p_nom_opt`` where a
+	component is extendable, so on an unsolved network the capacity-weighted
+	factor is weighted by the fleet *before* the expansion the network is the
+	answer to. The same reason `week_ahead` and `capacity_update` take this
+	input.
+	"""
+	import pypsa
+
+	from alea.io.artefacts import read_provenance, sha256_file
+	from alea.io.pipeline import skip_if_current
+	from alea.planning.balance import renewable_forecast_rows
+
+	network_dir = resolve(context.parameters.get("network_dir", NETWORK_DIR))
+	named = context.parameters.get("network_path")
+	path = Path(named) if named else _newest_network(network_dir)
+	if not path.exists():
+		raise ArtefactError(f"no solved network at {path}")
+
+	days = int(context.parameters.get("days", 7))
+	start = context.parameters.get("start") or None
+
+	digest = sha256_file(path)
+	inputs = [digest, *(value for value in context.inputs if value != digest)]
+	existing = skip_if_current(out, inputs, stage_name="renewable_forecast", logger=context.logger)
+	if existing is not None:
+		return existing
+
+	network = pypsa.Network(str(path))
+	frame = renewable_forecast_rows(network, days=days, start=start)
+	provenance = DerivedProvenance(
+		source_id="renewable_forecast",
+		inputs=inputs,
+		code_version=_code_version(),
+		run_id=new_run_id(),
+		parameters={
+			"network_file": path.name,
+			"carriers": int(len(frame)),
+			"days": int(days),
+			"snapshots_available": int(len(network.snapshots)),
+		},
+		basis=Basis.MODELLED,
+		notes=(
+			"Capacity-weighted mean of each variable-renewable carrier's per-unit "
+			"p_max_pu over the window, from the newest solved network. The profile "
+			"is atlite's, attached when the network was built; this stage reads it "
+			"rather than re-running the weather model, so the basis is `modelled` "
+			"and not `forecast`. The weighting is by nameplate capacity: a carrier "
+			"with one large unit and many small ones has one capacity factor, and "
+			"an unweighted mean would report the small units' weather as the "
+			"fleet's. A carrier with no built capacity is excluded rather than "
+			"reported as zero, which would render as a technology that produces "
+			"nothing rather than one that is not built."
+		),
+	)
+	write_stage(out, frame, provenance, format="parquet")
+	logger.info(
+		"planning.stage.renewable_forecast",
+		carriers=int(len(frame)),
+		network_file=path.name,
+		out=str(out),
+	)
+	return read_provenance(out)
+
+
 def _dispatch_stamp_of(network: Any) -> str:
 	"""The date a dispatch artefact is stamped with, from the network itself."""
 	snapshots = network.snapshots
@@ -620,6 +698,7 @@ __all__ = [
 	"build_capacity_update",
 	"build_generation_mix",
 	"build_network_arrays",
+	"build_renewable_forecast",
 	"build_week_ahead",
 	"dispatch_matrix",
 	"network_arrays",

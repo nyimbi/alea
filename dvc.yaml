@@ -417,6 +417,22 @@ stages:
     outs:
       - data/processed/week_ahead.parquet
 
+  renewable_forecast:
+    desc: >-
+      The week's capacity factors per variable-renewable carrier, for the weekly
+      renewable-forecast section. The network's own p_max_pu is the weather
+      model's output, so the stage reads it back rather than re-running atlite,
+      and records basis modelled.
+    cmd: >-
+      uv run --directory . alea build renewable_forecast
+      --out data/processed/renewable_forecast.parquet
+      --config config/config.kenya.yaml
+      --set network_dir=results/networks
+    deps:
+      - results/networks
+    outs:
+      - data/processed/renewable_forecast.parquet
+
   project_price_forecast:
     desc: >-
       The daily price section at the dated path its report reads. Optional, so
@@ -511,3 +527,17 @@ stages:
       - data/processed/week_ahead.parquet
     outs:
       - results/planning/outlook
+
+  project_renewable_forecast:
+    desc: >-
+      The renewable forecast at the dated path its report reads. The section
+      declares weather/renewables/{date}.parquet, so the projection resolves the
+      cadence's period rather than stamping the run date.
+    cmd: >-
+      uv run --directory . alea project weekly renewable_forecast
+      --source data/processed/renewable_forecast.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/renewable_forecast.parquet
+    outs:
+      - results/weather/renewables
