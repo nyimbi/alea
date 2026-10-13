@@ -36,10 +36,15 @@ config_app = typer.Typer(no_args_is_help=True, help="Inspect and validate config
 registry_app = typer.Typer(no_args_is_help=True, help="Inspect the country and technology registries.")
 quality_app = typer.Typer(no_args_is_help=True, help="Validation coverage and the unverified register.")
 whatif_app = typer.Typer(no_args_is_help=True, help="What-if scenario cache maintenance.")
+validate_app = typer.Typer(
+	no_args_is_help=True,
+	help="Measure an approximation and record it, so a gate can read the measurement.",
+)
 app.add_typer(config_app, name="config")
 app.add_typer(registry_app, name="registry")
 app.add_typer(quality_app, name="quality")
 app.add_typer(whatif_app, name="whatif")
+app.add_typer(validate_app, name="validate")
 
 ConfigOption = Annotated[
 	Path | None,
@@ -512,6 +517,117 @@ def whatif_gc(
 		typer.echo(f"{verb} {len(removed)} of {before} entries under {root}")
 		for key in removed:
 			typer.echo(f"  {key[:12]}")
+
+
+@validate_app.command("aggregation")
+def validate_aggregation(
+	network: Annotated[Path, typer.Option("--network", help="Solved network at full resolution.")],
+	periods: Annotated[
+		int,
+		typer.Option("--periods", help="Representative periods to aggregate to."),
+	],
+	config: ConfigOption = None,
+	out: Annotated[
+		Path | None,
+		typer.Option("--out", "-o", help="Directory for the validation artefact."),
+	] = None,
+	period_length: Annotated[
+		int | None,
+		typer.Option(
+			"--period-length",
+			help="Timesteps per representative period. Default: a week (168 h), or the "
+			"period count itself when the periods are meant to be single timesteps.",
+		),
+	] = None,
+	seed: Annotated[int, typer.Option("--seed", help="Aggregation seed.")] = 0,
+) -> None:
+	"""Measure what aggregating a network costs, and record it (AD-9).
+
+	The remedy `require_aggregation_validation` names in its own refusal, and
+	which did not exist: the gate's error string says "Run `alea validate
+	aggregation` first", `04-layer1-planning.md` §7 quotes the same string, and
+	the CLI had no `validate` group. A gate whose remedy cannot be run is a gate
+	whose failure has no next step, which is how an operator ends up writing a
+	validation artefact by hand.
+
+	Solves the network twice -- once at full resolution and once aggregated --
+	and writes the measured errors to ``results/aggregation/<network id>.json``,
+	which is where the gate reads them. The artefact is written **even when the
+	measurement fails**: a failing measurement on disk is how an operator learns
+	the fast path is 8% off, and refusing to write it leaves the gate reporting
+	"no artefact" instead of "artefact says 8%".
+
+	``--period-length`` defaults to a week rather than to ``snapshots / periods``.
+	The latter is not a default at all: 8760 / 12 is 730, and 12 periods of 730
+	hours is 8760 hours -- the whole year, so the "aggregated" network is the
+	full-resolution one and the measurement reports a flawless 0.00%. That is a
+	vacuous validation, and it is exactly the shape the gate exists to refuse.
+
+	The network must already be solved. Measuring an unsolved one would compare
+	two zeros and report a perfect aggregation, the same failure by another route.
+	"""
+	import pypsa
+
+	from alea.planning.aggregation import (
+		aggregate_network,
+		validate_aggregation_artefact,
+		write_validation,
+	)
+
+	with _run("cli.validate.aggregation", network=str(network), periods=periods) as run:
+		if not network.exists():
+			typer.secho(f"network {network} does not exist", fg=typer.colors.RED, err=True)
+			raise typer.Exit(code=2)
+		solved = pypsa.Network(str(network))
+		if not solved.is_solved:
+			typer.secho(
+				f"network {network} is not solved; run `alea solve` first. Measuring an "
+				"unsolved network compares two zeros and reports a perfect aggregation.",
+				fg=typer.colors.RED,
+				err=True,
+			)
+			raise typer.Exit(code=2)
+
+		# A week, or the period count when the periods are single timesteps. Both
+		# are real reductions; `snapshots // periods` is not, as the docstring says.
+		length = period_length or min(168, max(1, len(solved.snapshots) // periods))
+		if periods * length >= len(solved.snapshots):
+			typer.secho(
+				f"{periods} periods of {length} hours cover the whole "
+				f"{len(solved.snapshots)}-hour series, so the 'aggregated' network is "
+				"the full-resolution one and the measurement would report a flawless "
+				"zero. Pass a smaller --period-length or fewer --periods.",
+				fg=typer.colors.RED,
+				err=True,
+			)
+			raise typer.Exit(code=2)
+		aggregated = aggregate_network(solved, n_periods=periods, period_length=length, seed=seed)
+		aggregated.optimize(solver_name=_load(config, None, None).solve.solver, log_to_console=False)
+
+		validation = validate_aggregation_artefact(
+			solved, aggregated, n_periods=periods, period_length=length
+		)
+		written = write_validation(
+			validation,
+			root=out or "results/aggregation",
+			inputs=[f"sha256:network:{validation.network_id}"],
+		)
+		run.record(written)
+
+		typer.echo(
+			f"cost error {validation.cost_error_pct:+.3f}% (tolerance "
+			f"{validation.tolerance_cost_pct}%), mix error "
+			f"{validation.capacity_mix_l1_error_pct:.3f}% (tolerance "
+			f"{validation.tolerance_mix_pct}%), {validation.speedup:.1f}x fewer snapshots"
+		)
+		typer.echo(f"artefact: {written}")
+		if not validation.passes:
+			typer.secho(
+				"the aggregation is OUTSIDE tolerance; the artefact records it and "
+				"`solve` will refuse this level for this network",
+				fg=typer.colors.YELLOW,
+				err=True,
+			)
 
 
 @app.command()

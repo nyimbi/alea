@@ -42,6 +42,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -51,7 +52,9 @@ from tests.ci.canaries import REPO, planted
 from tests.ci.test_planning_layer1 import _seasonal_network, _seasonal_year
 
 AGGREGATION_PY = REPO / "src" / "alea" / "planning" / "aggregation.py"
+CLI_PY = REPO / "src" / "alea" / "cli.py"
 LAYER1_TEST_PY = REPO / "tests" / "ci" / "test_planning_layer1.py"
+VALIDATE_CLI_TEST_PY = REPO / "tests" / "ci" / "test_validate_aggregation_cli.py"
 
 # The old kernel's representative choice, as a selection: twelve consecutive
 # blocks. Not a mutation -- a stand-in for what the kernel returned, so the
@@ -63,19 +66,20 @@ _CONTIGUOUS_REPRESENTATIVES = (
 _TAKE_THE_FIRST_TWELVE_BLOCKS = "\tchosen = np.arange(n_periods)"
 
 
-def _run_gate(gate: str) -> subprocess.CompletedProcess[str]:
+def _run_gate(gate: str, *, module: Path | None = None) -> subprocess.CompletedProcess[str]:
 	"""Run one gate by name in a **fresh interpreter**.
 
 	The plant is a source mutation, and this test session has already imported
 	`alea.planning.aggregation` -- so calling the gate in-process would run the
 	module as it was at import time and the canary would report a blind gate that
 	is only blind to its own patch. A child process reads the mutated source.
-	The gate is addressed as ``tests.ci.test_planning_layer1::<name>`` so pytest
-	imports the module it needs and nothing of this session's.
+	The gate is addressed as ``<module>::<name>`` so pytest imports the module it
+	needs and nothing of this session's.
 	"""
+	target = module or LAYER1_TEST_PY
 	env = {**os.environ, "PYTHONPATH": str(REPO)}
 	return subprocess.run(
-		[sys.executable, "-m", "pytest", f"{LAYER1_TEST_PY}::{gate}", "-q", "--no-header", "-p", "no:cacheprovider"],
+		[sys.executable, "-m", "pytest", f"{target}::{gate}", "-q", "--no-header", "-p", "no:cacheprovider"],
 		capture_output=True,
 		text=True,
 		check=False,
@@ -84,13 +88,13 @@ def _run_gate(gate: str) -> subprocess.CompletedProcess[str]:
 	)
 
 
-def _assert_gate_passes(gate: str) -> None:
-	result = _run_gate(gate)
+def _assert_gate_passes(gate: str, *, module: Path | None = None) -> None:
+	result = _run_gate(gate, module=module)
 	assert result.returncode == 0, f"{gate} does not pass on the shipped code:\n{result.stdout[-2000:]}"
 
 
-def _assert_gate_fails(gate: str, *, match: str) -> None:
-	result = _run_gate(gate)
+def _assert_gate_fails(gate: str, *, match: str, module: Path | None = None) -> None:
+	result = _run_gate(gate, module=module)
 	assert result.returncode != 0, f"{gate} passed while the defect was planted:\n{result.stdout[-2000:]}"
 	assert match in result.stdout, (
 		f"{gate} failed, but not for the reason the canary planted: expected {match!r} "
@@ -162,6 +166,35 @@ def test_the_profile_gate_notices_a_period_that_was_averaged():
 		_assert_gate_fails(gate, match="snapshots")
 
 	_assert_gate_passes(gate)
+
+
+def test_the_validate_command_notices_a_passthrough_aggregation():
+	"""Plant the passthrough default and watch the command accept a flawless zero.
+
+	The gate is `test_a_passthrough_aggregation_is_refused`, and this is the
+	defect the command actually shipped with: ``--period-length`` defaulted to
+	``snapshots / periods``, 8760 / 12 is 730, and twelve periods of 730 hours is
+	the whole year. The "aggregated" network was the full-resolution one, both
+	solves returned the same objective, and the recorded artefact said 0.00% --
+	a passing validation for an aggregation nobody performed.
+
+	The plant removes the guard rather than changing the default, so the canary
+	proves the guard is what refuses and not some incidental property of the
+	fixture.
+	"""
+	gate = "test_a_passthrough_aggregation_is_refused"
+	_assert_gate_passes(gate, module=VALIDATE_CLI_TEST_PY)
+
+	guard = (
+		"\t\tif periods * length >= len(solved.snapshots):\n"
+		'\t\t\ttyper.secho(\n'
+		'\t\t\t\tf"{periods} periods of {length} hours cover the whole "\n'
+	)
+	assert guard in CLI_PY.read_text(encoding="utf-8"), "the passthrough guard is not where the canary expects it"
+	with planted(CLI_PY, guard, "\t\tif False:\n\t\t\ttyper.secho(\n"):
+		_assert_gate_fails(gate, match="passthrough aggregation was measured", module=VALIDATE_CLI_TEST_PY)
+
+	_assert_gate_passes(gate, module=VALIDATE_CLI_TEST_PY)
 
 
 def test_the_gate_is_measuring_the_year_it_claims_to():
