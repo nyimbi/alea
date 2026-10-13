@@ -20,8 +20,9 @@ import re
 from pathlib import Path
 
 import pytest
+import yaml
 
-from alea.reporting.producers import PRODUCERS, UNPRODUCED
+from alea.reporting.producers import PRODUCERS, PROJECTED, UNPRODUCED, UNPROJECTED
 from alea.reporting.schemas import ReportCadence
 from alea.reporting.service import cadence_specs
 
@@ -169,6 +170,82 @@ def test_the_market_entries_named_a_piece_that_has_now_arrived():
 		"written-but-unwired shape this register exists to tell apart from a "
 		"produced section"
 	)
+
+
+def test_the_projected_registers_partition_the_produced_sections():
+	"""Produced is not delivered, and the second pair of registers says which.
+
+	``PRODUCERS`` names the function that computes a section's rows; every stage
+	writes ``data/processed/`` and every section reads
+	``results/<dir>/{date}.parquet``. Naming a producer therefore says nothing
+	about whether a report can open the section -- which is exactly what was
+	measured: `capacity_update` was in ``PRODUCERS``, its rule exited 0, and
+	`alea report monthly` exited 1 with ``ReportDataError: no artefact``.
+
+	So the produced set is partitioned again, and the partition is the gate. A
+	slug in neither register is a produced section nobody has asked the delivery
+	question about; a slug in both is a claim that contradicts itself; a
+	``PROJECTED`` entry whose rule no rule file declares is the original defect
+	restated one level down -- the register says a projection exists and nothing
+	runs it.
+	"""
+	unrecorded = sorted(set(PRODUCERS) - set(PROJECTED) - set(UNPROJECTED))
+	assert not unrecorded, (
+		f"{unrecorded} are recorded as produced and in neither projection "
+		f"register. `PRODUCERS` names the function that writes the rows; the "
+		f"section reads a dated path under `results/`, and until a rule lands the "
+		f"artefact there the section is absent at report time. Add the rule and "
+		f"record it in `PROJECTED`, or record the blocker in `UNPROJECTED`."
+	)
+	stale = sorted((set(PROJECTED) | set(UNPROJECTED)) - set(PRODUCERS))
+	assert not stale, (
+		f"{stale} are in a projection register and in no `PRODUCERS` entry. An "
+		f"unproduced section has no artefact to project, so this is an entry that "
+		f"outlived its producer."
+	)
+	overlap = sorted(set(PROJECTED) & set(UNPROJECTED))
+	assert not overlap, (
+		f"{overlap} are recorded as both projected and unprojected; the two "
+		f"registers must partition the produced set"
+	)
+	for slug, reason in UNPROJECTED.items():
+		assert len(reason) > 80, (
+			f"{slug!r} has a reason too short to name what closes it: {reason!r}"
+		)
+
+
+def test_every_projected_section_has_a_rule_and_a_dvc_stage():
+	"""A projection recorded as delivered must be one the workflows run.
+
+	The canary-shaped half of the register: the source text is what is checked,
+	so a ``PROJECTED`` entry naming a rule that was renamed, deleted, or never
+	written fails here rather than at the next report run. Both workflow files,
+	because `snakemake` and `dvc repro` are two ways to build the same pipeline
+	and a projection in only one of them is a delivery that happens under one
+	and not the other.
+	"""
+	rules_text = "\n".join(
+		path.read_text(encoding="utf-8")
+		for path in sorted((REPO / "rules").glob("*.smk"))
+	)
+	declared_rules = set(
+		re.findall(r"^rule\s+([A-Za-z_][A-Za-z0-9_]*)\s*:", rules_text, re.MULTILINE)
+	)
+	dvc_stages = set(
+		yaml.safe_load((REPO / "dvc.yaml").read_text(encoding="utf-8"))["stages"]
+	)
+	for slug, rule in PROJECTED.items():
+		assert rule in declared_rules, (
+			f"{slug!r} is recorded as projected by `{rule}`, and no `.smk` file "
+			f"declares that rule. `PROJECTED` means a workflow rule lands the "
+			f"section's dated artefact; a name with no rule behind it is the "
+			f"original defect -- a function that exists and nothing that runs it"
+		)
+		assert rule in dvc_stages, (
+			f"{slug!r} is projected by `{rule}` under Snakemake, and `dvc.yaml` "
+			f"has no such stage -- so `dvc repro` builds a pipeline in which the "
+			f"section is never delivered"
+		)
 
 
 #: The required section each cadence cannot generate without, while it has no

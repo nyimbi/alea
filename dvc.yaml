@@ -292,6 +292,23 @@ stages:
     outs:
       - data/processed/capacity_update.parquet
 
+  project_capacity_update:
+    desc: >-
+      The monthly capacity section at the dated path its report reads. A stage
+      writes `data/processed/`; a section reads `results/<dir>/{date}.parquet`,
+      and nothing bridged the two.
+    cmd: >-
+      uv run --directory . alea project monthly capacity_update
+      --source data/processed/capacity_update.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/capacity_update.parquet
+    outs:
+      # A directory: the filename is the cadence's period end, which moves with
+      # the clock, so no literal is knowable at parse time. The projection
+      # resolves it from the section's own declared pattern.
+      - results/planning/capacity
+
   market_prices:
     desc: "The solved network's marginal prices for the API's price route."
     cmd: >-

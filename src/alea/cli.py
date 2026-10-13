@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Annotated, Any, Literal
 
@@ -434,6 +434,43 @@ def dispatch(
 			f"dispatched: objective={result.objective:,.0f} in {result.seconds:.1f}s, "
 			f"curtailment={result.curtailment_share * 100:.2f}%"
 		)
+
+
+@app.command()
+def project(
+	cadence: Annotated[str, typer.Argument(help="Report cadence the section belongs to.")],
+	slug: Annotated[str, typer.Argument(help="Section slug, e.g. 'capacity_update'.")],
+	source: Annotated[Path, typer.Option("--source", help="The artefact the stage wrote.")],
+	config: ConfigOption = None,
+	date: Annotated[str | None, typer.Option("--date", help="Report date, ISO 8601.")] = None,
+) -> None:
+	"""Land a produced artefact at the dated path its report section reads.
+
+	A stage writes ``data/processed/<stage>.<suffix>``; a section reads
+	``results/<dir>/{date}.parquet``. Nothing bridged the two, so a slug in
+	``reporting.producers.PRODUCERS`` recorded that a *function* exists rather
+	than that a section is deliverable -- `alea report monthly` failed with
+	"no artefact" while the producing rule exited 0.
+
+	The destination is the section's own declared path and the date is the
+	cadence's own period end, so this command cannot write a file no report
+	looks for.
+	"""
+	from alea.reporting.projection import project_section
+
+	with _run("cli.project", cadence=cadence, slug=slug) as run:
+		loaded = _load(config, None, None)
+		as_of = _as_date_or_today(date)
+		target = project_section(cadence, slug, source, loaded, as_of=as_of)
+		run.record(target)
+		typer.echo(f"{slug}: {source} -> {target}")
+
+
+def _as_date_or_today(value: str | None) -> date:
+	"""A CLI date option, defaulting to today in UTC."""
+	if value is None:
+		return datetime.now(UTC).date()
+	return date.fromisoformat(value)
 
 
 @app.command()

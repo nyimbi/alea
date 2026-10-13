@@ -50,3 +50,42 @@ rule capacity_update:
 				*params.flags,
 			)
 		)
+
+
+# --------------------------------------------------------------------------
+# The projection: a stage's output, at the dated path its section reads
+# --------------------------------------------------------------------------
+#
+# Every rule above writes ``data/processed/<stage>.<suffix>``; a section reads
+# ``results/<dir>/{date}.parquet``. The two docstrings in this repository that
+# describe the bridge -- `rules/losses.smk`'s ``critical_lines`` and this file's
+# own header -- say the dated path "is the projection's ``--out`` and is not
+# this rule's business". No such projection existed: no subcommand, no rule, no
+# test. So `alea report monthly` failed with "no artefact" while the producing
+# rule exited 0, and ``reporting.producers.PRODUCERS`` recorded that a *function*
+# exists rather than that a section is deliverable.
+#
+# This rule is that projection. `alea project` resolves the date from the
+# cadence's own period -- a monthly report issued on the 1st covers the month
+# that just ended -- and takes the destination from the section's own declared
+# ``artefact``, so neither can drift from where the reader looks. The source is
+# the processed artefact the rule above declares, so Snakemake orders the two
+# without either naming the other's stage.
+
+rule project_capacity_update:
+	"""`capacity_update` at the dated path the monthly report reads."""
+	input:
+		processed("capacity_update")
+	output:
+		report_artefact("monthly", "planning/capacity/{date}.parquet")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"project", "monthly", "capacity_update",
+				"--source", input[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)

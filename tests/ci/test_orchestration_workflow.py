@@ -92,6 +92,25 @@ SUFFIXES = {
 	"sector_coupling": ".json",
 }
 
+#: The report projections: a stage's processed artefact, landed at the dated
+#: path a report section reads. Keyed by rule name to the section slug.
+#:
+#: A distinct set from `STAGES` because the two answer different questions.
+#: `STAGES` are datasets under `paths.processed`; a projection is a *delivery*,
+#: and its output is a dated path under `paths.results` that moves with the
+#: cadence's period. Nothing wrote one until this set existed, which is why
+#: `alea report monthly` raised "no artefact" while the producing rule exited 0.
+PROJECTIONS = {
+	"project_capacity_update": "capacity_update",
+}
+
+#: The section pattern each projection writes, mirrored from the cadence module
+#: that declares it. A literal here for the same reason `SUFFIXES` is: the
+#: comparison is that the two spellings agree.
+PROJECTION_PATTERNS = {
+	"project_capacity_update": "planning/capacity/{date}.parquet",
+}
+
 
 def _smk_text() -> str:
 	"""Every rule file, concatenated.
@@ -162,11 +181,76 @@ def test_every_stage_has_a_dvc_stage():
 	stages = yaml.safe_load((REPO_ROOT / "dvc.yaml").read_text(encoding="utf-8"))["stages"]
 	missing = sorted(set(STAGES) - set(stages))
 	assert not missing, f"no DVC stage declares these datasets: {missing}"
-	extra = sorted(set(stages) - set(STAGES))
+	extra = sorted(set(stages) - set[str](STAGES) - set[str](PROJECTIONS))
 	assert not extra, (
 		f"dvc.yaml declares stages the registry does not hold: {extra}. `dvc repro` "
 		f"would run a command the CLI refuses."
 	)
+
+
+def test_every_projection_has_a_snakemake_rule_and_a_dvc_stage():
+	"""A projection with no rule delivers nothing, and nothing says so.
+
+	The whole defect this set exists for: `reporting.producers.PRODUCERS` named
+	a producer, the producer's rule ran and exited 0, and the section's dated
+	path was still absent -- so the report raised. A projection is the missing
+	step, and one that exists in only one of the two workflow files is a
+	delivery that happens under `snakemake` and not under `dvc repro`.
+	"""
+	declared = _declared_rules(_smk_text())
+	missing_rules = sorted(set(PROJECTIONS) - declared)
+	assert not missing_rules, f"no Snakemake rule declares these projections: {missing_rules}"
+	stages = yaml.safe_load((REPO_ROOT / "dvc.yaml").read_text(encoding="utf-8"))["stages"]
+	missing_dvc = sorted(set(PROJECTIONS) - set(stages))
+	assert not missing_dvc, f"no DVC stage declares these projections: {missing_dvc}"
+
+
+def test_a_projection_writes_the_pattern_its_section_declares():
+	"""The projection's destination is the section's own declaration.
+
+	The rule writes a directory (the filename is the cadence's period end, which
+	moves with the clock) and `alea project` resolves the file inside it from the
+	section's ``artefact``. So the directory the rule declares must be the one
+	the cadence module's pattern lives in -- a projection writing elsewhere is a
+	file no report reads, which is the defect and not a variant of it.
+	"""
+	from alea.reporting.schemas import ReportCadence
+	from alea.reporting.service import cadence_specs
+
+	by_slug: dict[str, str] = {}
+	for cadence in ReportCadence:
+		specs, _ = cadence_specs(cadence)
+		by_slug.update({spec.slug: spec.artefact for spec in specs})
+
+	for rule, slug in PROJECTIONS.items():
+		assert slug in by_slug, (
+			f"{rule} projects {slug!r}, which no cadence declares"
+		)
+		declared = by_slug[slug]
+		mirrored = PROJECTION_PATTERNS[rule]
+		assert declared == mirrored, (
+			f"{rule}: the cadence declares {declared!r} and this test mirrors "
+			f"{mirrored!r}; the projection would write where no reader looks"
+		)
+		directory = declared.rsplit("/", 1)[0]
+		# The rule declares the *directory* through `report_artefact`, which
+		# builds it from the section's own pattern -- so the rule body must carry
+		# that pattern, and `results/<dir>` is what `report_artefact` evaluates
+		# it to. Both halves are asserted: a rule that spelled the directory by
+		# hand would agree today and drift the moment the cadence moves a section.
+		block = _rule_blocks(_smk_text()).get(rule, "")
+		assert "report_artefact(" in block and f'"{declared}"' in block, (
+			f"{rule}: the rule must declare its output through "
+			f"`report_artefact` with the section's pattern {declared!r}; it "
+			f"declares {block.strip()[:200]!r}"
+		)
+		expected = f"results/{directory}"
+		dvc_outs = yaml.safe_load(
+			(REPO_ROOT / "dvc.yaml").read_text(encoding="utf-8")
+		)["stages"][rule]["outs"]
+		assert expected in {str(out) for out in dvc_outs}, (
+			f"{rule}: dvc.yaml outs {dvc_outs} do not name {expected}"
+		)
 
 
 def test_snakemake_and_dvc_agree_on_each_stage_s_output():

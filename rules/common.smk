@@ -166,6 +166,23 @@ def processed(stage, suffix=None):
 	return f"{PROCESSED}/{stage}{suffix or SUFFIXES[stage]}"
 
 
+def report_artefact(cadence, pattern):
+	"""The dated path a report section reads, for a projection to write.
+
+	``pattern`` is the section's own ``artefact`` string, with its ``{date}``
+	unexpanded: the date is the *cadence's* period end and not the day the rule
+	runs, so a literal here would be a file no report ever looks for. Snakemake
+	needs a concrete path at parse time and the period end moves with the clock,
+	which is why the projection resolves it and this declares the directory.
+
+	Spelled here rather than at the rule so the one place that knows how a dated
+	report path is built is beside the one place that knows how a processed path
+	is built -- the same reason ``processed`` exists.
+	"""
+	directory = pattern.rsplit("/", 1)[0]
+	return f"{RESULTS}/{directory}"
+
+
 def alea(*arguments):
 	"""An `alea` invocation, as a command prefix.
 

@@ -76,6 +76,78 @@ PRODUCERS: Final[MappingProxyType[str, str]] = MappingProxyType(
 )
 
 
+#: Produced sections whose *dated* artefact a workflow rule writes.
+#:
+#: A separate register because ``PRODUCERS`` answers a weaker question than it
+#: looks like it answers. Every stage writes ``data/processed/<stage>.<suffix>``
+#: and every section reads ``results/<dir>/{date}.parquet``; naming the function
+#: that computes a section's rows is not naming the rule that lands them where
+#: the reader looks. Measured 2026-10-13: `capacity_update` was in ``PRODUCERS``,
+#: its rule ran and exited 0, and `alea report monthly` exited 1 with
+#: ``ReportDataError: no artefact`` -- so the register recorded that a function
+#: exists rather than that a section is deliverable, and 918 tests passed over a
+#: pipeline that could not deliver one section.
+#:
+#: ``PROJECTED`` and ``UNPROJECTED`` partition ``PRODUCERS``, so a slug cannot be
+#: recorded as produced and left unexamined, and closing a gap means moving a
+#: slug between these two rather than editing a claim.
+#: `alea.reporting.projection` is the step they name.
+PROJECTED: Final[MappingProxyType[str, str]] = MappingProxyType(
+	{
+		# The first, and the one that measured the defect. `rules/reporting.smk`
+		# declares the rule and `dvc.yaml` a stage beside it, both writing
+		# `results/planning/capacity` -- the directory the section's own
+		# ``artefact`` pattern lives in, asserted by
+		# `test_orchestration_workflow.py::test_a_projection_writes_the_pattern_its_section_declares`.
+		"capacity_update": "project_capacity_update",
+	}
+)
+
+
+#: Produced sections whose dated path no rule writes, and what closes each.
+#:
+#: The three that remain, and the shape of the gap is the same in all three: the
+#: stage exists, the section's declaration exists, and the rule that moves one to
+#: the other does not. `capacity_update` is the worked example -- one
+#: ``rule project_<slug>`` calling `alea project <cadence> <slug> --source
+#: <processed path>`, one `dvc.yaml` stage beside it, and the slug moves here
+#: from ``UNPROJECTED`` to ``PROJECTED``.
+UNPROJECTED: Final[MappingProxyType[str, str]] = MappingProxyType(
+	{
+		"critical_lines": (
+			"`rules/losses.smk`'s ``critical_lines`` writes "
+			"`data/processed/critical_lines.parquet`; the weekly section reads "
+			"`results/outages/critical/{date}.parquet`. The rule's own docstring "
+			"says the dated path \"is the projection's ``--out`` and is not this "
+			"rule's business\" -- and no projection rule exists, which is the "
+			"sentence that described this register's whole gap before "
+			"`capacity_update` closed it. One rule and one DVC stage, no new "
+			"computation: the stage's frame is already the section's rows."
+		),
+		"market_report": (
+			"`rules/market.smk` writes `data/processed/market_report.parquet`; the "
+			"monthly section reads `results/market/monthly/{date}.parquet`. This "
+			"is a **required** section, so the monthly cadence raises rather than "
+			"warns without it -- and it is the one a reader opens the monthly "
+			"report for. `rules/market.smk`'s header calls the dated path \"a "
+			"projection someone passes a date to\"; the someone was never "
+			"written."
+		),
+		"market_outlook": (
+			"`rules/market.smk` writes `data/processed/market_outlook.parquet`; "
+			"the quarterly section reads `results/market/outlook/{date}.parquet`. "
+			"Also **required**, so the quarterly cadence raises. Note the date "
+			"resolution this one needs: a quarterly report issued on the 1st "
+			"covers the quarter that just ended, and "
+			"`reporting.schemas.period_for` is what decides which day that is -- "
+			"a projection stamped with its own run date writes a file no "
+			"quarterly report opens, and the symptom is an absent section rather "
+			"than an error."
+		),
+	}
+)
+
+
 #: Sections with no producer, keyed by slug to why, and what would close it.
 #:
 #: Named explicitly rather than left implicit, following ``UNWIRED`` in
@@ -309,5 +381,7 @@ the gap closes rather than describe it.
 
 __all__ = [
 	"PRODUCERS",
+	"PROJECTED",
 	"UNPRODUCED",
+	"UNPROJECTED",
 ]

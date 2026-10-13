@@ -203,12 +203,53 @@ def _artefact_path(spec: SectionSpec, config: Config, as_of: date) -> Path:
 	The template tokens ``{date}`` and ``{month}`` make a monthly section read
 	the month-end artefact while a daily section reads the day's.
 	"""
+	return section_artefact_path(spec, config, as_of)
+
+
+def section_artefact_path(spec: SectionSpec, config: Config, as_of: date) -> Path:
+	"""Where a section's artefact lives for a report dated ``as_of``.
+
+	Public because a *projection* has to write exactly here. This is the only
+	place the template tokens are expanded, so a projection that formatted the
+	path itself would be a second copy of the convention -- and the failure it
+	produces is invisible from either side: the producer passes its own tests
+	(it wrote the file it was told to), the reader reports the section absent
+	(it looked where the section declares), and the register says the section
+	is produced. Measured 2026-10-13: `capacity_update`'s rule wrote
+	``data/processed/capacity_update.parquet``, the monthly section read
+	``results/planning/capacity/{date}.parquet``, and `alea report monthly`
+	exited 1 with ``ReportDataError: no artefact``.
+
+	``as_of`` is the report's own date, not the day the projection ran, and for
+	a section whose period ends before its issue date the caller wants the
+	*period end* -- ``period_for(cadence, as_of)[1]``. The reader does the same
+	substitution, which is why passing the report date here and there agrees.
+	"""
 	pattern = spec.artefact.format(
 		date=f"{as_of:%Y-%m-%d}",
 		month=f"{as_of:%Y-%m}",
 		year=f"{as_of:%Y}",
 	)
 	return resolve(Path(config.paths.results) / pattern)
+
+
+def section_by_slug(cadence: ReportCadence, slug: str) -> SectionSpec:
+	"""One section's declaration, refused if the cadence no longer declares it.
+
+	A projection needs the section's declared ``artefact``, ``unit`` and
+	``columns``, and looking them up by a slug spelled in the caller is how a
+	projection comes to write a path no section declares. Raising here rather
+	than returning ``None`` keeps that a failure at the writer instead of an
+	absent section at the reader.
+	"""
+	specs, _ = cadence_specs(cadence)
+	by_slug = {spec.slug: spec for spec in specs}
+	if slug not in by_slug:
+		raise ReportDataError(
+			f"the {cadence.value} cadence declares no section {slug!r}; it declares "
+			f"{sorted(by_slug)}"
+		)
+	return by_slug[slug]
 
 
 # --------------------------------------------------------------------------
@@ -882,5 +923,7 @@ __all__ = [
 	"find_unverified_token",
 	"record_delivery",
 	"report_id_for",
+	"section_artefact_path",
+	"section_by_slug",
 	"validate_reporting_config",
 ]

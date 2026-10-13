@@ -91,3 +91,10 @@ rule all:
 		# warns rather than raises -- but it is a section a reader opens the
 		# monthly report for, and it costs one read of a network already solved.
 		processed("capacity_update"),
+		# The projection, not the build. A stage's artefact under
+		# `data/processed` is not the section's: the report reads
+		# `results/planning/capacity/{date}.parquet`, and until this rule
+		# existed nothing wrote it -- so the build succeeded, the report raised
+		# "no artefact", and `reporting.producers.PRODUCERS` recorded a function
+		# rather than a deliverable section.
+		report_artefact("monthly", "planning/capacity/{date}.parquet"),
