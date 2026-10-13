@@ -14,9 +14,7 @@ the failure explicitly rather than trusting the gate's exit.
 
 from __future__ import annotations
 
-import os
 import subprocess
-import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -41,7 +39,7 @@ from alea.reporting.service import (
 	drift_gate,
 	find_unverified_token,
 )
-from tests.ci.canaries import REPO, assert_raises, planted
+from tests.ci.canaries import REPO, assert_raises, planted, probe
 
 RENDER_PY = REPO / "src" / "alea" / "reporting" / "render.py"
 MODELS_PY = REPO / "src" / "alea" / "config" / "models.py"
@@ -89,11 +87,16 @@ def _context(*, sections: list[ReportSection], **extra: object) -> ReportContext
 
 
 def _run(program: str) -> subprocess.CompletedProcess[str]:
-	"""Run a snippet against the tree as it stands on disk, with tests importable."""
-	env = {**os.environ, "PYTHONPATH": ROOT}
-	return subprocess.run(
-		[sys.executable, "-c", program], capture_output=True, text=True, check=False, env=env
-	)
+	"""Run a snippet against the tree as it stands on disk, with tests importable.
+
+	Delegates to the shared `probe`, which carries a timeout. It did not, and
+	that is how this file hung the suite on 2026-10-13: the probe below
+	deadlocked in `libarrow`'s thread-pool destructor during interpreter exit,
+	`subprocess.run` waited forever, and the `planted` mutation in
+	`reporting/assemble.py` stayed on disk -- so the *next* run read
+	`interval=None` as the original and restored to it.
+	"""
+	return probe(program)
 
 
 # --------------------------------------------------------------------------

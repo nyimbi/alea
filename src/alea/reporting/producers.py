@@ -354,11 +354,13 @@ fact: "needs a rule" and "needs a model that does not exist" are different
 amounts of work, and a register that says only "unwired" hides which one it is.
 Five sections are `required=True` -- one per cadence: `outage_forecast`,
 `week_ahead`, `market_report`, `market_outlook`, `continental_outlook` -- and
-for those the report raises rather than warns. Two of the five are unproduced,
-so two cadences -- daily and annual -- still cannot be generated from the
-pipeline. The count was four here once, and the daily cadence was the one it
-dropped; `test_reporting_producers.py` pins one-required-per-cadence so the prose
-cannot drift from the set it describes again.
+for those the report raises rather than warns. Three of the five are unproduced,
+so three cadences -- daily, weekly and annual -- still cannot be generated from
+the pipeline. This sentence said "two ... daily and annual" while `week_ahead`
+sat in the mapping below it: the count is a *summary of this set* and nothing
+checked it, which is the same drift the note at the end of this docstring
+describes. `test_reporting_producers.py` now pins the count against the mapping
+rather than leaving it to be retyped.
 
 The monthly and quarterly entries left this register together, and their removal
 is the shape the rest will follow: `market/fleet.py` was written to be the

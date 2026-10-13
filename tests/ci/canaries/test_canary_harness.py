@@ -197,7 +197,9 @@ def test_the_harness_purges_bytecode_on_both_sides_of_a_mutation(tmp_path: Path)
 	module = tmp_path / "subject_module.py"
 	module.write_text("VALUE = 'forbid'\n")
 	# A real `.pyc`, as an import would leave behind.
-	cached = Path(py_compile.compile(str(module), doraise=True))
+	compiled = py_compile.compile(str(module), doraise=True)
+	assert compiled is not None, "py_compile reported success without a path"
+	cached = Path(compiled)
 	assert cached.is_file(), "no bytecode was produced to invalidate"
 
 	with planted(module, "'forbid'", "'ignore'"):
@@ -207,3 +209,127 @@ def test_the_harness_purges_bytecode_on_both_sides_of_a_mutation(tmp_path: Path)
 	# deserves rather than the one the mutation left.
 	assert not cached.exists(), "the restore left the mutation's bytecode trusted"
 	assert module.read_text() == "VALUE = 'forbid'\n"
+
+
+def test_the_harness_interrupts_a_body_that_holds_a_mutation_too_long(
+	target: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+	"""The defect: a body that never returns, holding the mutation forever.
+
+	The one failure the other four guards cannot catch, because all of them
+	assume the body returns. A hang leaves the defect planted past the life of
+	the process, and the *next* process reads that defect as the original and
+	restores to it -- so the leak outlives its cause. Measured 2026-10-13: a
+	probe deadlocked in `libarrow`'s thread-pool destructor during exit,
+	`subprocess.run` had no timeout, and `assemble.py` and `integrate.py` were
+	found hours later still carrying planted mutations.
+
+	The deadline is driven down rather than waited out, and the body blocks on
+	an `Event` rather than sleeping, so the test costs the interrupt latency and
+	not the deadline.
+	"""
+	import tests.ci.canaries as harness
+
+	monkeypatch.setattr(harness, "_HOLD_SECONDS", 0.5)
+	blocked = threading.Event()
+	interrupted: list[type[BaseException]] = []
+
+	with (
+		pytest.raises(harness.CanaryTimeout, match="held a mutation"),
+		planted(target, "line two", "line TWO"),
+	):
+		try:
+			blocked.wait(timeout=30)
+		except BaseException as exc:  # noqa: BLE001 - recorded, re-raised below
+			interrupted.append(type(exc))
+			raise
+
+	assert interrupted == [harness.CanaryTimeout], (
+		"the deadline raised nothing the body could see, so the body would have "
+		"held the mutation until the process died"
+	)
+	assert target.read_text() == ORIGINAL, (
+		"a hung canary left the tree mutated; the interrupt must make the "
+		"`finally` reachable, or the leak outlives the process"
+	)
+	assert not list(target.parent.glob("*.canary-backup")), (
+		"a hung canary left its backup behind, which is what a later run would "
+		"read as the original"
+	)
+
+
+def test_the_harness_deadline_is_disabled_in_a_worker_thread(
+	target: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+	"""`signal.signal` refuses outside the main thread, so the deadline must not arm there.
+
+	`test_two_canaries_on_one_file_do_not_see_each_other` drives `planted` from
+	worker threads on purpose, and a `ValueError: signal only works in main
+	thread` there would be the harness breaking the one test that proves its
+	lock works. A worker that hangs does not corrupt the tree on its own -- the
+	session is stuck, which is already visible -- so the deadline stands down.
+	"""
+	import tests.ci.canaries as harness
+
+	monkeypatch.setattr(harness, "_HOLD_SECONDS", 0.5)
+	seen: list[str] = []
+
+	def worker() -> None:
+		try:
+			with planted(target, "line two", "line TWO"):
+				seen.append(target.read_text())
+		except BaseException as exc:  # noqa: BLE001 - reported below
+			seen.append(f"raised {type(exc).__name__}: {exc}")
+
+	thread = threading.Thread(target=worker)
+	thread.start()
+	thread.join(timeout=10)
+
+	assert seen == ["line one\nline TWO\nline three\n"], (
+		f"the deadline broke `planted` in a worker thread: {seen}"
+	)
+	assert target.read_text() == ORIGINAL
+
+
+def test_leaked_mutations_finds_a_backup_a_dead_canary_left(tmp_path: Path) -> None:
+	"""A backup on disk is a live defect, and the check must see one.
+
+	`planted` unlinks its backup in the same `finally` that restores, so a
+	backup that survives means the restore never ran -- and the file beside it
+	is mutated. This is the detector for the state the 2026-10-13 hang left the
+	tree in; scoped to a temporary tree here because the point is the *finding*,
+	not the repo's current contents.
+	"""
+	from tests.ci.canaries import leaked_mutations
+
+	assert leaked_mutations([tmp_path]) == [], "an empty tree reported a leak"
+
+	stranded = tmp_path / "src" / "assemble.py.1234.0.canary-backup"
+	stranded.parent.mkdir(parents=True)
+	stranded.write_text("the original bytes\n")
+	(tmp_path / "src" / "assemble.py").write_text("the planted defect\n")
+
+	assert leaked_mutations([tmp_path]) == [stranded], (
+		"a stranded backup went unnoticed, so the mutated file beside it would be "
+		"read as the original by the next run"
+	)
+
+
+def test_the_repository_holds_no_leaked_mutation() -> None:
+	"""The live check: no canary run has left a defect planted in this tree.
+
+	Pinned as a gate rather than a one-off because the failure is silent and
+	self-perpetuating -- a leaked mutation is not a red test, it is a *green*
+	test over corrupted source, and the three `test_scanning_gates.py` conflict
+	tests failed for hours on 2026-10-13 under a `tolerance` the harness had
+	replaced with `1e9`.
+	"""
+	from tests.ci.canaries import leaked_mutations
+
+	found = leaked_mutations()
+	assert not found, (
+		"a canary run left mutations planted in the tree; each backup names the "
+		"file whose current contents are a *defect*, not the original:\n  "
+		+ "\n  ".join(str(path) for path in found)
+		+ "\nRestore each from its backup before trusting any test result."
+	)

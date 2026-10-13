@@ -18,10 +18,14 @@ The discipline, which `planted` below enforces rather than documents:
    next interpreter runs the *defect* against a source that reads correctly.
 4. Assert the gate fails while the defect is planted.
 5. Assert it passes again once restored, or the restore is not proven.
+6. Interrupt the body if it outlives `_HOLD_SECONDS`. Guards 1-5 all assume the
+   body *returns*; a hang breaks that assumption and is the one failure that
+   survives the process, because the mutation is still on disk when it dies.
 
-All three of the guards beyond the first are here because each was a live bug:
-the leak of 2026-10-12, and the stale-bytecode failure that made a clean tree
-look broken.
+All of the guards beyond the first are here because each was a live bug:
+the leak of 2026-10-12, the stale-bytecode failure that made a clean tree
+look broken, and the hang of 2026-10-13 that left two planted defects in the
+tree for hours.
 """
 
 from __future__ import annotations
@@ -31,8 +35,12 @@ import hashlib
 import itertools
 import os
 import shutil
+import signal
+import subprocess
+import sys
 import tempfile
-from collections.abc import Iterator
+import threading
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -41,6 +49,124 @@ import pytest
 REPO = Path(__file__).resolve().parents[3]
 
 _COUNTER = itertools.count()
+
+#: How long a canary may hold a mutation before the harness interrupts it.
+#:
+#: A canary that hangs is worse than a canary that fails, and the difference is
+#: the *tree*. The mutation is on disk for the whole body, so a body that never
+#: returns leaves the defect planted -- and the next process to read that file
+#: takes the defect for the original and restores *to* it. The leak then
+#: outlives the process that caused it, and every later canary fails for a
+#: reason unrelated to any gate.
+#:
+#: Measured 2026-10-13: a probe subprocess deadlocked in `libarrow`'s
+#: thread-pool destructor during interpreter exit, `subprocess.run` had no
+#: timeout, and `assemble.py` and `integrate.py` were both found hours later
+#: holding planted mutations -- `interval=None` where the band was read, and
+#: `> 1e9` where a tolerance was. The second is worth reading twice: it blinds
+#: the conflict detector, so the three tests that failed looked like another
+#: workstream's bug rather than this harness's.
+#:
+#: Generous, because a legitimate body runs pytest in a subprocess. Override
+#: with `ALEA_CANARY_TIMEOUT`; `0` disables the deadline.
+_HOLD_SECONDS = float(os.environ.get("ALEA_CANARY_TIMEOUT", "300"))
+
+
+class CanaryTimeout(TimeoutError):
+	"""A canary body outlived its deadline and was interrupted.
+
+	A distinct type rather than a bare `TimeoutError` so a test can tell the
+	harness's own deadline from a timeout the body raised itself.
+	"""
+
+
+@contextmanager
+def _hold_deadline(seconds: float, path: Path) -> Iterator[None]:
+	"""Interrupt a canary body that holds ``path`` longer than ``seconds``.
+
+	The interrupt is what makes the restore reachable. Without it a hung body
+	never unwinds, so `planted`'s `finally` never runs and the mutation stays --
+	and because `subprocess.run` kills its child on any exception, the hung probe
+	is reaped on the way out rather than left behind.
+
+	**Main thread only.** `signal.signal` refuses elsewhere, and
+	`test_two_canaries_on_one_file_do_not_see_each_other` drives `planted` from
+	worker threads deliberately. A worker that hangs does not corrupt anything
+	on its own: the session is what is stuck, and that is already visible.
+	"""
+	if seconds <= 0 or threading.current_thread() is not threading.main_thread():
+		yield
+		return
+
+	def fire(signum: int, frame: object) -> None:
+		del signum, frame  # the handler ignores both; the deadline is the message
+		raise CanaryTimeout(
+			f"the canary body held a mutation on {path.name} for more than "
+			f"{seconds:.0f}s and was interrupted; the restore still ran, so the "
+			f"tree is clean and this is a failure rather than a leak"
+		)
+
+	previous = signal.signal(signal.SIGALRM, fire)
+	# `setitimer` rather than `alarm`: sub-second deadlines are expressible, and
+	# it is the same timer, so a nested `planted` cannot leave a stray one armed
+	# past its block.
+	signal.setitimer(signal.ITIMER_REAL, seconds)
+	try:
+		yield
+	finally:
+		signal.setitimer(signal.ITIMER_REAL, 0)
+		signal.signal(signal.SIGALRM, previous)
+
+
+def probe(program: str, *args: str, timeout: float = 120.0) -> subprocess.CompletedProcess[str]:
+	"""Run a snippet against the tree on disk, with the repo importable.
+
+	The shared runner for canaries whose gate is a *code path* rather than a
+	value shape: the mutation is a source edit, so the gate has to execute in a
+	fresh interpreter that reads the mutated file. `tests` is not part of the
+	installed package, hence the `PYTHONPATH`.
+
+	The timeout is not optional and not decoration. A probe that never returns
+	used to hang its canary forever with the defect still planted -- see
+	`_HOLD_SECONDS` -- and a killed probe reports as a failure rather than as a
+	hang, which is the difference between a five-second diagnosis and an hour.
+	"""
+	env = {**os.environ, "PYTHONPATH": str(REPO)}
+	return subprocess.run(
+		[sys.executable, "-c", program, *args],
+		capture_output=True,
+		text=True,
+		check=False,
+		env=env,
+		cwd=str(REPO),
+		timeout=timeout,
+	)
+
+
+def probe_exit_code(program: str, *args: str, timeout: float = 120.0) -> int:
+	"""`probe`, reduced to the exit code a canary asserts on."""
+	return probe(program, *args, timeout=timeout).returncode
+
+
+def leaked_mutations(roots: Sequence[Path] | None = None) -> list[Path]:
+	"""Backup files a previous canary run left behind, which mean a live defect.
+
+	`planted` writes its backup beside the target and unlinks it in the same
+	`finally` that restores, so a backup on disk is a canary that did not finish
+	-- a killed process, or a hang from before `_HOLD_SECONDS` existed. The file
+	beside it is *mutated*, and the next run would read that mutation as the
+	original.
+
+	Scoped to the trees canary targets live in rather than the whole repo: a
+	recursive walk of `REPO` reaches `.venv` and the cutouts, and a check that
+	costs a minute is a check people skip.
+	"""
+	scan = roots if roots is not None else (REPO / "src", REPO / "tests", REPO / "rules")
+	found: list[Path] = []
+	for root in scan:
+		if root.is_dir():
+			found.extend(sorted(root.rglob("*.canary-backup")))
+	return found
 
 
 def _lock_for(path: Path) -> Path:
@@ -103,6 +229,12 @@ def planted(path: Path, old: str, new: str, *, count: int = 1) -> Iterator[Path]
 	* **The restore is from the bytes read under the lock**, not from the backup
 	  file, so it cannot fail for want of a file. The backup is for the case
 	  there is no `finally` at all -- the process is killed mid-canary.
+
+	* **The body has a deadline.** A body that never returns never unwinds, so
+	  the `finally` never runs and the mutation stays on disk for the next
+	  process to read as the original. `_HOLD_SECONDS` interrupts it, which
+	  makes the restore reachable and turns a hang into a failure. This is the
+	  guard the other three cannot provide: they all assume the body returns.
 	"""
 	assert path.is_file(), f"canary target is not a file: {path}"
 	backup = path.with_suffix(f"{path.suffix}.{os.getpid()}.{next(_COUNTER)}.canary-backup")
@@ -118,7 +250,8 @@ def planted(path: Path, old: str, new: str, *, count: int = 1) -> Iterator[Path]
 		try:
 			path.write_text(original.replace(old, new, count))
 			_invalidate_bytecode(path)
-			yield path
+			with _hold_deadline(_HOLD_SECONDS, path):
+				yield path
 		finally:
 			# Restored from memory, not from `git checkout`: the real work and the
 			# mutation are both uncommitted in this file, so checkout discards both.
@@ -142,4 +275,13 @@ def assert_raises(exception: type[BaseException], call, *args, **kwargs) -> Base
 	)
 
 
-__all__ = ["REPO", "assert_raises", "planted", "pytest"]
+__all__ = [
+	"REPO",
+	"CanaryTimeout",
+	"assert_raises",
+	"leaked_mutations",
+	"planted",
+	"probe",
+	"probe_exit_code",
+	"pytest",
+]

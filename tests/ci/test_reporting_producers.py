@@ -270,6 +270,65 @@ absence is the state that means "generatable", and an entry saying so would be a
 second way to spell the same thing."""
 
 
+def test_the_prose_count_of_unproduced_required_sections_matches_the_mapping():
+	"""The register's docstring states a count, and the count must be the set's.
+
+	`UNPRODUCED`'s docstring said "Two of the five are unproduced, so two
+	cadences -- daily and annual" while `week_ahead` sat in the mapping three
+	lines below it: the true count was three, and the sentence named two. Nothing
+	caught it, because `test_a_required_section_with_no_producer_is_recorded`
+	pins *which* section belongs to each cadence and never reads the number the
+	prose reports -- so the summary was free to describe a set it did not match.
+
+	This is the module's own lesson applied to itself. Its docstring already
+	warns that "the prose is a *summary of this set*, and a summary that is not
+	checked drifts"; the drift then happened in the sentence making the warning.
+	The count is derived here rather than restated, so closing a gap -- the
+	weekly one, by the plan's order -- moves this test instead of silently
+	falsifying a sentence.
+
+	The source is read as *text*, not through `UNPRODUCED.__doc__`: the sentence
+	lives in a string literal that follows the assignment rather than being the
+	module's first statement, so it is a bare expression with no runtime
+	accessor. Reading the file is also what the sibling gates over
+	`rules/reporting.smk` and `dvc.yaml` do, for the same reason -- the artefact
+	the claim is written in is the thing to check.
+	"""
+	source = (REPO / "src" / "alea" / "reporting" / "producers.py").read_text()
+	stated = re.search(r"(\w+) of the five are unproduced", source)
+	assert stated, (
+		"the docstring no longer states an unproduced count in the form this gate "
+		"reads; if the sentence was reworded, reword this pattern with it rather "
+		"than deleting the gate -- an unchecked summary is how the count was "
+		"wrong by one"
+	)
+
+	words = {
+		"one": 1,
+		"two": 2,
+		"three": 3,
+		"four": 4,
+		"five": 5,
+	}
+	claim = words.get(stated.group(1).lower())
+	assert claim is not None, f"unreadable count word {stated.group(1)!r}"
+
+	required = {
+		spec.slug
+		for cadence in ReportCadence
+		for spec in cadence_specs(cadence)[0]
+		if spec.required
+	}
+	measured = required & set(UNPRODUCED)
+	assert claim == len(measured), (
+		f"the docstring says {claim} of the five required sections are unproduced "
+		f"({stated.group(0)!r}); the register holds {len(measured)} ({sorted(measured)}). "
+		f"The prose is a summary of the mapping below it, and a summary that is "
+		f"not checked drifts -- which is how this sentence came to name two "
+		f"cadences while the mapping held three"
+	)
+
+
 @pytest.mark.parametrize("cadence", list(ReportCadence), ids=lambda c: c.value)
 def test_each_cadence_declares_exactly_one_required_section(cadence: ReportCadence):
 	"""The structural fact the register's prose paraphrases, pinned as a check.

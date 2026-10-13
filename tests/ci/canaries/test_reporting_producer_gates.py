@@ -22,6 +22,15 @@ work. The gate now pins the opposite: the fleet is constructed, and the module
 that constructs it has a caller. The canary mutates the constructor call, so the
 proof is about the new predicate rather than the old one.
 
+``test_the_prose_count_of_unproduced_required_sections_matches_the_mapping`` is
+the fourth, and it exists because the first two close the *shape* of the summary
+without closing the summary itself. `UNPRODUCED`'s docstring said "Two of the
+five are unproduced, so two cadences -- daily and annual" while `week_ahead` sat
+in the mapping below it; the measured count was three. The map gates pin which
+section belongs to which cadence and never read the number the prose reports, so
+the sentence was free to describe a set it did not match -- the module's own
+warning about unchecked summaries, drifted in the sentence making the warning.
+
 **A canary is what proves a pinned assertion is a gate.** A pinned assertion is
 only a check if a change to the thing it pins fails it. Each test below plants
 the change its gate exists to notice and runs the real gate in a fresh
@@ -31,10 +40,7 @@ imported at collection.
 
 from __future__ import annotations
 
-import subprocess
-import sys
-
-from tests.ci.canaries import REPO, planted
+from tests.ci.canaries import REPO, planted, probe_exit_code
 
 PRODUCERS_PY = REPO / "src" / "alea" / "reporting" / "producers.py"
 DAILY_PY = REPO / "src" / "alea" / "reporting" / "daily.py"
@@ -43,19 +49,25 @@ GATE_FILE = "tests/ci/test_reporting_producers.py"
 UNPRODUCED_GATE = "test_a_required_section_with_no_producer_is_recorded"
 SHAPE_GATE = "test_each_cadence_declares_exactly_one_required_section"
 MISSING_PIECE_GATE = "test_the_market_entries_named_a_piece_that_has_now_arrived"
+PROSE_COUNT_GATE = "test_the_prose_count_of_unproduced_required_sections_matches_the_mapping"
 FLEET_PY = REPO / "src" / "alea" / "market" / "fleet.py"
 
 
 def _gate_exit_code(test: str) -> int:
-	"""Exit code of one gate in this module, run in a fresh interpreter."""
-	completed = subprocess.run(
-		[sys.executable, "-m", "pytest", GATE_FILE, "-q", "-x", "-k", test],
-		capture_output=True,
-		text=True,
-		check=False,
-		cwd=REPO,
+	"""Exit code of one gate in this module, run in a fresh interpreter.
+
+	Through the shared `probe_exit_code`, which carries a timeout: a gate run
+	that hangs used to hang its canary forever with the defect still planted in
+	the source -- the 2026-10-13 leak, which left two mutated files in the tree.
+	"""
+	return probe_exit_code(
+		"import sys, pytest; sys.exit(pytest.main([*sys.argv[1:]]))",
+		GATE_FILE,
+		"-q",
+		"-x",
+		"-k",
+		test,
 	)
-	return completed.returncode
 
 
 def test_the_gate_catches_a_required_section_leaving_unproduced():
@@ -156,3 +168,39 @@ def test_the_missing_piece_gate_catches_the_fleet_losing_its_builder():
 		)
 
 	assert _gate_exit_code(MISSING_PIECE_GATE) == 0, "the restore was not proven"
+
+
+def test_the_prose_count_gate_catches_a_summary_that_mislabels_the_set():
+	"""The defect: the sentence states a count the mapping contradicts.
+
+	The live instance, restored: `UNPRODUCED`'s docstring said "Two of the five
+	are unproduced, so two cadences -- daily and annual" while `week_ahead` sat
+	in the mapping below it. The map gates pin *which* section belongs to each
+	cadence, so both passed; nothing read the number the prose reports, and the
+	sentence described a set it did not match.
+
+	The mutation puts the stale word back. It is the minimal true-to-life edit --
+	one word, no structural change, every other gate still green -- which is
+	exactly why it survived: an unchecked summary does not look like a defect,
+	it looks like prose.
+	"""
+	target = "Three of the five are unproduced"
+	replacement = "Two of the five are unproduced"
+	assert target in PRODUCERS_PY.read_text(), (
+		"the canary target moved; `UNPRODUCED`'s docstring no longer states the "
+		"unproduced count in the form this canary expects, so the canary would be "
+		"a no-op"
+	)
+	assert _gate_exit_code(PROSE_COUNT_GATE) == 0, (
+		"the prose-count gate does not pass on the shipped tree"
+	)
+
+	with planted(PRODUCERS_PY, target, replacement):
+		assert _gate_exit_code(PROSE_COUNT_GATE) != 0, (
+			"the prose-count gate passed with the docstring saying two cadences "
+			"cannot be generated while the mapping holds three; it is reading the "
+			"prose rather than checking it against the set, so the summary stays "
+			"free to describe a set it does not match"
+		)
+
+	assert _gate_exit_code(PROSE_COUNT_GATE) == 0, "the restore was not proven"
