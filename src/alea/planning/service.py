@@ -25,6 +25,7 @@ from alea.io.artefacts import artefact_exists, read_artefact, write_artefact
 from alea.logging import get_logger
 from alea.planning.aggregation import (
 	AggregationValidation,
+	aggregate_network,
 	network_id,
 	require_aggregation_validation,
 )
@@ -217,8 +218,29 @@ def solve_scenario(
 		inputs = [p.inputs[0] for p in provenances if p.inputs]
 
 	if config.solve.time_aggregation > 1:
-		require_aggregation_validation(built, config.solve.time_aggregation)
+		validation = require_aggregation_validation(built, config.solve.time_aggregation)
 		log.info("aggregation_gate_passed", network=network_id(built), periods=config.solve.time_aggregation)
+		# The gate above refuses an unmeasured fast path. This is the fast path:
+		# without it `time_aggregation` was a number the config carried, the
+		# gate validated, and the solve ignored -- every "aggregated" run
+		# silently solved all 8760 hours at full resolution. The gate is only
+		# worth its cost if the thing it guards is the thing that runs.
+		#
+		# The period length is recovered from the validation artefact rather
+		# than recomputed, so the solve aggregates exactly the shape that was
+		# measured. A different length would be a different approximation, and
+		# the measurement would not transfer.
+		built = aggregate_network(
+			built,
+			n_periods=config.solve.time_aggregation,
+			period_length=validation.period_length,
+		)
+		log.info(
+			"aggregation_applied",
+			periods=config.solve.time_aggregation,
+			period_length=validation.period_length,
+			snapshots=len(built.snapshots),
+		)
 
 	horizons = [horizon] if horizon is not None else None
 	result = solve_expansion(built, config, horizons=horizons, logger_=log)

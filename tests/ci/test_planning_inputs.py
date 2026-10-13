@@ -74,14 +74,17 @@ def _provenance(source_id: str) -> object:
 	)
 
 
-def _config(tmp_path: Path) -> Config:
+def _config(tmp_path: Path, *, time_aggregation: int = 1) -> Config:
 	"""A config whose processed lake is ``tmp_path``.
 
 	Absolute, so `resolve` returns it unchanged and the reader's conventional
 	paths land under the scratch tree rather than the repository's own
 	``data/processed`` -- which is a different test's subject.
 	"""
-	return load_config(overrides=[f"paths.processed={tmp_path}"])
+	overrides = [f"paths.processed={tmp_path}"]
+	if time_aggregation > 1:
+		overrides.append(f"solve.time_aggregation={time_aggregation}")
+	return load_config(overrides=overrides)
 
 
 def _write_demand(tmp_path: Path, *, buses: list[str] = BUSES, hours: pd.DatetimeIndex = HOURS) -> None:
@@ -1019,3 +1022,179 @@ def test_a_leap_year_is_where_the_hour_count_gate_can_fail(tmp_path: Path):
 	assert "carry no demand" in mutated.stdout, (
 		f"the gate failed for a reason other than the missing hours:\n{mutated.stdout[-2000:]}"
 	)
+
+
+# --------------------------------------------------------------------------
+# The aggregation the config selects is the aggregation that runs
+# --------------------------------------------------------------------------
+
+
+def _aggregation_fixture(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, time_aggregation: int = 6
+) -> Config:
+	"""A lake, a config selecting ``time_aggregation``, and its AD-9 measurement.
+
+	The validation is measured here the way the CLI measures it -- both
+	networks solved, then compared -- and written where `solve_scenario` looks
+	for it. That path is cwd-relative, so the fixture also moves the working
+	directory into the scratch tree; without that the gate would read the
+	repository's own ``results/aggregation`` and the test would pass or fail on
+	whatever a previous run left there.
+
+	Returns the config. The caller drives the solve; this only arranges the
+	inputs, so that a test asserting on the solve cannot accidentally be
+	asserting on the arrangement.
+	"""
+	from alea.planning.aggregation import (
+		aggregate_network,
+		validate_aggregation_artefact,
+		write_validation,
+	)
+	from alea.planning.service import build_network
+
+	buses = _write_topology(tmp_path)
+	_write_fleet(tmp_path, buses)
+	_write_demand(tmp_path, buses=buses)
+	_write_renewables(tmp_path, buses=buses)
+	_write_costs(tmp_path)
+	config = _config(tmp_path, time_aggregation=time_aggregation)
+
+	demand, profiles, costs = network_inputs(config, buses=buses)
+	full, _, _ = build_network(
+		config, demand_profiles=demand, renewable_profiles=profiles, capital_costs=costs
+	)
+	# The fixture year is 24 hours, so the reduction is coarse. Six periods of
+	# three hours leaves a six-hour tail, which exercises the general case --
+	# where the kernel's selection is a heuristic rather than the exact-division
+	# identity -- rather than a case that cannot fail.
+	n_periods, period_length = time_aggregation, _REDUCED_PERIOD_HOURS
+	assert n_periods * period_length < len(full.snapshots), "the fixture is too short to reduce"
+
+	reduced = aggregate_network(full, n_periods=n_periods, period_length=period_length)
+	reduced.optimize(solver_name="highs", log_to_console=False)
+	full.optimize(solver_name="highs", log_to_console=False)
+	validation = validate_aggregation_artefact(
+		full, reduced, n_periods=n_periods, period_length=period_length
+	)
+	assert validation.passes, (
+		f"the fixture does not clear AD-9, so the solve below is refused by the "
+		f"gate rather than reaching the reduction: cost "
+		f"{validation.cost_error_pct:.3f}%, mix "
+		f"{validation.capacity_mix_l1_error_pct:.3f}%"
+	)
+
+	monkeypatch.chdir(tmp_path)
+	write_validation(validation, root="results/aggregation", inputs=["sha256:network:fixture"])
+	return config
+
+
+_REDUCED_PERIOD_HOURS = 3
+"""Timesteps per representative period, for the 24-hour fixture year."""
+
+
+def _timesteps_per_period(network) -> dict[int, int]:
+	"""How many snapshots each investment period kept."""
+	periods = network.snapshots.get_level_values(0)
+	return {int(p): int((periods == p).sum()) for p in dict.fromkeys(periods)}
+
+
+def test_a_config_selecting_time_aggregation_reaches_a_reduced_network(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+	"""AD-9's gate guards a fast path, so the fast path has to exist.
+
+	The defect this closes: `solve_scenario` called
+	``require_aggregation_validation`` when ``time_aggregation > 1`` and then
+	solved the full-resolution network anyway. The gate was real, the config
+	knob was real, the measurement was real, and the reduction was never
+	applied -- so a run configured for representative periods spent the full
+	8760-hour solve and reported it as aggregated. Every test passed, because
+	every test checked the gate rather than the effect.
+
+	WHY this drives `solve_scenario` rather than calling `aggregate_network`:
+	the first version of this test called the aggregation itself and asserted on
+	its own call's result, so replacing the solve path's aggregation with
+	``pass`` left it green. A test that reimplements the step it is testing
+	cannot fail when the step is removed -- it only proves the function it just
+	called works, which was never in doubt.
+
+	The assertion is the effect: the network the solver receives keeps
+	``time_aggregation * period_length`` timesteps per investment period instead
+	of the full year, and their weights still sum to the year's hours. A build
+	that skips the aggregation fails the first, and one that reduces by
+	averaging periods rather than selecting them fails the second.
+	"""
+	from alea.planning.service import solve_scenario
+
+	config = _aggregation_fixture(tmp_path, monkeypatch)
+	result = solve_scenario(config, out=tmp_path / "networks", publish=False)
+	solved = result.network
+
+	assert isinstance(solved.snapshots, pd.MultiIndex), (
+		"the default config is multi-period, so the solved network's snapshots "
+		"carry a period level"
+	)
+	kept = _timesteps_per_period(solved)
+	expected = config.solve.time_aggregation * _REDUCED_PERIOD_HOURS
+	assert set(kept.values()) == {expected}, (
+		f"every investment period should keep {expected} timesteps under "
+		f"time_aggregation={config.solve.time_aggregation}; the solve kept {kept}"
+	)
+
+	# AD-9's invariant: the reduction selects periods, it does not shorten the
+	# year. A weighting that sums to fewer hours than the year has understates
+	# every annual total, systematically, across a whole study.
+	year_hours = float(len(HOURS))
+	for period in kept:
+		weight = float(solved.snapshot_weightings["generators"].loc[period].sum())
+		assert weight == pytest.approx(year_hours), (
+			f"investment period {period} carries {weight} hours of weight, not "
+			f"the year's {year_hours}; the reduction lost the annual totals"
+		)
+
+
+def test_multi_period_repeats_the_network_series_rather_than_inventing_one(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+	"""A planning model spans the horizons; every one of them must carry the data.
+
+	The defect this closes: `set_multi_period` built its snapshots as
+	``period_length`` fresh hours from each horizon's first of January, then
+	``set_snapshots`` reindexed every time series *by label*. The demand frame
+	covered 2030 only, so the other three periods aligned to nothing and pypsa
+	filled them with the component's static default -- zero load, and a capacity
+	factor of 1.0 where the profile said 0.25. Three of the four default
+	horizons modelled a continent with no demand and perpetual perfect weather.
+	Nothing raised; the objective was simply wrong.
+
+	PyPSA's own rule is the fix, and it is the one this asserts: a multi-period
+	network repeats the snapshots it already has. The check is on the *data*
+	rather than the index, because the index was always well-formed -- it was
+	the series behind it that emptied.
+	"""
+	from alea.planning.service import solve_scenario
+
+	config = _aggregation_fixture(tmp_path, monkeypatch)
+	result = solve_scenario(config, out=tmp_path / "networks", publish=False)
+	solved = result.network
+	periods = [int(p) for p in solved.investment_periods]
+	assert len(periods) == len(config.scenario.planning_horizons), (
+		f"the solve produced {periods} from horizons "
+		f"{config.scenario.planning_horizons}"
+	)
+
+	demand = solved.loads_t.p_set.iloc[:, 0]
+	capacity_factor = solved.generators_t.p_max_pu.iloc[:, 0]
+	for period in periods:
+		load = float(demand.loc[period].sum())
+		assert load > 0.0, (
+			f"investment period {period} carries no load at all; the series was "
+			f"reindexed onto labels it does not have and pypsa filled it with the "
+			f"static default"
+		)
+		mean_cf = float(capacity_factor.loc[period].mean())
+		assert mean_cf == pytest.approx(float(capacity_factor.loc[periods[0]].mean())), (
+			f"investment period {period} has a mean capacity factor of {mean_cf}, "
+			f"not the profile's own; a 1.0 here is a period with no weather"
+		)
+

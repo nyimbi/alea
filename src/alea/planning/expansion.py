@@ -37,16 +37,6 @@ from alea.provenance.models import Basis, DerivedProvenance
 
 _log = get_logger(__name__)
 
-PERIOD_WEIGHT_HOURS = 8760
-"""Snapshots per investment period.
-
-A multi-period model does not need 8760 timesteps per period to price
-investment: it needs enough to represent the system's operating states. This is
-the count of representative snapshots per period, and it multiplies into every
-annual total, so it is stated rather than inferred.
-"""
-
-
 class ExpansionError(RuntimeError):
 	"""The expansion problem cannot be built or solved."""
 
@@ -73,30 +63,53 @@ class SolveResult:
 
 
 def build_multi_period_snapshots(
+	network: pypsa.Network,
 	horizons: list[int],
 	*,
-	period_length: int = PERIOD_WEIGHT_HOURS,
 	base_year: int | None = None,
 ) -> pd.MultiIndex:
 	"""Snapshots for a multi-period expansion, as a MultiIndex with a period level.
 
-	Each period gets ``period_length`` hourly snapshots starting at its horizon
-	year. ``investment_period_weightings`` is derived from the gap to the next
-	horizon, so a period covering a decade is weighted as a decade.
+	Every period carries the network's *own* snapshots, repeated. This is
+	``pypsa.Network.set_investment_periods``' rule, and the reason for it is
+	that the alternative silently destroys the model.
+
+	WHY this is not ``period_length`` fresh hours starting at each horizon: that
+	is what this function used to build, and the snapshots it invented were
+	January hours of years the artefacts do not cover. ``set_snapshots``
+	reindexes every time series *by label*, so a demand frame holding 2030 found
+	no 2040 label to align to and pypsa filled the whole period with the
+	component's static default -- zero load and a capacity factor of 1.0 for
+	three of the four default horizons. The model still solved, and it solved a
+	continent whose demand and weather exist only in the 2030s. Nothing failed;
+	the answer was just wrong by roughly a factor of four, which is the failure
+	mode AD-9 exists to prevent and which no tolerance here would have caught.
+
+	Repeating the real series is also what makes the reduction in
+	``aggregation.py`` survive: ``time_aggregation`` reduces the *series* a
+	network carries, and a builder that replaces that series with a synthetic
+	year discards the reduction no matter what the gate measured.
+
+	The snapshots must already be a plain ``DatetimeIndex``; a network already
+	in multi-period form has nothing for this function to do and is refused
+	rather than silently re-repeated.
 	"""
+	assert network is not None, "network must not be None"
 	assert len(horizons) > 0, "at least one horizon is required"
 	assert horizons == sorted(horizons), f"horizons must ascend, got {horizons}"
-	assert period_length > 0, "period_length must be positive"
 	if base_year is not None and base_year >= horizons[0]:
 		raise ExpansionError(f"base_year ({base_year}) must precede the first horizon ({horizons[0]})")
-
-	tuples: list[tuple[int, Any]] = []
-	for horizon in horizons:
-		start = pd.Timestamp(f"{horizon}-01-01 00:00:00")
-		for h in range(period_length):
-			tuples.append((horizon, start + pd.Timedelta(hours=h)))
+	if isinstance(network.snapshots, pd.MultiIndex):
+		raise ExpansionError(
+			"network is already multi-period; `build_multi_period_snapshots` "
+			"repeats a plain snapshot index and would nest the existing one"
+		)
+	timesteps = pd.DatetimeIndex(network.snapshots)
+	tuples: list[tuple[int, Any]] = [
+		(horizon, timestep) for horizon in horizons for timestep in timesteps
+	]
 	index = pd.MultiIndex.from_tuples(tuples, names=["period", "timestep"])
-	assert len(index) == len(horizons) * period_length, "snapshot count does not match the periods"
+	assert len(index) == len(horizons) * len(timesteps), "snapshot count does not match the periods"
 	return index
 
 
@@ -104,7 +117,6 @@ def set_multi_period(
 	network: pypsa.Network,
 	horizons: list[int],
 	*,
-	period_length: int = PERIOD_WEIGHT_HOURS,
 	base_year: int | None = None,
 ) -> None:
 	"""Put a network into multi-period form, in place.
@@ -113,13 +125,28 @@ def set_multi_period(
 	weighted equally treats 2030-2040 as the same length of time as 2050-2060,
 	which understates the later period's operating cost and biases investment
 	early.
+
+	The snapshots are repeated, not rebuilt -- see
+	`build_multi_period_snapshots` for what rebuilding cost. The repeat is done
+	by ``set_investment_periods`` rather than by ``set_snapshots``: both produce
+	the same MultiIndex, but ``set_snapshots`` resets every snapshot weighting to
+	1.0 while ``set_investment_periods`` carries the existing ones through. On an
+	aggregated network those weightings are the whole content of the reduction
+	(``w / period_length`` per kept timestep, summing to the year's hours), so
+	the ``set_snapshots`` route would repeat the representative periods and then
+	price each of them as a single hour -- a fast path that is fast because it
+	threw the annual totals away.
 	"""
 	assert network is not None, "network must not be None"
-	index = build_multi_period_snapshots(horizons, period_length=period_length, base_year=base_year)
-	# Multi-investment-period snapshots are a MultiIndex by design; pypsa's stub
-	# types `snapshots` as a bare `Sequence`, which a MultiIndex satisfies at
-	# runtime but not in the stub's generic parameter.
-	network.set_snapshots(index)  # type: ignore[arg-type]
+	# The builder is the specification of the index and the assertion that the
+	# input is plain; it runs before the mutation, so a network already in
+	# multi-period form is refused with the input untouched.
+	expected = build_multi_period_snapshots(network, horizons, base_year=base_year)
+	network.set_investment_periods(horizons)
+	assert network.snapshots.equals(expected), (
+		"pypsa built a different index than this module specifies: "
+		f"{len(network.snapshots)} snapshots, expected {len(expected)}"
+	)
 
 	weights: list[float] = []
 	for i, horizon in enumerate(horizons):
@@ -473,7 +500,6 @@ def annual_system_cost(network: pypsa.Network) -> float:
 
 __all__ = [
 	"DISCOUNT_RATE",
-	"PERIOD_WEIGHT_HOURS",
 	"ExpansionError",
 	"SolveResult",
 	"annual_system_cost",
