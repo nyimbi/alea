@@ -130,37 +130,44 @@ def _call_sites(name: str) -> int:
 	return count
 
 
-def test_the_market_report_entry_names_a_piece_that_is_really_missing():
-	"""The claim this entry made was checkable, and it was wrong.
+def test_the_market_entries_named_a_piece_that_has_now_arrived():
+	"""The claim these entries made was checkable, and it has been discharged.
 
-	The entry said the monthly producer was "a rule over a cleared scenario,
-	not a new model". The scenario does not exist to be a rule over:
-	`clear_scenario` has no caller in `src/alea` outside its own definition, and
-	`BiddingUnit` -- the unit a market fleet is built from -- is constructed
-	nowhere outside tests. So the missing piece is the fleet, not the rule, and
-	the register has to say so: 'needs a rule' and 'needs a model that does not
-	exist' are the two amounts of work the register exists to tell apart.
+	The `market_report` entry said the missing piece was *the fleet*, not the
+	rule: "no module builds a market fleet from a solved network, so
+	`clear_scenario` has no caller and `BiddingUnit` is constructed nowhere
+	outside tests". That was measured, and it was right. `market/fleet.py` is
+	that module now and `market/stages.py` runs it, so the count moved -- and
+	the move is the prompt this gate exists to give.
 
-	This pins the measurement, not the wording. When someone builds the fleet,
-	the count moves and this fails, which is the prompt to rewrite the entry --
-	the same discipline as the required-section map.
+	The two assertions below are the *inverse* of the ones they replace. Before,
+	they pinned zero call sites and the entry's prose; a fleet builder is
+	exactly what makes them non-zero, so pinning zero now would fail on the
+	shipped tree. What they check instead is that the piece is genuinely wired
+	and not merely written: a `BiddingUnit` constructed in a module no stage
+	imports is the same defect one level down, and `build_fleet_series` having a
+	caller in `market/service.py` is what distinguishes the two.
+
+	This pins the measurement, not the wording. When the *next* entry's blocker
+	is closed, this fails again, which is the prompt to rewrite it -- the same
+	discipline as the required-section map.
 	"""
-	reason = UNPRODUCED["market_report"]
-	assert "clear_scenario" in reason, (
-		"the market_report entry no longer names `clear_scenario`, the piece it "
-		"was corrected to name as missing; if the entry was rewritten, this gate "
-		"must be rewritten with it rather than deleted"
+	assert "market_report" not in UNPRODUCED, (
+		"`market_report` is back in `UNPRODUCED` after being produced; a section "
+		"that lost its producer is a cadence that can no longer be generated, and "
+		"this gate must say which piece went missing again rather than passing"
 	)
-	assert _call_sites("clear_scenario") == 0, (
-		"`clear_scenario` now has a caller in `src/alea`, so the monthly "
-		"producer's blocker is no longer 'there is no cleared scenario'. Update "
-		"the market_report entry to the new, smaller blocker -- and if the "
-		"section can now be produced, move the slug to `PRODUCERS`."
+	assert _call_sites("BiddingUnit") > 0, (
+		"no module in `src/alea` constructs a `BiddingUnit`, so the market fleet "
+		"the entries named as the missing piece is not being built -- and the two "
+		"slugs in `PRODUCERS` would be naming a producer that reads an empty fleet"
 	)
-	assert _call_sites("BiddingUnit") == 0, (
-		"`BiddingUnit` is now constructed in `src/alea`, so a market fleet can "
-		"be built from something and the market_report entry's 'no module builds "
-		"a market fleet' is stale. Update the entry."
+	assert _call_sites("build_fleet_series") > 0, (
+		"`build_fleet_series` has no caller in `src/alea`, so `market/fleet.py` "
+		"exists and nothing runs it. The monthly and quarterly producers clear "
+		"`build_fleet_series`'s output; a fleet module with no caller is the "
+		"written-but-unwired shape this register exists to tell apart from a "
+		"produced section"
 	)
 
 
@@ -173,13 +180,17 @@ def test_the_market_report_entry_names_a_piece_that_is_really_missing():
 REQUIRED_WITHOUT_A_PRODUCER: dict[str, str] = {
 	"daily": "outage_forecast",
 	"weekly": "week_ahead",
-	"monthly": "market_report",
-	"quarterly": "market_outlook",
 	"annual": "continental_outlook",
 }
-"""One per cadence, and that is the measured state: every cadence has exactly
-one required section and none has a producer, so no cadence can be generated
-from the pipeline. The first to close shrinks this map by one."""
+"""One per cadence that cannot be generated from the pipeline, and that is the
+measured state: three of the five cadences have a required section with no
+producer. The map started with all five and lost two in one change -- the
+monthly and quarterly sections, whose shared blocker was the market fleet.
+
+A cadence whose required section *has* a producer is absent from this map rather
+than mapped to `None`: the assertion below compares against `.get(cadence)`, so
+absence is the state that means "generatable", and an entry saying so would be a
+second way to spell the same thing."""
 
 
 @pytest.mark.parametrize("cadence", list(ReportCadence), ids=lambda c: c.value)

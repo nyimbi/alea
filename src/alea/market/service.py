@@ -30,9 +30,11 @@ from alea.io.artefacts import read_artefact, stage_is_current, write_artefact
 from alea.logging import get_logger
 from alea.market.agents import Agent, build_stack
 from alea.market.capture import capture_by_technology
-from alea.market.clearing import clear_market, clear_market_zonal
+from alea.market.clearing import clear_market, clear_market_series, clear_market_zonal
+from alea.market.fleet import build_fleet_series, fleet_energy_mwh, load_series
 from alea.market.ppa import ppa_curve
 from alea.market.risk import monte_carlo_risk, value_at_risk
+from alea.market.strategy import Strategy
 from alea.market.views import (
 	ClearingResult,
 	FxRate,
@@ -329,11 +331,265 @@ def monte_carlo_scenario(
 	return result
 
 
+# --------------------------------------------------------------------------
+# The two report sections
+# --------------------------------------------------------------------------
+
+
+def monthly_market_to_artefact(
+	network: Any,
+	out: str | Path,
+	*,
+	value_of_lost_load_usd_per_mwh: float,
+	inputs: Sequence[str],
+	value_of_lost_load_basis: str = "",
+	strategy: Strategy | None = None,
+) -> pd.DataFrame:
+	"""Clear every snapshot and write the monthly market report's frame.
+
+	The frame `reporting/monthly.py`'s ``market_report`` section reads, and the
+	shape is decided by that section's declared columns --
+	``["Carrier", "Volume", "Average price", "Basis"]``. Two of those are
+	numeric, so `_rows_for` does *not* fall back to binding the primary into
+	both: each row must carry a ``volume`` and an ``average_price`` column of its
+	own, or the reader raises rather than printing the volume under "Average
+	price".
+
+	**One row per carrier, over the snapshots the network has.** ``volume`` is
+	MWh dispatched and ``average_price`` is the volume-weighted price that
+	carrier received -- the capture price, which is what a generator's revenue
+	actually is. A simple mean of the clearing prices would answer a different
+	question: it is the price a *buyer* at the wrong end of the dispatch paid.
+
+	The clearing is per snapshot, because a fleet's availability is. A single
+	clear at the period mean would produce one price for a month.
+	"""
+	assert value_of_lost_load_usd_per_mwh >= 0.0, "VoLL must be non-negative"
+	fleets = build_fleet_series(network, strategy=strategy)
+	if not fleets:
+		raise ValueError(
+			"the network has no generators, so there is no fleet to clear and no "
+			"market to report. An empty frame would render as a month in which "
+			"nothing was dispatched"
+		)
+	demand = load_series(network)
+	weights = fleet_energy_mwh(network)
+
+	results = clear_market_series(
+		[build_stack(fleet) for fleet in fleets],
+		demand,
+		value_of_lost_load_usd_per_mwh=value_of_lost_load_usd_per_mwh,
+	)
+	units = {agent.unit.unit_id: agent.unit.carrier for fleet in fleets for agent in fleet}
+
+	# Carrier -> per-snapshot MWh and the revenue that MWh earned. Revenue is
+	# dispatch x clearing price, so its ratio to the energy is the carrier's own
+	# average price rather than the system's.
+	energy: dict[str, np.ndarray] = {}
+	revenue: dict[str, np.ndarray] = {}
+	for hour, result in enumerate(results):
+		price = result.clearing_price_usd_per_mwh
+		weight = float(weights[hour]) if hour < weights.shape[0] else 1.0
+		for unit_id, mw in result.dispatched.items():
+			carrier = units.get(unit_id, unit_id)
+			mwh = float(mw) * weight
+			energy.setdefault(carrier, np.zeros(len(results), dtype=np.float64))[hour] += mwh
+			revenue.setdefault(carrier, np.zeros(len(results), dtype=np.float64))[hour] += mwh * price
+
+	rows: list[dict[str, Any]] = []
+	for carrier in sorted(energy):
+		mwh = float(np.nansum(energy[carrier]))
+		earned = float(np.nansum(revenue[carrier]))
+		# A carrier that dispatched nothing has no average price. NaN, never
+		# zero: zero is a specific claim (it sold at nothing) that propagates
+		# into every portfolio average -- the same rule `capture.capture_price`
+		# applies, and the artefact encodes NaN as null.
+		average = earned / mwh if mwh > 0.0 else float("nan")
+		rows.append(
+			{
+				"label": carrier,
+				"value": average,
+				"unit": "USD/MWh",
+				"volume": mwh,
+				"average_price": average,
+			}
+		)
+
+	unserved = float(sum(result.unserved_mwh for result in results))
+	provenance = _derived(
+		inputs,
+		parameters={
+			"value_of_lost_load_usd_per_mwh": value_of_lost_load_usd_per_mwh,
+			"value_of_lost_load_basis": value_of_lost_load_basis,
+			"strategy": (strategy or Strategy.competitive()).kind.value,
+			"snapshots": len(results),
+			"carriers": len(rows),
+			"unserved_mwh": unserved,
+			"demand_mwh": float(np.nansum(demand * weights[: demand.shape[0]])),
+		},
+		notes=(
+			"one row per carrier: `volume` is MWh dispatched over the network's "
+			"snapshots and `average_price` is the volume-weighted price it received "
+			"(its capture price), not the system mean. The clearing is per snapshot "
+			"because a fleet's availability is. Unserved energy is recorded in the "
+			"provenance: a clearing price from a short stack is a price for a system "
+			"in blackout"
+		),
+		source_id="market.monthly",
+	)
+	from alea.io.pipeline import write_stage
+
+	write_stage(Path(out), pd.DataFrame(rows, columns=["label", "value", "unit", "volume", "average_price"]), provenance, format="parquet")
+	logger.info(
+		"monthly_market_to_artefact",
+		out=str(out),
+		carriers=len(rows),
+		snapshots=len(results),
+		unserved_mwh=unserved,
+	)
+	return pd.DataFrame(rows)
+
+
+def quarterly_market_to_artefact(
+	network: Any,
+	out: str | Path,
+	*,
+	value_of_lost_load_usd_per_mwh: float,
+	inputs: Sequence[str],
+	value_of_lost_load_basis: str = "",
+	strategy: Strategy | None = None,
+	quarters: int = 4,
+) -> pd.DataFrame:
+	"""The quarterly price outlook's frame, from the clearing the run supports.
+
+	The frame `reporting/quarterly.py`'s ``market_outlook`` reads, and its
+	columns are ``["Quarter", "Price", "Basis"]`` -- exactly one numeric column,
+	so ``_rows_for`` binds the primary directly and no extra is needed.
+
+	**What the series is, and what it is not.** The section's prose says "the
+	next four quarters, under the central scenario", and *no forecast model
+	exists in this repository*: no demand forecast, no price forecast, and the
+	plan's own exit criterion for Layer 3 is only "competitive strategy
+	reproduces Layer 1 marginal prices". So this writes the clearing prices the
+	solved network actually supports -- one per planning horizon the network
+	carries -- labelled by the period they belong to, and records in the
+	provenance that the series is *the solve's own horizons*, not a four-quarter
+	projection.
+
+	Writing four invented quarters would be the defect this whole layer exists
+	to avoid: a number with a basis column and no model behind it. A shorter
+	series that says what it is beats a longer one that does not.
+
+	**One row per period, and the period is aggregated.** The section is titled by
+	quarter, so a row's price has to be the price *of that quarter* -- and the
+	first version of this wrote one row per *snapshot*, which for an hourly
+	network is 8,760 rows all labelled with the same quarter and each holding a
+	single hour's price. The label was a period and the number was an hour, which
+	is the mismatch a basis column cannot repair. So the clearing is grouped by
+	period and each row carries the demand-weighted mean of the clearing prices
+	in it: the mean that answers "what did a MWh cost over this quarter", which is
+	the question the column heading asks.
+	"""
+	fleets = build_fleet_series(network, strategy=strategy)
+	if not fleets:
+		raise ValueError("the network has no generators, so there is no price to report")
+	demand = load_series(network)
+	weights = fleet_energy_mwh(network)
+	results = clear_market_series(
+		[build_stack(fleet) for fleet in fleets],
+		demand,
+		value_of_lost_load_usd_per_mwh=value_of_lost_load_usd_per_mwh,
+	)
+
+	# Period -> the energy-weighted price sum and the weight that earned it. A
+	# period the network does not reach is absent rather than zero: a quarter
+	# with no snapshots in it has no price, and a zero would read as a free one.
+	periods = _periods_of(network, len(results), quarters=quarters)
+	earned: dict[str, float] = {}
+	weighted: dict[str, float] = {}
+	for position, (period, result) in enumerate(zip(periods, results, strict=True)):
+		weight = float(weights[position]) if position < weights.shape[0] else 1.0
+		earned[period] = earned.get(period, 0.0) + result.clearing_price_usd_per_mwh * weight
+		weighted[period] = weighted.get(period, 0.0) + weight
+
+	rows: list[dict[str, Any]] = []
+	for period in dict.fromkeys(periods):
+		total = weighted[period]
+		rows.append(
+			{
+				"label": period,
+				"value": earned[period] / total if total > 0.0 else float("nan"),
+				"unit": "USD/MWh",
+			}
+		)
+
+	provenance = _derived(
+		inputs,
+		parameters={
+			"value_of_lost_load_usd_per_mwh": value_of_lost_load_usd_per_mwh,
+			"value_of_lost_load_basis": value_of_lost_load_basis,
+			"strategy": (strategy or Strategy.competitive()).kind.value,
+			"periods": len(rows),
+			"series_basis": "the solved network's own horizons, not a price forecast",
+			"quarters_requested": quarters,
+		},
+		notes=(
+			"clearing price per period the solved network supports. No price-forecast "
+			"model exists in this repository, so this is the solve's own horizons "
+			"rather than the four-quarter projection the section's prose describes; "
+			"the provenance says so, and the series is short rather than invented"
+		),
+		source_id="market.outlook",
+	)
+	from alea.io.pipeline import write_stage
+
+	write_stage(Path(out), pd.DataFrame(rows, columns=["label", "value", "unit"]), provenance, format="parquet")
+	logger.info("quarterly_market_to_artefact", out=str(out), periods=len(rows))
+	return pd.DataFrame(rows)
+
+
+def _periods_of(network: Any, count: int, *, quarters: int) -> list[str]:
+	"""Labels for ``count`` clearing prices, from the network's own snapshots.
+
+	A multi-investment-period network's snapshots carry the horizon as the first
+	level of their index, and that is the period a price belongs to. An
+	hourly network carries a datetime, and the calendar quarter it falls in is
+	the label. Anything else is numbered, because a label that claims a period
+	the index does not state is a period invented at the render.
+	"""
+	snapshots = network.snapshots
+	if len(snapshots) != count:
+		return [f"Q{position + 1}" for position in range(count)]
+
+	labels: list[str] = []
+	for snapshot in snapshots:
+		year, quarter = _year_and_quarter(snapshot)
+		labels.append(f"{year}-Q{quarter}" if year is not None else str(snapshot))
+	return labels
+
+
+def _year_and_quarter(snapshot: Any) -> tuple[int | None, int]:
+	"""The calendar year and quarter a snapshot belongs to, or ``(None, 0)``.
+
+	A multi-index snapshot's first level is the investment period; a timestamp's
+	own quarter is the second. Neither is guessed from a string when the object
+	carries the fact.
+	"""
+	first = snapshot[0] if isinstance(snapshot, tuple) else snapshot
+	if hasattr(first, "year") and hasattr(first, "month"):
+		return int(first.year), (int(first.month) - 1) // 3 + 1
+	if isinstance(first, (int, np.integer)):
+		return int(first), 0
+	return None, 0
+
+
 __all__ = [
 	"capture_scenario",
 	"clear_scenario",
 	"clear_zonal_scenario",
 	"monte_carlo_scenario",
+	"monthly_market_to_artefact",
 	"ppa_scenario",
+	"quarterly_market_to_artefact",
 	"risk_scenario",
 ]

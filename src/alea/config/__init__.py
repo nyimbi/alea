@@ -31,6 +31,7 @@ _LAZY = {
 	"Config": "alea.config.models",
 	"CostsConfig": "alea.config.models",
 	"LoggingConfig": "alea.config.models",
+	"MarketConfig": "alea.config.models",
 	"PathsConfig": "alea.config.models",
 	"PredictiveConfig": "alea.config.models",
 	"RenewableConfig": "alea.config.models",

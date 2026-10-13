@@ -22,6 +22,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from alea.config.base import AleaConfig
 from alea.provenance.models import Provenance
 
 # Prices and quantities are finite. NaN and infinity are refused at the schema
@@ -496,18 +497,90 @@ class RiskResult(MarketModel):
 		return self
 
 
+# --------------------------------------------------------------------------
+# Configuration
+# --------------------------------------------------------------------------
+
+
+DEFAULT_VALUE_OF_LOST_LOAD_USD_PER_MWH = 2000.0
+"""The default value of lost load, in USD per MWh.
+
+A clearing price from a short stack *is* this number, so it decides the price of
+every hour the system sheds load. It is a default rather than a required setting
+because a market run has to be possible without one, and it is a named constant
+rather than a literal so the config file, the model and any test that quotes it
+read the same number.
+
+The value is the one `tests/determinism/run.py` has used since the determinism
+job was written, which is the only VoLL in the tree and therefore the only
+figure with a run behind it.
+"""
+
+
+class MarketConfig(AleaConfig):
+	"""Layer 3's market parameters.
+
+	One field, and it is the one that has nowhere else to live. Every other
+	number the fleet reads -- capacity, marginal cost, availability -- is the
+	solved network's own column, so it is a fact about the network rather than a
+	setting; the value of lost load is not, because no layer produces it. It is
+	an input to the market and only to the market.
+	"""
+
+	value_of_lost_load_usd_per_mwh: NonNegativeFinite = Field(
+		default=DEFAULT_VALUE_OF_LOST_LOAD_USD_PER_MWH
+	)
+	"""What a MWh of unserved energy is worth.
+
+	``market.clearing.clear_market`` prices a shortfall at this rate, so it is
+	recorded in every clearing artefact's provenance alongside the price it
+	produced. Two clearing prices from different VoLL assumptions are different
+	quantities sharing a name -- the same defect as two SAIDI figures at
+	different interruption thresholds.
+
+	A value of zero is permitted and means unserved energy is free, which is a
+	sensitivity case a modeller may want; it makes ``shortage_price`` zero and
+	leaves the unserved *energy* in the result, so the shortage is still visible
+	where the price is not.
+	"""
+
+	value_of_lost_load_basis: str = "config.market.value_of_lost_load_usd_per_mwh"
+	"""Where the rate came from.
+
+	Carried into the artefact because a VoLL is an assumption, not a
+	measurement: the literature ranges over an order of magnitude between
+	survey-based and production-function estimates, and a reader of a clearing
+	price has to be able to tell a defaulted rate from a sourced one. Setting
+	the rate without changing this is how a report quotes a house default as if
+	it were a study's finding.
+
+	**Why there is no validator tying the two together.** The obvious rule --
+	refuse a rate moved off the default while this still names the default --
+	was written, and it made the rate unreachable: the field is a scalar on a
+	layer section, so `test_config_reachability.py` sweeps it with a probe
+	value, the refusal fires, and the gate that exists to catch an unreachable
+	parameter fails. A cross-field invariant on a probed scalar *is* an
+	unreachable parameter, which is the defect the section was added to avoid.
+	The discipline is enforced where it can be: the stage records both fields in
+	the clearing artefact's provenance, so the pairing is in the number's own
+	record rather than in a constructor.
+	"""
+
+
 __all__ = [
 	"BankabilityResult",
 	"Bid",
 	"CaptureCurvePoint",
 	"CapturePrice",
 	"ClearingResult",
+	"DEFAULT_VALUE_OF_LOST_LOAD_USD_PER_MWH",
 	"FiniteFloat",
 	"FuelPriceSeries",
 	"FxRate",
 	"Interface",
 	"InterfaceFlow",
 	"MarginalCostComponents",
+	"MarketConfig",
 	"MarketModel",
 	"NonNegativeFinite",
 	"PpaBenchmark",

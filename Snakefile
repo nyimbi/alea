@@ -28,9 +28,10 @@ prevent. `rules/fetch.smk` declares the fetchable sources as literals and
 `tests/ci/test_orchestration_workflow.py` asserts that list is exactly the
 register's fetchable-and-implemented set.
 
-`rules/market.smk` is included and holds no rules: Layer 3 runs off the planning
-layer's artefacts rather than a source of its own, and an include that resolves
-to an empty module is a different thing from a missing file.
+`rules/market.smk` was included and held no rules while Layer 3 ran off the
+planning layer's artefacts rather than a source of its own. It holds two now:
+the monthly and quarterly sections whose artefacts were `required=True` and
+written by nothing, so neither cadence could be generated from the pipeline.
 """
 
 include: "rules/common.smk"
@@ -79,3 +80,9 @@ rule all:
 		processed("resilience/contingency", ".parquet"),
 		processed("market/prices", ".parquet"),
 		processed("market/capture_rates", ".parquet"),
+		# The two report sections Layer 3 produces. They are in `rule all`
+		# because they are not optional: the monthly and quarterly reports
+		# declare them `required=True`, so a workflow that skipped them would
+		# leave two cadences unbuildable.
+		processed("market_report"),
+		processed("market_outlook"),

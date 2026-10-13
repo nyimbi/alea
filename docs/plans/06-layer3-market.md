@@ -397,6 +397,32 @@ src/alea/market/
 | `test_var_sign_convention` | `CVaR >= VaR >= 0` | Flip sign; must fail |
 | `test_cholesky_checked` | Non-PSD correlation raises | Inject non-PSD; must fail |
 | `test_fx_rate_recorded` | Every PPA price records rate and date | Remove rate; must fail |
+| `test_the_monthly_section_reads_back_with_both_numbers_distinct` | The monthly section's `volume` and `average_price` are different numbers through the real reader | Write the average into both columns; must fail |
+| `test_the_fleet_excludes_load_shedding_and_sums_the_network_capacity` | Load shedding is not a bidder | Add a load-shedding unit; it must not enter the fleet |
+| `test_the_fleet_carries_the_network_s_own_marginal_cost` | A unit bids the network's cost, not a default | Flat costs; the average price becomes a constant |
+
+---
+
+**The three section gates are the report's own, not the layer's.** They exist
+because a producer is only produced if the *report* can read what it writes, and
+the reader is stricter than the producer: `market_report` declares two numeric
+columns, so every row must carry both a ``volume`` and an ``average_price``
+extra, while `market_outlook` declares one and binds the primary directly. The
+two sections exercise opposite branches of `_rows_for`, and a producer written
+for one shape raises under the other. The gates live in
+`tests/ci/test_market_report_sections.py`.
+
+Two defects were found by writing them, both of the class this plan names as
+Layer 3's recurring one:
+
+* **A generator with a static ``p_max_pu`` and no time series read as zero
+  availability** whenever any other generator had a series, so it never entered
+  the stack and the market cleared at the value of lost load with the system in
+  blackout. `_availability_frame` chose between the static column and the
+  dynamic table for the whole network; precedence is per generator.
+* **The outlook wrote one row per snapshot**, so an hourly network produced
+  8,760 rows all labelled with the same quarter and each holding a single hour's
+  price. A quarter's price is the demand-weighted mean of the prices in it.
 
 ---
 
@@ -414,6 +440,7 @@ src/alea/market/
 | 8 | Bankability matches a hand-computed fixture | Fixture test |
 | 9 | Two identical runs byte-identical | Determinism job |
 | 10 | Every gate canaried | `tests/ci/canaries` |
+| 11 | The monthly and quarterly report sections read back through the real reader | `test_market_report_sections.py` |
 
 **Criterion 3 is the integration gate.** A competitive market model must
 reproduce Layer 1's marginal prices at the same snapshots. If it does not, the

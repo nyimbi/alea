@@ -13,6 +13,7 @@ from pydantic import Field, model_validator
 
 from alea.config.base import AleaConfig
 from alea.losses.views import LossConfig
+from alea.market.views import MarketConfig
 from alea.outages.views import PredictiveConfig
 from alea.resilience.views import ResilienceConfig
 from alea.signals.models import CountryIso
@@ -340,6 +341,19 @@ class Config(AleaConfig):
 	utility's own number even in principle.
 	"""
 
+	market: MarketConfig = Field(default_factory=MarketConfig)
+	"""Layer 3: the value of lost load.
+
+	The one market parameter no layer produces. `market.clearing` prices a
+	shortfall at this rate, so it decides the clearing price of every hour the
+	system sheds load -- and it had no home at all: no config key, no field on
+	any model, and no value in `spec/` or `docs/plans/`. The only figure in the
+	tree was the determinism job's, which is where the default comes from.
+	Without this field a `market:` block in YAML is a load error under
+	``extra="forbid"``, so the rate a run cleared at could not be set, recorded
+	or changed.
+	"""
+
 	@model_validator(mode="after")
 	def _aggregation_needs_a_single_network(self) -> Config:
 		# Time aggregation above 1 is only meaningful once a network exists and
@@ -359,6 +373,7 @@ __all__ = [
 	"Config",
 	"CostsConfig",
 	"LoggingConfig",
+	"MarketConfig",
 	"PathsConfig",
 	"PredictiveConfig",
 	"RenewableConfig",

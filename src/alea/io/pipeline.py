@@ -295,6 +295,7 @@ def write_stage(
 _REGISTRATION_MODULES = (
 	"alea.io.stages",
 	"alea.losses.service",
+	"alea.market.stages",
 	"alea.outages.service",
 	"alea.planning.arrays",
 	"alea.publish.stages",

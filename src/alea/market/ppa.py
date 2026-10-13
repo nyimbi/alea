@@ -23,13 +23,16 @@ non-optional.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import TYPE_CHECKING
 
 import numpy as np
 
-from alea.config.models import CostsConfig
 from alea.logging import get_logger
 from alea.market.views import FxRate, PpaBenchmark
 from alea.provenance.models import Basis, Licence, Provenance
+
+if TYPE_CHECKING:  # pragma: no cover - the annotation only
+	from alea.config.models import CostsConfig
 
 logger = get_logger(__name__)
 

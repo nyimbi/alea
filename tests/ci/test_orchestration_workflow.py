@@ -48,7 +48,9 @@ STAGES = (
 	"fuel_prices",
 	"hydro_profiles",
 	"market_capture_rates",
+	"market_outlook",
 	"market_prices",
+	"market_report",
 	"network_arrays",
 	"outage_history",
 	"outage_truth",
@@ -83,6 +85,8 @@ SUFFIXES = {
 	"network_arrays": ".json",
 	"tlens": ".json",
 	"critical_lines": ".parquet",
+	"market_outlook": ".parquet",
+	"market_report": ".parquet",
 	"sector_coupling": ".json",
 }
 

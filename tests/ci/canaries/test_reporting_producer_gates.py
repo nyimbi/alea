@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Canary for the required-section producer gates.
 
-Two gates in `test_reporting_producers.py` are pinned rather than derived, and
+Three gates in `test_reporting_producers.py` are pinned rather than derived, and
 each needs a canary that proves it can fail:
 
 ``test_a_required_section_with_no_producer_is_recorded`` was a tautology: it
@@ -13,6 +13,14 @@ to a map of cadence to the one required section it cannot generate without.
 `UNPRODUCED`'s summary paraphrases. That summary said "four" where the measured
 count is five, because it was retyped rather than derived -- so the gate that
 makes the count structural needs the same proof as the map.
+
+``test_the_market_entries_named_a_piece_that_has_now_arrived`` is the third, and
+it is the one that *changed sides*. It used to pin ``_call_sites("BiddingUnit")
+== 0`` -- the measurement that the fleet did not exist -- and closing that gap
+made the assertion false, which is how the register shrinking is supposed to
+work. The gate now pins the opposite: the fleet is constructed, and the module
+that constructs it has a caller. The canary mutates the constructor call, so the
+proof is about the new predicate rather than the old one.
 
 **A canary is what proves a pinned assertion is a gate.** A pinned assertion is
 only a check if a change to the thing it pins fails it. Each test below plants
@@ -30,12 +38,12 @@ from tests.ci.canaries import REPO, planted
 
 PRODUCERS_PY = REPO / "src" / "alea" / "reporting" / "producers.py"
 DAILY_PY = REPO / "src" / "alea" / "reporting" / "daily.py"
-MARKET_SERVICE_PY = REPO / "src" / "alea" / "market" / "service.py"
 
 GATE_FILE = "tests/ci/test_reporting_producers.py"
 UNPRODUCED_GATE = "test_a_required_section_with_no_producer_is_recorded"
 SHAPE_GATE = "test_each_cadence_declares_exactly_one_required_section"
-MISSING_PIECE_GATE = "test_the_market_report_entry_names_a_piece_that_is_really_missing"
+MISSING_PIECE_GATE = "test_the_market_entries_named_a_piece_that_has_now_arrived"
+FLEET_PY = REPO / "src" / "alea" / "market" / "fleet.py"
 
 
 def _gate_exit_code(test: str) -> int:
@@ -112,37 +120,39 @@ def test_the_shape_gate_catches_a_cadence_gaining_a_second_required_section():
 	assert _gate_exit_code(SHAPE_GATE) == 0, "the restore was not proven"
 
 
-def test_the_missing_piece_gate_catches_a_piece_that_arrives():
-	"""The defect: the fleet gets built and the entry still says it does not exist.
+def test_the_missing_piece_gate_catches_the_fleet_losing_its_builder():
+	"""The defect: the fleet module stays and nothing constructs a unit.
 
-	The market_report entry's blocker is 'no module builds a market fleet from a
-	solved network', measured by `clear_scenario` having no call site. Adding a
-	call site is exactly what closing that part of the gap looks like, so the
-	gate that pins the measurement must fail against it -- otherwise the
-	register would keep asserting a piece is missing after someone wrote it,
-	which is the drift this whole file exists to catch.
+	The gate this canaries asserts that a `BiddingUnit` is constructed somewhere
+	in `src/alea`, which is what distinguishes a fleet that is built from a
+	module that exists. The mutation renames the *constructor call* to a name
+	nothing defines, which is the shape of the defect the gate exists to notice:
+	`market/fleet.py` still imports, still exports `build_fleet`, and still
+	carries the string `BiddingUnit` in its body -- so a gate matching the
+	*name* would pass. It matches the call shape, and the call is gone.
+
+	The mutation is deliberately a superstring of the asserted text rather than
+	an unrelated string: `BiddingUnitAlias(` contains `BiddingUnit`, and the
+	predicate is ``\\bBiddingUnit\\s*\\(``. A canary that renamed it to something
+	not containing the name would prove less -- it would pass even against a
+	gate that matched a bare mention.
 	"""
-	target = (
-		'\tlogger.info("monte_carlo_scenario", out=str(out), seed=seed, '
-		"cvar=result.conditional_value_at_risk_usd)\n"
-	)
-	# Call-shaped, because `_call_sites` counts `name(` and not a bare mention:
-	# a canary that planted a reference the helper does not count would pass
-	# against an unchanged measurement, which is a canary testing nothing.
-	replacement = target + "\t_ = lambda: clear_scenario(None, 0.0, 'x')\n"
-	assert target in MARKET_SERVICE_PY.read_text(), (
-		"the canary target moved; `monte_carlo_scenario`'s log line is no longer "
-		"where this canary expects, so the canary would be a no-op"
+	target = "\t\t\tunit=BiddingUnit(\n"
+	replacement = "\t\t\tunit=BiddingUnitAlias(\n"
+	assert target in FLEET_PY.read_text(), (
+		"the canary target moved; `fleet.py` no longer constructs a `BiddingUnit` "
+		"in the form this canary expects, so the canary would be a no-op"
 	)
 	assert _gate_exit_code(MISSING_PIECE_GATE) == 0, (
 		"the missing-piece gate does not pass on the shipped tree"
 	)
 
-	with planted(MARKET_SERVICE_PY, target, replacement):
+	with planted(FLEET_PY, target, replacement):
 		assert _gate_exit_code(MISSING_PIECE_GATE) != 0, (
-			"the missing-piece gate passed with a `clear_scenario(` call planted in "
-			"`src/alea`; it cannot notice the fleet arriving, so the market_report "
-			"entry would keep claiming the piece is absent"
+			"the missing-piece gate passed with the fleet's only `BiddingUnit` "
+			"construction renamed; it cannot notice the fleet losing its builder, "
+			"so the two `PRODUCERS` entries would keep naming a producer that "
+			"reads an empty fleet"
 		)
 
 	assert _gate_exit_code(MISSING_PIECE_GATE) == 0, "the restore was not proven"

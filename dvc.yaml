@@ -249,6 +249,33 @@ stages:
     outs:
       - data/processed/resilience/contingency.parquet
 
+  market_report:
+    desc: "Per-carrier volume and average price, the monthly market section's rows."
+    cmd: >-
+      uv run --directory . alea build market_report
+      --out data/processed/market_report.parquet
+      --config config/config.kenya.yaml
+      --set network_dir=results/networks
+    deps:
+      # A directory, for the same reason `market_prices` declares one: the
+      # solved network's filename carries a content hash no rule can know at
+      # parse time, so the stage resolves the newest itself.
+      - results/networks
+    outs:
+      - data/processed/market_report.parquet
+
+  market_outlook:
+    desc: "Clearing price per horizon, the quarterly outlook section's rows."
+    cmd: >-
+      uv run --directory . alea build market_outlook
+      --out data/processed/market_outlook.parquet
+      --config config/config.kenya.yaml
+      --set network_dir=results/networks
+    deps:
+      - results/networks
+    outs:
+      - data/processed/market_outlook.parquet
+
   market_prices:
     desc: "The solved network's marginal prices for the API's price route."
     cmd: >-

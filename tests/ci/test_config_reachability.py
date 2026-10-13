@@ -59,6 +59,7 @@ LAYER_SECTIONS = {
 	"predictive": "alea.outages.views",
 	"losses": "alea.losses.views",
 	"resilience": "alea.resilience.views",
+	"market": "alea.market.views",
 }
 
 

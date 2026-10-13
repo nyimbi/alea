@@ -67,6 +67,19 @@ resilience:
   # of the population-derived households, which is itself a proxy.
   electrification_rate: 1.0
 
+market:
+  # What a MWh of unserved energy is worth. `market.clearing` prices a
+  # shortfall at this rate, so it *is* the clearing price of every hour the
+  # system sheds load, and it is the one market parameter no layer produces.
+  # 2000.0 is the figure `tests/determinism/run.py` has used since the
+  # determinism job was written.
+  value_of_lost_load_usd_per_mwh: 2000.0
+  # Where the rate came from. A VoLL is an assumption, not a measurement:
+  # survey-based and production-function estimates differ by an order of
+  # magnitude, so a reader has to be able to tell a defaulted rate from a
+  # sourced one. Move the rate and this must move with it.
+  value_of_lost_load_basis: config.market.value_of_lost_load_usd_per_mwh
+
 solve:
   solver: highs
   # Losses are on. The PyPSA-Eur benchmark (neglecting losses overestimates

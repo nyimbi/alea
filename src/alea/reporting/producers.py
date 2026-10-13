@@ -11,7 +11,7 @@ records is indistinguishable from coverage.
 That is the defect this module closes, and it is the Layer 8 defect one layer
 up. `alea.publish.views` holds four registers and a bidirectional gate over its
 eleven serving tables, so "this table has a producer" is a claim someone made
-and a test checks. Layer 6 held thirty-one sections, zero producers and no
+and a test checks. Layer 6 held thirty-one sections, one producer and no
 register at all: the render tests pass because `tests/fixtures/reporting`
 writes every declared path by hand, so a section that no layer produces renders
 perfectly in CI and warns "no artefact" in production. The fixture is the
@@ -40,7 +40,8 @@ from typing import Final
 
 #: Sections with a producer, keyed by slug to the producer's name.
 #:
-#: One entry, and the first. Every other section below is reachable from a
+#: Three entries, and the first was the one that proved the register had to
+#: exist before it could shrink. Every other section below is reachable from a
 #: *reader* and from no writer: the layer services exist
 #: (`market.clear_market`, `outages.forecast_to_artefact`,
 #: `losses.decomposition_to_artefact`, `resilience.resilience_to_artefact`,
@@ -55,6 +56,15 @@ PRODUCERS: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# "needs a loading kernel, and there is none", the kernel was written
 		# (`losses.flow.loading_series`), and the slug moved here with it.
 		"critical_lines": "losses.service.critical_lines_to_artefact",
+		# The two required sections whose absence meant *no* cadence could be
+		# generated from the pipeline. The blocker recorded here was measured
+		# and correct: no module built a market fleet from a solved network, so
+		# `clear_scenario` had no caller and `BiddingUnit` was constructed
+		# nowhere outside tests. `market/fleet.py` is that module,
+		# `market/stages.py` registers the two stages that run it, and the
+		# register's own gate measured the move.
+		"market_outlook": "market.service.quarterly_market_to_artefact",
+		"market_report": "market.service.monthly_market_to_artefact",
 	}
 )
 
@@ -158,20 +168,6 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"`UNWIRED`."
 		),
 		# ---- monthly ----
-		"market_report": (
-			"A required monthly section with no producer. `market/monthly/"
-			"{date}.parquet` is declared by `reporting/monthly.py` and written by "
-			"nothing, so the monthly report cannot be generated from the pipeline "
-			"either. This entry used to say the producer was 'a rule over a "
-			"cleared scenario, not a new model', and that understated it: there "
-			"is no cleared scenario to be a rule over. `clear_scenario` is "
-			"defined and exported and called by nothing but its own tests, and "
-			"`BiddingUnit` is constructed nowhere outside them -- no module builds "
-			"a market fleet from a solved network, so the missing piece is the "
-			"fleet, and the rule and the volume/average-price projection come "
-			"after it. The projection itself is clearing arithmetic; the fleet is "
-			"not."
-		),
 		"capacity_update": (
 			"`planning/capacity/{date}.parquet`. `planning.capacity_mix_table` "
 			"computes the mix from a solved network and `solve_scenario` writes "
@@ -213,10 +209,6 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"-- so the section reads a path the design does not write."
 		),
 		# ---- quarterly ----
-		"market_outlook": (
-			"A required quarterly section with no producer. Same missing rule as "
-			"`market_report`."
-		),
 		"investment_pipeline": (
 			"`scanning/pipeline/{date}.parquet`. `planning.catalogue` writes a "
 			"project catalogue under `data/processed/`; the quarterly section "
@@ -283,11 +275,18 @@ fact: "needs a rule" and "needs a model that does not exist" are different
 amounts of work, and a register that says only "unwired" hides which one it is.
 Five sections are `required=True` -- one per cadence: `outage_forecast`,
 `week_ahead`, `market_report`, `market_outlook`, `continental_outlook` -- and
-for those the report raises rather than warns. Every cadence's single required
-section is unproduced, so *no* cadence can currently be generated from the
-pipeline. The count was four here, and the daily cadence was the one it dropped;
-`test_reporting_producers.py` pins one-required-per-cadence so the prose cannot
-drift from the set it describes again.
+for those the report raises rather than warns. Three of the five are unproduced,
+so three cadences -- daily, weekly, annual -- still cannot be generated from the
+pipeline. The count was four here once, and the daily cadence was the one it
+dropped; `test_reporting_producers.py` pins one-required-per-cadence so the prose
+cannot drift from the set it describes again.
+
+The monthly and quarterly entries left this register together, and their removal
+is the shape the rest will follow: `market/fleet.py` was written to be the
+missing piece the entry named, `market/stages.py` registered the two stages that
+run it, `rules/market.smk` gave each a rule, and the slugs moved to
+``PRODUCERS`` in the same change -- which is what makes the register shrink as
+the gap closes rather than describe it.
 """
 
 
