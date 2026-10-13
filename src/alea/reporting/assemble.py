@@ -131,6 +131,22 @@ def values_from_artefact(
 		and name not in (INTERVAL_LOW_COLUMN, INTERVAL_HIGH_COLUMN)
 		and is_numeric_dtype(data[name])
 	]
+	# The row's *text* columns, on the same footing and for the same reason. A
+	# section's middle column is not always a quantity: `daily.py`'s
+	# `system_alerts` declares a `State` the serving schema types `str`, and
+	# `weekly.py`'s `mitigation` a `Status`. Keeping only the numeric ones here
+	# dropped them, and `_rows_for` -- which binds every non-first column to a
+	# number -- then printed the primary under a header promising a state. The
+	# two are separate lists rather than one, because a category must not be
+	# able to satisfy a column the section meant as a quantity.
+	categorical = [
+		name
+		for name in data.columns
+		if name not in (column, UNIT_COLUMN, LABEL_COLUMN)
+		and name not in (INTERVAL_LOW_COLUMN, INTERVAL_HIGH_COLUMN)
+		and name not in others
+		and not is_numeric_dtype(data[name])
+	]
 	# The confidence interval, where the row carries one. `daily.py`'s
 	# `outage_forecast` section declares an `Interval` column and its own
 	# docstring says a 12% probability renders with its band; nothing read the
@@ -157,6 +173,11 @@ def values_from_artefact(
 			extra=tuple(
 				(name, float(data[name].iloc[position]))
 				for name in others
+				if pd.notna(data[name].iloc[position])
+			),
+			categories=tuple(
+				(name, str(data[name].iloc[position]))
+				for name in categorical
 				if pd.notna(data[name].iloc[position])
 			),
 		)

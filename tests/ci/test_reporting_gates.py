@@ -57,6 +57,7 @@ from tests.fixtures.reporting import (
 	AS_OF,
 	DEFAULT_ROWS,
 	declared_artefacts,
+	declared_shapes,
 	write_all_fixture_sets,
 	write_fixture_artefact,
 )
@@ -365,8 +366,12 @@ def test_scheduled_matches_manual(tmp_path: Path):
 	"""
 	results, reports = tmp_path / "results", tmp_path / "reports"
 	today = datetime.now(UTC).date()
+	shapes = declared_shapes(ReportCadence.DAILY, today)
 	for pattern in declared_artefacts(ReportCadence.DAILY, today):
-		write_fixture_artefact(results / pattern, DEFAULT_ROWS)
+		columns, categorical = shapes[pattern]
+		write_fixture_artefact(
+			results / pattern, DEFAULT_ROWS, columns=columns, categorical=categorical
+		)
 	config = _config(results, reports, pdf_enabled=False)
 
 	scheduled = run_cadence(ReportCadence.DAILY, config, run_id="scheduled")
@@ -479,6 +484,64 @@ def test_an_interval_in_the_artefact_reaches_the_interval_column(tmp_path: Path)
 	assert values_from_artefact(half)[0].interval is None, (
 		"a one-sided bound was read as an interval"
 	)
+
+
+def test_a_band_in_the_artefact_reaches_the_category_column(tmp_path: Path):
+	"""The text half of the same read: a severity band survives into its column.
+
+	``daily.py``'s ``system_alerts`` declares ``["Element", "State", "Basis"]``
+	and ``State`` is a category -- ``publish.views.RESILIENCE_CONTINGENCY``
+	types it ``str`` and ``project_resilience_contingency`` bands each element
+	into ``"high"``/``"medium"``/``"low"``. The reader had no path for a text
+	cell: ``values_from_artefact`` kept only the *numeric* columns as ``extra``,
+	so ``state`` was dropped on read, and ``_rows_for`` -- which binds every
+	non-first column to a number -- printed the element's load shed under a
+	header promising a state. Measured on a contingency frame: the projection
+	guard passed, the read dropped the column, and the row rendered
+	``["line_a", 150.0, "modelled"]``.
+
+	The round trip again, because a hand-built ``ReportValue`` with
+	``categories`` set asserts the renderer and says nothing about whether an
+	artefact's band ever reaches it.
+	"""
+	from alea.io.artefacts import write_artefact
+	from alea.reporting.assemble import values_from_artefact
+	from alea.reporting.service import _rows_for
+
+	frame = pd.DataFrame(
+		{
+			"label": ["line_a", "line_b"],
+			"value": [150.0, 8.0],
+			"unit": ["MW", "MW"],
+			"state": ["high", "low"],
+		}
+	)
+	target = tmp_path / "contingency.parquet"
+	write_artefact(target, frame, _derived_provenance())
+	values = values_from_artefact(target)
+	assert [dict(value.categories).get("state") for value in values] == ["high", "low"], (
+		"the artefact carries a band per row and the read path dropped it"
+	)
+
+	columns = ["Element", "State", "Basis"]
+	rows = _rows_for(values, columns, slug="system_alerts", categorical=("State",))
+	assert [row[columns.index("State")] for row in rows] == ["high", "low"], (
+		f"the State column does not carry the band: {rows}"
+	)
+
+	# The refusal, which is what makes the declaration load-bearing. A frame
+	# with no `state` column is a frame the reader must not paper over: with one
+	# numeric column the fallback would put the load shed under `State`.
+	without = pd.DataFrame({"label": ["line_a"], "value": [150.0], "unit": ["MW"]})
+	bare = tmp_path / "bare.parquet"
+	write_artefact(bare, without, _derived_provenance())
+	with pytest.raises(ReportDataError, match="declared a category"):
+		_rows_for(
+			values_from_artefact(bare),
+			columns,
+			slug="system_alerts",
+			categorical=("State",),
+		)
 
 
 def _derived_provenance() -> DerivedProvenance:

@@ -459,3 +459,124 @@ def test_the_interval_gate_notices_a_band_that_never_reaches_the_value():
 			"one, so the gate cannot tell a band from a blank column"
 		)
 	assert _run(_PROGRAM).returncode == 0, "the canary leaked its mutation"
+
+
+# --------------------------------------------------------------------------
+# test_a_band_in_the_artefact_reaches_the_category_column
+# --------------------------------------------------------------------------
+
+SERVICE_PY = REPO / "src" / "alea" / "reporting" / "service.py"
+
+# The branch that binds a *text* column, and the refusal behind it. Both live in
+# `_rows_for`, so one mutation of the read path and one of the refusal cover the
+# pair: a reader that drops the text column prints the row's quantity under a
+# header promising a band, and a reader with no refusal does the same when the
+# column is absent. Mutating the module on disk cannot reach this session's
+# already-imported copy, so the gate runs in a subprocess.
+_CATEGORY_READ = """				category = value.category_for(column)
+				if category is not None:
+					row.append(category)
+					continue"""
+
+_CATEGORY_REFUSAL = """				if _normalise_column(column) in declared_categories:
+					raise ReportDataError("""
+
+_CATEGORY_PROGRAM = (
+	"import pandas as pd, tempfile, pathlib\n"
+	"from alea.io.artefacts import write_artefact\n"
+	"from alea.provenance.models import Basis, DerivedProvenance\n"
+	"from alea.reporting.assemble import values_from_artefact\n"
+	"from alea.reporting.service import _rows_for\n"
+	"prov = DerivedProvenance(source_id='s', basis=Basis.MEASURED, inputs=['fixture:s'],\n"
+	"    run_id='00000000-0000-7000-8000-000000000000')\n"
+	"root = pathlib.Path(tempfile.mkdtemp())\n"
+	"with_state = pd.DataFrame({'label': ['line_a'], 'value': [150.0], 'unit': ['MW'],\n"
+	"    'state': ['high']})\n"
+	"banded = root / 'banded.parquet'\n"
+	"write_artefact(banded, with_state, prov)\n"
+	"columns = ['Element', 'State', 'Basis']\n"
+	"try:\n"
+	"    rows = _rows_for(values_from_artefact(banded), columns, slug='system_alerts',\n"
+	"        categorical=('State',))\n"
+	"except Exception as exc:\n"
+	"    print('BAND LOST', type(exc).__name__, exc)\n"
+	"    raise SystemExit(1)\n"
+	"cell = rows[0][columns.index('State')]\n"
+	"if cell != 'high':\n"
+	"    print('BAND LOST', repr(cell))\n"
+	"    raise SystemExit(1)\n"
+	"without = pd.DataFrame({'label': ['line_a'], 'value': [150.0], 'unit': ['MW']})\n"
+	"bare = root / 'bare.parquet'\n"
+	"write_artefact(bare, without, prov)\n"
+	"try:\n"
+	"    _rows_for(values_from_artefact(bare), columns, slug='system_alerts',\n"
+	"        categorical=('State',))\n"
+	"except Exception as exc:\n"
+	"    print('REFUSED', type(exc).__name__)\n"
+	"    raise SystemExit(0)\n"
+	"print('BAND FABRICATED')\n"
+	"raise SystemExit(1)\n"
+)
+
+
+def test_the_category_gate_notices_a_band_that_never_reaches_the_value():
+	"""Drop the text read and watch the section print a number under ``State``.
+
+	The defect as it shipped: ``values_from_artefact`` kept only the numeric
+	columns, so a serving schema's ``severity`` -- which
+	``publish.views.RESILIENCE_CONTINGENCY`` types ``str`` -- was dropped on
+	read, and ``_rows_for`` bound the element's load shed to the ``State``
+	header. Measured: the projection guard passed, the read dropped the column,
+	and the row rendered ``["line_a", 150.0, "modelled"]``.
+
+	The probe asserts the *effect* the gate asserts -- an artefact's band
+	arriving in its column, and a refusal when the column is absent -- and runs
+	in a subprocess so the mutation on disk is what executes.
+	"""
+	assert _CATEGORY_READ in SERVICE_PY.read_text(), (
+		"canary target not found: `_rows_for` no longer binds a text column"
+	)
+	assert _CATEGORY_REFUSAL in SERVICE_PY.read_text(), (
+		"canary target not found: `_rows_for` no longer refuses an unfilled category"
+	)
+	shipped = _run(_CATEGORY_PROGRAM)
+	assert shipped.returncode == 0, f"the probe fails on the shipped tree: {shipped.stdout}"
+	assert "REFUSED" in shipped.stdout, (
+		f"the probe passed without exercising the refusal: {shipped.stdout}"
+	)
+
+	# A mutation that breaks the import also exits non-zero, so the assertion is
+	# on *why* it failed. `BAND LOST` is the read path having dropped the band;
+	# anything else -- a traceback, a missing module -- is this canary's own
+	# instrument failing and must not be read as the gate noticing.
+	with planted(SERVICE_PY, _CATEGORY_READ, "\t\t\t\tpass"):
+		broken = _run(_CATEGORY_PROGRAM)
+		assert broken.returncode != 0, (
+			"a reader that never binds a text column still put the band in its cell, "
+			"so the gate cannot tell a band from a quantity"
+		)
+		assert "BAND LOST" in broken.stdout, (
+			f"the gate failed for a reason other than the dropped band: {broken.stdout}"
+		)
+	assert _run(_CATEGORY_PROGRAM).returncode == 0, "the canary leaked its mutation"
+
+	# The refusal alone, with the read left in place. The banded frame still
+	# renders, so this mutation is invisible to the first half of the probe and
+	# the *second* half is what catches it: with no refusal, a frame carrying no
+	# `state` column falls through to the single-numeric-column fallback and
+	# `State` takes the load shed.
+	#
+	# The two mutations are run in sequence rather than nested. `planted` takes
+	# an exclusive `flock` on a lock file beside the target, and two `flock`s
+	# from one process are two open file descriptions -- the second blocks
+	# forever, which is a hung canary holding a planted defect.
+	with planted(SERVICE_PY, _CATEGORY_REFUSAL, "\t\t\t\tif False:\n\t\t\t\t\traise ReportDataError("):
+		unrefused = _run(_CATEGORY_PROGRAM)
+		assert unrefused.returncode != 0, (
+			"a reader with no refusal still produced a cell for a category the frame "
+			"does not carry, so the declaration is not load-bearing"
+		)
+		assert "BAND FABRICATED" in unrefused.stdout, (
+			f"the gate failed for a reason other than the fabricated band: {unrefused.stdout}"
+		)
+	assert _run(_CATEGORY_PROGRAM).returncode == 0, "the canary leaked its mutation"

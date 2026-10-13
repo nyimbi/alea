@@ -178,6 +178,31 @@ class ReportValue:
 	reader needed. See ``_rows_for`` for the resolution and the refusal.
 	"""
 
+	categories: tuple[tuple[str, str], ...] = ()
+	"""Other *text* values carried by the same row of the same artefact.
+
+	A section's middle column is not always a quantity. ``daily.py``'s
+	``system_alerts`` declares ``["Element", "State", "Basis"]`` and ``State``
+	is the severity band -- ``"high"``/``"medium"``/``"low"`` -- which
+	``publish.views.RESILIENCE_CONTINGENCY`` declares ``dtype="str"`` and
+	``project_resilience_contingency`` bands each element into. ``weekly.py``'s
+	``mitigation`` declares ``["Measure", "Status", "Basis"]`` with the same
+	shape.
+
+	They were unrenderable. ``values_from_artefact`` kept only the numeric
+	columns as ``extra``, so a text column was dropped on read, and ``_rows_for``
+	binds every non-first column to a *number* -- so a section declaring a
+	category either raised or, where the section has one numeric column, printed
+	the primary under a header promising a state. Measured on a contingency
+	frame carrying ``state`` as text: the projection guard passed, the read
+	dropped the column, and the row rendered the load shed under ``State``.
+
+	Kept separate from ``extra`` rather than folded into it because the two are
+	not interchangeable: a number binds to a numeric header and a string binds
+	to a category one, and a single mapping typed ``float | str`` would let a
+	category satisfy a column the section meant as a quantity.
+	"""
+
 	def extra_for(self, name: str) -> float | None:
 		"""The extra quantity whose artefact column matches ``name``, or ``None``.
 
@@ -189,6 +214,19 @@ class ReportValue:
 		for key, number in self.extra:
 			if _normalise_column(key) == wanted:
 				return number
+		return None
+
+	def category_for(self, name: str) -> str | None:
+		"""The text value whose artefact column matches ``name``, or ``None``.
+
+		The same word-wise match :meth:`extra_for` applies, against the row's
+		text columns. Tried *after* ``extra_for``, so a column that carries a
+		number is read as one whatever else the row holds.
+		"""
+		wanted = _normalise_column(name)
+		for key, text in self.categories:
+			if _normalise_column(key) == wanted:
+				return text
 		return None
 
 	def __post_init__(self) -> None:

@@ -87,6 +87,26 @@ class SectionSpec:
 	unit: str = ""
 	prose: str = ""
 	columns: list[str] = field(default_factory=lambda: ["Item", "Value", "Basis"])
+	categorical: tuple[str, ...] = ()
+	"""Headers that name a *category* rather than a quantity.
+
+	Empty for every section but two. `daily.py`'s ``system_alerts`` declares a
+	``State`` and `weekly.py`'s ``mitigation`` a ``Status``, and both are bands
+	-- ``"high"``/``"medium"``/``"low"``, ``"open"``/``"closed"`` -- which
+	`publish.views.RESILIENCE_CONTINGENCY` types ``str``.
+
+	**Why this is declared rather than inferred.** ``_rows_for`` binds every
+	non-first column to a number, and it has one fallback: a section with
+	exactly one numeric column takes the primary whatever the header is called.
+	That fallback is load-bearing -- ``market_outlook`` declares
+	``["Quarter", "Price", "Basis"]`` and its producer writes ``value``/``unit``
+	with no ``price`` column -- so the reader cannot drop it. But it also means
+	a section declaring a category and receiving a frame with no such column
+	prints the *primary* under the category's header: measured, a contingency
+	frame with no ``state`` column rendered its load shed under ``State``. A
+	header alone cannot tell ``Price`` from ``Status``; only the section can say
+	which it meant, so it does.
+	"""
 	table_title: str = ""
 	chart: str = ""
 	required: bool = False
@@ -298,7 +318,7 @@ def _section_from_spec(
 		slug=spec.slug,
 		title=spec.table_title or spec.title,
 		columns=spec.columns,
-		rows=_rows_for(values, spec.columns, slug=spec.slug),
+		rows=_rows_for(values, spec.columns, slug=spec.slug, categorical=spec.categorical),
 		unit=spec.unit,
 	)
 	charts: list[ReportChart] = []
@@ -327,6 +347,7 @@ def _rows_for(
 	columns: list[str],
 	*,
 	slug: str = "",
+	categorical: tuple[str, ...] = (),
 ) -> list[list[ReportValue | str]]:
 	"""Lay values out against a section's declared columns.
 
@@ -348,6 +369,9 @@ def _rows_for(
 	number a reader will quote, and no downstream check can tell it from a real
 	one.
 	"""
+	declared_categories = {
+		_normalise_column(name) for name in (categorical or ())
+	}
 	rows: list[list[ReportValue | str]] = []
 	for value in values:
 		row: list[ReportValue | str] = []
@@ -373,6 +397,30 @@ def _rows_for(
 						)
 					)
 					continue
+				# A *text* column, where the row carries one under this name.
+				# `system_alerts` declares a `State` and `mitigation` a
+				# `Status`; both are categories, and a category is a plain
+				# string cell -- the template's `cell` macro prints a string
+				# as-is and a `ReportValue` with its basis marker. Tried after
+				# `extra_for` so a column carrying a number is read as one.
+				category = value.category_for(column)
+				if category is not None:
+					row.append(category)
+					continue
+				# A header the section declares as a category, with no text in
+				# the row to fill it. Refused rather than handed the primary:
+				# the single-numeric-column fallback below would otherwise
+				# print the row's quantity under a header promising a band,
+				# which is the duplication defect `_rows_for` exists to stop,
+				# one column type over.
+				if _normalise_column(column) in declared_categories:
+					raise ReportDataError(
+						f"{slug or 'section'}: column {column!r} is declared a "
+						f"category and this row carries no such text; the row "
+						f"holds {[key for key, _ in value.categories] or 'no text columns'}. "
+						f"A quantity printed under a category's header is a wrong "
+						f"cell in a published report"
+					)
 				# The primary goes only where the column names it. A column
 				# naming a quantity this row does not carry has no cell, and
 				# inventing one is how the duplication above happened.

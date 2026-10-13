@@ -85,6 +85,9 @@ SECTIONS: tuple[SectionSpec, ...] = (
 		unit="",
 		table_title="Open measures",
 		columns=["Measure", "Status", "Basis"],
+		# `Status` is a band -- open/closed -- not a quantity, on the same
+		# footing as `system_alerts`'s `State`. See `SectionSpec.categorical`.
+		categorical=("Status",),
 	),
 )
 

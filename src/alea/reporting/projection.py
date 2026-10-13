@@ -168,7 +168,34 @@ def _require_the_section_can_be_filled(source: Path, spec: SectionSpec, payload:
 			f"filled from it. A projection moves rows; it does not invent them"
 		)
 	carried = {_normalise(str(column)) for column in payload.columns}
-	numeric = [column for column in spec.columns[1:] if _is_numeric_column(column)]
+	# A header the section declares a *category* is not a quantity, whatever
+	# `_is_numeric_column` says about its spelling: `State` and `Status` pass that
+	# test and would otherwise be counted as the section's one numeric column,
+	# which is how a frame carrying only `load_shed_mw` passed this guard while
+	# `_rows_for` had nothing to put under `State` but the load shed. Checked
+	# before the fallback below, because the fallback is exactly what would
+	# swallow it.
+	declared_categories = {_normalise(name) for name in spec.categorical}
+	missing_categories = [
+		column
+		for column in spec.columns[1:]
+		if _normalise(column) in declared_categories
+		and _normalise(column) not in carried
+	]
+	if missing_categories:
+		raise ArtefactError(
+			f"{source}: the section {spec.slug!r} declares {missing_categories} a "
+			f"category and the artefact carries {sorted(str(c) for c in payload.columns)}. "
+			f"The reader binds a category column to the row's *text* and refuses "
+			f"rather than printing the row's quantity under it, so projecting this "
+			f"frame makes `alea report` raise naming this section while the missing "
+			f"band is the producer's to write"
+		)
+	numeric = [
+		column
+		for column in spec.columns[1:]
+		if _is_numeric_column(column) and _normalise(column) not in declared_categories
+	]
 	if len(numeric) == 1:
 		# The reader's own fallback: with one numeric column the primary goes
 		# there whatever the header is called, so there is nothing to refuse.

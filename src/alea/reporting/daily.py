@@ -76,6 +76,13 @@ SECTIONS: tuple[SectionSpec, ...] = (
 		unit="",
 		table_title="Active contingencies",
 		columns=["Element", "State", "Basis"],
+		# `State` is the severity band, not a number: `publish.views.
+		# RESILIENCE_CONTINGENCY` types it `str` and
+		# `project_resilience_contingency` bands each element into
+		# "high"/"medium"/"low". Declared here because a header alone cannot
+		# say so -- the reader's single-numeric-column fallback would otherwise
+		# print the element's load shed under it.
+		categorical=("State",),
 	),
 	SectionSpec(
 		slug="outage_summary",

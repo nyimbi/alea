@@ -87,23 +87,46 @@ def _provenance(spec: FixtureValue, source_id: str) -> DerivedProvenance:
 #: identity, and these three are metadata the reader derives from provenance.
 NON_NUMERIC_COLUMNS = frozenset({"basis", "source", "interval", "ci"})
 
+#: The band words a fixture writes into a section's declared *category* column.
+#:
+#: A category column is text, and the reader refuses to fill one with the row's
+#: quantity -- so a fixture that wrote no column there made `system_alerts` and
+#: `mitigation` raise, which is the correct failure and the reason this exists.
+#: The word varies by row so a cell that repeated its neighbour's band would
+#: differ from a correct one, the same property the numeric extras have.
+CATEGORY_BANDS = ("high", "medium", "low")
 
-def declared_quantities(columns: list[str]) -> list[str]:
+
+def declared_quantities(
+	columns: list[str], categorical: tuple[str, ...] = ()
+) -> list[str]:
 	"""A section's declared numeric column headers, in order.
 
 	The first is the row's primary quantity -- the reader binds it to the
 	artefact's ``value`` column -- and the rest are the row's other numbers,
 	which the fixture must write or the reader has nothing to put in the column
 	but a copy of the primary.
+
+	``categorical`` names the headers that are *not* quantities, and they are
+	excluded here: writing ``State`` as ``value * 2`` would make the fixture
+	assert a band is a number, which is the defect the reader's category path
+	was added to stop.
 	"""
+	bands = {name.lower() for name in categorical}
 	return [
 		column
 		for position, column in enumerate(columns)
-		if position > 0 and column.lower() not in NON_NUMERIC_COLUMNS
+		if position > 0
+		and column.lower() not in NON_NUMERIC_COLUMNS
+		and column.lower() not in bands
 	]
 
 
-def _frame(rows: tuple[FixtureValue, ...], columns: list[str] | None = None) -> pd.DataFrame:
+def _frame(
+	rows: tuple[FixtureValue, ...],
+	columns: list[str] | None = None,
+	categorical: tuple[str, ...] = (),
+) -> pd.DataFrame:
 	"""The rows as a frame, carrying every quantity the section declares.
 
 	**Why the extras exist, and why they are the point of this module.** The
@@ -126,8 +149,18 @@ def _frame(rows: tuple[FixtureValue, ...], columns: list[str] | None = None) -> 
 		"value": [row.value for row in rows],
 		"unit": [row.unit for row in rows],
 	}
-	for offset, header in enumerate(declared_quantities(columns or []), start=2):
+	for offset, header in enumerate(declared_quantities(columns or [], categorical), start=2):
 		frame[header] = [round(row.value * offset, 6) for row in rows]
+	# The declared *category* columns, as text. `system_alerts` declares a
+	# `State` and `mitigation` a `Status`, and the reader binds those to the
+	# row's text rather than to a number -- it refuses outright when the row
+	# carries none, because the alternative is printing the row's quantity
+	# under a header promising a band.
+	for header in categorical:
+		frame[header] = [
+			CATEGORY_BANDS[position % len(CATEGORY_BANDS)]
+			for position in range(len(rows))
+		]
 	return pd.DataFrame(frame)
 
 
@@ -136,6 +169,7 @@ def write_fixture_artefact(
 	rows: tuple[FixtureValue, ...] = DEFAULT_ROWS,
 	source_id: str = "reporting_fixture",
 	columns: list[str] | None = None,
+	categorical: tuple[str, ...] = (),
 ) -> Path:
 	"""Write one fixture artefact plus its provenance sidecar.
 
@@ -147,12 +181,13 @@ def write_fixture_artefact(
 	``columns`` is the declaring section's column list. Passing it makes the
 	frame carry every quantity the section reads, so a section with two numeric
 	columns is fed a two-number row rather than a one-number row the reader
-	would have to pad.
+	would have to pad. ``categorical`` is the section's declared category
+	headers, which are written as text.
 	"""
 	assert rows, "a fixture artefact needs at least one row"
 	target = Path(path)
 	target.parent.mkdir(parents=True, exist_ok=True)
-	write_artefact(target, _frame(rows, columns), _provenance(rows[0], source_id))
+	write_artefact(target, _frame(rows, columns, categorical), _provenance(rows[0], source_id))
 	return target
 
 
@@ -243,18 +278,27 @@ def write_fixture_set(cadence: ReportCadence, results_root: str | Path) -> list[
 	root = Path(results_root)
 	specs, _ = cadence_specs(cadence)
 	stamp = _day_stamp(cadence)
-	# Columns by resolved path, so each fixture carries exactly the quantities
-	# its section declares. Resolved here rather than in the plan because the
-	# plan names paths with a concrete date and the spec names them with a
-	# template token; this is the one place both spellings are in hand. The
-	# tokens are formatted exactly as `_artefact_path` formats them, so a
-	# cadence that starts using ``{month}`` is covered rather than mis-keyed.
-	columns_for = {
-		spec.artefact.format(date=stamp, month=stamp[:7], year=stamp[:4]): list(spec.columns)
+	# Columns and categories by resolved path, so each fixture carries exactly
+	# the quantities and bands its section declares. Resolved here rather than
+	# in the plan because the plan names paths with a concrete date and the spec
+	# names them with a template token; this is the one place both spellings are
+	# in hand. The tokens are formatted exactly as `_artefact_path` formats
+	# them, so a cadence that starts using ``{month}`` is covered rather than
+	# mis-keyed.
+	declared = {
+		spec.artefact.format(date=stamp, month=stamp[:7], year=stamp[:4]): (
+			list(spec.columns),
+			spec.categorical,
+		)
 		for spec in specs
 	}
 	written = [
-		write_fixture_artefact(root / relative, rows, columns=columns_for.get(relative))
+		write_fixture_artefact(
+			root / relative,
+			rows,
+			columns=declared.get(relative, (None, ()))[0],
+			categorical=declared.get(relative, (None, ()))[1],
+		)
 		for relative, rows in _fixture_plan(cadence).items()
 	]
 	assert written, f"cadence {cadence.value} wrote no fixtures"
@@ -288,6 +332,32 @@ def declared_artefacts(cadence: ReportCadence, as_of: date) -> list[str]:
 		)
 		for spec in specs
 	]
+
+
+def declared_shapes(
+	cadence: ReportCadence, as_of: date = AS_OF
+) -> dict[str, tuple[list[str], tuple[str, ...]]]:
+	"""Each declared artefact path, mapped to its section's columns and categories.
+
+	The one place a caller writing a fixture set by hand -- rather than through
+	:func:`write_fixture_set` -- can get the shape right. Two tests write one
+	artefact per declared path themselves, and a frame written without the
+	section's own column list is a frame the reader pads or refuses: it was the
+	one-value-per-row fixture that hid the duplication defect, and it is the
+	missing band column that makes `system_alerts` raise.
+	"""
+	from alea.reporting.schemas import period_for
+
+	_, period_end = period_for(cadence, as_of)
+	specs, _ = cadence_specs(cadence)
+	return {
+		spec.artefact.format(
+			date=f"{period_end:%Y-%m-%d}",
+			month=f"{period_end:%Y-%m}",
+			year=f"{period_end:%Y}",
+		): (list(spec.columns), spec.categorical)
+		for spec in specs
+	}
 
 
 def sections_without_fixtures(cadence: ReportCadence, as_of: date = AS_OF) -> list[str]:
@@ -326,6 +396,7 @@ __all__ = [
 	"MODELLED",
 	"PROXY",
 	"declared_artefacts",
+	"declared_shapes",
 	"fixture_provenance_at",
 	"sections_without_fixtures",
 	"write_all_fixture_sets",
