@@ -369,6 +369,13 @@ def test_the_stage_is_idempotent_through_the_cli(tmp_path: Path):
 	the workflow has (AD-5). The stage resolves its inputs itself -- the arrays
 	and dispatch at their conventional paths -- and checks them through
 	`skip_if_current`, so a second run against unchanged inputs must not rewrite.
+
+	The evidence is the output file's mtime, not a log line. This gate used to
+	assert ``"skip" in result.output``, which worked only because structlog's
+	default factory wrote to stdout; once records moved to stderr (they were
+	splicing into `alea config show`'s JSON payload) the assertion read an empty
+	string. An mtime is the effect the docstring claims -- the artefact was not
+	rewritten -- and it does not move when the logging configuration does.
 	"""
 	from typer.testing import CliRunner
 
@@ -400,10 +407,13 @@ def test_the_stage_is_idempotent_through_the_cli(tmp_path: Path):
 	]
 	first = runner.invoke(app, arguments)
 	assert first.exit_code == 0, first.output
+	assert out.exists(), "the first run published nothing, so the second proves nothing"
+	written = out.stat().st_mtime_ns
 	second = runner.invoke(app, arguments)
 	assert second.exit_code == 0, second.output
-	assert "skip" in second.output.lower() or "skipped" in second.output.lower(), (
-		f"the second run rebuilt against unchanged inputs; output was {second.output!r}"
+	assert out.stat().st_mtime_ns == written, (
+		f"the second run rebuilt against unchanged inputs; output was {second.stdout!r} "
+		f"and {out} was rewritten"
 	)
 
 

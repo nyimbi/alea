@@ -23,7 +23,7 @@ import typer
 from alea import __version__
 from alea.config.loader import ConfigError, load_config
 from alea.config.models import Config
-from alea.logging import configure, get_logger, new_run_id
+from alea.logging import configure, configure_from, get_logger, new_run_id
 from alea.registry import registry, technologies, tier_counts
 
 app = typer.Typer(
@@ -811,9 +811,77 @@ def version() -> None:
 	typer.echo(__version__)
 
 
+def _provisional_config() -> Config | None:
+	"""The config the invoked command is about to run with, before typer parses it.
+
+	Logging has to be configured before ``app()`` -- every module binds its
+	logger at import, so by the time a command body runs the process is already
+	configured -- but the config file that names the level arrives as a flag
+	typer has not parsed yet. This reads the same flags off ``sys.argv``, which
+	is the only source available at that point, and returns ``None`` when there
+	is nothing to read rather than guessing.
+
+	WHY it does not simply call ``load_config()`` bare: that reads
+	``config.default.yaml`` and nothing else, so ``--config`` could never change
+	the log level. ``logging.level`` and ``logging.json_output`` were declared
+	in every config file, merged and validated, and reached nothing.
+
+	WHY a failure here is not fatal: ``main`` falls back to the environment and
+	the defaults, and ``_load`` reports a genuinely broken config properly once
+	typer has parsed the flags. A logging setup that exited here would replace
+	that message with a traceback about YAML.
+	"""
+	assert isinstance(sys.argv, list), "sys.argv is not a list; this is not a normal interpreter"
+	argv = sys.argv[1:]
+	config: str | None = None
+	scenario: str | None = None
+	overrides: list[str] = []
+	index = 0
+	while index < len(argv):
+		token = argv[index]
+		# `--flag=value` and `--flag value` are both how typer accepts these.
+		name, _, inline = token.partition("=")
+		if name in ("--config", "-c"):
+			value = inline or (argv[index + 1] if index + 1 < len(argv) else "")
+			config = value or None
+			index += 1 if inline else 2
+			continue
+		if name in ("--scenario", "-s"):
+			value = inline or (argv[index + 1] if index + 1 < len(argv) else "")
+			scenario = value or None
+			index += 1 if inline else 2
+			continue
+		if name == "--set":
+			value = inline or (argv[index + 1] if index + 1 < len(argv) else "")
+			if value:
+				overrides.append(value)
+			index += 1 if inline else 2
+			continue
+		index += 1
+	if config is None and scenario is None and not overrides:
+		return None
+	return load_config(config, scenario=scenario, overrides=overrides, require=False)
+
+
 def main() -> None:
-	"""Console-script entry point."""
-	configure()
+	"""Console-script entry point.
+
+	Logging is configured from the config file the command will actually run
+	with, not from this function's defaults. ``configure()`` bare left
+	``logging.level`` and ``logging.json_output`` declared in every config file
+	and read by nothing, so a config asking for DEBUG produced an INFO run and
+	the only way to get a debug log was an environment variable the config does
+	not mention.
+	"""
+	provisional = None
+	try:
+		provisional = _provisional_config()
+	except Exception:  # noqa: BLE001 - a broken config is reported by the command, not here
+		provisional = None
+	if provisional is not None:
+		configure_from(provisional)
+	else:
+		configure()
 	try:
 		app()
 	except KeyboardInterrupt:  # pragma: no cover - interactive

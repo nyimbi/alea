@@ -37,6 +37,7 @@ excluded count to move.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -48,6 +49,7 @@ from alea.config.base import AleaConfig
 from alea.config.loader import load_config
 from alea.config.models import Config
 from alea.io.pipeline import build_stage
+from tests.ci.canaries import REPO
 
 #: The sections the layers own, and the module each layer declares its model in.
 #: The root composes these rather than re-declaring them, which is exactly why a
@@ -513,6 +515,135 @@ def test_the_losses_slack_bus_still_comes_from_the_solve_options(tmp_path: Path)
 	build_stage("tlens", explicit, explicit_out, inputs=[], force=True)
 	assert _sidecar_parameters(explicit_out)["slack_bus"] == 1, (
 		"an explicit losses.slack_bus did not win over the solve option"
+	)
+
+
+# --------------------------------------------------------------------------
+# logging -- the section that configures the process, not a stage
+# --------------------------------------------------------------------------
+
+
+def _run_the_cli(tmp_path: Path, config_text: str, *, env_extra: dict[str, str] | None = None):
+	"""Run the shipped entry point on a config file and return the process.
+
+	The child imports ``cli.main`` and hands it the argv the console script
+	would build: ``config validate`` takes ``--config`` itself, so the option
+	belongs *after* the subcommand. It does not belong on the root app, and an
+	argv that puts it there makes typer print a usage error -- which this gate
+	then read as "no records were emitted", i.e. as the defect it was written to
+	catch. The assertion below on the exit status exists so that failure mode
+	cannot recur.
+
+	``ALEA_LOG_LEVEL`` is cleared unless the caller sets it, so the config file
+	is the only thing that can set the level and a developer's shell cannot make
+	this gate pass.
+	"""
+	import subprocess
+	import sys
+
+	config_path = tmp_path / "config.logging.yaml"
+	config_path.write_text(config_text, encoding="utf-8")
+	program = (
+		"from alea.cli import main\n"
+		"import sys\n"
+		f"sys.argv = ['alea', 'config', 'validate', '--config', {str(config_path)!r}, '-q']\n"
+		"main()\n"
+	)
+	env = {**os.environ, "PYTHONPATH": str(REPO), **(env_extra or {})}
+	if not env_extra:
+		env.pop("ALEA_LOG_LEVEL", None)
+	completed = subprocess.run(
+		[sys.executable, "-c", program],
+		capture_output=True,
+		text=True,
+		check=False,
+		cwd=str(REPO),
+		env=env,
+	)
+	assert completed.returncode == 0, (
+		f"the CLI did not run, so what it logged says nothing about logging:\n"
+		f"{completed.stderr[-1500:]}"
+	)
+	return completed
+
+
+def test_the_logging_section_reaches_the_configured_logger(tmp_path: Path):
+	"""``logging.json_output`` reaches the process renderer.
+
+	The fourth instance of this module's defect, and the one whose effect is
+	least visible: ``cli.main`` called ``configure()`` with no arguments, so a
+	config file asking for ``json_output: true`` produced a console-rendered
+	run. The setting was declared in ``config.default.yaml`` and
+	``config.kenya.yaml``, merged, validated and read by nothing.
+
+	WHY a subprocess running the shipped entry point: the defect is in the
+	*order* of startup -- every module binds its logger at import, before the
+	config is loaded -- so a check that configures logging itself would pass
+	against the broken ordering. The assertion is on the run records the CLI
+	emits (``_Run.__enter__``/``__exit__``), not on a line this test logs: a
+	probe logged before ``main()`` runs is filtered by whatever level was in
+	force at import, which is the very thing under test.
+	"""
+	completed = _run_the_cli(
+		tmp_path,
+		"scenario:\n  countries: [KE]\nlogging:\n  level: INFO\n  json_output: true\n",
+	)
+	assert '"event": "start"' in completed.stderr, (
+		"the config asked for json_output=true and the run records were rendered "
+		f"for a terminal rather than a log shipper:\n{completed.stderr[-1500:]}"
+	)
+	assert '"event": "done"' in completed.stderr, (
+		f"the run emitted no exit record, so the process died early:\n{completed.stderr[-1500:]}"
+	)
+
+
+def test_the_logging_level_reaches_the_configured_logger(tmp_path: Path):
+	"""``logging.level: WARNING`` silences the run's own INFO records.
+
+	The same defect from the other side, and the discriminating half: pre-fix,
+	``configure()`` bare set INFO regardless, so the CLI's ``start`` record was
+	emitted under a config that asked for WARNING. A config that raises the
+	level is the only way to see the field arrive using lines the CLI itself
+	produces -- asserting a DEBUG line *appears* needs a probe this test writes,
+	and a probe logged before ``main()`` runs is filtered at import level.
+
+	The marker is ``run_id=``, not ``"event": "start"``: the latter is a string
+	only the JSON renderer emits, so under the console renderer this gate would
+	pass whether or not the level arrived. Both renderers print the bound
+	context, so a run record is visible to this assertion either way.
+	"""
+	completed = _run_the_cli(
+		tmp_path,
+		"scenario:\n  countries: [KE]\nlogging:\n  level: WARNING\n",
+	)
+	assert "run_id=" not in completed.stderr, (
+		"the config asked for level=WARNING and the run still logged INFO records; "
+		f"logging.level reached nothing:\n{completed.stderr[-1500:]}"
+	)
+
+
+def test_the_logging_environment_variable_still_overrides_the_config(tmp_path: Path):
+	"""A container overrides the level without editing a config file.
+
+	The complement of the gates above, and the reason ``configure_from`` reads
+	the environment first: a config that beat ``ALEA_LOG_LEVEL`` would make the
+	override useless, and the override is the only route a deployment has that
+	does not mean rewriting a checked-in file.
+
+	This one fails against the pre-fix ``main`` as well, which was not the
+	intent: the bare ``configure()`` ran at startup before any module had bound
+	a logger, so it pinned INFO over the level ``get_logger`` would have read
+	from the environment. ``ALEA_LOG_LEVEL`` was as inert as the config field
+	it was supposed to stand in for.
+	"""
+	completed = _run_the_cli(
+		tmp_path,
+		"scenario:\n  countries: [KE]\nlogging:\n  level: INFO\n",
+		env_extra={"ALEA_LOG_LEVEL": "WARNING"},
+	)
+	assert "run_id=" not in completed.stderr, (
+		"ALEA_LOG_LEVEL=WARNING was set and an INFO record was emitted anyway; the "
+		f"environment no longer overrides the config:\n{completed.stderr[-1500:]}"
 	)
 
 

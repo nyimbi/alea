@@ -8,6 +8,10 @@
   construct a bare ``LossConfig()``, the defect as it shipped;
 * ``test_the_resilience_section_reaches_the_stage`` -- `_stage_resilience` made
   to construct a bare ``ResilienceConfig()``, likewise;
+* ``test_the_logging_section_reaches_the_configured_logger`` and
+  ``test_the_logging_level_reaches_the_configured_logger`` -- ``cli.main`` made
+  to call ``configure()`` bare, the third instance of the class and the one
+  whose setting configures the process rather than a stage;
 * and the root field removed outright, which is the weaker half the other three
   exist to go beyond.
 
@@ -159,4 +163,65 @@ def test_the_gate_catches_a_root_field_re_declared_instead_of_imported():
 		"root_config_composes",
 		"a root Config carrying its own copy of the layer's section model still "
 		"passed the gate; the gate checks presence, not identity",
+	)
+
+
+# --------------------------------------------------------------------------
+# The logging section: a config that configures the process, not a stage
+# --------------------------------------------------------------------------
+
+CLI_PY = REPO / "src" / "alea" / "cli.py"
+
+_MAIN_LOGGING = """	provisional = None
+	try:
+		provisional = _provisional_config()
+	except Exception:  # noqa: BLE001 - a broken config is reported by the command, not here
+		provisional = None
+	if provisional is not None:
+		configure_from(provisional)
+	else:
+		configure()"""
+
+_BARE_CONFIGURE = "\tconfigure()"
+
+
+def test_the_gate_catches_a_main_that_ignores_the_config_logging_section():
+	"""``main`` called ``configure()`` bare, so the config's logging reached nothing.
+
+	The defect as it shipped. Every config file declares ``logging.level`` and
+	``logging.json_output``; ``main`` configured the process from its own
+	defaults instead, so a config asking for DEBUG produced an INFO run and the
+	only route to a debug log was an environment variable no config file
+	mentions.
+
+	Both gates that read this section fail here, which is why they are two
+	gates: one watches the renderer, one watches the level, and the pre-fix code
+	was wrong about both.
+	"""
+	_assert_canary(
+		CLI_PY,
+		_MAIN_LOGGING,
+		_BARE_CONFIGURE,
+		"logging",
+		"a main that configures logging from its own defaults instead of the "
+		"config's logging section still passed the gate",
+	)
+
+
+def test_the_gate_catches_a_config_that_is_never_read_from_the_command_line():
+	"""``--config`` named a file the logging setup never saw.
+
+	The subtler half, and the one a fix that stopped at ``configure_from`` would
+	have shipped: reading ``load_config()`` bare picks up
+	``config.default.yaml`` and nothing else, so the flag a user typed had no
+	effect on the log level even once ``configure_from`` existed. The gate
+	passes the file through ``--config``, so it fails here.
+	"""
+	_assert_canary(
+		CLI_PY,
+		"\treturn load_config(config, scenario=scenario, overrides=overrides, require=False)",
+		"\treturn load_config(None, scenario=None, overrides=None, require=False)",
+		"logging",
+		"a main that reads the default config rather than the one --config names "
+		"still passed the gate",
 	)
