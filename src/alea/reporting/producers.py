@@ -383,9 +383,16 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"energy vectors rather than labour."
 		),
 		"climate_scenarios": (
-			"No weather layer exists. `weather/scenarios/{date}.parquet` would "
-			"carry the CMIP scenario set, and the register holds no climate "
-			"projection source."
+			"A modelling gap, not a fetch one. `cmip6` is registered, its declared "
+			"``target`` is this slug, and `alea.io.fetchers` fetches its ESGF "
+			"dataset inventory -- so the source the entry above used to say was "
+			"missing has been there all along. What does not exist is everything "
+			"between that inventory and the section: a producer must name a "
+			"dataset per scenario, download it (terabytes, which the fetcher's own "
+			"docstring puts deliberately outside the pipeline), downscale it to "
+			"the network's snapshots, and re-solve for each. The section's "
+			"`Scenario`, `System cost` and `Reliability` columns come from the "
+			"last step and nothing runs it."
 		),
 	}
 )

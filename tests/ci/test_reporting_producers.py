@@ -377,3 +377,104 @@ def test_a_required_section_with_no_producer_is_recorded(cadence: ReportCadence)
 		f"that lost its producer is a cadence that can no longer be generated, "
 		f"and the map must gain it."
 	)
+
+#: The shapes a blocker uses to say a source is not there. Regexes rather than
+#: substrings, because the natural phrasings put words in between: "no climate
+#: projection source exists" does not contain the substring "no source", and a
+#: substring list is a subset predicate -- it matches some of the ways to write
+#: the denial and passes over the rest. The canary
+#: `test_source_claim_gates.py` plants exactly that phrasing, and the first
+#: draft of this list let it through.
+_ABSENCE_PATTERNS = (
+	re.compile(r"\bno\b[^.]{0,40}?\bsources?\b", re.IGNORECASE),
+	re.compile(r"\bholds no\b", re.IGNORECASE),
+	re.compile(r"\bnot registered\b", re.IGNORECASE),
+	re.compile(r"\bregistered nowhere\b", re.IGNORECASE),
+)
+
+#: Source ids whose fetcher is deliberately absent, each with the reason the
+#: blocker may therefore say so. Mirrors `UNIMPLEMENTED_FETCHERS` in
+#: `tests/ci/test_io_registry.py`, which is the register for this fact.
+UNFETCHED_SOURCES = frozenset({"era5_cutout", "gridwatch", "viirs_vnp46a2"})
+
+
+def test_no_blocker_claims_a_source_is_absent_when_the_register_holds_it():
+	"""A blocker that denies a source exists is a claim the source register refutes.
+
+	**The defect, measured.** `climate_scenarios` recorded "the register holds
+	no climate projection source". `cmip6` is registered, its declared
+	``target`` is ``climate_scenarios`` itself, and `alea.io.fetchers` carries a
+	working fetcher for it -- so the entry sent the next reader to look for a
+	source that was already there, and the real gap (naming a dataset per
+	scenario, downloading it, downscaling it, re-solving) went unrecorded. It is
+	the fourth entry this arc has found naming the wrong missing thing, after
+	`investment_pipeline`, `outage_events` and `renewable_forecast`.
+
+	**Why the check is keyed on the source's own ``target``.** The first draft
+	looked for a registered source id spelled in the blocker and skipped any
+	blocker that named none -- which is every blocker that *denies* a source
+	exists, including the one this gate was written for. A gate whose trigger is
+	the defect's own wording passes over the defect. The register already
+	carries the link: a ``Source``'s ``target`` names the artefact or stage it
+	feeds, and ``cmip6``'s is literally this slug. So the check is "does a
+	registered source declare this section as its target", which no wording can
+	evade, and the phrase list only decides whether the blocker *contradicts*
+	it.
+
+	**What is deliberately not checked.** A blocker may say "no fetcher" of a
+	source that is registered and unfetched -- `era5_cutout` and
+	`viirs_vnp46a2` are exactly that, and both entries are true. Only the two
+	denials the register can settle are gated: that a source is absent, and that
+	a source with a *registered* fetcher has none. The general prose -- "no
+	switching solver exists" -- stays unchecked, because a keyword search over
+	it would be a proof-shaped guess and this module has already been wrong once
+	by trusting a claim it could have measured.
+	"""
+	from alea.io.sources import registered_fetchers, sources
+
+	register = sources()
+	fetched = set(registered_fetchers())
+	targeting: dict[str, list[str]] = {}
+	for source_id, source in register.items():
+		targeting.setdefault(source.target, []).append(source_id)
+
+	for slug, reason in UNPRODUCED.items():
+		named = sorted(targeting.get(slug, ()))
+		if not named:
+			continue
+		denials = [pattern.pattern for pattern in _ABSENCE_PATTERNS if pattern.search(reason)]
+		assert not denials, (
+			f"{slug!r}'s blocker says {denials}, and {named} declare "
+			f"{slug!r} as their ``target`` in `alea.io.sources`. The sentence "
+			f"sends the next reader to look for a source that is already there, "
+			f"which is how this entry came to deny a climate projection source "
+			f"while `cmip6` sat in the register with a working fetcher. Name what "
+			f"is actually missing -- the model, the stage, the rule: {reason!r}"
+		)
+		unfetched = sorted(source_id for source_id in named if source_id in fetched)
+		if not unfetched:
+			continue
+		assert "no fetcher" not in reason, (
+			f"{slug!r}'s blocker says 'no fetcher' while `registered_fetchers()` "
+			f"holds one for {unfetched}. A source with a fetcher is not the "
+			f"blocker; name the stage or the model that is: {reason!r}"
+		)
+
+
+def test_the_unfetched_source_register_matches_the_io_registry():
+	"""One list of unfetched sources, not two that agree today.
+
+	`UNFETCHED_SOURCES` above exists so a blocker may say "no fetcher" of a
+	source that has none. The authoritative list is `tests/ci/test_io_registry.py`'s
+	``UNIMPLEMENTED_FETCHERS``, which asserts itself against the register; this
+	pins the copy here to it, so a source that gains a fetcher cannot leave this
+	file permitting a sentence that is no longer true.
+	"""
+	from tests.ci.test_io_registry import UNIMPLEMENTED_FETCHERS
+
+	assert set(UNFETCHED_SOURCES) == set(UNIMPLEMENTED_FETCHERS), (
+		"this file's unfetched-source set is "
+		f"{sorted(UNFETCHED_SOURCES)} and `test_io_registry.py` holds "
+		f"{sorted(UNIMPLEMENTED_FETCHERS)}; the two must be one list, or a "
+		f"blocker may keep saying 'no fetcher' of a source that has one"
+	)
