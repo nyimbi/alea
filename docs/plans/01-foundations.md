@@ -280,7 +280,7 @@ Verified counts, parsed from the tables:
 ### 3.2 Schema
 
 ```python
-# src/alea/registry/models.py
+# src/alea/registry/countries.py
 class CompletenessTier(StrEnum):
 	HIGH = "high"
 	MEDIUM = "medium"

@@ -378,7 +378,7 @@ and a Rust failure has exactly one place to be caught.
 Every Rust-backed function has a Python wrapper with this shape:
 
 ```python
-# src/alea/_core/rasters.py
+# src/alea/_core/kernels.py
 from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray

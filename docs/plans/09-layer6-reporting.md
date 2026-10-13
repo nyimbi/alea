@@ -193,7 +193,7 @@ The specification's `ReportDistributor` has three defects:
    silently failed send is invisible.
 
 ```python
-# src/alea/reporting/distribute.py
+# src/alea/reporting/service.py
 class DeliveryResult(BaseModel):
 	channel: str
 	recipients: list[str]
@@ -248,10 +248,9 @@ src/alea/reporting/
 ├── quarterly.py
 ├── annual.py
 ├── render.py       # Jinja2 → HTML → PDF
-├── distribute.py   # adapters + DeliveryResult
 ├── schedule.py     # APScheduler wiring
 ├── templates/      # Jinja2 templates per cadence
-└── service.py
+└── service.py      # build, deliver, and the DeliveryResult adapters
 ```
 
 ---
