@@ -23,6 +23,17 @@ Pinned semantics encoded here, and why:
   not guaranteed to match a particular kernel build. Differential tests
   therefore exercise the exact-division case for values and assert only the
   invariants (exact sum, coverage, determinism) for the general case.
+
+**What this module cannot prove, and what covers it instead.** This reference
+shares the kernel's algorithm family and its author, so it catches a coding
+error and not a modelling one: two implementations wrong in the same way agree.
+The independent check is `tests/ci/test_aggregation_against_tsam.py`, which puts
+the kernel against `tsam` — the third-party implementation the architecture
+names and the Rust crate replaces (`docs/plans/00-architecture.md:337`). The
+kernel's representative is a real period of the year and tsam's is a cluster
+mean, so they do not select the same blocks and the oracle test compares
+properties and AD-9's acceptance rule rather than cluster membership. That
+module's docstring states the reason in full.
 """
 
 from __future__ import annotations
