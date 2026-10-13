@@ -387,6 +387,21 @@ stages:
     outs:
       - results/planning/dispatch
 
+  week_ahead:
+    desc: >-
+      The week-ahead balance, one row per day, for the weekly report's required
+      outlook section. Capacity is the optimiser's chosen p_nom_opt where a
+      component is extendable, so the stage reads a solved network.
+    cmd: >-
+      uv run --directory . alea build week_ahead
+      --out data/processed/week_ahead.parquet
+      --config config/config.kenya.yaml
+      --set network_dir=results/networks
+    deps:
+      - results/networks
+    outs:
+      - data/processed/week_ahead.parquet
+
   project_price_forecast:
     desc: >-
       The daily price section at the dated path its report reads. Optional, so
@@ -427,3 +442,17 @@ stages:
       - results/networks
     outs:
       - data/processed/market/capture_rates.parquet
+
+  project_week_ahead:
+    desc: >-
+      The weekly balance at the dated path its report reads. A weekly report
+      covers the week that ended, so the projection resolves the cadence's
+      period rather than stamping the run date.
+    cmd: >-
+      uv run --directory . alea project weekly week_ahead
+      --source data/processed/week_ahead.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/week_ahead.parquet
+    outs:
+      - results/planning/outlook

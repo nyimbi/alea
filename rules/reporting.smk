@@ -79,6 +79,33 @@ rule generation_mix:
 		)
 
 
+rule week_ahead:
+	"""The week-ahead balance, for the weekly report's required outlook section.
+
+	`week_ahead` is the weekly cadence's only ``required=True`` section, so
+	without this rule `alea report weekly` raises rather than warns. The stage
+	reads the newest solved network because capacity is the optimiser's
+	``p_nom_opt`` where a component is extendable -- an unsolved network would
+	report the pre-expansion fleet under a heading promising the coming week.
+	"""
+	input:
+		provided("solved_network", NETWORKS)
+	output:
+		processed("week_ahead")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"build", "week_ahead",
+				"--out", output[0],
+				"--config", CONFIG,
+				"--set", set_arg("network_dir", NETWORKS),
+				*params.flags,
+			)
+		)
+
+
 # --------------------------------------------------------------------------
 # The projection: a stage's output, at the dated path its section reads
 # --------------------------------------------------------------------------
@@ -251,6 +278,31 @@ rule project_price_forecast:
 		shell(
 			alea(
 				"project", "daily", "price_forecast",
+				"--source", input[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)
+
+
+rule project_week_ahead:
+	"""`week_ahead` at the dated path the weekly report reads.
+
+	The last cadence whose *required* section was undeliverable. A weekly report
+	issued on Monday covers the week that ended, which `period_for` resolves from
+	the cadence -- so the projection asks for the period rather than stamping its
+	own run date, and a literal here would be a file no weekly report opens.
+	"""
+	input:
+		processed("week_ahead")
+	output:
+		report_artefact("weekly", "planning/outlook/{date}.parquet")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"project", "weekly", "week_ahead",
 				"--source", input[0],
 				"--config", CONFIG,
 				*params.flags,

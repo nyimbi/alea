@@ -77,19 +77,28 @@ def test_the_gate_catches_a_required_section_leaving_unproduced():
 	gap does -- the slug moves to `PRODUCERS` in the same change. If the pinned
 	map is not updated with it, the gate must fail, or the map is documentation
 	rather than a check. This plants the removal without the move.
+
+	**The target moved, and that is the canary working.** It used to plant the
+	removal of `week_ahead`'s entry, because `week_ahead` was the weekly cadence's
+	unproduced required section. Closing the weekly gap removed that entry for
+	real, so the canary now plants the removal of `outage_forecast`'s -- the daily
+	cadence's, and the one the register still holds. A canary whose target no
+	longer exists is a canary that never runs, which is why the `assert` below is
+	load-bearing rather than defensive.
 	"""
 	target = (
-		'\t\t"week_ahead": (\n'
-		'\t\t\t"A required weekly section with no producer at all: `planning/"\n'
-		'\t\t\t"outlook/{date}.parquet` is declared by `reporting/weekly.py` and "\n'
-		'\t\t\t"written by nothing. A required section whose artefact is absent "\n'
-		'\t\t\t"raises `ReportDataError`, so the weekly report cannot currently be "\n'
-		'\t\t\t"generated from the pipeline at all."\n'
+		'\t\t"outage_forecast": (\n'
+		'\t\t\t"`outages.forecast_to_artefact` trains the forecaster and writes its "\n'
+		'\t\t\t"metrics to a caller-chosen path; no rule runs it against "\n'
+		'\t\t\t"`results/outages/forecast/{date}.parquet`, and the daily section\'s "\n'
+		'\t\t\t"per-region probability rows are a different shape from the metrics "\n'
+		'\t\t\t"the function returns. Needs a rule, and a projection from the "\n'
+		'\t\t\t"forecaster\'s output to the section\'s columns."\n'
 		"\t\t),\n"
 	)
 	assert target in PRODUCERS_PY.read_text(), (
-		"the canary target moved; `week_ahead` is no longer an `UNPRODUCED` entry "
-		"in the form this canary expects, so the canary would be a no-op"
+		"the canary target moved; `outage_forecast` is no longer an `UNPRODUCED` "
+		"entry in the form this canary expects, so the canary would be a no-op"
 	)
 	assert _gate_exit_code(UNPRODUCED_GATE) == 0, (
 		"the required-producer gate does not pass on the shipped tree"
@@ -179,13 +188,18 @@ def test_the_prose_count_gate_catches_a_summary_that_mislabels_the_set():
 	cadence, so both passed; nothing read the number the prose reports, and the
 	sentence described a set it did not match.
 
-	The mutation puts the stale word back. It is the minimal true-to-life edit --
-	one word, no structural change, every other gate still green -- which is
-	exactly why it survived: an unchecked summary does not look like a defect,
-	it looks like prose.
+	The mutation is the minimal true-to-life edit -- one word, no structural
+	change, every other gate still green -- which is exactly why it survived: an
+	unchecked summary does not look like a defect, it looks like prose.
+
+	**The planted word follows the register.** Closing the weekly gap moved the
+	true count from three to two, so the mutation now plants *three* -- the
+	number that was correct until the move. Planting the old direction (two, the
+	number that used to be wrong) would plant the shipped value and the canary
+	would pass against a gate that had stopped reading.
 	"""
-	target = "Three of the five are unproduced"
-	replacement = "Two of the five are unproduced"
+	target = "Two of the five are unproduced"
+	replacement = "Three of the five are unproduced"
 	assert target in PRODUCERS_PY.read_text(), (
 		"the canary target moved; `UNPRODUCED`'s docstring no longer states the "
 		"unproduced count in the form this canary expects, so the canary would be "

@@ -512,6 +512,89 @@ def build_generation_mix(config: Config, out: Path, context: BuildContext) -> De
 	return read_provenance(out)
 
 
+@stage("week_ahead")
+def build_week_ahead(config: Config, out: Path, context: BuildContext) -> DerivedProvenance:
+	"""Registered stage: the week-ahead balance, one row per day of the outlook.
+
+	`reporting/weekly.py`'s ``week_ahead`` is its only ``required=True`` section,
+	so the weekly report *raises* without ``planning/outlook/{date}.parquet``.
+	`reporting/producers.py` recorded the blocker as "a required weekly section
+	with no producer at all", and that was exact: nothing wrote the frame. This
+	stage is the producer.
+
+	**Why it reads a solved network.** `planning.balance.week_ahead_rows` computes
+	what the network can meet the week with, and capacity is read as
+	``p_nom_opt`` where a component is extendable -- which is the built system
+	only once a solve has chosen it. Reading an unsolved network would report the
+	pre-expansion fleet under a heading that promises the coming week, so this
+	takes the same newest-solved-network input `generation_mix` and
+	`capacity_update` do.
+
+	**Why the horizon is a parameter and not a constant.** A network's snapshots
+	are its own horizon -- a full year for the default build, a day for a
+	fixture -- and a balance that rendered every snapshot would put 8,760 rows
+	under a heading promising a week. ``days`` bounds it, and the provenance
+	records how many days the network actually offered so a reader can see the
+	table was cut rather than short.
+	"""
+	import pypsa
+
+	from alea.io.artefacts import read_provenance, sha256_file
+	from alea.io.pipeline import skip_if_current
+	from alea.planning.balance import week_ahead_rows
+
+	network_dir = resolve(context.parameters.get("network_dir", NETWORK_DIR))
+	named = context.parameters.get("network_path")
+	path = Path(named) if named else _newest_network(network_dir)
+	if not path.exists():
+		raise ArtefactError(f"no solved network at {path}")
+
+	days = int(context.parameters.get("days", 7))
+	start = context.parameters.get("start") or None
+
+	digest = sha256_file(path)
+	inputs = [digest, *(value for value in context.inputs if value != digest)]
+	existing = skip_if_current(out, inputs, stage_name="week_ahead", logger=context.logger)
+	if existing is not None:
+		return existing
+
+	network = pypsa.Network(str(path))
+	frame = week_ahead_rows(network, days=days, start=start)
+	provenance = DerivedProvenance(
+		source_id="week_ahead",
+		inputs=inputs,
+		code_version=_code_version(),
+		run_id=new_run_id(),
+		parameters={
+			"network_file": path.name,
+			"days": int(len(frame)),
+			"days_requested": days,
+			"start": str(frame["label"].iloc[0]) if len(frame) else "",
+			"snapshots_available": int(len(network.snapshots)),
+		},
+		basis=Basis.MODELLED,
+		notes=(
+			"Mean daily load, mean available variable-renewable output, and the "
+			"reserve margin between them, from the newest solved network's own "
+			"profiles. An outlook is a statement about capability, so no dispatch "
+			"is solved and no operating decision is assumed; a load-shedding unit "
+			"is excluded from capacity, because counting it would report a system "
+			"that always meets its load. The section's prose calls these "
+			"forecasts; they are the network's modelled profiles at its own "
+			"snapshots, and the basis is `modelled` rather than `forecast` because "
+			"no forecast model produced them."
+		),
+	)
+	write_stage(out, frame, provenance, format="parquet")
+	logger.info(
+		"planning.stage.week_ahead",
+		days=int(len(frame)),
+		network_file=path.name,
+		out=str(out),
+	)
+	return read_provenance(out)
+
+
 def _dispatch_stamp_of(network: Any) -> str:
 	"""The date a dispatch artefact is stamped with, from the network itself."""
 	snapshots = network.snapshots
@@ -537,6 +620,7 @@ __all__ = [
 	"build_capacity_update",
 	"build_generation_mix",
 	"build_network_arrays",
+	"build_week_ahead",
 	"dispatch_matrix",
 	"network_arrays",
 ]

@@ -82,11 +82,13 @@ def build_fleet(
 		logger.info("build_fleet.empty")
 		return []
 
+	from alea.planning import balance
+
 	rule = strategy if strategy is not None else Strategy.competitive()
 	carriers = generators["carrier"].fillna("").astype(str)
-	capacity = _capacity_mw(generators)
+	capacity = balance.generator_capacity_mw(generators)
 	cost = _marginal_cost(generators)
-	profile = _availability_frame(network, generators)
+	profile = balance.availability_frame(network, generators)
 	offered = _offered_fraction(profile, snapshot)
 
 	agents: list[Agent] = []
@@ -156,37 +158,6 @@ def build_fleet_series(
 	]
 
 
-def load_series(network: pypsa.Network) -> np.ndarray:
-	"""Total load per snapshot, in MW, aligned to ``network.snapshots``.
-
-	A load's ``p_set`` may be a static column or a dynamic profile, and a network
-	built without a demand stage carries the static form -- the same trap
-	`whatif.extract._availability` records for ``p_max_pu``. Reading only the
-	dynamic table reports zero demand for such a network, and a market cleared
-	against zero demand has no price at all.
-	"""
-	loads = getattr(network, "loads", None)
-	if loads is None or len(loads) == 0:
-		raise ValueError("the network carries no loads, so there is no demand to clear against")
-
-	snapshots = network.snapshots
-	total = pd.Series(0.0, index=snapshots, dtype=float)
-	dynamic = getattr(getattr(network, "loads_t", None), "p_set", None)
-	static = _numeric(loads, "p_set") if "p_set" in loads.columns else np.zeros(len(loads))
-	named = {str(name): float(static[position]) for position, name in enumerate(loads.index)}
-
-	for name in loads.index:
-		if dynamic is not None and not dynamic.empty and name in dynamic.columns:
-			series = pd.to_numeric(dynamic[name], errors="coerce")
-		else:
-			series = pd.Series(named[str(name)], index=snapshots, dtype=float)
-		total = total.add(series.reindex(snapshots).fillna(0.0), fill_value=0.0)
-
-	values = np.asarray(total.to_numpy(dtype=float), dtype=np.float64)
-	assert values.shape[0] == len(snapshots), "the load series does not align with the snapshots"
-	return np.nan_to_num(values, nan=0.0)
-
-
 def peak_snapshot(network: pypsa.Network) -> Any:
 	"""The snapshot with the highest total load, ties broken by position.
 
@@ -195,7 +166,9 @@ def peak_snapshot(network: pypsa.Network) -> Any:
 	the tie-break -- first occurrence, never a dict or a numpy ordering -- in one
 	place (AD-8).
 	"""
-	values = load_series(network)
+	from alea.planning import balance
+
+	values = balance.load_series(network)
 	assert values.size > 0, "a network with no snapshots has no peak"
 	return network.snapshots[int(np.argmax(values))]
 
@@ -219,41 +192,35 @@ def fleet_energy_mwh(network: pypsa.Network) -> np.ndarray:
 # --------------------------------------------------------------------------
 # Reading the network's own columns
 # --------------------------------------------------------------------------
+#
+# ``_numeric``, ``_capacity_mw`` and ``_availability_frame`` used to live here.
+# They are readers of a *network*, not of a market, and `planning/balance.py`
+# needs all three -- so they moved down to Layer 1 and this module imports them
+# under the private names its callers already use. Two copies of "what a
+# generator's capacity is" is how a market and a balance come to disagree about
+# the same plant; there is one copy now, and it is in the layer that owns the
+# network.
 
 
-def _numeric(frame: pd.DataFrame, column: str, *, fill: float = 0.0) -> np.ndarray:
-	"""A numeric column as a NaN-free float array.
+def load_series(network: pypsa.Network) -> np.ndarray:
+	"""Total load per snapshot, in MW. The Layer 1 reader, under this layer's name.
 
-	``pd.to_numeric`` returns a union type under pandas' stubs, so the result is
-	coerced through ``np.asarray`` in one place rather than at each call site --
-	the same helper `whatif.extract` keeps for the same reason. ``fill`` is what
-	a NaN becomes: zero for a capacity or a cost, which an absent number must
-	not invent, and 1.0 for an availability, where NaN is PyPSA's own spelling
-	of "unconstrained".
+	`market/service.py` and the market tests import it from here, and it lives in
+	`planning/balance.py` now -- so this delegates rather than copying. Two
+	readers of the same column is how a market and a balance come to disagree
+	about one network, which is the defect the move exists to prevent.
+
+	**Why the import is inside the function.** `config.models` imports
+	`market.views`, which imports this package, which imports this module -- and a
+	module-level `from alea.planning import balance` would run
+	`planning/__init__`, which imports `expansion`, which imports `config.models`
+	*while it is still initialising*. The result is an ImportError at collection
+	for every test in the suite. `market/stages.py` imports
+	`planning.arrays` lazily for the same reason; this follows it.
 	"""
-	converted = pd.to_numeric(frame[column], errors="coerce")
-	values = np.asarray(converted.to_numpy(dtype=float), dtype=np.float64)
-	return np.nan_to_num(values, nan=fill)
+	from alea.planning import balance
 
-
-def _capacity_mw(generators: pd.DataFrame) -> np.ndarray:
-	"""Nameplate MW per generator: the optimiser's build where it chose one.
-
-	An extendable generator's capacity is ``p_nom_opt`` -- the value the solve
-	chose -- and a fixed one's is ``p_nom``. Reading ``p_nom`` for an extendable
-	unit reports the capacity *before* the expansion the network is the answer
-	to, which is a market for a system that was never built.
-	"""
-	capacity = _numeric(generators, "p_nom")
-	if "p_nom_opt" in generators.columns:
-		optimised = _numeric(generators, "p_nom_opt")
-		extendable = (
-			np.asarray(generators["p_nom_extendable"].fillna(False).astype(bool), dtype=bool)
-			if "p_nom_extendable" in generators.columns
-			else np.zeros(len(generators), dtype=bool)
-		)
-		capacity = np.where(extendable, optimised, capacity)
-	return capacity
+	return balance.load_series(network)
 
 
 def _marginal_cost(generators: pd.DataFrame) -> np.ndarray:
@@ -263,52 +230,16 @@ def _marginal_cost(generators: pd.DataFrame) -> np.ndarray:
 	what PyPSA does with an absent column and is stated here rather than
 	inherited: a fleet whose costs are all zero clears at zero and the artefact
 	says so through its provenance.
+
+	This one stayed here when its neighbours moved to `planning/balance.py`: a
+	marginal cost is what a *bidder* offers at, and nothing outside the market
+	layer reads it.
 	"""
+	from alea.planning import balance
+
 	if "marginal_cost" not in generators.columns:
 		return np.zeros(len(generators), dtype=np.float64)
-	return _numeric(generators, "marginal_cost")
-
-
-def _availability_frame(network: pypsa.Network, generators: pd.DataFrame) -> pd.DataFrame:
-	"""Per-snapshot availability per generator, dynamic per unit where present.
-
-	**Precedence is per generator, not per network.** ``p_max_pu`` has two homes
-	in PyPSA: the static column on ``generators`` and the ``generators_t`` time
-	series, and a network can carry both at once -- a renewables stage writes a
-	series for the solar units and leaves the thermal ones on their static
-	column. Choosing between them for the *whole* table is what this function did
-	first, and it was wrong in the way that is hardest to see: with a dynamic
-	table present, a generator that had none was reindexed in at ``0.0``, so coal
-	offered nothing, never entered the stack, and the market cleared at the value
-	of lost load with the system in blackout -- a plausible-looking price for a
-	system that is not short.
-
-	So a generator with a dynamic column is read from it, and a generator without
-	one is read from its static ``p_max_pu``, defaulting to 1.0 when the column is
-	absent. The two readings exist for the reasons they always did: a network
-	built without a renewables stage carries only the static form, and reading
-	only the dynamic table gives every unit an availability of NaN.
-	"""
-	snapshots = network.snapshots
-	dynamic = getattr(getattr(network, "generators_t", None), "p_max_pu", None)
-	static = (
-		_numeric(generators, "p_max_pu", fill=1.0)
-		if "p_max_pu" in generators.columns
-		else np.ones(len(generators), dtype=np.float64)
-	)
-
-	columns: dict[str, np.ndarray] = {}
-	for position, name in enumerate(generators.index):
-		key = str(name)
-		if dynamic is not None and not dynamic.empty and name in dynamic.columns:
-			series = pd.to_numeric(dynamic[name], errors="coerce")
-			values = series.reindex(snapshots).to_numpy(dtype=float)
-			columns[key] = np.nan_to_num(values, nan=0.0)
-		else:
-			# A unit with no series offers its static fraction at every snapshot.
-			columns[key] = np.full(len(snapshots), float(static[position]), dtype=np.float64)
-
-	return pd.DataFrame(columns, index=snapshots, dtype=float)
+	return balance.numeric_column(generators, "marginal_cost")
 
 
 def _offered_fraction(profile: pd.DataFrame, snapshot: Any) -> np.ndarray:

@@ -82,6 +82,13 @@ PRODUCERS: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# the network again into the report's columns rather than reshaping one.
 		"generation_mix": "planning.arrays.build_generation_mix",
 		"price_forecast": "market.service.daily_price_to_artefact",
+		# The weekly cadence's only required section, and the last of the three
+		# that kept a cadence from being generatable at all. Its blocker was
+		# recorded as "no producer at all" and was exact -- nothing wrote
+		# `planning/outlook/{date}.parquet`. `planning/balance.py` is the
+		# producer, and it is in Layer 1 rather than Layer 3 because all three
+		# quantities the section names are network facts.
+		"week_ahead": "planning.arrays.build_week_ahead",
 	}
 )
 
@@ -137,6 +144,12 @@ PROJECTED: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# computed for the API's serving table at a different shape; the section
 		# reads a report's columns, not a route's.
 		"price_forecast": "project_price_forecast",
+		# The weekly balance, and with it the last cadence whose *required*
+		# section was undeliverable. A weekly report issued on Monday covers the
+		# week that ended, which `reporting.schemas.period_for` resolves -- a
+		# projection stamped with its own run date would write a file no weekly
+		# report opens.
+		"week_ahead": "project_week_ahead",
 	}
 )
 
@@ -195,13 +208,6 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"write the coverage window alongside the rows."
 		),
 		# ---- weekly ----
-		"week_ahead": (
-			"A required weekly section with no producer at all: `planning/"
-			"outlook/{date}.parquet` is declared by `reporting/weekly.py` and "
-			"written by nothing. A required section whose artefact is absent "
-			"raises `ReportDataError`, so the weekly report cannot currently be "
-			"generated from the pipeline at all."
-		),
 		"market_summary": (
 			"Needs the market layer's weekly aggregates. `market.capture_by_"
 			"technology` and `market.build_stack` exist and write to caller-chosen "
@@ -354,13 +360,19 @@ fact: "needs a rule" and "needs a model that does not exist" are different
 amounts of work, and a register that says only "unwired" hides which one it is.
 Five sections are `required=True` -- one per cadence: `outage_forecast`,
 `week_ahead`, `market_report`, `market_outlook`, `continental_outlook` -- and
-for those the report raises rather than warns. Three of the five are unproduced,
-so three cadences -- daily, weekly and annual -- still cannot be generated from
-the pipeline. This sentence said "two ... daily and annual" while `week_ahead`
-sat in the mapping below it: the count is a *summary of this set* and nothing
-checked it, which is the same drift the note at the end of this docstring
-describes. `test_reporting_producers.py` now pins the count against the mapping
-rather than leaving it to be retyped.
+for those the report raises rather than warns. Two of the five are unproduced,
+so two cadences -- daily and annual -- still cannot be generated from the
+pipeline.
+
+This sentence was wrong twice, in opposite directions, and both are worth
+keeping. It first said "two ... daily and annual" while `week_ahead` sat in the
+mapping below it, so the count was one short of the set: the count is a
+*summary of this set* and nothing checked it. It then said three, correctly,
+until `week_ahead` moved to ``PRODUCERS`` -- at which point the sentence and the
+mapping would have drifted apart a second time had the gate not failed on the
+move. `test_reporting_producers.py` derives the count from the mapping rather
+than letting it be retyped, which is why closing the weekly gap edited a number
+here instead of silently falsifying it.
 
 The monthly and quarterly entries left this register together, and their removal
 is the shape the rest will follow: `market/fleet.py` was written to be the

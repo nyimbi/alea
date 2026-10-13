@@ -62,6 +62,7 @@ STAGES = (
 	"sector_coupling",
 	"tlens",
 	"topology",
+	"week_ahead",
 )
 
 # `demand_hourly` is the only stage whose rule needs a helper-supplied input
@@ -94,6 +95,7 @@ SUFFIXES = {
 	"generation_mix": ".parquet",
 	"price_forecast": ".parquet",
 	"sector_coupling": ".json",
+	"week_ahead": ".parquet",
 }
 
 #: The report projections: a stage's processed artefact, landed at the dated
@@ -111,6 +113,7 @@ PROJECTIONS = {
 	"project_market_outlook": "market_outlook",
 	"project_generation_mix": "generation_mix",
 	"project_price_forecast": "price_forecast",
+	"project_week_ahead": "week_ahead",
 }
 
 #: The section pattern each projection writes, mirrored from the cadence module
@@ -123,6 +126,7 @@ PROJECTION_PATTERNS = {
 	"project_market_outlook": "market/outlook/{date}.parquet",
 	"project_generation_mix": "planning/dispatch/{date}.parquet",
 	"project_price_forecast": "market/prices/{date}.parquet",
+	"project_week_ahead": "planning/outlook/{date}.parquet",
 }
 
 

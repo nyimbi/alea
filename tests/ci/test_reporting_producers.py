@@ -256,13 +256,13 @@ def test_every_projected_section_has_a_rule_and_a_dvc_stage():
 #: only one. The map is what makes closing a gap, or opening one, move a test.
 REQUIRED_WITHOUT_A_PRODUCER: dict[str, str] = {
 	"daily": "outage_forecast",
-	"weekly": "week_ahead",
 	"annual": "continental_outlook",
 }
 """One per cadence that cannot be generated from the pipeline, and that is the
-measured state: three of the five cadences have a required section with no
-producer. The map started with all five and lost two in one change -- the
-monthly and quarterly sections, whose shared blocker was the market fleet.
+measured state: two of the five cadences have a required section with no
+producer. The map started with all five, lost the monthly and quarterly sections
+in one change -- their shared blocker was the market fleet -- and lost the
+weekly one when `planning/balance.py` produced its outlook.
 
 A cadence whose required section *has* a producer is absent from this map rather
 than mapped to `None`: the assertion below compares against `.get(cadence)`, so
@@ -283,9 +283,10 @@ def test_the_prose_count_of_unproduced_required_sections_matches_the_mapping():
 	This is the module's own lesson applied to itself. Its docstring already
 	warns that "the prose is a *summary of this set*, and a summary that is not
 	checked drifts"; the drift then happened in the sentence making the warning.
-	The count is derived here rather than restated, so closing a gap -- the
-	weekly one, by the plan's order -- moves this test instead of silently
-	falsifying a sentence.
+	The count is derived here rather than restated, and the weekly gap is the
+	proof: closing it edited the sentence's number in the same change, which is
+	the gate doing the job it was written for rather than a later reader finding
+	a stale figure.
 
 	The source is read as *text*, not through `UNPRODUCED.__doc__`: the sentence
 	lives in a string literal that follows the assignment rather than being the
