@@ -140,6 +140,46 @@ def build_market_report(config: Config, out: Path, context: BuildContext) -> Der
 	return provenance
 
 
+@stage("market_summary")
+def build_market_summary(config: Config, out: Path, context: BuildContext) -> DerivedProvenance:
+	"""Registered stage: a solved network's clearing as the weekly section's rows.
+
+	``market_summary`` is the weekly cadence's *optional* section, so its absence
+	warned rather than raised -- which is why it stayed absent through every green
+	suite, and why the register's entry is worth more than the warning was. It
+	writes a ``volume`` and a ``capture_price`` column, and the second is
+	deliberately not the monthly section's ``average_price``: the weekly section
+	declares ``Capture price``, and the reader binds a header to the column
+	naming it, so reusing the monthly frame would raise rather than render.
+	"""
+	from alea.io.artefacts import read_provenance
+	from alea.io.pipeline import skip_if_current
+	from alea.market.service import weekly_market_to_artefact
+
+	path, inputs = _solved_network(config, context)
+	existing = skip_if_current(out, inputs, stage_name="market_summary", logger=context.logger)
+	if existing is not None:
+		return existing
+
+	network = _load_network(path)
+	weekly_market_to_artefact(
+		network,
+		out,
+		value_of_lost_load_usd_per_mwh=config.market.value_of_lost_load_usd_per_mwh,
+		value_of_lost_load_basis=config.market.value_of_lost_load_basis,
+		inputs=inputs,
+		strategy=_strategy(context),  # type: ignore[arg-type]
+	)
+	provenance = read_provenance(out)
+	logger.info(
+		"market.stage.market_summary",
+		network_file=path.name,
+		voll=config.market.value_of_lost_load_usd_per_mwh,
+		out=str(out),
+	)
+	return provenance
+
+
 @stage("market_outlook")
 def build_market_outlook(config: Config, out: Path, context: BuildContext) -> DerivedProvenance:
 	"""Registered stage: the quarterly price outlook's rows.

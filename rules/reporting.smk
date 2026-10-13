@@ -118,7 +118,7 @@ rule week_ahead:
 # rule exited 0, and ``reporting.producers.PRODUCERS`` recorded that a *function*
 # exists rather than that a section is deliverable.
 #
-# This rule is that projection. `alea project` resolves the date from the
+# These rules are that projection. `alea project` resolves the date from the
 # cadence's own period -- a monthly report issued on the 1st covers the month
 # that just ended -- and takes the destination from the section's own declared
 # ``artefact``, so neither can drift from where the reader looks. The source is
@@ -278,6 +278,33 @@ rule project_price_forecast:
 		shell(
 			alea(
 				"project", "daily", "price_forecast",
+				"--source", input[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)
+
+
+rule project_market_summary:
+	"""`market_summary` at the dated path the weekly report reads.
+
+	The weekly cadence's optional section, and the reason its absence survived
+	every green suite: an optional section whose artefact is missing warns rather
+	than raises, so nothing failed while the table was gone. It is still a
+	section a reader was promised. The projection asks `period_for` for the
+	week that ended rather than stamping its own run date -- a literal here
+	would be a file no weekly report opens.
+	"""
+	input:
+		processed("market_summary")
+	output:
+		report_artefact("weekly", "market/summary/{date}.parquet")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"project", "weekly", "market_summary",
 				"--source", input[0],
 				"--config", CONFIG,
 				*params.flags,

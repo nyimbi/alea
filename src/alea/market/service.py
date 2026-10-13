@@ -450,6 +450,133 @@ def monthly_market_to_artefact(
 	return pd.DataFrame(rows)
 
 
+def weekly_market_to_artefact(
+	network: Any,
+	out: str | Path,
+	*,
+	value_of_lost_load_usd_per_mwh: float,
+	inputs: Sequence[str],
+	value_of_lost_load_basis: str = "",
+	strategy: Strategy | None = None,
+) -> pd.DataFrame:
+	"""Clear every snapshot and write the weekly market summary's frame.
+
+	The frame `reporting/weekly.py`'s ``market_summary`` section reads, whose
+	columns are ``["Carrier", "Volume", "Capture price", "Basis"]``. Two of
+	those are numeric, so `_rows_for` binds each header to the row column
+	*naming* it: ``Capture price`` normalises to ``captureprice`` and the reader
+	**raises** against a row carrying only the monthly section's
+	``average_price``. That is why this producer writes a column of its own
+	rather than sharing `monthly_market_to_artefact`'s frame, and the two
+	functions deliberately disagree about the column name.
+
+	**The capture price is the quantity, not a renaming of the mean.** A
+	carrier's capture price is the price it actually received, weighted by what
+	it sold -- `market.capture.capture_price`, which is the kernel
+	`reporting/producers.py` recorded as existing with no rule running it. A
+	simple mean of the clearing prices would give every carrier the same number
+	and the section's second column would carry no information. The two are
+	equal only on a flat stack, which is the fixture that cannot tell them
+	apart.
+
+	**No ``period`` argument, and that is a decision rather than an omission.**
+	``capture_by_technology`` buckets by a pandas offset alias when asked. The
+	weekly section is one row per carrier over the week, so the whole series is
+	one period; bucketing by ``"W"`` would return seven periods per carrier and
+	the section declares no column for the week a row belongs to.
+	"""
+	assert value_of_lost_load_usd_per_mwh >= 0.0, "VoLL must be non-negative"
+	fleets = build_fleet_series(network, strategy=strategy)
+	if not fleets:
+		raise ValueError(
+			"the network has no generators, so there is no fleet to clear and no "
+			"market to summarise. An empty frame would render as a week in which "
+			"nothing was dispatched"
+		)
+	demand = load_series(network)
+	weights = fleet_energy_mwh(network)
+
+	results = clear_market_series(
+		[build_stack(fleet) for fleet in fleets],
+		demand,
+		value_of_lost_load_usd_per_mwh=value_of_lost_load_usd_per_mwh,
+	)
+	units = {agent.unit.unit_id: agent.unit.carrier for fleet in fleets for agent in fleet}
+	carriers = sorted(set(units.values()))
+
+	# ``(time, carrier)`` generation in MWh and the clearing price per snapshot,
+	# which is the pair `capture_by_technology` weights against each other. The
+	# weight turns a dispatch in MW into the energy it actually is: a snapshot
+	# is one hour only on an hourly network.
+	by_carrier = {carrier: np.zeros(len(results), dtype=np.float64) for carrier in carriers}
+	price = np.zeros(len(results), dtype=np.float64)
+	for hour, result in enumerate(results):
+		price[hour] = result.clearing_price_usd_per_mwh
+		weight = float(weights[hour]) if hour < weights.shape[0] else 1.0
+		for unit_id, mw in result.dispatched.items():
+			carrier = units.get(unit_id, unit_id)
+			by_carrier.setdefault(carrier, np.zeros(len(results), dtype=np.float64))
+			by_carrier[carrier][hour] += float(mw) * weight
+
+	generation = pd.DataFrame(by_carrier, columns=carriers, dtype=np.float64)
+	captures = capture_by_technology(generation, price)
+
+	rows: list[dict[str, Any]] = []
+	for carrier in carriers:
+		# One period, because the call above asked for none. A carrier that
+		# dispatched nothing has an *undefined* capture price and the kernel
+		# returns NaN for it -- never zero, which would claim it sold at nothing
+		# and drag every portfolio average toward it.
+		point = captures[carrier][0]
+		rows.append(
+			{
+				"label": carrier,
+				"value": point.capture_price_usd_per_mwh,
+				"unit": "USD/MWh",
+				"volume": point.generation_mwh,
+				"capture_price": point.capture_price_usd_per_mwh,
+			}
+		)
+
+	unserved = float(sum(result.unserved_mwh for result in results))
+	provenance = _derived(
+		inputs,
+		parameters={
+			"value_of_lost_load_usd_per_mwh": value_of_lost_load_usd_per_mwh,
+			"value_of_lost_load_basis": value_of_lost_load_basis,
+			"strategy": (strategy or Strategy.competitive()).kind.value,
+			"snapshots": len(results),
+			"carriers": len(rows),
+			"unserved_mwh": unserved,
+			"demand_mwh": float(np.nansum(demand * weights[: demand.shape[0]])),
+			"capture_basis": "volume-weighted price received, not the system mean",
+		},
+		notes=(
+			"one row per carrier: `volume` is MWh dispatched over the network's "
+			"snapshots and `capture_price` is the volume-weighted price it received "
+			"-- `market.capture.capture_price`, which is NaN rather than zero for a "
+			"carrier that dispatched nothing. The clearing is per snapshot because a "
+			"fleet's availability is. Unserved energy is recorded in the provenance: "
+			"a clearing price from a short stack is a price for a system in blackout"
+		),
+		source_id="market.weekly",
+	)
+	from alea.io.pipeline import write_stage
+
+	frame = pd.DataFrame(
+		rows, columns=["label", "value", "unit", "volume", "capture_price"]
+	)
+	write_stage(Path(out), frame, provenance, format="parquet")
+	logger.info(
+		"weekly_market_to_artefact",
+		out=str(out),
+		carriers=len(rows),
+		snapshots=len(results),
+		unserved_mwh=unserved,
+	)
+	return frame
+
+
 def quarterly_market_to_artefact(
 	network: Any,
 	out: str | Path,
@@ -690,4 +817,5 @@ __all__ = [
 	"ppa_scenario",
 	"quarterly_market_to_artefact",
 	"risk_scenario",
+	"weekly_market_to_artefact",
 ]

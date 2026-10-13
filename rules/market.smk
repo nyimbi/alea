@@ -1,12 +1,15 @@
 # SPDX-License-Identifier: MIT
-"""Layer 3: the two report sections a solved network's clearing produces.
+"""Layer 3: the report sections a solved network's clearing produces.
 
 `06-layer3-market.md` runs Layer 3 off the solved networks rather than a source
-of its own, so this file had no rules and said so. It has two now, and they are
-the sections `reporting/monthly.py` and `reporting/quarterly.py` declare as
+of its own, so this file had no rules and said so. It has four now. Two are the
+sections `reporting/monthly.py` and `reporting/quarterly.py` declare as
 `required=True` -- the two the register recorded as unproduced, and the reason
-*neither* cadence could be generated from the pipeline. A required section whose
-artefact is absent raises rather than warns.
+*neither* cadence could be generated from the pipeline; a required section whose
+artefact is absent raises rather than warns. One is the daily price series. The
+last is the weekly summary, which is optional and therefore *warned* rather than
+raised -- an absence a green suite cannot see, which is why the register's entry
+for it was worth more than the warning was.
 
 **These rules write the processed form, not the dated one.** `rules/losses.smk`'s
 ``critical_lines`` states the precedent: the dated path under ``results/`` is the
@@ -42,6 +45,36 @@ rule market_report:
 		shell(
 			alea(
 				"build", "market_report",
+				"--out", output[0],
+				"--config", CONFIG,
+				"--set", set_arg("network_dir", NETWORKS),
+				*params.flags,
+			)
+		)
+
+
+rule market_summary:
+	"""The weekly market section's clearing rows, per carrier.
+
+	The third report section read off one clearing. Its columns are
+	``["Carrier", "Volume", "Capture price", "Basis"]`` -- not the monthly
+	section's ``Average price`` -- and that difference is load-bearing rather
+	than cosmetic: the reader binds each numeric header to the row column
+	*naming* it, so a frame carrying only ``average_price`` raises instead of
+	rendering. The capture price is the volume-weighted price each carrier
+	received, which is a different quantity from the system mean on any stack
+	that is not flat.
+	"""
+	input:
+		provided("solved_network", NETWORKS)
+	output:
+		processed("market_summary")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"build", "market_summary",
 				"--out", output[0],
 				"--config", CONFIG,
 				"--set", set_arg("network_dir", NETWORKS),

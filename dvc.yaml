@@ -264,6 +264,21 @@ stages:
     outs:
       - data/processed/market_report.parquet
 
+  market_summary:
+    desc: >-
+      Per-carrier volume and capture price, the weekly market section's rows.
+      The capture price is volume-weighted, not the system mean, and it is a
+      column of its own because the section's header names it.
+    cmd: >-
+      uv run --directory . alea build market_summary
+      --out data/processed/market_summary.parquet
+      --config config/config.kenya.yaml
+      --set network_dir=results/networks
+    deps:
+      - results/networks
+    outs:
+      - data/processed/market_summary.parquet
+
   market_outlook:
     desc: "Clearing price per horizon, the quarterly outlook section's rows."
     cmd: >-
@@ -442,6 +457,20 @@ stages:
       - results/networks
     outs:
       - data/processed/market/capture_rates.parquet
+
+  project_market_summary:
+    desc: >-
+      The weekly market summary at the dated path its report reads. Optional to
+      the weekly cadence, so its absence warns rather than raises -- which is
+      why it survived every green suite while the table was gone.
+    cmd: >-
+      uv run --directory . alea project weekly market_summary
+      --source data/processed/market_summary.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/market_summary.parquet
+    outs:
+      - results/market/summary
 
   project_week_ahead:
     desc: >-

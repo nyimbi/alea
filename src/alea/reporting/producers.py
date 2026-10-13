@@ -89,6 +89,16 @@ PRODUCERS: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# producer, and it is in Layer 1 rather than Layer 3 because all three
 		# quantities the section names are network facts.
 		"week_ahead": "planning.arrays.build_week_ahead",
+		# The weekly cadence's *optional* section, and the first entry here whose
+		# absence was invisible: an optional section with no artefact warns
+		# rather than raises, so `market_summary` stayed missing through every
+		# green suite while a reader was promised a table. The blocker recorded
+		# above was exact -- `market.capture_by_technology` existed and no rule
+		# ran it. The weekly producer writes a ``capture_price`` column rather
+		# than the monthly section's ``average_price`` because the reader binds a
+		# header to the column naming it, and ``Capture price`` is not
+		# ``Average price``.
+		"market_summary": "market.service.weekly_market_to_artefact",
 	}
 )
 
@@ -150,6 +160,11 @@ PROJECTED: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# projection stamped with its own run date would write a file no weekly
 		# report opens.
 		"week_ahead": "project_week_ahead",
+		# The weekly summary, projected to `market/summary/{date}.parquet`. The
+		# weekly cadence issues on Monday for the week that ended, which
+		# `reporting.schemas.period_for` resolves -- a projection stamped with
+		# its own run date would write a file no weekly report opens.
+		"market_summary": "project_market_summary",
 	}
 )
 
@@ -208,12 +223,6 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"write the coverage window alongside the rows."
 		),
 		# ---- weekly ----
-		"market_summary": (
-			"Needs the market layer's weekly aggregates. `market.capture_by_"
-			"technology` and `market.build_stack` exist and write to caller-chosen "
-			"paths; no rule runs them, so `market/summary/{date}.parquet` has no "
-			"writer."
-		),
 		"renewable_forecast": (
 			"`weather/renewables/{date}.parquet`. `planning.renewable_profiles` "
 			"writes capacity factors to `data/processed/`, which the network "
