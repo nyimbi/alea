@@ -120,6 +120,15 @@ PRODUCERS: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# (`data/processed/`) as the defect when the defect was that no rule
 		# projected it.
 		"renewable_forecast": "planning.arrays.build_renewable_forecast",
+		# The daily contingency section, and the first entry here whose producer
+		# *reads* another consumer's table rather than a layer's result. The
+		# per-element rows already existed: `@stage("resilience_contingency")`
+		# sweeps the solved network and writes the serving table the API's
+		# contingency route reads. The section wants the same rows under
+		# different headers, so `resilience.service.system_alerts_to_artefact`
+		# renames them -- `element_id` to the label, `severity` to `state` -- and
+		# re-sweeping would be a second computation of the same numbers.
+		"system_alerts": "resilience.service.system_alerts_to_artefact",
 	}
 )
 
@@ -193,6 +202,12 @@ PROJECTED: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# Monday for the week that ended, so the projection resolves the period
 		# rather than stamping its own run date.
 		"renewable_forecast": "project_renewable_forecast",
+		# The daily contingency section, projected to
+		# `outages/contingency/{date}.parquet`. A daily report generated at 06:00
+		# covers *yesterday*, so the projection resolves the cadence's period
+		# rather than stamping its own run date -- a literal here would name a
+		# file no daily report opens.
+		"system_alerts": "project_system_alerts",
 	}
 )
 
@@ -233,40 +248,6 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"implemented, and no code thresholds it by severity. The section's "
 			"own prose says the threshold is config, so the config key has no "
 			"reader either."
-		),
-		"system_alerts": (
-			"One blocker now, and it is a projection rather than a capability. "
-			"The section declares `[\"Element\", \"State\", \"Basis\"]` and "
-			"`State` is a **category** -- the plan calls this section "
-			"\"contingency states\", `publish.service."
-			"project_resilience_contingency` bands each element into "
-			"`\"high\"`/`\"medium\"`/`\"low\"`, and `publish.views."
-			"RESILIENCE_CONTINGENCY` declares it `dtype=\"str\"`. The reader had "
-			"no path for a text cell -- `values_from_artefact` kept only the "
-			"numeric columns, `_rows_for` bound every non-first column to a "
-			"*number*, and the projection guard accepted the frame anyway -- and "
-			"measured on a frame carrying `state` as text, the guard passed, the "
-			"read dropped the column, and the row rendered "
-			"`[\"line_a\", 150.0, \"modelled\"]`, the severity gone and the load "
-			"shed printed under a header promising a state. **That is closed**: "
-			"`ReportValue.categories` carries a row's text columns, `_rows_for` "
-			"binds one to a header the section declares in `SectionSpec."
-			"categorical`, and both the reader and the projection guard refuse a "
-			"declared category the frame does not carry rather than falling "
-			"through to the single-numeric-column fallback. The pins are "
-			"`test_a_band_in_the_artefact_reaches_the_category_column` and "
-			"`tests/ci/canaries/test_reporting_gates.py`'s category canary.\n\n"
-			"What remains is the producer. `@stage(\"resilience_contingency\")` "
-			"sweeps the solved network per element, `rules/publish.smk` runs it, "
-			"and it writes `data/processed/resilience/contingency.parquet` -- "
-			"which this entry used to describe as the wrong shape. It is the "
-			"right shape and the wrong *quantity*: a serving row carries "
-			"`load_shed_mw` and a severity band, and the section wants one row "
-			"per element with its state, at `outages/contingency/{date}.parquet` "
-			"under a `contingency` key in `PROJECTED`. So this needs a "
-			"`project_system_alerts` that renames the serving table's columns to "
-			"the section's -- `element_id` to the label, `severity` to `state` -- "
-			"and a rule to run it."
 		),
 		"outage_summary": (
 			"VIIRS outage detection at `outages/viirs/{date}.parquet`. "

@@ -541,3 +541,32 @@ stages:
       - data/processed/renewable_forecast.parquet
     outs:
       - results/weather/renewables
+
+  system_alerts:
+    desc: >-
+      The per-element contingency states, renamed from the serving table the
+      API's contingency route reads. The stage renames columns rather than
+      re-sweeping, so the report and the route cannot disagree about which
+      elements are critical.
+    cmd: >-
+      uv run --directory . alea build system_alerts
+      --out data/processed/system_alerts.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/resilience/contingency.parquet
+    outs:
+      - data/processed/system_alerts.parquet
+
+  project_system_alerts:
+    desc: >-
+      The daily contingency section at the dated path its report reads. A daily
+      report generated at 06:00 covers yesterday, so the projection resolves the
+      cadence's period rather than stamping the run date.
+    cmd: >-
+      uv run --directory . alea project daily system_alerts
+      --source data/processed/system_alerts.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/system_alerts.parquet
+    outs:
+      - results/outages/contingency

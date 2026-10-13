@@ -91,6 +91,10 @@ rule all:
 		# warns rather than raises -- but it is a section a reader opens the
 		# monthly report for, and it costs one read of a network already solved.
 		processed("capacity_update"),
+		# The daily contingency section's rows, renamed from the serving table
+		# above rather than re-swept: the report and the API's contingency route
+		# read the same sweep, so they cannot disagree about what is critical.
+		processed("system_alerts"),
 		# The projections, not the builds. A stage's artefact under
 		# `data/processed` is not the section's: the report reads
 		# `results/<dir>/{date}.parquet`, and until these rules existed nothing
@@ -105,3 +109,4 @@ rule all:
 		report_artefact("quarterly", "market/outlook/{date}.parquet"),
 		report_artefact("daily", "planning/dispatch/{date}.parquet"),
 		report_artefact("daily", "market/prices/{date}.parquet"),
+		report_artefact("daily", "outages/contingency/{date}.parquet"),

@@ -450,3 +450,61 @@ rule project_renewable_forecast:
 				*params.flags,
 			)
 		)
+
+
+rule system_alerts:
+	"""The per-element contingency states, for the daily system-alerts section.
+
+	The first producer here whose input is another consumer's table rather than
+	a layer's result. `@stage("resilience_contingency")` already sweeps the
+	solved network and writes ``data/processed/resilience/contingency.parquet``
+	-- the shape the API's contingency route reads -- and the section wants the
+	same rows under different headers. So the stage renames the serving columns
+	rather than re-sweeping, and the report and the route cannot come to disagree
+	about which elements are critical.
+
+	The input is declared as the serving table's path, spelled as
+	``PUBLISHED_TABLES`` spells it, for the reason `rules/publish.smk` gives: the
+	path is what a consumer reads, and a stage that resolved it another way would
+	read a different file from the one the API serves.
+	"""
+	input:
+		processed("resilience/contingency", ".parquet")
+	output:
+		processed("system_alerts")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"build", "system_alerts",
+				"--out", output[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)
+
+
+rule project_system_alerts:
+	"""`system_alerts` at the dated path the daily report reads.
+
+	The section declares ``outages/contingency/{date}.parquet``. A daily report
+	generated at 06:00 covers *yesterday*, which `period_for` resolves inside the
+	projection -- a literal date here would name a file no daily report opens,
+	and the symptom would be an absent section rather than an error.
+	"""
+	input:
+		processed("system_alerts")
+	output:
+		report_artefact("daily", "outages/contingency/{date}.parquet")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"project", "daily", "system_alerts",
+				"--source", input[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)

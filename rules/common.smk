@@ -65,6 +65,7 @@ SUFFIXES = {
 	"policy_tracker": ".parquet",
 	"week_ahead": ".parquet",
 	"renewable_forecast": ".parquet",
+	"system_alerts": ".parquet",
 	"sector_coupling": ".json",
 }
 
