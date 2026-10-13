@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import pandas as pd
 import pypsa
 from pydantic import BaseModel, ConfigDict
 
@@ -150,6 +151,121 @@ def build_aggregation(
 		"weights": weights,
 		"shape": series.shape,
 	}
+
+
+def clustering_series(network: pypsa.Network) -> np.ndarray:
+	"""The profiles temporal clustering is driven by, as ``[time, feature]``.
+
+	Demand and renewable availability: the two shapes whose loss changes the
+	answer. A network with neither clusters on a constant series, which yields
+	contiguous blocks — the honest result for a network with no seasonality to
+	preserve.
+
+	The columns are not commensurate (a load is MW, a capacity factor is
+	dimensionless) and do not need to be: the kernel normalises each column by
+	its own mean before measuring distance, which is the whole reason a 5000 MW
+	bus and a 5 MW bus are equally interesting to it.
+	"""
+	assert network is not None, "network must not be None"
+	columns: list[np.ndarray] = []
+	for frame in (network.loads_t.p_set, network.generators_t.p_max_pu):
+		if frame.empty:
+			continue
+		columns.extend(
+			np.asarray(frame[column], dtype=np.float32) for column in frame.columns
+		)
+	if not columns:
+		return np.ones((len(network.snapshots), 1), dtype=np.float32)
+	return np.nan_to_num(np.column_stack(columns), nan=0.0)
+
+
+def aggregate_network(
+	network: pypsa.Network,
+	n_periods: int,
+	period_length: int,
+	*,
+	seed: int = 0,
+) -> pypsa.Network:
+	"""The network at reduced temporal resolution, by representative periods.
+
+	WHY this exists: ``build_aggregation`` returns the kernel's arrays and nothing
+	built a network from them, so the AD-9 gate guarded a path no solve ever took.
+
+	WHY it is not ``network.cluster.temporal.from_snapshot_map``: that function
+	groups the original snapshots by the mapped one and applies its default rule,
+	``mean``, to every dynamic frame. Mapping a whole day to its representative
+	day therefore *averages the day's capacity factors into a flat profile* — on a
+	seasonal year that measured a 23% cost error and a 106% capacity-mix error,
+	because a flattened solar profile has no peak left to build for, and the
+	optimiser builds no solar at all. A representative period is a period: the
+	aggregated network keeps every one of its ``period_length`` timesteps, at
+	weight ``w / period_length`` each, so the sum of the weights is still exactly
+	the number of hours in the year (AD-9's invariant).
+
+	The gate is still ``require_aggregation_validation``: this builds the fast
+	path, it does not certify it.
+	"""
+	assert network is not None, "network must not be None"
+	assert n_periods > 0, "n_periods must be positive"
+	assert period_length > 0, "period_length must be positive"
+	snapshots = network.snapshots
+	if n_periods * period_length > len(snapshots):
+		raise AggregationError(
+			f"{n_periods} periods of {period_length} need "
+			f"{n_periods * period_length} timesteps but the network has "
+			f"{len(snapshots)}"
+		)
+
+	built = build_aggregation(
+		clustering_series(network), n_periods, period_length, seed=seed
+	)
+	chosen = np.asarray(built["representatives"], dtype=int) // period_length
+	weights = np.asarray(built["weights"], dtype=float)
+	assert len(chosen) == n_periods, "the kernel returned the wrong number of periods"
+
+	# Concatenate each representative block's own timesteps. The blocks are
+	# disjoint, so the selected labels stay unique and ``set_snapshots`` reindexes
+	# every dynamic frame onto them by label.
+	positions = np.concatenate(
+		[np.arange(block * period_length, (block + 1) * period_length) for block in chosen]
+	)
+	selected = snapshots[positions]
+	if len(selected) != len(set(selected)):
+		raise AggregationError(
+			"representative periods overlap; the aggregated network would carry "
+			"the same timestamp twice and PyPSA cannot reindex onto it"
+		)
+
+	# ``copy`` refuses a solved network while a solver model is attached, and that
+	# is the intended input here — a validation compares an aggregated solve
+	# against the full-resolution one, so both networks are solved. Detaching the
+	# solver state is the route PyPSA's own error message names. The network's
+	# *results* (objective, dispatch, prices) are untouched by it, which is what
+	# the comparison reads; only the handle to the finished LP is dropped, and the
+	# caller can solve again. Stated because it is a mutation of the input, and an
+	# unexplained one is a trap for the next reader.
+	if network.is_solved and getattr(network._model, "solver_model", None) is not None:
+		network.model.solver_model = None
+
+	aggregated = network.copy()
+	aggregated.set_snapshots(selected)  # type: ignore[arg-type]
+	# One weight per kept timestep: the period's weight spread over its hours, so
+	# an hourly quantity converts to an annual one unchanged.
+	per_timestep = np.concatenate(
+		[np.full(period_length, weights[period] / period_length) for period in range(n_periods)]
+	)
+	aggregated.snapshot_weightings = pd.DataFrame(
+		{column: per_timestep for column in network.snapshot_weightings.columns},
+		index=selected,
+	)
+	logger.info(
+		"network_aggregated",
+		n_periods=n_periods,
+		period_length=period_length,
+		snapshots=int(len(selected)),
+		weight_sum=float(aggregated.snapshot_weightings["objective"].sum()),
+	)
+	return aggregated
 
 
 def capacity_mix(network: pypsa.Network) -> dict[str, float]:
@@ -438,10 +554,12 @@ __all__ = [
 	"TOLERANCE_MIX_PCT",
 	"AggregationError",
 	"AggregationValidation",
+	"aggregate_network",
 	"build_aggregation",
 	"capacity_mix",
 	"cluster_buses",
 	"cluster_provenance",
+	"clustering_series",
 	"l1_mix_distance",
 	"load_validation",
 	"mix_shares",

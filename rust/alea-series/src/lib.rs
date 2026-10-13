@@ -88,11 +88,16 @@ impl AggregationResult {
 /// capacity factors or demand. Periods are contiguous blocks of `period_length`
 /// timesteps; `n_periods` blocks are chosen to represent the whole year.
 ///
-/// The method is hierarchical: within each candidate block the timestep whose
-/// normalised load-duration curve is closest to the block mean is the
-/// representative, and the blocks are chosen to minimise the total
-/// reconstruction error over a sample of columns. Deterministic given `seed`,
-/// which only breaks ties.
+/// The series is cut into contiguous candidate blocks of `period_length`
+/// timesteps; `n_periods` of them are chosen as representatives and every block
+/// is assigned to the nearest one.
+///
+/// The selection minimises the total reconstruction error of the whole series:
+/// each block is represented by its nearest chosen block, and the chosen set is
+/// built greedily to reduce the sum of those distances. Greedy rather than
+/// exhaustive, which is exponential in `n_periods`; the validation harness in
+/// `alea.planning.aggregation` is what certifies the result. Deterministic given
+/// `seed`, which only breaks ties.
 pub fn aggregate(
 	series: ArrayView2<f32>,
 	n_periods: usize,
@@ -148,129 +153,213 @@ pub fn aggregate(
 		})
 		.collect();
 
-	// Score every candidate block by its reconstruction error.
-	let scores: Vec<f64> = (0..n_candidates)
-		.into_par_iter()
-		.map(|candidate| {
-			let start = candidate * period_length;
-			let end = start + period_length;
-			// The representative is the block's own mean profile, which is the
-			// optimal single-period representative under squared error.
-			let mut mean = vec![0.0f64; n_columns];
-			let mut count = vec![0usize; n_columns];
-			for t in start..end {
+	// Each candidate's profile, normalised by column scale: the vector the
+	// distance metric compares. A non-finite value reads as the column mean,
+	// which is zero in this space, so a gap in a capacity-factor series does not
+	// make the block holding it unrepresentable.
+	let profiles: Vec<Vec<f64>> = (0..n_candidates)
+		.map(|block| {
+			let start = block * period_length;
+			let mut profile = vec![0.0f64; period_length * n_columns];
+			for t in 0..period_length {
 				for c in 0..n_columns {
-					let v = series[[t, c]];
-					if v.is_finite() {
-						mean[c] += (v / scales[c]) as f64;
-						count[c] += 1;
+					let value = series[[start + t, c]];
+					if value.is_finite() {
+						profile[t * n_columns + c] = (value / scales[c]) as f64;
 					}
 				}
 			}
-			for c in 0..n_columns {
-				if count[c] > 0 {
-					mean[c] /= count[c] as f64;
-				}
-			}
-			let mut error = 0.0f64;
-			for t in start..end {
-				for c in 0..n_columns {
-					let v = series[[t, c]];
-					if v.is_finite() {
-						let d = (v / scales[c]) as f64 - mean[c];
-						error += d * d;
-					}
-				}
-			}
-			error
+			profile
 		})
 		.collect();
 
-	// Greedy selection of the best-scoring blocks, subject to covering each
-	// timestep exactly once. Greedy is used rather than exhaustive because
-	// exhaustive is exponential in n_periods and the greedy result is what TSAM
-	// itself produces; the validation harness is what certifies it.
-	let mut order: Vec<usize> = (0..n_candidates).collect();
-	order.sort_by(|&a, &b| {
-		scores[a]
-			.partial_cmp(&scores[b])
-			.unwrap_or(std::cmp::Ordering::Equal)
-			// The seed breaks ties deterministically, so two runs of the same
-			// input produce the same selection rather than one that depends on
-			// the sort implementation's stability.
-			.then_with(|| {
-				let ta = alea_dedup_hash(candidate_key(a, seed));
-				let tb = alea_dedup_hash(candidate_key(b, seed));
-				ta.cmp(&tb)
+	// Squared Frobenius distance between two block profiles: the cost of
+	// representing one block by the other, and the quantity whose total the
+	// selection minimises.
+	let distance = |a: usize, b: usize| -> f64 {
+		profiles[a]
+			.iter()
+			.zip(profiles[b].iter())
+			.map(|(x, y)| {
+				let d = x - y;
+				d * d
 			})
-	});
+			.sum()
+	};
 
+	// Deterministic tie-break. The seed hashes each candidate to a stable order,
+	// so two runs of one input select the same blocks rather than one that
+	// depends on the order a parallel reduction happened to finish in (AD-8).
+	let tie = |a: usize, b: usize| -> std::cmp::Ordering {
+		alea_dedup_hash(candidate_key(a, seed))
+			.cmp(&alea_dedup_hash(candidate_key(b, seed)))
+			.then_with(|| a.cmp(&b))
+	};
+
+	// Greedy facility location. Each round adds the block whose selection reduces
+	// the total reconstruction cost of the series most, where a block's cost is
+	// its distance to the nearest chosen block. Greedy rather than exhaustive
+	// because exhaustive is C(n_candidates, n_periods); the validation harness in
+	// `alea.planning.aggregation` is what certifies the result.
+	//
+	// WHAT this replaces, and why the replacement is the whole point: the previous
+	// selection scored each block by its own internal spread and took the
+	// flattest. On a seasonal year the flattest blocks are all in the same quiet
+	// fortnight, so every representative landed there -- twelve representatives
+	// inside one December fortnight on an 8760-hour year -- and the aggregated
+	// solve cost 106% more than the full-resolution one, against AD-9's 2%. A
+	// block is not representative because it is flat; it is representative
+	// because the other blocks are near it.
+	let mut nearest = vec![f64::INFINITY; n_candidates];
 	let mut chosen: Vec<usize> = Vec::with_capacity(n_periods);
-	let mut covered = vec![false; n_candidates];
-	for candidate in order {
-		if chosen.len() == n_periods {
-			break;
-		}
-		if covered[candidate] {
-			continue;
-		}
-		chosen.push(candidate);
-		covered[candidate] = true;
-	}
-	if chosen.len() != n_periods {
-		return Err(AleaError::InfeasibleAggregation {
+	while chosen.len() < n_periods {
+		let best = (0..n_candidates)
+			.into_par_iter()
+			.filter(|candidate| !chosen.contains(candidate))
+			.map(|candidate| {
+				let total: f64 = (0..n_candidates)
+					.map(|block| distance(block, candidate).min(nearest[block]))
+					.sum();
+				(candidate, total)
+			})
+			.reduce_with(|a, b| {
+				if a.1 < b.1 || (a.1 == b.1 && tie(a.0, b.0).is_lt()) {
+					a
+				} else {
+					b
+				}
+			});
+		let (candidate, _) = best.ok_or(AleaError::InfeasibleAggregation {
 			n_timesteps,
 			n_periods,
 			period_length,
-		});
+		})?;
+		chosen.push(candidate);
+		for block in 0..n_candidates {
+			nearest[block] = nearest[block].min(distance(block, candidate));
+		}
+	}
+
+	// Lloyd refinement. Reassign every block to its nearest centre, then move each
+	// centre to its cluster's medoid. Both steps can only reduce the total
+	// reconstruction cost, so the loop is monotone; the cap guards a pathological
+	// tie ping-pong rather than a slow descent.
+	for _ in 0..8 {
+		let label: Vec<usize> = (0..n_candidates)
+			.map(|block| {
+				(0..n_periods)
+					.min_by(|&a, &b| {
+						distance(block, chosen[a])
+							.partial_cmp(&distance(block, chosen[b]))
+							.unwrap_or(std::cmp::Ordering::Equal)
+							.then_with(|| a.cmp(&b))
+					})
+					.unwrap_or(0)
+			})
+			.collect();
+		let mut moved = false;
+		for (centre, slot) in chosen.iter_mut().enumerate() {
+			let members: Vec<usize> = (0..n_candidates).filter(|&b| label[b] == centre).collect();
+			if members.is_empty() {
+				// A centre can lose its own block to an identical one at a lower
+				// index. It keeps its position and carries zero weight, which the
+				// exact-sum invariant tolerates; dropping it would change
+				// `n_periods`.
+				continue;
+			}
+			let costs: Vec<(usize, f64)> = members
+				.iter()
+				.map(|&m| {
+					let cost: f64 = members.iter().map(|&other| distance(other, m)).sum();
+					(m, cost)
+				})
+				.collect();
+			let medoid = costs
+				.iter()
+				.copied()
+				.min_by(|a, b| {
+					a.1.partial_cmp(&b.1)
+						.unwrap_or(std::cmp::Ordering::Equal)
+						.then_with(|| tie(a.0, b.0))
+				})
+				.map(|(m, _)| m)
+				.expect("members is non-empty");
+			if medoid != *slot {
+				*slot = medoid;
+				moved = true;
+			}
+		}
+		if !moved {
+			break;
+		}
 	}
 	chosen.sort_unstable();
 
-	// Weights: the number of times each chosen block's representative stands in
-	// for a block, distributed so that the total is exactly n_timesteps.
-	let n_blocks = n_candidates;
-	let mut weights = vec![0.0f64; n_periods];
-	// Integer distribution first, so the sum is exact by construction.
-	let base = n_blocks / n_periods;
-	let remainder = n_blocks % n_periods;
-	for (i, w) in weights.iter_mut().enumerate() {
-		*w = (base + if i < remainder { 1 } else { 0 }) as f64;
-	}
-	// Each block is period_length timesteps.
-	for w in weights.iter_mut() {
-		*w *= period_length as f64;
-	}
-
-	// The remainder above is in units of blocks, so the sum is
-	// (base*n_periods + remainder) * period_length == n_blocks * period_length,
-	// which is <= n_timesteps. Any leftover timesteps (when n_timesteps is not a
-	// multiple of period_length) go to the highest-weight period so the total is
-	// exactly n_timesteps.
-	let assigned: usize = weights.iter().sum::<f64>() as usize;
-	let leftover = n_timesteps - assigned;
-	if leftover > 0 {
-		let heaviest = weights
-			.iter()
-			.enumerate()
-			.max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
-			.map(|(i, _)| i)
-			.unwrap_or(0);
-		weights[heaviest] += leftover as f64;
-	}
-
+	// Assignment: every block goes to its nearest chosen centre, and every
+	// timestep in a block takes that block's label. Built as a histogram first so
+	// the weights are the counts of what was actually assigned -- the previous
+	// version distributed the weight near-uniformly and separately from the
+	// assignment, which let the two disagree by a factor of ten while the
+	// exact-sum invariant still held.
+	//
+	// A block's weight is its *count of timesteps*, not its count of blocks. That
+	// is the unit the rest of the platform reads: `sector._util.total_hours` says
+	// an annual volume converts to the same per-snapshot series at either
+	// resolution, which is true only when a period's weight is the number of
+	// hours it stands for. With `period_length == 1` a period is one timestep, so
+	// a block is one timestep and the two units coincide.
 	let mut assignments = vec![0u32; n_timesteps];
-	let mut representatives = Vec::with_capacity(n_periods);
-	for (period, &candidate) in chosen.iter().enumerate() {
-		let start = candidate * period_length;
-		let end = (start + period_length).min(n_timesteps);
-		assignments[start..end].fill(period as u32);
-		representatives.push(start as u32);
+	let mut weights = vec![0.0f64; n_periods];
+	for block in 0..n_candidates {
+		let label = (0..n_periods)
+			.min_by(|&a, &b| {
+				distance(block, chosen[a])
+					.partial_cmp(&distance(block, chosen[b]))
+					.unwrap_or(std::cmp::Ordering::Equal)
+					.then_with(|| a.cmp(&b))
+			})
+			.unwrap_or(0);
+		let start = block * period_length;
+		assignments[start..start + period_length].fill(label as u32);
+		weights[label] += period_length as f64;
 	}
-	// Timesteps past the last whole block belong to the final period.
-	if let Some(last) = chosen.last() {
-		let end = ((last + 1) * period_length).min(n_timesteps);
-		let final_period = (n_periods - 1) as u32;
-		assignments[end..n_timesteps].fill(final_period);
+	// The tail -- the timesteps past the last whole block, when n_timesteps is
+	// not a multiple of period_length -- attaches to the nearest centre. Charged
+	// one timestep each, which is what keeps the sum exact in both units.
+	let tail_start = n_candidates * period_length;
+	if tail_start < n_timesteps {
+		// A tail timestep's distance to a centre is its distance to that centre's
+		// representative timestep, charged one timestep at a time.
+		let point_distance = |t: usize, centre: usize| -> f64 {
+			let representative = chosen[centre] * period_length;
+			(0..n_columns)
+				.map(|c| {
+					let value = series[[t, c]];
+					let a = if value.is_finite() { (value / scales[c]) as f64 } else { 0.0 };
+					let value = series[[representative, c]];
+					let b = if value.is_finite() { (value / scales[c]) as f64 } else { 0.0 };
+					let d = a - b;
+					d * d
+				})
+				.sum()
+		};
+		for t in tail_start..n_timesteps {
+			let label = (0..n_periods)
+				.min_by(|&a, &b| {
+					point_distance(t, a)
+						.partial_cmp(&point_distance(t, b))
+						.unwrap_or(std::cmp::Ordering::Equal)
+						.then_with(|| a.cmp(&b))
+				})
+				.unwrap_or(0);
+			assignments[t] = label as u32;
+			weights[label] += 1.0;
+		}
+	}
+
+	let mut representatives = Vec::with_capacity(n_periods);
+	for &candidate in chosen.iter() {
+		representatives.push((candidate * period_length) as u32);
 	}
 
 	let result = AggregationResult {
@@ -530,6 +619,62 @@ mod tests {
 		let result = aggregate(series.view(), 12, 24, 0).unwrap();
 		let expanded = result.expand(series.view()).unwrap();
 		assert_eq!(expanded.shape(), series.shape());
+	}
+
+	#[test]
+	fn weights_are_the_hours_assigned_to_each_period() {
+		// The invariant the exact-sum test cannot see. Weights that sum to 8760
+		// while standing for a different number of hours than they are assigned
+		// are wrong by a factor, and the sum still holds -- which is how the
+		// kernel shipped a period weighted 744 that stood in for 8352 hours.
+		let series = ramp(8760, 3);
+		let result = aggregate(series.view(), 12, 24, 0).unwrap();
+		let mut histogram = vec![0.0f64; 12];
+		for label in &result.assignments {
+			histogram[*label as usize] += 1.0;
+		}
+		assert_eq!(result.weights, histogram, "weights are not the assignment histogram");
+	}
+
+	#[test]
+	fn representatives_span_a_seasonal_year() {
+		// The defect this pins: a selection that puts every representative in the
+		// same quiet fortnight, which is what choosing the *flattest* blocks
+		// produces on a seasonal year. Winter-peaking load against a
+		// summer-peaking resource, so the two columns disagree about when the
+		// year is interesting and a flat-block rule has somewhere to go wrong.
+		let series = Array2::from_shape_fn((8760usize, 2), |(t, c)| {
+			let hour = (t % 24) as f32;
+			let day = (t / 24) as f32;
+			// Winter-peaking load: a broad annual cycle plus a diurnal one.
+			let winter = ((t as f32 - 2000.0) * std::f32::consts::TAU / 8760.0)
+				.sin()
+				.max(0.0);
+			// Summer-peaking solar: a day-length envelope plus a midday bump, so
+			// the column disagrees with the load about *when* the year matters.
+			let daylight = (std::f32::consts::PI * (hour - 6.0) / 12.0).sin().max(0.0);
+			let envelope = 0.55 + 0.30 * ((day - 172.0) * std::f32::consts::TAU / 365.0).cos();
+			if c == 0 {
+				100.0 + 40.0 * winter + 12.0 * (hour * std::f32::consts::TAU / 24.0).sin()
+			} else {
+				300.0 * daylight * envelope
+			}
+		});
+		let result = aggregate(series.view(), 12, 24, 0).unwrap();
+		let mut blocks: Vec<usize> = result
+			.representatives
+			.iter()
+			.map(|representative| *representative as usize / 24)
+			.collect();
+		let span = blocks.iter().max().unwrap() - blocks.iter().min().unwrap();
+		blocks.sort_unstable();
+		blocks.dedup();
+		assert_eq!(blocks.len(), 12, "two periods share a representative day");
+		assert!(
+			span >= 300,
+			"the twelve representatives span only {span} days, so most of the year \
+			 is represented by a period from somewhere else"
+		);
 	}
 
 	#[test]

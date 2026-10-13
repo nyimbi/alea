@@ -357,6 +357,63 @@ def test_aggregate_is_deterministic_for_a_seed():
 		assert np.array_equal(a, b)
 
 
+def test_aggregate_general_case_beats_contiguous_blocks():
+	"""The kernel's unequal-division result must be at least contiguous blocks.
+
+	The property the old kernel violated. It scored each candidate block by its
+	own internal spread and took the flattest as representatives, which on a
+	seasonal year put all twelve in one quiet fortnight: measured through the
+	layer's own gates, the aggregated solve cost 5.3% more than the
+	full-resolution one and the representatives covered three quarters of the
+	four. The reference's docstring excuses the general case from *exact*
+	agreement -- the two implement different heuristics -- but no heuristic may
+	be worse than the trivial one, and "the first n_periods contiguous blocks"
+	is the trivial one.
+
+	Measured as total reconstruction error: each timestep against its period's
+	representative. This is the quantity the selection exists to reduce, and it
+	is checkable without solving anything.
+
+	NOTE on what this gate does and does not catch: the margin is small, because
+	reconstruction error is dominated by how many days are kept rather than by
+	which, and a representative for a whole season reconstructs that season
+	poorly however well it was chosen. The gates that actually discriminate a
+	clustered selection are the seasonal-year ones in
+	`tests/ci/test_planning_layer1.py` -- cost error, span, and the kept profile
+	-- each of which was watched failing against the old kernel. This one is the
+	cheap invariant, and it is asserted here so the kernel cannot regress into
+	something *worse* than arbitrary blocks even if the layer's gates are edited.
+	"""
+	hours = np.arange(8760)
+	day = hours // 24
+	load = 100.0 + 40.0 * np.clip(np.cos(2 * np.pi * (hours - 15 * 24) / 8760.0), 0.0, None)
+	solar = np.clip(np.sin(np.pi * ((hours % 24) - 6) / 12.0), 0.0, None) * (
+		0.55 + 0.30 * np.cos(2 * np.pi * (day - 172) / 365.0)
+	)
+	series = np.column_stack([load, solar * 300.0]).astype(np.float32)
+
+	def reconstruction_error(assignments, representatives) -> float:
+		reconstructed = series[np.asarray(representatives)[np.asarray(assignments)]]
+		return float(np.square(reconstructed - series).sum())
+
+	for n_periods, period_length in [(12, 24), (24, 24), (12, 168), (48, 24)]:
+		assignments, representatives, _ = K.aggregate(series, n_periods, period_length, 0)
+		kernel_error = reconstruction_error(assignments, representatives)
+
+		# The trivial selection: the first n_periods contiguous blocks, which is
+		# what a kernel that chose by position rather than by content would give.
+		trivial_assignments = np.minimum(np.arange(8760) // period_length, n_periods - 1).astype(np.uint32)
+		trivial_representatives = (np.arange(n_periods) * period_length).astype(np.uint32)
+		trivial_error = reconstruction_error(trivial_assignments, trivial_representatives)
+
+		assert kernel_error <= trivial_error, (
+			f"P={n_periods} L={period_length}: the kernel's selection reconstructs the "
+			f"series worse ({kernel_error:.1f}) than {n_periods} arbitrary contiguous "
+			f"blocks ({trivial_error:.1f}); the representatives are not chosen for the "
+			"series they have to represent"
+		)
+
+
 def test_load_duration_curve_hand_checkable():
 	series = np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]], dtype=np.float32)
 	expected = np.array([[7.0, 8.0], [5.0, 6.0], [3.0, 4.0], [1.0, 2.0]], dtype=np.float32)

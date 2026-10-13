@@ -31,8 +31,12 @@ import pytest
 
 from alea.config.models import Config, ScenarioConfig, SolveConfig
 from alea.planning.aggregation import (
+	TOLERANCE_COST_PCT,
+	TOLERANCE_MIX_PCT,
 	AggregationError,
+	aggregate_network,
 	build_aggregation,
+	clustering_series,
 	mix_shares,
 	require_aggregation_validation,
 	validate_aggregation_artefact,
@@ -381,6 +385,241 @@ def test_the_aggregation_kernel_refuses_a_window_longer_than_the_series():
 	"""
 	with pytest.raises(AggregationError, match="timesteps"):
 		build_aggregation(np.zeros((24, 3), dtype=float), n_periods=8, period_length=6)
+
+
+# --------------------------------------------------------------------------
+# Criterion 4, the measurement itself: AD-9's 2% / 5% on a seasonal year
+# --------------------------------------------------------------------------
+
+
+def _seasonal_year() -> tuple[np.ndarray, np.ndarray, pd.DatetimeIndex]:
+	"""One year of hourly demand and solar availability, with real seasonality.
+
+	The shape matters more than the magnitudes. A synthetic year of pure noise
+	has no seasonal structure for an aggregator to lose, and a *flat* year has
+	none to preserve; either would let a broken kernel pass. This one has a
+	winter-peaking load, a summer-peaking solar resource and a diurnal cycle on
+	both — the three shapes whose loss is what AD-9's tolerance is about.
+
+	Winter-peaking load against summer-peaking solar is deliberate: it is what
+	makes the two capacities non-substitutable, so an aggregation that flattens
+	the solar peak changes the built fleet rather than merely the dispatch.
+	"""
+	hours = np.arange(8760)
+	day = hours // 24
+	# Winter-peaking load, centred on mid-January, against a summer-peaking solar
+	# resource centred on the solstice. The two columns therefore disagree about
+	# *when* the year is interesting, which is what gives a selection rule
+	# somewhere to go wrong; a fixture whose columns peak together is nearly
+	# collinear and a broken aggregator passes on it.
+	winter = np.clip(np.cos(2 * np.pi * (hours - 15 * 24) / 8760.0), 0.0, None)
+	load = 100.0 + 40.0 * winter + 12.0 * np.sin(2 * np.pi * (hours % 24) / 24.0)
+	solar = np.clip(np.sin(np.pi * ((hours % 24) - 6) / 12.0), 0.0, None) * (
+		0.55 + 0.30 * np.cos(2 * np.pi * (day - 172) / 365.0)
+	)
+	snapshots = pd.date_range("2030-01-01", periods=8760, freq="h")
+	return load, solar, snapshots
+
+
+def _seasonal_network(load: np.ndarray, solar: np.ndarray, snapshots: pd.DatetimeIndex) -> pypsa.Network:
+	"""The seasonal year as a solvable single-bus network.
+
+	Extendable coal at a high marginal cost and extendable solar at a zero one:
+	the fleet the optimiser builds is the answer the aggregation has to preserve,
+	and a flattened solar profile moves it a long way.
+	"""
+	network = pypsa.Network()
+	network.add("Bus", "b", carrier="AC")
+	network.set_snapshots(snapshots)  # type: ignore[arg-type]
+	network.add(
+		"Generator", "coal", bus="b", carrier="coal", p_nom_extendable=True,
+		capital_cost=120_000.0, marginal_cost=45.0,
+	)
+	network.add(
+		"Generator", "solar", bus="b", carrier="solar", p_nom_extendable=True,
+		p_max_pu=pd.Series(solar, index=snapshots), capital_cost=60_000.0, marginal_cost=0.0,
+	)
+	network.add("Load", "load", bus="b", p_set=pd.Series(load, index=snapshots))
+	return network
+
+
+def test_aggregation_keeps_the_solve_within_tolerance():
+	"""AD-9's rule, measured: 12 periods must hold cost to 2% and mix to 5%.
+
+	The gate the kernel defect passed by never being run. The kernel used to
+	select the *flattest* blocks as representatives, and on a seasonal year the
+	flattest blocks are all in the same quiet fortnight: all twelve
+	representatives landed inside one December fortnight, the aggregated solve
+	cost 106% more than the full-resolution one, and nothing anywhere said so.
+	Every existing test of this kernel used an exact-division case where
+	"flattest block" and "correct block" coincide, so the defect was invisible to
+	the whole suite.
+
+	The assertion is deliberately the plan's own acceptance rule rather than a
+	property of the algorithm: an aggregator that meets 2% by some other route is
+	a passing aggregator.
+	"""
+	load, solar, snapshots = _seasonal_year()
+	full = _seasonal_network(load, solar, snapshots)
+	full.optimize(solver_name="highs", log_to_console=False)
+
+	aggregated = aggregate_network(full, n_periods=12, period_length=24)
+	assert len(aggregated.snapshots) == 12 * 24, "the aggregated network lost representative hours"
+	aggregated.optimize(solver_name="highs", log_to_console=False)
+
+	validation = validate_aggregation_artefact(
+		full, aggregated, n_periods=12, period_length=24
+	)
+	assert abs(validation.cost_error_pct) <= TOLERANCE_COST_PCT, (
+		f"aggregation to 12 periods moved total system cost by "
+		f"{validation.cost_error_pct:.2f}%, outside AD-9's {TOLERANCE_COST_PCT}%"
+	)
+	assert abs(validation.capacity_mix_l1_error_pct) <= TOLERANCE_MIX_PCT, (
+		f"aggregation to 12 periods moved the capacity mix by "
+		f"{validation.capacity_mix_l1_error_pct:.2f}%, outside AD-9's {TOLERANCE_MIX_PCT}%"
+	)
+	assert validation.passes
+
+
+def test_the_representatives_span_the_year_rather_than_one_fortnight():
+	"""The shape of the defect, asserted directly.
+
+	The cost gate above is the one that matters, but it is a *measurement*: it
+	needs two solves, and it can be satisfied by luck on a year whose seasonality
+	is weak. This is the structural statement, and it is what the old kernel
+	violated most plainly — twelve representatives for twelve periods should
+	cover twelve different times of year, not twelve consecutive days.
+
+	Asserted on the block index rather than on a distance, so the failure names
+	the thing that went wrong.
+	"""
+	load, solar, _ = _seasonal_year()
+	series = np.column_stack([load, solar * 300.0]).astype(np.float32)
+	built = build_aggregation(series, n_periods=12, period_length=24)
+	blocks = np.asarray(built["representatives"], dtype=int) // 24
+
+	assert len(set(blocks.tolist())) == 12, "two periods share one representative day"
+	span_days = int(blocks.max() - blocks.min())
+	assert span_days >= 300, (
+		f"the twelve representatives for a year span only {span_days} days "
+		f"(blocks {sorted(blocks.tolist())}); a representative set confined to one "
+		"part of the year cannot represent the rest of it"
+	)
+	# Every month the year has, roughly: at least one representative in each
+	# quarter, which a single-fortnight selection fails outright.
+	quarters = {int(block * 24 // 2190) for block in blocks}
+	assert quarters == {0, 1, 2, 3}, f"representatives cover quarters {sorted(quarters)}, not the year"
+
+
+def test_the_aggregation_weights_are_the_hours_each_period_stands_for():
+	"""Weights are the assignment histogram in hours, and sum to 8760 exactly.
+
+	Both halves matter and they are different bugs. The old kernel distributed
+	weights near-uniformly *independently* of the assignment, so a period could
+	stand in for 8352 hours while carrying a weight of 744 — the exact-sum
+	invariant still held, and every annual total was wrong by a factor of ten.
+	The sum is the plan's §5.2 invariant; the equality with the histogram is what
+	makes the sum mean anything.
+	"""
+	load, solar, _ = _seasonal_year()
+	series = np.column_stack([load, solar * 300.0]).astype(np.float32)
+	built = build_aggregation(series, n_periods=12, period_length=24)
+	assignments = np.asarray(built["assignments"])
+	weights = np.asarray(built["weights"], dtype=float)
+
+	assert assignments.shape == (8760,), "every timestep must be assigned exactly once"
+	assert int(assignments.max()) < 12 and int(assignments.min()) >= 0
+	assert len(set(assignments.tolist())) == 12, "a period was chosen and then assigned no hours"
+	histogram = np.bincount(assignments, minlength=12).astype(float)
+	assert np.array_equal(weights, histogram), (
+		f"weights {weights} are not the hours assigned to each period {histogram}"
+	)
+	assert weights.sum() == 8760.0, "the weights do not sum to the year exactly"
+
+
+def test_a_representative_period_keeps_its_own_profile():
+	"""The aggregated network carries whole periods, not period averages.
+
+	The second defect, and the one that survives a correct kernel. The obvious
+	way to build the network is ``network.cluster.temporal.from_snapshot_map``,
+	which groups the original snapshots by their mapped representative and
+	applies its default rule — ``mean`` — to every dynamic frame. Mapping a day
+	to its representative day then *averages the day*, so a capacity-factor
+	profile with a midday peak becomes a flat band: measured on this year, a
+	solar peak of 0.269 against the true 0.850, a 23% cost error and a 106%
+	capacity-mix error, with the optimiser building no solar at all.
+
+	So the assertion is on the peak, which is the statistic a flattened profile
+	loses, and on the snapshot count, which is what a period is.
+	"""
+	load, solar, snapshots = _seasonal_year()
+	full = _seasonal_network(load, solar, snapshots)
+	aggregated = aggregate_network(full, n_periods=12, period_length=24)
+
+	assert len(aggregated.snapshots) == 12 * 24, (
+		"an aggregated network of 12 periods of 24 hours must carry 288 snapshots"
+	)
+	kept_solar = aggregated.generators_t.p_max_pu["solar"].to_numpy()
+	kept_load = aggregated.loads_t.p_set["load"].to_numpy()
+	# The signature of an averaged period is *flatness*: groupby-mean collapses
+	# each period to one value per column, so its mean and its peak are the same
+	# number and its night is gone. A kept period is a real day, so its peak
+	# stands well clear of its mean.
+	assert kept_solar.max() > 0.80, (
+		f"the aggregated solar profile peaks at {kept_solar.max():.3f}; a profile "
+		"averaged over each period has no midday peak left"
+	)
+	assert kept_solar.min() == pytest.approx(0.0), "the aggregated profile lost its night"
+	assert kept_solar.max() > 2.0 * kept_solar.mean(), (
+		"the aggregated solar profile is flat, which is what averaging a period produces"
+	)
+	assert kept_load.max() > 1.15 * kept_load.mean(), (
+		"the aggregated load profile is flat, which is what averaging a period produces"
+	)
+	# Coverage: a representative set has to reach the near-peak part of the year,
+	# or the optimiser builds for a load it never sees. Not the annual maximum --
+	# twelve days out of 365 need not include the single worst hour -- but within
+	# a few percent of it.
+	assert kept_load.max() >= 0.95 * float(load.max()), (
+		f"the aggregated load peaks at {kept_load.max():.1f} against the year's "
+		f"{load.max():.1f}; the representative days miss the peak season"
+	)
+	assert aggregated.snapshot_weightings["objective"].sum() == pytest.approx(8760.0), (
+		"the aggregated network's weights no longer sum to the hours in the year"
+	)
+
+
+def test_clustering_is_driven_by_demand_and_availability():
+	"""The kernel clusters on the shapes whose loss changes the answer.
+
+	Clustering on a network's *structure* would be a different thing entirely,
+	and clustering on nothing would return contiguous blocks for every network
+	while looking correct. Demand and renewable availability are the two series
+	an aggregator exists to preserve, so they are the two the driver reads.
+	"""
+	load, solar, snapshots = _seasonal_year()
+	network = _seasonal_network(load, solar, snapshots)
+	series = clustering_series(network)
+
+	assert series.shape == (8760, 2), f"expected one column per profile, got {series.shape}"
+	assert np.allclose(series[:, 0], load, atol=1e-3), "the load profile is not in the driver series"
+	assert np.allclose(series[:, 1], solar, atol=1e-3), "the availability profile is not in the driver series"
+	assert np.isfinite(series).all(), "a gap in a profile reached the kernel as a NaN"
+
+
+def test_aggregation_is_deterministic_across_calls():
+	"""AD-8: the same network aggregates identically, or a solve is not repeatable.
+
+	The selection is greedy over a parallel reduction, so the tie-break is the
+	only thing standing between a deterministic result and one that depends on
+	which thread finished first.
+	"""
+	load, solar, snapshots = _seasonal_year()
+	network = _seasonal_network(load, solar, snapshots)
+	first = build_aggregation(clustering_series(network), n_periods=12, period_length=24)
+	second = build_aggregation(clustering_series(network), n_periods=12, period_length=24)
+	for key in ("assignments", "representatives", "weights"):
+		assert np.array_equal(first[key], second[key]), f"{key} differed between two identical calls"
 
 
 # --------------------------------------------------------------------------
