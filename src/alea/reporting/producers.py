@@ -309,10 +309,18 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 		),
 		# ---- quarterly ----
 		"investment_pipeline": (
-			"`scanning/pipeline/{date}.parquet`. `planning.catalogue` writes a "
-			"project catalogue under `data/processed/`; the quarterly section "
-			"wants it dated under `results/`, and nothing projects one to the "
-			"other."
+			"Needs committed and proposed *projects*, which is what the section's "
+			"columns ask for -- `[\"Stage\", \"Capacity\", \"Basis\"]`, "
+			"generation and transmission capacity grouped by development stage. "
+			"This entry used to name `planning.catalogue` as the producer missing "
+			"only a projection, and that was wrong: the catalogue holds solved "
+			"*scenarios* (`carrier` / `capacity_mw` / `share` per horizon), which "
+			"carry no development stage and no country. The quantity does exist "
+			"one layer over -- `scanning.extract` reads `capacity_mw`, "
+			"`investment_usd` and `SignalType.GENERATION_INVESTMENT` out of "
+			"documents, and `guess_signal_type` routes them -- but a signal is a "
+			"proposal in a review queue, not a committed project, so the producer "
+			"waits on a review-queue reader and a project-stage model."
 		),
 		"scenario_update": (
 			"`whatif/frontier/{date}.parquet`. `alea.whatif` solves scenarios "
