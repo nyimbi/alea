@@ -178,7 +178,56 @@ def build_market_outlook(config: Config, out: Path, context: BuildContext) -> De
 	return provenance
 
 
+@stage("price_forecast")
+def build_price_forecast(config: Config, out: Path, context: BuildContext) -> DerivedProvenance:
+	"""Registered stage: a solved network's clearing as the daily price section's rows.
+
+	`reporting/daily.py`'s ``price_forecast`` is ``required=False``, so its
+	absence warns rather than raising -- which is exactly why it stayed absent:
+	nothing failed. The register recorded the blocker as "nothing runs
+	`market.clear_market`", and that was right for the section's own shape. The
+	*quantity* was already being computed by ``@stage("market_prices")`` for the
+	API's serving table, but at a different path and in a different shape
+	(``at``/``country_iso``/``price``/``unit``, one row per bus-hour) -- a
+	serving table is what a *route* reads, not what a report section reads.
+
+	So this stage clears the same network the same way and writes the section's
+	own columns. It reads the network rather than the serving table because a
+	projection moves bytes and this one has to reshape them, and reshaping a
+	serving table back into a price series would be a second conversion of a
+	number that already had one.
+	"""
+	from alea.io.artefacts import read_provenance
+	from alea.io.pipeline import skip_if_current
+	from alea.market.service import daily_price_to_artefact
+
+	path, inputs = _solved_network(config, context)
+	existing = skip_if_current(out, inputs, stage_name="price_forecast", logger=context.logger)
+	if existing is not None:
+		return existing
+
+	network = _load_network(path)
+	daily_price_to_artefact(
+		network,
+		out,
+		value_of_lost_load_usd_per_mwh=config.market.value_of_lost_load_usd_per_mwh,
+		value_of_lost_load_basis=config.market.value_of_lost_load_basis,
+		inputs=inputs,
+		strategy=_strategy(context),  # type: ignore[arg-type]
+		hours=int(context.parameters.get("hours", 24)),
+	)
+	provenance = read_provenance(out)
+	logger.info(
+		"market.stage.price_forecast",
+		network_file=path.name,
+		voll=config.market.value_of_lost_load_usd_per_mwh,
+		out=str(out),
+	)
+	return provenance
+
+
 __all__ = [
 	"build_market_outlook",
 	"build_market_report",
+	"build_price_forecast",
 ]

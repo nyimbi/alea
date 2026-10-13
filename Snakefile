@@ -103,3 +103,5 @@ rule all:
 		report_artefact("weekly", "outages/critical/{date}.parquet"),
 		report_artefact("monthly", "market/monthly/{date}.parquet"),
 		report_artefact("quarterly", "market/outlook/{date}.parquet"),
+		report_artefact("daily", "planning/dispatch/{date}.parquet"),
+		report_artefact("daily", "market/prices/{date}.parquet"),

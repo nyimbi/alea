@@ -52,10 +52,36 @@ rule capacity_update:
 		)
 
 
+rule generation_mix:
+	"""Dispatched MW by carrier, for the daily report's mix section.
+
+	`alea dispatch` writes exactly this frame and no rule ran it, which is the
+	gap `reporting/producers.py` recorded as "the rule, not the writer". The
+	stage reads the solved network's own dispatch table rather than re-solving:
+	a second solve would discard the capacity the first chose, and the report's
+	mix would be a different system from the one every other section reads.
+	"""
+	input:
+		provided("solved_network", NETWORKS)
+	output:
+		processed("generation_mix")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"build", "generation_mix",
+				"--out", output[0],
+				"--config", CONFIG,
+				"--set", set_arg("network_dir", NETWORKS),
+				*params.flags,
+			)
+		)
+
+
 # --------------------------------------------------------------------------
 # The projection: a stage's output, at the dated path its section reads
 # --------------------------------------------------------------------------
-#
 # Every rule above writes ``data/processed/<stage>.<suffix>``; a section reads
 # ``results/<dir>/{date}.parquet``. The two docstrings in this repository that
 # describe the bridge -- `rules/losses.smk`'s ``critical_lines`` and this file's
@@ -175,6 +201,56 @@ rule project_market_outlook:
 		shell(
 			alea(
 				"project", "quarterly", "market_outlook",
+				"--source", input[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)
+
+
+rule project_generation_mix:
+	"""`generation_mix` at the dated path the daily report reads.
+
+	The date matters more here than anywhere else. A daily report generated at
+	06:00 covers *yesterday*, so a file stamped with the run date is one no
+	report opens -- and the symptom is an absent section rather than an error,
+	which is why the stamp comes from the network's own first snapshot and the
+	projection from the cadence's period.
+	"""
+	input:
+		processed("generation_mix")
+	output:
+		report_artefact("daily", "planning/dispatch/{date}.parquet")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"project", "daily", "generation_mix",
+				"--source", input[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)
+
+
+rule project_price_forecast:
+	"""`price_forecast` at the dated path the daily report reads.
+
+	The section is optional, so its absence warns rather than raising -- which is
+	why nothing noticed it was missing. A warning in a published report is still
+	a section a reader expected and did not get.
+	"""
+	input:
+		processed("price_forecast")
+	output:
+		report_artefact("daily", "market/prices/{date}.parquet")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"project", "daily", "price_forecast",
 				"--source", input[0],
 				"--config", CONFIG,
 				*params.flags,

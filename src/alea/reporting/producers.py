@@ -72,6 +72,16 @@ PRODUCERS: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# register's own gate measured the move.
 		"market_outlook": "market.service.quarterly_market_to_artefact",
 		"market_report": "market.service.monthly_market_to_artefact",
+		# The two daily sections a solved network closes. Both were recorded as
+		# blocked on something that does not exist -- `generation_mix` on "a rule,
+		# not the writer" and `price_forecast` on "nothing runs
+		# `market.clear_market`" -- and both were right about the *section's* own
+		# shape. The quantity for each was already computed: dispatch for the mix,
+		# marginal prices for the API's serving table. A serving table is what a
+		# route reads, not what a report section reads, so `price_forecast` clears
+		# the network again into the report's columns rather than reshaping one.
+		"generation_mix": "planning.arrays.build_generation_mix",
+		"price_forecast": "market.service.daily_price_to_artefact",
 	}
 )
 
@@ -115,6 +125,18 @@ PROJECTED: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# report opens.
 		"market_outlook": "project_market_outlook",
 		"market_report": "project_market_report",
+		# The daily mix. `alea dispatch` already wrote this frame and no rule ran
+		# it -- the register recorded the gap as "the rule, not the writer", and
+		# `@stage("generation_mix")` is the rule. The stamp is the network's first
+		# snapshot, so the projection's date and the file's date are the same fact
+		# reached two ways; a daily report covers yesterday, and a file stamped
+		# with the run date would be read by no report at all.
+		"generation_mix": "project_generation_mix",
+		# Optional, so its absence warned rather than raised -- which is why it
+		# stayed absent through every green suite. The quantity was already being
+		# computed for the API's serving table at a different shape; the section
+		# reads a report's columns, not a route's.
+		"price_forecast": "project_price_forecast",
 	}
 )
 
@@ -155,21 +177,6 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"implemented, and no code thresholds it by severity. The section's "
 			"own prose says the threshold is config, so the config key has no "
 			"reader either."
-		),
-		"generation_mix": (
-			"`alea dispatch` now writes this one -- `planning/dispatch/{date}"
-			".parquet` with value/unit/label columns -- but only when a caller "
-			"passes an `--out` that resolves there, and no rule does. The gap is "
-			"the rule, not the writer: a daily dispatch needs a solved day-ahead "
-			"network at `results/networks`, which `alea solve` produces on "
-			"request and no schedule runs."
-		),
-		"price_forecast": (
-			"`market.clear_market` computes a `ClearingResult`; nothing runs it "
-			"and nothing writes `market/prices/{date}.parquet`. `rules/market.smk` "
-			"is empty by design (`06-layer3-market.md`: Layer 3 runs off the "
-			"planning layer's artefacts), so the wiring is a rule and a "
-			"projection, not a solver."
 		),
 		"system_alerts": (
 			"Needs a solved network's N-1 sweep as *events above a severity "
@@ -347,8 +354,8 @@ fact: "needs a rule" and "needs a model that does not exist" are different
 amounts of work, and a register that says only "unwired" hides which one it is.
 Five sections are `required=True` -- one per cadence: `outage_forecast`,
 `week_ahead`, `market_report`, `market_outlook`, `continental_outlook` -- and
-for those the report raises rather than warns. Three of the five are unproduced,
-so three cadences -- daily, weekly, annual -- still cannot be generated from the
+for those the report raises rather than warns. Two of the five are unproduced,
+so two cadences -- daily and annual -- still cannot be generated from the
 pipeline. The count was four here once, and the daily cadence was the one it
 dropped; `test_reporting_producers.py` pins one-required-per-cadence so the prose
 cannot drift from the set it describes again.
@@ -359,6 +366,18 @@ missing piece the entry named, `market/stages.py` registered the two stages that
 run it, `rules/market.smk` gave each a rule, and the slugs moved to
 ``PRODUCERS`` in the same change -- which is what makes the register shrink as
 the gap closes rather than describe it.
+
+The daily cadence left the same way on 2026-10-13, and its two entries are worth
+reading as a pair because they were *different kinds* of gap wearing the same
+word. `generation_mix` said "the gap is the rule, not the writer" and that was
+exact: `alea dispatch` already wrote the section's own frame and no rule ran it.
+`price_forecast` said "nothing runs `market.clear_market`" and that was true of
+the *section's* shape while the same quantity was already being computed for the
+API's serving table -- at a different path and in a different shape, because a
+serving table is what a route reads and not what a report reads. One entry needed
+a rule; the other needed a producer. A register that recorded both as "unwired"
+would have hidden that, which is why the reasons here are sentences and not a
+boolean.
 """
 
 

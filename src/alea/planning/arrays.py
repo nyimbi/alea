@@ -430,6 +430,98 @@ def build_capacity_update(config: Config, out: Path, context: BuildContext) -> D
 	return read_provenance(out)
 
 
+@stage("generation_mix")
+def build_generation_mix(config: Config, out: Path, context: BuildContext) -> DerivedProvenance:
+	"""Registered stage: a solved network's dispatch as the daily mix section's rows.
+
+	`reporting/daily.py`'s ``generation_mix`` reads
+	``planning/dispatch/{date}.parquet`` with ``value``/``unit``/``label``
+	columns. `alea dispatch` writes exactly that frame -- ``generation_mix_rows``
+	-- but only to the ``--out`` its caller names, and it also re-solves dispatch
+	on fixed capacity. No rule ran it, so the section had a writer and no
+	delivery, which the register recorded as "the gap is the rule, not the
+	writer".
+
+	**Why this reads the solve rather than re-dispatching.** A solved network
+	already carries its dispatch in ``generators_t.p``, and
+	``generation_mix_rows`` reads that table. Re-solving would discard the
+	capacity the solve chose, which `solve_dispatch`'s ``freeze`` documents as
+	deleting capacity rather than fixing it -- and it would make the report's mix
+	a *different* solve from the network the other sections read. So the stage
+	converts a network an operator has already solved, the same way
+	``@stage("network_arrays")`` does.
+
+	The stamp is the network's first snapshot, not the day the rule ran: the
+	daily cadence resolves ``{date}`` from the report's own ``as_of`` and reports
+	on the day *before*, so a file stamped with today is read by no report. The
+	stamp is written into the frame's own index rather than into the filename --
+	the rule declares the directory and the projection resolves the date, which is
+	the one place the cadence's arithmetic lives.
+	"""
+	import pypsa
+
+	from alea.io.artefacts import read_provenance, sha256_file
+	from alea.io.pipeline import skip_if_current
+	from alea.planning.service import generation_mix_rows
+
+	network_dir = resolve(context.parameters.get("network_dir", NETWORK_DIR))
+	named = context.parameters.get("network_path")
+	path = Path(named) if named else _newest_network(network_dir)
+	if not path.exists():
+		raise ArtefactError(f"no solved network at {path}")
+
+	digest = sha256_file(path)
+	inputs = [digest, *(value for value in context.inputs if value != digest)]
+	existing = skip_if_current(out, inputs, stage_name="generation_mix", logger=context.logger)
+	if existing is not None:
+		return existing
+
+	network = pypsa.Network(str(path))
+	frame = generation_mix_rows(network)
+	if frame.empty:
+		raise ArtefactError(
+			"generation_mix: the solved network dispatched nothing, so the mix has "
+			"no carriers. An empty frame renders as a day in which nothing ran, "
+			"which is a claim the solve does not support"
+		)
+	provenance = DerivedProvenance(
+		source_id="generation_mix",
+		inputs=inputs,
+		code_version=_code_version(),
+		run_id=new_run_id(),
+		parameters={
+			"network_file": path.name,
+			"n_carriers": int(len(frame)),
+			"stamp": _dispatch_stamp_of(network),
+		},
+		basis=Basis.MODELLED,
+		notes=(
+			"Mean dispatched MW per carrier over the solved network's snapshots, "
+			"read from its own dispatch table rather than re-solved. A day-ahead "
+			"mix is an average power, so the mean is reported and not the sum -- "
+			"summing it would print MWh under a column headed MW."
+		),
+	)
+	write_stage(out, frame, provenance, format="parquet")
+	logger.info(
+		"planning.stage.generation_mix",
+		carriers=int(len(frame)),
+		network_file=path.name,
+		out=str(out),
+	)
+	return read_provenance(out)
+
+
+def _dispatch_stamp_of(network: Any) -> str:
+	"""The date a dispatch artefact is stamped with, from the network itself."""
+	snapshots = network.snapshots
+	if len(snapshots) == 0:
+		raise ArtefactError("generation_mix: the network has no snapshots, so it has no date")
+	first = snapshots[0]
+	first = first[0] if isinstance(first, tuple) else first
+	return f"{pd.Timestamp(first):%Y-%m-%d}"
+
+
 def _code_version() -> str:
 	from alea import __version__
 
@@ -443,6 +535,7 @@ __all__ = [
 	"ArrayError",
 	"arrays_payload",
 	"build_capacity_update",
+	"build_generation_mix",
 	"build_network_arrays",
 	"dispatch_matrix",
 	"network_arrays",

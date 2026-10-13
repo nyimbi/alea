@@ -349,6 +349,58 @@ stages:
     outs:
       - results/market/outlook
 
+  generation_mix:
+    desc: "Dispatched MW by carrier, for the daily report's mix section."
+    cmd: >-
+      uv run --directory . alea build generation_mix
+      --out data/processed/generation_mix.parquet
+      --config config/config.kenya.yaml
+      --set network_dir=results/networks
+    deps:
+      - results/networks
+    outs:
+      - data/processed/generation_mix.parquet
+
+  price_forecast:
+    desc: "The daily price section's clearing rows, per hour."
+    cmd: >-
+      uv run --directory . alea build price_forecast
+      --out data/processed/price_forecast.parquet
+      --config config/config.kenya.yaml
+      --set network_dir=results/networks
+    deps:
+      - results/networks
+    outs:
+      - data/processed/price_forecast.parquet
+
+  project_generation_mix:
+    desc: >-
+      The daily mix section at the dated path its report reads. A daily report
+      covers yesterday, so the projection resolves the cadence's period rather
+      than stamping the run date.
+    cmd: >-
+      uv run --directory . alea project daily generation_mix
+      --source data/processed/generation_mix.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/generation_mix.parquet
+    outs:
+      - results/planning/dispatch
+
+  project_price_forecast:
+    desc: >-
+      The daily price section at the dated path its report reads. Optional, so
+      its absence warned rather than raised -- which is why nothing noticed it
+      was missing.
+    cmd: >-
+      uv run --directory . alea project daily price_forecast
+      --source data/processed/price_forecast.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/price_forecast.parquet
+    outs:
+      - results/market/prices
+
   market_prices:
     desc: "The solved network's marginal prices for the API's price route."
     cmd: >-

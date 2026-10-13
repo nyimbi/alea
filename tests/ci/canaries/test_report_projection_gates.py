@@ -31,6 +31,14 @@ and the rule files answer "does anything deliver it", and they agree only by
 convention -- so a rule in one and not the other is either a section recorded as
 delivered with nothing delivering it, or a delivery nothing records.
 
+``test_every_projection_names_the_cadence_that_declares_its_section`` pins the
+cadence in the rule's own command. A projection rule carries the cadence twice
+and only one of the two is load-bearing: ``report_artefact`` builds its output
+directory from the pattern alone, so a rule that runs ``alea project monthly
+generation_mix`` has a correct-looking output and a command that raises. The
+gate exists because the daily pair proved the two spellings can disagree without
+any other gate noticing.
+
 **Why the mutations are edits to the shipped files and not to the tests.** Each
 gate reads source text -- the register, the rule files, `dvc.yaml` -- so planting
 the defect in the artefact the gate reads is what proves the gate notices it. A
@@ -53,6 +61,7 @@ DELIVERY_GATE = "test_every_projected_section_has_a_rule_and_a_dvc_stage"
 WORKFLOW_GATE_FILE = "tests/ci/test_orchestration_workflow.py"
 PATTERN_GATE = "test_a_projection_writes_the_pattern_its_section_declares"
 AGREEMENT_GATE = "test_the_projection_register_and_the_workflow_declare_the_same_set"
+CADENCE_GATE = "test_every_projection_names_the_cadence_that_declares_its_section"
 
 #: The one `PROJECTED` entry, as it is spelled in the register. Both the
 #: partition canary and the delivery canary mutate this line, in different ways:
@@ -206,5 +215,44 @@ def test_the_agreement_gate_catches_a_rule_the_register_does_not_name():
 		)
 
 	assert _gate_exit_code(WORKFLOW_GATE_FILE, AGREEMENT_GATE) == 0, (
+		"the restore was not proven"
+	)
+
+
+def test_the_cadence_gate_catches_a_projection_naming_the_wrong_cadence():
+	"""The defect: the rule's command names a cadence that does not declare it.
+
+	The mutation moves one word -- ``daily`` to ``monthly`` in
+	``project_generation_mix``'s command -- and leaves the rule's *output*
+	untouched. That is the whole point: ``report_artefact(cadence, pattern)``
+	builds the directory from the pattern alone, so its first argument is
+	documentation and the wrong cadence changes no file the workflow writes. The
+	rule exits 0 and ``alea project monthly generation_mix`` raises, or -- for an
+	optional section like this one -- warns "no artefact" in every report.
+
+	A gate that read the register, the pattern, or the rule's output would pass
+	against this, which is why the canary asserts on a gate that reads the
+	*command*.
+	"""
+	target = '"project", "daily", "generation_mix"'
+	replacement = '"project", "monthly", "generation_mix"'
+	assert target in REPORTING_SMK.read_text(), (
+		"the canary target moved; `project_generation_mix` no longer names the "
+		"daily cadence in the form this canary expects, so the canary would be a "
+		"no-op"
+	)
+	assert _gate_exit_code(WORKFLOW_GATE_FILE, CADENCE_GATE) == 0, (
+		"the cadence gate does not pass on the shipped tree"
+	)
+
+	with planted(REPORTING_SMK, target, replacement):
+		assert _gate_exit_code(WORKFLOW_GATE_FILE, CADENCE_GATE) != 0, (
+			"the cadence gate passed with `project_generation_mix` running "
+			"`alea project monthly generation_mix`, which raises because the "
+			"monthly cadence declares no such section. The rule's output is "
+			"unchanged, so nothing else in the workflow can notice"
+		)
+
+	assert _gate_exit_code(WORKFLOW_GATE_FILE, CADENCE_GATE) == 0, (
 		"the restore was not proven"
 	)

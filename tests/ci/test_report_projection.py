@@ -370,23 +370,28 @@ def _projected_source(tmp_path: Path, config: Config, stage: str) -> Path:
 		(ReportCadence.WEEKLY, "critical_lines"),
 		(ReportCadence.MONTHLY, "market_report"),
 		(ReportCadence.QUARTERLY, "market_outlook"),
+		(ReportCadence.DAILY, "generation_mix"),
+		(ReportCadence.DAILY, "price_forecast"),
 	],
 	ids=lambda value: value.value if isinstance(value, ReportCadence) else value,
 )
 def test_every_projected_section_lands_where_its_cadence_reads(
 	tmp_path: Path, cadence: ReportCadence, slug: str
 ):
-	"""The three projections after `capacity_update`, one claim per section.
+	"""The projections after `capacity_update`, one claim per section.
 
 	Each is asserted the same way the capacity one is, and for the same reason:
 	the destination must be the path the *reader* computes, resolved from the
 	cadence's period. `market_outlook` is the one that would be wrong under a
 	projection that stamped its run date -- a quarterly report issued in April
 	reads the quarter ending 31 March, so the file is named for a day that is
-	not the day the rule ran.
+	not the day the rule ran. The two daily ones are the sharpest case of it: a
+	daily report generated at 06:00 covers *yesterday*, so a projection that
+	used the issue date would write a file no report opens and the symptom would
+	be an absent section rather than an error.
 	"""
 	config = _config(tmp_path)
-	if slug in {"market_report", "market_outlook"}:
+	if slug in {"market_report", "market_outlook", "generation_mix", "price_forecast"}:
 		_solved(tmp_path, config)
 	else:
 		# `critical_lines` reads the arrays and dispatch artefacts rather than a
@@ -502,3 +507,79 @@ def test_the_quarterly_report_reads_the_projected_outlook(tmp_path: Path):
 	)
 	section = next(s for s in built.context.sections if s.slug == "market_outlook")
 	assert section.tables[0].rows, "the outlook section rendered with no rows"
+
+
+def test_the_daily_report_reads_the_projected_mix_and_prices(tmp_path: Path):
+	"""The round trip for both daily sections, through the real report.
+
+	Two sections rather than one because they are the pair that measured the
+	distinction the register's prose draws. `generation_mix` had a writer and no
+	rule; `price_forecast` had its quantity computed for the API's serving table
+	at a different shape. Both are optional, so a daily report generates without
+	either and warns -- which is why asserting the *file* exists is not enough
+	and the claim has to be that the section appears in a generated report.
+
+	The daily cadence's *required* section is `outage_forecast`, whose producer
+	is blocked on the VIIRS fetcher (`UNIMPLEMENTED_FETCHERS`), so it is
+	projected from a hand-written frame. Without it `build_report` raises on that
+	section and this test would pass or fail for the wrong reason -- the same
+	reason the weekly round trip writes `week_ahead` by hand.
+	"""
+	from alea.reporting.service import build_report
+
+	config = _config(tmp_path)
+	_solved(tmp_path, config)
+	# `outage_forecast` declares `["Line", "Probability", "Interval", "Basis"]`
+	# and its unit is "probability", so the primary binds to the row's unit and
+	# no extra column is needed -- unlike `week_ahead`, whose unit is "MW" and
+	# which therefore needs a `demand` column.
+	_outage_forecast = pd.DataFrame(
+		{
+			"label": ["n-s"],
+			"value": [0.12],
+			"unit": ["probability"],
+			"interval_low": [0.05],
+			"interval_high": [0.22],
+		}
+	)
+	required_source = Path(config.paths.processed) / "outage_forecast.parquet"
+	write_artefact(
+		required_source,
+		_outage_forecast,
+		DerivedProvenance(
+			source_id="outage_forecast", inputs=["fixture:network"], basis=Basis.FORECAST
+		),
+		format="parquet",
+	)
+	project_section(
+		ReportCadence.DAILY, "outage_forecast", required_source, config, as_of=ISSUE_DATE
+	)
+
+	for slug in ("generation_mix", "price_forecast"):
+		source = _projected_source(tmp_path, config, slug)
+		project_section(ReportCadence.DAILY, slug, source, config, as_of=ISSUE_DATE)
+
+	built = build_report(
+		ReportCadence.DAILY,
+		config,
+		tmp_path / "reports",
+		date=ISSUE_DATE,
+		deliver=False,
+		formats=("html",),
+	)
+	slugs = {section.slug for section in built.context.sections}
+	for slug in ("generation_mix", "price_forecast"):
+		assert slug in slugs, (
+			f"the daily report generated without the {slug} section; it carries "
+			f"{sorted(slugs)}"
+		)
+		section = next(s for s in built.context.sections if s.slug == slug)
+		rows = section.tables[0].rows
+		assert rows, f"the {slug} section rendered with no rows"
+
+	# The mix's first column is the carrier, and the fixture network dispatches
+	# two of them -- so the rows are carriers rather than a repeated label.
+	mix = next(s for s in built.context.sections if s.slug == "generation_mix")
+	assert {str(row[0]) for row in mix.tables[0].rows} == {"coal", "hydro"}, (
+		f"the mix rows are not carriers: {mix.tables[0].rows}"
+	)

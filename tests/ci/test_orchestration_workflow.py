@@ -47,6 +47,7 @@ STAGES = (
 	"demand_national",
 	"fleet",
 	"fuel_prices",
+	"generation_mix",
 	"hydro_profiles",
 	"market_capture_rates",
 	"market_outlook",
@@ -55,6 +56,7 @@ STAGES = (
 	"network_arrays",
 	"outage_history",
 	"outage_truth",
+	"price_forecast",
 	"renewable_profiles",
 	"resilience_contingency",
 	"sector_coupling",
@@ -89,6 +91,8 @@ SUFFIXES = {
 	"capacity_update": ".parquet",
 	"market_outlook": ".parquet",
 	"market_report": ".parquet",
+	"generation_mix": ".parquet",
+	"price_forecast": ".parquet",
 	"sector_coupling": ".json",
 }
 
@@ -105,6 +109,8 @@ PROJECTIONS = {
 	"project_critical_lines": "critical_lines",
 	"project_market_report": "market_report",
 	"project_market_outlook": "market_outlook",
+	"project_generation_mix": "generation_mix",
+	"project_price_forecast": "price_forecast",
 }
 
 #: The section pattern each projection writes, mirrored from the cadence module
@@ -115,6 +121,8 @@ PROJECTION_PATTERNS = {
 	"project_critical_lines": "outages/critical/{date}.parquet",
 	"project_market_report": "market/monthly/{date}.parquet",
 	"project_market_outlook": "market/outlook/{date}.parquet",
+	"project_generation_mix": "planning/dispatch/{date}.parquet",
+	"project_price_forecast": "market/prices/{date}.parquet",
 }
 
 
@@ -308,6 +316,60 @@ def test_the_projection_register_and_the_workflow_declare_the_same_set():
 		"the projection registers do not partition `PRODUCERS`; a produced "
 		"section is either recorded as delivered or has its blocker named"
 	)
+
+
+def test_every_projection_names_the_cadence_that_declares_its_section():
+	"""The cadence in the rule's command is the one that declares the section.
+
+	A projection rule carries the cadence twice, and only one of the two is
+	load-bearing. ``report_artefact(cadence, pattern)`` builds the output
+	directory from ``pattern`` alone -- its first argument is documentation --
+	while ``alea project <cadence> <slug>`` passes the cadence to
+	`project_section`, which resolves the section by slug *within that cadence*
+	and raises if the cadence does not declare it.
+
+	So a rule naming the wrong cadence has a correct-looking output and a command
+	that fails at report time. For a required section that is a loud failure; for
+	an optional one it is a section that warns "no artefact" in every published
+	report while its rule exits 0 -- which is precisely how `generation_mix` and
+	`price_forecast` stayed absent. This gate makes the pairing static: the
+	cadence in the command must be one whose module declares the slug the
+	register pairs the rule with.
+	"""
+	from alea.reporting.schemas import ReportCadence
+	from alea.reporting.service import cadence_specs
+
+	declares: dict[str, set[str]] = {}
+	for cadence in ReportCadence:
+		specs, _ = cadence_specs(cadence)
+		declares[cadence.value] = {spec.slug for spec in specs}
+
+	blocks = _rule_blocks(_smk_text())
+	for rule, slug in PROJECTIONS.items():
+		block = blocks.get(rule, "")
+		match = re.search(r'"project",\s*"([a-z]+)",\s*"([a-z_]+)"', block)
+		assert match, (
+			f"{rule}: no `alea project <cadence> <slug>` command in the rule block; "
+			f"the projection cannot run and the register says it does"
+		)
+		named_cadence, named_slug = match.group(1), match.group(2)
+		assert named_slug == slug, (
+			f"{rule}: the command projects {named_slug!r} and the register pairs "
+			f"the rule with {slug!r}; the pattern check would pass either way, "
+			f"because `report_artefact` builds its directory from the pattern "
+			f"alone"
+		)
+		assert named_cadence in declares, (
+			f"{rule}: the command names cadence {named_cadence!r}, which is not "
+			f"one of {sorted(declares)}"
+		)
+		assert slug in declares[named_cadence], (
+			f"{rule}: `alea project {named_cadence} {slug}` would raise, because "
+			f"the {named_cadence} cadence does not declare {slug!r} -- it declares "
+			f"{sorted(declares[named_cadence])}. The rule's output would still "
+			f"look correct, since `report_artefact` builds it from the pattern "
+			f"and ignores its cadence argument"
+		)
 
 
 def test_snakemake_and_dvc_agree_on_each_stage_s_output():

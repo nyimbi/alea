@@ -273,12 +273,13 @@ src/alea/reporting/
 | `test_every_projected_section_has_a_rule_and_a_dvc_stage` | A projection recorded as delivered is declared by both workflows | Rename the rule; must fail |
 | `test_a_projection_writes_the_pattern_its_section_declares` | The rule's output is the section's own `artefact` pattern | Move the directory; must fail |
 | `test_the_projection_register_and_the_workflow_declare_the_same_set` | The register and the workflow files name the same projections | Drop a rule; must fail |
+| `test_every_projection_names_the_cadence_that_declares_its_section` | A projection's command names a cadence that declares its section | Move the cadence word; must fail |
 
 **`test_no_unverified_benchmark` is the gate that keeps the plan's honesty rule
 enforceable.** AD-10's rule — no `[UNVERIFIED]` figure in a published report —
 is only real if a check fails when one appears.
 
-**The three projection gates are the ones that distinguish a producer from a
+**The four projection gates are the ones that distinguish a producer from a
 delivery.** `reporting/producers.py` records the *function* that computes a
 section's rows, and every stage writes `data/processed/` while every section
 reads `results/<dir>/{date}.parquet`. Nothing bridged the two: no subcommand, no
@@ -288,6 +289,17 @@ tests passed because `tests/fixtures/reporting` writes every dated path by hand.
 A fixture that manufactures a section's input cannot see that no layer produces
 it, which is why the delivery claim needs a gate over the *workflow files* and
 not over the register's own wording.
+
+**The cadence gate exists because a projection rule carries its cadence twice
+and only one of the two is load-bearing.** `report_artefact(cadence, pattern)`
+builds the output directory from `pattern` alone — its first argument is
+documentation — while `alea project <cadence> <slug>` resolves the section by
+slug *within that cadence* and raises if the cadence does not declare it. So a
+rule naming the wrong cadence has a correct-looking output and a command that
+fails, and for an optional section the failure is a "no artefact" warning in
+every published report rather than an error. The two daily projections are what
+made this concrete: `generation_mix` and `price_forecast` are both optional to
+the daily cadence, so nothing raised while both were absent.
 
 ---
 
@@ -304,8 +316,9 @@ not over the register's own wording.
 | 7 | Drift gate scoped to HTML, PDFs asserted non-empty | `test_drift_gate_covers_html_only` |
 | 8 | No unverified benchmark in a report | `test_no_unverified_benchmark` |
 | 9 | A produced section's artefact is delivered to the dated path its report reads | `test_a_projection_writes_the_pattern_its_section_declares` |
-| 10 | Daily report generates in < 5 min | Recorded timing |
-| 11 | Every gate canaried | `tests/ci/canaries` |
+| 10 | A projection's command names the cadence that declares its section | `test_every_projection_names_the_cadence_that_declares_its_section` |
+| 11 | Daily report generates in < 5 min | Recorded timing |
+| 12 | Every gate canaried | `tests/ci/canaries` |
 
 **Criterion 8 is the one that makes the rest credible.** A platform whose
 reports distinguish measured from modelled from proxy, and which refuses to

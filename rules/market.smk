@@ -50,6 +50,33 @@ rule market_report:
 		)
 
 
+rule price_forecast:
+	"""The daily price section's clearing rows, per hour.
+
+	Writes the processed form and lets the projection land it, the same split
+	``market_report`` uses. The section is titled "day-ahead" and the series is
+	the solve's own snapshots rather than a forecast -- no price-forecast model
+	exists here, and the artefact's provenance says so rather than inventing a
+	day ahead.
+	"""
+	input:
+		provided("solved_network", NETWORKS)
+	output:
+		processed("price_forecast")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"build", "price_forecast",
+				"--out", output[0],
+				"--config", CONFIG,
+				"--set", set_arg("network_dir", NETWORKS),
+				*params.flags,
+			)
+		)
+
+
 rule market_outlook:
 	"""The quarterly outlook section's clearing prices, per period.
 

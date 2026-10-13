@@ -548,6 +548,103 @@ def quarterly_market_to_artefact(
 	return pd.DataFrame(rows)
 
 
+def daily_price_to_artefact(
+	network: Any,
+	out: str | Path,
+	*,
+	value_of_lost_load_usd_per_mwh: float,
+	inputs: Sequence[str],
+	value_of_lost_load_basis: str = "",
+	strategy: Strategy | None = None,
+	hours: int = 24,
+) -> pd.DataFrame:
+	"""The daily price section's frame, from the clearing the solve supports.
+
+	The frame `reporting/daily.py`'s ``price_forecast`` reads, whose columns are
+	``["Period", "Price", "Basis"]`` -- one numeric column, so ``_rows_for``
+	binds the primary directly.
+
+	**What the series is, and what it is not.** The section's prose says
+	"day-ahead clearing price by hour, from the market model", and the market
+	model is `clear_market_series` -- there is no price *forecast* in this
+	repository, the same absence `quarterly_market_to_artefact` records for the
+	outlook. So this writes the clearing prices the solved network's own
+	snapshots produce, labelled by the hour they belong to, and the provenance
+	says the series is the solve's horizons rather than a day-ahead forecast.
+	Inventing a forecast would put a number under a basis column with no model
+	behind it.
+
+	**Why the hourly cap.** The section is titled by hour and a daily report
+	covers one day, so a network carrying a year of snapshots would render 8,760
+	rows under a heading that promises a day. ``hours`` bounds it, and the
+	provenance records how many the network actually offered so a reader can see
+	the series was cut rather than short.
+
+	**One row per hour, and the price is that hour's.** Each snapshot is cleared
+	once against the fleet available in it, which is what makes the row a price
+	for that hour rather than a mean over a fleet that was mostly offline. A
+	single clear at the period mean would produce one price for a day.
+	"""
+	assert value_of_lost_load_usd_per_mwh >= 0.0, "VoLL must be non-negative"
+	fleets = build_fleet_series(network, strategy=strategy)
+	if not fleets:
+		raise ValueError(
+			"the network has no generators, so there is no fleet to clear and no "
+			"price to report. An empty frame would render as a day in which "
+			"nothing cleared"
+		)
+	demand = load_series(network)
+	results = clear_market_series(
+		[build_stack(fleet) for fleet in fleets],
+		demand,
+		value_of_lost_load_usd_per_mwh=value_of_lost_load_usd_per_mwh,
+	)
+	snapshots = list(network.snapshots)
+
+	rows: list[dict[str, Any]] = []
+	for position, result in enumerate(results[:hours]):
+		# A snapshot's own label, where the network states one. Numbering the
+		# hours instead would put a period in the column that the index does not
+		# name, which is the mismatch the quarterly docstring warns about.
+		label = (
+			f"{pd.Timestamp(snapshots[position][0] if isinstance(snapshots[position], tuple) else snapshots[position]):%Y-%m-%d %H:%M}"
+			if position < len(snapshots)
+			else f"h{position + 1}"
+		)
+		rows.append(
+			{
+				"label": label,
+				"value": result.clearing_price_usd_per_mwh,
+				"unit": "USD/MWh",
+			}
+		)
+
+	provenance = _derived(
+		inputs,
+		parameters={
+			"value_of_lost_load_usd_per_mwh": value_of_lost_load_usd_per_mwh,
+			"value_of_lost_load_basis": value_of_lost_load_basis,
+			"strategy": (strategy or Strategy.competitive()).kind.value,
+			"hours": len(rows),
+			"snapshots_available": len(snapshots),
+			"series_basis": "the solved network's own snapshots, not a day-ahead forecast",
+		},
+		notes=(
+			"clearing price per hour the solved network supports. No price-forecast "
+			"model exists in this repository, so this is the solve's own snapshots "
+			"rather than the day-ahead forecast the section's prose describes; the "
+			"provenance says so, and the series is bounded rather than invented"
+		),
+		source_id="market.price_forecast",
+	)
+	from alea.io.pipeline import write_stage
+
+	frame = pd.DataFrame(rows, columns=["label", "value", "unit"])
+	write_stage(Path(out), frame, provenance, format="parquet")
+	logger.info("daily_price_to_artefact", out=str(out), hours=len(rows))
+	return frame
+
+
 def _periods_of(network: Any, count: int, *, quarters: int) -> list[str]:
 	"""Labels for ``count`` clearing prices, from the network's own snapshots.
 
@@ -587,6 +684,7 @@ __all__ = [
 	"capture_scenario",
 	"clear_scenario",
 	"clear_zonal_scenario",
+	"daily_price_to_artefact",
 	"monte_carlo_scenario",
 	"monthly_market_to_artefact",
 	"ppa_scenario",
