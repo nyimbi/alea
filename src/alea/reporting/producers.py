@@ -238,10 +238,15 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"wired loss stage is `tlens`."
 		),
 		"outage_events": (
-			"Needs detected outage *events* with start and end times. "
-			"`outages.detect_to_artefact` writes per-tile detections; grouping "
-			"them into events is not implemented anywhere, and the section's "
-			"columns are event-shaped."
+			"Needs a *cause* per detected outage, which is what the section's "
+			"columns ask for -- `[\"Cause\", \"Events\", \"Basis\"]`, a count "
+			"grouped by cause, not the event rows this entry used to describe. "
+			"`outages.detect_to_artefact` writes per-tile detections and a "
+			"detection carries no cause; `scanning.extract.extract_causes` reads "
+			"causes out of prose. Nothing joins a dark tile to a published cause, "
+			"and grouping detections into events is not implemented either -- so "
+			"this needs a cause-attribution model, and the grouping is the smaller "
+			"half of it."
 		),
 		"mitigation": (
 			"Needs a candidate-measure list. `losses.mitigation_to_artefact` and "
