@@ -102,6 +102,9 @@ SUFFIXES = {
 #: `alea report monthly` raised "no artefact" while the producing rule exited 0.
 PROJECTIONS = {
 	"project_capacity_update": "capacity_update",
+	"project_critical_lines": "critical_lines",
+	"project_market_report": "market_report",
+	"project_market_outlook": "market_outlook",
 }
 
 #: The section pattern each projection writes, mirrored from the cadence module
@@ -109,6 +112,9 @@ PROJECTIONS = {
 #: comparison is that the two spellings agree.
 PROJECTION_PATTERNS = {
 	"project_capacity_update": "planning/capacity/{date}.parquet",
+	"project_critical_lines": "outages/critical/{date}.parquet",
+	"project_market_report": "market/monthly/{date}.parquet",
+	"project_market_outlook": "market/outlook/{date}.parquet",
 }
 
 
@@ -251,6 +257,57 @@ def test_a_projection_writes_the_pattern_its_section_declares():
 		assert expected in {str(out) for out in dvc_outs}, (
 			f"{rule}: dvc.yaml outs {dvc_outs} do not name {expected}"
 		)
+
+
+def test_the_projection_register_and_the_workflow_declare_the_same_set():
+	"""Both directions, because a projection is a delivery in two places at once.
+
+	The register answers "is this section delivered"; the rule files answer
+	"does anything deliver it". If the register named a projection no rule
+	declares, the register would overstate coverage -- which is the original
+	defect, restated. If a rule declared a projection the register does not
+	name, the register would understate it and a reader would go looking for a
+	gap that is closed.
+
+	**Read against the rule files, not against `PROJECTIONS`.** The first
+	version of this gate compared the register to the dict above, and both are
+	literals in this repository -- so it agreed by construction and the canary
+	that renames a rule in `rules/reporting.smk` left it green. That is the
+	"two files that agree today are not one source of truth" failure, and it is
+	why the left-hand side here is scraped from the `.smk` files: a rule that is
+	renamed, deleted, or added must move the register or fail this.
+	"""
+	from alea.reporting.producers import PRODUCERS, PROJECTED, UNPROJECTED
+
+	declared = _declared_rules(_smk_text())
+	# The convention the rule names follow, and the only way to enumerate
+	# projections from the workflow side: `PROJECTIONS` maps them, but a rule
+	# added to a `.smk` file and not to that map is exactly what this catches.
+	declared_projections = {name for name in declared if name.startswith("project_")}
+	register_rules = set(PROJECTED.values())
+
+	assert declared_projections == register_rules, (
+		f"the workflow declares the projection rules {sorted(declared_projections)} "
+		f"and `PROJECTED` names {sorted(register_rules)}. A rule in one and not "
+		f"the other is either a section recorded as delivered with nothing "
+		f"delivering it, or a delivery nothing records"
+	)
+	assert set(PROJECTIONS) == declared_projections, (
+		f"this file's `PROJECTIONS` mirror names {sorted(set(PROJECTIONS))} and "
+		f"the rule files declare {sorted(declared_projections)}; the mirror is "
+		f"what the pattern check below reads, so a rule it does not name has its "
+		f"output unchecked"
+	)
+	for slug, rule in PROJECTED.items():
+		assert PROJECTIONS.get(rule) == slug, (
+			f"`PROJECTED` pairs {slug!r} with {rule!r} and this file pairs it "
+			f"with {PROJECTIONS.get(rule)!r}; the two must agree on what a rule "
+			f"projects or the pattern check below is checking the wrong section"
+		)
+	assert set(PROJECTED) | set(UNPROJECTED) == set(PRODUCERS), (
+		"the projection registers do not partition `PRODUCERS`; a produced "
+		"section is either recorded as delivered or has its blocker named"
+	)
 
 
 def test_snakemake_and_dvc_agree_on_each_stage_s_output():

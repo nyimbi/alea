@@ -100,52 +100,35 @@ PROJECTED: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# ``artefact`` pattern lives in, asserted by
 		# `test_orchestration_workflow.py::test_a_projection_writes_the_pattern_its_section_declares`.
 		"capacity_update": "project_capacity_update",
+		# `rules/losses.smk` writes the processed form and says in its own
+		# docstring that the dated path "is the projection's ``--out`` and is not
+		# this rule's business". That sentence described this register's whole gap
+		# before anything closed it; `rules/reporting.smk`'s
+		# ``project_critical_lines`` is the projection it named.
+		"critical_lines": "project_critical_lines",
+		# The two required market sections, and the reason neither the monthly nor
+		# the quarterly cadence could be generated from the pipeline: a required
+		# section whose artefact is absent raises rather than warns.
+		# `market_outlook`'s date is the quarter that *ended* --
+		# `reporting.schemas.period_for` decides which day that is, and a
+		# projection stamped with its own run date would write a file no quarterly
+		# report opens.
+		"market_outlook": "project_market_outlook",
+		"market_report": "project_market_report",
 	}
 )
 
 
 #: Produced sections whose dated path no rule writes, and what closes each.
 #:
-#: The three that remain, and the shape of the gap is the same in all three: the
-#: stage exists, the section's declaration exists, and the rule that moves one to
-#: the other does not. `capacity_update` is the worked example -- one
-#: ``rule project_<slug>`` calling `alea project <cadence> <slug> --source
-#: <processed path>`, one `dvc.yaml` stage beside it, and the slug moves here
-#: from ``UNPROJECTED`` to ``PROJECTED``.
-UNPROJECTED: Final[MappingProxyType[str, str]] = MappingProxyType(
-	{
-		"critical_lines": (
-			"`rules/losses.smk`'s ``critical_lines`` writes "
-			"`data/processed/critical_lines.parquet`; the weekly section reads "
-			"`results/outages/critical/{date}.parquet`. The rule's own docstring "
-			"says the dated path \"is the projection's ``--out`` and is not this "
-			"rule's business\" -- and no projection rule exists, which is the "
-			"sentence that described this register's whole gap before "
-			"`capacity_update` closed it. One rule and one DVC stage, no new "
-			"computation: the stage's frame is already the section's rows."
-		),
-		"market_report": (
-			"`rules/market.smk` writes `data/processed/market_report.parquet`; the "
-			"monthly section reads `results/market/monthly/{date}.parquet`. This "
-			"is a **required** section, so the monthly cadence raises rather than "
-			"warns without it -- and it is the one a reader opens the monthly "
-			"report for. `rules/market.smk`'s header calls the dated path \"a "
-			"projection someone passes a date to\"; the someone was never "
-			"written."
-		),
-		"market_outlook": (
-			"`rules/market.smk` writes `data/processed/market_outlook.parquet`; "
-			"the quarterly section reads `results/market/outlook/{date}.parquet`. "
-			"Also **required**, so the quarterly cadence raises. Note the date "
-			"resolution this one needs: a quarterly report issued on the 1st "
-			"covers the quarter that just ended, and "
-			"`reporting.schemas.period_for` is what decides which day that is -- "
-			"a projection stamped with its own run date writes a file no "
-			"quarterly report opens, and the symptom is an absent section rather "
-			"than an error."
-		),
-	}
-)
+#: Empty, and that is the measurement rather than a placeholder: every section
+#: ``PRODUCERS`` names now has a rule that lands its artefact where the report
+#: reads it. The register is kept because it is the *question* -- it is what
+#: fails when a new producer is recorded without its delivery, which is how
+#: `capacity_update` came to be recorded as produced while `alea report monthly`
+#: exited 1. Deleting it would restore the state in which ``PRODUCERS`` means
+#: "a function exists" and nothing says otherwise.
+UNPROJECTED: Final[MappingProxyType[str, str]] = MappingProxyType({})
 
 
 #: Sections with no producer, keyed by slug to why, and what would close it.

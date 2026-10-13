@@ -309,6 +309,46 @@ stages:
       # resolves it from the section's own declared pattern.
       - results/planning/capacity
 
+  project_critical_lines:
+    desc: >-
+      The weekly critical-lines section at the dated path its report reads.
+      `rules/losses.smk` writes the processed form and says the dated path "is
+      the projection's `--out`"; this is that projection.
+    cmd: >-
+      uv run --directory . alea project weekly critical_lines
+      --source data/processed/critical_lines.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/critical_lines.parquet
+    outs:
+      - results/outages/critical
+
+  project_market_report:
+    desc: >-
+      The monthly market section at the dated path its report reads. Required
+      to the monthly cadence, so `alea report monthly` raises without it.
+    cmd: >-
+      uv run --directory . alea project monthly market_report
+      --source data/processed/market_report.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/market_report.parquet
+    outs:
+      - results/market/monthly
+
+  project_market_outlook:
+    desc: >-
+      The quarterly outlook section at the dated path its report reads. The
+      date is the quarter that ended, not the day the rule ran.
+    cmd: >-
+      uv run --directory . alea project quarterly market_outlook
+      --source data/processed/market_outlook.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/market_outlook.parquet
+    outs:
+      - results/market/outlook
+
   market_prices:
     desc: "The solved network's marginal prices for the API's price route."
     cmd: >-

@@ -272,6 +272,7 @@ src/alea/reporting/
 | `test_the_projected_registers_partition_the_produced_sections` | Every produced section is recorded as projected or unprojected | Delete the entry; must fail |
 | `test_every_projected_section_has_a_rule_and_a_dvc_stage` | A projection recorded as delivered is declared by both workflows | Rename the rule; must fail |
 | `test_a_projection_writes_the_pattern_its_section_declares` | The rule's output is the section's own `artefact` pattern | Move the directory; must fail |
+| `test_the_projection_register_and_the_workflow_declare_the_same_set` | The register and the workflow files name the same projections | Drop a rule; must fail |
 
 **`test_no_unverified_benchmark` is the gate that keeps the plan's honesty rule
 enforceable.** AD-10's rule — no `[UNVERIFIED]` figure in a published report —

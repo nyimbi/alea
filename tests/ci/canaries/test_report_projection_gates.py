@@ -25,6 +25,12 @@ exists for is the one that was measured: a producer writing
 ``data/processed/`` while the reader looked under ``results/``, which is a
 section that renders in CI and is absent in production.
 
+``test_the_projection_register_and_the_workflow_declare_the_same_set`` pins the
+two files against each other. The register answers "is this section delivered"
+and the rule files answer "does anything deliver it", and they agree only by
+convention -- so a rule in one and not the other is either a section recorded as
+delivered with nothing delivering it, or a delivery nothing records.
+
 **Why the mutations are edits to the shipped files and not to the tests.** Each
 gate reads source text -- the register, the rule files, `dvc.yaml` -- so planting
 the defect in the artefact the gate reads is what proves the gate notices it. A
@@ -46,6 +52,7 @@ PARTITION_GATE = "test_the_projected_registers_partition_the_produced_sections"
 DELIVERY_GATE = "test_every_projected_section_has_a_rule_and_a_dvc_stage"
 WORKFLOW_GATE_FILE = "tests/ci/test_orchestration_workflow.py"
 PATTERN_GATE = "test_a_projection_writes_the_pattern_its_section_declares"
+AGREEMENT_GATE = "test_the_projection_register_and_the_workflow_declare_the_same_set"
 
 #: The one `PROJECTED` entry, as it is spelled in the register. Both the
 #: partition canary and the delivery canary mutate this line, in different ways:
@@ -163,5 +170,41 @@ def test_the_workflow_gate_catches_a_rule_writing_the_wrong_directory():
 		)
 
 	assert _gate_exit_code(WORKFLOW_GATE_FILE, PATTERN_GATE) == 0, (
+		"the restore was not proven"
+	)
+
+
+def test_the_agreement_gate_catches_a_rule_the_register_does_not_name():
+	"""The defect: the workflow delivers a section the register says is not.
+
+	The two files agree only by convention, and this is the direction that hides
+	work rather than inventing it: a rule exists, so the section *is* delivered,
+	and the register still lists it as unprojected -- so a reader goes looking
+	for a gap that is closed and an operator cannot tell which file is stale.
+
+	The mutation renames the rule in `rules/reporting.smk` rather than in the
+	register, because the register is the side a careless edit updates and the
+	workflow is the side that runs. Renaming it leaves a rule nothing declares
+	and a register entry naming a rule that no longer exists -- both directions
+	of the disagreement at once.
+	"""
+	target = "rule project_critical_lines:"
+	replacement = "rule project_critical_lines_renamed:"
+	assert target in REPORTING_SMK.read_text(), (
+		"the canary target moved; `project_critical_lines` is no longer declared "
+		"in the form this canary expects, so the canary would be a no-op"
+	)
+	assert _gate_exit_code(WORKFLOW_GATE_FILE, AGREEMENT_GATE) == 0, (
+		"the agreement gate does not pass on the shipped tree"
+	)
+
+	with planted(REPORTING_SMK, target, replacement):
+		assert _gate_exit_code(WORKFLOW_GATE_FILE, AGREEMENT_GATE) != 0, (
+			"the agreement gate passed with a projection rule renamed out of the "
+			"workflow while the register still names it; the register and the "
+			"workflow files would disagree and neither would say so"
+		)
+
+	assert _gate_exit_code(WORKFLOW_GATE_FILE, AGREEMENT_GATE) == 0, (
 		"the restore was not proven"
 	)

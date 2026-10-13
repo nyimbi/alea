@@ -89,3 +89,94 @@ rule project_capacity_update:
 				*params.flags,
 			)
 		)
+
+
+# --------------------------------------------------------------------------
+# The projections that belong to another layer's rule file
+# --------------------------------------------------------------------------
+#
+# `critical_lines` and the two market sections are produced by
+# `rules/losses.smk` and `rules/market.smk`, and their projections live here
+# rather than beside them for the reason this file's header gives: a projection
+# advances no layer. `project_critical_lines` is not a loss computation and
+# `project_market_report` is not a market computation -- each moves an artefact
+# its own layer already wrote to the dated path Layer 6 reads, so filing either
+# under its producer's rule file would say the delivery is part of that layer.
+#
+# Their *sources* are still that layer's, declared here by the processed path
+# rather than by importing the producer's rule: Snakemake resolves the
+# dependency from the filename, so this file needs no knowledge of which rule
+# wrote it.
+#
+# The two market ones matter more than the third. `market_report` and
+# `market_outlook` are `required=True`, so the monthly and quarterly cadences
+# *raise* without them -- and `market_outlook`'s date is the quarter that ended,
+# not the day the rule ran, which `reporting.schemas.period_for` resolves and a
+# projection stamped with its own run date would get wrong silently.
+
+rule project_critical_lines:
+	"""`critical_lines` at the dated path the weekly report reads."""
+	input:
+		processed("critical_lines")
+	output:
+		report_artefact("weekly", "outages/critical/{date}.parquet")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"project", "weekly", "critical_lines",
+				"--source", input[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)
+
+
+rule project_market_report:
+	"""`market_report` at the dated path the monthly report reads.
+
+	Required to the monthly cadence, so without this rule `alea report monthly`
+	raises rather than warning -- and the section is the one a reader opens the
+	report for.
+	"""
+	input:
+		processed("market_report")
+	output:
+		report_artefact("monthly", "market/monthly/{date}.parquet")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"project", "monthly", "market_report",
+				"--source", input[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)
+
+
+rule project_market_outlook:
+	"""`market_outlook` at the dated path the quarterly report reads.
+
+	The date is the interesting part: a quarterly report issued on the 1st
+	covers the quarter that just ended, and the projection asks the cadence for
+	that day rather than stamping the run date. A literal here would be a file
+	no quarterly report opens, and the symptom would be an absent section.
+	"""
+	input:
+		processed("market_outlook")
+	output:
+		report_artefact("quarterly", "market/outlook/{date}.parquet")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"project", "quarterly", "market_outlook",
+				"--source", input[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)

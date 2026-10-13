@@ -37,7 +37,7 @@ from alea.io.artefacts import ArtefactError, write_artefact
 from alea.planning.arrays import build_capacity_update
 from alea.provenance.models import Basis, DerivedProvenance
 from alea.reporting.projection import project_section, unprojected_sections
-from alea.reporting.schemas import ReportCadence
+from alea.reporting.schemas import ReportCadence, period_for
 from alea.reporting.service import section_artefact_path, section_by_slug
 
 SNAPSHOTS = pd.date_range("2030-01-01", periods=24, freq="h")
@@ -311,3 +311,194 @@ def test_the_measurement_names_the_sections_a_cadence_cannot_deliver(tmp_path: P
 	assert len(after) == len(missing) - 1, (
 		f"projecting one section changed the set by {len(missing) - len(after)}"
 	)
+
+
+# --------------------------------------------------------------------------
+# The other three: the same claim, per section, through a real report
+# --------------------------------------------------------------------------
+
+
+def _solved(tmp_path: Path, config: Config) -> pypsa.Network:
+	"""A solved two-carrier network under ``results/networks``.
+
+	Solved rather than hand-built, because the producers read a *solve*: the
+	monthly frame is one row per carrier that dispatched, and a network with no
+	dispatch has no market to clear.
+	"""
+	import pypsa
+
+	directory = tmp_path / "results" / "networks"
+	directory.mkdir(parents=True, exist_ok=True)
+	network = pypsa.Network()
+	network.set_snapshots(list(SNAPSHOTS))
+	network.add("Bus", "north", v_nom=220.0)
+	network.add("Bus", "south", v_nom=132.0)
+	network.add("Line", "n-s", bus0="north", bus1="south", r=0.5, x=10.0, s_nom=400.0)
+	network.add(
+		"Generator", "coal", bus="north", carrier="coal", p_nom=300.0, marginal_cost=45.0
+	)
+	network.add(
+		"Generator", "hydro", bus="south", carrier="hydro", p_nom=200.0, marginal_cost=5.0
+	)
+	network.add("Load", "load", bus="south", p_set=120.0)
+	network.optimize()
+	network.export_to_netcdf(str(directory / "aaaa1111-2030.nc"))
+	return network
+
+
+def _projected_source(tmp_path: Path, config: Config, stage: str) -> Path:
+	"""Run the registered stage whose artefact the projection moves.
+
+	Through `build_stage` rather than by calling the producer, so the fixture
+	writes exactly what the rule's command writes -- including the sidecar the
+	projection's `read_artefact` verifies.
+	"""
+	from alea.io.pipeline import build_stage
+
+	directory = str(tmp_path / "results" / "networks")
+	out = Path(config.paths.processed) / f"{stage}.parquet"
+	result = build_stage(
+		stage, config, out, inputs=[], parameters={"network_dir": directory}
+	)
+	assert not result.skipped, f"{stage} skipped; the fixture wrote nothing"
+	return out
+
+
+@pytest.mark.parametrize(
+	("cadence", "slug"),
+	[
+		(ReportCadence.WEEKLY, "critical_lines"),
+		(ReportCadence.MONTHLY, "market_report"),
+		(ReportCadence.QUARTERLY, "market_outlook"),
+	],
+	ids=lambda value: value.value if isinstance(value, ReportCadence) else value,
+)
+def test_every_projected_section_lands_where_its_cadence_reads(
+	tmp_path: Path, cadence: ReportCadence, slug: str
+):
+	"""The three projections after `capacity_update`, one claim per section.
+
+	Each is asserted the same way the capacity one is, and for the same reason:
+	the destination must be the path the *reader* computes, resolved from the
+	cadence's period. `market_outlook` is the one that would be wrong under a
+	projection that stamped its run date -- a quarterly report issued in April
+	reads the quarter ending 31 March, so the file is named for a day that is
+	not the day the rule ran.
+	"""
+	config = _config(tmp_path)
+	if slug in {"market_report", "market_outlook"}:
+		_solved(tmp_path, config)
+	else:
+		# `critical_lines` reads the arrays and dispatch artefacts rather than a
+		# solved network, so it needs the tree `test_loading.py` builds.
+		from tests.ci.test_loading import _stage_tree
+
+		_stage_tree(tmp_path)
+	source = _projected_source(tmp_path, config, slug)
+
+	report_date = period_for(cadence, ISSUE_DATE)[1]
+	target = project_section(cadence, slug, source, config, as_of=ISSUE_DATE)
+	assert target == section_artefact_path(section_by_slug(cadence, slug), config, report_date), (
+		f"{slug}: the projection wrote {target}, and the reader computes "
+		f"{section_artefact_path(section_by_slug(cadence, slug), config, report_date)}"
+	)
+	assert target.exists(), f"{slug}: the projection wrote nothing"
+	assert unprojected_sections(cadence, config, as_of=ISSUE_DATE).count(slug) == 0, (
+		f"{slug} still reads as undelivered after being projected"
+	)
+
+
+def test_the_weekly_report_reads_the_projected_critical_lines(tmp_path: Path):
+	"""The round trip for a non-required section, through the real report.
+
+	`critical_lines` is optional to the weekly cadence, so a report generates
+	without it and warns -- which is exactly why asserting the *file* exists is
+	not enough. The claim is that the section appears in a generated report, and
+	only generating one shows that.
+	"""
+	from alea.reporting.service import build_report
+	from tests.ci.test_loading import _stage_tree
+
+	config = _config(tmp_path)
+	_stage_tree(tmp_path)
+	# The weekly cadence's *required* section has no producer at all, so it is
+	# projected from a hand-written frame: without it `build_report` raises on
+	# that section and this test would pass or fail for the wrong reason.
+	# The frame carries a column per numeric header the section declares. Not a
+	# convenience: `_rows_for` refuses a numeric column whose quantity the row
+	# does not carry, and `week_ahead` declares three -- the section's declared
+	# `unit` is "MW", so the primary binds to a *`demand` column* and not to the
+	# row's unit. A fixture with only `value` would raise in the reader, and this
+	# test would then be measuring the fixture rather than the projection.
+	_week_ahead = pd.DataFrame(
+		{
+			"label": ["Mon"],
+			"value": [120.0],
+			"unit": ["MW"],
+			"demand": [120.0],
+			"renewable": [40.0],
+			"margin": [80.0],
+		}
+	)
+	required_source = Path(config.paths.processed) / "week_ahead.parquet"
+	write_artefact(
+		required_source,
+		_week_ahead,
+		DerivedProvenance(
+			source_id="week_ahead", inputs=["fixture:network"], basis=Basis.MODELLED
+		),
+		format="parquet",
+	)
+	project_section(ReportCadence.WEEKLY, "week_ahead", required_source, config, as_of=ISSUE_DATE)
+
+	source = _projected_source(tmp_path, config, "critical_lines")
+	project_section(ReportCadence.WEEKLY, "critical_lines", source, config, as_of=ISSUE_DATE)
+
+	built = build_report(
+		ReportCadence.WEEKLY,
+		config,
+		tmp_path / "reports",
+		date=ISSUE_DATE,
+		deliver=False,
+		formats=("html",),
+	)
+	slugs = {section.slug for section in built.context.sections}
+	assert "critical_lines" in slugs, (
+		f"the weekly report generated without the critical-lines section; it "
+		f"carries {sorted(slugs)}"
+	)
+	section = next(s for s in built.context.sections if s.slug == "critical_lines")
+	rows = section.tables[0].rows
+	assert rows, "the critical-lines section rendered with no rows"
+	assert {str(row[0]) for row in rows} == {"AB"}, f"the rows are not lines: {rows}"
+
+
+def test_the_quarterly_report_reads_the_projected_outlook(tmp_path: Path):
+	"""The round trip for the quarterly required section.
+
+	`market_outlook` is required, so before its projection the quarterly cadence
+	could not be generated at all. This is that cadence generating, with the
+	section present and carrying the period the projection resolved.
+	"""
+	from alea.reporting.service import build_report
+
+	config = _config(tmp_path)
+	_solved(tmp_path, config)
+	source = _projected_source(tmp_path, config, "market_outlook")
+	project_section(ReportCadence.QUARTERLY, "market_outlook", source, config, as_of=ISSUE_DATE)
+
+	built = build_report(
+		ReportCadence.QUARTERLY,
+		config,
+		tmp_path / "reports",
+		date=ISSUE_DATE,
+		deliver=False,
+		formats=("html",),
+	)
+	slugs = {section.slug for section in built.context.sections}
+	assert "market_outlook" in slugs, (
+		f"the quarterly report generated without the outlook section; it carries "
+		f"{sorted(slugs)}"
+	)
+	section = next(s for s in built.context.sections if s.slug == "market_outlook")
+	assert section.tables[0].rows, "the outlook section rendered with no rows"

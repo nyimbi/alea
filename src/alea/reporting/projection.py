@@ -143,12 +143,24 @@ def _require_the_section_can_be_filled(source: Path, spec: SectionSpec, payload:
 	under another's header -- so the *report* raises naming the section while the
 	defect is in what the producer wrote.
 
-	The measured case. `capacity_update` declares ``["Carrier", "Capacity",
-	"Change", "Basis"]``, two of them numeric, and the stage deliberately omits
-	``change`` when the directory holds a single solve (inventing a zero would
-	assert capacity did not move). Projecting that frame makes `alea report
-	monthly` raise inside `_rows_for`, which reads as a broken report. Refusing
-	here names the missing quantity and the producer that owes it.
+	**This mirrors `_rows_for` rather than approximating it.** The first version
+	required every numeric column to have a matching column in the payload, and
+	that is *stricter* than the reader in two ways the reader allows: a column
+	whose name matches the row's ``unit`` takes the primary, and a section with
+	exactly one numeric column takes the primary whatever it is called. Both are
+	real -- `market_outlook` declares ``["Quarter", "Price", "Basis"]``, one
+	numeric column, and its producer writes ``value``/``unit`` and no ``price``
+	column -- so the strict version refused an artefact `alea report quarterly`
+	reads happily. A gate stricter than the thing it guards is one an operator
+	routes around, which is the failure the docstring above names.
+
+	The measured case for the refusal itself. `capacity_update` declares
+	``["Carrier", "Capacity", "Change", "Basis"]``, two of them numeric, and the
+	stage deliberately omits ``change`` when the directory holds a single solve
+	(inventing a zero would assert capacity did not move). Projecting that frame
+	makes `alea report monthly` raise inside `_rows_for`, which reads as a broken
+	report. Refusing here names the missing quantity and the producer that owes
+	it.
 	"""
 	if not isinstance(payload, pd.DataFrame) or payload.empty:
 		raise ArtefactError(
@@ -156,10 +168,29 @@ def _require_the_section_can_be_filled(source: Path, spec: SectionSpec, payload:
 			f"filled from it. A projection moves rows; it does not invent them"
 		)
 	carried = {_normalise(str(column)) for column in payload.columns}
+	numeric = [column for column in spec.columns[1:] if _is_numeric_column(column)]
+	if len(numeric) == 1:
+		# The reader's own fallback: with one numeric column the primary goes
+		# there whatever the header is called, so there is nothing to refuse.
+		return
+	# The primary binds to a column naming the row's unit -- and the *section's*
+	# declared unit wins where it has one, because that is what
+	# `values_from_artefact` passes as `unit` and `_rows_for` compares against.
+	# Reading the payload's unit unconditionally would be a third spelling of
+	# the binding rule, and it would accept a frame the reader refuses.
+	if spec.unit:
+		units = {_normalise(spec.unit)}
+	else:
+		column = payload.get("unit")
+		units = (
+			{_normalise(str(unit)) for unit in column.dropna().unique()}
+			if column is not None
+			else set()
+		)
 	missing = [
 		column
-		for column in spec.columns[1:]
-		if _is_numeric_column(column) and _normalise(column) not in carried
+		for column in numeric
+		if _normalise(column) not in carried and _normalise(column) not in units
 	]
 	if missing:
 		raise ArtefactError(
