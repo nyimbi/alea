@@ -56,6 +56,13 @@ PRODUCERS: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# "needs a loading kernel, and there is none", the kernel was written
 		# (`losses.flow.loading_series`), and the slug moved here with it.
 		"critical_lines": "losses.service.critical_lines_to_artefact",
+		# Recorded as "no artefact carries the mix as its own dated table", and
+		# that was exact: `capacity_mix_table` computed it and the solve's JSON
+		# summary carried it, which is a run record rather than a report input.
+		# The stage is `alea.planning.arrays.build_capacity_update` and the
+		# section's two numeric columns are why it writes `change` as a column
+		# of its own rather than folding it into the capacity.
+		"capacity_update": "planning.arrays.build_capacity_update",
 		# The two required sections whose absence meant *no* cadence could be
 		# generated from the pipeline. The blocker recorded here was measured
 		# and correct: no module built a market fleet from a solved network, so
@@ -168,12 +175,6 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"`UNWIRED`."
 		),
 		# ---- monthly ----
-		"capacity_update": (
-			"`planning/capacity/{date}.parquet`. `planning.capacity_mix_table` "
-			"computes the mix from a solved network and `solve_scenario` writes "
-			"it into the solve's JSON summary; no artefact carries it as its own "
-			"dated table."
-		),
 		"generation_actual_vs_forecast": (
 			"Needs the previous month's forecast retained, which "
 			"`09-layer6-reporting.md` §3.3 calls out: a comparison against a "
@@ -189,9 +190,25 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"row."
 		),
 		"loss_statistics": (
-			"`losses/monthly/{date}.parquet`. `losses.losses_to_artefact` writes "
-			"per-component losses; nothing aggregates them by month at the "
-			"declared path."
+			"`losses/monthly/{date}.parquet`, columns `Component`, `Loss share`, "
+			"`Basis`. The path to it is not the one this entry used to name: "
+			"`losses.losses_to_artefact` writes a per-*snapshot* loss series, "
+			"which is one component and not the by-cause split the section's "
+			"first column asks for. The split is `losses.decomposition_to_"
+			"artefact`, and it is **degenerate under its own defaults** -- "
+			"measured on the meshed mixed-voltage fixture: `load_driven == total` "
+			"and `generation_driven == topology_driven == 0.0`, for every network. "
+			"`reference_network` defaults to the actual network and "
+			"`topology_network` to the reference, so `T - R` is zero *by "
+			"construction*. A section written from that renders "
+			"`['load driven', 100.0]` in every published monthly report, which is "
+			"the specification's `_topology_driven = 0 # Placeholder` relocated "
+			"rather than repaired. It is the same blocker as "
+			"`data/processed/losses/decomposition.parquet` in `alea.publish.views."
+			"UNWIRED`, and `test_the_decomposition_needs_a_reference_network_to_"
+			"attribute_anything` pins it: wiring this needs a reference network "
+			"(the plan names loss-optimal line switching, and no switching solver "
+			"exists), not a rule."
 		),
 		"resilience_metrics": (
 			"`resilience.resilience_to_artefact` exists and writes to a "

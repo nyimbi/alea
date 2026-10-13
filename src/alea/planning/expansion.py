@@ -391,6 +391,15 @@ def capacity_mix_table(network: pypsa.Network) -> pd.DataFrame:
 	The one table every reader wants and the one every report quotes. Built here
 	so that "installed capacity" means the same thing everywhere: existing
 	capacity where a component is not extendable, optimal capacity where it is.
+
+	**The table is a mix, so it carries only positive capacity.** A component the
+	solve built to nothing is not part of the mix, and skipping it is what makes
+	the frame's shares sum to one. That is a fact about *this* function, not
+	about installed capacity in general, and a caller differencing two mixes has
+	to know it: a carrier that was 200 MW and is now 0 is **absent** here, so
+	reading its absence as zero and differencing naively reports it as having
+	*grown* by 200 MW. `planning.service.capacity_update_rows` is the one caller
+	that differences, and it reads the absence correctly.
 	"""
 	assert network is not None, "network must not be None"
 	rows: list[dict[str, Any]] = []

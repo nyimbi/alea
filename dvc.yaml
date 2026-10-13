@@ -276,6 +276,22 @@ stages:
     outs:
       - data/processed/market_outlook.parquet
 
+  capacity_update:
+    desc: "Installed capacity by carrier, differenced against the previous solve."
+    cmd: >-
+      uv run --directory . alea build capacity_update
+      --out data/processed/capacity_update.parquet
+      --config config/config.kenya.yaml
+      --set network_dir=results/networks
+    deps:
+      # A directory, and here it is read twice: the stage resolves the newest
+      # solve and the one written before it, because the section's change column
+      # is a difference between two networks. A new solve invalidates the delta
+      # either way round, which is exactly what a directory dep tracks.
+      - results/networks
+    outs:
+      - data/processed/capacity_update.parquet
+
   market_prices:
     desc: "The solved network's marginal prices for the API's price route."
     cmd: >-

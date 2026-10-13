@@ -46,6 +46,7 @@ include: "rules/outages.smk"
 include: "rules/losses.smk"
 include: "rules/sector.smk"
 include: "rules/publish.smk"
+include: "rules/reporting.smk"
 
 # The default target. Snakemake takes the first rule when no target is named,
 # and "the first rule" is fragile in a file whose rule order is maintained by
@@ -86,3 +87,7 @@ rule all:
 		# leave two cadences unbuildable.
 		processed("market_report"),
 		processed("market_outlook"),
+		# The monthly capacity section. Optional to the report, so its absence
+		# warns rather than raises -- but it is a section a reader opens the
+		# monthly report for, and it costs one read of a network already solved.
+		processed("capacity_update"),

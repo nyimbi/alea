@@ -39,6 +39,7 @@ SNAKEFILE = REPO_ROOT / "Snakefile"
 # Listed here rather than imported so that a stage silently disappearing from
 # the registry fails the comparison instead of shrinking both sides.
 STAGES = (
+	"capacity_update",
 	"costs",
 	"critical_lines",
 	"cutout",
@@ -85,6 +86,7 @@ SUFFIXES = {
 	"network_arrays": ".json",
 	"tlens": ".json",
 	"critical_lines": ".parquet",
+	"capacity_update": ".parquet",
 	"market_outlook": ".parquet",
 	"market_report": ".parquet",
 	"sector_coupling": ".json",

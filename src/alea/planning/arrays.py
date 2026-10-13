@@ -215,12 +215,46 @@ def _newest_network(directory: Path) -> Path:
 		reverse=True,
 	)
 	if not candidates:
+		# Layer-neutral, because seven stages across four layers resolve their
+		# network here and only two of them are the loss stages. The message used
+		# to name the loss layer's reason -- "an unsolved one has no dispatch to
+		# decompose" -- which was true of `tlens` and `critical_lines` and false
+		# of the other five: a reader of `alea build capacity_update` was told to
+		# go looking for a dispatch artefact that stage never reads.
 		raise ArtefactError(
-			f"no solved network in {directory}; run `alea solve` first. The loss "
-			f"stages read a solved network, and an unsolved one has no dispatch to "
-			f"decompose"
+			f"no solved network in {directory}; run `alea solve` first. The stages "
+			f"that read a solved network -- the loss kernel's arrays, the market, "
+			f"the sector coupling and the report sections built from them -- all "
+			f"read one, and none of them can read a network that was never solved"
 		)
 	return candidates[0]
+
+
+def _previous_network(directory: Path, current: Path) -> Path | None:
+	"""The solved network written before ``current``, or ``None`` if it is the first.
+
+	The same ordering ``_newest_network`` uses, read one place further down. A
+	caller that wants "the change since the previous month" has to be handed a
+	*second* network, and which one that is cannot be a judgement the caller
+	makes from a filename: the names carry a content hash, so the only ordering
+	the directory has is the write order.
+
+	``None`` rather than an exception, because one solve in the directory is the
+	ordinary state of a fresh clone and a *first* capacity update has nothing to
+	difference against. The caller decides whether that is a refusal or an
+	omitted column; this function only answers the question it was asked.
+	"""
+	if not directory.is_dir():
+		return None
+	candidates = sorted(
+		(path for path in directory.glob("*.nc") if path.is_file()),
+		key=lambda path: path.stat().st_mtime,
+		reverse=True,
+	)
+	for candidate in candidates:
+		if candidate != current:
+			return candidate
+	return None
 
 
 @stage("network_arrays")
@@ -313,6 +347,89 @@ def build_network_arrays(config: Config, out: Path, context: BuildContext) -> De
 	return provenance
 
 
+@stage("capacity_update")
+def build_capacity_update(config: Config, out: Path, context: BuildContext) -> DerivedProvenance:
+	"""Registered stage: installed capacity by carrier, in the monthly report's shape.
+
+	`reporting/producers.py` recorded this section's blocker as "no artefact
+	carries the mix as its own dated table": `capacity_mix_table` computed it and
+	`solve_scenario` wrote it into the solve's JSON summary, which is a run record
+	rather than a report input. This stage is the dated table.
+
+	**Two solves are read, not one.** The section asks for the change since the
+	previous month and a single solved network has no previous month in it. So
+	the directory is read twice -- newest, and newest-but-one -- and the two are
+	differenced by ``capacity_update_rows``. The older one is recorded in the
+	provenance as an input, because a change is a function of both networks and a
+	reader given only the new one cannot reproduce the delta.
+
+	A directory holding one solve writes the capacity with no ``change`` column at
+	all. That is a refusal to invent a zero dressed as a column: the reader reports
+	the section's own absence rather than asserting that capacity did not move.
+	"""
+	import pypsa
+
+	from alea.io.artefacts import read_provenance, sha256_file
+	from alea.io.pipeline import skip_if_current
+	from alea.planning.service import capacity_update_rows
+
+	network_dir = resolve(context.parameters.get("network_dir", NETWORK_DIR))
+	named = context.parameters.get("network_path")
+	path = Path(named) if named else _newest_network(network_dir)
+	if not path.exists():
+		raise ArtefactError(f"no solved network at {path}")
+
+	previous = None if named else _previous_network(network_dir, path)
+
+	digest = sha256_file(path)
+	inputs = [digest, *(value for value in context.inputs if value != digest)]
+	previous_digest = ""
+	if previous is not None:
+		previous_digest = sha256_file(previous)
+		inputs.append(previous_digest)
+	existing = skip_if_current(out, inputs, stage_name="capacity_update", logger=context.logger)
+	if existing is not None:
+		return existing
+
+	frame = capacity_update_rows(
+		pypsa.Network(str(path)),
+		pypsa.Network(str(previous)) if previous is not None else None,
+	)
+	provenance = DerivedProvenance(
+		source_id="capacity_update",
+		inputs=inputs,
+		code_version=_code_version(),
+		run_id=new_run_id(),
+		parameters={
+			"network_file": path.name,
+			"previous_network_file": previous.name if previous is not None else "",
+			"n_carriers": int(len(frame)),
+			"has_change": "change" in frame.columns,
+		},
+		basis=Basis.MODELLED,
+		notes=(
+			"Installed capacity by carrier from the newest solved network, "
+			"differenced against the solve written before it. Existing capacity "
+			"where a component is not extendable and the optimiser's chosen "
+			"capacity where it is, which is `capacity_mix_table`'s one definition "
+			"of installed capacity."
+			if previous is not None
+			else "Installed capacity by carrier from the newest solved network. No "
+			"earlier solve is in the directory, so the change against a previous "
+			"month is absent rather than zero -- a zero would assert capacity did "
+			"not move, from no evidence."
+		),
+	)
+	write_stage(out, frame, provenance, format="parquet")
+	logger.info(
+		"planning.stage.capacity_update",
+		carriers=int(len(frame)),
+		previous=previous.name if previous is not None else "",
+		out=str(out),
+	)
+	return read_provenance(out)
+
+
 def _code_version() -> str:
 	from alea import __version__
 
@@ -325,6 +442,7 @@ __all__ = [
 	"NETWORK_DIR",
 	"ArrayError",
 	"arrays_payload",
+	"build_capacity_update",
 	"build_network_arrays",
 	"dispatch_matrix",
 	"network_arrays",

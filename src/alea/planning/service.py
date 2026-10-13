@@ -373,6 +373,64 @@ def generation_mix_rows(network: pypsa.Network) -> pd.DataFrame:
 	)
 
 
+def capacity_update_rows(
+	network: pypsa.Network,
+	previous: pypsa.Network | None = None,
+) -> pd.DataFrame:
+	"""Installed capacity by carrier, and the change against an earlier solve.
+
+	The frame `reporting/monthly.py`'s ``capacity_update`` section reads, whose
+	columns are ``["Carrier", "Capacity", "Change", "Basis"]``. Two of those are
+	numeric, so `_rows_for` binds each header to the row column naming it and
+	does *not* fall back to the primary: a row carrying only the capacity raises
+	rather than printing a capacity under the header "Change".
+
+	**Why the change can be absent, and why an absent change is not a zero.**
+	The section asks for the change since the previous month, and one solved
+	network is one instant -- it contains no previous month. ``previous`` is the
+	earlier solve to difference against, and when the caller has none the
+	``change`` column is omitted entirely. The reader then reports the section's
+	absence instead of rendering ``0.0``, which would be the strongest claim
+	available (capacity did not move) made from no evidence at all.
+
+	A carrier with capacity in ``previous`` and none now reports its whole
+	capacity as a negative change, which is the true statement: it went from
+	that much to nothing. The reverse reports the capacity it now has, because
+	zero is what its earlier capacity actually was. Both cases need the union of
+	the two mixes' carriers rather than this month's alone -- see the comment at
+	the union below, which is where the sign of a retirement is decided.
+	"""
+	assert network is not None, "network must not be None"
+	mix = capacity_mix_table(network)
+	now = {
+		str(row["carrier"]): float(row["capacity_mw"]) for _, row in mix.iterrows()
+	}
+	before: dict[str, float] = {}
+	if previous is not None:
+		before = {
+			str(row["carrier"]): float(row["capacity_mw"])
+			for _, row in capacity_mix_table(previous).iterrows()
+		}
+
+	# The union, not this month's carriers. `capacity_mix_table` is a *mix* and
+	# carries only positive capacity, so a carrier that was 200 MW and is now
+	# nothing is absent from `now` rather than present as zero -- and a naive
+	# difference over this month's rows alone would read that absence as zero
+	# and report a retirement as a 200 MW *addition*. Taking the union is what
+	# makes the sign of every change correct.
+	carriers = sorted(set(now) | set(before))
+	capacity = [now.get(carrier, 0.0) for carrier in carriers]
+	frame: dict[str, list[Any]] = {
+		"label": carriers,
+		"value": capacity,
+		"unit": ["MW"] * len(carriers),
+		"capacity": capacity,
+	}
+	if previous is not None:
+		frame["change"] = [value - before.get(carrier, 0.0) for carrier, value in zip(carriers, capacity, strict=True)]
+	return pd.DataFrame(frame)
+
+
 def network_summary(network: pypsa.Network) -> dict[str, Any]:
 	"""The facts about a network a report or an API response needs.
 

@@ -53,11 +53,13 @@ def _solved_network(config: Config, context: BuildContext) -> tuple[Path, list[s
 
 	network_dir = resolve(context.parameters.get("network_dir", NETWORK_DIR))
 	named = context.parameters.get("network_path")
-	# The refusal is re-worded rather than inherited. `_newest_network` raises
-	# with the *loss* layer's message -- "an unsolved one has no dispatch to
-	# decompose" -- which is true of the loss stages and misleading here: a
-	# market build has no dispatch to decompose either, and a user who read that
-	# would go looking for a dispatch artefact instead of running `alea solve`.
+	# Only the *named* case is re-worded. `_newest_network`'s refusal is now
+	# layer-neutral and names the market among the stages that read a solved
+	# network, so re-wording it here would be a second copy of the same sentence
+	# kept in step by hand -- and this one was written when the shared message
+	# named the *loss* layer's reason, which is no longer true of it. A named
+	# path has no shared message to inherit, and "a market clears a solved
+	# network's fleet" is the part a reader of this stage needs.
 	if named:
 		path = Path(named)
 		if not path.exists():
@@ -67,14 +69,7 @@ def _solved_network(config: Config, context: BuildContext) -> tuple[Path, list[s
 				f"solved has no generators to bid"
 			)
 	else:
-		try:
-			path = _newest_network(network_dir)
-		except ArtefactError as exc:
-			raise ArtefactError(
-				f"no solved network in {network_dir}; run `alea solve` first. A "
-				f"market clears a solved network's fleet, and a network that was "
-				f"never solved has no generators to bid"
-			) from exc
+		path = _newest_network(network_dir)
 
 	digest = sha256_file(path)
 	return path, [digest, *(value for value in context.inputs if value != digest)]

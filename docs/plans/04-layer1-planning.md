@@ -291,6 +291,20 @@ src/alea/planning/
 | `test_aggregation_accuracy` | Kenya: cost within 2%, mix within 5% | Inject a bad aggregation; must fail |
 | `test_losses_default_on` | `transmission_losses` defaults `True` | Flip default; must fail |
 | `test_reproducible_solve` | Two solves byte-identical (AD-8) | Unseed the solver; must fail |
+| `test_the_capacity_section_carries_both_numbers_per_row` | §7.1's monthly section reads a capacity *and* a change from each row | Write the capacity into `change`; must fail |
+| `test_the_capacity_section_refuses_to_invent_a_change` | One solve in the directory omits `change` rather than writing `0.0` | Write zeros; must fail |
+
+**The last two are the "declared is not produced" class, one layer down.** The
+monthly cadence declares ``capacity_update`` with columns ``["Carrier",
+"Capacity", "Change", "Basis"]`` -- two numeric columns, so `_rows_for` binds
+each header to the row column naming it and does **not** fall back to the
+primary. Two defects are therefore available and both render: a producer that
+wrote one number into both columns prints a capacity under the header "Change",
+and a producer that wrote ``0.0`` for a change it could not compute asserts the
+strongest claim available -- capacity did not move -- from a directory holding a
+single solve. The first is the same shape as `market_report`'s; the second is
+particular to a section whose quantity is a *difference*, which needs two
+artefacts where the pipeline writes one.
 
 ---
 
@@ -308,6 +322,7 @@ src/alea/planning/
 | 8 | Two solves byte-identical | Determinism job |
 | 9 | Every gate canaried | `tests/ci/canaries` |
 | 10 | Layer 1 solves without PyPSA-Earth present | CI job with conda absent |
+| 11 | The monthly capacity section is produced, with both numbers | `test_the_capacity_section_carries_both_numbers_per_row` |
 
 **Criterion 10 is the one that keeps AD-1 honest.** If Layer 1 cannot build a
 network with PyPSA-Earth absent, the seam has leaked and the dependency is
