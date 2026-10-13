@@ -23,10 +23,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
 
+import pandas as pd
 import pytest
 
 from alea.config.loader import ConfigError, load_config
-from alea.provenance.models import Basis, Licence, Provenance
+from alea.provenance.models import Basis, DerivedProvenance, Licence, Provenance
 from alea.reporting.render import fingerprint, missing_or_empty_pdfs
 from alea.reporting.schedule import run_cadence
 from alea.reporting.schemas import (
@@ -418,3 +419,78 @@ def test_no_unverified_benchmark(tmp_path: Path):
 		assert_no_unverified("", poisoned)
 	# The token is caught in the rendered HTML as well as in the context.
 	assert find_unverified_token(_context(sections=[]), f"<p>{UNVERIFIED_TOKEN} 1,234</p>") != []
+
+
+def test_an_interval_in_the_artefact_reaches_the_interval_column(tmp_path: Path):
+	"""§9 ``test_every_value_has_provenance``'s sibling: a band that survives the read.
+
+	``reporting/daily.py``'s ``outage_forecast`` section declares an ``Interval``
+	column and its module docstring says a 12% forecast renders with its band
+	"because 'outage: yes' for a 12% forecast is a forecast rendered as a fact".
+	Nothing read the band out of the artefact: ``ReportValue.interval`` was set
+	by no line in ``src/alea``, and ``interval_text`` -- what ``_rows_for``
+	writes into that column -- is empty unless it is. The column rendered blank
+	in every daily report, and no gate noticed because the fixture writes one
+	``value`` column per row and the reader had nothing to be missing.
+
+	The round trip, not the reader. A test that sets ``interval`` on a
+	hand-built ``ReportValue`` asserts the renderer and says nothing about
+	whether an artefact's band ever gets there, which is the half that was
+	broken.
+	"""
+	from alea.io.artefacts import write_artefact
+	from alea.reporting.assemble import values_from_artefact
+	from alea.reporting.service import _rows_for
+
+	frame = pd.DataFrame(
+		{
+			"label": ["Line A", "Line B"],
+			"value": [0.12, 0.40],
+			"unit": ["probability", "probability"],
+			"interval_low": [0.04, 0.30],
+			"interval_high": [0.25, 0.52],
+		}
+	)
+	target = tmp_path / "forecast.parquet"
+	write_artefact(target, frame, _derived_provenance())
+	values = values_from_artefact(target)
+	assert [value.interval for value in values] == [(0.04, 0.25), (0.30, 0.52)], (
+		"the artefact carries a band per row and the read path dropped it"
+	)
+
+	columns = ["Line", "Probability", "Interval", "Basis"]
+	rows = _rows_for(values, columns, slug="outage_forecast")
+	rendered = [row[columns.index("Interval")] for row in rows]
+	assert all(str(cell) for cell in rendered), f"the Interval column rendered empty: {rendered}"
+	assert "0.04" in str(rendered[0]), f"the band is not in the cell: {rendered[0]!r}"
+
+	# The half-interval defect: one bound is not an interval, and printing it as
+	# `low-high` would pair a number with a bound that belongs to nothing.
+	partial = pd.DataFrame(
+		{
+			"label": ["Line A"],
+			"value": [0.12],
+			"unit": ["probability"],
+			"interval_low": [0.04],
+		}
+	)
+	half = tmp_path / "half.parquet"
+	write_artefact(half, partial, _derived_provenance())
+	assert values_from_artefact(half)[0].interval is None, (
+		"a one-sided bound was read as an interval"
+	)
+
+
+def _derived_provenance() -> DerivedProvenance:
+	"""A derived provenance carrying an input, which ``write_artefact`` requires.
+
+	``DerivedProvenance`` refuses an artefact that records no input checksum,
+	because a result that cannot be traced to what produced it is not derived
+	from anything.
+	"""
+	return DerivedProvenance(
+		source_id="outage_forecast",
+		basis=Basis.MEASURED,
+		inputs=["fixture:outage_forecast"],
+		run_id="00000000-0000-7000-8000-000000000000",
+	)

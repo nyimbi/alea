@@ -396,3 +396,63 @@ def test_no_repeated_table_cell():
 		for problem in check_report_gates(_context(sections=[clean]))
 		if "repeats a value" in problem
 	], "the gate fires on a table whose columns carry distinct numbers"
+
+
+# --------------------------------------------------------------------------
+# test_an_interval_in_the_artefact_reaches_the_interval_column
+# --------------------------------------------------------------------------
+
+ASSEMBLE_PY = REPO / "src" / "alea" / "reporting" / "assemble.py"
+
+# The read that carries an artefact's band onto the report value. Mutating the
+# module on disk cannot reach this session's already-imported copy, so the gate
+# runs in a subprocess -- the same reason every other canary here does.
+_INTERVAL_READ = """			interval=(
+				(float(data[INTERVAL_LOW_COLUMN].iloc[position]),
+				 float(data[INTERVAL_HIGH_COLUMN].iloc[position]))
+				if has_interval
+				and pd.notna(data[INTERVAL_LOW_COLUMN].iloc[position])
+				and pd.notna(data[INTERVAL_HIGH_COLUMN].iloc[position])
+				else None
+			),"""
+
+_PROGRAM = (
+	"import pandas as pd, tempfile, pathlib\n"
+	"from alea.io.artefacts import write_artefact\n"
+	"from alea.provenance.models import Basis, DerivedProvenance\n"
+	"from alea.reporting.assemble import values_from_artefact\n"
+	"frame = pd.DataFrame({'label': ['A'], 'value': [0.12], 'unit': ['probability'],\n"
+	"    'interval_low': [0.04], 'interval_high': [0.25]})\n"
+	"prov = DerivedProvenance(source_id='s', basis=Basis.MEASURED, inputs=['fixture:s'],\n"
+	"    run_id='00000000-0000-7000-8000-000000000000')\n"
+	"out = pathlib.Path(tempfile.mkdtemp()) / 'f.parquet'\n"
+	"write_artefact(out, frame, prov)\n"
+	"value = values_from_artefact(out)[0]\n"
+	"print('INTERVAL', value.interval)\n"
+	"raise SystemExit(0 if value.interval else 1)\n"
+)
+
+
+def test_the_interval_gate_notices_a_band_that_never_reaches_the_value():
+	"""Drop the interval read and watch the gate's own check fail.
+
+	The defect as it shipped: ``ReportValue.interval`` was set by no line in
+	``src/alea``, so ``interval_text`` was always empty and the daily
+	``outage_forecast`` section's ``Interval`` column rendered blank while its
+	docstring promised the band. The mutation removes exactly the read this
+	gate exists to keep.
+
+	The probe is not the gate: it asserts the *effect* the gate asserts (an
+	artefact's band arriving on the value), and it runs in a subprocess so the
+	mutation on disk is what executes.
+	"""
+	assert _INTERVAL_READ in ASSEMBLE_PY.read_text(), (
+		"canary target not found: the read path no longer carries the interval"
+	)
+	assert _run(_PROGRAM).returncode == 0, "the probe fails on the shipped tree"
+	with planted(ASSEMBLE_PY, _INTERVAL_READ, "\t\t\tinterval=None,"):
+		assert _run(_PROGRAM).returncode != 0, (
+			"a read path that drops the artefact's band still produced a value with "
+			"one, so the gate cannot tell a band from a blank column"
+		)
+	assert _run(_PROGRAM).returncode == 0, "the canary leaked its mutation"

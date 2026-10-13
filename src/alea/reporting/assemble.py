@@ -32,6 +32,13 @@ VALUE_COLUMN = "value"
 UNIT_COLUMN = "unit"
 LABEL_COLUMN = "label"
 
+#: The interval columns a layer artefact carries when its value is a forecast
+#: or a probability. Both must be present on a row for the interval to be read:
+#: half an interval is not an interval, and a one-sided bound rendered as
+#: ``low-high`` would print a range whose other end is a different number's.
+INTERVAL_LOW_COLUMN = "interval_low"
+INTERVAL_HIGH_COLUMN = "interval_high"
+
 
 def provenance_of(record: DerivedProvenance) -> DerivedProvenance:
 	"""The provenance a report value inherits from its artefact.
@@ -120,14 +127,33 @@ def values_from_artefact(
 	others = [
 		name
 		for name in data.columns
-		if name not in (column, UNIT_COLUMN, LABEL_COLUMN) and is_numeric_dtype(data[name])
+		if name not in (column, UNIT_COLUMN, LABEL_COLUMN)
+		and name not in (INTERVAL_LOW_COLUMN, INTERVAL_HIGH_COLUMN)
+		and is_numeric_dtype(data[name])
 	]
+	# The confidence interval, where the row carries one. `daily.py`'s
+	# `outage_forecast` section declares an `Interval` column and its own
+	# docstring says a 12% probability renders with its band; nothing read the
+	# band out of the artefact, so the column rendered empty in every published
+	# daily report. `_rows_for` writes `value.interval_text` into that column,
+	# and `interval_text` is empty unless `interval` is set here -- the read
+	# path is the only place a ReportValue is minted from an artefact, so this
+	# is the only place it could be set.
+	has_interval = INTERVAL_LOW_COLUMN in data.columns and INTERVAL_HIGH_COLUMN in data.columns
 	return [
 		ReportValue(
 			value=float(raw),
 			unit=unit or str(row_unit),
 			provenance=provenance,
 			label=str(row_label),
+			interval=(
+				(float(data[INTERVAL_LOW_COLUMN].iloc[position]),
+				 float(data[INTERVAL_HIGH_COLUMN].iloc[position]))
+				if has_interval
+				and pd.notna(data[INTERVAL_LOW_COLUMN].iloc[position])
+				and pd.notna(data[INTERVAL_HIGH_COLUMN].iloc[position])
+				else None
+			),
 			extra=tuple(
 				(name, float(data[name].iloc[position]))
 				for name in others
