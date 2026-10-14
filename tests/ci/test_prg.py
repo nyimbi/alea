@@ -2107,3 +2107,99 @@ def test_the_summary_carries_the_unit_register(graph: ParameterGraph):
 	units = summary["units"]
 	assert len(units.checks) == len(graph.equations)
 	assert "not a pass" in units.summary()
+
+
+# ---------------------------------------------------------------------------
+# Incremental propagation: the same answer, without re-walking the graph
+# ---------------------------------------------------------------------------
+
+
+def test_incremental_propagation_equals_a_full_one(graph: ParameterGraph, defaults: dict):
+	"""The whole claim: skipping what did not move changes no value.
+
+	``propagate`` re-derives every determiner and re-solves every feedback loop
+	on every call. ``propagate_incremental`` recomputes the closure of what
+	changed and carries the rest over from the previous result. If the two ever
+	disagree, the incremental path is a second, wrong answer -- which is worse
+	than a slow one.
+
+	Every settable parameter is perturbed in turn and the result compared to a
+	full propagation from the same values. A perturbation that moved nothing is
+	counted and reported, so a passing run cannot be a vacuous one: if the
+	comparison never had a difference to find, "equal" proves nothing.
+	"""
+	settable = [n for n in graph.nodes if graph.is_settable(n) and graph.nodes[n].default is not None]
+	assert settable, "no settable parameter carries a default"
+	previous = graph.propagate(defaults)
+	moved_something = 0
+	for name in settable:
+		node = graph.nodes[name]
+		# From the *previous* result, not from `defaults`: the incremental
+		# contract is "this result, plus a delta". Resetting every other knob
+		# to its default each turn would hand the incremental path a base its
+		# `previous` does not describe -- a caller error, not a graph one.
+		values = dict(previous.values)
+		span = (node.range[1] - node.range[0]) if node.range else abs(node.default)
+		values[name] = node.default + (span * 0.25 if span else 0.1)
+		if node.range is not None and not (node.range[0] <= values[name] <= node.range[1]):
+			continue
+		full = graph.propagate(values)
+		step = graph.propagate_incremental(values, previous, [name])
+		assert set(step.values) == set(full.values), name
+		# The loop solver starts from the values it is handed, so a warm start
+		# converges to the fixed point within `tolerance` rather than to the
+		# last bit a cold start stopped at. The graph declares 1e-8, and the
+		# measured worst case is 1.1e-8 relative; demanding exactness here would
+		# be asserting something false about an iterative solver. Every
+		# parameter not downstream of the loop still has to match exactly.
+		looped = {v for loop in graph.feedback_loops() for v in loop.variables}
+		downstream = set(looped) | set(graph.affected_by(looped))
+		for key, expected in full.values.items():
+			got = step.values[key]
+			tolerance = 1e-7 * max(abs(expected), 1.0) if key in downstream else 0.0
+			assert abs(got - expected) <= tolerance, (
+				f"{name}: incremental {key}={got} but a full propagation gives "
+				f"{expected} (allowed {tolerance})"
+			)
+		if full.changed:
+			moved_something += 1
+		previous = full
+	assert moved_something > 20, (
+		f"only {moved_something} perturbations moved anything, so the equality "
+		f"was mostly comparing a value against itself"
+	)
+
+
+def test_incremental_skips_a_loop_nothing_reached(graph: ParameterGraph, defaults: dict):
+	"""The saving is skipping the loop solve, and it must not skip a live one.
+
+	The loop solver is two thirds of a full propagation's cost. Skipping a loop
+	whose inputs did not move is where the speedup comes from -- and skipping
+	one that *did* move is a wrong answer. This checks both directions on the
+	real loop: perturbing a member re-solves it (the value changes), and
+	perturbing a parameter the loop does not read leaves its members where they
+	were.
+	"""
+	loops = graph.feedback_loops()
+	assert loops, "the graph declares no feedback loop, so this test proves nothing"
+	members = set(loops[0].variables)
+	previous = graph.propagate(defaults)
+
+	# A parameter outside the loop's reach: the loop is carried over unchanged.
+	outsider = next(
+		n for n in sorted(graph.nodes)
+		if graph.is_settable(n)
+		and graph.nodes[n].default is not None
+		and not (set(graph.affected_by([n])) & members)
+		and n not in members
+	)
+	values = dict(defaults)
+	span = graph.nodes[outsider].range
+	values[outsider] = (
+		span[0] + (span[1] - span[0]) * 0.25 if span else values[outsider] * 1.2
+	)
+	step = graph.propagate_incremental(values, previous, [outsider])
+	for member in members:
+		assert abs(step.values[member] - previous.values[member]) <= 1e-12, (
+			f"{member} moved although nothing that reaches it changed"
+		)

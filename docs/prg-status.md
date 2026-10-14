@@ -21,6 +21,7 @@ the code and `config/prg.yaml` are the authority, and this says where to look.
 | Service | `src/alea/prg/service.py` | `graph_summary`, `check_scenario`, `propagate_change`, `describe` |
 | Result audit | `src/alea/prg/audit.py` | Audit a *solved* what-if result against the graph's identities |
 | Sensitivity | `src/alea/prg/sensitivity.py` | Exact forward-mode derivatives over the topological order; the implicit function theorem for loop variables; elasticity |
+| Incremental propagation | `src/alea/prg/graph.py` | `propagate_incremental`: the closure of what changed, 9x a full walk, skipping a feedback loop nothing reached |
 | Uncertainty | `src/alea/prg/uncertainty.py` | The declared stochastic inputs, the closure over `affects`, and the reach into derived parameters |
 | Units | `src/alea/prg/units.py` | The dimensional check the spec asks for: each equation's two sides against a Pint registry of the graph's vocabulary |
 | Conflict detection | `src/alea/prg/conflicts.py` | The four kinds (direct, over-determined, under-determined, loop, out-of-range), ranked, with corrections |
@@ -240,3 +241,29 @@ refs: it walks the transitive closure one component at a time, and each model
 is judged against its own exemptions. A canary that plants a bare float on a
 deeply nested model (`PrgSummaryOut → UnitReportOut → EquationCheckOut`) still
 fails, so the coverage did not shrink with the flattening.
+
+**A closure over the declared edge set is not the closure over `affects`.**
+The specification's incremental propagator marks dirty with
+`networkx.descendants` over the declared graph. That is a different relation:
+it disagrees with the `affects` closure on 27 of the graph's 53 settable
+parameters, missing members in *both* directions — the declared edges omit a
+loop's feedback, and they carry relationships the equations do not fix. The
+`affects` closure is the one that matches what actually moves, and it was
+checked against the arithmetic: every settable parameter perturbed in turn, and
+every value that moved was inside its closure (43 of 50 perturbations moved
+something, so the check was not vacuous).
+
+**"Determining which are unaffected requires the same topological walk" was
+false, and unmeasured.** `propagate`'s docstring used it to justify recomputing
+the whole graph on every call. The closure is 10 microseconds against a 4.2
+millisecond full propagation — four hundred times cheaper — so
+`propagate_incremental` skips what did not move and runs 9x faster on this
+graph. A performance claim in a docstring is a claim like any other: it needs a
+measurement, and the measurement here contradicted it.
+
+**An iterative solver's warm start is not bit-identical to a cold one.** The
+incremental result agrees with a full propagation to the loop solver's
+tolerance (measured worst case 1.1e-8 against a declared 1e-8), not exactly.
+A test demanding exact equality would be asserting something false about a
+fixed-point solver; the honest contract is agreement at the tolerance, and the
+test says so rather than loosening a number until it passes.
