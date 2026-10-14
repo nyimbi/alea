@@ -48,6 +48,7 @@ __all__ = [
 	"Translation",
 	"TRANSLATIONS",
 	"coverage",
+	"engine_fields_unreached",
 	"from_scenario_parameters",
 	"to_scenario_parameters",
 	"translated",
@@ -186,7 +187,30 @@ def coverage(graph: ParameterGraph) -> dict[str, Any]:
 		"count": len(reachable),
 		"total": total,
 		"fraction": (len(reachable) / total) if total else 0.0,
+		"engine_unreached": engine_fields_unreached(),
 	}
+
+
+def engine_fields_unreached() -> tuple[str, ...]:
+	"""Engine knobs no PRG parameter names, by field.
+
+	The other half of the register. :func:`untranslated` counts PRG parameters
+	the engine cannot be told about; this counts engine knobs the graph cannot
+	speak to, and the two are not the same finding. A knob in this list is a
+	lever a what-if scenario can pull that the graph will never see -- so a
+	result solved from one cannot be audited against the graph's identities,
+	because the graph does not know the quantity moved. ``from_scenario_parameters``
+	already states this in prose; this is the same claim, counted.
+
+	Derived from the declared translations rather than listed by hand: a
+	hand-written list of what is missing is a second copy that goes stale the
+	moment a translation is added, and it would then report a reached knob as
+	unreached -- the register lying in the direction that looks like progress.
+	"""
+	reached = {translation.engine_field for translation in translations()}
+	return tuple(
+		sorted(name for name in ScenarioParameters.model_fields if name not in reached)
+	)
 
 
 def to_scenario_parameters(
@@ -287,10 +311,12 @@ def from_scenario_parameters(
 	"""The PRG parameters a ``ScenarioParameters`` carries, for the graph.
 
 	The inverse direction, and partial by construction: the engine's knobs that
-	no PRG parameter names (``coal_eaf``, ``battery_cost_multiplier``, the SSP
-	pathway) have no route back, and a caller that wants a graph check on a
-	scenario built from them should read this as "these are the ones the graph
-	can speak to" rather than as the scenario's whole parameter set.
+	no PRG parameter names have no route back, and a caller that wants a graph
+	check on a scenario built from them should read this as "these are the ones
+	the graph can speak to" rather than as the scenario's whole parameter set.
+	:func:`engine_fields_unreached` names the knobs this drops -- computed from
+	the declared translations, not transcribed, because a transcribed list of
+	what is missing drifts the moment a translation is added.
 	"""
 	out: dict[str, float] = {}
 	for translation in translations():

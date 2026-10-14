@@ -257,6 +257,15 @@ def prg_summary() -> None:
 		f"engine: {engine['count']} of {engine['total']} settable parameters reach "
 		f"a what-if knob ({engine['fraction']:.1%})"
 	)
+	# The reverse direction, and it is a different finding: a knob the graph
+	# cannot speak to is a lever a scenario can pull that no audit will see.
+	unreached = engine.get("engine_unreached") or ()
+	if unreached:
+		typer.echo(
+			f"engine: {len(unreached)} knob(s) no PRG parameter names, so a "
+			f"scenario pulling one cannot be audited against the graph: "
+			f"{', '.join(unreached)}"
+		)
 	typer.echo(f"uncertainty: {summary['uncertainty'].summary()}")
 	typer.echo(f"units: {summary['units'].summary()}")
 	for issue in summary["structure_issues"]:

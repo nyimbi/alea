@@ -657,6 +657,55 @@ def test_the_summary_reports_the_registers(graph: ParameterGraph):
 	assert engine["count"] == len(engine["translated"])
 	assert engine["count"] + len(engine["untranslated"]) == engine["total"]
 	assert 0.0 < engine["fraction"] < 1.0
+	# The other direction, and a different finding: a knob the graph cannot
+	# speak to is a lever a scenario can pull that no audit will see. It must
+	# be disjoint from what is reached, or it is not a register of the
+	# unreached.
+	assert engine["engine_unreached"]
+	from alea.prg.translate import translations as _translations
+
+	assert not set(engine["engine_unreached"]) & set(
+		t.engine_field for t in _translations()
+	)
+
+
+def test_the_unreached_engine_knobs_are_computed_not_transcribed(monkeypatch):
+	"""The reverse register is derived from the declared translations.
+
+	A hand-written list of what the engine cannot be reached for would go stale
+	the moment a translation is added, and it would then report a *reached*
+	knob as unreached -- the register lying in the direction that reads as a
+	limitation rather than as progress. So adding a translation must remove its
+	field from the register, and that is the canary: it is the one mutation
+	that tells a computed register from a transcribed one.
+	"""
+	from alea.prg import translate
+	from alea.whatif.params import ScenarioParameters
+
+	declared = translate.engine_fields_unreached()
+	assert declared == tuple(
+		sorted(
+			name
+			for name in ScenarioParameters.model_fields
+			if name not in {t.engine_field for t in translate.TRANSLATIONS}
+		)
+	)
+	# A reached knob is not in the register. `demand_growth` is translated.
+	assert "demand_growth" not in declared
+
+	# Canary: name a previously-unreached knob and it must leave the register.
+	victim = declared[0]
+	assert victim in ScenarioParameters.model_fields, victim
+	widened = translate.TRANSLATIONS + (
+		translate.Translation(
+			prg_parameter="demand_growth",
+			engine_field=victim,
+			kind="absolute",
+			note="canary",
+		),
+	)
+	monkeypatch.setattr(translate, "TRANSLATIONS", widened)
+	assert victim not in translate.engine_fields_unreached()
 
 
 def test_check_scenario_propagates_before_it_validates(graph: ParameterGraph, defaults: dict):

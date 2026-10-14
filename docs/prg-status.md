@@ -99,7 +99,13 @@ after `views.py` said the graph did not make it.
   named by `translate.untranslated()` and counted in `alea prg summary`. This
   is the register, not an omission: the graph states what the physics and the
   accounts require, and the engine states what a PyPSA network can be
-  perturbed by, and the two sets were built for different purposes.
+  perturbed by, and the two sets were built for different purposes. The
+  register runs both ways: `engine_fields_unreached()` names the **6** engine
+  knobs no PRG parameter reaches (`coal_eaf`, `renewable_multiplier`,
+  `battery_cost_multiplier`, `ssp_pathway`, `drought_multiplier`,
+  `hydrogen_export_twh_per_year`). A scenario pulling one of those cannot be
+  audited against the graph, because the graph does not know the quantity
+  moved.
 - **The energy balance is single-region.** One demand, one generation total. A
   PyPSA network balances per bus and per hour and the solved result carries no
   nodal frame, so the audit cannot assert the balance against it. The audit

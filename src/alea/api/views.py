@@ -974,10 +974,18 @@ class PrgSummaryOut(ApiModel):
 
 
 class EngineTranslationOut(ApiModel):
-	"""How much of the graph reaches a what-if knob. Three of fifty-three."""
+	"""How much of the graph reaches a what-if knob. Three of fifty-three.
+
+	``engine_unreached`` is the other direction and a different finding: an
+	engine knob no PRG parameter names is a lever a scenario can pull that the
+	graph never sees, so a result solved from one cannot be audited against the
+	graph's identities. A payload carrying only ``count``/``total`` would let a
+	client render the coverage as a single number and miss that.
+	"""
 
 	translated: list[str]
 	untranslated: list[str]
+	engine_unreached: list[str]
 	count: int = Field(ge=0)
 	total: int = Field(ge=0)
 	fraction: float = Field(ge=0.0, le=1.0)

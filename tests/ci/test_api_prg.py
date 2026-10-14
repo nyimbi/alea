@@ -86,6 +86,13 @@ def test_the_summary_route_serves_the_registers(
 	# The registers are the finding: a client that reads only the counts will
 	# assume the engine is driven by all of them.
 	assert 0.0 <= body["engine_translation"]["fraction"] <= 1.0
+	# Both directions of the engine register, because they are different
+	# findings: PRG parameters the engine cannot carry, and engine knobs no PRG
+	# parameter names. A payload carrying only the first lets a client read the
+	# coverage as one number and miss that a scenario can pull a lever the
+	# graph never sees.
+	assert body["engine_translation"]["untranslated"]
+	assert body["engine_translation"]["engine_unreached"]
 	assert body["units"]["summary"]
 	assert body["uncertainty"]["summary"]
 	assert len(body["units"]["consistent"]) + len(body["units"]["inconsistent"]) + len(
