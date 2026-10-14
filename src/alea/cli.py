@@ -249,6 +249,14 @@ def prg_summary() -> None:
 		typer.echo("feedback loops:")
 		for loop in summary["feedback_loops"]:
 			typer.echo(f"  {loop}")
+	# The engine-coverage line is printed unconditionally, because the number
+	# is the finding: a reader who sees only the graph's own counts assumes the
+	# engine is driven by all of it, and three of fifty-three is the truth.
+	engine = summary["engine_translation"]
+	typer.echo(
+		f"engine: {engine['count']} of {engine['total']} settable parameters reach "
+		f"a what-if knob ({engine['fraction']:.1%})"
+	)
 	for issue in summary["structure_issues"]:
 		typer.secho(f"structure: {issue}", fg=typer.colors.YELLOW, err=True)
 

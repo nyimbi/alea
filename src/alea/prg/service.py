@@ -19,6 +19,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from alea.prg import translate
 from alea.prg.graph import ParameterGraph, Violation, load_graph
 from alea.prg.library import SYSTEM_IDS, coverage, systems_of
 from alea.prg.views import Equation
@@ -78,6 +79,11 @@ def graph_summary(graph: ParameterGraph | None = None) -> dict[str, Any]:
 		"derived": len(g.order()),
 		"feedback_loops": [str(loop) for loop in g.feedback_loops()],
 		"structure_issues": g.structure_issues(),
+		# How much of the graph the what-if engine can be driven from. A
+		# summary that reported only the graph's own counts would leave the
+		# reader assuming the engine uses all of it; the fraction is the
+		# finding, and it is three of fifty-three.
+		"engine_translation": translate.coverage(g),
 	}
 
 

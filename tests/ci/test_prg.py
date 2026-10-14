@@ -650,6 +650,12 @@ def test_the_summary_reports_the_registers(graph: ParameterGraph):
 	assert summary["unmodelled_systems"] == []
 	assert summary["systems_declared"] == len(summary["systems"])
 	assert summary["structure_issues"] == []
+	# The engine-coverage register rides on the summary, so a reader of the
+	# graph's own counts cannot miss that most of it drives nothing.
+	engine = summary["engine_translation"]
+	assert engine["count"] == len(engine["translated"])
+	assert engine["count"] + len(engine["untranslated"]) == engine["total"]
+	assert 0.0 < engine["fraction"] < 1.0
 
 
 def test_check_scenario_propagates_before_it_validates(graph: ParameterGraph, defaults: dict):
