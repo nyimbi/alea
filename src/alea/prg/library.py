@@ -18,15 +18,21 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
+from pathlib import Path
 
+from alea.config.paths import repo_root
 from alea.prg.views import Equation
 
 __all__ = [
+	"SPEC_SYSTEM_COUNT",
+	"SPEC_TO_SYSTEM",
 	"SYSTEM_IDS",
 	"SYSTEMS",
 	"System",
 	"coverage",
+	"spec_systems",
 	"systems_of",
+	"unclaimed_spec_systems",
 ]
 
 
@@ -129,6 +135,34 @@ SYSTEMS: tuple[System, ...] = (
 		"Tariff against household income. The system that stops a scenario "
 		"being cost-optimal and socially impossible at once.",
 	),
+	System(
+		"water_energy",
+		"Water-Energy Nexus",
+		"physical_law",
+		"Cooling and hydrogen water demand against availability. A build that "
+		"clears on cost can still be one the catchment cannot supply.",
+	),
+	System(
+		"employment",
+		"Employment",
+		"accounting_identity",
+		"Direct, indirect and induced jobs from capacity and generation. The "
+		"system that makes a build programme a claim about people.",
+	),
+	System(
+		"health",
+		"Health Impact",
+		"economic_relationship",
+		"Premature deaths and DALYs from PM2.5, which is what the emissions "
+		"system costs in lives rather than in dollars.",
+	),
+	System(
+		"ppa_pricing",
+		"PPA Pricing",
+		"economic_relationship",
+		"Contract price from cost, risk and availability. The price a project "
+		"actually signs at, which is not its LCOE.",
+	),
 )
 
 
@@ -136,6 +170,83 @@ _BY_ID = {system.id: system for system in SYSTEMS}
 
 #: The system identifiers, for a caller that needs the set and not the objects.
 SYSTEM_IDS: frozenset[str] = frozenset(_BY_ID)
+
+#: How many systems ``params-prg1.md`` §4 enumerates, as
+#: ``### 4.N System N: Name`` headings. The register above must hold exactly
+#: these, and :func:`spec_systems` reads them off the document so the number
+#: cannot drift from the specification it claims to implement. A library that
+#: enumerates twelve systems while the spec enumerates twenty will report
+#: "every system modelled" about a third of the model.
+SPEC_SYSTEM_COUNT = 20
+
+
+#: Which library system answers each of the specification's §4 headings.
+#:
+#: The specification enumerates twenty headings and this library holds
+#: sixteen systems, and the difference is not an omission: four of the
+#: specification's headings are refinements of a system already here. System 15
+#: and 16 are the two halves of the capture-price loop; System 17 is the carbon
+#: trajectory; System 18 is the learning curve; System 19 is debt sizing, which
+#: is part of the financial identities. Recording the mapping rather than
+#: forcing a one-to-one correspondence is what makes the coverage claim
+#: checkable: every heading is claimed by a system, and a heading nobody claims
+#: is a finding.
+SPEC_TO_SYSTEM: dict[str, str] = {
+	"Energy Balance": "energy_balance",
+	"Cost Accounting": "cost_accounting",
+	"Emissions Accounting": "emissions",
+	"Demand-Supply Equilibrium": "demand_supply",
+	"Financial Identities": "financial",
+	"Learning Curves": "learning",
+	"Reserve Margin": "reserve_margin",
+	"Inertia Constraint": "inertia",
+	"Water-Energy Nexus": "water_energy",
+	"Capture Price": "capture_price",
+	"Reliability Indices": "reliability",
+	"Employment": "employment",
+	"Health Impact": "health",
+	"Affordability": "affordability",
+	"Feedback Loop — Price-Demand": "capture_price",
+	"Feedback Loop — VRE Investment": "capture_price",
+	"Carbon Price Trajectory": "carbon_trajectory",
+	"Technology Cost Trajectory": "learning",
+	"Debt Sizing": "financial",
+	"PPA Pricing": "ppa_pricing",
+}
+
+
+def unclaimed_spec_systems(path: Path | None = None) -> list[str]:
+	"""Specification §4 headings no library system claims.
+
+	A heading the specification enumerates and this library does not map is a
+	system the platform was specified to model and does not. It is the same
+	finding as an empty system, one level up: the register would otherwise
+	report full coverage of a document it had quietly stopped reading.
+	"""
+	return sorted(set(spec_systems(path)) - set(SPEC_TO_SYSTEM))
+
+
+def spec_systems(path: Path | None = None) -> dict[str, str]:
+	"""The systems ``params-prg1.md`` §4 enumerates, as ``{name: coupling}``.
+
+	Read from the document rather than transcribed, because a transcribed list
+	is a second copy that drifts. The heading carries the name and the
+	parenthetical carries the coupling class; both are what this library's
+	``System`` records, so the comparison is between two records of the same
+	thing and not between a record and a restatement of it.
+	"""
+	import re
+
+	document = path or (repo_root() / "docs" / "params-prg1.md")
+	text = document.read_text()
+	found: dict[str, str] = {}
+	for match in re.finditer(
+		r"^### 4\.\d+ System \d+: (?P<name>[^\n(]+?)(?: \((?P<coupling>[^)]*)\))?\s*$",
+		text,
+		flags=re.MULTILINE,
+	):
+		found[match.group("name").strip()] = (match.group("coupling") or "").strip()
+	return found
 
 
 def systems_of(equations: dict[str, Equation]) -> dict[str, tuple[Equation, ...]]:

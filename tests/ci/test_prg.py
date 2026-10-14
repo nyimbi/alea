@@ -826,3 +826,51 @@ def test_a_parameters_times_profile_broadcasts():
 	value = parse("capacity * profile").eval_array({"capacity": 100.0, "profile": profile})
 	assert list(value) == [20.0, 40.0, 60.0, 80.0]
 
+
+# ---------------------------------------------------------------------------
+# The specification's own enumeration
+# ---------------------------------------------------------------------------
+
+
+def test_the_library_holds_every_system_the_specification_enumerates():
+	"""The register is checked against the document, not against itself.
+
+	The first version of this library held twelve systems and reported "every
+	system modelled" -- about a document that enumerates twenty. A coverage
+	register whose own enumeration is short is the declared-is-not-produced
+	defect wearing the register's clothes: it cannot find the systems it never
+	knew about, so it reports full coverage of a specification it stopped
+	reading. Reading the headings off `params-prg1.md` is what makes the claim
+	checkable.
+	"""
+	from alea.prg.library import (
+		SPEC_SYSTEM_COUNT,
+		SPEC_TO_SYSTEM,
+		spec_systems,
+		unclaimed_spec_systems,
+	)
+
+	enumerated = spec_systems()
+	assert len(enumerated) == SPEC_SYSTEM_COUNT, sorted(enumerated)
+	assert unclaimed_spec_systems() == [], unclaimed_spec_systems()
+	# Every mapping target is a system that exists, and every system is
+	# claimed by at least one heading: both directions, or the mapping is a
+	# document that agrees with itself.
+	assert set(SPEC_TO_SYSTEM.values()) <= set(SYSTEM_IDS)
+	assert set(SYSTEM_IDS) <= set(SPEC_TO_SYSTEM.values())
+
+
+def test_every_system_that_is_declared_has_equations(graph: ParameterGraph):
+	"""Declaring a system is not modelling it.
+
+	The four systems added last -- water, employment, health, PPA -- were
+	declared in the register before they had a single equation, and the
+	coverage register reported them as modelled. That is the same defect one
+	level down from the count, and this is the assertion that catches it.
+	"""
+	modelled = {
+		system for system, equations in systems_of(graph.equations).items() if equations
+	}
+	assert modelled == set(SYSTEM_IDS), sorted(set(SYSTEM_IDS) - modelled)
+	assert coverage(graph.equations) == []
+
