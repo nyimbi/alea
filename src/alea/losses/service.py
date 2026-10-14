@@ -191,51 +191,6 @@ def decomposition_section_rows(components: LossComponents) -> list[dict[str, Any
 	return rows
 
 
-def decomposition_section_to_artefact(
-	network: Network,
-	dispatch_mw: NDArray[np.float64],
-	out: str | Path,
-	config: LossConfig | None = None,
-	*,
-	inputs: Sequence[str] | None = None,
-) -> tuple[str, list[dict[str, Any]]]:
-	"""Write the decomposition in the shape the two loss sections read.
-
-	The section frame, not the kernel payload: ``decomposition_to_artefact``
-	writes the four numbers as JSON for the API's serving row, and a report reads
-	a *table* with a ``Component`` label and one numeric column. Both resolve the
-	reference topology the same way -- :func:`losses_components` -- so the report
-	and the serving row cannot attribute against two different searches.
-
-	The ``Total`` row's share is 100 because the parts are of the total by
-	construction, and the model cannot be built otherwise. It is NaN for a zero
-	total, where a share has no denominator and zero would read as a measurement.
-	"""
-	import pandas as pd
-
-	cfg = config or LossConfig()
-	components = losses_components(network, dispatch_mw, cfg)
-	rows = decomposition_section_rows(components)
-	frame = pd.DataFrame(rows)
-	provenance = _provenance(
-		inputs if inputs is not None else [],
-		{
-			**_network_parameters(network, cfg),
-			"n_snapshots": int(np.asarray(dispatch_mw).shape[0]),
-			"total_mwh": components.total_mwh,
-			"shares": components.shares,
-		},
-		source_id="loss_decomposition",
-		notes=(
-			"the weekly and monthly loss sections' frame: each component's share "
-			"of the total, in percent, against the loss-optimal switching "
-			"topology the plan names (07-layer4 §6.2)"
-		),
-	)
-	checksum = write_stage(Path(out), frame, provenance, format="parquet")
-	return checksum, rows
-
-
 def losses_components(
 	network: Network,
 	dispatch_mw: NDArray[np.float64],
