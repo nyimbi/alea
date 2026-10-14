@@ -257,12 +257,25 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 	{
 		# ---- daily ----
 		"outage_forecast": (
-			"`outages.forecast_to_artefact` trains the forecaster and writes its "
-			"metrics to a caller-chosen path; no rule runs it against "
-			"`results/outages/forecast/{date}.parquet`, and the daily section's "
-			"per-region probability rows are a different shape from the metrics "
-			"the function returns. Needs a rule, and a projection from the "
-			"forecaster's output to the section's columns."
+			"Two gaps, and this entry named only the smaller one. It read "
+			"\"needs a rule, and a projection\", which is the *shape* of the gap "
+			"and not its size: `outages.forecast_to_artefact` writes "
+			"`Forecaster.metrics` -- PR-AUC, recall at precision, the base rate "
+			"-- which is a statement about the *model*, and the section asks for a "
+			"probability per line. Nothing in the repository turns a fitted "
+			"`Forecaster` into those rows: `predict_proba` exists and no caller "
+			"reaches it, and the function has no caller at all. **The second gap "
+			"is the interval.** The section declares "
+			"`[\"Line\", \"Probability\", \"Interval\", \"Basis\"]` and "
+			"`assemble.py` reads a band from `interval_low`/`interval_high`; "
+			"`ForecastMetrics` has no interval field and the forecaster has no "
+			"calibration function, so the band the module docstring promises "
+			"(`a 12% forecast rendered as a fact`) has neither a producer nor a "
+			"method. A rule over the current function would deliver metrics under "
+			"a heading promising probabilities. So: a forward-prediction "
+			"producer (the features are calendar plus lagged outage rate, both "
+			"computable ahead of the horizon), an interval method that is a "
+			"modelling decision to be made and recorded, a projection, and a rule."
 		),
 		"weather_alerts": (
 			"No weather layer exists. `weather/alerts/{date}.parquet` is declared "

@@ -88,12 +88,25 @@ def test_the_gate_catches_a_required_section_leaving_unproduced():
 	"""
 	target = (
 		'\t\t"outage_forecast": (\n'
-		'\t\t\t"`outages.forecast_to_artefact` trains the forecaster and writes its "\n'
-		'\t\t\t"metrics to a caller-chosen path; no rule runs it against "\n'
-		'\t\t\t"`results/outages/forecast/{date}.parquet`, and the daily section\'s "\n'
-		'\t\t\t"per-region probability rows are a different shape from the metrics "\n'
-		'\t\t\t"the function returns. Needs a rule, and a projection from the "\n'
-		'\t\t\t"forecaster\'s output to the section\'s columns."\n'
+		'\t\t\t"Two gaps, and this entry named only the smaller one. It read "\n'
+		'\t\t\t"\\"needs a rule, and a projection\\", which is the *shape* of the gap "\n'
+		'\t\t\t"and not its size: `outages.forecast_to_artefact` writes "\n'
+		'\t\t\t"`Forecaster.metrics` -- PR-AUC, recall at precision, the base rate "\n'
+		'\t\t\t"-- which is a statement about the *model*, and the section asks for a "\n'
+		'\t\t\t"probability per line. Nothing in the repository turns a fitted "\n'
+		'\t\t\t"`Forecaster` into those rows: `predict_proba` exists and no caller "\n'
+		'\t\t\t"reaches it, and the function has no caller at all. **The second gap "\n'
+		'\t\t\t"is the interval.** The section declares "\n'
+		'\t\t\t"`[\\"Line\\", \\"Probability\\", \\"Interval\\", \\"Basis\\"]` and "\n'
+		'\t\t\t"`assemble.py` reads a band from `interval_low`/`interval_high`; "\n'
+		'\t\t\t"`ForecastMetrics` has no interval field and the forecaster has no "\n'
+		'\t\t\t"calibration function, so the band the module docstring promises "\n'
+		'\t\t\t"(`a 12% forecast rendered as a fact`) has neither a producer nor a "\n'
+		'\t\t\t"method. A rule over the current function would deliver metrics under "\n'
+		'\t\t\t"a heading promising probabilities. So: a forward-prediction "\n'
+		'\t\t\t"producer (the features are calendar plus lagged outage rate, both "\n'
+		'\t\t\t"computable ahead of the horizon), an interval method that is a "\n'
+		'\t\t\t"modelling decision to be made and recorded, a projection, and a rule."\n'
 		"\t\t),\n"
 	)
 	assert target in PRODUCERS_PY.read_text(), (
