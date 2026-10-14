@@ -123,6 +123,16 @@ after `views.py` said the graph did not make it.
 - **Emissions use one fleet-wide factor.** The engine sums per-carrier
   intensities. `audit.fleet_intensity_gap` measures the difference instead of
   pretending they agree.
+- **Every parameter is `float`, and `type` gates only that.** The spec's §20
+  asks for type *inference* from equations. There is nothing to infer: all 84
+  nodes are float, all appear in arithmetic, and none is used as an index — so
+  an inference engine here would be a gate that cannot fail. What was real is
+  that `type` was declared on all 84 nodes, enum-validated, exported, and read
+  by **nothing**: a node declared `timeseries` with a scalar `default` was
+  accepted, propagated as a float, and reported as a quantity. The node now
+  refuses a non-scalar type carrying a scalar `default` or `range`, because
+  the model has no field for an array. `float` and `int` are the types it can
+  honestly carry; the other four wait on a field that holds the array.
 - **Not the 784-parameter graph.** 84 of them, over the systems with the
   clearest physical or accounting statement.
 - **No UI.** Packaging rather than capability, and the last door left shut. The

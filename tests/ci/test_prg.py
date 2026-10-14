@@ -557,6 +557,30 @@ def test_a_default_outside_its_own_range_is_refused(document: dict):
 		ParameterGraph.from_mapping(document)
 
 
+def test_a_non_scalar_type_carrying_a_scalar_default_is_refused(document: dict):
+	"""The `type` field constrains something, or it is decoration.
+
+	Every node in the shipped graph is `float`, and nothing read `type` -- so a
+	node declared `timeseries` with a scalar `default` was accepted, propagated
+	as a float, and reported as a quantity. That is the declared-is-not-produced
+	class: a field that exists, validates, and gates nothing. The model has no
+	field for an array, so the honest contract is that `float` is the only type
+	it can carry and a declaration saying otherwise is refused.
+
+	Canaried both ways: the refusal fires, and the scalar types are *not*
+	refused -- a check that refused every type would pass this test's first half
+	while making the field useless.
+	"""
+	document["parameters"]["discount_rate"]["type"] = "timeseries"
+	with pytest.raises(Exception, match="cannot be carried by a scalar"):
+		ParameterGraph.from_mapping(document)
+
+	# A scalar type is exactly what the model carries, so it must be accepted.
+	document["parameters"]["discount_rate"]["type"] = "int"
+	graph = ParameterGraph.from_mapping(document)
+	assert graph.nodes["discount_rate"].type.value == "int"
+
+
 def test_an_inequality_cannot_determine_a_variable(document: dict):
 	"""An inequality bounds a value; only an equality fixes one."""
 	document["equations"]["reserve_margin"]["determined_variables"] = ["firm_capacity_mw"]

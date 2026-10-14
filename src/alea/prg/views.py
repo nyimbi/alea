@@ -78,6 +78,14 @@ class ParameterType(StrEnum):
 	SPATIAL = "spatial"
 
 
+#: The types a scalar ``default``/``range`` cannot express. ``int`` and ``bool``
+#: are scalars, so they are absent: an integer parameter's default is one number
+#: and the range bounds it, which is exactly what this model carries.
+_NON_SCALAR_TYPES: frozenset[ParameterType] = frozenset(
+	{ParameterType.CATEGORICAL, ParameterType.TIMESERIES, ParameterType.SPATIAL}
+)
+
+
 class Priority(StrEnum):
 	P1 = "P1"
 	P2 = "P2"
@@ -160,6 +168,23 @@ class ParameterNode(BaseModel):
 					f"{self.id}: initial {self.initial} is outside its range "
 					f"({low}, {high})"
 				)
+		if self.type in _NON_SCALAR_TYPES and (
+			self.default is not None or self.range is not None
+		):
+			# A timeseries, a spatial field, or a categorical is not one number.
+			# The scalar fields on this model cannot express one, and nothing
+			# reads `type`, so a node declared `timeseries` with a scalar
+			# `default` was accepted, propagated as a float, and reported as a
+			# quantity -- the declared type constraining nothing. Refusing is
+			# the whole of what the type field can do until something carries
+			# the array; until then, `float` is the only type this model can
+			# honestly accept, and a declaration that says otherwise is a
+			# document that lies about the parameter.
+			raise ValueError(
+				f"{self.id}: type={self.type.value!r} cannot be carried by a "
+				f"scalar `default` or `range`, and this model has no field for "
+				f"the array; declare it `float` or leave the scalar fields unset"
+			)
 		return self
 
 
