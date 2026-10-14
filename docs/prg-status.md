@@ -21,6 +21,7 @@ the code and `config/prg.yaml` are the authority, and this says where to look.
 | Service | `src/alea/prg/service.py` | `graph_summary`, `check_scenario`, `propagate_change`, `describe` |
 | Result audit | `src/alea/prg/audit.py` | Audit a *solved* what-if result against the graph's identities |
 | Sensitivity | `src/alea/prg/sensitivity.py` | Exact forward-mode derivatives over the topological order; the implicit function theorem for loop variables; elasticity |
+| Uncertainty | `src/alea/prg/uncertainty.py` | The declared stochastic inputs, the closure over `affects`, and the reach into derived parameters |
 | Conflict detection | `src/alea/prg/conflicts.py` | The four kinds (direct, over-determined, under-determined, loop, out-of-range), ranked, with corrections |
 | Translation | `src/alea/prg/translate.py` | Three declared routes from a PRG parameter to a what-if knob, and the register of the other fifty |
 | The graph | `config/prg.yaml` | 84 parameters, 37 equations, 84 edges, 1 feedback loop |
@@ -64,9 +65,16 @@ would offer only the regulator's floor for a conflict the carbon price caused.
   PyPSA network balances per bus and per hour and the solved result carries no
   nodal frame, so the audit cannot assert the balance against it. The audit
   reports what it did not check rather than a pass it did not earn.
-- **No uncertainty or stochastic edges.** `Relationship.STOCHASTIC` is declared
-  and one edge uses it; nothing consumes the distinction. A sensitivity is a
-  derivative at a point, not a distribution over one.
+- **Uncertainty is registered, not propagated.** `uncertainty.py` reads the 13
+  settable parameters declared `stochastic` and the one `Relationship.STOCHASTIC`
+  edge, and computes the transitive closure over `affects`: 13 inputs reach 22
+  derived parameters, 8 of which are stochastic by their own relation. What it
+  does *not* do is sample. The spec asks for an edge *type* and says a scenario's
+  inputs are uncertain; it names no distribution, no correlation, no interval.
+  Inventing one would put a fabricated confidence band on a report, which is
+  worse than the silence it replaces — a reader cannot tell a modelled interval
+  from a guessed one. A sensitivity is a derivative at a point, and the register
+  says so rather than implying otherwise.
 - **Emissions use one fleet-wide factor.** The engine sums per-carrier
   intensities. `audit.fleet_intensity_gap` measures the difference instead of
   pretending they agree.
@@ -110,6 +118,13 @@ name is an input, and the carbon price reaches the ratio through the tariff and
 the cash flow. A correction list built from the equation's names offers only
 the regulator's floor for a conflict the carbon price caused. The chain rule
 through `sensitivity.gradients` is what makes the lever the right one.
+
+**`order()` is the determiner set, not "everything derived".** A loop variable
+is derived — nothing may set it — but it has no place in a topological order, so
+`order()` omits it. A reachability closure filtered on `order()` therefore
+reports a path that crossed a feedback loop while omitting the loop's own
+members, which is the one place the uncertainty most obviously lands. Use
+`not graph.is_settable(name)` for "derived".
 
 **A ratio translation needs the *recorded* base, not the current value.**
 `fuel_price_usd_per_mwh` is absolute; the engine's `gas_price_multiplier` is a

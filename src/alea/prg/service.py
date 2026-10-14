@@ -22,6 +22,7 @@ from typing import Any
 from alea.prg import translate
 from alea.prg.graph import ParameterGraph, Violation, load_graph
 from alea.prg.library import SYSTEM_IDS, coverage, systems_of
+from alea.prg.uncertainty import register as uncertainty_register
 from alea.prg.views import Equation
 
 __all__ = [
@@ -84,6 +85,11 @@ def graph_summary(graph: ParameterGraph | None = None) -> dict[str, Any]:
 		# reader assuming the engine uses all of it; the fraction is the
 		# finding, and it is three of fifty-three.
 		"engine_translation": translate.coverage(g),
+		# What the graph declares uncertain, and how far that reaches. The
+		# register is the honest substitute for a Monte Carlo the spec never
+		# specified: it names the inputs and the reach, and says in the same
+		# breath that a sensitivity is a point derivative, not a distribution.
+		"uncertainty": uncertainty_register(g),
 	}
 
 

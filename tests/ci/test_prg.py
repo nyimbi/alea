@@ -39,6 +39,7 @@ from alea.prg.graph import CycleError, GraphError, ParameterGraph
 from alea.prg.library import SYSTEM_IDS, coverage, systems_of
 from alea.prg.sensitivity import elasticity, gradients, sensitivity
 from alea.prg.service import check_scenario, describe, graph_summary, propagate_change
+from alea.prg.uncertainty import register
 
 PRG_PATH = repo_root() / "config" / "prg.yaml"
 
@@ -1772,3 +1773,134 @@ def test_the_sensitivity_command_can_report_elasticity(
 	elastic = _prg("sensitivity", "lcoe_usd_per_mwh", "--top", "1", "--elasticity")
 	assert raw.exit_code == 0 and elastic.exit_code == 0
 	assert raw.output != elastic.output
+
+
+# ---------------------------------------------------------------------------
+# Uncertainty: the declarations, and the gap between them and a distribution
+# ---------------------------------------------------------------------------
+
+
+def test_the_uncertainty_register_reads_the_declarations(graph: ParameterGraph):
+	"""The counts are literals, so the register cannot drift unnoticed.
+
+	Deriving them from the register itself would pass on a graph that declared
+	nothing uncertain, which is the silence this module exists to break.
+	"""
+	reg = register(graph)
+	assert len(reg.inputs) == 13, reg.inputs
+	assert len(reg.derived_stochastic) == 8, reg.derived_stochastic
+	assert len(reg.stochastic_edges) == 1, reg.stochastic_edges
+	# 21 nodes are declared stochastic in total: 13 settable, 8 derived.
+	assert len(reg.inputs) + len(reg.derived_stochastic) == 21
+
+
+def test_every_uncertain_input_is_settable(graph: ParameterGraph):
+	"""An uncertain *derived* value is reported separately, not as an input.
+
+	Conflating them would let a caller try to sample a parameter the graph
+	computes, which is the over-determination the graph refuses elsewhere.
+	"""
+	reg = register(graph)
+	for name in reg.inputs:
+		assert graph.is_settable(name), name
+	for name in reg.derived_stochastic:
+		assert not graph.is_settable(name), name
+
+
+def test_reachability_includes_a_physical_identity_downstream(graph: ParameterGraph):
+	"""An exact relation downstream of an uncertain input still moves.
+
+	``emissions_mtco2_per_year`` is declared ``physical`` and is an accounting
+	identity; it is also computed from a demand that is declared stochastic. The
+	relation is exact and the *value* is uncertain, and reporting only one of
+	those would either call every downstream identity stochastic or pretend the
+	uncertainty stops at the first equation.
+	"""
+	reg = register(graph)
+	assert "emissions_mtco2_per_year" in reg.reachable
+	assert "emissions_mtco2_per_year" not in reg.derived_stochastic
+
+
+def test_reachability_crosses_a_feedback_loop():
+	"""The closure uses `affects`, so it does not stop at a loop.
+
+	`depends_on` deliberately skips the loop equations -- a loop has no place in
+	a topological order -- so a closure over it would end at the fixed point and
+	miss everything the loop computes. Built on a synthetic graph because the
+	shipped one has no *uncertain* input that reaches its loop: the property is
+	about the closure's route, not about which of this graph's parameters happen
+	to be declared stochastic, and asserting it against the shipped graph would
+	assert a premise that is false.
+	"""
+	def node(name: str, role: str, **extra) -> dict:
+		return {
+			"name": name,
+			"unit": "1",
+			"type": "float",
+			"role": role,
+			"category": "Financial",
+			"determinism": "policy",
+			"priority": "P1",
+			"status": "existing",
+			**extra,
+		}
+
+	# `z` and `w` determine each other -- a loop -- and `out` is computed from
+	# the loop's fixed point, which is what a closure over `depends_on` would
+	# never reach.
+	document = {
+		"parameters": {
+			"x": node("x", "exogenous", determinism="stochastic", default=2.0),
+			"z": node("z", "derived", range=[0.0, 100.0], initial=1.0),
+			"w": node("w", "derived", range=[0.0, 100.0], initial=1.0),
+			"out": node("out", "derived", range=[0.0, 1e6]),
+		},
+		"equations": {
+			# `solution_method: iterative` is what marks an equation as part of
+			# a loop rather than a derivation; without it the graph reads the
+			# cycle as a topological contradiction and refuses the document.
+			"e_z": {"name": "z", "lhs": "z", "rhs": "x + w / 2",
+			        "parameters": ["z", "x", "w"], "determined_variables": ["z"],
+			        "system": "capture_price", "linearity": "linear",
+			        "solution_method": "iterative"},
+			"e_w": {"name": "w", "lhs": "w", "rhs": "z / 2",
+			        "parameters": ["w", "z"], "determined_variables": ["w"],
+			        "system": "capture_price", "linearity": "linear",
+			        "solution_method": "iterative"},
+			# `out` is an ordinary derivation *from* the loop, so it must not be
+			# iterative: that is what makes it downstream of the fixed point
+			# rather than part of the cycle.
+			"e_out": {"name": "out", "lhs": "out", "rhs": "z * 10",
+			          "parameters": ["out", "z"], "determined_variables": ["out"],
+			          "system": "cost_accounting"},
+		},
+	}
+	synthetic = ParameterGraph.from_mapping(document)
+	reg = register(synthetic)
+	assert "x" in reg.inputs
+	assert "z" in reg.reachable, reg.reachable
+	assert "out" in reg.reachable, (
+		f"the closure stopped at the loop instead of crossing it: {reg.reachable}"
+	)
+
+
+def test_the_stochastic_edge_names_parameters_the_graph_has(graph: ParameterGraph):
+	reg = register(graph)
+	for source, target, equation_id in reg.stochastic_edges:
+		assert source in graph.nodes, source
+		assert target in graph.nodes, target
+		assert equation_id in graph.equations, equation_id
+
+
+def test_the_register_states_the_gap_rather_than_implying_a_distribution(
+	graph: ParameterGraph,
+):
+	"""The summary says a sensitivity is not a distribution, in words.
+
+	The defect this module guards against is a reader taking the uncertainty
+	declarations for a modelled distribution. The sentence is the guard, so it
+	is asserted.
+	"""
+	text = register(graph).summary()
+	assert "not a distribution" in text
+	assert "13" in text and "22" in text

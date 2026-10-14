@@ -257,6 +257,7 @@ def prg_summary() -> None:
 		f"engine: {engine['count']} of {engine['total']} settable parameters reach "
 		f"a what-if knob ({engine['fraction']:.1%})"
 	)
+	typer.echo(f"uncertainty: {summary['uncertainty'].summary()}")
 	for issue in summary["structure_issues"]:
 		typer.secho(f"structure: {issue}", fg=typer.colors.YELLOW, err=True)
 
