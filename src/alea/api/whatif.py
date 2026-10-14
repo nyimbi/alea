@@ -459,8 +459,12 @@ def _expansion_solver() -> Any:
 
 	config = load_config()
 
-	def solve(network: Any) -> Any:
-		return solve_expansion(network, config)
+	def solve(network: Any, extra_functionality: Any = None) -> Any:
+		# The hook is passed through to `solve_expansion`, which hands it to
+		# `network.optimize`. Dropping it here would solve a constrained scenario
+		# unconstrained while the cache key said otherwise -- and the answer would
+		# look like a valid result for a build the graph had rejected.
+		return solve_expansion(network, config, extra_functionality=extra_functionality)
 
 	return solve
 

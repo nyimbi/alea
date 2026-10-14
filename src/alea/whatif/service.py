@@ -39,12 +39,18 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
 
 logger = get_logger(__name__)
 
-SolveFn = Callable[[pypsa.Network], Any]
+SolveFn = Callable[..., Any]
 """How a network is solved.
 
 The engine calls this rather than ``network.optimize`` so that the cache gates
 can count invocations (``count_solves`` in the plan's test sketch) and so a
 test can solve a fixture network with a stub.
+
+``...`` rather than ``[pypsa.Network]`` because a constrained solve passes a
+second argument, PyPSA's ``extra_functionality`` hook. A stub that takes only
+the network is still valid and is called with one argument; the engine passes
+the hook only when there is one, and raises a named error when the solve
+function cannot accept it rather than dropping the constraints silently.
 """
 
 PriceFn = Callable[[pypsa.Network, ScenarioResult], "tuple[list[float], float | None]"]
@@ -56,6 +62,17 @@ risk physics is Layer 3's.
 """
 
 DEFAULT_CODE_VERSION = __version__
+
+
+class SolveError(RuntimeError):
+	"""A solve that produced no feasible optimum.
+
+	Raised rather than returned because the alternative is a result object: an
+	infeasible network still has a ``ScenarioResult``'s shape, and every field
+	of it would be read as a modelled quantity. A scenario the fleet cannot
+	meet is an answer about the scenario, and it has to reach the caller as a
+	failure rather than as a cost.
+	"""
 
 
 @dataclass(frozen=True)
@@ -83,6 +100,24 @@ class PrgSolve:
 	audit: ScenarioAudit
 	intensity_gap: dict[str, float]
 	dropped: tuple[str, ...] = field(default=())
+	constrained: bool = False
+	"""Whether the solve ran under the graph's inequalities.
+
+	``False`` when the caller asked for the plain solve (``constrain=False``) or
+	when no inequality could bind. It travels with the result because a solved
+	number carries no trace of the constraints it was solved under, and two
+	results from one network -- one constrained, one not -- are otherwise
+	indistinguishable in a report.
+	"""
+
+	constraint_terms: tuple[str, ...] = field(default=())
+	"""The graph parameters the scenario moved that the constraints read.
+
+	These are the parameters that reach no engine knob and reach the *solve*
+	anyway, through an inequality. Naming them is what keeps them out of the
+	``dropped`` register, where they would read as reaching nothing at the exact
+	moment they reach the optimiser.
+	"""
 
 	@property
 	def result(self) -> ScenarioResult:
@@ -186,10 +221,17 @@ class WhatIfEngine:
 	# Solving
 	# ------------------------------------------------------------------
 
-	def key_for(self, params: ScenarioParameters) -> str:
+	def key_for(
+		self,
+		params: ScenarioParameters,
+		*,
+		constraints: Mapping[str, Any] | None = None,
+	) -> str:
 		"""The cache key this parameter set would be filed under."""
 		assert isinstance(params, ScenarioParameters)
-		return cache_key(params, self._network_checksum, self._code_version)
+		return cache_key(
+			params, self._network_checksum, self._code_version, constraints=constraints
+		)
 
 	def solve(
 		self,
@@ -197,9 +239,13 @@ class WhatIfEngine:
 		*,
 		force: bool = False,
 		write_cache: bool = True,
+		constraints: Mapping[str, Any] | None = None,
+		hook: Callable[[pypsa.Network], None] | None = None,
 	) -> ScenarioResult:
 		"""Solve one scenario, serving from the cache when possible."""
-		return self.solve_with_outcome(params, force=force, write_cache=write_cache).result
+		return self.solve_with_outcome(
+			params, force=force, write_cache=write_cache, constraints=constraints, hook=hook
+		).result
 
 	def solve_with_outcome(
 		self,
@@ -207,20 +253,34 @@ class WhatIfEngine:
 		*,
 		force: bool = False,
 		write_cache: bool = True,
+		constraints: Mapping[str, Any] | None = None,
+		hook: Callable[[pypsa.Network], None] | None = None,
 	) -> SolveOutcome:
 		"""As :meth:`solve`, additionally reporting whether the cache served it.
 
 		A sweep needs this: a point served from the cache must not be reported
 		as a fresh computation, and the resumed-sweep gate asserts on it.
+
+		``constraints`` and ``hook`` are the two halves of a constrained solve and
+		travel together. ``constraints`` is the *record* of what the solve ran
+		under -- it enters the cache key, so a constrained solve and an
+		unconstrained one cannot serve each other's answers. ``hook`` is the
+		callable PyPSA invokes to add them. Passing a record with no hook would
+		key a solve on constraints that were never applied, which is the worst of
+		the three states: the key says constrained, the answer is not.
 		"""
 		assert isinstance(params, ScenarioParameters)
-		key = self.key_for(params)
+		assert (constraints is None) == (hook is None), (
+			"a constraint record and the hook that applies it travel together: "
+			"one without the other keys a solve on constraints it did not run under"
+		)
+		key = self.key_for(params, constraints=constraints)
 
 		if self._cache is not None and not force:
 			cached = self._cache.get(key)
 			if cached is not None:
 				logger.info("whatif.cache.hit", key=key[:12], fingerprint=solve_fingerprint(
-					params, self._network_checksum, self._code_version
+					params, self._network_checksum, self._code_version, constraints=constraints
 				))
 				return SolveOutcome(
 					result=ScenarioResult.from_cache_payload(cached["result"]),
@@ -229,7 +289,7 @@ class WhatIfEngine:
 				)
 
 		started = time.perf_counter()
-		result = self._compute(params, key=key)
+		result = self._compute(params, key=key, hook=hook)
 		elapsed = time.perf_counter() - started
 
 		if self._cache is not None and write_cache:
@@ -239,15 +299,38 @@ class WhatIfEngine:
 				network_checksum=self._network_checksum,
 				code_version=self._code_version,
 				result=result.to_cache_payload(),
+				constraints=constraints,
 			)
 
 		logger.info("whatif.solve", key=key[:12], seconds=round(elapsed, 3), cost=result.total_cost_usd)
 		return SolveOutcome(result=result, cache_key=key, from_cache=False, solve_seconds=elapsed)
 
-	def _compute(self, params: ScenarioParameters, *, key: str) -> ScenarioResult:
+	def _compute(
+		self,
+		params: ScenarioParameters,
+		*,
+		key: str,
+		hook: Callable[[pypsa.Network], None] | None = None,
+	) -> ScenarioResult:
 		"""Apply, solve, extract. The uncached path."""
 		network = apply_parameters(self._base, params)
-		self._solve_fn(network)
+		if hook is None:
+			self._solve_fn(network)
+		else:
+			# The engine's solve function is handed the hook rather than the hook
+			# being run around it: a caller that solved the network itself to add a
+			# constraint would run a second, differently configured solve. The
+			# solver seam takes an optional hook for exactly this, and one that
+			# cannot accept it raises here rather than silently dropping the
+			# constraints and returning an unconstrained answer.
+			try:
+				self._solve_fn(network, hook)
+			except TypeError as exc:
+				raise TypeError(
+					"this engine's solve function does not accept the extra_functionality "
+					"hook, so a constrained scenario cannot be solved through it; pass a "
+					"solve function taking (network, extra_functionality)"
+				) from exc
 		self._solve_count += 1
 
 		risk: RiskMetrics | None = None
@@ -298,6 +381,7 @@ class WhatIfEngine:
 		graph: ParameterGraph | None = None,
 		strict: bool = True,
 		force: bool = False,
+		constrain: bool = True,
 	) -> PrgSolve:
 		"""Solve a scenario stated in the graph's parameters, and audit it.
 
@@ -323,22 +407,62 @@ class WhatIfEngine:
 		answer the question asked, and the refusal names the parameter. A caller
 		who wants the drop can ask for it, and :class:`PrgSolve` then carries the
 		register of what was dropped so the drop is not silent.
+
+		WHY the constraint terms are exempt from that refusal. Four of the graph's
+		settable parameters -- ``carbon_budget_mtco2``, ``horizon_years``,
+		``capacity_factor``, ``reserve_margin_min`` -- reach no engine knob and
+		are not *meant* to: they are the terms of the two inequalities the graph
+		can bind, and the optimiser reads them when the constraint is added. A
+		scenario that sets one is tightening a bound, which is a thing the graph
+		is for. Refusing it as uncarriable would be the register's own defect
+		inverted -- reporting a parameter as reaching nothing at the exact moment
+		it reaches the solve -- so they are translated into the constraint record
+		instead, and ``constrain=False`` is how a caller asks for the plain
+		unconstrained solve.
 		"""
+		from alea.prg.constraints import bound_parameter_names, bound_routes, constraint_function
 		from alea.prg.translate import to_scenario_parameters, translated
 
 		g = graph if graph is not None else _default_graph()
-		params = to_scenario_parameters(g, values, self._base, strict=strict)
-		# Everything the caller set that reached no knob, which is three findings
-		# under one register: a settable graph parameter the engine has no knob
-		# for, a graph parameter the graph itself computes (so `propagate`
-		# overwrites whatever is set), and a string that is not a graph parameter
-		# at all. The last two are the ones that would otherwise vanish --
-		# `untranslated()` enumerates the graph's own settable parameters, so it
-		# can name neither -- and a register filtered on it would report a typo,
-		# or a derived value, as cleanly carried.
-		reached = set(translated(g))
+		terms = set(bound_parameter_names(g))
+		# The constraint terms are lifted out of `values` before the translation
+		# sees them, because the translation's job is engine knobs and these are
+		# not knobs. They are read back by the hook from the same `values`.
+		constraint_values = (
+			{name: float(value) for name, value in values.items() if name in terms}
+			if constrain
+			else {}
+		)
+		knob_values = {name: value for name, value in values.items() if name not in constraint_values}
+		params = to_scenario_parameters(g, knob_values, self._base, strict=strict)
+		# Everything the caller set that reached no knob and no constraint, which
+		# is three findings under one register: a settable graph parameter the
+		# engine has no knob for, a graph parameter the graph itself computes (so
+		# `propagate` overwrites whatever is set), and a string that is not a
+		# graph parameter at all. The last two are the ones that would otherwise
+		# vanish -- `untranslated()` enumerates the graph's own settable
+		# parameters, so it can name neither -- and a register filtered on it
+		# would report a typo, or a derived value, as cleanly carried.
+		reached = set(translated(g)) | set(constraint_values)
 		dropped = tuple(sorted(name for name in values if name not in reached))
-		outcome = self.solve_with_outcome(params, force=force)
+		hook = constraint_function(g, constraint_values) if constrain else None
+		record: dict[str, Any] | None = None
+		if constrain:
+			# The record is the *defaults plus the scenario's overrides*, not the
+			# overrides alone: two scenarios that override different subsets of a
+			# constraint's terms would otherwise share a key while solving under
+			# different bounds. It is what the hook will read, spelled the same
+			# way, so the key describes the solve that actually ran.
+			record = {
+				name: constraint_values.get(
+					name, g.nodes[name].default if name in g.nodes else None
+				)
+				for name in sorted(terms)
+			}
+			record["_equations"] = list(bound_routes(g))
+		outcome = self.solve_with_outcome(
+			params, force=force, constraints=record, hook=hook
+		)
 		audit = audit_scenario_result(outcome.result, g, overrides=dict(values))
 		gap = fleet_intensity_gap(outcome.result, g)
 		logger.info(
@@ -347,6 +471,7 @@ class WhatIfEngine:
 			from_cache=outcome.from_cache,
 			translated=len(values) - len(dropped),
 			dropped=len(dropped),
+			constrained=constrain,
 			consistent=audit.consistent,
 		)
 		return PrgSolve(
@@ -355,6 +480,8 @@ class WhatIfEngine:
 			audit=audit,
 			intensity_gap=gap,
 			dropped=dropped,
+			constrained=constrain,
+			constraint_terms=tuple(sorted(constraint_values)),
 		)
 
 
@@ -392,9 +519,32 @@ def _network_checksum(network: pypsa.Network, source: str | Path | pypsa.Network
 		return hashlib.sha256(Path(handle.name).read_bytes()).hexdigest()
 
 
-def _default_solve(network: pypsa.Network) -> Any:
-	"""Solve with PyPSA's own optimiser."""
-	return network.optimize()
+def _default_solve(network: pypsa.Network, extra_functionality: Any = None) -> Any:
+	"""Solve with PyPSA's own optimiser, and refuse a non-optimal status.
+
+	``extra_functionality`` is PyPSA's hook and is passed through rather than
+	ignored: a constrained scenario solved by a function that dropped the hook
+	would return an unconstrained answer under a key that says otherwise.
+
+	WHY the status is checked here. ``network.optimize`` returns ``(status,
+	condition)`` and leaves ``network.objective`` at whatever it was, so an
+	infeasible solve is *not* an exception: it returns, ``extract`` reads an
+	objective of zero or the objective constant, and the engine caches a result
+	whose cost is a number no feasible dispatch produced. Layer 1's
+	``solve_expansion`` already refuses this; the engine's own default did not,
+	which was harmless only while nothing could make a what-if network
+	infeasible. Constraints do exactly that -- a carbon budget or a reserve
+	margin the fleet cannot meet is the ordinary way a scenario fails -- so the
+	check belongs here now that the failure is reachable.
+	"""
+	status, condition = network.optimize(extra_functionality=extra_functionality)
+	if status not in ("ok", "optimal", "Optimal"):
+		raise SolveError(
+			f"the optimiser returned status={status!r} ({condition}); an infeasible "
+			f"or unbounded scenario is a result about the scenario, not a number, "
+			f"and caching one would serve a cost no feasible dispatch produced"
+		)
+	return status, condition
 
 
 def _result_placeholder(

@@ -241,13 +241,22 @@ def solve_expansion(
 	horizons: list[int] | None = None,
 	multi_period: bool | None = None,
 	logger_: Any = None,
+	extra_functionality: Any = None,
 ) -> SolveResult:
 	"""Solve capacity expansion on a prepared network.
 
 	``network`` must already carry loads, generators and renewable profiles. The
 	snapshots are replaced when ``multi_period`` is on, because a network built
 	from the seam's artefacts arrives single-period.
+
+	``extra_functionality`` is PyPSA's own hook, called after the model is built
+	and before it is solved, and it is how the PRG's inequalities reach an
+	expansion. It is a parameter here rather than something the caller does
+	around this function because the hook has to run inside ``optimize``, where
+	the decision variables exist -- and a caller that solved the network itself
+	to add a constraint would be running a second, differently configured solve.
 	"""
+	assert network is not None, "network must not be None"
 	assert network is not None, "network must not be None"
 	assert len(network.buses) > 0, "network has no buses"
 	assert len(network.generators) > 0 or len(network.storage_units) > 0, (
@@ -286,6 +295,7 @@ def solve_expansion(
 			multi_investment_periods=use_multi and len(periods) > 1,
 			solver_options=options,
 			include_objective_constant=False,
+			extra_functionality=extra_functionality,
 		)
 	except Exception as exc:  # noqa: BLE001 - the solver raises its own types
 		raise ExpansionError(f"{solver} failed to solve: {exc}") from exc

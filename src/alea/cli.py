@@ -807,6 +807,13 @@ def whatif_scenario(
 			help="Drop parameters the engine cannot carry instead of refusing.",
 		),
 	] = False,
+	no_constrain: Annotated[
+		bool,
+		typer.Option(
+			"--no-constrain",
+			help="Solve without the graph's inequalities, as a plain what-if.",
+		),
+	] = False,
 ) -> None:
 	"""Solve a scenario stated in the graph's parameters, and audit the result.
 
@@ -823,6 +830,13 @@ def whatif_scenario(
 	different question. `--loose` drops it and prints what it dropped: the drop is
 	then a stated fact rather than a silent one.
 
+	**Constrained by default.** The graph's two bindable inequalities -- the
+	reserve margin and the carbon budget -- are added to the optimiser, so
+	`--set carbon_budget_mtco2=200` tightens the solve rather than being dropped
+	as a parameter with no knob. `--no-constrain` asks for the plain what-if. A
+	scenario the fleet cannot meet is infeasible and exits 3: an answer about the
+	scenario, which is a different thing from a cost.
+
 	The audit is the point of going through the graph at all. `alea prg audit`
 	checks a *stored* scenario after the fact; this is the same check run on the
 	result the solve just produced, so a scenario that the graph rejects is
@@ -830,19 +844,28 @@ def whatif_scenario(
 	"""
 	from alea.config.paths import resolve
 	from alea.whatif.cache import DEFAULT_CACHE_ROOT
-	from alea.whatif.service import WhatIfEngine
+	from alea.whatif.service import SolveError, WhatIfEngine
 
 	values = _parse_prg_values(set_)
 	with _run("cli.whatif.scenario", network=str(network), parameters=len(values)) as run:
 		engine = WhatIfEngine(network, cache_root=resolve(DEFAULT_CACHE_ROOT))
 		try:
-			solved = engine.solve_from_prg(values, strict=not loose, force=force)
+			solved = engine.solve_from_prg(
+				values, strict=not loose, force=force, constrain=not no_constrain
+			)
 		except ValueError as exc:
 			# The translation's own refusal, which names the parameter. Caught and
 			# re-raised as a clean CLI error rather than a traceback: the message is
 			# the finding, and a stack trace buries it.
 			typer.secho(f"{exc}", fg=typer.colors.RED, err=True)
 			raise typer.Exit(code=2) from exc
+		except SolveError as exc:
+			# Exit 3, distinct from 2: a scenario that was never solved and a
+			# scenario that was solved and refused by the graph are different
+			# failures, and so is one the fleet cannot meet at all. A caller
+			# scripting this needs to tell "no answer" from "a bad answer".
+			typer.secho(f"infeasible: {exc}", fg=typer.colors.RED, err=True)
+			raise typer.Exit(code=3) from exc
 
 		typer.echo(f"solved: objective={solved.result.total_cost_usd:,.0f}")
 		typer.echo(

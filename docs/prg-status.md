@@ -29,7 +29,8 @@ the code and `config/prg.yaml` are the authority, and this says where to look.
 | Edge strength | `src/alea/prg/graph.py` | The declared `hard`/`soft`/`informational` tier, read by `consistency`, `conflicts`, the audit and the CLI gate |
 | Translation | `src/alea/prg/translate.py` | Three declared routes from a PRG parameter to a what-if knob, the register of the other fifty, and the three refusals that name a key reaching no knob — a typo, a derived value, an uncarried parameter |
 | PRG-driven solve | `src/alea/whatif/service.py` | `WhatIfEngine.solve_from_prg` + `PrgSolve`: the production caller the translation layer had none of — translate, solve, audit, with the dropped parameters carried on the payload |
-| Constraints | `src/alea/prg/constraints.py` | The equation→constraint half of Part X: the two inequalities that bind a linopy solve, and the four that are post-solve checks instead |
+| Constraints | `src/alea/prg/constraints.py` | The equation→constraint half of Part X: the two inequalities that bind a linopy solve, the four that are post-solve checks instead, and `bound_parameter_names` — the four scalars those inequalities read, which reach the optimiser with no engine knob |
+| Constrained solve | `src/alea/whatif/service.py` | `solve_from_prg(constrain=True)`, the default: the graph's inequalities are added through PyPSA's `extra_functionality` hook, the constraint record enters the cache key, and an infeasible scenario raises `SolveError` instead of caching a cost |
 | API | `src/alea/api/routes/prg.py` | Five routes: `GET /prg/summary`, `GET /prg/equations`, `POST /prg/conflicts`, `POST /prg/sensitivity`, `POST /prg/cross-validation` |
 | The graph | `config/prg.yaml` | 84 parameters, 37 equations, 84 edges, 1 feedback loop |
 
@@ -193,25 +194,11 @@ after `views.py` said the graph did not make it.
 
 ## Not built
 
-- **Part X's engine is not driven by the graph's equations either, and the
-  register says which six.** The translation layer has two halves and both are
-  now measured. `translate.py` moves a *parameter* into an engine knob (three
-  of fifty-three). `constraints.py` moves an *equation* into an optimiser
-  constraint, and of the library's 37 equations six are inequalities — the only
-  ones that could constrain a solve. Two bind: `reserve_margin` and
-  `carbon_budget_constraint`, whose every term is either a declared network
-  quantity (summed dispatchable and VRE nameplate, peak coincident load, annual
-  emissions from dispatch × the registry's per-carrier intensity) or a settable
-  scalar. Four do not: `dscr_requirement`, `inertia_requirement`,
-  `affordability_constraint` and `water_availability_constraint` are stated
-  over quantities the graph *derives* — `project_gearing_dscr`,
-  `rocof_df_dt_hz_per_s`, `energy_burden`, `cooling_water_demand_m3` — which
-  exist only after a solve, so they are post-solve checks the audit runs, not
-  constraints on the solve. The other 31 equations are identities the graph
-  evaluates; counting them in the denominator would report the register as
-  2 of 37. The spec's other backends (Pyomo for MILP, SymPy for symbolic
-  manipulation, a custom iterative solver) are absent and each is a separate
-  modelling decision, not a missing adapter.
+- **Part X's other backends are absent.** The spec names Pyomo for MILP, SymPy
+  for symbolic manipulation and a custom iterative solver. Each is a separate
+  modelling decision, not a missing adapter: the translation layer's output is
+  a linopy constraint, and a second backend is a second answer to "what is a
+  constraint", which the graph would have to be able to state in both.
 - **The engine is barely driven by the graph.** `translate.py` declares the
   routes, and there are **three**: `carbon_price_usd_per_tco2` and
   `demand_growth` map one-for-one, and `fuel_price_usd_per_mwh` maps to the
@@ -234,9 +221,22 @@ after `views.py` said the graph did not make it.
   nothing but its own test file, so "three of fifty-three" counted a route no
   solve walked and the honest figure was zero. `WhatIfEngine.solve_from_prg`
   and `alea whatif scenario` are the seam; the count of reachable routes is now
-  three. The gap it leaves is unchanged and still the larger one: three of
-  fifty-three *reachable* is not the graph driving the solver, it is the graph
-  nudging three knobs of a solver whose structure it does not set.
+  three.
+
+  **Four more parameters reach the solve, and not through a knob.** The same
+  defect applied to the other half of Part X: `constraints.py` was written,
+  tested, and its `constraint_function` — the `extra_functionality` hook PyPSA
+  calls — had zero callers in `src/`. So the reserve margin and the carbon
+  budget constrained no optimiser, and `carbon_budget_mtco2`,
+  `horizon_years`, `capacity_factor` and `reserve_margin_min` were refused by
+  the strict path as uncarriable at the exact moment the graph could carry
+  them. Since 2026-10-15 the solve runs under both inequalities by default, the
+  four terms are named by `bound_parameter_names` rather than reported as
+  dropped, and a fleet the reserve margin rejects is infeasible rather than
+  silently solved without it. The gap that remains is the real one: seven of
+  fifty-three settable parameters reach a solver whose *structure* the graph
+  still does not set — no equation states the fleet, the topology, or the
+  dispatch, and the graph cannot yet be the thing that builds the network.
 - **The energy balance is single-region.** One demand, one generation total. A
   PyPSA network balances per bus and per hour and the solved result carries no
   nodal frame, so the audit cannot assert the balance against it. The audit
@@ -289,6 +289,34 @@ is a consequence of its inputs — and it deliberately ignores inequalities,
 because moving `dscr_min` changes no value at all. A regulator's lever is a
 constraint, so it appears in `constrains`, not in `affects`. The declared
 relationship direction is on `edges_from`/`edges_into`.
+
+**A constraint's terms are not "parameters that reach nothing".** The register
+of what reaches an engine knob is built from `translated()`, and
+`carbon_budget_mtco2`, `horizon_years`, `capacity_factor` and
+`reserve_margin_min` are settable parameters with no knob — so a register built
+from that alone names them as dropped. They reach the optimiser, through the
+inequality the graph binds. `bound_parameter_names` is the complement that
+makes the register honest: a parameter can reach a solve by tightening a bound
+rather than by moving a number, and a register that knows only the second is
+the same defect as `untranslated()` being unable to name a typo.
+
+**An infeasible solve is not an exception, and a constraint makes one
+reachable.** `network.optimize` returns `(status, condition)` and leaves the
+objective where it was, so an engine that reads the objective without reading
+the status caches a cost no feasible dispatch produced, wearing a solved
+result's shape. That path was dead until the graph's inequalities reached the
+model: the reserve margin is stated over the *grown* peak, so a fleet smaller
+than the graph's own requirement is infeasible, and the graph's default
+`firm_capacity_mw` of 9,000 MW is below the 14,469 MW the reserve margin
+requires at `demand_growth`'s default over a ten-year horizon. `SolveError`
+carries it, and the CLI exits 3.
+
+**A constrained solve is a different solve, and the cache key must say so.**
+The key covered the parameters, the network and the code version. A constrained
+solve adds a fourth component — the record of the inequalities it ran under —
+because one network solved under a carbon budget and solved without it are two
+different optimisations. Omitting it is the network-checksum failure one level
+up: whichever ran first is served to the other, and the number looks right.
 
 **A correction ranking on the raw delta ranks the units.** A 0.2 move in an
 emission factor and an 82 USD/t move in a carbon price can be the same

@@ -69,6 +69,7 @@ __all__ = [
 	"NetworkSource",
 	"SOURCES",
 	"add_constraints",
+	"bound_parameter_names",
 	"bound_routes",
 	"constraint_function",
 	"coverage",
@@ -314,6 +315,43 @@ def routes(graph: ParameterGraph) -> tuple[ConstraintRoute, ...]:
 def bound_routes(graph: ParameterGraph) -> tuple[str, ...]:
 	"""The equations that can bind, by id."""
 	return tuple(r.equation_id for r in routes(graph) if r.status == "bound")
+
+
+def bound_parameter_names(graph: ParameterGraph | None = None) -> tuple[str, ...]:
+	"""The settable scalars the bindable inequalities read, by name.
+
+	These are graph parameters with no engine knob, and they are not things a
+	scenario moves *about the network* -- they are the terms of the
+	constraints. A caller that sets one is not perturbing the fleet, it is
+	tightening or loosening a bound, and the difference matters to a register:
+	counting one as "reached no knob" reports the constraint's own terms as
+	dropped while the constraint reads them.
+
+	A symbol with a declared network source is excluded, deliberately.
+	``firm_capacity_mw`` and ``peak_demand_mw`` are settable scalars too, but
+	the constraint reads them off the fleet, so a scenario value for either is
+	ignored by the constraint and is honestly a dropped parameter. This is the
+	same set :func:`_symbol` reads from ``ctx.params``, derived the same way
+	rather than transcribed.
+	"""
+	if graph is None:
+		from alea.prg.graph import load_graph
+
+		g = load_graph()
+	else:
+		g = graph
+
+	names: set[str] = set()
+	for equation in _constraint_shaped(g):
+		if _classify(equation, g).status != "bound":
+			continue
+		for name in _symbols(equation):
+			if name in _SOURCE_BY_SYMBOL:
+				continue
+			node = g.nodes.get(name)
+			if node is not None and g.is_settable(name) and node.default is not None:
+				names.add(name)
+	return tuple(sorted(names))
 
 
 def coverage(graph: ParameterGraph) -> dict[str, Any]:

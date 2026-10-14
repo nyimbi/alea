@@ -38,29 +38,43 @@ from alea.whatif.service import WhatIfEngine
 # everywhere on one year. So the fixture is multi-period, as a real base is.
 YEARS = (2030, 2040)
 
+#: Firm capacity the graph's reserve margin admits. See `_network`.
+FIRM_MW = 15_000.0
+
 
 @pytest.fixture
 def graph() -> ParameterGraph:
 	return load_graph()
 
 
-def _network() -> pypsa.Network:
+def _network(firm_mw: float = FIRM_MW) -> pypsa.Network:
 	"""One bus, a gas unit and an extendable solar farm, at national scale.
 
 	The gas unit is what the ratio translation needs: ``fuel_price_usd_per_mwh``
 	is an absolute price the engine applies as a factor over the *base* gas cost,
 	and a network with no gas unit has no base to divide by.
 
-	**The capacities are the graph's own defaults, not round test numbers.** The
-	audit propagates the result's parameters through the graph, and the graph
-	carries a feedback loop -- the capture-price loop, whose fixed point is the
-	VRE share the build response justifies. That loop's root exists only for a
-	fleet at national scale: at a few hundred MW the ``vre_share_definition``
-	equation has no root in its (0, 1) bracket, the loop raises, and the audit
-	reports that it could not run. A fixture at test scale would therefore never
-	exercise the audit at all -- it would exercise the failure path and look like
-	coverage. Gas at ``firm_capacity_mw``, solar extendable to roughly the VRE
-	target, load at ``peak_demand_mw``: the graph's own numbers, so the audit runs.
+	**The capacities are the graph's own defaults, except for one.** The audit
+	propagates the result's parameters through the graph, and the graph carries a
+	feedback loop -- the capture-price loop, whose fixed point is the VRE share
+	the build response justifies. That loop's root exists only for a fleet at
+	national scale: at a few hundred MW the ``vre_share_definition`` equation has
+	no root in its (0, 1) bracket, the loop raises, and the audit reports that it
+	could not run. A fixture at test scale would therefore never exercise the
+	audit at all -- it would exercise the failure path and look like coverage.
+
+	**Why firm capacity is above the graph's default and everything else is not.**
+	A PRG-driven solve runs under the graph's inequalities, and the reserve margin
+	is one of them: ``firm + capacity_factor x VRE >= peak x (1 +
+	reserve_margin_min)``. Demand grows at ``demand_growth``'s default 4% a year
+	over the horizon, so the 2040 peak is ``8500 x 1.04^10`` = 12,582 MW and the
+	requirement is 14,469 MW of firm-equivalent capacity. The graph's own
+	``firm_capacity_mw`` default of 9,000 MW does not meet it -- a fleet of that
+	size is one the graph rejects, which is a true statement about the graph's
+	assumed system and not a test artefact. The fixture is therefore the smallest
+	fleet the graph admits (15,000 MW, with 1,750 MW of firm-equivalent VRE),
+	because a fixture the graph rejects would make every test here a test of the
+	infeasibility path instead of the route.
 	"""
 	network = pypsa.Network()
 	network.add("Bus", "b1", carrier="AC")
@@ -73,7 +87,7 @@ def _network() -> pypsa.Network:
 	)
 	network.set_snapshots(list(snapshots))
 	network.add(
-		"Generator", "gas", bus="b1", carrier="gas", p_nom=9000.0, marginal_cost=40.0
+		"Generator", "gas", bus="b1", carrier="gas", p_nom=firm_mw, marginal_cost=40.0
 	)
 	network.add(
 		"Generator",
@@ -303,6 +317,133 @@ def test_the_same_scenario_twice_is_served_from_the_cache(
 
 
 # --------------------------------------------------------------------------
+# The graph's inequalities reach the optimiser
+# --------------------------------------------------------------------------
+
+
+def test_a_constrained_solve_differs_from_an_unconstrained_one(
+	tmp_path, graph: ParameterGraph
+) -> None:
+	"""The graph's inequalities bind, and the answer says it was solved under them.
+
+	WHY THIS IS THE GATE FOR THE SECOND HALF OF PART X. ``constraints.py`` was in
+	exactly the state ``translate.py`` was in: written, tested, and reached by no
+	solve. ``constraint_function`` returns PyPSA's ``extra_functionality`` hook
+	and nothing in ``src/`` called it, so the graph's two bindable inequalities
+	-- the reserve margin and the carbon budget -- constrained no optimiser. The
+	objective is the observable: an unconstrained solve and a constrained one of
+	the same network are two different optimisations, and if they agree the
+	constraint did not reach the model.
+	"""
+	engine = _engine(tmp_path)
+	# The unconstrained side needs `strict=False`: with `constrain=False` the
+	# budget is an ordinary parameter the engine has no knob for, and strict --
+	# which is the default and is right -- refuses it. Asking for the plain solve
+	# *of a scenario that states a budget* therefore means dropping the budget,
+	# which is what `strict=False` says.
+	constrained = engine.solve_from_prg({"carbon_budget_mtco2": 200.0}, graph=graph, force=True)
+	plain = engine.solve_from_prg(
+		{"carbon_budget_mtco2": 200.0}, graph=graph, constrain=False, strict=False, force=True
+	)
+	assert constrained.constrained
+	assert not plain.constrained
+	# The budget binds: the constrained solve must emit *less*. Asserting only
+	# "the objective differs" would pass on a constraint that moved the answer
+	# the wrong way, and asserting equality would pass on one that never reached
+	# the model -- which is the defect this test exists for.
+	assert constrained.result.total_emissions_tco2 < plain.result.total_emissions_tco2, (
+		"the carbon budget constrained nothing: the constrained solve emitted no "
+		"less than the unconstrained one"
+	)
+	assert plain.dropped == ("carbon_budget_mtco2",)
+
+
+def test_the_constraint_terms_are_not_reported_as_dropped(
+	tmp_path, graph: ParameterGraph
+) -> None:
+	"""A parameter that reaches the solve through a constraint reached something.
+
+	``carbon_budget_mtco2`` and ``reserve_margin_min`` are settable graph
+	parameters with no engine knob, so the ``dropped`` register -- built as the
+	complement of ``translated()`` -- would name them. They are not dropped:
+	the optimiser reads them when the constraint is added. Reporting them as
+	dropped is the register's own defect inverted, calling a parameter
+	unreached at the moment it reaches the solve.
+	"""
+	engine = _engine(tmp_path)
+	solved = engine.solve_from_prg(
+		{"carbon_budget_mtco2": 200.0, "reserve_margin_min": 0.2}, graph=graph, force=True
+	)
+	assert "carbon_budget_mtco2" not in solved.dropped
+	assert "reserve_margin_min" not in solved.dropped
+	assert set(solved.constraint_terms) == {"carbon_budget_mtco2", "reserve_margin_min"}
+
+
+def test_the_constraint_terms_are_refused_on_a_strict_translation_no_longer(
+	tmp_path, graph: ParameterGraph
+) -> None:
+	"""Strict does not refuse a constraint term: it is carriable, by the graph.
+
+	Before the constraints were wired, ``--set carbon_budget_mtco2=20`` under the
+	default strict path raised, because the parameter reaches no engine knob.
+	The refusal was correct about the knob and wrong about the parameter: the
+	graph carries it into the solve.
+	"""
+	engine = _engine(tmp_path)
+	solved = engine.solve_from_prg({"carbon_budget_mtco2": 200.0}, graph=graph, force=True)
+	assert solved.dropped == ()
+	assert solved.constrained
+
+
+def test_a_constrained_and_unconstrained_solve_do_not_share_a_cache_key(
+	tmp_path, graph: ParameterGraph
+) -> None:
+	"""Two different optimisations of one network must not share one entry.
+
+	The key covers the parameters, the network and the code version. A
+	constrained solve adds a fourth component -- the graph inequalities it ran
+	under -- because the answer differs and a key that omitted it would serve
+	whichever ran first to the other. This is the network-checksum failure one
+	level up: the number looks right and answers a different question.
+	"""
+	engine = _engine(tmp_path)
+	values = {"carbon_budget_mtco2": 200.0}
+	constrained = engine.solve_from_prg(values, graph=graph, force=True)
+	plain = engine.solve_from_prg(values, graph=graph, constrain=False, strict=False, force=True)
+	assert constrained.outcome.cache_key != plain.outcome.cache_key
+
+	# And a second constrained call is served from the cache, so the extra key
+	# component does not defeat caching.
+	again = engine.solve_from_prg(values, graph=graph)
+	assert again.outcome.from_cache
+	assert again.outcome.cache_key == constrained.outcome.cache_key
+
+
+def test_an_infeasible_constrained_scenario_is_refused_not_cached(
+	tmp_path, graph: ParameterGraph
+) -> None:
+	"""A fleet the graph's reserve margin rejects raises; no result is cached.
+
+	WHY THIS IS REACHABLE NOW AND WAS NOT BEFORE. ``network.optimize`` returns
+	``(status, condition)`` and does not raise on infeasibility, so an engine
+	that ignored the status would read a zero objective out of a network the
+	solver refused and cache it -- a cost no feasible dispatch produced, wearing
+	a solved result's shape. That path was dead while nothing could make a
+	what-if network infeasible. The reserve margin does exactly that, and it is
+	the ordinary way a scenario fails: a fleet smaller than the graph's own
+	requirement.
+	"""
+	from alea.whatif.service import SolveError
+
+	engine = WhatIfEngine(_network(firm_mw=9_000.0), cache_root=tmp_path / "cache")
+	with pytest.raises(SolveError, match="infeasible"):
+		engine.solve_from_prg({}, graph=graph, force=True)
+	# Nothing was written: a cached infeasible scenario would be served forever.
+	assert engine.cache is not None
+	assert engine.cache.keys() == []
+
+
+# --------------------------------------------------------------------------
 # The command, which is the only entry point an operator has
 # --------------------------------------------------------------------------
 
@@ -333,6 +474,7 @@ def test_the_scenario_command_is_reachable(tmp_path) -> None:
 	assert result.exit_code == 0, result.output
 	assert "--set" in result.stdout
 	assert "--loose" in result.stdout
+	assert "--no-constrain" in result.stdout
 
 
 def test_the_command_gates_on_a_violation(tmp_path) -> None:
@@ -361,3 +503,44 @@ def test_the_command_refuses_a_parameter_the_engine_cannot_carry(tmp_path) -> No
 	assert result.exit_code == 2, result.output
 	assert "voll_usd_per_mwh" in result.output
 	assert "solved:" not in result.stdout, "the refusal came after a solve"
+
+
+def test_the_command_solves_under_the_graphs_inequalities(tmp_path) -> None:
+	"""The budget reaches the optimiser through the command, not just the API.
+
+	The flag defaults to constrained, so the operator gets the graph's
+	inequalities without asking. `--no-constrain` is the escape, and the two runs
+	of the same stated budget must differ -- if they agree, the constraint never
+	reached the model through this door.
+	"""
+	constrained = _cli(tmp_path, "--set", "carbon_budget_mtco2=200")
+	assert constrained.exit_code in (0, 1), constrained.output
+	plain = _cli(tmp_path, "--set", "carbon_budget_mtco2=200", "--no-constrain", "--loose")
+	assert plain.exit_code in (0, 1), plain.output
+	assert constrained.stdout != plain.stdout, (
+		"the constrained and unconstrained runs printed the same thing, so the "
+		"graph's inequality reached nothing through the command"
+	)
+
+
+def test_the_command_exits_three_on_an_infeasible_scenario(tmp_path) -> None:
+	"""A fleet the graph's reserve margin rejects exits 3, not 1 or 2.
+
+	Three failures, three codes: 2 is a scenario never solved, 1 is a scenario
+	solved and refused by the graph, 3 is a scenario the fleet cannot meet. The
+	last is the one a constrained solve newly makes reachable -- a 9 GW fleet
+	cannot cover a grown peak -- and a command that reported it as a solved cost
+	would hand back a number no feasible dispatch produced.
+	"""
+	small = tmp_path / "small.nc"
+	_network(firm_mw=9_000.0).export_to_netcdf(str(small))
+	from typer.testing import CliRunner
+
+	from alea.cli import app
+
+	result = CliRunner().invoke(
+		app, ["whatif", "scenario", "--network", str(small)]
+	)
+	assert result.exit_code == 3, result.output
+	assert "infeasible" in result.output.lower()
+	assert "solved:" not in result.stdout

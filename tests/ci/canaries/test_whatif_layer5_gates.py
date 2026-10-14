@@ -80,6 +80,56 @@ def _fresh_cache_and_service() -> None:
 
 
 # --------------------------------------------------------------------------
+# the constraint component of the key -- drop it; two solves must collide
+# --------------------------------------------------------------------------
+
+
+def test_the_constraint_key_gate_catches_a_dropped_constraint_record():
+	"""A constrained and an unconstrained solve must not collide on one entry.
+
+	WHY THIS CANARY EXISTS. The constraint record entered ``cache_key`` on
+	2026-10-15, when the graph's inequalities were first wired to the optimiser.
+	The component is load-bearing for the same reason the network checksum is:
+	one network solved under a carbon budget and solved without it are two
+	different optimisations, and a key that omitted the record would serve
+	whichever ran first to the other. The mutation drops the ``constraints``
+	component from the payload -- the component is *absent*, which is what an
+	unconstrained key is, so the two must then collide.
+	"""
+	_fresh_cache_and_service()
+	assert cache_module.cache_key(
+		_params(), NETWORK_A, CODE, constraints={"carbon_budget_mtco2": 200.0}
+	) != cache_module.cache_key(_params(), NETWORK_A, CODE), (
+		"the constraint-key gate already fails on clean source"
+	)
+
+	target = (
+		"\tif constraints is not None:\n"
+		"\t\tparts.append(\n"
+		"\t\t\t'\"constraints\":'\n"
+		"\t\t\t+ json.dumps(constraints, sort_keys=True, separators=(\",\", \":\"), default=str)\n"
+		"\t\t)\n"
+	)
+	assert target in CACHE_PY.read_text(), "canary target not found: the constraint block moved"
+
+	# The mutation removes the *append*, not the value: an appended empty string
+	# would still separate the two keys by their JSON, so it would not reproduce
+	# the defect. Absence is the defect -- a key that never carried the record.
+	with planted(CACHE_PY, target, "\tif False:\n\t\tpass\n"):
+		importlib.reload(cache_module)
+		assert cache_module.cache_key(
+			_params(), NETWORK_A, CODE, constraints={"carbon_budget_mtco2": 200.0}
+		) == cache_module.cache_key(_params(), NETWORK_A, CODE), (
+			"the constraint-dropped key still distinguished a constrained solve"
+		)
+
+	_fresh_cache_and_service()
+	assert cache_module.cache_key(
+		_params(), NETWORK_A, CODE, constraints={"carbon_budget_mtco2": 200.0}
+	) != cache_module.cache_key(_params(), NETWORK_A, CODE), "the restore was not proven"
+
+
+# --------------------------------------------------------------------------
 # test_cache_actually_hits -- blind the cache read; the second solve must re-solve
 # --------------------------------------------------------------------------
 
@@ -183,10 +233,10 @@ def test_the_network_key_gate_catches_a_dropped_network():
 	# payload is assembled as text, so a deleted line leaves `"network":,` and
 	# the canary would be hashing malformed JSON rather than a key that omits
 	# the network. A constant value is the same defect with a readable payload.
-	target = '\t\t+ json.dumps(network_checksum, separators=(",", ":"))\n'
+	target = 'parts.append(\'"network":\' + json.dumps(network_checksum, separators=(",", ":")))\n'
 	assert target in CACHE_PY.read_text(), "canary target not found: the network line moved"
 
-	with planted(CACHE_PY, target, '\t\t+ json.dumps("", separators=(",", ":"))\n'):
+	with planted(CACHE_PY, target, 'parts.append(\'"network":\' + json.dumps("", separators=(",", ":")))\n'):
 		importlib.reload(cache_module)
 		assert cache_module.cache_key(_params(), NETWORK_A, CODE) == cache_module.cache_key(
 			_params(), NETWORK_B, CODE
@@ -210,10 +260,14 @@ def test_the_code_version_key_gate_catches_a_dropped_version():
 		_params(), NETWORK_A, "0.1.1"
 	), "the code-version-key gate already fails on clean source"
 
-	target = '\t\t+ json.dumps(code_version, separators=(",", ":"))\n'
+	target = 'parts = [\n\t\t\'"cache_version":\' + json.dumps(CACHE_VERSION, separators=(",", ":")),\n\t\t\'"code":\' + json.dumps(code_version, separators=(",", ":")),\n\t]\n'
 	assert target in CACHE_PY.read_text(), "canary target not found: the code line moved"
 
-	with planted(CACHE_PY, target, '\t\t+ json.dumps("", separators=(",", ":"))\n'):
+	with planted(
+		CACHE_PY,
+		target,
+		'parts = [\n\t\t\'"cache_version":\' + json.dumps(CACHE_VERSION, separators=(",", ":")),\n\t\t\'"code":\' + json.dumps("", separators=(",", ":")),\n\t]\n',
+	):
 		importlib.reload(cache_module)
 		assert cache_module.cache_key(_params(), NETWORK_A, "0.1.0") == cache_module.cache_key(
 			_params(), NETWORK_A, "0.1.1"

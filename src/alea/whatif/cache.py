@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -51,6 +52,8 @@ def cache_key(
 	params: ScenarioParameters,
 	network_checksum: str,
 	code_version: str,
+	*,
+	constraints: Mapping[str, Any] | None = None,
 ) -> str:
 	"""The content-addressed key for one solve.
 
@@ -58,6 +61,17 @@ def cache_key(
 	compact JSON document, with no ``hash()`` and no dependence on iteration
 	order. The plan's ``test_cache_key_stable_across_processes`` gate exists
 	precisely because the obvious implementation is not.
+
+	``constraints`` names the graph inequalities a solve ran under, and it is a
+	component of the key because it changes the answer. A constrained solve and
+	an unconstrained one with the same parameters and the same network are two
+	different optimisations of one network, and a key that omitted this would
+	serve whichever ran first to the other -- the same failure the network
+	checksum prevents, one level up. ``None`` means unconstrained and the key is
+	byte-for-byte what it was before this parameter existed, so no entry in an
+	existing cache is invalidated by its arrival; an empty mapping is *not*
+	``None``, because "constrained by the graph's defaults" is a different solve
+	from "not constrained" and the two must not collide.
 	"""
 	assert isinstance(params, ScenarioParameters)
 	assert network_checksum, "a solve keyed without its network checksum is not reproducible"
@@ -70,18 +84,25 @@ def cache_key(
 	# embedded verbatim rather than re-encoded as a JSON string value, and the
 	# keys are emitted in `sort_keys` order so the bytes are what the dict form
 	# produced. `test_the_cache_key_embeds_the_canonical_form_byte_for_byte`
-	# pins that equivalence.
-	payload = (
-		'{"cache_version":'
-		+ json.dumps(CACHE_VERSION, separators=(",", ":"))
-		+ ',"code":'
-		+ json.dumps(code_version, separators=(",", ":"))
-		+ ',"network":'
-		+ json.dumps(network_checksum, separators=(",", ":"))
-		+ ',"params":'
-		+ params.canonical_json()
-		+ "}"
-	)
+	# pins that equivalence -- including the fact that the constraint component
+	# is *absent*, not empty, when there are no constraints, which is what keeps
+	# the pinned bytes and every cached entry from before this parameter.
+	# Emitted in `sort_keys` order, which is the order the dict form produced:
+	# cache_version, code, constraints, network, params. Assembled as text
+	# because `params.canonical_json()` must appear verbatim rather than as an
+	# escaped JSON string value, and a dict round-trip would escape it.
+	parts = [
+		'"cache_version":' + json.dumps(CACHE_VERSION, separators=(",", ":")),
+		'"code":' + json.dumps(code_version, separators=(",", ":")),
+	]
+	if constraints is not None:
+		parts.append(
+			'"constraints":'
+			+ json.dumps(constraints, sort_keys=True, separators=(",", ":"), default=str)
+		)
+	parts.append('"network":' + json.dumps(network_checksum, separators=(",", ":")))
+	parts.append('"params":' + params.canonical_json())
+	payload = "{" + ",".join(parts) + "}"
 	return sha256_bytes(payload.encode("utf-8"))
 
 
@@ -137,6 +158,7 @@ class SolveCache:
 		code_version: str,
 		result: dict[str, Any],
 		extra: dict[str, Any] | None = None,
+		constraints: Mapping[str, Any] | None = None,
 	) -> Path:
 		"""Write one entry.
 
@@ -144,8 +166,13 @@ class SolveCache:
 		so the entry reads as a miss and the next run recomputes it. Writing in
 		place would leave a truncated file that parses as a valid entry with
 		missing fields.
+
+		``constraints`` must be passed exactly as it was to :func:`cache_key`, or
+		the assert below rejects a legitimately constrained solve: the key was
+		computed over the constraint component and the re-derivation here would
+		omit it.
 		"""
-		assert key == cache_key(params, network_checksum, code_version), (
+		assert key == cache_key(params, network_checksum, code_version, constraints=constraints), (
 			"the key does not match the payload it is filed under"
 		)
 		directory = self.path_for(key)
@@ -215,9 +242,15 @@ class SolveCache:
 		return sorted(removed)
 
 
-def solve_fingerprint(params: ScenarioParameters, network_checksum: str, code_version: str) -> str:
+def solve_fingerprint(
+	params: ScenarioParameters,
+	network_checksum: str,
+	code_version: str,
+	*,
+	constraints: Mapping[str, Any] | None = None,
+) -> str:
 	"""A short human-facing label for a solve. Not a key; for logs and tables."""
-	return cache_key(params, network_checksum, code_version)[:12]
+	return cache_key(params, network_checksum, code_version, constraints=constraints)[:12]
 
 
 def key_is_process_stable(
