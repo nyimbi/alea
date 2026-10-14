@@ -27,7 +27,12 @@ import pypsa
 from alea import __version__
 from alea.io.artefacts import sha256_file
 from alea.logging import get_logger
-from alea.prg.audit import ScenarioAudit, audit_scenario_result, fleet_intensity_gap
+from alea.prg.audit import (
+	ScenarioAudit,
+	audit_scenario_result,
+	fleet_intensity_gap,
+	reliability_gap,
+)
 from alea.whatif.apply import apply_parameters
 from alea.whatif.cache import SolveCache, cache_key, solve_fingerprint
 from alea.whatif.extract import extract
@@ -99,6 +104,17 @@ class PrgSolve:
 	parameters: ScenarioParameters
 	audit: ScenarioAudit
 	intensity_gap: dict[str, float]
+	reliability_gap: dict[str, float] = field(default_factory=dict)
+	"""The engine's realised unserved fraction against the graph's standard.
+
+	A second declared-versus-measured pair, and the same shape as
+	``intensity_gap``: the graph states ``expected_unserved_fraction`` and
+	nothing in the tree compared it against what the solve actually shed. It is
+	defaulted rather than required so an existing caller constructing a
+	``PrgSolve`` keeps working; :meth:`WhatIfEngine.solve_from_prg` always fills
+	it.
+	"""
+
 	dropped: tuple[str, ...] = field(default=())
 	constrained: bool = False
 	"""Whether the solve ran under the graph's inequalities.
@@ -465,6 +481,7 @@ class WhatIfEngine:
 		)
 		audit = audit_scenario_result(outcome.result, g, overrides=dict(values))
 		gap = fleet_intensity_gap(outcome.result, g)
+		reliability = reliability_gap(outcome.result, g)
 		logger.info(
 			"whatif.prg.solved",
 			cache_key=outcome.cache_key[:12],
@@ -479,6 +496,7 @@ class WhatIfEngine:
 			parameters=params,
 			audit=audit,
 			intensity_gap=gap,
+			reliability_gap=reliability,
 			dropped=dropped,
 			constrained=constrain,
 			constraint_terms=tuple(sorted(constraint_values)),

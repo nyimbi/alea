@@ -241,6 +241,31 @@ after `views.py` said the graph did not make it.
   PyPSA network balances per bus and per hour and the solved result carries no
   nodal frame, so the audit cannot assert the balance against it. The audit
   reports what it did not check rather than a pass it did not earn.
+
+  **The balance is not the gap that mattered here, and the register said it
+  was.** Wiring `planning.dispatch.check_energy_balance` into the what-if path
+  was the obvious reading of this item, and it is wrong twice over: PyPSA's own
+  `consistency_check` already refuses a load on an undefined bus at solve time
+  (the defect the check's docstring names), and the check sums *lines* only, so
+  it false-positives by 1.6% on any network carrying a link — which is every
+  hydrogen or sector-coupled scenario. A gate scoped wider than its jurisdiction
+  refuses correct solves until someone turns it off. The real gap in this
+  cluster was the reliability standard, below.
+- **Emissions use one fleet-wide factor.** The engine sums per-carrier
+  intensities. `audit.fleet_intensity_gap` measures the difference instead of
+  pretending they agree. Since 2026-10-15 `alea whatif scenario` prints it: the
+  gap was computed, carried on `PrgSolve`, and shown by no door.
+- **The reliability standard was declared and unread.** `expected_unserved_fraction`
+  is the share of demand the system is meant to fail to serve, and until
+  2026-10-15 it was read by its own equation and by nothing else — the
+  declared-is-not-produced class, on a number that states a policy. The engine
+  measured the realised share (`unserved_energy_mwh` over the demand, which is
+  the generation total because load shedding is itself a carrier) and reported
+  it against nothing. `audit.reliability_gap` now reports the realised fraction,
+  the declared one, and their ratio, and both `alea whatif scenario` and
+  `alea prg audit` print it. It is a measurement and not a refusal: a scenario
+  deliberately short of capacity is a stress case the frontier is built from,
+  and refusing it would forbid exactly those points.
 - **Uncertainty is registered, not propagated.** `uncertainty.py` reads the 13
   settable parameters declared `stochastic` and the one `Relationship.STOCHASTIC`
   edge, and computes the transitive closure over `affects`: 13 inputs reach 22
@@ -251,9 +276,6 @@ after `views.py` said the graph did not make it.
   worse than the silence it replaces — a reader cannot tell a modelled interval
   from a guessed one. A sensitivity is a derivative at a point, and the register
   says so rather than implying otherwise.
-- **Emissions use one fleet-wide factor.** The engine sums per-carrier
-  intensities. `audit.fleet_intensity_gap` measures the difference instead of
-  pretending they agree.
 - **Every parameter is `float`, and `type` gates only that.** The spec's §20
   asks for type *inference* from equations. There is nothing to infer: all 84
   nodes are float, all appear in arithmetic, and none is used as an index — so

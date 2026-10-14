@@ -1313,6 +1313,100 @@ def test_the_intensity_gap_measures_rather_than_passes():
 	assert fleet_intensity_gap(dirty)["ratio"] == pytest.approx(2.0)
 
 
+def test_the_reliability_gap_reads_the_standard_nothing_else_reads():
+	"""The graph declares a reliability standard; the solve is what meets it.
+
+	`expected_unserved_fraction` is the share of demand the system is meant to
+	fail to serve. Until this check existed it was read by its own equation and
+	by nothing else -- the declared-is-not-produced defect class -- while the
+	engine measured the realised share and reported it as a number no reader
+	compared against anything.
+
+	The assertion is deliberately *not* "the solve met the standard". A
+	scenario short of capacity is a legitimate stress case and a refusal would
+	forbid the frontier. What is asserted is that the gap is computed, that it
+	is exact when the solve does meet the standard, and that it scales with the
+	shortfall when it does not.
+	"""
+	import uuid
+
+	from alea.prg.audit import reliability_gap
+	from alea.whatif.params import ScenarioParameters
+	from alea.whatif.views import ScenarioResult
+
+	def solved(generation: dict[str, float], unserved: float) -> ScenarioResult:
+		return ScenarioResult(
+			scenario_id=str(uuid.uuid4()),
+			params=ScenarioParameters(),
+			network_checksum="sha256:" + "c" * 64,
+			code_version="test",
+			total_cost_usd=1.0e9,
+			total_emissions_tco2=1.0e6,
+			capacity_mix_mw={"coal": 1000.0},
+			generation_mwh=generation,
+			unserved_energy_mwh=unserved,
+		)
+
+	# The graph's standard is 0.001. Load shedding is a generation carrier, so
+	# the generation total *is* the demand: 1 MWh shed of 1000 is exactly the
+	# declared fraction, and the ratio is 1.0 by construction rather than by
+	# tolerance.
+	met = reliability_gap(solved({"coal": 999.0, "load shedding": 1.0}, 1.0))
+	assert met["declared_fraction"] == pytest.approx(0.001)
+	assert met["realised_fraction"] == pytest.approx(0.001)
+	assert met["ratio"] == pytest.approx(1.0)
+	assert met["served_mwh"] == pytest.approx(999.0)
+
+	# A hundred times the standard. The realised fraction is 0.1 and the ratio
+	# must follow the shortfall rather than saturate: a check that reported
+	# "over standard" without a magnitude could not distinguish a near miss
+	# from a fleet that serves almost nothing.
+	missed = reliability_gap(solved({"coal": 900.0, "load shedding": 100.0}, 100.0))
+	assert missed["realised_fraction"] == pytest.approx(0.1)
+	assert missed["ratio"] == pytest.approx(100.0)
+
+	# A result with no generation at all reports zeros rather than dividing by
+	# the zero demand. A ratio of 0.0 here reads as "met the standard", which is
+	# wrong, so the two fractions are carried and the reader compares them.
+	empty = reliability_gap(solved({}, 0.0))
+	assert empty["ratio"] == 0.0
+	assert empty["declared_fraction"] == pytest.approx(0.001)
+	assert empty["realised_fraction"] == 0.0
+
+
+def test_the_reliability_gap_is_not_a_second_spelling_of_the_intensity_gap():
+	"""Two gaps over one result must measure two different things.
+
+	The intensity gap is emissions over generation; the reliability gap is
+	unserved over demand. A copy-paste that reused the emissions numerator
+	would produce a plausible ratio that answers the wrong question, and both
+	functions live in one module where that is a one-line mistake. This pins
+	the two apart on a result where they differ by construction: nothing is
+	unserved, so the reliability ratio is 0.0 while the intensity ratio is 1.0.
+	"""
+	import uuid
+
+	from alea.prg.audit import fleet_intensity_gap, reliability_gap
+	from alea.whatif.params import ScenarioParameters
+	from alea.whatif.views import ScenarioResult
+
+	# 25 Mt over 50 TWh is 0.5 t/MWh, the graph's factor: intensity ratio 1.0.
+	# Nothing is shed, so the reliability ratio is 0.0.
+	result = ScenarioResult(
+		scenario_id=str(uuid.uuid4()),
+		params=ScenarioParameters(),
+		network_checksum="sha256:" + "d" * 64,
+		code_version="test",
+		total_cost_usd=1.0e9,
+		total_emissions_tco2=25.0e6,
+		capacity_mix_mw={"coal": 6000.0, "wind": 4000.0},
+		generation_mwh={"coal": 30.0e6, "wind": 20.0e6},
+	)
+	assert fleet_intensity_gap(result)["ratio"] == pytest.approx(1.0)
+	assert reliability_gap(result)["ratio"] == 0.0
+	assert reliability_gap(result)["unserved_mwh"] == 0.0
+
+
 def test_the_audit_does_not_compare_the_graph_against_itself():
 	"""A derived parameter supplied by the result is discarded, and that is stated.
 

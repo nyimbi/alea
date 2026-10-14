@@ -523,6 +523,23 @@ def test_the_command_solves_under_the_graphs_inequalities(tmp_path) -> None:
 	)
 
 
+def test_the_command_prints_both_declared_versus_measured_gaps(tmp_path) -> None:
+	"""The solve reports what the graph declares and what the fleet did.
+
+	`intensity_gap` was computed and carried on `PrgSolve` and printed by
+	nothing, and the reliability gap did not exist: `expected_unserved_fraction`
+	was read by its own equation and by no reader. Both are the same defect --
+	a measurement the graph makes available and no door shows -- so both lines
+	are asserted at the command, which is the only entry point an operator has.
+	"""
+	result = _cli(tmp_path, "--set", "carbon_price_usd_per_tco2=60")
+	assert result.exit_code in (0, 1), result.output
+	assert "fleet intensity" in result.stdout, result.stdout
+	assert "against the graph's" in result.stdout
+	assert "unserved" in result.stdout, result.stdout
+	assert "of demand against the graph's standard" in result.stdout
+
+
 def test_the_command_exits_three_on_an_infeasible_scenario(tmp_path) -> None:
 	"""A fleet the graph's reserve margin rejects exits 3, not 1 or 2.
 

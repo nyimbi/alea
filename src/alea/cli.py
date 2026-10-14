@@ -872,6 +872,24 @@ def whatif_scenario(
 			f"applied {len(values) - len(solved.dropped)} of {len(values)} parameter(s); "
 			f"{solved.summary()}"
 		)
+		# The two declared-versus-measured gaps, printed where the solve happened
+		# rather than only on `prg audit` against a stored result. `intensity_gap`
+		# was carried on `PrgSolve` and read by nothing here, so a caller saw a
+		# cost and no sign that the graph's emissions factor and its reliability
+		# standard were being met or missed -- the declared-is-not-produced defect
+		# one level up, on the gap itself.
+		intensity = solved.intensity_gap
+		typer.echo(
+			f"fleet intensity {intensity['engine_intensity']:.6g} t/MWh against the "
+			f"graph's {intensity['graph_factor']:.6g} (ratio {intensity['ratio']:.4g})"
+		)
+		reliability = solved.reliability_gap
+		if reliability:
+			typer.echo(
+				f"unserved {reliability['realised_fraction']:.6g} of demand against the "
+				f"graph's standard {reliability['declared_fraction']:.6g} "
+				f"(ratio {reliability['ratio']:.4g})"
+			)
 		if solved.dropped:
 			typer.secho(
 				f"dropped: {', '.join(solved.dropped)}",
@@ -1622,7 +1640,7 @@ def prg_audit(
 	scenario can pass the first and fail the second, which is the whole reason
 	the seam exists.
 	"""
-	from alea.prg.audit import audit_scenario_result, fleet_intensity_gap
+	from alea.prg.audit import audit_scenario_result, fleet_intensity_gap, reliability_gap
 	from alea.whatif.store import latest_version, load_scenario
 
 	with _run("cli.prg.audit", scenario=name):
@@ -1639,10 +1657,16 @@ def prg_audit(
 				f"out of range: {parameter} = {value:.6g}", fg=typer.colors.RED, err=True
 			)
 		gap = fleet_intensity_gap(record.result)
+		reliability = reliability_gap(record.result)
 		typer.echo(f"{name} {resolved}: {audit.summary()}")
 		typer.echo(
 			f"fleet intensity {gap['engine_intensity']:.6g} t/MWh against the "
 			f"graph's {gap['graph_factor']:.6g} (ratio {gap['ratio']:.4g})"
+		)
+		typer.echo(
+			f"unserved {reliability['realised_fraction']:.6g} of demand against the "
+			f"graph's standard {reliability['declared_fraction']:.6g} "
+			f"(ratio {reliability['ratio']:.4g})"
 		)
 		if not audit.consistent:
 			raise typer.Exit(code=1)

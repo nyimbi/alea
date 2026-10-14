@@ -36,6 +36,7 @@ __all__ = [
 	"audit_scenario_result",
 	"fleet_intensity_gap",
 	"parameters_from_result",
+	"reliability_gap",
 ]
 
 
@@ -262,4 +263,81 @@ def fleet_intensity_gap(result: Any, graph: ParameterGraph | None = None) -> dic
 		"engine_intensity": engine_intensity,
 		"graph_factor": factor,
 		"ratio": (engine_intensity / factor) if factor > 0.0 else 0.0,
+	}
+
+
+def reliability_gap(result: Any, graph: ParameterGraph | None = None) -> dict[str, float]:
+	"""The engine's realised unserved fraction against the graph's standard.
+
+	The graph's reliability identity is ``unserved_energy_gwh =
+	equilibrium_demand_twh * expected_unserved_fraction * 1000``, and
+	``expected_unserved_fraction`` is a *declared* standard: the share of demand
+	the system is meant to fail to serve. The engine measures the realised
+	share -- ``unserved_energy_mwh`` over the demand it was asked to serve --
+	and nothing compared the two. The declared standard was read by its own
+	equation and by nothing else, which is this repository's recurring defect
+	class wearing a plausible number.
+
+	So the useful output is the two fractions and their ratio, reported and not
+	adjudicated. A ratio of 1.0 means the solve met the standard; a ratio of 50
+	means it missed by a factor of fifty, which is a fact about the *fleet*
+	that no consistency check can report, because the graph is internally
+	consistent whether or not the network honours it.
+
+	WHY this is not a pass/fail. The graph states a standard for a system; the
+	solve states what this fleet did. A scenario deliberately short of capacity
+	has a high realised fraction and is not *wrong* -- it is expensive, and the
+	cost is the point. The gap is the measurement a reviewer needs to see, and
+	turning it into a refusal would forbid exactly the stress scenarios the
+	frontier is built from.
+
+	WHY the denominator is the demand the system was asked to serve. The engine
+	reports ``unserved_energy_mwh`` separately from generation, but load
+	shedding is *also* a generation carrier, so ``generation_mwh`` already
+	contains the shortfall when the engine recorded it there. The demand is
+	therefore the generation total, and the energy actually served is that
+	total less the shortfall. Both are reported, because a fraction over the
+	wrong denominator is a plausible number that answers a different question.
+	"""
+	g = graph if graph is not None else load_graph()
+	generation_mwh = getattr(result, "generation_mwh", None) or {}
+	unserved_mwh = float(getattr(result, "unserved_energy_mwh", 0.0) or 0.0)
+
+	# The declared standard is read before the empty-result return, because it
+	# is a property of the *graph* and not of the result. Returning it as 0.0
+	# for a result that carries no generation would report the graph as
+	# declaring no standard, which is a claim about the graph made from a
+	# fact about the result.
+	node = g.nodes.get("expected_unserved_fraction")
+	declared = float(node.default) if node is not None and node.default is not None else 0.0
+
+	# `generation_mwh` includes the load-shedding carrier, so the dispatched
+	# total already contains the shortfall when the engine recorded it there.
+	# Subtracting it recovers the energy actually served, which is the other
+	# half of the denominator.
+	total_mwh = float(sum(generation_mwh.values()))
+	served_mwh = total_mwh - unserved_mwh
+	demand_mwh = total_mwh if total_mwh > 0.0 else 0.0
+	if demand_mwh <= 0.0:
+		return {
+			"realised_fraction": 0.0,
+			"declared_fraction": declared,
+			"ratio": 0.0,
+			"unserved_mwh": unserved_mwh,
+			"served_mwh": served_mwh,
+		}
+
+	realised = unserved_mwh / demand_mwh
+	# A declared standard of zero is a system that never fails to serve, and a
+	# ratio against it is undefined rather than infinite. Reporting 0.0 there
+	# would read as "met the standard", which is the one reading that is
+	# certainly wrong for any network that shed a load, so the ratio is left at
+	# zero and the two fractions are reported for the reader to compare.
+	ratio = (realised / declared) if declared > 0.0 else 0.0
+	return {
+		"realised_fraction": realised,
+		"declared_fraction": declared,
+		"ratio": ratio,
+		"unserved_mwh": unserved_mwh,
+		"served_mwh": served_mwh,
 	}
