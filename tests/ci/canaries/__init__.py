@@ -118,6 +118,55 @@ def _hold_deadline(seconds: float, path: Path) -> Iterator[None]:
 		signal.signal(signal.SIGALRM, previous)
 
 
+#: Runs a probe's source and leaves through `os._exit`, skipping interpreter
+#: shutdown.
+#:
+#: A probe ends by raising `SystemExit`, and `SystemExit` does not exit -- it
+#: unwinds to the top and *then* the interpreter tears down: atexit hooks,
+#: daemon threads joined, and `libarrow`'s thread-pool destructor, which
+#: deadlocks on this platform. The probe's own output has already been written
+#: by then, so the symptom is a `subprocess.TimeoutExpired` on a probe that
+#: plainly succeeded, and the canary that owns it fails while every gate it
+#: exercises is fine.
+#:
+#: Measured twice: 2026-10-13, where `subprocess.run` had no timeout and the
+#: hang left two mutations on disk for hours (see `_HOLD_SECONDS`), and
+#: 2026-10-14, where the timeout turned the same hang into a spurious failure of
+#: `test_the_category_gate_notices_a_band_that_never_reaches_the_value` -- the
+#: probe printed its expected `REFUSED ReportDataError` and then sat in
+#: shutdown for 120s. The timeout is what made the second occurrence legible
+#: rather than a leak; this wrapper is what stops it happening at all.
+#:
+#: `sys.argv` is deliberately **not** rewritten. Probe bodies are written
+#: against the `python -c` layout (`sys.argv[1]` for the first extra argument,
+#: `sys.argv[1:]` for the pytest pass-through), so shifting it by one would
+#: silently retarget every argument-passing probe.
+#:
+#: Flushing before `os._exit` is not optional: `os._exit` does not flush stdio,
+#: and the canaries assert on the probe's stdout.
+_EXIT_WRAPPER = """\
+import os, sys, traceback
+_src = os.environ.pop("ALEA_CANARY_PROGRAM")
+_code = 0
+try:
+    exec(compile(_src, "<canary>", "exec"), {"__name__": "__main__"})
+except SystemExit as _exc:
+    if _exc.code is None:
+        _code = 0
+    elif isinstance(_exc.code, int):
+        _code = _exc.code
+    else:
+        print(_exc.code, file=sys.stderr)
+        _code = 1
+except BaseException:
+    traceback.print_exc()
+    _code = 1
+sys.stdout.flush()
+sys.stderr.flush()
+os._exit(_code)
+"""
+
+
 def probe(program: str, *args: str, timeout: float = 120.0) -> subprocess.CompletedProcess[str]:
 	"""Run a snippet against the tree on disk, with the repo importable.
 
@@ -130,10 +179,15 @@ def probe(program: str, *args: str, timeout: float = 120.0) -> subprocess.Comple
 	used to hang its canary forever with the defect still planted -- see
 	`_HOLD_SECONDS` -- and a killed probe reports as a failure rather than as a
 	hang, which is the difference between a five-second diagnosis and an hour.
+
+	The program is passed through the environment rather than as the `-c`
+	argument, because the argument slot is what `_EXIT_WRAPPER` occupies. The
+	child's `sys.argv` is therefore identical to what `python -c program *args`
+	would have produced, which is the layout the probe bodies assume.
 	"""
-	env = {**os.environ, "PYTHONPATH": str(REPO)}
+	env = {**os.environ, "PYTHONPATH": str(REPO), "ALEA_CANARY_PROGRAM": program}
 	return subprocess.run(
-		[sys.executable, "-c", program, *args],
+		[sys.executable, "-c", _EXIT_WRAPPER, *args],
 		capture_output=True,
 		text=True,
 		check=False,

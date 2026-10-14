@@ -27,6 +27,7 @@ written as a single `planted` call, so it drives threads directly.
 
 from __future__ import annotations
 
+import os
 import threading
 from pathlib import Path
 
@@ -332,4 +333,110 @@ def test_the_repository_holds_no_leaked_mutation() -> None:
 		"file whose current contents are a *defect*, not the original:\n  "
 		+ "\n  ".join(str(path) for path in found)
 		+ "\nRestore each from its backup before trusting any test result."
+	)
+
+
+def test_probe_leaves_without_running_interpreter_shutdown() -> None:
+	"""A probe must not block in shutdown after its own output is written.
+
+	The defect, twice: a probe ends by raising `SystemExit`, which does not
+	exit -- it unwinds and *then* the interpreter tears down, joining threads and
+	running destructors. `libarrow`'s thread-pool destructor deadlocks there on
+	this platform, so the probe prints its verdict, sits for the full timeout,
+	and `subprocess.run` raises `TimeoutExpired`. The canary that owns it fails
+	while every gate it exercises is correct.
+
+	Measured 2026-10-13 (no timeout then, so the hang left two mutations on
+	disk for hours) and again 2026-10-14, where
+	`test_the_category_gate_notices_a_band_that_never_reaches_the_value` failed
+	on a probe that had printed its expected `REFUSED ReportDataError` and then
+	hung for 120s. Two occurrences is a class, so the fix is in `probe`, which
+	owns the child's lifecycle, and this is its canary.
+
+	A non-daemon thread the interpreter must join is a *deterministic* stand-in
+	for the destructor deadlock: `SystemExit` reaches the join and blocks,
+	`os._exit` never does. The same program is run both ways so the test proves
+	the wrapper is what makes the difference, rather than that the machine was
+	fast.
+	"""
+	import subprocess
+	import sys
+
+	from tests.ci.canaries import REPO, probe
+
+	program = (
+		"import threading, time\n"
+		"threading.Thread(target=lambda: time.sleep(600), daemon=False).start()\n"
+		"print('REACHED THE END')\n"
+		"raise SystemExit(0)\n"
+	)
+
+	# The old path: `python -c program`, which unwinds through `SystemExit` into
+	# a shutdown that cannot finish while the thread lives.
+	env = {**os.environ, "PYTHONPATH": str(REPO)}
+	with pytest.raises(subprocess.TimeoutExpired):
+		subprocess.run(
+			[sys.executable, "-c", program],
+			capture_output=True,
+			text=True,
+			env=env,
+			cwd=str(REPO),
+			timeout=10,
+		)
+
+	# The wrapped path: same program, same blocking thread, returns at once.
+	result = probe(program, timeout=10)
+	assert result.returncode == 0, f"the wrapper changed the exit code: {result.stderr}"
+	assert "REACHED THE END" in result.stdout, (
+		f"`os._exit` dropped the probe's output; stdio was not flushed: {result.stdout!r}"
+	)
+
+
+def test_probe_preserves_the_argv_layout_a_probe_body_expects() -> None:
+	"""The wrapper must not shift `sys.argv`, or every argument-passing probe retargets.
+
+	Probe bodies are written against `python -c program *args`: `sys.argv[1]` is
+	the first extra argument and `sys.argv[1:]` is the pytest pass-through
+	(`test_reporting_producer_gates.py` forwards its own arguments that way). The
+	program now travels through the environment so the `-c` slot can hold the
+	shutdown-skipping wrapper, and this pins the layout that swap could silently
+	break -- a probe reading `sys.argv[1]` would take the *program text* for its
+	first argument and fail somewhere unrelated to argv.
+	"""
+	from tests.ci.canaries import probe
+
+	result = probe(
+		"import sys; print('ARGV', sys.argv[1], sys.argv[2:])",
+		"one",
+		"two",
+		"three",
+	)
+	assert result.returncode == 0, result.stderr
+	assert result.stdout.strip() == "ARGV one ['two', 'three']", (
+		f"the probe's argv layout changed: {result.stdout.strip()!r}"
+	)
+
+
+def test_probe_still_reports_every_exit_code_a_canary_asserts_on() -> None:
+	"""`os._exit` must carry the code the body chose, including the exception path.
+
+	The wrapper replaces the interpreter's own exit handling, so the contract it
+	took over has to be pinned: `SystemExit(0)`, `SystemExit(1)`, a bare
+	`SystemExit`, a `SystemExit` with a string message, and an uncaught exception
+	(which must still be a non-zero exit *with* its traceback on stderr, since
+	canaries assert on both the code and the message).
+	"""
+	from tests.ci.canaries import probe
+
+	assert probe("raise SystemExit(0)").returncode == 0
+	assert probe("raise SystemExit(1)").returncode == 1
+	assert probe("raise SystemExit()").returncode == 0, "a bare SystemExit is success"
+	assert probe("raise SystemExit('a message')").returncode == 1, (
+		"a SystemExit carrying a message is a failure, as it is in CPython"
+	)
+
+	raised = probe("raise ValueError('boom')")
+	assert raised.returncode == 1, "an uncaught exception did not fail the probe"
+	assert "ValueError" in raised.stderr and "boom" in raised.stderr, (
+		f"the traceback was lost, so a canary cannot say *why* a probe failed: {raised.stderr!r}"
 	)
