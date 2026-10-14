@@ -16,7 +16,7 @@ it is how two callers end up disagreeing about what an equation says.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from alea.prg.graph import ParameterGraph, Violation, load_graph
@@ -41,6 +41,9 @@ class ScenarioCheck:
 	violations: tuple[Violation, ...]
 	unmodelled: tuple[str, ...]
 	"""Systems the library does not cover, so their absence is not a pass."""
+
+	excursions: dict[str, float] = field(default_factory=dict)
+	"""Derived values the equations fixed outside their declared range."""
 
 	def summary(self) -> str:
 		if self.consistent and not self.unmodelled:
@@ -95,6 +98,7 @@ def check_scenario(
 		consistent=not violations,
 		violations=tuple(violations),
 		unmodelled=tuple(coverage(g.equations)),
+		excursions=g.range_excursions(),
 	)
 
 

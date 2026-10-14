@@ -31,7 +31,7 @@ from typing import Any
 import yaml
 
 from alea.config.paths import repo_root
-from alea.prg.dsl import DslError, evaluate, parse, solve_for
+from alea.prg.dsl import DslError, Expr, evaluate, parse, solve_for
 from alea.prg.feedback import solve_loop
 from alea.prg.views import (
 	Equation,
@@ -144,6 +144,13 @@ class ParameterGraph:
 						f"by dictionary order"
 					)
 				self._determiner[target] = equation
+
+		#: parameter -> the value the equation fixes, where that value is
+		#: outside the parameter's declared range. Cleared at the top of every
+		#: propagation: a finding left over from the previous scenario would be
+		#: reported against this one, which is the stale-state bug the register
+		#: exists to avoid rather than to commit.
+		self._range_excursions: dict[str, float] = {}
 
 		self._validate()
 
@@ -479,6 +486,7 @@ class ParameterGraph:
 					f"parameters; a caller naming a parameter the graph does not "
 					f"hold is a caller editing a different graph"
 				)
+		self._range_excursions.clear()
 		scoped: dict[str, float] = {k: float(v) for k, v in values.items()}
 		missing = set(self._nodes) - scoped.keys()
 		underived_missing = {
@@ -523,6 +531,32 @@ class ParameterGraph:
 			loops=tuple(loop_results),
 		)
 
+	def _widen(
+		self,
+		residual: Expr,
+		parameter: str,
+		values: Mapping[str, float],
+		bracket: tuple[float, float],
+	) -> float | None:
+		"""The equation's root, searching past ``bracket`` until it is found.
+
+		Geometric widening from the declared range, so the root nearest the
+		admissible set is the one returned: a doubling search outward is the
+		cheapest way to reach a value that is off by an order of magnitude
+		without a bracket so wide it meets a different root on the way.
+		"""
+		low, high = bracket
+		width = max(high - low, 1.0)
+		for _ in range(32):
+			low -= width
+			high += width
+			width *= 2.0
+			try:
+				return solve_for(residual, parameter, values, bracket=(low, high))
+			except DslError:
+				continue
+		return None
+
 	def _derive(self, parameter: str, values: Mapping[str, float]) -> float:
 		equation = self._determiner[parameter]
 		if equation.relation != "eq":
@@ -539,12 +573,36 @@ class ParameterGraph:
 			)
 		try:
 			return solve_for(residual, parameter, values, bracket=node.range)
-		except DslError as exc:
-			raise GraphError(
-				f"cannot derive {parameter} from {equation.id!r}: {exc}"
-			) from exc
+		except DslError as first:
+			# A bracket miss is not the same thing as an unsolvable equation,
+			# and conflating them turns a scenario that should be *reported*
+			# into a traceback. `range` is the set the parameter is admissible
+			# over; the solver's bracket is where the root might be. For a
+			# ratio those are different sets -- a debt service coverage of 30 is
+			# perfectly computable and outside any range a reviewer would sign
+			# off -- so the bracket is widened until the root is found, and the
+			# excursion is recorded as the finding it is. A bracket that still
+			# has no root after widening is a genuinely unsolvable equation,
+			# and that is an error.
+			widened = self._widen(residual, parameter, values, node.range)
+			if widened is None:
+				raise GraphError(
+					f"cannot derive {parameter} from {equation.id!r}: {first}"
+				) from first
+			self._range_excursions[parameter] = widened
+			return widened
 
 	# -- consistency ----------------------------------------------------
+
+	def range_excursions(self) -> dict[str, float]:
+		"""Derived parameters whose equation fixed a value outside their range.
+
+		Read after a propagation. A value here is not a solver failure -- the
+		equation was solved and this is its answer -- it is the answer landing
+		outside the set the parameter is admissible over, which is a finding
+		about the scenario.
+		"""
+		return dict(self._range_excursions)
 
 	def consistency(
 		self, values: Mapping[str, float], *, only: str | None = None
@@ -558,6 +616,18 @@ class ParameterGraph:
 		impossibly tight for the first and infinitely loose for the second.
 		"""
 		violations: list[Violation] = []
+		for parameter, value in sorted(self._range_excursions.items()):
+			node = self._nodes[parameter]
+			assert node.range is not None, parameter
+			violations.append(
+				Violation(
+					equation_id=f"{parameter}_out_of_range",
+					residual=value,
+					tolerance=node.range[1] if value > node.range[1] else node.range[0],
+					relative=float("inf"),
+					priority=node.priority.value,
+				)
+			)
 		for equation in self._equations.values():
 			if only is not None and equation.system != only:
 				continue

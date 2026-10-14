@@ -332,7 +332,9 @@ def test_the_topological_order_respects_every_dependency(graph: ParameterGraph):
 def test_the_derived_parameters_match_their_closed_forms(graph: ParameterGraph, defaults: dict):
 	"""Propagation against arithmetic worked out independently."""
 	result = graph.propagate(defaults)
-	rate = defaults["discount_rate"]
+	# The discount rate is derived now -- it is the WACC -- so its value comes
+	# from the propagation, and the closed form below is computed from that.
+	rate = result.values["discount_rate"]
 	life = defaults["asset_life"]
 	crf = rate * (1 + rate) ** life / ((1 + rate) ** life - 1)
 	assert result.values["crf"] == pytest.approx(crf, rel=1e-9)
@@ -548,15 +550,44 @@ def test_coverage_names_the_systems_that_are_not_modelled(graph: ParameterGraph)
 	"""An unmodelled system is a finding, not silence.
 
 	"affordability is not modelled" and "affordability is modelled and nothing
-	violates it" read identically from a report that lists no violations.
+	violates it" read identically from a report that lists no violations. The
+	shipped graph now models every system, so the finding set is empty -- and
+	that is a claim worth asserting, because it is the one that regresses
+	silently if a system's equations are deleted.
 	"""
-	uncovered = coverage(graph.equations)
-	assert uncovered, "the shipped graph claims to model every system"
-	modelled = set(systems_of(graph.equations)) - {""}
-	assert len(uncovered) == len(SYSTEM_IDS) - len(
-		{system for system in modelled if systems_of(graph.equations)[system]}
-	)
-	assert any(entry.startswith("affordability:") for entry in uncovered)
+	assert coverage(graph.equations) == [], coverage(graph.equations)
+	modelled = {system for system, equations in systems_of(graph.equations).items() if equations}
+	assert modelled == set(SYSTEM_IDS), sorted(set(SYSTEM_IDS) - modelled)
+
+
+def test_every_system_has_equations_and_a_finding_is_what_an_empty_one_produces(
+	graph: ParameterGraph, document: dict
+):
+	"""The register reports absence, which is why it is computed and not inferred.
+
+	Deleting a system's equations must produce a finding naming it, or the
+	register cannot distinguish "not modelled" from "modelled and clean".
+	"""
+	document["equations"] = {
+		key: value
+		for key, value in document["equations"].items()
+		if value["system"] != "affordability"
+	}
+	# The edges citing those equations have to go too, or the graph refuses to
+	# load for naming an equation it no longer holds -- which is the load-time
+	# check working, not the register under test.
+	dropped = {
+		key
+		for key, value in yaml.safe_load(PRG_PATH.read_text())["equations"].items()
+		if value["system"] == "affordability"
+	}
+	document["relationships"] = [
+		edge for edge in document["relationships"] if edge["equation_id"] not in dropped
+	]
+	stripped = ParameterGraph.from_mapping(document)
+	uncovered = coverage(stripped.equations)
+	assert any(entry.startswith("affordability:") for entry in uncovered), uncovered
+	assert len(uncovered) == 1, uncovered
 
 
 # ---------------------------------------------------------------------------
@@ -570,7 +601,11 @@ def test_the_summary_reports_the_registers(graph: ParameterGraph):
 	assert summary["equations"] == len(graph.equations)
 	assert summary["derived"] == len(graph.order())
 	assert summary["feedback_loops"], "the summary lost the loop"
-	assert summary["unmodelled_systems"]
+	# Every system is modelled, so the register is empty -- and empty is the
+	# assertion, because a system that quietly lost its equations is exactly
+	# what this key exists to make visible.
+	assert summary["unmodelled_systems"] == []
+	assert summary["systems_declared"] == len(summary["systems"])
 	assert summary["structure_issues"] == []
 
 
@@ -625,3 +660,78 @@ def test_evaluate_is_the_module_level_entry_point():
 	expression = parse("a * b + 1")
 	values = {"a": 2.0, "b": 3.0}
 	assert evaluate(expression, values) == expression.eval(values) == 7.0
+
+
+# ---------------------------------------------------------------------------
+# The solver's bracket is not the parameter's admissible range
+# ---------------------------------------------------------------------------
+
+
+def test_a_value_outside_its_range_is_reported_rather_than_refused(
+	graph: ParameterGraph, defaults: dict
+):
+	"""A computable value outside the admissible range is a finding, not a crash.
+
+	`range` is the set a parameter is admissible over; the solver's bracket is
+	where the root might be. For a ratio those are different sets. A $900
+	tariff drives the debt service coverage to about 30 -- a real answer about
+	an unfinanceable-by-construction scenario -- and a graph that raises here
+	instead of reporting turns "why is this scenario bad" into a traceback.
+
+	The failure this guards is not hypothetical: the first version of the
+	widened library raised exactly this way, and the tariff that produced it is
+	the affordability system's own subject matter.
+	"""
+	scoped = dict(defaults)
+	scoped["tariff_usd_per_mwh"] = 900.0
+	result = graph.propagate(scoped)
+	# Solved, not pinned to a bound: the equation's actual answer.
+	assert result.values["project_gearing_dscr"] > 20.0
+	assert graph.range_excursions()["project_gearing_dscr"] == pytest.approx(
+		result.values["project_gearing_dscr"], rel=1e-9
+	)
+	check = check_scenario(scoped, graph)
+	assert not check.consistent
+	assert any(
+		v.equation_id == "project_gearing_dscr_out_of_range"
+		for v in check.violations
+	), [str(v) for v in check.violations]
+	# The downstream identities are computed from the *true* value, so a
+	# scenario reported as out of range is still fully described.
+	assert check.excursions["project_gearing_dscr"] == pytest.approx(
+		result.values["project_gearing_dscr"], rel=1e-9
+	)
+
+
+def test_a_range_excursion_does_not_survive_into_the_next_scenario(
+	graph: ParameterGraph, defaults: dict
+):
+	"""The register is cleared per propagation, or it reports a stale finding.
+
+	A finding left over from the previous scenario would be attributed to the
+	next one, which is worse than no finding at all: the report would name a
+	parameter the current scenario keeps well inside its range.
+	"""
+	scoped = dict(defaults)
+	scoped["tariff_usd_per_mwh"] = 900.0
+	graph.propagate(scoped)
+	assert graph.range_excursions()
+	graph.propagate(defaults)
+	assert graph.range_excursions() == {}
+	assert check_scenario(defaults, graph).consistent
+
+
+def test_an_equation_with_no_root_at_all_is_still_an_error(
+	graph: ParameterGraph, defaults: dict
+):
+	"""Widening is not a licence to return a bound and call it an answer.
+
+	A residual that does not change sign anywhere is unsolvable, and a solver
+	that answered anyway would be inventing a value the equation does not fix.
+	"""
+	from alea.prg.dsl import parse
+
+	scoped = dict(defaults)
+	# `x**2 + 1` has no real root, so no bracket contains one.
+	residual = parse("project_gearing_dscr ** 2 + 1")
+	assert graph._widen(residual, "project_gearing_dscr", scoped, (-20.0, 20.0)) is None

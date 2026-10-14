@@ -304,6 +304,14 @@ def prg_check(
 				raise typer.Exit(code=2)
 			values[key] = float(raw)
 		result = check_scenario(values, graph)
+		for parameter, value in sorted(result.excursions.items()):
+			node = graph.node(parameter)
+			typer.secho(
+				f"out of range: {parameter} = {value:.6g}, declared range "
+				f"{node.range}",
+				fg=typer.colors.RED,
+				err=True,
+			)
 		for violation in result.violations:
 			typer.secho(f"violation: {violation}", fg=typer.colors.RED, err=True)
 		for entry in result.unmodelled:
