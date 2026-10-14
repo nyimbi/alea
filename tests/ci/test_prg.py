@@ -874,3 +874,120 @@ def test_every_system_that_is_declared_has_equations(graph: ParameterGraph):
 	assert modelled == set(SYSTEM_IDS), sorted(set(SYSTEM_IDS) - modelled)
 	assert coverage(graph.equations) == []
 
+
+# ---------------------------------------------------------------------------
+# The seam: auditing a solved what-if result
+# ---------------------------------------------------------------------------
+
+
+def _solved(carbon_price: float = 50.0):
+	"""A solved result, carrying the engine's numbers rather than the graph's."""
+	import uuid
+
+	from alea.whatif.params import ScenarioParameters
+	from alea.whatif.views import ScenarioResult
+
+	return ScenarioResult(
+		scenario_id=str(uuid.uuid4()),
+		params=ScenarioParameters(carbon_price_usd_per_tco2=carbon_price),
+		network_checksum="sha256:" + "a" * 64,
+		code_version="test",
+		total_cost_usd=1.0e9,
+		total_emissions_tco2=25.0e6,
+		capacity_mix_mw={"coal": 6000.0, "wind": 4000.0},
+		generation_mwh={"coal": 30.0e6, "wind": 20.0e6},
+	)
+
+
+def test_the_audit_reports_what_it_did_not_check():
+	"""A pass over nothing must not read as a pass over everything.
+
+	The result carries a handful of the graph's twenty-eight derived
+	parameters. An audit that printed "consistent" without saying how many
+	parameters that covered would be a clean bill of health for a result
+	nobody examined.
+	"""
+	from alea.prg.audit import audit_scenario_result
+
+	audit = audit_scenario_result(_solved())
+	assert audit.consistent
+	assert len(audit.skipped) == 28, audit.skipped
+	assert "not carried" in audit.summary()
+
+
+def test_the_audit_finds_an_unfinanceable_scenario_the_engine_solved():
+	"""The seam's whole value: a scenario the optimiser accepts and a lender would not.
+
+	A $200 carbon price is a network PyPSA solves without complaint -- the
+	objective is finite and every constraint holds. The PRG refuses it, because
+	at that marginal cost the tariff no longer covers operating cost and the
+	debt service coverage falls below the floor a lender requires. That is the
+	inconsistency the specification says the engine would otherwise "happily
+	solve and return garbage" about.
+	"""
+	from alea.prg.audit import audit_scenario_result
+
+	assert audit_scenario_result(_solved(50.0)).consistent
+	refused = audit_scenario_result(_solved(200.0))
+	assert not refused.consistent
+	assert any(v.equation_id == "dscr_requirement" for v in refused.violations), [
+		str(v) for v in refused.violations
+	]
+
+
+def test_the_intensity_gap_measures_rather_than_passes():
+	"""A stand-in that is exact here is not exact everywhere, and the gap says so.
+
+	The graph's emissions identity uses one fleet-wide factor; the engine sums
+	per-carrier intensities. They agree exactly when the fleet's weighted
+	average equals the graph's number. Reporting that ratio is the honest
+	output: a consistency check cannot report it, because the graph is
+	internally consistent either way.
+	"""
+	from alea.prg.audit import fleet_intensity_gap
+
+	# 25 Mt over 50 TWh is 0.5 t/MWh, and the graph's factor is 0.5.
+	gap = fleet_intensity_gap(_solved())
+	assert gap["engine_intensity"] == pytest.approx(0.5)
+	assert gap["graph_factor"] == pytest.approx(0.5)
+	assert gap["ratio"] == pytest.approx(1.0)
+
+	# A dirtier fleet than the graph's single factor assumes.
+	import uuid
+
+	from alea.whatif.params import ScenarioParameters
+	from alea.whatif.views import ScenarioResult
+
+	dirty = ScenarioResult(
+		scenario_id=str(uuid.uuid4()),
+		params=ScenarioParameters(),
+		network_checksum="sha256:" + "b" * 64,
+		code_version="test",
+		total_cost_usd=1.0e9,
+		total_emissions_tco2=50.0e6,
+		capacity_mix_mw={"coal": 10000.0},
+		generation_mwh={"coal": 50.0e6},
+	)
+	assert fleet_intensity_gap(dirty)["ratio"] == pytest.approx(2.0)
+
+
+def test_the_audit_does_not_compare_the_graph_against_itself():
+	"""A derived parameter supplied by the result is discarded, and that is stated.
+
+	`generation_twh` and `emissions_mtco2_per_year` are both derived, so
+	`propagate` recomputes them. Supplying the engine's values for them would
+	change nothing and the audit would report agreement between two runs of the
+	same equation -- the vacuous fixture this repository has been bitten by
+	before. The engine's emissions are checked by `fleet_intensity_gap`, which
+	measures them against the graph's factor instead.
+	"""
+	from alea.prg.audit import parameters_from_result
+	from alea.prg.graph import load_graph
+
+	graph = load_graph()
+	supplied = parameters_from_result(_solved(), graph)
+	assert "emissions_mtco2_per_year" not in supplied
+	assert "generation_twh" not in supplied
+	assert supplied["carbon_price_usd_per_tco2"] == pytest.approx(50.0)
+	assert supplied["total_capacity_mw"] == pytest.approx(10000.0)
+
