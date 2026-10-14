@@ -20,31 +20,60 @@ the code and `config/prg.yaml` are the authority, and this says where to look.
 | Library | `src/alea/prg/library.py` | The 16 systems, the spec→system mapping, and the coverage register |
 | Service | `src/alea/prg/service.py` | `graph_summary`, `check_scenario`, `propagate_change`, `describe` |
 | Result audit | `src/alea/prg/audit.py` | Audit a *solved* what-if result against the graph's identities |
+| Sensitivity | `src/alea/prg/sensitivity.py` | Exact forward-mode derivatives over the topological order; the implicit function theorem for loop variables; elasticity |
+| Conflict detection | `src/alea/prg/conflicts.py` | The four kinds (direct, over-determined, under-determined, loop, out-of-range), ranked, with corrections |
+| Translation | `src/alea/prg/translate.py` | Three declared routes from a PRG parameter to a what-if knob, and the register of the other fifty |
 | The graph | `config/prg.yaml` | 84 parameters, 37 equations, 84 edges, 1 feedback loop |
 
-Commands: `alea prg summary|equations|check|propagate|audit`, and
-`alea expr render|eval|diff|simplify|solve`.
+Commands: `alea prg summary|equations|check|propagate|conflicts|sensitivity|audit`,
+and `alea expr render|eval|diff|simplify|solve`.
+
+## The four conflict kinds
+
+`conflicts.py` separates what `consistency` reports as one thing, because the
+fixes and the owners differ:
+
+| Kind | What it is | The fix |
+|---|---|---|
+| `direct` | One set value contradicts an equation that fixes it | Change that number |
+| `over_determined` | A value was set for a parameter the graph computes | Decide which of the two is authoritative |
+| `under_determined` | A needed parameter that nothing supplies | Supply it |
+| `loop` | A feedback system with no fixed point at these inputs | Widen a range or correct the formulation |
+| `out_of_range` | The arithmetic produced a value nobody would sign | Check the inputs that produced it |
+
+Corrections rank by *relative* move, not raw delta: a 0.2 move in an emission
+factor and an 82 USD/t move in a carbon price can be the same real-world size,
+and ranking on the raw number ranks the units. A correction for a direct
+conflict chains `dF/dx` through the gradient table, so a lever *upstream* of
+the violating equation is offered — the carbon price moves the DSCR through the
+tariff and the cash flow, and a list built from the equation's own parameters
+would offer only the regulator's floor for a conflict the carbon price caused.
 
 ## Not built
 
-- **The engine is not driven by the graph.** `whatif/params.py` exposes 9 knobs
-  and 2 of them name PRG parameters; the rest are PyPSA-level multipliers over
-  network data, which the graph has nothing to say about. `alea.prg.audit` is
-  the seam, and it checks the *result* rather than driving the solve.
+- **The engine is barely driven by the graph.** `translate.py` declares the
+  routes, and there are **three**: `carbon_price_usd_per_tco2` and
+  `demand_growth` map one-for-one, and `fuel_price_usd_per_mwh` maps to the
+  engine's `gas_price_multiplier` as a ratio over the network's base gas cost.
+  The other **50 of 53** settable parameters reach no what-if knob. They are
+  named by `translate.untranslated()` and counted in `alea prg summary`. This
+  is the register, not an omission: the graph states what the physics and the
+  accounts require, and the engine states what a PyPSA network can be
+  perturbed by, and the two sets were built for different purposes.
 - **The energy balance is single-region.** One demand, one generation total. A
   PyPSA network balances per bus and per hour and the solved result carries no
   nodal frame, so the audit cannot assert the balance against it. The audit
   reports what it did not check rather than a pass it did not earn.
-- **No correction suggestions.** A violation names the equation and the
-  residual. It does not propose which parameter to move, which is
-  `how_prg_works.md` §5's A/B/C.
 - **No uncertainty or stochastic edges.** `Relationship.STOCHASTIC` is declared
-  and one edge uses it; nothing consumes the distinction.
+  and one edge uses it; nothing consumes the distinction. A sensitivity is a
+  derivative at a point, not a distribution over one.
 - **Emissions use one fleet-wide factor.** The engine sums per-carrier
   intensities. `audit.fleet_intensity_gap` measures the difference instead of
   pretending they agree.
 - **Not the 784-parameter graph.** 84 of them, over the systems with the
   clearest physical or accounting statement.
+- **No API or UI.** Both are packaging rather than capability; the CLI is the
+  only door, and every command is exercised through it in `tests/ci`.
 
 ## Two things about the graph that are easy to get wrong
 
@@ -66,3 +95,25 @@ is a consequence of its inputs — and it deliberately ignores inequalities,
 because moving `dscr_min` changes no value at all. A regulator's lever is a
 constraint, so it appears in `constrains`, not in `affects`. The declared
 relationship direction is on `edges_from`/`edges_into`.
+
+**A correction ranking on the raw delta ranks the units.** A 0.2 move in an
+emission factor and an 82 USD/t move in a carbon price can be the same
+real-world size; ordering by the absolute number puts whichever parameter
+carries the smaller unit first, which is the same mistake as ranking a
+sensitivity by derivative instead of by elasticity. `Correction.rank_key()`
+compares relative moves, and a parameter sitting at zero — where a fraction is
+undefined — sorts last rather than first.
+
+**A correction for an equation must chain `dF/dx`, not read the equation's own
+parameters.** `dscr_requirement` is `project_gearing_dscr >= dscr_min`; neither
+name is an input, and the carbon price reaches the ratio through the tariff and
+the cash flow. A correction list built from the equation's names offers only
+the regulator's floor for a conflict the carbon price caused. The chain rule
+through `sensitivity.gradients` is what makes the lever the right one.
+
+**A ratio translation needs the *recorded* base, not the current value.**
+`fuel_price_usd_per_mwh` is absolute; the engine's `gas_price_multiplier` is a
+factor over each gas unit's base marginal cost. Dividing by the current cost
+makes the translation depend on how many times it has already run — the same
+compounding defect `apply.py`'s snapshot exists to prevent — so `translate.py`
+reads that snapshot, and records it if the network has none.
