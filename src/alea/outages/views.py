@@ -99,9 +99,27 @@ class WeatherConfig(AleaConfig):
 	"""Window for the lagged outage-rate feature. Lagged by one hour, never
 	zero: without the shift the feature contains the hour it is predicting."""
 
-	target_derived_columns: tuple[str, ...] = ("outage",)
-	"""Columns the model must never see contemporaneously. Every feature built
-	from one of these carries ``lag >= 1``."""
+	target_derived_columns: tuple[str, ...] = ("outage", "flagged_fraction")
+	"""Columns the model must never see contemporaneously.
+
+	``outage`` is the label, and every feature built from it carries
+	``lag >= 1``.
+
+	``flagged_fraction`` is the *detector's own fraction*, and the label is
+	that fraction thresholded: ``outage == (flagged_fraction >=
+	zone_flagged_fraction)``. A model handed the present hour's fraction does
+	not forecast, it reads the answer -- and it reads it perfectly, because the
+	threshold is deterministic. The empirical leak audit cannot see this on its
+	own: it perturbs the *target* and re-checks the feature, and
+	``flagged_fraction`` is invariant to a perturbation of ``outage``. So the
+	leak passes every causality probe while the score goes to 1.0, which is the
+	one shape of defect that looks like success. Declaring it here is what
+	removes it, because :func:`~alea.outages.weather.feature_names` excludes
+	this tuple from the model's inputs.
+
+	This tuple had **zero callers** until 2026-10-14 -- it was a correct
+	statement of the rule with nothing applying it, which is the register's own
+	defect class (a declared control is not an applied one)."""
 
 	scale_pos_weight: float = Field(default=10.0, gt=0.0)
 	"""Class-imbalance correction. Used *alone*.
@@ -126,6 +144,48 @@ class WeatherConfig(AleaConfig):
 	recall_at_precision: Fraction = 0.5
 	"""The operating precision at which recall is reported. With a ~1% positive
 	rate, accuracy is a number a "no outage" model gets for free."""
+
+	horizon_hours: int = Field(default=24, gt=0)
+	"""How far ahead a forecast reaches, in hours.
+
+	``spec4-base.md`` §18.1 declares the daily section "24-hour outage
+	probability" and §18.2 the weekly one "7-day". The two are the same model at
+	two horizons, so the horizon is a parameter of the run rather than a literal
+	at each call site -- and it is recorded in provenance, because a probability
+	without the interval it applies to is not a forecast.
+
+	The horizon also decides how far the *issued* instant is from the last
+	observation: the forward frame starts one step after the history ends, so a
+	24-hour horizon is the 24 hours nobody has observed yet."""
+
+	zone_flagged_fraction: Fraction = 0.5
+	"""Flagged fraction of a zone's clear pixels at which the zone-hour counts as
+	an outage. **A modelling decision, and this is where it is recorded.**
+
+	The detector reports a *fraction*: the share of a zone's clear pixels whose
+	radiance fell below the baseline threshold (``viirs.zone_series``). The
+	literature thresholds at the pixel (radiance < 0.6 x baseline) and publishes
+	the zone fraction as the outage measure; neither the specification nor the
+	plans name a zone-level threshold, so a supervised target needs one chosen.
+	Half is the reading that "most of the zone went dark" -- a lower value calls
+	a single dark city block a zone outage, and the base rate that follows is
+	then a statement about the threshold rather than about the grid.
+
+	It is a field rather than a constant because it *is* the target definition:
+	every metric in ``ForecastMetrics`` -- PR-AUC, recall, the base rate -- is
+	conditional on it, and an operator who moves it has changed the quantity
+	being predicted, not the model's quality."""
+
+	interval_level: Fraction = 0.9
+	"""Nominal coverage of the forecast band, as a quantile of held-out error.
+
+	The band the daily section renders is the ``interval_level`` quantile of
+	absolute error on the time-held-out validation split, per zone. That is a
+	**residual band, not a calibrated predictive interval**: the register
+	recorded that no calibration function exists, and this method is the
+	documented substitute rather than a number chosen to look like one. A
+	quantile of the model's own error is reproducible from the run and moves
+	when the model does, which a fixed +/- width would not."""
 
 	@model_validator(mode="after")
 	def _no_synthetic_oversampling(self) -> WeatherConfig:
@@ -208,6 +268,9 @@ class PredictiveConfig(AleaConfig):
 			"weather.month_encoding": self.weather.month_encoding,
 			"weather.scale_pos_weight": self.weather.scale_pos_weight,
 			"weather.outage_history_window_hours": self.weather.outage_history_window_hours,
+			"weather.horizon_hours": self.weather.horizon_hours,
+			"weather.zone_flagged_fraction": self.weather.zone_flagged_fraction,
+			"weather.interval_level": self.weather.interval_level,
 			"maintenance.require_dga": self.maintenance.require_dga,
 			"ensemble.method": self.ensemble.method,
 		}
@@ -256,6 +319,16 @@ class ForecastMetrics(AleaConfig):
 	"""Retained only so the specification's headline can be reproduced beside
 	the base rate that explains it. Never report it alone."""
 	features: list[str] = Field(default_factory=list)
+	interval_level: float = Field(default=0.0, ge=0.0, le=1.0)
+	"""Nominal coverage of the band the forecast rows carry. Zero means the run
+	produced no band -- which is the state every run before this field existed
+	was in, and the state the daily section rendered as an empty `Interval`
+	column rather than as an error."""
+	interval_method: str = ""
+	"""How the band was derived. A level without its method is not reproducible:
+	"the 90th percentile of absolute error on the held-out split" and "a
+	calibrated predictive interval at 90%" are different objects that would
+	print the same number."""
 	notes: str = ""
 
 

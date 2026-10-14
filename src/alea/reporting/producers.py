@@ -82,6 +82,21 @@ PRODUCERS: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# the network again into the report's columns rather than reshaping one.
 		"generation_mix": "planning.arrays.build_generation_mix",
 		"price_forecast": "market.service.daily_price_to_artefact",
+		# The daily forecast, and the last section whose absence meant a cadence
+		# could not be generated at all. Its register entry named two gaps and was
+		# right about both, which is worth recording: `forecast_to_artefact`
+		# writes `Forecaster.metrics` -- a statement about the *model* -- while
+		# the section asks for a probability per zone, and `predict_proba` existed
+		# with no caller. The interval was the second gap and the harder one,
+		# because it needed a *method* rather than a caller: the section declares
+		# an `Interval` column, `assemble.py` reads a band from
+		# `interval_low`/`interval_high`, and `ForecastMetrics` had no interval
+		# field. `outages.weather.residual_band` is that method, and the entry
+		# said it would be "a modelling decision to be made and recorded" --
+		# which is what it is, recorded in `WeatherConfig.interval_level` and
+		# stated in provenance as a residual quantile rather than a calibrated
+		# predictive interval, because the two print the same two numbers.
+		"outage_forecast": "outages.service._stage_outage_forecast",
 		# The weekly cadence's only required section, and the last of the three
 		# that kept a cadence from being generatable at all. Its blocker was
 		# recorded as "no producer at all" and was exact -- nothing wrote
@@ -216,6 +231,13 @@ PROJECTED: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# Monday for the week that ended, so the projection resolves the period
 		# rather than stamping its own run date.
 		"renewable_forecast": "project_renewable_forecast",
+		# The daily forecast, projected to `outages/forecast/{date}.parquet`. The
+		# daily cadence's one required section: a daily report generated at 06:00
+		# covers *yesterday*, which `period_for` resolves, so a projection stamped
+		# with its own run date would write a file no daily report opens -- and
+		# because the section is required, the symptom is a raise rather than a
+		# warning.
+		"outage_forecast": "project_outage_forecast",
 		# The daily contingency section, projected to
 		# `outages/contingency/{date}.parquet`. A daily report generated at 06:00
 		# covers *yesterday*, so the projection resolves the cadence's period
@@ -256,27 +278,6 @@ UNPROJECTED: Final[MappingProxyType[str, str]] = MappingProxyType({})
 UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 	{
 		# ---- daily ----
-		"outage_forecast": (
-			"Two gaps, and this entry named only the smaller one. It read "
-			"\"needs a rule, and a projection\", which is the *shape* of the gap "
-			"and not its size: `outages.forecast_to_artefact` writes "
-			"`Forecaster.metrics` -- PR-AUC, recall at precision, the base rate "
-			"-- which is a statement about the *model*, and the section asks for a "
-			"probability per line. Nothing in the repository turns a fitted "
-			"`Forecaster` into those rows: `predict_proba` exists and no caller "
-			"reaches it, and the function has no caller at all. **The second gap "
-			"is the interval.** The section declares "
-			"`[\"Line\", \"Probability\", \"Interval\", \"Basis\"]` and "
-			"`assemble.py` reads a band from `interval_low`/`interval_high`; "
-			"`ForecastMetrics` has no interval field and the forecaster has no "
-			"calibration function, so the band the module docstring promises "
-			"(`a 12% forecast rendered as a fact`) has neither a producer nor a "
-			"method. A rule over the current function would deliver metrics under "
-			"a heading promising probabilities. So: a forward-prediction "
-			"producer (the features are calendar plus lagged outage rate, both "
-			"computable ahead of the horizon), an interval method that is a "
-			"modelling decision to be made and recorded, a projection, and a rule."
-		),
 		"weather_alerts": (
 			"No weather layer exists. `weather/alerts/{date}.parquet` is declared "
 			"by the daily cadence and produced by nothing: ERA5 is a *fetch* "
@@ -425,9 +426,8 @@ fact: "needs a rule" and "needs a model that does not exist" are different
 amounts of work, and a register that says only "unwired" hides which one it is.
 Five sections are `required=True` -- one per cadence: `outage_forecast`,
 `week_ahead`, `market_report`, `market_outlook`, `continental_outlook` -- and
-for those the report raises rather than warns. Two of the five are unproduced,
-so two cadences -- daily and annual -- still cannot be generated from the
-pipeline.
+for those the report raises rather than warns. One of the five is unproduced, so
+one cadence -- annual -- still cannot be generated from the pipeline.
 
 This sentence was wrong twice, in opposite directions, and both are worth
 keeping. It first said "two ... daily and annual" while `week_ahead` sat in the
@@ -438,13 +438,6 @@ mapping would have drifted apart a second time had the gate not failed on the
 move. `test_reporting_producers.py` derives the count from the mapping rather
 than letting it be retyped, which is why closing the weekly gap edited a number
 here instead of silently falsifying it.
-
-The monthly and quarterly entries left this register together, and their removal
-is the shape the rest will follow: `market/fleet.py` was written to be the
-missing piece the entry named, `market/stages.py` registered the two stages that
-run it, `rules/market.smk` gave each a rule, and the slugs moved to
-``PRODUCERS`` in the same change -- which is what makes the register shrink as
-the gap closes rather than describe it.
 
 The daily cadence left the same way on 2026-10-13, and its two entries are worth
 reading as a pair because they were *different kinds* of gap wearing the same
@@ -457,6 +450,17 @@ serving table is what a route reads and not what a report reads. One entry neede
 a rule; the other needed a producer. A register that recorded both as "unwired"
 would have hidden that, which is why the reasons here are sentences and not a
 boolean.
+
+`outage_forecast` left last, on 2026-10-14, and it is the third kind: the entry
+was *right about both* of its gaps, and the second one needed a decision rather
+than a piece of code. Nothing turned a fitted `Forecaster` into a probability
+per zone (`predict_proba` existed with no caller), and no interval method
+existed at all -- the section declares an `Interval` column and
+`ForecastMetrics` had no field to carry one. The first gap was a producer; the
+second was a *modelling choice*, and the entry said so in advance ("an interval
+method that is a modelling decision to be made and recorded"), which is what
+made it closable rather than open-ended. A register whose blockers name the
+decision rather than only the artefact is one an engineer can finish.
 """
 
 

@@ -255,14 +255,15 @@ def test_every_projected_section_has_a_rule_and_a_dvc_stage():
 #: passing if a cadence gained a second unproduced required section or lost its
 #: only one. The map is what makes closing a gap, or opening one, move a test.
 REQUIRED_WITHOUT_A_PRODUCER: dict[str, str] = {
-	"daily": "outage_forecast",
 	"annual": "continental_outlook",
 }
 """One per cadence that cannot be generated from the pipeline, and that is the
-measured state: two of the five cadences have a required section with no
+measured state: one of the five cadences has a required section with no
 producer. The map started with all five, lost the monthly and quarterly sections
-in one change -- their shared blocker was the market fleet -- and lost the
-weekly one when `planning/balance.py` produced its outlook.
+in one change -- their shared blocker was the market fleet -- lost the weekly one
+when `planning/balance.py` produced its outlook, and lost the daily one when
+`outages.service._stage_outage_forecast` predicted forward and banded the
+result.
 
 A cadence whose required section *has* a producer is absent from this map rather
 than mapped to `None`: the assertion below compares against `.get(cadence)`, so
@@ -296,7 +297,13 @@ def test_the_prose_count_of_unproduced_required_sections_matches_the_mapping():
 	the claim is written in is the thing to check.
 	"""
 	source = (REPO / "src" / "alea" / "reporting" / "producers.py").read_text()
-	stated = re.search(r"(\w+) of the five are unproduced", source)
+	# ``are|is``, because the count is now one and the sentence had to become
+	# singular with it. A pattern written only for the plural would have stopped
+	# matching the moment the register shrank past one -- and a gate that stops
+	# matching fails loudly here (the `assert stated` below), which is the right
+	# failure, but the pattern should carry both forms rather than force a
+	# sentence to stay ungrammatical to stay checked.
+	stated = re.search(r"(\w+) of the five (?:are|is) unproduced", source)
 	assert stated, (
 		"the docstring no longer states an unproduced count in the form this gate "
 		"reads; if the sentence was reworded, reword this pattern with it rather "

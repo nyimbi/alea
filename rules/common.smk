@@ -53,6 +53,7 @@ SUFFIXES = {
 	"fuel_prices": ".parquet",
 	"outage_history": ".parquet",
 	"outage_truth": ".parquet",
+	"outage_forecast": ".parquet",
 	"network_arrays": ".json",
 	"tlens": ".json",
 	"critical_lines": ".parquet",

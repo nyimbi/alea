@@ -78,40 +78,29 @@ def test_the_gate_catches_a_required_section_leaving_unproduced():
 	map is not updated with it, the gate must fail, or the map is documentation
 	rather than a check. This plants the removal without the move.
 
-	**The target moved, and that is the canary working.** It used to plant the
-	removal of `week_ahead`'s entry, because `week_ahead` was the weekly cadence's
-	unproduced required section. Closing the weekly gap removed that entry for
-	real, so the canary now plants the removal of `outage_forecast`'s -- the daily
-	cadence's, and the one the register still holds. A canary whose target no
-	longer exists is a canary that never runs, which is why the `assert` below is
-	load-bearing rather than defensive.
+	**The target moved twice, and the second move is the register running out.**
+	It first planted the removal of `week_ahead`'s entry; closing the weekly gap
+	removed that entry for real. It then planted `outage_forecast`'s, the daily
+	cadence's -- and closing *that* gap removed it too. The remaining unproduced
+	required section is `continental_outlook`, the annual cadence's, so the
+	canary plants that. A canary whose target no longer exists is a canary that
+	never runs, which is why the `assert` below is load-bearing rather than
+	defensive: it is what turned both moves into a failing test rather than a
+	silent no-op.
 	"""
 	target = (
-		'\t\t"outage_forecast": (\n'
-		'\t\t\t"Two gaps, and this entry named only the smaller one. It read "\n'
-		'\t\t\t"\\"needs a rule, and a projection\\", which is the *shape* of the gap "\n'
-		'\t\t\t"and not its size: `outages.forecast_to_artefact` writes "\n'
-		'\t\t\t"`Forecaster.metrics` -- PR-AUC, recall at precision, the base rate "\n'
-		'\t\t\t"-- which is a statement about the *model*, and the section asks for a "\n'
-		'\t\t\t"probability per line. Nothing in the repository turns a fitted "\n'
-		'\t\t\t"`Forecaster` into those rows: `predict_proba` exists and no caller "\n'
-		'\t\t\t"reaches it, and the function has no caller at all. **The second gap "\n'
-		'\t\t\t"is the interval.** The section declares "\n'
-		'\t\t\t"`[\\"Line\\", \\"Probability\\", \\"Interval\\", \\"Basis\\"]` and "\n'
-		'\t\t\t"`assemble.py` reads a band from `interval_low`/`interval_high`; "\n'
-		'\t\t\t"`ForecastMetrics` has no interval field and the forecaster has no "\n'
-		'\t\t\t"calibration function, so the band the module docstring promises "\n'
-		'\t\t\t"(`a 12% forecast rendered as a fact`) has neither a producer nor a "\n'
-		'\t\t\t"method. A rule over the current function would deliver metrics under "\n'
-		'\t\t\t"a heading promising probabilities. So: a forward-prediction "\n'
-		'\t\t\t"producer (the features are calendar plus lagged outage rate, both "\n'
-		'\t\t\t"computable ahead of the horizon), an interval method that is a "\n'
-		'\t\t\t"modelling decision to be made and recorded, a projection, and a rule."\n'
+		'\t\t"continental_outlook": (\n'
+		'\t\t\t"A required annual section with no producer. `planning/continental/"\n'
+		'\t\t\t"{date}.parquet` would need a continental solve; "\n'
+		'\t\t\t"`test_the_continental_config_builds_without_solving` asserts the "\n'
+		'\t\t\t"config builds and deliberately does not solve, because a "\n'
+		'\t\t\t"continental solve is hours of compute."\n'
 		"\t\t),\n"
 	)
 	assert target in PRODUCERS_PY.read_text(), (
-		"the canary target moved; `outage_forecast` is no longer an `UNPRODUCED` "
-		"entry in the form this canary expects, so the canary would be a no-op"
+		"the canary target moved; `continental_outlook` is no longer an "
+		"`UNPRODUCED` entry in the form this canary expects, so the canary would "
+		"be a no-op"
 	)
 	assert _gate_exit_code(UNPRODUCED_GATE) == 0, (
 		"the required-producer gate does not pass on the shipped tree"
@@ -206,13 +195,18 @@ def test_the_prose_count_gate_catches_a_summary_that_mislabels_the_set():
 	unchecked summary does not look like a defect, it looks like prose.
 
 	**The planted word follows the register.** Closing the weekly gap moved the
-	true count from three to two, so the mutation now plants *three* -- the
-	number that was correct until the move. Planting the old direction (two, the
-	number that used to be wrong) would plant the shipped value and the canary
-	would pass against a gate that had stopped reading.
+	true count from three to two, so the mutation then planted *three* -- the
+	number that was correct until the move. Closing the daily gap moved it from
+	two to one, so the mutation now plants *two*, the number that was correct
+	until that move, and the sentence's verb had to become singular with it
+	("One ... is unproduced"), which is why the gate's pattern carries ``are|is``
+	rather than the plural alone. Planting the *shipped* value would be a canary
+	that passes against a gate that had stopped reading; planting the
+	previously-correct value is the one that proves the gate still compares the
+	sentence to the set.
 	"""
-	target = "Two of the five are unproduced"
-	replacement = "Three of the five are unproduced"
+	target = "One of the five is unproduced"
+	replacement = "Two of the five are unproduced"
 	assert target in PRODUCERS_PY.read_text(), (
 		"the canary target moved; `UNPRODUCED`'s docstring no longer states the "
 		"unproduced count in the form this canary expects, so the canary would be "
@@ -225,7 +219,7 @@ def test_the_prose_count_gate_catches_a_summary_that_mislabels_the_set():
 	with planted(PRODUCERS_PY, target, replacement):
 		assert _gate_exit_code(PROSE_COUNT_GATE) != 0, (
 			"the prose-count gate passed with the docstring saying two cadences "
-			"cannot be generated while the mapping holds three; it is reading the "
+			"cannot be generated while the mapping holds one; it is reading the "
 			"prose rather than checking it against the set, so the summary stays "
 			"free to describe a set it does not match"
 		)

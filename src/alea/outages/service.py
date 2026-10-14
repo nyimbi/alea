@@ -32,7 +32,7 @@ import pandas as pd
 from numpy.typing import NDArray
 
 from alea.config.models import Config
-from alea.io.artefacts import sha256_file
+from alea.io.artefacts import ArtefactError, sha256_file
 from alea.io.pipeline import BuildContext, stage, write_stage
 from alea.logging import get_logger, new_run_id
 from alea.outages.ensemble import combine
@@ -45,7 +45,16 @@ from alea.outages.viirs import (
 	detection_parameters,
 	read_granule,
 )
-from alea.outages.weather import Forecaster, train_forecaster
+from alea.outages.weather import (
+	METHOD_INTERVAL_RESIDUAL,
+	TARGET_COLUMN,
+	ZONE_COLUMN,
+	Forecaster,
+	build_features,
+	forward_frame,
+	residual_band,
+	train_forecaster,
+)
 from alea.provenance.models import Basis, DerivedProvenance
 
 logger = get_logger(__name__)
@@ -219,6 +228,202 @@ def forecast_to_artefact(
 		Path(out), forecaster.metrics.model_dump(mode="json"), provenance, format="json"
 	)
 	return checksum, forecaster
+
+
+def zone_history_rows(history: pd.DataFrame, config: PredictiveConfig | None = None) -> pd.DataFrame:
+	"""The detector's wide zone series as the forecaster's long frame.
+
+	**The reshape is not cosmetic.** `outage_history` writes one column per zone
+	(``zone_0``, ``zone_1``, ...) with a timestamp index, because that is what the
+	VIIRS kernel aggregates to. The forecaster is keyed on ``grid_zone`` and
+	expects one row per (zone, hour), because every feature is a per-zone lag and
+	a wide frame has no column to group by. Nothing converted between them: the
+	forecaster was reachable only from a test that built the long frame by hand,
+	which is the shape `publish.views.UNWIRED` recorded for the serving table
+	("needs the weather feature frame `forecast_to_artefact` trains on").
+
+	The target is the detector's **flagged fraction**, thresholded at
+	``weather.zone_flagged_fraction`` into the binary the classifier needs. The
+	fraction is kept as a column rather than discarded, so a consumer can see how
+	far past the threshold a flagged zone-hour was: a zone at 0.51 and one at
+	0.99 are the same positive to the model and are not the same event.
+
+	NaN stays NaN and the row is kept. A zone-hour with no clear pixels is
+	*unknown*, not calm -- `viirs.zone_series` returns NaN for exactly that case
+	and its docstring says a consumer must treat it as no information. Dropping
+	the row would silently shift every later lag by one step within that zone.
+	"""
+	cfg = config or PredictiveConfig()
+	threshold = cfg.weather.zone_flagged_fraction
+	if "timestamp" not in history.columns:
+		raise KeyError(f"outage history has no 'timestamp'; columns are {list(history.columns)}")
+	zones = [column for column in history.columns if column.startswith("zone_")]
+	if not zones:
+		raise ArtefactError(
+			"the outage history carries no zone_ columns; it is the detector's zone "
+			"series or it is something else, and a forecaster trained on the wrong "
+			"frame reports a number about the wrong quantity"
+		)
+	long = history.melt(
+		id_vars=["timestamp"], value_vars=zones, var_name="grid_zone", value_name="flagged_fraction"
+	)
+	# UTC, and not whatever the caller's frame carried. The detector writes UTC
+	# (`detect_to_artefact` parses its instants with ``utc=True``), the forward
+	# frame is built from it, and a naive series concatenated with an aware one
+	# becomes an object column that sorts as a categorical and raises. The
+	# comparison the forecast rests on is between instants, so the instants get
+	# one representation at the boundary rather than two that agree by luck.
+	long["timestamp"] = pd.to_datetime(long["timestamp"], utc=True)
+	long["outage"] = (long["flagged_fraction"] >= threshold).astype(float)
+	# `>= threshold` on a NaN is False, which would turn "no clear pixels" into a
+	# confident zero -- the exact substitution `zone_series` warns against. The
+	# NaN is restored so `build_features`' lag carries it forward as unknown.
+	long.loc[long["flagged_fraction"].isna(), "outage"] = np.nan
+	long = long.sort_values(["grid_zone", "timestamp"]).reset_index(drop=True)
+	logger.info(
+		"outages.zone_history_rows",
+		rows=int(len(long)),
+		zones=len(zones),
+		threshold=threshold,
+		unknown=int(long["flagged_fraction"].isna().sum()),
+	)
+	return long
+
+
+def predict_to_artefact(
+	history: pd.DataFrame,
+	out: str | Path,
+	config: PredictiveConfig | None = None,
+	*,
+	inputs: Sequence[str] | None = None,
+	seed: int = 0,
+) -> tuple[str, pd.DataFrame, Forecaster]:
+	"""Fit the forecaster, predict the horizon, and write one row per zone.
+
+	**The producer the register said did not exist.** `forecast_to_artefact`
+	writes ``Forecaster.metrics`` -- a statement about the *model* -- and the
+	section asks for a probability per zone. ``predict_proba`` existed with no
+	caller. This is that caller, and it writes the section's own shape:
+	``label``/``value``/``unit``/``interval_low``/``interval_high``, which is what
+	``reporting.assemble.values_from_artefact`` binds and what
+	``reporting.daily``'s `outage_forecast` declares an `Interval` for.
+
+	**The forward rows are built, not observed.** `weather.forward_frame`
+	continues the history's cadence for ``weather.horizon_hours``, and the lagged
+	features on those rows read the history's tail -- which is why a horizon can
+	be forecast at all from a satellite that runs a day behind.
+
+	The band is `weather.residual_band`'s, which is a quantile of the model's own
+	held-out error and **not** a calibrated predictive interval. It is recorded
+	as such in ``ForecastMetrics.interval_method`` rather than left for a reader
+	to assume, because a band and a calibrated band print the same two numbers.
+
+	Rows are one per zone: the horizon is averaged into a single probability, so
+	the section's "probability of an outage in each grid zone over the next 24
+	hours" is one number per zone rather than one per zone-hour. The maximum is
+	reported alongside as ``peak_probability`` -- an average over 24 hours
+	understates a zone that is nearly certain to fail in one of them, and the
+	column costs nothing.
+	"""
+	cfg = config or PredictiveConfig()
+	labelled = zone_history_rows(history, cfg)
+	trainable = labelled.dropna(subset=[TARGET_COLUMN])
+	if trainable.empty:
+		raise ArtefactError(
+			"every zone-hour is unknown (no clear pixels); a forecaster fitted on "
+			"no labelled observation reports a prior, not a forecast"
+		)
+	if trainable[TARGET_COLUMN].nunique() < 2:
+		raise ArtefactError(
+			f"the target is constant at {trainable[TARGET_COLUMN].iloc[0]} across "
+			f"{len(trainable)} labelled rows; a classifier cannot be fitted on one "
+			f"class, and the base rate would be the whole result. Check "
+			f"`weather.zone_flagged_fraction` against the detector's fractions"
+		)
+
+	forecaster = train_forecaster(labelled, cfg.weather, seed=seed)
+	band = residual_band(forecaster, cfg.weather)
+	forward = forward_frame(labelled, cfg.weather)
+	# `build_features` reads the target's history, so the forward rows must be
+	# featured *with* the history rather than on their own: a lag computed over a
+	# frame that starts at the horizon has nothing to lag from.
+	stacked = build_features(
+		pd.concat([labelled, forward], ignore_index=True), cfg.weather
+	)
+	# Selected by instant and not by position. `build_features` sorts by
+	# (zone, time) whenever the frame is not monotonic, which the concatenation
+	# always is -- so the forward rows are interleaved with the history, one zone
+	# at a time, and a positional slice would take a mix of observed and
+	# unobserved hours and call the result a forecast.
+	last_observed = labelled.groupby(ZONE_COLUMN)["timestamp"].max()
+	stacked["_forward"] = stacked["timestamp"] > stacked[ZONE_COLUMN].map(last_observed)
+	horizon_rows = stacked[stacked["_forward"]].drop(columns="_forward").copy()
+	if horizon_rows.empty:
+		raise ArtefactError(
+			"no row landed after the last observation; the horizon is empty and a "
+			"forecast of no hours is not a forecast"
+		)
+	horizon_rows["probability"] = forecaster.predict_proba(horizon_rows)
+
+	rows: list[dict[str, Any]] = []
+	for zone, group in horizon_rows.groupby(ZONE_COLUMN, sort=True):
+		probability = float(group["probability"].mean())
+		width = band.get(str(zone), (0.0, 0.0))[0]
+		rows.append(
+			{
+				"label": str(zone),
+				"value": probability,
+				"unit": "probability",
+				"interval_low": max(0.0, probability - width),
+				"interval_high": min(1.0, probability + width),
+				"peak_probability": float(group["probability"].max()),
+			}
+		)
+	frame = pd.DataFrame(
+		rows,
+		columns=[
+			"label",
+			"value",
+			"unit",
+			"interval_low",
+			"interval_high",
+			"peak_probability",
+		],
+	)
+	metrics = forecaster.metrics.model_copy(
+		update={
+			"interval_level": cfg.weather.interval_level,
+			"interval_method": METHOD_INTERVAL_RESIDUAL,
+		}
+	)
+	provenance = _provenance(
+		inputs if inputs is not None else [frame_digest(history)],
+		{
+			**cfg.parameters(),
+			"seed": seed,
+			"backend": forecaster.backend,
+			"horizon_hours": cfg.weather.horizon_hours,
+			"n_zones": len(rows),
+			"interval_level": cfg.weather.interval_level,
+			"interval_method": METHOD_INTERVAL_RESIDUAL,
+			"zone_flagged_fraction": cfg.weather.zone_flagged_fraction,
+			"metrics": metrics.model_dump(mode="json"),
+		},
+		source_id="outage_forecast",
+		notes=(
+			f"forward prediction over {cfg.weather.horizon_hours} h from the "
+			f"detector's zone series; target is the flagged fraction thresholded at "
+			f"{cfg.weather.zone_flagged_fraction}. Interval is "
+			f"{METHOD_INTERVAL_RESIDUAL} at level {cfg.weather.interval_level}: the "
+			f"quantile of absolute error on the time-held-out split, clipped to "
+			f"[0, 1]. It is NOT a calibrated predictive interval and carries no "
+			f"out-of-sample coverage guarantee. "
+			+ ("; ".join(forecaster.notes) or "weather-driven outage forecaster")
+		),
+		basis=Basis.FORECAST,
+	)
+	checksum = write_stage(Path(out), frame, provenance, format="parquet")
+	return checksum, frame, forecaster
 
 
 # --------------------------------------------------------------------------
@@ -397,6 +602,56 @@ def detection_parameters_for(config: Config | None = None) -> dict[str, Any]:
 	return detection_parameters(predictive_config(config).viirs)
 
 
+@stage("outage_forecast")
+def _stage_outage_forecast(config: Config, out: Path, context: BuildContext) -> DerivedProvenance:
+	"""Registered stage: the daily forecast section, from the detector's zone series.
+
+	Reads ``outage_history``'s artefact at the path the stage that writes it
+	resolves to, rather than taking a frame from the context: the detector's run
+	is what the forecast is a function of, and a stage that accepted a frame
+	would let two callers forecast from different observations under one
+	provenance.
+
+	A missing history raises. An empty zone series reads as "no zone ever lost
+	supply", which is a claim about the grid; the truth is that no detection run
+	happened. And a constant target raises inside the producer for the same
+	reason one layer down -- a classifier fitted on one class reports the base
+	rate as its result.
+	"""
+	from alea.config.paths import resolve
+	from alea.io.artefacts import read_artefact, read_provenance
+	from alea.io.pipeline import skip_if_current
+
+	processed = resolve(config.paths.processed)
+	history_path = processed / "outage_history.parquet"
+	if not history_path.exists():
+		raise ArtefactError(
+			f"no outage history at {history_path}; the forecast is trained on the "
+			f"detector's zone series, and a forecast with no observation behind it "
+			f"is a prior wearing a model's name"
+		)
+
+	digest = sha256_file(history_path)
+	inputs = [digest, *(value for value in context.inputs if value != digest)]
+	existing = skip_if_current(out, inputs, stage_name="outage_forecast", logger=context.logger)
+	if existing is not None:
+		return existing
+
+	history, _ = read_artefact(history_path)
+	_, frame, forecaster = predict_to_artefact(
+		history, out, predictive_config(config), inputs=inputs
+	)
+	logger.info(
+		"outages.stage.outage_forecast",
+		zones=int(len(frame)),
+		backend=forecaster.backend,
+		pr_auc=forecaster.metrics.pr_auc,
+		base_rate=forecaster.metrics.base_rate,
+		out=str(out),
+	)
+	return read_provenance(out)
+
+
 __all__ = [
 	"detect_to_artefact",
 	"detection_parameters_for",
@@ -404,6 +659,8 @@ __all__ = [
 	"forecast_to_artefact",
 	"frame_digest",
 	"maintenance_to_artefact",
+	"predict_to_artefact",
 	"predictive_config",
 	"validation_to_artefact",
+	"zone_history_rows",
 ]

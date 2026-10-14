@@ -574,6 +574,36 @@ stages:
     outs:
       - data/processed/system_alerts.parquet
 
+  outage_forecast:
+    desc: >-
+      The daily 24-hour outage probability per grid zone, with its band. The
+      forward rows are built rather than observed -- calendar plus lagged outage
+      rate, both computable ahead of the horizon -- and the band is the
+      residual quantile of the model's held-out error, not a calibrated
+      predictive interval. Provenance states which.
+    cmd: >-
+      uv run --directory . alea build outage_forecast
+      --out data/processed/outage_forecast.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/outage_history.parquet
+    outs:
+      - data/processed/outage_forecast.parquet
+
+  project_outage_forecast:
+    desc: >-
+      The daily forecast section at the dated path its report reads. This is
+      the daily cadence's one required section, so an absent artefact raises
+      rather than warns.
+    cmd: >-
+      uv run --directory . alea project daily outage_forecast
+      --source data/processed/outage_forecast.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/outage_forecast.parquet
+    outs:
+      - results/outages/forecast
+
   project_system_alerts:
     desc: >-
       The daily contingency section at the dated path its report reads. A daily

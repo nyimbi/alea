@@ -227,9 +227,24 @@ def build_features(
 	return out
 
 
-def feature_names(frame: pd.DataFrame, *, exclude: Sequence[str] = ()) -> list[str]:
-	"""Model inputs: numeric, non-identifier, non-target columns."""
-	blocked = set(exclude) | {TARGET_COLUMN, TIME_COLUMN, ZONE_COLUMN}
+def feature_names(
+	frame: pd.DataFrame,
+	*,
+	exclude: Sequence[str] = (),
+	config: WeatherConfig | None = None,
+) -> list[str]:
+	"""Model inputs: numeric, non-identifier, non-target columns.
+
+	``config.target_derived_columns`` is excluded here rather than at each call
+	site, because it is the one exclusion that must not be forgettable. The
+	label's own source column (``flagged_fraction``) is numeric, is not named
+	``outage``, and is therefore an ordinary-looking feature -- a caller who
+	passes only ``exclude=(target_column,)`` gets a model that reads the answer
+	and scores 1.0. Making the exclusion structural means a new caller cannot
+	reintroduce it by forgetting.
+	"""
+	cfg = config or WeatherConfig()
+	blocked = set(exclude) | set(cfg.target_derived_columns) | {TARGET_COLUMN, TIME_COLUMN, ZONE_COLUMN}
 	names: list[str] = []
 	for column in frame.columns:
 		if column in blocked:
@@ -239,22 +254,193 @@ def feature_names(frame: pd.DataFrame, *, exclude: Sequence[str] = ()) -> list[s
 	return names
 
 
+def forward_frame(
+	history: pd.DataFrame,
+	config: WeatherConfig | None = None,
+	*,
+	zone_column: str = ZONE_COLUMN,
+	time_column: str = TIME_COLUMN,
+) -> pd.DataFrame:
+	"""The horizon nobody has observed, one row per zone per hour.
+
+	**Why this is a construction and not a reindex.** The model's features are
+	calendar plus the *lagged* outage rate, and both are computable ahead of the
+	horizon: the calendar from the clock, the lag from the observed history. The
+	rows for the next ``horizon_hours`` therefore need no future observation --
+	which is the whole reason this forecast can exist, since the only outage
+	source is a satellite that runs a day behind.
+
+	The forward instants continue the history's own cadence rather than assuming
+	one: VIIRS is daily and the specification's feature set is hourly, and a
+	frame built on the wrong step would put the horizon in the past or spread it
+	over the wrong span. The step is measured from the last two observations.
+
+	``outage`` is present and NaN, and that is load-bearing rather than untidy:
+	:func:`build_features` requires the target column to exist, and the lagged
+	features on these rows read the *history's* tail. A NaN there is honest --
+	these hours have no outcome yet -- and it is what keeps the same builder
+	usable for training and for prediction instead of a second feature path that
+	could drift from the first.
+	"""
+	cfg = config or WeatherConfig()
+	missing = {time_column, zone_column} - set(history.columns)
+	if missing:
+		raise KeyError(f"history has no {sorted(missing)}")
+	if history.empty:
+		raise ValueError(
+			"no outage history; a forecast from no observation is a prior wearing "
+			"a model's name"
+		)
+	observed = pd.to_datetime(history[time_column], utc=True)
+	if not observed.is_monotonic_increasing:
+		history = history.sort_values([zone_column, time_column]).reset_index(drop=True)
+		observed = pd.to_datetime(history[time_column], utc=True)
+
+	# Numpy rather than `.iloc`, so the per-zone read is positional over an array
+	# whose dtype is unambiguous. `history[column]` types as a union in the stubs,
+	# and a union is exactly where a wrong read hides.
+	stamps_all = observed.to_numpy()
+	zone_all = history[zone_column].to_numpy()
+
+	zones = sorted(history[zone_column].unique().tolist())
+	per_zone: list[pd.Series] = []
+	for zone in zones:
+		stamps = np.sort(stamps_all[zone_all == zone])
+		if len(stamps) < 2:
+			raise ValueError(
+				f"zone {zone!r} has {len(stamps)} observation(s); a cadence cannot "
+				f"be measured from one, and a horizon guessed at the wrong step is "
+				f"a forecast of the wrong hours"
+			)
+		step = pd.Timedelta(stamps[-1] - stamps[-2])
+		if step <= pd.Timedelta(0):
+			raise ValueError(
+				f"zone {zone!r}'s observations are not increasing in time "
+				f"(last step {step}); the cadence is undefined"
+			)
+		per_zone.append(
+			pd.Series(pd.date_range(stamps[-1] + step, periods=cfg.horizon_hours, freq=step))
+		)
+
+	frame = pd.DataFrame(
+		{
+			time_column: pd.concat(per_zone, ignore_index=True),
+			zone_column: np.repeat(zones, cfg.horizon_hours),
+		}
+	)
+	frame[TARGET_COLUMN] = np.nan
+	logger.info(
+		"weather.forward_frame",
+		zones=len(zones),
+		horizon_hours=cfg.horizon_hours,
+		step=str(per_zone[0].iloc[1] - per_zone[0].iloc[0]) if cfg.horizon_hours > 1 else "n/a",
+	)
+	return frame
+
+
+def residual_band(
+	forecaster: Forecaster,
+	config: WeatherConfig | None = None,
+	*,
+	target_column: str = TARGET_COLUMN,
+	group_column: str = ZONE_COLUMN,
+) -> dict[str, tuple[float, float]]:
+	"""A per-zone band, as the model's own held-out error at ``interval_level``.
+
+	**This is a residual band, not a calibrated predictive interval**, and the
+	difference is the reason this docstring exists. A calibrated interval is a
+	statement that the outcome falls inside the band at the nominal rate, and
+	producing one needs a calibration fit -- isotonic regression against held-out
+	outcomes, or a quantile model. Neither is here. What is here is the
+	``interval_level`` quantile of absolute error on the time-held-out
+	validation split, which says: *on the data this model was checked against,
+	this share of its errors were no larger than this.*
+
+	Two consequences a reader must not have to infer. The band is **symmetric
+	and clipped to [0, 1]**, because a probability has no room above one and a
+	clipped bound is a statement about the model rather than about the outcome.
+	And it is **not** a coverage guarantee out of sample: a model whose error
+	grows on the forward frame will keep printing a band that was measured on
+	the past. It is recorded in ``ForecastMetrics.interval_method`` in those
+	words so the number travels with its meaning.
+
+	The zones the validation split does not cover get the pooled quantile rather
+	than a missing band: a zone with too few held-out rows to measure its own
+	error is a zone whose band is uncertain, not absent, and dropping it would
+	take the row out of a section that declares an interval for every zone.
+	"""
+	cfg = config or WeatherConfig()
+	features = list(forecaster.features)
+	if forecaster.validation is None:
+		raise ValueError(
+			"this forecaster carries no validation split, so a band cannot be "
+			"measured on the data its metrics came from"
+		)
+	scored = forecaster.validation.dropna(subset=[target_column]).copy()
+	if scored.empty:
+		raise ValueError(
+			"the validation split has no labelled rows; a band measured on nothing "
+			"is not a band"
+		)
+	# `scored` is a fresh frame, so this assignment is not a view on the fitted
+	# object's own split -- a band must not mutate the data its metrics came from.
+	scored["_error"] = np.abs(
+		scored[target_column].to_numpy(dtype=float)
+		- forecaster.predict_proba(scored.loc[:, features])
+	)
+	pooled = float(np.quantile(scored["_error"].to_numpy(dtype=float), cfg.interval_level))
+	band: dict[str, tuple[float, float]] = {}
+	for zone, rows in scored.groupby(group_column, sort=False):
+		width = (
+			float(np.quantile(rows["_error"].to_numpy(dtype=float), cfg.interval_level))
+			if len(rows) > 1
+			else pooled
+		)
+		band[str(zone)] = (width, width)
+	logger.info(
+		"weather.residual_band",
+		zones=len(band),
+		pooled_width=pooled,
+		level=cfg.interval_level,
+		method=METHOD_INTERVAL_RESIDUAL,
+	)
+	return band
+
+
+METHOD_INTERVAL_RESIDUAL = "residual_quantile"
+"""``ForecastMetrics.interval_method`` for :func:`residual_band`.
+
+A slug rather than a sentence so a consumer can branch on it, and a constant
+rather than a literal at the call site so the writer and the reader name the
+same method -- the register's own lesson about a claim spelled twice."""
+
+
 # --------------------------------------------------------------------------
 # Leakage audit
 # --------------------------------------------------------------------------
 
 
-def audit_feature_names(features: Sequence[str], *, target_column: str = TARGET_COLUMN) -> None:
-	"""Refuse a feature whose name is a target column.
+def audit_feature_names(
+	features: Sequence[str],
+	*,
+	target_column: str = TARGET_COLUMN,
+	config: WeatherConfig | None = None,
+) -> None:
+	"""Refuse a feature that is a target-derived column.
 
 	The cheapest half of the leak check: ``outage`` used directly as a feature
-	is the defect, and its name says so.
+	is the defect, and its name says so. It checks the whole declared set and
+	not just ``target_column``, because the expensive half -- the empirical
+	causality probe -- is blind to ``flagged_fraction``: perturbing the label
+	does not change the fraction the label was thresholded from.
 	"""
-	offenders = [name for name in features if name == target_column]
+	cfg = config or WeatherConfig()
+	offenders = [name for name in features if name in set(cfg.target_derived_columns) | {target_column}]
 	if offenders:
 		raise LeakageError(
-			f"{offenders} is the target column used as a feature; it contains the "
-			f"value being predicted"
+			f"{offenders} are target-derived columns used as features; "
+			f"`flagged_fraction` is the fraction the label was thresholded from, "
+			f"so a model given it reads the answer rather than forecasting it"
 		)
 
 
@@ -266,14 +452,15 @@ def assert_causal_features(
 	target_column: str = TARGET_COLUMN,
 	group_column: str = ZONE_COLUMN,
 	probes_per_group: int = 3,
+	perturb_columns: Sequence[str] | None = None,
 ) -> None:
 	"""Prove every feature at time *t* is a function of strictly earlier values.
 
-	The probe perturbs the target at one row and rebuilds, then asserts that no
-	feature at that row **or any earlier row** changed. Perturbing the target at
-	row *c* can legitimately change features only at rows after *c*, because
-	those are the rows that read *c* as history. A feature at row ``r <= c``
-	that changes reads the target at *c* — the present (*r == c*) or the future
+	The probe perturbs a source column at one row and rebuilds, then asserts
+	that no feature at that row **or any earlier row** changed. Perturbing row
+	*c* can legitimately change features only at rows after *c*, because those
+	are the rows that read *c* as history. A feature at row ``r <= c`` that
+	changes reads the value at *c* — the present (*r == c*) or the future
 	(*r < c*).
 
 	Truncating the tail instead would catch only the forward-looking half: a
@@ -281,24 +468,41 @@ def assert_causal_features(
 	its own row and survives any truncation of rows after it. Perturbation
 	catches both, which is why it is the probe used here.
 
+	**``perturb_columns`` defaults to the target and must include every column
+	the target is derived from.** The probe works by changing an input and
+	watching a feature follow; it can only see a leak through a column it
+	perturbs. ``flagged_fraction`` is the label's own source — ``outage ==
+	(flagged_fraction >= threshold)`` — so a probe that perturbs only ``outage``
+	leaves the fraction untouched, every feature reads as causal, and the model
+	that consumes the fraction scores 1.0. The caller passes the declared set
+	(``WeatherConfig.target_derived_columns``) rather than the label alone,
+	which is what closes the class instead of the one instance.
+
 	``probes_per_group`` rows per zone are perturbed, spread through the series
 	so a leak confined to part of it is exercised.
 	"""
 	if probes_per_group < 1:
 		raise ValueError(f"probes_per_group must be positive, got {probes_per_group}")
-	if target_column not in frame.columns:
-		raise KeyError(f"no target column {target_column!r} to perturb")
-	if not pd.api.types.is_numeric_dtype(frame[target_column]):
+	sources = list(perturb_columns) if perturb_columns else [target_column]
+	if target_column not in sources:
+		sources.insert(0, target_column)
+	missing = [name for name in sources if name not in frame.columns]
+	if missing:
+		raise KeyError(f"no column {missing} to perturb")
+	non_numeric = [
+		name for name in sources if not pd.api.types.is_numeric_dtype(frame[name])
+	]
+	if non_numeric:
 		raise LeakageError(
-			f"the causality probe perturbs {target_column!r}, which must be "
-			f"numeric; a non-numeric target cannot be perturbed"
+			f"the causality probe perturbs {non_numeric}, which must be numeric; a "
+			f"non-numeric column cannot be perturbed"
 		)
 	full = builder(frame)
 	if list(full.columns) != list(builder(frame).columns):
 		raise LeakageError("the feature builder is not deterministic in its columns")
 
 	# A sentinel distinct from every observed value, so the perturbation always
-	# changes the target and a leak cannot hide behind a coincidental equality.
+	# changes the source and a leak cannot hide behind a coincidental equality.
 	values = frame[target_column].to_numpy(dtype=float)
 	sentinel = float(np.nanmax(values)) + 1.0
 	if not np.isfinite(sentinel):
@@ -319,26 +523,27 @@ def assert_causal_features(
 		)
 		for offset in chosen:
 			probe_index = members[int(offset)]
-			perturbed = frame.copy()
-			perturbed.loc[probe_index, target_column] = sentinel
-			rebuilt = builder(perturbed)
 			cut = positions[probe_index]
-			for name in features:
-				if name not in full.columns or name not in rebuilt.columns:
-					continue
-				before = full[name].to_numpy(dtype=float)[: cut + 1]
-				after = rebuilt[name].to_numpy(dtype=float)[: cut + 1]
-				both_nan = np.isnan(before) & np.isnan(after)
-				close = np.isclose(before, after, rtol=1e-9, atol=1e-9) | both_nan
-				if not close.all():
-					row = int(np.argmax(~close))
-					raise LeakageError(
-						f"feature {name!r} at row {row} changes when the target at "
-						f"row {cut} is perturbed ({before[row]!r} -> {after[row]!r}): "
-						f"it reads information at or after its own timestamp. A "
-						f"feature that includes the present hour is the leak this "
-						f"module exists to prevent (07-layer4 §3.2)"
-					)
+			for source in sources:
+				perturbed = frame.copy()
+				perturbed.loc[probe_index, source] = sentinel
+				rebuilt = builder(perturbed)
+				for name in features:
+					if name not in full.columns or name not in rebuilt.columns:
+						continue
+					before = full[name].to_numpy(dtype=float)[: cut + 1]
+					after = rebuilt[name].to_numpy(dtype=float)[: cut + 1]
+					both_nan = np.isnan(before) & np.isnan(after)
+					close = np.isclose(before, after, rtol=1e-9, atol=1e-9) | both_nan
+					if not close.all():
+						row = int(np.argmax(~close))
+						raise LeakageError(
+							f"feature {name!r} at row {row} changes when {source!r} at "
+							f"row {cut} is perturbed ({before[row]!r} -> {after[row]!r}): "
+							f"it reads information at or after its own timestamp. A "
+							f"feature that includes the present hour is the leak this "
+							f"module exists to prevent (07-layer4 §3.2)"
+						)
 			checked += 1
 	if checked == 0:
 		raise LeakageError(
@@ -361,8 +566,8 @@ def audit_no_temporal_leakage(
 	:class:`LeakageError` on either.
 	"""
 	cfg = config or WeatherConfig()
-	features = feature_names(frame)
-	audit_feature_names(features, target_column=target_column)
+	features = feature_names(frame, config=cfg)
+	audit_feature_names(features, target_column=target_column, config=cfg)
 
 	def builder(part: pd.DataFrame) -> pd.DataFrame:
 		return build_features(
@@ -373,12 +578,17 @@ def audit_no_temporal_leakage(
 			time_column=time_column,
 		)
 
+	# Every column the target is derived from, and not the target alone: the
+	# label's own source column is the one a probe over `outage` cannot see.
 	assert_causal_features(
 		builder,
 		frame,
 		features,
 		target_column=target_column,
 		group_column=group_column,
+		perturb_columns=[
+			name for name in cfg.target_derived_columns if name in frame.columns
+		],
 	)
 
 
@@ -475,6 +685,13 @@ class Forecaster:
 	metrics: ForecastMetrics
 	backend: str = ""
 	notes: list[str] = field(default_factory=list)
+	validation: pd.DataFrame | None = None
+	"""The time-held-out split the metrics were measured on, kept on the object.
+
+	Kept here rather than handed to whoever wants a band, because a band
+	measured on a *different* split than the metrics is two answers to "how
+	wrong is this model" that would be quoted side by side. ``None`` only for a
+	forecaster assembled by hand -- :func:`train_forecaster` always sets it."""
 
 	def predict_proba(self, frame: pd.DataFrame) -> NDArray[np.float64]:
 		"""Positive-class probability for each row."""
@@ -579,6 +796,18 @@ def train_forecaster(
 	The metrics carry the base rate, PR-AUC, and recall at the configured
 	precision. Accuracy is retained only so the specification's headline can be
 	reproduced beside the base rate that explains it.
+
+	**Rows with no outcome are dropped before the split, and the features are
+	built before they are dropped.** The two halves are one decision. A zone-hour
+	with no clear pixels is *unknown* (``viirs.zone_series``), so its target is
+	NaN and it is not a training row -- a classifier handed one raises rather
+	than guessing, and a zero substituted for it would teach the model that an
+	unobserved hour was calm. But dropping it *before* ``build_features`` would
+	shift every later lag in that zone by a step, because the rolling window is
+	computed over the rows the frame still has: the feature would silently mean
+	"the last n observations" instead of "the last n hours". So the lags are
+	built on the full series and the unlabelled rows leave afterwards, carrying
+	the history they contributed.
 	"""
 	cfg = config or WeatherConfig()
 	if seed is None:
@@ -589,8 +818,21 @@ def train_forecaster(
 	featured = build_features(
 		frame, cfg, target_column=target_column, time_column=time_column
 	)
-	features = feature_names(featured, exclude=(target_column,))
-	audit_feature_names(features, target_column=target_column)
+	labelled = int(featured[target_column].notna().sum())
+	if labelled < len(featured):
+		logger.info(
+			"weather.train.dropping_unlabelled",
+			dropped=int(len(featured) - labelled),
+			kept=labelled,
+		)
+	featured = featured.dropna(subset=[target_column]).reset_index(drop=True)
+	if featured.empty:
+		raise ValueError(
+			f"no row carries a {target_column!r} outcome; a model fitted on no "
+			f"labelled observation reports a prior, not a forecast"
+		)
+	features = feature_names(featured, exclude=(target_column,), config=cfg)
+	audit_feature_names(features, target_column=target_column, config=cfg)
 
 	train, validation = time_split(featured, cfg, time_column=time_column)
 	base_rate = float(validation[target_column].mean())
@@ -654,6 +896,7 @@ def train_forecaster(
 		metrics=metrics,
 		backend=resolved,
 		notes=chosen,
+		validation=validation,
 	)
 
 
@@ -727,6 +970,7 @@ __all__ = [
 	"HEMISPHERE_FEATURES",
 	"LAGGED_FEATURES",
 	"LeakageError",
+	"METHOD_INTERVAL_RESIDUAL",
 	"TARGET_COLUMN",
 	"TIME_COLUMN",
 	"WEATHER_FEATURES",
@@ -738,7 +982,9 @@ __all__ = [
 	"audit_no_temporal_leakage",
 	"build_features",
 	"feature_names",
+	"forward_frame",
 	"recall_at_precision",
+	"residual_band",
 	"time_split",
 	"train_forecaster",
 ]

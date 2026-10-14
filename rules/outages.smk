@@ -55,3 +55,68 @@ rule outage_truth:
 				*params.flags,
 			)
 		)
+
+
+rule outage_forecast:
+	"""The daily 24-hour outage probability, per grid zone.
+
+	The producer the daily cadence's required section was waiting for. The
+	register recorded the gap as two: `forecast_to_artefact` writes the model's
+	*metrics*, and nothing turned a fitted `Forecaster` into a probability per
+	zone -- `predict_proba` existed with no caller. The interval was the second
+	gap and the harder one: the section declares an `Interval` column and
+	`assemble.py` reads a band from `interval_low`/`interval_high`, while
+	`ForecastMetrics` had no interval field and the module had no calibration
+	function.
+
+	So this rule runs a stage that predicts forward and bands the result by the
+	model's own held-out error. That band is a *residual quantile*, not a
+	calibrated predictive interval, and the artefact's provenance says so in
+	those words -- the two print the same two numbers and mean different things.
+
+	The input is `outage_history` because the forecast is a function of the
+	detector's observations and of nothing else: the features are calendar plus
+	the lagged outage rate, and the calendar needs no observation.
+	"""
+	input:
+		processed("outage_history")
+	output:
+		processed("outage_forecast")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"build", "outage_forecast",
+				"--out", output[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)
+
+
+rule project_outage_forecast:
+	"""`outage_forecast` at the dated path the daily report reads.
+
+	The section declares ``outages/forecast/{date}.parquet``. A daily report
+	generated at 06:00 covers *yesterday*, which `period_for` resolves inside the
+	projection -- a literal date here would name a file no daily report opens,
+	and the symptom would be an absent section rather than an error. This is the
+	daily cadence's one `required=True` section, so "absent" means the report
+	raises rather than warns.
+	"""
+	input:
+		processed("outage_forecast")
+	output:
+		report_artefact("daily", "outages/forecast/{date}.parquet")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"project", "daily", "outage_forecast",
+				"--source", input[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)

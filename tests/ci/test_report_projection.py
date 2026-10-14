@@ -529,13 +529,15 @@ def test_the_daily_report_reads_the_projected_mix_and_prices(tmp_path: Path):
 
 	config = _config(tmp_path)
 	_solved(tmp_path, config)
-	# `outage_forecast` declares `["Line", "Probability", "Interval", "Basis"]`
+	# `outage_forecast` declares `["Zone", "Probability", "Interval", "Basis"]`
 	# and its unit is "probability", so the primary binds to the row's unit and
 	# no extra column is needed -- unlike `week_ahead`, whose unit is "MW" and
-	# which therefore needs a `demand` column.
+	# which therefore needs a `demand` column. The label is a *zone* and not a
+	# line: `spec4-base.md` §18.1 and `publish.views.OUTAGE_FORECAST` both key
+	# this section on `grid_zone`, and the forecaster is keyed the same way.
 	_outage_forecast = pd.DataFrame(
 		{
-			"label": ["n-s"],
+			"label": ["zone_0"],
 			"value": [0.12],
 			"unit": ["probability"],
 			"interval_low": [0.05],

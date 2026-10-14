@@ -57,6 +57,7 @@ STAGES = (
 	"market_report",
 	"market_summary",
 	"network_arrays",
+	"outage_forecast",
 	"outage_history",
 	"outage_truth",
 	"policy_tracker",
@@ -90,6 +91,7 @@ SUFFIXES = {
 	"hydro_profiles": ".parquet",
 	"costs": ".parquet",
 	"fuel_prices": ".parquet",
+	"outage_forecast": ".parquet",
 	"outage_history": ".parquet",
 	"outage_truth": ".parquet",
 	"network_arrays": ".json",
@@ -129,6 +131,7 @@ PROJECTIONS = {
 	"project_policy_tracker": "policy_tracker",
 	"project_price_forecast": "price_forecast",
 	"project_renewable_forecast": "renewable_forecast",
+	"project_outage_forecast": "outage_forecast",
 	"project_system_alerts": "system_alerts",
 	"project_week_ahead": "week_ahead",
 }
@@ -148,6 +151,7 @@ PROJECTION_PATTERNS = {
 	"project_policy_tracker": "scanning/policy/{date}.parquet",
 	"project_price_forecast": "market/prices/{date}.parquet",
 	"project_renewable_forecast": "weather/renewables/{date}.parquet",
+	"project_outage_forecast": "outages/forecast/{date}.parquet",
 	"project_system_alerts": "outages/contingency/{date}.parquet",
 	"project_week_ahead": "planning/outlook/{date}.parquet",
 }

@@ -27,14 +27,25 @@ SECTIONS: tuple[SectionSpec, ...] = (
 		slug="outage_forecast",
 		title="Outage forecast (24 h)",
 		prose=(
-			"Probability of an outage on each monitored line over the next 24 "
-			"hours. A probability is not a prediction of an event; the interval "
-			"is the model's 90% band."
+			"Probability of an outage in each grid zone over the next 24 hours. A "
+			"probability is not a prediction of an event; the interval is the "
+			"model's band, and its width is the model's own calibration rather "
+			"than a fixed number."
 		),
 		artefact="outages/forecast/{date}.parquet",
 		unit="probability",
-		table_title="Outage probability by line",
-		columns=["Line", "Probability", "Interval", "Basis"],
+		table_title="Outage probability by zone",
+		# The spec's object, not a line. `spec4-base.md` §18.1 declares this
+		# section "24-hour outage probability by grid zone, with confidence
+		# intervals", `OUTAGE_FORECAST` in `publish/views.py` serves
+		# ``grid_zone``, and the forecaster is keyed on ``ZONE_COLUMN =
+		# "grid_zone"``. This header and the prose above it said "line" and "each
+		# monitored line" -- a *branch*, which is what `critical_lines` and
+		# `week_ahead` rank and a different object from a zone. The declaration
+		# was never exercised: this is the daily cadence's one `required=True`
+		# section and it has had no producer, so the mismatch surfaced only when
+		# the producer was written against it.
+		columns=["Zone", "Probability", "Interval", "Basis"],
 		required=True,
 	),
 	SectionSpec(

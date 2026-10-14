@@ -70,6 +70,15 @@ rule all:
 		processed("fuel_prices"),
 		processed("outage_history"),
 		processed("outage_truth"),
+		# The daily cadence's one `required=True` section, and the last cadence
+		# that could not be generated from the pipeline. `outage_forecast` was
+		# recorded as two gaps -- no forward-prediction producer, and no interval
+		# method -- and the second was the harder one: the section declares an
+		# `Interval` column that nothing could fill. Its band is a residual
+		# quantile of the model's own held-out error, which the artefact's
+		# provenance states in those words rather than letting a reader assume a
+		# calibrated interval.
+		processed("outage_forecast"),
 		processed("network_arrays"),
 		processed("tlens"),
 		processed("critical_lines"),
@@ -119,6 +128,7 @@ rule all:
 		report_artefact("daily", "planning/dispatch/{date}.parquet"),
 		report_artefact("daily", "market/prices/{date}.parquet"),
 		report_artefact("daily", "outages/contingency/{date}.parquet"),
+		report_artefact("daily", "outages/forecast/{date}.parquet"),
 		# The two loss sections, projected from the one decomposition above. The
 		# weekly one is the section whose register entry recorded the degeneracy
 		# rather than the missing rule; the monthly one reads the same frame under
