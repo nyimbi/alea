@@ -233,11 +233,34 @@ def to_scenario_parameters(
 	A non-strict call drops it, which is what a caller building a partial
 	scenario wants -- and the drop is what :func:`untranslated` exists to make
 	visible, so the non-strict path is the one that needs the register read.
+
+	``strict`` also refuses two keys that are not translatable, each with its own
+	message, because one message would send an author to the wrong fix. A key the
+	graph does not declare is a typo. A key the graph declares but *computes* is
+	derived: setting it changes nothing, because ``propagate`` overwrites it.
+	:func:`untranslated` enumerates the graph's own settable parameters, so it
+	can name neither, and a register built from either direction is blind to
+	both -- which is how a typo came to solve and apply nothing.
 	"""
 	fields: dict[str, Any] = {}
 	skipped: list[str] = []
+	unknown: list[str] = []
+	derived: list[str] = []
 	for name, value in sorted(values.items()):
-		if name not in graph.nodes or not graph.is_settable(name):
+		if name not in graph.nodes:
+			# Three findings, not two, and each needs its own message or the
+			# advice is wrong. This one is a string the graph does not declare,
+			# which is almost always a typo. ``derived`` below is a real graph
+			# parameter the graph computes -- setting it is meaningless, because
+			# ``propagate`` overwrites it. ``skipped`` is a settable graph
+			# parameter the engine has no knob for, which is a real quantity this
+			# translation cannot carry. Telling an author to widen the engine for
+			# a parameter that does not exist, or to spell-check one that is
+			# simply derived, both send them to the wrong fix.
+			unknown.append(name)
+			continue
+		if not graph.is_settable(name):
+			derived.append(name)
 			continue
 		translation = _by_prg().get(name)
 		if translation is None:
@@ -260,6 +283,18 @@ def to_scenario_parameters(
 				f"one and report the parameter as applied"
 			)
 		fields[translation.engine_field] = float(value) / float(base_value)
+	if strict and unknown:
+		raise ValueError(
+			f"not graph parameters: {sorted(unknown)}; the graph declares "
+			f"{len(graph.nodes)} and none of these is one, which is usually a "
+			f"typo. `untranslated()` names the parameters the engine cannot carry"
+		)
+	if strict and derived:
+		raise ValueError(
+			f"the graph computes {sorted(derived)}, so setting them changes "
+			f"nothing: `propagate` overwrites a derived value. A scenario that "
+			f"wants one of these moved sets what determines it instead"
+		)
 	if strict and skipped:
 		raise ValueError(
 			f"the engine cannot carry {sorted(skipped)}; pass strict=False to drop "

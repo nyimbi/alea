@@ -203,6 +203,64 @@ def test_a_parameter_not_in_the_graph_is_ignored_rather_than_guessed(
 	assert params == ScenarioParameters()
 
 
+def test_a_name_that_is_not_a_graph_parameter_is_refused_by_strict(
+	graph: ParameterGraph,
+):
+	"""A typo must not solve, which is the whole value of the default path.
+
+	WHY THIS IS A DIFFERENT FINDING FROM AN UNCARRIED PARAMETER. ``voll_usd_per_mwh``
+	is a graph parameter the engine has no knob for; a caller setting it asked for
+	something real the engine cannot express. ``carbon_price_usd_per_ton`` is not a
+	graph parameter at all, and the failure it causes is the quiet one the strict
+	path exists to prevent: the translation ignores it, the engine solves, the
+	objective looks like an answer, and the parameter the caller believed they set
+	moved nothing.
+
+	The messages are asserted apart, because sharing one would tell an author to
+	widen the engine for a parameter that does not exist.
+	"""
+	with pytest.raises(ValueError, match="not graph parameters"):
+		to_scenario_parameters(graph, {"carbon_price_usd_per_ton": 200.0})
+	# The uncarried-but-real case keeps its own message.
+	with pytest.raises(ValueError, match="the engine cannot carry"):
+		to_scenario_parameters(graph, {"voll_usd_per_mwh": 9000.0})
+
+
+def test_a_derived_parameter_is_refused_as_derived_not_as_a_typo(
+	graph: ParameterGraph,
+):
+	"""A third finding, and the message has to be the third message.
+
+	``lcoe_usd_per_mwh`` *is* a graph parameter -- the graph computes it -- so a
+	refusal calling it "not a graph parameter" is false, and the fix it implies
+	(spell-check it) is the wrong one. Setting a derived value changes nothing:
+	``propagate`` overwrites it. Three classes of key reach no knob and each
+	needs its own advice.
+	"""
+	assert "lcoe_usd_per_mwh" in graph.nodes
+	assert not graph.is_settable("lcoe_usd_per_mwh")
+	with pytest.raises(ValueError, match="the graph computes"):
+		to_scenario_parameters(graph, {"lcoe_usd_per_mwh": 50.0})
+
+
+def test_a_typo_is_named_in_the_loose_register(graph: ParameterGraph):
+	"""Loose drops it, and `untranslated()` cannot be the register that says so.
+
+	``untranslated()`` enumerates the graph's own settable parameters, so a name
+	that is not in the graph appears in neither it nor ``translated()`` -- a
+	register filtered on it reports a typo as cleanly carried.
+	"""
+	from alea.prg.translate import translated, untranslated
+
+	untranslated_names = set(untranslated(graph))
+	assert "carbon_price_usd_per_ton" not in untranslated_names
+	assert "carbon_price_usd_per_ton" not in set(translated(graph))
+	# Loose still drops it without raising; the register that catches it is the
+	# caller's, which is why `solve_from_prg` builds `dropped` from `translated`.
+	params = to_scenario_parameters(graph, {"carbon_price_usd_per_ton": 200.0}, strict=False)
+	assert params == ScenarioParameters()
+
+
 # --------------------------------------------------------------------------
 # The ratio direction
 # --------------------------------------------------------------------------
