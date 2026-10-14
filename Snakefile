@@ -113,6 +113,26 @@ rule all:
 		# above rather than re-swept: the report and the API's contingency route
 		# read the same sweep, so they cannot disagree about what is critical.
 		processed("system_alerts"),
+		# The quarterly scenario range. Optional to the report like
+		# `capacity_update` above, and for the same reason it is here anyway: the
+		# section's producer and its projection both exist, and a rule nothing
+		# reaches is a stage the workflow never runs -- indistinguishable, from
+		# the register, from one that works.
+		processed("scenario_update"),
+		# Four sections whose producer and projection both existed and which no
+		# default target reached. `test_the_default_target_reaches_every_wired_
+		# section` found them: every register said "produced", `snakemake <stage>`
+		# built them, and `alea report weekly` still raised "no artefact" because
+		# nothing in `rule all` pulled either rule.
+		#
+		# `week_ahead` is the load-bearing one: it is the weekly cadence's only
+		# `required=True` section, so the weekly report could not be generated at
+		# all. The other three are optional sections a reader opens the weekly and
+		# monthly reports for.
+		processed("week_ahead"),
+		processed("market_summary"),
+		processed("renewable_forecast"),
+		processed("policy_tracker"),
 		# The projections, not the builds. A stage's artefact under
 		# `data/processed` is not the section's: the report reads
 		# `results/<dir>/{date}.parquet`, and until these rules existed nothing
@@ -135,3 +155,11 @@ rule all:
 		# a different header, so a single projection would have left it absent.
 		report_artefact("weekly", "losses/decomposition/{date}.parquet"),
 		report_artefact("monthly", "losses/monthly/{date}.parquet"),
+		report_artefact("quarterly", "whatif/frontier/{date}.parquet"),
+		# The same four sections' deliveries. Both halves are needed: a build
+		# with no projection leaves the report raising "no artefact", which is
+		# the defect this whole block exists for.
+		report_artefact("weekly", "planning/outlook/{date}.parquet"),
+		report_artefact("weekly", "market/summary/{date}.parquet"),
+		report_artefact("weekly", "weather/renewables/{date}.parquet"),
+		report_artefact("monthly", "scanning/policy/{date}.parquet"),

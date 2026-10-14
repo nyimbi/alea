@@ -225,7 +225,89 @@ def test_every_stage_has_a_snakemake_rule():
 	assert not missing, f"no Snakemake rule declares these stages: {missing}"
 
 
-def test_the_workflow_parses():
+def test_the_default_target_reaches_every_wired_section():
+	"""A producer and a projection are not a delivery until `rule all` runs them.
+
+	`PRODUCERS` and `PROJECTED` say a section *can* be built and *can* be
+	delivered. Neither says the default target does it. A rule with no path from
+	`rule all` is a job `snakemake` builds only when named, which from every
+	register in the tree is indistinguishable from a section that works -- and
+	the report raises "no artefact" the first time someone runs the cadence
+	without having guessed the target.
+
+	This is the reachability question, so it is answered by the DAG and not by
+	the file's text. `--dag` emits the resolved graph, which names every job the
+	default target pulls; a substring search over the Snakefile would pass on a
+	section mentioned in a comment and fail on one reached through a helper.
+
+	**What the gate found when it was written.** Seven wired sections were in no
+	default target, `week_ahead` among them -- and `week_ahead` is the weekly
+	cadence's *only* `required=True` section, so `alea report weekly` raised on a
+	tree where every register said the section was produced. `loss_statistics`,
+	`generation_mix`, `market_summary`, `policy_tracker`, `price_forecast` and
+	`renewable_forecast` were the rest. Nothing read `rule all` before this, so
+	the omission had no way to surface.
+
+	`sector_coupling` is the one deliberate exception and is named here with its
+	reason: it refuses when every sector is disabled, which is the shipped
+	config's state, so an unconditional entry would make `snakemake all` fail on
+	a default clone.
+	"""
+	snakemake = shutil.which("snakemake")
+	if snakemake is None:  # pragma: no cover - depends on the environment
+		pytest.skip("snakemake is not on PATH")
+	result = subprocess.run(
+		[snakemake, "-n", "--dag"],
+		capture_output=True,
+		text=True,
+		cwd=REPO_ROOT,
+		timeout=600,
+	)
+	assert result.returncode == 0, (
+		f"`snakemake -n --dag` exited {result.returncode}; the graph cannot be "
+		f"read.\n{result.stdout[-2000:]}\n{result.stderr[-2000:]}"
+	)
+	# The DOT graph quotes each job name; `rule all` itself is `all`.
+	reached = set(re.findall(r'"([a-z_0-9]+)"', result.stdout))
+	assert reached, "the DAG named no jobs; the graph format changed"
+
+	from alea.reporting.producers import PRODUCERS, PROJECTED
+
+	wired = sorted(set(PRODUCERS) & set(PROJECTED))
+	assert wired, "no section is both produced and projected; the registers are empty"
+
+	#: Wired sections deliberately kept out of the default target, with the
+	#: reason. An entry here is a claim that the section is reachable another
+	#: way, so it is spelled as the *rule* that would have to exist.
+	exempt = {
+		"sector_coupling": (
+			"refuses when every sector is disabled -- the shipped config's state "
+			"(`sector.enabled: false`) -- so an unconditional entry in `rule all` "
+			"would make `snakemake all` fail on a default clone"
+		),
+	}
+
+	unreachable = [
+		slug
+		for slug in wired
+		if f"project_{slug}" not in reached and slug not in exempt
+	]
+	assert not unreachable, (
+		f"these sections are produced and projected but no default target reaches "
+		f"them: {unreachable}. Their rules exist and `snakemake <stage>` builds "
+		f"them, so every register reads as wired while `alea report` raises 'no "
+		f"artefact' for a cadence that was never built. Add `processed(<stage>)` "
+		f"and `report_artefact(<cadence>, <pattern>)` to `rule all`, or record the "
+		f"section in this gate's `exempt` map with the reason."
+	)
+	for slug in sorted(exempt):
+		assert len(exempt[slug]) > 80, (
+			f"the exemption for {slug!r} has a reason too short to be one: "
+			f"{exempt[slug]!r}"
+		)
+
+
+
 	"""The Snakefile builds a DAG, which is a stronger claim than "a rule exists".
 
 	Every other gate here reads the ``.smk`` files as *text*: `_declared_rules`
