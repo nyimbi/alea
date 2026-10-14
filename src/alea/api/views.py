@@ -949,6 +949,42 @@ PageSize = Annotated[int, Field(ge=1, le=MAX_PAGE_SIZE)]
 # --------------------------------------------------------------------------
 
 
+class ConstraintRouteOut(ApiModel):
+	"""What happened to one constraint-shaped equation.
+
+	``reason`` is served and not summarised, because the four unbound equations
+	are unbound for a *modelling* reason -- their terms are quantities the graph
+	derives from a solved result -- and a client that saw only the status would
+	have no way to tell that from a constraint that failed to build.
+	"""
+
+	equation_id: str
+	status: str
+	reason: str
+	unresolved: list[str]
+	assumed: list[str]
+
+
+class ConstraintReportOut(ApiModel):
+	"""How much of the equation library reaches an optimiser constraint.
+
+	``constraint_shaped`` is the denominator and the reason this is not a bare
+	fraction. Thirty-one of the library's 37 equations are identities the graph
+	evaluates; only the six inequalities could constrain a solve, so ``2``
+	against ``constraint_shaped`` is the honest register and ``2`` against
+	``total`` would be a coverage claim about a set that was never in scope.
+	"""
+
+	bound: list[str]
+	unbound: list[str]
+	count: int = Field(ge=0)
+	constraint_shaped: int = Field(ge=0)
+	identities: int = Field(ge=0)
+	total: int = Field(ge=0)
+	fraction: float = Field(ge=0.0, le=1.0)
+	routes: list[ConstraintRouteOut]
+
+
 class PrgSummaryOut(ApiModel):
 	"""The graph's own counts, and the registers that qualify them.
 
@@ -979,6 +1015,7 @@ class PrgSummaryOut(ApiModel):
 	"""
 
 	engine_translation: EngineTranslationOut
+	constraints: ConstraintReportOut
 	units: UnitReportOut
 	uncertainty: UncertaintyOut
 

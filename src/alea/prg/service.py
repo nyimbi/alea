@@ -19,7 +19,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from alea.prg import translate
+from alea.prg import constraints, translate
 from alea.prg.crossval import CrossValidationReport
 from alea.prg.graph import ParameterGraph, Violation, load_graph
 from alea.prg.library import SYSTEM_IDS, coverage, systems_of
@@ -116,6 +116,12 @@ def graph_summary(graph: ParameterGraph | None = None) -> dict[str, Any]:
 		# reader assuming the engine uses all of it; the fraction is the
 		# finding, and it is three of fifty-three.
 		"engine_translation": translate.coverage(g),
+		# The other half of the translation layer, and a different finding: of
+		# the six equations that could constrain a solve, two bind and four are
+		# post-solve checks. The denominator is the six inequalities, not the
+		# 37 equations -- an identity is a definition the graph evaluates, and
+		# counting it here would report the register as "2 of 37".
+		"constraints": constraints.coverage(g),
 		# What the graph declares uncertain, and how far that reaches. The
 		# register is the honest substitute for a Monte Carlo the spec never
 		# specified: it names the inputs and the reach, and says in the same

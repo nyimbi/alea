@@ -898,6 +898,7 @@ PRG_EXACT_FIELDS: dict[str, frozenset[str]] = {
 	"SensitivityOut": frozenset({"value", "derivatives"}),
 	"CrossValidationReportOut": frozenset({"violations", "undecided"}),
 	"PrgSummaryOut": frozenset({"edge_strength"}),
+	"ConstraintReportOut": frozenset({"constraint_shaped", "identities"}),
 }
 """The graph's own arithmetic, exempt per model.
 
@@ -914,6 +915,13 @@ is the one thing this contract exists to prevent. They are exempt per model
 rather than added to :data:`NON_QUANTITY_FIELDS` for the reason that map's own
 note gives: exempting the *name* would also exempt a genuinely modelled
 ``violations`` on any future response model.
+
+``ConstraintReportOut``'s two are the same class of count, and they are the
+register's denominator and its complement: how many inequalities could constrain
+a solve, and how many of the library's equations are identities instead. Neither
+is a modelled quantity -- there is no unit of "an equation" -- and both are
+load-bearing, because a client that saw only ``count`` would compute coverage
+against the wrong total. Exempt per model for the same reason as above.
 
 They are exempt rather than wrapped because the graph records *which*
 parameters are uncertain and no magnitude for any of them: ``uncertainty.py``

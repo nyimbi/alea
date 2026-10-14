@@ -29,6 +29,8 @@ from alea.api.views import (
 	ConflictOut,
 	ConflictReportOut,
 	ConflictRequest,
+	ConstraintReportOut,
+	ConstraintRouteOut,
 	CorrectionOut,
 	CrossValidationFindingOut,
 	CrossValidationReportOut,
@@ -66,6 +68,36 @@ def _check_out(check: Any) -> EquationCheckOut:
 		lhs=check.lhs,
 		rhs=check.rhs,
 		detail=check.detail,
+	)
+
+
+def _constraints_out(report: dict[str, Any]) -> ConstraintReportOut:
+	"""The constraint register, with every route's reason carried through.
+
+	The reasons are not dropped for brevity: four of the six inequalities are
+	unbound, and the *only* thing distinguishing "the graph derives this from a
+	solved result, so the audit checks it after" from "this failed to build" is
+	the text. A payload that served the status alone would leave a client
+	guessing which.
+	"""
+	return ConstraintReportOut(
+		bound=list(report["bound"]),
+		unbound=list(report["unbound"]),
+		count=report["count"],
+		constraint_shaped=report["constraint_shaped"],
+		identities=report["identities"],
+		total=report["total"],
+		fraction=report["fraction"],
+		routes=[
+			ConstraintRouteOut(
+				equation_id=route["equation_id"],
+				status=route["status"],
+				reason=route["reason"],
+				unresolved=list(route["unresolved"]),
+				assumed=list(route["assumed"]),
+			)
+			for route in report["routes"]
+		],
 	)
 
 
@@ -109,6 +141,7 @@ async def summary(principal: PublicDep) -> PrgSummaryOut:
 		cross_validation_rules=report["cross_validation_rules"],
 		edge_strength=report["edge_strength"],
 		engine_translation=EngineTranslationOut(**engine),
+		constraints=_constraints_out(report["constraints"]),
 		units=UnitReportOut(
 			consistent=[_check_out(c) for c in units.consistent],
 			inconsistent=[_check_out(c) for c in units.inconsistent],

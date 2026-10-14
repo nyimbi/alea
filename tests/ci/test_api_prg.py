@@ -100,6 +100,39 @@ def test_the_summary_route_serves_the_registers(
 	) == body["equations"]
 
 
+def test_the_summary_serves_the_constraint_register(
+	prg_client: TestClient, public_key: dict[str, str]
+) -> None:
+	"""The constraint register, with the denominator that makes it honest.
+
+	A client reading ``count`` against ``total`` would compute 2 of 37 and
+	conclude the layer reaches almost nothing; the six inequalities are the set
+	that could constrain a solve, and the other 31 equations are identities the
+	graph evaluates. Both numbers are served so the client cannot make that
+	mistake, and the four unbound routes carry their reasons because "unbound"
+	alone does not distinguish a post-solve check from a failure to build.
+	"""
+	response = prg_client.get("/api/v1/prg/summary", headers=public_key)
+	assert response.status_code == 200, response.text
+	constraints = response.json()["constraints"]
+	assert constraints["count"] == len(constraints["bound"])
+	assert constraints["constraint_shaped"] < constraints["total"]
+	assert (
+		constraints["count"] + len(constraints["unbound"])
+		== constraints["constraint_shaped"]
+	)
+	assert constraints["constraint_shaped"] + constraints["identities"] == constraints[
+		"total"
+	]
+	# Every route is served, and the unbound ones say why.
+	routes = {route["equation_id"]: route for route in constraints["routes"]}
+	assert len(routes) == constraints["constraint_shaped"]
+	for equation_id in constraints["unbound"]:
+		assert routes[equation_id]["status"] == "unbound"
+		assert routes[equation_id]["reason"]
+		assert routes[equation_id]["unresolved"]
+
+
 def test_the_equations_route_renders_them(
 	prg_client: TestClient, public_key: dict[str, str]
 ) -> None:

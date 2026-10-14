@@ -268,6 +268,16 @@ def prg_summary() -> None:
 		)
 	typer.echo(f"uncertainty: {summary['uncertainty'].summary()}")
 	typer.echo(f"units: {summary['units'].summary()}")
+	# The constraint register. Printed with the six-inequality denominator,
+	# because "2 of 37" is the number a reader would compute and it is wrong:
+	# 31 equations are identities the graph evaluates, not constraints anybody
+	# forgot to add.
+	shaped = summary["constraints"]
+	typer.echo(
+		f"constraints: {shaped['count']} of {shaped['constraint_shaped']} "
+		f"inequality(ies) bind a solve; {len(shaped['unbound'])} are post-solve "
+		f"checks, and {shaped['identities']} equation(s) are identities"
+	)
 	# The cross-validation register. Printed as ids rather than a count because
 	# a count of rules that were *declared* says nothing about whether any of
 	# them was evaluated -- the check that runs them is `prg check`.
@@ -1410,6 +1420,47 @@ def prg_units() -> None:
 		typer.echo(report.summary())
 		if report.inconsistent:
 			raise typer.Exit(code=1)
+
+
+@prg_app.command("constraints")
+def prg_constraints() -> None:
+	"""Which equations can constrain a solve, and which cannot.
+
+	The equation→constraint half of the spec's translation layer. Six of the
+	library's 37 equations are inequalities and could constrain a solve; two
+	do, and the other four are stated over quantities the graph derives from a
+	solved result, so the audit checks them after rather than the optimiser
+	during. Each route is printed with its reason, because "unbound" alone does
+	not distinguish a post-solve check from a constraint that failed to build.
+
+	No exit code, and that is deliberate rather than an omission. The register
+	has no defect state to gate on: the graph refuses an equation naming an
+	unknown parameter at load, so a route's unresolved symbols are *always*
+	derived quantities -- there is no spelling of "this failed to build" left
+	for a check to catch. A gate here would be a gate that cannot fail, and an
+	exit code that never fires is worse than none, because it reads as coverage.
+	"""
+	from alea.prg import load_graph
+	from alea.prg.constraints import coverage
+
+	with _run("cli.prg.constraints"):
+		report = coverage(load_graph())
+		for route in report["routes"]:
+			if route["status"] == "bound":
+				typer.secho(
+					f"{route['equation_id']}: binds ({route['reason']})",
+					fg=typer.colors.GREEN,
+				)
+			else:
+				typer.secho(
+					f"{route['equation_id']}: {route['reason']}",
+					fg=typer.colors.YELLOW,
+				)
+		typer.echo(
+			f"{report['count']} of {report['constraint_shaped']} inequality(ies) "
+			f"bind a solve; {report['identities']} of {report['total']} "
+			f"equation(s) are identities the graph evaluates"
+		)
 
 
 @prg_app.command("audit")

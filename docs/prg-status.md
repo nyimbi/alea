@@ -28,10 +28,11 @@ the code and `config/prg.yaml` are the authority, and this says where to look.
 | Cross-validation | `src/alea/prg/crossval.py` | §25's multi-parameter rules: a parsed condition, three severities, and the register of rules that could not be evaluated |
 | Edge strength | `src/alea/prg/graph.py` | The declared `hard`/`soft`/`informational` tier, read by `consistency`, `conflicts`, the audit and the CLI gate |
 | Translation | `src/alea/prg/translate.py` | Three declared routes from a PRG parameter to a what-if knob, and the register of the other fifty |
+| Constraints | `src/alea/prg/constraints.py` | The equation→constraint half of Part X: the two inequalities that bind a linopy solve, and the four that are post-solve checks instead |
 | API | `src/alea/api/routes/prg.py` | Five routes: `GET /prg/summary`, `GET /prg/equations`, `POST /prg/conflicts`, `POST /prg/sensitivity`, `POST /prg/cross-validation` |
 | The graph | `config/prg.yaml` | 84 parameters, 37 equations, 84 edges, 1 feedback loop |
 
-Commands: `alea prg summary|equations|check|propagate|conflicts|sensitivity|units|audit`,
+Commands: `alea prg summary|equations|check|propagate|conflicts|sensitivity|units|constraints|audit`,
 and `alea expr render|eval|diff|simplify|solve`.
 
 The two reads are public and the three computations are analyst-tier. Every
@@ -120,9 +121,48 @@ about this document rather than a property of the mechanism, and it is pinned
 in `tests/ci/test_prg.py` so a second informational equation that *is*
 reachable through a solve will be looked at rather than assumed.
 
-## What the dimensional check found
+## The constraint register, and the canary that did not fire
 
-`units.py` decides every equation: 30 of 37 are dimensionally consistent, 7
+The six inequalities in the library are not six constraints. Two bind —
+`reserve_margin` and `carbon_budget_constraint` — and the other four are stated
+over quantities the graph derives from a solved result, so the network has no
+column for them and the audit checks them after the solve instead. The register
+is `alea prg summary`'s `constraints:` line and `/prg/summary`'s `constraints`
+object, and its denominator is the six, not the 37.
+
+Three things about it are worth keeping.
+
+**A symbol is read from a declared source, never inferred.** Nothing in the
+graph records that `firm_capacity_mw` is the summed nameplate of the
+dispatchable fleet. Inferring it from the name would map it onto whatever
+quantity shares the most characters. `SOURCES` states each mapping with the
+assumption behind it written down — that storage is not counted toward firm
+capacity, that "dispatchable" is the registry's classification and not an
+availability guarantee, that the emissions term carries the same fleet-average
+intensity stand-in the graph's own identity makes.
+
+**An undeclared symbol falls back to the parameter set only if it is settable
+with a default, and the route records that it did.** `reserve_margin_min` and
+`capacity_factor` come from the scenario, not the network, and the route's
+`assumed` tuple says so — because a constraint whose terms are half read off
+the fleet and half off a default is a weaker claim than one read entirely off
+the fleet. `firm_capacity_mw` and `peak_demand_mw` are *also* settable scalars
+with defaults, which is why they carry declared sources: without them the
+fallback would have swallowed the two terms that matter most.
+
+**The canary that did not fire was the finding.** The carbon budget's unit
+chain is MW × hours = MWh, × tonne/MWh = tonne, ÷ 1e6 = Mt, then scaled by
+8,760 over the modelled hours. Dropping the annualisation is the mutation that
+should break the test, and it did not: the fixture spans exactly 8,760 hours,
+so the factor is 1 and removing it changed nothing. A canary that passes is
+evidence about the canary before it is evidence about the gate — here the gate
+was fine and the *fixture* was blind. The fix is
+`test_the_carbon_budget_annualises_a_short_horizon`: a two-hour horizon, where
+the same budget permits 4,380× more emissions per modelled hour, and the
+assertion is on the emissions the solve actually produces. Re-running the
+annualisation canary against it now fails as it must.
+
+## What the dimensional check found`units.py` decides every equation: 30 of 37 are dimensionally consistent, 7
 are not, and 0 are undecidable. The seven are not seven of one kind, and the
 fix differs by kind — which is why they are listed rather than counted:
 
@@ -152,6 +192,25 @@ after `views.py` said the graph did not make it.
 
 ## Not built
 
+- **Part X's engine is not driven by the graph's equations either, and the
+  register says which six.** The translation layer has two halves and both are
+  now measured. `translate.py` moves a *parameter* into an engine knob (three
+  of fifty-three). `constraints.py` moves an *equation* into an optimiser
+  constraint, and of the library's 37 equations six are inequalities — the only
+  ones that could constrain a solve. Two bind: `reserve_margin` and
+  `carbon_budget_constraint`, whose every term is either a declared network
+  quantity (summed dispatchable and VRE nameplate, peak coincident load, annual
+  emissions from dispatch × the registry's per-carrier intensity) or a settable
+  scalar. Four do not: `dscr_requirement`, `inertia_requirement`,
+  `affordability_constraint` and `water_availability_constraint` are stated
+  over quantities the graph *derives* — `project_gearing_dscr`,
+  `rocof_df_dt_hz_per_s`, `energy_burden`, `cooling_water_demand_m3` — which
+  exist only after a solve, so they are post-solve checks the audit runs, not
+  constraints on the solve. The other 31 equations are identities the graph
+  evaluates; counting them in the denominator would report the register as
+  2 of 37. The spec's other backends (Pyomo for MILP, SymPy for symbolic
+  manipulation, a custom iterative solver) are absent and each is a separate
+  modelling decision, not a missing adapter.
 - **The engine is barely driven by the graph.** `translate.py` declares the
   routes, and there are **three**: `carbon_price_usd_per_tco2` and
   `demand_growth` map one-for-one, and `fuel_price_usd_per_mwh` maps to the
