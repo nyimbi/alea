@@ -17,10 +17,15 @@ WHY ``unit`` is a string and not a Pint quantity. The specification asks for
 Pint. Pint is not a dependency of this repository, and adding one is a real
 cost -- it changes the solve environment for a check that catches a class of
 error this graph does not currently make. The unit is recorded so that a reader
-and a later dimensional check have it, and :func:`ParameterGraph.structure_issues`
-enforces the weaker property that *is* free: every equation's arithmetic is
-over symbols whose recorded units are present, so a missing unit is a finding
-rather than a silent dimensionless quantity.
+and a later dimensional check have it.
+
+WHY there is no dimensional check yet, stated plainly because an earlier
+docstring here claimed one. ``ParameterGraph.structure_issues`` asserts that
+every parameter an equation names carries a recorded unit -- which is a
+completeness check on the metadata, not a dimensional one. It does not check
+that ``MW * hours`` is ``MWh``; nothing here parses a unit string. A reader who
+wants the dimensional claim should treat its absence as a known gap rather than
+as a property this module establishes.
 """
 
 from __future__ import annotations

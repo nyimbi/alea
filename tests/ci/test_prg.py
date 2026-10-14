@@ -390,6 +390,37 @@ def test_the_loop_answer_does_not_depend_on_where_it_starts(graph: ParameterGrap
 	assert max(answers) - min(answers) < 1e-6, answers
 
 
+def test_a_loop_that_cannot_settle_says_which_failure_it_is(
+	graph: ParameterGraph, defaults: dict
+):
+	"""The non-convergence message must name the fix, and be reachable.
+
+	"Did not converge" leaves the reader to guess between a diverging map and
+	an oscillating one, and the two have different fixes -- a smaller damping
+	factor for the oscillation, a different equation or range for the
+	divergence. The diagnostic is only worth having if it actually fires, so
+	this forces non-convergence with a one-turn budget and asserts the message
+	names the failure rather than restating the residual.
+	"""
+	from dataclasses import replace
+
+	from alea.prg.feedback import FeedbackError, solve_loop
+
+	loop = replace(graph.feedback_loops()[0], max_iterations=1)
+	values = graph.propagate(defaults).values
+	for name in loop.variables:
+		values.pop(name, None)
+	with pytest.raises(FeedbackError) as caught:
+		solve_loop(graph, loop, values)
+	message = str(caught.value)
+	assert "did not converge" in message
+	# The diagnosis, not just the residual: one of the three named causes.
+	assert any(
+		phrase in message
+		for phrase in ("oscillating", "diverging", "slow convergence")
+	), message
+
+
 def test_an_inconsistent_parameter_set_is_reported(graph: ParameterGraph, defaults: dict):
 	"""The check that is the point of the graph.
 
@@ -526,11 +557,17 @@ def test_an_inequality_cannot_determine_a_variable(document: dict):
 		ParameterGraph.from_mapping(document)
 
 
-def test_an_unenumerated_system_is_refused(document: dict):
+def test_an_unenumerated_system_is_refused_at_load(document: dict):
+	"""A misspelt system is a load error, not a surprise inside a later report.
+
+	`systems_of` raises too, but only when something asks it to group the
+	equations, so the malformed graph loaded cleanly and failed later inside an
+	unrelated call. Refusing it at construction is the stronger contract: the
+	graph a caller holds is one the library can describe.
+	"""
 	document["equations"]["marginal_cost"]["system"] = "invented_system"
-	graph = ParameterGraph.from_mapping(document)
-	with pytest.raises(ValueError, match="not one of"):
-		systems_of(graph.equations)
+	with pytest.raises(GraphError, match="which the library does not hold"):
+		ParameterGraph.from_mapping(document)
 
 
 def test_a_declared_relationship_list_that_drifted_is_reported(document: dict):
@@ -825,6 +862,150 @@ def test_a_parameters_times_profile_broadcasts():
 	profile = np.array([0.2, 0.4, 0.6, 0.8])
 	value = parse("capacity * profile").eval_array({"capacity": 100.0, "profile": profile})
 	assert list(value) == [20.0, 40.0, 60.0, 80.0]
+
+
+def test_a_function_applied_to_an_array_uses_its_array_form():
+	"""`math.exp(array)` raises; the array path must not route through it.
+
+	The first implementation wrapped the scalar result in a one-element list,
+	which is neither a broadcast nor the right answer, and it raised
+	`TypeError: only 0-dimensional arrays can be converted to Python scalars`
+	before it got that far. Checked against NumPy's own ufunc, which is the
+	independent witness for the values as well as the shape.
+	"""
+	import numpy as np
+
+	values = np.array([0.0, 1.0, 2.0])
+	got = parse("exp(x)").eval_array({"x": values})
+	assert list(got) == pytest.approx(list(np.exp(values)))
+	assert list(parse("sqrt(x)").eval_array({"x": [1.0, 4.0, 9.0]})) == [1.0, 2.0, 3.0]
+	assert list(parse("ln(x)").eval_array({"x": [1.0, math.e]})) == pytest.approx([0.0, 1.0])
+
+
+def test_an_array_through_an_elementwise_comparison_matches_numpy():
+	"""`min`/`max` over arrays are reductions, not the elementwise pair.
+
+	They are the two functions with no single NumPy equivalent, so they get the
+	elementwise form explicitly rather than silently falling back to the scalar
+	implementation, which would compare arrays by truth value and raise.
+	"""
+	import numpy as np
+
+	a, b = np.array([1.0, 5.0]), np.array([4.0, 2.0])
+	assert list(parse("min(a, b)").eval_array({"a": a, "b": b})) == [1.0, 2.0]
+	assert list(parse("max(a, b)").eval_array({"a": a, "b": b})) == [4.0, 5.0]
+
+
+def test_floor_is_floor():
+	"""`floor` was mapped to `float`, which is the identity.
+
+	`floor(3.7)` returned 3.7 and no test noticed, because the scalar path was
+	only ever exercised through `abs`/`min`/`max`. The assertion is against
+	`math.floor`, not against a recorded value.
+	"""
+	assert parse("floor(x)").eval({"x": 3.7}) == 3.0
+	assert parse("floor(x)").eval({"x": -3.2}) == -4.0
+	assert parse("ceil(x)").eval({"x": 3.2}) == 4.0
+	assert list(parse("floor(x)").eval_array({"x": [1.9, -0.1]})) == [1.0, -1.0]
+
+
+def test_a_reserved_name_cannot_be_a_symbol_however_it_is_built():
+	"""`sym()` checked the reserved set; the constructor did not.
+
+	`Symbol("exp")` built a parameter indistinguishable from the exponential in
+	every rendering. The check belongs where the object is made, so every path
+	to a Symbol -- the factory, a parser, a caller -- meets it.
+	"""
+	from alea.prg.dsl import Symbol
+
+	for name in ("exp", "sum", "min", "range"):
+		with pytest.raises(DslError, match="reserved"):
+			Symbol(name)
+		with pytest.raises(DslError, match="reserved"):
+			sym(name)
+
+
+def test_a_policy_lever_is_reported_as_constraining_something(graph: ParameterGraph):
+	"""A constraint's inputs are couplings, and the graph must say so.
+
+	`affects` read only the determining equations, so a parameter that appears
+	in an inequality reported nothing at all. Moving ``energy_burden_limit``
+	does not move any *value* -- it decides whether the scenario is admissible,
+	which is the whole question for a regulator's lever. So the register for it
+	is ``constrains``, and the assertion is that every such lever is visible in
+	one register or the other rather than in neither.
+	"""
+	for lever in (
+		"dscr_min",
+		"energy_burden_limit",
+		"reserve_margin_min",
+		"rocof_limit_hz_per_s",
+		"water_availability_m3",
+		"firm_capacity_mw",
+		"peak_demand_mw",
+	):
+		assert graph.constrains(lever), f"{lever} bounds no inequality"
+	assert "dscr_requirement" in graph.constrains("dscr_min")
+	assert "affordability_constraint" in graph.constrains("energy_burden_limit")
+	# And the value-coupling path is unchanged for a lever that does move one.
+	assert "project_gearing_dscr" in graph.affects("cfads_usd_per_kw_year")
+
+
+def test_a_loop_equation_is_a_value_coupling(graph: ParameterGraph):
+	"""A loop's target is a consequence of its inputs, and `affects` says so.
+
+	The loop equations are skipped by `_determiner` -- that is what makes them
+	loops -- so reading only the determiner dropped them from `affects` too,
+	and ``capture_price_sensitivity`` and ``vre_capacity_target_mw`` reported
+	as inert. Both are real levers: one changes the cannibalisation the fixed
+	point settles at, the other changes the build the loop converges to.
+	"""
+	assert "capture_price_usd_per_mwh" in graph.affects("capture_price_sensitivity")
+	assert "vre_capacity_mw" in graph.affects("vre_capacity_target_mw")
+
+
+def test_every_settable_parameter_affects_or_constrains_something(graph: ParameterGraph):
+	"""A knob whose value reaches nothing and bounds nothing does nothing.
+
+	The graph is allowed to hold such an input -- but then it must be visible
+	as one, not silently present. This asserts the register is empty, which is
+	the state a graph worth shipping should be in.
+	"""
+	dead = [
+		name
+		for name in sorted(graph.nodes)
+		if graph.is_settable(name)
+		and not graph.affects(name)
+		and not graph.constrains(name)
+	]
+	assert dead == [], dead
+
+
+def test_a_loop_variable_is_reported_as_moved(graph: ParameterGraph):
+	"""The fixed point moved, and the report said nothing.
+
+	`before` is captured before `solve_loop` seeds its iterates, so a loop
+	variable the caller did not supply was never in it and `changed` dropped it
+	entirely. The seed is the honest "before" for an iterated value, and it is
+	the same rule the solver applies -- written once, in `_loop_seed`.
+
+	The test must *not* supply the loop variables: a caller-supplied value is
+	in `before` and takes the path that always worked, which is how the first
+	version of this test passed against the defect it was written for.
+	"""
+	defaults = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	loop_variables = {
+		equation.determined_variables[0]
+		for equation in graph.equations.values()
+		if equation.solution_method == "iterative"
+	}
+	# None of them is a default, so none is in `before`: this is the seeded path.
+	assert not (loop_variables & set(defaults)), sorted(loop_variables & set(defaults))
+	result = graph.propagate(defaults)
+	assert loop_variables <= set(result.changed), (
+		f"loop variables missing from changed: "
+		f"{sorted(loop_variables - set(result.changed))}"
+	)
 
 
 # ---------------------------------------------------------------------------

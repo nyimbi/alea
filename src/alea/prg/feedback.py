@@ -128,7 +128,18 @@ def detect_loops(graph: ParameterGraph) -> tuple[FeedbackLoop, ...]:
 
 
 def _strongly_connected(edges: dict[str, set[str]]) -> list[set[str]]:
-	"""Tarjan's SCC, iteratively so a deep graph cannot overflow the stack."""
+	"""Tarjan's SCC, iteratively so a deep graph cannot overflow the stack.
+
+	The recursive form is a function call per node; this keeps the same state
+	on an explicit stack of ``(node, unvisited successors)`` frames. The
+	invariant that makes the control flow readable: the frame on top of
+	``work`` is the node currently being explored, and a frame is popped only
+	once its ``pending`` list is empty -- at which point its ``low`` is final
+	and is propagated to its parent, which is the frame now on top. The two
+	``continue``s are the "descend, or resume the parent" steps and not loop
+	restarts: neither consumes the frame, and the ``pending`` list shrinking by
+	one per turn is what guarantees termination.
+	"""
 	index_of: dict[str, int] = {}
 	low: dict[str, int] = {}
 	on_stack: set[str] = set()
@@ -209,6 +220,13 @@ def solve_loop(
 			)
 
 	change = float("inf")
+	#: The last few steps per variable, so a loop that fails can say whether it
+	#: failed by diverging or by oscillating. A damping factor too large for a
+	#: map with a negative eigenvalue shows up as a step that alternates sign
+	#: without shrinking, and the fix -- halve the damping -- is different from
+	#: the fix for a diverging loop. Reporting only "did not converge" leaves
+	#: the reader to guess which one they have.
+	steps: dict[str, list[float]] = {name: [] for name in loop.variables}
 	for turn in range(1, loop.max_iterations + 1):
 		previous = {name: values[name] for name in loop.variables}
 		for equation in loop.equations:
@@ -230,6 +248,10 @@ def solve_loop(
 			# Relaxation: the raw map can overshoot and oscillate between two
 			# builds, neither of which is the fixed point.
 			values[target] = values[target] + loop.damping * (solved - values[target])
+
+		for name in loop.variables:
+			steps[name].append(values[name] - previous[name])
+			del steps[name][:-6]
 
 		# Relative, not absolute. The loop mixes a capture price in USD/MWh
 		# with a capacity in MW, and an absolute tolerance tight enough for the
@@ -258,10 +280,44 @@ def solve_loop(
 
 	raise FeedbackError(
 		f"{loop} did not converge in {loop.max_iterations} turns; the last "
-		f"change was {change:.6g}, above {loop.tolerance:.3g}. A loop that does "
-		f"not settle has a contraction factor at or above one at these "
-		f"parameter values, and reporting the last iterate would present a "
-		f"limit cycle as a fixed point"
+		f"change was {change:.6g}, above {loop.tolerance:.3g}. "
+		f"{_diagnose(steps, loop)}"
+	)
+
+
+def _diagnose(steps: Mapping[str, list[float]], loop: FeedbackLoop) -> str:
+	"""Say which failure this is, because the two have different fixes.
+
+	A step sequence that alternates in sign without shrinking is an
+	oscillation -- a map with a negative eigenvalue and a damping factor too
+	large for it, fixed by lowering the damping. A step sequence that grows is
+	a divergence, fixed by bounding the range or by a different formulation.
+	"Did not converge" alone leaves the reader to guess.
+	"""
+	for name, history in steps.items():
+		signs = [s for s in history if s != 0.0]
+		if len(signs) < 4:
+			continue
+		alternating = all(
+			(a > 0) != (b > 0) for a, b in zip(signs, signs[1:], strict=False)
+		)
+		shrinking = abs(signs[-1]) < abs(signs[0])
+		if alternating and not shrinking:
+			return (
+				f"{name} is oscillating: its steps alternate in sign without "
+				f"shrinking. That is a contraction factor near -1, and the fix "
+				f"is a smaller damping factor than {loop.damping} -- not a "
+				f"wider range."
+			)
+		if not alternating and abs(signs[-1]) > abs(signs[0]):
+			return (
+				f"{name} is diverging: its steps grow. That is a contraction "
+				f"factor above one at these values, and a smaller damping "
+				f"factor will not fix it -- the equation or its range is wrong."
+			)
+	return (
+		"the steps are neither growing nor alternating, so this is slow "
+		"convergence rather than divergence: raise `max_iterations`."
 	)
 
 

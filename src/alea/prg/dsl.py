@@ -44,6 +44,7 @@ and is wrong.
 from __future__ import annotations
 
 import ast
+import functools
 import math
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping
@@ -51,6 +52,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
+import scipy.special as scipy_special
 from scipy.optimize import brentq
 
 __all__ = [
@@ -101,6 +103,12 @@ class MathFunction:
 	latex: str
 	arity: int | None  # None is variadic
 	derivative: Callable[[Expr], Expr] | None = None
+	#: The array-valued implementation. ``impl`` is a :mod:`math` callable, and
+	#: ``math.exp(array([1, 2]))`` raises rather than broadcasting, so the array
+	#: path cannot reuse it. Where no NumPy equivalent exists (``min``/``max``
+	#: are the reductions, not the elementwise pair) the field stays ``None``
+	#: and :meth:`Func._eval` refuses the array by name instead of guessing.
+	vectorised: Callable[..., Any] | None = None
 
 
 def _f_abs(x: float) -> float:
@@ -115,35 +123,65 @@ def _f_max(*xs: float) -> float:
 	return max(xs)
 
 
+def _f_floor(x: float) -> float:
+	return float(math.floor(x))
+
+
+def _v_min(*xs: Any) -> Any:
+	return functools.reduce(np.minimum, xs)
+
+
+def _v_max(*xs: Any) -> Any:
+	return functools.reduce(np.maximum, xs)
+
+
 _FUNCTIONS: dict[str, MathFunction] = {
-	"exp": MathFunction(math.exp, r"\exp", 1, lambda u: Func("exp", (u,))),
-	"ln": MathFunction(math.log, r"\ln", 1, lambda u: Mul.of(Const(1.0), Pow(u, Const(-1.0)))),
-	"log": MathFunction(math.log, r"\ln", 1, lambda u: Mul.of(Const(1.0), Pow(u, Const(-1.0)))),
+	"exp": MathFunction(
+		math.exp, r"\exp", 1, lambda u: Func("exp", (u,)), vectorised=np.exp
+	),
+	"ln": MathFunction(
+		math.log, r"\ln", 1, lambda u: Pow(u, Const(-1.0)), vectorised=np.log
+	),
+	"log": MathFunction(
+		math.log, r"\ln", 1, lambda u: Pow(u, Const(-1.0)), vectorised=np.log
+	),
 	"log10": MathFunction(
 		math.log10,
 		r"\log_{10}",
 		1,
 		lambda u: Pow(Mul.of(Const(math.log(10.0)), u), Const(-1.0)),
+		vectorised=np.log10,
 	),
 	"log2": MathFunction(
 		math.log2,
 		r"\log_{2}",
 		1,
 		lambda u: Pow(Mul.of(Const(math.log(2.0)), u), Const(-1.0)),
+		vectorised=np.log2,
 	),
 	"sqrt": MathFunction(
 		math.sqrt,
 		r"\sqrt",
 		1,
 		lambda u: Pow(Mul.of(Const(2.0), Func("sqrt", (u,))), Const(-1.0)),
+		vectorised=np.sqrt,
 	),
-	"sin": MathFunction(math.sin, r"\sin", 1, lambda u: Func("cos", (u,))),
-	"cos": MathFunction(math.cos, r"\cos", 1, lambda u: Mul.of(Const(-1.0), Func("sin", (u,)))),
+	"sin": MathFunction(
+		math.sin, r"\sin", 1, lambda u: Func("cos", (u,)), vectorised=np.sin
+	),
+	"cos": MathFunction(
+		math.cos,
+		r"\cos",
+		1,
+		lambda u: Mul.of(Const(-1.0), Func("sin", (u,))),
+		vectorised=np.cos,
+	),
 	"tan": MathFunction(
 		math.tan,
 		r"\tan",
 		1,
 		lambda u: Pow(Func("cos", (u,)), Const(-2.0)),
+		vectorised=np.tan,
 	),
 	"asin": MathFunction(
 		math.asin,
@@ -153,6 +191,7 @@ _FUNCTIONS: dict[str, MathFunction] = {
 			Pow(Add.of(Const(1.0), Mul.of(Const(-1.0), Pow(u, Const(2.0)))), Const(0.5)),
 			Const(-1.0),
 		),
+		vectorised=np.arcsin,
 	),
 	"acos": MathFunction(
 		math.acos,
@@ -168,15 +207,21 @@ _FUNCTIONS: dict[str, MathFunction] = {
 				Const(-1.0),
 			),
 		),
+		vectorised=np.arccos,
 	),
 	"atan": MathFunction(
 		math.atan,
 		r"\arctan",
 		1,
 		lambda u: Pow(Add.of(Const(1.0), Pow(u, Const(2.0))), Const(-1.0)),
+		vectorised=np.arctan,
 	),
-	"sinh": MathFunction(math.sinh, r"\sinh", 1, lambda u: Func("cosh", (u,))),
-	"cosh": MathFunction(math.cosh, r"\cosh", 1, lambda u: Func("sinh", (u,))),
+	"sinh": MathFunction(
+		math.sinh, r"\sinh", 1, lambda u: Func("cosh", (u,)), vectorised=np.sinh
+	),
+	"cosh": MathFunction(
+		math.cosh, r"\cosh", 1, lambda u: Func("sinh", (u,)), vectorised=np.cosh
+	),
 	"tanh": MathFunction(
 		math.tanh,
 		r"\tanh",
@@ -184,6 +229,7 @@ _FUNCTIONS: dict[str, MathFunction] = {
 		lambda u: Add.of(
 			Const(1.0), Mul.of(Const(-1.0), Pow(Func("tanh", (u,)), Const(2.0)))
 		),
+		vectorised=np.tanh,
 	),
 	"erf": MathFunction(
 		math.erf,
@@ -193,15 +239,18 @@ _FUNCTIONS: dict[str, MathFunction] = {
 			Const(2.0 / math.sqrt(math.pi)),
 			Func("exp", (Mul.of(Const(-1.0), Pow(u, Const(2.0))),)),
 		),
+		vectorised=scipy_special.erf,
 	),
 	# Non-differentiable on purpose. `abs` has a kink at zero and `min`/`max`
 	# have a discontinuity in the derivative where the arguments cross; a
 	# formula that hides that is worse than a refusal.
-	"abs": MathFunction(_f_abs, r"\left|", 1),
-	"min": MathFunction(_f_min, r"\min", None),
-	"max": MathFunction(_f_max, r"\max", None),
-	"floor": MathFunction(float, r"\lfloor", 1),
-	"ceil": MathFunction(lambda x: float(math.ceil(x)), r"\lceil", 1),
+	"abs": MathFunction(_f_abs, r"\left|", 1, vectorised=np.abs),
+	"min": MathFunction(_f_min, r"\min", None, vectorised=_v_min),
+	"max": MathFunction(_f_max, r"\max", None, vectorised=_v_max),
+	"floor": MathFunction(_f_floor, r"\lfloor", 1, vectorised=np.floor),
+	"ceil": MathFunction(
+		lambda x: float(math.ceil(x)), r"\lceil", 1, vectorised=np.ceil
+	),
 }
 
 #: Names that render as a Greek letter. A parameter called ``beta`` is the
@@ -439,6 +488,22 @@ class Symbol(Expr):
 	"""A named parameter."""
 
 	name: str
+
+	def __post_init__(self) -> None:
+		# Enforced here and not only in :func:`sym`: the factory is a
+		# convenience, not a gate, and a Symbol built directly -- by a caller,
+		# or by a parser path that let a name through -- would otherwise shadow
+		# a DSL function. A parameter named ``exp`` is indistinguishable from
+		# the exponential in every rendering, so it is refused at construction
+		# rather than at the first wrong answer.
+		if not self.name.isidentifier():
+			raise DslError(f"{self.name!r} is not a valid parameter name")
+		if self.name in _RESERVED:
+			raise DslError(
+				f"{self.name!r} is reserved: it names a DSL function, and a "
+				f"parameter that shadows one cannot be told from it in the "
+				f"arithmetic"
+			)
 
 	@property
 	def symbols(self) -> frozenset[str]:
@@ -788,7 +853,13 @@ class Func(Expr):
 		spec = _FUNCTIONS[self.name]
 		evaluated = [arg._eval(values) for arg in self.args]
 		if any(isinstance(v, np.ndarray) for v in evaluated):
-			return np.asarray([spec.impl(*evaluated)])
+			if spec.vectorised is None:
+				raise DslError(
+					f"{self.name} has no array-valued form; the scalar "
+					f"implementation is a math callable and would raise on an "
+					f"array rather than broadcasting"
+				)
+			return spec.vectorised(*evaluated)
 		return spec.impl(*evaluated)
 
 	def _latex(self, parent: int) -> str:
@@ -915,13 +986,9 @@ def _as_expr(value: object) -> Expr:
 
 def sym(name: str) -> Symbol:
 	"""A named parameter, for building a formula in code."""
-	if not name.isidentifier():
-		raise DslError(f"{name!r} is not a valid parameter name")
-	if name in _RESERVED:
-		raise DslError(
-			f"{name!r} is reserved: it names a DSL function, and a parameter "
-			f"that shadows one cannot be told from it in the arithmetic"
-		)
+	# The validity and reserved-name rules live in ``Symbol.__post_init__``, so
+	# this is a spelling of the constructor and not a second gate that can
+	# drift from it.
 	return Symbol(name)
 
 
@@ -1069,7 +1136,6 @@ def _merge_powers(expression: Mul) -> Expr:
 	"""Combine ``a**m * a**n`` into ``a**(m+n)``."""
 	powers: dict[Expr, list[Expr]] = {}
 	order: list[Expr] = []
-	others: list[Expr] = []
 	for factor in expression.factors:
 		if isinstance(factor, Pow):
 			base, exponent = factor.base, factor.exponent
@@ -1089,7 +1155,6 @@ def _merge_powers(expression: Mul) -> Expr:
 			factors.append(base)
 			continue
 		factors.append(Pow(base, simplify(total)))
-	factors.extend(others)
 	return Mul.of(*factors)
 
 

@@ -24,7 +24,7 @@ from __future__ import annotations
 from collections import defaultdict, deque
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from functools import lru_cache
+
 from pathlib import Path
 from typing import Any
 
@@ -78,11 +78,22 @@ class Violation:
 
 @dataclass(frozen=True)
 class PropagationResult:
-	"""What a change did to the graph."""
+	"""What a change did to the graph.
+
+	``values`` is a fresh dict per propagation and no caller shares it with the
+	graph, so mutating it is safe -- but it is a plain dict and not a mapping
+	proxy, and it is not a *record*: the graph holds no reference to it, and
+	re-running ``propagate`` recomputes from the input rather than from this.
+	"""
 
 	values: dict[str, float]
 	changed: dict[str, float]
-	"""Parameters whose value moved, and by how much. Excludes the seeds."""
+	"""Parameters whose value moved, and by how much.
+
+	Includes the loop variables. A fixed point that moved is a change, and the
+	"before" for one the caller did not supply is the seed the solver started
+	from -- the same rule, read from :meth:`ParameterGraph._loop_seed`.
+	"""
 
 	order: tuple[str, ...]
 	"""The derived parameters, in the order they were computed."""
@@ -151,6 +162,12 @@ class ParameterGraph:
 		#: reported against this one, which is the stale-state bug the register
 		#: exists to avoid rather than to commit.
 		self._range_excursions: dict[str, float] = {}
+
+		#: Memoised per-instance results. Declared here rather than via
+		#: ``lru_cache`` on the methods, which would key the cache on ``self`` in
+		#: a class-level table and keep every graph alive.
+		self._loops_cache: tuple[Any, ...] | None = None
+		self._phases_cache: tuple[tuple[str, ...], tuple[str, ...]] | None = None
 
 		self._validate()
 
@@ -255,6 +272,44 @@ class ParameterGraph:
 			and parameter not in self._loop_variables
 		)
 
+	def edges_from(self, parameter: str) -> tuple[RelationshipEdge, ...]:
+		"""The edges this parameter is the source of.
+
+		The declared direction, not the arithmetic. ``affects`` answers "whose
+		value moves"; this answers "what the graph says this feeds", which is
+		the question a reader of a diagram is asking and the one the edge set
+		was written to state.
+		"""
+		return tuple(self._by_source.get(parameter, ()))
+
+	def edges_into(self, parameter: str) -> tuple[RelationshipEdge, ...]:
+		"""The edges this parameter is the target of."""
+		return tuple(self._by_target.get(parameter, ()))
+
+	def constrains(self, parameter: str) -> tuple[str, ...]:
+		"""The inequalities this parameter bounds, by equation id.
+
+		A third relation, and it is not `affects`. Moving ``energy_burden_limit``
+		changes no parameter's *value* -- ``energy_burden`` is what it is -- but
+		it changes whether the scenario is admissible, which is the whole
+		question for a regulator's lever. Folding it into `affects` would make
+		that method mean two different things, and a caller reading "affects"
+		to mean "moves the number" would be misled by the union.
+
+		An inequality's edge set does not answer this: the edges are positional
+		(the ``rhs`` computed into the ``lhs`` slot), so ``dscr_requirement``
+		carries an edge from ``dscr_min`` to ``project_gearing_dscr`` even
+		though ``dscr_min`` determines nothing. Reading the equation is what is
+		true here.
+		"""
+		out: set[str] = set()
+		for equation in self._equations.values():
+			if equation.relation == "eq":
+				continue
+			if parameter in set(equation.parameters) | set(equation.free_variables):
+				out.add(equation.id)
+		return tuple(sorted(out))
+
 	def computed(self) -> frozenset[str]:
 		"""Every parameter the graph computes rather than accepts."""
 		return frozenset(self._determiner) | self._loop_variables
@@ -262,20 +317,38 @@ class ParameterGraph:
 	def determined_by(self, parameter: str) -> Equation | None:
 		return self._determiner.get(parameter)
 
-	@lru_cache(maxsize=1)
 	def feedback_loops(self) -> tuple[Any, ...]:
-		"""The loops the topological order cannot evaluate."""
-		from alea.prg.feedback import detect_loops
+		"""The loops the topological order cannot evaluate.
 
-		return detect_loops(self)
+		Memoised on the instance, not with ``lru_cache``. A method decorator
+		caches on ``self`` in a *class-level* table, so every graph ever built
+		stays alive for as long as the cache holds it -- an instance-retention
+		leak that a short-lived-graph workload turns into unbounded memory. The
+		attribute cache dies with the graph, which is the lifetime the value
+		has.
+		"""
+		if self._loops_cache is None:
+			from alea.prg.feedback import detect_loops
+
+			self._loops_cache = tuple(detect_loops(self))
+		return self._loops_cache
 
 	def depends_on(self, parameter: str) -> tuple[str, ...]:
-		"""Parameters this one is computed from, by the equations.
+		"""Parameters this one is computed from, by the determining equation.
 
 		Derived from the *determining equation*, not from the declared
 		``depends_on`` list and not from the edges. The edges carry a
 		relationship and its direction; the equation carries the arithmetic, and
 		the arithmetic is what propagation must follow.
+
+		Deliberately excludes the loop equations, and that is not the blind spot
+		:meth:`affects` had. ``order`` and ``_phases`` walk this to build a
+		topological sequence, and a loop has no place in one -- the fixed point
+		is solved separately and the parameters that wait on it are computed
+		after. A loop variable therefore reports ``()`` here and its inputs are
+		readable from the loop itself (:meth:`feedback_loops`). Reading the loop
+		equations in would put a cycle back into the sort that exists to exclude
+		it.
 		"""
 		equation = self._determiner.get(parameter)
 		if equation is None:
@@ -284,16 +357,29 @@ class ParameterGraph:
 		return tuple(sorted(others - {parameter}))
 
 	def affects(self, parameter: str) -> tuple[str, ...]:
-		"""Parameters whose value this one enters, by the equations."""
-		out = {
-			target
-			for target, equation in self._determiner.items()
-			if target != parameter
-			and (
-				parameter in equation.parameters
-				or parameter in equation.free_variables
-			)
-		}
+		"""Parameters whose *value* this one moves, by the equations.
+
+		Every equation that fixes a value, including the iterative ones. The
+		determining equations alone are not enough: ``_determiner`` skips the
+		loop equations -- that is what makes them loops -- so reading only it
+		dropped ``capture_price_sensitivity`` and ``vre_capacity_target_mw``,
+		both of which change what the fixed point settles at.
+
+		Inequalities are deliberately *not* read here. They fix no value, so a
+		parameter appearing in one moves no number; it changes whether the
+		scenario is admissible, which is :meth:`constrains`. Folding the two
+		together would make this method mean "moves the number or gates the
+		scenario", and a caller who reads ``affects`` as "moves the number"
+		would be misled. The declared relationships are on :meth:`edges_from`.
+		"""
+		out: set[str] = set()
+		for equation in self._equations.values():
+			if parameter not in set(equation.parameters) | set(
+				equation.free_variables
+			):
+				continue
+			out |= set(equation.determined_variables)
+		out.discard(parameter)
 		return tuple(sorted(out))
 
 	# -- validation -----------------------------------------------------
@@ -357,6 +443,21 @@ class ParameterGraph:
 					f"the engine would never apply"
 				)
 
+		# An equation's `system` must name a system the library holds. Checked
+		# here rather than where the system is first *read*: `systems_of` raises
+		# too, but only when something asks it to group the equations, so a
+		# graph with a misspelt system loaded cleanly and failed later inside an
+		# unrelated report. A load error belongs at load.
+		from alea.prg.library import SYSTEM_IDS
+
+		for equation in self._equations.values():
+			if equation.system not in SYSTEM_IDS:
+				raise GraphError(
+					f"equation {equation.id!r} names system {equation.system!r}, "
+					f"which the library does not hold; known systems: "
+					f"{sorted(SYSTEM_IDS)}"
+				)
+
 		for target in self._determiner:
 			node = self._nodes[target]
 			if node.role is not Role.DERIVED:
@@ -400,7 +501,6 @@ class ParameterGraph:
 
 	# -- ordering -------------------------------------------------------
 
-	@lru_cache(maxsize=1)
 	def _phases(self) -> tuple[tuple[str, ...], tuple[str, ...]]:
 		"""The derived parameters, split by whether they follow a feedback loop.
 
@@ -410,7 +510,11 @@ class ParameterGraph:
 		and what waits on the fixed point. ``propagate`` runs them either side
 		of the solver, and a parameter in the wrong half would be computed from
 		a pre-loop value.
+
+		Memoised on the instance for the same reason as :meth:`feedback_loops`.
 		"""
+		if self._phases_cache is not None:
+			return self._phases_cache
 		ordered = self.order()
 		waiting: set[str] = set()
 		changed = True
@@ -426,7 +530,8 @@ class ParameterGraph:
 						break
 		before = tuple(p for p in ordered if p not in waiting)
 		after = tuple(p for p in ordered if p in waiting)
-		return before, after
+		self._phases_cache = (before, after)
+		return self._phases_cache
 
 	def order(self) -> tuple[str, ...]:
 		"""Derived parameters in an order where each follows its inputs.
@@ -514,16 +619,26 @@ class ParameterGraph:
 			scoped[parameter] = self._derive(parameter, scoped)
 
 		computed = set(self._determiner) | self._loop_variables
-		moved = {
-			name: value - before[name]
-			for name, value in scoped.items()
-			if name in computed
-			and name in before
+		moved: dict[str, float] = {}
+		for name, value in scoped.items():
+			if name not in computed:
+				continue
+			# A loop variable has no value in `before` unless the caller
+			# supplied one: `solve_loop` seeds it from the node's `initial` or
+			# the midpoint of its range. Reading `before` alone therefore
+			# dropped every loop variable from the report -- a caller asking
+			# what a knob moved was not told the fixed point had moved at all.
+			# The seed is the honest "before" for an iterated value.
+			start = before.get(name)
+			if start is None:
+				start = self._loop_seed(name)
+			if start is None:
+				continue
 			# Relative, so a solver's last-bit noise on a 2700 MW capacity is
 			# not reported as a change. An absolute floor would call the same
 			# noise a change on a capacity factor and not on a capacity.
-			and abs(value - before[name]) > 1e-12 * max(abs(value), 1.0)
-		}
+			if abs(value - start) > 1e-12 * max(abs(value), 1.0):
+				moved[name] = value - start
 		return PropagationResult(
 			values=scoped,
 			changed=moved,
@@ -540,10 +655,21 @@ class ParameterGraph:
 	) -> float | None:
 		"""The equation's root, searching past ``bracket`` until it is found.
 
-		Geometric widening from the declared range, so the root nearest the
-		admissible set is the one returned: a doubling search outward is the
-		cheapest way to reach a value that is off by an order of magnitude
-		without a bracket so wide it meets a different root on the way.
+		Geometric widening outward from the declared range, doubling the
+		half-width each turn: the cheapest way to reach a value off by orders of
+		magnitude without stepping so far in one move that an intervening root
+		is skipped.
+
+		The guarantee is *a* root outside the admissible set, not necessarily
+		the one nearest to it, and the difference matters for a non-monotonic
+		equation -- a learning curve or a cannibalisation term with two roots
+		can return the far one. For the equations in this library the residual
+		is monotonic in the parameter it is solved for, so the first root found
+		is the only one; an equation that is not must declare a bracket wide
+		enough to contain its root rather than relying on this search. The
+		excursion is recorded in ``_range_excursions`` either way, so a value
+		fixed outside its declared range is a reported finding and not a silent
+		one.
 		"""
 		low, high = bracket
 		width = max(high - low, 1.0)
@@ -555,6 +681,24 @@ class ParameterGraph:
 				return solve_for(residual, parameter, values, bracket=(low, high))
 			except DslError:
 				continue
+		return None
+
+	def _loop_seed(self, parameter: str) -> float | None:
+		"""Where the solver starts ``parameter`` if the caller did not set it.
+
+		The same rule :func:`alea.prg.feedback.solve_loop` applies, written once
+		here so the "before" a propagation reports against is the iterate the
+		solver actually began from. A second spelling of the rule would let the
+		reported change and the solved change disagree by exactly the seed.
+		"""
+		node = self._nodes.get(parameter)
+		if node is None:
+			return None
+		if node.initial is not None:
+			return float(node.initial)
+		if node.range is not None:
+			low, high = node.range
+			return 0.5 * (low + high)
 		return None
 
 	def _derive(self, parameter: str, values: Mapping[str, float]) -> float:

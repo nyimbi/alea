@@ -15,8 +15,8 @@ the code and `config/prg.yaml` are the authority, and this says where to look.
 |---|---|---|
 | Symbolic DSL | `src/alea/prg/dsl.py` | Create, render (LaTeX / Unicode / MathML / source), evaluate (scalar and array), differentiate, simplify, solve numerically |
 | Models | `src/alea/prg/views.py` | `ParameterNode`, `RelationshipEdge`, `Equation`, with the cross-field rules that make an incoherent declaration a construction error |
-| Graph | `src/alea/prg/graph.py` | Topological order in two phases, propagation, consistency, structure checks |
-| Feedback | `src/alea/prg/feedback.py` | Tarjan SCC detection, Gauss–Seidel with damping, convergence on the residual `consistency` checks |
+| Graph | `src/alea/prg/graph.py` | Topological order in two phases, propagation, consistency, structure checks, `affects`/`constrains`/`depends_on`/`edges_from`/`edges_into` |
+| Feedback | `src/alea/prg/feedback.py` | Tarjan SCC detection, Gauss–Seidel with damping, convergence on the residual `consistency` checks, a divergence-vs-oscillation diagnostic when it fails |
 | Library | `src/alea/prg/library.py` | The 16 systems, the spec→system mapping, and the coverage register |
 | Service | `src/alea/prg/service.py` | `graph_summary`, `check_scenario`, `propagate_change`, `describe` |
 | Result audit | `src/alea/prg/audit.py` | Audit a *solved* what-if result against the graph's identities |
@@ -58,3 +58,11 @@ not raise. An equation with no root anywhere still raises.
 residual is the step divided by the damping factor, so a loop that stops on its
 iterates can sit outside the tolerance `consistency` checks it against — and the
 audit then reports an equation the solver called solved as violated.
+
+**`affects` is "moves the number"; `constrains` is "gates the scenario".** They
+are different relations and are kept apart on purpose. `affects` reads the
+equations that *fix* a value — including the iterative ones, whose fixed point
+is a consequence of its inputs — and it deliberately ignores inequalities,
+because moving `dscr_min` changes no value at all. A regulator's lever is a
+constraint, so it appears in `constrains`, not in `affects`. The declared
+relationship direction is on `edges_from`/`edges_into`.

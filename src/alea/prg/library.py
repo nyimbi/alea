@@ -172,11 +172,13 @@ _BY_ID = {system.id: system for system in SYSTEMS}
 SYSTEM_IDS: frozenset[str] = frozenset(_BY_ID)
 
 #: How many systems ``params-prg1.md`` §4 enumerates, as
-#: ``### 4.N System N: Name`` headings. The register above must hold exactly
-#: these, and :func:`spec_systems` reads them off the document so the number
-#: cannot drift from the specification it claims to implement. A library that
-#: enumerates twelve systems while the spec enumerates twenty will report
-#: "every system modelled" about a third of the model.
+#: ``### 4.N System N: Name`` headings.
+#:
+#: Deliberately a literal, and not ``len(spec_systems())``. This is the
+#: *claim*; :func:`spec_systems` is the witness, and the test asserts the two
+#: agree. Deriving the expected count from the document would make the check
+#: vacuous -- it would pass on a document that enumerated twelve systems or
+#: two hundred. A register that counts itself is not a register.
 SPEC_SYSTEM_COUNT = 20
 
 
