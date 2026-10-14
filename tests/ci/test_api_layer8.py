@@ -801,6 +801,12 @@ NON_QUANTITY_FIELDS = frozenset(
 		"bounds",
 		"clusters",
 		"confidence",
+		"count",
+		"derived",
+		"edges",
+		"equations",
+		"elasticity",
+		"fraction",
 		"from_lat",
 		"from_lon",
 		"horizon",
@@ -813,17 +819,19 @@ NON_QUANTITY_FIELDS = frozenset(
 		"lon",
 		"offset",
 		"overloaded_elements",
+		"parameters",
 		"planning_horizons",
 		"points",
 		"progress",
+		"relative_move",
 		"sample_size",
+		"systems",
+		"systems_declared",
 		"tenor_years",
 		"to_lat",
 		"to_lon",
 		"total",
-		"uncertainty",
 		"uptime_seconds",
-		"value",
 		"window_days",
 		"year",
 	}
@@ -833,6 +841,7 @@ REGISTRY_REFERENCE_FIELDS: dict[str, frozenset[str]] = {
 	"CountryOut": frozenset({"population"}),
 	"TechnologyOut": frozenset({"co2_intensity_t_per_mwh"}),
 }
+
 """Registry reference numbers, exempt from the value contract, per model.
 
 ``Country.population`` and ``Technology.co2_t_per_mwh`` are static reference
@@ -852,7 +861,15 @@ FRAMEWORK_COMPONENTS: frozenset[str] = frozenset({"HTTPValidationError", "Valida
 
 
 def _exempt_fields(component: str) -> frozenset[str]:
-	"""The reference fields exempt for ``component``, plus its framework bases.
+	"""The fields exempt for ``component`` beyond the global non-quantity names.
+
+	``value`` and ``uncertainty`` are exempted by *path*, not by name. They are
+	the members of a :class:`ValueOut` and of a ``ProvenanceOut``, and the whole
+	point of the contract is that a quantity is wrapped in one -- so exempting
+	the names globally also exempts a bare ``value: float`` on any response model
+	that is not a wrapper, which is precisely the regression the gate exists to
+	catch. The walker carries a dotted trace for this reason; these two lookups
+	are what it is for.
 
 	``Page[CountryOut]`` reaches ``population`` through ``items``; the field is
 	declared on ``CountryOut``, so the exemption is resolved through the ``Page_``
@@ -867,31 +884,60 @@ def _exempt_fields(component: str) -> frozenset[str]:
 	return frozenset()
 
 
-def _numeric_response_fields(spec: dict, name: str, *, trace: str = "") -> list[str]:
-	"""Bare numeric property names reachable from a named component's schema.
+#: Fields that are exempt only when they sit directly on the wrapper that gives
+#: them meaning. ``value``/``uncertainty`` on ``ValueOut``; ``uncertainty`` on
+#: ``ProvenanceOut``, where the number is the basis's own magnitude.
+WRAPPER_MEMBERS: dict[str, frozenset[str]] = {
+	"ValueOut": frozenset({"value", "uncertainty"}),
+	"ProvenanceOut": frozenset({"uncertainty"}),
+}
 
-	Resolves ``$ref`` chains (depth-bounded) and unions, so a quantity nested
-	inside a row model is found. ``ValueOut``'s own ``value``/``uncertainty``
-	are skipped: the contract is that a quantity is *wrapped* in a ValueOut, and
-	the wrapper's members are numbers by design. ``ProvenanceOut.uncertainty`` is
-	skipped for the same reason -- provenance *is* the basis, so the number on it
-	is the basis's own magnitude, not a quantity that lacks one.
+PRG_EXACT_FIELDS: dict[str, frozenset[str]] = {
+	"ConflictOut": frozenset({"residual", "tolerance"}),
+	"CorrectionOut": frozenset({"current", "delta"}),
+	"SensitivityOut": frozenset({"value", "derivatives"}),
+}
+"""The graph's own arithmetic, exempt per model.
 
-	``trace`` carries the dotted path of the property currently being walked, so
-	a bare number under a ``provenance`` property is exempted while the same
-	field name elsewhere is not.
+These are numbers the PRG computes *exactly* from a parameter set -- a residual
+against a tolerance, a proposed move, a propagated value, a derivative -- and
+each model names the unit on an adjacent ``unit`` field, so none is the
+unanchored number the contract is about.
+
+They are exempt rather than wrapped because the graph records *which*
+parameters are uncertain and no magnitude for any of them: ``uncertainty.py``
+counts thirteen uncertain inputs and eight derived-stochastic parameters, and
+the YAML carries no distribution and no sigma. Wrapping one in a
+:class:`ValueOut` would pair ``basis='modelled'`` with an uncertainty invented
+to satisfy the validator -- the one thing this contract exists to prevent. The
+honest report is that the graph cannot yet supply one, and
+:data:`NON_QUANTITY_FIELDS` is the wrong place to record it: exempting the
+*names* would also exempt a genuinely modelled ``value`` on any future response
+model. Per model, so a rename cannot make it absorb a new field -- asserted
+live in the test below.
+"""
+
+
+def _numeric_response_fields(spec: dict, name: str) -> list[str]:
+	"""Bare numeric property names declared on ``name`` itself.
+
+	References are *not* followed. An exemption belongs to the model that
+	declares the field, and following refs flattened the two together: every
+	field exempt on ``ConflictOut`` -- a residual against a tolerance -- was
+	re-reported as an offender on ``ConflictReportOut``, which holds a list of
+	them. The transitive closure is walked by the caller, one component at a
+	time, so each model is judged against its own exemptions.
+
+	Numbers under a ``provenance`` property are skipped: provenance *is* the
+	basis, so the number on it is the basis's own magnitude rather than a
+	quantity that lacks one. ``trace`` carries the dotted path so that exemption
+	applies to that property and not to the same field name elsewhere.
 	"""
 	components = spec["components"]["schemas"]
 	found: list[str] = []
 
-	def walk(schema: object, seen: frozenset[str], trace: str) -> None:
-		if not isinstance(schema, dict):
-			return
-		if "$ref" in schema:
-			target = schema["$ref"].split("/")[-1]
-			if target in ("ValueOut", "ProvenanceOut") or target in seen:
-				return
-			walk(components.get(target, {}), seen | {target}, trace)
+	def walk(schema: object, trace: str) -> None:
+		if not isinstance(schema, dict) or "$ref" in schema:
 			return
 		if schema.get("type") in ("number", "integer"):
 			# Name the bare number after the property it is under, so a failure
@@ -904,13 +950,20 @@ def _numeric_response_fields(spec: dict, name: str, *, trace: str = "") -> list[
 					continue
 				found.append(prop)
 			else:
-				walk(sub, seen, f"{trace}.{prop}")
+				walk(sub, f"{trace}.{prop}")
 		for sub in schema.get("anyOf") or []:
-			walk(sub, seen, trace)
+			walk(sub, trace)
 		if "items" in schema:
-			walk(schema["items"], seen, trace)
+			walk(schema["items"], trace)
+		if isinstance(schema.get("additionalProperties"), dict):
+			# A mapping of numbers is a number per key. The walker read only
+			# ``properties``, so ``dict[str, float]`` -- a derivative table, a
+			# count per system -- was invisible to a gate whose whole job is to
+			# find bare numbers in responses. ``SensitivityOut.derivatives``
+			# shipped through it.
+			walk(schema["additionalProperties"], trace)
 
-	walk({"$ref": f"#/components/schemas/{name}"}, frozenset(), trace)
+	walk(components.get(name, {}), "")
 	return found
 
 
@@ -962,7 +1015,11 @@ def _bare_quantity_offenders(spec: dict) -> dict[str, list[str]]:
 	for name in sorted(_response_components(spec)):
 		if name in FRAMEWORK_COMPONENTS:
 			continue
-		exempt = _exempt_fields(name)
+		exempt = (
+			_exempt_fields(name)
+			| WRAPPER_MEMBERS.get(name, frozenset())
+			| PRG_EXACT_FIELDS.get(name, frozenset())
+		)
 		bare = [
 			f
 			for f in _numeric_response_fields(spec, name)
@@ -987,26 +1044,36 @@ def test_values_carry_basis(config: Config) -> None:
 	* the registry reference fields (``population``, ``co2_intensity_t_per_mwh``)
 	  -- see :data:`REGISTRY_REFERENCE_FIELDS`;
 	* the framework's own error models, which this API does not define.
+
+	Three maps are consulted and all three are checked for staleness *per
+	component*, not against a flattened pool of field names: a check that only
+	asked whether ``delta`` appears somewhere in the spec would pass after the
+	field moved to a model whose ``delta`` is not exempt.
 	"""
 	app = create_app(config)
 	spec = app.openapi()
 	offenders = _bare_quantity_offenders(spec)
 	assert not offenders, f"response models with bare quantities: {offenders}"
 
-	# The exemptions are live, not stale: each named field still appears in the
-	# response it exempts. A rename that emptied the exemption would otherwise
+	# The exemptions are live, not stale: each named field still appears on the
+	# component it exempts. A rename that emptied the exemption would otherwise
 	# leave the gate passing while the reason for the exemption no longer held.
-	present = {
-		field
-		for name in _response_components(spec)
-		for field in _numeric_response_fields(spec, name)
-	}
-	for inner, fields in REGISTRY_REFERENCE_FIELDS.items():
-		for field in fields:
-			assert field in present, (
-				f"the exemption for {inner}.{field} is stale: no response exposes "
-				f"{field!r} any more"
+	reachable = _response_components(spec)
+	for label, mapping in (
+		("REGISTRY_REFERENCE_FIELDS", REGISTRY_REFERENCE_FIELDS),
+		("WRAPPER_MEMBERS", WRAPPER_MEMBERS),
+		("PRG_EXACT_FIELDS", PRG_EXACT_FIELDS),
+	):
+		for inner, fields in mapping.items():
+			assert inner in reachable, (
+				f"{label} names {inner}, which no response reaches any more"
 			)
+			on_component = set(_numeric_response_fields(spec, inner))
+			for field in fields:
+				assert field in on_component, (
+					f"the exemption for {inner}.{field} is stale: {inner} no "
+					f"longer exposes {field!r}"
+				)
 
 
 def test_signal_quantities_are_values(client: TestClient, keys: dict) -> None:

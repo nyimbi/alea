@@ -944,6 +944,167 @@ class DeliveryResultOut(ApiModel):
 PageSize = Annotated[int, Field(ge=1, le=MAX_PAGE_SIZE)]
 
 
+# --------------------------------------------------------------------------
+# The parameter relationship graph
+# --------------------------------------------------------------------------
+
+
+class PrgSummaryOut(ApiModel):
+	"""The graph's own counts, and the registers that qualify them.
+
+	The registers are the point, not the counts: a client that sees only
+	``parameters`` and ``equations`` will assume the engine is driven by all of
+	them. ``engine_translation`` says how many settable parameters reach a
+	what-if knob, ``units`` says how many equations the dimensional check could
+	decide, and ``uncertainty`` says what the stochastic declarations reach.
+	"""
+
+	parameters: int = Field(ge=0)
+	equations: int = Field(ge=0)
+	edges: int = Field(ge=0)
+	derived: int = Field(ge=0)
+	systems: dict[str, int]
+	systems_declared: int = Field(ge=0)
+	unmodelled_systems: list[str]
+	feedback_loops: list[str]
+	structure_issues: list[str]
+	engine_translation: EngineTranslationOut
+	units: UnitReportOut
+	uncertainty: UncertaintyOut
+
+
+class EngineTranslationOut(ApiModel):
+	"""How much of the graph reaches a what-if knob. Three of fifty-three."""
+
+	translated: list[str]
+	untranslated: list[str]
+	count: int = Field(ge=0)
+	total: int = Field(ge=0)
+	fraction: float = Field(ge=0.0, le=1.0)
+
+
+class UnitReportOut(ApiModel):
+	"""The dimensional check: which equations are consistent, which are not."""
+
+	consistent: list[EquationCheckOut]
+	inconsistent: list[EquationCheckOut]
+	undecidable: list[EquationCheckOut]
+	summary: str
+
+
+class EquationCheckOut(ApiModel):
+	"""One equation's dimensional verdict.
+
+	``decidable`` is carried alongside ``consistent`` because the two are
+	different claims: an equation the walker could not decide is not a pass,
+	and a client that rendered it as one would be reporting a green the check
+	never gave.
+	"""
+
+	equation_id: str
+	decidable: bool
+	consistent: bool
+	lhs: str
+	rhs: str
+	detail: str
+
+
+class UncertaintyOut(ApiModel):
+	"""What the graph declares uncertain, and what that reaches."""
+
+	inputs: list[str]
+	derived_stochastic: list[str]
+	reachable: list[str]
+	stochastic_edges: list[list[str]]
+	summary: str
+
+
+class EquationOut(ApiModel):
+	"""One equation, rendered."""
+
+	equation_id: str
+	system: str
+	rendered: str
+
+
+class ConflictOut(ApiModel):
+	"""One inconsistency, with the corrections that would resolve it.
+
+	``residual`` and ``tolerance`` are in the units of the violating equation's
+	two sides -- which share a dimension, or the equation would be flagged by
+	the dimensional check -- so ``unit`` names it. A residual without its unit
+	is the bare number the value contract forbids.
+	"""
+
+	kind: str
+	subject: str
+	detail: str
+	unit: str
+	residual: float
+	tolerance: float
+	corrections: list[CorrectionOut]
+
+
+class CorrectionOut(ApiModel):
+	"""A move that would resolve a conflict.
+
+	``relative_move`` is the number to rank on: a 0.2 move in an emission
+	factor and an 82 USD/t move in a carbon price can be the same real-world
+	size, and ordering by ``delta`` orders by the unit. ``unit`` is the
+	parameter's, so ``delta`` and ``current`` are interpretable.
+	"""
+
+	parameter: str
+	unit: str
+	delta: float
+	elasticity: float
+	within_range: bool
+	current: float
+	relative_move: float
+
+
+class ConflictReportOut(ApiModel):
+	"""The conflicts in a parameter set, ranked, and what was examined."""
+
+	conflicts: list[ConflictOut]
+	checked: list[str]
+	consistent: bool
+	summary: str
+
+
+class SensitivityOut(ApiModel):
+	"""A derived parameter's derivatives with respect to its inputs.
+
+	``method`` says how the row was produced -- ``input``, ``symbolic``, or
+	``implicit`` for a loop variable solved through the implicit function
+	theorem -- because a reader weighing the numbers needs to know which.
+	"""
+
+	parameter: str
+	method: str
+	value: float | None
+	derivatives: dict[str, float]
+
+
+class SensitivityRequest(ApiModel):
+	"""A parameter set to differentiate at, with optional overrides."""
+
+	parameter: str
+	set: dict[str, float] = Field(default_factory=dict)
+	top: int = Field(default=10, ge=1, le=100)
+
+
+class ConflictRequest(ApiModel):
+	"""A parameter set to check for conflicts.
+
+	``set`` may name a derived parameter -- unlike ``prg check`` -- because
+	setting one is exactly the over-determination this endpoint reports.
+	"""
+
+	set: dict[str, float] = Field(default_factory=dict)
+	rank: int = Field(default=3, ge=1, le=20)
+
+
 __all__ = [
 	"DEFAULT_PAGE_SIZE",
 	"MAX_PAGE_SIZE",
@@ -1004,4 +1165,16 @@ __all__ = [
 	"WhatIfFrontierRequest",
 	"WhatIfResultOut",
 	"WhatIfSolveRequest",
+	"ConflictOut",
+	"ConflictReportOut",
+	"ConflictRequest",
+	"CorrectionOut",
+	"EngineTranslationOut",
+	"EquationCheckOut",
+	"EquationOut",
+	"PrgSummaryOut",
+	"SensitivityOut",
+	"SensitivityRequest",
+	"UncertaintyOut",
+	"UnitReportOut",
 ]

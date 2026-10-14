@@ -17,6 +17,7 @@ from alea.api.routes import (
 	market,
 	outages,
 	planning,
+	prg,
 	reports,
 	resilience,
 	signals,
@@ -42,6 +43,7 @@ ROUTERS: tuple[APIRouter, ...] = (
 	whatif.router,
 	reports.router,
 	signals.router,
+	prg.router,
 )
 
 __all__ = ["ROUTERS"]

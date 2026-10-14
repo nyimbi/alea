@@ -25,10 +25,18 @@ the code and `config/prg.yaml` are the authority, and this says where to look.
 | Units | `src/alea/prg/units.py` | The dimensional check the spec asks for: each equation's two sides against a Pint registry of the graph's vocabulary |
 | Conflict detection | `src/alea/prg/conflicts.py` | The four kinds (direct, over-determined, under-determined, loop, out-of-range), ranked, with corrections |
 | Translation | `src/alea/prg/translate.py` | Three declared routes from a PRG parameter to a what-if knob, and the register of the other fifty |
+| API | `src/alea/api/routes/prg.py` | Four routes: `GET /prg/summary`, `GET /prg/equations`, `POST /prg/conflicts`, `POST /prg/sensitivity` |
 | The graph | `config/prg.yaml` | 84 parameters, 37 equations, 84 edges, 1 feedback loop |
 
 Commands: `alea prg summary|equations|check|propagate|conflicts|sensitivity|units|audit`,
 and `alea expr render|eval|diff|simplify|solve`.
+
+The two reads are public and the two computations are analyst-tier. Every
+response carries its registers: `/prg/summary` reports how many equations the
+dimensional check could not decide, and `/prg/conflicts` reports what it
+examined. A client that renders a green count from a check whose coverage
+shrank is reporting something the service never claimed, and the only place to
+prevent that is in the payload.
 
 ## The four conflict kinds
 
@@ -111,8 +119,8 @@ after `views.py` said the graph did not make it.
   pretending they agree.
 - **Not the 784-parameter graph.** 84 of them, over the systems with the
   clearest physical or accounting statement.
-- **No API or UI.** Both are packaging rather than capability; the CLI is the
-  only door, and every command is exercised through it in `tests/ci`.
+- **No UI.** Packaging rather than capability, and the last door left shut. The
+  CLI and the API both reach every register; a UI would render them.
 
 ## Two things about the graph that are easy to get wrong
 
@@ -183,3 +191,36 @@ finding, and the count fell from 8 to 7. Before reporting a dimensional
 finding, check the registry's definition of the unit is not the thing that is
 wrong: the graph's units are a vocabulary, and a wrong entry in the vocabulary
 accuses every equation that uses it.
+
+**A gate that reads only `properties` is blind to `dict[str, float]`.**
+`test_values_carry_basis` walks each response schema for numeric fields and
+fails on any bare quantity. It read `schema["properties"]` and never
+`additionalProperties`, so a mapping of numbers — a derivative table, a count
+per system — was invisible to the one check whose whole job is to find bare
+numbers in responses. `SensitivityOut.derivatives` and `PrgSummaryOut.systems`
+both shipped through it. The general shape: a walker enumerates the *writings*
+of a thing it recognises and silently omits the others, which is the same
+defect as the internal-link checker that matched only `href="/…"` and passed
+fifteen relative links. When a gate enumerates a schema, enumerate every way
+the schema can express the thing — `properties`, `additionalProperties`,
+`items`, `anyOf`, `$ref` — and canary each one.
+
+**Exempting a field *name* globally exempts it everywhere.** The same gate had
+`value` and `uncertainty` in its global `NON_QUANTITY_FIELDS`, because they are
+the members of a `ValueOut` and a `ProvenanceOut`. That also exempted a bare
+`value: float` on any response model that is not a wrapper — the exact
+regression the contract exists to catch — and `SensitivityOut.value` was
+sitting in that hole. The exemption is now scoped to the wrapper that gives the
+name its meaning (`WRAPPER_MEMBERS`), and a bare `uncertainty` planted on
+`EquationOut` fails the gate. An exemption is a claim about *where* a name is
+acceptable, and a set of names cannot express "where".
+
+**An exemption that follows a `$ref` is applied to the wrong model.**
+`ConflictOut` exempts `residual` and `tolerance`; `ConflictReportOut` holds a
+`list[ConflictOut]`. The walker followed the ref and flattened the inner
+model's fields onto the outer one, so every exempt field was re-reported as an
+offender on the model that merely contains it. The walker no longer follows
+refs: it walks the transitive closure one component at a time, and each model
+is judged against its own exemptions. A canary that plants a bare float on a
+deeply nested model (`PrgSummaryOut → UnitReportOut → EquationCheckOut`) still
+fails, so the coverage did not shrink with the flattening.
