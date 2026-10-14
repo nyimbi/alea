@@ -1193,17 +1193,68 @@ def _solved(carbon_price: float = 50.0):
 def test_the_audit_reports_what_it_did_not_check():
 	"""A pass over nothing must not read as a pass over everything.
 
-	The result carries a handful of the graph's twenty-eight derived
-	parameters. An audit that printed "consistent" without saying how many
-	parameters that covered would be a clean bill of health for a result
-	nobody examined.
+	The result supplies three of the graph's parameters and the graph derives
+	twenty-eight; the audit checks the derived parameters those three *reach* and
+	names the rest as not carried. A summary that printed "consistent" without
+	saying how many parameters that covered would be a clean bill of health for a
+	result nobody examined.
+
+	WHY THE COUNTS ARE ASSERTED AND NOT JUST THE PARTITION. ``checked`` was
+	``supplied ∩ derived``, and a solved result supplies only *exogenous*
+	parameters -- a derived value is what the graph computes *for* the result --
+	so the intersection was always empty and the CLI printed "consistent over 0
+	parameter(s)" for an audit that had evaluated eighteen identities. A test
+	asserting only ``checked ∪ skipped == derived`` passes on that version, so
+	both counts are pinned.
 	"""
 	from alea.prg.audit import audit_scenario_result
 
 	audit = audit_scenario_result(_solved())
 	assert audit.consistent
-	assert len(audit.skipped) == 28, audit.skipped
+	assert len(audit.checked) == 18, audit.checked
+	assert len(audit.skipped) == 10, audit.skipped
+	# The partition is exhaustive: every derived parameter is either checked or
+	# named as not carried, so the two counts are the whole of the graph's
+	# derived set and neither can shrink unnoticed.
+	assert not (set(audit.checked) & set(audit.skipped))
 	assert "not carried" in audit.summary()
+
+
+def test_an_audit_that_cannot_run_is_not_a_pass():
+	"""A propagation that raises must read as a refusal, never as agreement.
+
+	WHY THIS IS THE MOST IMPORTANT ASSERTION IN THE SEAM. The audit is a
+	secondary check on a result a solve already produced. The graph can decline
+	to have an opinion -- the capture-price feedback loop has no root in its
+	(0, 1) bracket once the VRE build-out passes the fleet's total capacity --
+	and the two obvious ways to write that are both wrong. Letting the exception
+	escape destroys a valid solve's answer inside a check that was never the
+	answer; swallowing it reports an unevaluated check as a pass, which is the
+	defect this repo has paid for most often.
+
+	``consistent`` is False on the failure path even though ``violations`` is
+	empty, because a check that did not run is not a check that passed. A
+	version returning ``consistent=True`` here would print a clean bill of
+	health for a scenario nobody examined.
+
+	The trigger is a plausible one, not a contrived one: a sweep over VRE
+	capacity crosses this boundary, and ``vre_capacity_mw`` above
+	``total_capacity_mw`` is a build-out the graph's own identity cannot express.
+	"""
+	from alea.prg.audit import audit_scenario_result
+
+	# At the fleet's own capacity the loop still has a root.
+	assert audit_scenario_result(_solved(), overrides={"vre_capacity_mw": 10000.0}).ran
+
+	audit = audit_scenario_result(_solved(), overrides={"vre_capacity_mw": 40000.0})
+	assert not audit.ran, "the loop found a root it should not have"
+	assert audit.failure, "a check that did not run must say why"
+	assert not audit.consistent, "an audit that could not run read as a pass"
+	assert audit.violations == (), "a failure is not a violation of an identity"
+	assert "not run" in audit.summary(), audit.summary()
+	# The whole derived set is named as unexamined: a partial count here would
+	# understate how much of the graph went unread.
+	assert len(audit.skipped) == 28, audit.skipped
 
 
 def test_the_audit_finds_an_unfinanceable_scenario_the_engine_solved():

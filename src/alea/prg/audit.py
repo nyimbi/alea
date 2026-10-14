@@ -27,6 +27,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from alea.prg.dsl import DslError
+from alea.prg.feedback import FeedbackError
 from alea.prg.graph import ParameterGraph, Violation, load_graph
 
 __all__ = [
@@ -55,6 +57,28 @@ class ScenarioAudit:
 	violations: tuple[Violation, ...]
 	excursions: dict[str, float]
 
+	failure: str = ""
+	"""Why the audit could not run, or ``""`` when it did.
+
+	WHY this is a field and not an exception. The audit is a *secondary* check
+	run against a result the solve already produced. When the graph cannot
+	propagate the result's parameters -- the feedback loop has no root at the
+	result's scale, a supplied value falls outside every bracket the solver will
+	search -- the propagation raises, and a version that let it propagate would
+	destroy a valid solve's answer in a check that was never the answer. The
+	failure is a fact about the *check*, so it travels on the check.
+
+	It is deliberately not folded into ``violations``: a violation is a
+	disagreement between the result and the graph, and this is the graph declining
+	to have an opinion. ``consistent`` is False either way, because a check that
+	could not run is not a check that passed.
+	"""
+
+	@property
+	def ran(self) -> bool:
+		"""Whether the graph was able to evaluate the result at all."""
+		return not self.failure
+
 	@property
 	def consistent(self) -> bool:
 		"""Whether every parameter that *was* checked agrees.
@@ -68,10 +92,18 @@ class ScenarioAudit:
 		``check_scenario`` excludes it: it is a reported correlation, and
 		breaking one is a finding about the result rather than a disagreement
 		with it. The finding stays in ``violations``.
+
+		``False`` when the audit did not run: an unevaluated check is not a pass,
+		and the whole point of carrying ``failure`` is that this cannot read as
+		one.
 		"""
+		if self.failure:
+			return False
 		return not any(violation.blocks for violation in self.violations)
 
 	def summary(self) -> str:
+		if self.failure:
+			return f"not run: {self.failure}"
 		if self.consistent:
 			tail = (
 				f"; {len(self.violations)} informational finding(s)"
@@ -160,9 +192,37 @@ def audit_scenario_result(
 	# restatement of that rule, and the first version of it was wrong in
 	# exactly that way -- it demanded values for the loop variables, which the
 	# solver starts from their own `initial`.
-	propagated = g.propagate(values)
+	#
+	# A propagation that *raises* is caught and recorded rather than allowed to
+	# escape. The audit runs against a result a solve already produced, and the
+	# graph can decline to have an opinion: a feedback loop with no root at the
+	# result's scale, a supplied value outside every bracket the solver will
+	# search. Letting that propagate would destroy a valid answer inside a check
+	# that was never the answer, and swallowing it would report the unevaluated
+	# check as a pass. Neither is acceptable, so the failure is carried.
+	try:
+		propagated = g.propagate(values)
+	except (FeedbackError, DslError) as exc:
+		return ScenarioAudit(
+			checked=(),
+			skipped=tuple(sorted(g.order())),
+			violations=(),
+			excursions={},
+			failure=f"{type(exc).__name__}: {exc}",
+		)
+
 	derived = set(g.order())
-	checked = tuple(sorted(name for name in supplied if name in derived))
+	# ``checked`` is the derived parameters the result's supplied values
+	# *determine* -- the ones the graph computed from what it was handed, and
+	# whose identities were therefore evaluated. It is deliberately not
+	# ``supplied ∩ derived``: a solved result supplies exogenous parameters
+	# (``total_capacity_mw``, the carbon price, the growth rate), never derived
+	# ones, because a derived value is what the graph computes *for* the result.
+	# The intersection was therefore always empty, and the CLI printed
+	# "consistent over 0 parameter(s)" for an audit that had in fact evaluated
+	# every identity the result's inputs reach. The reach is the honest count.
+	reach = set(g.affected_by(supplied)) if supplied else set()
+	checked = tuple(sorted(reach & derived))
 	skipped = tuple(sorted(derived - set(checked)))
 	return ScenarioAudit(
 		checked=checked,
