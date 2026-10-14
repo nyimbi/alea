@@ -28,7 +28,7 @@ from alea.whatif.cache import (
 )
 from alea.whatif.extract import extract
 from alea.whatif.params import ScenarioParameters
-from alea.whatif.service import DEFAULT_CODE_VERSION, WhatIfEngine
+from alea.whatif.service import DEFAULT_CODE_VERSION, PrgSolve, WhatIfEngine
 from alea.whatif.store import (
 	ScenarioStoreError,
 	latest_version,
@@ -60,6 +60,7 @@ __all__ = [
 	"FRONTIER_COLUMNS",
 	"FRONTIER_VALUE_COLUMNS",
 	"FrontierPoint",
+	"PrgSolve",
 	"RiskMetrics",
 	"ScenarioParameters",
 	"ScenarioRecord",

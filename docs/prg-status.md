@@ -19,7 +19,7 @@ the code and `config/prg.yaml` are the authority, and this says where to look.
 | Feedback | `src/alea/prg/feedback.py` | Tarjan SCC detection, Gauss–Seidel with damping, convergence on the residual `consistency` checks, a divergence-vs-oscillation diagnostic when it fails |
 | Library | `src/alea/prg/library.py` | The 16 systems, the spec→system mapping, and the coverage register |
 | Service | `src/alea/prg/service.py` | `graph_summary`, `check_scenario`, `propagate_change`, `describe` |
-| Result audit | `src/alea/prg/audit.py` | Audit a *solved* what-if result against the graph's identities |
+| Result audit | `src/alea/prg/audit.py` | Audit a *solved* what-if result against the graph's identities. `checked` is what the result's inputs *reach*, and `failure` carries a propagation that could not run — two fields whose first versions both lied in the direction that reads as a pass |
 | Sensitivity | `src/alea/prg/sensitivity.py` | Exact forward-mode derivatives over the topological order; the implicit function theorem for loop variables; elasticity |
 | Incremental propagation | `src/alea/prg/graph.py` | `propagate_incremental`: the closure of what changed, 9x a full walk, skipping a feedback loop nothing reached |
 | Uncertainty | `src/alea/prg/uncertainty.py` | The declared stochastic inputs, the closure over `affects`, and the reach into derived parameters |
@@ -27,13 +27,14 @@ the code and `config/prg.yaml` are the authority, and this says where to look.
 | Conflict detection | `src/alea/prg/conflicts.py` | The four kinds (direct, over-determined, under-determined, loop, out-of-range), ranked, with corrections |
 | Cross-validation | `src/alea/prg/crossval.py` | §25's multi-parameter rules: a parsed condition, three severities, and the register of rules that could not be evaluated |
 | Edge strength | `src/alea/prg/graph.py` | The declared `hard`/`soft`/`informational` tier, read by `consistency`, `conflicts`, the audit and the CLI gate |
-| Translation | `src/alea/prg/translate.py` | Three declared routes from a PRG parameter to a what-if knob, and the register of the other fifty |
+| Translation | `src/alea/prg/translate.py` | Three declared routes from a PRG parameter to a what-if knob, the register of the other fifty, and the three refusals that name a key reaching no knob — a typo, a derived value, an uncarried parameter |
+| PRG-driven solve | `src/alea/whatif/service.py` | `WhatIfEngine.solve_from_prg` + `PrgSolve`: the production caller the translation layer had none of — translate, solve, audit, with the dropped parameters carried on the payload |
 | Constraints | `src/alea/prg/constraints.py` | The equation→constraint half of Part X: the two inequalities that bind a linopy solve, and the four that are post-solve checks instead |
 | API | `src/alea/api/routes/prg.py` | Five routes: `GET /prg/summary`, `GET /prg/equations`, `POST /prg/conflicts`, `POST /prg/sensitivity`, `POST /prg/cross-validation` |
 | The graph | `config/prg.yaml` | 84 parameters, 37 equations, 84 edges, 1 feedback loop |
 
 Commands: `alea prg summary|equations|check|propagate|conflicts|sensitivity|units|constraints|audit`,
-and `alea expr render|eval|diff|simplify|solve`.
+`alea whatif scenario`, and `alea expr render|eval|diff|simplify|solve`.
 
 The two reads are public and the three computations are analyst-tier. Every
 response carries its registers: `/prg/summary` reports how many equations the
@@ -226,6 +227,16 @@ after `views.py` said the graph did not make it.
   `hydrogen_export_twh_per_year`). A scenario pulling one of those cannot be
   audited against the graph, because the graph does not know the quantity
   moved.
+
+  **The three routes were, until 2026-10-14, reached by no production caller.**
+  That is the register's own defect class — declared is not produced — applied
+  to the register itself: `translate.py` was written, tested, and imported by
+  nothing but its own test file, so "three of fifty-three" counted a route no
+  solve walked and the honest figure was zero. `WhatIfEngine.solve_from_prg`
+  and `alea whatif scenario` are the seam; the count of reachable routes is now
+  three. The gap it leaves is unchanged and still the larger one: three of
+  fifty-three *reachable* is not the graph driving the solver, it is the graph
+  nudging three knobs of a solver whose structure it does not set.
 - **The energy balance is single-region.** One demand, one generation total. A
   PyPSA network balances per bus and per hour and the solved result carries no
   nodal frame, so the audit cannot assert the balance against it. The audit
@@ -457,3 +468,49 @@ the second assertion failed because the solve had erased the finding. The tier
 is real; the path that reaches it is narrower than the name suggests, and the
 test now says which path it does and does not reach rather than asserting a
 property the shipped graph does not have.
+
+**An intersection with the derived set is empty by construction.** The audit
+reported `checked = supplied ∩ derived`, and a solved result supplies only
+*exogenous* parameters — `total_capacity_mw`, the carbon price, the growth rate
+— because a derived value is what the graph computes *for* the result. The
+intersection was therefore always empty, and `alea prg audit` printed
+"consistent over 0 parameter(s)" for an audit that had evaluated eighteen
+identities. The count was wrong in the direction that reads as a clean bill of
+health, and a test asserting only `checked ∪ skipped == derived` passes on it,
+which is why the corrected counts (18 and 10) are pinned individually. The
+honest count is the *reach*: `affected_by(supplied) ∩ derived`. When a set
+intersection is the denominator of a report, check it is not empty for the
+reason the report is supposed to have a number in it.
+
+**A check that cannot run must not be allowed to crash its caller, and must not
+be allowed to pass.** The audit propagates a solved result's parameters through
+the graph, and the graph can decline to have an opinion: the capture-price
+feedback loop has no root in its `(0, 1)` bracket once the VRE build-out passes
+the fleet's total capacity. Letting the exception escape destroys a valid
+solve's answer inside a check that was never the answer; catching it and
+returning `consistent=True` reports an unevaluated check as a pass. Both are
+wrong, so the failure travels on the audit as a `failure` field, `consistent`
+is `False` whenever it is set, and the canary removes the guard and watches the
+test fail on `assert not audit.consistent`.
+
+**A name that is not in the graph is neither translated nor untranslated, so a
+register filtered on either is blind to it.** `to_scenario_parameters` skipped
+any key that was not a settable graph parameter, and under `strict` — the
+default — it skipped it *silently*: a misspelt `--set carbon_price_usd_per_ton=200`
+solved, returned a plausible objective, and moved nothing. The strict path
+exists precisely to prevent that, and it had a hole exactly the width of a typo.
+Three classes of key reach no knob, and each now carries its own message,
+because one message sends an author to the wrong fix: `unknown` is a string the
+graph does not declare (a typo — and calling a real parameter one is itself a
+false statement); `derived` is a graph parameter the graph *computes*, which
+`propagate` overwrites, so setting it changes nothing and the fix is to set what
+determines it; `skipped` is a settable graph parameter the engine has no knob
+for, which is the only one whose fix is to widen the engine. The first two are
+the reason the loose path's register had the same hole from the other side —
+`solve_from_prg` built `dropped` by filtering on `untranslated()`, which
+enumerates the graph's *own settable* parameters, so a typo and a derived value
+were in neither `translated()` nor `untranslated()` and both were reported as
+cleanly carried. The register is now the complement of `translated()`. The
+general shape, and the third instance in this file: **a set built by enumerating
+the graph cannot name what is not in the graph**, and a filter written from it
+fails open toward "clean".

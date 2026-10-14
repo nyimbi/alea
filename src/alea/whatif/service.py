@@ -17,20 +17,25 @@ like it did not.
 from __future__ import annotations
 
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pypsa
 
 from alea import __version__
 from alea.io.artefacts import sha256_file
 from alea.logging import get_logger
+from alea.prg.audit import ScenarioAudit, audit_scenario_result, fleet_intensity_gap
 from alea.whatif.apply import apply_parameters
 from alea.whatif.cache import SolveCache, cache_key, solve_fingerprint
 from alea.whatif.extract import extract
 from alea.whatif.params import ScenarioParameters
 from alea.whatif.views import RiskMetrics, ScenarioResult, SolveOutcome
+
+if TYPE_CHECKING:  # pragma: no cover - typing only
+	from alea.prg.graph import ParameterGraph
 
 logger = get_logger(__name__)
 
@@ -51,6 +56,67 @@ risk physics is Layer 3's.
 """
 
 DEFAULT_CODE_VERSION = __version__
+
+
+@dataclass(frozen=True)
+class PrgSolve:
+	"""A solve driven by the graph's parameters, with what the graph made of it.
+
+	Four things travel together and none is derivable from the others:
+
+	* ``outcome`` -- the solve, and whether the cache served it;
+	* ``parameters`` -- the engine knobs the translation produced, so a caller
+	  can see *what* was applied rather than what was asked for;
+	* ``audit`` -- the graph's verdict on the solved result, with the count of
+	  parameters the result did not carry;
+	* ``dropped`` -- the parameters the caller set that reached no knob.
+
+	``dropped`` is empty on the strict path, which is the default: the refusal
+	happens inside the translation and no solve is attempted. It is non-empty
+	only when the caller asked for ``strict=False``, and it is carried rather
+	than logged because a dropped parameter is the difference between an answer
+	to the question asked and an answer to a question the engine could express.
+	"""
+
+	outcome: SolveOutcome
+	parameters: ScenarioParameters
+	audit: ScenarioAudit
+	intensity_gap: dict[str, float]
+	dropped: tuple[str, ...] = field(default=())
+
+	@property
+	def result(self) -> ScenarioResult:
+		return self.outcome.result
+
+	@property
+	def consistent(self) -> bool:
+		"""Whether the graph accepted the result over the parameters it carried.
+
+		Not a verdict on the scenario: ``audit.consistent`` says nothing about the
+		parameters in ``audit.skipped``, and a caller reading this as a bill of
+		health is reading a statement about the checked set as one about the
+		result. :meth:`summary` carries the counts for exactly that reason.
+		"""
+		return self.audit.consistent
+
+	def summary(self) -> str:
+		parts = [self.audit.summary()]
+		if self.dropped:
+			parts.append(
+				f"{len(self.dropped)} parameter(s) reached no engine knob and were "
+				f"dropped: {', '.join(self.dropped)}"
+			)
+		if self.outcome.from_cache:
+			parts.append("served from cache")
+		return "; ".join(parts)
+
+
+def _default_graph() -> ParameterGraph:
+	"""The shipped graph. Imported lazily so this module stays importable
+	without the YAML file present, which a stub-solver cache test relies on."""
+	from alea.prg import load_graph
+
+	return load_graph()
 
 
 class WhatIfEngine:
@@ -220,6 +286,76 @@ class WhatIfEngine:
 		from alea.whatif.sweep import sweep_parameter
 
 		return sweep_parameter(self, param_name, values, template or ScenarioParameters())
+
+	# ------------------------------------------------------------------
+	# PRG-driven scenarios
+	# ------------------------------------------------------------------
+
+	def solve_from_prg(
+		self,
+		values: Mapping[str, float],
+		*,
+		graph: ParameterGraph | None = None,
+		strict: bool = True,
+		force: bool = False,
+	) -> PrgSolve:
+		"""Solve a scenario stated in the graph's parameters, and audit it.
+
+		WHY this method exists. ``alea.prg.translate`` was written, tested, and
+		reachable from nothing: its two directions were called only by
+		``tests/ci/test_prg_translate.py``, so the register it prints -- "three of
+		fifty-three settable parameters reach a what-if knob" -- described a route
+		no production caller walked. The graph could not drive a solve at all, and
+		the number reported a capability that was, in the sense that matters, zero.
+		This is that route: the caller states a scenario in the *graph's* names,
+		the translation maps what it can onto the engine's knobs, and the result is
+		audited against the graph's own identities.
+
+		The network is in hand here, which is what makes the ratio direction
+		possible at all -- ``fuel_price_usd_per_mwh`` is an absolute price the
+		engine applies as a factor over the network's base gas cost, and there is
+		no factor without the base. ``to_scenario_parameters`` refuses rather than
+		defaulting the factor to 1.0, because a defaulted factor runs, reports the
+		parameter as applied, and applies nothing.
+
+		``strict`` is passed through and defaults to refusing: a scenario that sets
+		a parameter the engine cannot carry is a scenario whose answer does not
+		answer the question asked, and the refusal names the parameter. A caller
+		who wants the drop can ask for it, and :class:`PrgSolve` then carries the
+		register of what was dropped so the drop is not silent.
+		"""
+		from alea.prg.translate import to_scenario_parameters, translated
+
+		g = graph if graph is not None else _default_graph()
+		params = to_scenario_parameters(g, values, self._base, strict=strict)
+		# Everything the caller set that reached no knob, which is three findings
+		# under one register: a settable graph parameter the engine has no knob
+		# for, a graph parameter the graph itself computes (so `propagate`
+		# overwrites whatever is set), and a string that is not a graph parameter
+		# at all. The last two are the ones that would otherwise vanish --
+		# `untranslated()` enumerates the graph's own settable parameters, so it
+		# can name neither -- and a register filtered on it would report a typo,
+		# or a derived value, as cleanly carried.
+		reached = set(translated(g))
+		dropped = tuple(sorted(name for name in values if name not in reached))
+		outcome = self.solve_with_outcome(params, force=force)
+		audit = audit_scenario_result(outcome.result, g, overrides=dict(values))
+		gap = fleet_intensity_gap(outcome.result, g)
+		logger.info(
+			"whatif.prg.solved",
+			cache_key=outcome.cache_key[:12],
+			from_cache=outcome.from_cache,
+			translated=len(values) - len(dropped),
+			dropped=len(dropped),
+			consistent=audit.consistent,
+		)
+		return PrgSolve(
+			outcome=outcome,
+			parameters=params,
+			audit=audit,
+			intensity_gap=gap,
+			dropped=dropped,
+		)
 
 
 # --------------------------------------------------------------------------

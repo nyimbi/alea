@@ -35,7 +35,11 @@ app = typer.Typer(
 config_app = typer.Typer(no_args_is_help=True, help="Inspect and validate configuration.")
 registry_app = typer.Typer(no_args_is_help=True, help="Inspect the country and technology registries.")
 quality_app = typer.Typer(no_args_is_help=True, help="Validation coverage and the unverified register.")
-whatif_app = typer.Typer(no_args_is_help=True, help="What-if scenario cache maintenance.")
+whatif_app = typer.Typer(
+	no_args_is_help=True,
+	help="What-if scenarios: solve one stated in the graph's parameters, and "
+	"maintain the solve cache.",
+)
 validate_app = typer.Typer(
 	no_args_is_help=True,
 	help="Measure an approximation and record it, so a gate can read the measurement.",
@@ -777,6 +781,122 @@ def whatif_gc(
 		typer.echo(f"{verb} {len(removed)} of {before} entries under {root}")
 		for key in removed:
 			typer.echo(f"  {key[:12]}")
+
+
+@whatif_app.command("scenario")
+def whatif_scenario(
+	network: Annotated[Path, typer.Option("--network", help="Base network to re-solve.")],
+	set_: Annotated[
+		list[str] | None,
+		typer.Option(
+			"--set",
+			help="A PRG parameter: --set carbon_price_usd_per_tco2=120. Repeatable.",
+		),
+	] = None,
+	name: Annotated[
+		str | None,
+		typer.Option("--name", help="Store the solved scenario under this name."),
+	] = None,
+	force: Annotated[
+		bool, typer.Option("--force", help="Re-solve even when the cache holds this scenario.")
+	] = False,
+	loose: Annotated[
+		bool,
+		typer.Option(
+			"--loose",
+			help="Drop parameters the engine cannot carry instead of refusing.",
+		),
+	] = False,
+) -> None:
+	"""Solve a scenario stated in the graph's parameters, and audit the result.
+
+	This is the route `alea.prg.translate` never had. The translation layer was
+	written, tested, and called by nothing but its own test file, so the register
+	it prints -- "three of fifty-three settable parameters reach a what-if knob"
+	-- described a path no production caller walked, and the graph could not drive
+	a solve at all. Here a scenario is stated in the *graph's* names, the
+	translation maps what it can onto the engine's knobs, the engine solves, and
+	the solved result is audited against the graph's own identities.
+
+	**Refuses by default.** A parameter the engine cannot carry is named and the
+	run exits non-zero rather than solving a scenario whose answer is to a
+	different question. `--loose` drops it and prints what it dropped: the drop is
+	then a stated fact rather than a silent one.
+
+	The audit is the point of going through the graph at all. `alea prg audit`
+	checks a *stored* scenario after the fact; this is the same check run on the
+	result the solve just produced, so a scenario that the graph rejects is
+	rejected in the same command that computed it.
+	"""
+	from alea.config.paths import resolve
+	from alea.whatif.cache import DEFAULT_CACHE_ROOT
+	from alea.whatif.service import WhatIfEngine
+
+	values = _parse_prg_values(set_)
+	with _run("cli.whatif.scenario", network=str(network), parameters=len(values)) as run:
+		engine = WhatIfEngine(network, cache_root=resolve(DEFAULT_CACHE_ROOT))
+		try:
+			solved = engine.solve_from_prg(values, strict=not loose, force=force)
+		except ValueError as exc:
+			# The translation's own refusal, which names the parameter. Caught and
+			# re-raised as a clean CLI error rather than a traceback: the message is
+			# the finding, and a stack trace buries it.
+			typer.secho(f"{exc}", fg=typer.colors.RED, err=True)
+			raise typer.Exit(code=2) from exc
+
+		typer.echo(f"solved: objective={solved.result.total_cost_usd:,.0f}")
+		typer.echo(
+			f"applied {len(values) - len(solved.dropped)} of {len(values)} parameter(s); "
+			f"{solved.summary()}"
+		)
+		if solved.dropped:
+			typer.secho(
+				f"dropped: {', '.join(solved.dropped)}",
+				fg=typer.colors.YELLOW,
+				err=True,
+			)
+
+		if name:
+			from alea.whatif.store import save_scenario
+
+			path = save_scenario(
+				name,
+				solved.parameters,
+				solved.result,
+				engine.network_checksum,
+				engine.code_version,
+				notes=f"PRG-driven: {', '.join(f'{k}={v}' for k, v in sorted(values.items()))}",
+			)
+			run.record(path)
+			typer.echo(f"stored {name}: {path}")
+
+		# Non-zero on a violation, so the command gates the way `prg check` and
+		# `prg audit` do. A result the graph rejects is not a result to build on.
+		if not solved.consistent:
+			raise typer.Exit(code=1)
+
+
+def _parse_prg_values(pairs: list[str] | None) -> dict[str, float]:
+	"""``--set name=value`` pairs, as a float mapping.
+
+	Separate from ``_parse_parameters``, which serves the *stage* commands and
+	uses ``json.loads`` so a value can be a list or a dict. A PRG parameter is a
+	scalar, and a command that accepted ``--set x=[1,2]`` would pass a list to a
+	graph that propagates floats. So the value is parsed as a float and anything
+	else is refused with the pair named.
+	"""
+	values: dict[str, float] = {}
+	for pair in pairs or []:
+		key, separator, raw = pair.partition("=")
+		if not separator or not key.strip():
+			raise typer.BadParameter(f"--set expects NAME=VALUE, got {pair!r}")
+		try:
+			values[key.strip()] = float(raw)
+		except ValueError as exc:
+			raise typer.BadParameter(
+				f"--set {pair!r}: a PRG parameter is a number, got {raw!r}"
+			) from exc
+	return values
 
 
 @validate_app.command("aggregation")
