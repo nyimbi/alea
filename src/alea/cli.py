@@ -50,6 +50,11 @@ prg_app = typer.Typer(
 )
 app.add_typer(validate_app, name="validate")
 app.add_typer(prg_app, name="prg")
+expr_app = typer.Typer(
+	no_args_is_help=True,
+	help="Write a formula once and create, render, differentiate, simplify or solve it.",
+)
+app.add_typer(expr_app, name="expr")
 
 ConfigOption = Annotated[
 	Path | None,
@@ -1075,3 +1080,148 @@ def main() -> None:
 
 if __name__ == "__main__":  # pragma: no cover
 	main()
+
+@expr_app.command("render")
+def expr_render(
+	formula: Annotated[str, typer.Argument(help="The formula, in the DSL.")],
+	as_: Annotated[
+		str, typer.Option("--as", help="unicode, latex, mathml, or source.")
+	] = "unicode",
+	values: SetOption = None,
+) -> None:
+	"""Render a formula. The created and rendered forms are the same object.
+
+	Rendering does not evaluate, so a formula with free parameters renders
+	without values. Passing ``--set`` substitutes them first, which is how a
+	general relation is turned into the specific one a report quotes.
+	"""
+	from alea.prg.dsl import parse
+
+	with _run("cli.expr.render"):
+		expression = parse(formula)
+		for override in values or []:
+			key, _, raw = override.partition("=")
+			expression = expression.subs({key: float(raw)})
+		rendered = {
+			"unicode": expression.unicode,
+			"latex": expression.latex,
+			"mathml": expression.mathml,
+			"source": expression.source,
+		}
+		if as_ not in rendered:
+			typer.secho(
+				f"--as must be one of {sorted(rendered)}, got {as_!r}",
+				fg=typer.colors.RED,
+				err=True,
+			)
+			raise typer.Exit(code=2)
+		typer.echo(rendered[as_]())
+
+
+@expr_app.command("eval")
+def expr_eval(
+	formula: Annotated[str, typer.Argument(help="The formula, in the DSL.")],
+	values: SetOption = None,
+) -> None:
+	"""Evaluate a formula against a parameter set."""
+	from alea.prg.dsl import parse
+
+	with _run("cli.expr.eval"):
+		expression = parse(formula)
+		scoped: dict[str, float] = {}
+		for override in values or []:
+			key, _, raw = override.partition("=")
+			scoped[key] = float(raw)
+		missing = sorted(expression.symbols - set(scoped))
+		if missing:
+			typer.secho(
+				f"the formula names {missing}, which --set does not provide; an "
+				f"expression with free parameters has no single value",
+				fg=typer.colors.RED,
+				err=True,
+			)
+			raise typer.Exit(code=2)
+		typer.echo(f"{expression.eval(scoped):.10g}")
+
+
+@expr_app.command("diff")
+def expr_diff(
+	formula: Annotated[str, typer.Argument(help="The formula, in the DSL.")],
+	with_respect_to: Annotated[str, typer.Argument(help="The symbol to differentiate by.")],
+	as_: Annotated[str, typer.Option("--as", help="unicode, latex, or source.")] = "source",
+) -> None:
+	"""Differentiate a formula symbolically."""
+	from alea.prg.dsl import parse
+
+	with _run("cli.expr.diff"):
+		expression = parse(formula)
+		if with_respect_to not in expression.symbols:
+			typer.secho(
+				f"{with_respect_to!r} does not appear in the formula, so the "
+				f"derivative is identically zero and says nothing",
+				fg=typer.colors.RED,
+				err=True,
+			)
+			raise typer.Exit(code=2)
+		derivative = expression.diff(with_respect_to)
+		typer.echo(
+			{"unicode": derivative.unicode, "latex": derivative.latex, "source": derivative.source}[
+				as_
+			]()
+		)
+
+
+@expr_app.command("simplify")
+def expr_simplify(
+	formula: Annotated[str, typer.Argument(help="The formula, in the DSL.")],
+) -> None:
+	"""Simplify a formula, keeping it a formula."""
+	from alea.prg.dsl import parse
+
+	with _run("cli.expr.simplify"):
+		typer.echo(parse(formula).simplify().source())
+
+
+@expr_app.command("solve")
+def expr_solve(
+	formula: Annotated[str, typer.Argument(help="The formula, in the DSL.")],
+	unknown: Annotated[str, typer.Argument(help="The symbol to solve for.")],
+	bracket: Annotated[
+		str,
+		typer.Option("--bracket", help="Search interval, as LOW,HIGH."),
+	],
+	values: SetOption = None,
+	equals: Annotated[float, typer.Option("--equals", help="The value the formula takes.")] = 0.0,
+) -> None:
+	"""Solve a formula for one unknown, numerically, within a bracket.
+
+	The bracket is required and not guessed. Only the caller knows the range
+	the answer is admissible over: a capacity factor lives in ``[0, 1]`` and a
+	carbon price does not, and a solver handed a wide interval finds whichever
+	root it meets first -- which is how a learning curve yields a negative cost.
+	"""
+	from alea.prg.dsl import parse, solve_for
+
+	with _run("cli.expr.solve"):
+		low_raw, _, high_raw = bracket.partition(",")
+		if not high_raw:
+			typer.secho(
+				f"--bracket needs LOW,HIGH, got {bracket!r}", fg=typer.colors.RED, err=True
+			)
+			raise typer.Exit(code=2)
+		scoped: dict[str, float] = {}
+		for override in values or []:
+			key, _, raw = override.partition("=")
+			scoped[key] = float(raw)
+		try:
+			answer = solve_for(
+				parse(formula),
+				unknown,
+				scoped,
+				bracket=(float(low_raw), float(high_raw)),
+				residual=equals,
+			)
+		except Exception as exc:
+			typer.secho(f"cannot solve: {exc}", fg=typer.colors.RED, err=True)
+			raise typer.Exit(code=1) from exc
+		typer.echo(f"{answer:.10g}")

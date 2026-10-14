@@ -735,3 +735,94 @@ def test_an_equation_with_no_root_at_all_is_still_an_error(
 	# `x**2 + 1` has no real root, so no bracket contains one.
 	residual = parse("project_gearing_dscr ** 2 + 1")
 	assert graph._widen(residual, "project_gearing_dscr", scoped, (-20.0, 20.0)) is None
+
+
+# ---------------------------------------------------------------------------
+# The DSL's door: `alea expr`
+# ---------------------------------------------------------------------------
+
+
+def _expr(*args: str):
+	from typer.testing import CliRunner
+
+	from alea.cli import app
+
+	return CliRunner().invoke(app, ["expr", *args])
+
+
+def test_the_expr_commands_are_reachable():
+	"""The DSL had no entry point; a formula language nobody can type is a library.
+
+	Asserted through the runner rather than by importing the functions, because
+	the defect class is registration: a command defined and never mounted is
+	unreachable from the shell, and nothing else in the suite would notice.
+	"""
+	for command in ("render", "eval", "diff", "simplify", "solve"):
+		result = _expr(command, "--help")
+		assert result.exit_code == 0, f"{command}: {result.output}"
+
+
+def test_render_evaluates_nothing_and_eval_renders_nothing():
+	"""The three lives of a formula, each reachable without the others.
+
+	Rendering a formula with free parameters must succeed -- it is a
+	*relation*, and demanding values for it would make the general form
+	unquotable. Evaluating one with free parameters must fail, because a
+	relation has no single value.
+	"""
+	rendered = _expr("render", "capex * crf + fuel", "--as", "unicode")
+	assert rendered.exit_code == 0, rendered.output
+	assert "capex" in rendered.stdout
+
+	unbound = _expr("eval", "capex * crf + fuel", "--set", "capex=1200")
+	assert unbound.exit_code == 2, unbound.output
+
+	bound = _expr("eval", "capex * crf + fuel", "--set", "capex=1200", "--set", "crf=0.1", "--set", "fuel=40")
+	assert bound.exit_code == 0, bound.output
+	assert float(bound.stdout.strip()) == pytest.approx(160.0)
+
+
+def test_the_cli_differentiates_and_solves_the_same_objects_the_kernel_does():
+	"""The door and the kernel agree, because there is one implementation."""
+	derivative = _expr("diff", "x ** 3 + 2 * x", "x", "--as", "source")
+	assert derivative.exit_code == 0, derivative.output
+	assert derivative.stdout.strip() == parse("3 * x ** 2 + 2").source()
+
+	solved = _expr(
+		"solve", "lcoe - (capex * crf + fuel)", "capex",
+		"--bracket", "0,5000",
+		"--set", "lcoe=100", "--set", "crf=0.1", "--set", "fuel=40",
+	)
+	assert solved.exit_code == 0, solved.output
+	assert float(solved.stdout.strip()) == pytest.approx(600.0)
+
+
+def test_a_solve_with_no_root_exits_non_zero_with_the_bracket_named():
+	"""A solve that cannot answer must say so, not print a bound as the answer."""
+	result = _expr("solve", "x ** 2 + 1", "x", "--bracket", "-10,10")
+	assert result.exit_code == 1
+	assert "no root" in result.output
+
+
+def test_a_list_of_hourly_values_evaluates_as_an_array():
+	"""A CSV column is a list, and `eval_array` must accept one.
+
+	The signature says ``Any``; a caller holding a list of hourly values got
+	`TypeError: can't multiply sequence by non-int of type 'float'` from inside
+	the evaluator, about a value the signature invited them to pass.
+	"""
+	expression = parse("x * 2 + 1")
+	from_list = expression.eval_array({"x": [1.0, 2.0, 3.0]})
+	assert list(from_list) == [3.0, 5.0, 7.0]
+	# And a tuple, which is what a row of a CSV reader is.
+	assert list(expression.eval_array({"x": (1.0, 2.0, 3.0)})) == [3.0, 5.0, 7.0]
+
+
+def test_a_parameters_times_profile_broadcasts():
+	"""The shape a parameter-times-profile equation needs, which is why it is not a float."""
+	import numpy as np
+
+	profile = np.array([0.2, 0.4, 0.6, 0.8])
+	value = parse("capacity * profile").eval_array({"capacity": 100.0, "profile": profile})
+	assert list(value) == [20.0, 40.0, 60.0, 80.0]
+

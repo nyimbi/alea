@@ -327,8 +327,21 @@ class Expr(ABC):
 		time-series ``b`` yields a time series -- which is the shape a
 		parameters-times-profile equation needs and the reason evaluation is
 		not simply a float.
+
+		Sequences are coerced on the way *in*, not on the way out. A caller
+		holding a list of hourly values -- which is what a CSV column is --
+		would otherwise reach ``2.0 * [1.0, 2.0]`` and be told a float cannot
+		multiply a sequence, from inside the evaluator, about a value the
+		caller was told to pass. Coercing here makes the signature's ``Any``
+		mean what a reader takes it to mean.
 		"""
-		return np.asarray(self._eval(values), dtype=float)
+		coerced = {
+			name: np.asarray(value, dtype=float)
+			if isinstance(value, (list, tuple, range))
+			else value
+			for name, value in values.items()
+		}
+		return np.asarray(self._eval(coerced), dtype=float)
 
 	def subs(self, mapping: Mapping[str, Expr | float]) -> Expr:
 		"""Replace named parameters by expressions or numbers."""
