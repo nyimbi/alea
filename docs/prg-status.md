@@ -22,11 +22,12 @@ the code and `config/prg.yaml` are the authority, and this says where to look.
 | Result audit | `src/alea/prg/audit.py` | Audit a *solved* what-if result against the graph's identities |
 | Sensitivity | `src/alea/prg/sensitivity.py` | Exact forward-mode derivatives over the topological order; the implicit function theorem for loop variables; elasticity |
 | Uncertainty | `src/alea/prg/uncertainty.py` | The declared stochastic inputs, the closure over `affects`, and the reach into derived parameters |
+| Units | `src/alea/prg/units.py` | The dimensional check the spec asks for: each equation's two sides against a Pint registry of the graph's vocabulary |
 | Conflict detection | `src/alea/prg/conflicts.py` | The four kinds (direct, over-determined, under-determined, loop, out-of-range), ranked, with corrections |
 | Translation | `src/alea/prg/translate.py` | Three declared routes from a PRG parameter to a what-if knob, and the register of the other fifty |
 | The graph | `config/prg.yaml` | 84 parameters, 37 equations, 84 edges, 1 feedback loop |
 
-Commands: `alea prg summary|equations|check|propagate|conflicts|sensitivity|audit`,
+Commands: `alea prg summary|equations|check|propagate|conflicts|sensitivity|units|audit`,
 and `alea expr render|eval|diff|simplify|solve`.
 
 ## The four conflict kinds
@@ -49,6 +50,36 @@ conflict chains `dF/dx` through the gradient table, so a lever *upstream* of
 the violating equation is offered — the carbon price moves the DSCR through the
 tariff and the cash flow, and a list built from the equation's own parameters
 would offer only the regulator's floor for a conflict the carbon price caused.
+
+## What the dimensional check found
+
+`units.py` decides every equation: 30 of 37 are dimensionally consistent, 7
+are not, and 0 are undecidable. The seven are not seven of one kind, and the
+fix differs by kind — which is why they are listed rather than counted:
+
+| Equation | The mismatch | What it is |
+|---|---|---|
+| `crf_definition` | `1 + discount_rate`, a `1/year` rate | A rate added to the dimensionless `1`. Either `discount_rate` is a fraction and its unit is wrong, or the equation is. |
+| `energy_demand` | `(1 + demand_growth) ** horizon_years` | The same, for the growth rate. |
+| `debt_service_definition` | `(1 + cost_of_debt) ** asset_life` | The same, for the cost of debt. |
+| `rocof_definition` | `MW / MW.s` gives `1/[time]`, the node says `Hz/s` = `1/[time]²` | The standard formula is `ΔP·f₀/(2·E)`; the nominal frequency (50 Hz) is missing. |
+| `emissions_definition` | `TWh · t/MWh = Mt`, the node says `MtCO2/year` | The left side is an annual quantity declared without its per-year divisor. |
+| `hydrogen_water_definition` | `kt/year · m3/kg = m3/year`, the node says `m3` | The same annual-quantity gap. |
+| `premature_deaths_definition` | `people · 1/year · kt/year · 1/kt = 1/year²`, the node says `deaths/year` | The same, and it compounds two per-year factors. |
+
+The three rate cases are one question asked three times: is a `1/year` rate a
+*frequency* (per-year, so it cannot be added to 1) or a *fraction per year*
+(dimensionless, so it can)? The equations use it as a fraction. The units say
+frequency. One of the two is wrong in each equation, and the check cannot say
+which — that is a modelling decision, not a dimensional one. The other four are
+the annual-quantity gap: the graph writes a yearly total in a unit that names
+the year, then divides it by something else that also names a year, and the
+year cancels to a dimension the node does not claim.
+
+None of the seven is reported as a *failure* by any other check, because the
+graph is internally consistent either way — which is exactly the class of error
+a dimensional check exists to catch, and the reason the check was worth adding
+after `views.py` said the graph did not make it.
 
 ## Not built
 
@@ -132,3 +163,23 @@ factor over each gas unit's base marginal cost. Dividing by the current cost
 makes the translation depend on how many times it has already run — the same
 compounding defect `apply.py`'s snapshot exists to prevent — so `translate.py`
 reads that snapshot, and records it if the network has none.
+
+**A canary run with `-k` can miss the test that guards the branch.** I removed
+the symbolic-exponent branch from `units.py`, ran `pytest -k "decidable or
+flagged"`, saw two passes and nearly recorded "the branch is not load-bearing".
+The guarding test is named `test_the_unit_checker_decides_the_graph_without_giving_up`
+— `-k decidable` does not match `decides`, so it never ran, and the two tests
+that did pass were testing something else. Re-run by exact node id
+(`pytest path::test_name`), or assert the count of selected tests equals the
+count you meant to select. A `-k` filter that selects zero of the tests you
+believe are guarding a branch is the same failure as a canary whose patch does
+not apply: the instrument, not the subject, is what lied.
+
+**A dimension declared as a base dimension manufactures its own findings.**
+`DALY` was first declared `[health]`, and `dalys = deaths x years_of_life_lost`
+then read as `[health]` vs `[count]` — a mismatch in the registry, not in the
+graph. A DALY is a person-year. Declaring it `person * year` cleared the
+finding, and the count fell from 8 to 7. Before reporting a dimensional
+finding, check the registry's definition of the unit is not the thing that is
+wrong: the graph's units are a vocabulary, and a wrong entry in the vocabulary
+accuses every equation that uses it.

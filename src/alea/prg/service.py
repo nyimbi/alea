@@ -23,6 +23,7 @@ from alea.prg import translate
 from alea.prg.graph import ParameterGraph, Violation, load_graph
 from alea.prg.library import SYSTEM_IDS, coverage, systems_of
 from alea.prg.uncertainty import register as uncertainty_register
+from alea.prg.units import check_graph as check_units
 from alea.prg.views import Equation
 
 __all__ = [
@@ -90,6 +91,11 @@ def graph_summary(graph: ParameterGraph | None = None) -> dict[str, Any]:
 		# specified: it names the inputs and the reach, and says in the same
 		# breath that a sensitivity is a point derivative, not a distribution.
 		"uncertainty": uncertainty_register(g),
+		# The dimensional check's own coverage. An equation the walker cannot
+		# decide is not a pass, so the summary carries the counts rather than a
+		# boolean: "30 of 37 consistent" is a fact a reader can weigh, and
+		# "consistent" would be a claim the check does not make.
+		"units": check_units(g),
 	}
 
 

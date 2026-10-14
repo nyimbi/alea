@@ -63,6 +63,13 @@ from alea.prg.sensitivity import (
 	sensitivity,
 	sensitivity_table,
 )
+from alea.prg.uncertainty import UncertaintyRegister, register
+from alea.prg.units import (
+	EquationCheck,
+	UnitReport,
+	check_equation,
+	check_graph,
+)
 from alea.prg.views import (
 	Determinism,
 	Direction,
@@ -124,4 +131,10 @@ __all__ = [
 	"solve_for",
 	"suggest_corrections",
 	"sym",
+	"check_equation",
+	"check_graph",
+	"EquationCheck",
+	"UnitReport",
+	"UncertaintyRegister",
+	"register",
 ]

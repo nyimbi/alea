@@ -1904,3 +1904,133 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	text = register(graph).summary()
 	assert "not a distribution" in text
 	assert "13" in text and "22" in text
+
+
+# ---------------------------------------------------------------------------
+# Dimensional consistency
+# ---------------------------------------------------------------------------
+
+
+def _canary_equation(lhs: str, rhs: str):
+	"""An equation built only to be pointed at the dimensional checker."""
+	from alea.prg.views import Equation
+
+	return Equation(
+		id="canary",
+		name="canary",
+		description="a canary, not a claim about the graph",
+		system="cost_accounting",
+		lhs=lhs,
+		rhs=rhs,
+		relation="eq",
+		parameters=[],
+		free_variables=[],
+		determined_variables=[],
+	)
+
+
+def test_the_unit_checker_flags_a_power_against_an_energy(graph: ParameterGraph):
+	"""MW = TWh is a mismatch, and the checker must say so.
+
+	The canary for the whole module: a dimensional check that cannot tell a
+	megawatt from a megawatt-hour is not a check. If this passes the checker is
+	blind, and every "consistent" it reports is unearned.
+	"""
+	from alea.prg.units import check_equation
+
+	check = check_equation(_canary_equation("largest_loss_mw", "generation_twh"), graph)
+	assert check.decidable, "the checker gave up on MW = TWh"
+	assert not check.consistent, "the checker called MW = TWh consistent"
+
+
+def test_the_unit_checker_flags_an_inhomogeneous_sum(graph: ParameterGraph):
+	"""``MW + TWh`` cannot share a dimension, and the mismatch is the finding."""
+	from alea.prg.units import check_equation
+
+	check = check_equation(
+		_canary_equation("largest_loss_mw", "largest_loss_mw + generation_twh"), graph
+	)
+	assert check.decidable, "the checker gave up on MW + TWh"
+	assert not check.consistent, "the checker called MW + TWh consistent"
+
+
+def test_the_unit_checker_passes_a_dimensionally_correct_identity(
+	graph: ParameterGraph,
+):
+	"""``USD/tCO2 * tCO2/MWh = USD/MWh`` is right, and must not be flagged.
+
+	The other half of the canary. A checker that flagged everything would pass
+	the two tests above and be useless; this is the one that fails it.
+	"""
+	from alea.prg.units import check_equation
+
+	check = check_equation(
+		_canary_equation(
+			"carbon_cost_usd_per_mwh",
+			"carbon_price_usd_per_tco2 * emission_factor_t_per_mwh",
+		),
+		graph,
+	)
+	assert check.decidable and check.consistent, check.summary()
+
+
+def test_the_unit_checker_decides_the_graph_without_giving_up(
+	graph: ParameterGraph,
+):
+	"""Every equation is decidable -- no silent hole in the coverage.
+
+	An undecidable equation is not a pass, and a check whose undecidable set
+	grows quietly is a check that stops covering the graph while still
+	reporting a green count. The graph is fully decidable today, and that is
+	the assertion: if a future equation cannot be decided, this fails and the
+	walker gets the branch it is missing.
+	"""
+	from alea.prg.units import check_graph
+
+	report = check_graph(graph)
+	assert report.undecidable == (), [c.summary() for c in report.undecidable]
+	assert len(report.checks) == len(graph.equations)
+
+
+def test_the_unit_report_separates_inconsistent_from_undecidable(
+	graph: ParameterGraph,
+):
+	"""The three sets partition the equations, and none is folded into another."""
+	from alea.prg.units import check_graph
+
+	report = check_graph(graph)
+	total = len(report.consistent) + len(report.inconsistent) + len(report.undecidable)
+	assert total == len(graph.equations)
+	assert "not a pass" in report.summary()
+
+
+def test_the_flagged_equations_are_a_known_set(graph: ParameterGraph):
+	"""The inconsistent set is pinned, so a new one is a failing test.
+
+	Seven equations are flagged today. They are not seven of one kind -- three
+	are the ``(1 + rate)`` convention, one is a missing nominal frequency, and
+	the rest are annual quantities declared without a per-year divisor. This
+	test does not bless them; it makes the set move only when someone means it
+	to, because a count that drifts unnoticed is how a dimensional defect ships.
+	"""
+	from alea.prg.units import check_graph
+
+	report = check_graph(graph)
+	flagged = {check.equation_id for check in report.inconsistent}
+	assert flagged == {
+		"crf_definition",
+		"energy_demand",
+		"debt_service_definition",
+		"rocof_definition",
+		"emissions_definition",
+		"hydrogen_water_definition",
+		"premature_deaths_definition",
+	}, sorted(flagged)
+
+
+def test_the_summary_carries_the_unit_register(graph: ParameterGraph):
+	"""The unit check rides on the summary, so its coverage cannot be missed."""
+	summary = graph_summary(graph)
+	units = summary["units"]
+	assert len(units.checks) == len(graph.equations)
+	assert "not a pass" in units.summary()

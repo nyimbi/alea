@@ -57,6 +57,7 @@ dependencies = [
 	"structlog>=24.1",
 	"matplotlib>=3.8",
 	"joblib>=1.4",
+	"pint>=0.26.1",
 ]
 
 [project.optional-dependencies]

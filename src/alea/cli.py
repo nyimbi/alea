@@ -258,6 +258,7 @@ def prg_summary() -> None:
 		f"a what-if knob ({engine['fraction']:.1%})"
 	)
 	typer.echo(f"uncertainty: {summary['uncertainty'].summary()}")
+	typer.echo(f"units: {summary['units'].summary()}")
 	for issue in summary["structure_issues"]:
 		typer.secho(f"structure: {issue}", fg=typer.colors.YELLOW, err=True)
 
@@ -1327,6 +1328,31 @@ def prg_sensitivity(
 			for name, value in row.largest(top):
 				typer.echo(f"  {name:38s} {value:+12.6g}")
 		typer.echo(f"{parameter} = {propagated.values.get(parameter):.6g} ({row.method})")
+
+
+@prg_app.command("units")
+def prg_units() -> None:
+	"""Check every equation's two sides for a shared dimension.
+
+	Exits non-zero when an equation is inconsistent, so it gates the graph the
+	way `check` gates a scenario. The dimensional claim was a stated gap in
+	`views.py` -- and it is not academic: the graph makes the error in several
+	equations, on identities the carbon budget and the debt schedule are built
+	from. An equation the walker cannot decide is printed separately and does
+	not count as a pass.
+	"""
+	from alea.prg import load_graph
+	from alea.prg.units import check_graph
+
+	with _run("cli.prg.units"):
+		report = check_graph(load_graph())
+		for check in report.inconsistent:
+			typer.secho(check.summary(), fg=typer.colors.RED, err=True)
+		for check in report.undecidable:
+			typer.secho(check.summary(), fg=typer.colors.YELLOW, err=True)
+		typer.echo(report.summary())
+		if report.inconsistent:
+			raise typer.Exit(code=1)
 
 
 @prg_app.command("audit")

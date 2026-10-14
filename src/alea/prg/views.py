@@ -13,19 +13,23 @@ of the relationship, and :meth:`ParameterGraph.structure_issues` asserts the
 YAML's declared lists agree with the derived ones. That is the consistency
 check the PRG exists to perform, applied to itself.
 
-WHY ``unit`` is a string and not a Pint quantity. The specification asks for
-Pint. Pint is not a dependency of this repository, and adding one is a real
-cost -- it changes the solve environment for a check that catches a class of
-error this graph does not currently make. The unit is recorded so that a reader
-and a later dimensional check have it.
+WHY ``unit`` is a string and not a Pint quantity. The unit is recorded as the
+graph spells it -- ``MW.s``, ``m3``, ``MtCO2/year`` -- because it is read by
+people, and the dimensional check in :mod:`alea.prg.units` normalises those
+spellings to what Pint parses rather than asking the graph to spell them Pint's
+way. A ``Quantity`` on the node would carry a scale the node does not have: a
+parameter's unit is the dimension it lives in, and its value is a separate
+field.
 
-WHY there is no dimensional check yet, stated plainly because an earlier
-docstring here claimed one. ``ParameterGraph.structure_issues`` asserts that
-every parameter an equation names carries a recorded unit -- which is a
-completeness check on the metadata, not a dimensional one. It does not check
-that ``MW * hours`` is ``MWh``; nothing here parses a unit string. A reader who
-wants the dimensional claim should treat its absence as a known gap rather than
-as a property this module establishes.
+WHY the dimensional check lives in ``units.py`` and not here. An earlier
+docstring in this module said there was no check because it "catches a class of
+error this graph does not currently make". That was an assumption, and it was
+false: the check finds seven equations whose two sides do not share a
+dimension, including the emissions identity the carbon budget is built from.
+``structure_issues`` still asserts the weaker thing -- that every parameter an
+equation names carries a recorded unit -- which is a completeness check on the
+metadata. The dimensional claim is now established, by ``units.check_graph``,
+and this module no longer disclaims it.
 """
 
 from __future__ import annotations
