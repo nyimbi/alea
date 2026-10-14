@@ -44,7 +44,12 @@ app.add_typer(config_app, name="config")
 app.add_typer(registry_app, name="registry")
 app.add_typer(quality_app, name="quality")
 app.add_typer(whatif_app, name="whatif")
+prg_app = typer.Typer(
+	no_args_is_help=True,
+	help="The Parameter Relationship Graph: consistency, propagation, equations.",
+)
 app.add_typer(validate_app, name="validate")
+app.add_typer(prg_app, name="prg")
 
 ConfigOption = Annotated[
 	Path | None,
@@ -209,6 +214,140 @@ def config_show(
 	with _run("cli.config.show", config=str(config)):
 		loaded = _load(config, scenario, set_)
 		typer.echo(json.dumps(loaded.model_dump(mode="json"), indent=2, sort_keys=True))
+
+
+# --------------------------------------------------------------------------
+# prg
+# --------------------------------------------------------------------------
+
+
+@prg_app.command("summary")
+def prg_summary() -> None:
+	"""Counts, the feedback loops, and the systems the library does not cover."""
+	from alea.prg.service import graph_summary
+
+	summary = graph_summary()
+	typer.echo(
+		f"parameters={summary['parameters']} equations={summary['equations']} "
+		f"edges={summary['edges']} derived={summary['derived']}"
+	)
+	typer.echo(
+		f"systems: {len(summary['systems'])} of {summary['systems_declared']} modelled"
+	)
+	for system_id, count in sorted(summary["systems"].items()):
+		typer.echo(f"  {system_id:20s} {count} equation(s)")
+	if summary["unmodelled_systems"]:
+		typer.echo("not modelled:")
+		for system_id in summary["unmodelled_systems"]:
+			typer.echo(f"  {system_id}")
+	if summary["feedback_loops"]:
+		typer.echo("feedback loops:")
+		for loop in summary["feedback_loops"]:
+			typer.echo(f"  {loop}")
+	for issue in summary["structure_issues"]:
+		typer.secho(f"structure: {issue}", fg=typer.colors.YELLOW, err=True)
+
+
+@prg_app.command("equations")
+def prg_equations(
+	system: Annotated[
+		str | None, typer.Option("--system", help="Only this equation system.")
+	] = None,
+	as_: Annotated[
+		str, typer.Option("--as", help="unicode, latex, or source.")
+	] = "unicode",
+) -> None:
+	"""Render the equation library."""
+	from alea.prg.service import equation_report
+
+	for equation_id, system_id, rendered in equation_report(as_=as_, system=system):
+		typer.echo(f"{equation_id} [{system_id}]")
+		typer.echo(f"    {rendered}")
+
+
+@prg_app.command("check")
+def prg_check(
+	set_: SetOption = None,
+	scenario: ScenarioOption = None,
+	config: ConfigOption = None,
+) -> None:
+	"""Validate a parameter set, propagating the derived parameters first.
+
+	Exits non-zero on any violation, so it can gate a scenario file. The
+	unmodelled systems are printed too: a set that violates nothing is not the
+	same as a set that is consistent, and a check that reported only the first
+	would read as a clean bill of health for a graph that covers a third of the
+	model.
+	"""
+	from alea.prg import load_graph
+	from alea.prg.service import check_scenario
+
+	with _run("cli.prg.check", scenario=str(scenario)):
+		graph = load_graph()
+		values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+		for override in set_ or []:
+			key, _, raw = override.partition("=")
+			if key not in graph.nodes:
+				typer.secho(
+					f"{key!r} is not a parameter in the graph", fg=typer.colors.RED, err=True
+				)
+				raise typer.Exit(code=2)
+			if not graph.is_settable(key):
+				equation = graph.determined_by(key)
+				by = equation.id if equation is not None else "a feedback loop"
+				typer.secho(
+					f"{key!r} is computed by {by}, not set; the graph derives it "
+					f"from the parameters it depends on",
+					fg=typer.colors.RED,
+					err=True,
+				)
+				raise typer.Exit(code=2)
+			values[key] = float(raw)
+		result = check_scenario(values, graph)
+		for violation in result.violations:
+			typer.secho(f"violation: {violation}", fg=typer.colors.RED, err=True)
+		for entry in result.unmodelled:
+			typer.secho(f"not modelled: {entry}", fg=typer.colors.YELLOW, err=True)
+		typer.echo(result.summary())
+		if not result.consistent:
+			raise typer.Exit(code=1)
+
+
+@prg_app.command("propagate")
+def prg_propagate(
+	set_: SetOption = None,
+) -> None:
+	"""Set parameters and print what the change moved."""
+	from alea.prg import load_graph
+	from alea.prg.service import propagate_change
+
+	with _run("cli.prg.propagate"):
+		graph = load_graph()
+		values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+		changes: dict[str, float] = {}
+		for override in set_ or []:
+			key, _, raw = override.partition("=")
+			if key not in graph.nodes:
+				typer.secho(
+					f"{key!r} is not a parameter in the graph", fg=typer.colors.RED, err=True
+				)
+				raise typer.Exit(code=2)
+			if not graph.is_settable(key):
+				equation = graph.determined_by(key)
+				by = equation.id if equation is not None else "a feedback loop"
+				typer.secho(
+					f"{key!r} is computed by {by}, not set; set the parameters it "
+					f"depends on instead",
+					fg=typer.colors.RED,
+					err=True,
+				)
+				raise typer.Exit(code=2)
+			changes[key] = float(raw)
+		result = propagate_change(values, changes)
+		for name, delta in sorted(result["changed"].items()):
+			typer.echo(f"  {name:38s} {result['values'][name]:14.6f}  ({delta:+.6f})")
+		for loop in result["loops"]:
+			typer.echo(f"  loop {loop['loop']}: {loop['iterations']} turns")
 
 
 # --------------------------------------------------------------------------

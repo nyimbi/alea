@@ -1,0 +1,607 @@
+# SPDX-License-Identifier: MIT
+# The Parameter Relationship Graph.
+#
+# WHAT THIS FILE IS. The couplings between ALEA's parameters, stated as
+# equations, so that a scenario which sets two coupled parameters independently
+# is refused rather than solved. `docs/params-prg1.md` §1: "the 784 parameters
+# are not independent knobs... if ALEA treats parameters as independent, it will
+# produce physically impossible, economically inconsistent, or
+# self-contradictory scenarios".
+#
+# WHAT IT DELIBERATELY DOES NOT CONTAIN. No `depends_on` / `affects` list on a
+# node. The specification's node model carries them beside the edges, so the
+# same relationship is written twice and the two records drift. The edges and
+# the equations are the graph; a declared list is a document that lies about it.
+# `ParameterGraph.structure_issues()` will check declared lists if anyone adds
+# them, and reports nothing while there are none.
+#
+# SCOPE. This is the kernel's first slice: the cost, emissions, reserve and
+# capture-price systems, over the parameters the what-if engine already exposes.
+# It is not the 784-parameter graph. The systems it does not yet cover are
+# enumerated in `alea.prg.library.SYSTEMS` and reported by
+# `alea.prg.library.coverage()`, so an unmodelled system reads as a finding
+# rather than as a system nothing violates.
+
+parameters:
+  # -- exogenous: what a user or a dataset sets ------------------------
+
+  discount_rate:
+    name: "Discount rate"
+    description: "Real weighted average cost of capital, used to annualise capex."
+    category: "Financial"
+    type: float
+    unit: "1/year"
+    range: [0.0, 0.5]
+    default: 0.08
+    role: exogenous
+    determinism: policy
+    priority: P1
+    status: existing
+
+  asset_life:
+    name: "Asset life"
+    description: "Economic life over which capex is recovered."
+    category: "Financial"
+    type: float
+    unit: "years"
+    range: [5.0, 60.0]
+    default: 25.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+
+  capex_usd_per_kw:
+    name: "Capital cost"
+    description: "Installed cost per kilowatt of the reference technology."
+    category: "Costs"
+    type: float
+    unit: "USD/kW"
+    range: [100.0, 5000.0]
+    default: 1200.0
+    role: exogenous
+    determinism: fixed
+    priority: P1
+    status: existing
+
+  capacity_factor:
+    name: "Capacity factor"
+    description: "Annual energy divided by rated output times 8760 hours."
+    category: "Technical"
+    type: float
+    unit: "1"
+    range: [0.05, 0.7]
+    default: 0.35
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+
+  fuel_price_usd_per_mwh:
+    name: "Fuel price"
+    description: "Delivered fuel cost per megawatt-hour of thermal output."
+    category: "Costs"
+    type: float
+    unit: "USD/MWh"
+    range: [0.0, 300.0]
+    default: 40.0
+    role: exogenous
+    determinism: stochastic
+    priority: P1
+    status: existing
+
+  carbon_price_usd_per_tco2:
+    name: "Carbon price"
+    description: "Price per tonne of CO2 applied to covered emissions."
+    category: "Policy & Regulatory"
+    type: float
+    unit: "USD/tonne"
+    range: [0.0, 1000.0]
+    default: 50.0
+    role: exogenous
+    determinism: policy
+    priority: P1
+    status: existing
+
+  emission_factor_t_per_mwh:
+    name: "Emission factor"
+    description: "Tonnes of CO2 per megawatt-hour of the reference technology."
+    category: "Emissions"
+    type: float
+    unit: "tonne/MWh"
+    range: [0.0, 1.5]
+    default: 0.5
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+
+  capture_price_sensitivity:
+    name: "Capture price sensitivity"
+    description: >
+      How far the capture price falls per unit of renewable share. This is the
+      cannibalisation coefficient, and it is what makes the capture-price loop
+      a loop: without it the price a renewable unit receives would not depend on
+      how much renewable capacity was built.
+    category: "Market"
+    type: float
+    unit: "1"
+    range: [0.0, 3.0]
+    default: 1.2
+    role: exogenous
+    determinism: fixed
+    priority: P2
+    status: to_build
+
+  total_capacity_mw:
+    name: "Total installed capacity"
+    description: "Nameplate capacity on the system, all carriers."
+    category: "Technical"
+    type: float
+    unit: "MW"
+    range: [1.0, 1000000.0]
+    default: 10000.0
+    role: exogenous
+    determinism: fixed
+    priority: P2
+    status: existing
+
+  vre_capacity_target_mw:
+    name: "Renewable build target"
+    description: >
+      The capacity investors would build if the capture price equalled the
+      marginal cost of the alternative. The loop's forcing term: the fixed
+      point is this target discounted by the cannibalisation it causes.
+    category: "Technical"
+    type: float
+    unit: "MW"
+    range: [0.0, 1000000.0]
+    default: 4000.0
+    role: exogenous
+    determinism: policy
+    priority: P2
+    status: to_build
+
+  firm_capacity_mw:
+    name: "Firm capacity"
+    description: "Dispatchable capacity counted at full nameplate for reserve."
+    category: "Technical"
+    type: float
+    unit: "MW"
+    range: [0.0, 1000000.0]
+    default: 9000.0
+    role: exogenous
+    determinism: fixed
+    priority: P2
+    status: existing
+
+  peak_demand_mw:
+    name: "Peak demand"
+    description: "Highest hourly demand the system must serve."
+    category: "Demand"
+    type: float
+    unit: "MW"
+    range: [1.0, 1000000.0]
+    default: 8500.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+
+  reserve_margin_min:
+    name: "Minimum reserve margin"
+    description: "Firm capacity required above peak demand, as a fraction."
+    category: "Technical"
+    type: float
+    unit: "1"
+    range: [0.0, 1.0]
+    default: 0.15
+    role: exogenous
+    determinism: policy
+    priority: P1
+    status: existing
+
+  # -- derived: what the equations compute -----------------------------
+
+  crf:
+    name: "Capital recovery factor"
+    description: "The annuity factor that turns capex into an annual charge."
+    category: "Financial"
+    type: float
+    unit: "1/year"
+    range: [0.001, 2.0]
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+
+  annualised_capex_usd_per_kw:
+    name: "Annualised capital cost"
+    description: "Capex recovered per year, per kilowatt."
+    category: "Costs"
+    type: float
+    unit: "USD/kW/year"
+    range: [0.0, 5000.0]
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+
+  carbon_cost_usd_per_mwh:
+    name: "Carbon cost"
+    description: "The carbon price expressed per megawatt-hour generated."
+    category: "Emissions"
+    type: float
+    unit: "USD/MWh"
+    range: [0.0, 5000.0]
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+
+  marginal_cost_usd_per_mwh:
+    name: "Marginal cost"
+    description: "Short-run marginal cost: fuel plus carbon."
+    category: "Costs"
+    type: float
+    unit: "USD/MWh"
+    range: [0.0, 5000.0]
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+
+  lcoe_usd_per_mwh:
+    name: "Levelised cost"
+    description: "Levelised cost of energy over the asset's economic life."
+    category: "Costs"
+    type: float
+    unit: "USD/MWh"
+    range: [0.0, 5000.0]
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+
+  capture_price_ratio:
+    name: "Capture price ratio"
+    description: >
+      The capture price as a fraction of marginal cost. One means a renewable
+      unit is paid what the alternative costs; below one, the cannibalisation
+      has eaten the margin, and that ratio is the loop's answer.
+    category: "Market"
+    type: float
+    unit: "1"
+    range: [0.0, 2.0]
+    role: derived
+    determinism: fixed
+    priority: P2
+    status: to_build
+
+  # -- the feedback loop's state variables -----------------------------
+  #
+  # Role `derived` because no user sets them: they are the fixed point. They
+  # are excluded from the topological order -- a cycle has none -- and solved
+  # by `alea.prg.feedback`. `solution_method: iterative` on their equations is
+  # what marks them, and it is also what stops the graph refusing the cycle.
+
+  capture_price_usd_per_mwh:
+    name: "Capture price"
+    description: "The price a renewable unit actually receives, per MWh."
+    category: "Market"
+    type: float
+    unit: "USD/MWh"
+    range: [0.0, 5000.0]
+    role: derived
+    determinism: fixed
+    initial: 60.0
+    priority: P2
+    status: to_build
+
+  vre_share:
+    name: "Renewable share"
+    description: "Renewable nameplate capacity as a fraction of the total."
+    category: "Technical"
+    type: float
+    unit: "1"
+    range: [0.0, 1.0]
+    role: derived
+    determinism: fixed
+    initial: 0.2
+    priority: P2
+    status: to_build
+
+  vre_capacity_mw:
+    name: "Renewable capacity"
+    description: "Renewable nameplate capacity at the loop's fixed point."
+    category: "Technical"
+    type: float
+    unit: "MW"
+    range: [0.0, 1000000.0]
+    role: derived
+    determinism: fixed
+    initial: 4000.0
+    priority: P2
+    status: to_build
+
+
+equations:
+  # -- System 2: Cost Accounting ---------------------------------------
+
+  crf_definition:
+    name: "Capital recovery factor"
+    description: >
+      The annuity factor: the annual charge that repays one unit of capex over
+      the asset's life at the discount rate.
+    system: cost_accounting
+    lhs: "discount_rate * (1 + discount_rate) ** asset_life"
+    rhs: "crf * ((1 + discount_rate) ** asset_life - 1)"
+    parameters: [crf, discount_rate, asset_life]
+    determined_variables: [crf]
+    tolerance: 1.0e-9
+    reference: "Standard annuity formula; cf. LCOE definitions in IEA/NEA Projected Costs of Generating Electricity"
+    linearity: nonlinear
+    solution_method: direct
+    priority: P1
+
+  annualised_capex:
+    name: "Annualised capital cost"
+    description: "Capex recovered per year is capex times the recovery factor."
+    system: cost_accounting
+    lhs: "annualised_capex_usd_per_kw"
+    rhs: "capex_usd_per_kw * crf"
+    parameters: [annualised_capex_usd_per_kw, capex_usd_per_kw, crf]
+    determined_variables: [annualised_capex_usd_per_kw]
+    tolerance: 1.0e-9
+    linearity: linear
+    solution_method: direct
+    priority: P1
+
+  marginal_cost:
+    name: "Marginal cost"
+    description: >
+      Short-run marginal cost. The carbon cost enters here rather than as a
+      separate term in the objective, so a carbon price and a fuel price cannot
+      be double-counted or omitted independently.
+    system: cost_accounting
+    lhs: "marginal_cost_usd_per_mwh"
+    rhs: "fuel_price_usd_per_mwh + carbon_cost_usd_per_mwh"
+    parameters: [marginal_cost_usd_per_mwh, fuel_price_usd_per_mwh, carbon_cost_usd_per_mwh]
+    determined_variables: [marginal_cost_usd_per_mwh]
+    tolerance: 1.0e-9
+    linearity: linear
+    solution_method: direct
+    priority: P1
+
+  lcoe_definition:
+    name: "Levelised cost"
+    description: >
+      Levelised cost: the annualised capital charge spread over the energy the
+      asset actually produces, plus marginal cost. The 1000 and 8760 convert
+      kW to MW and hours to a year, and they are written here rather than
+      folded into a constant so a reader can check the units.
+    system: cost_accounting
+    lhs: "lcoe_usd_per_mwh"
+    rhs: "annualised_capex_usd_per_kw * 1000 / (8760 * capacity_factor) + marginal_cost_usd_per_mwh"
+    parameters: [lcoe_usd_per_mwh, annualised_capex_usd_per_kw, capacity_factor, marginal_cost_usd_per_mwh]
+    determined_variables: [lcoe_usd_per_mwh]
+    tolerance: 1.0e-9
+    reference: "IEA/NEA, Projected Costs of Generating Electricity"
+    linearity: linear
+    solution_method: direct
+    priority: P1
+
+  # -- System 3: Emissions Accounting ----------------------------------
+
+  carbon_cost:
+    name: "Carbon cost per MWh"
+    description: "Carbon price times emission factor: the price, per unit generated."
+    system: emissions
+    lhs: "carbon_cost_usd_per_mwh"
+    rhs: "carbon_price_usd_per_tco2 * emission_factor_t_per_mwh"
+    parameters: [carbon_cost_usd_per_mwh, carbon_price_usd_per_tco2, emission_factor_t_per_mwh]
+    determined_variables: [carbon_cost_usd_per_mwh]
+    tolerance: 1.0e-9
+    linearity: linear
+    solution_method: direct
+    priority: P1
+
+  # -- System 7: Reserve Margin ----------------------------------------
+
+  reserve_margin:
+    name: "Reserve margin"
+    description: >
+      Firm capacity plus the renewable fleet's contribution at its capacity
+      factor must cover peak demand with the required margin. An inequality,
+      because it bounds a build rather than fixing one.
+    system: reserve_margin
+    lhs: "firm_capacity_mw + vre_capacity_mw * capacity_factor"
+    rhs: "peak_demand_mw * (1 + reserve_margin_min)"
+    relation: geq
+    parameters: [firm_capacity_mw, vre_capacity_mw, capacity_factor, peak_demand_mw, reserve_margin_min]
+    tolerance: 1.0e-6
+    reference: "Standard N-1 planning criterion; cf. ENTSO-E adequacy studies"
+    linearity: linear
+    solution_method: direct
+    priority: P1
+
+  # -- System 9: Capture Price (the feedback loop) ----------------------
+  #
+  # Three equations, each determining one state variable, that together form a
+  # single strongly connected component. `solution_method: iterative` is what
+  # marks them as a loop rather than a derivation -- without it the graph would
+  # refuse the cycle, correctly, because a derivation cycle has no order.
+
+  capture_price_equation:
+    name: "Capture price under cannibalisation"
+    description: >
+      The price a renewable unit receives falls as its own share rises. This is
+      `params-prg1.md` §2 class 6: higher VRE lowers the capture price, which
+      lowers the return to building more VRE.
+    system: capture_price
+    lhs: "capture_price_usd_per_mwh"
+    rhs: "marginal_cost_usd_per_mwh * (1 - capture_price_sensitivity * vre_share)"
+    parameters: [capture_price_usd_per_mwh, marginal_cost_usd_per_mwh, capture_price_sensitivity, vre_share]
+    determined_variables: [capture_price_usd_per_mwh]
+    tolerance: 1.0e-8
+    linearity: linear
+    solution_method: iterative
+    priority: P2
+
+  vre_share_definition:
+    name: "Renewable share"
+    description: "Renewable capacity as a fraction of the system's total."
+    system: capture_price
+    lhs: "vre_share"
+    rhs: "vre_capacity_mw / total_capacity_mw"
+    parameters: [vre_share, vre_capacity_mw, total_capacity_mw]
+    determined_variables: [vre_share]
+    tolerance: 1.0e-8
+    linearity: linear
+    solution_method: iterative
+    priority: P2
+
+  vre_build:
+    name: "Renewable build response"
+    description: >
+      Investors build in proportion to the capture price's ratio to the
+      alternative's cost. The loop's forcing term, and the reason the fixed
+      point is below the target: the build erodes the price that justified it.
+    system: capture_price
+    lhs: "vre_capacity_mw"
+    rhs: "vre_capacity_target_mw * capture_price_usd_per_mwh / marginal_cost_usd_per_mwh"
+    parameters: [vre_capacity_mw, vre_capacity_target_mw, capture_price_usd_per_mwh, marginal_cost_usd_per_mwh]
+    determined_variables: [vre_capacity_mw]
+    tolerance: 1.0e-8
+    linearity: linear
+    solution_method: iterative
+    priority: P2
+
+  capture_price_ratio_definition:
+    name: "Capture price ratio"
+    description: >
+      The loop's answer as a single number: what a renewable unit is paid,
+      against what the alternative costs to run.
+    system: capture_price
+    lhs: "capture_price_ratio"
+    rhs: "capture_price_usd_per_mwh / marginal_cost_usd_per_mwh"
+    parameters: [capture_price_ratio, capture_price_usd_per_mwh, marginal_cost_usd_per_mwh]
+    determined_variables: [capture_price_ratio]
+    tolerance: 1.0e-8
+    linearity: linear
+    solution_method: direct
+    priority: P2
+
+
+relationships:
+  - source: discount_rate
+    target: crf
+    equation_id: crf_definition
+    relationship: functional
+    direction: forward
+    strength: hard
+    description: "A higher discount rate raises the annual charge on capex."
+    priority: P1
+  - source: asset_life
+    target: crf
+    equation_id: crf_definition
+    relationship: functional
+    direction: forward
+    strength: hard
+    description: "A longer life spreads capex over more years."
+    priority: P1
+  - source: capex_usd_per_kw
+    target: annualised_capex_usd_per_kw
+    equation_id: annualised_capex
+    relationship: equality
+    direction: forward
+    strength: hard
+    description: "Annualised capex is capex times the recovery factor."
+    priority: P1
+  - source: carbon_price_usd_per_tco2
+    target: carbon_cost_usd_per_mwh
+    equation_id: carbon_cost
+    relationship: equality
+    direction: forward
+    strength: hard
+    description: "The carbon price enters marginal cost through this identity."
+    priority: P1
+  - source: emission_factor_t_per_mwh
+    target: carbon_cost_usd_per_mwh
+    equation_id: carbon_cost
+    relationship: equality
+    direction: forward
+    strength: hard
+    description: "A dirtier unit pays more of the same carbon price."
+    priority: P1
+  - source: carbon_cost_usd_per_mwh
+    target: marginal_cost_usd_per_mwh
+    equation_id: marginal_cost
+    relationship: equality
+    direction: forward
+    strength: hard
+    description: "Carbon cost is a component of marginal cost."
+    priority: P1
+  - source: annualised_capex_usd_per_kw
+    target: lcoe_usd_per_mwh
+    equation_id: lcoe_definition
+    relationship: equality
+    direction: forward
+    strength: hard
+    description: "The capital charge is the fixed half of levelised cost."
+    priority: P1
+  - source: capacity_factor
+    target: lcoe_usd_per_mwh
+    equation_id: lcoe_definition
+    relationship: functional
+    direction: forward
+    strength: hard
+    description: "A lower capacity factor spreads capex over less energy."
+    priority: P1
+  - source: vre_capacity_mw
+    target: vre_share
+    equation_id: vre_share_definition
+    relationship: equality
+    direction: forward
+    strength: hard
+    description: "The share is the build over the total."
+    priority: P2
+  - source: vre_share
+    target: capture_price_usd_per_mwh
+    equation_id: capture_price_equation
+    relationship: feedback
+    direction: forward
+    strength: hard
+    description: >
+      Cannibalisation: a larger renewable share lowers the price each renewable
+      unit receives. The first half of the loop.
+    priority: P2
+  - source: capture_price_usd_per_mwh
+    target: vre_capacity_mw
+    equation_id: vre_build
+    relationship: feedback
+    direction: forward
+    strength: hard
+    description: >
+      Investment response: a lower capture price lowers the build. The second
+      half, which closes the loop.
+    priority: P2
+  - source: vre_capacity_mw
+    target: firm_capacity_mw
+    equation_id: reserve_margin
+    relationship: constraint
+    direction: forward
+    strength: hard
+    description: >
+      The renewable build contributes to the reserve margin only at its
+      capacity factor, which is why a high renewable share still needs firm
+      capacity.
+    priority: P1
+  - source: capture_price_usd_per_mwh
+    target: capture_price_ratio
+    equation_id: capture_price_ratio_definition
+    relationship: equality
+    direction: forward
+    strength: informational
+    description: "The ratio is the loop's result, reported rather than constrained."
+    priority: P2

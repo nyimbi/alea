@@ -1,0 +1,617 @@
+# SPDX-License-Identifier: MIT
+"""The Parameter Relationship Graph: load, validate, order, propagate.
+
+WHY the graph owns the topological order and the propagation together. A
+determined parameter is computed from the parameters it depends on, so the
+order it is computed in *is* the propagation. Splitting them into a
+``topological`` module and a ``propagation`` module -- as the specification's
+tree does -- means the sort and the walk can disagree about which edge is a
+dependency, and the symptom of that disagreement is a derived parameter
+computed from a stale value: a number that is wrong and plausible.
+
+WHY a cycle is an error here and a solver there. The graph refuses a cycle among
+*determined* parameters, because a derivation cycle has no order and therefore
+no answer. The specification's fifteen feedback loops are a different object:
+they are cycles among parameters where each turn of the loop re-evaluates an
+equation against the previous turn's values. Those are not edges in this
+graph's derived subgraph -- they are :class:`alea.prg.feedback.FeedbackLoop`
+objects with a convergence criterion, and the distinction is what stops a
+non-converging loop from being mistaken for a malformed graph.
+"""
+
+from __future__ import annotations
+
+from collections import defaultdict, deque
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
+from functools import lru_cache
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+from alea.config.paths import repo_root
+from alea.prg.dsl import DslError, evaluate, parse, solve_for
+from alea.prg.feedback import solve_loop
+from alea.prg.views import (
+	Equation,
+	ParameterNode,
+	RelationshipEdge,
+	Role,
+)
+
+__all__ = [
+	"CycleError",
+	"GraphError",
+	"ParameterGraph",
+	"PropagationResult",
+	"Violation",
+	"default_prg_path",
+	"load_graph",
+]
+
+
+class GraphError(ValueError):
+	"""The graph is malformed: an edge or equation names what does not exist."""
+
+
+class CycleError(GraphError):
+	"""The derived subgraph has a cycle, so it has no evaluation order."""
+
+
+@dataclass(frozen=True)
+class Violation:
+	"""One equation that does not hold at the current parameter values."""
+
+	equation_id: str
+	residual: float
+	tolerance: float
+	relative: float
+	priority: str
+
+	def __str__(self) -> str:
+		return (
+			f"{self.equation_id} ({self.priority}): residual {self.residual:.6g}, "
+			f"relative {self.relative:.3g} > tolerance {self.tolerance:.3g}"
+		)
+
+
+@dataclass(frozen=True)
+class PropagationResult:
+	"""What a change did to the graph."""
+
+	values: dict[str, float]
+	changed: dict[str, float]
+	"""Parameters whose value moved, and by how much. Excludes the seeds."""
+
+	order: tuple[str, ...]
+	"""The derived parameters, in the order they were computed."""
+
+	loops: tuple[Any, ...] = ()
+	"""The feedback loops solved, with their iteration counts."""
+
+
+def default_prg_path() -> Path:
+	return repo_root() / "config" / "prg.yaml"
+
+
+class ParameterGraph:
+	"""An immutable graph over parameter nodes, equations and edges."""
+
+	def __init__(
+		self,
+		nodes: Mapping[str, ParameterNode],
+		equations: Mapping[str, Equation],
+		edges: Iterable[RelationshipEdge],
+		*,
+		declared: Mapping[str, tuple[tuple[str, ...], tuple[str, ...]]] | None = None,
+	) -> None:
+		self._nodes = dict(nodes)
+		self._equations = dict(equations)
+		self._edges = tuple(edges)
+		#: The `depends_on` / `affects` lists the YAML declared, kept only so
+		#: `structure_issues` can compare them against the edges. They are not
+		#: the graph; the edges are.
+		self._declared = dict(declared or {})
+
+		self._by_source: dict[str, list[RelationshipEdge]] = defaultdict(list)
+		self._by_target: dict[str, list[RelationshipEdge]] = defaultdict(list)
+		for edge in self._edges:
+			self._by_source[edge.source].append(edge)
+			self._by_target[edge.target].append(edge)
+
+		#: equation id -> the equation, for a derived parameter. Built once.
+		self._loop_variables: set[str] = {
+			equation.determined_variables[0]
+			for equation in self._equations.values()
+			if equation.solution_method == "iterative" and equation.determined_variables
+		}
+
+		self._determiner: dict[str, Equation] = {}
+		for equation in self._equations.values():
+			if equation.solution_method == "iterative":
+				# A loop, not a derivation. Its variable is a fixed point, and
+				# the topological order has no place to put it -- which is the
+				# whole reason the feedback solver exists.
+				continue
+			for target in equation.determined_variables:
+				if target in self._determiner:
+					raise GraphError(
+						f"{target} is determined by both "
+						f"{self._determiner[target].id!r} and {equation.id!r}; "
+						f"two equations fixing one parameter is an "
+						f"over-determined system, and the engine would pick one "
+						f"by dictionary order"
+					)
+				self._determiner[target] = equation
+
+		self._validate()
+
+	# -- construction ---------------------------------------------------
+
+	@classmethod
+	def from_mapping(cls, document: Mapping[str, Any]) -> ParameterGraph:
+		"""Build from the parsed contents of ``prg.yaml``."""
+		raw_nodes = document.get("parameters") or {}
+		raw_equations = document.get("equations") or {}
+		raw_edges = document.get("relationships") or []
+		if not raw_nodes:
+			raise GraphError("the PRG document declares no parameters")
+		if not raw_equations:
+			raise GraphError(
+				"the PRG document declares no equations; a graph of parameters "
+				"with no relationships is a list, and every consistency check "
+				"over it passes vacuously"
+			)
+
+		nodes: dict[str, ParameterNode] = {}
+		declared: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {}
+		for key, body in raw_nodes.items():
+			payload = dict(body or {})
+			payload.setdefault("id", key)
+			if payload["id"] != key:
+				raise GraphError(
+					f"parameter {key!r} declares id {payload['id']!r}; the key is "
+					f"the identity and a second spelling of it is a node two "
+					f"readers will look for in two places"
+				)
+			# A list the file does not carry is not a declaration of `[]`:
+			# comparing against it reports the whole graph as drifted.
+			if "depends_on" in payload or "affects" in payload:
+				declared[key] = (
+					tuple(payload.pop("depends_on", ()) or ()),
+					tuple(payload.pop("affects", ()) or ()),
+				)
+			payload.pop("depends_on", None)
+			payload.pop("affects", None)
+			# `equations` on the node is likewise a second record of what the
+			# equation objects already say. Read it, check it, drop it.
+			payload.pop("equations", None)
+			payload.pop("validation_rules", None)
+			payload.pop("cross_validation", None)
+			nodes[key] = ParameterNode(**payload)
+
+		equations: dict[str, Equation] = {}
+		for key, body in raw_equations.items():
+			payload = dict(body or {})
+			payload.setdefault("id", key)
+			equations[key] = Equation(**payload)
+
+		edges = [RelationshipEdge(**edge) for edge in raw_edges]
+		return cls(nodes, equations, edges, declared=declared)
+
+	@classmethod
+	def from_yaml(cls, path: str | Path) -> ParameterGraph:
+		text = Path(path).read_text()
+		document = yaml.safe_load(text)
+		if not isinstance(document, dict):
+			raise GraphError(f"{path} does not hold a mapping at the top level")
+		return cls.from_mapping(document)
+
+	# -- accessors ------------------------------------------------------
+
+	@property
+	def nodes(self) -> dict[str, ParameterNode]:
+		return dict(self._nodes)
+
+	@property
+	def equations(self) -> dict[str, Equation]:
+		return dict(self._equations)
+
+	@property
+	def edges(self) -> tuple[RelationshipEdge, ...]:
+		return self._edges
+
+	def node(self, parameter: str) -> ParameterNode:
+		try:
+			return self._nodes[parameter]
+		except KeyError as exc:
+			raise GraphError(f"no parameter {parameter!r} in the graph") from exc
+
+	def equation(self, equation_id: str) -> Equation:
+		try:
+			return self._equations[equation_id]
+		except KeyError as exc:
+			raise GraphError(f"no equation {equation_id!r} in the graph") from exc
+
+	def is_settable(self, parameter: str) -> bool:
+		"""Whether a user may set this parameter.
+
+		False for a derived parameter and for a loop variable. This is the
+		question the whole graph exists to answer: a user who sets a carbon
+		price *and* the emissions it determines has set two coupled parameters
+		independently, and the only correct response is to refuse rather than to
+		pick one and recompute the other in silence.
+		"""
+		return (
+			parameter not in self._determiner
+			and parameter not in self._loop_variables
+		)
+
+	def computed(self) -> frozenset[str]:
+		"""Every parameter the graph computes rather than accepts."""
+		return frozenset(self._determiner) | self._loop_variables
+
+	def determined_by(self, parameter: str) -> Equation | None:
+		return self._determiner.get(parameter)
+
+	@lru_cache(maxsize=1)
+	def feedback_loops(self) -> tuple[Any, ...]:
+		"""The loops the topological order cannot evaluate."""
+		from alea.prg.feedback import detect_loops
+
+		return detect_loops(self)
+
+	def depends_on(self, parameter: str) -> tuple[str, ...]:
+		"""Parameters this one is computed from, by the equations.
+
+		Derived from the *determining equation*, not from the declared
+		``depends_on`` list and not from the edges. The edges carry a
+		relationship and its direction; the equation carries the arithmetic, and
+		the arithmetic is what propagation must follow.
+		"""
+		equation = self._determiner.get(parameter)
+		if equation is None:
+			return ()
+		others = set(equation.parameters) | set(equation.free_variables)
+		return tuple(sorted(others - {parameter}))
+
+	def affects(self, parameter: str) -> tuple[str, ...]:
+		"""Parameters whose value this one enters, by the equations."""
+		out = {
+			target
+			for target, equation in self._determiner.items()
+			if target != parameter
+			and (
+				parameter in equation.parameters
+				or parameter in equation.free_variables
+			)
+		}
+		return tuple(sorted(out))
+
+	# -- validation -----------------------------------------------------
+
+	def _validate(self) -> None:
+		for edge in self._edges:
+			if edge.source not in self._nodes:
+				raise GraphError(
+					f"edge {edge.source} -> {edge.target} names a source that is "
+					f"not a parameter"
+				)
+			if edge.target not in self._nodes:
+				raise GraphError(
+					f"edge {edge.source} -> {edge.target} names a target that is "
+					f"not a parameter"
+				)
+			if edge.equation_id not in self._equations:
+				raise GraphError(
+					f"edge {edge.source} -> {edge.target} cites equation "
+					f"{edge.equation_id!r}, which the library does not hold"
+				)
+
+		for equation in self._equations.values():
+			unknown = (set(equation.parameters) | set(equation.free_variables)) - set(
+				self._nodes
+			)
+			if unknown:
+				raise GraphError(
+					f"equation {equation.id!r} names {sorted(unknown)}, which are "
+					f"not parameters"
+				)
+			unknown_targets = set(equation.determined_variables) - set(self._nodes)
+			if unknown_targets:
+				raise GraphError(
+					f"equation {equation.id!r} determines {sorted(unknown_targets)}, "
+					f"which are not parameters"
+				)
+			# The arithmetic must name what the metadata claims, or the metadata
+			# is decoration. Parsing here means a malformed equation is a load
+			# error rather than a surprise inside a solve.
+			try:
+				named = parse(equation.lhs).symbols | parse(equation.rhs).symbols
+			except DslError as exc:
+				raise GraphError(f"equation {equation.id!r}: {exc}") from exc
+			claimed = set(equation.parameters) | set(equation.free_variables) | set(
+				equation.determined_variables
+			)
+			unnamed = named - claimed
+			if unnamed:
+				raise GraphError(
+					f"equation {equation.id!r} uses {sorted(unnamed)} in its "
+					f"arithmetic but does not list them in `parameters`, so the "
+					f"graph cannot say which parameters it couples"
+				)
+			unused = claimed - named
+			if unused:
+				raise GraphError(
+					f"equation {equation.id!r} lists {sorted(unused)} but its "
+					f"arithmetic does not name them; a declared parameter that "
+					f"does not appear is a coupling the graph would report and "
+					f"the engine would never apply"
+				)
+
+		for target in self._determiner:
+			node = self._nodes[target]
+			if node.role is not Role.DERIVED:
+				raise GraphError(
+					f"{target} is determined by "
+					f"{self._determiner[target].id!r} but its role is "
+					f"{node.role.value!r}; a parameter an equation fixes is "
+					f"`derived`, and any other role lets a user set it and be "
+					f"silently overruled"
+				)
+
+	def structure_issues(self) -> list[str]:
+		"""Disagreements between what the YAML declares and what the edges say.
+
+		Not fatal -- the edges win, and propagation never reads the declared
+		lists -- but reported, because a declared list that has drifted is a
+		document that lies about the graph a reader is trying to understand.
+		"""
+		issues: list[str] = []
+		for parameter, (depends, affects) in sorted(self._declared.items()):
+			derived_depends = set(self.depends_on(parameter))
+			derived_affects = set(self.affects(parameter))
+			if set(depends) != derived_depends:
+				issues.append(
+					f"{parameter}.depends_on declares {sorted(depends)} but the "
+					f"equations say {sorted(derived_depends)}"
+				)
+			if set(affects) != derived_affects:
+				issues.append(
+					f"{parameter}.affects declares {sorted(affects)} but the "
+					f"equations say {sorted(derived_affects)}"
+				)
+		for parameter in sorted(set(self._determiner) | self._loop_variables):
+			if self._nodes[parameter].range is None:
+				issues.append(
+					f"{parameter} is derived but declares no range; a derivation "
+					f"is solved numerically and a solver without bounds finds "
+					f"whichever root it meets first"
+				)
+		return issues
+
+	# -- ordering -------------------------------------------------------
+
+	@lru_cache(maxsize=1)
+	def _phases(self) -> tuple[tuple[str, ...], tuple[str, ...]]:
+		"""The derived parameters, split by whether they follow a feedback loop.
+
+		A parameter computed from a loop variable cannot be computed before the
+		loop is solved, and the loop has no place in a topological order. So the
+		order is cut in two: what is computable from the exogenous inputs alone,
+		and what waits on the fixed point. ``propagate`` runs them either side
+		of the solver, and a parameter in the wrong half would be computed from
+		a pre-loop value.
+		"""
+		ordered = self.order()
+		waiting: set[str] = set()
+		changed = True
+		while changed:
+			changed = False
+			for parameter in ordered:
+				if parameter in waiting:
+					continue
+				for dependency in self.depends_on(parameter):
+					if dependency in self._loop_variables or dependency in waiting:
+						waiting.add(parameter)
+						changed = True
+						break
+		before = tuple(p for p in ordered if p not in waiting)
+		after = tuple(p for p in ordered if p in waiting)
+		return before, after
+
+	def order(self) -> tuple[str, ...]:
+		"""Derived parameters in an order where each follows its inputs.
+
+		Kahn's algorithm. A cycle is reported with its members rather than as
+		"the graph has a cycle": the members are the finding, and naming them is
+		the difference between a message someone can act on and one they cannot.
+		"""
+		derived = sorted(self._determiner)
+		deps = {
+			parameter: tuple(
+				d for d in self.depends_on(parameter) if d in self._determiner
+			)
+			for parameter in derived
+		}
+		remaining = {parameter: set(deps[parameter]) for parameter in derived}
+		ready = deque(p for p in derived if not remaining[p])
+		out: list[str] = []
+		while ready:
+			parameter = ready.popleft()
+			out.append(parameter)
+			for candidate in derived:
+				if parameter in remaining[candidate]:
+					remaining[candidate].discard(parameter)
+					if not remaining[candidate]:
+						ready.append(candidate)
+		if len(out) != len(derived):
+			cyclic = sorted(p for p in derived if p not in set(out))
+			raise CycleError(
+				f"the derived parameters {cyclic} form a cycle and have no "
+				f"evaluation order; if this is a feedback loop it belongs in the "
+				f"feedback solver, where each turn re-evaluates against the "
+				f"previous one"
+			)
+		return tuple(out)
+
+	# -- propagation ----------------------------------------------------
+
+	def propagate(
+		self,
+		values: Mapping[str, float],
+		changed: Iterable[str] | None = None,
+	) -> PropagationResult:
+		"""Recompute every derived parameter from ``values``.
+
+		``changed`` names the parameters the caller just set. It does not change
+		the arithmetic -- every derived parameter is recomputed, because
+		determining which are unaffected requires the same topological walk --
+		but it lets the result report *what moved*, which is what a user who
+		edited one knob wants to see.
+		"""
+		if changed is not None:
+			unknown = set(changed) - set(self._nodes)
+			if unknown:
+				raise GraphError(
+					f"propagate was told {sorted(unknown)} changed, which are not "
+					f"parameters; a caller naming a parameter the graph does not "
+					f"hold is a caller editing a different graph"
+				)
+		scoped: dict[str, float] = {k: float(v) for k, v in values.items()}
+		missing = set(self._nodes) - scoped.keys()
+		underived_missing = {
+			name
+			for name in missing
+			if name not in self._determiner and name not in self._loop_variables
+		}
+		if underived_missing:
+			raise GraphError(
+				f"the parameter set is missing {sorted(underived_missing)}; a "
+				f"parameter that is not derived has no equation to compute it "
+				f"from"
+			)
+
+		before = dict(scoped)
+		computable, waits_on_loop = self._phases()
+		for parameter in computable:
+			scoped[parameter] = self._derive(parameter, scoped)
+
+		# A loop's inputs may themselves be derived, so the loops are solved
+		# after the first pass and the parameters that depend on the fixed
+		# point are derived after them.
+		loop_results = [solve_loop(self, loop, scoped) for loop in self.feedback_loops()]
+		for parameter in waits_on_loop:
+			scoped[parameter] = self._derive(parameter, scoped)
+
+		computed = set(self._determiner) | self._loop_variables
+		moved = {
+			name: value - before[name]
+			for name, value in scoped.items()
+			if name in computed
+			and name in before
+			# Relative, so a solver's last-bit noise on a 2700 MW capacity is
+			# not reported as a change. An absolute floor would call the same
+			# noise a change on a capacity factor and not on a capacity.
+			and abs(value - before[name]) > 1e-12 * max(abs(value), 1.0)
+		}
+		return PropagationResult(
+			values=scoped,
+			changed=moved,
+			order=self.order(),
+			loops=tuple(loop_results),
+		)
+
+	def _derive(self, parameter: str, values: Mapping[str, float]) -> float:
+		equation = self._determiner[parameter]
+		if equation.relation != "eq":
+			raise GraphError(
+				f"{parameter} is determined by {equation.id!r}, which is an "
+				f"inequality; an inequality bounds a value and cannot fix one"
+			)
+		residual = parse(f"({equation.lhs}) - ({equation.rhs})")
+		node = self.node(parameter)
+		if node.range is None:
+			raise GraphError(
+				f"{parameter} is derived but declares no range, so the solver "
+				f"has no bracket; declare the physical range on the node"
+			)
+		try:
+			return solve_for(residual, parameter, values, bracket=node.range)
+		except DslError as exc:
+			raise GraphError(
+				f"cannot derive {parameter} from {equation.id!r}: {exc}"
+			) from exc
+
+	# -- consistency ----------------------------------------------------
+
+	def consistency(
+		self, values: Mapping[str, float], *, only: str | None = None
+	) -> list[Violation]:
+		"""Every equation that does not hold at ``values``.
+
+		The residual is scaled by the magnitudes it relates before it is
+		compared to the tolerance. An absolute tolerance cannot be right for a
+		library whose equations relate a carbon price in USD/tonne to a cost in
+		USD and a capacity factor in ``[0, 1]``: the same tolerance is
+		impossibly tight for the first and infinitely loose for the second.
+		"""
+		violations: list[Violation] = []
+		for equation in self._equations.values():
+			if only is not None and equation.system != only:
+				continue
+			if equation.relation != "eq":
+				# An inequality is a boundary. Reporting its residual as a
+				# violation would flag a parameter sitting correctly inside its
+				# bound, so the sign is what matters, not the magnitude.
+				if not self._inequality_holds(equation, values):
+					violations.append(
+						Violation(
+							equation_id=equation.id,
+							residual=self._residual(equation, values),
+							tolerance=equation.tolerance,
+							relative=float("inf"),
+							priority=equation.priority.value,
+						)
+					)
+				continue
+			residual = self._residual(equation, values)
+			scale = self._scale(equation, values)
+			relative = abs(residual) / scale if scale > 0 else abs(residual)
+			if relative > equation.tolerance:
+				violations.append(
+					Violation(
+						equation_id=equation.id,
+						residual=residual,
+						tolerance=equation.tolerance,
+						relative=relative,
+						priority=equation.priority.value,
+					)
+				)
+		return violations
+
+	def _residual(self, equation: Equation, values: Mapping[str, float]) -> float:
+		return evaluate(parse(equation.lhs), values) - evaluate(
+			parse(equation.rhs), values
+		)
+
+	def _scale(self, equation: Equation, values: Mapping[str, float]) -> float:
+		return max(
+			1.0,
+			abs(evaluate(parse(equation.lhs), values)),
+			abs(evaluate(parse(equation.rhs), values)),
+		)
+
+	def _inequality_holds(
+		self, equation: Equation, values: Mapping[str, float]
+	) -> bool:
+		residual = self._residual(equation, values)
+		if equation.relation == "leq":
+			return residual <= equation.tolerance
+		return residual >= -equation.tolerance
+
+
+def load_graph(path: str | Path | None = None) -> ParameterGraph:
+	"""Load the shipped graph, or one at ``path``."""
+	return ParameterGraph.from_yaml(path or default_prg_path())
