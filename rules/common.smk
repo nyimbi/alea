@@ -56,6 +56,7 @@ SUFFIXES = {
 	"network_arrays": ".json",
 	"tlens": ".json",
 	"critical_lines": ".parquet",
+	"loss_decomposition": ".parquet",
 	"capacity_update": ".parquet",
 	"market_report": ".parquet",
 	"market_outlook": ".parquet",

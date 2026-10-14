@@ -508,3 +508,54 @@ rule project_system_alerts:
 				*params.flags,
 			)
 		)
+
+
+rule project_loss_decomposition:
+	"""`loss_decomposition` at the dated path the weekly report reads.
+
+	The weekly section declares ``losses/decomposition/{date}.parquet``. This is
+	the delivery half of the entry that started in `UNPRODUCED` with a missing
+	rule: `@stage("loss_decomposition")` writes the frame under
+	``paths.processed`` and the report reads a dated path under ``paths.results``,
+	so a build that exits 0 leaves the section absent and the report raises.
+	"""
+	input:
+		processed("loss_decomposition")
+	output:
+		report_artefact("weekly", "losses/decomposition/{date}.parquet")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"project", "weekly", "loss_decomposition",
+				"--source", input[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)
+
+
+rule project_loss_statistics:
+	"""`loss_statistics` at the dated path the monthly report reads.
+
+	The *second* projection of one stage's artefact, which is why the stage
+	writes a single frame: both sections declare ``["Component", <one numeric
+	column>, "Basis"]`` at unit ``%`` and differ only in the header. Two
+	projections of one file cannot disagree about the shares; two searches would.
+	"""
+	input:
+		processed("loss_decomposition")
+	output:
+		report_artefact("monthly", "losses/monthly/{date}.parquet")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"project", "monthly", "loss_statistics",
+				"--source", input[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)

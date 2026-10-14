@@ -346,11 +346,12 @@ PROJECTION_STAGES: Final[MappingProxyType[str, str]] = MappingProxyType(
 		"market_capture_rates": "market_capture_rates",
 		"market_prices": "market_prices",
 		"resilience_contingency": "resilience_contingency",
+		"losses_decomposition": "loss_decomposition",
 	}
 )
 """Tables a projection **stage** writes, keyed by table name to stage name.
 
-Three entries, and the register is what makes "wired" a claim someone makes
+Four entries, and the register is what makes "wired" a claim someone makes
 rather than an inference the gate draws. `resilience_contingency` was the
 first; `market_prices` joined it when the register's stated blocker turned out
 to be overstated -- the country comes from the run's own scenario
@@ -359,6 +360,18 @@ to be overstated -- the country comes from the run's own scenario
 `market_capture_rates` joined it third, the arithmetic the implementation plan
 names as Layer 3's first build, and it serves one curve point because one solve
 has one VRE penetration -- the multi-point curve is the what-if sweep's output.
+
+`losses_decomposition` is the fourth, and its blocker was a kernel rather than
+a wiring. `UNWIRED` recorded the path with the measured degeneracy: under
+`losses.decompose.measure`'s old defaults the reference network *was* the actual
+network, so `T - R` was zero by construction and a table written from it
+asserted "100% of losses are load-driven" for every country -- the
+specification's `_topology_driven = 0 # Placeholder` relocated rather than
+repaired. `alea.losses.switching` is the loss-optimal switching search the plan
+names, `@stage("loss_decomposition")` resolves the reference topology through
+it, and the path moved here in the same change. The register's own prose for
+that entry was careful to say the *inputs* existed and the degeneracy was the
+blocker, which is why closing a kernel and not a rule is what retired it.
 
 The gate cannot decide a table is produced from a *name match* against the stage
 registry. `outage_history` is both a serving table (`data/processed/outages/
@@ -414,24 +427,6 @@ UNWIRED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"is credentialed and the model refuses to fit without it, so this table "
 			"is empty until a utility supplies the export -- a data arrival, not a "
 			"wiring task."
-		),
-		"data/processed/losses/decomposition.parquet": (
-			"The inputs exist now -- `@stage(\"network_arrays\")` writes "
-			"`network_arrays.json` and `dispatch.parquet` and `rules/losses.smk` runs "
-			"it -- but no stage calls `decomposition_to_artefact`, and the layer "
-			"result is **degenerate under its own defaults**. Measured on a meshed "
-			"mixed-voltage fixture: `load_driven == total` and "
-			"`generation_driven == topology_driven == 0.0`, for every network. "
-			"`reference_network` defaults to the actual network, so "
-			"`losses_with_actual_load_only` equals `actual_losses`; `topology_network` "
-			"defaults to the reference network, so `T - R` is zero by construction. A "
-			"table written from that asserts \"100% of losses are load-driven\" for "
-			"every country -- the specification's `_topology_driven = 0 # Placeholder` "
-			"defect relocated rather than repaired. Wiring it needs a decision about "
-			"what the reference network is (the plan names loss-optimal line "
-			"switching, and no switching solver exists) before a stage can supply one. "
-			"`test_the_decomposition_needs_a_reference_network_to_attribute_anything` "
-			"pins this."
 		),
 		"data/processed/losses/mitigation.parquet": (
 			"The dispatch series and network arrays it needs exist now. The remaining "

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Sector coupling: the solved electricity network extended with the sectors.
 
-`08-layer5-whatif.md` and `05-layer4-outages.md`'s DAG place the coupling off the
+`08-layer5-whatif.md` and `05-layer2-sector.md` place the coupling off the
 solved network, the same input `network_arrays` reads. The rule declares it the
 same way -- `provided("solved_network", NETWORKS)` plus `--set network_dir=`,
 because the solved network's filename is a content hash and is not knowable at

@@ -145,11 +145,34 @@ def read_raw(
 # --------------------------------------------------------------------------
 
 
+def _index_carries_information(index: pd.Index) -> bool:
+	"""Whether dropping this index would lose something the payload states.
+
+	A default ``RangeIndex`` is the position of each row, which the reader
+	reconstructs: writing it would add an ``__index_level_0__`` column to every
+	serving table for no information. A ``DatetimeIndex``, or any other index,
+	*is* a column of the payload -- the dispatch's snapshots are its timestamps,
+	and a reader that got back a bare ``RangeIndex`` would be holding a series
+	with no period attached while every other field claims one.
+
+	That loss is silent, which is what makes it worth a rule: the checksum still
+	verifies, the shape still matches, and the only symptom appears much later
+	in whichever stage asks the artefact what period it covers.
+	"""
+	return not (
+		isinstance(index, pd.RangeIndex) and index.start == 0 and index.step == 1
+	)
+
+
 def _write_payload(path: Path, data: Any, fmt: Format) -> None:
 	if fmt == "parquet":
 		if not isinstance(data, pd.DataFrame):
 			raise ArtefactError("parquet payloads must be a pandas DataFrame")
-		data.to_parquet(path, index=False)
+		# Parquet round-trips an index by name, so a non-trivial index comes
+		# back as itself. CSV does not: pandas returns it as a *column*, a
+		# different shape rather than the same payload, so this applies here
+		# only.
+		data.to_parquet(path, index=_index_carries_information(data.index))
 	elif fmt == "csv":
 		if not isinstance(data, pd.DataFrame):
 			raise ArtefactError("csv payloads must be a pandas DataFrame")

@@ -107,3 +107,53 @@ rule critical_lines:
 				*params.flags,
 			)
 		)
+
+
+rule loss_decomposition:
+	"""Losses split into load-, generation- and topology-driven parts.
+
+	The third reader of the two artefacts `network_arrays` writes, and the one
+	that turns Layer 4b's decomposition from a placeholder into a measurement.
+	`reporting.producers.UNPRODUCED` recorded this section's blocker as a missing
+	*rule*, and that was the smaller half: `losses.decomposition_to_artefact` had
+	no pipeline caller, and under its own defaults -- `reference_network` the
+	actual network, `topology_network` the reference -- the artefact it would
+	have written reads `load driven == total` for every network. A rule over
+	those defaults would have delivered a section whose every row said 100%.
+
+	So the blocker was the reference *topology*, which the plan names as
+	loss-optimal line switching and nothing implemented. `alea.losses.switching`
+	is that kernel now, and the stage resolves the reference through it.
+
+	One stage, two artefacts: the report frame at `--out` and the API's serving
+	table at `data/processed/losses/decomposition.parquet`. Both come from one
+	decomposition, so the weekly report and the losses route cannot attribute
+	against two different searches. The serving path is declared here as a
+	second output because it is one -- a change to it has to be visible to
+	`dvc status`, and `alea.publish.views.PUBLISHED_TABLES` spells the same path
+	the API reads.
+
+	The section's dated path under `results/` is the projection's `--out` and is
+	not this rule's business, the same division `critical_lines` follows.
+	"""
+	input:
+		processed("network_arrays"),
+		processed("dispatch", ".parquet")
+	output:
+		processed("loss_decomposition"),
+		# The serving table, from the same decomposition. `publish.views.UNWIRED`
+		# held this path with the blocker "a table written from that asserts
+		# '100% of losses are load-driven' for every country"; the kernel above is
+		# what closed it, so the path moves out of that register in this change.
+		processed("losses/decomposition", ".parquet"),
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"build", "loss_decomposition",
+				"--out", output[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)

@@ -73,6 +73,15 @@ rule all:
 		processed("network_arrays"),
 		processed("tlens"),
 		processed("critical_lines"),
+		# The loss decomposition, and with it the API's losses route: the stage
+		# writes the report frame at `data/processed/loss_decomposition.parquet`
+		# and the serving table at `data/processed/losses/decomposition.parquet`
+		# from one search for the loss-optimal reference topology. Both were
+		# recorded as gaps -- the section in `reporting.producers.UNPRODUCED`, the
+		# table in `publish.views.UNWIRED` -- and the blocker both named was the
+		# missing switching kernel rather than the missing rule.
+		processed("loss_decomposition"),
+		processed("losses/decomposition", ".parquet"),
 		# `sector_coupling` is deliberately absent, like the fetch rules above.
 		# It refuses when every sector is disabled -- the shipped config's state
 		# (`sector.enabled: false`) -- so an unconditional entry here would make
@@ -110,3 +119,9 @@ rule all:
 		report_artefact("daily", "planning/dispatch/{date}.parquet"),
 		report_artefact("daily", "market/prices/{date}.parquet"),
 		report_artefact("daily", "outages/contingency/{date}.parquet"),
+		# The two loss sections, projected from the one decomposition above. The
+		# weekly one is the section whose register entry recorded the degeneracy
+		# rather than the missing rule; the monthly one reads the same frame under
+		# a different header, so a single projection would have left it absent.
+		report_artefact("weekly", "losses/decomposition/{date}.parquet"),
+		report_artefact("monthly", "losses/monthly/{date}.parquet"),

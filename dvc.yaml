@@ -237,6 +237,23 @@ stages:
     outs:
       - data/processed/critical_lines.parquet
 
+  loss_decomposition:
+    desc: >-
+      Losses split into load-, generation- and topology-driven parts. One stage,
+      two artefacts: the weekly and monthly sections' frame and the API's
+      serving table, both from one search for the loss-optimal switching
+      topology the plan names.
+    cmd: >-
+      uv run --directory . alea build loss_decomposition
+      --out data/processed/loss_decomposition.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/network_arrays.json
+      - data/processed/dispatch.parquet
+    outs:
+      - data/processed/loss_decomposition.parquet
+      - data/processed/losses/decomposition.parquet
+
   resilience_contingency:
     desc: "The N-1 sweep as per-element serving rows for the API's contingency route."
     cmd: >-
@@ -570,3 +587,31 @@ stages:
       - data/processed/system_alerts.parquet
     outs:
       - results/outages/contingency
+
+  project_loss_decomposition:
+    desc: >-
+      The weekly loss-decomposition section at the dated path its report reads.
+      A stage writes `data/processed/`; a section reads
+      `results/<dir>/{date}.parquet`, and nothing bridged the two.
+    cmd: >-
+      uv run --directory . alea project weekly loss_decomposition
+      --source data/processed/loss_decomposition.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/loss_decomposition.parquet
+    outs:
+      - results/losses/decomposition
+
+  project_loss_statistics:
+    desc: >-
+      The monthly loss-statistics section at the dated path its report reads.
+      The second projection of one stage's frame: both loss sections declare one
+      numeric column at unit `%` and differ only in the header.
+    cmd: >-
+      uv run --directory . alea project monthly loss_statistics
+      --source data/processed/loss_decomposition.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/loss_decomposition.parquet
+    outs:
+      - results/losses/monthly

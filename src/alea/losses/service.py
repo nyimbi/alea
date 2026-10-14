@@ -25,7 +25,8 @@ from alea.losses.contingency import summary, tlens, tlens_payload
 from alea.losses.decompose import losses_by_component
 from alea.losses.flow import Network, loading_series, solve_series
 from alea.losses.mitigation import rank_options, rank_payload
-from alea.losses.views import LossConfig, MitigationOption
+from alea.losses.switching import optimal_switching
+from alea.losses.views import LossComponents, LossConfig, MitigationOption
 from alea.provenance.models import Basis, DerivedProvenance
 
 logger = get_logger(__name__)
@@ -82,8 +83,20 @@ def decomposition_to_artefact(
 	The components sum to the total by construction; a result that did not
 	would fail :class:`LossComponents`'s validator rather than reaching the
 	artefact.
+
+	``reference_network`` defaults to the loss-optimal topology
+	:func:`alea.losses.switching.optimal_switching` finds, which is what makes
+	the topology-driven component a measurement. Under the old default -- the
+	actual network, and a ``topology_network`` equal to it -- ``T - R`` was zero
+	for every network, so the payload read ``load driven == total`` and the
+	section built from it rendered a constant. A caller who wants that
+	degenerate case back sets ``config.switching_max_openings = 0``, which
+	returns the actual network and records the choice.
 	"""
 	cfg = config or LossConfig()
+	switching = None
+	if reference_network is None:
+		reference_network, switching = optimal_switching(network, dispatch_mw, cfg)
 	payload = losses_by_component(
 		network,
 		dispatch_mw,
@@ -92,14 +105,154 @@ def decomposition_to_artefact(
 		reference_network=reference_network,
 		topology_network=topology_network,
 	)
+	parameters: dict[str, Any] = {
+		**_network_parameters(network, cfg),
+		"n_snapshots": int(np.asarray(dispatch_mw).shape[0]),
+	}
+	if switching is not None:
+		# The search is a parameter of the result, not an implementation detail:
+		# a decomposition whose reference topology came from a truncated search
+		# is a different claim from one whose search was exhaustive, and a reader
+		# of the artefact has no other way to tell them apart.
+		parameters["switching"] = switching.model_dump(mode="json")
 	provenance = _provenance(
 		inputs if inputs is not None else [],
-		{**_network_parameters(network, cfg), "n_snapshots": int(np.asarray(dispatch_mw).shape[0])},
+		parameters,
 		source_id="loss_decomposition",
-		notes="components sum to the total by construction (07-layer4 §6.2)",
+		notes=(
+			"components sum to the total by construction (07-layer4 §6.2); the "
+			"reference topology is the loss-optimal switching the plan names, and "
+			"the search that found it is recorded under `switching`"
+		),
 	)
 	checksum = write_stage(Path(out), payload, provenance, format="json")
 	return checksum, payload
+
+
+def decomposition_section_rows(components: LossComponents) -> list[dict[str, Any]]:
+	"""A decomposition as the rows the weekly and monthly sections read.
+
+	Both sections are ``["Component", <one numeric column>, "Basis"]`` with unit
+	``%``, so both read this one frame: `weekly.py`'s ``loss_decomposition``
+	under the header "Share of input" and `monthly.py`'s ``loss_statistics``
+	under "Loss share". The values are the shares **times 100**, because the
+	sections declare ``%`` and a fraction rendered under a percent header is
+	off by two orders of magnitude in a published report.
+
+	**Every component is written, including a zero one.** The register's whole
+	complaint about this section was a table reading ``load driven, 100.0`` for
+	every network, and the temptation is to drop the components that are zero --
+	which would make the defect invisible in exactly the case it was reported in.
+	A zero topology-driven share beside two real ones says "the topology is
+	already loss-optimal", which is a finding; its absence says nothing.
+
+	**The label map is asserted complete.** ``LossComponents.component_names``
+	is the model's list and this is the report's spelling of it; a component
+	added to the model and not here would be silently missing from every
+	published decomposition, which is the shape of defect that put a hardcoded
+	zero in the specification.
+	"""
+	shares = components.shares
+	labels = {
+		"load_driven": "Load-driven",
+		"generation_driven": "Generation-driven",
+		"topology_driven": "Topology-driven",
+	}
+	missing = sorted(set(components.component_names()) - set(labels))
+	if missing:
+		raise ValueError(
+			f"the decomposition carries {missing} and this producer has no report "
+			f"label for them; a component with no row is a driver the report does "
+			f"not show"
+		)
+	rows: list[dict[str, Any]] = []
+	for name in components.component_names():
+		share = shares[name]
+		rows.append(
+			{
+				"label": labels[name],
+				"value": float(share) * 100.0,
+				"unit": "%",
+				# Carried as its own column so a reader can check the share
+				# against the energy it came from without re-deriving either.
+				"loss_mwh": float(getattr(components, f"{name}_mwh")),
+				"component": name,
+			}
+		)
+	rows.append(
+		{
+			"label": "Total",
+			"value": 100.0 if abs(components.total_mwh) >= 1e-12 else float("nan"),
+			"unit": "%",
+			"loss_mwh": float(components.total_mwh),
+			"component": "total",
+		}
+	)
+	return rows
+
+
+def decomposition_section_to_artefact(
+	network: Network,
+	dispatch_mw: NDArray[np.float64],
+	out: str | Path,
+	config: LossConfig | None = None,
+	*,
+	inputs: Sequence[str] | None = None,
+) -> tuple[str, list[dict[str, Any]]]:
+	"""Write the decomposition in the shape the two loss sections read.
+
+	The section frame, not the kernel payload: ``decomposition_to_artefact``
+	writes the four numbers as JSON for the API's serving row, and a report reads
+	a *table* with a ``Component`` label and one numeric column. Both resolve the
+	reference topology the same way -- :func:`losses_components` -- so the report
+	and the serving row cannot attribute against two different searches.
+
+	The ``Total`` row's share is 100 because the parts are of the total by
+	construction, and the model cannot be built otherwise. It is NaN for a zero
+	total, where a share has no denominator and zero would read as a measurement.
+	"""
+	import pandas as pd
+
+	cfg = config or LossConfig()
+	components = losses_components(network, dispatch_mw, cfg)
+	rows = decomposition_section_rows(components)
+	frame = pd.DataFrame(rows)
+	provenance = _provenance(
+		inputs if inputs is not None else [],
+		{
+			**_network_parameters(network, cfg),
+			"n_snapshots": int(np.asarray(dispatch_mw).shape[0]),
+			"total_mwh": components.total_mwh,
+			"shares": components.shares,
+		},
+		source_id="loss_decomposition",
+		notes=(
+			"the weekly and monthly loss sections' frame: each component's share "
+			"of the total, in percent, against the loss-optimal switching "
+			"topology the plan names (07-layer4 §6.2)"
+		),
+	)
+	checksum = write_stage(Path(out), frame, provenance, format="parquet")
+	return checksum, rows
+
+
+def losses_components(
+	network: Network,
+	dispatch_mw: NDArray[np.float64],
+	config: LossConfig | None = None,
+) -> LossComponents:
+	"""The decomposed components, with the loss-optimal reference topology.
+
+	The one place the reference topology is resolved for a caller that wants the
+	:class:`LossComponents` rather than a payload, so the section frame and the
+	serving row cannot attribute against two different searches.
+	"""
+	from alea.losses.decompose import decompose, measure
+	from alea.losses.switching import optimal_switching
+
+	cfg = config or LossConfig()
+	reference, _ = optimal_switching(network, dispatch_mw, cfg)
+	return decompose(measure(network, dispatch_mw, cfg, reference_network=reference), cfg)
 
 
 def tlens_to_artefact(
@@ -411,6 +564,211 @@ def _stage_critical_lines(config: Config, out: Path, context: BuildContext) -> D
 		source_id="critical_lines",
 		notes="branch loading written by the registered stage",
 	)
+
+
+@stage("loss_decomposition")
+def _stage_loss_decomposition(config: Config, out: Path, context: BuildContext) -> DerivedProvenance:
+	"""Registered stage: the loss decomposition, as a report frame and a serving row.
+
+	Writes two artefacts from one decomposition, the way ``network_arrays``
+	writes its arrays and its dispatch:
+
+	* ``out`` -- the weekly and monthly sections' frame, one row per driver with
+	  its share of the total in percent. Both sections read
+	  ``["Component", <one numeric column>, "Basis"]`` at unit ``%``, so one
+	  frame satisfies both and neither can be produced from a different search.
+	* the API's serving table at :data:`alea.publish.views.PUBLISHED_TABLES`,
+	  through `project_loss_decomposition`, which checks it against
+	  ``LOSSES_DECOMPOSITION`` before writing. That register recorded the path as
+	  ``UNWIRED`` with this exact blocker -- "a table written from that asserts
+	  '100% of losses are load-driven' for every country" -- so closing the
+	  kernel and leaving the table unwired would leave the register overstating a
+	  gap that no longer exists.
+
+	**Why this is not a rule over the old defaults.** ``decomposition_to_artefact``
+	had no pipeline caller, and the register recorded the missing piece as a
+	*rule*. A rule is the smaller half: with ``reference_network`` defaulting to
+	the actual network, the artefact it would have written reads
+	``load_driven == total`` for every network, and the section built from it
+	renders a constant. The reference topology is
+	:func:`alea.losses.switching.optimal_switching`, and this stage supplies it.
+
+	A missing input raises rather than producing an empty decomposition. An empty
+	one reads as "no losses", which is a claim about the network; the truth is
+	that no dispatch was read.
+	"""
+	import pandas as pd
+
+	from alea.config.paths import resolve
+	from alea.io.artefacts import ArtefactError, read_artefact
+
+	processed = resolve(config.paths.processed)
+	network_path = processed / "network_arrays.json"
+	dispatch_path = processed / "dispatch.parquet"
+
+	if not network_path.exists():
+		raise ArtefactError(f"no network arrays at {network_path}")
+	if not dispatch_path.exists():
+		raise ArtefactError(f"no dispatch series at {dispatch_path}")
+
+	network = _network_from_payload(read_artefact(network_path)[0])
+	dispatch, _ = read_artefact(dispatch_path)
+	frame = pd.DataFrame(dispatch)
+	matrix = frame.select_dtypes("number").to_numpy(dtype=float)
+	if matrix.shape[1] != network.n_buses:
+		raise ArtefactError(
+			f"dispatch has {matrix.shape[1]} columns but the network has "
+			f"{network.n_buses} buses"
+		)
+	losses = _loss_config(config)
+	components = losses_components(network, matrix, losses)
+	_write_loss_section(out, components, config, losses, context.inputs)
+	serving = _write_loss_serving(components, frame, config, losses, context.inputs)
+	logger.info(
+		"losses.stage.loss_decomposition",
+		total_mwh=components.total_mwh,
+		load_share=components.shares["load_driven"],
+		topology_share=components.shares["topology_driven"],
+		serving=str(serving),
+	)
+	return _provenance(
+		context.inputs,
+		{
+			"n_branches": network.n_branches,
+			"n_snapshots": int(matrix.shape[0]),
+			"total_mwh": components.total_mwh,
+			"shares": components.shares,
+			"snapshot_hours": losses.snapshot_hours,
+			"switching_max_openings": losses.switching_max_openings,
+			"serving_table": str(serving),
+		},
+		source_id="loss_decomposition",
+		notes=(
+			"loss decomposition written by the registered stage: the report frame "
+			"at `--out` and the API's serving table beside it, both from one "
+			"decomposition against the loss-optimal switching topology"
+		),
+	)
+
+
+def _write_loss_section(
+	out: Path,
+	components: LossComponents,
+	config: Config,
+	losses: LossConfig,
+	inputs: Sequence[str],
+) -> None:
+	"""Write the report frame the two loss sections read."""
+	import pandas as pd
+
+	frame = pd.DataFrame(decomposition_section_rows(components))
+	write_stage(
+		Path(out),
+		frame,
+		_provenance(
+			inputs,
+			{
+				**_network_parameters_from(losses),
+				"total_mwh": components.total_mwh,
+				"shares": components.shares,
+			},
+			source_id="loss_decomposition",
+			notes=(
+				"the weekly and monthly loss sections' frame: each driver's share "
+				"of the total, in percent, against the loss-optimal switching "
+				"topology the plan names (07-layer4 §6.2)"
+			),
+		),
+		format="parquet",
+	)
+
+
+def _write_loss_serving(
+	components: LossComponents,
+	dispatch: Any,
+	config: Config,
+	losses: LossConfig,
+	inputs: Sequence[str],
+) -> Path:
+	"""Write the API's loss-decomposition serving table.
+
+	The country comes from the run's own scenario and the period from the
+	dispatch series' own index, because a serving row carries both and neither
+	is in the decomposition. A dispatch whose index is not a timestamp is
+	refused rather than stamped with the run date: the period is what the
+	numbers are *about*, and a row claiming a window the dispatch does not cover
+	is a wrong period on a right number.
+	"""
+	import pandas as pd
+
+	from alea.io.artefacts import ArtefactError
+	from alea.publish.service import project, project_loss_decomposition, table_path
+	from alea.publish.stages import _single_country
+
+	country_iso = _single_country(config)
+	if not isinstance(dispatch.index, pd.DatetimeIndex):
+		raise ArtefactError(
+			f"the dispatch series carries a {type(dispatch.index).__name__} index, "
+			f"not a timestamp; the serving row declares the period its losses are "
+			f"about and there is nothing to read it from"
+		)
+	if len(dispatch.index) == 0:
+		raise ArtefactError("the dispatch series is empty, so it covers no period")
+	# Resolved against *this config's* processed directory, not the repository
+	# root: the register declares the path the API reads, and a run configured
+	# to write elsewhere must land its table there or the API reads a table
+	# this run never wrote.
+	target = table_path("losses_decomposition", processed=config.paths.processed)
+	frame = project_loss_decomposition(
+		components,
+		country_iso=country_iso,
+		period_start=dispatch.index.min(),
+		period_end=dispatch.index.max(),
+	)
+	target.parent.mkdir(parents=True, exist_ok=True)
+	project(
+		"losses_decomposition",
+		frame,
+		target,
+		inputs=list(inputs),
+		parameters={
+			"country_iso": country_iso,
+			"total_mwh": components.total_mwh,
+			"shares": components.shares,
+			"switching_max_openings": losses.switching_max_openings,
+		},
+		notes=(
+			"loss decomposition as one serving row. The components sum to the "
+			"total by construction and the reference topology is the loss-optimal "
+			"switching the plan names, so `share` is a measurement rather than the "
+			"specification's hardcoded zero"
+		),
+	)
+	return target
+
+
+def _loss_config(config: Config) -> LossConfig:
+	"""The configured loss section, with the solve's reference bus where it names none.
+
+	One spelling of a rule three stages apply -- `tlens`, `critical_lines` and
+	`loss_decomposition` all read the same solved network, and the slack bus is a
+	property of the solve rather than a loss default. A stage that resolved it
+	differently from its neighbour would be measuring a different network.
+	"""
+	losses = config.losses
+	if "slack_bus" not in losses.model_fields_set and "slack_bus" in config.solve.solver_options:
+		losses = losses.model_copy(update={"slack_bus": config.solve.solver_options["slack_bus"]})
+	return losses
+
+
+def _network_parameters_from(losses: LossConfig) -> dict[str, Any]:
+	"""The solver parameters a loss artefact's provenance records."""
+	return {
+		"slack_bus": losses.slack_bus,
+		"price_usd_per_mwh": losses.price_usd_per_mwh,
+		"snapshot_hours": losses.snapshot_hours,
+		"switching_max_openings": losses.switching_max_openings,
+	}
 
 
 def _network_from_payload(payload: Any) -> Network:

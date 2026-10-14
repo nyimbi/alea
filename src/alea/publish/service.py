@@ -478,13 +478,26 @@ def project_resilience_contingency(
 # --------------------------------------------------------------------------
 
 
-def table_path(name: str, *, root: str | Path | None = None) -> Path:
+def table_path(
+	name: str,
+	*,
+	root: str | Path | None = None,
+	processed: str | Path | None = None,
+) -> Path:
 	"""Where a projection's table is written.
 
 	Read from :data:`alea.publish.views.PUBLISHED_TABLES`, which is also what the
 	repository's path literals are checked against. A projection that computed its
 	own path would write somewhere the API does not read and pass every test that
 	only reads its return value.
+
+	``processed`` resolves the register's path against *a config's* processed
+	directory rather than the repository root. A stage that resolved the
+	register against the root would write to ``data/processed`` even when the
+	config names somewhere else -- and the config naming somewhere else is
+	exactly what a scratch tree does, so the stage would pass its own tests by
+	writing into the repository and the API would read a table the run never
+	produced. `@stage("system_alerts")` reads its serving table the same way.
 	"""
 	if name not in PUBLISHED_TABLES:
 		raise KeyError(
@@ -492,7 +505,18 @@ def table_path(name: str, *, root: str | Path | None = None) -> Path:
 		)
 	from alea.config.paths import resolve
 
-	relative = PUBLISHED_TABLES[name]
+	relative = Path(PUBLISHED_TABLES[name])
+	if processed is not None:
+		# The register's paths are all under `data/processed`; the prefix is what
+		# is being replaced, so a register entry outside it is a path this
+		# function cannot rebase and says so rather than producing a mangled one.
+		if relative.parts[:2] != ("data", "processed"):
+			raise KeyError(
+				f"{name}: PUBLISHED_TABLES names {relative}, which is not under "
+				f"data/processed, so it cannot be resolved against a config's "
+				f"processed directory"
+			)
+		return resolve(processed) / Path(*relative.parts[2:])
 	return resolve(relative) if root is None else Path(root) / relative
 
 

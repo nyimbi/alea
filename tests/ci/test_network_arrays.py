@@ -410,6 +410,51 @@ def test_the_dispatch_round_trips_through_the_artefact_layer():
 	assert frame.to_numpy(dtype=float).shape == (1, len(network.buses))
 
 
+def test_the_dispatch_keeps_its_timestamps_through_the_artefact_layer(tmp_path: Path):
+	"""The period survives the write, because a serving row declares one.
+
+	``_write_payload`` wrote every parquet with ``index=False``, so the
+	dispatch's ``DatetimeIndex`` was dropped and a reader got a bare
+	``RangeIndex``. Every other reader is indifferent -- the loss kernel takes
+	the numeric columns as a matrix -- and the one that is not is the serving
+	projection, whose row states the period its numbers are *about*. Measured
+	while writing the loss stage: ``@stage("loss_decomposition")`` refused at
+	``the dispatch series carries a RangeIndex index`` on the real pipeline, not
+	only in a test, because this stage writes the dispatch through the same
+	layer.
+
+	The check is on the *round trip* rather than on the frame, because the frame
+	was always right: the defect was in the layer between it and the reader.
+	"""
+	network = _meshed()
+	frame = dispatch_matrix(network)
+	assert isinstance(frame.index, pd.DatetimeIndex), (
+		"the fixture is not exercising the case; `dispatch_matrix` names a "
+		"timestamp index and this test is about that index surviving"
+	)
+	write_artefact(
+		tmp_path / "dispatch.parquet",
+		frame,
+		_provenance("dispatch"),
+		format="parquet",
+	)
+	back, _ = read_artefact(tmp_path / "dispatch.parquet")
+	assert isinstance(back.index, pd.DatetimeIndex), (
+		f"the dispatch came back with a {type(back.index).__name__}; the serving "
+		f"row declares the period its losses cover and there is nothing to read "
+		f"it from"
+	)
+	assert back.index.equals(frame.index), (
+		"the timestamps survived as a type but not as values, which is the same "
+		"loss with a quieter symptom"
+	)
+	assert list(back.columns) == list(frame.columns), (
+		f"the index round trip changed the columns: {list(back.columns)} against "
+		f"{list(frame.columns)}. A named index becomes a parquet field, so a "
+		f"collision with a bus name would silently replace a column"
+	)
+
+
 # --------------------------------------------------------------------------
 # The stage: two artefacts from one solve
 # --------------------------------------------------------------------------

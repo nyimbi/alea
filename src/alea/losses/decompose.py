@@ -105,6 +105,47 @@ def _snapshot_loss(
 	return solve_snapshot(network, injection_mw, config).losses_mw
 
 
+def reference_injection(dispatch_mw: NDArray[np.float64]) -> NDArray[np.float64]:
+	"""The mean injection across snapshots: the network at its average loading.
+
+	Spelled once because two callers need the same vector and they must not
+	disagree about it: :func:`flat_reference_dispatch` repeats it for every
+	snapshot, and :func:`alea.losses.switching.optimal_switching` chooses its
+	topology *at* it. A switching search run at the peak while the decomposition
+	attributes against the mean would pick a reference topology the reference
+	case never sees -- and the topology-driven component would then carry a
+	switching decision taken under a loading the report does not show.
+
+	The mean is over snapshots and not over hours: a dispatch whose snapshots
+	stand for unequal durations is a series this function cannot weight
+	correctly, and nothing here reads ``LossConfig.snapshot_hours``. Callers with
+	such a series pass an explicit ``reference_dispatch_mw``.
+	"""
+	matrix = np.asarray(dispatch_mw, dtype=np.float64)
+	if matrix.ndim != 2:
+		raise ValueError(f"dispatch must be [n_snapshots, n_buses], got {matrix.shape}")
+	mean = matrix.mean(axis=0)
+	assert mean.shape == (matrix.shape[1],), f"{mean.shape} != ({matrix.shape[1]},)"
+	return mean
+
+
+def flat_reference_dispatch(dispatch_mw: NDArray[np.float64]) -> NDArray[np.float64]:
+	"""The mean injection repeated for every snapshot: the reference *series*.
+
+	The matrix form of :func:`reference_injection`. A caller that wants the
+	reference case's loss over the whole series wants this; one that wants the
+	loading to choose a topology at wants the vector, and handing the vector's
+	caller a matrix is a shape error the solver reports rather than a subtly
+	different answer -- which is what makes the two functions worth separating
+	rather than one returning whichever form its caller expected.
+	"""
+	matrix = np.asarray(dispatch_mw, dtype=np.float64)
+	mean = reference_injection(matrix)
+	reference = np.tile(mean, (matrix.shape[0], 1))
+	assert reference.shape == matrix.shape, f"{reference.shape} != {matrix.shape}"
+	return reference
+
+
 def measure(
 	network: Network,
 	dispatch_mw: NDArray[np.float64],
@@ -120,10 +161,19 @@ def measure(
 	defaults to a flat dispatch carrying the same total energy — the network at
 	its average loading, which is what a "reference" case means when no
 	historical baseline is supplied. ``reference_network`` defaults to the
-	network itself (all lines in). ``topology_network`` defaults to the
-	reference network: with no switching candidate the topology component is
-	zero, which is the *correct* answer for a network with no loss-reducing
-	reconfiguration available, not the specification's placeholder zero.
+	network itself (all lines in). ``topology_network`` defaults to ``network``
+	— the actual topology — because the component it feeds is defined as *what
+	the actual topology adds over the reference*, so the actual network is the
+	only network that can measure it.
+
+	**That default is the repair, and its old value was the defect.** It used to
+	default to the reference network, which made ``T - R`` zero for every caller
+	who supplied a reference and no topology — so the first stage to resolve a
+	loss-optimal reference network would have published ``topology_driven ==
+	0.0`` and looked correct while measuring nothing. The specification's
+	``_topology_driven = 0 # Placeholder`` was reproduced by the signature that
+	was supposed to fix it. ``test_a_reference_network_alone_attributes_the_
+	topology`` pins the repaired direction.
 	"""
 	cfg = config or LossConfig()
 	dispatch = np.asarray(dispatch_mw, dtype=np.float64)
@@ -132,7 +182,7 @@ def measure(
 			f"dispatch must be [n_snapshots, {network.n_buses}], got {dispatch.shape}"
 		)
 	reference = (
-		dispatch
+		flat_reference_dispatch(dispatch)
 		if reference_dispatch_mw is None
 		else np.asarray(reference_dispatch_mw, dtype=np.float64)
 	)
@@ -141,7 +191,7 @@ def measure(
 			f"reference dispatch {reference.shape} must match dispatch {dispatch.shape}"
 		)
 	reference_net = reference_network or network
-	topology_net = topology_network or reference_net
+	topology_net = topology_network or network
 
 	# Each snapshot's loss is in MW; the hours it stands for turn the four sums
 	# into the energies the decomposition's field names claim.
@@ -212,6 +262,8 @@ __all__ = [
 	"DecompositionInputs",
 	"decompose",
 	"decompose_series",
+	"flat_reference_dispatch",
 	"losses_by_component",
 	"measure",
+	"reference_injection",
 ]

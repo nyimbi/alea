@@ -151,24 +151,30 @@ def _four_bus_meshed() -> Network:
 
 
 def test_the_decomposition_needs_a_reference_network_to_attribute_anything():
-	"""The layer result is degenerate under its own defaults, and this pins it.
+	"""``measure``'s own default is still degenerate, and this pins *that*.
 
-	Measured, not reasoned: on the fixture below, ``measure``'s defaults return
-	``load_driven == total`` and ``generation_driven == topology_driven == 0.0``,
-	for every network. Two defaults cause it. ``reference_network`` defaults to
-	the actual network, so ``losses_with_actual_load_only`` is
+	Measured, not reasoned: on the fixture below, a call that supplies no
+	reference network returns ``load_driven == total`` and
+	``generation_driven == topology_driven == 0.0``. ``reference_network``
+	defaults to the actual network, so ``losses_with_actual_load_only`` is
 	``actual_losses``; ``topology_network`` defaults to the reference network, so
 	``T - R`` is zero *by construction* rather than because the topology is
 	loss-optimal.
 
-	That is the specification's ``_topology_driven`` returning ``0  #
-	Placeholder`` relocated rather than repaired: the number is right and the
-	reason is absent. A serving table written from a default call would assert
-	"100% of losses are load-driven" for every country, which is
-	`alea.publish.views.UNWIRED`'s recorded reason for leaving
-	``data/processed/losses/decomposition.parquet`` unwired. When a stage learns
-	to supply a reference network, this test fails and the register shrinks with
-	it -- which is what keeps the entry from outliving the gap.
+	**What changed, and what this test's docstring claimed.** It used to say
+	"when a stage learns to supply a reference network, this test fails and the
+	register shrinks with it -- which is what keeps the entry from outliving the
+	gap". The stage learned to supply one (``@stage("loss_decomposition")``
+	resolves the reference through ``alea.losses.switching``) and the register
+	shrank, and this test **did not fail** -- because it pins a *function*
+	default, not the stage's behaviour. The sentence described a gate on the
+	stage while the assertion was a gate on ``measure``. The claim is corrected
+	rather than the assertion: the function default is deliberately unchanged,
+	because a caller who has decided no reconfiguration is available
+	(``switching_max_openings = 0``) gets the honest zero and the recorded
+	choice, and that is a state worth keeping reachable. What gates the stage is
+	``test_loss_switching.py``'s round trip, which reads the same fixture through
+	the producer and requires more than one driver to carry a share.
 	"""
 	from alea.losses.decompose import decompose, measure
 
@@ -183,6 +189,20 @@ def test_the_decomposition_needs_a_reference_network_to_attribute_anything():
 	assert components.topology_driven_mwh == pytest.approx(0.0)
 	# The shares say the same thing, and it is the claim a table would carry.
 	assert components.shares["load_driven"] == pytest.approx(1.0)
+	# The disabled search is the same answer reached deliberately, which is why
+	# the default above is not a defect to fix: `switching_max_openings = 0` makes
+	# the reference topology the actual one and records the choice, and a caller
+	# who has decided no reconfiguration is available wants exactly this. Read
+	# through `losses_components`, which is where the option is honoured --
+	# `measure` never runs the search, so asserting this against `measure` would
+	# be a fixture that manufactures the shape it needs.
+	from alea.losses.service import losses_components
+
+	disabled = losses_components(
+		network, dispatch, LossConfig(slack_bus=0, snapshot_hours=1.0, switching_max_openings=0)
+	)
+	assert disabled.topology_driven_mwh == pytest.approx(0.0)
+	assert disabled.load_driven_mwh == pytest.approx(disabled.total_mwh)
 
 
 def test_a_reference_dispatch_alone_changes_nothing():

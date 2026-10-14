@@ -21,6 +21,7 @@ from alea.losses.views import (
 	LossConfig,
 	MitigationOption,
 	MitigationResult,
+	SwitchingResult,
 	TlensEntry,
 	TlensRanking,
 )
@@ -33,6 +34,7 @@ __all__ = [
 	"LossConfig",
 	"MitigationOption",
 	"MitigationResult",
+	"SwitchingResult",
 	"TlensEntry",
 	"TlensRanking",
 ]
@@ -47,6 +49,7 @@ def __getattr__(name: str):
 		"decompose": "alea.losses.decompose",
 		"contingency": "alea.losses.contingency",
 		"mitigation": "alea.losses.mitigation",
+		"switching": "alea.losses.switching",
 		"service": "alea.losses.service",
 	}
 	if name in _lazy:

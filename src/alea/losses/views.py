@@ -58,6 +58,28 @@ class LossConfig(AleaConfig):
 	keeps an hourly series unchanged and makes any other resolution an explicit,
 	recorded choice rather than an accident of the caller's index."""
 
+	switching_max_openings: int = Field(default=1, ge=0)
+	"""How many branches the loss-optimal switching search may open at once.
+
+	One, so the search is exact rather than greedy: the whole single-switching
+	space is enumerated, and ``SwitchingResult.truncated`` is False whenever the
+	budget did not bind. A value of two or more enumerates pairs and triples
+	exhaustively too, but the budget binds far sooner and the result says so.
+	Zero disables the search, which makes the reference topology the actual one
+	and the topology-driven component zero by construction -- the state
+	``test_the_decomposition_needs_a_reference_network_to_attribute_anything``
+	pins, kept reachable because it is the honest answer for a caller who has
+	decided no reconfiguration is available."""
+
+	switching_max_evaluations: int = Field(default=512, gt=0)
+	"""The solve budget for the switching search.
+
+	A budget rather than a timeout: the enumeration is deterministic, so a
+	wall-clock limit would make the chosen topology depend on the machine and
+	two runs of one network would disagree. A truncated search records itself in
+	``SwitchingResult.truncated`` instead of passing a partial answer off as an
+	optimum."""
+
 
 class LossComponents(AleaConfig):
 	"""A three-component loss decomposition that sums to its total.
@@ -110,6 +132,56 @@ class LossComponents(AleaConfig):
 	@staticmethod
 	def component_names() -> tuple[str, str, str]:
 		return ("load_driven", "generation_driven", "topology_driven")
+
+
+class SwitchingResult(AleaConfig):
+	"""What the loss-optimal switching search did, and how far it got.
+
+	The reference topology a decomposition attributes against is a *result* of a
+	search, and a search that does not report its own scope is a number a reader
+	will take for an optimum. Three fields exist for that reason:
+	``n_evaluated``, ``n_infeasible`` and ``truncated``. ``truncated`` is the
+	load-bearing one -- at ``switching_max_openings > 1`` the enumeration is
+	exhaustive but the solve budget binds, and a partial enumeration read as an
+	optimum would put a switching decision in a report the search never
+	considered.
+	"""
+
+	opened: list[int]
+	"""Branch indices opened, ascending. Empty means every line stays in."""
+
+	opened_names: list[str] = Field(default_factory=list)
+	"""The same branches by name, where the network carries names."""
+
+	reference_loss_mw: float
+	"""Loss at the search dispatch with every line in, MW."""
+
+	switched_loss_mw: float
+	"""Loss at the search dispatch with the chosen branches open, MW."""
+
+	reduction_mw: float
+	"""``reference_loss_mw - switched_loss_mw``. Zero when nothing improved."""
+
+	n_candidates: int
+	"""Branches eligible to be opened: those carrying a positive susceptance."""
+
+	n_evaluated: int
+	"""Topologies solved. Zero means the search was disabled, not that it failed."""
+
+	n_infeasible: int = 0
+	"""Topologies that islanded the network and were skipped."""
+
+	max_openings: int = 1
+	truncated: bool = False
+	"""Whether the solve budget bound before the enumeration finished.
+
+	False at the default one opening with any network the budget covers, which
+	is what makes ``opened`` an exact single-switching optimum rather than a
+	greedy guess.
+	"""
+
+	search_dispatch: str = "flat_mean"
+	"""Which dispatch the topology was chosen at: ``flat_mean`` or ``caller``."""
 
 
 class FlowResult(AleaConfig):
@@ -343,6 +415,7 @@ __all__ = [
 	"LossConfig",
 	"MitigationOption",
 	"MitigationResult",
+	"SwitchingResult",
 	"TlensEntry",
 	"TlensRanking",
 ]

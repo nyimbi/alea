@@ -129,6 +129,20 @@ PRODUCERS: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# renames them -- `element_id` to the label, `severity` to `state` -- and
 		# re-sweeping would be a second computation of the same numbers.
 		"system_alerts": "resilience.service.system_alerts_to_artefact",
+		# The weekly loss decomposition and the monthly loss statistics, and the
+		# first pair here that one producer feeds. The blocker both entries
+		# recorded was the *same* one and it was measured rather than guessed:
+		# `losses.decompose.measure`'s reference network was the actual network,
+		# so `T - R` was zero by construction and the decomposition published
+		# `load driven == total` for every network -- the specification's
+		# `_topology_driven = 0 # Placeholder` relocated rather than repaired. The
+		# missing piece was the reference topology the plan names, loss-optimal
+		# line switching, and `alea.losses.switching` is that kernel now. The
+		# stage resolves the reference through it and writes one frame, because
+		# both sections declare one numeric column at unit `%` and differ only in
+		# the header.
+		"loss_decomposition": "losses.service._stage_loss_decomposition",
+		"loss_statistics": "losses.service._stage_loss_decomposition",
 	}
 )
 
@@ -208,6 +222,15 @@ PROJECTED: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# rather than stamping its own run date -- a literal here would name a
 		# file no daily report opens.
 		"system_alerts": "project_system_alerts",
+		# The two loss sections, and the pair that makes the case for one stage
+		# writing one frame. Both declare a single numeric column at unit `%` --
+		# `["Component", "Share of input", "Basis"]` weekly and `["Component",
+		# "Loss share", "Basis"]` monthly -- so `@stage("loss_decomposition")`
+		# writes the rows once and these two rules land them where each cadence
+		# looks. The `UNPRODUCED` entries for both named the *same* missing
+		# kernel, which is why they move together rather than one at a time.
+		"loss_decomposition": "project_loss_decomposition",
+		"loss_statistics": "project_loss_statistics",
 	}
 )
 
@@ -258,25 +281,6 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"write the coverage window alongside the rows."
 		),
 		# ---- weekly ----
-		"loss_decomposition": (
-			"The writer exists (`losses.decomposition_to_artefact`) and "
-			"`test_network_arrays.py` exercises it, so the missing rule is a "
-			"symptom rather than the blocker: the artefact it would write is "
-			"**degenerate under `losses.decompose.measure`'s own defaults**. "
-			"`reference_net = reference_network or network` and `topology_net = "
-			"topology_network or reference_net`, so the reference case *is* the "
-			"actual case and "
-			"`T - R` is zero by construction -- the decomposition publishes "
-			"`load driven == total`, `generation driven == topology driven == "
-			"0.0` for every network. Wiring a rule over that would deliver a "
-			"section whose every row reads 100% load-driven, which is the "
-			"specification's `_topology_driven = 0 # Placeholder` relocated "
-			"rather than repaired. What it needs is a reference network the "
-			"plan names but nothing implements -- loss-optimal line switching -- "
-			"exactly the blocker `loss_statistics` records for the same kernel. "
-			"`test_the_decomposition_needs_a_reference_network_to_attribute_"
-			"anything` pins it."
-		),
 		"outage_events": (
 			"Needs a *cause* per detected outage, which is what the section's "
 			"columns ask for -- `[\"Cause\", \"Events\", \"Basis\"]`, a count "
@@ -290,11 +294,18 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 		),
 		"mitigation": (
 			"Needs a candidate-measure list. `losses.mitigation_to_artefact` and "
-			"`losses.rank_options` exist and refuse without one -- "
-			"`docs/plans/05-layer4-outages.md` names loss-optimal line switching "
-			"as the reference, and no switching solver exists. This is the same "
-			"blocker `data/processed/losses/mitigation.parquet` carries in "
-			"`UNWIRED`."
+			"`losses.rank_options` exist and refuse without one -- a mitigation "
+			"ranking is over *candidate measures* (reconductoring a branch, "
+			"upgrading a voltage, adding a parallel circuit) and nothing records "
+			"which measures are candidates for which branch. This entry used to "
+			"name loss-optimal line switching as the blocker and cite "
+			"`docs/plans/05-layer4-outages.md`, which does not exist -- the "
+			"switching kernel is `alea.losses.switching` now and it ranks nothing, "
+			"because a *switching* decision is a topology and a mitigation ranking "
+			"is a capital measure. Synthesising one option per branch would "
+			"fabricate engineering options with capex figures nobody supplied, so "
+			"this waits on a data arrival, not a wiring task -- the same blocker "
+			"`data/processed/losses/mitigation.parquet` carries in `UNWIRED`."
 		),
 		# ---- monthly ----
 		"generation_actual_vs_forecast": (
@@ -310,27 +321,6 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"the monthly section declares `outages/reliability/{date}.parquet`, "
 			"and the proxy basis the section requires has to travel with each "
 			"row."
-		),
-		"loss_statistics": (
-			"`losses/monthly/{date}.parquet`, columns `Component`, `Loss share`, "
-			"`Basis`. The path to it is not the one this entry used to name: "
-			"`losses.losses_to_artefact` writes a per-*snapshot* loss series, "
-			"which is one component and not the by-cause split the section's "
-			"first column asks for. The split is `losses.decomposition_to_"
-			"artefact`, and it is **degenerate under its own defaults** -- "
-			"measured on the meshed mixed-voltage fixture: `load_driven == total` "
-			"and `generation_driven == topology_driven == 0.0`, for every network. "
-			"`reference_network` defaults to the actual network and "
-			"`topology_network` to the reference, so `T - R` is zero *by "
-			"construction*. A section written from that renders "
-			"`['load driven', 100.0]` in every published monthly report, which is "
-			"the specification's `_topology_driven = 0 # Placeholder` relocated "
-			"rather than repaired. It is the same blocker as "
-			"`data/processed/losses/decomposition.parquet` in `alea.publish.views."
-			"UNWIRED`, and `test_the_decomposition_needs_a_reference_network_to_"
-			"attribute_anything` pins it: wiring this needs a reference network "
-			"(the plan names loss-optimal line switching, and no switching solver "
-			"exists), not a rule."
 		),
 		"resilience_metrics": (
 			"`resilience.resilience_to_artefact` exists and writes to a "
