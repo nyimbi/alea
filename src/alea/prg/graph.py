@@ -31,6 +31,11 @@ from typing import Any
 import yaml
 
 from alea.config.paths import repo_root
+from alea.prg.crossval import (
+	CrossValidationReport,
+	CrossValidationRule,
+	rules_from_document,
+)
 from alea.prg.dsl import DslError, Expr, evaluate, parse, solve_for
 from alea.prg.feedback import solve_loop
 from alea.prg.views import (
@@ -116,6 +121,7 @@ class ParameterGraph:
 		edges: Iterable[RelationshipEdge],
 		*,
 		declared: Mapping[str, tuple[tuple[str, ...], tuple[str, ...]]] | None = None,
+		rules: Iterable[CrossValidationRule] = (),
 	) -> None:
 		self._nodes = dict(nodes)
 		self._equations = dict(equations)
@@ -124,6 +130,11 @@ class ParameterGraph:
 		#: `structure_issues` can compare them against the edges. They are not
 		#: the graph; the edges are.
 		self._declared = dict(declared or {})
+		#: The cross-validation rules the document declared, parsed once at
+		#: load. Unlike the declared lists above, these are not a second record
+		#: of something the edges say -- a rule relates parameters no equation
+		#: couples, so nothing else in the graph can supply it.
+		self._rules = tuple(rules)
 
 		self._by_source: dict[str, list[RelationshipEdge]] = defaultdict(list)
 		self._by_target: dict[str, list[RelationshipEdge]] = defaultdict(list)
@@ -211,7 +222,18 @@ class ParameterGraph:
 			# `equations` on the node is likewise a second record of what the
 			# equation objects already say. Read it, check it, drop it.
 			payload.pop("equations", None)
+			# `validation_rules` is §19's per-parameter value rules -- "value
+			# >= 0", "value <= 500" -- which are what `range` already states,
+			# and the node model enforces `range` on every load. Dropping the
+			# text loses nothing the graph does not already check; a rule that
+			# is *not* expressible as a range would need a home, and none is
+			# declared.
 			payload.pop("validation_rules", None)
+			# `cross_validation` is §25's multi-parameter rules, and it is NOT
+			# a second record of anything: a rule relates parameters no
+			# equation couples. It was popped here and discarded, which made a
+			# declared rule a comment. It is read below, by
+			# `rules_from_document`, from the raw document.
 			payload.pop("cross_validation", None)
 			nodes[key] = ParameterNode(**payload)
 
@@ -222,7 +244,15 @@ class ParameterGraph:
 			equations[key] = Equation(**payload)
 
 		edges = [RelationshipEdge(**edge) for edge in raw_edges]
-		return cls(nodes, equations, edges, declared=declared)
+		# Parsed here, at load, so a rule outside the condition grammar is a
+		# load error rather than a surprise inside a check -- and so a rule
+		# naming a parameter the graph does not hold is refused before a
+		# scenario is ever validated against it.
+		try:
+			rules = rules_from_document(document)
+		except DslError as exc:
+			raise GraphError(f"cross-validation: {exc}") from exc
+		return cls(nodes, equations, edges, declared=declared, rules=rules)
 
 	@classmethod
 	def from_yaml(cls, path: str | Path) -> ParameterGraph:
@@ -245,6 +275,16 @@ class ParameterGraph:
 	@property
 	def edges(self) -> tuple[RelationshipEdge, ...]:
 		return self._edges
+
+	@property
+	def rules(self) -> tuple[CrossValidationRule, ...]:
+		"""The cross-validation rules the document declared.
+
+		Read off the graph rather than re-parsed per call, so the rule a report
+		names is the rule that was validated at load. A caller that re-read the
+		YAML would be checking a document that may have changed since.
+		"""
+		return self._rules
 
 	def node(self, parameter: str) -> ParameterNode:
 		try:
@@ -500,6 +540,19 @@ class ParameterGraph:
 					f"{node.role.value!r}; a parameter an equation fixes is "
 					f"`derived`, and any other role lets a user set it and be "
 					f"silently overruled"
+				)
+
+		# A rule naming a parameter the graph does not hold can never be
+		# evaluated, so it is a rule that would report nothing forever while
+		# reading as a check. Refused at load, for the same reason a misspelt
+		# equation system is: a load error belongs at load.
+		for rule in self._rules:
+			unknown = rule.parameters - set(self._nodes)
+			if unknown:
+				raise GraphError(
+					f"cross-validation rule {rule.id!r} names {sorted(unknown)}, "
+					f"which are not parameters; a rule that can never be "
+					f"evaluated is a check that never runs"
 				)
 
 	def structure_issues(self) -> list[str]:
@@ -948,6 +1001,20 @@ class ParameterGraph:
 					)
 				)
 		return violations
+
+	def cross_validate(self, values: Mapping[str, float]) -> CrossValidationReport:
+		"""Every declared cross-validation rule against ``values``.
+
+		A separate pass from :meth:`consistency` because it answers a different
+		question: ``consistency`` says which *equations* fail, and this says
+		which declared *relationships between parameters* a scenario breaks --
+		relationships no equation states, so no residual can report them. A
+		graph with no rules returns an empty report and says so, rather than an
+		empty finding list that reads as "everything holds".
+		"""
+		from alea.prg.crossval import run_rules
+
+		return run_rules(self._rules, values, self)
 
 	def _residual(self, equation: Equation, values: Mapping[str, float]) -> float:
 		return evaluate(parse(equation.lhs), values) - evaluate(

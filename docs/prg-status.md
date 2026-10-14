@@ -25,19 +25,21 @@ the code and `config/prg.yaml` are the authority, and this says where to look.
 | Uncertainty | `src/alea/prg/uncertainty.py` | The declared stochastic inputs, the closure over `affects`, and the reach into derived parameters |
 | Units | `src/alea/prg/units.py` | The dimensional check the spec asks for: each equation's two sides against a Pint registry of the graph's vocabulary |
 | Conflict detection | `src/alea/prg/conflicts.py` | The four kinds (direct, over-determined, under-determined, loop, out-of-range), ranked, with corrections |
+| Cross-validation | `src/alea/prg/crossval.py` | §25's multi-parameter rules: a parsed condition, three severities, and the register of rules that could not be evaluated |
 | Translation | `src/alea/prg/translate.py` | Three declared routes from a PRG parameter to a what-if knob, and the register of the other fifty |
-| API | `src/alea/api/routes/prg.py` | Four routes: `GET /prg/summary`, `GET /prg/equations`, `POST /prg/conflicts`, `POST /prg/sensitivity` |
+| API | `src/alea/api/routes/prg.py` | Five routes: `GET /prg/summary`, `GET /prg/equations`, `POST /prg/conflicts`, `POST /prg/sensitivity`, `POST /prg/cross-validation` |
 | The graph | `config/prg.yaml` | 84 parameters, 37 equations, 84 edges, 1 feedback loop |
 
 Commands: `alea prg summary|equations|check|propagate|conflicts|sensitivity|units|audit`,
 and `alea expr render|eval|diff|simplify|solve`.
 
-The two reads are public and the two computations are analyst-tier. Every
+The two reads are public and the three computations are analyst-tier. Every
 response carries its registers: `/prg/summary` reports how many equations the
-dimensional check could not decide, and `/prg/conflicts` reports what it
-examined. A client that renders a green count from a check whose coverage
-shrank is reporting something the service never claimed, and the only place to
-prevent that is in the payload.
+dimensional check could not decide, `/prg/conflicts` reports what it examined,
+and `/prg/cross-validation` reports the rules that could not be evaluated. A
+client that renders a green count from a check whose coverage shrank is
+reporting something the service never claimed, and the only place to prevent
+that is in the payload.
 
 ## The four conflict kinds
 
@@ -59,6 +61,33 @@ conflict chains `dF/dx` through the gradient table, so a lever *upstream* of
 the violating equation is offered — the carbon price moves the DSCR through the
 tariff and the cash flow, and a list built from the equation's own parameters
 would offer only the regulator's floor for a conflict the carbon price caused.
+
+## Cross-validation, and what it is not
+
+`crossval.py` runs the rules `config/prg.yaml` declares under
+`cross_validation:` — four of them, over pairs of parameters **no equation
+couples**: a carbon price against a budget ratio, a lender's coverage floor
+against a sponsor's return, a reserve margin against a build target. Each is a
+boundary a reviewer would argue about, not a physical constant, and each holds
+at every parameter's declared default.
+
+Three severities, and they are not decoration: `error` gates (`alea prg check`
+exits non-zero), `warning` and `info` are printed and block nothing. The
+condition describes the *bad* state — `if carbon_price > 100 and
+coal_retirement > 2045: warning` — so a finding fires when the condition
+**holds**.
+
+The grammar is comparisons and boolean operators, deliberately **no
+arithmetic**: `a * b > c` is a coupling the graph should state as an equation,
+where it is checked dimensionally and propagated. `cooling + hydrogen <=
+availability` is the worked example — it is already `water_availability_constraint`,
+so it is an equation here and not a rule. A sign on a *number* is allowed
+(`price_elasticity < -1.5`), a sign on a *parameter* is not.
+
+What it is not: a value rule. §19's per-parameter `validation_rules` — "value
+>= 0", "value <= 500" — are what `range` already states and the node model
+enforces on every load; the text is dropped because it adds nothing the graph
+does not already check.
 
 ## What the dimensional check found
 
@@ -267,3 +296,46 @@ tolerance (measured worst case 1.1e-8 against a declared 1e-8), not exactly.
 A test demanding exact equality would be asserting something false about a
 fixed-point solver; the honest contract is agreement at the tolerance, and the
 test says so rather than loosening a number until it passes.
+
+**A declaration the loader pops is a comment that parses.** `from_mapping`
+popped `validation_rules` *and* `cross_validation` off every node and dropped
+both. The first is genuinely redundant — `range` states the same constraint and
+the node model enforces it — but the second is §25's multi-parameter rules,
+which relate parameters **no equation couples**, so nothing else in the graph
+can supply them. Every rule an author wrote was silently discarded, and the
+symptom is not an error: it is a check that reports "no findings" because it
+never looked. The test is not that a rule can be parsed but that a rule
+*declared in a document reaches `graph.rules` and is evaluated* — the
+"declared is not produced" class, closed by making the pop-list and the
+read-list the same list.
+
+**A condition read as a requirement inverts every rule.** The spec writes
+`if carbon_price > 100 and coal_retirement > 2045: warning`, so the condition
+describes the *bad* state and a finding fires when it **holds**. The first
+implementation appended a finding when it *failed*, which is the reading a
+"must hold" habit produces — and the shipped graph then reported all four rules
+violated at every default, a clean scenario flagged pathological. The canary
+that catches it is a rule set that must hold at defaults; the one that catches
+the opposite error is a probe that must make each rule fire.
+
+**A one-parameter-at-a-time probe cannot trigger a conjunctive rule.** The
+canary for "every rule can fire" moved each parameter to an endpoint of its
+range in turn, and `carbon_price > 150 and carbon_budget_ratio > 1.0` never
+fired: it needs *both* past threshold, and the probe held one at its default.
+The fix is to walk the corners of the rule's parameters' ranges, not one axis
+at a time. A canary whose probe is weaker than the condition reports a live
+rule as dead.
+
+**A rule the scenario cannot run is not a pass.** A rule naming a parameter the
+set does not carry is reported in `undecided` with the reason, never dropped —
+the same discipline as `units.undecidable`. A report reading "no
+cross-validation findings" for a rule that was never evaluated is a clean bill
+of health for a check that did not happen.
+
+**A negative literal is `USub(Constant)`, and refusing every unary operator
+refuses it.** The condition grammar allowed comparisons and booleans and
+nothing else, so `price_elasticity < -1.5` — over a parameter declared
+`(-3.0, 0.0)`, where a negative threshold is the only sensible one — was a load
+error. The grammar refused a condition the graph needs. `USub`/`UAdd` are now
+allowed on a *constant* only, so the arithmetic door stays shut: `-a` is still
+refused.

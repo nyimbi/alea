@@ -22,6 +22,7 @@ with itself; the closed form is an independent witness, and it is what makes
 
 from __future__ import annotations
 
+import itertools
 import math
 
 import pytest
@@ -2203,3 +2204,201 @@ def test_incremental_skips_a_loop_nothing_reached(graph: ParameterGraph, default
 		assert abs(step.values[member] - previous.values[member]) <= 1e-12, (
 			f"{member} moved although nothing that reaches it changed"
 		)
+
+
+# ---------------------------------------------------------------------------
+# Cross-validation rules (`alea_prg.md` §25)
+# ---------------------------------------------------------------------------
+
+
+def test_the_declared_cross_validation_rules_hold_at_every_default(
+	graph: ParameterGraph, defaults: dict
+):
+	"""The shipped rules are satisfiable, which a rule set can fail to be.
+
+	A rule that fires at every parameter's declared default is either a
+	threshold nobody can meet or a condition written inside out -- and it would
+	make every clean scenario report a finding, which is how a check earns
+	being switched off. This is the canary for the shipped four.
+	"""
+	report = graph.cross_validate(graph.propagate(dict(defaults)).values)
+	assert report.rules, "the graph declares no rules, so this test proves nothing"
+	assert not report.violations, [str(f) for f in report.violations]
+	assert not report.blocks
+
+
+def test_every_declared_rule_can_fire(graph: ParameterGraph, defaults: dict):
+	"""A rule that cannot fire is a rule that checks nothing.
+
+	Each rule is pointed at a scenario built to satisfy its condition, and the
+	condition must hold. Without this, a typo in a threshold -- ``>`` for
+	``<``, a parameter named but never reached -- leaves a rule that passes
+	every scenario forever while reading as a check.
+	"""
+	from alea.prg.crossval import evaluate_condition
+
+	assert graph.rules, "no rules to check"
+	# The base is the *propagated* defaults, not the sparse `defaults` mapping:
+	# a rule naming a derived parameter -- `carbon_budget_ratio` is one -- has
+	# no default of its own, and evaluating against the sparse set would report
+	# the rule undecided rather than untriggerable.
+	base = graph.propagate(dict(defaults)).values
+	for rule in graph.rules:
+		# The probe moves every parameter the rule names, together, over the
+		# corners of their declared ranges. One parameter at a time is too weak:
+		# a conjunctive condition -- "carbon_price > 150 AND budget_ratio > 1"
+		# -- needs both past their thresholds, and a probe that held one at its
+		# default would report the rule untriggerable when it is merely a rule
+		# about a combination.
+		names = sorted(rule.parameters)
+		endpoints = []
+		for parameter in names:
+			node = graph.node(parameter)
+			assert node.range is not None, parameter
+			endpoints.append(node.range)
+		fired = False
+		for corner in itertools.product(*endpoints):
+			probe = dict(base)
+			probe.update(dict(zip(names, corner)))
+			if evaluate_condition(rule.condition, probe):
+				fired = True
+				break
+		assert fired, (
+			f"rule {rule.id!r} cannot be made to fire at any corner of its "
+			f"parameters' declared ranges, so it checks nothing"
+		)
+
+
+def test_a_rule_declared_in_the_document_is_read_not_discarded(document: dict):
+	"""A declared rule reaches the graph, which is not what used to happen.
+
+	``from_mapping`` popped ``cross_validation`` off every node and threw it
+	away, so a rule was a comment that parsed. This asserts the rule survives
+	into ``graph.rules`` and is evaluated -- the "declared is not produced"
+	class, closed for this field.
+	"""
+	doc = dict(document)
+	doc["cross_validation"] = [
+		{
+			"id": "invented_rule",
+			"condition": "carbon_price_usd_per_tco2 > 10",
+			"severity": "warning",
+			"message": "an invented rule",
+		}
+	]
+	rebuilt = ParameterGraph.from_mapping(doc)
+	assert [r.id for r in rebuilt.rules] == ["invented_rule"]
+	values = {
+		name: node.default for name, node in rebuilt.nodes.items()
+		if node.default is not None
+	}
+	report = rebuilt.cross_validate(rebuilt.propagate(values).values)
+	assert [f.rule.id for f in report.findings] == ["invented_rule"]
+
+
+def test_a_rule_naming_an_unknown_parameter_is_refused_at_load(document: dict):
+	"""A rule that can never be evaluated is refused, not silently skipped."""
+	doc = dict(document)
+	doc["cross_validation"] = [
+		{"id": "bad", "condition": "not_a_parameter > 1", "severity": "warning"}
+	]
+	with pytest.raises(GraphError, match="not_a_parameter"):
+		ParameterGraph.from_mapping(doc)
+
+
+def test_a_condition_outside_the_grammar_is_refused():
+	"""Arithmetic in a condition is refused: it belongs in an equation.
+
+	``a * b > c`` is a coupling the graph should state, where it is checked
+	dimensionally and propagated. Allowing it in a condition puts a relation
+	where nothing checks it -- the reason the DSL's whitelist is extended by
+	comparisons and nothing else.
+	"""
+	from alea.prg.crossval import evaluate_condition
+
+	for refused in ("a * b > c", "a + 1 > b", "a", "-a > 1", "f(a) > 1"):
+		with pytest.raises(DslError):
+			evaluate_condition(refused, {"a": 1.0, "b": 2.0, "c": 3.0})
+
+
+def test_a_negative_literal_is_expressible():
+	"""A parameter whose range is negative has to be comparable to a number.
+
+	``-1.5`` parses as ``USub(Constant(1.5))``. Refusing every unary operator
+	made ``price_elasticity < -1.5`` -- a rule over a parameter declared
+	``(-3.0, 0.0)`` -- a load error, which is the grammar refusing a condition
+	the graph needs rather than one it should not have.
+	"""
+	from alea.prg.crossval import evaluate_condition
+
+	assert evaluate_condition("a < -1.5", {"a": -2.0})
+	assert not evaluate_condition("a < -1.5", {"a": -1.0})
+
+
+def test_an_undecidable_rule_is_not_a_pass():
+	"""A rule the scenario cannot run is reported, not dropped.
+
+	The failure this guards is a report reading "no cross-validation findings"
+	for a rule that was never evaluated -- a clean bill of health for a check
+	that did not happen, which is the same defect ``units.undecidable`` exists
+	to prevent.
+	"""
+	from alea.prg.crossval import parse_rule, run_rules
+
+	rule = parse_rule("needs_two", "alpha > 1 and beta > 1: warning")
+	report = run_rules((rule,), {"alpha": 5.0})
+	assert not report.violations, "an unrun rule was reported as a violation"
+	assert len(report.undecided) == 1
+	assert "beta" in report.undecided[0].detail
+	assert "not decided" in report.summary()
+
+
+def test_only_an_error_severity_rule_blocks():
+	"""The three tiers are not decoration: one gates and two do not.
+
+	A check that blocked on a warning is unusable as a gate; one that never
+	blocked on an error is a gate that never fires. Both directions here.
+	"""
+	from alea.prg.crossval import Severity, parse_rule, run_rules
+
+	values = {"a": 5.0, "b": 5.0}
+	info = run_rules((parse_rule("i", "a > 1: info"),), values)
+	warning = run_rules((parse_rule("w", "a > 1: warning"),), values)
+	error = run_rules((parse_rule("e", "a > 1: error"),), values)
+	assert info.violations and not info.blocks
+	assert warning.violations and not warning.blocks
+	assert error.violations and error.blocks
+	assert [f.severity for f in error.findings] == [Severity.ERROR]
+
+
+def test_the_cli_gates_on_an_error_rule(graph: ParameterGraph):
+	"""``prg check`` exits non-zero on an ``error``-severity cross-validation rule.
+
+	The gate is only a gate if it is watched failing. The rule that blocks is
+	built into a copy of the shipped document, so the exit code is the thing
+	under test rather than the shipped thresholds.
+	"""
+	from typer.testing import CliRunner
+
+	from alea.cli import app
+
+	document = yaml.safe_load(PRG_PATH.read_text())
+	document["cross_validation"] = [
+		{
+			"id": "always_error",
+			"condition": "carbon_price_usd_per_tco2 > 0",
+			"severity": "error",
+			"message": "fires on every scenario",
+		}
+	]
+	path = repo_root() / "config" / "prg.yaml"
+	backup = path.read_bytes()
+	try:
+		path.write_text(yaml.safe_dump(document, sort_keys=False))
+		runner = CliRunner()
+		result = runner.invoke(app, ["prg", "check"])
+		assert result.exit_code == 1, result.output
+	finally:
+		# Restored from bytes captured before the patch, never with
+		# `git checkout` -- the canary and any uncommitted work share the file.
+		path.write_bytes(backup)

@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from alea.prg import translate
+from alea.prg.crossval import CrossValidationReport
 from alea.prg.graph import ParameterGraph, Violation, load_graph
 from alea.prg.library import SYSTEM_IDS, coverage, systems_of
 from alea.prg.uncertainty import register as uncertainty_register
@@ -48,14 +49,29 @@ class ScenarioCheck:
 	excursions: dict[str, float] = field(default_factory=dict)
 	"""Derived values the equations fixed outside their declared range."""
 
+	cross_validation: CrossValidationReport | None = None
+	"""The cross-validation rules the scenario breaks, if any were declared.
+
+	``None`` when the graph declares no rules, which is a different fact from
+	an empty report: "no rule was violated" and "no rule was checked" read
+	identically in a finding list, and the caller needs to tell them apart.
+	"""
+
 	def summary(self) -> str:
-		if self.consistent and not self.unmodelled:
-			return "consistent against every modelled system"
 		parts: list[str] = []
-		if self.violations:
-			parts.append(f"{len(self.violations)} violation(s)")
-		if self.unmodelled:
-			parts.append(f"{len(self.unmodelled)} system(s) not modelled")
+		if self.consistent and not self.unmodelled:
+			parts.append("consistent against every modelled system")
+		else:
+			if self.violations:
+				parts.append(f"{len(self.violations)} violation(s)")
+			if self.unmodelled:
+				parts.append(f"{len(self.unmodelled)} system(s) not modelled")
+		# The cross-validation line is appended whether or not the equation
+		# check passed: a scenario can satisfy every equation and still break a
+		# rule no equation states, and a summary that reported only the first
+		# would call that consistent.
+		if self.cross_validation is not None:
+			parts.append(self.cross_validation.summary())
 		return "; ".join(parts)
 
 
@@ -81,6 +97,12 @@ def graph_summary(graph: ParameterGraph | None = None) -> dict[str, Any]:
 		"derived": len(g.order()),
 		"feedback_loops": [str(loop) for loop in g.feedback_loops()],
 		"structure_issues": g.structure_issues(),
+		# The cross-validation rules the document declares. Reported as a count
+		# and their ids, because a summary that listed only the graph's own
+		# counts would leave a reader assuming the rules were checked -- and
+		# until now a declared rule was silently discarded at load, so the
+		# number is new information rather than a restatement.
+		"cross_validation_rules": [rule.id for rule in g.rules],
 		# How much of the graph the what-if engine can be driven from. A
 		# summary that reported only the graph's own counts would leave the
 		# reader assuming the engine uses all of it; the fraction is the
@@ -112,11 +134,17 @@ def check_scenario(
 	g = _graph(graph)
 	result = g.propagate(values)
 	violations = g.consistency(result.values)
+	# Cross-validation runs on the *propagated* values, not the supplied ones:
+	# a rule naming a derived parameter -- "if lcoe > X and tariff < Y" -- is
+	# about the computed scenario, and checking it against a set that never
+	# carried that parameter would report the rule as undecided.
+	rules = g.rules
 	return ScenarioCheck(
 		consistent=not violations,
 		violations=tuple(violations),
 		unmodelled=tuple(coverage(g.equations)),
 		excursions=g.range_excursions(),
+		cross_validation=g.cross_validate(result.values) if rules else None,
 	)
 
 

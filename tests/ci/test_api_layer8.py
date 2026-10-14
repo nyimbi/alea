@@ -896,6 +896,7 @@ PRG_EXACT_FIELDS: dict[str, frozenset[str]] = {
 	"ConflictOut": frozenset({"residual", "tolerance"}),
 	"CorrectionOut": frozenset({"current", "delta"}),
 	"SensitivityOut": frozenset({"value", "derivatives"}),
+	"CrossValidationReportOut": frozenset({"violations", "undecided"}),
 }
 """The graph's own arithmetic, exempt per model.
 
@@ -903,6 +904,15 @@ These are numbers the PRG computes *exactly* from a parameter set -- a residual
 against a tolerance, a proposed move, a propagated value, a derivative -- and
 each model names the unit on an adjacent ``unit`` field, so none is the
 unanchored number the contract is about.
+
+``CrossValidationReportOut``'s two are *cardinalities*: how many findings the
+report holds and how many rules it could not decide. A count of findings is not
+a modelled quantity and has no unit to name -- wrapping it would pair a
+``ValueOut`` basis with an uncertainty invented to satisfy the validator, which
+is the one thing this contract exists to prevent. They are exempt per model
+rather than added to :data:`NON_QUANTITY_FIELDS` for the reason that map's own
+note gives: exempting the *name* would also exempt a genuinely modelled
+``violations`` on any future response model.
 
 They are exempt rather than wrapped because the graph records *which*
 parameters are uncertain and no magnitude for any of them: ``uncertainty.py``

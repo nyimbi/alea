@@ -46,6 +46,16 @@ from alea.prg.conflicts import (
 	detect_conflicts,
 	suggest_corrections,
 )
+from alea.prg.crossval import (
+	CrossValidationFinding,
+	CrossValidationReport,
+	CrossValidationRule,
+	Severity,
+	evaluate_condition,
+	parse_rule,
+	rules_from_document,
+	run_rules,
+)
 from alea.prg.graph import (
 	CycleError,
 	GraphError,
@@ -88,6 +98,9 @@ __all__ = [
 	"Conflict",
 	"ConflictKind",
 	"ConflictReport",
+	"CrossValidationFinding",
+	"CrossValidationReport",
+	"CrossValidationRule",
 	"Const",
 	"Correction",
 	"CycleError",
@@ -134,6 +147,7 @@ __all__ = [
 	"check_equation",
 	"check_graph",
 	"EquationCheck",
+	"Severity",
 	"UnitReport",
 	"UncertaintyRegister",
 	"register",

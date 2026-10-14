@@ -30,6 +30,9 @@ from alea.api.views import (
 	ConflictReportOut,
 	ConflictRequest,
 	CorrectionOut,
+	CrossValidationFindingOut,
+	CrossValidationReportOut,
+	CrossValidationRuleOut,
 	EngineTranslationOut,
 	EquationCheckOut,
 	EquationOut,
@@ -103,6 +106,7 @@ async def summary(principal: PublicDep) -> PrgSummaryOut:
 		unmodelled_systems=report["unmodelled_systems"],
 		feedback_loops=report["feedback_loops"],
 		structure_issues=report["structure_issues"],
+		cross_validation_rules=report["cross_validation_rules"],
 		engine_translation=EngineTranslationOut(**engine),
 		units=UnitReportOut(
 			consistent=[_check_out(c) for c in units.consistent],
@@ -240,4 +244,65 @@ async def sensitivity(
 		method=row.method,
 		value=propagated.values.get(request.parameter),
 		derivatives=largest,
+	)
+
+
+@router.post(
+	"/cross-validation",
+	response_model=CrossValidationReportOut,
+	summary="Rules that span more than one parameter, against a scenario",
+)
+async def cross_validation(
+	principal: AnalystDep, request: ConflictRequest
+) -> CrossValidationReportOut:
+	"""Every declared cross-validation rule against a parameter set.
+
+	Analyst-tier like the other POSTs: it takes a body and runs the graph, and
+	the tier rule here is mechanical -- a GET takes scalars and is public, a
+	POST takes a body and is analyst. What it answers is a policy question
+	rather than an arithmetic one, which is why the payload carries the
+	severity and the ``evaluated`` flag rather than a single verdict.
+	"""
+	graph = _graph()
+	unknown = set(request.set) - set(graph.nodes)
+	if unknown:
+		raise HTTPException(
+			status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+			detail=f"{sorted(unknown)} are not parameters in the graph",
+		)
+	values = {
+		name: node.default
+		for name, node in graph.nodes.items()
+		if node.default is not None
+	}
+	values.update(request.set)
+	propagated = graph.propagate(values)
+	report = graph.cross_validate(propagated.values)
+	return CrossValidationReportOut(
+		findings=[
+			CrossValidationFindingOut(
+				rule_id=finding.rule.id,
+				severity=finding.severity.value,
+				evaluated=finding.evaluated,
+				message=finding.rule.message,
+				suggestion=finding.rule.suggestion,
+				detail=finding.detail,
+			)
+			for finding in report.findings
+		],
+		rules=[
+			CrossValidationRuleOut(
+				id=rule.id,
+				condition=rule.condition,
+				severity=rule.severity.value,
+				message=rule.message,
+				suggestion=rule.suggestion,
+				parameters=sorted(rule.parameters),
+			)
+			for rule in report.rules
+		],
+		violations=len(report.violations),
+		undecided=len(report.undecided),
+		blocks=report.blocks,
+		summary=report.summary(),
 	)

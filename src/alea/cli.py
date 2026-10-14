@@ -268,6 +268,14 @@ def prg_summary() -> None:
 		)
 	typer.echo(f"uncertainty: {summary['uncertainty'].summary()}")
 	typer.echo(f"units: {summary['units'].summary()}")
+	# The cross-validation register. Printed as ids rather than a count because
+	# a count of rules that were *declared* says nothing about whether any of
+	# them was evaluated -- the check that runs them is `prg check`.
+	rules = summary["cross_validation_rules"]
+	typer.echo(
+		f"cross-validation: {len(rules)} rule(s) declared"
+		+ (f": {', '.join(rules)}" if rules else "")
+	)
 	for issue in summary["structure_issues"]:
 		typer.secho(f"structure: {issue}", fg=typer.colors.YELLOW, err=True)
 
@@ -340,8 +348,28 @@ def prg_check(
 			typer.secho(f"violation: {violation}", fg=typer.colors.RED, err=True)
 		for entry in result.unmodelled:
 			typer.secho(f"not modelled: {entry}", fg=typer.colors.YELLOW, err=True)
+		# Cross-validation findings are printed with the equation violations,
+		# because they are the other half of the same question. They are *not*
+		# folded into `consistent`: a scenario can satisfy every equation and
+		# still break a rule no equation states, and calling that inconsistent
+		# would misname what failed.
+		cross = result.cross_validation
+		if cross is not None:
+			for finding in cross.findings:
+				colour = (
+					typer.colors.RED
+					if finding.severity.value == "error"
+					else typer.colors.YELLOW
+				)
+				typer.secho(f"cross-validation: {finding}", fg=colour, err=True)
 		typer.echo(result.summary())
 		if not result.consistent:
+			raise typer.Exit(code=1)
+		# An `error`-severity rule is the one severity that gates: it is a
+		# scenario a reviewer should refuse, and a check that exited zero on it
+		# would be a gate that never fires. `warning` and `info` are printed
+		# and do not block.
+		if cross is not None and cross.blocks:
 			raise typer.Exit(code=1)
 
 

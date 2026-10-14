@@ -968,6 +968,7 @@ class PrgSummaryOut(ApiModel):
 	unmodelled_systems: list[str]
 	feedback_loops: list[str]
 	structure_issues: list[str]
+	cross_validation_rules: list[str]
 	engine_translation: EngineTranslationOut
 	units: UnitReportOut
 	uncertainty: UncertaintyOut
@@ -1113,6 +1114,47 @@ class ConflictRequest(ApiModel):
 	rank: int = Field(default=3, ge=1, le=20)
 
 
+class CrossValidationRuleOut(ApiModel):
+	"""One declared rule: the condition as written, and what it means."""
+
+	id: str
+	condition: str
+	severity: str
+	message: str
+	suggestion: str
+	parameters: list[str]
+
+
+class CrossValidationFindingOut(ApiModel):
+	"""One rule's verdict.
+
+	``evaluated`` is carried alongside the finding because the two are
+	different claims: a rule the scenario did not carry the parameters to run
+	is not a pass, and a client that rendered it as one would be reporting a
+	green the check never gave. ``detail`` says why when it is ``False``.
+	"""
+
+	rule_id: str
+	severity: str
+	evaluated: bool
+	message: str
+	suggestion: str
+	detail: str
+
+
+class CrossValidationReportOut(ApiModel):
+	"""The cross-validation verdicts, with the denominator."""
+
+	findings: list[CrossValidationFindingOut]
+	rules: list[CrossValidationRuleOut]
+	violations: int = Field(ge=0)
+	undecided: int = Field(ge=0)
+	blocks: bool
+	"""Whether an ``error``-severity rule was violated, which is the gate."""
+
+	summary: str
+
+
 __all__ = [
 	"DEFAULT_PAGE_SIZE",
 	"MAX_PAGE_SIZE",
@@ -1177,6 +1219,9 @@ __all__ = [
 	"ConflictReportOut",
 	"ConflictRequest",
 	"CorrectionOut",
+	"CrossValidationFindingOut",
+	"CrossValidationReportOut",
+	"CrossValidationRuleOut",
 	"EngineTranslationOut",
 	"EquationCheckOut",
 	"EquationOut",

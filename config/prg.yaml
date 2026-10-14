@@ -2423,3 +2423,48 @@ relationships:
     strength: hard
     description: "The price is divided by the hours it is paid over."
     priority: P2
+
+# ---------------------------------------------------------------------------
+# Cross-validation rules (`alea_prg.md` §25).
+#
+# WHY THESE ARE NOT EQUATIONS. Each relates parameters no equation couples: a
+# carbon price to a budget ratio, a lender's coverage floor to a sponsor's
+# return, a reserve margin to a build target. The graph is internally
+# consistent whether or not they hold, so no residual can report them and
+# `consistency` is silent about all four. That is exactly the class §25 exists
+# for -- "beyond equation-level consistency".
+#
+# WHY THE CONDITION IS COMPARISONS ONLY. No arithmetic: `a * b > c` is an
+# equation the graph should state, where it is checked dimensionally and
+# propagated, not a rule buried in a condition where nothing checks it. The
+# water-availability limit is the worked example -- `cooling + hydrogen <=
+# availability` is already `water_availability_constraint`, so it is an
+# equation here and not a rule.
+#
+# WHY THE THRESHOLDS. Each is a boundary a reviewer would argue about, not a
+# physical constant: they fire on a scenario a person should look at, and they
+# hold at every parameter's declared default so a clean load is a clean check.
+cross_validation:
+  - id: carbon_price_budget_alignment
+    condition: "carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0"
+    severity: warning
+    message: "A carbon price above 150 USD/t with emissions over the declared budget means the price is not doing the work the budget assumes"
+    suggestion: "Raise carbon_budget_mtco2, or check that the price reaches the sectors the budget covers"
+
+  - id: reserve_margin_vre_penetration
+    condition: "reserve_margin_min < 0.10 and vre_capacity_target_mw > 20000"
+    severity: error
+    message: "A reserve margin floor below 10% with a 20 GW-plus VRE target is a system with no firm capacity to fall back on"
+    suggestion: "Raise reserve_margin_min, or lower vre_capacity_target_mw and add firm capacity"
+
+  - id: financing_terms_conflict
+    condition: "dscr_min > 2.0 and equity_return_target > 0.15"
+    severity: warning
+    message: "A debt coverage floor above 2.0 together with an equity return above 15% is a capital structure no offtake price is likely to carry"
+    suggestion: "Lower dscr_min or equity_return_target, or accept a higher ppa_price_usd_per_mwh"
+
+  - id: elastic_demand_growth
+    condition: "price_elasticity < -1.5 and demand_growth > 0.10"
+    severity: info
+    message: "Fast demand growth against highly elastic demand: the tariff path moves the load as much as the growth assumption does"
+    suggestion: "Check the demand projection is not double-counting the tariff response"

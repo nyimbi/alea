@@ -222,3 +222,85 @@ def test_the_read_routes_are_public_and_the_compute_routes_are_not(
 	assert prg_client.get("/api/v1/prg/equations").status_code == 200
 	assert prg_client.post("/api/v1/prg/sensitivity", json={"parameter": "lcoe_usd_per_mwh"}).status_code == 401
 	assert prg_client.post("/api/v1/prg/conflicts", json={}).status_code == 401
+
+
+def test_the_cross_validation_route_serves_every_rule_and_its_verdict(
+	prg_client: TestClient, analyst_key: dict[str, str]
+) -> None:
+	"""The rules are served with the denominator, not just the findings.
+
+	A payload carrying only the findings would let a client render "no
+	violations" for a rule set it never saw. ``rules`` is every rule considered
+	and ``undecided`` counts the ones the scenario could not run, so the
+	response says how much of the rule set it actually checked.
+	"""
+	response = prg_client.post(
+		"/api/v1/prg/cross-validation", json={}, headers=analyst_key
+	)
+	assert response.status_code == 200, response.text
+	body = response.json()
+	assert body["rules"], "the shipped graph declares rules, so this is not vacuous"
+	assert body["violations"] == 0, body["summary"]
+	assert body["blocks"] is False
+	assert all(rule["condition"] for rule in body["rules"])
+	assert all("parameters" in rule for rule in body["rules"])
+
+
+def test_the_cross_validation_route_fires_on_a_scenario_that_breaks_a_rule(
+	prg_client: TestClient, analyst_key: dict[str, str]
+) -> None:
+	"""A scenario past an ``error`` threshold is reported, and blocks.
+
+	The route is only a check if it can be watched failing: a rule that fired
+	on nothing would pass this test's first assertion and mean nothing.
+	"""
+	response = prg_client.post(
+		"/api/v1/prg/cross-validation",
+		json={
+			"set": {
+				"reserve_margin_min": 0.05,
+				"vre_capacity_target_mw": 25000.0,
+				# The VRE build target is also the loop's own variable's driver,
+				# and a 25 GW target against a 10 GW total pushes `vre_share`
+				# outside its (0, 1) bracket -- the loop then has no root and
+				# the whole request 500s. Total capacity is raised so the
+				# scenario is one the graph can actually solve; the rule under
+				# test is about the margin and the target, not the fleet size.
+				"total_capacity_mw": 100000.0,
+			}
+		},
+		headers=analyst_key,
+	)
+	assert response.status_code == 200, response.text
+	body = response.json()
+	assert body["violations"] >= 1, body["summary"]
+	assert body["blocks"] is True
+	assert any(
+		finding["severity"] == "error" and finding["evaluated"]
+		for finding in body["findings"]
+	)
+
+
+def test_the_cross_validation_route_422s_an_unknown_parameter(
+	prg_client: TestClient, analyst_key: dict[str, str]
+) -> None:
+	response = prg_client.post(
+		"/api/v1/prg/cross-validation",
+		json={"set": {"nope": 1.0}},
+		headers=analyst_key,
+	)
+	assert response.status_code == 422
+
+
+def test_the_summary_carries_the_rule_register(
+	prg_client: TestClient,
+) -> None:
+	"""``/prg/summary`` names the declared rules, so a reader sees the check.
+
+	The register is the point: a summary with only the graph's counts would
+	leave a client assuming the rules are enforced, and until the loader was
+	fixed a declared rule was silently discarded -- so the list is new
+	information rather than a restatement of the file.
+	"""
+	body = prg_client.get("/api/v1/prg/summary").json()
+	assert body["cross_validation_rules"], "no rule register on the summary"
