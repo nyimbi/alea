@@ -103,6 +103,14 @@ def graph_summary(graph: ParameterGraph | None = None) -> dict[str, Any]:
 		# until now a declared rule was silently discarded at load, so the
 		# number is new information rather than a restatement.
 		"cross_validation_rules": [rule.id for rule in g.rules],
+		# The edge strengths the document declares, counted by tier. The spec
+		# gives every relationship a strength -- hard, soft, informational --
+		# and until now nothing read the field, so a declaration that
+		# distinguished a contradiction from a reported correlation was
+		# decoration. The register is what makes the tiers visible: a graph
+		# whose `soft` count is zero has declared every equation a
+		# contradiction, which is a claim about the model and not a default.
+		"edge_strength": g.strength_counts(),
 		# How much of the graph the what-if engine can be driven from. A
 		# summary that reported only the graph's own counts would leave the
 		# reader assuming the engine uses all of it; the fraction is the
@@ -134,13 +142,19 @@ def check_scenario(
 	g = _graph(graph)
 	result = g.propagate(values)
 	violations = g.consistency(result.values)
+	# An `informational` equation is a reported correlation, so failing it is a
+	# finding rather than a contradiction -- the spec's own reading of the
+	# tier. It stays in `violations`, which is the record, and is excluded from
+	# `consistent`, which is the gate. A scenario that breaks one is reported
+	# and does not fail a check.
+	blocking = tuple(v for v in violations if v.blocks)
 	# Cross-validation runs on the *propagated* values, not the supplied ones:
 	# a rule naming a derived parameter -- "if lcoe > X and tariff < Y" -- is
 	# about the computed scenario, and checking it against a set that never
 	# carried that parameter would report the rule as undecided.
 	rules = g.rules
 	return ScenarioCheck(
-		consistent=not violations,
+		consistent=not blocking,
 		violations=tuple(violations),
 		unmodelled=tuple(coverage(g.equations)),
 		excursions=g.range_excursions(),

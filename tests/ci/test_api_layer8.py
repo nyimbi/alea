@@ -897,6 +897,7 @@ PRG_EXACT_FIELDS: dict[str, frozenset[str]] = {
 	"CorrectionOut": frozenset({"current", "delta"}),
 	"SensitivityOut": frozenset({"value", "derivatives"}),
 	"CrossValidationReportOut": frozenset({"violations", "undecided"}),
+	"PrgSummaryOut": frozenset({"edge_strength"}),
 }
 """The graph's own arithmetic, exempt per model.
 
@@ -925,6 +926,13 @@ honest report is that the graph cannot yet supply one, and
 *names* would also exempt a genuinely modelled ``value`` on any future response
 model. Per model, so a rename cannot make it absorb a new field -- asserted
 live in the test below.
+
+``PrgSummaryOut``'s ``edge_strength`` is the same kind of thing: a map from a
+strength tier to the number of equations declaring it. Each value is a
+*cardinality* -- how many -- so there is no unit to name, and wrapping a count
+of equations in a :class:`ValueOut` would be the invented-uncertainty failure
+again. The model is the right scope for the exemption because ``edge_strength``
+names a register on the graph's own summary and nowhere else.
 """
 
 

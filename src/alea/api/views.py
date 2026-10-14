@@ -969,6 +969,15 @@ class PrgSummaryOut(ApiModel):
 	feedback_loops: list[str]
 	structure_issues: list[str]
 	cross_validation_rules: list[str]
+	edge_strength: dict[str, int]
+	"""Equations per declared strength tier: ``hard``, ``soft``, ``informational``.
+
+	A count by tier rather than a list, because the finding is the shape. A
+	graph with no ``soft`` equations has declared every relationship a
+	contradiction, and a client that assumed the spec's three tiers were in use
+	would read a two-tier graph as a three-tier one.
+	"""
+
 	engine_translation: EngineTranslationOut
 	units: UnitReportOut
 	uncertainty: UncertaintyOut
@@ -1051,6 +1060,23 @@ class ConflictOut(ApiModel):
 	unit: str
 	residual: float
 	tolerance: float
+	strength: str
+	"""The strength the graph declared on the edge that stated this equation.
+
+	``informational`` is the spec's reported correlation: a client rendering
+	every conflict as a failure would report a finding the service never
+	claimed as one. The field is what lets a reader tell the two apart without
+	knowing which equation ids happen to be informational.
+	"""
+
+	blocks: bool
+	"""Whether this conflict should fail a check.
+
+	Carried alongside ``strength`` rather than left to the client to derive: a
+	client that reimplemented the rule would drift from the CLI, and the two
+	would disagree about whether a scenario passes.
+	"""
+
 	corrections: list[CorrectionOut]
 
 

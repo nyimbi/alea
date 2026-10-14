@@ -2402,3 +2402,174 @@ def test_the_cli_gates_on_an_error_rule(graph: ParameterGraph):
 		# Restored from bytes captured before the patch, never with
 		# `git checkout` -- the canary and any uncommitted work share the file.
 		path.write_bytes(backup)
+
+
+# ---------------------------------------------------------------------------
+# Edge strength: the declaration that had no reader
+# ---------------------------------------------------------------------------
+
+
+def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
+	"""The register is the finding: the shipped graph declares two tiers.
+
+	The spec gives every relationship a strength, and until this was wired the
+	field was declared on all 84 edges and read by nothing. A summary that
+	reported only the edge count would leave a reader assuming the tiers were
+	in use; the count says which of them the model actually uses.
+	"""
+	counts = graph.strength_counts()
+	assert counts, "no strength was counted"
+	assert sum(counts.values()) == len(graph.equations)
+	assert set(counts) <= {"hard", "soft", "informational"}
+	# The shipped graph declares no `soft` equation. Pinned rather than
+	# asserted as a property, because it is a fact about *this* document: a new
+	# soft edge should make this test fail and be looked at, not pass silently.
+	assert counts == {"hard": 36, "informational": 1}, counts
+
+
+def test_a_soft_or_informational_violation_does_not_block_and_a_hard_one_does(
+	graph: ParameterGraph, defaults: dict
+):
+	"""The tier is what decides whether a failure is a contradiction.
+
+	``capture_price_ratio_definition`` is the one ``informational`` equation:
+	the spec's "reported correlation". Breaking it while a hard equation also
+	fails must leave the hard one blocking and this one merely reported --
+	otherwise the tier is a comment.
+	"""
+	values = dict(graph.propagate(defaults).values)
+	values["capture_price_usd_per_mwh"] = values["marginal_cost_usd_per_mwh"] * 1.5
+	violations = graph.consistency(values)
+	by_id = {v.equation_id: v for v in violations}
+	assert "capture_price_ratio_definition" in by_id, "the informational rule did not fire"
+	assert by_id["capture_price_ratio_definition"].strength == "informational"
+	assert not by_id["capture_price_ratio_definition"].blocks
+	assert any(v.blocks for v in violations), "a hard equation failed and nothing blocked"
+
+
+def test_the_informational_tier_is_read_and_cannot_fire_through_a_solve(
+	graph: ParameterGraph, defaults: dict
+):
+	"""The tier is honoured where it can fire, and it cannot fire after a solve.
+
+	``capture_price_ratio_definition`` determines its own variable, so
+	``propagate`` recomputes the ratio from the capture price and the marginal
+	cost and the equation holds by construction. The tier is therefore
+	reachable only through :meth:`consistency` on a set that was *not*
+	re-propagated -- which is the honest reading of "reported correlation" for
+	a determined equation, and the reason ``check_scenario`` never reports it.
+
+	Pinned as a fact about this document rather than left implicit: a reader
+	who assumed the shipped ``informational`` declaration was gating something
+	would be wrong, and the test says which path it does and does not reach.
+	"""
+	propagated = graph.propagate(defaults)
+	# A raw set: the ratio moved off its equation and nothing re-solved it.
+	raw = dict(propagated.values)
+	raw["capture_price_ratio"] = propagated.values["capture_price_ratio"] * 2.0
+	direct = graph.consistency(raw)
+	informational = [v for v in direct if not v.blocks]
+	assert informational, "the ratio was moved off its equation and nothing fired"
+	assert informational[0].equation_id == "capture_price_ratio_definition"
+	# The same set through a solve: propagation recomputes the ratio, so the
+	# equation holds again and the tier has nothing to gate.
+	check = check_scenario(raw, graph)
+	assert not any(
+		v.equation_id == "capture_price_ratio_definition" for v in check.violations
+	), "a determined equation cannot fail after the graph recomputes it"
+	assert check.consistent
+	# `consistent` excludes an informational finding, so a direct check of a raw
+	# set still calls the scenario consistent -- the gate reads `blocks`.
+	assert all(v.blocks for v in direct) is False
+
+
+def test_a_conflict_carries_its_strength_and_blocks_only_when_hard(
+	graph: ParameterGraph, defaults: dict
+):
+	"""The conflict report reads the same tier the violation does."""
+	values = dict(graph.propagate(defaults).values)
+	values["capture_price_usd_per_mwh"] = values["marginal_cost_usd_per_mwh"] * 1.5
+	report = detect_conflicts(graph, values)
+	informational = report.informational()
+	assert informational, "no informational conflict was reported"
+	assert all(not c.blocks for c in informational)
+	# `consistent` is False here because a hard equation also failed; the
+	# informational findings are still carried rather than dropped.
+	assert any(c.blocks for c in report.conflicts)
+	assert "informational" in report.summary() or not report.consistent
+
+
+def test_a_document_whose_edges_disagree_about_a_strength_is_refused(
+	document: dict,
+):
+	"""Two edges citing one equation at two strengths is a self-contradiction.
+
+	The strength is a property of the *equation*, and a reader taking it from
+	an edge would get whichever edge they read first. Refused at construction
+	rather than resolved by an arbitrary pick.
+	"""
+	patched = yaml.safe_load(yaml.safe_dump(document))
+	edges = patched["relationships"]
+	# Find an equation cited by more than one edge and flip one of its edges.
+	from collections import Counter
+
+	cited = Counter(edge["equation_id"] for edge in edges)
+	shared = next(eq for eq, n in cited.items() if n > 1)
+	flipped = False
+	for edge in edges:
+		if edge["equation_id"] == shared:
+			edge["strength"] = "informational" if not flipped else "hard"
+			flipped = True
+			break
+	with pytest.raises(GraphError, match="two strengths"):
+		ParameterGraph.from_mapping(patched)
+
+
+def test_the_summary_serves_the_strength_register(graph: ParameterGraph):
+	"""`graph_summary` carries the tiers, so the API and the CLI both see them."""
+	summary = graph_summary(graph)
+	assert summary["edge_strength"] == graph.strength_counts()
+	assert sum(summary["edge_strength"].values()) == len(graph.equations)
+
+
+def test_the_conflict_gate_reads_the_tier_and_a_softened_edge_stops_blocking():
+	"""The CLI exit code follows the declared strength, not the residual.
+
+	`prg conflicts --set carbon_price_usd_per_tco2=200` fails `dscr_requirement`
+	and exits 1. The same scenario with that equation's edge declared
+	`informational` must exit 0 while still *printing* the finding -- a gate
+	that ignored the tier would exit 1 either way, and this is the canary that
+	tells the two apart.
+	"""
+	from typer.testing import CliRunner
+
+	from alea.cli import app
+
+	path = repo_root() / "config" / "prg.yaml"
+	backup = path.read_bytes()
+	document = yaml.safe_load(path.read_text())
+	target = "dscr_requirement"
+	softened = False
+	for edge in document["relationships"]:
+		if edge["equation_id"] == target:
+			edge["strength"] = "informational"
+			softened = True
+	assert softened, f"no edge cites {target!r}; the canary patched nothing"
+	try:
+		path.write_text(yaml.safe_dump(document, sort_keys=False))
+		runner = CliRunner()
+		result = runner.invoke(
+			app, ["prg", "conflicts", "--set", "carbon_price_usd_per_tco2=200"]
+		)
+		assert result.exit_code == 0, result.output
+		# Printed, not hidden: the finding survives and only the gate moves.
+		assert target in result.output
+	finally:
+		# From captured bytes, never `git checkout` -- the canary and any
+		# uncommitted work share the file.
+		path.write_bytes(backup)
+	# The backup restored the hard edge, so the gate fires again.
+	restored = CliRunner().invoke(
+		app, ["prg", "conflicts", "--set", "carbon_price_usd_per_tco2=200"]
+	)
+	assert restored.exit_code == 1, restored.output

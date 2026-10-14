@@ -63,17 +63,30 @@ class ScenarioAudit:
 		parameters in ``skipped``, and a reader who takes it as a verdict is
 		taking a statement about the checked set for one about the result --
 		which is why :meth:`summary` carries the count.
+
+		An ``informational`` equation is excluded for the same reason
+		``check_scenario`` excludes it: it is a reported correlation, and
+		breaking one is a finding about the result rather than a disagreement
+		with it. The finding stays in ``violations``.
 		"""
-		return not self.violations
+		return not any(violation.blocks for violation in self.violations)
 
 	def summary(self) -> str:
 		if self.consistent:
+			tail = (
+				f"; {len(self.violations)} informational finding(s)"
+				if self.violations
+				else ""
+			)
 			return (
 				f"consistent over {len(self.checked)} parameter(s); "
 				f"{len(self.skipped)} not carried by the result, so nothing was "
-				f"checked about them"
+				f"checked about them{tail}"
 			)
-		return f"{len(self.violations)} violation(s) over {len(self.checked)} parameter(s)"
+		blocking = sum(1 for violation in self.violations if violation.blocks)
+		return (
+			f"{blocking} violation(s) over {len(self.checked)} parameter(s)"
+		)
 
 
 def parameters_from_result(

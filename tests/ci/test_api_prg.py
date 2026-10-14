@@ -304,3 +304,39 @@ def test_the_summary_carries_the_rule_register(
 	"""
 	body = prg_client.get("/api/v1/prg/summary").json()
 	assert body["cross_validation_rules"], "no rule register on the summary"
+
+
+def test_the_summary_serves_the_strength_register(
+	prg_client: TestClient,
+) -> None:
+	"""The tiers are on the payload, so a client does not have to guess them.
+
+	A client that assumed the spec's three strengths were all in use would read
+	this graph as one where ``soft`` edges exist. The count says which tiers the
+	model actually declares.
+	"""
+	body = prg_client.get("/api/v1/prg/summary").json()
+	assert body["edge_strength"], "no strength register on the summary"
+	assert sum(body["edge_strength"].values()) == body["equations"]
+	assert set(body["edge_strength"]) <= {"hard", "soft", "informational"}
+
+
+def test_the_conflicts_route_says_which_findings_block(
+	prg_client: TestClient, analyst_key: dict[str, str]
+) -> None:
+	"""A conflict carries its tier and the verdict the CLI would reach.
+
+	``blocks`` is on the payload rather than left for the client to derive from
+	``strength``: a client that reimplemented the rule would drift from the
+	CLI, and the two would disagree about whether a scenario passes.
+	"""
+	response = prg_client.post(
+		"/api/v1/prg/conflicts",
+		json={"set": {"demand_twh": 1.0}},
+		headers=analyst_key,
+	)
+	assert response.status_code == 200, response.text
+	conflicts = response.json()["conflicts"]
+	assert conflicts
+	assert all(c["strength"] in {"hard", "soft", "informational"} for c in conflicts)
+	assert all(c["blocks"] is (c["strength"] != "informational") for c in conflicts)

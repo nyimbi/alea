@@ -66,18 +66,38 @@ class CycleError(GraphError):
 
 @dataclass(frozen=True)
 class Violation:
-	"""One equation that does not hold at the current parameter values."""
+	"""One equation that does not hold at the current parameter values.
+
+	``strength`` is the edge's, carried here so the *consumer* can decide what a
+	failure costs. It is not a property of the arithmetic -- the residual is the
+	residual -- but of the claim the equation was declared to make. An
+	``informational`` equation is a reported correlation; failing it is a
+	finding, not a contradiction, and a check that treated the two alike would
+	gate on a number it was never asked to enforce.
+	"""
 
 	equation_id: str
 	residual: float
 	tolerance: float
 	relative: float
 	priority: str
+	strength: str = "hard"
+
+	@property
+	def blocks(self) -> bool:
+		"""Whether this failure contradicts the scenario rather than advising.
+
+		Read from ``strength``, and the default is ``hard`` because a violation
+		with no declared edge to read is one nothing softened.
+		"""
+		return self.strength != "informational"
 
 	def __str__(self) -> str:
+		tier = "" if self.strength == "hard" else f" [{self.strength}]"
 		return (
-			f"{self.equation_id} ({self.priority}): residual {self.residual:.6g}, "
-			f"relative {self.relative:.3g} > tolerance {self.tolerance:.3g}"
+			f"{self.equation_id} ({self.priority}{tier}): residual "
+			f"{self.residual:.6g}, relative {self.relative:.3g} > tolerance "
+			f"{self.tolerance:.3g}"
 		)
 
 
@@ -141,6 +161,28 @@ class ParameterGraph:
 		for edge in self._edges:
 			self._by_source[edge.source].append(edge)
 			self._by_target[edge.target].append(edge)
+
+		#: equation id -> the strength the edges citing it declare.
+		#:
+		#: Every equation is cited by at least one edge, and the strength is a
+		#: property of the *relationship* rather than of the arithmetic -- the
+		#: same equation reached by a `hard` edge and by an `informational` one
+		#: would mean two things. The graph refuses that rather than picking
+		#: one: a strength that depends on which edge a caller happened to read
+		#: is not a declared property. Checked at construction, so a document
+		#: that disagrees with itself is a load error.
+		self._strength: dict[str, str] = {}
+		for edge in self._edges:
+			declared_strength = self._strength.setdefault(
+				edge.equation_id, edge.strength.value
+			)
+			if declared_strength != edge.strength.value:
+				raise GraphError(
+					f"{edge.equation_id!r} is cited by edges of two strengths "
+					f"({declared_strength!r} and {edge.strength.value!r}); the "
+					f"strength is a property of the equation and a reader taking "
+					f"it from an edge would get whichever edge they read first"
+				)
 
 		#: equation id -> the equation, for a derived parameter. Built once.
 		self._loop_variables: set[str] = {
@@ -285,6 +327,30 @@ class ParameterGraph:
 		YAML would be checking a document that may have changed since.
 		"""
 		return self._rules
+
+	def strength_of(self, equation_id: str) -> str:
+		"""The strength the edges citing ``equation_id`` declare.
+
+		``hard`` for an equation no edge cites, which is the conservative
+		reading: an equation with no declared relationship behind it was not
+		softened by anything.
+		"""
+		return self._strength.get(equation_id, "hard")
+
+	def strength_counts(self) -> dict[str, int]:
+		"""How many *equations* each strength tier covers.
+
+		Counted by equation rather than by edge because the strength is a
+		property of the equation once loaded -- the constructor refuses a
+		document whose edges disagree about one. The register the summary
+		carries, and the useful fact is the *shape*: a graph with no ``soft``
+		equations has declared every relationship a contradiction, and one with
+		no ``hard`` equations has declared none of them load-bearing.
+		"""
+		counts: dict[str, int] = {}
+		for strength in self._strength.values():
+			counts[strength] = counts.get(strength, 0) + 1
+		return dict(sorted(counts.items()))
 
 	def node(self, parameter: str) -> ParameterNode:
 		try:
@@ -972,6 +1038,7 @@ class ParameterGraph:
 		for equation in self._equations.values():
 			if only is not None and equation.system != only:
 				continue
+			strength = self._strength.get(equation.id, "hard")
 			if equation.relation != "eq":
 				# An inequality is a boundary. Reporting its residual as a
 				# violation would flag a parameter sitting correctly inside its
@@ -984,6 +1051,7 @@ class ParameterGraph:
 							tolerance=equation.tolerance,
 							relative=float("inf"),
 							priority=equation.priority.value,
+							strength=strength,
 						)
 					)
 				continue
@@ -998,6 +1066,7 @@ class ParameterGraph:
 						tolerance=equation.tolerance,
 						relative=relative,
 						priority=equation.priority.value,
+						strength=strength,
 					)
 				)
 		return violations

@@ -148,9 +148,29 @@ class Conflict:
 	residual: float = 0.0
 	tolerance: float = 0.0
 	corrections: tuple[Correction, ...] = ()
+	strength: str = "hard"
+	"""The strength of the equation this came from, when it came from one.
+
+	An arithmetic conflict inherits the strength of the edge that declared the
+	equation. An input-level conflict -- over- and under-determination -- is a
+	contradiction the scenario states about itself and has no edge to inherit
+	from, so it stays ``hard``: nothing softened it.
+	"""
+
+	@property
+	def blocks(self) -> bool:
+		"""Whether this conflict invalidates the scenario rather than advising.
+
+		``informational`` is the spec's "reported correlation": a scenario that
+		breaks one is a finding worth printing and not a contradiction. Read
+		here rather than at the print site, so the CLI, the API and the report
+		all answer the same question the same way.
+		"""
+		return self.strength != "informational"
 
 	def __str__(self) -> str:
-		head = f"{self.kind.value}: {self.subject} -- {self.detail}"
+		tier = "" if self.strength == "hard" else f" [{self.strength}]"
+		head = f"{self.kind.value}{tier}: {self.subject} -- {self.detail}"
 		if not self.corrections:
 			return head
 		ranked = "; ".join(str(correction) for correction in self.corrections[:3])
@@ -170,11 +190,36 @@ class ConflictReport:
 
 	@property
 	def consistent(self) -> bool:
-		return not self.conflicts
+		"""Whether the scenario holds against every equation that *contradicts*.
+
+		An ``informational`` conflict is excluded, and the exclusion is the
+		point: the spec calls those reported correlations, and a check that
+		called a broken correlation an inconsistency would gate on a number it
+		was never asked to enforce. They remain in :attr:`conflicts`, so nothing
+		is hidden -- :meth:`informational` names them and :attr:`blocks` is what
+		a gate should read.
+		"""
+		return not any(conflict.blocks for conflict in self.conflicts)
+
+	@property
+	def blocks(self) -> bool:
+		"""Whether any conflict should make a check exit non-zero."""
+		return not self.consistent
+
+	def informational(self) -> tuple[Conflict, ...]:
+		"""The findings that advise rather than contradict."""
+		return tuple(conflict for conflict in self.conflicts if not conflict.blocks)
 
 	def summary(self) -> str:
 		if self.consistent:
-			return f"no conflicts over {len(self.checked)} checked parameter(s)"
+			tail = (
+				f"; {len(self.conflicts)} informational finding(s)"
+				if self.conflicts
+				else ""
+			)
+			return (
+				f"no conflicts over {len(self.checked)} checked parameter(s){tail}"
+			)
 		counts: dict[str, int] = {}
 		for conflict in self.conflicts:
 			counts[conflict.kind.value] = counts.get(conflict.kind.value, 0) + 1
@@ -313,6 +358,7 @@ def detect_conflicts(
 				residual=violation.residual,
 				tolerance=violation.tolerance,
 				corrections=corrections,
+				strength=violation.strength,
 			)
 		)
 

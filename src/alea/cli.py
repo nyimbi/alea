@@ -276,6 +276,14 @@ def prg_summary() -> None:
 		f"cross-validation: {len(rules)} rule(s) declared"
 		+ (f": {', '.join(rules)}" if rules else "")
 	)
+	# The strength register. The spec gives every relationship one of three
+	# tiers and this graph declares two of them, which is a fact about the
+	# model: a `soft` count of zero means every equation is a contradiction.
+	strength = summary["edge_strength"]
+	typer.echo(
+		"edge strength: "
+		+ ", ".join(f"{count} {tier}" for tier, count in sorted(strength.items()))
+	)
 	for issue in summary["structure_issues"]:
 		typer.secho(f"structure: {issue}", fg=typer.colors.YELLOW, err=True)
 
@@ -345,7 +353,13 @@ def prg_check(
 				err=True,
 			)
 		for violation in result.violations:
-			typer.secho(f"violation: {violation}", fg=typer.colors.RED, err=True)
+			# An `informational` equation is a reported correlation: breaking it
+			# is printed and does not fail the run, so it is not coloured as a
+			# contradiction. Everything else is one.
+			colour = (
+				typer.colors.RED if violation.blocks else typer.colors.YELLOW
+			)
+			typer.secho(f"violation: {violation}", fg=colour, err=True)
 		for entry in result.unmodelled:
 			typer.secho(f"not modelled: {entry}", fg=typer.colors.YELLOW, err=True)
 		# Cross-validation findings are printed with the equation violations,
@@ -1312,8 +1326,14 @@ def prg_conflicts(
 			graph, result.values, supplied=supplied, rank=rank
 		)
 		for conflict in report.ranked():
-			typer.secho(str(conflict), fg=typer.colors.RED, err=True)
+			colour = (
+				typer.colors.RED if conflict.blocks else typer.colors.YELLOW
+			)
+			typer.secho(str(conflict), fg=colour, err=True)
 		typer.echo(report.summary())
+		# `report.consistent` excludes informational findings, so the gate and
+		# the summary read the same predicate: a correlation that moved is
+		# printed and does not fail the run.
 		if not report.consistent:
 			raise typer.Exit(code=1)
 

@@ -26,6 +26,7 @@ the code and `config/prg.yaml` are the authority, and this says where to look.
 | Units | `src/alea/prg/units.py` | The dimensional check the spec asks for: each equation's two sides against a Pint registry of the graph's vocabulary |
 | Conflict detection | `src/alea/prg/conflicts.py` | The four kinds (direct, over-determined, under-determined, loop, out-of-range), ranked, with corrections |
 | Cross-validation | `src/alea/prg/crossval.py` | §25's multi-parameter rules: a parsed condition, three severities, and the register of rules that could not be evaluated |
+| Edge strength | `src/alea/prg/graph.py` | The declared `hard`/`soft`/`informational` tier, read by `consistency`, `conflicts`, the audit and the CLI gate |
 | Translation | `src/alea/prg/translate.py` | Three declared routes from a PRG parameter to a what-if knob, and the register of the other fifty |
 | API | `src/alea/api/routes/prg.py` | Five routes: `GET /prg/summary`, `GET /prg/equations`, `POST /prg/conflicts`, `POST /prg/sensitivity`, `POST /prg/cross-validation` |
 | The graph | `config/prg.yaml` | 84 parameters, 37 equations, 84 edges, 1 feedback loop |
@@ -88,6 +89,36 @@ What it is not: a value rule. §19's per-parameter `validation_rules` — "value
 >= 0", "value <= 500" — are what `range` already states and the node model
 enforces on every load; the text is dropped because it adds nothing the graph
 does not already check.
+
+## Edge strength, and what the tiers actually gate
+
+Every edge in `config/prg.yaml` carries a `strength` — `hard`, `soft`, or
+`informational` — which the spec defines as "inviolable", "usually true", and
+"reported correlation". The field was declared on all 84 edges and read by
+**nothing** until it was wired: a violation was a violation, and a graph that
+distinguished a contradiction from a correlation did so in a comment.
+
+The tier is now carried on the `Violation` and the `Conflict`, and it decides
+whether a failure blocks. `informational` does not: it is printed, it stays in
+the report, and `consistent` excludes it — so `alea prg check` and
+`alea prg conflicts` exit zero on a correlation that moved, and the API's
+`blocks` field says the same thing the CLI's exit code does rather than leaving
+a client to re-derive it.
+
+The shipped graph declares **two tiers, not three**: 36 `hard` equations and
+one `informational`. No `soft` equation exists, and the register says so
+(`alea prg summary` prints the counts, `/prg/summary` serves them) because a
+reader who assumed all three were in use would misread the model.
+
+**Where the tier can actually fire, and where it cannot.** The one
+`informational` equation is `capture_price_ratio_definition`, and it
+*determines* its own variable — so `propagate` recomputes the ratio from the
+capture price and the marginal cost, and the equation holds by construction.
+The tier is reachable through `consistency` on a set that was not re-propagated
+and through nothing else; `check_scenario` never reports it. That is a fact
+about this document rather than a property of the mechanism, and it is pinned
+in `tests/ci/test_prg.py` so a second informational equation that *is*
+reachable through a solve will be looked at rather than assumed.
 
 ## What the dimensional check found
 
@@ -339,3 +370,31 @@ nothing else, so `price_elasticity < -1.5` — over a parameter declared
 error. The grammar refused a condition the graph needs. `USub`/`UAdd` are now
 allowed on a *constant* only, so the arithmetic door stays shut: `-a` is still
 refused.
+
+**A declaration with no reader is a comment, even when it validates.** `strength`
+was declared on all 84 edges, enum-checked on every load, exported in the model
+— and read by nothing, so the spec's three tiers ("inviolable", "usually true",
+"reported correlation") were a comment the loader happened to accept. The
+symptom of the class is that nothing fails: a graph declaring every edge
+`informational` and one declaring every edge `hard` behave identically, and the
+difference is only visible to a person reading the YAML. The fix is not to read
+the field somewhere convenient but to make it *decide* something — here, whether
+a failure blocks — and then to gate on it, canaried in both directions.
+
+**A property of the equation cannot be read off an edge.** The strength is
+declared per edge, and 26 of the 37 equations are cited by more than one, so
+"the strength of this equation" was ambiguous: a reader taking it from an edge
+got whichever edge they read first. The constructor now refuses a document whose
+edges disagree about one, rather than resolving it by an arbitrary pick — the
+same discipline as `GraphError` for a node determined by two equations. A
+strength that depends on iteration order is not a declared property.
+
+**A determined equation cannot fail after a solve.** `capture_price_ratio_definition`
+is the one `informational` equation, and it determines its own variable, so
+`propagate` recomputes it and the equation holds by construction. A test written
+against "a scenario whose only failure is informational is still consistent"
+passed a raw set to `consistency` and a *solved* set to `check_scenario`, and
+the second assertion failed because the solve had erased the finding. The tier
+is real; the path that reaches it is narrower than the name suggests, and the
+test now says which path it does and does not reach rather than asserting a
+property the shipped graph does not have.

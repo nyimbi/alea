@@ -107,6 +107,7 @@ async def summary(principal: PublicDep) -> PrgSummaryOut:
 		feedback_loops=report["feedback_loops"],
 		structure_issues=report["structure_issues"],
 		cross_validation_rules=report["cross_validation_rules"],
+		edge_strength=report["edge_strength"],
 		engine_translation=EngineTranslationOut(**engine),
 		units=UnitReportOut(
 			consistent=[_check_out(c) for c in units.consistent],
@@ -180,6 +181,8 @@ async def conflicts(principal: AnalystDep, request: ConflictRequest) -> Conflict
 				unit=_unit_of(graph, conflict.subject),
 				residual=conflict.residual,
 				tolerance=conflict.tolerance,
+				strength=conflict.strength,
+				blocks=conflict.blocks,
 				corrections=[
 					CorrectionOut(
 						parameter=correction.parameter,
