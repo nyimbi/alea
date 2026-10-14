@@ -365,8 +365,17 @@ class Expr(ABC):
 
 	# -- the three lives -------------------------------------------------
 
-	def eval(self, values: Mapping[str, float]) -> float:
-		"""The value at ``values``."""
+	def eval(self, values: Mapping[str, Any]) -> float:
+		"""The value at ``values``.
+
+		``values`` may hold sequences as well as scalars: ``sum(x[i] for i in
+		range(0, 3))`` is the shape the equation library needs over a fleet, and
+		it *reduces* an array to a scalar, so the result of this call is a float
+		even when its inputs are not. The signature says ``Any`` for that
+		reason -- typing the inputs as floats described a narrower function than
+		the one that runs, and the array case is a supported one, not an
+		accident.
+		"""
 		return float(self._eval(values))
 
 	def eval_array(self, values: Mapping[str, Any]) -> np.ndarray:

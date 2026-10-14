@@ -1227,6 +1227,99 @@ def expr_solve(
 		typer.echo(f"{answer:.10g}")
 
 
+@prg_app.command("conflicts")
+def prg_conflicts(
+	set_: SetOption = None,
+	rank: Annotated[
+		int, typer.Option("--rank", help="Corrections to show per conflict.")
+	] = 3,
+) -> None:
+	"""Why a scenario is inconsistent, and what to move to fix it.
+
+	`check` says *which equations fail*. This says *what a person should do
+	about it*: which kind of inconsistency it is, which input is responsible,
+	and by how much it would have to move. Exits non-zero on any conflict, so
+	it gates the same way `check` does.
+	"""
+	from alea.prg import load_graph
+	from alea.prg.conflicts import detect_conflicts
+
+	with _run("cli.prg.conflicts"):
+		graph = load_graph()
+		values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+		supplied = dict(values)
+		for override in set_ or []:
+			key, _, raw = override.partition("=")
+			if key not in graph.nodes:
+				typer.secho(
+					f"{key!r} is not a parameter in the graph", fg=typer.colors.RED, err=True
+				)
+				raise typer.Exit(code=2)
+			# A derived parameter *is* accepted here, unlike in `check`: setting
+			# one is exactly the over-determination this command exists to
+			# report, and refusing it would hide the conflict the caller has.
+			values[key] = float(raw)
+			supplied[key] = float(raw)
+		result = graph.propagate(values)
+		report = detect_conflicts(
+			graph, result.values, supplied=supplied, rank=rank
+		)
+		for conflict in report.ranked():
+			typer.secho(str(conflict), fg=typer.colors.RED, err=True)
+		typer.echo(report.summary())
+		if not report.consistent:
+			raise typer.Exit(code=1)
+
+
+@prg_app.command("sensitivity")
+def prg_sensitivity(
+	parameter: Annotated[
+		str, typer.Argument(help="The derived parameter to differentiate.")
+	],
+	set_: SetOption = None,
+	top: Annotated[
+		int, typer.Option("--top", help="Inputs to show, by magnitude.")
+	] = 10,
+	elastic: Annotated[
+		bool, typer.Option("--elasticity", help="Show dimensionless elasticity.")
+	] = False,
+) -> None:
+	"""How much a derived parameter moves when each input moves.
+
+	Exact forward-mode derivatives, not finite differences: the graph's
+	equations are differentiable expressions and it knows the order they are
+	computed in, so the derivative is a chain along that path. A difference
+	quotient carries a truncation error that has to be tuned per parameter, and
+	the tuning is what makes a sensitivity report irreproducible.
+	"""
+	from alea.prg import load_graph
+	from alea.prg.sensitivity import elasticity, sensitivity
+
+	with _run("cli.prg.sensitivity", parameter=parameter):
+		graph = load_graph()
+		values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+		for override in set_ or []:
+			key, _, raw = override.partition("=")
+			if key not in graph.nodes:
+				typer.secho(
+					f"{key!r} is not a parameter in the graph", fg=typer.colors.RED, err=True
+				)
+				raise typer.Exit(code=2)
+			values[key] = float(raw)
+		propagated = graph.propagate(values)
+		row = sensitivity(graph, parameter, propagated.values)
+		if elastic:
+			weights = elasticity(graph, parameter, propagated.values)
+			for name, weight in sorted(
+				weights.items(), key=lambda kv: abs(kv[1]), reverse=True
+			)[:top]:
+				typer.echo(f"  {name:38s} {weight:+12.6g}")
+		else:
+			for name, value in row.largest(top):
+				typer.echo(f"  {name:38s} {value:+12.6g}")
+		typer.echo(f"{parameter} = {propagated.values.get(parameter):.6g} ({row.method})")
+
+
 @prg_app.command("audit")
 def prg_audit(
 	name: Annotated[str, typer.Argument(help="Stored scenario name.")],

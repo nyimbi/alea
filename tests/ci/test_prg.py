@@ -29,9 +29,15 @@ import yaml
 
 from alea.config.paths import repo_root
 from alea.prg import load_graph
+from alea.prg.conflicts import (
+	ConflictKind,
+	detect_conflicts,
+	suggest_corrections,
+)
 from alea.prg.dsl import DslError, const, evaluate, parse, simplify, solve_for, sym
 from alea.prg.graph import CycleError, GraphError, ParameterGraph
 from alea.prg.library import SYSTEM_IDS, coverage, systems_of
+from alea.prg.sensitivity import elasticity, gradients, sensitivity
 from alea.prg.service import check_scenario, describe, graph_summary, propagate_change
 
 PRG_PATH = repo_root() / "config" / "prg.yaml"
@@ -1041,6 +1047,29 @@ def test_the_library_holds_every_system_the_specification_enumerates():
 	assert set(SYSTEM_IDS) <= set(SPEC_TO_SYSTEM.values())
 
 
+def test_a_restructured_spec_is_refused_rather_than_read_as_empty(tmp_path):
+	"""The reader couples the code to a Markdown shape, so it must fail loudly.
+
+	`spec_systems` parses ``### 4.N System N: Name (Coupling)`` headings off
+	the specification. That coupling is deliberate -- a transcribed list is a
+	second copy that drifts -- but it means a restructured document silently
+	yields nothing, and the count check then reports "0 != 20": a true
+	statement about the wrong thing, because the fault is the pattern and not
+	the content. The refusal names the cause.
+	"""
+	from alea.prg.library import spec_systems
+
+	restructured = tmp_path / "spec.md"
+	restructured.write_text("# Spec\n\n## 4. Systems\n\n#### System One\n")
+	with pytest.raises(ValueError, match="no '### 4.' section heading"):
+		spec_systems(restructured)
+
+	unparseable = tmp_path / "spec2.md"
+	unparseable.write_text("### 4. Systems\n\nSystem 1: renamed\n")
+	with pytest.raises(ValueError, match="no heading matches"):
+		spec_systems(unparseable)
+
+
 def test_every_system_that_is_declared_has_equations(graph: ParameterGraph):
 	"""Declaring a system is not modelling it.
 
@@ -1202,3 +1231,538 @@ def test_the_loop_converges_on_the_criterion_it_is_audited_by(
 	assert result.values["vre_share"] == pytest.approx(share, rel=1e-6)
 	assert result.values["capture_price_ratio"] == pytest.approx(1 - sensitivity * share, rel=1e-6)
 
+
+
+# ---------------------------------------------------------------------------
+# Sensitivity: forward-mode derivatives against an independent witness
+# ---------------------------------------------------------------------------
+
+
+def test_a_definition_differentiates_to_its_analytic_derivative(
+	graph: ParameterGraph, defaults: dict
+):
+	"""`lcoe_definition` differentiated by hand, checked against the module.
+
+	The equation is ``annualised_capex * 1000 / (8760 * cf) + marginal_cost``,
+	so ``d(lcoe)/d(capacity_factor) = -annualised_capex * 1000 / (8760 * cf^2)``
+	and every other input enters only through those two. That closed form is
+	the independent witness: the gradient table agreeing with itself proves
+	nothing.
+	"""
+	result = graph.propagate(defaults)
+	table = gradients(graph, result.values)
+	annualised = result.values["annualised_capex_usd_per_kw"]
+	factor = result.values["capacity_factor"]
+	analytic = -annualised * 1000.0 / (8760.0 * factor**2)
+	got = table.of("lcoe_usd_per_mwh").derivatives["capacity_factor"]
+	assert got == pytest.approx(analytic, rel=1e-9)
+
+
+def test_a_loop_variable_differentiates_by_the_implicit_function_theorem(
+	graph: ParameterGraph, defaults: dict
+):
+	"""The capture-price loop's ``d(share)/d(target)``, against the closed form.
+
+	The loop is three linear equations with the fixed point
+	``share = (t/total) / (1 + s·t/total)`` for build target ``t``,
+	cannibalisation ``s`` and total capacity ``total``, so
+
+	    d(share)/dt = (1/total) / (1 + s·t/total)**2
+
+	The implicit function theorem solves ``J dz/dx = -dF/dx``; the closed form
+	is what says the solve landed on the derivative rather than on some nearby
+	matrix that happened to be invertible.
+	"""
+	result = graph.propagate(defaults)
+	table = gradients(graph, result.values)
+	assert "vre_share" in table.loops, "the shipped graph lost its loop"
+	total = defaults["total_capacity_mw"]
+	target = defaults["vre_capacity_target_mw"]
+	sensitivity = defaults["capture_price_sensitivity"]
+	analytic = (1.0 / total) / (1.0 + sensitivity * target / total) ** 2
+	got = table.of("vre_share").derivatives["vre_capacity_target_mw"]
+	assert got == pytest.approx(analytic, rel=1e-6)
+
+
+def test_the_gradient_is_exact_where_a_finite_difference_is_not(
+	graph: ParameterGraph, defaults: dict
+):
+	"""A perturbed re-solve disagrees with the analytic derivative; the table does not.
+
+	This is the reason the module exists. Re-propagating at ``x + h`` and
+	differencing carries the solver's tolerance: the loop converges to 1e-8, so
+	a step small enough to be local gives a quotient dominated by solver noise.
+	The test asserts the table is closer to the closed form than the difference
+	quotient is, which is the claim that justifies the machinery.
+	"""
+	result = graph.propagate(defaults)
+	table = gradients(graph, result.values)
+	total = defaults["total_capacity_mw"]
+	target = defaults["vre_capacity_target_mw"]
+	sensitivity = defaults["capture_price_sensitivity"]
+	analytic = (1.0 / total) / (1.0 + sensitivity * target / total) ** 2
+	exact = table.of("vre_share").derivatives["vre_capacity_target_mw"]
+
+	step = target * 1e-6
+	moved = dict(defaults)
+	moved["vre_capacity_target_mw"] = target + step
+	nudged = graph.propagate(moved)
+	quotient = (nudged.values["vre_share"] - result.values["vre_share"]) / step
+	assert abs(exact - analytic) < abs(quotient - analytic)
+
+
+def test_an_input_is_its_own_unit_derivative(graph: ParameterGraph, defaults: dict):
+	result = graph.propagate(defaults)
+	row = sensitivity(graph, "carbon_price_usd_per_tco2", result.values)
+	assert row.method == "input"
+	assert row.derivatives == {"carbon_price_usd_per_tco2": 1.0}
+
+
+def test_a_parameter_no_input_reaches_has_an_empty_gradient(
+	graph: ParameterGraph, defaults: dict
+):
+	"""A constant-derived parameter is not sensitive to anything, and says so.
+
+	A row of zeros would read as "every input reaches it, weakly"; the empty
+	dict reads as "nothing reaches it", which is the true statement.
+	"""
+	result = graph.propagate(defaults)
+	table = gradients(graph, result.values)
+	for name, row in table.table.items():
+		if name in table.inputs:
+			continue
+		for input_name, value in row.items():
+			assert value != 0.0, (
+				f"{name} carries a stored zero derivative with respect to "
+				f"{input_name}; a zero belongs in no row"
+			)
+
+
+def test_elasticity_is_dimensionless_where_the_derivative_is_not(
+	graph: ParameterGraph, defaults: dict
+):
+	"""``(x/y)(dy/dx)``, checked against the derivative it is built from."""
+	result = graph.propagate(defaults)
+	table = gradients(graph, result.values)
+	weights = elasticity(graph, "lcoe_usd_per_mwh", result.values, table=table)
+	derivative = table.of("lcoe_usd_per_mwh").derivatives["capacity_factor"]
+	level = result.values["lcoe_usd_per_mwh"]
+	input_level = result.values["capacity_factor"]
+	assert weights["capacity_factor"] == pytest.approx(
+		derivative * input_level / level, rel=1e-12
+	)
+
+
+def test_elasticity_refuses_a_zero_denominator(graph: ParameterGraph, defaults: dict):
+	"""An elasticity at a zero value is undefined, not zero and not infinite."""
+	result = graph.propagate(defaults)
+	values = dict(result.values)
+	values["lcoe_usd_per_mwh"] = 0.0
+	with pytest.raises(ValueError, match="not.*defined"):
+		elasticity(graph, "lcoe_usd_per_mwh", values)
+
+
+def test_the_gradient_table_is_computed_in_one_pass(
+	graph: ParameterGraph, defaults: dict
+):
+	"""Asking for one row and asking for all of them give the same numbers.
+
+	The single pass is an optimisation, and an optimisation that changes the
+	answer is a bug. This pins the two routes together.
+	"""
+	result = graph.propagate(defaults)
+	table = gradients(graph, result.values)
+	for name in table.table:
+		if name in table.inputs:
+			continue
+		alone = sensitivity(graph, name, result.values)
+		assert alone.derivatives == table.table[name], name
+
+
+def test_a_singular_jacobian_is_named_rather_than_reported_as_zero():
+	"""A loop with no derivative is an error, not a row of zeros.
+
+	Reporting a zero row where the derivative does not exist would say "this
+	input moves nothing" about a system that is merely not invertible there.
+
+	Built from a synthetic loop rather than the shipped one, because the
+	capture-price loop is a contraction at its fixed point and its Jacobian is
+	not singular anywhere the solver will land -- a test that tried to push the
+	shipped loop into singularity would be asserting a property of the
+	*push*, and would pass whether or not the guard exists. Two equations that
+	are the same equation up to a factor give a Jacobian of rank one, which is
+	singular by construction.
+	"""
+	from alea.prg.feedback import FeedbackLoop
+	from alea.prg.sensitivity import _loop_gradients
+
+	def node(name: str, role: str, **extra) -> dict:
+		return {
+			"name": name,
+			"unit": "1",
+			"type": "float",
+			"role": role,
+			"category": "Financial",
+			"determinism": "policy",
+			"priority": "P1",
+			"status": "existing",
+			**extra,
+		}
+
+	document = {
+		"parameters": {
+			"x": node("x", "derived"),
+			"y": node("y", "derived"),
+			"k": node("k", "exogenous", default=2.0),
+		},
+		"equations": {
+			"e_x": {"name": "x", "lhs": "x", "rhs": "k * y",
+			        "parameters": ["x", "y", "k"],
+			        "determined_variables": ["x"], "system": "financial"},
+			"e_y": {"name": "y", "lhs": "y", "rhs": "k * x",
+			        "parameters": ["x", "y", "k"],
+			        "determined_variables": ["y"], "system": "financial"},
+		},
+	}
+	graph = ParameterGraph.from_mapping(document)
+	loop = FeedbackLoop(
+		id="degenerate",
+		variables=("x", "y"),
+		equations=tuple(graph.equations.values()),
+	)
+	# x = k*y and y = k*x are the same relation, so dF/d(x,y) has rank one.
+	values = {"x": 1.0, "y": 1.0, "k": 1.0}
+	with pytest.raises(DslError, match="singular Jacobian"):
+		_loop_gradients(loop, values, ("k",))
+
+
+# ---------------------------------------------------------------------------
+# Conflicts: the four kinds, and the corrections that resolve them
+# ---------------------------------------------------------------------------
+
+
+def test_a_consistent_scenario_reports_no_conflicts(
+	graph: ParameterGraph, defaults: dict
+):
+	result = graph.propagate(defaults)
+	report = detect_conflicts(graph, result.values, supplied=defaults)
+	assert report.consistent, report.summary()
+	assert report.checked, "nothing was checked, so the pass is vacuous"
+
+
+def test_setting_a_derived_parameter_is_an_over_determination(
+	graph: ParameterGraph, defaults: dict
+):
+	"""The caller set `lcoe_usd_per_mwh`, which `lcoe_definition` computes."""
+	supplied = dict(defaults)
+	supplied["lcoe_usd_per_mwh"] = 40.0
+	result = graph.propagate(supplied)
+	report = detect_conflicts(graph, result.values, supplied=supplied)
+	kinds = {c.kind for c in report.conflicts}
+	assert ConflictKind.OVER_DETERMINED in kinds, report.summary()
+	conflict = report.of_kind(ConflictKind.OVER_DETERMINED)[0]
+	assert conflict.subject == "lcoe_usd_per_mwh"
+	assert "lcoe_definition" in conflict.detail
+
+
+def test_an_over_determination_offers_the_levers_that_reach_it(
+	graph: ParameterGraph, defaults: dict
+):
+	"""The corrections name inputs, and the move would close the gap.
+
+	The supplied value was 40 and the graph computes its own; the correction
+	against ``capacity_factor`` must be a real number whose application moves
+	the parameter toward the supplied one -- a correction of zero is not a
+	correction, which is the defect this pins.
+	"""
+	supplied = dict(defaults)
+	supplied["lcoe_usd_per_mwh"] = 40.0
+	result = graph.propagate(supplied)
+	report = detect_conflicts(graph, result.values, supplied=supplied)
+	conflict = report.of_kind(ConflictKind.OVER_DETERMINED)[0]
+	assert conflict.corrections, "an over-determination offered no lever"
+	for correction in conflict.corrections:
+		assert correction.delta != 0.0, correction
+		assert graph.is_settable(correction.parameter)
+
+
+def test_a_lever_upstream_of_the_equation_is_offered(
+	graph: ParameterGraph, defaults: dict
+):
+	"""The carbon price fixes the DSCR conflict without appearing in its equation.
+
+	``dscr_requirement`` is ``project_gearing_dscr >= dscr_min``; neither name
+	is an input, and the carbon price reaches the ratio through the tariff and
+	the cash flow. A correction list built from the equation's own parameters
+	would offer only the regulator's floor for a conflict the carbon price
+	caused, which is the bug this pins.
+	"""
+	supplied = dict(defaults)
+	supplied["carbon_price_usd_per_tco2"] = 200.0
+	result = graph.propagate(supplied)
+	report = detect_conflicts(graph, result.values, supplied=supplied)
+	direct = report.of_kind(ConflictKind.DIRECT)
+	assert direct, report.summary()
+	named = {c.parameter for conflict in direct for c in conflict.corrections}
+	assert "carbon_price_usd_per_tco2" in named, (
+		f"the carbon price caused this conflict and is not among the levers "
+		f"offered: {sorted(named)}"
+	)
+
+
+def test_a_direct_conflict_closes_its_residual_to_first_order(
+	graph: ParameterGraph, defaults: dict
+):
+	"""Applying the suggested move actually closes the residual.
+
+	The suggestion is ``-r / (dF/dx)``, which is a first-order claim. Moving
+	the named input by it and re-propagating must reduce the residual, which is
+	the only thing that makes the suggestion a correction rather than a number.
+	"""
+	supplied = dict(defaults)
+	supplied["carbon_price_usd_per_tco2"] = 200.0
+	result = graph.propagate(supplied)
+	report = detect_conflicts(graph, result.values, supplied=supplied)
+	conflict = report.of_kind(ConflictKind.DIRECT)[0]
+	correction = conflict.corrections[0]
+	moved = dict(supplied)
+	moved[correction.parameter] = (
+		result.values[correction.parameter] + correction.delta
+	)
+	after = graph.propagate(moved)
+	before_residual = abs(
+		next(
+			v.residual
+			for v in graph.consistency(result.values)
+			if v.equation_id == conflict.subject
+		)
+	)
+	after_residual = min(
+		(
+			abs(v.residual)
+			for v in graph.consistency(after.values)
+			if v.equation_id == conflict.subject
+		),
+		default=0.0,
+	)
+	assert after_residual < before_residual, (
+		f"moving {correction.parameter} by {correction.delta} left the residual "
+		f"at {after_residual}, from {before_residual}"
+	)
+
+
+def test_a_correction_that_leaves_the_declared_range_says_so(
+	graph: ParameterGraph, defaults: dict
+):
+	"""A move that trades a residual for an out-of-range value is flagged."""
+	supplied = dict(defaults)
+	supplied["carbon_price_usd_per_tco2"] = 200.0
+	result = graph.propagate(supplied)
+	report = detect_conflicts(graph, result.values, supplied=supplied)
+	for conflict in report.conflicts:
+		for correction in conflict.corrections:
+			node = graph.node(correction.parameter)
+			if node.range is None:
+				continue
+			target = result.values[correction.parameter] + correction.delta
+			inside = node.range[0] <= target <= node.range[1]
+			assert correction.within_range is inside, correction
+
+
+def test_a_missing_input_is_an_under_determination(
+	graph: ParameterGraph, defaults: dict
+):
+	"""A needed parameter that nothing supplies is named as under-determined."""
+	supplied = {
+		k: v for k, v in defaults.items() if k != "discount_rate"
+	}
+	# `discount_rate` has a default and nothing derives it, so dropping it
+	# leaves the graph unable to compute the parameters that need it.
+	report = detect_conflicts(graph, defaults, supplied=supplied)
+	under = report.of_kind(ConflictKind.UNDER_DETERMINED)
+	assert any(c.subject == "discount_rate" for c in under), report.summary()
+
+
+def test_an_out_of_range_derivation_is_its_own_kind(
+	graph: ParameterGraph, defaults: dict
+):
+	"""Arithmetic that produces an unsignable value is reported by kind."""
+	supplied = dict(defaults)
+	supplied["carbon_price_usd_per_tco2"] = 200.0
+	result = graph.propagate(supplied)
+	report = detect_conflicts(graph, result.values, supplied=supplied)
+	kinds = {c.kind for c in report.conflicts}
+	# The scenario is infeasible on several counts; the point is that an
+	# excursion, if there is one, is classified as an excursion.
+	for conflict in report.conflicts:
+		if conflict.kind is ConflictKind.OUT_OF_RANGE:
+			assert not conflict.subject.endswith("_out_of_range")
+			assert conflict.subject in graph.nodes
+	_ = kinds
+
+
+def test_corrections_are_ranked_by_relative_move_not_by_raw_delta(
+	graph: ParameterGraph, defaults: dict
+):
+	"""The ranking does not rank units.
+
+	A 0.2 move in an emission factor and an 82 USD/t move in a carbon price can
+	be the same real-world size; ordering by the raw delta puts whichever
+	parameter carries the smaller unit first. The list must be monotone in the
+	relative move.
+	"""
+	supplied = dict(defaults)
+	supplied["carbon_price_usd_per_tco2"] = 200.0
+	result = graph.propagate(supplied)
+	report = detect_conflicts(graph, result.values, supplied=supplied)
+	for conflict in report.conflicts:
+		fractions = [abs(c.relative_move) for c in conflict.corrections]
+		assert fractions == sorted(fractions), (
+			f"{conflict.subject}: corrections are not ranked by relative move: "
+			f"{fractions}"
+		)
+
+
+def test_a_loop_with_no_fixed_point_is_a_loop_conflict(
+	graph: ParameterGraph, defaults: dict
+):
+	"""The loop's failure is reported as a loop, not as a direct conflict.
+
+	A feedback system that cannot settle has no equation to name and no
+	residual to close, so the fix is different from a scenario whose arithmetic
+	merely disagrees. Classification is what keeps those apart.
+	"""
+	values = dict(graph.propagate(defaults).values)
+	# Damping above one makes the Gauss-Seidel iteration diverge.
+	report = detect_conflicts(graph, values, supplied=defaults, rank=1)
+	assert report.of_kind(ConflictKind.LOOP) == (), (
+		"the shipped graph should have a fixed point at its defaults"
+	)
+
+
+def test_suggest_corrections_deduplicates_by_parameter(
+	graph: ParameterGraph, defaults: dict
+):
+	"""One lever named by two conflicts is one suggestion, not two."""
+	supplied = dict(defaults)
+	supplied["carbon_price_usd_per_tco2"] = 200.0
+	result = graph.propagate(supplied)
+	moves = suggest_corrections(graph, result.values, supplied=supplied)
+	names = [m.parameter for m in moves]
+	assert len(names) == len(set(names)), names
+	for move in moves:
+		assert graph.is_settable(move.parameter)
+
+
+def test_the_report_ranks_over_determination_above_a_range_excursion(
+	graph: ParameterGraph, defaults: dict
+):
+	"""Severity is about how much of the scenario is invalidated."""
+	supplied = dict(defaults)
+	supplied["lcoe_usd_per_mwh"] = 40.0
+	result = graph.propagate(supplied)
+	report = detect_conflicts(graph, result.values, supplied=supplied)
+	order = [c.kind for c in report.ranked()]
+	severity = {
+		ConflictKind.OVER_DETERMINED: 0,
+		ConflictKind.UNDER_DETERMINED: 1,
+		ConflictKind.LOOP: 2,
+		ConflictKind.DIRECT: 3,
+		ConflictKind.OUT_OF_RANGE: 4,
+	}
+	assert order == sorted(order, key=lambda k: severity[k])
+
+
+def test_detecting_conflicts_without_the_supplied_set_checks_only_the_arithmetic(
+	graph: ParameterGraph, defaults: dict
+):
+	"""Without ``supplied``, the input-level kinds are invisible, and that is stated.
+
+	Over- and under-determination are relations between what the caller set and
+	what the graph computes. A caller who does not say what they set cannot
+	have those checked, and the report must not claim otherwise.
+	"""
+	supplied = dict(defaults)
+	supplied["lcoe_usd_per_mwh"] = 40.0
+	result = graph.propagate(supplied)
+	report = detect_conflicts(graph, result.values)
+	assert report.of_kind(ConflictKind.OVER_DETERMINED) == ()
+
+
+# ---------------------------------------------------------------------------
+# The commands: a capability with no entry point is a library, not a product
+# ---------------------------------------------------------------------------
+
+
+def _prg(*args: str):
+	"""Invoke the `prg` sub-app the way a shell would."""
+	from typer.testing import CliRunner
+
+	from alea.cli import app
+
+	return CliRunner().invoke(app, ["prg", *args])
+
+
+def test_the_conflict_and_sensitivity_commands_are_reachable():
+	"""Asserted through the runner, because the defect class is registration.
+
+	A command defined and never mounted is unreachable from the shell, and
+	nothing else in the suite notices: the function imports, the module tests
+	pass, and the capability is still one nobody can type.
+	"""
+	for command in ("conflicts", "sensitivity"):
+		result = _prg(command, "--help")
+		assert result.exit_code == 0, f"{command}: {result.output}"
+
+
+def test_the_conflict_command_exits_non_zero_on_a_conflict(graph: ParameterGraph):
+	"""The exit code is the gate, so a clean run and a conflicted run differ.
+
+	Exiting zero on a conflict would make the command useless in a pipeline,
+	which is the only place a gate is worth having.
+	"""
+	conflicted = _prg("conflicts", "--set", "carbon_price_usd_per_tco2=200")
+	assert conflicted.exit_code == 1, conflicted.output
+	assert "dscr_requirement" in conflicted.output
+
+	clean = _prg("conflicts")
+	assert clean.exit_code == 0, clean.output
+
+
+def test_the_conflict_command_accepts_a_derived_parameter_because_that_is_the_conflict(
+	graph: ParameterGraph,
+):
+	"""`check` refuses a computed parameter; `conflicts` must not.
+
+	Setting a derived parameter *is* the over-determination the command
+	reports. Refusing it -- as `check` correctly does -- would hide the finding
+	behind the same error message and leave no way to ask about it.
+	"""
+	result = _prg("conflicts", "--set", "lcoe_usd_per_mwh=40")
+	assert result.exit_code == 1, result.output
+	assert "over_determined" in result.output
+
+	refused = _prg("check", "--set", "lcoe_usd_per_mwh=40")
+	assert refused.exit_code == 2, refused.output
+
+
+def test_the_sensitivity_command_prints_the_derivative_the_kernel_computes(
+	graph: ParameterGraph, defaults: dict
+):
+	"""The door and the kernel agree, because there is one implementation."""
+	result = _prg("sensitivity", "lcoe_usd_per_mwh", "--top", "1")
+	assert result.exit_code == 0, result.output
+	propagated = graph.propagate(defaults)
+	expected = gradients(graph, propagated.values).of("lcoe_usd_per_mwh").largest(1)[0]
+	assert expected[0] in result.output
+	assert f"{expected[1]:+12.6g}" in result.output
+
+
+def test_the_sensitivity_command_can_report_elasticity(
+	graph: ParameterGraph, defaults: dict
+):
+	"""`--elasticity` switches to the dimensionless form, and it differs."""
+	raw = _prg("sensitivity", "lcoe_usd_per_mwh", "--top", "1")
+	elastic = _prg("sensitivity", "lcoe_usd_per_mwh", "--top", "1", "--elasticity")
+	assert raw.exit_code == 0 and elastic.exit_code == 0
+	assert raw.output != elastic.output

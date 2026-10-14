@@ -38,6 +38,14 @@ from alea.prg.dsl import (
 	solve_for,
 	sym,
 )
+from alea.prg.conflicts import (
+	Conflict,
+	ConflictKind,
+	ConflictReport,
+	Correction,
+	detect_conflicts,
+	suggest_corrections,
+)
 from alea.prg.graph import (
 	CycleError,
 	GraphError,
@@ -46,6 +54,14 @@ from alea.prg.graph import (
 	Violation,
 	default_prg_path,
 	load_graph,
+)
+from alea.prg.sensitivity import (
+	GradientTable,
+	Sensitivity,
+	elasticity,
+	gradients,
+	sensitivity,
+	sensitivity_table,
 )
 from alea.prg.views import (
 	Determinism,
@@ -62,7 +78,11 @@ from alea.prg.views import (
 
 __all__ = [
 	"Add",
+	"Conflict",
+	"ConflictKind",
+	"ConflictReport",
 	"Const",
+	"Correction",
 	"CycleError",
 	"Determinism",
 	"Direction",
@@ -71,6 +91,7 @@ __all__ = [
 	"Expr",
 	"Expression",
 	"Func",
+	"GradientTable",
 	"GraphError",
 	"Mul",
 	"ParameterGraph",
@@ -82,6 +103,7 @@ __all__ = [
 	"Relationship",
 	"RelationshipEdge",
 	"Role",
+	"Sensitivity",
 	"Strength",
 	"Subscript",
 	"Sum",
@@ -89,11 +111,17 @@ __all__ = [
 	"Violation",
 	"const",
 	"default_prg_path",
+	"detect_conflicts",
+	"elasticity",
 	"evaluate",
 	"evaluate_array",
+	"gradients",
 	"load_graph",
 	"parse",
+	"sensitivity",
+	"sensitivity_table",
 	"simplify",
 	"solve_for",
+	"suggest_corrections",
 	"sym",
 ]
