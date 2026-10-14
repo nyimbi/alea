@@ -241,6 +241,16 @@ def spec_systems(path: Path | None = None) -> dict[str, str]:
 
 	document = path or (repo_root() / "docs" / "params-prg1.md")
 	text = document.read_text()
+	# A restructured document that matches no heading returns an empty dict,
+	# and the caller's count check then reports "0 != 20" -- a true statement
+	# about the wrong thing, because the failure is the *pattern* and not the
+	# document's content. Refusing here names the real cause.
+	if "### 4." not in text:
+		raise ValueError(
+			f"{document} holds no '### 4.' section heading; `spec_systems` "
+			f"reads the systems from that section and a document without it "
+			f"cannot be checked against this library"
+		)
 	found: dict[str, str] = {}
 	for match in re.finditer(
 		r"^### 4\.\d+ System \d+: (?P<name>[^\n(]+?)(?: \((?P<coupling>[^)]*)\))?\s*$",
@@ -248,6 +258,12 @@ def spec_systems(path: Path | None = None) -> dict[str, str]:
 		flags=re.MULTILINE,
 	):
 		found[match.group("name").strip()] = (match.group("coupling") or "").strip()
+	if not found:
+		raise ValueError(
+			f"{document} has a '### 4.' section but no heading matches "
+			f"'### 4.N System N: Name (Coupling)'; the section was restructured "
+			f"and this reader no longer parses it"
+		)
 	return found
 
 

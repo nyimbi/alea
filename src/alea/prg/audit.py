@@ -57,13 +57,21 @@ class ScenarioAudit:
 
 	@property
 	def consistent(self) -> bool:
+		"""Whether every parameter that *was* checked agrees.
+
+		Not a bill of health for the scenario. It says nothing about the
+		parameters in ``skipped``, and a reader who takes it as a verdict is
+		taking a statement about the checked set for one about the result --
+		which is why :meth:`summary` carries the count.
+		"""
 		return not self.violations
 
 	def summary(self) -> str:
 		if self.consistent:
 			return (
 				f"consistent over {len(self.checked)} parameter(s); "
-				f"{len(self.skipped)} not carried by the result"
+				f"{len(self.skipped)} not carried by the result, so nothing was "
+				f"checked about them"
 			)
 		return f"{len(self.violations)} violation(s) over {len(self.checked)} parameter(s)"
 
