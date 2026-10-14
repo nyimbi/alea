@@ -991,3 +991,33 @@ def test_the_audit_does_not_compare_the_graph_against_itself():
 	assert supplied["carbon_price_usd_per_tco2"] == pytest.approx(50.0)
 	assert supplied["total_capacity_mw"] == pytest.approx(10000.0)
 
+
+def test_the_loop_converges_on_the_criterion_it_is_audited_by(
+	graph: ParameterGraph, defaults: dict
+):
+	"""A solver's stopping rule must not be weaker than its audit's.
+
+	The loop stopped when its *iterates* stopped moving. With damping 0.5 the
+	residual is the step divided by the damping factor, so the loop settled at
+	1e-8 on its iterates and 1.9e-8 on the capture-price equation -- outside
+	that equation's 1e-8 tolerance. The result was a scenario reported as
+	violating an equation the solver had just declared solved, which is worse
+	than a wrong number: it is a false finding, and false findings train a
+	reader to ignore the true ones.
+
+	The loop now also checks the scaled residual, the same comparison
+	`consistency` applies, so convergence means the answer passes the check
+	that will be run on it.
+	"""
+	result = graph.propagate(defaults)
+	assert result.loops, "the shipped graph lost its loop"
+	assert graph.consistency(result.values) == [], graph.consistency(result.values)
+	# And the answer is still the closed form, so the tighter rule did not
+	# change what the loop converges to.
+	total = defaults["total_capacity_mw"]
+	target = defaults["vre_capacity_target_mw"]
+	sensitivity = defaults["capture_price_sensitivity"]
+	share = (target / total) / (1 + sensitivity * target / total)
+	assert result.values["vre_share"] == pytest.approx(share, rel=1e-6)
+	assert result.values["capture_price_ratio"] == pytest.approx(1 - sensitivity * share, rel=1e-6)
+

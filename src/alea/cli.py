@@ -1063,15 +1063,7 @@ def main() -> None:
 	the only way to get a debug log was an environment variable the config does
 	not mention.
 	"""
-	provisional = None
-	try:
-		provisional = _provisional_config()
-	except Exception:  # noqa: BLE001 - a broken config is reported by the command, not here
-		provisional = None
-	if provisional is not None:
-		configure_from(provisional)
-	else:
-		configure()
+	configure()
 	try:
 		app()
 	except KeyboardInterrupt:  # pragma: no cover - interactive
@@ -1225,3 +1217,45 @@ def expr_solve(
 			typer.secho(f"cannot solve: {exc}", fg=typer.colors.RED, err=True)
 			raise typer.Exit(code=1) from exc
 		typer.echo(f"{answer:.10g}")
+
+
+@prg_app.command("audit")
+def prg_audit(
+	name: Annotated[str, typer.Argument(help="Stored scenario name.")],
+	version: Annotated[
+		str | None, typer.Option("--version", help="Version; defaults to the latest.")
+	] = None,
+) -> None:
+	"""Audit a stored scenario's solved result against the graph.
+
+	Exits non-zero on any violation, so it can gate a result the way `check`
+	gates a parameter set. The two ask different questions: `check` asks whether
+	the parameters a caller hands in are self-consistent, and this asks whether
+	the answer the optimiser returned is one the graph's identities accept. A
+	scenario can pass the first and fail the second, which is the whole reason
+	the seam exists.
+	"""
+	from alea.prg.audit import audit_scenario_result, fleet_intensity_gap
+	from alea.whatif.store import latest_version, load_scenario
+
+	with _run("cli.prg.audit", scenario=name):
+		resolved = version or latest_version(name)
+		if resolved is None:
+			typer.secho(f"no stored scenario named {name!r}", fg=typer.colors.RED, err=True)
+			raise typer.Exit(code=2)
+		record = load_scenario(name, resolved)
+		audit = audit_scenario_result(record.result)
+		for violation in audit.violations:
+			typer.secho(f"violation: {violation}", fg=typer.colors.RED, err=True)
+		for parameter, value in sorted(audit.excursions.items()):
+			typer.secho(
+				f"out of range: {parameter} = {value:.6g}", fg=typer.colors.RED, err=True
+			)
+		gap = fleet_intensity_gap(record.result)
+		typer.echo(f"{name} {resolved}: {audit.summary()}")
+		typer.echo(
+			f"fleet intensity {gap['engine_intensity']:.6g} t/MWh against the "
+			f"graph's {gap['graph_factor']:.6g} (ratio {gap['ratio']:.4g})"
+		)
+		if not audit.consistent:
+			raise typer.Exit(code=1)

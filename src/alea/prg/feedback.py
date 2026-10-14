@@ -42,9 +42,9 @@ that would be worse than shipping nothing.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Mapping
 
-from alea.prg.dsl import DslError, Expr, parse, solve_for
+from alea.prg.dsl import DslError, Expr, evaluate, parse, solve_for
 from alea.prg.views import Equation
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
@@ -240,7 +240,14 @@ def solve_loop(
 			abs(values[name] - previous[name]) / max(abs(values[name]), 1.0)
 			for name in loop.variables
 		)
-		if change <= loop.tolerance:
+		# Two criteria, and the second is the one that matters. Iterates
+		# stopping is not the equations holding: with damping the residual is
+		# the step divided by the damping factor, so a loop that stops at 1e-8
+		# on its iterates can sit at 2e-8 on the equation -- outside the
+		# tolerance `consistency` checks it against, and reported as a violation
+		# of an equation the solver considered solved. Converging on the
+		# residual is converging on what the answer is *checked* by.
+		if change <= loop.tolerance and _residuals_hold(graph, loop, values):
 			return LoopResult(
 				loop=loop.id,
 				values={name: values[name] for name in loop.variables},
@@ -260,3 +267,26 @@ def solve_loop(
 
 def _residual(equation: Equation) -> Expr:
 	return parse(f"({equation.lhs}) - ({equation.rhs})")
+
+
+def _residuals_hold(
+	graph: ParameterGraph, loop: FeedbackLoop, values: Mapping[str, float]
+) -> bool:
+	"""Whether every equation of the loop holds at ``values``.
+
+	The same scaled comparison ``ParameterGraph.consistency`` applies, so a
+	loop that reports convergence is a loop whose answer passes the check that
+	will be run on it. A solver whose stopping rule is weaker than its audit's
+	produces answers that are reported as violations of equations it declared
+	solved.
+	"""
+	for equation in loop.equations:
+		residual = abs(evaluate(_residual(equation), values))
+		scale = max(
+			1.0,
+			abs(evaluate(parse(equation.lhs), values)),
+			abs(evaluate(parse(equation.rhs), values)),
+		)
+		if residual / scale > equation.tolerance:
+			return False
+	return True
