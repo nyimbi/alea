@@ -1063,7 +1063,15 @@ def main() -> None:
 	the only way to get a debug log was an environment variable the config does
 	not mention.
 	"""
-	configure()
+	provisional = None
+	try:
+		provisional = _provisional_config()
+	except Exception:  # noqa: BLE001 - a broken config is reported by the command, not here
+		provisional = None
+	if provisional is not None:
+		configure_from(provisional)
+	else:
+		configure()
 	try:
 		app()
 	except KeyboardInterrupt:  # pragma: no cover - interactive
