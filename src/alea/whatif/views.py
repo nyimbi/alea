@@ -19,10 +19,72 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from alea.config.base import AleaConfig
 from alea.provenance.models import Basis
 from alea.whatif.params import ScenarioParameters
+
+
+class WhatIfConfig(AleaConfig):
+	"""Which sweep the quarterly `scenario_update` section reports.
+
+	The section is a *range across the scenario set*, so it needs to know which
+	parameter was swept and over what values. Both are config rather than
+	constants because a frontier over carbon price answers a different question
+	from one over demand growth, and a reader cannot tell which they are looking
+	at from the shape of the table.
+
+	``sweep_values`` is a tuple, not a (start, stop, points) triple. A triple
+	implies a uniform grid, and the interesting sweeps are not uniform -- a
+	carbon price frontier wants 0 in it, because the no-policy point is the
+	baseline the others are read against, and an arithmetic sequence from 0 to
+	200 in four steps does not include the values a policy reader asks for.
+	"""
+
+	parameter: str = "carbon_price_usd_per_tco2"
+	"""The `ScenarioParameters` field the frontier sweeps.
+
+	Validated against the model's own fields at load rather than at solve time:
+	a typo here is a `KeyError` from `sweep_parameter` several minutes into a
+	sweep, and `extra="forbid"` already refuses an unknown *key* -- this refuses
+	an unknown *value*.
+	"""
+
+	sweep_values: tuple[float, ...] = (0.0, 25.0, 50.0, 100.0, 200.0)
+	"""Parameter values, in the order the frontier's rows are reported."""
+
+	workers: int = Field(default=1, ge=1)
+	"""Parallel solves. Each worker writes its own cache entry, so there is no
+	lock contention; 1 keeps a report generation reproducible by default."""
+
+	cache_root: str = ""
+	"""Where solved scenarios are cached. Empty means the layer's own default,
+	which `WhatIfEngine` resolves -- a path spelled here would be a second
+	answer to a question the cache already answers."""
+
+	@field_validator("parameter")
+	@classmethod
+	def _parameter_must_be_sweepable(cls, value: str) -> str:
+		known = ScenarioParameters.model_fields
+		if value not in known:
+			raise ValueError(
+				f"unknown scenario parameter {value!r}; a frontier over a "
+				f"parameter the engine cannot apply is flat in every row and "
+				f"reads as 'this does not matter' rather than as a typo. "
+				f"Known: {', '.join(sorted(known))}"
+			)
+		return value
+
+	@field_validator("sweep_values")
+	@classmethod
+	def _sweep_needs_points(cls, value: tuple[float, ...]) -> tuple[float, ...]:
+		if len(value) < 2:
+			raise ValueError(
+				f"a sweep of {len(value)} point(s) is not a range; a frontier "
+				f"needs at least two values or it reports a scenario set of one"
+			)
+		return value
 
 
 class RiskMetrics(BaseModel):
@@ -274,5 +336,6 @@ __all__ = [
 	"ScenarioRecord",
 	"ScenarioResult",
 	"SolveOutcome",
+	"WhatIfConfig",
 	"renewable_share",
 ]

@@ -14,9 +14,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from alea.config.models import Config
 from alea.io.artefacts import (
 	ArtefactError,
 	artefact_exists,
@@ -28,6 +27,15 @@ from alea.io.artefacts import (
 from alea.io.sources import Access, get_fetcher, get_source
 from alea.logging import get_logger
 from alea.provenance.models import DerivedProvenance, Provenance
+
+if TYPE_CHECKING:
+	# `Config` appears only in annotations here, and every module that declares
+	# a stage imports this one. Importing the root config model at runtime made
+	# `alea.config.models -> alea.whatif.views -> alea.whatif -> alea.io` a
+	# cycle the moment `Config` gained a `whatif` field, because `alea.io`'s
+	# own `__init__` re-exports this module. The annotation is the whole
+	# dependency, so it costs nothing to make it a type-checking one.
+	from alea.config.models import Config
 
 _log = get_logger(__name__)
 
@@ -127,7 +135,7 @@ def _newest_raw(root: str | Path, source_id: str) -> tuple[str, Path] | None:
 	return None
 
 
-StageBuilder = Callable[[Config, Path, "BuildContext"], DerivedProvenance]
+StageBuilder = Callable[["Config", Path, "BuildContext"], DerivedProvenance]
 """A stage builder writes its artefact and returns its provenance."""
 
 
@@ -303,6 +311,7 @@ _REGISTRATION_MODULES = (
 	"alea.resilience.service",
 	"alea.scanning.service",
 	"alea.sector.service",
+	"alea.whatif.stages",
 )
 """Modules that declare stage builders with ``@stage``.
 

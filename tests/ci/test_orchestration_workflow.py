@@ -65,6 +65,7 @@ STAGES = (
 	"renewable_forecast",
 	"renewable_profiles",
 	"resilience_contingency",
+	"scenario_update",
 	"sector_coupling",
 	"system_alerts",
 	"tlens",
@@ -106,6 +107,7 @@ SUFFIXES = {
 	"policy_tracker": ".parquet",
 	"price_forecast": ".parquet",
 	"renewable_forecast": ".parquet",
+	"scenario_update": ".parquet",
 	"sector_coupling": ".json",
 	"system_alerts": ".parquet",
 	"week_ahead": ".parquet",
@@ -131,6 +133,7 @@ PROJECTIONS = {
 	"project_policy_tracker": "policy_tracker",
 	"project_price_forecast": "price_forecast",
 	"project_renewable_forecast": "renewable_forecast",
+	"project_scenario_update": "scenario_update",
 	"project_outage_forecast": "outage_forecast",
 	"project_system_alerts": "system_alerts",
 	"project_week_ahead": "week_ahead",
@@ -151,6 +154,7 @@ PROJECTION_PATTERNS = {
 	"project_policy_tracker": "scanning/policy/{date}.parquet",
 	"project_price_forecast": "market/prices/{date}.parquet",
 	"project_renewable_forecast": "weather/renewables/{date}.parquet",
+	"project_scenario_update": "whatif/frontier/{date}.parquet",
 	"project_outage_forecast": "outages/forecast/{date}.parquet",
 	"project_system_alerts": "outages/contingency/{date}.parquet",
 	"project_week_ahead": "planning/outlook/{date}.parquet",
@@ -217,7 +221,7 @@ def test_the_snakefile_includes_every_rule_file_and_no_missing_one():
 def test_every_stage_has_a_snakemake_rule():
 	"""A dataset with no rule is a dataset the workflow cannot produce."""
 	declared = _declared_rules(_smk_text())
-	missing = sorted(set(STAGES) - declared)
+	missing = sorted(set[str](STAGES) - declared)
 	assert not missing, f"no Snakemake rule declares these stages: {missing}"
 
 

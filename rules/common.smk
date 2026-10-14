@@ -69,6 +69,7 @@ SUFFIXES = {
 	"renewable_forecast": ".parquet",
 	"system_alerts": ".parquet",
 	"sector_coupling": ".json",
+	"scenario_update": ".parquet",
 }
 
 # The bus weight table `demand_hourly` disaggregates against: population and GDP

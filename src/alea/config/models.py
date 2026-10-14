@@ -17,6 +17,7 @@ from alea.market.views import MarketConfig
 from alea.outages.views import PredictiveConfig
 from alea.resilience.views import ResilienceConfig
 from alea.signals.models import CountryIso
+from alea.whatif.views import WhatIfConfig
 
 
 class ScenarioConfig(AleaConfig):
@@ -339,6 +340,18 @@ class Config(AleaConfig):
 	and the electrification rate all defaulted, so the recorded threshold was a
 	constant and the SAIDI the platform published could not be matched to a
 	utility's own number even in principle.
+	"""
+
+	whatif: WhatIfConfig = Field(default_factory=WhatIfConfig)
+	"""Layer 5: which parameter the quarterly `scenario_update` sweeps.
+
+	``reporting/quarterly.py``'s ``scenario_update`` section is a range across a
+	scenario set, and which set is a choice, not a constant. The sweep had no
+	home: `alea.whatif` could run one from a call and the API could write one to
+	a caller's path, but nothing named the parameter a *report* is over, so the
+	section was unproduced and no config key could change that. The parameter
+	value is validated against `ScenarioParameters` at load, because a typo
+	there is otherwise a `KeyError` several minutes into a sweep.
 	"""
 
 	market: MarketConfig = Field(default_factory=MarketConfig)

@@ -645,3 +645,36 @@ stages:
       - data/processed/loss_decomposition.parquet
     outs:
       - results/losses/monthly
+
+  scenario_update:
+    desc: >-
+      Capacity and cost across a parameter sweep, one row per solved scenario.
+      The sweep re-solves the base network once per configured value, so the
+      parameter and its values come from `config.whatif` rather than from this
+      command -- which sweep a quarter reports is a choice the provenance has
+      to record, and a rule argument is not recorded anywhere.
+    cmd: >-
+      uv run --directory . alea build scenario_update
+      --out data/processed/scenario_update.parquet
+      --config config/config.kenya.yaml
+      --set network_dir=results/networks
+    deps:
+      # A directory: the filename carries a content hash no literal can know at
+      # parse time, and any new solve is a new base network to sweep.
+      - results/networks
+    outs:
+      - data/processed/scenario_update.parquet
+
+  project_scenario_update:
+    desc: >-
+      The quarterly scenario range at the dated path its report reads. The
+      projection resolves the quarter that ended through `period_for`, so a
+      file stamped with the run date would be one no quarterly report opens.
+    cmd: >-
+      uv run --directory . alea project quarterly scenario_update
+      --source data/processed/scenario_update.parquet
+      --config config/config.kenya.yaml
+    deps:
+      - data/processed/scenario_update.parquet
+    outs:
+      - results/whatif/frontier

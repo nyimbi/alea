@@ -158,6 +158,12 @@ PRODUCERS: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# the header.
 		"loss_decomposition": "losses.service._stage_loss_decomposition",
 		"loss_statistics": "losses.service._stage_loss_decomposition",
+		# The quarterly scenario range. Recorded here as blocked on "no layer
+		# writes the frontier as an artefact", and that was exact: the engine
+		# solved and cached, the API wrote a document to whatever path its caller
+		# named, and no rule landed the section's frame where the section reads
+		# it. `whatif/stages.py` is that rule's stage.
+		"scenario_update": "whatif.stages.build_scenario_update",
 	}
 )
 
@@ -253,6 +259,18 @@ PROJECTED: Final[MappingProxyType[str, str]] = MappingProxyType(
 		# kernel, which is why they move together rather than one at a time.
 		"loss_decomposition": "project_loss_decomposition",
 		"loss_statistics": "project_loss_statistics",
+		# The quarterly range, and the last section whose recorded blocker was a
+		# *wiring* gap rather than a data arrival. `alea.whatif` could sweep a
+		# parameter and `alea.api.whatif` could write a frontier -- to a
+		# caller-chosen path, from an HTTP job, which is a route's shape and not a
+		# report's. Nothing ran a sweep from a rule and landed the section's frame
+		# at the section's own dated path.
+		#
+		# The sweep goes through `sweep_parameter` rather than
+		# `efficient_frontier` because the section asks for capacity, which the
+		# *result* carries (`capacity_mix_mw`) and the frontier frame drops:
+		# re-deriving it from the frontier's cost would be inventing it.
+		"scenario_update": "project_scenario_update",
 	}
 )
 
@@ -358,12 +376,6 @@ UNPRODUCED: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"documents, and `guess_signal_type` routes them -- but a signal is a "
 			"proposal in a review queue, not a committed project, so the producer "
 			"waits on a review-queue reader and a project-stage model."
-		),
-		"scenario_update": (
-			"`whatif/frontier/{date}.parquet`. `alea.whatif` solves scenarios "
-			"through a cache and returns `ScenarioResult`s; no layer writes the "
-			"frontier as an artefact, and `alea.api.whatif` writes one to a "
-			"caller-chosen path from the API surface rather than a rule."
 		),
 		"climate_risk": (
 			"No weather layer exists. `weather/climate_risk/{date}.parquet` has "

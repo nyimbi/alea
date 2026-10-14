@@ -106,6 +106,39 @@ rule week_ahead:
 		)
 
 
+rule scenario_update:
+	"""Capacity and cost across a parameter sweep, for the quarterly range.
+
+	The section declares ``whatif/frontier/{date}.parquet`` and its rows are one
+	solved scenario per sweep point, so the input is the solved network rather
+	than any table: `alea.whatif` re-solves the base network once per configured
+	value. A directory input for the same reason `capacity_update` takes one --
+	the filename carries a content hash no rule can know at parse time.
+
+	The sweep's parameter and its values come from ``config.whatif``, not from
+	this rule. A frontier over carbon price answers a different question from one
+	over demand growth, and a reader cannot tell which they are looking at from
+	the shape of the table -- so which one this is belongs in the run's config,
+	where the provenance records it, rather than in a rule's arguments.
+	"""
+	input:
+		provided("solved_network", NETWORKS)
+	output:
+		processed("scenario_update")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"build", "scenario_update",
+				"--out", output[0],
+				"--config", CONFIG,
+				"--set", set_arg("network_dir", NETWORKS),
+				*params.flags,
+			)
+		)
+
+
 # --------------------------------------------------------------------------
 # The projection: a stage's output, at the dated path its section reads
 # --------------------------------------------------------------------------
@@ -305,6 +338,31 @@ rule project_market_summary:
 		shell(
 			alea(
 				"project", "weekly", "market_summary",
+				"--source", input[0],
+				"--config", CONFIG,
+				*params.flags,
+			)
+		)
+
+
+rule project_scenario_update:
+	"""`scenario_update` at the dated path the quarterly report reads.
+
+	The projection resolves the *quarter that ended* through `period_for`, the
+	same rule the market sections follow: a quarterly report issued on the first
+	day of a quarter covers the quarter before it, so a file stamped with the
+	rule's own run date would be one no quarterly report opens.
+	"""
+	input:
+		processed("scenario_update")
+	output:
+		report_artefact("quarterly", "whatif/frontier/{date}.parquet")
+	params:
+		flags=lambda wildcards: force_flags(),
+	run:
+		shell(
+			alea(
+				"project", "quarterly", "scenario_update",
 				"--source", input[0],
 				"--config", CONFIG,
 				*params.flags,

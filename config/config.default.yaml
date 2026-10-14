@@ -67,6 +67,20 @@ resilience:
   # of the population-derived households, which is itself a proxy.
   electrification_rate: 1.0
 
+whatif:
+  # Which sweep the quarterly `scenario_update` section reports. A frontier over
+  # carbon price answers a different question from one over demand growth, and a
+  # reader cannot tell which from the shape of the table -- so both the
+  # parameter and its values are recorded rather than constant.
+  parameter: carbon_price_usd_per_tco2
+  # Not a (start, stop, points) triple: a uniform grid omits the no-policy point
+  # at 0, which is the baseline every other row is read against.
+  sweep_values: [0.0, 25.0, 50.0, 100.0, 200.0]
+  # 1 keeps a report generation reproducible by default; each worker writes its
+  # own cache entry, so raising it costs no correctness.
+  workers: 1
+  cache_root: ""
+
 market:
   # What a MWh of unserved energy is worth. `market.clearing` prices a
   # shortfall at this rate, so it *is* the clearing price of every hour the
