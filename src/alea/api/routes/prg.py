@@ -20,7 +20,7 @@ never claimed, and the only place to prevent that is in the payload.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, HTTPException, Query, Response, status
 
@@ -62,6 +62,9 @@ from alea.api.views import (
 	UnitReportOut,
 	ViolationOut,
 )
+
+if TYPE_CHECKING:
+	from alea.prg.service import EquationRow
 
 router = APIRouter(prefix="/prg", tags=["prg"])
 
@@ -283,8 +286,13 @@ async def graph_route(principal: PublicDep) -> GraphOut:
 			for edge in loaded.edges
 		],
 		equations=[
-			EquationOut(equation_id=equation_id, system=system_id, rendered=rendered)
-			for equation_id, system_id, rendered in _equation_rows(loaded)
+			EquationOut(
+				equation_id=row.equation_id,
+				system=row.system,
+				rendered=row.rendered,
+				reference=row.reference,
+			)
+			for row in _equation_rows(loaded)
 		],
 		summary=_summary_out(loaded),
 	)
@@ -470,6 +478,7 @@ async def equation(
 		equation_id=equation_id,
 		system=found.system,
 		rendered=describe(found, as_=as_),
+		reference=found.reference,
 	)
 
 
@@ -773,8 +782,8 @@ async def translate(principal: AnalystDep, request: TranslateRequest) -> Transla
 	)
 
 
-def _equation_rows(graph: Any) -> list[tuple[str, str, str]]:
-	"""``(id, system, rendered)`` for every equation, in the library's order."""
+def _equation_rows(graph: Any) -> list[EquationRow]:
+	"""One row per equation, in the library's order."""
 	from alea.prg.service import equation_report
 
 	return equation_report(graph)
@@ -816,10 +825,13 @@ async def equations(
 	from alea.prg.service import equation_report
 
 	return [
-		EquationOut(equation_id=equation_id, system=system_id, rendered=rendered)
-		for equation_id, system_id, rendered in equation_report(
-			_graph(), as_=as_, system=system
+		EquationOut(
+			equation_id=row.equation_id,
+			system=row.system,
+			rendered=row.rendered,
+			reference=row.reference,
 		)
+		for row in equation_report(_graph(), as_=as_, system=system)
 	]
 
 

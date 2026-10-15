@@ -1105,11 +1105,19 @@ class UncertaintyOut(ApiModel):
 
 
 class EquationOut(ApiModel):
-	"""One equation, rendered."""
+	"""One equation, rendered.
+
+	``reference`` is the equation's declared citation -- the standard the
+	relation comes from, where the graph names one. It is ``None`` on the thirty
+	equations whose provenance is the document itself rather than a named
+	source, and a client rendering a citation column should treat ``None`` as
+	"no external source", not as a missing value.
+	"""
 
 	equation_id: str
 	system: str
 	rendered: str
+	reference: str | None = None
 
 
 class ConflictOut(ApiModel):

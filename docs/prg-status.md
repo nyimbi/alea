@@ -18,7 +18,7 @@ the code and `config/prg.yaml` are the authority, and this says where to look.
 | Graph | `src/alea/prg/graph.py` | Topological order in two phases, propagation, consistency, structure checks, `affects`/`constrains`/`depends_on`/`edges_from`/`edges_into` |
 | Feedback | `src/alea/prg/feedback.py` | Tarjan SCC detection, Gauss–Seidel with damping, convergence on the residual `consistency` checks, a divergence-vs-oscillation diagnostic when it fails |
 | Library | `src/alea/prg/library.py` | The 16 systems, the spec→system mapping, and the coverage register |
-| Service | `src/alea/prg/service.py` | `graph_summary`, `check_scenario`, `propagate_change`, `describe` |
+| Service | `src/alea/prg/service.py` | `graph_summary`, `check_scenario`, `propagate_change`, `describe`, `equation_report` (an `EquationRow` carrying the declared citation, which nine equations have and nothing read until 2026-10-16) |
 | Result audit | `src/alea/prg/audit.py` | Audit a *solved* what-if result against the graph's identities. `checked` is what the result's inputs *reach*, and `failure` carries a propagation that could not run — two fields whose first versions both lied in the direction that reads as a pass |
 | Sensitivity | `src/alea/prg/sensitivity.py` | Exact forward-mode derivatives over the topological order; the implicit function theorem for loop variables; elasticity |
 | Incremental propagation | `src/alea/prg/graph.py` | `propagate_incremental`: the closure of what changed, 9x a full walk, skipping a feedback loop nothing reached |
@@ -374,8 +374,100 @@ manufacturing a decision no one took.
   clearest physical or accounting statement.
 - **No UI.** Packaging rather than capability, and the last door left shut. The
   CLI and the API both reach every register; a UI would render them.
+- **§37's Anderson acceleration is not built, and measurement says building it
+  would make convergence worse.** The spec prescribes Anderson acceleration or
+  Aitken's delta-squared for slow loops. Both shipped loops are slow in the
+  sense the spec means (38 and 36 iterations at the defaults), so this was the
+  next item on the list until it was measured against the real propagation
+  path rather than argued about.
+
+  Plain damped Gauss–Seidel, which is what the solver already does, converges
+  in **38 and 36** iterations at the defaults. Anderson with `m=3` needs **63
+  and 45**; `m=5` needs **67 and 49**; `m=2` **fails** — the loop does not
+  converge inside its 200-iteration budget. Across four scenarios (defaults,
+  `carbon_price_usd_per_tco2=1000`, `demand_growth=0.15`,
+  `renewable_multiplier=0.5`) the baseline is 37–38 and 32–36, and every
+  accelerated run is worse than its baseline. So the ordering is stable and
+  the direction is unambiguous: the spec's mechanism is roughly 1.5× slower
+  here, and at `m=2` it does not converge at all.
+
+  The reason is in the spec's own snippet. It extrapolates over the raw
+  iterate history, and this solver's iterates are *damped* — `values[target] =
+  values[target] + damping * (solved - values[target])` with `damping = 0.5`.
+  A damped fixed-point sequence is a geometric one, and the least-squares
+  extrapolant over a geometric sequence mostly recovers the damping factor,
+  which is to say it proposes the undamped step the damping exists to
+  suppress. The acceleration and the relaxation are fighting, and the
+  relaxation wins because it is what makes the loop a contraction.
+
+  **The spec's snippet does not run as written.** `X = np.column_stack([x for
+  x, _ in history])` over scalar iterates is a `(1, m)` row vector, so
+  `R[:, :-1]` is `(1, m-1)` and the extrapolant comes back as a shape-`(1,)`
+  array; `solve_for` needs a scalar and raises `TypeError: only 0-dimensional
+  arrays can be converted to Python scalars`. The counts above are from the
+  most favourable reading — the scalar extracted from the array — so the
+  finding is not an artefact of a strict reading of the snippet. §37 is
+  pseudocode that was never run.
+
+  Aitken's delta-squared is not measured here and the reason is structural
+  rather than a gap: loop 1 is three-dimensional and loop 2 is
+  two-dimensional, and the scalar extrapolant is undefined on a vector
+  sequence without first choosing a component to extrapolate. Any such choice
+  is a decision the spec does not make.
+
+  Recorded rather than built, and deliberately not built: implementing §37 to
+  close a checklist entry would degrade the product to make a document agree
+  with itself.
+
+  **The measurement is a script, not a gate, and that is the weakest part of
+  this entry.** The numbers reproduce exactly
+  (`python3 scripts/measure_loop_convergence.py`, deterministic across runs)
+  but nothing in the tree pins them, so a change to the damping factor or the
+  loop structure could move them silently. What the tree *does* pin is weaker
+  than it looks: `test_prg.py` asserts a loop that fails to converge inside a
+  one-iteration budget raises (line 530), and that a propagated loop reports
+  `iterations > 0` (line 981). **No test asserts either loop's actual count**,
+  so a solver change that doubled them would pass every gate in the tree. What
+  is not pinned at all is the comparison — a future reader who implements §37
+  will get no test failure telling them they have made both loops slower,
+  which is exactly the failure this entry exists to warn about. Pinning it
+  would mean shipping an Anderson implementation solely so a test can assert
+  it is worse, and that trade is not worth making for a mechanism the spec
+  itself never ran.
+
+  The honest residual is that "38 and 36" is a fact about the graph as it
+  stands on 2026-10-16 and is enforced by nothing. A future change to the
+  damping factor, the loop's equation set or a node's declared range can move
+  it without a single test failing — which is the same shape as every other
+  entry on this page, and is recorded rather than papered over with an
+  assertion that would only pin a number no one has decided is load-bearing.
 
 ### Closed since this list was written
+
+**`Equation.reference` is read.** Nine of the thirty-nine equations declare a
+citation — IEA/NEA on `lcoe_definition`, Wright's law on `learning_curve`,
+WHO AirQ+ on `premature_deaths_definition`, and six more — and the field was
+parsed, validated and read by **nothing**: no report, no route, no CLI line.
+The library's provenance was invisible to every caller, which is the
+"declared is not produced" shape this document keeps recording. The reader is
+`equation_report`, which now returns an `EquationRow` carrying the citation
+beside the rendering, and it reaches four doors: `GET /prg/equations`,
+`GET /prg/equations/{id}`, the `equations` list inside `GET /prg/graph`, and
+`alea prg equations`.
+
+The field could not simply be appended to the tuple the function returned.
+Three callers unpacked it positionally, so a fourth element would have made
+each raise `ValueError` — loud, which is the good failure, but the same change
+made by a caller that sliced (`row[:3]`) would have dropped the citation in
+silence, which is the defect the field exists to close. A `NamedTuple` keeps
+the positional contract while making the citation reachable by name.
+
+`None` is carried on the other thirty rather than an empty string: "no external
+source" and "a source that rendered blank" are different findings, and a report
+that printed a blank citation column would read as thirty missing citations.
+The CLI prints the line only where a citation exists. Both halves are tested,
+and canaried by blinding the reader — the CLI test fired as well as the service
+test, so the reader is asserted at a door and not only at the function.
 
 **The energy balance is measured and reaches a door.** It was listed here as
 correctly *unwired*, on the grounds that `check_energy_balance` false-positives
@@ -524,6 +616,19 @@ workload asks for. The key is the resolved path, mtime and size: the same
 identity check `make` uses. Its limit is stated rather than hidden — a rewrite
 preserving both would be served stale — and the test asserts both directions,
 that an unchanged file is not re-parsed and that an edit is observed.
+
+**The twelve routes were shipped without the value-contract gate being run
+against them, and it was failing.** `test_values_carry_basis` enumerates every
+response-reachable schema's numeric fields and refuses a bare quantity — a
+`capacity_mw: float` where a `ValueOut` belongs. The routes added nine response
+models, each carrying the graph's own arithmetic as plain floats, and the gate
+listed all nine the first time it was run. It was not run because the routes
+were verified against the *PRG* suites, and this gate lives in the Layer 8
+suite: a check whose jurisdiction is the whole API surface was scoped, in
+practice, to the files the change happened to touch. The fix is the one the
+gate's own design already provides — per-model exemptions in
+`PRG_EXACT_FIELDS`, which the test asserts are live, so a rename cannot make an
+exemption absorb a new field. Canaried by planting a stale field name.
 
 **The spec's §44 request examples do not run against this API, and that is
 recorded rather than worked around.** `docs/alea_prg.md` §43 lists fourteen
@@ -900,3 +1005,64 @@ cleanly carried. The register is now the complement of `translated()`. The
 general shape, and the third instance in this file: **a set built by enumerating
 the graph cannot name what is not in the graph**, and a filter written from it
 fails open toward "clean".
+
+**§24's tolerance table is not honoured, and the graph is stricter than the
+spec — which is the safe direction, recorded because the table is what a
+reader would expect to find implemented.** §24 assigns a tolerance by equation
+*type*: 1e-6 for a hard equality, 1e-3 for an accounting identity, 1e-2 for an
+economic relationship or a learning curve, 5e-2 for a health impact, 1e-1 for
+employment. The graph declares its own, per equation, and every one is at or
+below the spec's value: 27 equations at 1e-9, six at 1e-8, six at 1e-6. The
+`1e-1` the spec allows an employment identity is nowhere in the document —
+`direct_jobs_definition` carries 1e-9.
+
+Measured on the raw `graph.consistency()` path
+(`python3 scripts/measure_tolerance_sensitivity.py`) — the graph's own defaults,
+propagated once, then each settable parameter moved by ±0.1% and the set
+re-checked without re-propagating, 104 draws. **30 of the 39 equations report
+a violation**, and the worst relative residual on the top of the list is
+1.93e-3 (`cfads_definition`), with a dozen more at 1.00e-3:
+
+| equation | system | declared tolerance | worst relative residual |
+|---|---|---|---|
+| `cfads_definition` | financial | 1e-9 | 1.93e-3 |
+| `premature_deaths_definition` | health | 1e-9 | 1.00e-3 |
+| `direct_jobs_definition` | employment | 1e-9 | 1.00e-3 |
+| `learning_curve` | learning | 1e-9 | 1.00e-3 |
+| `carbon_cost` | emissions | 1e-9 | 1.00e-3 |
+| `emissions_definition` | carbon_trajectory | 1e-9 | 1.00e-3 |
+| `marginal_cost` | cost_accounting | 1e-9 | 6.15e-4 |
+| `lcoe_definition` | cost_accounting | 1e-9 | 3.84e-4 |
+
+The residual tracks the perturbation — a 0.1% move produces a ~1e-3 relative
+residual — which is the point rather than a coincidence. **A spec-faithful
+implementation would call most of these consistent.** §24 allows 5e-2 for a
+health impact, 1e-1 for employment, 1e-2 for a learning curve, and every
+residual above is under all three, so the table's answer to this scenario is
+"consistent" while the shipped graph's answer is thirty violations.
+
+That is not a defect to fix by loosening the tolerances, and the distinction
+matters: the graph's tolerances are what make it a *gate* rather than a
+formality, and the equations flagging here are flagging correctly — a
+parameter was moved and the identity no longer holds to 1e-9. What the finding
+says is that §24's table describes a different graph from the one that
+shipped. The spec's numbers are sized for inputs that are *reported figures*
+with rounding error; this graph's inputs are declared parameters, and its
+identities are exact arithmetic over them. Applying §24 as written would make
+`consistency()` accept a 10% error in an employment identity.
+
+**Door-reachability is limited, and saying so is part of the finding.**
+`/consistency/check`, `/consistency/report` and both conflict routes propagate
+before they check (`check_scenario` calls `g.propagate` first — read, not
+assumed), and a propagation re-derives every identity from its inputs, so a
+caller arriving through a route sees the *propagated* residuals and not these.
+The raw path is what a direct `consistency()` call reaches, which is how a
+test reaches it. So this is real but narrow: it is a fact about the
+non-propagated path, and no current route reports it. Recorded at that
+strength and no stronger.
+
+The tolerance values are also not configurable from the document in the way
+§24's YAML block shows — `tolerances:` is not a key `load_graph` reads
+(verified: no occurrence anywhere under `src/alea/prg/`), and a document
+carrying one would be accepted and ignored. Per-equation `tolerance` on the
+equation is the supported spelling, and it is what all 39 use.

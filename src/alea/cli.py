@@ -349,12 +349,18 @@ def prg_equations(
 		str, typer.Option("--as", help="unicode, latex, or source.")
 	] = "unicode",
 ) -> None:
-	"""Render the equation library."""
+	"""Render the equation library, with each equation's declared citation."""
 	from alea.prg.service import equation_report
 
-	for equation_id, system_id, rendered in equation_report(as_=as_, system=system):
-		typer.echo(f"{equation_id} [{system_id}]")
-		typer.echo(f"    {rendered}")
+	for row in equation_report(as_=as_, system=system):
+		typer.echo(f"{row.equation_id} [{row.system}]")
+		typer.echo(f"    {row.rendered}")
+		# The citation is printed only where the graph declares one. A dimmed
+		# placeholder on the other thirty would be a column of noise that reads
+		# as thirty missing sources rather than as equations whose provenance is
+		# the document -- which is what `None` means here.
+		if row.reference:
+			typer.secho(f"    ref: {row.reference}", fg=typer.colors.BRIGHT_BLACK)
 
 
 @prg_app.command("check")

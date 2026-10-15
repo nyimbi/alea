@@ -900,6 +900,43 @@ PRG_EXACT_FIELDS: dict[str, frozenset[str]] = {
 	"CrossValidationReportOut": frozenset({"violations", "undecided"}),
 	"PrgSummaryOut": frozenset({"edge_strength"}),
 	"ConstraintReportOut": frozenset({"constraint_shaped", "identities"}),
+	# The nine below arrived with the §43 route surface, and this gate was not
+	# run against them until it was: the twelve routes were added, their
+	# response models with them, and every one of these nine fields is the
+	# graph's own arithmetic. They are exempt per model, like the six above, so
+	# a rename cannot make an exemption absorb a new field.
+	#
+	# A residual against a tolerance, per violating equation. ``ViolationOut``
+	# carries no ``unit`` of its own the way ``ConflictOut`` does, and the
+	# reason is structural rather than an omission: a violation names an
+	# *equation*, whose two sides share a dimension, and ``_unit_of`` has
+	# nothing to read for one. The dimension is available on the equation
+	# (`units.check_equation` returns it) and is not served here yet.
+	"ViolationOut": frozenset({"residual", "tolerance"}),
+	# ``excursions`` is ``dict[str, float]`` -- a value per derived parameter
+	# whose equation fixed it outside its admissible range -- and ``checked``
+	# is how many equations the check reached. Neither is a quantity: an
+	# excursion's number is the parameter's own, whose unit is on the node,
+	# and ``checked`` counts equations.
+	"ConsistencyReportOut": frozenset({"checked", "excursions"}),
+	# A hop count. There is no unit of "a parameter downstream".
+	"DependentOut": frozenset({"distance"}),
+	# A parameter's own declared ``default`` and admissible ``range``, served
+	# verbatim from the node. The unit is the adjacent ``unit`` field, which is
+	# why the node model is the one place these are not wrapped.
+	"ParameterOut": frozenset({"default", "range"}),
+	# The whole propagated set and the delta per parameter. A ``ValueOut`` per
+	# entry would be the same number with the unit the node already carries,
+	# repeated once per parameter on every propagation.
+	"PropagationOut": frozenset({"changed", "values"}),
+	"ResolutionOut": frozenset({"values_after"}),
+	# A loop's turn count and the residual of its last step -- the quantity the
+	# convergence test compares against ``loop.tolerance``. ``values`` is the
+	# fixed point, keyed by the loop's variables, whose units are on their
+	# nodes.
+	"LoopResultOut": frozenset({"change", "iterations"}),
+	"FeedbackLoopOut": frozenset({"change", "iterations", "values"}),
+	"FeedbackReportOut": frozenset({"values"}),
 }
 """The graph's own arithmetic, exempt per model.
 
@@ -1335,11 +1372,35 @@ def test_openapi_valid(config: Config) -> None:
 
 	# The document covers exactly the served routes (modulo path params).
 	documented = set(spec["paths"])
-	served = {route.path for route in route_inventory(app) if route.path.startswith("/api/v1")}
+	routes = [route for route in route_inventory(app) if route.path.startswith("/api/v1")]
+	# A route served at a second path with `include_in_schema=False` is a
+	# deliberate alias, and the document names it once. The exemption is not the
+	# flag alone: it also requires that a *documented* sibling carries the same
+	# operation name, so an operation whose only spelling is hidden -- a path
+	# that vanished from the document, which is the thing this gate exists to
+	# catch -- is still reported. Without the second half, `include_in_schema`
+	# would be a switch that turns the gate off for whatever it is set on.
+	aliased = {
+		route.path
+		for route in routes
+		if not route.include_in_schema
+		and any(
+			other.name == route.name and other.include_in_schema for other in routes
+		)
+	}
+	served = {route.path for route in routes} - aliased
 	undocumented = {
 		path for path in served if not any(_same_shape(path, doc) for doc in documented)
 	}
 	assert not undocumented, f"served routes missing from the document: {sorted(undocumented)}"
+	# The alias set is asserted live rather than left implicit: a rename that
+	# made every spelling hidden would empty `documented` for that operation and
+	# this gate would pass over a route no client can discover.
+	assert aliased == {"/api/v1/prg/conflicts/detect"}, (
+		f"the deliberately-hidden route set changed: {sorted(aliased)}. If a route "
+		f"was added or removed here, update this assertion and the spec's endpoint "
+		f"table together, so the alias and the table cannot drift apart"
+	)
 
 
 def _same_shape(served: str, documented: str) -> bool:

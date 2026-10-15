@@ -40,6 +40,16 @@ class RouteInfo:
 	path: str
 	methods: tuple[str, ...]
 	name: str
+	include_in_schema: bool = True
+	"""Whether the OpenAPI document names this path.
+
+	A route registered under two decorators -- the second spelling carrying
+	``include_in_schema=False`` -- is served at both paths and documented once.
+	Carried on the inventory rather than re-read from ``app.routes`` at the
+	call site, because the flag is what the document is generated from: a gate
+	that compared served paths against documented ones without it cannot tell a
+	deliberate alias from an operation that has silently vanished.
+	"""
 
 	@property
 	def key(self) -> tuple[str, str]:
@@ -81,6 +91,11 @@ def _walk(entry: object, prefix: str) -> list[RouteInfo]:
 				path=f"{prefix}{entry.path}",
 				methods=methods,
 				name=getattr(entry, "name", "") or "",
+				# A plain ``starlette.routing.Route`` -- a mount or a static file
+				# route -- carries no such attribute, and it is documented by
+				# default in the sense that matters here: it is not a
+				# deliberately hidden alias, so a gate must not excuse it.
+				include_in_schema=bool(getattr(entry, "include_in_schema", True)),
 			)
 		]
 	return []

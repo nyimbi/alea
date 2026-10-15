@@ -3247,3 +3247,63 @@ def test_the_cli_refuses_an_endogenous_knob_with_the_reason_it_was_refused(
 	derived = runner.invoke(app, ["prg", "check", "--set", "firm_capacity_mw=9000"])
 	assert derived.exit_code == 2, derived.output
 	assert "firm_capacity_definition" in derived.output, derived.output
+
+
+def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
+	"""`Equation.reference` was parsed, validated and read by nothing.
+
+	Nine of the thirty-nine equations declare a citation. The field loaded on
+	all nine and reached no report, no route and no CLI line, so the library's
+	provenance was invisible to every caller -- the "declared is not produced"
+	shape this tree keeps finding. The reader is `equation_report`, and this
+	asserts it at the level the field is *about*: the count of citations that
+	survive the trip out of the graph.
+	"""
+	from alea.prg.service import EquationRow, equation_report
+
+	rows = equation_report(graph)
+	assert len(rows) == len(graph.equations)
+	assert all(isinstance(row, EquationRow) for row in rows)
+
+	declared = {
+		equation.id: equation.reference
+		for equation in graph.equations.values()
+		if equation.reference
+	}
+	# The premise, asserted rather than assumed: if a future document declares
+	# no citations this test would pass vacuously and the reader would be
+	# untested. Nine is the shipped count and a change to it should be looked
+	# at, not absorbed.
+	assert len(declared) == 9, f"the citation register moved: {sorted(declared)}"
+
+	carried = {row.equation_id: row.reference for row in rows if row.reference}
+	assert carried == declared, (
+		"the report dropped or altered a citation the graph declares; the field "
+		"is read again, which is the thing that was not true before"
+	)
+	# The other thirty carry `None` and not an empty string: "no external
+	# source" and "a source that rendered blank" are different findings.
+	blank = [row.equation_id for row in rows if row.reference == ""]
+	assert not blank, f"a citation rendered as an empty string rather than None: {blank}"
+
+
+def test_a_citation_reaches_the_api_and_the_cli(graph: ParameterGraph):
+	"""The reader is only a reader if a caller outside the package sees it.
+
+	A service function nothing serves is the same defect one layer up: the
+	field would move from "declared and unread" to "read and unreachable".
+	"""
+	from typer.testing import CliRunner
+
+	from alea.cli import app
+
+	runner = CliRunner()
+	result = runner.invoke(app, ["prg", "equations", "--system", "health"])
+	assert result.exit_code == 0, result.output
+	# The WHO AirQ+ citation is on `premature_deaths_definition`, in `health`.
+	assert "WHO AirQ+" in result.output, result.output
+	# And the equations without one print no citation line, so the absence is
+	# absence rather than a blank column.
+	ppaless = runner.invoke(app, ["prg", "equations", "--system", "employment"])
+	assert ppaless.exit_code == 0, ppaless.output
+	assert "ref:" not in ppaless.output, ppaless.output

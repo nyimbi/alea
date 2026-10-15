@@ -17,7 +17,7 @@ it is how two callers end up disagreeing about what an equation says.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, NamedTuple
 
 from alea.prg import constraints, translate
 from alea.prg.crossval import CrossValidationReport
@@ -28,6 +28,7 @@ from alea.prg.units import check_graph as check_units
 from alea.prg.views import Equation, Role
 
 __all__ = [
+	"EquationRow",
 	"ScenarioCheck",
 	"check_scenario",
 	"describe",
@@ -279,19 +280,63 @@ def describe(equation: Equation, *, as_: str = "unicode") -> str:
 	return f"{lhs.unicode()}{join}{rhs.unicode()}"
 
 
+class EquationRow(NamedTuple):
+	"""One equation as a report line: identity, system, rendering, citation.
+
+	A ``NamedTuple`` rather than a fourth element on the tuple this function
+	used to return. Three callers unpack it positionally, and a four-element
+	plain tuple would have made every one of them raise ``ValueError: too many
+	values to unpack`` -- loud, which is the good failure, but it is also the
+	reason the field could not simply be appended: a caller that *ignored* the
+	extra element by slicing (``row[:3]``) would have dropped the citation in
+	silence, and a citation nothing reads is the defect this field exists to
+	close. Named access also means a consumer added later cannot confuse the
+	rendering for the reference by position.
+	"""
+
+	equation_id: str
+	system: str
+	rendered: str
+	reference: str | None = None
+	"""The equation's declared citation, or ``None`` when it declares none.
+
+	Carried as ``None`` rather than an empty string because the two are
+	different findings: nine of the thirty-nine equations cite a source, and a
+	report that rendered the other thirty with a blank citation column would
+	read as thirty missing citations rather than thirty equations whose
+	provenance is the document itself.
+	"""
+
+
 def equation_report(
 	graph: ParameterGraph | None = None,
 	*,
 	as_: str = "unicode",
 	system: str | None = None,
-) -> list[tuple[str, str, str]]:
-	"""Every equation as ``(id, system, rendered)``, for a report or a listing."""
+) -> list[EquationRow]:
+	"""Every equation as an :class:`EquationRow`, for a report or a listing.
+
+	The citation is carried because the graph declares one on nine equations
+	and, until this field existed, nothing read it: ``reference`` was parsed,
+	validated and reachable from no door, so a reader of the equation library
+	could not see that ``lcoe_definition`` cites IEA/NEA while
+	``tariff_cost_recovery`` cites average-cost pricing. A declared field with
+	no reader is the recurring defect in this tree, and the fix is a reader --
+	this one.
+	"""
 	g = _graph(graph)
 	by_system = systems_of(g.equations)
-	out: list[tuple[str, str, str]] = []
+	out: list[EquationRow] = []
 	for system_id, equations in by_system.items():
 		if system is not None and system_id != system:
 			continue
 		for equation in equations:
-			out.append((equation.id, system_id, describe(equation, as_=as_)))
+			out.append(
+				EquationRow(
+					equation.id,
+					system_id,
+					describe(equation, as_=as_),
+					equation.reference,
+				)
+			)
 	return out

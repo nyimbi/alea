@@ -62,8 +62,17 @@ def test_a_string_hash_key_is_invisible_in_process():
 	Both a content hash and a string hash return the same value twice within one
 	interpreter. This asserts that the naive check -- compute it twice, compare
 	-- cannot tell them apart, so a same-process test would be no gate at all.
+
+	The hash is taken over ``canonical_json`` rather than over
+	``tuple(sorted(canonical().items()))``. The tuple form was the first
+	spelling and it stopped being *hashable*: ``canonical()`` renders the nested
+	``outages`` field as a list, so the tuple raised ``TypeError`` and the
+	canary failed for a reason that had nothing to do with what it asserts. The
+	JSON string is the same projection of the same values, and it is the one
+	``cache_key`` itself hashes, so the blindness argument is now about the
+	actual key material.
 	"""
-	in_process = {hash(tuple(sorted(_params().canonical().items()))) for _ in range(2)}
+	in_process = {hash(_params().canonical_json()) for _ in range(2)}
 	assert len(in_process) == 1, (
 		"a string hash disagreed with itself in one process, which it does not "
 		"do; the in-process blindness argument no longer holds"
