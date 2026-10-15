@@ -39,6 +39,7 @@ from alea.prg.crossval import (
 from alea.prg.dsl import DslError, Expr, evaluate, parse, solve_for
 from alea.prg.feedback import solve_loop
 from alea.prg.views import (
+	Direction,
 	Equation,
 	ParameterNode,
 	RelationshipEdge,
@@ -156,11 +157,35 @@ class ParameterGraph:
 		#: couples, so nothing else in the graph can supply it.
 		self._rules = tuple(rules)
 
+		# The edge index, built from the *declared* direction rather than from
+		# the source/target fields. `params-prg1.md` §3.3 makes direction a
+		# first-class part of an edge -- "the PRG must encode causality" -- and
+		# `Direction` offers three values, so indexing by `source` alone read a
+		# `backward` edge as forward and made the field decorative. All 84 edges
+		# in the shipped document are `forward`, which is why the defect was
+		# invisible: a field no edge exercises is a field nothing tests.
 		self._by_source: dict[str, list[RelationshipEdge]] = defaultdict(list)
 		self._by_target: dict[str, list[RelationshipEdge]] = defaultdict(list)
 		for edge in self._edges:
-			self._by_source[edge.source].append(edge)
-			self._by_target[edge.target].append(edge)
+			# A `backward` edge states that the *target* determines the
+			# source, so it belongs on the target's outgoing list. Reading the
+			# fields and ignoring this is the same defect as a knob nothing
+			# reads, one layer down: the declaration is present and inert.
+			if edge.direction is Direction.FORWARD:
+				self._by_source[edge.source].append(edge)
+				self._by_target[edge.target].append(edge)
+			elif edge.direction is Direction.BACKWARD:
+				self._by_source[edge.target].append(edge)
+				self._by_target[edge.source].append(edge)
+			else:
+				# Bidirectional: the spec's "capacity and dispatch are jointly
+				# determined". Both endpoints are a source and a target, so the
+				# edge appears on all four lists -- which is what makes
+				# `edges_into` the mirror of `edges_from` for such a pair.
+				self._by_source[edge.source].append(edge)
+				self._by_source[edge.target].append(edge)
+				self._by_target[edge.source].append(edge)
+				self._by_target[edge.target].append(edge)
 
 		#: equation id -> the strength the edges citing it declare.
 		#:
@@ -420,17 +445,27 @@ class ParameterGraph:
 		)
 
 	def edges_from(self, parameter: str) -> tuple[RelationshipEdge, ...]:
-		"""The edges this parameter is the source of.
+		"""The edges whose declared direction leaves this parameter.
 
 		The declared direction, not the arithmetic. ``affects`` answers "whose
 		value moves"; this answers "what the graph says this feeds", which is
 		the question a reader of a diagram is asking and the one the edge set
 		was written to state.
+
+		"Leaves" and not "has as its ``source`` field": a ``backward`` edge
+		states that its *target* determines its source, so it leaves the target.
+		Reading the field instead made the direction inert -- see the index in
+		the constructor for why that mattered.
 		"""
 		return tuple(self._by_source.get(parameter, ()))
 
 	def edges_into(self, parameter: str) -> tuple[RelationshipEdge, ...]:
-		"""The edges this parameter is the target of."""
+		"""The edges whose declared direction arrives at this parameter.
+
+		The mirror of :meth:`edges_from`, and under the declared direction
+		rather than the fields: a ``bidirectional`` edge appears on both, which
+		is what the spec's jointly-determined pairs are.
+		"""
 		return tuple(self._by_target.get(parameter, ()))
 
 	def constrains(self, parameter: str) -> tuple[str, ...]:

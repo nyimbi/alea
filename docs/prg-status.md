@@ -194,6 +194,45 @@ after `views.py` said the graph did not make it.
 
 ## Not built
 
+- **`Equation.linearity` is declared on all 38 equations and read by nothing,
+  and the term is undefined.** The field takes `linear`/`nonlinear`/`mixed`
+  (31/7/0 as shipped). `constraints.py` does not read it: it walks the actual
+  arithmetic and asks whether *the optimiser's decision variables* enter
+  nonlinearly, which is the question that decides whether a linear constraint
+  can be built, and a declaration is not evidence for it. Nothing anywhere
+  cross-checks the two. Trying to write that cross-check is the finding: four
+  honest oracles, four answers out of 38 equations —
+
+  | oracle | what it asks | disagreements |
+  |---|---|---|
+  | superposition per free parameter | is `f` homogeneous in each argument alone | 6 |
+  | affine over the decision variables | is `f` affine where the solver varies it | 1 |
+  | affine over all parameters | is `f` affine in everything it names | 0 |
+  | expression tree | does any product/power/quotient join two variables | 24 |
+
+  Every one is defensible and they are not measuring the same property. The
+  tree reading calls `capex * crf` nonlinear; the decision-variable reading
+  calls it linear, because neither factor is a decision variable and the
+  optimiser sees a constant. The parameter reading calls it linear for the same
+  reason. All three are right about different questions, and the spec never
+  says which one the field answers — `spec/` mentions linearisation only about
+  PyPSA's loss function. So the field is not *wrong*; it is a label with no
+  agreed referent, which is why no reader can be written for it without first
+  choosing one. Recorded rather than resolved: inventing a referent and then
+  writing the reader that enforces it would manufacture agreement with a
+  decision no one made.
+
+- **`ParameterNode.status` is declared on all 87 nodes, read by nothing, and
+  stale.** 69 `to_build` / 18 `existing`, and five of the `to_build` nodes are
+  already reached by a production path: `carbon_budget_mtco2`,
+  `dispatchable_re_capacity_mw`, `horizon_years`, `storage_capacity_mw`,
+  `thermal_capacity_mw`. No spec doc defines what the label means — whether it
+  tracks "a builder writes this" or "a solve consumes this" — and the two
+  disagree on exactly those five. Same class as `linearity` above: a
+  declaration whose referent was never fixed, drifted from the tree because
+  nothing could read it to notice. Left as a finding; giving it a reader would
+  mean choosing a meaning and then retrofitting 87 labels to it.
+
 - **Part X's other backends are absent.** The spec names Pyomo for MILP, SymPy
   for symbolic manipulation and a custom iterative solver. Each is a separate
   modelling decision, not a missing adapter: the translation layer's output is
@@ -333,6 +372,24 @@ is a consequence of its inputs — and it deliberately ignores inequalities,
 because moving `dscr_min` changes no value at all. A regulator's lever is a
 constraint, so it appears in `constrains`, not in `affects`. The declared
 relationship direction is on `edges_from`/`edges_into`.
+
+**A direction field nothing reads is a declaration, not a relation.**
+`RelationshipEdge.direction` is declared on all 84 edges, enum-validated
+against `forward`/`backward`/`bidirectional`, and required by `params-prg1.md`
+§3.3 — "the PRG must encode **causality**". The index behind
+`edges_from`/`edges_into` was built from the `source` and `target` *fields* and
+ignored it, so a `backward` edge was indexed exactly as a forward one and the
+field was inert. Every shipped edge is `forward`, which is the whole reason the
+defect was invisible: a declaration no instance exercises is a declaration
+nothing tests. Flipping one edge in a copy of the document was the entire
+diagnosis — `edges_from(source)` still contained it. The fix indexes by the
+declared direction, and `bidirectional` cannot be refused instead: the spec
+names `Endogenous ↔ Endogenous` ("capacity and dispatch are jointly determined
+by the optimisation") as a legitimate coupling, so a value the graph forbids
+would be a coupling the spec requires. The test that pins it is parametrised
+over the three values and matches the edge *by identity* — a check over the set
+of `source` names would have passed on the unfixed index, because dozens of
+other edges touch those two parameters.
 
 **A constraint's terms are not "parameters that reach nothing".** The register
 of what reaches an engine knob is built from `translated()`, and
