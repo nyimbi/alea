@@ -278,6 +278,49 @@ manufacturing a decision no one took.
   Recorded rather than built, and recorded because a field the spec's own
   example fills is one a reader will assume works.
 
+  **Measured against the catalog on 2026-10-16, which narrows all four.** The
+  referent that was missing for `status` is missing for these too, and looking
+  for it separates two fields that share a name from two that do not.
+
+  - **`subcategory` has no referent in the catalog at all.** `docs/params.md`
+    has one Category column, 29 values across 824 rows, and no Subcategory
+    column anywhere. The graph's `category` has 14 values, and the two lists
+    are not a coarsening of each other — they share exactly two names,
+    `Demand` and `Market`, and diverge on all 27 and 12 others (the catalog's
+    `Aviation`, `Fisheries`, `Defence`, `Geopol` against the graph's
+    `Affordability`, `Policy & Regulatory`, `Reliability`). So the catalog and
+    the graph each have one flat taxonomy, they disagree about it, and neither
+    has a second level — which leaves `subcategory` with no level to be the
+    second of. Its only inhabitant anywhere in the tree is the spec's example
+    string `"Climate Policy"`. This is the one of the four where dropping the
+    field is a live option rather than a loss.
+  - **`users` has a real vocabulary and a 7% join.** 34 distinct values across
+    the catalog's Users column — `Policymakers`, `Investors`, `Utilities`,
+    `Banks`, `DFIs`, `Agriculture`, `Cities` — so it is a curated audience
+    list, not free text. But it joins to the graph on the same 6 nodes as
+    `status`, for the same reason: the catalog is technology-specific and the
+    graph is a country aggregate. Populating it on 6 nodes and leaving 82
+    unset would make the field *look* served, which is worse than the current
+    honest emptiness.
+  - **`source`/`source_url` split internal from external, and the split is
+    real.** The catalog's Algorithm and Python Implementation columns are
+    *internal* provenance — where in this codebase a value comes from. The
+    spec's `"IMF Effective Carbon Prices"` is *external* provenance — the
+    literature a value was taken from. `provenance.models.Provenance` is the
+    external kind and is used by 19 modules (planning, reporting, losses,
+    quality, publish, sector, resilience) and by **zero** in `prg/`. Wiring
+    these two fields into it is the one of the four that has an existing home
+    and an existing shape; it is deferred because the catalog does not carry
+    the citation for most rows either — `carbon_price`'s own row names an
+    algorithm (`n.generators.marginal_cost += carbon_price * co2`) and a
+    status, and no source — so the wiring would populate from the spec's
+    single example.
+
+  Left as findings because every resolution here is a product decision: drop
+  `subcategory`, populate `users` from the catalog on the joinable nodes or
+  not, and adopt `Provenance` for parameter sources or keep parameter
+  provenance out of the artefact layer.
+
 - **Part X's other backends are absent.** The spec names Pyomo for MILP, SymPy
   for symbolic manipulation and a custom iterative solver. Each is a separate
   modelling decision, not a missing adapter: the translation layer's output is
