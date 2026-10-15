@@ -1248,6 +1248,231 @@ class CrossValidationReportOut(ApiModel):
 	summary: str
 
 
+class ParameterOut(ApiModel):
+	"""One parameter node, with the couplings the graph actually holds.
+
+	``depends_on`` and ``affects`` are *derived from the equations*, not read
+	from the YAML's declared lists -- the declared lists are compared against
+	these by ``structure_issues`` and the equations win. A payload serving the
+	declared list would serve a document that may have drifted from the graph
+	the engine walks.
+	"""
+
+	parameter_id: str
+	name: str
+	description: str
+	category: str
+	type: str
+	unit: str
+	range: list[float] | None
+	default: float | None
+	role: str
+	determinism: str
+	priority: str
+	status: str
+	depends_on: list[str]
+	affects: list[str]
+	determined_by: str
+	"""The equation that fixes this parameter, or ``""`` for one nothing fixes.
+
+	Empty rather than ``None`` because a JSON client reading ``null`` for a
+	settable parameter and ``null`` for a missing field cannot tell "you set
+	this" from "the graph has nothing". The empty string is the graph's own
+	answer: no equation determines it.
+	"""
+
+
+class DependentOut(ApiModel):
+	"""One parameter downstream of a parameter, and how far downstream.
+
+	``distance`` is the number of hops along the affects relation. A client
+	asking "what does this knob move" wants the set; one asking "what should I
+	re-check" wants it ordered, and the order is the hop count.
+	"""
+
+	parameter_id: str
+	distance: int = Field(ge=1)
+	direct: bool
+	"""Whether an equation couples this parameter to the subject in one hop."""
+
+
+class GraphEdgeOut(ApiModel):
+	"""One declared relationship, as the document states it."""
+
+	source: str
+	target: str
+	equation_id: str
+	relationship: str
+	direction: str
+	strength: str
+	description: str
+
+
+class GraphOut(ApiModel):
+	"""The whole graph: nodes, edges, equations, and the registers.
+
+	``edges`` is the *declared* relationship set -- what a reader draws -- while
+	propagation follows the equations. They agree on this graph and the two are
+	reported separately so a client can see if they ever stop agreeing, rather
+	than inferring the coupling from whichever one it happened to read.
+	"""
+
+	parameters: list[ParameterOut]
+	edges: list[GraphEdgeOut]
+	equations: list[EquationOut]
+	summary: PrgSummaryOut
+
+
+class ConsistencyRequest(ApiModel):
+	"""A parameter set to validate against every equation.
+
+	Distinct from :class:`ConflictRequest` in what it does with the answer:
+	this reports whether the set holds, and the conflicts route reports what
+	would fix it. Both take the same body, deliberately -- a client should not
+	have to assemble a different payload to ask the follow-up question.
+	"""
+
+	set: dict[str, float] = Field(default_factory=dict)
+
+
+class ViolationOut(ApiModel):
+	"""One equation a parameter set does not satisfy."""
+
+	equation_id: str
+	system: str
+	residual: float
+	tolerance: float
+	strength: str
+	blocks: bool
+	detail: str
+
+
+class ConsistencyReportOut(ApiModel):
+	"""Whether a set holds, and what it was checked against.
+
+	``unmodelled`` is served for the same reason the CLI prints it: a scenario
+	consistent against every *modelled* system is not a scenario the platform
+	endorses, and a payload carrying only ``consistent`` would let a client
+	render the first as the second.
+	"""
+
+	consistent: bool
+	violations: list[ViolationOut]
+	unmodelled: list[str]
+	excursions: dict[str, float]
+	checked: int = Field(ge=0)
+	summary: str
+
+
+class PropagateRequest(ApiModel):
+	"""A change to apply to a parameter set, and the set to apply it to."""
+
+	set: dict[str, float] = Field(default_factory=dict)
+	changes: dict[str, float] = Field(default_factory=dict)
+
+
+class PropagationOut(ApiModel):
+	"""What a change moved, and the path it moved along."""
+
+	values: dict[str, float]
+	changed: dict[str, float]
+	order: list[str]
+	loops: list[LoopResultOut]
+
+
+class LoopResultOut(ApiModel):
+	"""One feedback loop's solve, as a propagation reports it."""
+
+	loop: str
+	iterations: int = Field(ge=0)
+	change: float
+	converged: bool
+	"""Whether the iteration settled.
+
+	Carried even though a propagation that fails to converge raises rather
+	than returning: an absent key and a ``false`` one read differently to a
+	client, and the second is the honest answer for a loop that is reported
+	at all. The solve route serves the same field on its richer model.
+	"""
+
+
+class ResolveRequest(ApiModel):
+	"""A parameter set whose conflicts should be resolved, and how many to take."""
+
+	set: dict[str, float] = Field(default_factory=dict)
+	rank: int = Field(default=1, ge=1, le=20)
+	"""How many corrections to accept per conflict, highest-ranked first."""
+
+
+class ResolutionOut(ApiModel):
+	"""One conflict, the correction chosen, and the set after applying it."""
+
+	conflict: ConflictOut
+	applied: CorrectionOut | None
+	resolved: bool
+	values_after: dict[str, float]
+	"""The parameter set after the correction, propagated.
+
+	Carried per conflict rather than once at the end because a client stepping
+	through a resolution wants to see the set move, and a single final set
+	would hide a correction that undid an earlier one.
+	"""
+
+
+class FeedbackSolveRequest(ApiModel):
+	"""A parameter set to solve the feedback loops at."""
+
+	set: dict[str, float] = Field(default_factory=dict)
+
+
+class FeedbackLoopOut(ApiModel):
+	"""One loop: its variables, its equations, and whether it converged."""
+
+	loop: str
+	variables: list[str]
+	equations: list[str]
+	converged: bool
+	iterations: int = Field(ge=0)
+	change: float
+	values: dict[str, float]
+
+
+class FeedbackReportOut(ApiModel):
+	"""Every loop's solve, and the value set that came out."""
+
+	loops: list[FeedbackLoopOut]
+	values: dict[str, float]
+
+
+class TranslateRequest(ApiModel):
+	"""A parameter set to build engine constraints from."""
+
+	set: dict[str, float] = Field(default_factory=dict)
+
+
+class TranslateRouteOut(ApiModel):
+	"""One engine knob a PRG parameter reaches, and how."""
+
+	parameter: str
+	engine_field: str
+	kind: str
+	reason: str
+
+
+class TranslateOut(ApiModel):
+	"""The engine parameters a scenario translates to, and what did not.
+
+	``untranslated`` is the register, and the point of the route: a client that
+	received only ``parameters`` would believe the whole scenario reached the
+	engine, and three of fifty-two settable parameters do.
+	"""
+
+	parameters: dict[str, float]
+	routes: list[TranslateRouteOut]
+	untranslated: list[str]
+	coverage: EngineTranslationOut
+
+
 __all__ = [
 	"DEFAULT_PAGE_SIZE",
 	"MAX_PAGE_SIZE",
@@ -1323,4 +1548,22 @@ __all__ = [
 	"SensitivityRequest",
 	"UncertaintyOut",
 	"UnitReportOut",
+	"ConsistencyReportOut",
+	"ConsistencyRequest",
+	"DependentOut",
+	"FeedbackLoopOut",
+	"FeedbackReportOut",
+	"FeedbackSolveRequest",
+	"GraphEdgeOut",
+	"GraphOut",
+	"LoopResultOut",
+	"ParameterOut",
+	"PropagateRequest",
+	"PropagationOut",
+	"ResolutionOut",
+	"ResolveRequest",
+	"TranslateOut",
+	"TranslateRequest",
+	"TranslateRouteOut",
+	"ViolationOut",
 ]

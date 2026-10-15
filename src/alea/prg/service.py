@@ -232,8 +232,19 @@ def propagate_change(
 		"values": result.values,
 		"changed": moved,
 		"order": list(result.order),
+		# `converged` is carried even though a propagation that failed to
+		# converge raises rather than returning: a caller reading the payload
+		# cannot tell "the loop settled" from "this field was not populated"
+		# when the key is simply absent, and the whole point of reporting the
+		# iteration at all is that a loop which settled in four turns and one
+		# that needed 180 are different findings.
 		"loops": [
-			{"loop": lr.loop, "iterations": lr.iterations, "change": lr.change}
+			{
+				"loop": lr.loop,
+				"iterations": lr.iterations,
+				"change": lr.change,
+				"converged": lr.converged,
+			}
 			for lr in result.loops
 		],
 	}

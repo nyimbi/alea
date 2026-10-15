@@ -136,20 +136,21 @@ def _solve(
 def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	graph: ParameterGraph,
 ):
-	"""Six of the library's 38 equations can constrain a solve.
+	"""Six of the library's 39 equations can constrain a solve.
 
-	The denominator is the finding: 32 equations are identities, and folding
-	them into the register would report "2 of 38" for a library where the
+	The denominator is the finding: 33 equations are identities, and folding
+	them into the register would report "2 of 39" for a library where the
 	honest figure is 2 of 6. Pinned as a literal so a new inequality has to
 	change this line to land. The identity count moved 31 -> 32 when
 	``firm_capacity_definition`` landed: an equation that derives the firm
 	fleet from the optimiser's own capacity decisions is a definition, not a
-	seventh boundary.
+	seventh boundary. 32 -> 33 when ``tariff_cost_recovery`` landed, for the
+	same reason: a cost-recovery identity is not a boundary either.
 	"""
 	cov = coverage(graph)
 	assert cov["constraint_shaped"] == 6
-	assert cov["identities"] == 32
-	assert cov["total"] == 38
+	assert cov["identities"] == 33
+	assert cov["total"] == 39
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):

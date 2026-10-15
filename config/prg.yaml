@@ -519,13 +519,37 @@ parameters:
 
   equilibrium_demand_twh:
     name: "Equilibrium demand"
-    description: "Demand after the tariff moves, which is what the balance must serve."
+    description: >
+      Demand after the tariff moves, which is what the balance must serve. A
+      loop variable and not a derivation: the tariff is set to recover the cost
+      of serving this demand, so demand and tariff determine each other and the
+      pair is a fixed point. `initial` is where the iteration starts, not a
+      value that stands in for the equation.
     category: "Demand"
     type: float
     unit: "TWh"
     range: [0.0, 20000.0]
     role: derived
     determinism: stochastic
+    initial: 45.0
+    priority: P2
+    status: to_build
+
+  regulated_tariff_usd_per_mwh:
+    name: "Cost-recovery tariff"
+    description: >
+      The tariff that recovers what serving the load costs: the annualised
+      fixed charge spread over the energy sold, plus the short-run marginal
+      cost. Distinct from `tariff_usd_per_mwh`, which is the policy dial a
+      regulator sets; this is the tariff the cost of the system implies, and
+      the gap between the two is the subsidy or the surplus.
+    category: "Demand"
+    type: float
+    unit: "USD/MWh"
+    range: [0.0, 2000.0]
+    role: derived
+    determinism: fixed
+    initial: 135.0
     priority: P2
     status: to_build
 
@@ -1466,16 +1490,58 @@ equations:
   equilibrium_demand:
     name: "Demand at the tariff"
     description: >
-      Demand after the tariff moves, at a constant elasticity. The reason a
-      tariff rise is not a free fiscal move: it is also a demand forecast.
+      Demand after the tariff moves, at a constant elasticity, against the
+      tariff the system's own cost implies. The reason a tariff rise is not a
+      free fiscal move: it is also a demand forecast, and the demand it
+      forecasts changes the cost the tariff was meant to recover. Iterative
+      rather than a derivation because of that circularity -- see the System 15
+      block below, which is where the other half of the loop lives.
     system: demand_supply
     lhs: "equilibrium_demand_twh"
-    rhs: "demand_twh * (tariff_usd_per_mwh / reference_tariff_usd_per_mwh) ** price_elasticity"
-    parameters: [equilibrium_demand_twh, demand_twh, tariff_usd_per_mwh, reference_tariff_usd_per_mwh, price_elasticity]
+    rhs: "demand_twh * (regulated_tariff_usd_per_mwh / reference_tariff_usd_per_mwh) ** price_elasticity"
+    parameters: [equilibrium_demand_twh, demand_twh, regulated_tariff_usd_per_mwh, reference_tariff_usd_per_mwh, price_elasticity]
     determined_variables: [equilibrium_demand_twh]
-    tolerance: 1.0e-9
+    tolerance: 1.0e-8
     linearity: nonlinear
-    solution_method: direct
+    solution_method: iterative
+    priority: P2
+
+  # -- System 15: Price-Demand Feedback (the second loop) ---------------
+  #
+  # The specification's System 15, and a *different* loop from the capture-price
+  # one: this is the tariff-demand fixed point, not the VRE-cannibalisation one.
+  # `demand_growth_rate`, `regulated_tariff_rate` and `price_elasticity` are the
+  # three parameters `params-prg1.md` §4.15 names.
+  #
+  # WHY the demand equation above is iterative here when it was a derivation.
+  # As a derivation it read the *policy* tariff and answered in one pass, which
+  # is the right arithmetic for a question that does not close the loop. Closing
+  # it -- a tariff that recovers the cost of serving the demand it induces --
+  # makes the pair a fixed point, and an equation that determines its own input
+  # has no place in a topological order. The two readings are not the same
+  # claim, and the loop is the one §4.15 specifies.
+  #
+  # The loop is contractive, and the reason is worth stating because it is what
+  # makes an iterative solve safe here: the composite gain is
+  # `|elasticity| * fixed_cost / total_revenue`, which is below one whenever the
+  # elasticity is inelastic and the marginal cost is positive. The graph's own
+  # `feedback` diagnostics report the failure if a parameter set breaks that.
+
+  tariff_cost_recovery:
+    name: "Cost-recovery tariff"
+    description: >
+      What serving the load costs, per unit sold: the annualised fixed charge
+      spread over the energy, plus short-run marginal cost. A tariff below this
+      is a subsidy; above it, a surplus.
+    system: price_demand
+    lhs: "regulated_tariff_usd_per_mwh"
+    rhs: "annualised_capex_usd_per_kw * total_capacity_mw * 1000 / (equilibrium_demand_twh * 1000000) + marginal_cost_usd_per_mwh"
+    parameters: [regulated_tariff_usd_per_mwh, annualised_capex_usd_per_kw, total_capacity_mw, equilibrium_demand_twh, marginal_cost_usd_per_mwh]
+    determined_variables: [regulated_tariff_usd_per_mwh]
+    tolerance: 1.0e-8
+    reference: "Average-cost pricing: fixed cost recovered over units sold, plus short-run marginal cost"
+    linearity: nonlinear
+    solution_method: iterative
     priority: P2
 
   # -- System 5: Financial Identities ----------------------------------
@@ -2009,13 +2075,17 @@ relationships:
     strength: hard
     description: "The tariff moves demand away from its reference level."
     priority: P1
-  - source: tariff_usd_per_mwh
+  - source: regulated_tariff_usd_per_mwh
     target: equilibrium_demand_twh
     equation_id: equilibrium_demand
     relationship: functional
     direction: forward
     strength: hard
-    description: "A higher tariff suppresses demand, which is why it is not free revenue."
+    description: >
+      The tariff the system's cost implies suppresses demand, which is why it is
+      not free revenue. The edge reads the *cost-recovery* tariff and not the
+      policy dial: the loop closes on the tariff the demand it induces implies,
+      and reading the policy tariff here would open it.
     priority: P2
   - source: reference_tariff_usd_per_mwh
     target: equilibrium_demand_twh
@@ -2032,6 +2102,40 @@ relationships:
     direction: forward
     strength: hard
     description: "The elasticity sets how much demand the tariff move costs."
+    priority: P2
+  - source: annualised_capex_usd_per_kw
+    target: regulated_tariff_usd_per_mwh
+    equation_id: tariff_cost_recovery
+    relationship: functional
+    direction: forward
+    strength: hard
+    description: "The fixed charge per unit of load is what the tariff must recover."
+    priority: P2
+  - source: total_capacity_mw
+    target: regulated_tariff_usd_per_mwh
+    equation_id: tariff_cost_recovery
+    relationship: functional
+    direction: forward
+    strength: hard
+    description: "A larger fleet is a larger fixed charge to recover."
+    priority: P2
+  - source: equilibrium_demand_twh
+    target: regulated_tariff_usd_per_mwh
+    equation_id: tariff_cost_recovery
+    relationship: functional
+    direction: forward
+    strength: hard
+    description: >
+      The fixed charge is spread over the load, so more demand lowers the tariff
+      per unit -- the loop's other half, and the reason it is a fixed point.
+    priority: P2
+  - source: marginal_cost_usd_per_mwh
+    target: regulated_tariff_usd_per_mwh
+    equation_id: tariff_cost_recovery
+    relationship: functional
+    direction: forward
+    strength: hard
+    description: "Short-run marginal cost is the floor the tariff cannot go below."
     priority: P2
   - source: debt_fraction
     target: discount_rate

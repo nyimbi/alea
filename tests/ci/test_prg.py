@@ -36,6 +36,7 @@ from alea.prg.conflicts import (
 	suggest_corrections,
 )
 from alea.prg.dsl import DslError, const, evaluate, parse, simplify, solve_for, sym
+from alea.prg.feedback import FeedbackError
 from alea.prg.graph import CycleError, GraphError, ParameterGraph
 from alea.prg.library import SYSTEM_IDS, coverage, systems_of
 from alea.prg.sensitivity import elasticity, gradients, sensitivity
@@ -58,6 +59,25 @@ def document() -> dict:
 @pytest.fixture
 def defaults(graph: ParameterGraph) -> dict[str, float]:
 	return {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+
+
+def _loop_over(graph: ParameterGraph, variable: str):
+	"""The feedback loop that solves for ``variable``.
+
+	Selected by variable rather than by index because the graph carries more
+	than one loop, and the order ``detect_loops`` returns them in is an artefact
+	of Tarjan's traversal -- an index-based test would silently check whichever
+	component the algorithm happened to reach first, and would keep passing
+	after the loop it meant to check was deleted, as long as some other loop
+	took its place. Naming the variable makes a missing loop a named failure.
+	"""
+	loops = [loop for loop in graph.feedback_loops() if variable in loop.variables]
+	assert len(loops) == 1, (
+		f"expected exactly one feedback loop solving for {variable!r}, "
+		f"found {[loop.id for loop in loops]} among "
+		f"{[loop.id for loop in graph.feedback_loops()]}"
+	)
+	return loops[0]
 
 
 # ---------------------------------------------------------------------------
@@ -362,11 +382,15 @@ def test_the_feedback_loop_converges_to_its_closed_form(graph: ParameterGraph, d
 	With share ``= v / total``, capture ``= m·(1 - s·share)`` and
 	``v = t·capture/m``, substituting gives ``v = t·(1 - s·v/total)``, so
 	``v = t / (1 + s·t/total)`` and ``share = (t/total) / (1 + s·t/total)``.
+
+	Selected by variable and not by index. The graph carries two loops as of
+	2026-10-15 -- this one and the tariff-demand fixed point -- and an index
+	would silently check whichever `detect_loops` happened to order first.
 	"""
 	result = graph.propagate(defaults)
-	loops = graph.feedback_loops()
-	assert len(loops) == 1, "the shipped graph declares exactly one feedback loop"
-	assert result.loops and result.loops[0].converged
+	loop = _loop_over(graph, "vre_capacity_mw")
+	solved = {entry.loop: entry for entry in result.loops}[loop.id]
+	assert solved.converged
 
 	total = defaults["total_capacity_mw"]
 	target = defaults["vre_capacity_target_mw"]
@@ -380,11 +404,67 @@ def test_the_feedback_loop_converges_to_its_closed_form(graph: ParameterGraph, d
 	)
 
 
+def test_the_tariff_loop_converges_and_the_tariff_covers_its_cost(
+	graph: ParameterGraph, defaults: dict
+):
+	"""The second feedback loop, and the identity that makes it a loop.
+
+	``equilibrium_demand`` alone is not a loop: demand is a function of the
+	tariff, and if the tariff is exogenous that is one directed edge. The loop
+	is the pair, because the tariff is set to recover the cost of serving the
+	demand, so each determines the other. The specification declares both
+	(§4.14 Demand-Supply Equilibrium and §4.15 Price-Demand Feedback); the
+	graph carried only the first until 2026-10-15.
+
+	The assertion that matters is not "it converged" -- a fixed point of a
+	wrong map converges too -- but that the converged pair *satisfies the
+	cost-recovery identity*, checked here from the result's own numbers rather
+	than from the equation text.
+	"""
+	result = graph.propagate(defaults)
+	loop = _loop_over(graph, "regulated_tariff_usd_per_mwh")
+	solved = {entry.loop: entry for entry in result.loops}[loop.id]
+	assert solved.converged, solved
+
+	tariff = result.values["regulated_tariff_usd_per_mwh"]
+	demand = result.values["equilibrium_demand_twh"]
+	# The identity, restated: the annualised fixed charge over the energy sold,
+	# plus the short-run marginal cost. 1000 kW/MW and 1e6 MWh/TWh.
+	expected = (
+		result.values["annualised_capex_usd_per_kw"]
+		* defaults["total_capacity_mw"]
+		* 1000
+		/ (demand * 1e6)
+		+ result.values["marginal_cost_usd_per_mwh"]
+	)
+	assert tariff == pytest.approx(expected, rel=1e-7), (tariff, expected)
+
+	# And the demand side: the tariff moved demand off its unconstrained
+	# value, in the direction the elasticity's sign says it should. This is
+	# what makes the loop a *feedback* loop rather than an identity that
+	# happens to be circular.
+	unconstrained = result.values["demand_twh"]
+	assert defaults["price_elasticity"] < 0
+	assert demand != pytest.approx(unconstrained, rel=1e-9), demand
+	# The direction is a *consequence* of the two, not a fact to assume: the
+	# elasticity is negative, so demand moves opposite to the tariff ratio, and
+	# at these defaults the cost-recovery tariff (88.98 USD/MWh) sits below the
+	# reference (100.00) -- an under-recovering fleet, so demand rises. Asserting
+	# "demand falls" would have been asserting the sign of a difference that
+	# depends on the fleet's capital intensity; asserting the relationship is
+	# the claim that actually holds for every fleet.
+	reference = defaults["reference_tariff_usd_per_mwh"]
+	assert (tariff - reference) * (demand - unconstrained) < 0, (
+		f"elasticity is negative, so demand must move against the tariff ratio: "
+		f"tariff {tariff} vs reference {reference}, demand {demand} vs {unconstrained}"
+	)
+
+
 def test_the_loop_answer_does_not_depend_on_where_it_starts(graph: ParameterGraph, defaults: dict):
 	"""A fixed point is a property of the map, not of the initial iterate."""
 	from alea.prg.feedback import solve_loop
 
-	loop = graph.feedback_loops()[0]
+	loop = _loop_over(graph, "vre_capacity_mw")
 	answers = []
 	# Starts below 1/sensitivity, which is where the capture price is still
 	# positive: `capture = marginal * (1 - sensitivity * share)`, and above
@@ -414,7 +494,7 @@ def test_a_loop_that_cannot_settle_says_which_failure_it_is(
 
 	from alea.prg.feedback import FeedbackError, solve_loop
 
-	loop = replace(graph.feedback_loops()[0], max_iterations=1)
+	loop = replace(_loop_over(graph, "vre_capacity_mw"), max_iterations=1)
 	values = graph.propagate(defaults).values
 	for name in loop.variables:
 		values.pop(name, None)
@@ -1260,6 +1340,104 @@ def test_every_system_that_is_declared_has_equations(graph: ParameterGraph):
 	assert coverage(graph.equations) == []
 
 
+def test_the_deficit_register_counts_the_spec_it_claims_to_count():
+	"""The claim and the witness agree, and neither is derived from the other.
+
+	``SPEC_EQUATION_COUNT`` is the claim, written out as literals;
+	``spec_equations`` reads §13 of ``alea_prg.md`` and is the witness. A test
+	asserting ``len(spec_equations()) == len(spec_equations())`` would be
+	vacuous, which is why the expected counts are literals -- and a test that
+	only checked the *total* would pass on a document that had moved three
+	equations from one system to another. So the per-system counts are compared
+	too: the shape is the claim, not just its sum.
+	"""
+	from alea.prg.library import SPEC_EQUATION_COUNT, spec_equations
+
+	enumerated = spec_equations()
+	witness = {name: len(set(ids)) for name, ids in enumerated.items()}
+	assert witness == SPEC_EQUATION_COUNT, {
+		name: (SPEC_EQUATION_COUNT.get(name), witness.get(name))
+		for name in set(SPEC_EQUATION_COUNT) | set(witness)
+		if SPEC_EQUATION_COUNT.get(name) != witness.get(name)
+	}
+	# The document's own total, pinned. 85, and the library implements 9 of
+	# them: the register exists so that ratio is a number the tree prints
+	# rather than a claim in a status file.
+	assert sum(witness.values()) == 85, sum(witness.values())
+
+
+def test_the_deficit_names_what_is_missing_and_does_not_invent_a_shortfall(
+	graph: ParameterGraph,
+):
+	"""The register is a finding list, and its ``graph`` column is not a false one.
+
+	Two failure modes, and the test pins both. The first is the register the
+	tree had: ``unclaimed_spec_systems`` returned ``[]`` while the library held
+	nine of the specification's eighty-three equations -- a register that
+	measured nothing and read as full coverage.
+
+	The second is subtler and was live in the first version of this function.
+	Counting the specification's *ids* the library happens to use reports
+	``Capture Price spec=4 graph=0`` about a system holding four equations
+	under different ids, because the library spells ``capture_price`` as
+	``capture_price_equation``. That is a false finding, and a false finding
+	costs more than a missing one: it sends a reader to build something that is
+	already there. ``graph`` is therefore the mapped system's equation count,
+	and the id-level detail is separated into ``ids_missing``, where being
+	strict about naming is a fact rather than a claim about coverage.
+	"""
+	from alea.prg.library import equation_coverage, spec_equation_deficit
+
+	deficit = spec_equation_deficit(graph.equations)
+	assert deficit, "the register enumerated nothing"
+	# Every entry names the library system it mapped to, or None when the
+	# heading maps to nothing -- an entry with neither would be a row a reader
+	# cannot act on.
+	for name, row in deficit.items():
+		assert row["spec"] > 0, name
+		assert row["graph"] >= 0, name
+		if row["system"] is None:
+			assert row["graph"] == 0, name
+	# The false-finding case, asserted directly: the four equations §13 files
+	# under `Capture Price` are implemented, so the register must not report a
+	# zero there. This is the assertion that would have caught the first
+	# version.
+	capture = deficit["Capture Price"]
+	assert capture["graph"] > 0, capture
+	# And the deficit is real and large: the library holds a fraction of what
+	# the specification enumerates. Pinned as an inequality rather than an
+	# exact number so that building equations does not fail this test -- the
+	# register moving toward zero is the point.
+	missing = equation_coverage(graph.equations)
+	assert missing, "the register found no gap at all, which is the defect it guards"
+	assert len(missing) > 50, len(missing)
+	assert all(": " in entry for entry in missing), missing[:3]
+
+
+def test_the_deficit_register_reads_the_document_rather_than_a_copy(tmp_path):
+	"""A restructured §13 is refused, not read as an empty specification.
+
+	``spec_equations`` couples the code to a Markdown shape, deliberately --
+	a transcribed list is a second copy that drifts. The coupling means a
+	restructured document yields nothing, and a register that then reported
+	"no deficit" would be reporting full coverage of a document it had stopped
+	reading. The refusal names the cause instead.
+	"""
+	from alea.prg.library import spec_equations
+
+	empty = tmp_path / "spec.md"
+	empty.write_text(
+		"# Spec\n\n### 13. Equation Systems\n\n### 14. Something else\n\nNo tables.\n"
+	)
+	with pytest.raises(ValueError, match="no heading matches"):
+		spec_equations(empty)
+
+	absent = tmp_path / "spec2.md"
+	absent.write_text("# Spec\n\nNothing about equations.\n")
+	with pytest.raises(ValueError, match="holds no"):
+		spec_equations(absent)
+
+
 # ---------------------------------------------------------------------------
 # The seam: auditing a solved what-if result
 # ---------------------------------------------------------------------------
@@ -1310,7 +1488,7 @@ def test_the_audit_reports_what_it_did_not_check():
 	asserting only ``checked ∪ skipped == derived`` passes on that version, so
 	both counts are pinned.
 
-	WHY 19 AND 10 AND NOT 18 AND 10. ``firm_capacity_mw`` moved from exogenous
+	WHY 23 AND 10 AND NOT 18 AND 10. ``firm_capacity_mw`` moved from exogenous
 	to derived when the endogenous fleet layer landed, and the result's
 	``capacity_mix_mw`` now fills the three fleet nodes the graph declares. So
 	the audit gained one check -- ``firm_capacity_mw``, reachable from
@@ -1318,12 +1496,21 @@ def test_the_audit_reports_what_it_did_not_check():
 	stayed at 29. The growth is the point: before the fleet was wired the
 	reserve margin checked the node's reference default while reading as a
 	check on the build.
+
+	WHY THE TOTAL IS 33 AND NOT 29. The audit partitioned ``order()``, the
+	topological *sequence*, and a sequence has no place for a feedback loop --
+	so the five loop variables were in neither ``checked`` nor ``skipped``, and
+	the partition the test asserts below was not exhaustive over the graph at
+	all. Making ``equilibrium_demand_twh`` a loop variable is what exposed it:
+	the parameter left ``order()``, the total stayed 29, and nothing failed.
+	The set is now ``computed()``, which is what the docstring above already
+	described, and the four reachable loop variables join ``checked``.
 	"""
 	from alea.prg.audit import audit_scenario_result
 
 	audit = audit_scenario_result(_solved())
 	assert audit.consistent
-	assert len(audit.checked) == 19, audit.checked
+	assert len(audit.checked) == 23, audit.checked
 	assert len(audit.skipped) == 10, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
@@ -1365,8 +1552,9 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	assert audit.violations == (), "a failure is not a violation of an identity"
 	assert "not run" in audit.summary(), audit.summary()
 	# The whole derived set is named as unexamined: a partial count here would
-	# understate how much of the graph went unread.
-	assert len(audit.skipped) == 29, audit.skipped
+	# understate how much of the graph went unread. 33, not 29, for the reason
+	# spelled out in `test_the_audit_reports_what_it_did_not_check`.
+	assert len(audit.skipped) == 33, audit.skipped
 
 
 def test_the_audit_finds_an_unfinanceable_scenario_the_engine_solved():
@@ -2327,7 +2515,13 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	"""
 	text = register(graph).summary()
 	assert "not a distribution" in text
-	assert "13" in text and "22" in text
+	# 13 inputs reaching 23 derived parameters. The reach grew by one when the
+	# tariff loop landed: `regulated_tariff_usd_per_mwh` is now derived and is
+	# downstream of the uncertain demand and price inputs, so a sensitivity
+	# over those inputs moves it. Pinned because the number is the finding --
+	# the sentence exists to stop a reader taking the declarations for a
+	# distribution, and a reach that drifts unnoticed would understate it.
+	assert "13" in text and "23" in text
 
 
 # ---------------------------------------------------------------------------
@@ -2431,11 +2625,24 @@ def test_the_unit_report_separates_inconsistent_from_undecidable(
 def test_the_flagged_equations_are_a_known_set(graph: ParameterGraph):
 	"""The inconsistent set is pinned, so a new one is a failing test.
 
-	Seven equations are flagged today. They are not seven of one kind -- three
+	Eight equations are flagged today. They are not eight of one kind -- three
 	are the ``(1 + rate)`` convention, one is a missing nominal frequency, and
 	the rest are annual quantities declared without a per-year divisor. This
 	test does not bless them; it makes the set move only when someone means it
 	to, because a count that drifts unnoticed is how a dimensional defect ships.
+
+	WHY ``tariff_cost_recovery`` IS FLAGGED AND IS NOT WRONG. It is the
+	per-year-divisor class, and the coarse declaration is the *demand node's*,
+	not the equation's: ``equilibrium_demand_twh`` is an annual energy declared
+	as bare ``TWh``, so ``USD/year / TWh`` reads as ``USD/(MWh·year)`` when the
+	arithmetic is the physically correct ``USD/year / (MWh/year) = USD/MWh``.
+	The equation divides annual cost by annual energy and the physics is right;
+	what is missing is the ``/year`` on the node. Declaring the five ``TWh``
+	nodes as ``TWh/year`` clears this equation and opens five others in the same
+	class -- ``energy_balance``, ``energy_demand``, ``equilibrium_demand``,
+	``unserved_definition`` and ``cooling_water_definition`` -- so the unit
+	vocabulary is a modelling decision to make once, deliberately, and not a
+	side effect of adding a loop. Pinned here so it is visible in the meantime.
 	"""
 	from alea.prg.units import check_graph
 
@@ -2449,6 +2656,7 @@ def test_the_flagged_equations_are_a_known_set(graph: ParameterGraph):
 		"emissions_definition",
 		"hydrogen_water_definition",
 		"premature_deaths_definition",
+		"tariff_cost_recovery",
 	}, sorted(flagged)
 
 
@@ -2483,6 +2691,7 @@ def test_incremental_propagation_equals_a_full_one(graph: ParameterGraph, defaul
 	assert settable, "no settable parameter carries a default"
 	previous = graph.propagate(defaults)
 	moved_something = 0
+	refused = 0
 	for name in settable:
 		node = graph.nodes[name]
 		# From the *previous* result, not from `defaults`: the incremental
@@ -2494,7 +2703,21 @@ def test_incremental_propagation_equals_a_full_one(graph: ParameterGraph, defaul
 		values[name] = node.default + (span * 0.25 if span else 0.1)
 		if node.range is not None and not (node.range[0] <= values[name] <= node.range[1]):
 			continue
-		full = graph.propagate(values)
+		# A perturbation can leave the *loop's* declared bracket even while
+		# sitting inside its own node's range: 25% of `total_capacity_mw`'s
+		# 1e6 MW span is a 260,000 MW fleet whose revenue requirement exceeds
+		# the tariff node's 2000 USD/MWh ceiling, and the solver correctly
+		# refuses to search outside it. That is not a failure to propagate --
+		# it is the same answer the full path gives -- so the two paths are
+		# required to refuse *together*, which is a stronger claim than the
+		# equality below and covers the case a `continue` would have hidden.
+		try:
+			full = graph.propagate(values)
+		except (DslError, FeedbackError) as refusal:
+			with pytest.raises(type(refusal)):
+				graph.propagate_incremental(values, previous, [name])
+			refused += 1
+			continue
 		step = graph.propagate_incremental(values, previous, [name])
 		assert set(step.values) == set(full.values), name
 		# The loop solver starts from the values it is handed, so a warm start
@@ -2519,6 +2742,11 @@ def test_incremental_propagation_equals_a_full_one(graph: ParameterGraph, defaul
 		f"only {moved_something} perturbations moved anything, so the equality "
 		f"was mostly comparing a value against itself"
 	)
+	# The refusal branch is the other half of the equality and it must have
+	# fired: an unreachable branch would leave every perturbation that escapes
+	# the loop's bracket silently skipped, which is the same vacuity the count
+	# above exists to catch.
+	assert refused, "no perturbation left the loop's bracket, so the refusal branch never ran"
 
 
 def test_incremental_skips_a_loop_nothing_reached(graph: ParameterGraph, defaults: dict):
@@ -2775,13 +3003,15 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# asserted as a property, because it is a fact about *this* document: a new
 	# soft edge should make this test fail and be looked at, not pass silently.
 	#
-	# 37 hard and not 36: `firm_capacity_definition` is an equation no edge
+	# 38 hard and not 37: `firm_capacity_definition` is an equation no edge
 	# cites, and this register counted it as no equation at all until the
 	# count was moved onto `strength_of` -- which, like the propagation,
 	# defaults an uncited equation to `hard`. The count and the two readers
 	# that use `strength_of` disagreed by exactly the number of edge-less
-	# equations, and the register was the one that was wrong.
-	assert counts == {"hard": 37, "informational": 1}, counts
+	# equations, and the register was the one that was wrong. 38 and not 37
+	# today because `tariff_cost_recovery` landed as the second loop's second
+	# equation, and it is `hard` like every other identity.
+	assert counts == {"hard": 38, "informational": 1}, counts
 
 
 def test_a_soft_or_informational_violation_does_not_block_and_a_hard_one_does(

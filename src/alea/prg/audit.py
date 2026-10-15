@@ -282,13 +282,21 @@ def audit_scenario_result(
 	except (FeedbackError, DslError) as exc:
 		return ScenarioAudit(
 			checked=(),
-			skipped=tuple(sorted(g.order())),
+			skipped=tuple(sorted(g.computed())),
 			violations=(),
 			excursions={},
 			failure=f"{type(exc).__name__}: {exc}",
 		)
 
-	derived = set(g.order())
+	# ``computed`` and not ``order``. ``order`` is the topological *sequence*,
+	# and a sequence has no place for a feedback loop -- its variables are
+	# solved by iteration and are deliberately absent from it. Using it here
+	# made the audit's derived set silently lose every loop variable, so when
+	# ``equilibrium_demand_twh`` became the tariff loop's variable it dropped
+	# out of both ``checked`` and ``skipped`` and the partition quietly stopped
+	# covering the graph. ``computed`` is the set the docstring above already
+	# describes -- everything the graph computes rather than accepts.
+	derived = set(g.computed())
 	# ``checked`` is the derived parameters the result's supplied values
 	# *determine* -- the ones the graph computed from what it was handed, and
 	# whose identities were therefore evaluated. It is deliberately not
