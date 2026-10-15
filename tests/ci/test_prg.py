@@ -3585,3 +3585,61 @@ def test_a_nonaffine_equation_falls_back_and_is_reported():
 	result = synthetic.propagate({"x": 3.0})
 	assert math.isclose(result.values["y"], 3.0, rel_tol=1e-9), result.values["y"]
 	assert synthetic.solve_paths() == {"y": "numeric"}, synthetic.solve_paths()
+
+
+def test_both_feedback_loops_converge_in_the_iteration_count_this_tree_pins(
+	graph: ParameterGraph, defaults: dict
+):
+	"""Pin both loop counts, so a solver change that doubles them fails.
+
+	`docs/prg-status.md` records the measurement behind §37's rejection --
+	Anderson acceleration is 63 and 45 turns against plain damped Gauss-Seidel's
+	38 and 36 -- and names this as the weakest part of that entry: the numbers
+	reproduce from `scripts/measure_loop_convergence.py` but nothing in the tree
+	pins them, so a change to the damping factor, the loop's equation set or a
+	node's range could move them without a gate failing. This is the gate.
+
+	**The exact count is pinned, not a bound.** "Converges in under 50 turns"
+	would pass a solver that needs 49 where this one needs 38, which is the
+	1.3x regression the entry exists to warn about -- and the whole reason the
+	numbers are worth writing down is that they are a *baseline* an accelerator
+	has to beat. A bound loose enough to survive any change is a bound that
+	reports nothing.
+
+	**Keyed by variable, not by index.** `detect_loops` returns components in
+	Tarjan's traversal order, so an index-based assertion would check whichever
+	loop the algorithm reached first and keep passing after the loop it meant
+	to check was deleted, as long as some other loop took its place. `_loop_over`
+	already exists for this reason and is reused here.
+
+	**Both counts, and the second is the one a rewrite would drop.** Loop 2 is
+	two-dimensional and converges in fewer turns; a solver that special-cased
+	the three-dimensional loop would move only the first number. Asserting both
+	is what makes the pair a measurement rather than one number and a spare.
+	"""
+	expected = {"vre_capacity_mw": 38, "equilibrium_demand_twh": 36}
+	result = graph.propagate(dict(defaults))
+
+	assert result.loops, "the graph carries two feedback loops and propagated none"
+	measured = {
+		variable: next(
+			loop.iterations for loop in result.loops if loop.loop == _loop_over(graph, variable).id
+		)
+		for variable in expected
+	}
+	# The set, not just the values: a third loop appearing is a change to the
+	# graph's structure and belongs in this failure rather than passing as an
+	# extra entry nobody asserted.
+	assert measured == expected, (
+		f"feedback-loop iteration counts moved: measured {measured}, pinned "
+		f"{expected}. These are the baseline `docs/prg-status.md` measures §37 "
+		f"against; if the change is deliberate, move the pin and the entry "
+		f"together."
+	)
+	# Determinism is the precondition for pinning anything. Two propagations of
+	# the same defaults landing on different counts would make the assertion
+	# above flake rather than fail, which is worse than no pin.
+	again = graph.propagate(dict(defaults))
+	assert [loop.iterations for loop in again.loops] == [
+		loop.iterations for loop in result.loops
+	], "the loop count is not deterministic; pinning it would be a flake"

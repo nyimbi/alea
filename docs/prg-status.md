@@ -489,28 +489,29 @@ manufacturing a decision no one took.
   close a checklist entry would degrade the product to make a document agree
   with itself.
 
-  **The measurement is a script, not a gate, and that is the weakest part of
-  this entry.** The numbers reproduce exactly
-  (`python3 scripts/measure_loop_convergence.py`, deterministic across runs)
-  but nothing in the tree pins them, so a change to the damping factor or the
-  loop structure could move them silently. What the tree *does* pin is weaker
-  than it looks: `test_prg.py` asserts a loop that fails to converge inside a
-  one-iteration budget raises (line 530), and that a propagated loop reports
-  `iterations > 0` (line 981). **No test asserts either loop's actual count**,
-  so a solver change that doubled them would pass every gate in the tree. What
-  is not pinned at all is the comparison — a future reader who implements §37
-  will get no test failure telling them they have made both loops slower,
+  **The measurement was a script and is now a gate.** The numbers reproduce
+  exactly (`python3 scripts/measure_loop_convergence.py`, deterministic across
+  runs) but nothing in the tree pinned them, so a change to the damping factor
+  or the loop structure could move them silently — the weakest part of this
+  entry as it first stood.
+  `test_both_feedback_loops_converge_in_the_iteration_count_this_tree_pins`
+  pins both counts, keyed by variable rather than by
+  index (Tarjan's traversal order is an artefact, and an index-based assertion
+  keeps passing after the loop it meant to check is deleted, as long as another
+  loop takes its place). It asserts the exact pair, not a bound: "under 50
+  turns" would pass a solver needing 49 where this one needs 38, which is the
+  1.3x regression the entry exists to warn about. Canaried by moving the
+  damping factor from 0.5 to 0.45 — **both** counts moved, 38→45 and 36→41,
+  which is why the test asserts the pair rather than one number and a spare.
+
+  What is still not pinned is the comparison — a future reader who implements
+  §37 will get no test failure telling them they have made both loops slower,
   which is exactly the failure this entry exists to warn about. Pinning it
   would mean shipping an Anderson implementation solely so a test can assert
   it is worse, and that trade is not worth making for a mechanism the spec
-  itself never ran.
-
-  The honest residual is that "38 and 36" is a fact about the graph as it
-  stands on 2026-10-16 and is enforced by nothing. A future change to the
-  damping factor, the loop's equation set or a node's declared range can move
-  it without a single test failing — which is the same shape as every other
-  entry on this page, and is recorded rather than papered over with an
-  assertion that would only pin a number no one has decided is load-bearing.
+  itself never ran. What the gate buys is that the baseline the comparison is
+  against cannot drift unnoticed, which is the half of the problem that was
+  actually load-bearing.
 
 ### Closed since this list was written
 
