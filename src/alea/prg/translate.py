@@ -319,13 +319,22 @@ def to_scenario_parameters(
 			f"wants one of these moved sets what determines it instead"
 		)
 	if strict and endogenous:
+		# The levers named here are the ones that *reach* a solve, checked
+		# against the translation table and the constraint register rather than
+		# written from memory. An earlier version of this message offered "the
+		# build target" as well -- and `vre_capacity_target_mw` reaches neither
+		# an engine knob nor an inequality, so it is a lever a reader would pull
+		# and see nothing move. Naming a fix that does not work is worse than
+		# naming none: it costs the reader the round trip that proves it.
+		from alea.prg.constraints import bound_parameter_names
+
+		levers = sorted(set(translated(graph)) | set(bound_parameter_names(graph)))
 		raise ValueError(
 			f"{sorted(endogenous)} are chosen by the optimisation, so setting "
 			f"them states an input where the graph states a decision: the solve "
 			f"determines them and would overwrite whatever was passed. A "
 			f"scenario that wants a different fleet moves what the solve is "
-			f"given -- the carbon price, the demand, the build target -- not the "
-			f"fleet it produces"
+			f"given -- {', '.join(levers)} -- not the fleet it produces"
 		)
 	if strict and skipped:
 		raise ValueError(

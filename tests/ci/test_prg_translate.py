@@ -269,19 +269,47 @@ def test_an_endogenous_parameter_is_refused_as_a_decision_not_as_derived(
 	The two are one boolean and two different sentences, which is why
 	``graph.role`` exists rather than a second predicate over ``is_settable``.
 
-	The refusal must name the *right* fix. A scenario that wants a different
-	fleet moves what the solve is given -- the carbon price, the demand, the
-	build target -- and the message says so.
+	The refusal must name the *right* fix, and every lever it names must
+	actually reach a solve. The message offered "the build target" until
+	2026-10-15, when the levers were derived from the translation table and the
+	constraint register instead: ``vre_capacity_target_mw`` reaches neither an
+	engine knob nor an inequality, so it was a lever a reader would pull and see
+	nothing move. The assertion below is the property, not the prose -- it
+	checks each name the message offers against the two sets that decide it, so
+	a lever that stops reaching a solve fails here rather than in a reader's
+	scenario.
 	"""
+	from alea.prg.constraints import bound_parameter_names
+	from alea.prg.translate import translated
+
 	assert "thermal_capacity_mw" in graph.nodes
 	assert not graph.is_settable("thermal_capacity_mw")
-	with pytest.raises(ValueError, match="chosen by the optimisation"):
+	with pytest.raises(ValueError, match="chosen by the optimisation") as excinfo:
 		to_scenario_parameters(graph, {"thermal_capacity_mw": 9000.0})
+	message = str(excinfo.value)
 	# The derived message must not be what comes back: a caller reading "the
 	# graph computes" would go looking for an equation to change.
-	with pytest.raises(ValueError) as excinfo:
-		to_scenario_parameters(graph, {"thermal_capacity_mw": 9000.0})
-	assert "the graph computes" not in str(excinfo.value)
+	assert "the graph computes" not in message
+
+	# The lever list must *equal* the set that reaches a solve, not merely
+	# contain names from it. A membership check cannot see the defect this
+	# guards: the original message said "the build target", which is prose and
+	# matches no parameter name at all, so a gate asking "is every name in the
+	# message a real lever" passes on an empty list. Pinning equality fails on
+	# prose *and* on a stale hand-written list, which is the shape both bugs
+	# took. Canaried by restoring the prose text: the assertion below fails.
+	reaches = set(translated(graph)) | set(bound_parameter_names(graph))
+	tail = message.split("given -- ", 1)[-1]
+	assert tail != message, "the refusal no longer names the levers it offers"
+	assert tail.split(" -- ", 1)[0] == ", ".join(sorted(reaches)), (
+		"the refusal's lever list is not the set that reaches a solve; a lever "
+		"written by hand drifts from the register the moment a route is added "
+		"or removed"
+	)
+	assert "build target" not in message, (
+		"the build target reaches no solve, so offering it sends a reader to a "
+		"lever that moves nothing"
+	)
 
 
 def test_a_typo_is_named_in_the_loose_register(graph: ParameterGraph):

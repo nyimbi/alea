@@ -381,8 +381,20 @@ through `sensitivity.gradients` is what makes the lever the right one.
 is derived — nothing may set it — but it has no place in a topological order, so
 `order()` omits it. A reachability closure filtered on `order()` therefore
 reports a path that crossed a feedback loop while omitting the loop's own
-members, which is the one place the uncertainty most obviously lands. Use
-`not graph.is_settable(name)` for "derived".
+members, which is the one place the uncertainty most obviously lands.
+
+**And `not is_settable` is not "derived" either, which the fix above taught the
+hard way.** That advice stood here until 2026-10-15, when the endogenous fleet
+layer landed and the predicate silently became a superset: a parameter the
+optimiser *chooses* is also not settable, and the uncertainty register was
+folding three solved fleet nodes into a closure that reports what an equation
+computed. `is_settable` answers "may the user move this" and collapses three
+answers — an equation fixes it, a loop computes it, the solve determines it.
+A caller that needs the *set* must say which: `graph.role(name) is Role.DERIVED`
+for the first, `graph.endogenous()` for the third. The general shape is the one
+this document keeps returning to: a predicate widened by a change elsewhere
+stays green everywhere it is read, and the readers that assumed the old
+narrower meaning are exactly the ones no test names.
 
 **A ratio translation needs the *recorded* base, not the current value.**
 `fuel_price_usd_per_mwh` is absolute; the engine's `gas_price_multiplier` is a
@@ -401,6 +413,27 @@ that did pass were testing something else. Re-run by exact node id
 count you meant to select. A `-k` filter that selects zero of the tests you
 believe are guarding a branch is the same failure as a canary whose patch does
 not apply: the instrument, not the subject, is what lied.
+
+**A refusal that names a lever must name one that moves something.** The
+endogenous refusal told a reader to move "the carbon price, the demand, the
+build target". The first two reach a solve; `vre_capacity_target_mw` reaches
+neither an engine knob nor an inequality — it is a settable parameter the graph
+carries and no path consumes, so the third is a lever a reader pulls and sees
+nothing move. The list is now derived from `translated()` and
+`bound_parameter_names()`, which are the two registers that decide it.
+
+**And the gate written for it was blind to the bug it was written for.** The
+first version asked whether every *name* appearing in the message was a real
+lever — and the defect was prose ("the build target"), which matches no
+parameter name at all, so the check passed on an empty list. The canary caught
+this: reverting to the original text made the test fail with "the refusal names
+no lever at all", which is the wrong reason, and a canary that fails for the
+wrong reason is a finding about the gate. The assertion now pins the message's
+lever list *equal* to the computed set, which fails on prose and on a stale
+hand-written list alike. This is the subset rule from the other side: a
+predicate over the *recognised* form of a thing cannot see the thing written in
+a form it does not recognise, and prose is the form a message is most likely to
+take.
 
 **A dimension declared as a base dimension manufactures its own findings.**
 `DALY` was first declared `[health]`, and `dalys = deaths x years_of_life_lost`
