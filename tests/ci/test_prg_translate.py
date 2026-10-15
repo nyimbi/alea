@@ -89,19 +89,28 @@ def _network(*, gas_cost: float = 40.0) -> pypsa.Network:
 def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	graph: ParameterGraph,
 ):
-	"""Three of fifty-three, asserted rather than derived.
+	"""Three of fifty-two, asserted rather than derived.
 
 	Deriving the expected count from ``TRANSLATIONS`` would make this vacuous:
 	it would pass on a layer that translated everything and on one that
 	translated nothing. The literal is the claim; the register is the witness.
+
+	The denominator moved 53 -> 52 when the three endogenous fleet nodes
+	landed: they are chosen by the optimiser, so ``is_settable`` is False for
+	them and they are not part of the surface the engine can be *driven* from.
+	They are not missing from the register -- ``endogenous`` carries them, and
+	``audit.fleet_parameters`` reads them back out of a solved result.
 	"""
 	cov = coverage(graph)
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 53, cov
+	assert cov["total"] == 52, cov
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
 	}
+	# The three that left the denominator, named where they went.
+	assert len(cov["endogenous"]) == 3, cov["endogenous"]
+	assert not (set(cov["endogenous"]) & set(cov["untranslated"]))
 
 
 def test_every_translation_names_a_parameter_the_graph_actually_has(
@@ -154,9 +163,14 @@ def test_the_untranslated_register_is_not_empty_and_says_why(
 	network can be perturbed by.
 	"""
 	missing = untranslated(graph)
-	assert len(missing) == 50, missing
+	assert len(missing) == 49, missing
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
+	# The fleet nodes are not in this register, and their absence is a fact
+	# about them rather than about the engine: nothing a scenario *sets*
+	# determines the fleet, because the solve does.
+	assert "thermal_capacity_mw" not in missing
+	assert "thermal_capacity_mw" in graph.endogenous()
 
 
 # --------------------------------------------------------------------------
@@ -241,6 +255,33 @@ def test_a_derived_parameter_is_refused_as_derived_not_as_a_typo(
 	assert not graph.is_settable("lcoe_usd_per_mwh")
 	with pytest.raises(ValueError, match="the graph computes"):
 		to_scenario_parameters(graph, {"lcoe_usd_per_mwh": 50.0})
+
+
+def test_an_endogenous_parameter_is_refused_as_a_decision_not_as_derived(
+	graph: ParameterGraph,
+):
+	"""The fourth finding, and the derived message is actively wrong for it.
+
+	``thermal_capacity_mw`` is not settable, so a register built on
+	``is_settable`` files it with the derived parameters -- and the derived
+	refusal's advice, "set what determines it instead", is advice that cannot
+	be followed: nothing a scenario sets determines what the optimiser chooses.
+	The two are one boolean and two different sentences, which is why
+	``graph.role`` exists rather than a second predicate over ``is_settable``.
+
+	The refusal must name the *right* fix. A scenario that wants a different
+	fleet moves what the solve is given -- the carbon price, the demand, the
+	build target -- and the message says so.
+	"""
+	assert "thermal_capacity_mw" in graph.nodes
+	assert not graph.is_settable("thermal_capacity_mw")
+	with pytest.raises(ValueError, match="chosen by the optimisation"):
+		to_scenario_parameters(graph, {"thermal_capacity_mw": 9000.0})
+	# The derived message must not be what comes back: a caller reading "the
+	# graph computes" would go looking for an equation to change.
+	with pytest.raises(ValueError) as excinfo:
+		to_scenario_parameters(graph, {"thermal_capacity_mw": 9000.0})
+	assert "the graph computes" not in str(excinfo.value)
 
 
 def test_a_typo_is_named_in_the_loose_register(graph: ParameterGraph):

@@ -32,7 +32,7 @@ the code and `config/prg.yaml` are the authority, and this says where to look.
 | Constraints | `src/alea/prg/constraints.py` | The equation→constraint half of Part X: the two inequalities that bind a linopy solve, the four that are post-solve checks instead, and `bound_parameter_names` — the four scalars those inequalities read, which reach the optimiser with no engine knob |
 | Constrained solve | `src/alea/whatif/service.py` | `solve_from_prg(constrain=True)`, the default: the graph's inequalities are added through PyPSA's `extra_functionality` hook, the constraint record enters the cache key, and an infeasible scenario raises `SolveError` instead of caching a cost |
 | API | `src/alea/api/routes/prg.py` | Five routes: `GET /prg/summary`, `GET /prg/equations`, `POST /prg/conflicts`, `POST /prg/sensitivity`, `POST /prg/cross-validation` |
-| The graph | `config/prg.yaml` | 84 parameters, 37 equations, 84 edges, 1 feedback loop |
+| The graph | `config/prg.yaml` | 87 parameters, 38 equations, 84 edges, 1 feedback loop (3 loop variables); 52 exogenous, 3 endogenous (the optimiser's fleet), 32 derived |
 
 Commands: `alea prg summary|equations|check|propagate|conflicts|sensitivity|units|constraints|audit`,
 `alea whatif scenario`, and `alea expr render|eval|diff|simplify|solve`.
@@ -130,7 +130,7 @@ The six inequalities in the library are not six constraints. Two bind —
 over quantities the graph derives from a solved result, so the network has no
 column for them and the audit checks them after the solve instead. The register
 is `alea prg summary`'s `constraints:` line and `/prg/summary`'s `constraints`
-object, and its denominator is the six, not the 37.
+object, and its denominator is the six, not the 38.
 
 Three things about it are worth keeping.
 
@@ -164,7 +164,7 @@ the same budget permits 4,380× more emissions per modelled hour, and the
 assertion is on the emissions the solve actually produces. Re-running the
 annualisation canary against it now fails as it must.
 
-## What the dimensional check found`units.py` decides every equation: 30 of 37 are dimensionally consistent, 7
+## What the dimensional check found`units.py` decides every equation: 31 of 38 are dimensionally consistent, 7
 are not, and 0 are undecidable. The seven are not seven of one kind, and the
 fix differs by kind — which is why they are listed rather than counted:
 
@@ -203,7 +203,7 @@ after `views.py` said the graph did not make it.
   routes, and there are **three**: `carbon_price_usd_per_tco2` and
   `demand_growth` map one-for-one, and `fuel_price_usd_per_mwh` maps to the
   engine's `gas_price_multiplier` as a ratio over the network's base gas cost.
-  The other **50 of 53** settable parameters reach no what-if knob. They are
+  The other **49 of 52** settable parameters reach no what-if knob. They are
   named by `translate.untranslated()` and counted in `alea prg summary`. This
   is the register, not an omission: the graph states what the physics and the
   accounts require, and the engine states what a PyPSA network can be
@@ -234,9 +234,31 @@ after `views.py` said the graph did not make it.
   four terms are named by `bound_parameter_names` rather than reported as
   dropped, and a fleet the reserve margin rejects is infeasible rather than
   silently solved without it. The gap that remains is the real one: seven of
-  fifty-three settable parameters reach a solver whose *structure* the graph
-  still does not set — no equation states the fleet, the topology, or the
-  dispatch, and the graph cannot yet be the thing that builds the network.
+  fifty-two settable parameters reach a solver whose *structure* the graph
+  still does not set — no equation states the topology or the dispatch, and
+  the graph is not yet the thing that *builds* the network.
+
+  **The fleet is now the graph's, in both directions, and it took two steps.**
+  `Role.ENDOGENOUS` — the spec's §3.4 middle layer, what the optimiser chooses
+  — was declared, enum-validated, exported on `ParameterNode`, and carried by
+  **zero nodes**; the graph was a two-layer DAG (53 exogenous → 31 derived)
+  while the spec declares three. That is why it could not state a fleet: it
+  could say "an equation fixes this" or "you set this", and a fleet is neither.
+  Since 2026-10-15 three endogenous nodes carry the optimiser's own decisions
+  (`thermal_capacity_mw`, `dispatchable_re_capacity_mw`,
+  `storage_capacity_mw`), each with the range an LP needs and a reference
+  default; `firm_capacity_mw` is *derived* from two of them by
+  `firm_capacity_definition` rather than stated by fiat, so the reserve margin
+  is a check on the build instead of on a declared number.
+
+  **And the second step is the one that would have been missed.**
+  `audit.fleet_parameters` reads the solve's own `capacity_mix_mw` back into
+  those three nodes, classifying carriers by the registry's `CarrierClass`.
+  Without it the nodes kept their reference defaults through every audit — the
+  declared-is-not-produced defect *inside the layer added to fix it*, and the
+  hard version to see, because 7,500 MW of thermal is a plausible number. A
+  coal-and-wind result reporting 6,000 MW of firm capacity against an 8,500 MW
+  peak passed the reserve margin until this landed.
 - **The energy balance is single-region.** One demand, one generation total. A
   PyPSA network balances per bus and per hour and the solved result carries no
   nodal frame, so the audit cannot assert the balance against it. The audit
@@ -422,10 +444,22 @@ is judged against its own exemptions. A canary that plants a bare float on a
 deeply nested model (`PrgSummaryOut → UnitReportOut → EquationCheckOut`) still
 fails, so the coverage did not shrink with the flattening.
 
+**The gate caught the field added to satisfy it.** `PrgSummaryOut.endogenous`
+shipped as a bare `int` — the count of nodes the optimiser chooses, added
+beside `derived` — and `test_values_carry_basis` failed on it immediately,
+naming the model and the field. `derived` was already in
+`NON_QUANTITY_FIELDS` for the same reason and the sibling was simply forgotten;
+the fix is one name in that set. Worth recording because the gate's value here
+is not the fix but the *timing*: the count of a role is not a modelled
+quantity, and the only reason it did not ship as one is that a check written
+for a different purpose enumerated every numeric field on every response model.
+A gate earns its keep by catching the change its author did not think was in
+its jurisdiction.
+
 **A closure over the declared edge set is not the closure over `affects`.**
 The specification's incremental propagator marks dirty with
 `networkx.descendants` over the declared graph. That is a different relation:
-it disagrees with the `affects` closure on 27 of the graph's 53 settable
+it disagrees with the `affects` closure on 27 of the graph's 52 settable
 parameters, missing members in *both* directions — the declared edges omit a
 loop's feedback, and they carry relationships the equations do not fix. The
 `affects` closure is the one that matches what actually moves, and it was
@@ -502,12 +536,20 @@ the field somewhere convenient but to make it *decide* something — here, wheth
 a failure blocks — and then to gate on it, canaried in both directions.
 
 **A property of the equation cannot be read off an edge.** The strength is
-declared per edge, and 26 of the 37 equations are cited by more than one, so
+declared per edge, and 26 of the 38 equations are cited by more than one, so
 "the strength of this equation" was ambiguous: a reader taking it from an edge
 got whichever edge they read first. The constructor now refuses a document whose
 edges disagree about one, rather than resolving it by an arbitrary pick — the
 same discipline as `GraphError` for a node determined by two equations. A
 strength that depends on iteration order is not a declared property.
+
+**An equation with no edge is still an equation, and the count has to say so.**
+`strength_counts` iterated the edge-derived `_strength` dict while `strength_of`
+and the propagation both read it with a `hard` default — so `firm_capacity_definition`,
+which no edge cites, was counted as no equation at all and the register read 37
+tiers over 38 equations. Two readers of one field disagreed by exactly the number
+of edge-less equations, and the register was the wrong one. It now counts by
+equation through `strength_of`, which is the single reader the other two use.
 
 **A determined equation cannot fail after a solve.** `capture_price_ratio_definition`
 is the one `informational` equation, and it determines its own variable, so

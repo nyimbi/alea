@@ -166,13 +166,17 @@ parameters:
 
   firm_capacity_mw:
     name: "Firm capacity"
-    description: "Dispatchable capacity counted at full nameplate for reserve."
+    description: >
+      Dispatchable capacity counted at full nameplate for reserve. Derived:
+      it is the thermal fleet plus the dispatchable renewables, and the
+      optimiser chooses both. It was an exogenous node with a 9,000 MW default
+      until 2026-10-15 -- a fleet stated by fiat, which is what made the
+      reserve margin a check against a number rather than against the build.
     category: "Technical"
     type: float
     unit: "MW"
     range: [0.0, 1000000.0]
-    default: 9000.0
-    role: exogenous
+    role: derived
     determinism: fixed
     priority: P2
     status: existing
@@ -189,6 +193,82 @@ parameters:
     determinism: physical
     priority: P1
     status: existing
+
+  # -- endogenous: what the optimisation chooses -----------------------
+  #
+  # The middle layer of `params-prg1.md` §3.4's DAG. Until 2026-10-15 the graph
+  # carried none: `Role.ENDOGENOUS` was declared, enum-validated, exported in
+  # the model and on `ParameterNode`, and **no node used it**. The graph could
+  # therefore say only "an equation fixes this" (derived) or "you set this"
+  # (exogenous), and a fleet is neither -- it is what the optimiser decides.
+  # That is why the graph could not be the thing that builds a network: it had
+  # no way to state the network's own decision variables.
+  #
+  # WHY three carrier groups and not sixteen carriers. A node per carrier
+  # would be a node per name in the registry, and no equation in this library
+  # is written at that resolution -- the reserve margin reads "firm" and "VRE",
+  # which is how a planner states adequacy. The groups are the registry's own
+  # classes (`alea.registry.technologies.CarrierClass`), so the mapping from a
+  # node to the generators it counts is a declared fact about the registry
+  # rather than a second classification maintained here.
+  #
+  # There is no `vre_fleet_capacity_mw`: VRE capacity is already stated by
+  # `vre_capacity_mw`, the capture-price loop's fixed point. A second node for
+  # the same quantity would be two records of one fleet, drifting.
+  #
+  # WHY each carries a range. An endogenous value is chosen by the solve, and
+  # an unbounded decision variable is one an LP drives to infinity or to a
+  # negative capacity. The range is the admissible set, and for these nodes it
+  # is also the only thing bounding the optimum.
+
+  thermal_capacity_mw:
+    name: "Dispatchable thermal capacity"
+    description: >
+      Coal, gas, oil, nuclear, biomass and waste on the system. The optimiser
+      chooses it; the reserve margin and the emissions identities read it.
+    category: "Fleet"
+    type: float
+    unit: "MW"
+    range: [0.0, 1000000.0]
+    default: 7500.0
+    role: endogenous
+    determinism: fixed
+    priority: P1
+    status: to_build
+
+  dispatchable_re_capacity_mw:
+    name: "Dispatchable renewable capacity"
+    description: >
+      Hydro, geothermal and OTEC: renewable, and the operator chooses the
+      output. Counted toward firm capacity because the dispatch is controllable
+      even though the fuel is not.
+    category: "Fleet"
+    type: float
+    unit: "MW"
+    range: [0.0, 1000000.0]
+    default: 1500.0
+    role: endogenous
+    determinism: fixed
+    priority: P2
+    status: to_build
+
+  storage_capacity_mw:
+    name: "Storage power capacity"
+    description: >
+      Battery, pumped hydro and thermal storage, at their power rating. Not a
+      Generator in the network, so it counts toward neither firm nor VRE
+      capacity -- the reserve margin is a nameplate adequacy criterion and
+      counting a battery's rating as firm is a modelling choice this graph does
+      not make.
+    category: "Fleet"
+    type: float
+    unit: "MW"
+    range: [0.0, 1000000.0]
+    default: 800.0
+    role: endogenous
+    determinism: fixed
+    priority: P2
+    status: to_build
 
   reserve_margin_min:
     name: "Minimum reserve margin"
@@ -1244,6 +1324,24 @@ equations:
     priority: P1
 
   # -- System 7: Reserve Margin ----------------------------------------
+
+  firm_capacity_definition:
+    name: "Firm capacity"
+    description: >
+      The firm fleet is the thermal units plus the dispatchable renewables:
+      the generators whose output the operator chooses. Derived from the
+      optimiser's own capacity decisions, which is what makes the reserve
+      margin below a check on the build rather than on a declared number.
+    system: reserve_margin
+    lhs: "firm_capacity_mw"
+    rhs: "thermal_capacity_mw + dispatchable_re_capacity_mw"
+    parameters: [firm_capacity_mw, thermal_capacity_mw, dispatchable_re_capacity_mw]
+    determined_variables: [firm_capacity_mw]
+    tolerance: 1.0e-9
+    reference: "Nameplate adequacy accounting; cf. ENTSO-E adequacy studies"
+    linearity: linear
+    solution_method: direct
+    priority: P1
 
   reserve_margin:
     name: "Reserve margin"

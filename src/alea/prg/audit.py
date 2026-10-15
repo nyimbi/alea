@@ -35,9 +35,76 @@ __all__ = [
 	"ScenarioAudit",
 	"audit_scenario_result",
 	"fleet_intensity_gap",
+	"fleet_parameters",
 	"parameters_from_result",
 	"reliability_gap",
 ]
+
+#: The registry's carrier classes, mapped onto the graph's fleet nodes.
+#:
+#: The three *endogenous* nodes of ``params-prg1.md`` §3.4's middle layer --
+#: what the optimiser chooses. The mapping is by ``CarrierClass`` rather than
+#: by carrier name because the classes are the registry's own declared
+#: classification (``alea.registry.technologies``), so this is a reading of a
+#: fact the tree already holds rather than a second classification maintained
+#: here. A carrier the registry does not know is left out of every group, which
+#: understates the fleet rather than inventing a capacity for it -- the same
+#: choice ``constraints._generator_capacity`` makes, and for the same reason.
+#:
+#: ``VRE`` is absent deliberately. VRE capacity is already stated by
+#: ``vre_capacity_mw``, the capture-price loop's fixed point; a fourth group
+#: here would be a second record of one fleet.
+_FLEET_GROUPS: tuple[tuple[str, str], ...] = (
+	("thermal", "thermal_capacity_mw"),
+	("dispatchable_re", "dispatchable_re_capacity_mw"),
+	("storage", "storage_capacity_mw"),
+)
+
+
+def fleet_parameters(
+	capacity_mix_mw: dict[str, float], graph: ParameterGraph
+) -> dict[str, float]:
+	"""The optimiser's own capacity decisions, as the graph's fleet nodes.
+
+	WHY this exists. The three endogenous nodes landed in ``config/prg.yaml``
+	and were read by *nothing* -- the defect class this repo has paid for most
+	often, applied to the layer that was added to fix it. A node the optimiser
+	is said to choose, and that no code ever fills from a solve, is a decision
+	variable the graph states and never receives: the reserve margin then checks
+	the node's *reference default* while reading as a check on the build.
+
+	The result carries ``capacity_mix_mw`` as carrier -> MW, so the solve's
+	answer is in hand and the mapping is the registry's classes. Capacity the
+	registry cannot classify is dropped from every group, which understates
+	the firm fleet rather than overstating the margin.
+	"""
+	from alea.registry.technologies import CarrierClass, get_technology, is_known_carrier
+
+	assert graph is not None, "a fleet is read against a graph"
+	by_class: dict[CarrierClass, float] = {}
+	for carrier, megawatts in capacity_mix_mw.items():
+		if not is_known_carrier(carrier):
+			continue
+		klass = get_technology(carrier).klass
+		by_class[klass] = by_class.get(klass, 0.0) + float(megawatts)
+
+	out: dict[str, float] = {}
+	if not capacity_mix_mw:
+		# A result carrying no capacity at all says nothing about the fleet, so
+		# every node keeps whatever the caller supplied. An *empty* mix is not
+		# a fleet of zero: it is a result that did not record one.
+		return out
+	for klass_name, node_name in _FLEET_GROUPS:
+		if node_name not in graph.nodes:
+			continue
+		# A class with no units on the network is a fleet of zero, and zero is
+		# the value the solve produced. Leaving the node unset would keep its
+		# *reference default* instead, so a two-carrier network would audit
+		# against 1,500 MW of hydro and 800 MW of storage that do not exist --
+		# the same "declared is not produced" defect one level down, and the
+		# harder one to see, because the number looks plausible.
+		out[node_name] = by_class.get(CarrierClass(klass_name), 0.0)
+	return out
 
 
 @dataclass(frozen=True)
@@ -158,6 +225,15 @@ def parameters_from_result(
 		total = float(sum(capacity_mix.values()))
 		if total > 0.0:
 			scoped["total_capacity_mw"] = total
+
+	# The optimiser's own capacity decisions, into the three endogenous nodes
+	# the graph declares for them. Without this the fleet nodes keep their
+	# *reference defaults* through every audit, and the reserve margin -- which
+	# reads `firm_capacity_mw`, derived from two of them -- checks a fleet the
+	# solve did not choose while reporting as a check on the build. That is the
+	# "declared is not produced" defect exactly: the middle layer existed, was
+	# validated, and was filled by nothing.
+	scoped.update(fleet_parameters(capacity_mix, graph))
 
 	return {name: value for name, value in scoped.items() if name in graph.nodes}
 

@@ -39,6 +39,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Mapping
 
+from alea.prg.views import Role
 from alea.whatif.params import ScenarioParameters
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
@@ -79,7 +80,7 @@ class Translation:
 
 #: The declared routes from a PRG parameter into a ``ScenarioParameters`` knob.
 #:
-#: Short, and the shortness is the finding. Three of the graph's 53 settable
+#: Short, and the shortness is the finding. Three of the graph's 52 settable
 #: parameters reach the engine; the rest are quantities the PRG states and the
 #: PyPSA layer has no column for. Recording that here is what keeps it from
 #: being rediscovered as a surprise every time a scenario runs flat.
@@ -175,8 +176,17 @@ def untranslated(graph: ParameterGraph) -> tuple[str, ...]:
 def coverage(graph: ParameterGraph) -> dict[str, Any]:
 	"""How much of the graph's settable surface the engine can be driven from.
 
-	Reported as a fraction with the names behind it, because "3 of 53" and the
-	list of the other 50 are the same finding and the second is actionable.
+	Reported as a fraction with the names behind it, because "3 of 52" and the
+	list of the other 49 are the same finding and the second is actionable.
+
+	``endogenous`` is carried beside the fraction and not folded into it. The
+	three fleet nodes the optimiser chooses are not settable, so they left this
+	denominator -- and a register that shrank from 53 to 52 without saying
+	where the three went reads as three parameters that vanished. They did not:
+	they are what the *solve* produces, and ``audit.fleet_parameters`` is what
+	reads them back out of a result. That is the direction this layer does not
+	cover, and naming it here is the difference between a register and a
+	subtraction.
 	"""
 	reachable = translated(graph)
 	missing = untranslated(graph)
@@ -187,6 +197,7 @@ def coverage(graph: ParameterGraph) -> dict[str, Any]:
 		"count": len(reachable),
 		"total": total,
 		"fraction": (len(reachable) / total) if total else 0.0,
+		"endogenous": graph.endogenous(),
 		"engine_unreached": engine_fields_unreached(),
 	}
 
@@ -234,18 +245,22 @@ def to_scenario_parameters(
 	scenario wants -- and the drop is what :func:`untranslated` exists to make
 	visible, so the non-strict path is the one that needs the register read.
 
-	``strict`` also refuses two keys that are not translatable, each with its own
-	message, because one message would send an author to the wrong fix. A key the
-	graph does not declare is a typo. A key the graph declares but *computes* is
-	derived: setting it changes nothing, because ``propagate`` overwrites it.
+	``strict`` also refuses three keys that are not translatable, each with its
+	own message, because one message would send an author to the wrong fix. A
+	key the graph does not declare is a typo. A key the graph declares but
+	*computes* is derived: setting it changes nothing, because ``propagate``
+	overwrites it. A key the optimiser *chooses* is endogenous: nothing the
+	author sets determines it, and "set what determines it instead" -- the
+	derived case's advice -- sends them looking for a lever that does not exist.
 	:func:`untranslated` enumerates the graph's own settable parameters, so it
-	can name neither, and a register built from either direction is blind to
-	both -- which is how a typo came to solve and apply nothing.
+	can name none of the three, and a register built from either direction is
+	blind to all of them -- which is how a typo came to solve and apply nothing.
 	"""
 	fields: dict[str, Any] = {}
 	skipped: list[str] = []
 	unknown: list[str] = []
 	derived: list[str] = []
+	endogenous: list[str] = []
 	for name, value in sorted(values.items()):
 		if name not in graph.nodes:
 			# Three findings, not two, and each needs its own message or the
@@ -260,7 +275,15 @@ def to_scenario_parameters(
 			unknown.append(name)
 			continue
 		if not graph.is_settable(name):
-			derived.append(name)
+			# A fourth bucket, because the advice differs. A derived value is
+			# overwritten by `propagate`, so the fix is to set what determines
+			# it. An endogenous value is chosen by the optimiser: nothing the
+			# author sets determines it, and "set what determines it instead"
+			# sends them looking for a lever that does not exist.
+			if graph.role(name) is Role.ENDOGENOUS:
+				endogenous.append(name)
+			else:
+				derived.append(name)
 			continue
 		translation = _by_prg().get(name)
 		if translation is None:
@@ -294,6 +317,15 @@ def to_scenario_parameters(
 			f"the graph computes {sorted(derived)}, so setting them changes "
 			f"nothing: `propagate` overwrites a derived value. A scenario that "
 			f"wants one of these moved sets what determines it instead"
+		)
+	if strict and endogenous:
+		raise ValueError(
+			f"{sorted(endogenous)} are chosen by the optimisation, so setting "
+			f"them states an input where the graph states a decision: the solve "
+			f"determines them and would overwrite whatever was passed. A "
+			f"scenario that wants a different fleet moves what the solve is "
+			f"given -- the carbon price, the demand, the build target -- not the "
+			f"fleet it produces"
 		)
 	if strict and skipped:
 		raise ValueError(

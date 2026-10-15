@@ -111,6 +111,17 @@ class ParameterNode(BaseModel):
 	unit: str | None = None
 	range: tuple[float, float] | None = None
 	default: float | None = None
+	"""The value used when nothing else supplies one.
+
+	Three roles read it three ways. For an *exogenous* node it is the value a
+	scenario starts from. For an *endogenous* node it is the reference value
+	used when no solve supplies the optimiser's own answer -- the graph's
+	convenience paths build a value set from defaults, and a decision variable
+	with no starting point makes every one of them unrunnable. A *derived*
+	node must not carry one: its value comes from an equation, and a default is
+	a value that would stand in whenever the equation is not run.
+	"""
+
 	initial: float | None = None
 	"""Where a feedback loop starts iterating.
 
@@ -150,6 +161,32 @@ class ParameterNode(BaseModel):
 				f"{self.id}: a derived parameter must not carry a default; its "
 				f"value comes from an equation, and a default is a value that "
 				f"would be used when the equation is not"
+			)
+		if self.role is Role.ENDOGENOUS and self.default is None:
+			# The reference value, used when nothing else supplies one. A
+			# `propagate` call takes a value set, and the graph's own
+			# convenience paths build that set from defaults; an endogenous
+			# node with none makes every one of them unrunnable, and the
+			# alternative -- silently zero -- is a fleet of no units that the
+			# reserve margin then reports as satisfied.
+			raise ValueError(
+				f"{self.id}: an endogenous parameter needs a `default` as its "
+				f"reference value, used when no solve supplies one; a decision "
+				f"variable with no starting point makes the graph unanswerable "
+				f"and zero would read as a fleet of no units"
+			)
+		if self.role is Role.ENDOGENOUS and self.range is None:
+			# The optimiser chooses this value, and a decision variable with no
+			# bounds is one an LP may drive to infinity or to a negative
+			# capacity -- both of which solve and neither of which is a fleet.
+			# The range is the admissible set the graph states; for an
+			# endogenous node it is also the only thing standing between the
+			# solve and a nonsense optimum.
+			raise ValueError(
+				f"{self.id}: an endogenous parameter is chosen by the "
+				f"optimiser, so it must declare the range the optimiser may "
+				f"choose within; a decision variable with no bounds is one the "
+				f"solve can drive anywhere"
 			)
 		if self.initial is not None:
 			if self.role is not Role.DERIVED:

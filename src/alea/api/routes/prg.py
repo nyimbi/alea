@@ -120,7 +120,7 @@ async def summary(principal: PublicDep) -> PrgSummaryOut:
 
 	The registers are load-bearing: a client that reads only ``parameters``
 	and ``equations`` will assume the engine is driven by all of them, and
-	three of fifty-three settable parameters reach a what-if knob.
+	three of fifty-two settable parameters reach a what-if knob.
 	"""
 	from alea.prg.service import graph_summary
 
@@ -133,6 +133,8 @@ async def summary(principal: PublicDep) -> PrgSummaryOut:
 		equations=report["equations"],
 		edges=report["edges"],
 		derived=report["derived"],
+		endogenous=report["endogenous"],
+		endogenous_parameters=report["endogenous_parameters"],
 		systems=report["systems"],
 		systems_declared=report["systems_declared"],
 		unmodelled_systems=report["unmodelled_systems"],

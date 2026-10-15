@@ -347,8 +347,16 @@ class ParameterGraph:
 		equations has declared every relationship a contradiction, and one with
 		no ``hard`` equations has declared none of them load-bearing.
 		"""
+		# Iterate the *equations* and ask `strength_of` for each, rather than
+		# iterating `_strength`. That dict is built from the edge list, so an
+		# equation no edge cites has no entry in it -- while `strength_of` and
+		# the propagation both default such an equation to `hard`. The two
+		# readers disagreed by exactly the number of edge-less equations, and
+		# the register is the one that was wrong: it reported 37 tiers over 38
+		# equations, so a `hard` equation read as no equation at all.
 		counts: dict[str, int] = {}
-		for strength in self._strength.values():
+		for equation in self._equations.values():
+			strength = self.strength_of(equation.id)
 			counts[strength] = counts.get(strength, 0) + 1
 		return dict(sorted(counts.items()))
 
@@ -367,15 +375,48 @@ class ParameterGraph:
 	def is_settable(self, parameter: str) -> bool:
 		"""Whether a user may set this parameter.
 
-		False for a derived parameter and for a loop variable. This is the
-		question the whole graph exists to answer: a user who sets a carbon
-		price *and* the emissions it determines has set two coupled parameters
-		independently, and the only correct response is to refuse rather than to
-		pick one and recompute the other in silence.
+		False for a derived parameter, for a loop variable, and for an
+		endogenous one. This is the question the whole graph exists to answer: a
+		user who sets a carbon price *and* the emissions it determines has set
+		two coupled parameters independently, and the only correct response is
+		to refuse rather than to pick one and recompute the other in silence.
+
+		**An endogenous parameter is refused for the third reason, not the
+		first.** A derived value is refused because an equation overwrites it;
+		an endogenous value is refused because the *solve* determines it, and a
+		user who sets a fleet capacity has stated an input where the graph
+		states a decision. The two are one answer here and two different
+		diagnoses, which is why :meth:`role` exists: a caller that needs to say
+		*why* a knob was refused must not infer it from this boolean.
 		"""
 		return (
 			parameter not in self._determiner
 			and parameter not in self._loop_variables
+			and self._nodes[parameter].role is not Role.ENDOGENOUS
+		)
+
+	def role(self, parameter: str) -> Role:
+		"""What determines this parameter, as the graph understands it.
+
+		``is_settable`` answers "may the user move this"; this answers "who
+		moves it instead", and the two are not the same question. A caller
+		reporting *why* a parameter was refused -- the CLI's message, the
+		translate layer's register -- needs the second, and reading it off
+		``is_settable`` collapses "an equation computes it" into "the optimiser
+		chooses it", which are different sentences to put in front of a user.
+		"""
+		return self._nodes[parameter].role
+
+	def endogenous(self) -> tuple[str, ...]:
+		"""The parameters the optimiser chooses, in name order.
+
+		The middle layer of ``params-prg1.md`` §3.4's DAG. It is a method
+		rather than a count in a docstring because the number that matters is
+		the one the loaded graph carries, and a figure written into prose is a
+		figure that drifts the first time a node is added.
+		"""
+		return tuple(
+			sorted(name for name in self._nodes if self._nodes[name].role is Role.ENDOGENOUS)
 		)
 
 	def edges_from(self, parameter: str) -> tuple[RelationshipEdge, ...]:
@@ -608,6 +649,26 @@ class ParameterGraph:
 					f"silently overruled"
 				)
 
+		# An endogenous parameter is chosen by the optimiser, and the graph
+		# must not also claim to compute it: `_determiner` would then overwrite
+		# the optimiser's own answer with a closed form, and the two would agree
+		# only while the closed form happened to be the optimum. The roles are
+		# exclusive for that reason, and the check is here rather than in the
+		# node model because only the graph knows what the equations say.
+		conflicting = sorted(
+			name
+			for name in self._nodes
+			if self._nodes[name].role is Role.ENDOGENOUS
+			and (name in self._determiner or name in self._loop_variables)
+		)
+		if conflicting:
+			raise GraphError(
+				f"{conflicting} are endogenous but an equation also fixes them; "
+				f"a value the optimiser chooses is not one the graph computes, "
+				f"and propagating the closed form over the optimum would replace "
+				f"the solved fleet with an arithmetic one"
+			)
+
 		# A rule naming a parameter the graph does not hold can never be
 		# evaluated, so it is a rule that would report nothing forever while
 		# reading as a check. Refused at load, for the same reason a misspelt
@@ -752,10 +813,18 @@ class ParameterGraph:
 		self._range_excursions.clear()
 		scoped: dict[str, float] = {k: float(v) for k, v in values.items()}
 		missing = set(self._nodes) - scoped.keys()
+		# An endogenous parameter is not *missing* when a caller omits it: no
+		# arithmetic can supply it and no user is required to, because the
+		# solve determines it. Requiring a value for one would make every
+		# propagation over a graph carrying a fleet fail for a reason that is
+		# not a defect -- and the alternative, defaulting it, would propagate a
+		# fleet the optimiser never chose.
 		underived_missing = {
 			name
 			for name in missing
-			if name not in self._determiner and name not in self._loop_variables
+			if name not in self._determiner
+			and name not in self._loop_variables
+			and self._nodes[name].role is not Role.ENDOGENOUS
 		}
 		if underived_missing:
 			raise GraphError(

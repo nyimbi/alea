@@ -105,9 +105,9 @@ def test_the_summary_serves_the_constraint_register(
 ) -> None:
 	"""The constraint register, with the denominator that makes it honest.
 
-	A client reading ``count`` against ``total`` would compute 2 of 37 and
+	A client reading ``count`` against ``total`` would compute 2 of 38 and
 	conclude the layer reaches almost nothing; the six inequalities are the set
-	that could constrain a solve, and the other 31 equations are identities the
+	that could constrain a solve, and the other 32 equations are identities the
 	graph evaluates. Both numbers are served so the client cannot make that
 	mistake, and the four unbound routes carry their reasons because "unbound"
 	alone does not distinguish a post-solve check from a failure to build.
@@ -373,3 +373,27 @@ def test_the_conflicts_route_says_which_findings_block(
 	assert conflicts
 	assert all(c["strength"] in {"hard", "soft", "informational"} for c in conflicts)
 	assert all(c["blocks"] is (c["strength"] != "informational") for c in conflicts)
+
+
+def test_the_summary_serves_the_endogenous_layer(
+	prg_client: TestClient,
+) -> None:
+	"""The optimiser's own layer is on the payload, and it is not the derived one.
+
+	WHY THIS IS ASSERTED SEPARATELY FROM THE DERIVED COUNT. The two are the
+	halves of "not settable", and a client that saw only ``derived`` would read
+	the graph as one where every unsettable parameter is computed by an
+	equation -- which is what the graph *was* until 2026-10-15, when
+	``Role.ENDOGENOUS`` was declared, validated, exported, and carried by no
+	node. A fleet is not computed by an equation and is not something a user
+	sets; without this field the API could not say so.
+	"""
+	body = prg_client.get("/api/v1/prg/summary").json()
+	assert body["endogenous"] == len(body["endogenous_parameters"])
+	assert body["endogenous"] == 3, body["endogenous_parameters"]
+	# The fleet nodes, by name: a count a client cannot act on is half a
+	# register, and these are the names a scenario's result is read back into.
+	assert "thermal_capacity_mw" in body["endogenous_parameters"]
+	# Disjoint from the derived count, which is the claim the field exists to
+	# make: a parameter the optimiser chooses is not one the graph computes.
+	assert body["endogenous"] + body["derived"] < body["parameters"]

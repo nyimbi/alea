@@ -230,6 +230,40 @@ def config_show(
 # --------------------------------------------------------------------------
 
 
+def _refuse_unsettable(graph: Any, key: str) -> None:
+	"""Print why ``key`` cannot be set and exit 2.
+
+	One helper because the two `prg` commands that take ``--set`` had the same
+	message written twice, and a message that has to name the *reason* a knob is
+	refused drifts the moment a third reason exists. There are three:
+
+	- an equation computes it, so setting it is overruled by the propagation;
+	- a feedback loop computes it, which has no equation id to name;
+	- the optimiser chooses it, which is neither -- and saying "computed by
+	  <equation>" about a solved fleet is a false diagnosis whose implied advice
+	  (set what it depends on) cannot be followed.
+	"""
+	from alea.prg.views import Role
+
+	if graph.role(key) is Role.ENDOGENOUS:
+		typer.secho(
+			f"{key!r} is chosen by the optimisation, not set by the graph; it is "
+			f"an outcome of the solve, and no parameter you set determines it",
+			fg=typer.colors.RED,
+			err=True,
+		)
+		raise typer.Exit(code=2)
+	equation = graph.determined_by(key)
+	by = equation.id if equation is not None else "a feedback loop"
+	typer.secho(
+		f"{key!r} is computed by {by}, not set; set the parameters it depends "
+		f"on instead",
+		fg=typer.colors.RED,
+		err=True,
+	)
+	raise typer.Exit(code=2)
+
+
 @prg_app.command("summary")
 def prg_summary() -> None:
 	"""Counts, the feedback loops, and the systems the library does not cover."""
@@ -238,7 +272,8 @@ def prg_summary() -> None:
 	summary = graph_summary()
 	typer.echo(
 		f"parameters={summary['parameters']} equations={summary['equations']} "
-		f"edges={summary['edges']} derived={summary['derived']}"
+		f"edges={summary['edges']} derived={summary['derived']} "
+		f"endogenous={summary['endogenous']}"
 	)
 	typer.echo(
 		f"systems: {len(summary['systems'])} of {summary['systems_declared']} modelled"
@@ -255,7 +290,7 @@ def prg_summary() -> None:
 			typer.echo(f"  {loop}")
 	# The engine-coverage line is printed unconditionally, because the number
 	# is the finding: a reader who sees only the graph's own counts assumes the
-	# engine is driven by all of it, and three of fifty-three is the truth.
+	# engine is driven by all of it, and three of fifty-two is the truth.
 	engine = summary["engine_translation"]
 	typer.echo(
 		f"engine: {engine['count']} of {engine['total']} settable parameters reach "
@@ -273,8 +308,8 @@ def prg_summary() -> None:
 	typer.echo(f"uncertainty: {summary['uncertainty'].summary()}")
 	typer.echo(f"units: {summary['units'].summary()}")
 	# The constraint register. Printed with the six-inequality denominator,
-	# because "2 of 37" is the number a reader would compute and it is wrong:
-	# 31 equations are identities the graph evaluates, not constraints anybody
+	# because "2 of 38" is the number a reader would compute and it is wrong:
+	# 32 equations are identities the graph evaluates, not constraints anybody
 	# forgot to add.
 	shaped = summary["constraints"]
 	typer.echo(
@@ -347,15 +382,7 @@ def prg_check(
 				)
 				raise typer.Exit(code=2)
 			if not graph.is_settable(key):
-				equation = graph.determined_by(key)
-				by = equation.id if equation is not None else "a feedback loop"
-				typer.secho(
-					f"{key!r} is computed by {by}, not set; the graph derives it "
-					f"from the parameters it depends on",
-					fg=typer.colors.RED,
-					err=True,
-				)
-				raise typer.Exit(code=2)
+				_refuse_unsettable(graph, key)
 			values[key] = float(raw)
 		result = check_scenario(values, graph)
 		for parameter, value in sorted(result.excursions.items()):
@@ -421,15 +448,7 @@ def prg_propagate(
 				)
 				raise typer.Exit(code=2)
 			if not graph.is_settable(key):
-				equation = graph.determined_by(key)
-				by = equation.id if equation is not None else "a feedback loop"
-				typer.secho(
-					f"{key!r} is computed by {by}, not set; set the parameters it "
-					f"depends on instead",
-					fg=typer.colors.RED,
-					err=True,
-				)
-				raise typer.Exit(code=2)
+				_refuse_unsettable(graph, key)
 			changes[key] = float(raw)
 		result = propagate_change(values, changes)
 		for name, delta in sorted(result["changed"].items()):
@@ -819,7 +838,7 @@ def whatif_scenario(
 
 	This is the route `alea.prg.translate` never had. The translation layer was
 	written, tested, and called by nothing but its own test file, so the register
-	it prints -- "three of fifty-three settable parameters reach a what-if knob"
+	it prints -- "three of fifty-two settable parameters reach a what-if knob"
 	-- described a path no production caller walked, and the graph could not drive
 	a solve at all. Here a scenario is stated in the *graph's* names, the
 	translation maps what it can onto the engine's knobs, the engine solves, and
@@ -1724,7 +1743,7 @@ def prg_constraints() -> None:
 	"""Which equations can constrain a solve, and which cannot.
 
 	The equation→constraint half of the spec's translation layer. Six of the
-	library's 37 equations are inequalities and could constrain a solve; two
+	library's 38 equations are inequalities and could constrain a solve; two
 	do, and the other four are stated over quantities the graph derives from a
 	solved result, so the audit checks them after rather than the optimiser
 	during. Each route is printed with its reason, because "unbound" alone does
@@ -1776,7 +1795,13 @@ def prg_audit(
 	scenario can pass the first and fail the second, which is the whole reason
 	the seam exists.
 	"""
-	from alea.prg.audit import audit_scenario_result, fleet_intensity_gap, reliability_gap
+	from alea.prg import load_graph
+	from alea.prg.audit import (
+		audit_scenario_result,
+		fleet_intensity_gap,
+		fleet_parameters,
+		reliability_gap,
+	)
 	from alea.whatif.store import latest_version, load_scenario
 
 	with _run("cli.prg.audit", scenario=name):
@@ -1795,6 +1820,16 @@ def prg_audit(
 		gap = fleet_intensity_gap(record.result)
 		reliability = reliability_gap(record.result)
 		typer.echo(f"{name} {resolved}: {audit.summary()}")
+		# The fleet the identities were checked against, read out of the result.
+		# Printed because the reserve margin is stated over it: a reader who
+		# cannot see which fleet the audit used cannot tell a check on the build
+		# from a check on the graph's reference default -- and until
+		# `fleet_parameters` landed it was silently the second.
+		fleet = fleet_parameters(dict(record.result.capacity_mix_mw), load_graph())
+		typer.echo(
+			"fleet: "
+			+ ", ".join(f"{node}={value:.6g} MW" for node, value in sorted(fleet.items()))
+		)
 		typer.echo(
 			f"fleet intensity {gap['engine_intensity']:.6g} t/MWh against the "
 			f"graph's {gap['graph_factor']:.6g} (ratio {gap['ratio']:.4g})"

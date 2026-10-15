@@ -981,7 +981,7 @@ class ConstraintReportOut(ApiModel):
 	"""How much of the equation library reaches an optimiser constraint.
 
 	``constraint_shaped`` is the denominator and the reason this is not a bare
-	fraction. Thirty-one of the library's 37 equations are identities the graph
+	fraction. Thirty-two of the library's 38 equations are identities the graph
 	evaluates; only the six inequalities could constrain a solve, so ``2``
 	against ``constraint_shaped`` is the honest register and ``2`` against
 	``total`` would be a coverage claim about a set that was never in scope.
@@ -1011,6 +1011,17 @@ class PrgSummaryOut(ApiModel):
 	equations: int = Field(ge=0)
 	edges: int = Field(ge=0)
 	derived: int = Field(ge=0)
+	endogenous: int = Field(default=0, ge=0)
+	"""Parameters the optimiser chooses: the spec's §3.4 middle layer.
+
+	Reported beside ``derived`` because the two are the halves of "not
+	settable", and a summary naming only the derived count leaves a client
+	believing the graph states a decision where it states none. It did: the
+	role was declared and carried by no node until 2026-10-15.
+	"""
+
+	endogenous_parameters: list[str] = Field(default_factory=list)
+	"""Their names, so the count is not the only thing a client can act on."""
 	systems: dict[str, int]
 	systems_declared: int = Field(ge=0)
 	unmodelled_systems: list[str]
@@ -1033,18 +1044,25 @@ class PrgSummaryOut(ApiModel):
 
 
 class EngineTranslationOut(ApiModel):
-	"""How much of the graph reaches a what-if knob. Three of fifty-three.
+	"""How much of the graph reaches a what-if knob. Three of fifty-two.
 
 	``engine_unreached`` is the other direction and a different finding: an
 	engine knob no PRG parameter names is a lever a scenario can pull that the
 	graph never sees, so a result solved from one cannot be audited against the
 	graph's identities. A payload carrying only ``count``/``total`` would let a
 	client render the coverage as a single number and miss that.
+
+	``endogenous`` is where the three parameters that left this denominator
+	went. They are not settable, so they are not part of the surface an engine
+	can be driven from -- and a coverage that shrank from 53 to 52 without
+	naming them reads as three parameters that vanished. They are what the
+	*solve* produces, read back by ``audit.fleet_parameters``.
 	"""
 
 	translated: list[str]
 	untranslated: list[str]
 	engine_unreached: list[str]
+	endogenous: list[str] = Field(default_factory=list)
 	count: int = Field(ge=0)
 	total: int = Field(ge=0)
 	fraction: float = Field(ge=0.0, le=1.0)

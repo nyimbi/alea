@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 """The equation-to-constraint half of the translation layer.
 
-WHAT THESE TESTS ARE FOR. Of the library's 37 equations, six are inequalities
+WHAT THESE TESTS ARE FOR. Of the library's 38 equations, six are inequalities
 and two of those bind. The number is the finding, in both directions: a test
 that only checked the two work would let a third appear unnoticed, and a test
 that only checked the register would never learn whether the two constraints
@@ -136,17 +136,20 @@ def _solve(
 def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	graph: ParameterGraph,
 ):
-	"""Six of the library's 37 equations can constrain a solve.
+	"""Six of the library's 38 equations can constrain a solve.
 
-	The denominator is the finding: 31 equations are identities, and folding
-	them into the register would report "2 of 37" for a library where the
+	The denominator is the finding: 32 equations are identities, and folding
+	them into the register would report "2 of 38" for a library where the
 	honest figure is 2 of 6. Pinned as a literal so a new inequality has to
-	change this line to land.
+	change this line to land. The identity count moved 31 -> 32 when
+	``firm_capacity_definition`` landed: an equation that derives the firm
+	fleet from the optimiser's own capacity decisions is a definition, not a
+	seventh boundary.
 	"""
 	cov = coverage(graph)
 	assert cov["constraint_shaped"] == 6
-	assert cov["identities"] == 31
-	assert cov["total"] == 37
+	assert cov["identities"] == 32
+	assert cov["total"] == 38
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):

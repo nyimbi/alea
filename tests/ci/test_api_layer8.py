@@ -804,8 +804,9 @@ NON_QUANTITY_FIELDS = frozenset(
 		"count",
 		"derived",
 		"edges",
-		"equations",
 		"elasticity",
+		"endogenous",
+		"equations",
 		"fraction",
 		"from_lat",
 		"from_lon",
@@ -1164,17 +1165,20 @@ def test_an_unfinished_job_result_is_a_conflict(config: Config, scratch: Path, k
 	"""
 	app = create_app(config)
 	with TestClient(app) as client:
+		# Unregister the handlers *before* submitting. Clearing them afterwards
+		# leaves a window the worker's poll can land in: the job is claimed while
+		# its handler is still registered, runs to success, and the result route
+		# answers 200. That made this test pass or fail on the same tree
+		# depending on where the 1s poll tick fell. Unregistering first removes
+		# the only path to ``succeeded``, so every reachable status -- queued,
+		# running or failed -- is the 409 this asserts.
+		client.app.state.api.worker._handlers.clear()  # type: ignore[attr-defined]
 		submitted = client.post(
 			"/api/v1/whatif/compare",
 			headers=keys["analyst"],
 			json={"scenario_ids": ["base", "base"], "horizon": 2030},
 		)
 		job_id = submitted.json()["job_id"]
-		# Freeze the worker so the job cannot complete between the two calls: with
-		# no handler registered the claim fails the job rather than finishing it,
-		# and a job that is not ``succeeded`` -- queued, running or failed -- is a
-		# 409 from the result route, never a 404.
-		client.app.state.api.worker._handlers.clear()  # type: ignore[attr-defined]
 		result = client.get(f"/api/v1/jobs/{job_id}/result", headers=keys["public"])
 		assert result.status_code == 409, result.text
 

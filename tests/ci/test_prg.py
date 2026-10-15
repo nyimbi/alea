@@ -1172,7 +1172,16 @@ def test_every_system_that_is_declared_has_equations(graph: ParameterGraph):
 
 
 def _solved(carbon_price: float = 50.0):
-	"""A solved result, carrying the engine's numbers rather than the graph's."""
+	"""A solved result, carrying the engine's numbers rather than the graph's.
+
+	WHY the mix carries a gas fleet and not just coal and wind. The audit now
+	reads the optimiser's own capacity decisions into the graph's three
+	endogenous fleet nodes, so the reserve margin checks the *build* the result
+	reports rather than the graph's 9,000 MW reference default. A coal-and-wind
+	mix is 6,000 MW of firm capacity against an 8,500 MW peak at a 15% margin,
+	which is a scenario no solve would return -- and it passed this fixture
+	until the fleet was wired, precisely because nothing read the mix.
+	"""
 	import uuid
 
 	from alea.whatif.params import ScenarioParameters
@@ -1185,7 +1194,7 @@ def _solved(carbon_price: float = 50.0):
 		code_version="test",
 		total_cost_usd=1.0e9,
 		total_emissions_tco2=25.0e6,
-		capacity_mix_mw={"coal": 6000.0, "wind": 4000.0},
+		capacity_mix_mw={"coal": 6000.0, "gas": 4000.0, "wind": 4000.0},
 		generation_mwh={"coal": 30.0e6, "wind": 20.0e6},
 	)
 
@@ -1194,7 +1203,7 @@ def test_the_audit_reports_what_it_did_not_check():
 	"""A pass over nothing must not read as a pass over everything.
 
 	The result supplies three of the graph's parameters and the graph derives
-	twenty-eight; the audit checks the derived parameters those three *reach* and
+	twenty-nine; the audit checks the derived parameters those three *reach* and
 	names the rest as not carried. A summary that printed "consistent" without
 	saying how many parameters that covered would be a clean bill of health for a
 	result nobody examined.
@@ -1206,12 +1215,21 @@ def test_the_audit_reports_what_it_did_not_check():
 	parameter(s)" for an audit that had evaluated eighteen identities. A test
 	asserting only ``checked ∪ skipped == derived`` passes on that version, so
 	both counts are pinned.
+
+	WHY 19 AND 10 AND NOT 18 AND 10. ``firm_capacity_mw`` moved from exogenous
+	to derived when the endogenous fleet layer landed, and the result's
+	``capacity_mix_mw`` now fills the three fleet nodes the graph declares. So
+	the audit gained one check -- ``firm_capacity_mw``, reachable from
+	``thermal_capacity_mw``, which the mix supplies -- and the partition total
+	stayed at 29. The growth is the point: before the fleet was wired the
+	reserve margin checked the node's reference default while reading as a
+	check on the build.
 	"""
 	from alea.prg.audit import audit_scenario_result
 
 	audit = audit_scenario_result(_solved())
 	assert audit.consistent
-	assert len(audit.checked) == 18, audit.checked
+	assert len(audit.checked) == 19, audit.checked
 	assert len(audit.skipped) == 10, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
@@ -1254,7 +1272,7 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	assert "not run" in audit.summary(), audit.summary()
 	# The whole derived set is named as unexamined: a partial count here would
 	# understate how much of the graph went unread.
-	assert len(audit.skipped) == 28, audit.skipped
+	assert len(audit.skipped) == 29, audit.skipped
 
 
 def test_the_audit_finds_an_unfinanceable_scenario_the_engine_solved():
@@ -1425,7 +1443,100 @@ def test_the_audit_does_not_compare_the_graph_against_itself():
 	assert "emissions_mtco2_per_year" not in supplied
 	assert "generation_twh" not in supplied
 	assert supplied["carbon_price_usd_per_tco2"] == pytest.approx(50.0)
-	assert supplied["total_capacity_mw"] == pytest.approx(10000.0)
+	# 14,000 MW: the fixture's three carriers, summed. It is asserted against
+	# the fixture rather than pinned as a literal, because what this test is
+	# about is *which* parameters the extraction takes, not the fleet's size.
+	assert supplied["total_capacity_mw"] == pytest.approx(14000.0)
+	# The optimiser's own decisions, read off the mix through the registry's
+	# carrier classes: coal and gas are thermal, and wind is neither thermal
+	# nor dispatchable renewable, so it lands in no fleet node -- VRE capacity
+	# is `vre_capacity_mw`, the capture-price loop's fixed point.
+	assert supplied["thermal_capacity_mw"] == pytest.approx(10000.0)
+	assert supplied["dispatchable_re_capacity_mw"] == pytest.approx(0.0)
+	assert supplied["storage_capacity_mw"] == pytest.approx(0.0)
+
+
+def test_the_fleet_nodes_are_filled_from_the_solve_not_from_their_defaults(
+	graph: ParameterGraph,
+):
+	"""The middle layer of the spec's DAG, and the reader that was missing.
+
+	WHY THIS IS THE TEST THAT MATTERS. The three endogenous nodes landed in
+	``config/prg.yaml`` carrying reference defaults -- 7,500 MW of thermal,
+	1,500 of dispatchable renewable, 800 of storage -- and *nothing read them
+	back from a solve*. So the reserve margin, which derives ``firm_capacity_mw``
+	from two of them, checked 9,000 MW of reference fleet on every audit while
+	reporting as a check on the build. That is the "declared is not produced"
+	defect in the layer that was added to fix it, and it is invisible in any
+	test whose fixture happens to agree with the default.
+
+	The mix below is chosen to disagree with every default in both directions:
+	more thermal, no dispatchable renewable at all, and a storage unit. A
+	mapping that fell back to the default would pass a test whose fleet
+	happened to match one.
+	"""
+	from alea.prg.audit import fleet_parameters
+
+	mix = {
+		"coal": 9000.0,
+		"gas": 2000.0,
+		"hydro": 400.0,
+		"geothermal": 100.0,
+		"battery": 250.0,
+		"onwind": 3000.0,
+		# A carrier the registry does not know. It lands in no group, which
+		# understates the fleet rather than inventing a capacity for it -- the
+		# same choice `constraints._generator_capacity` makes.
+		"unobtainium": 999.0,
+	}
+	fleet = fleet_parameters(mix, graph)
+	assert fleet["thermal_capacity_mw"] == pytest.approx(11000.0)
+	assert fleet["dispatchable_re_capacity_mw"] == pytest.approx(500.0)
+	assert fleet["storage_capacity_mw"] == pytest.approx(250.0)
+	# Wind is VRE, which is `vre_capacity_mw` -- the loop's fixed point -- so it
+	# is in no fleet node. Asserted rather than left implicit: a mapping that
+	# swept every known carrier into one group would double-count the fleet.
+	assert sum(fleet.values()) == pytest.approx(11750.0)
+
+	# An empty mix is a result that did not record a fleet, not a fleet of
+	# zero. Returning zeros would overwrite whatever the caller supplied with a
+	# claim about a network the result says nothing about.
+	assert fleet_parameters({}, graph) == {}
+
+
+def test_the_audit_checks_the_fleet_the_solve_reported(
+	graph: ParameterGraph,
+):
+	"""A build the reserve margin rejects is refused, and the refusal is about the build.
+
+	The differential form of the test above: the same result, with only the
+	mix changed. A coal-and-wind fleet is 6,000 MW of firm capacity against an
+	8,500 MW peak at a 15% margin, and the graph must say so. Before the fleet
+	was wired this audit passed, because ``firm_capacity_mw`` was filled from
+	the node's own 9,000 MW reference default and the mix never reached an
+	equation.
+	"""
+	import uuid
+
+	from alea.prg.audit import audit_scenario_result
+	from alea.whatif.params import ScenarioParameters
+	from alea.whatif.views import ScenarioResult
+
+	thin = ScenarioResult(
+		scenario_id=str(uuid.uuid4()),
+		params=ScenarioParameters(carbon_price_usd_per_tco2=50.0),
+		network_checksum="sha256:" + "b" * 64,
+		code_version="test",
+		total_cost_usd=1.0e9,
+		total_emissions_tco2=25.0e6,
+		capacity_mix_mw={"coal": 6000.0, "wind": 4000.0},
+		generation_mwh={"coal": 30.0e6, "wind": 20.0e6},
+	)
+	audit = audit_scenario_result(thin, graph)
+	assert not audit.consistent
+	assert any(v.equation_id == "reserve_margin" for v in audit.violations), [
+		str(v) for v in audit.violations
+	]
 
 
 def test_the_loop_converges_on_the_criterion_it_is_audited_by(
@@ -2569,7 +2680,14 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# The shipped graph declares no `soft` equation. Pinned rather than
 	# asserted as a property, because it is a fact about *this* document: a new
 	# soft edge should make this test fail and be looked at, not pass silently.
-	assert counts == {"hard": 36, "informational": 1}, counts
+	#
+	# 37 hard and not 36: `firm_capacity_definition` is an equation no edge
+	# cites, and this register counted it as no equation at all until the
+	# count was moved onto `strength_of` -- which, like the propagation,
+	# defaults an uncited equation to `hard`. The count and the two readers
+	# that use `strength_of` disagreed by exactly the number of edge-less
+	# equations, and the register was the one that was wrong.
+	assert counts == {"hard": 37, "informational": 1}, counts
 
 
 def test_a_soft_or_informational_violation_does_not_block_and_a_hard_one_does(
@@ -2718,3 +2836,38 @@ def test_the_conflict_gate_reads_the_tier_and_a_softened_edge_stops_blocking():
 		app, ["prg", "conflicts", "--set", "carbon_price_usd_per_tco2=200"]
 	)
 	assert restored.exit_code == 1, restored.output
+
+
+def test_the_cli_refuses_an_endogenous_knob_with_the_reason_it_was_refused(
+	graph: ParameterGraph,
+):
+	"""Three reasons a knob is refused, and the message must name the right one.
+
+	``is_settable`` collapses them into one boolean, so a CLI reading only that
+	boolean says "computed by <equation>" about a solved fleet -- a false
+	diagnosis whose implied advice (set what it depends on) cannot be followed,
+	because nothing a user sets determines what the optimiser chooses.
+
+	The exit code is asserted as well as the text: a refusal that prints and
+	exits 0 is a warning, and a script gating on it would proceed.
+	"""
+	from typer.testing import CliRunner
+
+	from alea.cli import app
+
+	runner = CliRunner()
+	endogenous = runner.invoke(
+		app, ["prg", "check", "--set", "thermal_capacity_mw=9000"]
+	)
+	assert endogenous.exit_code == 2, endogenous.output
+	assert "chosen by the optimisation" in endogenous.output, endogenous.output
+	# The two must not be confused: the endogenous message must not carry the
+	# derived one's advice, which is the specific wrong sentence this branch
+	# exists to avoid.
+	assert "set the parameters it depends on" not in endogenous.output
+
+	# The derived branch still says its own thing, so the split is a split and
+	# not a replacement.
+	derived = runner.invoke(app, ["prg", "check", "--set", "firm_capacity_mw=9000"])
+	assert derived.exit_code == 2, derived.output
+	assert "firm_capacity_definition" in derived.output, derived.output

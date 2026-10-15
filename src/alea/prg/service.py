@@ -25,7 +25,7 @@ from alea.prg.graph import ParameterGraph, Violation, load_graph
 from alea.prg.library import SYSTEM_IDS, coverage, systems_of
 from alea.prg.uncertainty import register as uncertainty_register
 from alea.prg.units import check_graph as check_units
-from alea.prg.views import Equation
+from alea.prg.views import Equation, Role
 
 __all__ = [
 	"ScenarioCheck",
@@ -95,6 +95,16 @@ def graph_summary(graph: ParameterGraph | None = None) -> dict[str, Any]:
 		"systems_declared": len(SYSTEM_IDS),
 		"unmodelled_systems": [entry.split(":")[0] for entry in coverage(g.equations)],
 		"derived": len(g.order()),
+		# The middle layer of the spec's §3.4 DAG -- what the optimiser chooses.
+		# Reported beside `derived` because the two are the halves of "not
+		# settable", and a summary that named only the derived count would leave
+		# a reader believing the graph states a decision where it states none.
+		# That was the state until this field existed: `Role.ENDOGENOUS` was
+		# declared, exported, and carried by no node, so the graph could only
+		# say "an equation fixes this" or "you set this" -- and a fleet is
+		# neither.
+		"endogenous": len(g.endogenous()),
+		"endogenous_parameters": list(g.endogenous()),
 		"feedback_loops": [str(loop) for loop in g.feedback_loops()],
 		"structure_issues": g.structure_issues(),
 		# The cross-validation rules the document declares. Reported as a count
@@ -114,13 +124,13 @@ def graph_summary(graph: ParameterGraph | None = None) -> dict[str, Any]:
 		# How much of the graph the what-if engine can be driven from. A
 		# summary that reported only the graph's own counts would leave the
 		# reader assuming the engine uses all of it; the fraction is the
-		# finding, and it is three of fifty-three.
+		# finding, and it is three of fifty-two.
 		"engine_translation": translate.coverage(g),
 		# The other half of the translation layer, and a different finding: of
 		# the six equations that could constrain a solve, two bind and four are
 		# post-solve checks. The denominator is the six inequalities, not the
-		# 37 equations -- an identity is a definition the graph evaluates, and
-		# counting it here would report the register as "2 of 37".
+		# 38 equations -- an identity is a definition the graph evaluates, and
+		# counting it here would report the register as "2 of 38".
 		"constraints": constraints.coverage(g),
 		# What the graph declares uncertain, and how far that reaches. The
 		# register is the honest substitute for a Monte Carlo the spec never
@@ -129,7 +139,7 @@ def graph_summary(graph: ParameterGraph | None = None) -> dict[str, Any]:
 		"uncertainty": uncertainty_register(g),
 		# The dimensional check's own coverage. An equation the walker cannot
 		# decide is not a pass, so the summary carries the counts rather than a
-		# boolean: "30 of 37 consistent" is a fact a reader can weigh, and
+		# boolean: "31 of 38 consistent" is a fact a reader can weigh, and
 		# "consistent" would be a claim the check does not make.
 		"units": check_units(g),
 	}
@@ -182,6 +192,12 @@ def propagate_change(
 	if computed:
 		by: dict[str, str] = {}
 		for name in computed:
+			if g.role(name) is Role.ENDOGENOUS:
+				# The optimiser chooses it, so "computed by <equation>" would be
+				# a false diagnosis and the advice it implies -- set what this
+				# depends on -- is advice that cannot be followed.
+				by[name] = "the optimisation, not the graph"
+				continue
 			equation = g.determined_by(name)
 			by[name] = equation.id if equation is not None else "a feedback loop"
 		raise ValueError(

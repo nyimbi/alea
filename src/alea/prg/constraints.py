@@ -9,10 +9,10 @@ arithmetic. This module moves an *equation* into a constraint: the graph states
 that firm capacity plus derated VRE must cover peak demand with a margin, and
 the engine has no column for that at all -- the relation between the inequality
 and the optimiser's variables exists only in a person's head. The two are
-different problems and the register of the first (50 of 53 parameters reach no
+different problems and the register of the first (49 of 52 parameters reach no
 knob) says nothing about the register of the second.
 
-WHY the output is a register and not a list of constraints. Of the 37 equations
+WHY the output is a register and not a list of constraints. Of the 38 equations
 the library holds, six are inequalities. Two of them -- the reserve margin and
 the carbon budget -- have every term the network can supply, and those become
 real linopy constraints. The other four are stated over quantities the graph
@@ -38,10 +38,13 @@ no network source that the graph marks settable *and* carries a scalar default
 is read from the parameter set, and the route records that it was ``assumed``.
 That distinction is the whole difference between "the reserve margin is
 computed from this network's fleet" and "the reserve margin is computed from
-9,000 MW, the node's stand-in for a system of unknown size". ``firm_capacity_mw``
-and ``peak_demand_mw`` are *also* settable scalars with defaults, which is why
-they carry declared sources: without them the fallback would silently swallow
-the two terms that matter most and bind the build to the defaults.
+9,000 MW, the node's stand-in for a system of unknown size". ``peak_demand_mw``
+is *also* a settable scalar with a default, which is why it carries a declared
+source: without it the fallback would silently swallow one of the two terms
+that matter most and bind the build to the default. ``firm_capacity_mw``
+carried one for the same reason and no longer needs the fallback at all --
+since the endogenous fleet layer landed it is derived, so it is not settable
+and the fallback cannot reach it.
 
 WHY a term the walker cannot linearise makes the whole equation unbound rather
 than partially bound. A constraint missing one of its terms is not a weaker
@@ -328,11 +331,14 @@ def bound_parameter_names(graph: ParameterGraph | None = None) -> tuple[str, ...
 	dropped while the constraint reads them.
 
 	A symbol with a declared network source is excluded, deliberately.
-	``firm_capacity_mw`` and ``peak_demand_mw`` are settable scalars too, but
-	the constraint reads them off the fleet, so a scenario value for either is
-	ignored by the constraint and is honestly a dropped parameter. This is the
-	same set :func:`_symbol` reads from ``ctx.params``, derived the same way
-	rather than transcribed.
+	``peak_demand_mw`` is a settable scalar too, but the constraint reads it off
+	the fleet, so a scenario value for it is ignored by the constraint and is
+	honestly a dropped parameter. ``firm_capacity_mw`` is excluded on two
+	counts now: it has a source, and since the endogenous fleet layer landed it
+	is *derived* -- from ``thermal_capacity_mw`` and
+	``dispatchable_re_capacity_mw`` -- so it is not settable at all and cannot
+	appear in a set of settable scalars. This is the same set :func:`_symbol`
+	reads from ``ctx.params``, derived the same way rather than transcribed.
 	"""
 	if graph is None:
 		from alea.prg.graph import load_graph
@@ -360,7 +366,7 @@ def coverage(graph: ParameterGraph) -> dict[str, Any]:
 	``identities`` is the other direction and a different finding: an equation
 	that derives a value is not a constraint anybody forgot to add, it is a
 	definition the graph evaluates. Folding the two into one number would make
-	the register read as 2 of 37 when the honest denominator is 6.
+	the register read as 2 of 38 when the honest denominator is 6.
 	"""
 	classified = routes(graph)
 	bound = [r.equation_id for r in classified if r.status == "bound"]

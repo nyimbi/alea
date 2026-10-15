@@ -34,7 +34,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from alea.prg.views import Determinism, Relationship
+from alea.prg.views import Determinism, Relationship, Role
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
 	from alea.prg.graph import ParameterGraph
@@ -89,7 +89,15 @@ def register(graph: ParameterGraph) -> UncertaintyRegister:
 	# point itself and report a closure that reached past the loop while
 	# omitting the loop's own members. The capture price is a loop variable, and
 	# it is precisely a number the demand's uncertainty moves.
-	derived = {name for name in graph.nodes if not graph.is_settable(name)}
+	# Not `not is_settable`: that set also holds the endogenous parameters, and
+	# a value the optimiser chooses is not one the graph derives from anything.
+	# Folding the two would report a closure that reached a solved fleet as if
+	# an equation had computed it.
+	derived = {
+		name
+		for name in graph.nodes
+		if not graph.is_settable(name) and graph.role(name) is not Role.ENDOGENOUS
+	}
 	inputs = tuple(sorted(name for name in uncertain if graph.is_settable(name)))
 
 	# Transitive closure over `affects`, which is the inverse of `depends_on`
