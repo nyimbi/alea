@@ -1465,11 +1465,24 @@ class TranslateOut(ApiModel):
 	``untranslated`` is the register, and the point of the route: a client that
 	received only ``parameters`` would believe the whole scenario reached the
 	engine, and three of fifty-two settable parameters do.
+
+	``deferred`` is separate from ``untranslated`` on purpose. The two are
+	different findings that share a shape: ``untranslated`` is "no knob carries
+	this parameter", which is a modelling gap, and ``deferred`` is "a knob
+	carries it but this route had nothing to form the ratio against", which is
+	an API limitation a caller fixes by calling a route that has a network.
+	Merged into one list they read as one finding, and the merged list also
+	contradicts ``coverage`` -- which is computed from the graph and names a
+	deferred parameter as reaching a knob. Two registers in one payload naming
+	the same parameter as both reaching and not reaching an engine knob is a
+	contradiction a client cannot resolve without knowing which one it is
+	reading.
 	"""
 
 	parameters: dict[str, float]
 	routes: list[TranslateRouteOut]
 	untranslated: list[str]
+	deferred: list[str] = Field(default_factory=list)
 	coverage: EngineTranslationOut
 
 

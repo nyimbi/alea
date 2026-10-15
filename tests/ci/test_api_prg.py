@@ -804,3 +804,24 @@ def test_the_translate_route_names_what_did_not_reach_the_engine(
 	# named rather than dropped: a modelling gap and an API limitation are
 	# different findings.
 	assert any(route["kind"] == "absolute" for route in body["routes"])
+	assert body["deferred"], "the ratio translation was dropped, not deferred"
+	# The three registers must not contradict each other. ``coverage`` is
+	# computed from the graph, so a parameter it counts as reaching a knob may
+	# not appear in ``untranslated`` -- but it *may* appear in ``deferred``,
+	# because a deferred parameter does reach one; this route just could not
+	# form the ratio. Merging the two lists made the payload assert both, and
+	# a client reading either register got the opposite answer.
+	graph_routed = set(body["coverage"]["translated"])
+	assert not (graph_routed & set(body["untranslated"])), graph_routed & set(
+		body["untranslated"]
+	)
+	assert set(body["deferred"]) <= graph_routed, set(body["deferred"]) - graph_routed
+	assert set(body["deferred"]).isdisjoint(body["untranslated"])
+	# And the union is the whole settable surface: a parameter in neither list
+	# and in neither payload is one no register accounts for.
+	accounted = graph_routed | set(body["untranslated"]) | set(body["deferred"])
+	assert accounted == set(body["coverage"]["translated"]) | set(
+		body["coverage"]["untranslated"]
+	), accounted.symmetric_difference(
+		set(body["coverage"]["translated"]) | set(body["coverage"]["untranslated"])
+	)

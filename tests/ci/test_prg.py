@@ -345,6 +345,39 @@ def test_the_shipped_graph_loads_and_is_structurally_sound(graph: ParameterGraph
 	assert graph.structure_issues() == []
 
 
+def test_the_load_cache_is_identity_keyed_and_cannot_serve_a_stale_graph(tmp_path):
+	"""The cache is a speed-up, and the test is that it never lies.
+
+	Two properties, and the second is the one that matters. It *is* a cache --
+	the second load of an unchanged file returns the same object rather than an
+	equal one. And an edit changes the answer: a modified document must produce
+	a graph reflecting the edit, because a cache keyed on the path alone would
+	serve the old graph after the file changed, which is the defect the module
+	exists to avoid, one level up.
+
+	The key is mtime *and* size, so the limit is stated rather than hidden: a
+	rewrite preserving both would be served stale, and this test does not
+	pretend otherwise. What it does pin is that the ordinary edit -- write a
+	file, in place, as an editor does -- is observed.
+	"""
+	from alea.prg.graph import load_graph
+
+	document = yaml.safe_load(PRG_PATH.read_text())
+	path = tmp_path / "prg.yaml"
+	path.write_text(yaml.safe_dump(document))
+
+	first = load_graph(path)
+	assert load_graph(path) is first, "an unchanged file was re-parsed"
+
+	# A real edit: one node's default changes. The size changes with it, which
+	# is what makes this the ordinary case rather than a contrived one.
+	document["parameters"]["base_demand_twh"]["default"] = 41.0
+	path.write_text(yaml.safe_dump(document))
+	second = load_graph(path)
+	assert second is not first, "an edited file served the graph from before the edit"
+	assert second.nodes["base_demand_twh"].default == 41.0
+
+
 def test_the_topological_order_respects_every_dependency(graph: ParameterGraph):
 	"""Each derived parameter follows everything it is computed from."""
 	position = {name: index for index, name in enumerate(graph.order())}

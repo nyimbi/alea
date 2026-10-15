@@ -747,7 +747,12 @@ async def translate(principal: AnalystDep, request: TranslateRequest) -> Transla
 			# No network here, so the ratio cannot be formed. Named rather than
 			# dropped: the difference between "the engine cannot carry this" and
 			# "this route has no network to divide by" is the difference between
-			# a modelling gap and an API limitation.
+			# a modelling gap and an API limitation -- which is why this goes to
+			# ``deferred`` and not into ``untranslated``. Merging the two made
+			# the payload contradict its own ``coverage``: the coverage is
+			# computed from the graph and counts ``fuel_price_usd_per_mwh`` as
+			# reaching a knob, while the merged list named the same parameter as
+			# reaching none.
 			skipped.append(translation.prg_parameter)
 			continue
 		routes.append(
@@ -762,7 +767,8 @@ async def translate(principal: AnalystDep, request: TranslateRequest) -> Transla
 	return TranslateOut(
 		parameters=translated,
 		routes=routes,
-		untranslated=sorted(set(layer.untranslated(loaded)) | set(skipped)),
+		untranslated=list(layer.untranslated(loaded)),
+		deferred=sorted(set(skipped)),
 		coverage=EngineTranslationOut(**layer.coverage(loaded)),
 	)
 
@@ -822,11 +828,25 @@ async def equations(
 	response_model=ConflictReportOut,
 	summary="Why a parameter set is inconsistent, and what to move",
 )
+@router.post(
+	"/conflicts/detect",
+	response_model=ConflictReportOut,
+	include_in_schema=False,
+)
 async def conflicts(principal: AnalystDep, request: ConflictRequest) -> ConflictReportOut:
 	"""Detect conflicts in a parameter set and rank the corrections.
 
 	A POST, not a GET: the parameter set is the body, and a set large enough to
 	be useful is too large for a query string.
+
+	Served at two paths, and the second is not vanity. The specification's §43
+	table names ``/conflicts/detect``; the route was built as ``/conflicts``,
+	which reads better beside ``/conflicts/resolve``. A client written to the
+	published table would 404 on a service that answers the same question at
+	the other spelling, and a 404 on a documented endpoint is indistinguishable
+	from a missing feature. Both are served, the spec's spelling is the alias
+	(``include_in_schema=False`` so the OpenAPI document names one path per
+	operation rather than two), and the SDK calls the canonical one.
 	"""
 	from alea.prg.conflicts import detect_conflicts
 
