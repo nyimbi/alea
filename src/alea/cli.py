@@ -910,11 +910,12 @@ def whatif_scenario(
 				f"(ratio {reliability['ratio']:.4g})"
 			)
 		# The balance residual, printed on the same reasoning as the two above:
-		# `check_energy_balance` existed, was tested, and no production path
-		# called it, so a solve reported a cost with no sign that its dispatch
-		# closed. A non-zero residual here is the phantom-generation defect --
-		# generation in the dispatch table no component accounts for -- and it
-		# is worth saying out loud rather than leaving on the result.
+		# the what-if engine's solve function bypasses `solve_dispatch`, which is
+		# where `check_energy_balance` lives, so a scenario reported a cost with
+		# no sign that its dispatch closed. A non-zero residual here is the
+		# phantom-generation defect -- generation in the dispatch table no
+		# component accounts for -- and it is worth saying out loud rather than
+		# leaving on the result.
 		balance = solved.result.energy_balance_error_mwh
 		if balance is not None and balance != 0.0:
 			typer.secho(

@@ -841,11 +841,13 @@ def test_the_energy_balance_counts_links_as_branches(efficiency: float, sign: fl
 def test_a_solved_result_carries_the_energy_balance_residual():
 	"""`extract` records the residual, because it is the last place with the network.
 
-	`check_energy_balance` was written, tested, and called by nothing in
-	``src/`` — so every ``ScenarioResult`` in the tree asserted a balance no
-	production path had checked. A `ScenarioResult` holds no network (it has to
-	be serialisable into a content-addressed cache entry), so the residual can
-	only be measured at extraction, where the network still exists.
+	`check_energy_balance` is live on the *planning* path — `solve_dispatch`
+	calls it — but the what-if engine's own solve function calls
+	`network.optimize` directly and never goes through `solve_dispatch`, so a
+	`ScenarioResult` was the one result in the tree asserting a balance no code
+	had verified. A `ScenarioResult` holds no network (it has to be serialisable
+	into a content-addressed cache entry), so the residual can only be measured
+	at extraction, where the network still exists.
 
 	The residual on a *correct* solve is zero — that is the whole point of the
 	fix above, and a test asserting non-zero on a balanced network would be

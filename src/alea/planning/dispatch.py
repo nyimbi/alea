@@ -220,8 +220,10 @@ def balance_measurement(network: pypsa.Network) -> dict[str, float]:
 	on a solved result as well as *refused* at solve time. The two callers want
 	different things from the same arithmetic: a solve that fails the balance is
 	a bug and must stop, while a report should record how far off it was rather
-	than say nothing because the number happened not to clear a threshold. A
-	check with no caller measured nothing, which is why this exists.
+	than say nothing because the number happened not to clear a threshold. The
+	what-if engine's own solve function bypasses :func:`solve_dispatch` and so
+	never reached the refusal at all; this is the measurement it can carry
+	instead.
 
 	A dispatch that does not balance means a load was attached to a bus the
 	model does not contain, or a generator was added outside the network's

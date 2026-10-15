@@ -376,9 +376,12 @@ heat-pump link above 1 creates it (`p0 + p1 < 0`), and both close
 `generation - load - losses == 0`. A fix that special-cased the lossy direction
 would pass one row and fail the other.
 
-**And the check had no caller, which is why its bug survived.** It was written,
-tested, exported from `alea.planning`, and reached only by its own test file —
-so every `ScenarioResult` in the tree asserted a balance no production path had
+**And the one path that reported a balance did not check it.** The check is
+live: `solve_dispatch` calls it, and `planning/service.py` and
+`publish/stages.py` reach that, so a planning run refuses a residual over the
+tolerance. But the what-if engine's own `_default_solve` calls
+`network.optimize` directly and never goes through `solve_dispatch` — so every
+`ScenarioResult` in the tree was the one result asserting a balance no code had
 verified. The measurement is now split from the refusal: `balance_measurement`
 returns the numbers, `check_energy_balance` raises on them, and `extract`
 records the residual on the result because that is the last place the network

@@ -200,13 +200,15 @@ class ScenarioResult(BaseModel):
 	(``extract`` reports ``None`` prices for one), so the field has to be able
 	to say "not measured" rather than defaulting to a passing value.
 
-	Carried rather than only *checked*, because a check with no caller measured
-	nothing: `check_energy_balance` existed, was tested, and was reached by no
-	production path, so every result claimed a balance no one had verified. The
-	solve still refuses a residual over the tolerance — that is what
-	`check_energy_balance` does at solve time — and this records the number on
-	the result so a report can show how close the solve came rather than
-	say nothing because it happened to clear the bar.
+	Carried rather than only *checked*, because the what-if path never checked
+	it: `check_energy_balance` is live on the planning path (`solve_dispatch`
+	calls it, and `planning/service.py` and `publish/stages.py` reach that), but
+	the engine's own `_default_solve` calls `network.optimize` directly and
+	never goes through `solve_dispatch`. So a `ScenarioResult` was the one
+	result in the tree asserting a balance no code had verified. The solve still
+	refuses a residual over the tolerance where `solve_dispatch` runs it, and
+	this records the number on the result so a report can show how close the
+	solve came rather than say nothing because it happened to clear the bar.
 
 	Signed, and not an absolute value: a negative residual is energy created (a
 	heat-pump link, or a bus the model double-counts), which is as much a
