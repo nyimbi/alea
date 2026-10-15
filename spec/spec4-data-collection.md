@@ -1,11 +1,11 @@
-# PyPSA-X Pan-African: Automated Data Collection & Intelligence Scanning Module
+# Alea: Automated Data Collection & Intelligence Scanning Module
 
 ## Extension Specification for Continuous Data Acquisition, Signal Detection, and Model-Updating Intelligence
 
 **Version**: 3.0 (Extension to v2.0 Product Specification)
 **Status**: Draft for Developer Implementation
 **Audience**: Intermediate Python developers with energy system modelling and data engineering experience
-**Base Platform**: PyPSA-X Pan-African v2.0
+**Base Platform**: Alea v2.0
 
 ---
 
@@ -13,7 +13,7 @@
 
 ### 1. Why Automated Intelligence Scanning Is Essential
 
-Version 2.0 of the PyPSA-X specification defined a platform that consumes data from static sources—downloaded once, processed, and used to build models. That architecture is insufficient for a platform intended to be the **best in the world** for African energy system analysis. The African energy landscape changes continuously:
+Version 2.0 of the Alea specification defined a platform that consumes data from static sources—downloaded once, processed, and used to build models. That architecture is insufficient for a platform intended to be the **best in the world** for African energy system analysis. The African energy landscape changes continuously:
 
 - **New investment proposals** are announced weekly (solar IPPs, gas plants, transmission corridors)
 - **RFPs and tenders** are published across 200+ fragmented sources in 54 countries
@@ -778,7 +778,7 @@ Confirmed signals are processed by the **Model Integration Layer**, which determ
 ```python
 # scripts/scanning/integration/model_updater.py
 class ModelUpdater:
-    """Apply confirmed signals to the PyPSA-X model."""
+    """Apply confirmed signals to the Alea model."""
 
     def apply_signal(self, signal: dict):
         handler = self._get_handler(signal["signal_type"])
@@ -900,7 +900,7 @@ A dedicated dashboard view shows:
 
 ## Part IX: Conclusion
 
-This specification defines the **Automated Data Collection & Intelligence Scanning Module** for PyPSA-X Pan-African. The module transforms the platform from a static modelling tool into a **living system** that continuously monitors the African energy landscape, extracts structured signals from unstructured information, and updates its models accordingly.
+This specification defines the **Automated Data Collection & Intelligence Scanning Module** for Alea. The module transforms the platform from a static modelling tool into a **living system** that continuously monitors the African energy landscape, extracts structured signals from unstructured information, and updates its models accordingly.
 
 The module is grounded in **validated methodologies**:
 
@@ -909,7 +909,7 @@ The module is grounded in **validated methodologies**:
 - **Africa Energy & Commodities Intelligence Workbench** for public-data monitoring and evidence-backed intelligence synthesis
 - **Jorpex** and **Deepbloo** for tender aggregation across 50+ and 200+ sources respectively
 
-By integrating this module, PyPSA-X Pan-African becomes not just a model but an **intelligence system**—one that knows what is happening in African energy systems as it happens, and that can update its predictions accordingly. This is the capability that separates a **world-class** platform from a good one.
+By integrating this module, Alea becomes not just a model but an **intelligence system**—one that knows what is happening in African energy systems as it happens, and that can update its predictions accordingly. This is the capability that separates a **world-class** platform from a good one.
 
 ---
 

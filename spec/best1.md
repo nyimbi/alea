@@ -1,8 +1,8 @@
-To be the best in the world across every capability, PyPSA-X Pan-African must define "best" not by European or North American standards, but by what is required to deliver rigorous, actionable, and trusted analysis **under African data and institutional realities**. The global frontier is defined by PyPSA v1.0's stochastic optimisation, agent-based market models like AMIRIS and ASSUME, the sector-coupling depth of TIMES and PyPSA-Earth-Sec, and the granularity of commercial tools like PLEXOS—but none of these were built to solve Africa's specific problems. The specification below defines the capabilities, functionality, and characteristics required to surpass all of them for the African context.
+To be the best in the world across every capability, Alea must define "best" not by European or North American standards, but by what is required to deliver rigorous, actionable, and trusted analysis **under African data and institutional realities**. The global frontier is defined by PyPSA v1.0's stochastic optimisation, agent-based market models like AMIRIS and ASSUME, the sector-coupling depth of TIMES and PyPSA-Earth-Sec, and the granularity of commercial tools like PLEXOS—but none of these were built to solve Africa's specific problems. The specification below defines the capabilities, functionality, and characteristics required to surpass all of them for the African context.
 
 ---
 
-# PyPSA-X Pan-African: World-Best Capability Specification
+# Alea: World-Best Capability Specification
 
 ## 1. Modelling & Optimisation Core
 
@@ -293,8 +293,8 @@ To be the best in the world across every capability, PyPSA-X Pan-African must de
 **World-Class Benchmark**: A multi-criteria assessment framework has screened 122 open-source energy system modelling tools against 113 capabilities, using a three-level rubric. PyPSA, Calliope, GENeSYS-MOD, and TIMES scored highest.
 
 **Required Functionality**:
-- **Capability benchmarking**: Score PyPSA-X Pan-African against the 113-capability framework, with a target of **> 95% coverage**.
-- **Cross-model comparison**: Run the same African scenario in PyPSA-X, PyPSA-Earth, OSeMOSYS, and Calliope, and compare key outputs.
+- **Capability benchmarking**: Score Alea against the 113-capability framework, with a target of **> 95% coverage**.
+- **Cross-model comparison**: Run the same African scenario in Alea, PyPSA-Earth, OSeMOSYS, and Calliope, and compare key outputs.
 - **Peer review**: Publish model documentation and validation results for independent peer review in academic journals.
 
 **Required Characteristics**:
@@ -340,7 +340,7 @@ To be the best in the world across every capability, PyPSA-X Pan-African must de
 
 ## 8. Summary: Capability Targets vs. Global Best
 
-| Capability | Global Best | PyPSA-X Target | Target Date |
+| Capability | Global Best | Alea Target | Target Date |
 |---|---|---|---|
 | **Spatial resolution** | 30 km (PyPSA-Earth) | 10 km (high-potential countries) | 2028 |
 | **Temporal resolution** | 1-minute (PLEXOS) | 5-minute (operational studies) | 2028 |

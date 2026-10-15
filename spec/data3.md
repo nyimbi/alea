@@ -1,4 +1,4 @@
-# PyPSA-X Pan-African: Comprehensive Data Source Specification with Direct Data Links
+# Alea: Comprehensive Data Source Specification with Direct Data Links
 
 ## A Methodical Inventory of All Required Data Inputs for Continental Energy System Modelling
 
@@ -6,7 +6,7 @@
 
 ## 1. Introduction and Methodology
 
-This specification catalogues every data source required to build, calibrate, and operate PyPSA-X Pan-African across all 55 African Union member states, five regional power pools, and the continental interconnection. Each entry includes the source name, custodian, coverage, **direct verified link to the actual data file, download endpoint, or API**, and a description of the data content and known limitations.
+This specification catalogues every data source required to build, calibrate, and operate Alea across all 55 African Union member states, five regional power pools, and the continental interconnection. Each entry includes the source name, custodian, coverage, **direct verified link to the actual data file, download endpoint, or API**, and a description of the data content and known limitations.
 
 ---
 
@@ -1112,7 +1112,7 @@ The following countries have been identified as missing from continental dataset
 
 ---
 
-## 15. Summary of Data Source Integration into PyPSA-X
+## 15. Summary of Data Source Integration into Alea
 
 | Data Category | Primary Source(s) | Direct Data Link(s) | Additional Sources Required |
 |---------------|-------------------|---------------------|----------------------------|
@@ -1130,4 +1130,4 @@ The following countries have been identified as missing from continental dataset
 | Power Pools | SAPP, EAPP, WAPP | `data.europa.eu`; `zenodo.org/records/2428081`; `zenodo.org/records/13863272` | CAPP, COMELEC, ICA |
 | Continental | CMP, AfSEM | `cmpmwanga.nepad.org`; `au.int` | PIDA, AID, Mwanga |
 
-This specification provides the complete data foundation for PyPSA-X Pan-African, with each source catalogued with its custodian, coverage, **direct verified link to the actual data file, download endpoint, or API**, and known limitations. This enables systematic data acquisition, validation, and integration into the continental modelling platform without requiring users to search websites again.
+This specification provides the complete data foundation for Alea, with each source catalogued with its custodian, coverage, **direct verified link to the actual data file, download endpoint, or API**, and known limitations. This enables systematic data acquisition, validation, and integration into the continental modelling platform without requiring users to search websites again.

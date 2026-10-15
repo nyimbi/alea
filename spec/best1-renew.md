@@ -1,4 +1,4 @@
-# PyPSA-X Pan-African: Comprehensive Renewable Energy Integration Specification
+# Alea: Comprehensive Renewable Energy Integration Specification
 
 ## From Solar and Wind to Geothermal, Biomass, Marine, and Beyond
 
@@ -6,7 +6,7 @@
 
 ## 1. Introduction
 
-The preceding specification defined PyPSA-X Pan-African as a world-best platform across all capabilities. This extension specifies the **full incorporation of all renewable energy technologies**—not just solar PV and onshore wind, but geothermal, offshore wind, hydropower (including small hydro), biomass (solid, biogas, and liquid biofuels), concentrated solar power (CSP), marine energy (wave, tidal, ocean current, and ocean thermal), and green hydrogen derived from renewables. The platform must model each technology with the same rigour, spatial granularity, and temporal resolution as solar and wind, using the best available African resource data.
+The preceding specification defined Alea as a world-best platform across all capabilities. This extension specifies the **full incorporation of all renewable energy technologies**—not just solar PV and onshore wind, but geothermal, offshore wind, hydropower (including small hydro), biomass (solid, biogas, and liquid biofuels), concentrated solar power (CSP), marine energy (wave, tidal, ocean current, and ocean thermal), and green hydrogen derived from renewables. The platform must model each technology with the same rigour, spatial granularity, and temporal resolution as solar and wind, using the best available African resource data.
 
 ---
 
@@ -240,7 +240,7 @@ The preceding specification defined PyPSA-X Pan-African as a world-best platform
 
 ---
 
-## 10. Data Integration into PyPSA-X
+## 10. Data Integration into Alea
 
 | Renewable Technology | Primary Data Source(s) | PyPSA-Earth Integration | Additional Sources Required |
 |---|---|---|---|
@@ -258,7 +258,7 @@ The preceding specification defined PyPSA-X Pan-African as a world-best platform
 
 ## 11. Summary: Renewable Capability Targets
 
-| Technology | Global Best | PyPSA-X Target | Target Date |
+| Technology | Global Best | Alea Target | Target Date |
 |---|---|---|---|
 | **Solar PV** | 1 km resolution, hourly | 250 m resolution, sub-hourly | 2028 |
 | **CSP** | Site-specific | Country-level with thermal storage | 2027 |
@@ -274,4 +274,4 @@ The preceding specification defined PyPSA-X Pan-African as a world-best platform
 
 ## 12. Conclusion
 
-This specification defines the full incorporation of all renewable energy technologies into PyPSA-X Pan-African. By leveraging the best available African resource data—from the Geothermal Atlas for Africa to the Global Wind Atlas, from the African Hydropower Atlas to the all-Africa supply regions dataset—the platform will model solar, wind, geothermal, hydropower, biomass, marine, and hydrogen technologies with world-class spatial and temporal granularity. This ensures that PyPSA-X Pan-African is not merely a solar-and-wind model, but a comprehensive renewable energy system modelling platform capable of optimising Africa's entire clean energy portfolio.
+This specification defines the full incorporation of all renewable energy technologies into Alea. By leveraging the best available African resource data—from the Geothermal Atlas for Africa to the Global Wind Atlas, from the African Hydropower Atlas to the all-Africa supply regions dataset—the platform will model solar, wind, geothermal, hydropower, biomass, marine, and hydrogen technologies with world-class spatial and temporal granularity. This ensures that Alea is not merely a solar-and-wind model, but a comprehensive renewable energy system modelling platform capable of optimising Africa's entire clean energy portfolio.

@@ -1,4 +1,4 @@
-# PyPSA-X Pan-African: Outage Prediction, Loss Mitigation & What-If Scenario Planning
+# Alea: Outage Prediction, Loss Mitigation & What-If Scenario Planning
 
 ## Extension Specification for Predictive Operations, Resilience Analytics, and Exploratory Planning
 
@@ -8,7 +8,7 @@
 
 ### 1. Why These Capabilities Require a New Architecture
 
-The base PyPSA-X Pan-African specification defines a **planning model** — it optimises capacity expansion and dispatch over multi-year horizons with perfect foresight. Outage prediction, transmission loss mitigation, and what-if scenario planning require a fundamentally different temporal and analytical posture:
+The base Alea specification defines a **planning model** — it optimises capacity expansion and dispatch over multi-year horizons with perfect foresight. Outage prediction, transmission loss mitigation, and what-if scenario planning require a fundamentally different temporal and analytical posture:
 
 - **Outage prediction** operates on **minutes to days** ahead, using statistical and machine learning models trained on historical fault and weather data. It is inherently probabilistic and data-driven, not optimisation-based.
 - **Transmission loss mitigation** operates on **operational and planning horizons**, using the network's physical characteristics (impedance, topology, loading) to identify loss-reduction interventions. It requires the linear power flow and loss approximation capabilities already present in PyPSA.
@@ -502,7 +502,7 @@ class WhatIfEngine:
 
 ---
 
-## Part V: Integration with PyPSA-X Pan-African
+## Part V: Integration with Alea
 
 ### 9. Data Flow
 
@@ -658,7 +658,7 @@ The dashboard shall include three new interactive views:
 
 ## Part IX: Summary
 
-This specification extends PyPSA-X Pan-African with three capabilities that transform it from a planning model into a **predictive, operational, and exploratory decision-support platform**:
+This specification extends Alea with three capabilities that transform it from a planning model into a **predictive, operational, and exploratory decision-support platform**:
 
 1. **Outage Prediction**: Machine learning models trained on historical fault, weather, and satellite data, producing probabilistic outage forecasts for every country and grid zone.
 
@@ -666,4 +666,4 @@ This specification extends PyPSA-X Pan-African with three capabilities that tran
 
 3. **What-If Scenario Planning**: Interactive parameter adjustment, rapid re-solve, scenario comparison, and efficient frontier generation for exploring robust investment pathways.
 
-These capabilities are built on PyPSA's existing power flow, contingency analysis, and optimisation engines, extended with data science and interactive delivery layers. They enable PyPSA-X Pan-African to answer not just "what is the least-cost system?" but "what could go wrong?", "how do we mitigate it?", and "what if the future unfolds differently?"
+These capabilities are built on PyPSA's existing power flow, contingency analysis, and optimisation engines, extended with data science and interactive delivery layers. They enable Alea to answer not just "what is the least-cost system?" but "what could go wrong?", "how do we mitigate it?", and "what if the future unfolds differently?"

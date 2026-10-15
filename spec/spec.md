@@ -1,4 +1,4 @@
-# PyPSA-X Pan-African Specification
+# Alea Specification
 
 ## A Better-Than-COMPASS Continental Energy Market Modelling and Analytics Platform for Africa
 
@@ -6,9 +6,9 @@
 
 ## 1. Executive Summary
 
-This specification defines **PyPSA-X Pan-African**, an open-source continental energy system modelling and market intelligence platform designed to **surpass the capabilities of Meridian Economics' COMPASS** across all 55 African Union member states. COMPASS currently delivers projections of SAWEM spot prices, renewable capture prices, and PPA benchmarks for South Africa, underpinned by Meridian's proprietary power market modelling suite and grounded in real market dynamics including policy, regulation, technology costs, and carbon pricing, with projections extending to 2060.
+This specification defines **Alea**, an open-source continental energy system modelling and market intelligence platform designed to **surpass the capabilities of Meridian Economics' COMPASS** across all 55 African Union member states. COMPASS currently delivers projections of SAWEM spot prices, renewable capture prices, and PPA benchmarks for South Africa, underpinned by Meridian's proprietary power market modelling suite and grounded in real market dynamics including policy, regulation, technology costs, and carbon pricing, with projections extending to 2060.
 
-PyPSA-X Pan-African extends this capability in five fundamental ways:
+Alea extends this capability in five fundamental ways:
 
 1. **Geographic scope**: From one country to 55 AU member states, five regional power pools, and the emerging African Single Electricity Market (AfSEM).
 2. **Methodological transparency**: From a closed, proprietary model to a fully open-source, peer-reviewable platform built on PyPSA-Earth, which has already demonstrated data validation for the entire African continent and a 2060 net-zero planning study for Nigeria.
@@ -24,13 +24,13 @@ The platform is designed for use by utilities, regulators, investors, researcher
 
 ### 2.1 Purpose
 
-This document specifies the functional and non-functional requirements for PyPSA-X Pan-African, a product that extends the open-source PyPSA framework to deliver continental-scale energy market modelling, price forecasting, and investment analytics superior to COMPASS.
+This document specifies the functional and non-functional requirements for Alea, a product that extends the open-source PyPSA framework to deliver continental-scale energy market modelling, price forecasting, and investment analytics superior to COMPASS.
 
 ### 2.2 Background
 
 COMPASS is Meridian Economics' proprietary power market modelling suite that underpins the annual South Africa Power Market Report. The report provides long-term scenario-based projections of future wholesale power market prices, capture prices for renewable energy, and market pricing curves for shorter-term PPAs, supported by a review of sector developments including market growth, regulatory and market structure evolution, technology costs, carbon pricing, and other factors. Key insights from the September 2025 edition include a 20% drop in battery costs in early 2025, gas losing competitiveness amid rising turbine costs, and carbon tax scenarios causing sharp swings in system marginal prices.
 
-While COMPASS is a sophisticated tool, it is limited to South Africa, closed-source, and delivered as a subscription report. PyPSA-X Pan-African addresses these limitations by providing an open, continental-scale platform that exceeds COMPASS in scope, transparency, and analytical capability.
+While COMPASS is a sophisticated tool, it is limited to South Africa, closed-source, and delivered as a subscription report. Alea addresses these limitations by providing an open, continental-scale platform that exceeds COMPASS in scope, transparency, and analytical capability.
 
 ### 2.3 Goals and Objectives
 
@@ -58,9 +58,9 @@ While COMPASS is a sophisticated tool, it is limited to South Africa, closed-sou
 
 ---
 
-## 3. Competitive Benchmarking: COMPASS vs. PyPSA-X Pan-African
+## 3. Competitive Benchmarking: COMPASS vs. Alea
 
-| Capability | COMPASS (Meridian Economics) | PyPSA-X Pan-African |
+| Capability | COMPASS (Meridian Economics) | Alea |
 |---|---|---|
 | **Geographic scope** | South Africa only | 55 AU member states, 5 power pools, AfSEM |
 | **Model transparency** | Proprietary, closed-source | Open-source, peer-reviewable |
@@ -419,19 +419,19 @@ While COMPASS is a sophisticated tool, it is limited to South Africa, closed-sou
 
 ---
 
-## 12. How PyPSA-X Pan-African Surpasses COMPASS
+## 12. How Alea Surpasses COMPASS
 
 ### 12.1 Geographic and Institutional Scope
 
-COMPASS covers South Africa only. PyPSA-X Pan-African covers all 55 AU member states, five regional power pools, and the emerging AfSEM, providing a continental perspective that COMPASS cannot offer. This enables analysis of cross-border trade, regional integration, and continental energy security that is essential for the CMP and AfSEM.
+COMPASS covers South Africa only. Alea covers all 55 AU member states, five regional power pools, and the emerging AfSEM, providing a continental perspective that COMPASS cannot offer. This enables analysis of cross-border trade, regional integration, and continental energy security that is essential for the CMP and AfSEM.
 
 ### 12.2 Methodological Transparency
 
-COMPASS is proprietary and closed-source. PyPSA-X Pan-African is fully open-source, built on PyPSA-Earth, which has already demonstrated data validation for the entire African continent and a 2060 net-zero planning study for Nigeria. This transparency enables peer review, replication, and trust among stakeholders.
+COMPASS is proprietary and closed-source. Alea is fully open-source, built on PyPSA-Earth, which has already demonstrated data validation for the entire African continent and a 2060 net-zero planning study for Nigeria. This transparency enables peer review, replication, and trust among stakeholders.
 
 ### 12.3 Analytical Depth
 
-COMPASS delivers price projections and capture rates for South Africa. PyPSA-X Pan-African delivers these plus:
+COMPASS delivers price projections and capture rates for South Africa. Alea delivers these plus:
 - **Agent-based market simulation** for strategic bidding and regulatory intervention analysis, using frameworks like AMIRIS demonstrated for Eastern Africa.
 - **Stochastic optimisation** with CVaR, Monte Carlo, and chance constraints, enabling rigorous risk quantification.
 - **Sector coupling** covering hydrogen, transport, industry, and water, with demonstrated hydrogen applications for Egypt and Brazil.
@@ -440,7 +440,7 @@ COMPASS delivers price projections and capture rates for South Africa. PyPSA-X P
 
 ### 12.4 Commercial Analytics
 
-COMPASS provides capture prices and PPA benchmarks for South Africa. PyPSA-X Pan-African provides these for all African markets, with:
+COMPASS provides capture prices and PPA benchmarks for South Africa. Alea provides these for all African markets, with:
 - **Currency risk adjustments** for PPA curves.
 - **Counterparty risk** modelling.
 - **CfD structure** analysis.
@@ -449,7 +449,7 @@ COMPASS provides capture prices and PPA benchmarks for South Africa. PyPSA-X Pan
 
 ### 12.5 Delivery Model
 
-COMPASS is delivered as a subscription report. PyPSA-X Pan-African provides:
+COMPASS is delivered as a subscription report. Alea provides:
 - **REST API** for programmatic access.
 - **Interactive dashboard** for scenario exploration.
 - **Scenario database** with version control and audit trails.
@@ -458,7 +458,7 @@ COMPASS is delivered as a subscription report. PyPSA-X Pan-African provides:
 
 ### 12.6 Institutional Alignment
 
-COMPASS is aligned with South African policy. PyPSA-X Pan-African is aligned with:
+COMPASS is aligned with South African policy. Alea is aligned with:
 - **AUDA-NEPAD's CMP** for continental electricity planning.
 - **AfSEM** for the African Single Electricity Market.
 - **AU Common Position** on energy access and transition.
@@ -469,7 +469,7 @@ COMPASS is aligned with South African policy. PyPSA-X Pan-African is aligned wit
 
 ## 13. Conclusion
 
-This specification defines PyPSA-X Pan-African, an open-source continental energy system modelling and market intelligence platform that surpasses COMPASS in geographic scope, methodological transparency, analytical depth, commercial analytics, and delivery model. By building on PyPSA-Earth, which has already demonstrated continental-scale data validation and optimisation for Africa, and aligning with AUDA-NEPAD's CMP and the AfSEM roadmap, PyPSA-X Pan-African is positioned to become the reference platform for Africa's energy transition, serving all 55 AU member states, five regional power pools, and the continent as a whole.
+This specification defines Alea, an open-source continental energy system modelling and market intelligence platform that surpasses COMPASS in geographic scope, methodological transparency, analytical depth, commercial analytics, and delivery model. By building on PyPSA-Earth, which has already demonstrated continental-scale data validation and optimisation for Africa, and aligning with AUDA-NEPAD's CMP and the AfSEM roadmap, Alea is positioned to become the reference platform for Africa's energy transition, serving all 55 AU member states, five regional power pools, and the continent as a whole.
 
 ---
 

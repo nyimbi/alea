@@ -1,4 +1,4 @@
-# Product Specification: PyPSA-X
+# Product Specification: Alea
 
 ## An Open, Extensible Platform for South African Energy Market Modelling and Analytics
 
@@ -6,7 +6,7 @@
 
 ## 1. Executive Summary
 
-PyPSA-X is a comprehensive extension of the open-source PyPSA framework designed to deliver the full analytical, market-simulation, and commercial-intelligence capabilities required to supersede proprietary tools such as COMPASS. It provides a modular, transparent, and scalable platform for modelling South Africa's energy system across physical, market, and financial dimensions. PyPSA-X integrates sector coupling, agent-based market simulation, stochastic optimisation, advanced risk analytics, and a modern delivery layer comprising APIs, dashboards, and automated reporting. The platform is built on open standards, supports reproducible research, and is designed for use by utilities, regulators, investors, and researchers.
+Alea is a comprehensive extension of the open-source PyPSA framework designed to deliver the full analytical, market-simulation, and commercial-intelligence capabilities required to supersede proprietary tools such as COMPASS. It provides a modular, transparent, and scalable platform for modelling South Africa's energy system across physical, market, and financial dimensions. Alea integrates sector coupling, agent-based market simulation, stochastic optimisation, advanced risk analytics, and a modern delivery layer comprising APIs, dashboards, and automated reporting. The platform is built on open standards, supports reproducible research, and is designed for use by utilities, regulators, investors, and researchers.
 
 ---
 
@@ -14,11 +14,11 @@ PyPSA-X is a comprehensive extension of the open-source PyPSA framework designed
 
 ### 2.1 Purpose
 
-The purpose of this document is to specify the functional and non-functional requirements for PyPSA-X, a product that extends the PyPSA optimisation engine to provide a complete energy-market modelling and analytics solution tailored to the South African context.
+The purpose of this document is to specify the functional and non-functional requirements for Alea, a product that extends the PyPSA optimisation engine to provide a complete energy-market modelling and analytics solution tailored to the South African context.
 
 ### 2.2 Background
 
-PyPSA is a powerful open-source tool for power system analysis, but it lacks the market-simulation, stochastic planning, and commercial-intelligence layers needed to produce bankable price forecasts, capture rates, and PPA benchmarks. COMPASS, Meridian Economics' proprietary suite, fills this gap but is closed-source and subscription-based. PyPSA-X aims to replicate and surpass COMPASS by building an open, extensible, and transparent alternative.
+PyPSA is a powerful open-source tool for power system analysis, but it lacks the market-simulation, stochastic planning, and commercial-intelligence layers needed to produce bankable price forecasts, capture rates, and PPA benchmarks. COMPASS, Meridian Economics' proprietary suite, fills this gap but is closed-source and subscription-based. Alea aims to replicate and surpass COMPASS by building an open, extensible, and transparent alternative.
 
 ### 2.3 Goals and Objectives
 
@@ -67,7 +67,7 @@ PyPSA is a powerful open-source tool for power system analysis, but it lacks the
 
 ### 3.1 Architecture Layers
 
-PyPSA-X is organised into six layers:
+Alea is organised into six layers:
 
 ```
 ┌─────────────────────────────────────────────────────┐

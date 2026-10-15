@@ -1,4 +1,4 @@
-# PyPSA-X Pan-African: Per-Country Data Completeness Assessment and Data Links
+# Alea: Per-Country Data Completeness Assessment and Data Links
 
 ## Methodology
 
@@ -171,4 +171,4 @@ For countries without national portals, the following regional resources provide
 | Continental | CMP Mwanga Database | `https://cmpmwanga.nepad.org/` |
 | Continental | OASES Continental Dataset | `https://doi.org/10.5281/zenodo.14843471` |
 
-This per-country assessment enables PyPSA-X Pan-African to systematically prioritise data acquisition, quantify uncertainty, and transparently communicate data quality to stakeholders across all 55 AU member states.
+This per-country assessment enables Alea to systematically prioritise data acquisition, quantify uncertainty, and transparently communicate data quality to stakeholders across all 55 AU member states.

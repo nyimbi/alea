@@ -1,10 +1,10 @@
-To assess how our proposed PyPSA-X Pan-African capabilities compare to the global best, we can benchmark against established models and frameworks across key dimensions.
+To assess how our proposed Alea capabilities compare to the global best, we can benchmark against established models and frameworks across key dimensions.
 
 Here is how the capabilities stack up against the world's leading energy system models.
 
 ### 🎯 Benchmarking Criteria
 
-We compare PyPSA-X Pan-African against the best-in-class models on six core capabilities: **Geographic Scope**, **Data Granularity**, **Sector Coupling**, **Market Simulation**, **Stochastic Optimisation**, and **Delivery & Accessibility**.
+We compare Alea against the best-in-class models on six core capabilities: **Geographic Scope**, **Data Granularity**, **Sector Coupling**, **Market Simulation**, **Stochastic Optimisation**, and **Delivery & Accessibility**.
 
 ---
 
@@ -44,7 +44,7 @@ We compare PyPSA-X Pan-African against the best-in-class models on six core capa
 
 **Global Best:** This is where we move **beyond** the capabilities of most traditional optimisation models. The leading open-source frameworks for this are **AMIRIS** and **ASSUME**. ASSUME is particularly advanced, incorporating **multi-agent deep reinforcement learning** for adaptive market participants. A direct comparison of AMIRIS and ASSUME showed both achieve a Mean Absolute Error (MAE) of **5.6–6.4 €/MWh** against a benchmark dataset, demonstrating their practical accuracy.
 
-**Assessment:** **Cutting-Edge**. By integrating these frameworks (or similar approaches), PyPSA-X Pan-African would be at the global forefront of open-source market simulation. This is a key differentiator from purely optimisation-based tools like OSeMOSYS or TIMES.
+**Assessment:** **Cutting-Edge**. By integrating these frameworks (or similar approaches), Alea would be at the global forefront of open-source market simulation. This is a key differentiator from purely optimisation-based tools like OSeMOSYS or TIMES.
 
 ---
 
@@ -79,7 +79,7 @@ We compare PyPSA-X Pan-African against the best-in-class models on six core capa
 | **Stochastic Optimisation** | **State-of-the-Art** | PyPSA v1.0+ (CVaR), PLEXOS |
 | **Delivery & Accessibility** | **Pioneering** | Commercial tools (closed), Open tools (steep curve) |
 
-**Conclusion:** The proposed PyPSA-X Pan-African is not merely "better than COMPASS"; it is designed to be **competitive with the global state-of-the-art** across every major dimension. Its unique strength is the **combination** of these world-class capabilities—open-source granular data, advanced market and risk modelling, and a modern delivery interface—into a single, unified platform focused on Africa.
+**Conclusion:** The proposed Alea is not merely "better than COMPASS"; it is designed to be **competitive with the global state-of-the-art** across every major dimension. Its unique strength is the **combination** of these world-class capabilities—open-source granular data, advanced market and risk modelling, and a modern delivery interface—into a single, unified platform focused on Africa.
 
 The primary challenge is not a lack of ambition or technical sophistication, but the **execution against severe data constraints**, as documented in our per-country completeness assessment. The platform's success will hinge on how effectively it can bridge these data gaps using advanced methods like satellite-based asset detection and proxy estimation.
 

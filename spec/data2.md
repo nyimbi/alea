@@ -1,4 +1,4 @@
-# PyPSA-X Pan-African: Comprehensive Data Source Specification with Verified Links
+# Alea: Comprehensive Data Source Specification with Verified Links
 
 ## A Methodical Inventory of All Required Data Inputs for Continental Energy System Modelling
 
@@ -6,7 +6,7 @@
 
 ## 1. Introduction and Methodology
 
-This specification catalogues every data source required to build, calibrate, and operate PyPSA-X Pan-African across all 55 African Union member states, five regional power pools, and the continental interconnection. Each entry includes the source name, custodian, coverage, verified access link, and a description of the data content and known limitations.
+This specification catalogues every data source required to build, calibrate, and operate Alea across all 55 African Union member states, five regional power pools, and the continental interconnection. Each entry includes the source name, custodian, coverage, verified access link, and a description of the data content and known limitations.
 
 ---
 
@@ -1044,7 +1044,7 @@ The following countries have been identified as missing from continental dataset
 
 ---
 
-## 15. Summary of Data Source Integration into PyPSA-X
+## 15. Summary of Data Source Integration into Alea
 
 | Data Category | Primary Source(s) | PyPSA-Earth Integration | Additional Sources Required |
 |---------------|-------------------|------------------------|----------------------------|
@@ -1062,4 +1062,4 @@ The following countries have been identified as missing from continental dataset
 | Power Pools | SAPP, EAPP, WAPP | Partial | CAPP, COMELEC, ICA |
 | Continental | CMP, AfSEM | No | PIDA, AID, Mwanga |
 
-This specification provides the complete data foundation for PyPSA-X Pan-African, with each source catalogued with its custodian, coverage, verified access link, and known limitations, enabling systematic data acquisition, validation, and integration into the continental modelling platform.
+This specification provides the complete data foundation for Alea, with each source catalogued with its custodian, coverage, verified access link, and known limitations, enabling systematic data acquisition, validation, and integration into the continental modelling platform.

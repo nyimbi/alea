@@ -1,11 +1,11 @@
-# ALEA: Interface Specification
+# Alea: Interface Specification
 
 ## Complete Definition of All Interfaces — External, Internal, and Inbound
 
 **Version**: 1.0
 **Status**: Draft for Developer Implementation
 **Audience**: Intermediate developers, API designers, integration engineers
-**Companion Documents**: ALEA Product Specification v4.0
+**Companion Documents**: Alea Product Specification v4.0
 
 ---
 
@@ -13,7 +13,7 @@
 
 ### 1. Why Interfaces Are the Product
 
-ALEA is not a single application. It is a **platform** — a collection of analytical engines, data pipelines, and intelligence services that must be usable by twenty different user archetypes across eighteen delivery channels. The interfaces are not an afterthought; they **are** the product. A user never sees the PyPSA optimisation engine, the VIIRS processing pipeline, or the agent-based market simulator. They see an API response, a dashboard widget, a WhatsApp message, or a PDF report. If the interfaces are poor, the platform fails regardless of how sophisticated the underlying analytics are.
+Alea is not a single application. It is a **platform** — a collection of analytical engines, data pipelines, and intelligence services that must be usable by twenty different user archetypes across eighteen delivery channels. The interfaces are not an afterthought; they **are** the product. A user never sees the PyPSA optimisation engine, the VIIRS processing pipeline, or the agent-based market simulator. They see an API response, a dashboard widget, a WhatsApp message, or a PDF report. If the interfaces are poor, the platform fails regardless of how sophisticated the underlying analytics are.
 
 ### 2. Interface Design Principles
 
@@ -31,14 +31,14 @@ ALEA is not a single application. It is a **platform** — a collection of analy
 
 ### 3. Interface Taxonomy
 
-ALEA exposes and consumes interfaces across six categories:
+Alea exposes and consumes interfaces across six categories:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                     ALEA INTERFACE TAXONOMY                         │
+│                     Alea INTERFACE TAXONOMY                         │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
-│  A. EXTERNAL INTERFACES (ALEA → Users)                             │
+│  A. EXTERNAL INTERFACES (Alea → Users)                             │
 │     A1. REST API                                                    │
 │     A2. GraphQL API                                                 │
 │     A3. WebSocket / Server-Sent Events                              │
@@ -63,7 +63,7 @@ ALEA exposes and consumes interfaces across six categories:
 │     B7. Cross-layer: Shared Database Schemas                        │
 │     B8. Cross-layer: Model Artefact Registry                        │
 │                                                                     │
-│  C. INBOUND INTERFACES (External → ALEA)                            │
+│  C. INBOUND INTERFACES (External → Alea)                            │
 │     C1. Source Connectors (News, Tenders, Social, Institutional)    │
 │     C2. Crowdsourcing Endpoints                                     │
 │     C3. Human Review Interface                                      │
@@ -679,7 +679,7 @@ The most inclusive interfaces are those that require **no smartphone, no data, a
 **Rich responses**: WhatsApp supports interactive buttons and lists. Example:
 
 ```
-ALEA: What would you like to do?
+Alea: What would you like to do?
 [Check outage forecast] [Report outage]
 [Check prices] [Settings]
 ```
@@ -691,7 +691,7 @@ ALEA: What would you like to do?
 **Session flow**:
 
 ```
-CON Welcome to ALEA
+CON Welcome to Alea
 1. Outage forecast
 2. Report outage
 3. Electricity prices
@@ -725,7 +725,7 @@ Sessions time out after 180 seconds. All responses are ≤ 182 characters.
 
 #### 10.7.1 Design Rationale
 
-Journalists, bloggers, and partner websites want to embed ALEA data without building their own integrations. Widgets provide **ready-made, styled components** that can be embedded with a single `<script>` tag.
+Journalists, bloggers, and partner websites want to embed Alea data without building their own integrations. Widgets provide **ready-made, styled components** that can be embedded with a single `<script>` tag.
 
 #### 10.7.2 Widget Catalogue
 
@@ -866,7 +866,7 @@ Bulk downloads (e.g., the full renewable profiles dataset) use **BitTorrent** fo
 
 #### 13.10.1 Design Rationale
 
-Businesses want to **react** to ALEA events without polling. Webhooks push events to their systems when they occur.
+Businesses want to **react** to Alea events without polling. Webhooks push events to their systems when they occur.
 
 #### 13.10.2 Webhook Events
 
@@ -936,7 +936,7 @@ The signature is computed as `HMAC-SHA256(secret, timestamp + "." + payload)`. C
 
 #### 15.12.1 Google Sheets Add-on
 
-Users can pull ALEA data directly into Google Sheets:
+Users can pull Alea data directly into Google Sheets:
 
 ```
 =ALEA_FORECAST("NG", "outage", "2026-10-12", 24)
@@ -955,7 +955,7 @@ Similar functions for Excel:
 
 #### 15.12.3 Power BI Connector
 
-A custom Power BI connector that pulls ALEA data via the REST API. Published in the Power BI marketplace.
+A custom Power BI connector that pulls Alea data via the REST API. Published in the Power BI marketplace.
 
 #### 15.12.4 Tableau Connector
 
@@ -967,7 +967,7 @@ A Web Data Connector (WDC) for Tableau.
 
 #### 16.13.1 QGIS Plugin
 
-A QGIS plugin for loading ALEA spatial data:
+A QGIS plugin for loading Alea spatial data:
 
 - Grid topology
 - Generation assets
@@ -985,7 +985,7 @@ Similar capabilities for ArcGIS Pro.
 
 ### 17. Layer-to-Layer Interfaces
 
-ALEA's six layers communicate through **well-defined contracts**. Each layer exposes its outputs as **artefacts** (files, database records, or message queue topics) that the next layer consumes.
+Alea's six layers communicate through **well-defined contracts**. Each layer exposes its outputs as **artefacts** (files, database records, or message queue topics) that the next layer consumes.
 
 #### 17.1 B1 — Layer 1 → Layer 2 (Planning → Sector)
 
@@ -1224,7 +1224,7 @@ A dedicated web interface for analysts to review, confirm, reject, or edit extra
 
 ### 21. C4 — Partner Data Exchange
 
-For institutional partners (AUDA-NEPAD, AFREC, power pools, national utilities), ALEA provides a **secure data exchange interface**:
+For institutional partners (AUDA-NEPAD, AFREC, power pools, national utilities), Alea provides a **secure data exchange interface**:
 
 - **SFTP** for bulk data transfers
 - **API keys** with elevated scopes for programmatic access
@@ -1432,10 +1432,10 @@ Administrators can:
 
 ## Part IX: Conclusion
 
-This specification defines the **complete interface surface** of ALEA — the 13 external interfaces, 8 internal layer interfaces, 4 inbound interfaces, 4 platform interfaces, 3 administrative interfaces, and 3 governance interfaces that together constitute the platform's connection to its users, its data sources, and itself.
+This specification defines the **complete interface surface** of Alea — the 13 external interfaces, 8 internal layer interfaces, 4 inbound interfaces, 4 platform interfaces, 3 administrative interfaces, and 3 governance interfaces that together constitute the platform's connection to its users, its data sources, and itself.
 
 The interfaces are designed around six principles: **progressive disclosure**, **cross-channel consistency**, **explicit uncertainty**, **provenance by default**, **open by default**, and **observability everywhere**. They serve twenty user archetypes across eighteen delivery channels, from a farmer in Malawi using USSD to a sovereign wealth fund using the Enterprise API.
 
 The specification is intentionally **implementation-ready**. Each endpoint, schema, and contract is defined with enough precision that an intermediate developer can implement it without further clarification. Where decisions remain open (e.g., the specific model architecture for a given prediction), the specification defines the **interface contract** that any implementation must satisfy, leaving the implementation details to the development team.
 
-The result is a platform whose interfaces are not merely functional but **strategic** — they are the mechanism by which ALEA becomes the reference energy intelligence platform for Africa, usable by everyone, from anywhere, on any device.
+The result is a platform whose interfaces are not merely functional but **strategic** — they are the mechanism by which Alea becomes the reference energy intelligence platform for Africa, usable by everyone, from anywhere, on any device.

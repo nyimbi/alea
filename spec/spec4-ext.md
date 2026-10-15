@@ -1,11 +1,11 @@
-# PyPSA-X Pan-African: The Energy Intelligence Platform for Africa
+# Alea: The Energy Intelligence Platform for Africa
 
 ## Extension Specification: From Modelling Tool to Continental Public Utility
 
 **Version**: 4.0 (Extension to v3.0 Product Specification)
 **Status**: Strategic Vision & Implementation Blueprint
 **Audience**: Product strategists, senior developers, partnership leads
-**Base Platform**: PyPSA-X Pan-African v3.0
+**Base Platform**: Alea v3.0
 
 ---
 
@@ -13,7 +13,7 @@
 
 ### 1. The Core Insight
 
-PyPSA-X Pan-African v1.0–v3.0 defined a **modelling platform** for analysts, planners, and investors. But the platform's data, predictions, and analyses have value far beyond these original users. The same outage predictions that help a utility plan maintenance can help a **hospital** decide whether to invest in backup power. The same price forecasts that help an **investor** structure a PPA can help a **small business** decide whether to install solar. The same climate scenarios that help a **government** plan transmission can help a **farmer** understand irrigation risks.
+Alea v1.0–v3.0 defined a **modelling platform** for analysts, planners, and investors. But the platform's data, predictions, and analyses have value far beyond these original users. The same outage predictions that help a utility plan maintenance can help a **hospital** decide whether to invest in backup power. The same price forecasts that help an **investor** structure a PPA can help a **small business** decide whether to install solar. The same climate scenarios that help a **government** plan transmission can help a **farmer** understand irrigation risks.
 
 The platform should therefore become an **Energy Intelligence Platform for Africa** — a public utility for energy information that serves **everyone** from rural communities to global investors. This is not a commercial pivot; it is a **public good mandate** with a sustainable commercial layer.
 
@@ -21,7 +21,7 @@ The platform should therefore become an **Energy Intelligence Platform for Afric
 
 Think of what Bloomberg Terminal did for financial markets: it consolidated fragmented data, added analytics, and delivered it through a single interface that became indispensable. But Bloomberg is expensive, closed, and serves only finance professionals. What if there were a **Bloomberg for African Energy** that was **open, accessible, and served everyone** — from a journalist in Lagos to a mini-grid developer in Tanzania to a sovereign wealth fund in Abu Dhabi?
 
-That is the vision. PyPSA-X Pan-African becomes the **reference platform for African energy intelligence**, with:
+That is the vision. Alea becomes the **reference platform for African energy intelligence**, with:
 
 - **Open data** as a commons
 - **Predictions and analyses** as a service
@@ -65,42 +65,42 @@ The platform currently serves five user archetypes (utilities, regulators, inves
 **Persona 1: Amina, Journalist in Lagos**
 - Needs: Data for stories, visualisations, alerts on newsworthy events
 - Pain point: Energy data is fragmented across dozens of sources
-- How PyPSA-X helps: Story detection alerts, embeddable widgets, data downloads
+- How Alea helps: Story detection alerts, embeddable widgets, data downloads
 
 **Persona 2: Kwame, Mini-Grid Developer in Tanzania**
 - Needs: Settlement-level demand data, solar resource assessment, tariff design
 - Pain point: Cannot afford commercial data services
-- How PyPSA-X helps: Free DRE Atlas integration, mini-grid planner tool
+- How Alea helps: Free DRE Atlas integration, mini-grid planner tool
 
 **Persona 3: Dr. Ngozi, Hospital Administrator in rural Nigeria**
 - Needs: Reliable power for vaccine cold chain, operating theatres
 - Pain point: Grid outages are unpredictable and costly
-- How PyPSA-X helps: Outage forecasts, backup power ROI calculator, SMS alerts
+- How Alea helps: Outage forecasts, backup power ROI calculator, SMS alerts
 
 **Persona 4: Sarah, ESG Analyst at a European Bank**
 - Needs: Portfolio exposure to climate risk, carbon accounting
 - Pain point: African energy data is opaque and inconsistent
-- How PyPSA-X helps: Climate risk dashboard, carbon accounting API
+- How Alea helps: Climate risk dashboard, carbon accounting API
 
 **Persona 5: Professor Mwangi, University Researcher in Nairobi**
 - Needs: Datasets for teaching, model benchmarking, publication-quality visualisations
 - Pain point: Data collection is time-consuming and expensive
-- How PyPSA-X helps: Open data portal, Jupyter notebooks, citation-ready datasets
+- How Alea helps: Open data portal, Jupyter notebooks, citation-ready datasets
 
 **Persona 6: Fatima, Small Business Owner in Morocco**
 - Needs: Understanding of electricity costs, solar viability
 - Pain point: Tariffs are complex, solar quotes are opaque
-- How PyPSA-X helps: Tariff comparison tool, solar calculator, Arabic language support
+- How Alea helps: Tariff comparison tool, solar calculator, Arabic language support
 
 **Persona 7: David, Insurance Underwriter in Johannesburg**
 - Needs: Risk assessment for energy infrastructure investments
 - Pain point: Climate risk models are Europe-focused
-- How PyPSA-X helps: Africa-specific climate risk dashboard, asset-level risk scores
+- How Alea helps: Africa-specific climate risk dashboard, asset-level risk scores
 
 **Persona 8: Chen, Carbon Trader in Singapore**
 - Needs: Verification of African carbon offset projects
 - Pain point: Additionality and baseline verification is difficult
-- How PyPSA-X helps: Carbon accounting API, project-level emissions baselines
+- How Alea helps: Carbon accounting API, project-level emissions baselines
 
 ---
 
@@ -213,7 +213,7 @@ async def ussd_callback(request: Request):
 
 **What**: A web and mobile tool that estimates rooftop solar potential for individual buildings.
 
-**Why**: Millions of African households and businesses want to know if solar is viable for them. The Global Solar Atlas provides the resource data; PyPSA-X provides the economic analysis.
+**Why**: Millions of African households and businesses want to know if solar is viable for them. The Global Solar Atlas provides the resource data; Alea provides the economic analysis.
 
 **How**:
 
@@ -391,11 +391,11 @@ class StoryDetector:
 
 #### 7.4 Benchmarking Service
 
-**What**: A service that allows researchers to benchmark their models against PyPSA-X outputs.
+**What**: A service that allows researchers to benchmark their models against Alea outputs.
 
 **How**:
 - Submit model outputs
-- Compare against PyPSA-X reference scenarios
+- Compare against Alea reference scenarios
 - Receive divergence metrics and visualisations
 - Publish results (optional)
 
@@ -981,7 +981,7 @@ class PersonalizationEngine:
 
 ## Part XI: Conclusion
 
-This specification defines the transformation of PyPSA-X Pan-African from a **modelling platform** into an **Energy Intelligence Platform for Africa** — a public utility for energy information that serves **twenty user archetypes** across **eighteen delivery channels** with **thirty new capabilities**.
+This specification defines the transformation of Alea from a **modelling platform** into an **Energy Intelligence Platform for Africa** — a public utility for energy information that serves **twenty user archetypes** across **eighteen delivery channels** with **thirty new capabilities**.
 
 The platform becomes:
 

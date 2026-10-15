@@ -1,4 +1,4 @@
-# PyPSA-X Pan-African: Comprehensive Product Specification
+# Alea: Comprehensive Product Specification
 
 ## An Open-Source, Extensible Platform for Continental Energy System Modelling, Market Simulation, and Investment Analytics
 
@@ -689,7 +689,7 @@ app.layout = html.Div([
 
 ### 18. Cross-Model Comparison
 
-**What**: Run the same African scenario in PyPSA-X, PyPSA-Earth, OSeMOSYS, and Calliope.
+**What**: Run the same African scenario in Alea, PyPSA-Earth, OSeMOSYS, and Calliope.
 
 **Acceptance criteria**: < 10% divergence in total system cost by 2028.
 

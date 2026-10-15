@@ -1,4 +1,4 @@
-# PyPSA-X Pan-African: Comprehensive Product Specification
+# Alea: Comprehensive Product Specification
 
 ## An Open-Source, Extensible Platform for Continental Energy System Planning, Predictive Operations, Market Simulation, and Periodic Intelligence Reporting
 
@@ -1243,7 +1243,7 @@ app = Dash(__name__)
 engine = WhatIfEngine("results/base_network.nc")
 
 app.layout = html.Div([
-    html.H1("PyPSA-X What-If Scenario Explorer"),
+    html.H1("Alea What-If Scenario Explorer"),
     html.Div([
         html.Label("Demand Growth"),
         dcc.Slider(id="demand", min=0, max=0.08, value=0.04, step=0.01),
@@ -1482,7 +1482,7 @@ if __name__ == "__main__":
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PyPSA-X Daily Report - {{ date }}</title>
+    <title>Alea Daily Report - {{ date }}</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
         .header { border-bottom: 3px solid #1f77b4; padding-bottom: 10px; }
@@ -1496,7 +1496,7 @@ if __name__ == "__main__":
 </head>
 <body>
     <div class="header">
-        <h1>PyPSA-X Pan-African Daily Report</h1>
+        <h1>Alea Daily Report</h1>
         <p>{{ date }}</p>
     </div>
 
@@ -1649,7 +1649,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 import pandas as pd
 
-app = FastAPI(title="PyPSA-X Pan-African API", version="2.0")
+app = FastAPI(title="Alea API", version="2.0")
 api_key_header = APIKeyHeader(name="X-API-Key")
 
 async def verify_key(api_key: str = Depends(api_key_header)):
@@ -1812,7 +1812,7 @@ def test_reproducibility():
 
 ## Part XIV: Conclusion
 
-This specification defines PyPSA-X Pan-African as a **full lifecycle decision-support system** with six analytical layers:
+This specification defines Alea as a **full lifecycle decision-support system** with six analytical layers:
 
 1. **Planning Core** — multi-horizon capacity expansion with all renewable technologies
 2. **Sector Coupling** — electricity, hydrogen, heat, transport, industry, water

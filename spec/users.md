@@ -1,6 +1,6 @@
-The PyPSA-X Pan-African system represents a fundamental shift from a single-country, single-purpose tool to a **continental, multi-purpose decision-support platform**. It answers a far broader set of questions and serves a much wider range of users than COMPASS, which is narrowly focused on South African power market price projections.
+The Alea system represents a fundamental shift from a single-country, single-purpose tool to a **continental, multi-purpose decision-support platform**. It answers a far broader set of questions and serves a much wider range of users than COMPASS, which is narrowly focused on South African power market price projections.
 
-### 🎯 What Predictions Will PyPSA-X Pan-African Answer?
+### 🎯 What Predictions Will Alea Answer?
 
 The system will generate predictions across four interconnected domains, moving from physical system outcomes to financial and strategic insights.
 
@@ -28,9 +28,9 @@ The platform's utility derives from its **continental scope, open architecture, 
 
 COMPASS is a **South Africa-specific subscription report** designed for banks, investors, developers, traders, large power users, and policymakers. Its commercial applications are concentrated in the **South African power market**: supporting NAV/GAV calculations, benchmarking projections, and stress-testing assumptions for SAWEM prices, capture rates, and PPA benchmarks.
 
-PyPSA-X Pan-African serves the **same user archetypes but across all 55 AU member states**, and it does so as an **open platform rather than a closed report**. The table below compares the commercial applications.
+Alea serves the **same user archetypes but across all 55 AU member states**, and it does so as an **open platform rather than a closed report**. The table below compares the commercial applications.
 
-| Commercial Application | COMPASS (Meridian Economics) | PyPSA-X Pan-African |
+| Commercial Application | COMPASS (Meridian Economics) | Alea |
 | :--- | :--- | :--- |
 | **Geographic Scope** | South Africa only | All 55 AU member states, 5 power pools |
 | **Price Forecasting** | SAWEM spot prices, capture prices, PPA benchmarks to 2060 | Wholesale prices, capture prices, PPA benchmarks for all African markets |
@@ -48,6 +48,6 @@ PyPSA-X Pan-African serves the **same user archetypes but across all 55 AU membe
 
 *   **For Planners and Policymakers**: It will offer a **transparent, peer-reviewable** basis for national and continental planning. It will support **CMP and AfSEM implementation** by modelling cross-border trade, regulatory harmonisation, and market coupling. It will also enable **climate-resilient planning** by integrating CMIP6 hydrological and temperature uncertainty into capacity expansion.
 
-In essence, PyPSA-X Pan-African transforms energy modelling from a **South African subscription service** into a **continental public good**. It gives every stakeholder in Africa's energy transition the analytical tools to make better, more resilient decisions—whether they are a business managing energy costs, an investor allocating capital, or a planner designing the continent's energy future.
+In essence, Alea transforms energy modelling from a **South African subscription service** into a **continental public good**. It gives every stakeholder in Africa's energy transition the analytical tools to make better, more resilient decisions—whether they are a business managing energy costs, an investor allocating capital, or a planner designing the continent's energy future.
 
 If you would like to explore a specific commercial application in more detail, such as PPA structuring or portfolio risk assessment, please let me know.

@@ -1,4 +1,4 @@
-# PyPSA-X Continental Extension Specification
+# Alea Continental Extension Specification
 
 ## Pan-African Deployment Architecture for 55 African Union Member States
 
@@ -6,7 +6,7 @@
 
 ## 1. Executive Summary
 
-This specification extends PyPSA-X from a South Africa-focused platform to a **pan-African continental energy system modelling and analytics platform** covering all 55 African Union member states. The extension is built on the proven PyPSA-Earth framework, which already provides global coverage with demonstrated application in Africa. The architecture must accommodate the continent's five regional power pools (SAPP, EAPP, WAPP, CAPP, COMELEC), the African Single Electricity Market (AfSEM), and the Continental Power System Master Plan (CMP), while remaining granular enough to support national-level planning for each member state.
+This specification extends Alea from a South Africa-focused platform to a **pan-African continental energy system modelling and analytics platform** covering all 55 African Union member states. The extension is built on the proven PyPSA-Earth framework, which already provides global coverage with demonstrated application in Africa. The architecture must accommodate the continent's five regional power pools (SAPP, EAPP, WAPP, CAPP, COMELEC), the African Single Electricity Market (AfSEM), and the Continental Power System Master Plan (CMP), while remaining granular enough to support national-level planning for each member state.
 
 The core design principle is **multi-scale modelling**: a single codebase that can solve at continental, power-pool, national, and sub-national resolutions using the same data pipeline and optimisation engine.
 
@@ -325,4 +325,4 @@ The PyPSA-Earth sector-coupled framework has been demonstrated for hydrogen appl
 
 ## 12. Conclusion
 
-This specification defines a pan-African extension of PyPSA-X that leverages the proven PyPSA-Earth framework, existing continental data initiatives, and institutional partnerships with AUDA-NEPAD, IRENA, AfDB, and the five regional power pools. The system is designed to support the African Single Electricity Market, the Continental Power System Master Plan, and national energy planning for all 55 AU member states. By building on open data, open-source software, and transparent methodologies, PyPSA-X can become the reference modelling platform for Africa's energy transition, providing the analytical foundation for a unified, sustainable, and equitable continental energy system.
+This specification defines a pan-African extension of Alea that leverages the proven PyPSA-Earth framework, existing continental data initiatives, and institutional partnerships with AUDA-NEPAD, IRENA, AfDB, and the five regional power pools. The system is designed to support the African Single Electricity Market, the Continental Power System Master Plan, and national energy planning for all 55 AU member states. By building on open data, open-source software, and transparent methodologies, Alea can become the reference modelling platform for Africa's energy transition, providing the analytical foundation for a unified, sustainable, and equitable continental energy system.

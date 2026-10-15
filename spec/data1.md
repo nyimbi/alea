@@ -1,4 +1,4 @@
-# PyPSA-X Pan-African: Comprehensive Data Source Specification
+# Alea: Comprehensive Data Source Specification
 
 ## A Methodical Inventory of All Required Data Inputs for Continental Energy System Modelling
 
@@ -6,7 +6,7 @@
 
 ## 1. Introduction and Methodology
 
-This specification catalogues every data source required to build, calibrate, and operate PyPSA-X Pan-African across all 55 African Union member states, five regional power pools, and the continental interconnection. Sources are organised by functional category, with each entry specifying the source name, custodian, coverage, access method, update frequency, and known limitations. Where PyPSA-Earth already integrates a source, this is noted.
+This specification catalogues every data source required to build, calibrate, and operate Alea across all 55 African Union member states, five regional power pools, and the continental interconnection. Sources are organised by functional category, with each entry specifying the source name, custodian, coverage, access method, update frequency, and known limitations. Where PyPSA-Earth already integrates a source, this is noted.
 
 The inventory follows the data pipeline sequence: (1) grid topology, (2) generation assets, (3) renewable resources, (4) demand, (5) fuel and technology costs, (6) policy and regulatory, (7) market and price, (8) water and hydro, (9) sector coupling, (10) power pool-specific, and (11) continental institutional data.
 
@@ -440,7 +440,7 @@ For North African countries (COMELEC members), transmission data may be suppleme
 **Coverage**: South Africa
 **Access**: Eskom data portal; SAPP reports
 **Content**: Wholesale electricity prices, dispatch data, market clearing prices
-**Use**: Backtesting of PyPSA-X price projections; validation against COMPASS
+**Use**: Backtesting of Alea price projections; validation against COMPASS
 
 ### 8.2 SAPP Database Management System (DMS)
 
@@ -773,7 +773,7 @@ The following countries have been identified as missing from continental dataset
 
 ---
 
-## 15. Summary of Data Source Integration into PyPSA-X
+## 15. Summary of Data Source Integration into Alea
 
 | Data Category | Primary Source(s) | PyPSA-Earth Integration | Additional Sources Required |
 |---------------|-------------------|------------------------|----------------------------|
@@ -791,4 +791,4 @@ The following countries have been identified as missing from continental dataset
 | Power Pools | SAPP, EAPP, WAPP | Partial | CAPP, COMELEC, ICA |
 | Continental | CMP, AfSEM | No | PIDA, AID, Mwanga |
 
-This specification provides the complete data foundation for PyPSA-X Pan-African. Each source has been catalogued with its custodian, coverage, access method, and known limitations, enabling systematic data acquisition, validation, and integration into the continental modelling platform.
+This specification provides the complete data foundation for Alea. Each source has been catalogued with its custodian, coverage, access method, and known limitations, enabling systematic data acquisition, validation, and integration into the continental modelling platform.
