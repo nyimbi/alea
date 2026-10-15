@@ -103,6 +103,17 @@ class LineOutage:
 
 	line: str
 	factor: float = 0.0
+	"""The share of the line's rating that remains: 0.0 out, 1.0 in service.
+
+	A **fraction**, not a percentage. The spec states
+	``line_capacity_factor`` in percent (``docs/what-if-line-loss.md`` §1.1,
+	example ``50``); this field is that number divided by 100, so the same
+	scenario is ``factor=0.5`` here. The conversion is named because a caller
+	carrying the spec's own ``50`` across would be refused by the bound below
+	rather than silently derating the line by a factor of fifty — the refusal
+	is what makes the unit mismatch loud instead of a wrong answer.
+	"""
+
 	start: str | None = None
 	end: str | None = None
 
