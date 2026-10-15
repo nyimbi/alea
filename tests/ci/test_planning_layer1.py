@@ -129,6 +129,38 @@ def _lossy() -> pypsa.Network:
 	return network
 
 
+def _linked(efficiency: float) -> pypsa.Network:
+	"""`_lossy`'s topology with the transfer by **link** instead of line.
+
+	The fixture that makes a link's contribution to the balance observable.
+	`_lossy` transfers by line, so the check's line-only loss sum closed the
+	identity on it and could not see that links were missing. A sector-coupled
+	network — hydrogen, heat, industry — transfers by link, and the same sum
+	left the link's retained energy unaccounted.
+
+	``efficiency`` decides the *sign*, which is why the fixture is
+	parametrised: a link below 1 absorbs the difference (``p0 + p1 > 0``) and a
+	heat-pump link above 1 creates it (``p0 + p1 < 0``). Both must close
+	``generation - load - losses == 0``, so a fix that only handled the lossy
+	case would pass one half and fail the other.
+	"""
+	network = pypsa.Network()
+	network.add("Bus", "north", v_nom=132.0)
+	network.add("Bus", "south", v_nom=132.0)
+	network.add(
+		"Link",
+		"north-south",
+		bus0="north",
+		bus1="south",
+		p_nom=500.0,
+		efficiency=efficiency,
+	)
+	network.add("Generator", "coal", bus="north", carrier="coal", p_nom=500.0, marginal_cost=30.0)
+	network.add("Load", "load", bus="south", p_set=50.0)
+	network.set_snapshots(list(SNAPSHOTS))
+	return network
+
+
 def _solvable() -> pypsa.Network:
 	"""The topology fixture with generation and load per bus, so it balances.
 
@@ -761,6 +793,95 @@ def test_the_energy_balance_subtracts_the_losses():
 		"generation matches the double-counted reading too; the fixture no longer "
 		"separates them"
 	)
+
+
+@pytest.mark.parametrize(
+	("efficiency", "sign"),
+	[(0.9, 1.0), (3.0, -1.0)],
+	ids=["lossy-link", "heat-pump-link"],
+)
+def test_the_energy_balance_counts_links_as_branches(efficiency: float, sign: float):
+	"""A link retains energy like a line, and the sum omitted it.
+
+	The loss term read ``network.lines_t`` only, so on any network that
+	transfers by link the branch's retained energy was unaccounted and a
+	*correct* dispatch was refused. Measured on this fixture before the fix: a
+	0.9 link left an 11.1% residual and a COP-3 link a 200% one. Sector-coupled
+	networks transfer by link, so the check refused most of what this project
+	builds.
+
+	The two halves are the point. A link's ``p0 + p1`` is positive when it
+	absorbs (efficiency < 1) and negative when it creates (efficiency > 1, a
+	heat pump drawing ambient heat), and both close the same identity — so a
+	fix that special-cased the lossy direction would pass the first row and
+	fail the second. ``sign`` asserts the fixture actually takes the branch it
+	is meant to, or the row proves nothing about the direction it names.
+	"""
+	from alea.planning.dispatch import check_energy_balance
+
+	network = _linked(efficiency)
+	status, condition = network.optimize(solver_name="highs", log_to_console=False)
+	assert status == "ok", f"the link fixture did not solve: {status} ({condition})"
+
+	retained = float(network.links_t.p0.to_numpy().sum() + network.links_t.p1.to_numpy().sum())
+	assert retained * sign > 1.0, (
+		f"the fixture retained {retained:.6f} MWh through the link, so it does "
+		f"not exercise the {sign:+.0f} direction this row names"
+	)
+
+	report = check_energy_balance(network)
+	assert report["losses_mwh"] == pytest.approx(retained, rel=1e-9), (
+		"the loss term does not carry the link's retained energy"
+	)
+	assert report["generation_mwh"] == pytest.approx(
+		report["load_mwh"] + report["losses_mwh"], rel=1e-9
+	)
+
+
+def test_a_solved_result_carries_the_energy_balance_residual():
+	"""`extract` records the residual, because it is the last place with the network.
+
+	`check_energy_balance` was written, tested, and called by nothing in
+	``src/`` — so every ``ScenarioResult`` in the tree asserted a balance no
+	production path had checked. A `ScenarioResult` holds no network (it has to
+	be serialisable into a content-addressed cache entry), so the residual can
+	only be measured at extraction, where the network still exists.
+
+	The residual on a *correct* solve is zero — that is the whole point of the
+	fix above, and a test asserting non-zero on a balanced network would be
+	asserting the bug. So the fixture is deliberately made unbalanced the way
+	the check's own docstring names: generation appearing in the dispatch table
+	that no component accounts for. That is the defect the check exists to
+	catch, and it is the only way to show the field carries a real measurement
+	rather than a constant.
+	"""
+	from alea.planning.dispatch import balance_measurement
+	from alea.whatif.extract import extract
+	from alea.whatif.params import ScenarioParameters
+
+	network = _linked(0.9)
+	status, condition = network.optimize(solver_name="highs", log_to_console=False)
+	assert status == "ok", f"the link fixture did not solve: {status} ({condition})"
+	assert balance_measurement(network)["error_mwh"] == pytest.approx(0.0, abs=1e-6), (
+		"the fixture does not balance, so it cannot show the field is measured"
+	)
+
+	# Phantom generation: 7 MWh in the dispatch table that no component owns.
+	network.generators_t.p.iloc[0, 0] += 7.0
+	measured = balance_measurement(network)["error_mwh"]
+	assert measured == pytest.approx(7.0, abs=1e-6), (
+		f"the fixture's residual is {measured:.6f} MWh, so a result that recorded "
+		"zero would pass; the fixture cannot discriminate"
+	)
+
+	result = extract(
+		network,
+		ScenarioParameters(),
+		network_checksum="0" * 64,
+		code_version="test",
+	)
+	assert result.energy_balance_error_mwh == pytest.approx(measured, rel=1e-9)
+	assert result.energy_balance_error_mwh != 0.0, "the residual was dropped"
 
 
 def test_freezing_away_all_the_capacity_is_refused():

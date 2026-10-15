@@ -37,6 +37,7 @@ from alea.planning.demand import (
 from alea.planning.dispatch import (
 	DispatchError,
 	DispatchResult,
+	balance_measurement,
 	check_energy_balance,
 	curtailment_mwh,
 	generation_by_carrier,
@@ -126,6 +127,7 @@ __all__ = [
 	"capacity_mix",
 	"capacity_mix_table",
 	"check_carriers",
+	"balance_measurement",
 	"check_energy_balance",
 	"check_no_free_capacity",
 	"check_solver_available",

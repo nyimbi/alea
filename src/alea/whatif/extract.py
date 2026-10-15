@@ -52,6 +52,28 @@ def extract(
 	generation = _generation_mwh(network)
 	unserved = _unserved_energy_mwh(network, generation)
 	mean_price, volatility = price_statistics(network)
+	# Measured here because this is where the network is still in hand: a
+	# `ScenarioResult` holds no network, so a result that did not record the
+	# residual at extraction could never recover it. `balance_measurement`
+	# rather than `check_energy_balance` on purpose -- a result records what the
+	# solve did, and refusing here would fail a solve that already succeeded.
+	# The refusal belongs at solve time, and `solve_dispatch` owns it.
+	#
+	# Guarded on dispatch because `extract` accepts an *unsolved* network: it
+	# reports `None` prices for one, and a `None` residual is the same
+	# distinction. `balance_measurement` raises on an unsolved network, and
+	# letting that escape would turn a legal extraction into an error -- which
+	# is what the first version of this did, and it failed ten tests that
+	# extract an unsolved fixture.
+	#
+	# Imported here rather than at module scope: `alea.planning` imports
+	# `alea.config.models`, which imports `alea.whatif.views`, which imports this
+	# module -- so a top-level import closes a cycle and `alea.config` fails to
+	# load at all. The cycle is real and pre-existing; this is the edge that
+	# would complete it.
+	from alea.planning.dispatch import balance_measurement, has_dispatch
+
+	balance = balance_measurement(network) if has_dispatch(network) else None
 
 	basis = basis_uncertainty[0] if basis_uncertainty else _default_basis()
 	uncertainty = basis_uncertainty[1] if basis_uncertainty else 0.0
@@ -68,6 +90,7 @@ def extract(
 		renewable_share=renewable_share(generation),
 		unserved_energy_mwh=unserved,
 		curtailment_mwh=_curtailment_mwh(network),
+		energy_balance_error_mwh=balance["error_mwh"] if balance is not None else None,
 		price_mean_usd_per_mwh=mean_price,
 		price_volatility_usd_per_mwh=volatility,
 		risk=risk,

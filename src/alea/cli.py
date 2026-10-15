@@ -909,6 +909,20 @@ def whatif_scenario(
 				f"graph's standard {reliability['declared_fraction']:.6g} "
 				f"(ratio {reliability['ratio']:.4g})"
 			)
+		# The balance residual, printed on the same reasoning as the two above:
+		# `check_energy_balance` existed, was tested, and no production path
+		# called it, so a solve reported a cost with no sign that its dispatch
+		# closed. A non-zero residual here is the phantom-generation defect --
+		# generation in the dispatch table no component accounts for -- and it
+		# is worth saying out loud rather than leaving on the result.
+		balance = solved.result.energy_balance_error_mwh
+		if balance is not None and balance != 0.0:
+			typer.secho(
+				f"energy balance off by {balance:,.1f} MWh; a load or generator "
+				f"is in the dispatch table but not in the model",
+				fg=typer.colors.YELLOW,
+				err=True,
+			)
 		if solved.dropped:
 			typer.secho(
 				f"dropped: {', '.join(solved.dropped)}",
@@ -1838,6 +1852,18 @@ def prg_audit(
 			f"unserved {reliability['realised_fraction']:.6g} of demand against the "
 			f"graph's standard {reliability['declared_fraction']:.6g} "
 			f"(ratio {reliability['ratio']:.4g})"
+		)
+		# The residual travels on the stored result, so a scenario audited long
+		# after its solve still reports whether its dispatch closed. Zero is the
+		# expected value and is printed as such: silence here would be
+		# indistinguishable from a result written before the field existed. A
+		# result with no dispatch carries `None`, which is not zero -- it says
+		# the balance was never measured, and printing 0.0 would be a claim.
+		balance = record.result.energy_balance_error_mwh
+		typer.echo(
+			"energy balance not measured (the scenario carries no dispatch)"
+			if balance is None
+			else f"energy balance {balance:,.1f} MWh off zero"
 		)
 		if not audit.consistent:
 			raise typer.Exit(code=1)

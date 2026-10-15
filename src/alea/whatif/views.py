@@ -190,6 +190,29 @@ class ScenarioResult(BaseModel):
 
 	unserved_energy_mwh: float = Field(default=0.0, ge=0.0)
 	curtailment_mwh: float = Field(default=0.0, ge=0.0)
+	energy_balance_error_mwh: float | None = None
+	"""Generation minus load minus branch retention. Zero on a balanced solve.
+
+	``None`` when there was no dispatch to measure — the same distinction
+	``price_mean_usd_per_mwh`` draws, and for the same reason: ``0.0`` is a
+	*claim* that the balance was checked and closed, and an unsolved network
+	makes no such claim. An unsolved ``ScenarioResult`` is a legal object here
+	(``extract`` reports ``None`` prices for one), so the field has to be able
+	to say "not measured" rather than defaulting to a passing value.
+
+	Carried rather than only *checked*, because a check with no caller measured
+	nothing: `check_energy_balance` existed, was tested, and was reached by no
+	production path, so every result claimed a balance no one had verified. The
+	solve still refuses a residual over the tolerance — that is what
+	`check_energy_balance` does at solve time — and this records the number on
+	the result so a report can show how close the solve came rather than
+	say nothing because it happened to clear the bar.
+
+	Signed, and not an absolute value: a negative residual is energy created (a
+	heat-pump link, or a bus the model double-counts), which is as much a
+	finding as a positive one.
+	"""
+
 	price_mean_usd_per_mwh: float | None = None
 	price_volatility_usd_per_mwh: float | None = None
 	risk: RiskMetrics | None = None

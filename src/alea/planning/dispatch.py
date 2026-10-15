@@ -213,20 +213,19 @@ def solve_dispatch(
 	return result
 
 
-def check_energy_balance(
-	network: pypsa.Network,
-	*,
-	tolerance_share: float = 1e-4,
-) -> dict[str, float]:
-	"""Verify generation minus load minus losses is zero, per snapshot.
+def balance_measurement(network: pypsa.Network) -> dict[str, float]:
+	"""Measure the energy balance without refusing anything.
+
+	Split out from :func:`check_energy_balance` so the residual can be *carried*
+	on a solved result as well as *refused* at solve time. The two callers want
+	different things from the same arithmetic: a solve that fails the balance is
+	a bug and must stop, while a report should record how far off it was rather
+	than say nothing because the number happened not to clear a threshold. A
+	check with no caller measured nothing, which is why this exists.
 
 	A dispatch that does not balance means a load was attached to a bus the
 	model does not contain, or a generator was added outside the network's
 	component tables. Both produce an objective that looks fine.
-
-	The tolerance is a share of load, not an absolute MWh: a continental network
-	carries terawatt-hours and an absolute tolerance that suits Kenya is a
-	division by zero for a small country.
 	"""
 	assert network is not None, "network must not be None"
 	if not has_dispatch(network):
@@ -245,8 +244,8 @@ def check_energy_balance(
 		weights = network.snapshot_weightings.get("objective")
 		static = float(network.loads["p_set"].astype(float).sum())
 		load = static * float(weights.sum()) if weights is not None else static * len(network.snapshots)
-	# Line flow into a branch is *consumed* by it, so ``p0 + p1`` is the energy
-	# the lines absorbed, not the energy they delivered. It is a positive
+	# Branch flow into a branch is *consumed* by it, so ``p0 + p1`` is the energy
+	# the branch absorbed, not the energy it delivered. It is a positive
 	# quantity that must be **subtracted** to close the balance:
 	# ``generation - load - losses == 0``. Measured on a two-bus network with
 	# losses on, ``p0 + p1`` equals ``buses_t.p.sum()`` to 1e-9, which is the
@@ -259,22 +258,29 @@ def check_energy_balance(
 	# freezes a solve's capacity and re-optimises, and every network the CLI
 	# builds carries losses, so the check refused exactly the dispatches it
 	# existed to verify.
+	#
+	# **Links carry the same sign, and the first version of this sum omitted
+	# them.** A link is a branch like a line and its two flows sum to what the
+	# branch retained, with the sign following the efficiency: a 0.9 link
+	# returns ``p0 + p1 > 0`` (it absorbed the difference) and a heat-pump link
+	# with efficiency 3 returns ``p0 + p1 < 0`` (it created it). Both close the
+	# same identity, so the term is one sum over both branch tables rather than
+	# a line-only special case. Measured on a two-bus network transferring by
+	# link: line-only left an 11.1% residual on a lossy link and 200% on a
+	# COP-3 one, every one of them a *correct* dispatch refused. Sector-coupled
+	# networks -- hydrogen, heat, industry -- transfer by link, which is to say
+	# the check refused the majority of what this project builds.
 	losses = 0.0
-	if not network.lines_t.p0.empty:
-		losses = float(network.lines_t.p0.to_numpy().sum() + network.lines_t.p1.to_numpy().sum())
+	for branch in (network.lines_t, network.links_t):
+		p0, p1 = branch.get("p0"), branch.get("p1")
+		if p0 is None or p1 is None or p0.empty:
+			continue
+		losses += float(p0.to_numpy().sum() + p1.to_numpy().sum())
 	unserved = float(network.generators_t.p.filter(like="load_shedding").to_numpy().sum()) if any(
 		"load_shedding" in str(c) for c in network.generators_t.p.columns
 	) else 0.0
 
 	error = generation - load - losses
-	scale = max(load, 1.0)
-	if abs(error) / scale > tolerance_share:
-		raise DispatchError(
-			f"energy balance fails by {error:,.1f} MWh over {load:,.1f} MWh of "
-			f"load ({100.0 * error / scale:.4f}%); a load is attached to a bus "
-			f"the network does not contain"
-		)
-
 	curtailment = curtailment_mwh(network)
 	available = generation + curtailment
 	return {
@@ -287,6 +293,32 @@ def check_energy_balance(
 		"peak_mw": float(network.generators_t.p.to_numpy().sum(axis=1).max()) if has_dispatch(network) else 0.0,
 		"unserved_mwh": unserved,
 	}
+
+
+def check_energy_balance(
+	network: pypsa.Network,
+	*,
+	tolerance_share: float = 1e-4,
+) -> dict[str, float]:
+	"""Verify generation minus load minus losses is zero, per snapshot.
+
+	The refusal half of :func:`balance_measurement`: same arithmetic, and it
+	raises rather than returning when the residual exceeds the tolerance.
+
+	The tolerance is a share of load, not an absolute MWh: a continental network
+	carries terawatt-hours and an absolute tolerance that suits Kenya is a
+	division by zero for a small country.
+	"""
+	report = balance_measurement(network)
+	error = report["error_mwh"]
+	scale = max(report["load_mwh"], 1.0)
+	if abs(error) / scale > tolerance_share:
+		raise DispatchError(
+			f"energy balance fails by {error:,.1f} MWh over {report['load_mwh']:,.1f} MWh of "
+			f"load ({100.0 * error / scale:.4f}%); a load is attached to a bus "
+			f"the network does not contain"
+		)
+	return report
 
 
 def curtailment_mwh(network: pypsa.Network) -> float:
