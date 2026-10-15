@@ -297,6 +297,28 @@ class Equation(BaseModel):
 	determined_variables: tuple[str, ...] = ()
 
 	tolerance: float = 1e-6
+	unit_check: bool = True
+	"""Whether the dimensional check should decide this equation.
+
+	The spec's §12 declares this field, and until 2026-10-16 the model did not
+	carry it -- so a document written to the spec's own example, which includes
+	``unit_check: true``, was **refused** at load with
+	``extra_forbidden``. That is a worse failure than a missing feature: the
+	spec's YAML is not a document this service accepts.
+
+	``False`` is the only interesting value, and it is a *statement about the
+	check* rather than about the equation: it says the dimensional walk cannot
+	decide this relation and the undecidable verdict is expected. It does not
+	make a failing equation pass -- ``check_equation`` still runs and still
+	reports -- it moves the equation out of the "could not be decided" count
+	into a declared exemption, so a reader can tell an equation nobody has
+	annotated from one whose dimensions are known not to be checkable.
+
+	It is read by :func:`alea.prg.units.check_graph`, and the register it feeds
+	(``exempt``) is asserted live in ``test_prg.py`` so a rename cannot make an
+	exemption absorb a newly-undecidable equation.
+	"""
+
 	reference: str | None = None
 	priority: Priority = Priority.P1
 

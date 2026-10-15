@@ -23,7 +23,7 @@ the code and `config/prg.yaml` are the authority, and this says where to look.
 | Sensitivity | `src/alea/prg/sensitivity.py` | Exact forward-mode derivatives over the topological order; the implicit function theorem for loop variables; elasticity |
 | Incremental propagation | `src/alea/prg/graph.py` | `propagate_incremental`: the closure of what changed, 9x a full walk, skipping a feedback loop nothing reached |
 | Uncertainty | `src/alea/prg/uncertainty.py` | The declared stochastic inputs, the closure over `affects`, and the reach into derived parameters |
-| Units | `src/alea/prg/units.py` | The dimensional check the spec asks for: each equation's two sides against a Pint registry of the graph's vocabulary |
+| Units | `src/alea/prg/units.py` | The dimensional check the spec asks for: each equation's two sides against a Pint registry of the graph's vocabulary, with §12's per-equation `unit_check` read into an `exempt` register — a declaration that the walk cannot decide a relation, kept apart from an equation nobody has annotated |
 | Conflict detection | `src/alea/prg/conflicts.py` | The four kinds (direct, over-determined, under-determined, loop, out-of-range), ranked, with corrections |
 | Cross-validation | `src/alea/prg/crossval.py` | §25's multi-parameter rules: a parsed condition, three severities, and the register of rules that could not be evaluated |
 | Edge strength | `src/alea/prg/graph.py` | The declared `hard`/`soft`/`informational` tier, read by `consistency`, `conflicts`, the audit and the CLI gate |
@@ -1066,3 +1066,34 @@ The tolerance values are also not configurable from the document in the way
 (verified: no occurrence anywhere under `src/alea/prg/`), and a document
 carrying one would be accepted and ignored. Per-equation `tolerance` on the
 equation is the supported spelling, and it is what all 39 use.
+
+**§12's `unit_check` is carried and read, and a document written to the spec's
+own example now loads.** The spec declares `unit_check: bool = True` on every
+equation and shows it in §12's YAML, and the model did not carry it. Because
+`Equation` sets `extra="forbid"`, a document written to the spec's example was
+**refused** at load with `extra_forbidden` — so this was not a missing feature
+but a document the service would not accept, which is the stronger defect and
+the reason it was fixed rather than recorded.
+
+All three halves are wired. The field loads; it defaults to `True`, so no
+equation's meaning changed; and `False` is **read** — `check_graph` puts the
+equation's id in `UnitReport.exempt`, and `undecidable` excludes it. The three
+are separate on purpose. An exemption is a declaration that the walk cannot
+decide this relation, which is a different finding from "nobody has annotated
+this", and folding the two would let a flag absorb a newly-undecidable
+equation. It is also not a *skip*: every equation is still walked and still
+reported, so an equation that later became decidable cannot hide behind a flag
+nobody revisited. The count is announced rather than silently shrinking — the
+summary says "N are exempt by declaration", and `UnitReportOut.exempt` carries
+the list so a client that saw `undecidable` fall has the payload explaining it.
+
+The shipped graph declares no exemption (`exempt == ()`, and the test asserts
+it), which is the honest state: the walk decides all 39 equations and reports
+8 inconsistent. The eight are *findings*, not undecidable relations, and marking
+them exempt would be the flag used to hide what the check exists to say.
+
+`alea prg units` prints exemptions dim and does not fail on them — the gate
+still exits 1 on `inconsistent` only. Canaried by removing the field from the
+model, which reproduced the exact `extra_forbidden` refusal the test documents,
+and the guard was re-run by exact node id rather than through `-k`, for the
+reason recorded above it.

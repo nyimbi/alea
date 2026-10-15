@@ -217,6 +217,7 @@ def _summary_out(graph: Any) -> PrgSummaryOut:
 			consistent=[_check_out(c) for c in units.consistent],
 			inconsistent=[_check_out(c) for c in units.inconsistent],
 			undecidable=[_check_out(c) for c in units.undecidable],
+			exempt=list(units.exempt),
 			summary=units.summary(),
 		),
 		uncertainty=UncertaintyOut(

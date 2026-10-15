@@ -42,6 +42,7 @@ from alea.prg.library import SYSTEM_IDS, coverage, systems_of
 from alea.prg.sensitivity import elasticity, gradients, sensitivity
 from alea.prg.service import check_scenario, describe, graph_summary, propagate_change
 from alea.prg.uncertainty import register
+from alea.prg.views import Equation
 
 PRG_PATH = repo_root() / "config" / "prg.yaml"
 
@@ -3307,3 +3308,61 @@ def test_a_citation_reaches_the_api_and_the_cli(graph: ParameterGraph):
 	ppaless = runner.invoke(app, ["prg", "equations", "--system", "employment"])
 	assert ppaless.exit_code == 0, ppaless.output
 	assert "ref:" not in ppaless.output, ppaless.output
+
+
+def test_the_specs_unit_check_field_loads_and_is_read(graph: ParameterGraph):
+	"""§12 declares `unit_check`; until 2026-10-16 the model did not carry it.
+
+	A document written to the spec's own §12 example -- which includes
+	`unit_check: true` -- was **refused** at load with `extra_forbidden`,
+	because `Equation` sets `extra="forbid"`. That is a worse failure than a
+	missing field: the spec's YAML is not a document this service accepts.
+
+	All three halves are asserted, because any one alone would pass against a
+	broken implementation: the spec's example loads, the default is `True` so
+	no existing equation changes meaning, and a `False` is *read* rather than
+	merely accepted.
+	"""
+	from alea.prg.units import check_graph
+
+	# The spec's §12 example, verbatim in the fields that matter.
+	spec_example = Equation(
+		id="total_cost",
+		name="Total system cost",
+		system="cost_accounting",
+		lhs="total_cost_usd",
+		rhs="capex_usd + opex_usd",
+		tolerance=1e-6,
+		unit_check=True,
+		reference="PyPSA objective function",
+		priority="P1",
+		solution_method="numeric",
+		linearity="linear",
+	)
+	assert spec_example.unit_check is True
+	# The default, so a document that omits the key behaves as before.
+	assert Equation(id="x", name="X", system="s", lhs="a", rhs="b").unit_check is True
+
+	# And it is read. `False` reclassifies the verdict; it does not skip the
+	# walk, so the equation is still checked and still reported.
+	report = check_graph(graph)
+	assert report.exempt == (), (
+		f"the shipped graph declares no exemption, so `exempt` must be empty; "
+		f"it holds {report.exempt}"
+	)
+	assert len(report.checks) == len(graph.equations), (
+		"an exempt equation must still be checked -- skipping it would hide an "
+		"equation that later became decidable"
+	)
+
+	target = "energy_balance"
+	patched = dict(graph.equations)
+	patched[target] = patched[target].model_copy(update={"unit_check": False})
+	exempted = ParameterGraph(graph.nodes, patched, graph.edges, rules=graph.rules)
+	after = check_graph(exempted)
+	assert after.exempt == (target,), after.exempt
+	# The check still ran: the exempt equation is in `checks` as before.
+	assert len(after.checks) == len(graph.equations)
+	# And the exemption is announced rather than silently shrinking a count.
+	assert "exempt by declaration" in after.summary(), after.summary()
+	assert "1 is exempt" in after.summary(), after.summary()

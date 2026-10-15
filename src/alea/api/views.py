@@ -1069,11 +1069,20 @@ class EngineTranslationOut(ApiModel):
 
 
 class UnitReportOut(ApiModel):
-	"""The dimensional check: which equations are consistent, which are not."""
+	"""The dimensional check: which equations are consistent, which are not.
+
+	``exempt`` names the equations whose own ``unit_check`` is ``False``. It is
+	carried because ``undecidable`` excludes them: without this list a client
+	would see the undecidable count fall when an exemption was declared and have
+	nothing in the payload explaining where those equations went. An exemption
+	is a declaration, not a pass, and the two lists together are what lets a
+	reader tell "nobody has annotated this" from "this is declared undecidable".
+	"""
 
 	consistent: list[EquationCheckOut]
 	inconsistent: list[EquationCheckOut]
 	undecidable: list[EquationCheckOut]
+	exempt: list[str] = []
 	summary: str
 
 

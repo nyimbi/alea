@@ -1868,6 +1868,17 @@ def prg_units() -> None:
 			typer.secho(check.summary(), fg=typer.colors.RED, err=True)
 		for check in report.undecidable:
 			typer.secho(check.summary(), fg=typer.colors.YELLOW, err=True)
+		# Exemptions are printed dim and do not fail the gate: `unit_check:
+		# False` is the document saying the walk cannot decide this relation,
+		# which is a declaration rather than a finding. Printing them keeps the
+		# three-way split visible, so an equation that is undecidable and one
+		# that is exempt are not read as the same thing.
+		for equation_id in report.exempt:
+			typer.secho(
+				f"{equation_id}: exempt (declared unit_check: false)",
+				fg=typer.colors.BRIGHT_BLACK,
+				err=True,
+			)
 		typer.echo(report.summary())
 		if report.inconsistent:
 			raise typer.Exit(code=1)

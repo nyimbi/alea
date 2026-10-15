@@ -310,6 +310,17 @@ class UnitReport:
 
 	checks: tuple[EquationCheck, ...]
 
+	exempt: tuple[str, ...] = ()
+	"""Equations whose ``unit_check`` is ``False``, by id.
+
+	An exemption is not a pass and is not counted as one. It says the walk's
+	verdict on this equation is known and not actionable -- the equation is
+	declared undecidable by whoever wrote it -- so a reader can tell it apart
+	from an equation nobody has looked at. The two are different findings and
+	the summary keeps them apart, which is the whole reason the field is a
+	separate tuple rather than a filter applied to ``checks``.
+	"""
+
 	@property
 	def consistent(self) -> tuple[EquationCheck, ...]:
 		return tuple(c for c in self.checks if c.decidable and c.consistent)
@@ -320,23 +331,43 @@ class UnitReport:
 
 	@property
 	def undecidable(self) -> tuple[EquationCheck, ...]:
-		return tuple(c for c in self.checks if not c.decidable)
+		"""Equations the walk could not decide, excluding declared exemptions."""
+		return tuple(
+			c for c in self.checks if not c.decidable and c.equation_id not in self.exempt
+		)
 
 	def summary(self) -> str:
+		exempt = (
+			f"; {len(self.exempt)} "
+			f"{'is' if len(self.exempt) == 1 else 'are'} exempt by declaration"
+			if self.exempt
+			else ""
+		)
 		return (
 			f"{len(self.consistent)} of {len(self.checks)} equations are "
 			f"dimensionally consistent; {len(self.inconsistent)} are not, and "
 			f"{len(self.undecidable)} could not be decided from the recorded "
-			f"units. An undecidable equation is not a pass."
+			f"units{exempt}. An undecidable equation is not a pass."
 		)
 
 
 def check_graph(graph: ParameterGraph) -> UnitReport:
-	"""Check every equation in the graph."""
+	"""Check every equation in the graph.
+
+	Every equation is checked, including an exempt one: ``unit_check: False``
+	does not skip the walk, it reclassifies the verdict. Skipping would mean an
+	equation that later *became* decidable -- a unit added to its vocabulary --
+	stayed unreported behind a flag nobody revisited.
+	"""
 	assert graph is not None, "check_graph called with no graph"
 	return UnitReport(
 		checks=tuple(
 			check_equation(equation, graph)
 			for equation in graph.equations.values()
-		)
+		),
+		exempt=tuple(
+			equation.id
+			for equation in graph.equations.values()
+			if not equation.unit_check
+		),
 	)
