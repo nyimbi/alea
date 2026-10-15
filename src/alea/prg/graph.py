@@ -25,6 +25,7 @@ from collections import defaultdict, deque
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
+import math
 from pathlib import Path
 from typing import Any
 
@@ -36,7 +37,15 @@ from alea.prg.crossval import (
 	CrossValidationRule,
 	rules_from_document,
 )
-from alea.prg.dsl import DslError, Expr, evaluate, parse, solve_for
+from alea.prg.dsl import (
+	DslError,
+	Expr,
+	evaluate,
+	linearity_in,
+	parse,
+	solve_affine,
+	solve_for,
+)
 from alea.prg.feedback import solve_loop
 from alea.prg.views import (
 	Direction,
@@ -241,6 +250,16 @@ class ParameterGraph:
 		#: exists to avoid rather than to commit.
 		self._range_excursions: dict[str, float] = {}
 
+		#: Per parameter, whether the last solve for it was the exact affine
+		#: path or the numeric search. This is the register the model's
+		#: ``linearity`` field was meant to be and could not: it is measured
+		#: from the formula at the moment of the solve rather than declared
+		#: alongside it, so it cannot drift from the arithmetic. A parameter
+		#: appearing here as numeric is one whose equation is genuinely not
+		#: affine in it -- the case that needs a bracket, a bracket that can
+		#: miss, and a widened search that can land on a second root.
+		self._solve_paths: dict[str, bool] = {}
+
 		#: Memoised per-instance results. Declared here rather than via
 		#: ``lru_cache`` on the methods, which would key the cache on ``self`` in
 		#: a class-level table and keep every graph alive.
@@ -384,6 +403,38 @@ class ParameterGraph:
 			strength = self.strength_of(equation.id)
 			counts[strength] = counts.get(strength, 0) + 1
 		return dict(sorted(counts.items()))
+
+	def linearity(self) -> dict[str, str]:
+		"""Per determined variable, whether its equation is affine in it.
+
+		Computed from the formulas, not read from the document. The model's
+		``linearity`` field is declared per *equation* and no reading of the
+		arithmetic reproduced the shipped column: classifying by the variable
+		solved for, by any parameter's entry, by the worst entry, and by
+		whether every parameter enters affinely gave four different sets of
+		eight disagreements, disjoint from one another. A field no definition
+		agrees with is not a hard classification, it is a hand-entered one.
+
+		The question with an answer is per variable -- an equation is affine in
+		the variable it solves for, or it is not, and that is what decides
+		whether the solve is arithmetic or a bracketed search. So the register
+		is keyed by variable.
+
+		This is the *static* counterpart to :meth:`solve_paths`, which records
+		what a particular propagation actually did. The two can disagree for a
+		loop variable, whose equation is affine in it while the solve goes
+		through the relaxation in ``feedback.solve_loop`` rather than
+		:meth:`_derive`; the static answer is what the arithmetic says, and the
+		recorded one is what ran.
+		"""
+		out: dict[str, str] = {}
+		for equation in self._equations.values():
+			if not equation.determined_variables:
+				continue
+			residual = parse(f"({equation.lhs}) - ({equation.rhs})")
+			for variable in equation.determined_variables:
+				out[variable] = linearity_in(residual, variable)
+		return dict(sorted(out.items()))
 
 	def node(self, parameter: str) -> ParameterNode:
 		try:
@@ -846,6 +897,7 @@ class ParameterGraph:
 					f"hold is a caller editing a different graph"
 				)
 		self._range_excursions.clear()
+		self._solve_paths.clear()
 		scoped: dict[str, float] = {k: float(v) for k, v in values.items()}
 		missing = set(self._nodes) - scoped.keys()
 		# An endogenous parameter is not *missing* when a caller omits it: no
@@ -955,6 +1007,7 @@ class ParameterGraph:
 				f"are not parameters"
 			)
 		self._range_excursions.clear()
+		self._solve_paths.clear()
 		# The previous result carries every derived value, and the caller's
 		# `values` need only name what it set -- the same sparse contract
 		# `propagate` accepts. Seeding from `previous` first is what lets an
@@ -1082,6 +1135,30 @@ class ParameterGraph:
 				f"{parameter} is derived but declares no range, so the solver "
 				f"has no bracket; declare the physical range on the node"
 			)
+		exact = self._solve_affine(residual, parameter, values)
+		if exact is not None:
+			# An affine residual has one root and it is arithmetic, so there is
+			# no bracket to miss and no second root to land on. Every equation
+			# in the shipped library is affine in the variable it solves for --
+			# checked, not assumed -- which makes this the path every
+			# propagation actually takes and the numeric search the fallback.
+			#
+			# This is also what the model's ``linearity`` field was for and
+			# could not deliver: it was a hand-entered label on the equation,
+			# four defensible readings of the formulas disagreed with it on
+			# four disjoint sets of eight, and nothing read it. The fact that
+			# decides the solve is per *variable*, and it is computed here.
+			self._note_linearity(parameter, exact_affine=True)
+			# An answer outside the declared range is a finding whether or not
+			# a bracket was searched to find it. The register used to be
+			# written only by `_widen`, which made "left its range" and "the
+			# numeric search had to leave the bracket to find it" the same
+			# fact -- two things that coincide only while every solve is
+			# numeric. Comparing the answer against the range here is what
+			# keeps the finding when the solve stops needing a bracket.
+			self._note_excursion(parameter, exact, node.range)
+			return exact
+		self._note_linearity(parameter, exact_affine=False)
 		try:
 			return solve_for(residual, parameter, values, bracket=node.range)
 		except DslError as first:
@@ -1103,6 +1180,53 @@ class ParameterGraph:
 			self._range_excursions[parameter] = widened
 			return widened
 
+	def _solve_affine(
+		self, residual: Expr, parameter: str, values: Mapping[str, float]
+	) -> float | None:
+		"""The root of an affine residual, or ``None`` if it is not affine.
+
+		For ``a * p + b == 0`` the root is ``-b / a``, and there is exactly one
+		of it. That matters beyond speed: :func:`solve_for` needs a bracket, a
+		bracket can fail to contain the root, and the widening search that
+		recovers from that can land on a *second* root when the residual is
+		non-monotonic -- which is why ``_widen`` carries a caveat about
+		learning curves. An affine residual has no second root to land on.
+
+		Delegates to :func:`alea.prg.dsl.solve_affine` so the loop solver in
+		``alea.prg.feedback`` takes the identical path rather than a second
+		implementation of it.
+		"""
+		return solve_affine(residual, parameter, values)
+
+	def _note_linearity(self, parameter: str, *, exact_affine: bool) -> None:
+		"""Record which solve path fixed ``parameter``."""
+		self._solve_paths[parameter] = exact_affine
+
+	def _note_excursion(
+		self, parameter: str, value: float, admissible: tuple[float, float]
+	) -> None:
+		"""Record ``value`` if it falls outside the parameter's declared range.
+
+		The finding is "the equation's answer is outside the set the parameter
+		is admissible over", and it is a property of the *answer*. It used to be
+		recorded only where the numeric search had to widen its bracket to find
+		one, which is a different fact that happens to imply this one: a root
+		outside the range is necessarily outside a bracket that starts as the
+		range. That implication runs one way, so recording the excursion at the
+		widening meant an exact solve -- which never has a bracket to widen --
+		reported nothing, and a scenario that fixed an inadmissible value went
+		silent the moment the solve got better.
+
+		A non-finite value is not an excursion and is not recorded as one: it is
+		a failed solve, and reporting it here would file an arithmetic fault
+		under a scenario finding.
+		"""
+		low, high = admissible
+		if not math.isfinite(value):
+			return
+		if value < low or value > high:
+			self._range_excursions[parameter] = value
+
 	# -- consistency ----------------------------------------------------
 
 	def range_excursions(self) -> dict[str, float]:
@@ -1114,6 +1238,32 @@ class ParameterGraph:
 		about the scenario.
 		"""
 		return dict(self._range_excursions)
+
+	def solve_paths(self) -> dict[str, str]:
+		"""Which solve fixed each derived parameter in the last propagation.
+
+		``"affine"`` when the residual was linear in the parameter and the root
+		was arithmetic; ``"numeric"`` when it was not and the bracket search
+		ran. Read after a propagation.
+
+		This is the *measured* replacement for the model's declared
+		``linearity`` field. That field could not be reconciled with the
+		formulas under any of four readings, was read by no code, and had
+		already drifted from the document it was copied from. This register
+		cannot drift: it is written by the branch that took the solve, so a
+		parameter reported ``affine`` is one whose root was ``-b / a``.
+
+		A ``"numeric"`` entry is the finding worth acting on. It is the only
+		case where the answer came from a bracket that could have missed, and
+		the shipped library has none -- every equation in it is affine in the
+		variable it solves for. The register exists so that the first equation
+		that is not says so at the solve, rather than sitting behind a
+		hand-entered label a reader has to trust.
+		"""
+		return {
+			parameter: ("affine" if exact else "numeric")
+			for parameter, exact in sorted(self._solve_paths.items())
+		}
 
 	def consistency(
 		self, values: Mapping[str, float], *, only: str | None = None

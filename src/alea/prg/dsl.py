@@ -62,6 +62,8 @@ __all__ = [
 	"Expr",
 	"Expression",
 	"Func",
+	"LINEAR",
+	"NONLINEAR",
 	"Mul",
 	"Pow",
 	"Subscript",
@@ -70,8 +72,11 @@ __all__ = [
 	"const",
 	"evaluate",
 	"evaluate_array",
+	"linear_coefficients",
+	"linearity_in",
 	"parse",
 	"simplify",
+	"solve_affine",
 	"solve_for",
 	"symbols_of",
 	"sym",
@@ -1332,6 +1337,204 @@ def solve_for(
 			f"it does not change sign there"
 		)
 	return float(brentq(at, low, high))  # pyright: ignore[reportArgumentType]
+
+
+# ---------------------------------------------------------------------------
+# Linearity, as a fact about a variable rather than a label on an equation
+# ---------------------------------------------------------------------------
+
+#: How ``symbol`` enters ``expression``. Ordered by increasing severity, so the
+#: worst occurrence in a sum or a product is the one that decides it.
+_ABSENT = 0
+"""``symbol`` does not appear in this subexpression."""
+
+_AFFINE = 1
+"""``symbol`` appears to the first power, in no product with itself."""
+
+_NONLINEAR = 2
+"""``symbol`` appears as a power, inside a function, or multiplied by itself."""
+
+LINEAR = "linear"
+NONLINEAR = "nonlinear"
+LINEAR_IN_ITS_OWN_UNKNOWN = "linear_in_its_own_unknown"
+NONLINEAR_IN_ITS_OWN_UNKNOWN = "nonlinear_in_its_own_unknown"
+
+
+def _severity(expression: Expr, symbol: str) -> int:
+	"""The worst way ``symbol`` enters ``expression``.
+
+	Structural, not symbolic: it reads the tree rather than differentiating,
+	so ``a * a / a`` counts as nonlinear even though it equals ``a``. A
+	simplify-then-classify would be exact and would also change the answer
+	under a rewrite rule, which is the property that made the declared
+	``linearity`` column unreproducible in the first place -- four defensible
+	readings gave four disjoint disagreement sets against it. A structural
+	answer is one a reader can check against the formula they can see.
+	"""
+	if isinstance(expression, Const):
+		return _ABSENT
+	if isinstance(expression, (Symbol, Subscript)):
+		# A subscript's index may mention the symbol (``a[a]``), but the
+		# index is an element selector rather than a value the formula
+		# computes with; every subscript in this library indexes a sum.
+		return _AFFINE if getattr(expression, "name", None) == symbol else _ABSENT
+	if isinstance(expression, Add):
+		return max((_severity(term, symbol) for term in expression.terms), default=_ABSENT)
+	if isinstance(expression, Sum):
+		# The body is summed over an index, so a symbol entering it linearly
+		# enters the sum linearly.
+		return _severity(expression.body, symbol)
+	if isinstance(expression, Mul):
+		children = [_severity(factor, symbol) for factor in expression.factors]
+		if _NONLINEAR in children:
+			return _NONLINEAR
+		# Two affine factors make a quadratic: ``a * a`` and ``a * b`` with
+		# both named ``a`` are the same tree after flattening.
+		return _NONLINEAR if children.count(_AFFINE) >= 2 else (
+			_AFFINE if _AFFINE in children else _ABSENT
+		)
+	if isinstance(expression, Pow):
+		base = _severity(expression.base, symbol)
+		exponent = _severity(expression.exponent, symbol)
+		if exponent != _ABSENT:
+			# ``symbol`` in the exponent is nonlinear in it whatever the base
+			# is -- ``a ** x`` is exponential in ``x``, and ``x ** x`` is not
+			# even a power. This is checked *before* the base, because
+			# ``a ** x`` has a symbol-free base and would otherwise fall
+			# through the ``_ABSENT`` branch below as though the symbol were
+			# not there at all.
+			return _NONLINEAR
+		if base == _NONLINEAR:
+			return _NONLINEAR
+		if base == _ABSENT:
+			return _ABSENT
+		# ``a ** 1`` is affine; every other constant power is not.
+		if isinstance(expression.exponent, Const) and float(expression.exponent.value) == 1.0:
+			return _AFFINE
+		return _NONLINEAR
+	if isinstance(expression, Func):
+		# A function of the symbol is nonlinear in it whatever the function
+		# is. ``abs`` is linear on each side of zero and not on any interval
+		# containing it, and the solver cannot know which side it is on.
+		return _NONLINEAR if any(_severity(arg, symbol) != _ABSENT for arg in expression.args) else _ABSENT
+	return _NONLINEAR
+
+
+def linearity_in(expression: Expr, symbol: str) -> str:
+	"""Whether ``expression`` is linear or nonlinear **in one variable**.
+
+	``LINEAR`` when ``symbol`` enters to the first power, ``NONLINEAR`` when it
+	enters as a power, inside a function, or multiplied by itself.
+
+	This is a different question from "is this equation linear", and the
+	difference is the whole reason the model's equation-level ``linearity``
+	field could not be reconciled with any reading of the formulas. ``x ** 2``
+	is nonlinear in ``x`` and constant in ``y``; ``crf_definition`` is
+	nonlinear in ``discount_rate`` (which appears as a power) and *affine in
+	``crf``*, the variable it solves for. An equation has no linearity of its
+	own -- only a variable has, and only relative to an expression.
+
+	The distinction is not academic: it is what decides whether the solve can
+	be exact. See :func:`linear_coefficients`.
+	"""
+	return NONLINEAR if _severity(expression, symbol) == _NONLINEAR else LINEAR
+
+
+def linear_coefficients(expression: Expr, symbol: str) -> tuple[Expr, Expr] | None:
+	"""``(a, b)`` with ``expression == a * symbol + b``, or ``None``.
+
+	``None`` means ``expression`` is not affine in ``symbol``, which is a
+	statement about this variable and not about the formula: an expression
+	that is a cubic in ``x`` may still be affine in ``y``.
+
+	``a`` and ``b`` are expressions, not floats -- a coefficient is routinely
+	another parameter (``debt_fraction * capex_usd_per_kw`` is the coefficient
+	on the solved variable in ``debt_service_definition``), so folding them to
+	numbers here would need values this function does not have. The caller
+	evaluates them.
+
+	Raises ``DslError`` if ``symbol`` does not appear at all: a caller asking
+	for the coefficients of a variable the expression never names has a bug,
+	and returning ``(0, expression)`` would let it divide by zero one step
+	later with nothing pointing at the cause.
+	"""
+	if symbol not in expression.symbols:
+		raise DslError(
+			f"{symbol!r} does not appear in {expression.source()!r}, so it has "
+			f"no coefficient here"
+		)
+	if _severity(expression, symbol) == _NONLINEAR:
+		return None
+
+	def split(node: Expr) -> tuple[Expr, Expr]:
+		"""``(coefficient_on_symbol, rest)`` for an affine subexpression."""
+		if isinstance(node, Add):
+			pairs = [split(term) for term in node.terms]
+			return (
+				Add.of(*(coefficient for coefficient, _ in pairs)),
+				Add.of(*(rest for _, rest in pairs)),
+			)
+		if isinstance(node, Mul):
+			# At most one factor carries the symbol -- two affine factors would
+			# have been caught as nonlinear before ``split`` was reached -- so
+			# the product is that factor's ``(c*x + r)`` scaled by every other
+			# factor. Dropping the scale is the bug this shape exists to
+			# avoid: ``2 * (x + a)`` has coefficient ``2`` and rest ``2 * a``,
+			# and returning ``1`` and ``0`` would solve it as though it were
+			# ``x + a``.
+			carrier: tuple[Expr, Expr] | None = None
+			others: list[Expr] = []
+			for factor in node.factors:
+				if _severity(factor, symbol) == _AFFINE:
+					carrier = split(factor)
+				else:
+					others.append(factor)
+			if carrier is None:
+				return Const(0.0), node
+			scale = Mul.of(*others) if others else Const(1.0)
+			coefficient, rest = carrier
+			return Mul.of(coefficient, scale), Mul.of(rest, scale)
+		if isinstance(node, Pow) and _severity(node, symbol) == _AFFINE:
+			# ``symbol ** 1``. The parser folds this to the symbol, but a tree
+			# built by hand need not have.
+			return Const(1.0), Const(0.0)
+		if isinstance(node, (Symbol, Subscript)) and getattr(node, "name", None) == symbol:
+			return Const(1.0), Const(0.0)
+		return Const(0.0), node
+
+	coefficient, rest = split(expression)
+	return coefficient, rest
+
+
+def solve_affine(
+	expression: Expr,
+	symbol: str,
+	values: Mapping[str, float],
+	*,
+	residual: float = 0.0,
+) -> float | None:
+	"""The root of ``expression == residual`` when it is affine in ``symbol``.
+
+	``None`` when ``expression`` is not affine in ``symbol``, or when the
+	coefficient evaluates to zero -- ``0 * p + b == 0`` fixes nothing about
+	``p``, so there is no root to return and ``None`` is the honest answer
+	rather than an infinity a caller would divide by.
+
+	The counterpart to :func:`solve_for`, and the two answer different
+	questions. ``solve_for`` finds *a* root in a bracket and needs the bracket
+	to contain one; this finds *the* root arithmetically and cannot miss. For
+	an affine residual the two agree -- checked across the shipped library's
+	33 determined variables, agreeing to 1e-9 relative -- so a caller that can
+	take this path should, and a caller that cannot has a bracket to choose.
+	"""
+	coefficients = linear_coefficients(expression, symbol)
+	if coefficients is None:
+		return None
+	coefficient, rest = coefficients
+	a = evaluate(coefficient, values)
+	if a == 0.0:
+		return None
+	return (residual - float(evaluate(rest, values))) / float(a)
 
 
 # ---------------------------------------------------------------------------

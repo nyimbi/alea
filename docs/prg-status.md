@@ -212,34 +212,6 @@ manufacturing a decision no one took.
 
 ## Not built
 
-- **`Equation.linearity` is declared on all 39 equations and read by nothing,
-  and the term is undefined.** The field takes `linear`/`nonlinear`/`mixed`
-  (31/8/0 as shipped). `constraints.py` does not read it: it walks the actual
-  arithmetic and asks whether *the optimiser's decision variables* enter
-  nonlinearly, which is the question that decides whether a linear constraint
-  can be built, and a declaration is not evidence for it. Nothing anywhere
-  cross-checks the two. Trying to write that cross-check is the finding: four
-  honest oracles, four answers out of 39 equations —
-
-  | oracle | what it asks | disagreements |
-  |---|---|---|
-  | superposition per free parameter | is `f` homogeneous in each argument alone | 6 |
-  | affine over the decision variables | is `f` affine where the solver varies it | 1 |
-  | affine over all parameters | is `f` affine in everything it names | 0 |
-  | expression tree | does any product/power/quotient join two variables | 24 |
-
-  Every one is defensible and they are not measuring the same property. The
-  tree reading calls `capex * crf` nonlinear; the decision-variable reading
-  calls it linear, because neither factor is a decision variable and the
-  optimiser sees a constant. The parameter reading calls it linear for the same
-  reason. All three are right about different questions, and the spec never
-  says which one the field answers — `spec/` mentions linearisation only about
-  PyPSA's loss function. So the field is not *wrong*; it is a label with no
-  agreed referent, which is why no reader can be written for it without first
-  choosing one. Recorded rather than resolved: inventing a referent and then
-  writing the reader that enforces it would manufacture agreement with a
-  decision no one made.
-
 - **`ParameterNode.status` is declared on all 88 nodes, read by nothing, and
   stale.** 70 `to_build` / 18 `existing`, and five of the `to_build` nodes are
   already reached by a production path: `carbon_budget_mtco2`,
@@ -262,6 +234,23 @@ manufacturing a decision no one took.
   — so the five are confirmed, and the class of reader that reaches them is a
   *bound* or a *fleet readback*, not a builder. Neither reader consults `status`,
   which is why the label could drift without anything failing.
+
+  **The referent exists and the label was copied from it.** `docs/params.md` —
+  the master parameter catalog — carries a Status column with the legend
+  `✅ Existing | 🔨 To Build | 🔗 Integrate`, which is exactly
+  `Literal["existing", "to_build", "integrate"]`, and Users/Priority columns
+  matching `tuple[str, ...]` and `Literal["P1", "P2", "P3"]`. `ParameterNode`
+  was transcribed from that table. The join is only 6 of 88 nodes by name —
+  the catalog is technology-specific (`coal_capacity`, `solar_pv_capacity`)
+  while the graph is a single-country aggregate, so no mechanical join exists,
+  which is why nothing has ever checked one against the other. On the six that
+  do join, **five agree and `equity_return_target` has drifted**: `to_build` in
+  the graph, `integrate` in the catalog. That is the signature of a hand-copied
+  column, and it makes `status` a *transcription with no diff* rather than an
+  undefined label — a much more specific defect, and a fixable one (populate
+  the remaining 82 from the catalog, or drop the column and let the catalog be
+  the register). Left as a finding because the choice between those two is the
+  user's, not the code's.
 
 - **Four declared node fields are populated on zero nodes, and the spec's own
   example populates all four.** `source`, `source_url`, `users` and
@@ -721,6 +710,56 @@ the follow-up question. The spec's `parameters` was not adopted because the
 four names under it are the illustrative ones — adopting the envelope would
 have made a body that still fails, one field later. Recorded here so the next
 reader does not read §44 as a contract and conclude the routes are broken.
+
+**`Equation.linearity` is closed, and not by giving the field a reader.** The
+entry above it was right that four oracles disagree on four disjoint sets of
+equations — that measurement stands. What it got wrong was the conclusion that
+the disagreement was the finding. The finding is *what the four oracles are
+measuring*, and once stated plainly it is not ambiguous: **linearity is a
+property of a variable, not of an equation.** `x ** 2` is nonlinear in `x` and
+constant in `y`; an equation has no linearity of its own, so a per-equation
+`linear`/`nonlinear` column has no referent to be right or wrong about. That is
+why no reading reproduced the declared column and why `mixed` appears in it
+zero times — it is a hand-entered label, not a classification.
+
+The question underneath it does have an answer, and the answer decides the
+solve. Every one of the 33 determined variables is **affine in its own
+unknown** — measured, zero exceptions — so each derivation's root is arithmetic
+(`-b/a`) and the bracket search is a fallback that the shipped library never
+takes. `solution_method` already tracked that structure honestly (28 `direct`,
+5 `iterative`, and the five are exactly the loop variables); `linearity` tracked
+nothing. The replacement is a computable per-variable register:
+
+- `dsl.linearity_in(expression, symbol)` — structural, so `a * a / a` is
+  nonlinear although it equals `a`. It reads the tree rather than
+  differentiating, because a symbolic simplification would make the answer
+  depend on which identities the simplifier happens to know.
+- `dsl.linear_coefficients(expression, symbol)` — the `(c, r)` of `c*x + r`,
+  which is what makes `solve_affine` possible and is testable as an identity:
+  `c*x + r` reconstructs the expression at every point sampled.
+- `ParameterGraph.linearity()` and `solve_paths()` — per determined variable,
+  `linear`/`nonlinear` and `affine`/`numeric`. Served on the graph summary as
+  `PrgSummaryOut.linearity`, defaulting to `{}` so a payload stored before the
+  register existed is still valid.
+
+**The exact solve exposed a latent bug, and that is the part worth keeping.**
+`_range_excursions` was written only inside `_widen` — the bracket-widening
+path — so "the answer left its declared range" and "the numeric search had to
+leave the bracket to find it" were the same fact. They coincide only while
+every solve is numeric. Adding the exact path would have made the register go
+**blind**: a solve that returns a value outside the declared range without ever
+widening a bracket would have reported nothing. Four tests failed on the first
+run and every one of them was pointing at this. The fix is `_note_excursion`,
+called on both paths and comparing the answer against the declared range, with a
+non-finite value excluded — a failed solve is an arithmetic fault and filing it
+as a scenario finding is the other half of the same conflation.
+
+The `feedback.py` half was written and **reverted**. The loop solver's refusal
+to return a root outside its bracket is behaviour three tests depend on, and
+whether a loop should take the exact path is a product decision about what a
+feedback iteration means, not a missing optimisation. `graph.py` and
+`feedback.py` both converge unchanged — 38 and 36 turns — and the derived values
+are identical to the previous revision to 14 significant figures.
 
 ## Two things about the graph that are easy to get wrong
 

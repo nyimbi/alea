@@ -228,6 +228,7 @@ def _summary_out(graph: Any) -> PrgSummaryOut:
 			stochastic_edges=[list(edge) for edge in uncertainty.stochastic_edges],
 			summary=uncertainty.summary(),
 		),
+		linearity=report["linearity"],
 	)
 
 

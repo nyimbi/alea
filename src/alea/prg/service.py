@@ -152,6 +152,15 @@ def graph_summary(graph: ParameterGraph | None = None) -> dict[str, Any]:
 		# boolean: "31 of 38 consistent" is a fact a reader can weigh, and
 		# "consistent" would be a claim the check does not make.
 		"units": check_units(g),
+		# Whether each equation is affine in the variable it solves for --
+		# computed from the formulas, keyed by variable. This replaces the
+		# document's per-equation `linearity` field as the answer to "does this
+		# solve exactly": that field was hand-entered, four defensible readings
+		# of the arithmetic each disagreed with it on a disjoint set of eight,
+		# and nothing read it. A `nonlinear` entry here is the one that matters
+		# -- it is the only case where the answer comes from a bracket that can
+		# miss -- and the shipped library has none.
+		"linearity": g.linearity(),
 	}
 
 

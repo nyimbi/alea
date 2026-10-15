@@ -35,7 +35,18 @@ from alea.prg.conflicts import (
 	detect_conflicts,
 	suggest_corrections,
 )
-from alea.prg.dsl import DslError, const, evaluate, parse, simplify, solve_for, sym
+from alea.prg.dsl import (
+	DslError,
+	const,
+	evaluate,
+	linear_coefficients,
+	linearity_in,
+	parse,
+	simplify,
+	solve_affine,
+	solve_for,
+	sym,
+)
 from alea.prg.feedback import FeedbackError
 from alea.prg.graph import CycleError, GraphError, ParameterGraph
 from alea.prg.library import SYSTEM_IDS, coverage, systems_of
@@ -3366,3 +3377,211 @@ def test_the_specs_unit_check_field_loads_and_is_read(graph: ParameterGraph):
 	# And the exemption is announced rather than silently shrinking a count.
 	assert "exempt by declaration" in after.summary(), after.summary()
 	assert "1 is exempt" in after.summary(), after.summary()
+
+
+# ---------------------------------------------------------------------------
+# Linearity as a fact about a variable, and the exact solve it licenses
+# ---------------------------------------------------------------------------
+
+
+def test_linearity_is_a_property_of_a_variable_not_of_an_equation():
+	"""``x ** 2`` is nonlinear in ``x`` and constant in ``y``.
+
+	This is the distinction the model's equation-level ``linearity`` field
+	could not carry, and the reason no reading of the formulas reproduced the
+	declared column: an equation has no linearity of its own, so a label on it
+	has to pick a variable and does not say which.
+	"""
+	quadratic = parse("a * x ** 2 + b * y")
+	assert linearity_in(quadratic, "x") == "nonlinear"
+	assert linearity_in(quadratic, "y") == "linear"
+	assert linearity_in(quadratic, "a") == "linear"
+	# A variable the expression never names is linear in it -- it is a
+	# coefficient, and every coefficient is constant in the unknown.
+	assert linearity_in(quadratic, "zzz") == "linear"
+
+	# The cases that decide the classification, each spelled out because each
+	# is a way a structural walk gets it wrong.
+	assert linearity_in(parse("a ** x"), "x") == "nonlinear", (
+		"a symbol in the exponent is exponential in it, and a walk that only "
+		"looks at the base sees a symbol-free base and calls it absent"
+	)
+	assert linearity_in(parse("x * x"), "x") == "nonlinear"
+	assert linearity_in(parse("exp(x)"), "x") == "nonlinear"
+	assert linearity_in(parse("1 / x"), "x") == "nonlinear"
+	assert linearity_in(parse("sqrt(x)"), "x") == "nonlinear"
+	assert linearity_in(parse("x / k"), "x") == "linear"
+	assert linearity_in(parse("-3 * x + b"), "x") == "linear"
+	assert linearity_in(parse("x ** 1"), "x") == "linear"
+
+
+def test_the_coefficients_reconstruct_the_expression():
+	"""``e == a * x + b`` for every affine ``e``, checked numerically.
+
+	The identity is the whole contract of :func:`linear_coefficients`, and it
+	is checked by evaluation rather than by comparing trees: a structural
+	comparison would pass on a decomposition that reordered terms and fail on
+	one that is arithmetically identical, which is backwards.
+	"""
+	cases = [
+		"a * x + b",
+		"x / k + c",
+		"-3 * x",
+		"2 * (x + a) - a",
+		"(x + 1) * (a + b)",
+		"x",
+		"a * x",
+		"x * 2 / (k + 1)",
+		"b + x",
+	]
+	points = [
+		{"a": 2.5, "b": -7.0, "c": 1.0, "k": 4.0, "x": 3.0},
+		{"a": -1.0, "b": 0.0, "c": 5.5, "k": -2.0, "x": -4.0},
+		{"a": 0.0, "b": 9.0, "c": -3.0, "k": 0.5, "x": 0.0},
+		{"a": 1e6, "b": 1e-6, "c": 12.0, "k": 1e3, "x": 7.5},
+	]
+	for source in cases:
+		expression = parse(source)
+		decomposition = linear_coefficients(expression, "x")
+		assert decomposition is not None, f"{source!r} should be affine in x"
+		coefficient, rest = decomposition
+		for values in points:
+			lhs = evaluate(expression, values)
+			rhs = evaluate(coefficient, values) * values["x"] + evaluate(rest, values)
+			assert math.isclose(lhs, rhs, rel_tol=1e-12, abs_tol=1e-12), (
+				f"{source!r} decomposed as ({coefficient.source()}) * x + "
+				f"({rest.source()}) gives {rhs} where it evaluates to {lhs} at "
+				f"{values}"
+			)
+
+	# `2 * (x + a) - a` is the case a product decomposition drops: the scale
+	# on the bracketed term reaches both the coefficient and the constant.
+	expression = parse("2 * (x + a) - a")
+	scaled = linear_coefficients(expression, "x")
+	assert scaled is not None
+	coefficient, rest = scaled
+	assert evaluate(coefficient, {"a": 5.0}) == 2.0
+	assert evaluate(rest, {"a": 5.0}) == 5.0
+
+	# A symbol the expression never names has no coefficient to return, and
+	# answering (0, expression) would let a caller divide by zero a step later
+	# with nothing pointing at the cause.
+	with pytest.raises(DslError):
+		linear_coefficients(parse("a + b"), "x")
+
+
+def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
+	"""The exact root equals the numeric one for every determined variable.
+
+	The two are different algorithms -- ``-b / a`` against Brent in a bracket
+	-- so their agreement is evidence about both. This is the check that says
+	the affine path is a *shortcut* and not a different answer, which is what
+	makes it safe to prefer.
+	"""
+	values = {
+		k: n.default for k, n in graph.nodes.items() if n.default is not None
+	}
+	values = dict(graph.propagate(values).values)
+
+	compared = 0
+	for equation in graph.equations.values():
+		for variable in equation.determined_variables:
+			residual = parse(f"({equation.lhs}) - ({equation.rhs})")
+			exact = solve_affine(residual, variable, values)
+			assert exact is not None, (
+				f"{equation.id!r} is not affine in {variable!r}, the variable it "
+				f"solves for -- which the shipped library is expected not to "
+				f"contain, and this is the assertion that would notice"
+			)
+			bracket = graph.node(variable).range
+			assert bracket is not None, (
+				f"{variable!r} is derived but declares no range, so there is no "
+				f"bracket to search and nothing to compare against"
+			)
+			numeric = solve_for(residual, variable, values, bracket=bracket)
+			assert math.isclose(exact, numeric, rel_tol=1e-9, abs_tol=1e-12), (
+				f"{equation.id!r} solved for {variable!r}: exact {exact!r} vs "
+				f"numeric {numeric!r}"
+			)
+			compared += 1
+	assert compared == 33, (
+		f"expected 33 determined variables in the shipped library, compared "
+		f"{compared}; a change to the equation count is a change to this "
+		f"check's coverage"
+	)
+
+
+def test_every_shipped_derivation_takes_the_exact_path(graph: ParameterGraph):
+	"""No equation in the library needs a bracket, and the register says so.
+
+	``solve_paths`` is the measured replacement for the declared ``linearity``
+	field: written by the branch that took the solve, so it cannot drift from
+	the arithmetic the way a hand-entered label did. A ``"numeric"`` entry is
+	the finding worth acting on -- it is the only case where the answer came
+	from a bracket that could have missed -- and the shipped library has none.
+	"""
+	values = {
+		k: n.default for k, n in graph.nodes.items() if n.default is not None
+	}
+	graph.propagate(values)
+	paths = graph.solve_paths()
+
+	assert paths, "a propagation must record which solve fixed each parameter"
+	assert set(paths.values()) == {"affine"}, (
+		f"every equation in the shipped library is affine in the variable it "
+		f"solves for; these are not: "
+		f"{sorted(k for k, v in paths.items() if v == 'numeric')}"
+	)
+	# The derived parameters, not the loop variables: the loops are solved by
+	# `feedback.solve_loop`, which does not write this register.
+	derived = {
+		e.determined_variables[0]
+		for e in graph.equations.values()
+		if e.determined_variables and e.solution_method != "iterative"
+	}
+	assert set(paths) == derived, sorted(set(paths) ^ derived)
+
+
+def test_a_nonaffine_equation_falls_back_and_is_reported():
+	"""The fallback is reachable, and a graph that needs it says so.
+
+	Every shipped equation is affine, so the numeric branch is dead code
+	unless a document exercises it -- and dead code in a solver is the kind
+	that breaks silently. This drives a genuinely nonlinear derivation through
+	the graph and asserts both that it solves and that the register names it.
+	"""
+	def node(name: str, role: str, **extra) -> dict:
+		return {
+			"name": name,
+			"unit": "1",
+			"type": "float",
+			"role": role,
+			"category": "Financial",
+			"determinism": "policy",
+			"priority": "P1",
+			"status": "existing",
+			**extra,
+		}
+
+	document = {
+		"parameters": {
+			"x": node("x", "exogenous", default=3.0),
+			"y": node("y", "derived", range=[0.0, 100.0]),
+		},
+		"equations": {
+			# Quadratic in `y`, so `solve_affine` returns None and the bracket
+			# search runs. The root is sqrt(9) = 3.
+			"e_y": {
+				"name": "y",
+				"lhs": "y ** 2",
+				"rhs": "x ** 2",
+				"parameters": ["y", "x"],
+				"determined_variables": ["y"],
+				"system": "cost_accounting",
+			},
+		},
+	}
+	synthetic = ParameterGraph.from_mapping(document)
+	result = synthetic.propagate({"x": 3.0})
+	assert math.isclose(result.values["y"], 3.0, rel_tol=1e-9), result.values["y"]
+	assert synthetic.solve_paths() == {"y": "numeric"}, synthetic.solve_paths()

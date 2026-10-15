@@ -1041,6 +1041,25 @@ class PrgSummaryOut(ApiModel):
 	constraints: ConstraintReportOut
 	units: UnitReportOut
 	uncertainty: UncertaintyOut
+	linearity: dict[str, str] = Field(default_factory=dict)
+	"""Per determined variable: ``linear`` or ``nonlinear`` in its own unknown.
+
+	Computed from the formulas rather than read from the document. The
+	``linearity`` key a document declares sits on the *equation* and is
+	hand-entered -- no reading of the arithmetic reproduced the shipped column,
+	and nothing read it -- so a client rendering it was rendering an
+	unverified claim.
+
+	Keyed by variable because that is the question with an answer: an equation
+	is affine in the variable it solves for or it is not, and that decides
+	whether the solve is arithmetic (``-b / a``) or a bracketed numeric search.
+	A ``nonlinear`` entry is the one that matters: it is the only case where
+	the answer can come from a bracket that missed, or from the second root of
+	a non-monotonic residual.
+
+	Defaults to empty so a payload built before this register existed is still
+	valid, rather than making every stored response a 500.
+	"""
 
 
 class EngineTranslationOut(ApiModel):
