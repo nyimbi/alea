@@ -537,8 +537,19 @@ def test_one_parameter_route_serves_it_and_404s_an_unknown_one(
 	assert body["role"] == "derived"
 	# A loop variable is derived and carries an `initial` rather than a
 	# `default`: it is where the iteration starts, not a value standing in for
-	# the equation, and the payload has to say so.
+	# the equation, and the payload has to say so. Both halves are asserted --
+	# the absent `default` *and* the present `initial` -- because asserting only
+	# the absence left the payload free to serve neither, which is what it did
+	# until 2026-10-16: a client rebuilding the declared graph from this route
+	# could not tell a loop variable with a starting point from one falling back
+	# to its range midpoint.
 	assert body.get("default") is None
+	assert body["initial"] == 45.0
+
+	# And a parameter outside every loop declares neither, so `initial` is
+	# `None` rather than a value invented to fill the field.
+	plain = prg_client.get("/api/v1/prg/parameters/asset_life", headers=public_key).json()
+	assert plain["initial"] is None
 
 	missing = prg_client.get("/api/v1/prg/parameters/not_a_parameter", headers=public_key)
 	assert missing.status_code == 404, missing.text

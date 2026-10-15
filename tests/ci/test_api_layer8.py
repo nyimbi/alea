@@ -921,10 +921,13 @@ PRG_EXACT_FIELDS: dict[str, frozenset[str]] = {
 	"ConsistencyReportOut": frozenset({"checked", "excursions"}),
 	# A hop count. There is no unit of "a parameter downstream".
 	"DependentOut": frozenset({"distance"}),
-	# A parameter's own declared ``default`` and admissible ``range``, served
-	# verbatim from the node. The unit is the adjacent ``unit`` field, which is
-	# why the node model is the one place these are not wrapped.
-	"ParameterOut": frozenset({"default", "range"}),
+	# A parameter's own declared ``default``, admissible ``range`` and loop
+	# ``initial``, served verbatim from the node. The unit is the adjacent
+	# ``unit`` field, which is why the node model is the one place these are not
+	# wrapped. ``initial`` is the third value the solve reads off a node, so a
+	# client rebuilding the declared graph needs it; it does not change a served
+	# delta, which is a measurement recorded on the field itself.
+	"ParameterOut": frozenset({"default", "range", "initial"}),
 	# The whole propagated set and the delta per parameter. A ``ValueOut`` per
 	# entry would be the same number with the unit the node already carries,
 	# repeated once per parameter on every propagation.

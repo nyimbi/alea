@@ -178,6 +178,7 @@ def _parameter_out(graph: Any, name: str) -> ParameterOut:
 		determinism=node.determinism.value,
 		priority=node.priority.value,
 		status=node.status,
+		initial=node.initial,
 		depends_on=list(graph.depends_on(name)),
 		affects=list(graph.affects(name)),
 		determined_by=equation.id if equation is not None else "",

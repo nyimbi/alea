@@ -251,6 +251,44 @@ manufacturing a decision no one took.
   nothing could read it to notice. Left as a finding; giving it a reader would
   mean choosing a meaning and then retrofitting 87 labels to it.
 
+  Two corrections to the entry as it first stood. The field is not read by
+  *nothing*: `_parameter_out` serves it on `GET /prg/parameters` and
+  `GET /prg/parameters/{id}`, so it reaches two doors. It is read by nothing
+  that *decides* anything — no gate, no register, no solve consults it — which
+  is the claim the entry is actually making and the one worth keeping. And the
+  five-node disagreement was re-measured on 2026-10-16: `bound_parameter_names`
+  returns `capacity_factor`, `carbon_budget_mtco2`, `horizon_years`,
+  `reserve_margin_min`, and the other three are read by `audit.fleet_parameters`
+  — so the five are confirmed, and the class of reader that reaches them is a
+  *bound* or a *fleet readback*, not a builder. Neither reader consults `status`,
+  which is why the label could drift without anything failing.
+
+- **Four declared node fields are populated on zero nodes, and the spec's own
+  example populates all four.** `source`, `source_url`, `users` and
+  `subcategory` are on `ParameterNode` — `subcategory` as `str | None`, the
+  other three as `str | None` / `tuple[str, ...]` — and `config/prg.yaml`
+  writes none of them on any of the 88 nodes. The spec's example node
+  (`docs/alea_prg.md`, the `carbon_price` block) carries every one:
+  `subcategory: "Climate Policy"`, `source: "IMF Effective Carbon Prices"`,
+  `source_url: "https://www.imf.org/"`, `users: ["Policymakers", "Investors",
+  "Utilities"]`. A document written to that example loads — the fields are on
+  the model and validate — and then the values reach nothing: `ParameterOut`
+  serves neither, and the register that exists to count this class did not name
+  them.
+
+  This is the `declared is not produced` shape with the twist that the
+  declaration is in the *spec*, not only in this tree, so the honest reading is
+  not "the YAML forgot to fill them". It is that the graph was built without a
+  consumer for parameter provenance and audience, and the model kept the fields
+  because the spec declares them. Two of the four have an obvious seam this
+  project already owns — `provenance.models.Provenance` carries a `source_url`
+  and the scanning layer fills it — and wiring PRG nodes into that layer is a
+  modelling decision about whether a *parameter's* source is the same kind of
+  fact as a *signal's*, not a missing adapter. The other two (`users`,
+  `subcategory`) name an audience and a taxonomy the tree has nowhere to put.
+  Recorded rather than built, and recorded because a field the spec's own
+  example fills is one a reader will assume works.
+
 - **Part X's other backends are absent.** The spec names Pyomo for MILP, SymPy
   for symbolic manipulation and a custom iterative solver. Each is a separate
   modelling decision, not a missing adapter: the translation layer's output is
@@ -443,6 +481,41 @@ manufacturing a decision no one took.
   assertion that would only pin a number no one has decided is load-bearing.
 
 ### Closed since this list was written
+
+**`ParameterNode.initial` reaches a door, and the first reason written for it
+was false.** The field is where a feedback loop starts iterating, declared on
+the five loop variables, and until 2026-10-16 no door served it —
+`ParameterOut` carried the node's `default` and `range` but not this, so a
+client rebuilding the declared graph from `GET /prg/parameters/{id}` could not
+tell a loop variable with a starting point from one falling back to its range
+midpoint. It is served now, and the test that asserted the *absent* `default`
+on `equilibrium_demand_twh` asserts the present `initial` beside it — asserting
+only the absence left the payload free to serve neither, which is what it did.
+
+**The reason I first wrote for serving it was wrong, and measurement said so.**
+I claimed `initial` was the invisible baseline of a propagation's `changed`
+delta, so a client holding only the delta could not interpret it. That is true
+of a bare `ParameterGraph.propagate`, where `changed[name] = value - seed` and
+the seed is `initial` or a range midpoint: measured, moving
+`capture_price_usd_per_mwh`'s `initial` from 60 to 100 moves that `changed`
+entry from −16.08 to −56.08, exactly the 40 the seed moved. But **no door reads
+that field**. The served delta comes from `propagate_change`, which diffs two
+*converged* fixed points, and the loop solver is a contraction — so the seed
+washes out. Measured across five seed perturbations (capture +40, demand +5,
+tariff −20, and all three): the served delta is identical to nine significant
+figures (`23.6486486606` vs `23.648648453`, a convergence-tolerance
+difference) and the iteration counts do not move from 37 and 34. A docstring
+resting on the first reason would have been a false explanation of a real
+field, which is worse than no explanation because the reason is what the next
+reader reuses.
+
+The build for that wrong reason was written and reverted — a `seeds` field on
+`PropagationResult`, populated at both construction sites. It would have added
+a *new* unread field to explain an unread one, and the measurement above is why
+it is not in the tree. `graph.py` is byte-identical to its previous revision.
+
+`initial` is served as the declaration it is, not as the explanation of a
+delta: `float | None`, `None` on the 83 nodes outside every loop.
 
 **`Equation.reference` is read.** Nine of the thirty-nine equations declare a
 citation — IEA/NEA on `lcoe_definition`, Wright's law on `learning_curve`,

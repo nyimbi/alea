@@ -1287,6 +1287,29 @@ class ParameterOut(ApiModel):
 	determinism: str
 	priority: str
 	status: str
+	initial: float | None
+	"""Where a feedback loop starts iterating this parameter, if it declares one.
+
+	Carried because it is a declared field of the node and the payload omitted
+	it while serving its two siblings: ``default`` and ``range`` are here, and
+	this is the third value the solve reads off a node. A client rebuilding the
+	graph's declared state from ``ParameterOut`` therefore got a node that
+	disagreed with the YAML, and could not tell which loop variables declare a
+	starting point and which fall back to a range midpoint.
+
+	What it does *not* do, measured rather than assumed: it does not change the
+	``changed`` delta a propagation serves. ``propagate_change`` diffs two
+	converged fixed points, and the loop solver is a contraction, so moving a
+	loop variable's ``initial`` by 40 leaves the served delta identical to nine
+	significant figures and the iteration counts at 37 and 34. ``initial`` *is*
+	the baseline in a bare ``ParameterGraph.propagate``, where ``changed`` is
+	``value - seed`` and no door reads it; that is why this field is worth
+	serving as the declaration it is, and not as the explanation of a delta.
+
+	``None`` for the 83 nodes that declare none, which is most of the graph: a
+	loop variable is the only kind that has one, and the graph has five.
+	"""
+
 	depends_on: list[str]
 	affects: list[str]
 	determined_by: str
