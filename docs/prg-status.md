@@ -300,18 +300,23 @@ after `views.py` said the graph did not make it.
   peak passed the reserve margin until this landed.
 - **The energy balance is single-region.** One demand, one generation total. A
   PyPSA network balances per bus and per hour and the solved result carries no
-  nodal frame, so the audit cannot assert the balance against it. The audit
-  reports what it did not check rather than a pass it did not earn.
+  nodal frame, so the audit cannot assert the balance *per bus* against it. What
+  it can assert is the system-wide residual, and since 2026-10-15 it does: the
+  result carries `energy_balance_error_mwh`, both doors print it, and the solve
+  refuses one over tolerance. See "Closed since this list was written" below for
+  why the per-bus assertion is still out of reach and why the system-wide one
+  was worth having.
 
-  **The balance is not the gap that mattered here, and the register said it
-  was.** Wiring `planning.dispatch.check_energy_balance` into the what-if path
-  was the obvious reading of this item, and it is wrong twice over: PyPSA's own
-  `consistency_check` already refuses a load on an undefined bus at solve time
-  (the defect the check's docstring names), and the check sums *lines* only, so
-  it false-positives by 1.6% on any network carrying a link — which is every
-  hydrogen or sector-coupled scenario. A gate scoped wider than its jurisdiction
-  refuses correct solves until someone turns it off. The real gap in this
-  cluster was the reliability standard, below.
+  **This item previously said wiring the check was wrong, and the reasoning is
+  worth keeping because half of it was right.** PyPSA's own `consistency_check`
+  does refuse a load on an undefined bus at solve time, so the check is not the
+  only guard. But the other half — "it false-positives on any network carrying a
+  link" — was a description of a *bug*, not a jurisdiction problem, and it was
+  an underestimate: measured, a link network fails by 11.1%, not 1.6%. A gate
+  scoped wider than its jurisdiction refuses correct solves until someone turns
+  it off; a gate with a *defect* does the same and gets left unwired, which is
+  what happened here for as long as it did. The distinction matters: the first
+  is fixed by narrowing the check, the second by fixing it.
 - **Emissions use one fleet-wide factor.** The engine sums per-carrier
   intensities. `audit.fleet_intensity_gap` measures the difference instead of
   pretending they agree. Since 2026-10-15 `alea whatif scenario` prints it: the
@@ -351,6 +356,43 @@ after `views.py` said the graph did not make it.
   clearest physical or accounting statement.
 - **No UI.** Packaging rather than capability, and the last door left shut. The
   CLI and the API both reach every register; a UI would render them.
+
+### Closed since this list was written
+
+**The energy balance is measured and reaches a door.** It was listed here as
+correctly *unwired*, on the grounds that `check_energy_balance` false-positives
+on any network carrying a link. That ground was right and the conclusion was
+wrong: the false positive was a **bug in the check**, not a reason to leave it
+uncalled. The loss term summed `network.lines_t` only, so a link's retained
+energy went unaccounted — measured on a two-bus link fixture, an 11.1% residual
+on a 0.9 link and 200% on a COP-3 one, every one a *correct* dispatch refused.
+Sector-coupled networks transfer by link, so the check refused most of what this
+project builds, which is why no one had wired it and why the docstring's
+1.6% figure was an underestimate of its own defect.
+
+The sum now covers both branch tables, and the two signs are asserted
+separately: a link below 1 absorbs the difference (`p0 + p1 > 0`) and a
+heat-pump link above 1 creates it (`p0 + p1 < 0`), and both close
+`generation - load - losses == 0`. A fix that special-cased the lossy direction
+would pass one row and fail the other.
+
+**And the check had no caller, which is why its bug survived.** It was written,
+tested, exported from `alea.planning`, and reached only by its own test file —
+so every `ScenarioResult` in the tree asserted a balance no production path had
+verified. The measurement is now split from the refusal: `balance_measurement`
+returns the numbers, `check_energy_balance` raises on them, and `extract`
+records the residual on the result because that is the last place the network
+still exists (a `ScenarioResult` holds no network — it has to be serialisable
+into a content-addressed cache entry — so a residual not taken at extraction can
+never be recovered). `whatif scenario` warns when it is non-zero and `prg audit`
+reports it against a stored result.
+
+The field is `float | None` and not `float`. `extract` legally accepts an
+*unsolved* network and reports `None` prices for one, so `0.0` would be a claim
+that the balance was checked and closed. `None` says it was never measured,
+which is what an unsolved network is. The first version defaulted to `0.0` and
+raised on an unsolved network instead; ten tests that extract an unsolved
+fixture caught it, and they were right.
 
 ## Two things about the graph that are easy to get wrong
 
