@@ -774,6 +774,15 @@ class ReviewQueue:
 		Computed from the latest version of every signal plus the recorded
 		edits, so a confirmed signal that was corrected counts as confirmed
 		*and* contributes its corrected fields to ``field_errors``.
+
+		**A machine confirmation is not human evidence, and the two are counted
+		apart.** The auto-acceptance threshold is chosen from ``precision``, so
+		letting an auto-accepted signal count as a human confirmation closes a
+		loop that feeds itself: the threshold accepts signals on the strength of
+		signals it accepted. The service records every machine decision under the
+		analyst ``auto:``-prefixed name, which is the only thing that
+		distinguishes them -- a confirmed version looks identical either way --
+		so the split is read from the action table and joined to the version.
 		"""
 		versions = [
 			self._row_to_version(row)
@@ -781,26 +790,41 @@ class ReviewQueue:
 		]
 		action_rows = await self._run(
 			self._execute,
-			"SELECT signal_id, action, edits_json FROM review_actions",
+			"SELECT signal_id, analyst, action, edits_json FROM review_actions",
 		)
 		edits_by_signal: dict[str, list[dict[str, Any]]] = {}
+		machine_confirmed: set[str] = set()
 		for row in action_rows:
+			# The *latest* action per signal is what set its current status, so
+			# a machine confirmation followed by a human rejection must not leave
+			# the signal marked as machine-confirmed. The table is append-only
+			# and unordered, so the last non-empty analyst for a signal wins.
+			if row["action"] == "confirm":
+				if str(row["analyst"]).startswith("auto:"):
+					machine_confirmed.add(row["signal_id"])
+				else:
+					machine_confirmed.discard(row["signal_id"])
 			if row["action"] in ("confirm", "edit") and row["edits_json"] not in ("{}", ""):
-				edits_by_signal.setdefault(row["signal_id"], []).append(json.loads(row["edits_json"]))
+				edits_by_signal.setdefault(row["signal_id"], []).append(
+					json.loads(row["edits_json"])
+				)
 
 		by_type: dict[str, AccuracyRow] = {}
 		by_source: dict[str, AccuracyRow] = {}
 		for version in versions:
+			is_machine = version.signal_id in machine_confirmed
 			for dimension, key, bucket in (
 				("signal_type", str(version.signal.signal_type), by_type),
 				("source_name", version.signal.source_name, by_source),
 			):
 				row = bucket.get(key) or AccuracyRow(dimension=dimension, key=key)  # type: ignore[arg-type]
+				confirmed = 1 if version.status is SignalStatus.CONFIRMED else 0
 				row = row.model_copy(
 					update={
 						"extracted": row.extracted + 1,
-						"confirmed": row.confirmed
-						+ (1 if version.status is SignalStatus.CONFIRMED else 0),
+						"confirmed": row.confirmed + (confirmed if not is_machine else 0),
+						"machine_confirmed": row.machine_confirmed
+						+ (confirmed if is_machine else 0),
 						"rejected": row.rejected
 						+ (1 if version.status is SignalStatus.REJECTED else 0),
 						"pending": row.pending

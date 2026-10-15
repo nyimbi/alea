@@ -130,6 +130,17 @@ class AccuracyRow(BaseModel):
 	key: str
 	extracted: int = Field(default=0, ge=0)
 	confirmed: int = Field(default=0, ge=0)
+	"""Human confirmations only. A machine auto-acceptance is counted in
+	``machine_confirmed`` instead, and the split is load-bearing: the
+	auto-acceptance threshold is chosen from ``precision``, so counting machine
+	confirmations as human evidence would let a threshold accept signals on the
+	strength of signals it had already accepted."""
+	machine_confirmed: int = Field(default=0, ge=0)
+	"""Signals the precision threshold confirmed with no human involved.
+
+	Held separately rather than folded into ``confirmed`` so the human sample
+	size stays the thing a threshold is measured against, and so the proportion
+	of the queue a machine cleared is visible rather than assumed."""
 	rejected: int = Field(default=0, ge=0)
 	pending: int = Field(default=0, ge=0)
 	edited: int = Field(default=0, ge=0)
@@ -144,12 +155,15 @@ class AccuracyRow(BaseModel):
 
 	@property
 	def sample_size(self) -> int:
-		"""Reviewed signals. Pending ones are not evidence either way."""
+		"""Human-reviewed signals. Pending ones are not evidence either way.
+
+		Machine confirmations are excluded, which is what makes this the number
+		``auto_accept_precisions``' ``min_sample_size`` floor means."""
 		return self.confirmed + self.rejected
 
 	@property
 	def precision(self) -> float:
-		"""Confirmed over reviewed. Zero when nothing has been reviewed.
+		"""Confirmed over human-reviewed. Zero when nothing has been reviewed.
 
 		Zero rather than 0.5: a caller that reads this without checking
 		``sample_size`` gets a value that fails every threshold, which is the

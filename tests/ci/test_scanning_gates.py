@@ -81,6 +81,7 @@ from alea.scanning.integrate import (
 )
 from alea.scanning.review import ReviewQueue, SignalStatus
 from alea.scanning.score import SignalTypePrecision, decide_auto_accept
+from alea.scanning.service import extraction_accuracy_artefact
 from alea.signals.models import Signal, SignalType
 
 REPO = Path(__file__).resolve().parents[2]
@@ -1711,3 +1712,297 @@ def _load_config_for_scratch(root: Path):
 	from alea.config.loader import load_config
 
 	return load_config(root / "config" / "queue-limit.yaml", require=True)
+
+
+# --------------------------------------------------------------------------
+# §10 criterion 8: the M3 extraction-accuracy artefact
+# --------------------------------------------------------------------------
+
+
+def _reviewed_queue(tmp_path: Path, *, reviewed: int = 2, machine: int = 1, rejected: int = 1):
+	"""A queue with a known human review record and one machine confirmation.
+
+	Built by review rather than by writing rows: the point of the accuracy
+	report is what the *review path* recorded, so a fixture that inserted
+	versions directly would test the reader against a shape the writer never
+	produces.
+	"""
+	import asyncio
+
+	queue = ReviewQueue(path=tmp_path / "q.sqlite")
+
+	async def seed() -> list[str]:
+		ids: list[str] = []
+		for index in range(reviewed + machine + rejected):
+			version = await queue.enqueue(_signal(capacity_mw=100.0 + index))
+			ids.append(version.signal_id)
+		for index in range(reviewed):
+			# One clean confirmation and one with a correction, so the
+			# `field_errors` half of the report has something to report.
+			edits = {"capacity_mw": 999.0} if index == 1 else {}
+			await queue.confirm(ids[index], "alice", edits=edits)
+		for index in range(reviewed, reviewed + machine):
+			await queue.confirm(
+				ids[index], "auto:precision-threshold", reason="measured precision"
+			)
+		for index in range(reviewed + machine, reviewed + machine + rejected):
+			await queue.reject(ids[index], "bob", reason="not a plant")
+		await queue.aclose()
+		return ids
+
+	asyncio.run(seed())
+	return queue
+
+
+def test_a_machine_confirmation_is_not_human_evidence(tmp_path: Path):
+	"""The feedback loop that would otherwise close on itself.
+
+	``auto_accept_precisions`` selects the threshold from ``precision``, and the
+	service records every auto-acceptance as a confirmation under an
+	``auto:``-prefixed analyst. If ``accuracy`` counted those as human
+	confirmations, a threshold would accept signals on the strength of signals
+	it had already accepted, and the reported precision would rise as the
+	threshold widened -- the exact opposite of a measurement.
+
+	Three signals: one human confirmation, one human rejection, one machine
+	confirmation. The human precision is 1/2. Counting the machine one would
+	make it 2/3, which is the number the assertion refuses.
+	"""
+	import asyncio
+
+	queue = _reviewed_queue(tmp_path, reviewed=1, machine=1, rejected=1)
+
+	async def measure():
+		try:
+			return await queue.accuracy()
+		finally:
+			await queue.aclose()
+
+	report = asyncio.run(measure())
+	row = report.by_signal_type()["generation_investment"]
+	assert row.confirmed == 1, f"a machine confirmation counted as human: {row.confirmed}"
+	assert row.machine_confirmed == 1, "the machine confirmation was not reported at all"
+	assert row.rejected == 1
+	assert row.sample_size == 2, "the machine confirmation entered the human sample"
+	assert row.precision == 0.5, (
+		f"precision {row.precision} is not the human-only 1/2; a machine "
+		f"confirmation is in the numerator"
+	)
+
+
+def test_a_human_decision_after_a_machine_one_wins(tmp_path: Path):
+	"""The latest action per signal decides, not the presence of any action.
+
+	The action table is append-only and unordered, so a signal the threshold
+	auto-accepted and a human then rejected must not stay marked as
+	machine-confirmed -- it would drop out of the human sample and the rejection
+	would be counted by nobody.
+	"""
+	import asyncio
+
+	queue = ReviewQueue(path=tmp_path / "q.sqlite")
+
+	async def seed() -> None:
+		version = await queue.enqueue(_signal())
+		await queue.confirm(version.signal_id, "auto:precision-threshold", reason="threshold")
+		await queue.reject(version.signal_id, "bob", reason="the machine was wrong")
+		await queue.aclose()
+
+	asyncio.run(seed())
+
+	async def measure():
+		queue2 = ReviewQueue(path=tmp_path / "q.sqlite")
+		try:
+			return await queue2.accuracy()
+		finally:
+			await queue2.aclose()
+
+	row = asyncio.run(measure()).by_signal_type()["generation_investment"]
+	assert row.machine_confirmed == 0, (
+		"the signal stayed machine-confirmed after a human rejected it; its "
+		"rejection is now counted by no bucket"
+	)
+	assert row.rejected == 1 and row.sample_size == 1
+
+
+def test_the_accuracy_artefact_carries_the_precision_its_sample_size(tmp_path: Path):
+	"""Criterion 8's artefact: precision per signal type, with the sample behind it.
+
+	`12-quality.md` §5 registers the target with the pass condition "precision
+	per signal type" and the ground truth "human review sample". A precision
+	with no sample size is a number nobody can weigh, so both travel -- the
+	metric in the validation artefact, the sample and the field errors in the
+	frame beside it.
+	"""
+	from alea.io.artefacts import read_artefact
+
+	root = tmp_path / "quality"
+	queue = _reviewed_queue(tmp_path, reviewed=2, machine=1, rejected=1)
+	frame = extraction_accuracy_artefact(
+		root / "scanning" / "extraction_accuracy.parquet", queue=queue
+	)
+
+	assert list(frame["label"]) == ["generation_investment"]
+	row = frame.iloc[0]
+	assert row["sample_size"] == 3, f"3 human decisions, got {row['sample_size']}"
+	assert row["confirmed"] == 2 and row["rejected"] == 1
+	assert row["machine_confirmed"] == 1
+	assert row["value"] == pytest.approx(2 / 3), "the precision is not confirmed/reviewed"
+
+	payload, provenance = read_artefact(root / "validation" / "extraction_accuracy.json")
+	assert payload["target"] == "extraction_accuracy"
+	assert payload["status"] == "passed"
+	assert payload["milestone"] == "M3", "the milestone did not come from the register"
+	assert payload["metrics"]["precision__generation_investment"] == pytest.approx(2 / 3)
+	# The base rate is the prevalence the precision is read against, over the
+	# human sample only.
+	assert payload["base_rate"] == pytest.approx(2 / 3)
+	assert provenance.basis.value == "measured", (
+		"a precision read from a review record is a measurement, not a projection"
+	)
+
+
+def test_the_accuracy_artefact_lands_where_the_coverage_check_looks(tmp_path: Path):
+	"""The artefact must satisfy criterion 4, which is a claim about a register.
+
+	`12-quality.md` §9 criterion 4 is "every validation target writes an
+	artefact", checked by ``missing_validation_targets`` against
+	``results/quality/validation/<target>.json``. A producer that wrote
+	somewhere else would leave ``extraction_accuracy`` on the missing list while
+	an artefact for it existed on disk -- the directory and the register
+	disagreeing, which is the failure the register exists to prevent.
+	"""
+	from alea.quality import missing_validation_targets, validation_coverage
+
+	root = tmp_path / "quality"
+	queue = _reviewed_queue(tmp_path)
+	extraction_accuracy_artefact(root / "scanning" / "extraction_accuracy.parquet", queue=queue)
+
+	coverage = validation_coverage(root)
+	assert "extraction_accuracy" in coverage, (
+		f"the coverage check cannot see the artefact it wrote: {sorted(coverage)}"
+	)
+	assert "extraction_accuracy" not in missing_validation_targets(root)
+
+
+def test_an_unreviewed_queue_records_a_skip_rather_than_a_pass(tmp_path: Path):
+	"""No sample is a skip, not a pass and not a zero.
+
+	M3 is a measurement against a labelled human sample. With none, the honest
+	status is ``skipped`` with the reason -- a ``passed`` with no metrics does
+	not even construct, and a ``failed`` would read as a measurement that came
+	out badly rather than one that did not happen.
+	"""
+	import asyncio
+
+	from alea.io.artefacts import read_artefact
+
+	queue = ReviewQueue(path=tmp_path / "q.sqlite")
+
+	async def seed() -> None:
+		await queue.enqueue(_signal())
+		await queue.aclose()
+
+	asyncio.run(seed())
+
+	root = tmp_path / "quality"
+	frame = extraction_accuracy_artefact(
+		root / "scanning" / "extraction_accuracy.parquet",
+		queue=ReviewQueue(path=tmp_path / "q.sqlite"),
+	)
+	assert frame.empty, "an unreviewed queue produced a precision row"
+
+	payload, _ = read_artefact(root / "validation" / "extraction_accuracy.json")
+	assert payload["status"] == "skipped"
+	assert payload["reason"], "a skip with no reason reads as a pass"
+	assert payload["metrics"] == {}, "a skipped measurement carries no metric"
+
+
+def test_a_type_with_no_human_review_is_absent_rather_than_zero(tmp_path: Path):
+	"""A type nobody reviewed has no precision, and zero is a different claim.
+
+	Reporting ``0.0`` for an unreviewed type would read as a measurement that
+	failed every threshold, which is the direction that silently disables
+	auto-acceptance for a type that may be perfectly accurate.
+	"""
+	import asyncio
+
+	from alea.io.artefacts import read_artefact
+
+	queue = ReviewQueue(path=tmp_path / "q.sqlite")
+
+	async def seed() -> None:
+		# Two types: one reviewed, one not.
+		reviewed = await queue.enqueue(_signal())
+		await queue.enqueue(_signal(signal_type=SignalType.OUTAGE_EVENT))
+		await queue.confirm(reviewed.signal_id, "alice")
+		await queue.aclose()
+
+	asyncio.run(seed())
+
+	root = tmp_path / "quality"
+	frame = extraction_accuracy_artefact(
+		root / "scanning" / "extraction_accuracy.parquet",
+		queue=ReviewQueue(path=tmp_path / "q.sqlite"),
+	)
+	assert list(frame["label"]) == ["generation_investment"], (
+		f"an unreviewed type reached the frame: {list(frame['label'])}"
+	)
+	payload, _ = read_artefact(root / "validation" / "extraction_accuracy.json")
+	assert "precision__outage_event" not in payload["metrics"], (
+		"an unreviewed type reported a precision; there is no measurement to report"
+	)
+
+
+def test_the_quality_accuracy_command_writes_the_artefact_it_reports(tmp_path: Path, monkeypatch):
+	"""The door criterion 8 needs: a command that produces the artefact.
+
+	The producer existing is not the criterion -- the plan's target is an
+	artefact on disk, and an artefact nothing runs is the register's own defect
+	class. This drives the CLI against a scratch root and asserts both halves:
+	the validation artefact lands where the coverage check looks, and the frame
+	beside it carries the sample the precision was measured on.
+	"""
+	import asyncio
+
+	from typer.testing import CliRunner
+
+	from alea.config.paths import repo_root
+	from alea.io.artefacts import read_artefact
+	from alea.quality import validation_coverage
+	from alea.scanning.review.queue import queue_path
+
+	root = _scratch_root(tmp_path, monkeypatch)
+	queue = ReviewQueue(path=queue_path(root / "results"))
+
+	async def seed() -> None:
+		version = await queue.enqueue(_signal(source_document_id="doc-a"))
+		await queue.confirm(version.signal_id, "alice")
+		await queue.aclose()
+
+	asyncio.run(seed())
+
+	from alea.cli import app
+
+	try:
+		result = CliRunner().invoke(app, ["quality", "accuracy"])
+	finally:
+		repo_root.cache_clear()
+
+	assert result.exit_code == 0, result.output
+	assert "precision 1.000" in result.stdout, (
+		f"the command did not report the measured precision: {result.stdout!r}"
+	)
+	assert "1 reviewed" in result.stdout, (
+		"the precision was printed without the sample size behind it"
+	)
+
+	validation = root / "results" / "quality" / "validation" / "extraction_accuracy.json"
+	assert validation.exists(), f"no artefact at {validation}; criterion 8 is unmet"
+	payload, provenance = read_artefact(validation)
+	assert payload["status"] == "passed"
+	assert payload["base_rate"] == 1.0, "one confirmation out of one reviewed"
+	assert provenance.basis.value == "measured"
+	assert "extraction_accuracy" in validation_coverage(root / "results" / "quality"), (
+		"the artefact is not where the coverage check looks"
+	)

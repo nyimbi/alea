@@ -71,7 +71,7 @@ from alea.scanning.score import (
 	decide_auto_accept,
 	score_signals,
 )
-from alea.scanning.service import ScanningService
+from alea.scanning.service import ScanningService, extraction_accuracy_artefact
 from alea.scanning.views import (
 	DedupGroup,
 	DedupReport,
@@ -93,6 +93,7 @@ __all__ = [
 	"ExtractionConfig",
 	"ExtractionRecord",
 	"Extractor",
+	"extraction_accuracy_artefact",
 	"FetchBlocked",
 	"FetchError",
 	"HttpFetcher",

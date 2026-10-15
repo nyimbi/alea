@@ -365,6 +365,218 @@ def policy_tracker_to_artefact(
 	return frame
 
 
+def extraction_accuracy_artefact(
+	out: str | Path,
+	*,
+	queue: ReviewQueue | None = None,
+) -> pd.DataFrame:
+	"""Write the M3 extraction-accuracy validation artefact from the review record.
+
+	`10-layer7-scanning.md` §10 criterion 8 is "extraction accuracy measured per
+	signal type", and `12-quality.md` §5 registers the target as
+	``extraction_accuracy`` with the ground truth "human review sample" and the
+	pass condition "precision per signal type". `ReviewQueue.accuracy()` computes
+	exactly that and was called by nothing in ``src/`` -- so the target had no
+	artefact, ``missing_validation_targets()`` named it missing, and criterion 4
+	("every validation target writes an artefact") was unmet by one.
+
+	**The ground truth is the review record, and it is measured against humans
+	only.** An auto-accepted signal is excluded from the precision and reported
+	separately. The auto-acceptance threshold is *chosen* from this precision, so
+	a measurement that counted machine confirmations would let the threshold
+	accept signals on the strength of signals it had already accepted -- a loop
+	that reports rising accuracy as it widens. ``machine_confirmed`` travels in
+	the artefact so a reader can see how much of the queue a machine cleared.
+
+	**A type with no human-reviewed signals is skipped, not passed.** Its
+	precision is unmeasurable, and reporting it as 0.0 would read as a
+	measurement that failed; reporting it as passed would be a fabricated
+	result. It is named in ``skipped`` with its own reason, and the artefact's
+	own validators refuse the alternatives: a ``passed`` status with no metrics
+	does not construct, and an accuracy metric with no ``base_rate`` does not
+	either. The base rate is the share of reviewed signals a human confirmed,
+	which is the prevalence an accuracy has to be read against.
+
+	**``basis`` is MEASURED and ``inputs`` names the queue's checksum.** The
+	measurement is of a real review record, not a projection -- and the bytes it
+	was taken from are what a reader re-checking it six months later needs.
+	"""
+	from alea.io.artefacts import sha256_file
+	from alea.quality import ValidationStatus, validation_artefact, write_validation
+
+	review = queue or ReviewQueue()
+
+	async def _measure() -> Any:
+		try:
+			return await review.accuracy()
+		finally:
+			if queue is None:
+				await review.aclose()
+
+	report = asyncio.run(_measure())
+
+	# Checksummed after the read, because the first connection is what creates
+	# the file. A queue that is still absent was never created, which means
+	# nothing was ever enqueued: an empty measurement, not an error.
+	queue_input = (
+		f"sha256:{sha256_file(review.path)}"
+		if review.path.exists()
+		else f"absent:{review.path}"
+	)
+
+	metrics: dict[str, float] = {}
+	per_type: dict[str, dict[str, Any]] = {}
+	skipped: list[str] = []
+	reviewed = 0
+	human_confirmed = 0
+	machine = 0
+	for key, row in sorted(report.by_signal_type().items()):
+		machine += row.machine_confirmed
+		if row.sample_size == 0:
+			skipped.append(key)
+			continue
+		reviewed += row.sample_size
+		human_confirmed += row.confirmed
+		metrics[f"precision__{key}"] = row.precision
+		per_type[key] = {
+			"precision": row.precision,
+			"sample_size": row.sample_size,
+			"confirmed": row.confirmed,
+			"rejected": row.rejected,
+			"edited": row.edited,
+			"machine_confirmed": row.machine_confirmed,
+			"field_errors": row.field_errors,
+		}
+
+	# The base rate is over reviewed signals only, so it is the prevalence the
+	# precision was measured against and not the prevalence of the queue.
+	base_rate = human_confirmed / reviewed if reviewed else None
+
+	if not metrics:
+		# No human has reviewed anything yet. The target is skipped with its
+		# reason rather than passed or failed: M3 is a measurement against a
+		# labelled sample, and there is no sample.
+		artefact = validation_artefact(
+			"extraction_accuracy",
+			"Human review sample",
+			status=ValidationStatus.SKIPPED,
+			reason=(
+				f"no human-reviewed signals in the queue: "
+				f"{len(report.rows)} extraction row(s) across "
+				f"{len(report.by_signal_type())} signal type(s), none confirmed or "
+				f"rejected by a human ({machine} machine confirmation(s) excluded, "
+				f"which is not evidence)"
+			),
+			notes="M3 is measured against a labelled human sample; none exists yet",
+		)
+	else:
+		artefact = validation_artefact(
+			"extraction_accuracy",
+			"Human review sample",
+			metrics=metrics,
+			base_rate=base_rate,
+			notes=(
+				f"{reviewed} human-reviewed signal(s) across {len(metrics)} signal "
+				f"type(s); {len(skipped)} type(s) skipped with no human review; "
+				f"{machine} machine confirmation(s) excluded from the precision"
+			),
+		)
+
+	written = write_validation(artefact, root=_quality_root(out))
+
+	# The per-type detail and the skipped set go beside the validation artefact
+	# as a frame, because the validation model carries flat metrics only and the
+	# sample sizes, the field errors and the machine count are what make a
+	# precision arguable. A precision with no sample size is a number nobody can
+	# weigh.
+	from alea.io.pipeline import write_stage
+	from alea.provenance.models import Basis, DerivedProvenance, Licence
+
+	provenance = DerivedProvenance(
+		source_id="scanning_extraction_accuracy",
+		retrieved_at=utcnow(),
+		licence=Licence.UNKNOWN,
+		basis=Basis.MEASURED,
+		uncertainty=0.0,
+		uncertainty_basis="",
+		notes=(
+			"precision per signal type over human-reviewed signals only; machine "
+			"auto-acceptances are counted separately and excluded from the "
+			"measurement. Types with no human review are absent rather than zero"
+		),
+		inputs=[queue_input],
+		parameters={
+			"reviewed": reviewed,
+			"machine_confirmed": machine,
+			"types_measured": len(metrics),
+			"types_skipped": len(skipped),
+			"base_rate": base_rate if base_rate is not None else -1.0,
+		},
+	)
+	rows = [
+		{
+			"label": key,
+			"value": float(detail["precision"]),
+			"unit": "precision",
+			"sample_size": float(detail["sample_size"]),
+			"confirmed": float(detail["confirmed"]),
+			"rejected": float(detail["rejected"]),
+			"edited": float(detail["edited"]),
+			"machine_confirmed": float(detail["machine_confirmed"]),
+		}
+		for key, detail in per_type.items()
+	]
+	frame = pd.DataFrame(
+		rows,
+		columns=[
+			"label",
+			"value",
+			"unit",
+			"sample_size",
+			"confirmed",
+			"rejected",
+			"edited",
+			"machine_confirmed",
+		],
+	)
+	write_stage(Path(out), frame, provenance, format="parquet")
+	logger.info(
+		"extraction_accuracy_artefact",
+		out=str(out),
+		validation=written,
+		reviewed=reviewed,
+		types_measured=len(metrics),
+		types_skipped=len(skipped),
+		machine_confirmed=machine,
+	)
+	return frame
+
+
+def _quality_root(out: str | Path) -> Path:
+	"""The quality storage root implied by an artefact output path.
+
+	``write_validation`` appends ``validation/<target>.json`` to its root, so a
+	caller that names the stage's own output path needs the part above it. The
+	stage writes ``results/quality/scanning/extraction_accuracy.parquet``, which
+	makes ``results/quality`` the root; taking the grandparent is derived from
+	that path rather than from ``storage_root()``, which would be a second answer
+	to where quality artefacts live.
+
+	Resolved first, because the configured ``paths.results`` is relative to the
+	repository root: ``Path("results").parent.parent`` is ``.``, which is not a
+	quality root at all, and the assert below is what catches that rather than
+	letting the artefact land where the coverage check does not look.
+	"""
+	from alea.config.paths import resolve
+
+	root = resolve(out).parent.parent
+	assert root.name == "quality", (
+		f"{out} is not under a quality root; write_validation would place the "
+		f"artefact somewhere the coverage check does not look"
+	)
+	return root
+
+
 def retention_report(*, config: Config, dry_run: bool = True) -> object:
 	"""Apply the raw-text retention policy from a config.
 

@@ -1284,6 +1284,85 @@ def quality_claims(
 		typer.echo(f"{claim.number:2d}  {claim.milestone}  {status:10s}  {claim.claim}")
 
 
+@quality_app.command("accuracy")
+def quality_accuracy(
+	config: ConfigOption = None,
+	quiet: Annotated[bool, typer.Option("--quiet", "-q", help="Print nothing; exit with the verdict.")] = False,
+) -> None:
+	"""Measure extraction accuracy from the review record, and write the M3 artefact.
+
+	`10-layer7-scanning.md` §10 criterion 8 registers this as an M3 validation
+	target against the ground truth "human review sample". The machinery existed
+	and nothing produced the artefact, so ``missing_validation_targets()`` named
+	``extraction_accuracy`` missing and `12-quality.md` §9 criterion 4 was unmet
+	by one. This is the producer.
+
+	It measures humans only. An auto-accepted signal is excluded from the
+	precision and reported separately, because the auto-acceptance threshold is
+	chosen from that precision and a measurement that counted machine
+	confirmations would let the threshold accept signals on the strength of
+	signals it had already accepted.
+
+	Exits non-zero only when the artefact records a *pass* with nothing measured,
+	which the validation model refuses anyway. A type with no human review is
+	recorded as *skipped*, not failed: M3 is a measurement against a labelled
+	sample and there is no sample, which is a different state from a measured
+	failure. The exit code is the guard against a target that reports a pass it
+	did not earn.
+	"""
+	from alea.scanning.service import extraction_accuracy_artefact
+
+	with _run("cli.quality.accuracy"):
+		loaded = _load(config, None, None)
+		# Resolved against the repository root, because `paths.results` is
+		# configured relative to it: reading back a relative path would resolve
+		# against the *working directory* instead, so a command run from
+		# anywhere but the root would write the artefact in one tree and look
+		# for it in another.
+		from alea.config.paths import resolve
+
+		results = resolve(loaded.paths.results)
+		frame = extraction_accuracy_artefact(
+			results / "quality" / "scanning" / "extraction_accuracy.parquet"
+		)
+		validation = results / "quality" / "validation" / "extraction_accuracy.json"
+		payload = json.loads(validation.read_text(encoding="utf-8"))
+
+		reviewed = int(frame["sample_size"].sum()) if not frame.empty else 0
+		if not quiet:
+			if reviewed:
+				for record in frame.to_dict("records"):
+					typer.echo(
+						f"{record['label']:28s} precision {float(record['value']):.3f} "
+						f"({int(record['sample_size'])} reviewed: "
+						f"{int(record['confirmed'])} confirmed, "
+						f"{int(record['rejected'])} rejected, "
+						f"{int(record['edited'])} edited; "
+						f"{int(record['machine_confirmed'])} machine)"
+					)
+				base = payload.get("base_rate")
+				if base is not None:
+					typer.echo(f"base rate {float(base):.3f} over {reviewed} reviewed")
+			else:
+				typer.echo(
+					"no human-reviewed signals; the extraction_accuracy target is "
+					"recorded as skipped rather than passed"
+				)
+			typer.echo(f"validation artefact: {validation}")
+
+		if payload["status"] == "passed" and reviewed == 0:
+			# Unreachable through this command, and asserted anyway: a target
+			# that reports a pass with nothing measured is the fabrication the
+			# validation model exists to refuse, so if it ever appears the exit
+			# code should say so rather than print a green line.
+			typer.secho(
+				"extraction_accuracy is marked passed with no reviewed signals",
+				fg=typer.colors.RED,
+				err=True,
+			)
+			raise typer.Exit(code=1)
+
+
 @app.command()
 def version() -> None:
 	"""Print the version."""
