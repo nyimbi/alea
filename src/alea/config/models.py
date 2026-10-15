@@ -219,6 +219,15 @@ class ScanningConfig(AleaConfig):
 	silently. A threshold is introduced only after a measured precision
 	justifies it, per signal type.
 	"""
+	review_queue_limit: int = Field(default=100, ge=1)
+	"""The pending-review depth the KPI allows (``spec4-data-collection.md`` §16).
+
+	The spec states it as a target ("< 100 pending at any time") measured by a
+	"queue monitor", and until now nothing measured it and nothing held the
+	number. It is configuration rather than a constant because the ceiling is a
+	staffing decision -- how many reviews a week the team can clear -- and a
+	constant would make it a code change.
+	"""
 
 
 class ReportingConfig(AleaConfig):

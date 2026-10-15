@@ -78,6 +78,7 @@ from alea.scanning.views import (
 	IngestionReport,
 	PriorityBreakdown,
 	RetentionReport,
+	ReviewBacklog,
 	ScanReport,
 )
 
@@ -103,6 +104,7 @@ __all__ = [
 	"RawDocument",
 	"RetentionReport",
 	"ReviewAction",
+	"ReviewBacklog",
 	"ReviewQueue",
 	"ScanReport",
 	"ScanningService",

@@ -1094,6 +1094,24 @@ def scan(
 			f"scan: {result.signals_extracted} signals from {result.documents_kept} documents, "
 			f"{result.signals_enqueued} queued for review"
 		)
+		# The review backlog, which the report has carried since it was written
+		# and which no door printed. A depth without its age is the number the
+		# spec's §14 asks for and §16 sets a ceiling on, so both are shown
+		# against that ceiling rather than as bare counts.
+		backlog = result.backlog
+		over = backlog.breaches(result.review_queue_limit)
+		age = (
+			f"oldest {backlog.oldest_age_hours:.1f} h"
+			if backlog.oldest_age_hours is not None
+			else "queue empty"
+		)
+		typer.secho(
+			f"review queue: {backlog.pending} pending ({age}), "
+			f"limit {result.review_queue_limit}"
+			f"{' -- OVER' if over else ''}",
+			fg=typer.colors.RED if over else None,
+			err=over,
+		)
 
 
 @app.command()
@@ -1173,6 +1191,35 @@ def health(
 	runs = RunLog(loaded).list(limit=1)
 	last = runs[0] if runs else None
 
+	# The review backlog, read through the same class the pipeline writes with
+	# rather than by repeating the query here: the depth and the age are two
+	# spellings of one metric, and a second copy of the SQL is the "two files
+	# that agree today" failure in a doctor that is supposed to notice drift
+	# rather than introduce it.
+	#
+	# Reported, and deliberately not gated. This command is the container's
+	# liveness probe, and a deep queue is a staffing problem, not an unusable
+	# store: exiting non-zero here would restart a healthy process because
+	# nobody has cleared the review backlog, which is the gate-scoped-wider-
+	# than-its-jurisdiction failure. The ceiling is enforced where the KPI puts
+	# it -- the queue monitor -- and `alea scan` colours the line when it is
+	# breached.
+	backlog = None
+	queue_file = queue_path(loaded.paths.results)
+	if queue_file.exists():
+		import asyncio
+
+		from alea.scanning.review.queue import ReviewQueue
+
+		async def _read_backlog() -> Any:
+			queue = ReviewQueue(path=queue_file)
+			try:
+				return await queue.backlog()
+			finally:
+				await queue.aclose()
+
+		backlog = asyncio.run(_read_backlog())
+
 	if problems:
 		for problem in problems:
 			typer.secho(f"unhealthy: {problem}", fg=typer.colors.RED, err=True)
@@ -1182,6 +1229,16 @@ def health(
 		typer.echo(f"ok: {countries}")
 		typer.echo(f"  results: {results}")
 		typer.echo(f"  last run: {last.run_id if last else 'none'}")
+		if backlog is not None:
+			age = (
+				f"oldest {backlog.oldest_age_hours:.1f} h"
+				if backlog.oldest_age_hours is not None
+				else "queue empty"
+			)
+			typer.echo(
+				f"  review queue: {backlog.pending} pending ({age}), "
+				f"limit {loaded.scanning.review_queue_limit}"
+			)
 
 
 @quality_app.command("claims")

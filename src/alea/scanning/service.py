@@ -205,7 +205,8 @@ class ScanningService:
 			signals_extracted=len(signals),
 			signals_enqueued=enqueued,
 			signals_auto_accepted=auto_accepted,
-			pending_count=await self.queue.pending_count(),
+			backlog=await self.queue.backlog(),
+			review_queue_limit=self.scanning.review_queue_limit,
 			llm_calls=self.extractor.calls,
 			connector_health=self.connector_health(),
 			unhealthy=self.unhealthy_sources(),
@@ -217,6 +218,13 @@ class ScanningService:
 			signals=report.signals_extracted,
 			enqueued=report.signals_enqueued,
 			auto_accepted=report.signals_auto_accepted,
+			# The backlog goes to the log as well as to the report. The log is
+			# what an operator reads at 03:00 when the dashboard is the thing
+			# that is down, and a depth that appears only in an artefact is a
+			# depth nobody sees while the pipeline is running.
+			pending=report.backlog.pending,
+			oldest_pending_hours=report.backlog.oldest_age_hours,
+			backlog_over_limit=report.backlog.breaches(report.review_queue_limit),
 			unhealthy=report.unhealthy,
 			extraction_records=len(records),
 		)

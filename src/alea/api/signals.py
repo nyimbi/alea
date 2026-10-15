@@ -340,7 +340,22 @@ class SignalStore:
 		]
 
 	async def pending_count(self) -> int:
-		"""How many signals still await a human. Read by the health endpoint."""
+		"""How many signals in *this* store still await a human.
+
+		Not the pipeline's review backlog, and the difference matters: the
+		scanning layer enqueues into ``results/scanning/review.sqlite`` through
+		:class:`alea.scanning.review.queue.ReviewQueue`, and this store's
+		``signals`` table is written only by ``add``/``add_many``, which no
+		production caller invokes. So this counts what the API was handed, which
+		is currently nothing, while the queue a reviewer actually works is the
+		other file. ``ReviewQueue.backlog`` is the reader for that one, and
+		``alea health`` reports it.
+
+		The docstring used to claim this was "read by the health endpoint". It
+		was not: ``/health`` calls ``job_store.counts()`` and nothing else. A
+		claim about a caller is as checkable as the caller, and this one had
+		none.
+		"""
 		row = await self._database.fetchone(
 			"SELECT COUNT(*) AS n FROM signals WHERE requires_review = 1"
 		)

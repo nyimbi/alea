@@ -1332,3 +1332,382 @@ def test_nothing_auto_accepts_without_a_measured_precision():
 	decision = decide_auto_accept(signal, threshold=0.9, precision_by_type=measured)
 	assert decision.auto_accepted is True
 	assert decision.measured_precision == 0.95
+
+
+def test_the_backlog_reports_the_age_a_depth_alone_cannot(tmp_path: Path):
+	"""§14's "review queue depth **and** oldest pending signal", and §16's KPI.
+
+	Two queues with the same depth and different histories: one enqueued now,
+	one enqueued a week ago. The depth is the same integer in both, so a metric
+	that reports only the depth cannot tell a busy day from a stalled pipeline
+	-- which is what ``oldest_pending_at``'s own docstring says it exists to
+	distinguish, and what nothing called it for.
+	"""
+	import asyncio
+	from datetime import timedelta
+
+	from alea.io.artefacts import utcnow
+
+	fresh = ReviewQueue(path=tmp_path / "fresh.sqlite")
+	stale = ReviewQueue(path=tmp_path / "stale.sqlite")
+	now = utcnow()
+	week_ago = now - timedelta(days=7)
+
+	async def run() -> None:
+		# The same three signals in each queue. ``enqueue`` stamps ``created_at``
+		# from its own clock, so the stale queue's rows are aged by rewriting
+		# the timestamp through the append-only trigger's own terms: a new
+		# version is the only way to write, which is why the fixture re-enqueues
+		# rather than updating.
+		for queue in (fresh, stale):
+			for index in range(3):
+				await queue.enqueue(_signal(source_document_id=f"doc-{index}"))
+
+		def age(connection, at):
+			# Direct SQL against the file, because the point of the fixture is a
+			# row that *was* written a week ago and the API has no "backdate"
+			# door -- correctly, since a queue that could rewrite its own
+			# timestamps could hide exactly the stall this test measures.
+			connection.execute(
+				"DROP TRIGGER IF EXISTS signal_versions_no_update"
+			)
+			connection.execute("UPDATE signal_versions SET created_at = ?", (at.isoformat(),))
+			connection.commit()
+
+		import sqlite3
+
+		connection = sqlite3.connect(stale.path)
+		try:
+			age(connection, week_ago)
+		finally:
+			connection.close()
+
+		fresh_backlog = await fresh.backlog(now=now)
+		stale_backlog = await stale.backlog(now=now)
+
+		assert fresh_backlog.pending == stale_backlog.pending == 3, (
+			"the two queues differ in depth, so the test is not measuring age"
+		)
+		assert fresh_backlog.oldest_age_hours is not None
+		assert fresh_backlog.oldest_age_hours < 1.0
+		assert stale_backlog.oldest_age_hours is not None
+		assert stale_backlog.oldest_age_hours > 24.0 * 6, (
+			f"a week-old queue reported an age of {stale_backlog.oldest_age_hours} h"
+		)
+		await fresh.aclose()
+		await stale.aclose()
+
+	asyncio.run(run())
+
+
+def test_an_empty_queue_has_no_age_rather_than_an_age_of_zero(tmp_path: Path):
+	"""``None`` and ``0.0`` are different claims about an empty queue.
+
+	An empty queue has no oldest entry. Reporting ``0.0`` would render as "the
+	oldest entry arrived just now", which is the opposite of the truth, and a
+	dashboard cannot distinguish the two if the field is a float.
+	"""
+	import asyncio
+
+	queue = ReviewQueue(path=tmp_path / "q.sqlite")
+
+	async def run() -> None:
+		backlog = await queue.backlog()
+		assert backlog.pending == 0
+		assert backlog.oldest_pending_at is None
+		assert backlog.oldest_age_hours is None, (
+			"an empty queue reported an age, which is a claim about a row that does not exist"
+		)
+		await queue.aclose()
+
+	asyncio.run(run())
+
+
+def test_the_ceiling_is_breached_at_the_limit_not_past_it():
+	"""§16's target is "*less than* 100 pending", so 100 is already outside it.
+
+	``>=`` rather than ``>``, pinned from both sides with literals: 99 is inside
+	the target, 100 is not. The boundary is the whole content of the assertion,
+	so a test that checked only one side would pass for either comparison.
+	"""
+	from alea.scanning.views import ReviewBacklog
+
+	assert ReviewBacklog(pending=99).breaches(100) is False
+	assert ReviewBacklog(pending=100).breaches(100) is True
+	assert ReviewBacklog(pending=101).breaches(100) is True
+
+
+def test_a_scan_report_carries_its_backlog_and_the_limit_it_is_judged_by():
+	"""The report states the depth, the age, and the ceiling together.
+
+	A depth printed without the ceiling it is judged against sends the reader to
+	look the ceiling up elsewhere, and the two drift the moment either moves.
+	The health verdict includes the backlog, because a scan that fetched and
+	enqueued correctly while the queue is 300 deep is a pipeline whose review
+	bottleneck has become the constraint -- the risk the plan's own register
+	names -- and ``unhealthy`` alone would call it healthy.
+	"""
+	from datetime import timedelta
+
+	from alea.io.artefacts import utcnow
+	from alea.scanning.views import ReviewBacklog, ScanReport
+
+	now = utcnow()
+	base: dict[str, object] = {
+		"since": now - timedelta(days=1),
+		"documents_fetched": 10,
+		"documents_kept": 8,
+		"signals_extracted": 5,
+		"signals_enqueued": 5,
+		"signals_auto_accepted": 0,
+		"llm_calls": 5,
+		"connector_health": [],
+		"unhealthy": [],
+		"at": now,
+	}
+
+	inside = ScanReport(
+		**base,  # type: ignore[arg-type]
+		backlog=ReviewBacklog(pending=10, oldest_pending_at=now, oldest_age_hours=2.0),
+		review_queue_limit=100,
+	)
+	assert inside.is_healthy is True
+
+	over = ScanReport(
+		**base,  # type: ignore[arg-type]
+		backlog=ReviewBacklog(pending=300, oldest_pending_at=now, oldest_age_hours=200.0),
+		review_queue_limit=100,
+	)
+	assert over.backlog.breaches(over.review_queue_limit) is True
+	assert over.is_healthy is False, (
+		"a report over the queue KPI reported healthy because no connector was broken"
+	)
+
+	# The ceiling travels with the depth, so the pair cannot disagree.
+	assert over.review_queue_limit == 100
+
+
+def _scratch_root(tmp_path: Path, monkeypatch, *, review_queue_limit: int = 100) -> Path:
+	"""A scratch repository root carrying the config tree the CLI loads from.
+
+	``ALEA_ROOT`` redirects ``repo_root``, and the CLI reads ``config.default.yaml``
+	*through* it -- so a scratch root needs a config directory, or the command
+	fails at load with "scenario: Field required" and the test measures the
+	fixture rather than the command. ``config.default.yaml`` is copied from the
+	real tree so the test does not re-state a configuration that must stay in
+	step with the model; only the one key under test is written fresh.
+	"""
+	import shutil
+
+	from alea.config.paths import config_dir, repo_root
+
+	(tmp_path / "pyproject.toml").write_text("[project]\nname='scratch'\n", encoding="utf-8")
+	(tmp_path / "config").mkdir()
+	shutil.copy2(config_dir() / "config.default.yaml", tmp_path / "config" / "config.default.yaml")
+	(tmp_path / "config" / "queue-limit.yaml").write_text(
+		f"scanning:\n  review_queue_limit: {review_queue_limit}\n", encoding="utf-8"
+	)
+	monkeypatch.setenv("ALEA_ROOT", str(tmp_path))
+	repo_root.cache_clear()
+	return tmp_path
+
+
+def test_the_health_command_reports_the_backlog_it_can_see(tmp_path: Path, monkeypatch):
+	"""`alea health` prints the queue depth and age, through the queue's own reader.
+
+	The doctor already opened the review-queue file to prove it was readable,
+	and then said nothing about what was in it. The KPI's subject is exactly
+	what it skipped.
+
+	The backlog is read through ``ReviewQueue.backlog`` rather than by repeating
+	the SQL in the command: a second copy of a query is two spellings of one
+	metric, and they agree until one is edited -- in a doctor whose whole job is
+	to notice drift.
+	"""
+	import asyncio
+
+	from typer.testing import CliRunner
+
+	from alea.config.paths import repo_root
+	from alea.scanning.review.queue import queue_path
+
+	root = _scratch_root(tmp_path, monkeypatch)
+	queue = ReviewQueue(path=queue_path(root / "results"))
+
+	async def seed() -> None:
+		await queue.enqueue(_signal(source_document_id="doc-a"))
+		await queue.aclose()
+
+	asyncio.run(seed())
+
+	from alea.cli import app
+
+	try:
+		result = CliRunner().invoke(app, ["health"])
+	finally:
+		repo_root.cache_clear()
+
+	assert result.exit_code == 0, result.output
+	assert "review queue: 1 pending" in result.stdout, (
+		f"the doctor did not report the backlog it opened the file to read: {result.stdout!r}"
+	)
+	assert "limit 100" in result.stdout, (
+		"the depth was printed without the ceiling it is judged against"
+	)
+
+
+def test_the_health_command_reads_the_ceiling_from_the_config(
+	tmp_path: Path, monkeypatch
+):
+	"""The ceiling the doctor prints is the configured one, not a constant.
+
+	Pinned apart deliberately: a literal ``100`` in the command would satisfy
+	the test above, because 100 is also the default. Overriding the key is the
+	only way to tell "reads the configuration" from "prints the number the spec
+	happens to name", and those are different claims.
+	"""
+	import asyncio
+
+	from typer.testing import CliRunner
+
+	from alea.config.paths import repo_root
+	from alea.scanning.review.queue import queue_path
+
+	root = _scratch_root(tmp_path, monkeypatch, review_queue_limit=7)
+	queue = ReviewQueue(path=queue_path(root / "results"))
+
+	async def seed() -> None:
+		await queue.enqueue(_signal(source_document_id="doc-a"))
+		await queue.aclose()
+
+	asyncio.run(seed())
+
+	from alea.cli import app
+
+	try:
+		result = CliRunner().invoke(app, ["health", "-c", "config/queue-limit.yaml"])
+	finally:
+		repo_root.cache_clear()
+
+	assert result.exit_code == 0, result.output
+	assert "limit 7" in result.stdout, (
+		f"the doctor printed a ceiling other than the configured one: {result.stdout!r}"
+	)
+
+
+def test_a_deep_queue_does_not_make_the_health_command_fail(tmp_path: Path, monkeypatch):
+	"""The doctor reports the backlog and does not gate on it.
+
+	`alea health` is the container's liveness probe. A deep queue is a staffing
+	problem, not an unusable store, so exiting non-zero here would restart a
+	healthy process because nobody has cleared the review backlog -- a gate
+	scoped wider than its jurisdiction, which is the failure that teaches
+	operators to bypass the check. The ceiling is enforced where the KPI puts
+	it: `alea scan` colours the line when it is breached.
+	"""
+	import asyncio
+
+	from typer.testing import CliRunner
+
+	from alea.config.paths import repo_root
+	from alea.scanning.review.queue import queue_path
+
+	root = _scratch_root(tmp_path, monkeypatch, review_queue_limit=2)
+	queue = ReviewQueue(path=queue_path(root / "results"))
+
+	async def seed() -> None:
+		for index in range(3):
+			await queue.enqueue(_signal(source_document_id=f"doc-{index}"))
+		await queue.aclose()
+
+	asyncio.run(seed())
+
+	from alea.cli import app
+
+	try:
+		result = CliRunner().invoke(app, ["health", "-c", "config/queue-limit.yaml"])
+	finally:
+		repo_root.cache_clear()
+
+	assert result.exit_code == 0, (
+		f"a queue over the KPI made the liveness probe exit {result.exit_code}: "
+		f"{result.output!r}"
+	)
+	assert "review queue: 3 pending" in result.stdout
+	assert "limit 2" in result.stdout
+
+
+
+def test_a_scan_report_carries_the_backlog_the_command_prints(tmp_path: Path, monkeypatch):
+	"""The report's backlog reaches the door, over an injected connector.
+
+	The report carried a bare ``pending_count`` that no door read; the spec's
+	§14 asks for the depth *and* the oldest pending signal, and §16 puts a
+	ceiling on the first. This drives a real ``ScanningService`` over a mock
+	transport -- never a socket -- and asserts the report the service returns
+	carries all three, which is what ``alea scan`` prints.
+
+	Driven through the service rather than the CLI because the CLI builds its
+	own connectors from ``default_connectors()``, and a command test would
+	therefore either reach the network or measure the fixture. What the command
+	adds on top is a format string; what this asserts is the data path.
+	"""
+	import asyncio
+
+	from alea.scanning.connectors.news import RSSNewsConnector
+	from alea.scanning.review.queue import queue_path
+	from alea.scanning.service import ScanningService
+
+	root = _scratch_root(tmp_path, monkeypatch, review_queue_limit=5)
+	queue = ReviewQueue(path=queue_path(root / "results"))
+	connector = RSSNewsConnector(
+		feeds={"a": "https://ex.org/1"},
+		rate_limit_per_second=1000.0,
+		fetcher=_fetcher(),
+	)
+
+	async def seed() -> None:
+		# Two already pending, so the report's depth is not the run's own work.
+		for index in range(2):
+			await queue.enqueue(_signal(source_document_id=f"pending-{index}"))
+		await queue.aclose()
+
+	asyncio.run(seed())
+
+	async def run() -> None:
+		service = ScanningService(
+			[connector],
+			config=_load_config_for_scratch(root),
+			queue=ReviewQueue(path=queue_path(root / "results")),
+		)
+		try:
+			# ``SINCE`` rather than the default lookback: the fixture feed's item
+			# is dated September 2026 and the default window is the last day, so
+			# the default would fetch nothing and the report's depth would be
+			# the only thing under test.
+			report = await service.run(since=SINCE)
+		finally:
+			await service.aclose()
+		assert report.backlog.pending >= 2, (
+			f"the report's depth ({report.backlog.pending}) missed the two rows already queued"
+		)
+		assert report.backlog.oldest_pending_at is not None
+		assert report.backlog.oldest_age_hours is not None
+		assert report.review_queue_limit == 5, (
+			"the report did not carry the configured ceiling it is judged against"
+		)
+
+	asyncio.run(run())
+
+
+def _load_config_for_scratch(root: Path):
+	"""The scratch tree's configuration, loaded the way the CLI loads it.
+
+	The ``queue-limit`` overlay rather than ``config.default.yaml``: the whole
+	point of the assertion is that the report carries the *configured* ceiling,
+	and the default file carries the default one, so loading it would pass
+	whether or not the config reached the report.
+	"""
+	from alea.config.loader import load_config
+
+	return load_config(root / "config" / "queue-limit.yaml", require=True)

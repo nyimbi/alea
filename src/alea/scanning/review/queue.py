@@ -47,7 +47,7 @@ from alea.scanning.review.models import (
 	SignalStatus,
 	SignalVersion,
 )
-from alea.scanning.views import PriorityBreakdown
+from alea.scanning.views import PriorityBreakdown, ReviewBacklog
 from alea.signals.models import Signal
 
 logger = get_logger(__name__)
@@ -715,6 +715,32 @@ class ReviewQueue:
 		)
 		oldest = rows[0]["oldest"] if rows else None
 		return datetime.fromisoformat(oldest) if oldest else None
+
+	async def backlog(self, *, now: datetime | None = None) -> ReviewBacklog:
+		"""The queue's depth and the age of its oldest entry, in one read.
+
+		Both in one call, and one round trip, because the pair is the metric.
+		``pending_count`` and ``oldest_pending_at`` were both written and
+		neither was read; exposing a method that returns them separately would
+		have invited the same failure again -- a door that takes the depth and
+		forgets the age.
+
+		``now`` is a parameter so a caller reading a stored report can measure
+		the age against the report's own clock rather than against the clock at
+		read time, which would grow the age every time the report was opened.
+		"""
+		moment = now or utcnow()
+		pending = await self.pending_count()
+		oldest = await self.oldest_pending_at()
+		age_hours = None
+		if oldest is not None:
+			# Clamped at zero: a row written by a process whose clock is ahead
+			# of this one would otherwise report a negative age, and a negative
+			# duration reads as a corrupt record rather than as clock skew.
+			age_hours = max((moment - oldest).total_seconds() / 3600.0, 0.0)
+		return ReviewBacklog(
+			pending=pending, oldest_pending_at=oldest, oldest_age_hours=age_hours
+		)
 
 	async def actions(self, signal_id: str | None = None) -> list[ReviewAction]:
 		"""Every recorded decision, optionally for one signal."""
