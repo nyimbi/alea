@@ -396,7 +396,17 @@ def test_the_summary_serves_the_endogenous_layer(
 	assert "thermal_capacity_mw" in body["endogenous_parameters"]
 	# Disjoint from the derived count, which is the claim the field exists to
 	# make: a parameter the optimiser chooses is not one the graph computes.
-	assert body["endogenous"] + body["derived"] < body["parameters"]
+	# Asserted as an exact closure rather than an inequality, because a client
+	# reading the three counts has to be able to add them up: ``<`` passed
+	# while ``derived`` was undercounting by five, and an undercount that still
+	# leaves room under the total is exactly what an inequality cannot catch.
+	assert body["derived"] + body["endogenous"] <= body["parameters"]
+	exogenous = body["parameters"] - body["derived"] - body["endogenous"]
+	# And the third role is the remainder: every parameter is in exactly one of
+	# the three, which is what makes the counts a partition rather than three
+	# unrelated numbers.
+	listed = prg_client.get("/api/v1/prg/parameters?role=exogenous").json()
+	assert len(listed) == exogenous, (len(listed), exogenous)
 
 
 # ---------------------------------------------------------------------------

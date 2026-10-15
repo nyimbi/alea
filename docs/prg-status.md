@@ -31,8 +31,10 @@ the code and `config/prg.yaml` are the authority, and this says where to look.
 | PRG-driven solve | `src/alea/whatif/service.py` | `WhatIfEngine.solve_from_prg` + `PrgSolve`: the production caller the translation layer had none of — translate, solve, audit, with the dropped parameters carried on the payload |
 | Constraints | `src/alea/prg/constraints.py` | The equation→constraint half of Part X: the two inequalities that bind a linopy solve, the four that are post-solve checks instead, and `bound_parameter_names` — the four scalars those inequalities read, which reach the optimiser with no engine knob |
 | Constrained solve | `src/alea/whatif/service.py` | `solve_from_prg(constrain=True)`, the default: the graph's inequalities are added through PyPSA's `extra_functionality` hook, the constraint record enters the cache key, and an infeasible scenario raises `SolveError` instead of caching a cost |
-| API | `src/alea/api/routes/prg.py` | Five routes: `GET /prg/summary`, `GET /prg/equations`, `POST /prg/conflicts`, `POST /prg/sensitivity`, `POST /prg/cross-validation` |
-| The graph | `config/prg.yaml` | 87 parameters, 38 equations, 84 edges, 1 feedback loop (3 loop variables); 52 exogenous, 3 endogenous (the optimiser's fleet), 32 derived |
+| API | `src/alea/api/routes/prg.py` | The §43 surface: `GET /prg/summary`, `/graph`, `/graph/export`, `/parameters`, `/parameters/{id}`, `/parameters/{id}/dependents`, `/equations`, `/equations/{id}`, `/consistency/check`, `/consistency/report`; `POST /prg/propagate`, `/conflicts` (`/conflicts/detect`), `/conflicts/resolve`, `/feedback/solve`, `/translate`, `/sensitivity`, `/cross-validation`. The two reads and the two `/consistency` routes are public; the rest are analyst-tier |
+| Python SDK | `src/alea/prg/sdk.py` | The §45 `PRGClient`: async, one method per §43 operation, returning the JSON the service served rather than re-modelling it. Transport failures and service errors both raise `PrgClientError`, so a caller writes one `except` and does not import `httpx` |
+| Load cache | `src/alea/prg/graph.py` | `load_graph` memoised on the document's *identity* -- resolved path, mtime and size. Measured: a propagation is 6.5 ms and an incremental one 6.1 ms, while parsing the YAML is 73.0 ms of a 73.4 ms load, so §30's propagation cache targets the cheap half and the parse is what the workload asks for |
+| The graph | `config/prg.yaml` | 88 parameters, 39 equations, 88 edges, 2 feedback loops (5 loop variables between them); 52 exogenous, 3 endogenous (the optimiser's fleet), 33 derived |
 
 Commands: `alea prg summary|equations|check|propagate|conflicts|sensitivity|units|constraints|audit`,
 `alea whatif scenario`, and `alea expr render|eval|diff|simplify|solve`.
@@ -97,7 +99,7 @@ does not already check.
 
 Every edge in `config/prg.yaml` carries a `strength` — `hard`, `soft`, or
 `informational` — which the spec defines as "inviolable", "usually true", and
-"reported correlation". The field was declared on all 84 edges and read by
+"reported correlation". The field was declared on all 88 edges and read by
 **nothing** until it was wired: a violation was a violation, and a graph that
 distinguished a contradiction from a correlation did so in a comment.
 
@@ -164,13 +166,16 @@ the same budget permits 4,380× more emissions per modelled hour, and the
 assertion is on the emissions the solve actually produces. Re-running the
 annualisation canary against it now fails as it must.
 
-## What the dimensional check found`units.py` decides every equation: 31 of 38 are dimensionally consistent, 7
-are not, and 0 are undecidable. The seven are not seven of one kind, and the
+## What the dimensional check found
+
+`units.py` decides every equation: 31 of 39 are dimensionally consistent, 8
+are not, and 0 are undecidable. The eight are not eight of one kind, and the
 fix differs by kind — which is why they are listed rather than counted:
 
 | Equation | The mismatch | What it is |
 |---|---|---|
 | `crf_definition` | `1 + discount_rate`, a `1/year` rate | A rate added to the dimensionless `1`. Either `discount_rate` is a fraction and its unit is wrong, or the equation is. |
+| `tariff_cost_recovery` | `1000 · annualised_capex · capacity / energy` gives `currency·time/mass/length²`, `marginal_cost` is `currency·time²/mass/length²` | The cost-recovery identity divides a *power* cost by an *energy* quantity; one side is missing a time factor. Found when the second feedback loop added this equation — it is the newest of the eight and the only one that arrived already flagged. |
 | `energy_demand` | `(1 + demand_growth) ** horizon_years` | The same, for the growth rate. |
 | `debt_service_definition` | `(1 + cost_of_debt) ** asset_life` | The same, for the cost of debt. |
 | `rocof_definition` | `MW / MW.s` gives `1/[time]`, the node says `Hz/s` = `1/[time]²` | The standard formula is `ΔP·f₀/(2·E)`; the nominal frequency (50 Hz) is missing. |
@@ -187,21 +192,34 @@ the annual-quantity gap: the graph writes a yearly total in a unit that names
 the year, then divides it by something else that also names a year, and the
 year cancels to a dimension the node does not claim.
 
-None of the seven is reported as a *failure* by any other check, because the
+None of the eight is reported as a *failure* by any other check, because the
 graph is internally consistent either way — which is exactly the class of error
 a dimensional check exists to catch, and the reason the check was worth adding
 after `views.py` said the graph did not make it.
 
+**The units vocabulary is the deferred decision behind four of them.** The
+annual-quantity gap (`emissions_definition`, `hydrogen_water_definition`,
+`premature_deaths_definition`, and the new `tariff_cost_recovery`) is not four
+independent mistakes: it is one question about whether a node's unit names the
+per-year divisor. Probed both ways — declaring the five `TWh` nodes as
+`TWh/year` clears `tariff_cost_recovery` and opens `energy_balance`,
+`energy_demand`, `equilibrium_demand`, `unserved_definition` and
+`cooling_water_definition`. So the gap moves rather than closes, which means
+the eight are not eight things to fix; they are one decision to make, and the
+check is reporting the places it would land. Deferred rather than made,
+because inventing the convention and then editing 88 units to agree with it is
+manufacturing a decision no one took.
+
 ## Not built
 
-- **`Equation.linearity` is declared on all 38 equations and read by nothing,
+- **`Equation.linearity` is declared on all 39 equations and read by nothing,
   and the term is undefined.** The field takes `linear`/`nonlinear`/`mixed`
-  (31/7/0 as shipped). `constraints.py` does not read it: it walks the actual
+  (31/8/0 as shipped). `constraints.py` does not read it: it walks the actual
   arithmetic and asks whether *the optimiser's decision variables* enter
   nonlinearly, which is the question that decides whether a linear constraint
   can be built, and a declaration is not evidence for it. Nothing anywhere
   cross-checks the two. Trying to write that cross-check is the finding: four
-  honest oracles, four answers out of 38 equations —
+  honest oracles, four answers out of 39 equations —
 
   | oracle | what it asks | disagreements |
   |---|---|---|
@@ -222,8 +240,8 @@ after `views.py` said the graph did not make it.
   writing the reader that enforces it would manufacture agreement with a
   decision no one made.
 
-- **`ParameterNode.status` is declared on all 87 nodes, read by nothing, and
-  stale.** 69 `to_build` / 18 `existing`, and five of the `to_build` nodes are
+- **`ParameterNode.status` is declared on all 88 nodes, read by nothing, and
+  stale.** 70 `to_build` / 18 `existing`, and five of the `to_build` nodes are
   already reached by a production path: `carbon_budget_mtco2`,
   `dispatchable_re_capacity_mw`, `horizon_years`, `storage_capacity_mw`,
   `thermal_capacity_mw`. No spec doc defines what the label means — whether it
@@ -247,10 +265,10 @@ after `views.py` said the graph did not make it.
   is the register, not an omission: the graph states what the physics and the
   accounts require, and the engine states what a PyPSA network can be
   perturbed by, and the two sets were built for different purposes. The
-  register runs both ways: `engine_fields_unreached()` names the **6** engine
+  register runs both ways: `engine_fields_unreached()` names the **7** engine
   knobs no PRG parameter reaches (`coal_eaf`, `renewable_multiplier`,
   `battery_cost_multiplier`, `ssp_pathway`, `drought_multiplier`,
-  `hydrogen_export_twh_per_year`). A scenario pulling one of those cannot be
+  `hydrogen_export_twh_per_year`, `outages`). A scenario pulling one of those cannot be
   audited against the graph, because the graph does not know the quantity
   moved.
 
@@ -343,16 +361,16 @@ after `views.py` said the graph did not make it.
   from a guessed one. A sensitivity is a derivative at a point, and the register
   says so rather than implying otherwise.
 - **Every parameter is `float`, and `type` gates only that.** The spec's §20
-  asks for type *inference* from equations. There is nothing to infer: all 84
+  asks for type *inference* from equations. There is nothing to infer: all 88
   nodes are float, all appear in arithmetic, and none is used as an index — so
   an inference engine here would be a gate that cannot fail. What was real is
-  that `type` was declared on all 84 nodes, enum-validated, exported, and read
+  that `type` was declared on all 88 nodes, enum-validated, exported, and read
   by **nothing**: a node declared `timeseries` with a scalar `default` was
   accepted, propagated as a float, and reported as a quantity. The node now
   refuses a non-scalar type carrying a scalar `default` or `range`, because
   the model has no field for an array. `float` and `int` are the types it can
   honestly carry; the other four wait on a field that holds the array.
-- **Not the 784-parameter graph.** 84 of them, over the systems with the
+- **Not the 784-parameter graph.** 88 of them, over the systems with the
   clearest physical or accounting statement.
 - **No UI.** Packaging rather than capability, and the last door left shut. The
   CLI and the API both reach every register; a UI would render them.
@@ -458,6 +476,55 @@ is 2 of the horizon's 7.44 demand-weighted years, i.e. the parameter does
 exactly what the growth model says; `L1:0.5` gives 657,330 and a full-horizon
 `L1` gives 3,348,330, and all four cache keys differ.
 
+**The §43 API surface and the §45 client.** The route module carried five
+routes; §43 names thirteen operations. Twelve were added, the client was
+written against them, and the client's tests — which drive the real app through
+`httpx.ASGITransport` rather than a mock, because a client's defects are all
+path strings and payload shapes that a mock cannot see — found two route
+defects that no unit test had:
+
+`/consistency/report` called `check_scenario({})`. A propagation needs a value
+for every underived parameter, so **every call was a 422 naming the graph's own
+defaults as missing inputs**; the route could not answer at all. It now seeds
+them, which is what "the shipped default scenario" means.
+
+`/conflicts/resolve` applied `corrections[0]` blindly. The ranking is by
+relative move, so the smallest proportional correction to an over-determined
+`marginal_cost` on this graph is a **negative fuel price** — resolving one
+contradiction by producing a scenario the graph refuses. It now takes the first
+correction that stays inside its declared range, which is the field the
+detector was already recording and no reader was acting on.
+
+**Three registers in one payload disagreed about one parameter.** `/translate`
+merged two different findings into `untranslated`: "no knob carries this" (a
+modelling gap) and "a knob carries it, but this route had no network to form
+the ratio against" (an API limitation). Merged, the payload named
+`fuel_price_usd_per_mwh` as both reaching and not reaching a knob, while its own
+`coverage` — computed from the graph — counted it as reaching one. The route's
+docstring already said the two were different findings; it then merged them.
+`deferred` is now its own field, the three registers are asserted pairwise
+disjoint, and the canary that re-merges them names the parameter.
+
+**`derived` in the summary was the `order()`-vs-`computed()` defect again.** The
+field is the derived half of the role partition and sat beside `endogenous`, so
+it had to count the nodes carrying the derived role; it counted `order()`, the
+topological *sequence*, which omits the five feedback-loop variables. The
+payload therefore stated 28 derived against 52 exogenous and 3 endogenous — 83
+of the 88 parameters it reports in the same response. A client cannot reconcile
+that, and an inequality assertion (`derived + endogenous < parameters`) passed
+throughout, because an undercount that still leaves room under the total is
+exactly what an inequality cannot catch. Both sites now assert the partition
+*closes*, counted from the graph rather than pinned.
+
+**The load is cached, and the cache is identity-keyed.** Measured before
+building it: a propagation is 6.5 ms and an incremental one 6.1 ms — the loop
+solve dominates both — while `yaml.safe_load` is 73.0 ms of a 73.4 ms load. So
+§30's propagation cache targets the cheap half, and the parse is what the
+workload asks for. The key is the resolved path, mtime and size: the same
+identity check `make` uses. Its limit is stated rather than hidden — a rewrite
+preserving both would be served stale — and the test asserts both directions,
+that an unchanged file is not re-parsed and that an edit is observed.
+
 ## Two things about the graph that are easy to get wrong
 
 **`range` on a node is the admissible set, not the solver's bracket.** They
@@ -480,7 +547,7 @@ constraint, so it appears in `constrains`, not in `affects`. The declared
 relationship direction is on `edges_from`/`edges_into`.
 
 **A direction field nothing reads is a declaration, not a relation.**
-`RelationshipEdge.direction` is declared on all 84 edges, enum-validated
+`RelationshipEdge.direction` is declared on all 88 edges, enum-validated
 against `forward`/`backward`/`bidirectional`, and required by `params-prg1.md`
 §3.3 — "the PRG must encode **causality**". The index behind
 `edges_from`/`edges_into` was built from the `source` and `target` *fields* and
@@ -545,6 +612,18 @@ is derived — nothing may set it — but it has no place in a topological order
 `order()` omits it. A reachability closure filtered on `order()` therefore
 reports a path that crossed a feedback loop while omitting the loop's own
 members, which is the one place the uncertainty most obviously lands.
+
+**And it is not a count of anything.** This is the third site where `order()`
+was read as "the derived parameters" and the second where the reader was a
+payload. `audit.py` partitioned a scenario's parameters into checked and skipped
+over `set(g.order())`, so when `equilibrium_demand_twh` became the tariff loop's
+variable it left the sequence and entered *neither* set — the partition silently
+stopped covering the graph. `service.graph_summary` counted it as `derived`, and
+the response then stated 83 of its own 88 parameters. `computed()` is
+`frozenset(self._determiner) | self._loop_variables` and is the set both of them
+meant. The rule: `order()` is a *sequence*, and a sequence is not a set with an
+ordering — anywhere a set is wanted, it is the wrong object, and it fails by
+omission, which reads as a smaller number rather than as an error.
 
 **And `not is_settable` is not "derived" either, which the fix above taught the
 hard way.** That advice stood here until 2026-10-15, when the endogenous fleet
@@ -722,7 +801,7 @@ allowed on a *constant* only, so the arithmetic door stays shut: `-a` is still
 refused.
 
 **A declaration with no reader is a comment, even when it validates.** `strength`
-was declared on all 84 edges, enum-checked on every load, exported in the model
+was declared on all 88 edges, enum-checked on every load, exported in the model
 — and read by nothing, so the spec's three tiers ("inviolable", "usually true",
 "reported correlation") were a comment the loader happened to accept. The
 symptom of the class is that nothing fails: a graph declaring every edge
@@ -732,7 +811,7 @@ the field somewhere convenient but to make it *decide* something — here, wheth
 a failure blocks — and then to gate on it, canaried in both directions.
 
 **A property of the equation cannot be read off an edge.** The strength is
-declared per edge, and 26 of the 38 equations are cited by more than one, so
+declared per edge, and 27 of the 39 equations are cited by more than one, so
 "the strength of this equation" was ambiguous: a reader taking it from an edge
 got whichever edge they read first. The constructor now refuses a document whose
 edges disagree about one, rather than resolving it by an arbitrary pick — the
@@ -743,7 +822,7 @@ strength that depends on iteration order is not a declared property.
 `strength_counts` iterated the edge-derived `_strength` dict while `strength_of`
 and the propagation both read it with a `hard` default — so `firm_capacity_definition`,
 which no edge cites, was counted as no equation at all and the register read 37
-tiers over 38 equations. Two readers of one field disagreed by exactly the number
+tiers over 39 equations. Two readers of one field disagreed by exactly the number
 of edge-less equations, and the register was the wrong one. It now counts by
 equation through `strength_of`, which is the single reader the other two use.
 

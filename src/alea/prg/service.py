@@ -94,7 +94,16 @@ def graph_summary(graph: ParameterGraph | None = None) -> dict[str, Any]:
 		},
 		"systems_declared": len(SYSTEM_IDS),
 		"unmodelled_systems": [entry.split(":")[0] for entry in coverage(g.equations)],
-		"derived": len(g.order()),
+		# ``computed`` and not ``order``. The field is the derived half of the
+		# role partition -- it sits beside ``endogenous``, and the two together
+		# are "not settable" -- so it has to count the nodes carrying the
+		# derived role. ``order`` is the topological *sequence*, and a sequence
+		# has no place for a feedback loop: its five loop variables are
+		# deliberately absent from it. Counting them out made the summary state
+		# 28 derived against 52 exogenous and 3 endogenous, which sums to 83 of
+		# the 88 parameters it reports in the same payload. A client cannot
+		# reconcile that, and the missing five are exactly the loop variables.
+		"derived": len(g.computed()),
 		# The middle layer of the spec's §3.4 DAG -- what the optimiser chooses.
 		# Reported beside `derived` because the two are the halves of "not
 		# settable", and a summary that named only the derived count would leave

@@ -875,7 +875,26 @@ def test_the_summary_reports_the_registers(graph: ParameterGraph):
 	summary = graph_summary(graph)
 	assert summary["parameters"] == len(graph.nodes)
 	assert summary["equations"] == len(graph.equations)
-	assert summary["derived"] == len(graph.order())
+	# ``computed``, not ``order``: this field is the derived half of the role
+	# partition, so it counts the nodes carrying the derived role. ``order`` is
+	# the topological sequence and omits the five feedback-loop variables,
+	# which made the summary state 28 derived against 52 exogenous and 3
+	# endogenous -- 83 of the 88 parameters it reports in the same payload.
+	assert summary["derived"] == len(graph.computed())
+	assert summary["derived"] == sum(
+		1 for node in graph.nodes.values() if node.role.value == "derived"
+	)
+	# The partition closes. A client reading the counts must be able to add
+	# them up and land on ``parameters``, or one of them is counting a
+	# different set than its name says. Exogenous is counted from the graph
+	# rather than pinned, so this stays true when the document grows.
+	exogenous = sum(
+		1 for node in graph.nodes.values() if node.role.value == "exogenous"
+	)
+	assert (
+		summary["derived"] + summary["endogenous"] + exogenous
+		== summary["parameters"]
+	), "the role partition does not close"
 	assert summary["feedback_loops"], "the summary lost the loop"
 	# Every system is modelled, so the register is empty -- and empty is the
 	# assertion, because a system that quietly lost its equations is exactly
