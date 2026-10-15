@@ -536,6 +536,18 @@ class WhatIfFrontierRequest(ApiModel):
 	stop: float
 	points: int = Field(default=10, ge=2, le=100)
 
+	frontier: Literal["cost_emissions", "cost_risk"] = "cost_emissions"
+	"""Which frontier the sweep is for, and it is not a labelling choice.
+
+	``cost_risk`` asks the cost against CVaR -- whether the portfolio survives a
+	bad year, which is criterion 6. It is *refused* when the engine has no price
+	model, because a cost-risk frontier whose risk column reads 0.0 is the
+	cost-emissions frontier with a better name: the strongest version of the
+	defect `alea.whatif.sweep` exists to avoid. Without this field the API could
+	only ever produce the cost-emissions frontier, so that refusal was a
+	guarantee nothing could invoke.
+	"""
+
 
 class JobKind(StrEnum):
 	"""What a job runs. The worker dispatches on this value."""

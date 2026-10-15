@@ -47,8 +47,10 @@ from alea.whatif import (
 	save_scenario,
 	sweep_parameter,
 )
+from alea.whatif.extract import price_statistics, total_cost_usd
+from alea.whatif.pricemodel import _served_energy_mwh, price_model_from_network
 from alea.whatif.sweep import FRONTIER_COLUMNS, FRONTIER_VALUE_COLUMNS
-from alea.whatif.views import RiskMetrics
+from alea.whatif.views import RiskMetrics, ScenarioResult
 
 SNAPSHOTS = pd.date_range("2030-01-01", periods=4, freq="h")
 
@@ -658,7 +660,7 @@ def test_renewable_share_nan_on_zero_gen():
 def test_extract_reports_none_for_an_unsolved_network():
 	"""An unsolved network has no prices, and ``None`` is not a price.
 
-	Zero would be a price. ``_price_statistics`` returns ``(None, None)`` so a
+	Zero would be a price. ``price_statistics`` returns ``(None, None)`` so a
 	consumer can tell "no price computed" from "price computed and zero".
 	"""
 	result = extract(
@@ -848,3 +850,341 @@ def test_the_key_probe_is_a_fresh_interpreter(tmp_path: Path):
 	assert result.stdout.strip() == cache_key(
 		ScenarioParameters(), "sha256:" + "ab" * 32, "0.1.0"
 	)
+
+
+# --------------------------------------------------------------------------
+# The price model: criterion 6's producer
+# --------------------------------------------------------------------------
+
+
+def _varying_price_network() -> pypsa.Network:
+	"""A network whose marginal price differs between hours.
+
+	Coal is the only unit that can serve the peak; solar is free and covers the
+	middle of the day, so the clearing price is 0 when the sun is out and 30
+	when it is not. ``_network`` cannot serve here: one always-marginal thermal
+	unit prices every hour identically, so the dispersion the price model draws
+	from is zero and a seed change is unobservable.
+
+	Multi-period, because the engine applies ``demand_growth`` by default and
+	refuses a single-year network rather than applying a parameter that would do
+	nothing -- criterion 3, asserted by
+	``test_demand_growth_requires_multi_period``.
+	"""
+	network = pypsa.Network()
+	network.add("Bus", "b1", carrier="AC")
+	network.set_snapshots(
+		[
+			ts
+			for year in (2030, 2040)
+			for ts in pd.date_range(f"{year}-01-01", periods=3, freq="h")
+		]
+	)
+	network.add("Generator", "coal", bus="b1", carrier="coal", p_nom=200.0, marginal_cost=30.0)
+	network.add(
+		"Generator",
+		"solar",
+		bus="b1",
+		carrier="solar",
+		p_nom=150.0,
+		marginal_cost=0.0,
+		p_max_pu=[0.0, 0.6, 0.9, 0.0, 0.6, 0.9],
+	)
+	network.add("Load", "load", bus="b1", p_set=120.0)
+	return network
+
+
+def test_the_price_model_centres_on_the_objective_it_was_handed(tmp_path: Path):
+	"""The expected cost is the solve's own objective, not a re-estimate of it.
+
+	The zero-mean draw is what makes the distribution a statement about *spread*
+	only. A draw with a non-zero mean would move the expected cost off the
+	objective the optimiser returned, and the risk axis would then measure the
+	model's bias as well as the scenario's risk.
+	"""
+	network = _network()
+	network.optimize(solver_name="highs", log_to_console=False)
+	price_fn = price_model_from_network(n_paths=4096)
+	costs, threshold = price_fn(network, None)
+
+	assert len(costs) == 4096
+	objective = total_cost_usd(network)
+	assert threshold == objective
+	mean = sum(costs) / len(costs)
+	# A zero-mean draw of 4096 paths leaves a sampling error of order
+	# std/sqrt(n); 5% of the objective is far outside it and inside any bias
+	# worth catching.
+	assert abs(mean - objective) < 0.05 * abs(objective), (
+		f"the sample mean {mean} is not the objective {objective}; the draw is "
+		f"not zero-mean, so the risk axis carries the model's bias"
+	)
+
+
+def test_the_served_energy_is_per_horizon_not_per_snapshot(tmp_path: Path):
+	"""A static ``p_set`` is per snapshot, so summing the column is wrong by N.
+
+	PyPSA leaves ``loads_t.p_set`` empty for a statically-defined load and puts
+	the value in ``loads["p_set"]``. Summing that column gives one snapshot's
+	energy on an N-snapshot network, which understates the served energy by N
+	and the risk axis with it -- a unit error, invisible because the number is
+	internally consistent with its own line.
+	"""
+	network = _network()
+	network.optimize(solver_name="highs", log_to_console=False)
+	# The fixture's load is 120 MW on 4 snapshots: 480 MWh, not 120.
+	assert _served_energy_mwh(network) == 480.0, (
+		f"served energy is {_served_energy_mwh(network)}, which is the "
+		f"per-snapshot figure rather than the horizon total"
+	)
+
+
+def test_the_price_model_reports_no_distribution_when_the_solve_has_none():
+	"""A solve without duals has no price distribution, and that is not zero.
+
+	The empty sample is the absence of a measurement. Reporting a zero-volatility
+	distribution instead would give a riskless portfolio for a solve that
+	measured nothing -- the same defect as a ``renewable_share`` of 0 for a
+	network that generated nothing.
+	"""
+	network = _network()  # built, never solved: no marginal prices
+	price_fn = price_model_from_network()
+	costs, threshold = price_fn(network, None)
+	assert costs == [] and threshold is None
+
+
+def test_the_price_model_is_deterministic_in_the_scenario(tmp_path: Path):
+	"""Same scenario, same sample -- in this process and another (AD-8).
+
+	A clock-seeded or globally-seeded draw makes two runs of one sweep differ,
+	and a frontier that moves between runs is a frontier nobody can act on.
+
+	**The fixture must have a price that varies.** ``_network``'s single
+	thermal unit is marginal in every hour, so its marginal price is flat, its
+	dispersion is zero and *any* seed draws the same sample -- the test would
+	pass against a clock-seeded model. The solar unit below is cheaper and
+	covers some hours and not others, which is what puts a spread in the price
+	for a seed to move.
+	"""
+	network = _varying_price_network()
+	network.optimize(solver_name="highs", log_to_console=False)
+	price_fn = price_model_from_network(n_paths=256)
+	first, _ = price_fn(network, _placeholder("scenario-a"))
+	second, _ = price_fn(network, _placeholder("scenario-a"))
+	other, _ = price_fn(network, _placeholder("scenario-b"))
+	assert first == second, "the same scenario drew two different samples"
+	assert first != other, "two scenarios drew the same sample; the seed ignores identity"
+
+
+def _placeholder(scenario_id: str):
+	"""A minimal result carrying a scenario identity, for the seed."""
+	return ScenarioResult(
+		scenario_id=scenario_id,
+		params=ScenarioParameters(),
+		network_checksum="sha256:" + "ab" * 32,
+		code_version="0.1.0",
+		total_cost_usd=0.0,
+		total_emissions_tco2=0.0,
+		capacity_mix_mw={},
+		generation_mwh={},
+	)
+
+
+def test_the_cost_risk_frontier_is_reachable_from_the_price_model(tmp_path: Path):
+	"""Criterion 6 end to end: a real engine, a real model, a real frontier.
+
+	``PriceFn`` had no producer in ``src/`` -- the only construction was a
+	lambda in the test above -- so the frontier this asserts was reachable from
+	a test and nowhere else. This drives the shipped model through the shipped
+	frontier.
+	"""
+	base = _varying_price_network()
+	base.optimize(solver_name="highs", log_to_console=False)
+	base.model.solver_model = None
+	engine = WhatIfEngine(
+		base, cache_root=tmp_path / "cache", price_fn=price_model_from_network()
+	)
+	frame = cost_risk_frontier(engine, "carbon_price_usd_per_tco2", [0.0, 100.0, 300.0])
+	assert frame["conditional_value_at_risk"].notna().all()
+	assert (frame["conditional_value_at_risk"] >= 0.0).all()
+	assert frame["value_at_risk"].notna().all()
+	# The axis carries information: it is not the cost column under another
+	# name, which is the mislabelling the frontier's own guard now refuses.
+	assert (frame["conditional_value_at_risk"] != frame["total_cost_usd"]).all()
+
+
+# --------------------------------------------------------------------------
+# The API's door to a cost-risk frontier
+# --------------------------------------------------------------------------
+
+
+def _api_frontier_service(tmp_path: Path, network: pypsa.Network):
+	"""A ``WhatIfService`` over a scratch catalogue holding ``network``."""
+	import asyncio
+	import json as _json
+
+	from alea.api.jobs import JobStore
+	from alea.api.repository import Repository
+	from alea.api.whatif import WhatIfService
+	from alea.config.loader import load_config
+	from alea.io.artefacts import write_artefact
+	from alea.provenance.models import Basis, DerivedProvenance
+
+	# Loaded *before* `repo_root` is patched: `load_config` reads
+	# `config/config.default.yaml` through it, so patching first makes the
+	# default file unfindable. The API fixture documents the same ordering.
+	config = load_config()
+	scenario_dir = tmp_path / "results" / "scenarios" / "base"
+	scenario_dir.mkdir(parents=True, exist_ok=True)
+	network.export_to_netcdf(scenario_dir / "network.nc")
+
+	def write(relative: str, data: object) -> None:
+		write_artefact(
+			tmp_path / relative,
+			data,
+			DerivedProvenance(
+				source_id="fixture",
+				basis=Basis.MEASURED,
+				uncertainty=0.0,
+				inputs=["fixture"],
+				code_version="0.1.0",
+			),
+		)
+
+	write(
+		"results/scenarios/index.json",
+		{
+			"scenarios": [
+				{
+					"scenario_id": "base",
+					"name": "Base",
+					"countries": ["KE"],
+					"planning_horizons": [2030],
+					"clusters": [55],
+					"created_at": "2026-01-01T00:00:00+00:00",
+				}
+			]
+		},
+	)
+	write(
+		"results/scenarios/base/scenario.json",
+		{
+			"scenario_id": "base",
+			"name": "Base",
+			"countries": ["KE"],
+			"planning_horizons": [2030],
+			"clusters": [55],
+			"created_at": "2026-01-01T00:00:00+00:00",
+			"network_checksum": "abc",
+			"code_version": "0.1.0",
+		},
+	)
+	write(
+		"results/scenarios/base/results/2030.json",
+		{
+			"objective": 1.0e9,
+			"total_capacity_mw": 2100.0,
+			"capacity_mix": [{"carrier": "solar", "capacity_mw": 1000.0, "share": 0.5}],
+			"solved_at": "2026-01-01T00:00:00+00:00",
+			"network_checksum": "abc",
+		},
+	)
+	# The service resolves every path through `alea.config.paths.resolve`, so the
+	# scratch root has to be installed before it is built and uninstalled after.
+	import shutil
+
+	import alea.config.paths as paths
+
+	# The scratch root is a *repository* root, so it needs a `config/`. The
+	# engine's solve function calls `load_config()` at solve time, and by then
+	# `repo_root` is the scratch tree -- a tree with no `config/config.default.yaml`
+	# makes `_read` return `{}` and `Config` fail validation with "scenario Field
+	# required", from inside the solver rather than from anything the test names.
+	shutil.copytree(paths.repo_root() / "config", tmp_path / "config")
+
+	previous = paths.repo_root
+	paths.repo_root = lambda: tmp_path  # type: ignore[assignment]
+	service = WhatIfService(config, Repository(config))
+	store = JobStore(str(tmp_path / "jobs.sqlite"))
+	asyncio.run(store.connect())
+	return service, store, paths, previous
+
+
+def test_the_api_frontier_carries_the_whole_point_set(tmp_path: Path):
+	"""Every ``FRONTIER_COLUMNS`` field, not three of them.
+
+	The handler emitted ``parameter_value``/``objective``/``emissions`` only, so
+	the risk axis the engine computed on every point was dropped at the API
+	boundary and criterion 6 was unreachable through the endpoint. The key names
+	are the sweep module's, so an API frontier and a CLI frontier describe a
+	point the same way.
+	"""
+	import asyncio
+
+	from alea.api.jobs import JobContext
+
+	network = _varying_price_network()
+	network.optimize(solver_name="highs", log_to_console=False)
+	network.model.solver_model = None
+	service, store, paths, previous = _api_frontier_service(tmp_path, network)
+	try:
+		context = JobContext(store, "job-1", 1)
+		payload = asyncio.run(
+			service._run_frontier(
+				{
+					"base_scenario_id": "base",
+					"parameter": "carbon_price_usd_per_tco2",
+					"start": 0.0,
+					"stop": 200.0,
+					"points": 3,
+				},
+				context,
+			)
+		)
+	finally:
+		asyncio.run(store.close())
+		paths.repo_root = previous  # type: ignore[assignment]
+
+	assert payload["kind"] == "cost_emissions"
+	assert payload["risk_computed"] is True
+	for point in payload["points"]:
+		missing = [column for column in FRONTIER_COLUMNS if column not in point]
+		assert not missing, f"the point is missing {missing}"
+		assert point["conditional_value_at_risk"] is not None
+		assert point["value_at_risk"] is not None
+
+
+def test_the_api_refuses_a_cost_risk_frontier_with_no_risk_axis(tmp_path: Path):
+	"""The API's door must enforce what the sweep module's does.
+
+	A guarantee one door enforces and another routes around is not a guarantee.
+	``cost_risk_frontier`` refuses a frontier whose risk axis is missing or
+	degenerate; the endpoint accepted ``frontier='cost_risk'`` and returned the
+	cost-emissions points under that name.
+	"""
+	import asyncio
+
+	from alea.api.jobs import JobContext
+
+	network = _network()  # one always-marginal unit: a flat price, no dispersion
+	network.optimize(solver_name="highs", log_to_console=False)
+	network.model.solver_model = None
+	service, store, paths, previous = _api_frontier_service(tmp_path, network)
+	try:
+		context = JobContext(store, "job-1", 1)
+		with pytest.raises(ValueError, match="CVaR equal to its cost"):
+			asyncio.run(
+				service._run_frontier(
+					{
+						"base_scenario_id": "base",
+						"parameter": "carbon_price_usd_per_tco2",
+						"start": 0.0,
+						"stop": 200.0,
+						"points": 3,
+						"frontier": "cost_risk",
+					},
+					context,
+				)
+			)
+	finally:
+		asyncio.run(store.close())
+		paths.repo_root = previous  # type: ignore[assignment]

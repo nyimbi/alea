@@ -51,7 +51,7 @@ def extract(
 	capacity_mix = _capacity_mix_mw(network)
 	generation = _generation_mwh(network)
 	unserved = _unserved_energy_mwh(network, generation)
-	mean_price, volatility = _price_statistics(network)
+	mean_price, volatility = price_statistics(network)
 
 	basis = basis_uncertainty[0] if basis_uncertainty else _default_basis()
 	uncertainty = basis_uncertainty[1] if basis_uncertainty else 0.0
@@ -61,7 +61,7 @@ def extract(
 		params=params,
 		network_checksum=network_checksum,
 		code_version=code_version,
-		total_cost_usd=_total_cost_usd(network),
+		total_cost_usd=total_cost_usd(network),
 		total_emissions_tco2=_total_emissions_tco2(network, generation),
 		capacity_mix_mw=capacity_mix,
 		generation_mwh=generation,
@@ -85,7 +85,7 @@ def extract(
 # --------------------------------------------------------------------------
 
 
-def _total_cost_usd(network: pypsa.Network) -> float:
+def total_cost_usd(network: pypsa.Network) -> float:
 	"""The LP objective: total system cost over the horizon.
 
 	``n.objective`` alone omits ``objective_constant`` — the capital cost of
@@ -287,7 +287,7 @@ def _availability(network: pypsa.Network, generators: pd.DataFrame) -> pd.DataFr
 	)
 
 
-def _price_statistics(network: pypsa.Network) -> tuple[float | None, float | None]:
+def price_statistics(network: pypsa.Network) -> tuple[float | None, float | None]:
 	"""Mean and standard deviation of the wholesale price, or ``(None, None)``.
 
 	``(None, None)`` when the solve produced no marginal prices — a network
@@ -311,4 +311,4 @@ def _default_basis() -> Any:
 	return Basis.MODELLED
 
 
-__all__ = ["extract"]
+__all__ = ["extract", "price_statistics", "total_cost_usd"]

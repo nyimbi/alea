@@ -28,6 +28,7 @@ from alea.whatif.cache import (
 )
 from alea.whatif.extract import extract
 from alea.whatif.params import ScenarioParameters
+from alea.whatif.pricemodel import DEFAULT_PRICE_PATHS, price_model_from_network
 from alea.whatif.service import DEFAULT_CODE_VERSION, PrgSolve, WhatIfEngine
 from alea.whatif.store import (
 	ScenarioStoreError,
@@ -73,7 +74,9 @@ __all__ = [
 	"cache_key",
 	"cost_risk_frontier",
 	"efficient_frontier",
+	"DEFAULT_PRICE_PATHS",
 	"extract",
+	"price_model_from_network",
 	"frontier_points",
 	"key_is_process_stable",
 	"latest_version",

@@ -181,7 +181,28 @@ class WhatIfService:
 		return result
 
 	async def _run_frontier(self, request: dict[str, Any], context: JobContext) -> dict[str, Any]:
-		"""Sweep one parameter across a range and write the frontier artefact."""
+		"""Sweep one parameter across a range and write the frontier artefact.
+
+		**Every point carries what a frontier point has to carry.** This used to
+		emit three fields -- ``parameter_value``, ``objective``, ``emissions`` --
+		so the artefact answered a policy question and not the one
+		`08-layer5-whatif.md` §10 criterion 6 states: the *cost-risk* frontier,
+		whether a portfolio survives a bad year. ``ScenarioResult.risk`` was
+		computed by the engine on every point and dropped here, so the risk axis
+		was reachable from `alea whatif scenario` and from the sweep module's own
+		``cost_risk_frontier``, and not from the API at all.
+
+		The point shape is ``FRONTIER_COLUMNS``'s, and the key names are the
+		sweep module's, so the two doors to a frontier describe it the same way.
+		A second spelling would make an API frontier and a CLI frontier
+		incomparable while both looked right.
+
+		``risk_computed`` says whether the sweep had a price model, because the
+		alternative -- a ``null`` the reader has to interpret -- does not
+		distinguish "no risk model" from "risk model, and the value is missing".
+		"""
+		from alea.whatif.sweep import check_cost_risk_axis
+
 		assert isinstance(request, dict), "a job request is an object"
 		frontier_request = WhatIfFrontierRequest.model_validate(request)
 		base = self._load_base(frontier_request.base_scenario_id)
@@ -206,18 +227,46 @@ class WhatIfService:
 			)
 			points.append(
 				{
-					"parameter_value": value,
-					"objective": solved["objective"],
-					"emissions": solved["emissions"],
+					"param_name": frontier_request.parameter,
+					"param_value": value,
+					"total_cost_usd": solved["objective"]["value"],
+					"total_emissions_tco2": solved["emissions"]["value"],
+					"renewable_share": solved.get("renewable_share"),
+					"conditional_value_at_risk": solved.get("conditional_value_at_risk"),
+					"value_at_risk": solved.get("value_at_risk"),
+					"scenario_id": frontier_request.base_scenario_id,
+					"cache_key": key,
+					"from_cache": bool(solved.get("from_cache", False)),
 				}
 			)
 			await context.progress((index + 1) / frontier_request.points)
 
+		risk_computed = all(point["conditional_value_at_risk"] is not None for point in points)
+		if frontier_request.frontier == "cost_risk":
+			# The *same* predicate the sweep module's `cost_risk_frontier`
+			# enforces, not a second copy of it -- because a guarantee one door
+			# enforces and the other routes around is not a guarantee, and two
+			# copies of a comparison agree today and diverge the first time
+			# either is edited. Returning the cost-emissions points labelled
+			# cost-risk is the defect that function exists to prevent, and the
+			# label is what a reader trusts, so this raises before anything is
+			# persisted: an artefact that survives the refusal is a forged one.
+			check_cost_risk_axis(
+				[point["conditional_value_at_risk"] for point in points],
+				[float(point["total_cost_usd"]) for point in points],
+			)
 		payload = {
 			"parameter": frontier_request.parameter,
 			"points": points,
 			"base_scenario_id": frontier_request.base_scenario_id,
 			"network_checksum": base["network_checksum"],
+			# `kind` names what was asked for; `risk_computed` says whether the
+			# risk axis is populated. They are separate because a cost-emissions
+			# sweep on a *priced* engine carries CVaR too -- inferring the kind
+			# from the columns would relabel it cost-risk, which is the same
+			# mislabelling in the other direction.
+			"risk_computed": risk_computed,
+			"kind": frontier_request.frontier,
 		}
 		self._persist_document(f"{WHATIF_DIR}/frontiers", payload, base)
 		logger.info(
@@ -225,6 +274,7 @@ class WhatIfService:
 			scenario_id=frontier_request.base_scenario_id,
 			parameter=frontier_request.parameter,
 			points=len(points),
+			kind=payload["kind"],
 		)
 		return payload
 
@@ -488,6 +538,7 @@ def _try_real_engine(
 	"""
 	from alea.whatif.cache import DEFAULT_CACHE_ROOT
 	from alea.whatif.params import ScenarioParameters
+	from alea.whatif.pricemodel import price_model_from_network
 	from alea.whatif.service import DEFAULT_CODE_VERSION, WhatIfEngine
 
 	engine = WhatIfEngine(
@@ -500,6 +551,12 @@ def _try_real_engine(
 		# `test_whatif_gc_cli.py`.
 		cache_root=resolve(DEFAULT_CACHE_ROOT),
 		solve_fn=_expansion_solver(),
+		# The price model, without which `ScenarioResult.risk` is `None` on
+		# every point and the API can never produce a cost-risk frontier --
+		# criterion 6's subject. Built from the solve's own marginal prices
+		# rather than from an assumed volatility, so the risk axis is a fact
+		# about the network in front of it.
+		price_fn=price_model_from_network(),
 		code_version=str(base.get("code_version") or "") or DEFAULT_CODE_VERSION,
 	)
 	params = request.parameters.to_engine()
@@ -508,7 +565,11 @@ def _try_real_engine(
 	# ``solve_expansion`` calls ``network.optimize`` on the network it is handed,
 	# so the engine is given a copy: a solve that mutated the base network would
 	# make every later scenario in the same worker depend on the order they ran.
-	outcome = engine.solve_with_outcome(params.copy(deep=True))
+	# ``model_copy(deep=True)``, not ``copy(deep=True)``: the latter is
+	# ``PydanticDeprecatedSince20``, which subclasses ``DeprecationWarning``, and
+	# this repo's pytest config turns those into errors -- so the deprecation was
+	# a hard failure on the one path that reaches this line.
+	outcome = engine.solve_with_outcome(params.model_copy(deep=True))
 	result = outcome.result
 	logger.info(
 		"whatif.engine.solved",
@@ -549,6 +610,15 @@ def _try_real_engine(
 		"cache_key": outcome.cache_key,
 		"from_cache": outcome.from_cache,
 		"renewable_share": result.renewable_share,
+		# The risk axis, carried on the result rather than recomputed by each
+		# reader. `ScenarioResult.risk` is `None` when the engine had no price
+		# model, and `None` is not 0: a cost-risk frontier whose risk column
+		# reads 0.0 is the cost-emissions frontier with a better name, which is
+		# the strongest version of the defect the sweep module exists to avoid.
+		"conditional_value_at_risk": (
+			result.risk.conditional_value_at_risk if result.risk is not None else None
+		),
+		"value_at_risk": result.risk.value_at_risk if result.risk is not None else None,
 		"placeholder": False,
 	}
 

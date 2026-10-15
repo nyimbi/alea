@@ -15,6 +15,7 @@ with zeros, which would plot as a flat line at the origin and read as "riskless"
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable, Sequence
 from typing import TYPE_CHECKING, Any
 
@@ -167,6 +168,72 @@ def efficient_frontier(
 	return frame
 
 
+def check_cost_risk_axis(
+	risk: Sequence[float | None],
+	cost: Sequence[float],
+) -> None:
+	"""Raise unless a cost-risk frontier's risk axis is present *and* populated.
+
+	**One predicate, two doors.** There are two ways to ask for a cost-risk
+	frontier -- ``cost_risk_frontier`` below, and the API's ``_run_frontier`` --
+	and a guarantee one door enforces and the other routes around is not a
+	guarantee. The API door used to accept ``frontier='cost_risk'`` and return
+	the cost-emissions points under that name; the fix is this shared check
+	rather than a second copy of the same comparison, because two copies of a
+	predicate agree today and diverge the first time either is edited.
+
+	Two refusals, and the second is the one that took a defect to find:
+
+	- **Absent.** A ``None`` or ``NaN`` CVaR is a sweep run without a price
+	  model. Filling the column with zeros would plot as a flat line at the
+	  origin and read as "riskless" for a solve that measured nothing.
+	- **Uninformative.** A *present* axis is not a *populated* one. The price
+	  model draws its dispersion from the solve's own marginal prices, so a
+	  network whose price is the same in every hour has none to draw from and
+	  every point comes back with ``CVaR == total_cost`` -- not NaN, and
+	  carrying nothing. That frontier is the cost-emissions frontier with a
+	  risk label, arriving by the one route the absence check cannot see.
+	  Verified on this build: a flat-price fixture returns CVaR equal to the
+	  objective on every point.
+
+	The comparison is ``isclose`` with ``rtol=1e-9``, not ``==``: a
+	zero-dispersion draw still leaves float noise of order 1e-11 on a cost of
+	order 1e5, so an exact comparison reports "informative" on exactly the
+	frontier this exists to refuse.
+	"""
+	assert len(risk) == len(cost), "a risk point and a cost point per frontier point"
+	if not risk:
+		raise ValueError("a cost-risk frontier with no points is not a frontier")
+
+	absent = 0
+	pairs: list[tuple[float, float]] = []
+	for risk_value, cost_value in zip(risk, cost, strict=True):
+		if risk_value is None:
+			absent += 1
+			continue
+		number = float(risk_value)
+		if math.isnan(number):
+			absent += 1
+			continue
+		pairs.append((number, float(cost_value)))
+
+	if absent:
+		raise ValueError(
+			f"{absent} of {len(risk)} points have no CVaR; a cost-risk frontier "
+			f"needs a price model (price_fn) on the engine. Use "
+			f"efficient_frontier() for the cost-emissions frontier instead."
+		)
+	if all(math.isclose(value, cost_value, rel_tol=1e-9, abs_tol=0.0) for value, cost_value in pairs):
+		raise ValueError(
+			f"every one of {len(pairs)} points has CVaR equal to its cost, so the "
+			f"risk axis carries no information and this is the cost-emissions "
+			f"frontier with a risk label. The engine's price model draws its "
+			f"dispersion from the solved network's marginal prices, and this "
+			f"network prices every hour the same. Use efficient_frontier() for "
+			f"the cost-emissions frontier instead."
+		)
+
+
 def cost_risk_frontier(
 	engine: WhatIfEngine,
 	param_name: str,
@@ -177,21 +244,29 @@ def cost_risk_frontier(
 ) -> pd.DataFrame:
 	"""The cost-risk frontier: cost against CVaR.
 
-	Refuses rather than returning a frontier whose risk axis is missing. A
-	cost-risk frontier without CVaR is the cost-emissions frontier with a
-	better name, and naming it "risk" would be the strongest possible version
-	of the defect this module exists to avoid.
+	Refuses rather than returning a frontier whose risk axis is missing or
+	carries nothing. A cost-risk frontier without CVaR is the cost-emissions
+	frontier with a better name, and naming it "risk" would be the strongest
+	possible version of the defect this module exists to avoid. The refusal is
+	``check_cost_risk_axis``, shared with the API door.
 	"""
 	frame = efficient_frontier(engine, param_name, values, template, workers=workers)
-	missing = frame["conditional_value_at_risk"].isna().to_numpy(dtype=bool)
-	missing_count = int(missing.sum())
-	if missing_count > 0:
-		raise ValueError(
-			f"{missing_count} of {len(frame)} points have no CVaR; a "
-			f"cost-risk frontier needs a price model (price_fn) on the engine. "
-			f"Use efficient_frontier() for the cost-emissions frontier instead."
-		)
+	check_cost_risk_axis(
+		_optional_floats(frame["conditional_value_at_risk"].tolist()),
+		[float(value) for value in frame["total_cost_usd"].tolist()],
+	)
 	return frame
+
+
+def _optional_floats(values: Sequence[Any]) -> list[float | None]:
+	"""A float column as ``float | None``, with ``NaN`` read as absent.
+
+	``check_cost_risk_axis`` takes both doors' points, and the two spell
+	"missing" differently -- the sweep frame carries ``NaN``, the API's payload
+	carries ``None``. Normalising here keeps the shared predicate from having to
+	know which door called it.
+	"""
+	return [None if value is None or pd.isna(value) else float(value) for value in values]
 
 
 def frontier_points(frame: pd.DataFrame) -> list[FrontierPoint]:
@@ -244,6 +319,7 @@ def _optional_float(value: Any) -> float | None:
 __all__ = [
 	"FRONTIER_COLUMNS",
 	"FRONTIER_VALUE_COLUMNS",
+	"check_cost_risk_axis",
 	"cost_risk_frontier",
 	"efficient_frontier",
 	"frontier_points",

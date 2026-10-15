@@ -354,7 +354,16 @@ class WhatIfEngine:
 			costs, threshold = self._price_fn(
 				network, _result_placeholder(params, self._network_checksum, self._code_version)
 			)
-			risk = RiskMetrics.from_costs(costs, confidence=self._risk_confidence, threshold=threshold)
+			# An empty sample means the price model had no distribution to draw
+			# from -- a solve without duals carries no marginal prices. That is
+			# "risk not computed", which `risk is None` already says, and it is
+			# not "risk is zero": `from_costs([])` raises, and a raise here would
+			# fail a solve that is otherwise perfectly good because a *reporting*
+			# axis is unavailable. The frontier's own refusal then names it.
+			if costs:
+				risk = RiskMetrics.from_costs(
+					costs, confidence=self._risk_confidence, threshold=threshold
+				)
 
 		return extract(
 			network,
