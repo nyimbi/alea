@@ -65,6 +65,7 @@ def apply_parameters(base: pypsa.Network, params: ScenarioParameters) -> pypsa.N
 	_apply_renewable_potential(network, params, snapshot)
 	_apply_availability_multipliers(network, params, snapshot)
 	_apply_hydrogen_export(network, params)
+	_apply_outages(network, params)
 
 	after = _network_fingerprint(base)
 	assert before == after, "apply_parameters mutated the base network"
@@ -378,6 +379,37 @@ def _apply_hydrogen_export(network: pypsa.Network, params: ScenarioParameters) -
 	if name not in network.loads.index:
 		network.add("Load", name, bus=bus, carrier=_HYDROGEN_EXPORT_CARRIER)
 	network.loads_t.p_set[name] = values
+
+
+def _apply_outages(network: pypsa.Network, params: ScenarioParameters) -> None:
+	"""Derate or remove the scenario's lines, before the solve reads them.
+
+	Last among the mutations because it is the only one that changes the bus
+	graph rather than a value on it: the islanding check reads the components
+	the outage leaves behind, and running it before a later step added a
+	generator would check a network the optimiser never sees.
+
+	The check is here rather than in the solve function because it is a
+	statement about the *scenario*, and the engine is what knows which scenario
+	is being solved. Left to the optimiser, an islanded load returns
+	``status='warning' (infeasible)`` and the engine reports it as "an
+	infeasible or unbounded scenario is a result about the scenario" — true, and
+	silent about which line stranded which bus.
+	"""
+	if not params.outages:
+		return
+	from alea.whatif.outage import OutageError, apply_outages, islands_without_generation
+
+	stranded = islands_without_generation(network, params.outages)
+	if stranded:
+		raise OutageError(
+			f"{params.outages.summary()} strands load on {stranded} with no local "
+			f"generation or storage; the optimiser would return "
+			f"status='warning' (infeasible) and name neither the line nor the bus. "
+			f"An outage that islands demand is an answer about the scenario, and it "
+			f"is stated here rather than left to the solver to discover"
+		)
+	apply_outages(network, params.outages)
 
 
 def _export_bus(network: pypsa.Network) -> str:

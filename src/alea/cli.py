@@ -16,7 +16,7 @@ import json
 import sys
 from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import Annotated, Any, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 import typer
 
@@ -25,6 +25,9 @@ from alea.config.loader import ConfigError, load_config
 from alea.config.models import Config
 from alea.logging import configure, configure_from, get_logger, new_run_id
 from alea.registry import registry, technologies, tier_counts
+
+if TYPE_CHECKING:  # pragma: no cover - typing only
+	from alea.whatif.outage import OutageSet
 
 app = typer.Typer(
 	no_args_is_help=True,
@@ -833,6 +836,17 @@ def whatif_scenario(
 			help="Solve without the graph's inequalities, as a plain what-if.",
 		),
 	] = False,
+	outage: Annotated[
+		list[str] | None,
+		typer.Option(
+			"--outage",
+			help=(
+				"Take a line out or derate it: --outage LINE[:FACTOR][@START..END]. "
+				"FACTOR defaults to 0 (the line is gone); 0.5 is a derate to half "
+				"its rating. Repeatable, one entry per line."
+			),
+		),
+	] = None,
 ) -> None:
 	"""Solve a scenario stated in the graph's parameters, and audit the result.
 
@@ -856,6 +870,22 @@ def whatif_scenario(
 	scenario the fleet cannot meet is infeasible and exits 3: an answer about the
 	scenario, which is a different thing from a cost.
 
+	**Outages go in through their own option, not through `--set`.** A line
+	outage is a topology change, not a quantity: the graph states quantities and
+	equations, and there is no equation behind removing a line. `--outage
+	LINE[:FACTOR][@START..END]` builds the outage set the engine's `outages`
+	field carries. Without this option that field would be declared, validated,
+	applied by `apply_parameters`, and reachable from nothing but a direct
+	Python call -- the declared-is-not-produced defect, on the one parameter
+	that models this specification's own headline scenario.
+
+	An outage that islands demand with no local generation is refused (exit 2)
+	before the solve, naming the line and the bus. Left to the optimiser it
+	returns `status='warning' (infeasible)` and names neither. An island the
+	load-shedding generator can serve is *not* refused: shedding is how the
+	scenario states its unserved energy, and refusing it would forbid the
+	measurement.
+
 	The audit is the point of going through the graph at all. `alea prg audit`
 	checks a *stored* scenario after the fact; this is the same check run on the
 	result the solve just produced, so a scenario that the graph rejects is
@@ -866,11 +896,21 @@ def whatif_scenario(
 	from alea.whatif.service import SolveError, WhatIfEngine
 
 	values = _parse_prg_values(set_)
-	with _run("cli.whatif.scenario", network=str(network), parameters=len(values)) as run:
+	outages = _parse_outages(outage)
+	with _run(
+		"cli.whatif.scenario",
+		network=str(network),
+		parameters=len(values),
+		outages=len(outages) if outages else 0,
+	) as run:
 		engine = WhatIfEngine(network, cache_root=resolve(DEFAULT_CACHE_ROOT))
 		try:
 			solved = engine.solve_from_prg(
-				values, strict=not loose, force=force, constrain=not no_constrain
+				values,
+				strict=not loose,
+				force=force,
+				constrain=not no_constrain,
+				outages=outages,
 			)
 		except ValueError as exc:
 			# The translation's own refusal, which names the parameter. Caught and
@@ -949,6 +989,80 @@ def whatif_scenario(
 		# `prg audit` do. A result the graph rejects is not a result to build on.
 		if not solved.consistent:
 			raise typer.Exit(code=1)
+
+
+def _parse_outages(specs: list[str] | None) -> OutageSet | None:
+	"""``--outage`` specs, as an ``OutageSet``, or ``None`` when none were given.
+
+	Grammar: ``LINE[:FACTOR][@START..END]``. ``--outage L1`` removes the line
+	for the whole horizon; ``--outage L1:0.5`` derates it to half its rating;
+	``--outage L1@2030-01-01T02:00..2030-01-01T05:00`` removes it over a
+	window; the parts compose. The factor defaults to ``0`` because the bare
+	form is the spec's headline scenario -- the line is gone -- and a user who
+	typed ``--outage L1`` and got a derate would have to read this file to
+	learn why.
+
+	The split order is ``@`` before ``:``, and it is not arbitrary: an ISO
+	timestamp contains colons, so splitting on ``:`` first would read
+	``L1@2030-01-01T02:00..`` as line ``L1@2030-01-01T02`` with factor
+	``00..``. Neither a line name nor a factor contains ``@``, so ``@`` is the
+	separator that is safe to take first.
+
+	``None`` rather than an empty ``OutageSet`` when nothing was passed:
+	``solve_from_prg`` reads ``None`` as "the caller stated no outages" and an
+	empty set as a scenario that was stated and happens to be empty. They
+	produce the same solve, but only the first leaves the default path
+	untouched, and the distinction is what keeps this option from becoming the
+	thing every scenario has to pass through.
+	"""
+	if not specs:
+		return None
+
+	# Imported here rather than at module scope, matching every other what-if
+	# import in this file: `alea.whatif` pulls in pypsa, and a CLI that pays
+	# that on `alea --help` is slower for every user who never solves anything.
+	from alea.whatif.outage import LineOutage, OutageError, OutageSet
+
+	records: list[LineOutage] = []
+	for spec in specs:
+		head, at, window = spec.partition("@")
+		line, colon, raw_factor = head.partition(":")
+		if not line.strip():
+			raise typer.BadParameter(f"--outage expects LINE[:FACTOR][@START..END], got {spec!r}")
+		factor = 0.0
+		if colon:
+			try:
+				factor = float(raw_factor)
+			except ValueError as exc:
+				raise typer.BadParameter(
+					f"--outage {spec!r}: the factor is a number between 0 and 1, "
+					f"got {raw_factor!r}"
+				) from exc
+		start: str | None = None
+		end: str | None = None
+		if at:
+			start, dots, end = window.partition("..")
+			if not dots or not start.strip() or not end.strip():
+				raise typer.BadParameter(
+					f"--outage {spec!r}: a window is START..END, both required; a "
+					f"half-open window would apply an outage of unstated length"
+				)
+		try:
+			records.append(LineOutage(line=line.strip(), factor=factor, start=start, end=end))
+		except OutageError as exc:
+			# The record's own bounds -- a factor above 1, an inverted window --
+			# surfaced as a CLI error rather than a traceback. This is the same
+			# validation the field runs when a scenario is constructed in Python,
+			# reached here from the command line rather than re-implemented.
+			raise typer.BadParameter(f"--outage {spec!r}: {exc}") from exc
+
+	try:
+		return OutageSet(tuple(records))
+	except OutageError as exc:
+		# Two outages on one line. Refused rather than merged: the second would
+		# otherwise overwrite the first's factor from a frame built off the
+		# static rating, silently dropping the earlier window.
+		raise typer.BadParameter(f"--outage: {exc}") from exc
 
 
 def _parse_prg_values(pairs: list[str] | None) -> dict[str, float]:

@@ -41,6 +41,7 @@ from alea.whatif.views import RiskMetrics, ScenarioResult, SolveOutcome
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
 	from alea.prg.graph import ParameterGraph
+	from alea.whatif.outage import OutageSet
 
 logger = get_logger(__name__)
 
@@ -407,6 +408,7 @@ class WhatIfEngine:
 		strict: bool = True,
 		force: bool = False,
 		constrain: bool = True,
+		outages: OutageSet | None = None,
 	) -> PrgSolve:
 		"""Solve a scenario stated in the graph's parameters, and audit it.
 
@@ -460,6 +462,15 @@ class WhatIfEngine:
 		)
 		knob_values = {name: value for name, value in values.items() if name not in constraint_values}
 		params = to_scenario_parameters(g, knob_values, self._base, strict=strict)
+		if outages is not None:
+			# Carried onto the parameters here rather than through `--set`, because
+			# an outage is not a graph parameter: the graph states quantities and
+			# equations, and a line outage is a topology change with no equation
+			# behind it. Without this argument the field would be declared,
+			# validated, applied by `apply_parameters`, and reachable from nothing
+			# but a direct Python call -- the declared-is-not-produced class, on
+			# the one parameter that models the spec's own headline scenario.
+			params = params.with_value("outages", outages)
 		# Everything the caller set that reached no knob and no constraint, which
 		# is three findings under one register: a settable graph parameter the
 		# engine has no knob for, a graph parameter the graph itself computes (so

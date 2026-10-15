@@ -27,6 +27,14 @@ from alea.whatif.cache import (
 	solve_fingerprint,
 )
 from alea.whatif.extract import extract
+from alea.whatif.outage import (
+	LineOutage,
+	OutageError,
+	OutageSet,
+	apply_outages,
+	islands_without_generation,
+	outage_mask,
+)
 from alea.whatif.params import ScenarioParameters
 from alea.whatif.pricemodel import DEFAULT_PRICE_PATHS, price_model_from_network
 from alea.whatif.service import DEFAULT_CODE_VERSION, PrgSolve, WhatIfEngine
@@ -61,6 +69,9 @@ __all__ = [
 	"FRONTIER_COLUMNS",
 	"FRONTIER_VALUE_COLUMNS",
 	"FrontierPoint",
+	"LineOutage",
+	"OutageError",
+	"OutageSet",
 	"PrgSolve",
 	"RiskMetrics",
 	"ScenarioParameters",
@@ -71,6 +82,7 @@ __all__ = [
 	"SolveOutcome",
 	"WhatIfEngine",
 	"apply_parameters",
+	"apply_outages",
 	"cache_key",
 	"cost_risk_frontier",
 	"efficient_frontier",
@@ -87,4 +99,6 @@ __all__ = [
 	"scenario_dir",
 	"solve_fingerprint",
 	"sweep_parameter",
+	"islands_without_generation",
+	"outage_mask",
 ]

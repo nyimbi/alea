@@ -397,6 +397,67 @@ which is what an unsolved network is. The first version defaulted to `0.0` and
 raised on an unsolved network instead; ten tests that extract an unsolved
 fixture caught it, and they were right.
 
+**Line outages, and the mechanism the tree's own doc gets wrong.** The spec
+states a line-outage dimension three ways (`docs/what-if-line-loss.md` §1.1:
+`line_active`, `line_capacity_factor`, `line_outage_start`/`_end`). All three
+are one mechanism here — a per-snapshot rating — because the obvious one does
+not work. Probed on pypsa 1.4.0:
+
+| spelling | declared as | measured |
+|---|---|---|
+| `lines_t.active = [T,T,F,F]` | **static only** | optimises `ok`, sends 50 MW through the line on the snapshots marked inactive. Accepted, stored, **never read**. |
+| `lines_t.s_max_pu = [1,1,0,0]` | static or series | honoured exactly: 0 MW across the window, load served by shedding. |
+
+`docs/modelling-alg-3.md:427` prescribes `n.lines.active = False` as *the*
+implementation — and so do `docs/modelling-alg-2.md:39` and `docs/params.md:412`
+for `line_active` and `line_outage_start`. The dynamic table is a silent no-op —
+the worst of the three possible behaviours, because the solve returns and the
+answer looks like an answer. So a windowed outage is a rating of zero, a
+permanent one is the same with no window, and `line_capacity_factor` is `0.5` on
+the same field.
+
+The two failure modes are different and belong to different mechanisms, which
+an earlier draft of this code got wrong in four docstrings. With no injector on
+an islanded bus: `s_max_pu = 0` returns `status='warning' (infeasible)` and the
+engine's `_default_solve` raises `SolveError`; the static `lines.active = False`
+raises linopy's `ValueError: Empty LHS with non-zero RHS in nodal balance
+constraint`. A rating keeps the variable and forces it, so the failure is
+infeasibility rather than a malformed constraint. The canary that disabled the
+islanding refusal is what surfaced it — it failed with `SolveError` where the
+docstring predicted the linopy error.
+
+`islands_without_generation` counts **load shedding as supply**, deliberately.
+`docs/what-if-line-loss.md` §2.3 models shedding as a VoLL generator so the
+optimiser minimises unserved energy; a check that excluded it would refuse
+*every* island, forbidding the measurement and calling it validation. The
+refusal is for an island with no injector at all, where the solver's answer
+names neither the line nor the bus.
+
+**The door was the part that mattered, and it caught a defect the unit tests
+could not.** `--outage LINE[:FACTOR][@START..END]` on `alea whatif scenario`
+builds the set and passes it to `solve_from_prg`, which carries it onto the
+parameters through `with_value` (re-validated, not `model_copy`). Without the
+option the field would be declared, validated, applied by `apply_parameters`,
+and reachable from nothing but a direct Python call — the declared-is-not-produced
+class, on the parameter that models the spec's headline scenario.
+
+Running it end-to-end refused a *correct* window:
+`--outage L1@2030-01-01T01:00..2030-01-01T02:00` matched no snapshot on a
+network whose labels are plainly `2030-01-01 01:00:00`. Pandas separates date
+from time with a space, ISO-8601 — what a user types, what the CLI documents,
+what `datetime` prints — with `T`, and the string comparison the module
+docstring defended as "the ordering the labels already carry" never matched.
+Both sides now go through `_iso`. Every unit test passed throughout, because
+every one of them spelled the bound the way the implementation happened to want;
+the two new gates spell it the way a user does, and the canary that reverts
+`_iso` fails them with `matches none of the network's 6 snapshots`.
+
+Measured through the CLI on a 2030+2040 base: objective 11,161 with no outage;
+a two-hour 2030 window takes it to 908,161 with unserved fraction 0.269 — which
+is 2 of the horizon's 7.44 demand-weighted years, i.e. the parameter does
+exactly what the growth model says; `L1:0.5` gives 657,330 and a full-horizon
+`L1` gives 3,348,330, and all four cache keys differ.
+
 ## Two things about the graph that are easy to get wrong
 
 **`range` on a node is the admissible set, not the solver's bracket.** They

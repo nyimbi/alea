@@ -20,6 +20,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from alea.whatif.outage import OutageSet
+
 # The SSP pathways that carry a climate story strong enough to justify a
 # hydrological perturbation. See the validator below.
 _HIGH_EMISSIONS_PATHWAYS: frozenset[str] = frozenset({"SSP3-7.0", "SSP5-8.5"})
@@ -66,6 +68,23 @@ class ScenarioParameters(BaseModel):
 	ssp_pathway: str = "SSP2-4.5"
 	drought_multiplier: float = Field(default=1.0, gt=0.0, le=3.0)
 	"""Hydrological stress. Divides hydro availability; > 1 is a drier year."""
+
+	outages: OutageSet = Field(default_factory=OutageSet)
+	"""Lines taken out or derated, optionally over a snapshot window.
+
+	A topology change rather than a quantity, and the one parameter here that is
+	not a scalar. It is carried as a nested value rather than as parallel
+	``outage_lines``/``outage_factors`` lists because the two lists can differ
+	in length, and a mismatch would apply the second line's factor to the third
+	line — a scenario that runs, reports an outage, and loses the wrong line.
+
+	The field enters the cache key through ``canonical_json`` like every other,
+	which is what makes a scenario with a line out a different solve from one
+	without. It has to: two identical parameter sets differing only in an
+	outage are two different optimisations of one network, and a key that
+	omitted this would serve whichever ran first to the other — the same
+	failure the network checksum prevents, one level down.
+	"""
 
 	@model_validator(mode="after")
 	def _drought_needs_a_climate_scenario(self) -> ScenarioParameters:
