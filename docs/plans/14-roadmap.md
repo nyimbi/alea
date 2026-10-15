@@ -91,11 +91,11 @@ reproduces (or refutes) the specification's own case study.
 | **Losses on vs. off difference recorded** | Artefact |
 | **Kenya geothermal case study reproduced or refuted** | Artefact |
 | Aggregation validated and recorded | Validation artefact |
-| ALEA solves with PyPSA-Earth absent | CI job |
+| Alea solves with PyPSA-Earth absent | CI job |
 
 **M1 resolves three `[UNVERIFIED]` claims:** the ~20% loss overestimate (#6), the
 Kenya geothermal case study (#9), and the DC-vs-AC loss error. Each is either
-reproduced with ALEA's numbers or recorded as a discrepancy.
+reproduced with Alea's numbers or recorded as a discrepancy.
 
 **M1 is the first real milestone.** Everything before it is infrastructure;
 everything after it depends on the Kenya network being right.
@@ -158,7 +158,7 @@ review, not success rate.
 | Resilience metrics carry proxy flags | `test_saidi_proxy_flagged` |
 | TLENS on 200 lines under 2 hours | Recorded timing |
 
-**M4 resolves the Malawi TLENS target.** Where ALEA's ranking differs from the
+**M4 resolves the Malawi TLENS target.** Where Alea's ranking differs from the
 experts', the difference is reported, not tuned away.
 
 ---
@@ -245,7 +245,7 @@ the point at which it becomes usable by someone other than its authors.
 
 | Gate | Check |
 |---|---|
-| ALEA image builds and runs clean | CI |
+| Alea image builds and runs clean | CI |
 | PyPSA-Earth image separate, no shared interpreter | Build test |
 | Every long job durable | Canary |
 | Review queue restore tested | Restore drill |

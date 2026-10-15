@@ -1,4 +1,4 @@
-# ALEA: The Definitive Master Parameter Catalog
+# Alea: The Definitive Master Parameter Catalog
 
 ## Complete Single-Table Reference of All 784 Parameters, Algorithms, and Implementations
 

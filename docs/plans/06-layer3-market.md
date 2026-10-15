@@ -310,7 +310,7 @@ def capture_price(
 
 **Capture rate** is `capture_price / time_weighted_price`, computed only where
 the time-weighted price is non-zero, and NaN otherwise. The `[UNVERIFIED]`
-benchmark here is COMPASS's South African capture curves; M8 compares ALEA's
+benchmark here is COMPASS's South African capture curves; M8 compares Alea's
 South African output against them.
 
 ### 5.2 Cannibalisation

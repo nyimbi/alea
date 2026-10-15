@@ -1,4 +1,4 @@
-# ALEA: Comprehensive Gap Analysis of Parameter Coverage
+# Alea: Comprehensive Gap Analysis of Parameter Coverage
 
 ## Are the Parametric Needs of All Users Truly Covered?
 
@@ -668,7 +668,7 @@ Required by: IPP developers, DFIs, NGOs, cities
 
 With the **331 additional parameters** across **14 new categories**, total coverage rises to **784 parameters** across **28 categories**, achieving an average of **95% coverage** across all twenty user archetypes.
 
-The remaining 5% gap consists of highly specialised parameters (e.g., nuclear fusion, military energy, space-based solar) that are not relevant to ALEA's mission of serving Africa's energy transition. These can be added as domain-specific extensions when the need arises.
+The remaining 5% gap consists of highly specialised parameters (e.g., nuclear fusion, military energy, space-based solar) that are not relevant to Alea's mission of serving Africa's energy transition. These can be added as domain-specific extensions when the need arises.
 
 **Recommendation**: Implement the 14 new categories in **Phase 3** of the platform development, prioritising:
 
@@ -687,4 +687,4 @@ The remaining 5% gap consists of highly specialised parameters (e.g., nuclear fu
 13. **Asset condition & lifecycle** (required for asset management)
 14. **Market operations** (required for trading and settlement)
 
-Without these additions, ALEA cannot claim to serve all twenty user archetypes comprehensively. With them, ALEA becomes the **definitive energy intelligence platform for Africa** — one that answers the questions of every stakeholder in the energy transition, from the household deciding whether to install solar to the sovereign wealth fund deciding whether to invest in a transmission corridor.
+Without these additions, Alea cannot claim to serve all twenty user archetypes comprehensively. With them, Alea becomes the **definitive energy intelligence platform for Africa** — one that answers the questions of every stakeholder in the energy transition, from the household deciding whether to install solar to the sovereign wealth fund deciding whether to invest in a transmission corridor.

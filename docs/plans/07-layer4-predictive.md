@@ -226,7 +226,7 @@ comes from a utility's work-order system.
 **260% ROI is not a model output.** It is a business-case figure dependent on
 failure costs, maintenance costs, and outage costs specific to an operator. M6
 either reproduces it from a stated cost model or the claim is dropped from any
-ALEA output.
+Alea output.
 
 ---
 
@@ -295,7 +295,7 @@ asserted as a property test to 1e-9 relative tolerance.
 | Loss approximation < 2% error vs. full AC | `[UNVERIFIED]` | M1 |
 
 The first is confirmed by solving Kenya with and without losses (Layer 1). The
-second compares ALEA's DC-flow losses against an AC solve on the Kenya fixture —
+second compares Alea's DC-flow losses against an AC solve on the Kenya fixture —
 this is the one place a reference implementation may depend on pypsa's `pf`
 (AC power flow), because it is checking the DC approximation against the physics.
 
@@ -331,7 +331,7 @@ Transmission Lines' contribution to Energy Not Supplied: for each line, the
 increase in ENS when that line is out. The specification's Malawi result
 (identifying Nanjoka–Nkhotakota, Nkhotakota–Dwangwa, Dwangwa–Chintheche,
 Kapichila–Mlambe as critical) is `[UNVERIFIED]` and is the M1/M4 validation
-target: ALEA's top-N TLENS lines must match the expert ranking, and where they
+target: Alea's top-N TLENS lines must match the expert ranking, and where they
 differ the difference is reported rather than tuned away.
 
 **TLENS is where the Rust crate is decisive.** 200 lines × 8760 snapshots, each
@@ -460,6 +460,6 @@ reader of the result consults. §7 and §8 each state that a parameter is config
 | 10 | Every `[UNVERIFIED]` claim resolved or withdrawn | M2/M6 review |
 
 **Criterion 10 is the honesty gate.** Every claim inherited from the
-specification is either reproduced with ALEA's own numbers or explicitly
+specification is either reproduced with Alea's own numbers or explicitly
 withdrawn. A claim that stays in the codebase unverified past its milestone is a
 claim that will be quoted.

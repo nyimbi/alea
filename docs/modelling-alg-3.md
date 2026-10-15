@@ -1,4 +1,4 @@
-# ALEA: Complete Reconciled Catalog of Modelling Algorithms
+# Alea: Complete Reconciled Catalog of Modelling Algorithms
 
 ## Accounting for the Discrepancy and Delivering the Full 14-Category, 400+ Parameter Catalog
 
@@ -645,4 +645,4 @@ The remainder of this document delivers the **complete, reconciled catalog**: al
 | Which categories were missing? | **Spatial & Temporal (16), Market Design (15)** |
 | Why was the count different (226 vs 171)? | 226 was **missing algorithms**, not total parameters. The catalog listed 171 representative parameters, not all 453. |
 
-The complete reconciled catalog now covers all **14 categories** and **453 parameters**, with each parameter mapped to its required algorithm and Python implementation (existing or to-be-built). This is the definitive, exhaustive reference for ALEA's what-if analysis engine.
+The complete reconciled catalog now covers all **14 categories** and **453 parameters**, with each parameter mapped to its required algorithm and Python implementation (existing or to-be-built). This is the definitive, exhaustive reference for Alea's what-if analysis engine.

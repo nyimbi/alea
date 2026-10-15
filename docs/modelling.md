@@ -1,12 +1,12 @@
-The ALEA platform derives its predictions and insights through a multi-layered modelling architecture, where each layer consumes the outputs of the one below it, adding analytical depth and predictive capability. This specification details the mathematical formulations, data flows, and computational methods that transform raw data into actionable intelligence.
+The Alea platform derives its predictions and insights through a multi-layered modelling architecture, where each layer consumes the outputs of the one below it, adding analytical depth and predictive capability. This specification details the mathematical formulations, data flows, and computational methods that transform raw data into actionable intelligence.
 
 ---
 
-## Part I: The Optimisation Core — How ALEA Determines the Least-Cost System
+## Part I: The Optimisation Core — How Alea Determines the Least-Cost System
 
 ### 1.1 The Objective Function
 
-ALEA inherits its optimisation core from PyPSA-Earth, which is driven by a **cost-optimisation objective function** in linear form. The objective minimises total system cost across all nodes (countries or regions), technologies, branches (transmission lines), and snapshots (time steps):
+Alea inherits its optimisation core from PyPSA-Earth, which is driven by a **cost-optimisation objective function** in linear form. The objective minimises total system cost across all nodes (countries or regions), technologies, branches (transmission lines), and snapshots (time steps):
 
 $$\text{Minimize} \quad \text{Costs} = \sum_{N,S} c_{n,s}\bar{G}_{n,s} + \sum_{N,S} c_{n,s}\bar{H}_{n,s} + \sum_{L} c_{l}F_{l} + \sum_{T} w_{t} \left[ \sum_{N,S} o_{n,s}G_{n,s,t} + \sum_{N,S} o_{n,s}H_{n,s,t} \right]$$
 
@@ -43,7 +43,7 @@ Where $C_{l,c}$ is the cycle incidence matrix, $x_l$ is line reactance, and $f_{
 
 ### 1.4 Unit Commitment Constraints
 
-For thermal generators, ALEA applies **unit commitment** constraints, which introduce binary status variables for each committable unit. The key constraints are:
+For thermal generators, Alea applies **unit commitment** constraints, which introduce binary status variables for each committable unit. The key constraints are:
 
 - **Minimum up/down times**: A generator committed at time $t$ must remain committed for a minimum number of periods.
 - **Start-up and shut-down costs**: Incurred when the status variable changes.
@@ -52,7 +52,7 @@ For thermal generators, ALEA applies **unit commitment** constraints, which intr
 
 ### 1.5 Spatial Resolution and Clustering
 
-ALEA supports **five spatial resolutions** for the African continent:
+Alea supports **five spatial resolutions** for the African continent:
 
 | Resolution | Nodes | Use Case |
 |---|---|---|
@@ -66,7 +66,7 @@ Spatial clustering uses a **Voronoi cell approach**, where each cluster is repre
 
 ### 1.6 Temporal Resolution and Aggregation
 
-The default temporal resolution is **full chronology (8,760 hours per year)** to capture renewable variability. For computationally intensive studies, ALEA uses the **Time Series Aggregation Module (TSAM)** to cluster snapshots into segments of varying lengths. Three aggregation methods are available:
+The default temporal resolution is **full chronology (8,760 hours per year)** to capture renewable variability. For computationally intensive studies, Alea uses the **Time Series Aggregation Module (TSAM)** to cluster snapshots into segments of varying lengths. Three aggregation methods are available:
 
 1. **Averaging**: Simple averaging of snapshots within segments.
 2. **Segmentation (TSAM)**: Agglomerative clustering with variable-duration segments that preserves the statistical properties of the time series.
@@ -76,7 +76,7 @@ The model reports the **error introduced by temporal aggregation** for key outpu
 
 ### 1.7 Transmission Loss Approximation
 
-Transmission losses are non-linear (quadratic with flow) and must be linearised for the LP formulation. ALEA uses **secant-based approximation with error control**, configured via the `transmission_losses` parameter:
+Transmission losses are non-linear (quadratic with flow) and must be linearised for the LP formulation. Alea uses **secant-based approximation with error control**, configured via the `transmission_losses` parameter:
 
 - **Secant method**: Uses piecewise linear secant lines with explicit error bounds (default: absolute tolerance 1 MW, relative tolerance 0.1, maximum 20 segments).
 - **Tangent method** (deprecated): Uses tangent lines to approximate the quadratic loss curve.
@@ -85,11 +85,11 @@ Research shows that adding a convex relaxation of quadratic losses with **two or
 
 ---
 
-## Part II: Sector Coupling — How ALEA Models the Full Energy System
+## Part II: Sector Coupling — How Alea Models the Full Energy System
 
 ### 2.1 Multi-Energy Carrier Architecture
 
-ALEA extends the electricity-only model with **sector coupling**, adding hydrogen, heat, transport, industry, and water as interconnected energy carriers. The core mathematical formulation follows closely the work done in PyPSA-EUR.
+Alea extends the electricity-only model with **sector coupling**, adding hydrogen, heat, transport, industry, and water as interconnected energy carriers. The core mathematical formulation follows closely the work done in PyPSA-EUR.
 
 Each sector is represented by a **Bus** (energy carrier), **Links** (conversion technologies with efficiencies), and **Stores** (storage). PyPSA can automatically handle links with more than one input (bus0) and/or output (bus1, bus2, bus3) with given efficiencies.
 
@@ -115,7 +115,7 @@ The **additionality constraint** ensures that hydrogen production does not diver
 
 ---
 
-## Part III: Stochastic Optimisation — How ALEA Handles Uncertainty
+## Part III: Stochastic Optimisation — How Alea Handles Uncertainty
 
 ### 3.1 Two-Stage Stochastic Programming
 
@@ -132,7 +132,7 @@ Where $x$ is the first-stage investment vector, $p_s$ is the probability of scen
 
 ### 3.2 CVaR Risk Aversion
 
-ALEA implements **Conditional Value at Risk (CVaR)-based risk-averse optimisation**, controlled by two parameters:
+Alea implements **Conditional Value at Risk (CVaR)-based risk-averse optimisation**, controlled by two parameters:
 
 - **$\alpha$ (alpha)**: The tail level (e.g., 0.95 for the worst 5% of outcomes).
 - **$\omega$ (omega)**: The trade-off between expectation and risk (0 = risk-neutral, 1 = fully risk-averse).
@@ -153,11 +153,11 @@ Uncertain parameters (fuel prices, demand growth, technology costs, climate vari
 
 ---
 
-## Part IV: Market Simulation — How ALEA Derives Prices
+## Part IV: Market Simulation — How Alea Derives Prices
 
 ### 4.1 Agent-Based Market Model (AMIRIS)
 
-ALEA integrates the **AMIRIS** agent-based market model for endogenous price formation. AMIRIS simulates an **Energy-Only Market with hourly resolution**, where bids are submitted by market participants and the energy exchange ranks them according to the **merit order principle**.
+Alea integrates the **AMIRIS** agent-based market model for endogenous price formation. AMIRIS simulates an **Energy-Only Market with hourly resolution**, where bids are submitted by market participants and the energy exchange ranks them according to the **merit order principle**.
 
 **Agent types**:
 
@@ -174,7 +174,7 @@ AMIRIS **computes electricity prices endogenously** based on the simulation of s
 
 ### 4.2 Reinforcement Learning Bidding (ASSUME)
 
-ALEA integrates **ASSUME**, an open-source agent-based simulation framework that incorporates **multi-agent deep reinforcement learning** for modelling adaptive market participants. ASSUME's unique feature is the integration of **Deep Reinforcement Learning** methods into the behavioural strategies of market agents.
+Alea integrates **ASSUME**, an open-source agent-based simulation framework that incorporates **multi-agent deep reinforcement learning** for modelling adaptive market participants. ASSUME's unique feature is the integration of **Deep Reinforcement Learning** methods into the behavioural strategies of market agents.
 
 **Reinforcement learning approach**: Instead of bidding each unit independently, the RL agent observes the full portfolio state and learns a **joint bidding policy**. The observation space includes portfolio costs, market prices, and competitor behaviour. The agent outputs a **markup multiplier per cost bin per time step**.
 
@@ -194,15 +194,15 @@ Capture rates decline as VRE penetration increases (cannibalisation effect), bec
 
 ---
 
-## Part V: Outage Prediction — How ALEA Forecasts Disruptions
+## Part V: Outage Prediction — How Alea Forecasts Disruptions
 
 ### 5.1 Satellite-Based Outage Detection (OWL-I Framework)
 
-ALEA uses the **OWL-I (Outage Framework for Luminosity Interruptions)** methodology, which detects power outages from VIIRS/Black Marble nighttime light observations **without knowledge of the driver event or infrastructural records**.
+Alea uses the **OWL-I (Outage Framework for Luminosity Interruptions)** methodology, which detects power outages from VIIRS/Black Marble nighttime light observations **without knowledge of the driver event or infrastructural records**.
 
 **Step 1: Angular Effect Correction**
 
-The raw daily radiance fluctuates due to the satellite's changing viewing angle. ALEA corrects for this by grouping observations by **Viewing Zenith Angle (VZA)** to establish a normal radiance baseline for each pixel and time.
+The raw daily radiance fluctuates due to the satellite's changing viewing angle. Alea corrects for this by grouping observations by **Viewing Zenith Angle (VZA)** to establish a normal radiance baseline for each pixel and time.
 
 **Step 2: Deconfounding**
 
@@ -218,7 +218,7 @@ Pixel-level anomalies are aggregated to **0.01-degree grid zones**. The Ghana st
 
 ### 5.2 Weather-Driven Outage Forecasting
 
-For countries with historical outage records, ALEA trains supervised machine learning models using weather, temporal, and historical features.
+For countries with historical outage records, Alea trains supervised machine learning models using weather, temporal, and historical features.
 
 **Feature engineering**:
 
@@ -231,11 +231,11 @@ For countries with historical outage records, ALEA trains supervised machine lea
 
 **Model selection**: Random Forest, XGBoost, and LightGBM are trained and evaluated per country. The Ghana study found that a **random forest** combining weather, temporal, and historical features achieved an **AUC of 0.8346**. The Algeria study achieved **99% accuracy** with precision/recall/F1 > 98%.
 
-**Class imbalance handling**: Outages are rare events. ALEA uses **SMOTE (Synthetic Minority Over-sampling Technique)** to balance the training data.
+**Class imbalance handling**: Outages are rare events. Alea uses **SMOTE (Synthetic Minority Over-sampling Technique)** to balance the training data.
 
 ### 5.3 Predictive Maintenance
 
-For critical assets (transformers, circuit breakers), ALEA uses **survival analysis** with Cox Proportional Hazards models:
+For critical assets (transformers, circuit breakers), Alea uses **survival analysis** with Cox Proportional Hazards models:
 
 $$h(t | X) = h_0(t) \cdot \exp(\beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_p X_p)$$
 
@@ -245,11 +245,11 @@ The Nigeria study achieved **87% critical failure detection** with a **64% false
 
 ---
 
-## Part VI: Loss Mitigation — How ALEA Identifies and Reduces Losses
+## Part VI: Loss Mitigation — How Alea Identifies and Reduces Losses
 
 ### 6.1 Loss Decomposition
 
-ALEA decomposes total system losses into four components using **power flow tracing**:
+Alea decomposes total system losses into four components using **power flow tracing**:
 
 1. **Load-driven losses**: Losses proportional to the square of load current.
 2. **Generation-driven losses**: Losses due to the spatial mismatch between generation and load.
@@ -260,7 +260,7 @@ The decomposition uses **Virtual Contribution Theory**, where the negative value
 
 ### 6.2 TLENS — Critical Line Identification
 
-ALEA computes **TLENS (Transmission Lines' Contribution to Energy Not Supplied)** , a novel resilience indicator that measures how specific line failures impact overall Energy Not Supplied (ENS):
+Alea computes **TLENS (Transmission Lines' Contribution to Energy Not Supplied)** , a novel resilience indicator that measures how specific line failures impact overall Energy Not Supplied (ENS):
 
 $$\text{TLENS}_l = \Delta \text{ENS} \text{ when line } l \text{ fails}$$
 
@@ -290,7 +290,7 @@ Options are categorised into four types:
 
 ---
 
-## Part VII: What-If Scenario Engine — How ALEA Explores Futures
+## Part VII: What-If Scenario Engine — How Alea Explores Futures
 
 ### 7.1 Parameter-Driven Simulation
 
@@ -314,7 +314,7 @@ The engine generates **efficient frontiers** by sweeping a single parameter acro
 
 ---
 
-## Part VIII: Intelligence Scanning — How ALEA Discovers New Information
+## Part VIII: Intelligence Scanning — How Alea Discovers New Information
 
 ### 8.1 Signal Extraction Pipeline
 
@@ -335,7 +335,7 @@ The Intelligence Scanning module continuously monitors external sources and extr
 
 ### 8.2 LLM-Based Extraction
 
-ALEA uses **large language models (LLMs)** to extract signals from raw documents. The GLISSA framework (validated in Uganda) achieves a **91% success rate** for flagging outage-related social media posts.
+Alea uses **large language models (LLMs)** to extract signals from raw documents. The GLISSA framework (validated in Uganda) achieves a **91% success rate** for flagging outage-related social media posts.
 
 The extraction prompt instructs the LLM to identify signal types, extract entities (country, capacity, technology, investment), and provide **evidence quotes** supporting each extraction. Every signal carries a **confidence score** and is placed in a **human review queue** before being committed to the model.
 
@@ -351,7 +351,7 @@ All extracted signals are reviewed by analysts who can **confirm**, **reject**, 
 
 ---
 
-## Part IX: Periodic Reporting — How ALEA Communicates Insights
+## Part IX: Periodic Reporting — How Alea Communicates Insights
 
 ### 9.1 Report Generation Pipeline
 
@@ -387,4 +387,4 @@ Reports are distributed via **email**, **API**, **dashboard**, and **S3-compatib
 | **Intelligence Scanning** | News, tenders, social media, institutional sources | LLM extraction + human review | Structured signals updating model parameters |
 | **Reporting** | All model outputs | Jinja2 templates + WeasyPrint | PDF/HTML reports on schedule |
 
-The ALEA platform's predictive power derives not from any single model, but from the **integration of physical optimisation, market simulation, satellite-based detection, machine learning, and human-validated intelligence** into a unified, continuously updating system.
+The Alea platform's predictive power derives not from any single model, but from the **integration of physical optimisation, market simulation, satellite-based detection, machine learning, and human-validated intelligence** into a unified, continuously updating system.

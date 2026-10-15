@@ -1,4 +1,4 @@
-# ALEA: Definitive Catalog of Modelling Algorithms
+# Alea: Definitive Catalog of Modelling Algorithms
 
 ## Complete Mapping of What-If Parameters → Algorithms → Python Implementations
 
@@ -652,4 +652,4 @@ Where a Python implementation exists in PyPSA-Earth, PyPSA, or a validated open-
    - `wacc-estimator` for cost of capital
    - `cacoca` for industrial decarbonisation contracts
 
-4. **The definitive catalog comprises 171 distinct algorithms** across 12 categories, of which 54 have validated Python implementations and 117 require development or integration. This catalog provides the complete algorithmic foundation for ALEA's what-if analysis engine, ensuring that every parameter in the taxonomy can be meaningfully modelled and queried.
+4. **The definitive catalog comprises 171 distinct algorithms** across 12 categories, of which 54 have validated Python implementations and 117 require development or integration. This catalog provides the complete algorithmic foundation for Alea's what-if analysis engine, ensuring that every parameter in the taxonomy can be meaningfully modelled and queried.

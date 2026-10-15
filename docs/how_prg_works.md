@@ -6,7 +6,7 @@ Let me build this up from the problem it solves, through the mechanism, to a con
 
 ## 1. The Problem the PRG Solves
 
-Imagine a user opens ALEA and asks: **"What if we set the carbon price to $150?"**
+Imagine a user opens Alea and asks: **"What if we set the carbon price to $150?"**
 
 Without the PRG, here's what would happen:
 
@@ -31,7 +31,7 @@ The **Parameter Relationship Graph (PRG)** exists to prevent all three failures.
 
 **The PRG is a dependency graph of typed equations that knows which parameters are inputs (user-set), which are decisions (optimiser-set), and which are derived (computed), and it propagates any parameter change to all dependents while checking consistency and detecting conflicts.**
 
-Think of it as the **"spreadsheet engine"** that sits behind ALEA. When you change a cell in Excel, every formula that references it recalculates. When you change a parameter in ALEA, every equation that involves it recalculates — and every parameter that depends on those equations recalculates too, and so on, until the whole system is consistent again.
+Think of it as the **"spreadsheet engine"** that sits behind Alea. When you change a cell in Excel, every formula that references it recalculates. When you change a parameter in Alea, every equation that involves it recalculates — and every parameter that depends on those equations recalculates too, and so on, until the whole system is consistent again.
 
 But the PRG is **smarter than a spreadsheet** in four ways:
 
@@ -379,7 +379,7 @@ From the user's perspective, changing one parameter is simple. Behind the scenes
 
 ## 8. What Happens Without the PRG
 
-To make the value concrete, here's what would happen if ALEA didn't have the PRG:
+To make the value concrete, here's what would happen if Alea didn't have the PRG:
 
 | Change | Without PRG | With PRG |
 |---|---|---|
@@ -390,7 +390,7 @@ To make the value concrete, here's what would happen if ALEA didn't have the PRG
 | Derived parameters (LCOE, DSCR, SAIDI) | Model does not compute them | Model computes them automatically |
 | Cross-validation (carbon price vs. coal retirement) | Model does not check | Model flags and corrects |
 
-Without the PRG, ALEA is a **parameter playground** that produces numbers. With the PRG, ALEA is a **coherent system** that produces scenarios.
+Without the PRG, Alea is a **parameter playground** that produces numbers. With the PRG, Alea is a **coherent system** that produces scenarios.
 
 ---
 
@@ -432,7 +432,7 @@ The solution is to:
 
 ### Convergence
 
-Iteration converges if the equations are **contractions** — that is, each iteration brings the values closer to the fixed point. In practice, most feedback loops in ALEA converge within 5–15 iterations because the equations are well-behaved (elasticities are small, learning rates are bounded, etc.).
+Iteration converges if the equations are **contractions** — that is, each iteration brings the values closer to the fixed point. In practice, most feedback loops in Alea converge within 5–15 iterations because the equations are well-behaved (elasticities are small, learning rates are bounded, etc.).
 
 When convergence fails, the PRG:
 
@@ -471,7 +471,7 @@ This is why changing a carbon price ripples through coal capacity, emissions, ca
 7. Over-determined and under-determined systems are detected and reported with suggested corrections.
 8. Once consistent, the PRG translates the parameter set into PyPSA network attributes and Linopy constraints.
 9. The optimiser then solves the network and returns results.
-10. The PRG makes ALEA a coherent system rather than a parameter playground — the difference between a model and a platform.
+10. The PRG makes Alea a coherent system rather than a parameter playground — the difference between a model and a platform.
 
 ---
 

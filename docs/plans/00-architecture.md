@@ -1,6 +1,6 @@
 # 00 — Architecture and Decisions
 
-**ALEA — African Light and Energy Analytics**
+**Alea — African Light and Energy Analytics**
 **Status**: Binding. Every other plan document conforms to this one.
 **Verified against**: working tree at `9e934f9`, 2026-10-11
 **Audience**: an intermediate developer joining with no prior context
@@ -40,7 +40,7 @@ stakeholder as though it were established. See §9.
 
 ---
 
-## 1. What ALEA is
+## 1. What Alea is
 
 A continental decision-support platform for African energy systems: capacity
 expansion planning to 2060 across all 55 AU member states and five power pools,
@@ -106,7 +106,7 @@ not re-litigated.
 
 ### AD-1 — PyPSA-Earth is an external workflow, not a dependency
 
-**Decision.** ALEA depends on `pypsa` (the library) directly. PyPSA-Earth is
+**Decision.** Alea depends on `pypsa` (the library) directly. PyPSA-Earth is
 consumed as an **external producer of network artefacts**. The seam between
 them is **files** — NetCDF networks, GeoJSON topology, CSV profiles — never
 Python imports.
@@ -118,15 +118,15 @@ that carries the geospatial stack. The specification's `pypsa-earth>=0.7.0`
 dependency line is therefore not implementable as written.
 
 **Consequences.**
-- ALEA stays pip-installable and unit-testable on Python 3.14. PyPSA-Earth keeps
+- Alea stays pip-installable and unit-testable on Python 3.14. PyPSA-Earth keeps
   its own conda environment. The two never share an interpreter.
 - Every artefact crossing the seam is versioned and checksummed, so any result
   traces to the network it came from.
-- ALEA cannot call PyPSA-Earth internals. Where a spec example reaches into
+- Alea cannot call PyPSA-Earth internals. Where a spec example reaches into
   `pypsa_earth.*`, reimplement it in `alea.planning` or require the data to
   arrive in the artefact.
 
-**Rejected.** *Import PyPSA-Earth as a library* — forces ALEA onto the conda
+**Rejected.** *Import PyPSA-Earth as a library* — forces Alea onto the conda
 environment's Python (which cannot be 3.14) and couples every layer to another
 project's internals. *Fork PyPSA-Earth into the repo* — inherits a 33 MB
 workflow and its maintenance burden for a fraction of its functionality.
@@ -148,7 +148,7 @@ check at M1 (§9).
 | Optimisation modelling | **Python** (pypsa/linopy) | The solver does the work; the modelling layer is small |
 | ML training | **Python** (xgboost/lightgbm/sklearn) | Mature, GPU-capable, SHAP integration |
 
-**Reason.** ALEA's performance problems are all element-wise array algebra over
+**Reason.** Alea's performance problems are all element-wise array algebra over
 rasters and time series, not algorithmic complexity. VIIRS VNP46A2 at 500 m over
 Africa is roughly 10⁹ pixels per day; the VZA-binned quantile baseline is a
 grouped reduction over that. Python + numpy does this at perhaps 5–20× the
@@ -156,7 +156,7 @@ memory bandwidth of Rust and with per-call overhead that dominates at the
 chunking granularity the algorithm requires. The same is true of the LSH
 shingling in the scanning layer and the Monte Carlo in the risk layer.
 
-Conversely, ALEA's *complexity* is in orchestration and I/O — configuration
+Conversely, Alea's *complexity* is in orchestration and I/O — configuration
 precedence, provenance threading, artefact versioning, multi-format ingestion.
 That is exactly where Python is strongest and Rust would cost development time
 for no runtime gain.

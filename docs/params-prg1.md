@@ -1,4 +1,4 @@
-# ALEA: Parameter Interdependency Framework
+# Alea: Parameter Interdependency Framework
 
 ## Systems of Equations Relating the 784 Parameters
 
@@ -8,7 +8,7 @@
 
 **Yes. Absolutely. This is not optional — it is the single most important architectural decision in the entire platform.**
 
-The 784 parameters are **not independent knobs**. They form a **coupled system of equations**. Changing one parameter propagates through dozens of others. If ALEA treats parameters as independent, it will produce **physically impossible, economically inconsistent, or self-contradictory scenarios**. A user could set a carbon price, a coal retirement schedule, a demand growth rate, and a renewable target that are mutually incompatible — and the model would happily solve and return garbage.
+The 784 parameters are **not independent knobs**. They form a **coupled system of equations**. Changing one parameter propagates through dozens of others. If Alea treats parameters as independent, it will produce **physically impossible, economically inconsistent, or self-contradictory scenarios**. A user could set a carbon price, a coal retirement schedule, a demand growth rate, and a renewable target that are mutually incompatible — and the model would happily solve and return garbage.
 
 The what-if engine must therefore be built on a **Parameter Relationship Graph (PRG)** — a directed acyclic graph of typed equations that defines how every parameter relates to every other parameter, which parameters are free (endogenous decision variables), which are fixed (exogenous inputs), and which are determined (derived outputs).
 
@@ -698,7 +698,7 @@ $$\text{Jobs} = \sum_g \bar{P}_g \cdot \text{EF}_g^{\text{construction}} + \sum_
 
 ## 8. What Happens Without the PRG
 
-If ALEA treats parameters as independent, the following failures occur:
+If Alea treats parameters as independent, the following failures occur:
 
 | Failure | Example | Consequence |
 |---|---|---|
@@ -773,6 +773,6 @@ PRG: Propagating changes...
 | Key Python libraries? | `networkx`, `sympy`, `scipy.optimize`, `casadi`, `linopy`, `pyomo`, `numpy_financial`, `pymrio` |
 | User experience? | **Consistency checking with suggested corrections** |
 
-The PRG transforms ALEA from a collection of independent parameters into a **coherent, physically consistent, economically sound, and policy-relevant system**. It is the difference between a toy model and a world-class platform.
+The PRG transforms Alea from a collection of independent parameters into a **coherent, physically consistent, economically sound, and policy-relevant system**. It is the difference between a toy model and a world-class platform.
 
-Without it, ALEA cannot answer the questions its users ask. With it, ALEA becomes the definitive energy intelligence platform for Africa — one that every stakeholder can trust because its outputs are internally consistent, physically possible, and economically coherent.
+Without it, Alea cannot answer the questions its users ask. With it, Alea becomes the definitive energy intelligence platform for Africa — one that every stakeholder can trust because its outputs are internally consistent, physically possible, and economically coherent.

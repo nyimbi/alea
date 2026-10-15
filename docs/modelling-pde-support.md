@@ -1,8 +1,8 @@
-# ALEA PRG and DSL: Partial Differential Equation Support
+# Alea PRG and DSL: Partial Differential Equation Support
 
 ## Direct Answer
 
-**No, the PRG and DSL as currently specified do not support partial differential equations (PDEs).** The DSL supports linear, polynomial, and general non-linear **algebraic** equations, and it can handle **ordinary differential equations (ODEs)** if they are pre-discretised. But it has no native concept of continuous spatial coordinates, partial derivatives, discretisation schemes, boundary conditions, or mesh-based solving. This is a genuine gap that must be addressed if ALEA is to model the physics-based phenomena for which PDEs are required.
+**No, the PRG and DSL as currently specified do not support partial differential equations (PDEs).** The DSL supports linear, polynomial, and general non-linear **algebraic** equations, and it can handle **ordinary differential equations (ODEs)** if they are pre-discretised. But it has no native concept of continuous spatial coordinates, partial derivatives, discretisation schemes, boundary conditions, or mesh-based solving. This is a genuine gap that must be addressed if Alea is to model the physics-based phenomena for which PDEs are required.
 
 This is a technical, honest, and important gap. Let me explain it fully.
 
@@ -44,9 +44,9 @@ SymPy — which powers the equation evaluator — **can** represent PDEs symboli
 
 ---
 
-## 2. Where ALEA Genuinely Needs PDEs
+## 2. Where Alea Genuinely Needs PDEs
 
-Fourteen ALEA parameters require PDE-based modelling. Let me be specific about each.
+Fourteen Alea parameters require PDE-based modelling. Let me be specific about each.
 
 ### PDE 1: Reservoir Level Dynamics (1D Shallow Water / Muskingum)
 
@@ -92,7 +92,7 @@ $$\frac{\partial p}{\partial x} = -\frac{f \rho v^2}{2D} \quad \text{(momentum, 
 
 $$p_{i+1}^2 - p_i^2 = -k \cdot \dot{m}^2 \cdot L$$
 
-**Verdict**: Steady-state flow is algebraic. **No PDE support needed** for standard capacity planning. Transient pipeline dynamics would require PDE support, but that is beyond ALEA's scope.
+**Verdict**: Steady-state flow is algebraic. **No PDE support needed** for standard capacity planning. Transient pipeline dynamics would require PDE support, but that is beyond Alea's scope.
 
 ### PDE 4: Heat Diffusion in Thermal Storage
 
@@ -128,7 +128,7 @@ $$\frac{\partial c}{\partial t} + u \cdot \nabla c = \nabla \cdot (K \nabla c) +
 
 where $c$ is concentration, $u$ is wind velocity, $K$ is turbulent diffusivity, and $S$ is source term (power plant emissions).
 
-**Verdict**: Requires 3D PDE with wind fields. This is what atmospheric dispersion models like AERMOD, CALPUFF, and CAMx solve. **ALEA cannot solve this natively.**
+**Verdict**: Requires 3D PDE with wind fields. This is what atmospheric dispersion models like AERMOD, CALPUFF, and CAMx solve. **Alea cannot solve this natively.**
 
 ### PDE 7: Dynamic Line Rating (Transmission)
 
@@ -158,7 +158,7 @@ $$\rho c_p \frac{\partial T}{\partial t} = k \nabla^2 T + Q_{gen}$$
 
 **Physics**: Regional air quality requires 3D Eulerian models (CAMx, CMAQ, GEOS-Chem).
 
-**Verdict**: **ALEA cannot solve this natively.** Must use pre-computed source-receptor matrices from external models.
+**Verdict**: **Alea cannot solve this natively.** Must use pre-computed source-receptor matrices from external models.
 
 ### PDE 10: Climate Downscaling
 
@@ -166,7 +166,7 @@ $$\rho c_p \frac{\partial T}{\partial t} = k \nabla^2 T + Q_{gen}$$
 
 **Physics**: Regional climate downscaling uses 3D atmospheric models (WRF, RegCM).
 
-**Verdict**: **ALEA cannot solve this natively.** Must use pre-computed CMIP6 downscaled outputs.
+**Verdict**: **Alea cannot solve this natively.** Must use pre-computed CMIP6 downscaled outputs.
 
 ### PDE 11: Seismic / Geological (CO₂ Storage, Geothermal)
 
@@ -176,7 +176,7 @@ $$\rho c_p \frac{\partial T}{\partial t} = k \nabla^2 T + Q_{gen}$$
 
 $$\frac{\partial (\phi \rho)}{\partial t} = \nabla \cdot \left(\frac{\rho k}{\mu} \nabla p\right) + Q$$
 
-**Verdict**: Requires reservoir simulators (TOUGH2, ECLIPSE, CMG-GEM). **ALEA cannot solve this natively.**
+**Verdict**: Requires reservoir simulators (TOUGH2, ECLIPSE, CMG-GEM). **Alea cannot solve this natively.**
 
 ### PDE 12: Electromagnetic Transients (HVDC)
 
@@ -187,7 +187,7 @@ $$\frac{\partial (\phi \rho)}{\partial t} = \nabla \cdot \left(\frac{\rho k}{\mu
 $$\frac{\partial V}{\partial x} = -L \frac{\partial I}{\partial t} - R I$$
 $$\frac{\partial I}{\partial x} = -C \frac{\partial V}{\partial t} - G V$$
 
-**Verdict**: Needed only for electromagnetic transient (EMT) studies. **Beyond ALEA's scope.**
+**Verdict**: Needed only for electromagnetic transient (EMT) studies. **Beyond Alea's scope.**
 
 ### PDE 13: Fluid Dynamics (Pumped Hydro)
 
@@ -207,7 +207,7 @@ $$\frac{\partial I}{\partial x} = -C \frac{\partial V}{\partial t} - G V$$
 
 ---
 
-## 3. Summary: Which PDEs Does ALEA Actually Need?
+## 3. Summary: Which PDEs Does Alea Actually Need?
 
 | PDE | Needed for Planning? | Needed for Operations? | Recommended Approach |
 |---|---|---|---|
@@ -225,7 +225,7 @@ $$\frac{\partial I}{\partial x} = -C \frac{\partial V}{\partial t} - G V$$
 | **Pumped hydro transients** | No (lumped) | Maybe | Lumped ODE (supported) |
 | **Structural dynamics** | No (power curve) | No | Out of scope |
 
-**Conclusion**: ALEA needs PDE support **only** for:
+**Conclusion**: Alea needs PDE support **only** for:
 1. **Atmospheric dispersion** (health impacts) — best handled by external models
 2. **Regional air quality** (health impacts) — best handled by external models
 3. **Climate downscaling** (scenarios) — best handled by pre-computed CMIP6
@@ -293,7 +293,7 @@ class PDEExtensionLayer:
 
 ### 4.2 Pre-Computed Lookup Tables
 
-For each PDE-based sub-model, ALEA pre-computes solutions across a parameter grid and stores them as lookup tables. During scenario exploration, the PRG interpolates.
+For each PDE-based sub-model, Alea pre-computes solutions across a parameter grid and stores them as lookup tables. During scenario exploration, the PRG interpolates.
 
 **Example: Atmospheric Dispersion**
 
@@ -334,7 +334,7 @@ pde_lookup_tables:
 
 ### 4.3 External Solver Adapters
 
-For cases where pre-computation is not feasible (e.g., user-specified scenarios outside the pre-computed grid), ALEA provides **external solver adapters**:
+For cases where pre-computation is not feasible (e.g., user-specified scenarios outside the pre-computed grid), Alea provides **external solver adapters**:
 
 | Adapter | PDE Type | External Solver | Interface |
 |---|---|---|---|
@@ -398,7 +398,7 @@ If we want the PRG to handle **some** PDEs natively (specifically, 1D PDEs that 
 ### 5.1 Extended Grammar
 
 ```lark
-// Extended grammar for ALEA DSL v2.0
+// Extended grammar for Alea DSL v2.0
 expression: term (("+" | "-") term)*
 term: factor (("*" | "/") factor)*
 factor: base ("**" factor)?
@@ -493,7 +493,7 @@ For all other cases, **pre-computation** is more efficient.
 
 ## 6. Why Full PDE Support Is Probably Not Worth It
 
-If ALEA were to support PDEs natively and fully, the consequences would be:
+If Alea were to support PDEs natively and fully, the consequences would be:
 
 | Consequence | Impact |
 |---|---|
@@ -542,10 +542,10 @@ If ALEA were to support PDEs natively and fully, the consequences would be:
 | Does the current PRG/DSL support PDEs? | **No** |
 | Does it support ODEs? | **Partially** (must pre-discretise) |
 | Does it support non-linear algebraic equations? | **Yes** (via SymPy) |
-| Does ALEA need full PDE support? | **No** — only five use cases, all handled by pre-computation |
+| Does Alea need full PDE support? | **No** — only five use cases, all handled by pre-computation |
 | What is the recommended architecture? | **Hybrid**: pre-computed lookup tables + external solver adapters |
 | What is the recommended DSL extension? | **PDE Extension Layer** with lookup-table equations |
 | What is the computational cost of native PDE support? | **100×–10,000× higher** than the hybrid approach |
 | What is the recommended action? | **Document the limitation, implement the hybrid layer** |
 
-The PRG's algebraic foundation is not a limitation; it is a **deliberate design choice**. ALEA is an energy system planning and intelligence platform, not a computational fluid dynamics solver. By externalising PDEs to specialised solvers and consuming their outputs as algebraic relationships, ALEA preserves the simplicity, speed, and rigour of its core architecture while still delivering the physical accuracy that PDE-based sub-models provide. The result is a platform that is **fit for purpose** — neither over-engineered nor under-powered.
+The PRG's algebraic foundation is not a limitation; it is a **deliberate design choice**. Alea is an energy system planning and intelligence platform, not a computational fluid dynamics solver. By externalising PDEs to specialised solvers and consuming their outputs as algebraic relationships, Alea preserves the simplicity, speed, and rigour of its core architecture while still delivering the physical accuracy that PDE-based sub-models provide. The result is a platform that is **fit for purpose** — neither over-engineered nor under-powered.

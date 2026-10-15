@@ -74,10 +74,10 @@ RUN mamba create -n pypsa-earth -c conda-forge python=3.11 pypsa-earth
 ```
 
 **They never share an interpreter.** The seam is files: PyPSA-Earth writes
-NetCDF/GeoJSON/Parquet into a mounted volume; ALEA reads them. This is AD-1
+NetCDF/GeoJSON/Parquet into a mounted volume; Alea reads them. This is AD-1
 enforced by construction — there is no import path between the images.
 
-### 3.2 Why the ALEA image installs a wheel, not a source tree
+### 3.2 Why the Alea image installs a wheel, not a source tree
 
 The wheel is built with `abi3-py312`, so one wheel serves every supported Python
 (`03-rust-core.md` §1). Installing from source in the runtime image would need
@@ -266,9 +266,9 @@ nobody can reproduce.
 
 | # | Criterion | Gate |
 |---|---|---|
-| 1 | ALEA image builds and runs on a clean host | CI build |
+| 1 | Alea image builds and runs on a clean host | CI build |
 | 2 | PyPSA-Earth image builds separately; no shared interpreter | Build test |
-| 3 | The seam is files only; ALEA runs with PyPSA-Earth absent | CI job |
+| 3 | The seam is files only; Alea runs with PyPSA-Earth absent | CI job |
 | 4 | `dvc repro` reproduces the Kenya fixture | `test_a_perturbed_input_moves_the_checksum` |
 | 5 | Every long job survives a process restart | `test_job_survives_restart` |
 | 6 | Review queue restore tested | Restore drill |

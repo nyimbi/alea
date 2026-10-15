@@ -1,8 +1,8 @@
-# ALEA What-If Analysis: Modelling Transmission Line Loss
+# Alea What-If Analysis: Modelling Transmission Line Loss
 
 ## Yes — and It Goes Far Beyond Simply Removing a Line
 
-The ALEA What-If engine can model the loss of any transmission line — single or multiple, planned or unplanned, permanent or temporary — and trace the full cascade of consequences through the network, generation fleet, market prices, and system reliability. This is not a simple "remove the line and re-solve" feature. It is a **contingency-aware, cascading, probabilistic resilience analysis** integrated with every other layer of the platform.
+The Alea What-If engine can model the loss of any transmission line — single or multiple, planned or unplanned, permanent or temporary — and trace the full cascade of consequences through the network, generation fleet, market prices, and system reliability. This is not a simple "remove the line and re-solve" feature. It is a **contingency-aware, cascading, probabilistic resilience analysis** integrated with every other layer of the platform.
 
 ---
 
@@ -55,7 +55,7 @@ In the dashboard, the user can:
 
 ### 2.1 Immediate Power Flow Redistribution
 
-When a line is lost, the power that was flowing through it must find alternative paths. ALEA solves the **linear power flow (LPF)** with the line removed and computes:
+When a line is lost, the power that was flowing through it must find alternative paths. Alea solves the **linear power flow (LPF)** with the line removed and computes:
 
 - **New flows on all remaining lines**: Using the network's impedance matrix and Kirchhoff's laws.
 - **Overload detection**: Any line whose flow exceeds its rating is flagged.
@@ -70,7 +70,7 @@ Where $\theta_i$ is the voltage angle at bus $i$ and $x_{ij}$ is the line reacta
 
 ### 2.2 Generation Re-Dispatch
 
-The loss of a line changes the optimal dispatch of the entire generation fleet. ALEA re-solves the **economic dispatch** (or unit commitment, if enabled) with the new network topology:
+The loss of a line changes the optimal dispatch of the entire generation fleet. Alea re-solves the **economic dispatch** (or unit commitment, if enabled) with the new network topology:
 
 - **Cheaper generation may be curtailed** if it can no longer reach load centres.
 - **More expensive generation may be dispatched** to serve load that was previously served by cheaper, remote generation.
@@ -82,7 +82,7 @@ $$\Delta G_{n,s,t} = G_{n,s,t}^{\text{post-outage}} - G_{n,s,t}^{\text{pre-outag
 
 ### 2.3 Load Shedding / Energy Not Served (ENS)
 
-If the network cannot serve all load after the line loss, ALEA computes **Energy Not Served (ENS)** as:
+If the network cannot serve all load after the line loss, Alea computes **Energy Not Served (ENS)** as:
 
 $$\text{ENS} = \sum_{t} \sum_{n} \left( d_{n,t} - \sum_{s} G_{n,s,t}^{\text{served}} \right)$$
 
@@ -98,7 +98,7 @@ The **Locational Marginal Prices (LMPs)** change dramatically after a line loss:
 - **Downstream of the outage**: If load is stranded, prices may **spike** to the cost of the most expensive generation or to VoLL.
 - **Congestion rents**: The price difference between nodes reflects the cost of the constraint.
 
-ALEA computes the **price change** for every node and time step:
+Alea computes the **price change** for every node and time step:
 
 $$\Delta \pi_{n,t} = \pi_{n,t}^{\text{post-outage}} - \pi_{n,t}^{\text{pre-outage}}$$
 
@@ -112,7 +112,7 @@ The loss of a line changes total system losses:
 
 ### 2.6 Cascading Failures
 
-ALEA can simulate **cascading failures** through an iterative process:
+Alea can simulate **cascading failures** through an iterative process:
 
 1. Solve the base case with all lines active.
 2. Remove the initial line(s) and re-solve.
@@ -134,7 +134,7 @@ This produces a **cascade sequence**: a list of lines that fail in order, with t
 
 ### 2.7 Probabilistic Outage Modelling
 
-When the line loss is uncertain (e.g., weather-dependent), ALEA runs a **Monte Carlo simulation** with multiple outage scenarios:
+When the line loss is uncertain (e.g., weather-dependent), Alea runs a **Monte Carlo simulation** with multiple outage scenarios:
 
 - Each line has a **probability of outage** based on weather, age, and loading.
 - The model samples outage scenarios from this probability distribution.
@@ -250,7 +250,7 @@ GET /v1/whatif/result?scenario_id=line_outage_abc123&metric=price_change&country
 
 ---
 
-## 6. Integration with Other ALEA Layers
+## 6. Integration with Other Alea Layers
 
 ### 6.1 Integration with Outage Prediction
 
@@ -294,7 +294,7 @@ Line outage scenarios feed into **periodic reports**:
 
 ### 7.1 Probabilistic Contingency Analysis
 
-For each line, ALEA computes the **probability-weighted impact** of its loss:
+For each line, Alea computes the **probability-weighted impact** of its loss:
 
 $$\text{Expected Impact}_l = \sum_{s \in S} p_s \cdot \text{Impact}(l, s)$$
 
@@ -315,7 +315,7 @@ Lines are ranked by **criticality** using multiple metrics:
 
 ### 7.3 Restoration Optimisation
 
-ALEA can optimise the **restoration sequence** after a line outage:
+Alea can optimise the **restoration sequence** after a line outage:
 
 1. Identify the optimal order to restore lines.
 2. Minimise total ENS during restoration.
@@ -335,7 +335,7 @@ The What-If engine can compare:
 
 ### 7.5 Multi-Line Simultaneous Outages
 
-For **N-k contingencies** (loss of k lines simultaneously), ALEA can:
+For **N-k contingencies** (loss of k lines simultaneously), Alea can:
 
 - Enumerate all combinations of k lines.
 - Compute the impact of each combination.
@@ -345,7 +345,7 @@ For **N-k contingencies** (loss of k lines simultaneously), ALEA can:
 
 ### 7.6 Spatial and Temporal Correlation
 
-ALEA models **spatial correlation** (e.g., lines in the same corridor fail together) and **temporal correlation** (e.g., outages cluster during storms) using:
+Alea models **spatial correlation** (e.g., lines in the same corridor fail together) and **temporal correlation** (e.g., outages cluster during storms) using:
 
 - **Copula models** for spatial dependence.
 - **Markov chains** for temporal dependence.
@@ -357,7 +357,7 @@ ALEA models **spatial correlation** (e.g., lines in the same corridor fail toget
 
 **User question**: "What happens if the Inga–Kolwezi 220 kV line in DRC fails for 2 weeks during the dry season?"
 
-**ALEA workflow**:
+**Alea workflow**:
 
 1. **Load base network**: DRC + SAPP network with 2030 demand and generation.
 2. **Apply outage**: Set `line_active = False` for Inga–Kolwezi, `outage_start = 2030-06-01`, `outage_end = 2030-06-15`.
@@ -418,7 +418,7 @@ ALEA models **spatial correlation** (e.g., lines in the same corridor fail toget
 | **API access** | Query results programmatically |
 | **Pre-built scenarios** | N-1, N-2, corridor, tower, substation, weather, cascade, blackout, restoration |
 
-ALEA's What-If engine does not merely answer "what happens if a line is lost?" It answers:
+Alea's What-If engine does not merely answer "what happens if a line is lost?" It answers:
 
 - **Which lines are most critical?**
 - **What is the cascade risk?**
@@ -431,4 +431,4 @@ ALEA's What-If engine does not merely answer "what happens if a line is lost?" I
 - **What is the probability-weighted impact?**
 - **How does this compare to alternative scenarios?**
 
-This makes ALEA the most comprehensive transmission resilience analysis platform for African power systems.
+This makes Alea the most comprehensive transmission resilience analysis platform for African power systems.

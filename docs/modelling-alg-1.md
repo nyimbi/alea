@@ -1,6 +1,6 @@
-# ALEA: Exhaustive List of Modelling Algorithms
+# Alea: Exhaustive List of Modelling Algorithms
 
-This specification catalogues every algorithm required to implement ALEA across all six analytical layers, plus the data pipeline and intelligence scanning module. Each entry specifies the algorithm name, its purpose, the layer it belongs to, and the mathematical or computational method it implements.
+This specification catalogues every algorithm required to implement Alea across all six analytical layers, plus the data pipeline and intelligence scanning module. Each entry specifies the algorithm name, its purpose, the layer it belongs to, and the mathematical or computational method it implements.
 
 ---
 
@@ -423,4 +423,4 @@ score = confidence × 30 + source_reliability × 20 + signal_type_impact × 25
 | | GDP-pop weighted disaggregation | Demand downscaling |
 | | OSM/World Bank merge | Grid topology |
 
-This exhaustive list defines every algorithm ALEA requires across all six analytical layers, the data pipeline, and the intelligence scanning module. Each algorithm is grounded in validated methodologies from PyPSA, PyPSA-Earth, AMIRIS, ASSUME, OWL-I, and peer-reviewed literature, ensuring that ALEA's predictions and insights are both rigorous and reproducible.
+This exhaustive list defines every algorithm Alea requires across all six analytical layers, the data pipeline, and the intelligence scanning module. Each algorithm is grounded in validated methodologies from PyPSA, PyPSA-Earth, AMIRIS, ASSUME, OWL-I, and peer-reviewed literature, ensuring that Alea's predictions and insights are both rigorous and reproducible.

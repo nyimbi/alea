@@ -38,7 +38,7 @@ rasterio, atlite) and produces a PyPSA network as its final artefact.
 
 ```
 ┌─────────────────────────┐         ┌──────────────────────────┐
-│  PyPSA-Earth            │         │  ALEA                    │
+│  PyPSA-Earth            │         │  Alea                    │
 │  (conda env, Snakemake) │         │  (uv, Python 3.14)       │
 │                         │         │                          │
 │  build_network ─────────┼────────▶│  data/processed/topology │
@@ -57,16 +57,16 @@ interpreter.
 `alea.planning` must be able to build a network from the *artefacts* alone. That
 means:
 
-- Every PyPSA-Earth output ALEA consumes has a **schema** declared in
+- Every PyPSA-Earth output Alea consumes has a **schema** declared in
   `alea.planning.schemas` and validated on read.
-- ALEA can build a network with **zero** PyPSA-Earth output present, using its
+- Alea can build a network with **zero** PyPSA-Earth output present, using its
   own ingestion (`02-data-pipeline.md`) — the Kenya path does exactly this.
 - PyPSA-Earth is an **optional accelerator** for continental runs where its
   Voronoi clustering and preprocessing are worth the conda dependency. It is
   never a requirement.
 
 **Why this matters:** the Kenya development loop must never need a conda
-environment. A developer clones ALEA, runs `uv sync`, and builds a network from
+environment. A developer clones Alea, runs `uv sync`, and builds a network from
 the processed datasets. PyPSA-Earth appears only in `13-deployment.md` as a
 continental-scale preprocessing step.
 
@@ -252,7 +252,7 @@ additional solar and raises annual system cost by **€600 million**.
 
 **This is a validation target, not a claim.** It is `[UNVERIFIED]` here (the
 figure appears in `users.md` without a citation to the underlying study). M1
-reproduces it or records the discrepancy. If ALEA's Kenya model does not
+reproduces it or records the discrepancy. If Alea's Kenya model does not
 reproduce it, either the model or the claim is wrong, and finding out which is
 the point of having the target.
 

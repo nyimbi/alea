@@ -1,4 +1,4 @@
-# ALEA What-If Analysis: Comprehensive Modelable, Queryable, and Modifiable Parameters
+# Alea What-If Analysis: Comprehensive Modelable, Queryable, and Modifiable Parameters
 
 ## A Complete Taxonomy of Scenario Dimensions
 
@@ -784,7 +784,7 @@
 
 ## Summary
 
-The ALEA What-If Analysis engine allows users to **model, query, and modify** an exhaustive set of parameters across **fourteen categories**:
+The Alea What-If Analysis engine allows users to **model, query, and modify** an exhaustive set of parameters across **fourteen categories**:
 
 1. **Demand-side** — growth, composition, flexibility, electrification, technology adoption
 2. **Supply-side** — thermal, renewable, storage, fleet characteristics
@@ -801,4 +801,4 @@ The ALEA What-If Analysis engine allows users to **model, query, and modify** an
 13. **Market Design** — structure, participants, pricing
 14. **Combined & Cross-Cutting** — pre-built templates, combined scenarios
 
-Users can query results across **thirteen metric categories** and **twelve filter dimensions**, with outputs in **nine formats**. The engine supports **ten query types**, from simple point queries to complex attribution analysis. This makes ALEA the most comprehensive what-if analysis platform for African energy systems, capable of answering any question a policymaker, investor, utility, or researcher might ask about the future of African energy.
+Users can query results across **thirteen metric categories** and **twelve filter dimensions**, with outputs in **nine formats**. The engine supports **ten query types**, from simple point queries to complex attribution analysis. This makes Alea the most comprehensive what-if analysis platform for African energy systems, capable of answering any question a policymaker, investor, utility, or researcher might ask about the future of African energy.

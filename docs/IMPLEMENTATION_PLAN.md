@@ -1,4 +1,4 @@
-# ALEA Implementation Plan
+# Alea Implementation Plan
 
 **Status**: Draft for execution
 **Companion to**: `spec/spec4-base.md`, `spec/spec4-data-collection.md`
@@ -103,21 +103,21 @@ clone, with a conda environment carrying the geospatial stack. The
 specification's `pypsa-earth>=0.7.0` line is therefore not implementable as
 written.
 
-**Decision.** ALEA depends on **PyPSA the library** directly, and treats
+**Decision.** Alea depends on **PyPSA the library** directly, and treats
 PyPSA-Earth as an *external producer of network artefacts*. The seam between
 them is **files** — NetCDF networks, GeoJSON topology, CSV profiles — never
 Python imports.
 
 **Consequences.**
 
-- ALEA stays pip-installable and unit-testable on 3.14. PyPSA-Earth stays on
+- Alea stays pip-installable and unit-testable on 3.14. PyPSA-Earth stays on
   whatever Python its conda env needs. The two never share an interpreter.
 - Every artefact crossing the seam is versioned and checksummed, so a result can
   always be traced to the network it came from.
 - The seam is also where a *replacement* for PyPSA-Earth would go. Nothing in
   Tracks A/B/C above Layer 1 assumes PyPSA-Earth specifically — only that a
   PyPSA network with the documented schema appears.
-- Cost: ALEA cannot call PyPSA-Earth internals. Where the spec's example code
+- Cost: Alea cannot call PyPSA-Earth internals. Where the spec's example code
   reaches into `pypsa_earth.*`, that code must be reimplemented or the artefact
   must carry the data. This is the right trade — internals are where the
   coupling would hurt.

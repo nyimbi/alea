@@ -1,11 +1,11 @@
-# ALEA: Parameter Relationship Graph (PRG) System Specification
+# Alea: Parameter Relationship Graph (PRG) System Specification
 
 ## Comprehensive Product Specification for the Parameter Relationship Graph, Equation Library, Consistency Engine, Propagation System, and Associated Subsystems
 
 **Version**: 1.0
 **Status**: Draft for Developer Implementation
 **Audience**: Intermediate Python developers with experience in graph systems, symbolic mathematics, and optimisation
-**Companion Documents**: ALEA Product Specification v4.0, ALEA Definitive Parameter Catalog v1.0
+**Companion Documents**: Alea Product Specification v4.0, Alea Definitive Parameter Catalog v1.0
 
 ---
 
@@ -13,9 +13,9 @@
 
 ### 1. Why the PRG Exists
 
-ALEA exposes **784 parameters** to its users across **28 categories**. These parameters are not independent. They are coupled by **physical laws** (energy conservation, Kirchhoff's laws, thermodynamics), **accounting identities** (cost = capex + opex, emissions = Σ generation × emission factor), **technical constraints** (reserve margins, ramp rates, minimum stable levels), **economic relationships** (demand elasticity, learning curves, CAPM), **policy constraints** (renewable targets, carbon caps, local content), **feedback loops** (higher VRE → lower capture price → lower VRE investment), and **temporal relationships** (investment lead times, learning by doing, retirement schedules).
+Alea exposes **784 parameters** to its users across **28 categories**. These parameters are not independent. They are coupled by **physical laws** (energy conservation, Kirchhoff's laws, thermodynamics), **accounting identities** (cost = capex + opex, emissions = Σ generation × emission factor), **technical constraints** (reserve margins, ramp rates, minimum stable levels), **economic relationships** (demand elasticity, learning curves, CAPM), **policy constraints** (renewable targets, carbon caps, local content), **feedback loops** (higher VRE → lower capture price → lower VRE investment), and **temporal relationships** (investment lead times, learning by doing, retirement schedules).
 
-If ALEA treated these parameters as independent knobs, it would produce **physically impossible, economically inconsistent, or self-contradictory scenarios**. A user could set a carbon price, a coal retirement schedule, a demand growth rate, and a renewable target that are mutually incompatible — and the model would either fail to solve or return garbage.
+If Alea treated these parameters as independent knobs, it would produce **physically impossible, economically inconsistent, or self-contradictory scenarios**. A user could set a carbon price, a coal retirement schedule, a demand growth rate, and a renewable target that are mutually incompatible — and the model would either fail to solve or return garbage.
 
 The **Parameter Relationship Graph (PRG)** is the subsystem that prevents this. It is a directed acyclic graph of typed equations that defines how every parameter relates to every other parameter, which parameters are free (endogenous decision variables), which are fixed (exogenous inputs), and which are determined (derived outputs). It validates every parameter change, propagates the change to all dependents, detects conflicts, suggests corrections, and feeds a consistent parameter set to the optimisation engine.
 
@@ -44,9 +44,9 @@ The PRG is **not** a static schema. It is a **living system** that evolves as ne
 **Out of scope**:
 
 - The optimisation engine itself (PyPSA/PyPSA-Earth)
-- The data pipeline (covered in ALEA v2.0)
-- The market simulation engine (covered in ALEA v2.0)
-- The predictive analytics modules (covered in ALEA v3.0)
+- The data pipeline (covered in Alea v2.0)
+- The market simulation engine (covered in Alea v2.0)
+- The predictive analytics modules (covered in Alea v3.0)
 
 ---
 
@@ -1931,9 +1931,9 @@ When a parameter is changed, the UI shows:
 
 ## Part XVI: Conclusion
 
-The Parameter Relationship Graph (PRG) is the **subsystem that makes ALEA coherent**. It transforms 784 independent parameters into a **coupled system of 20 equation systems and ~120,000 constraints** that enforce physical, economic, and policy consistency. It validates every parameter change, propagates it to all dependents, detects conflicts, suggests corrections, solves feedback loops, and translates equations into optimisation constraints.
+The Parameter Relationship Graph (PRG) is the **subsystem that makes Alea coherent**. It transforms 784 independent parameters into a **coupled system of 20 equation systems and ~120,000 constraints** that enforce physical, economic, and policy consistency. It validates every parameter change, propagates it to all dependents, detects conflicts, suggests corrections, solves feedback loops, and translates equations into optimisation constraints.
 
-Without the PRG, ALEA would produce physically impossible, economically inconsistent, or self-contradictory scenarios. With it, ALEA becomes a **world-class energy intelligence platform** whose outputs are internally consistent, physically possible, and economically coherent — trusted by every stakeholder in Africa's energy transition.
+Without the PRG, Alea would produce physically impossible, economically inconsistent, or self-contradictory scenarios. With it, Alea becomes a **world-class energy intelligence platform** whose outputs are internally consistent, physically possible, and economically coherent — trusted by every stakeholder in Africa's energy transition.
 
 The specification defines:
 
@@ -1953,4 +1953,4 @@ The specification defines:
 - **Testing and validation** frameworks for all subsystems
 - **A 14-month roadmap** with clear milestones
 
-This specification is designed for **intermediate Python developers** to implement incrementally, with each phase independently testable and deployable. It is grounded in **validated methodologies** (NetworkX, SymPy, Pydantic, Pint, Linopy, PyPSA) and uses **open-source tools** wherever possible. The result is a subsystem that makes ALEA not just a model but a **coherent, consistent, and trusted decision-support system** for Africa's energy transition.
+This specification is designed for **intermediate Python developers** to implement incrementally, with each phase independently testable and deployable. It is grounded in **validated methodologies** (NetworkX, SymPy, Pydantic, Pint, Linopy, PyPSA) and uses **open-source tools** wherever possible. The result is a subsystem that makes Alea not just a model but a **coherent, consistent, and trusted decision-support system** for Africa's energy transition.
