@@ -525,6 +525,25 @@ identity check `make` uses. Its limit is stated rather than hidden — a rewrite
 preserving both would be served stale — and the test asserts both directions,
 that an unchanged file is not re-parsed and that an edit is observed.
 
+**The spec's §44 request examples do not run against this API, and that is
+recorded rather than worked around.** `docs/alea_prg.md` §43 lists fourteen
+endpoints; all fourteen are mounted. §44 then shows the bodies, and every one
+of them is wrong in the same two ways:
+
+| §44 writes | the service takes | why |
+|---|---|---|
+| `{"parameters": {...}}` | `{"set": {...}}` | The model forbids extra inputs, so the spec's body is a 422 naming `body.parameters`. |
+| `carbon_price`, `coal_retirement_schedule`, `renewable_target`, `demand_growth_rate` | none of these is a node | They are from `how_prg_works.md` §5's illustrative trace, which this document's own preamble already says is intent and not implementation. The graph's names are `carbon_price_usd_per_tco2`, `demand_growth`, and there is no retirement-schedule or renewable-target node at all. |
+
+So a client written from §44 verbatim does not work, and the envelope is a
+decision the code made and the spec did not: `set` is what every
+parameter-accepting route takes, `ConsistencyRequest` and `ConflictRequest`
+share it deliberately so a caller does not assemble a second payload to ask
+the follow-up question. The spec's `parameters` was not adopted because the
+four names under it are the illustrative ones — adopting the envelope would
+have made a body that still fails, one field later. Recorded here so the next
+reader does not read §44 as a contract and conclude the routes are broken.
+
 ## Two things about the graph that are easy to get wrong
 
 **`range` on a node is the admissible set, not the solver's bracket.** They
