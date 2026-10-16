@@ -32,10 +32,11 @@ import pytest
 from alea.config.loader import load_config
 from alea.io.artefacts import ArtefactError, read_artefact, store_raw
 from alea.io.pipeline import build_stage
+from alea.planning.fleet import FleetError, validate_fleet_coverage
 from alea.planning.schemas import FLEET, TOPOLOGY
 from alea.provenance.models import Basis, Licence, Provenance
 from alea.registry import Carrier
-from tests.ci.canaries import REPO, planted
+from tests.ci.canaries import REPO, planted, probe_exit_code
 
 
 def _raw_provenance(source_id: str) -> Provenance:
@@ -291,3 +292,154 @@ else:
 			f"the refusal did not come from the carrier gate: {result}"
 		)
 	assert outcome().startswith("accepted"), "the restore did not put it back"
+
+
+# --------------------------------------------------------------------------
+# 02-data-pipeline §6 criterion 2 -- fleet coverage
+# --------------------------------------------------------------------------
+
+
+def test_fleet_coverage_passes_against_a_matching_reference():
+	"""§6 criterion 2's content: a fleet that covers the reference passes.
+
+	The gate the plan calls "the one to watch". It was promised in the exit
+	criteria and had no implementation and no test, so a fleet covering 60% of
+	national capacity would have produced a plausible, wrong capacity mix with
+	nothing to catch it.
+	"""
+	check = validate_fleet_coverage(
+		{"geothermal": 900.0, "hydro": 800.0, "coal": 300.0},
+		{"geothermal": 900.0, "hydro": 800.0, "coal": 300.0},
+		country="KE",
+		source="repp_africa",
+	)
+	assert check.passes
+	assert check.coverage_pct == pytest.approx(100.0)
+	assert check.missing_mw == {}
+	assert check.missing_carriers == []
+
+
+def test_fleet_coverage_notices_a_missing_carrier():
+	"""The gate's canary: drop a carrier and the check must fail, naming it.
+
+	A total that is 10% low can be an aggregate of ten right numbers and one
+	hole. The carrier breakdown is what turns "the fleet is short" into "the
+	fleet has no geothermal", which is the finding an operator can act on.
+	"""
+	check = validate_fleet_coverage(
+		{"geothermal": 900.0, "hydro": 800.0},
+		{"geothermal": 900.0, "hydro": 800.0, "coal": 300.0},
+		country="KE",
+		source="repp_africa",
+	)
+	assert not check.passes
+	assert check.coverage_pct == pytest.approx(85.0)
+	assert check.missing_mw == {"coal": 300.0}
+	assert check.missing_carriers == ["coal"]
+
+
+def test_fleet_coverage_refuses_a_scalar_reference_it_cannot_break_down():
+	"""A scalar total answers "how much", not "which". The check reports the
+	miss without inventing a carrier mix the source never stated."""
+	check = validate_fleet_coverage({"geothermal": 500.0}, 1000.0, country="KE")
+	assert not check.passes
+	assert check.coverage_pct == pytest.approx(50.0)
+	assert check.missing_mw == {}, "a scalar reference must not fabricate a carrier gap"
+
+
+def test_fleet_coverage_refuses_an_empty_fleet():
+	"""A national total cannot be reconciled against a fleet with nothing in it,
+	the same refusal the demand analogue makes for a zero series."""
+	with pytest.raises(FleetError, match="no capacity"):
+		validate_fleet_coverage({}, {"coal": 100.0})
+	with pytest.raises(FleetError, match="nothing in it"):
+		validate_fleet_coverage({"coal": 0.0}, {"coal": 100.0})
+
+
+def test_the_fleet_stage_records_that_the_coverage_check_did_not_run(tmp_path: Path):
+	"""A missing reference is recorded as *not run*, never as a pass.
+
+	The fail-open this project keeps hitting: absence treated as a green light.
+	RePP is SCENARIO-priority and its fetcher reaches a live DOI, so a run
+	without a committed export must say the check did not run rather than leave
+	a reader to assume full coverage.
+	"""
+	_write_fleet_export(tmp_path)
+	out = tmp_path / "processed" / "fleet.parquet"
+	build_stage("fleet", _fleet_config(tmp_path), out)
+	_, provenance = read_artefact(out)
+	coverage = provenance.parameters["coverage"]
+	assert coverage["ran"] is False
+	assert "did not run" in str(coverage["reason"])
+
+
+def test_the_fleet_stage_runs_the_coverage_check_against_a_repp_export(tmp_path: Path):
+	"""With a committed cross-check export the stage runs the check and records
+	the verdict, so the criterion is a check the workflow performs rather than a
+	function nobody calls."""
+	_write_fleet_export(tmp_path)
+	reference = tmp_path / "raw" / "repp_africa" / "manual"
+	reference.mkdir(parents=True, exist_ok=True)
+	pd.DataFrame(
+		{
+			"Country": ["Kenya", "Kenya"],
+			"Carrier": ["coal", "geothermal"],
+			"Capacity": [600.0, 400.0],
+		}
+	).to_parquet(reference / "repp.parquet")
+
+	out = tmp_path / "processed" / "fleet.parquet"
+	build_stage(
+		"fleet",
+		_fleet_config(tmp_path),
+		out,
+		parameters={"repp_export": str(reference / "repp.parquet")},
+	)
+	_, provenance = read_artefact(out)
+	coverage = provenance.parameters["coverage"]
+	assert coverage["ran"] is True
+	# The built fleet is 1000 MW of coal against a 600 coal / 400 geothermal
+	# reference: total coverage is 100%, and the carrier mix is still wrong.
+	# That is exactly the failure a total-only check cannot see, and why the
+	# carrier breakdown is carried.
+	assert coverage["coverage_pct"] == pytest.approx(100.0)
+	assert coverage["missing_mw"] == {"geothermal": 400.0}
+	assert coverage["excess_mw"] == {"coal": 400.0}
+	assert coverage["passes"] is True
+
+
+def test_the_fleet_coverage_gate_notices_a_fleet_that_lost_a_carrier():
+	"""The canary for ``test_fleet_coverage_notices_a_missing_carrier``.
+
+	The mutation keeps the total and drops the per-carrier breakdown, which is
+	the defect the gate exists for and the one a total-only check cannot see:
+	1000 MW of coal against a 600 coal / 400 geothermal reference covers 100% of
+	the megawatts and none of the mix.
+
+	The mutation is *disjoint* from what the gate asserts: it changes which
+	numbers are compared, not the threshold. A gate that read only
+	``coverage_pct`` would pass both ways and this canary would prove nothing --
+	which is exactly the flattened-grouping defect, so it is the right mutation
+	to prove the gate is not the total-only check it could have been.
+
+	Run in a fresh interpreter: the mutation is a source edit and this process
+	holds the unmutated module in ``sys.modules``.
+	"""
+	fleet_py = REPO / "src" / "alea" / "planning" / "fleet.py"
+	node = "tests/ci/test_stage_output_gates.py::test_fleet_coverage_notices_a_missing_carrier"
+	program = (
+		"import sys\n"
+		"import pytest\n\n"
+		f"sys.exit(pytest.main(['-q', '-p', 'no:randomly', {node!r}]))\n"
+	)
+
+	shipped = "\t\t\tif gap > 0.0:\n\t\t\t\tmissing[carrier] = gap"
+	broken = "\t\t\tif gap > 0.0:\n\t\t\t\tpass  # canary: the carrier gap is dropped"
+
+	assert probe_exit_code(program) == 0, "the gate was already failing"
+	with planted(fleet_py, shipped, broken):
+		assert probe_exit_code(program) != 0, (
+			"a check that drops the per-carrier gap still passed; the gate is "
+			"reading the total, not the mix"
+		)
+	assert probe_exit_code(program) == 0, "the gate did not recover"

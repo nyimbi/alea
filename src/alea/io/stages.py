@@ -47,7 +47,7 @@ from alea.logging import get_logger, new_run_id
 from alea.planning.fleet import DEFAULT_LIFETIME_YEARS
 from alea.planning.schemas import FLEET, TOPOLOGY
 from alea.provenance.models import Basis, DerivedProvenance
-from alea.registry import Carrier, get_technology
+from alea.registry import Carrier, get_technology, registry
 
 _log = get_logger(__name__)
 
@@ -68,6 +68,16 @@ DEFAULT_ALPHA = 0.5
 
 Recorded in the artefact's provenance every time it is used, because a
 disaggregation whose ``alpha`` is unrecorded produces a map nobody can defend.
+"""
+
+PROXY_NATIONAL_UNCERTAINTY = 0.25
+"""Relative uncertainty on a CRITICAL-tier national total (``§3.1``).
+
+§3.1 requires ``uncertainty > 0`` for these artefacts and names no figure; the
+value is a modelling convention, recorded in the provenance beside the basis
+rather than left implicit. It matches the figure ``demand_hourly`` already
+carries for its own proxy disaggregation, so one proxy does not acquire two
+different uncertainties on the way through the pipeline.
 """
 
 HOURS_PER_YEAR = 8760
@@ -469,6 +479,12 @@ def build_topology(config: Config, out: Path, context: BuildContext) -> DerivedP
 
 	geojson_out = out.with_suffix(".geojson")
 	_write_geojson(lines, geojson_out)
+	# The GeoJSON is an artefact in its own right (§3 declares this dataset as
+	# "GeoJSON + Parquet") and it carried no provenance: `_write_geojson` writes
+	# the payload directly and only the Parquet went through `write_stage`. An
+	# artefact with no sidecar is one `read_artefact` refuses and no reader can
+	# verify, so the same provenance goes beside both files.
+	_write_provenance_sidecar(geojson_out, provenance)
 	write_stage(out, lines, provenance)
 	_log.info("stage.topology", lines=len(lines), geojson=str(geojson_out))
 	return provenance
@@ -618,6 +634,19 @@ def build_fleet(config: Config, out: Path, context: BuildContext) -> DerivedProv
 	# because the fixtures wrote the consumer's spelling by hand.
 	FLEET.check(frame, artefact="fleet")
 
+	# §6 criterion 2, "the one to watch": a fleet covering 60% of national
+	# capacity yields a capacity mix that looks plausible and is wrong, and
+	# nothing downstream can see it. The check runs here, against the RePP
+	# cross-check the register names for this module, and its result goes into
+	# the provenance rather than a log -- a coverage figure a reader cannot see
+	# is a coverage figure nobody can dispute.
+	#
+	# The reference is optional because RePP is a SCENARIO-priority source and
+	# covers renewables only, ending in 2023. A run without it records that the
+	# check did not run, which is a different statement from a check that
+	# passed -- the distinction the whole register exists to keep.
+	coverage = _fleet_coverage(frame, config, context)
+
 	provenance = _provenance(
 		config,
 		context,
@@ -635,6 +664,7 @@ def build_fleet(config: Config, out: Path, context: BuildContext) -> DerivedProv
 			"commissioning_year_default": default_year,
 			"n_plants_undated": n_undated,
 			"lifetime_years_default": DEFAULT_LIFETIME_YEARS,
+			"coverage": coverage,
 		},
 		basis=Basis.MEASURED,
 		notes=(
@@ -646,6 +676,106 @@ def build_fleet(config: Config, out: Path, context: BuildContext) -> DerivedProv
 	write_stage(out, frame, provenance)
 	_log.info("stage.fleet", plants=len(frame), capacity_mw=float(frame["capacity_mw"].sum()))
 	return provenance
+
+
+def _fleet_coverage(
+	frame: pd.DataFrame,
+	config: Config,
+	context: BuildContext,
+) -> dict[str, Any]:
+	"""The §6 criterion 2 coverage record for a built fleet, or why it did not run.
+
+	Returns a dictionary for the provenance either way, because "the check did
+	not run" and "the check ran and passed" are different claims and a provenance
+	that records only the second is the fail-open the register is built to catch.
+
+	The reference is the RePP Africa plant list, which the register names as
+	``planning/fleet``'s cross-check. It is read only when a committed export
+	exists: RePP is SCENARIO-priority and its fetcher reaches a live DOI, so a
+	run that has not fetched it must not silently report full coverage.
+	"""
+	from alea.planning.fleet import FleetError, validate_fleet_coverage
+
+	by_carrier: dict[str, float] = {}
+	for carrier, group in frame.groupby("carrier"):
+		by_carrier[str(carrier)] = float(group["capacity_mw"].sum())
+
+	export = context.parameters.get("repp_export")
+	if not export:
+		return {
+			"ran": False,
+			"reason": (
+				"no RePP cross-check export was supplied; the coverage check "
+				"against a published national total did not run"
+			),
+		}
+
+	path = Path(str(export))
+	if not path.is_absolute():
+		path = _raw_root(config, context) / path
+	if not path.exists():
+		return {
+			"ran": False,
+			"reason": f"the RePP cross-check export named at {path} does not exist",
+		}
+
+	raw = _read_table(path)
+	carrier_column = _pick(raw, "carrier", "Carrier", "technology", "Technology", "fuel")
+	capacity_column = _pick(raw, "capacity_mw", "Capacity", "capacity", "capacity_mw_total")
+	if carrier_column is None or capacity_column is None:
+		return {
+			"ran": False,
+			"reason": (
+				"the RePP export has no carrier/capacity column pair; it holds "
+				f"{', '.join(str(c) for c in raw.columns)}"
+			),
+		}
+
+	countries = {str(iso) for iso in config.scenario.countries}
+	country_column = _pick(raw, "country_iso", "Country", "country")
+	reference = raw
+	if country_column is not None:
+		reference = raw.loc[raw[country_column].map(_iso2).isin(countries)]
+	if reference.empty:
+		return {
+			"ran": False,
+			"reason": (
+				f"the RePP export holds no plant in {', '.join(sorted(countries))}"
+			),
+		}
+
+	reference_mw: dict[str, float] = {}
+	for carrier, group in reference.groupby(reference[carrier_column].map(_carrier_name)):
+		value = pd.to_numeric(group[capacity_column], errors="coerce").sum()
+		if pd.notna(value) and float(value) > 0.0:
+			reference_mw[str(carrier)] = float(value)
+	if not reference_mw:
+		return {"ran": False, "reason": "the RePP export holds no positive capacity"}
+
+	try:
+		check = validate_fleet_coverage(
+			by_carrier,
+			reference_mw,
+			country=", ".join(sorted(countries)),
+			source="repp_africa",
+		)
+	except FleetError as exc:
+		return {"ran": False, "reason": f"the coverage check refused: {exc}"}
+
+	record = check.as_dict()
+	record["ran"] = True
+	# A check that ran and failed is a finding, not a build failure: RePP covers
+	# renewables only and ends in 2023, so a fleet that is missing its thermal
+	# plants will legitimately cover well under 90% against it. Raising here
+	# would make the cross-check unusable against the one source that exists for
+	# it, and the provenance carries the finding to whoever reads it.
+	_log.info(
+		"stage.fleet.coverage",
+		coverage_pct=check.coverage_pct,
+		passes=check.passes,
+		missing=len(check.missing_mw),
+	)
+	return record
 
 
 def _iso2(value: Any) -> str:
@@ -727,6 +857,31 @@ def build_demand_national(config: Config, out: Path, context: BuildContext) -> D
 			f"{', '.join(str(i) for i in config.scenario.countries)}"
 		)
 
+	# §3.1: for the seven CRITICAL-tier countries the national total is itself a
+	# proxy, estimated from regional averages scaled by population. The stage's
+	# notes claimed this and no code branched on the tier, so a Burundi total
+	# was written `basis=measured, uncertainty=0.0` -- a proxy published as a
+	# measurement, which is the exact laundering AD-6 exists to prevent. The
+	# tier is read from the registry, the one table that holds it. A country the
+	# registry does not hold is not a proxy by this rule (the tier is undefined
+	# for it), so the lookup tolerates the miss rather than raising a KeyError
+	# out of a provenance build.
+	known = registry()
+	proxy_countries = sorted(
+		iso
+		for iso in {str(c) for c in frame["country_iso"]}
+		if iso in known and known[iso].needs_proxy_data
+	)
+	parameters: dict[str, Any] = {}
+	basis = Basis.MEASURED
+	uncertainty = 0.0
+	uncertainty_basis = ""
+	if proxy_countries:
+		parameters["proxy_countries"] = proxy_countries
+		basis = Basis.PROXY
+		uncertainty = PROXY_NATIONAL_UNCERTAINTY
+		uncertainty_basis = "proxy"
+
 	provenance = _provenance(
 		config,
 		context,
@@ -736,8 +891,11 @@ def build_demand_national(config: Config, out: Path, context: BuildContext) -> D
 			"n_rows": int(len(frame)),
 			"years": sorted(int(y) for y in frame["year"].unique()),
 			"source": str(path),
+			**parameters,
 		},
-		basis=Basis.MEASURED,
+		basis=basis,
+		uncertainty=uncertainty,
+		uncertainty_basis=uncertainty_basis,
 		notes=(
 			"National totals are the measured constraint everything downstream is "
 			"scaled to. For a CRITICAL-tier country the total is a proxy scaled "
@@ -746,7 +904,7 @@ def build_demand_national(config: Config, out: Path, context: BuildContext) -> D
 		),
 	)
 	write_stage(out, frame, provenance)
-	_log.info("stage.demand_national", rows=len(frame))
+	_log.info("stage.demand_national", rows=len(frame), proxy=proxy_countries)
 	return provenance
 
 
@@ -1190,11 +1348,23 @@ def _cutout_years(config: Config, context: BuildContext) -> list[int]:
 
 
 def _write_provenance_sidecar(path: Path, provenance: DerivedProvenance) -> None:
-	"""Write an artefact's provenance beside a payload this module wrote itself."""
+	"""Write an artefact's provenance beside a payload this module wrote itself.
+
+	The sidecar carries the payload's own sha256, exactly as `write_artefact`
+	does, so that a reader can verify the payload against the sidecar whichever
+	writer produced the pair. Without it the sidecar is a *record* rather than a
+	verification: `read_artefact` compares the payload's hash against the
+	sidecar's `checksum` and would compare against an empty string, refusing
+	every artefact this function writes.
+	"""
 	sidecar = path.with_suffix(path.suffix + ".provenance.json")
 	sidecar.parent.mkdir(parents=True, exist_ok=True)
 	sidecar.write_text(
-		json.dumps(provenance.model_dump(mode="json"), indent=2, sort_keys=True),
+		json.dumps(
+			{**provenance.model_dump(mode="json"), "checksum": sha256_file(path)},
+			indent=2,
+			sort_keys=True,
+		),
 		encoding="utf-8",
 	)
 
@@ -2018,6 +2188,7 @@ asked for it.
 __all__ = [
 	"DEFAULT_ALPHA",
 	"HOURS_PER_YEAR",
+	"PROXY_NATIONAL_UNCERTAINTY",
 	"REGISTERED_STAGE_NAMES",
 	"build_costs",
 	"build_cutout",

@@ -56,8 +56,55 @@ provenance precisely because they are placeholders.
 """
 
 
+FLEET_COVERAGE_TOLERANCE_PCT = 10.0
+"""`02-data-pipeline.md` §6 criterion 2: the built fleet must cover > 90% of the
+published national installed capacity. The tolerance is the complement of that
+threshold, stated as a miss so it reads the same way as the demand analogue's."""
+
+
 class FleetError(ValueError):
 	"""The fleet cannot be attached to the network."""
+
+
+@dataclass(frozen=True)
+class FleetCoverage:
+	"""A comparison of a built fleet against a published national capacity total.
+
+	Carrier-level, not just a total. Two fleets can sum to the same megawatts
+	with entirely different mixes, and the failure that matters -- a missing
+	technology -- is invisible in the total while being the whole finding. The
+	missing dictionary is therefore the point of the check, not a detail on it.
+	"""
+
+	country: str
+	built_mw: float
+	reference_mw: float
+	coverage_pct: float
+	tolerance_pct: float
+	source: str
+	missing_mw: dict[str, float] = field(default_factory=dict)
+	excess_mw: dict[str, float] = field(default_factory=dict)
+
+	@property
+	def passes(self) -> bool:
+		return self.coverage_pct >= 100.0 - self.tolerance_pct
+
+	@property
+	def missing_carriers(self) -> list[str]:
+		return sorted(self.missing_mw)
+
+	def as_dict(self) -> dict[str, object]:
+		return {
+			"country": self.country,
+			"built_mw": self.built_mw,
+			"reference_mw": self.reference_mw,
+			"coverage_pct": self.coverage_pct,
+			"tolerance_pct": self.tolerance_pct,
+			"passes": self.passes,
+			"source": self.source,
+			"missing_mw": dict(self.missing_mw),
+			"excess_mw": dict(self.excess_mw),
+		}
 
 
 @dataclass
@@ -242,6 +289,84 @@ def fleet_provenance(
 	)
 
 
+def validate_fleet_coverage(
+	carrier_mw: dict[str, float],
+	reference_mw: dict[str, float] | float,
+	*,
+	country: str = "",
+	source: str = "",
+	tolerance_pct: float = FLEET_COVERAGE_TOLERANCE_PCT,
+) -> FleetCoverage:
+	"""Compare a built fleet against a published national capacity total.
+
+	``02-data-pipeline.md`` §6 calls this "the one to watch", and the reason is
+	arithmetic rather than taste: a fleet covering 60% of national capacity
+	produces a capacity mix that looks plausible and is wrong, because the
+	optimiser expands into the hole the missing plants left. Nothing downstream
+	can see it -- the network solves, the balance closes, the mix is a mix.
+
+	``reference_mw`` is either a national total in MW, or a mapping of carrier
+	to MW. The mapping form is the one that names what is missing; the scalar
+	form answers only "how much", so it reports a total miss with no carriers.
+	Both are accepted because a source may publish only the aggregate, and
+	refusing that would leave the check unrunnable against a real total.
+
+	Raises nothing. As with ``validate_national_total``, the caller decides: a
+	10% miss on a fleet whose export is known to omit distributed solar is a
+	different finding from one that omits a 300 MW geothermal field.
+	"""
+	if not carrier_mw:
+		raise FleetError(
+			"the built fleet holds no capacity; a national total cannot be "
+			"reconciled against a fleet with nothing in it"
+		)
+	if isinstance(reference_mw, dict):
+		assert reference_mw, "the reference capacity mapping is empty"
+		reference_total = float(sum(reference_mw.values()))
+		reference_by_carrier = {str(k): float(v) for k, v in reference_mw.items()}
+	else:
+		reference_total = float(reference_mw)
+		reference_by_carrier = {}
+	if reference_total <= 0.0:
+		raise FleetError("the reference capacity total is not positive")
+
+	built_total = float(sum(carrier_mw.values()))
+	if built_total <= 0.0:
+		raise FleetError(
+			"the built fleet holds no capacity; a national total cannot be "
+			"reconciled against a fleet with nothing in it"
+		)
+
+	# Per-carrier only where the reference is per-carrier. Deriving a carrier
+	# breakdown from a scalar reference would invent a mix the source never
+	# stated, which is the defect this check exists to catch, one level up.
+	missing: dict[str, float] = {}
+	excess: dict[str, float] = {}
+	if reference_by_carrier:
+		built_by_carrier = {str(k): float(v) for k, v in carrier_mw.items()}
+		for carrier, wanted in reference_by_carrier.items():
+			gap = wanted - built_by_carrier.get(carrier, 0.0)
+			if gap > 0.0:
+				missing[carrier] = gap
+			elif gap < 0.0:
+				excess[carrier] = -gap
+		for carrier, have in built_by_carrier.items():
+			if carrier not in reference_by_carrier:
+				excess[carrier] = have
+
+	coverage_pct = 100.0 * built_total / reference_total
+	return FleetCoverage(
+		country=country,
+		built_mw=built_total,
+		reference_mw=reference_total,
+		coverage_pct=coverage_pct,
+		tolerance_pct=tolerance_pct,
+		source=source,
+		missing_mw=missing,
+		excess_mw=excess,
+	)
+
+
 def attach_extendable_candidates(
 	network: pypsa.Network,
 	carriers: list[str],
@@ -304,11 +429,14 @@ def attach_extendable_candidates(
 __all__ = [
 	"DEFAULT_EFFICIENCY",
 	"DEFAULT_LIFETIME_YEARS",
+	"FLEET_COVERAGE_TOLERANCE_PCT",
 	"MARGINAL_COST_USD_PER_MWH",
 	"AttachmentReport",
+	"FleetCoverage",
 	"FleetError",
 	"attach_extendable_candidates",
 	"attach_generators",
 	"fleet_provenance",
 	"nearest_bus",
+	"validate_fleet_coverage",
 ]

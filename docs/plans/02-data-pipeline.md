@@ -325,18 +325,29 @@ a marginal modelling choice.
 
 | # | Criterion | Gate |
 |---|---|---|
-| 1 | Kenya topology builds with > 0 lines and no orphan buses | Schema test |
-| 2 | Kenya fleet covers > 90% of installed capacity vs. AFREC national totals | Coverage test |
-| 3 | Hourly demand series has no gaps over the fixture horizon | Gap test |
-| 4 | Renewable profiles in [0, 1] for every bus and hour | Range test |
-| 5 | Every processed artefact has provenance with a checksum | Provenance test |
-| 6 | VIIRS quality-flag handling matches the pinned semantics | Synthetic flag test |
-| 7 | CRITICAL-tier proxies carry `uncertainty_basis="proxy"` | Provenance test |
-| 8 | Every stage is idempotent | Idempotence test |
+| 1 | Kenya topology builds with > 0 lines and no orphan buses | `test_topology_schema` |
+| 2 | Kenya fleet covers > 90% of installed capacity vs. the RePP cross-check | `test_fleet_coverage_notices_a_missing_carrier` |
+| 3 | Hourly demand series has no gaps over the fixture horizon | `test_demand_hourly_covers_horizon` |
+| 4 | Renewable profiles in [0, 1] for every bus and hour | `test_capacity_factors_in_range` |
+| 5 | Every processed artefact has provenance with a checksum | `test_every_artefact_a_stage_writes_has_provenance_with_a_checksum` |
+| 6 | VIIRS quality-flag handling matches the pinned semantics | `test_cloud_flag_semantics` |
+| 7 | CRITICAL-tier proxies carry `uncertainty_basis="proxy"` | `test_a_critical_tier_national_total_carries_a_proxy_basis` |
+| 8 | Every stage is idempotent | `test_the_stage_is_idempotent_through_the_cli` |
 | 9 | Every placeholder link in `data3.md` is resolved or the source is dropped | Manual, recorded in the source registry |
 | 10 | Every registered stage is a rule the workflow runs, or a named exception | `test_every_registered_stage_is_a_rule_or_a_named_exception` |
 
 **Criterion 2 is the one to watch.** A fleet that covers 60% of national
 installed capacity will produce a capacity mix that looks plausible and is
-wrong. The coverage check compares the built fleet against AFREC's national
-totals and fails below 90%, naming the missing capacity.
+wrong. The coverage check compares the built fleet, carrier by carrier, against
+the published capacity total and fails below 90%, naming the missing capacity.
+
+**The yardstick is RePP, not AFREC.** AFREC's registered target is
+``demand_national`` (§1's table, and the register's own entry): it publishes
+consumption, and no version of it carries installed capacity. `spec/spec3.md`
+§17 names EIA and IRENA for capacity validation; of those, only RePP is
+registered against `planning/fleet` here, and its fetcher is the one fleet
+source with a stable DOI. RePP covers renewables only and ends in 2023, so it
+is a cross-check and not a total — a fleet missing its thermal plants will
+legitimately read low against it, which is why the stage records the verdict
+rather than raising on it. A run with no RePP export records that the check did
+not run, which is a different claim from a check that passed.

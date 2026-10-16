@@ -55,10 +55,13 @@ from alea.planning.expansion import (
 	solve_expansion,
 )
 from alea.planning.fleet import (
+	FLEET_COVERAGE_TOLERANCE_PCT,
 	AttachmentReport,
+	FleetCoverage,
 	FleetError,
 	attach_extendable_candidates,
 	attach_generators,
+	validate_fleet_coverage,
 )
 from alea.planning.renewables import (
 	RenewableError,
@@ -109,6 +112,8 @@ __all__ = [
 	"DispatchError",
 	"DispatchResult",
 	"ExpansionError",
+	"FLEET_COVERAGE_TOLERANCE_PCT",
+	"FleetCoverage",
 	"FleetError",
 	"NationalCheck",
 	"PlanningError",
@@ -153,6 +158,7 @@ __all__ = [
 	"solve_expansion",
 	"solve_scenario",
 	"validate_aggregation_artefact",
+	"validate_fleet_coverage",
 	"validate_capacity_factors",
 	"validate_national_total",
 	"write_validation",
