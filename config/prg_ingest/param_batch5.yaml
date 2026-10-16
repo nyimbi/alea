@@ -9,7 +9,26 @@
 #   R11: dropped equation 'learning_curve_wind_definition' -- it determines 'capex_learning_usd_per_kw', which 'learning_curve' already determines
 #   R11: dropped equation 'capture_price_from_ppa_definition' -- it determines 'capture_price_usd_per_mwh', which 'capture_price_equation' already determines
 #   R11: dropped equation 'energy_burden_with_lifeline_definition' -- it determines 'energy_burden', which 'energy_burden_definition' already determines
-#   R12: emissions_peak_constraint.parameters pruned ['emissions_peak_year'] -- the arithmetic does not name them
+#   R12: dropped equation 'emissions_peak_constraint' -- as delivered it read
+#        `emissions_mtco2_per_year <= emissions_mtco2_per_year`, a tautology. The
+#        batch's own repair rule pruned `emissions_peak_year` from its
+#        `parameters` on the grounds that "the arithmetic does not name them",
+#        which removed the one operand that made the relation a relation and left
+#        `x <= x`. That repair treated the symptom: the delivered arithmetic was
+#        wrong, not the metadata. The intended claim (docs/param_eqn_formula1.md
+#        :173) is `CO2(y_peak) >= CO2(y) for all y` -- a property of a trajectory
+#        indexed by year, i.e. a curve, and this graph carries a single annual
+#        scalar `emissions_mtco2_per_year`. So the claim has no encoding here and
+#        the equation is removed rather than re-pointed: writing
+#        `emissions_mtco2_per_year <= emissions_peak_year` would compare
+#        MtCO2/year against years under the equation's own `unit_check: true`.
+#        This leaves `emissions_peak_year` uncoupled, which is the honest state
+#        -- it was already uncoupled, because R12 had pruned it from the only
+#        equation that named it. The spec's relation column
+#        (docs/param_eqn.md:361-362) states `emissions_peak_year <->
+#        net_zero_year`, and its formula for `net_zero_year` is a trajectory
+#        claim too (`CO2(y) = 0`), so a future batch that gives the graph a
+#        year-indexed trajectory would land both together.
 #   R7: combined_ratio is claimed by ['param_batch0.md', 'param_batch5.md']; this entry kept
 #   R7: customs_duty is claimed by ['param_batch5.md', 'param_batch7.md']; this entry kept
 #   R7: loss_ratio is claimed by ['param_batch0.md', 'param_batch5.md']; this entry kept
@@ -1231,22 +1250,6 @@ equations:
     solution_method: direct
     linearity: linear
     priority: P1
-  emissions_peak_constraint:
-    name: Emissions peak constraint
-    description: 'The emissions at the horizon must not exceed the emissions at the peak year, by construction.
-      An inequality: it bounds a trajectory rather than fixing a value. Dimensional check: MtCO2/year
-      compared against MtCO2/year.'
-    system: carbon_trajectory
-    lhs: emissions_mtco2_per_year
-    rhs: emissions_mtco2_per_year
-    relation: leq
-    parameters:
-    - emissions_mtco2_per_year
-    tolerance: 1.0e-06
-    unit_check: true
-    solution_method: numeric
-    linearity: linear
-    priority: P2
   reserve_margin_with_firm_vre:
     name: Reserve margin with firm VRE
     description: 'The reserve margin identity with the renewable fleet''s firm contribution made explicit.

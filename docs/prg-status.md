@@ -604,11 +604,19 @@ manufacturing a decision no one took.
   (`coal`, `gas`, `biomass`), so class instantiation reaches a handful of
   nodes, not 787.
 
-  A per-node equation is also the one shape the loader refuses outright:
+  A per-node equation used to be the one shape the loader refused outright:
   `'1000000.0' names no parameter; a constant expression relates nothing and
-  would pass every consistency check vacuously`. A bounds equation over a
-  single node is a constant RHS, so it is refused by construction; a sum
-  identity over the technology capacities is not sound either, because the
+  would pass every consistency check vacuously`. That refusal was mis-scoped —
+  it is an argument about a *relation*, and it was being applied to a *side*,
+  where a constant is what a bound is made of. `dsl.parse_side` now accepts a
+  constant side, so `x == 1000000.0` and `sum(shares) <= 1.0` both load; the
+  vacuity guard moved to the combined arithmetic, which is where it can be
+  stated, and a relation whose two sides are identical is refused separately
+  (see `e0efc70`). So the loader is no longer the reason not to author
+  per-node equations.
+
+  The surviving reason is dimensional: a sum identity over the technology
+  capacities is not sound, because the
   catalog declares **no unit** for them (its columns are number, category,
   name, title, algorithm, binding, status, users, priority) while the fleet
   totals it would sum against are in MW. And every candidate total is already

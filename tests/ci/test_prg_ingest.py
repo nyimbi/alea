@@ -426,6 +426,131 @@ def test_an_equation_that_is_constant_on_both_sides_is_still_refused():
 		ParameterGraph.from_mapping(document)
 
 
+def test_an_equation_that_relates_a_side_to_itself_is_refused():
+	"""The second way a relation can relate nothing.
+
+	The constant check above does not catch `x <= x`: both sides name a
+	parameter, so the equation passes the vacuity guard, couples its node, and
+	then holds at every value that node can take. The residual the solver builds
+	is `(lhs) - (rhs)` -- identically zero -- so the constraint is dropped as
+	trivially satisfied while the node still reads as reached in every coverage
+	count.
+
+	This is not hypothetical: `param_batch5.yaml` shipped
+	`emissions_peak_constraint` as exactly `emissions_mtco2_per_year <=
+	emissions_mtco2_per_year`, because its own repair rule had pruned the second
+	operand rather than fixing the arithmetic.
+
+	The guard is asserted to *name* the defect, and the same equation is asserted
+	to load once the operand is corrected -- otherwise the test would pass
+	against a guard that refuses every inequality.
+	"""
+	def document(rhs: str) -> dict:
+		return {
+			"parameters": {
+				"delta": _node("Delta", [0.0, 1.0]),
+				"epsilon": _node("Epsilon", [0.0, 1.0]),
+			},
+			"equations": {
+				"peak": {
+					"name": "Delta at most epsilon",
+					"system": "reliability",
+					"lhs": "delta",
+					"rhs": rhs,
+					"relation": "leq",
+					"parameters": ["delta", "epsilon"],
+					"unit_check": False,
+				}
+			},
+			"relationships": [],
+			"cross_validation": [],
+		}
+
+	with pytest.raises(GraphError, match="relates 'delta' to itself"):
+		ParameterGraph.from_mapping(document("delta"))
+
+	# The same equation with a distinct operand is not refused, so the guard is
+	# scoped to the tautology rather than to the relation's shape.
+	assert ParameterGraph.from_mapping(document("epsilon")).equations
+
+
+def test_the_shipped_emissions_peak_equation_is_gone_rather_than_vacuous():
+	"""A tautology standing in for a claim the graph cannot express.
+
+	`emissions_peak_constraint` read `x <= x`. Its intended meaning
+	(`docs/param_eqn_formula1.md:173`) is `CO2(y_peak) >= CO2(y) for all y` --
+	a property of a trajectory indexed by year -- and the graph carries one
+	annual scalar, so the claim has no encoding here. Re-pointing it at
+	`emissions_peak_year` would compare MtCO2/year against years under the
+	equation's own `unit_check`.
+
+	The equation is removed, and this test pins that: it must not come back as a
+	tautology, and `emissions_peak_year` must still be a *node* (the batch's own
+	repair rule pruned it from the equation, and a later edit that pruned the
+	node instead would look identical in the equation count).
+	"""
+	graph, _ = load_ingested(default_ingest_dir())
+	assert "emissions_peak_constraint" not in graph.equations
+	assert "emissions_peak_year" in graph.nodes
+	assert graph.nodes["emissions_peak_year"].unit == "years"
+
+
+def test_the_tautology_guard_refuses_the_shipped_batch_that_carried_one():
+	"""Canary: plant the defect the guard exists for, in the file that had it.
+
+	The in-test canary above builds a two-node fixture, which proves the guard
+	fires on the *shape* but not that it would have caught the shipped instance.
+	The two differ: `emissions_peak_constraint` carried `parameters:
+	[emissions_mtco2_per_year]` and `system: carbon_trajectory`, so a guard that
+	only compared `lhs` and `rhs` would pass it -- and the guard here does
+	compare exactly that, but nothing yet proves it against the real fragment.
+
+	The mutation is restored from the harness's in-memory bytes, never from
+	`git checkout`, because the removal of this equation is uncommitted work in
+	the same file.
+	"""
+	from tests.ci.canaries import REPO, planted, probe_exit_code
+
+	fragment = REPO / "config" / "prg_ingest" / "param_batch5.yaml"
+	node = (
+		"tests/ci/test_prg_ingest.py"
+		"::test_the_shipped_fragments_load_and_report_a_clean_merge"
+	)
+	program = (
+		"import sys\n"
+		"import pytest\n\n"
+		f"sys.exit(pytest.main(['-q', '-p', 'no:randomly', {node!r}]))\n"
+	)
+
+	# Planted where the equation used to sit, immediately before its successor.
+	shipped = "    priority: P1\n  reserve_margin_with_firm_vre:\n"
+	broken = (
+		"    priority: P1\n"
+		"  emissions_peak_constraint:\n"
+		"    name: Emissions peak constraint\n"
+		"    system: carbon_trajectory\n"
+		"    lhs: emissions_mtco2_per_year\n"
+		"    rhs: emissions_mtco2_per_year\n"
+		"    relation: leq\n"
+		"    parameters:\n"
+		"    - emissions_mtco2_per_year\n"
+		"    tolerance: 1.0e-06\n"
+		"    unit_check: true\n"
+		"    solution_method: numeric\n"
+		"    linearity: linear\n"
+		"    priority: P2\n"
+		"  reserve_margin_with_firm_vre:\n"
+	)
+
+	assert probe_exit_code(program) == 0, "the gate was already failing"
+	with planted(fragment, shipped, broken):
+		assert probe_exit_code(program) != 0, (
+			"the shipped tautology loaded and the merge test passed; the guard "
+			"does not reach the fragment the defect actually lived in"
+		)
+	assert probe_exit_code(program) == 0, "the gate did not recover"
+
+
 # --------------------------------------------------------------------------
 # The shipped fragments, which are the reason the loader exists.
 # --------------------------------------------------------------------------

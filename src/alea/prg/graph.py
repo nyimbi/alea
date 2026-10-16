@@ -889,6 +889,27 @@ class ParameterGraph:
 					f"relation naming no parameter relates nothing and would pass "
 					f"every consistency check vacuously"
 				)
+			# A relation between an expression and itself is the other way a
+			# relation can relate nothing, and the constant check above does not
+			# catch it: `x <= x` names a parameter on both sides, so it passes
+			# the vacuity guard, couples a node, and then holds at every value
+			# the node can take. The solver builds the residual `(lhs) - (rhs)`,
+			# which is identically zero, so the constraint is dropped as
+			# trivially satisfied and the equation's only effect is to make a
+			# node look reached. `Expr` equality is structural, so this catches
+			# `x <= x` however each side is spelled -- but only after the two
+			# are parsed, and a relation whose sides simplify to each other
+			# (`x + 0 <= x`) is still a relation between distinct formulas. Say
+			# what the equation was probably meant to be, because a tautology is
+			# nearly always a mis-typed operand rather than an intended claim.
+			if lhs == rhs:
+				raise GraphError(
+					f"equation {equation.id!r} relates {equation.lhs!r} to itself "
+					f"({equation.lhs!r} {equation.relation} {equation.rhs!r}); the "
+					f"residual is identically zero, so the equation couples "
+					f"{sorted(named)} without constraining them and would read as "
+					f"a reached node in every coverage count"
+				)
 			claimed = set(equation.parameters) | set(equation.free_variables) | set(
 				equation.determined_variables
 			)
