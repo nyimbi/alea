@@ -36,9 +36,10 @@ move, with its cost in units the reader can judge.
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING, Mapping
+from typing import TYPE_CHECKING
 
 from alea.prg.dsl import DslError
 from alea.prg.graph import Violation

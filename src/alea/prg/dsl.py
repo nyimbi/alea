@@ -629,10 +629,7 @@ class Mul(Expr):
 		flat: list[Expr] = []
 		coefficient = 1.0
 		for factor in factors:
-			if isinstance(factor, Mul):
-				items = factor.factors
-			else:
-				items = (factor,)
+			items = factor.factors if isinstance(factor, Mul) else (factor,)
 			for item in items:
 				if isinstance(item, Const):
 					coefficient *= item.value
@@ -744,12 +741,16 @@ class Pow(Expr):
 	def _eval(self, values: Mapping[str, Any]) -> Any:
 		base = self.base._eval(values)
 		exponent = self.exponent._eval(values)
-		if not isinstance(base, np.ndarray) and not isinstance(exponent, np.ndarray):
-			if base < 0 and not float(exponent).is_integer():
-				raise DslError(
-					f"({base}) ** {exponent} is not real; a fractional power of a "
-					f"negative base has no real value"
-				)
+		if (
+			not isinstance(base, np.ndarray)
+			and not isinstance(exponent, np.ndarray)
+			and base < 0
+			and not float(exponent).is_integer()
+		):
+			raise DslError(
+				f"({base}) ** {exponent} is not real; a fractional power of a "
+				f"negative base has no real value"
+			)
 		return base**exponent
 
 	def _latex(self, parent: int) -> str:

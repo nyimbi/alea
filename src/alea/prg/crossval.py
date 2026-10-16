@@ -43,9 +43,10 @@ from __future__ import annotations
 
 import ast
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, Mapping
+from typing import TYPE_CHECKING, Any
 
 from alea.prg.dsl import DslError
 
@@ -284,7 +285,7 @@ def _eval(node: ast.AST, values: Mapping[str, float]) -> Any:
 		# same as Python: `a < b < c` is `a < b and b < c`, and evaluating all
 		# pairs would report a comparison Python never makes.
 		left = _eval(node.left, values)
-		for operator, comparator in zip(node.ops, node.comparators):
+		for operator, comparator in zip(node.ops, node.comparators, strict=True):
 			right = _eval(comparator, values)
 			if type(operator) not in _COMPARISONS:
 				raise DslError(

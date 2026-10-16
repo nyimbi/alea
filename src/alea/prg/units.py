@@ -35,7 +35,7 @@ grows -- which is the failure mode of every gate that reports only a pass.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING
 
 import pint
 from pint.facets.plain.unit import PlainUnit
@@ -49,7 +49,7 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
 #: Pint's stubs separate the plain unit ``parse_units`` returns from the
 #: registry unit the arithmetic returns. Both carry ``.dimensionality``, which
 #: is the only attribute this module reads, so the wider of the two names them.
-Unit: TypeAlias = PlainUnit
+type Unit = PlainUnit
 
 __all__ = [
 	"DimensionalMismatch",

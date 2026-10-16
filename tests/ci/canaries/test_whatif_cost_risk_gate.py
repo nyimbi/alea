@@ -36,10 +36,10 @@ pass against a blind gate.
 from __future__ import annotations
 
 import importlib
-import textwrap
 import os
 import subprocess
 import sys
+import textwrap
 
 from tests.ci.canaries import REPO, planted, probe
 

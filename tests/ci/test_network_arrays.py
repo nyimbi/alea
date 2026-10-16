@@ -50,6 +50,7 @@ import pytest
 from alea.config.loader import load_config
 from alea.config.models import Config
 from alea.io.artefacts import ArtefactError, read_artefact, write_artefact
+from alea.io.pipeline import BuildContext
 from alea.losses.flow import Network, solve_snapshot, susceptance_matrix
 from alea.losses.views import LossConfig
 from alea.planning.arrays import (
@@ -61,7 +62,6 @@ from alea.planning.arrays import (
 	dispatch_matrix,
 	network_arrays,
 )
-from alea.io.pipeline import BuildContext
 from alea.provenance.models import Basis, DerivedProvenance
 
 #: The discriminating fixture's voltages. Two tiers, and the 220 kV lines are
@@ -128,7 +128,6 @@ def _radial() -> pypsa.Network:
 
 
 def _unsolved() -> pypsa.Network:
-	network = _radial()
 	# `optimize` writes the dynamic tables; a fresh network has none. Building
 	# one and *not* solving it is the state `dispatch_matrix` must refuse.
 	fresh = pypsa.Network()
@@ -617,7 +616,6 @@ def test_the_stage_is_idempotent_through_the_cli(tmp_path: Path):
 
 	from alea.cli import app
 
-	config = _config(tmp_path)
 	network_dir = tmp_path / "results" / "networks"
 	network_dir.mkdir(parents=True)
 	_meshed().export_to_netcdf(str(network_dir / "abc123-2030.nc"))
@@ -793,4 +791,4 @@ def test_a_fixture_written_by_hand_is_not_what_this_gate_checks(tmp_path: Path):
 	assert payload["branch_susceptance"] == pytest.approx([10.0, 10.0])
 	# The producer, on a network with the same topology and voltages, would give
 	# V^2/x -- 132^2/10 = 1742.4 -- not 10. The fixture is a wiring probe.
-	assert 132.0**2 / 10.0 != pytest.approx(10.0)
+	assert pytest.approx(10.0) != 132.0**2 / 10.0

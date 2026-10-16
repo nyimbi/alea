@@ -18,6 +18,24 @@ the feedback loops the couplings contain.
 
 from __future__ import annotations
 
+from alea.prg.conflicts import (
+	Conflict,
+	ConflictKind,
+	ConflictReport,
+	Correction,
+	detect_conflicts,
+	suggest_corrections,
+)
+from alea.prg.crossval import (
+	CrossValidationFinding,
+	CrossValidationReport,
+	CrossValidationRule,
+	Severity,
+	evaluate_condition,
+	parse_rule,
+	rules_from_document,
+	run_rules,
+)
 from alea.prg.dsl import (
 	Add,
 	Const,
@@ -37,24 +55,6 @@ from alea.prg.dsl import (
 	simplify,
 	solve_for,
 	sym,
-)
-from alea.prg.conflicts import (
-	Conflict,
-	ConflictKind,
-	ConflictReport,
-	Correction,
-	detect_conflicts,
-	suggest_corrections,
-)
-from alea.prg.crossval import (
-	CrossValidationFinding,
-	CrossValidationReport,
-	CrossValidationRule,
-	Severity,
-	evaluate_condition,
-	parse_rule,
-	rules_from_document,
-	run_rules,
 )
 from alea.prg.graph import (
 	CycleError,
@@ -135,9 +135,13 @@ __all__ = [
 	"elasticity",
 	"evaluate",
 	"evaluate_array",
+	"evaluate_condition",
 	"gradients",
 	"load_graph",
 	"parse",
+	"parse_rule",
+	"rules_from_document",
+	"run_rules",
 	"sensitivity",
 	"sensitivity_table",
 	"simplify",

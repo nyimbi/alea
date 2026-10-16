@@ -202,7 +202,6 @@ def parameters_from_result(
 	assert graph is not None
 	scoped: dict[str, float] = dict(overrides or {})
 
-	generation_mwh = getattr(result, "generation_mwh", None) or {}
 	emissions_tco2 = getattr(result, "total_emissions_tco2", None)
 	capacity_mix = getattr(result, "capacity_mix_mw", None) or {}
 	params = getattr(result, "params", None)

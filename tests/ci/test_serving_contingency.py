@@ -45,7 +45,7 @@ import pytest
 from alea.config.loader import load_config
 from alea.config.models import Config
 from alea.io.artefacts import ArtefactError, read_artefact
-from alea.io.pipeline import build_stage, registered_stages
+from alea.io.pipeline import registered_stages
 from alea.losses.flow import Network, susceptance_matrix
 from alea.losses.views import LossConfig
 from alea.planning.arrays import ARRAYS_ARTEFACT, DISPATCH_ARTEFACT
@@ -115,8 +115,8 @@ def _write_inputs(tmp_path: Path, network: Network | None = None) -> Path:
 	asserted in `tests/ci/test_network_arrays.py`.
 	"""
 	from alea.io.artefacts import write_artefact
-	from alea.losses.service import network_to_payload
 	from alea.logging import new_run_id
+	from alea.losses.service import network_to_payload
 	from alea.provenance.models import Basis, DerivedProvenance
 
 	processed = tmp_path / "processed"

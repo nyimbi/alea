@@ -41,8 +41,9 @@ that would be worse than shipping nothing.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Mapping
+from typing import TYPE_CHECKING
 
 from alea.prg.dsl import DslError, Expr, evaluate, parse, solve_for
 from alea.prg.views import Equation

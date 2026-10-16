@@ -47,7 +47,7 @@ from alea.whatif import (
 	save_scenario,
 	sweep_parameter,
 )
-from alea.whatif.extract import price_statistics, total_cost_usd
+from alea.whatif.extract import total_cost_usd
 from alea.whatif.pricemodel import _served_energy_mwh, price_model_from_network
 from alea.whatif.sweep import FRONTIER_COLUMNS, FRONTIER_VALUE_COLUMNS
 from alea.whatif.views import RiskMetrics, ScenarioResult
@@ -1020,7 +1020,6 @@ def test_the_cost_risk_frontier_is_reachable_from_the_price_model(tmp_path: Path
 def _api_frontier_service(tmp_path: Path, network: pypsa.Network):
 	"""A ``WhatIfService`` over a scratch catalogue holding ``network``."""
 	import asyncio
-	import json as _json
 
 	from alea.api.jobs import JobStore
 	from alea.api.repository import Repository

@@ -2901,7 +2901,7 @@ def test_every_declared_rule_can_fire(graph: ParameterGraph, defaults: dict):
 		fired = False
 		for corner in itertools.product(*endpoints):
 			probe = dict(base)
-			probe.update(dict(zip(names, corner)))
+			probe.update(dict(zip(names, corner, strict=True)))
 			if evaluate_condition(rule.condition, probe):
 				fired = True
 				break

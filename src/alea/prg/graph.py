@@ -21,11 +21,10 @@ non-converging loop from being mistaken for a malformed graph.
 
 from __future__ import annotations
 
+import math
 from collections import defaultdict, deque
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-
-import math
 from pathlib import Path
 from typing import Any
 
