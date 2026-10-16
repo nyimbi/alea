@@ -42,6 +42,7 @@ from alea.prg.dsl import (
 	evaluate,
 	linearity_in,
 	parse,
+	parse_side,
 	solve_affine,
 	solve_for,
 )
@@ -833,7 +834,7 @@ class ParameterGraph:
 		for edge in self._edges:
 			equation = self._equations[edge.equation_id]
 			try:
-				held = parse(equation.lhs).symbols | parse(equation.rhs).symbols
+				held = parse_side(equation.lhs).symbols | parse_side(equation.rhs).symbols
 			except DslError:
 				# The malformed-arithmetic error is raised by the loop below,
 				# with the equation's own id. Reporting it here as well would
@@ -867,10 +868,27 @@ class ParameterGraph:
 			# The arithmetic must name what the metadata claims, or the metadata
 			# is decoration. Parsing here means a malformed equation is a load
 			# error rather than a surprise inside a solve.
+			#
+			# Each side is parsed with `parse_side`, not `parse`, because a bound
+			# equation's right-hand side is legitimately a constant --
+			# `sum(demand shares) <= 1.0` is a relation between four parameters
+			# and a ceiling, and `parse`'s "names no parameter" refusal is an
+			# argument about a *relation*, not about one side of one. The vacuity
+			# it was protecting against is asserted below on the combined
+			# arithmetic, which is where it can actually be stated.
 			try:
-				named = parse(equation.lhs).symbols | parse(equation.rhs).symbols
+				lhs = parse_side(equation.lhs)
+				rhs = parse_side(equation.rhs)
 			except DslError as exc:
 				raise GraphError(f"equation {equation.id!r}: {exc}") from exc
+			named = lhs.symbols | rhs.symbols
+			if not named:
+				raise GraphError(
+					f"equation {equation.id!r} is constant on both sides "
+					f"({equation.lhs!r} {equation.relation} {equation.rhs!r}); a "
+					f"relation naming no parameter relates nothing and would pass "
+					f"every consistency check vacuously"
+				)
 			claimed = set(equation.parameters) | set(equation.free_variables) | set(
 				equation.determined_variables
 			)
@@ -1605,15 +1623,15 @@ class ParameterGraph:
 		return run_rules(self._rules, values, self)
 
 	def _residual(self, equation: Equation, values: Mapping[str, float]) -> float:
-		return evaluate(parse(equation.lhs), values) - evaluate(
-			parse(equation.rhs), values
+		return evaluate(parse_side(equation.lhs), values) - evaluate(
+			parse_side(equation.rhs), values
 		)
 
 	def _scale(self, equation: Equation, values: Mapping[str, float]) -> float:
 		return max(
 			1.0,
-			abs(evaluate(parse(equation.lhs), values)),
-			abs(evaluate(parse(equation.rhs), values)),
+			abs(evaluate(parse_side(equation.lhs), values)),
+			abs(evaluate(parse_side(equation.rhs), values)),
 		)
 
 	def _inequality_holds(

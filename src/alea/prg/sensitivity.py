@@ -33,7 +33,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from alea.prg.dsl import DslError, Expr, parse
+from alea.prg.dsl import DslError, Expr, parse_side
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
 	from alea.prg.graph import ParameterGraph
@@ -130,7 +130,7 @@ def _residual(equation: Any) -> Expr:
 	equation's own text means the sensitivity is taken against the equation the
 	engine solves, not against a rearrangement of it that could disagree.
 	"""
-	return parse(equation.lhs) - parse(equation.rhs)
+	return parse_side(equation.lhs) - parse_side(equation.rhs)
 
 
 def _partials(expression: Expr, values: Mapping[str, float]) -> dict[str, float]:

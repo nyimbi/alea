@@ -45,7 +45,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from alea.prg.dsl import DslError, Expr, evaluate, parse, solve_for
+from alea.prg.dsl import DslError, Expr, evaluate, parse, parse_side, solve_for
 from alea.prg.views import Equation
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
@@ -341,8 +341,8 @@ def _residuals_hold(
 		residual = abs(evaluate(_residual(equation), values))
 		scale = max(
 			1.0,
-			abs(evaluate(parse(equation.lhs), values)),
-			abs(evaluate(parse(equation.rhs), values)),
+			abs(evaluate(parse_side(equation.lhs), values)),
+			abs(evaluate(parse_side(equation.rhs), values)),
 		)
 		if residual / scale > equation.tolerance:
 			return False

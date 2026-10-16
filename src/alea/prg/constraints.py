@@ -59,7 +59,17 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from alea.prg.dsl import Add, Const, DslError, Expr, Mul, Symbol, evaluate, parse
+from alea.prg.dsl import (
+	Add,
+	Const,
+	DslError,
+	Expr,
+	Mul,
+	Symbol,
+	evaluate,
+	parse,
+	parse_side,
+)
 from alea.registry.technologies import get_technology, is_known_carrier
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
@@ -255,7 +265,7 @@ def _constraint_shaped(graph: ParameterGraph) -> tuple[Any, ...]:
 def _symbols(equation: Any) -> tuple[str, ...]:
 	names: set[str] = set()
 	for side in (equation.lhs, equation.rhs):
-		names |= set(parse(side).symbols)
+		names |= set(parse_side(side).symbols)
 	return tuple(sorted(names))
 
 
@@ -670,8 +680,8 @@ def add_constraints(
 		ctx.assumed = set()
 		ctx.unresolved = set()
 		ctx.nonlinear = set()
-		lhs = _evaluate(parse(equation.lhs), ctx)
-		rhs = _evaluate(parse(equation.rhs), ctx)
+		lhs = _evaluate(parse_side(equation.lhs), ctx)
+		rhs = _evaluate(parse_side(equation.rhs), ctx)
 
 		if lhs is None or rhs is None or (_is_constant(lhs) and _is_constant(rhs)):
 			blockers = sorted(ctx.nonlinear) or sorted(ctx.unresolved)

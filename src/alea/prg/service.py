@@ -22,7 +22,7 @@ from typing import Any, NamedTuple
 
 from alea.prg import catalog, constraints, translate
 from alea.prg.crossval import CrossValidationReport
-from alea.prg.dsl import parse
+from alea.prg.dsl import parse_side
 from alea.prg.graph import ParameterGraph, Violation, load_graph
 from alea.prg.library import SYSTEM_IDS, coverage, systems_of
 from alea.prg.uncertainty import register as uncertainty_register
@@ -318,9 +318,9 @@ def describe(equation: Equation, *, as_: str = "unicode") -> str:
 	different claim from one that is an equality, and a report that prints both
 	with ``=`` misstates half the library.
 	"""
-	from alea.prg.dsl import parse
+	from alea.prg.dsl import parse_side
 
-	lhs, rhs = parse(equation.lhs), parse(equation.rhs)
+	lhs, rhs = parse_side(equation.lhs), parse_side(equation.rhs)
 	if as_ == "latex":
 		# The declared rendering wins when there is one; see `latex_of`. A
 		# report that rendered the arithmetic instead would typeset the
@@ -350,9 +350,9 @@ def generated_latex(equation: Equation) -> str:
 	would compare a value with itself and report agreement for every equation
 	including the wrong ones.
 	"""
-	from alea.prg.dsl import parse
+	from alea.prg.dsl import parse_side
 
-	lhs, rhs = parse(equation.lhs), parse(equation.rhs)
+	lhs, rhs = parse_side(equation.lhs), parse_side(equation.rhs)
 	return f"{lhs.latex()}{_LATEX_RELATION[equation.relation]}{rhs.latex()}"
 
 
@@ -412,7 +412,7 @@ def check_latex(graph: ParameterGraph | None = None) -> list[LatexFinding]:
 	for equation_id, equation in sorted(g.equations.items()):
 		if not equation.latex:
 			continue
-		held = parse(equation.lhs).symbols | parse(equation.rhs).symbols
+		held = parse_side(equation.lhs).symbols | parse_side(equation.rhs).symbols
 		named = _latex_symbols(equation.latex)
 		unknown = sorted(named - held)
 		missing = sorted(held - named)

@@ -75,6 +75,7 @@ __all__ = [
 	"linear_coefficients",
 	"linearity_in",
 	"parse",
+	"parse_side",
 	"simplify",
 	"solve_affine",
 	"solve_for",
@@ -1576,7 +1577,46 @@ def parse(source: str) -> Expr:
 	without ``eval``: the whitelist is the security boundary, and it is also
 	the modelling boundary, because an expression that cannot be written cannot
 	be silently ignored by the engine.
+
+	A *whole* relation's arithmetic must name a parameter -- see
+	:func:`parse_side` for why one side of one need not.
 	"""
+	return _parse(source, require_symbols=True)
+
+
+def parse_side(source: str) -> Expr:
+	"""Parse one side of a relation, where a constant is legitimate.
+
+	``parse`` refuses an expression naming no parameter, on the grounds that it
+	"relates nothing and would pass every consistency check vacuously". That
+	argument is about a **relation**, and it was being applied to a **side**.
+
+	The distinction matters because a bound equation's right-hand side *is* a
+	constant: ``residential_demand_share + commercial_demand_share + ... <= 1.0``
+	relates four parameters to a ceiling, and the ceiling is the point. Parsing
+	the two sides separately to read their symbols -- which is what the loader,
+	the constraint router, the loop scaler and the unit checker all do -- met
+	the constant side and refused the whole equation. The residual the solver
+	actually evaluates, ``(lhs) - (rhs)``, parsed and evaluated correctly all
+	along, so the equation was expressible to every consumer except the checks
+	that guarded it.
+
+	The vacuity guard is not lost, it is **moved to where it can be stated**:
+	:func:`alea.prg.graph.ParameterGraph.from_mapping` requires the combined
+	arithmetic to name at least one parameter, which is the claim the original
+	message was making. A fully-constant equation is still refused; a constant
+	*side* is not.
+
+	A bare constant is also the one expression ``solve_affine`` cannot solve for
+	anything, so callers that derive a value must keep checking that their
+	variable actually appears -- ``solve_affine`` raises ``DslError`` saying so,
+	which is the right place for that check rather than here.
+	"""
+	return _parse(source, require_symbols=False)
+
+
+def _parse(source: str, *, require_symbols: bool) -> Expr:
+	"""The shared body of :func:`parse` and :func:`parse_side`."""
 	if not source or not source.strip():
 		raise DslError("an expression must not be empty")
 	try:
@@ -1591,7 +1631,7 @@ def parse(source: str) -> Expr:
 				f"{sorted(_FUNCTIONS)}, and sum(... for i in range(a, b))"
 			)
 	expression = _from_ast(tree.body)
-	if not expression.symbols:
+	if require_symbols and not expression.symbols:
 		raise DslError(
 			f"{source!r} names no parameter; a constant expression relates "
 			f"nothing and would pass every consistency check vacuously"

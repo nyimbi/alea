@@ -40,7 +40,18 @@ from typing import TYPE_CHECKING
 import pint
 from pint.facets.plain.unit import PlainUnit
 
-from alea.prg.dsl import Add, Const, Expr, Func, Mul, Pow, Subscript, Sum, Symbol, parse
+from alea.prg.dsl import (
+	Add,
+	Const,
+	Expr,
+	Func,
+	Mul,
+	Pow,
+	Subscript,
+	Sum,
+	Symbol,
+	parse_side,
+)
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
 	from alea.prg.graph import ParameterGraph
@@ -272,8 +283,8 @@ def check_equation(
 	"""
 	assert equation is not None, "check_equation called with no equation"
 	try:
-		left = unit_of(parse(equation.lhs), graph)
-		right = unit_of(parse(equation.rhs), graph)
+		left = unit_of(parse_side(equation.lhs), graph)
+		right = unit_of(parse_side(equation.rhs), graph)
 	except DimensionalMismatch as mismatch:
 		return EquationCheck(
 			equation_id=equation.id,

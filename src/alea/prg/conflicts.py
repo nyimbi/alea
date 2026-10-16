@@ -508,14 +508,14 @@ def _corrections_for_equation(
 	``x``'s declared range, because a correction that trades a residual for an
 	out-of-range value is not a correction.
 	"""
-	from alea.prg.dsl import parse
+	from alea.prg.dsl import parse_side
 	from alea.prg.sensitivity import gradients
 
 	equation = graph.equations.get(violation.equation_id)
 	if equation is None:
 		return ()
 	try:
-		residual_expr = parse(equation.lhs) - parse(equation.rhs)
+		residual_expr = parse_side(equation.lhs) - parse_side(equation.rhs)
 		table = gradients(graph, values)
 	except (DslError, ValueError):
 		return ()

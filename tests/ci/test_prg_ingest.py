@@ -343,6 +343,90 @@ def test_the_report_is_false_only_when_nothing_was_lost():
 
 
 # --------------------------------------------------------------------------
+# A bound equation -- a constant side, which `parse` used to refuse.
+# --------------------------------------------------------------------------
+
+
+def test_a_bound_equation_with_a_constant_side_loads():
+	"""`sum(shares) <= 1.0` is a relation, and its ceiling is the point.
+
+	The loader read each side's symbols with `parse`, which refuses any
+	expression naming no parameter -- "a constant expression relates nothing
+	and would pass every consistency check vacuously". That argument is about a
+	*relation*, and it was being applied to a *side*, so every bound equation
+	was refused at load: the right-hand side of a ceiling is a constant, by
+	definition. The residual the solver builds, `(lhs) - (rhs)`, parsed and
+	evaluated correctly the whole time, so the equation was expressible to
+	every consumer except the checks guarding it.
+
+	Asserted on the *outcome* rather than on the error text: the equation
+	loads, it couples both operands, and the inequality evaluates to the right
+	answer on either side of the bound.
+	"""
+	document = {
+		"parameters": {
+			"delta": _node("Delta", [0.0, 1.0]),
+			"epsilon": _node("Epsilon", [0.0, 1.0]),
+		},
+		"equations": {
+			"delta_plus_epsilon_bound": {
+				"name": "Delta plus epsilon at most one",
+				"system": "reliability",
+				"lhs": "delta + epsilon",
+				"rhs": "1.0",
+				"relation": "leq",
+				"parameters": ["delta", "epsilon"],
+				"unit_check": False,
+			}
+		},
+		"relationships": [],
+		"cross_validation": [],
+	}
+	graph = ParameterGraph.from_mapping(document)
+	equation = graph.equations["delta_plus_epsilon_bound"]
+
+	# Both operands are coupled by the bound, so the register shrinks.
+	assert "delta" not in graph.uncoupled()
+	assert "epsilon" not in graph.uncoupled()
+
+	# And the inequality means what it says, on both sides of the ceiling.
+	assert graph._inequality_holds(equation, {"delta": 0.4, "epsilon": 0.5})
+	assert not graph._inequality_holds(equation, {"delta": 0.6, "epsilon": 0.5})
+
+
+def test_an_equation_that_is_constant_on_both_sides_is_still_refused():
+	"""The vacuity guard moved, it did not go away.
+
+	`parse`'s refusal protected against an equation that relates nothing. Once
+	a constant *side* is legal, that protection has to be stated on the
+	*combined* arithmetic -- otherwise `1.0 <= 2.0` would load as a relation
+	that passes every consistency check and couples nothing.
+
+	Canaried against the exact input the guard exists for, and the guard is
+	asserted to *name* the defect: an assertion on `GraphError` alone would
+	pass against the system-name check further down the same loader.
+	"""
+	document = {
+		"parameters": {"delta": _node("Delta", [0.0, 1.0])},
+		"equations": {
+			"vacuous": {
+				"name": "One at most two",
+				"system": "reliability",
+				"lhs": "1.0",
+				"rhs": "2.0",
+				"relation": "leq",
+				"parameters": ["delta"],
+				"unit_check": False,
+			}
+		},
+		"relationships": [],
+		"cross_validation": [],
+	}
+	with pytest.raises(GraphError, match="constant on both sides"):
+		ParameterGraph.from_mapping(document)
+
+
+# --------------------------------------------------------------------------
 # The shipped fragments, which are the reason the loader exists.
 # --------------------------------------------------------------------------
 
