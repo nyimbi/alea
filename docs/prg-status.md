@@ -513,6 +513,64 @@ manufacturing a decision no one took.
   against cannot drift unnoticed, which is the half of the problem that was
   actually load-bearing.
 
+- **Two quantities are declared twice, in `config/` and in the graph, with
+  different values and nothing reconciling them.** Found on 2026-10-16 by
+  cross-checking `ScenarioParameters` against `config.default.yaml`, and it is
+  the same defect the plan-level sweep was looking for, one layer down.
+
+  **`value_of_lost_load_usd_per_mwh` is `2000.0`; `voll_usd_per_mwh` is
+  `5000.0`.** Same quantity, same unit, both declared, both read, no join.
+  `config.market` feeds `market/stages.py`, which prices every hour the system
+  sheds load; the graph's node feeds `reliability_cost_usd` by
+  `unserved_energy_gwh * 1000 * voll_usd_per_mwh`. So the market layer prices a
+  shortfall at 2,000 and the graph's reliability accounting prices it at 5,000
+  — a **2.5x** disagreement about what an unserved megawatt-hour is worth, in
+  one product, with each number internally consistent. This is the
+  rate-stated-in-one-place defect the MeGuard lesson names: each figure is
+  right on its own line and nothing compares the lines.
+
+  The graph's value is the weaker of the two on its own evidence. Its node is
+  `status: to_build`, so no builder writes it and nothing sources it, while the
+  config value carries `value_of_lost_load_basis:
+  config.market.value_of_lost_load_usd_per_mwh` and a comment recording that
+  2,000 is the figure the determinism job has used since it was written. So the
+  graph's 5,000 is the unsourced one. What it reaches is `reliability_cost_usd`
+  — a derived node with no report reading it today, so the disagreement is
+  visible through `alea prg summary` and the propagation payload rather than in
+  a published figure. That is the only reason this is a finding and not an
+  incident: the two numbers have not yet met in one document, and the entry
+  exists so they do not.
+
+  **`hydrogen_export_twh_per_year` is declared twice too, and there the two
+  consumers disagree about what the number is *for*.** `sector.hydrogen` reads
+  `config.hydrogen_export_twh_per_year` and builds an export load into the
+  sector-coupled network; `whatif/apply.py` reads
+  `params.hydrogen_export_twh_per_year` and adds an `h2_export` load to the
+  network it is perturbing. Both default to `0.0`, so nothing is wrong today —
+  but the moment one is moved, the sector build and the what-if solve export
+  different volumes from the same declared quantity, and the engine's
+  `engine_fields_unreached()` register counts this knob as one the graph cannot
+  speak to. The graph's nearest node is `hydrogen_production_kt_per_year`
+  (`kt/year`, default 50), which is a *related* quantity and not the same one —
+  a country produces hydrogen and exports some of it — so the graph can state
+  the system's hydrogen volume without being able to state the export it is
+  asked to carry.
+
+  **Not built, and the reason is that the join is a decision.** There is no
+  mechanical reconciliation available: the two files name the quantity
+  differently (`value_of_lost_load_usd_per_mwh` against `voll_usd_per_mwh`),
+  they live in different layers by design — `config/` is the deployment's
+  settings and `config/prg.yaml` is the library of physical and policy
+  relations — and a name-identical sweep finds **zero** overlaps between the
+  two files' numeric leaves. So the fix is not an adapter. It is either (a)
+  make the graph the single source and have the config read its default from
+  it, which makes a deployment setting depend on a library, or (b) record the
+  config value as the graph node's `default` and delete the node's own, which
+  makes the library depend on the deployment. Both are real modelling choices
+  about which layer owns a policy number, and choosing one without the user is
+  the same mistake as inventing a referent for `linearity`. Recorded so the
+  2.5x is not rediscovered as a report discrepancy.
+
 ### Closed since this list was written
 
 **`ParameterNode.initial` reaches a door, and the first reason written for it

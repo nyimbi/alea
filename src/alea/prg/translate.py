@@ -36,8 +36,9 @@ declaration.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Mapping
+from typing import TYPE_CHECKING, Any
 
 from alea.prg.views import Role
 from alea.whatif.params import ScenarioParameters
@@ -46,9 +47,13 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
 	from alea.prg.graph import ParameterGraph
 
 __all__ = [
+	"CROSS_LAYER_QUANTITIES",
+	"CrossLayerQuantity",
 	"Translation",
 	"TRANSLATIONS",
 	"coverage",
+	"cross_layer_disagreements",
+	"cross_layer_report",
 	"engine_fields_unreached",
 	"from_scenario_parameters",
 	"to_scenario_parameters",
@@ -402,3 +407,215 @@ def from_scenario_parameters(
 		if value is not None:
 			out[translation.prg_parameter] = float(value)
 	return out
+
+
+@dataclass(frozen=True)
+class CrossLayerQuantity:
+	"""One quantity declared in more than one layer, and what disagrees.
+
+	A quantity is *cross-layer* when the deployment's settings
+	(``config/config.default.yaml``) and the relation library
+	(``config/prg.yaml``) each declare it. The two are different kinds of file
+	on purpose -- one is what a deployment chose, the other is what the physics
+	and the policy require -- and that is exactly why a quantity appearing in
+	both is a finding rather than a convenience: two layers can hold different
+	values for the same thing and nothing compares them.
+	"""
+
+	config_path: str
+	"""Dotted path in ``config.default.yaml``, e.g. ``market.value_of_lost_load``."""
+
+	prg_parameter: str
+	"""The graph node that declares the same quantity."""
+
+	unit: str
+	"""The unit both sides are in, asserted equal rather than assumed: a match
+	on the name with a mismatch on the unit is a different finding."""
+
+	note: str
+	"""Which layers consume each side, and what would diverge if they differ."""
+
+
+#: Quantities the deployment config and the relation library both declare.
+#:
+#: Declared rather than derived, and that is a deliberate choice with a cost.
+#: A name-identical sweep of the two files' numeric leaves finds **zero**
+#: overlaps -- the config says ``value_of_lost_load_usd_per_mwh`` where the
+#: graph says ``voll_usd_per_mwh`` -- so no mechanical join exists to derive
+#: from, and a fuzzy one (shared unit tokens, say) matches dozens of unrelated
+#: nodes. The declared list is the honest form: it is a claim about which
+#: quantities are the same thing, made by a person, in one place, and it is
+#: *checkable* -- the test that reads it asserts each entry resolves on both
+#: sides, so a rename in either file breaks the register rather than silently
+#: dropping an entry. A derived list that could not be derived would be worse
+#: than none.
+CROSS_LAYER_QUANTITIES: tuple[CrossLayerQuantity, ...] = (
+	CrossLayerQuantity(
+		config_path="market.value_of_lost_load_usd_per_mwh",
+		prg_parameter="voll_usd_per_mwh",
+		unit="USD/MWh",
+		note=(
+			"Config feeds `market/stages.py`, which prices every hour the system "
+			"sheds load; the graph's node feeds `reliability_cost_usd` by "
+			"`unserved_energy_gwh * 1000 * voll_usd_per_mwh`. Shipped values "
+			"disagree: config is 2000.0 and the graph is 5000.0, so the market "
+			"layer and the reliability accounting price an unserved MWh at 2.5x "
+			"different rates. Each is internally consistent and nothing compares "
+			"them."
+		),
+	),
+	CrossLayerQuantity(
+		config_path="sector.hydrogen_export_twh_per_year",
+		prg_parameter="",
+		unit="TWh/year",
+		note=(
+			"Declared in config and again as a `ScenarioParameters` field, with "
+			"two consumers that build the same load into different networks: "
+			"`sector.hydrogen` reads the config value into the sector-coupled "
+			"build, and `whatif/apply.py` reads its own param into the network a "
+			"scenario perturbs. Both default to 0.0, so nothing diverges today; "
+			"moving one and not the other makes the two exports disagree. No PRG "
+			"node names this quantity -- `hydrogen_production_kt_per_year` is the "
+			"related but distinct production figure -- which is why the graph "
+			"column is empty here rather than wrong."
+		),
+	),
+)
+
+
+def cross_layer_disagreements(
+	entries: tuple[CrossLayerQuantity, ...] | None = None,
+	*,
+	config: Any | None = None,
+	graph_values: Mapping[str, float | None] | None = None,
+) -> tuple[CrossLayerQuantity, ...]:
+	"""Cross-layer quantities whose shipped values differ, with both values.
+
+	The register's live half. Reported rather than raised: a deployment may
+	legitimately override the config value, and a check that refused would
+	forbid the override it is meant to make visible. What it must not do is
+	stay silent -- two layers holding different rates for one quantity is the
+	defect this module exists to name, and it is invisible to every other
+	check in the tree because each layer is self-consistent.
+
+	``entries``, ``config`` and ``graph_values`` exist so the *predicate* can be
+	tested against a constructed pair. Without them the only way to exercise
+	the comparison is to change one of the shipped numbers, and a test that
+	asserted ``abs(2000.0 - 2000.0) <= 1e-12`` in its own body would be
+	checking arithmetic rather than checking this function -- it would pass
+	against a version that reported every entry and a version that reported
+	none.
+
+	**Reads the config *file*, not a ``Config`` object.** The first version
+	called ``load_config()``, which validates the whole deployment config -- so
+	every caller inherited a requirement that a scenario section and every
+	other layer field be present. Three API route tests build a scratch repo
+	root holding only ``prg.yaml`` and immediately raised
+	``ValidationError: scenario / Field required``, which is a real coupling
+	and not a test that needed widening: this register compares two numbers
+	declared in two files and needs neither file validated to do it. A missing
+	or unreadable config file is reported by the caller as *unavailable*
+	rather than as agreement.
+	"""
+	config = _read_default_config() if config is None else config
+	if config is None:
+		return ()
+	out: list[CrossLayerQuantity] = []
+	for entry in CROSS_LAYER_QUANTITIES if entries is None else entries:
+		if not entry.prg_parameter:
+			continue
+		config_value = _dig(config, entry.config_path)
+		if graph_values is None:
+			graph_value = _graph_value(entry.prg_parameter)
+		else:
+			graph_value = graph_values.get(entry.prg_parameter)
+		if config_value is None or graph_value is None:
+			continue
+		if abs(float(config_value) - float(graph_value)) > 1e-12:
+			out.append(entry)
+	return tuple(out)
+
+
+def cross_layer_report() -> dict[str, Any]:
+	"""The register as a payload: what it compared, and what it found.
+
+	``compared`` is carried because an empty disagreement list and a register
+	that could not run are the same JSON otherwise, and only one of them is
+	good news. ``reason`` names why when it could not -- a scratch tree with no
+	``config.default.yaml`` is a legitimate state (several tests build one) and
+	must not read as "the layers agree".
+	"""
+	from alea.config.paths import default_config_path
+
+	path = default_config_path()
+	if not path.exists():
+		return {
+			"compared": False,
+			"reason": f"no deployment config at {path}; nothing to compare against",
+			"disagreements": [],
+		}
+	return {
+		"compared": True,
+		"reason": "",
+		"disagreements": [
+			{
+				"config_path": entry.config_path,
+				"prg_parameter": entry.prg_parameter,
+				"unit": entry.unit,
+				"note": entry.note,
+			}
+			for entry in cross_layer_disagreements()
+		],
+	}
+
+
+def _read_default_config() -> dict[str, Any] | None:
+	"""``config.default.yaml`` as a plain mapping, or None when unreadable.
+
+	The *shipped* defaults, which is the referent this register compares
+	against: a deployment that overlays a scenario legitimately moves its own
+	value, and comparing against the overlay would report every override as a
+	disagreement with the library.
+	"""
+	import yaml
+
+	from alea.config.paths import default_config_path
+
+	path = default_config_path()
+	if not path.exists():
+		return None
+	try:
+		loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+	except (OSError, yaml.YAMLError):
+		return None
+	return loaded if isinstance(loaded, dict) else None
+
+
+def _dig(config: Any, dotted: str) -> Any:
+	"""``market.value_of_lost_load_usd_per_mwh`` -> the float, or None.
+
+	Walks either a mapping or an object, because the shipped path hands it a
+	parsed YAML document and a test may hand it a ``Config``. A missing segment
+	returns None rather than raising: an entry naming a path that no longer
+	exists is caught by the register's own test, and raising here would turn a
+	stale entry into a 500 on the summary route.
+	"""
+	current: Any = config
+	for part in dotted.split("."):
+		current = (
+			current.get(part)
+			if isinstance(current, dict)
+			else getattr(current, part, None)
+		)
+		if current is None:
+			return None
+	return current
+
+
+def _graph_value(parameter: str) -> float | None:
+	"""The declared default of a graph node, or None when it has none."""
+	from alea.prg.graph import load_graph
+
+	graph = load_graph()
+	node = graph.nodes.get(parameter)
+	return None if node is None or node.default is None else float(node.default)

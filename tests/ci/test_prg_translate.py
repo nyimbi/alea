@@ -19,6 +19,8 @@ on the gas unit.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pandas as pd
 import pypsa
 import pytest
@@ -425,3 +427,169 @@ def test_the_translated_names_are_settable(graph: ParameterGraph):
 	the caller cannot set."""
 	for name in translated(graph):
 		assert graph.is_settable(name), name
+
+
+# ---------------------------------------------------------------------------
+# The cross-layer register
+# ---------------------------------------------------------------------------
+
+
+def test_every_cross_layer_entry_resolves_on_both_sides():
+	"""A rename in either file must break the register, not empty it.
+
+	The register is declared rather than derived because no mechanical join
+	exists -- the two files name the same quantity differently, and a fuzzy
+	join on shared tokens matches dozens of unrelated nodes. The cost of a
+	declared list is that it can go stale silently, and this is the check that
+	prevents it: an entry whose ``config_path`` or ``prg_parameter`` no longer
+	resolves is a register that has quietly stopped watching what it claims to
+	watch. Asserted per entry and by name, so the failure says which one.
+	"""
+	from alea.prg.translate import (
+		CROSS_LAYER_QUANTITIES,
+		_dig,
+		_graph_value,
+		_read_default_config,
+	)
+
+	# The same reader the register uses, so the test asserts what the register
+	# actually compares rather than a differently-shaped view of it.
+	config = _read_default_config()
+	assert config is not None, "config/config.default.yaml is not readable"
+	graph = load_graph()
+	for entry in CROSS_LAYER_QUANTITIES:
+		value = _dig(config, entry.config_path)
+		assert value is not None, (
+			f"{entry.config_path!r} does not resolve in config.default.yaml; the "
+			f"register is watching a path that no longer exists"
+		)
+		assert isinstance(value, (int, float)), (
+			f"{entry.config_path!r} resolved to {type(value).__name__}, not a "
+			f"number; the register compares values and cannot compare this"
+		)
+		if not entry.prg_parameter:
+			# The empty column is a deliberate state -- the quantity has no
+			# graph node -- and it must stay deliberate. If a node with this
+			# name appears, the entry should name it rather than keep claiming
+			# the graph cannot speak to the quantity.
+			continue
+		assert entry.prg_parameter in graph.nodes, (
+			f"{entry.prg_parameter!r} is not a node; the register names a graph "
+			f"parameter that no longer exists"
+		)
+		assert _graph_value(entry.prg_parameter) is not None, (
+			f"{entry.prg_parameter!r} declares no default, so the register has "
+			f"nothing to compare the config value against"
+		)
+		assert graph.node(entry.prg_parameter).unit == entry.unit, (
+			f"{entry.prg_parameter!r} is in "
+			f"{graph.node(entry.prg_parameter).unit!r} and the register says "
+			f"{entry.unit!r}; a name match with a unit mismatch is a different "
+			f"finding and must not pass as agreement"
+		)
+
+
+def test_the_volll_disagreement_is_reported_rather_than_hidden():
+	"""The live half: the shipped values differ by 2.5x and the register says so.
+
+	Both numbers are correct on their own line -- the config's 2,000 is the
+	figure the determinism job has used since it was written, and the graph's
+	5,000 is a `to_build` node nothing sources -- which is exactly why no check
+	in the tree noticed. This asserts the register reports it, and pins the
+	ratio, so a change to either number has to move this test with it rather
+	than silently closing (or widening) the gap.
+	"""
+	from alea.prg.translate import _read_default_config, cross_layer_disagreements
+
+	# The register's own reader: `load_config()` validates the whole deployment
+	# config, and a comparison of two numbers in two files needs neither.
+	config = _read_default_config()
+	assert config is not None, "config/config.default.yaml is not readable"
+	disagreements = cross_layer_disagreements()
+	named = {entry.prg_parameter for entry in disagreements}
+	assert "voll_usd_per_mwh" in named, (
+		"the VoLL disagreement is no longer reported; either the two values "
+		"now agree (move this test and the status entry together) or the "
+		f"register went blind. Reported: {sorted(named)}"
+	)
+	config_value = config["market"]["value_of_lost_load_usd_per_mwh"]
+	graph_value = load_graph().node("voll_usd_per_mwh").default
+	assert config_value == 2000.0, config_value
+	assert graph_value == 5000.0, graph_value
+	# The `== 5000.0` above narrows for a reader but not for pyright, and the
+	# division below needs the narrowed type.
+	assert graph_value is not None
+	assert graph_value / config_value == pytest.approx(2.5)
+
+
+def test_a_register_that_cannot_run_says_so_rather_than_reporting_agreement(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+	"""An unreadable config is not an agreement, and the payload distinguishes them.
+
+	Several tests build a scratch repo root holding only `prg.yaml`. The first
+	version of this register called `load_config()` and those tests raised
+	`ValidationError: scenario / Field required` -- a real coupling, since the
+	register compares two numbers in two files and needs neither validated.
+	Reading the file fixed that. This pins the other half: a missing file must
+	produce `compared: false` with a reason, because an empty disagreement list
+	and a register that never ran are byte-identical JSON otherwise, and only
+	one of them is good news.
+	"""
+	import alea.config.paths as paths
+	from alea.prg.translate import cross_layer_report
+
+	monkeypatch.setattr(paths, "config_dir", lambda: tmp_path)
+	report = cross_layer_report()
+	assert report["compared"] is False, report
+	assert report["reason"], "an unavailable register must name why"
+	assert report["disagreements"] == []
+
+
+def test_a_quantity_that_agrees_is_not_reported():
+	"""The register must not report agreement as disagreement.
+
+	A check that flagged every declared entry would be indistinguishable from
+	one that flagged the differing ones, and a reader would learn to ignore it.
+	Exercised through the *function* with an injected pair, not by asserting
+	arithmetic in the test body: `abs(2000.0 - 2000.0) <= 1e-12` passes against
+	a version of `cross_layer_disagreements` that returns every entry, which is
+	the predicate this test exists to pin.
+	"""
+	from alea.prg.translate import (
+		CROSS_LAYER_QUANTITIES,
+		_read_default_config,
+		cross_layer_disagreements,
+	)
+
+	config = _read_default_config()
+	assert config is not None, "config/config.default.yaml is not readable"
+	entry = CROSS_LAYER_QUANTITIES[0]
+	assert entry.prg_parameter == "voll_usd_per_mwh", entry
+
+	# The shipped pair disagrees, so it is reported.
+	reported = cross_layer_disagreements(
+		(entry,), config=config, graph_values={"voll_usd_per_mwh": 5000.0}
+	)
+	assert reported == (entry,)
+
+	# The same entry with the graph side moved onto the config value is not.
+	agreed = cross_layer_disagreements(
+		(entry,),
+		config=config,
+		graph_values={
+			"voll_usd_per_mwh": config["market"]["value_of_lost_load_usd_per_mwh"]
+		},
+	)
+	assert agreed == (), (
+		"the register reported an entry whose two sides hold the same value; a "
+		"check that flags agreement is one a reader learns to ignore"
+	)
+
+	# And a side that does not resolve is skipped rather than reported: an
+	# unresolvable entry is a broken register, which its own test catches, and
+	# filing it here would mix that with a genuine disagreement.
+	absent = cross_layer_disagreements(
+		(entry,), config=config, graph_values={"voll_usd_per_mwh": None}
+	)
+	assert absent == ()

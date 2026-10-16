@@ -136,6 +136,16 @@ def graph_summary(graph: ParameterGraph | None = None) -> dict[str, Any]:
 		# reader assuming the engine uses all of it; the fraction is the
 		# finding, and it is three of fifty-two.
 		"engine_translation": translate.coverage(g),
+		# A third direction, and a different finding from either half of
+		# ``engine_translation``: quantities the deployment config and the
+		# relation library *both* declare. Neither of the other registers would
+		# catch one, because each layer is self-consistent -- the config's VoLL
+		# prices a shortfall in the market layer and the graph's prices it in
+		# the reliability accounting, and only a reader holding both sees the
+		# 2.5x. Carried as a report rather than a bare list so a scratch tree
+		# with no deployment config says ``compared: false`` instead of
+		# serving an empty list that reads as agreement.
+		"cross_layer": translate.cross_layer_report(),
 		# The other half of the translation layer, and a different finding: of
 		# the six equations that could constrain a solve, two bind and four are
 		# post-solve checks. The denominator is the six inequalities, not the
