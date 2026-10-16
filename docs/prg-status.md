@@ -1253,3 +1253,63 @@ still exits 1 on `inconsistent` only. Canaried by removing the field from the
 model, which reproduced the exact `extra_forbidden` refusal the test documents,
 and the guard was re-run by exact node id rather than through `-k`, for the
 reason recorded above it.
+
+## What the coverage sweep found, and the predicate that lied twice
+
+Every plan in `docs/plans/` names its gates, and a register of "which named
+gates exist" is exactly the kind of check this page keeps recording as absent.
+So one was written on 2026-10-16, and it was wrong twice before it was right.
+
+**The first predicate enumerated one of the two spellings.** `grep -r "def
+$gate" tests/` reported **40 of 115** plan gates missing. It matched the
+function name, but the plans cite gates in docstrings and the tests are free to
+be named for what they assert — `test_clearing_deterministic` lives in
+`test_market_layer3.py:321` as a docstring citation, not a function name.
+Matching the bare name instead reported **3**, and all three exist under other
+names:
+
+| plan gate | where it actually lives |
+|---|---|
+| `test_raw_is_immutable` | `tests/ci/canaries/test_raw_immutability.py` — `test_edited_bytes_under_a_checksum_directory_are_refused` |
+| `test_no_bare_unit_columns` | `tests/ci/test_units_columns.py` — the module's own rule check |
+| `test_artefact_round_trip` | `tests/ci/test_loading.py:359`, `test_capacity_section.py:232`, and five more read `write_artefact` back through `read_artefact` |
+
+This is the same bug as the `href="/…"`-only internal-link checker: a predicate
+for "every X" that recognises one way of writing X, reporting a false negative
+at a rate that makes the register useless. The lesson generalises past this
+sweep — **a coverage check over a naming convention must be canaried against a
+known-present instance before its count is believed**, because 40 missing looks
+like a finding and 3 missing looks like a finding, and only the second was one.
+
+**What the corrected sweep says.** 112 of 115 gates are cited somewhere in
+`tests/`, and the three that are not named that way are covered. The plans'
+*modules* are all present (30 of 30 declared paths exist), and of 58
+plan-declared symbols, 11 are not defined in `src/` — but each is one of three
+benign kinds. Four are plan code sketches rather than contracts (`fetch_viirs`,
+`export_powerplantmatching`, `solve_whatif`, `verify_key`, the same finding
+already recorded for §44's request bodies). Three were **renamed or redesigned**
+rather than dropped, and each is worth naming because the plan's spelling and
+the tree's differ for a reason: `_deep_merge` is `config/loader.py`'s public
+`deep_merge`; `_cache_key` is the module-level `api/whatif.py:solve_cache_key`,
+which the plan's own §2.1 explains — the plan sketches
+`hash(tuple(sorted(params.__dict__.items())))` and the tree does not use
+`hash()` at all, because Python's string hashing is salted per process and the
+plan's `test_cache_key_stable_across_processes` gate is precisely what that
+defect fails. `_init_strategy` is a sketch of the design the same plan rejects
+two sections later (`06-layer3-market.md` §2.2, "An RL agent per generator is
+not a design" — thousands of independent PPO policies, non-deterministic and
+unreproducible), and §4.3 is titled "Rejected: reinforcement learning"; the
+tree's `market/agents.py` has no strategy object at all, which is that
+rejection carried out. One is a deliberate aliasing
+(`ValueBasis = Basis`, with the reason written at `reporting/schemas.py:31` — a
+second enum with the same four members is a second place for them to drift).
+
+**And the engine register is honest in both directions.** Cross-checked on
+2026-10-16: every `ScenarioParameters` field is read by `whatif/apply.py` or by
+a validator (`ssp_pathway` is read as a gate on `drought_multiplier`, which is
+a real read and not a declaration), and every `params.X` read is a declared
+field. No knob is applied without being declared, and none is declared without
+being applied. The 7 knobs `engine_fields_unreached()` reports are genuinely
+unreached by the graph, and the 49 parameters `untranslated()` reports are
+genuinely unreached by the engine — the two counts are a register, not a
+defect, and the sweep found nothing hiding behind either.
