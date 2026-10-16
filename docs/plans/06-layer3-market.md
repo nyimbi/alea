@@ -430,14 +430,14 @@ Layer 3's recurring one:
 
 | # | Criterion | Gate |
 |---|---|---|
-| 1 | Kenya merit-order clearing matches a hand-computed stack | Fixture test |
-| 2 | Zonal clearing produces congestion on a congested fixture | Integration test |
+| 1 | Kenya merit-order clearing matches a hand-computed stack | `test_kenya_merit_order_clearing_matches_a_hand_computed_stack` |
+| 2 | Zonal clearing produces congestion on a congested fixture | `test_zonal_clearing_produces_congestion_on_a_congested_path` |
 | 3 | Competitive strategy reproduces Layer 1 marginal prices | Cross-check |
-| 4 | Capture prices for Kenya solar/wind computed | Integration test |
-| 5 | Capture-rate curve rises monotonically with VRE share | Property test |
+| 4 | Capture prices for Kenya solar/wind computed | `test_kenya_solar_and_wind_capture_prices_are_computed` |
+| 5 | Capture-rate curve falls monotonically with VRE share | `test_the_capture_rate_curve_falls_monotonically_with_vre_share` |
 | 6 | South Africa capture curves compared to COMPASS | M8 |
-| 7 | VaR/CVaR on a normal sample matches 1.645σ at 95% | Analytic test |
-| 8 | Bankability matches a hand-computed fixture | Fixture test |
+| 7 | VaR/CVaR on a normal sample matches 1.645σ at 95% | `test_var_matches_the_analytic_normal_quantile` |
+| 8 | Bankability matches a hand-computed fixture | `test_bankability_matches_a_hand_computed_fixture` |
 | 9 | Two identical runs byte-identical | Determinism job |
 | 10 | Every gate canaried | `tests/ci/canaries` |
 | 11 | The monthly and quarterly report sections read back through the real reader | `test_market_report_sections.py` |

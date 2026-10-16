@@ -466,11 +466,11 @@ error, log the run id on both entry and exit.
 
 | # | Criterion | Gate |
 |---|---|---|
-| 1 | Config typo fails at load, naming the key | Canary test |
-| 2 | Scenario overlay deep-merges without discarding siblings | Unit test |
-| 3 | Registry has exactly 55 countries, tier counts match tables | Unit test |
-| 4 | Every artefact round-trips provenance | Unit test |
-| 5 | `raw/` is immutable | Canary test |
+| 1 | Config typo fails at load, naming the key | `test_a_typo_in_a_config_key_is_refused` |
+| 2 | Scenario overlay deep-merges without discarding siblings | `test_a_scenario_overlay_deep_merges_without_discarding_siblings` |
+| 3 | Registry has exactly 55 countries, tier counts match tables | `test_registry_covers_all_au_members`, `test_registry_tier_counts_match_tables` |
+| 4 | Every artefact round-trips provenance | `test_artefact_round_trip` |
+| 5 | `raw/` is immutable | `test_raw_is_immutable` |
 | 6 | CI runs and its run history is non-empty | `gh api .../actions/runs` |
 | 7 | Every gate has a canary that fails on a planted defect | `tests/ci/canaries` green |
 | 8 | Determinism job passes | Two runs byte-identical |

@@ -303,3 +303,24 @@ def test_the_subprocess_runner_can_actually_fail():
 
 if __name__ == "__main__":  # pragma: no cover
 	raise SystemExit(pytest.main([__file__, "-q"]))
+
+
+GATE_CAPTURE_MONOTONE = "test_the_capture_rate_curve_falls_monotonically_with_vre_share"
+
+
+def test_the_capture_monotonicity_gate_notices_a_rate_that_ignores_generation():
+	"""``test_the_capture_rate_curve_falls_monotonically_with_vre_share`` must notice.
+
+	The curve falls because a VRE fleet sells into the hours it has driven the
+	price down in -- cannibalisation. The gate reads that fall off a real
+	clearing, so the defect it is blind to is a capture price that ignores the
+	generation weighting: with a plain mean, every share captures the same price
+	and the rate is 1.0 at all four points. Flat is not "no cannibalisation",
+	it is the numerator having stopped reading the denominator's axis.
+	"""
+	_assert_gate_notices(
+		GATE_CAPTURE_MONOTONE,
+		CAPTURE_PY,
+		"\trevenue = float(np.nansum(generation * price))\n\treturn revenue / total",
+		"\treturn float(np.nanmean(price))  # canary: unweighted capture",
+	)

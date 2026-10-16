@@ -13,10 +13,14 @@ loader as a whole.
 
 from __future__ import annotations
 
+import importlib
+
 import pytest
 from pydantic import ValidationError
 
 from tests.ci.canaries import REPO, planted
+
+LOADER_PY = REPO / "src" / "alea" / "config" / "loader.py"
 
 BASE = {
 	"name": "canary",
@@ -76,3 +80,40 @@ def test_forbidding_extra_keys_is_the_gate():
 	importlib.reload(models_module)
 	with pytest.raises(ValidationError, match="extra_forbidden"):
 		models_module.ScenarioConfig(**typo)
+
+
+def test_the_overlay_gate_notices_a_merge_that_replaces_a_sibling():
+	"""``test_a_scenario_overlay_deep_merges_without_discarding_siblings`` must notice.
+
+	The gate asserts a scenario overlay preserves its siblings -- the failure
+	mode `deep_merge`'s own docstring names: "a solve with the right carbon price
+	and the default planning horizons". Making the recursive branch shallow is
+	exactly that defect, and it is the one a `dict.update` would produce, so the
+	canary plants the thing a hurried implementation would have written rather
+	than a corruption of the real one.
+	"""
+	from alea.config import loader
+
+	base = {"scenario": {"base_year": 2025, "countries": ["KE"]}, "solve": {"solver": "highs"}}
+	overlay = {"scenario": {"base_year": 2030}}
+	assert loader.deep_merge(base, overlay)["scenario"]["countries"] == ["KE"], (
+		"the premise failed: the shipped merge already discards siblings"
+	)
+
+	with planted(
+		LOADER_PY,
+		"\t\t\tout[key] = deep_merge(existing, value)",
+		"\t\t\tout[key] = value  # canary: a shallow merge",
+	):
+		importlib.reload(loader)
+		merged = loader.deep_merge(base, overlay)
+		assert "countries" not in merged["scenario"], (
+			"the planted shallow merge did not take effect; the canary is a no-op"
+		)
+
+	# Reloaded after `planted` restores, so the module every later test imports
+	# is the real one.
+	importlib.reload(loader)
+	assert loader.deep_merge(base, overlay)["scenario"]["countries"] == ["KE"], (
+		"the module did not recover after the canary"
+	)

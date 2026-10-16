@@ -31,7 +31,12 @@ import pytest
 from alea.market import fuel
 from alea.market.agents import Agent, BiddingUnit
 from alea.market.bankability import bankability, irr, npv
-from alea.market.capture import capture_by_technology, capture_price
+from alea.market.capture import (
+	cannibalisation_curve,
+	capture_by_technology,
+	capture_price,
+	time_weighted_price,
+)
 from alea.market.clearing import clear_market, clear_market_zonal
 from alea.market.ppa import ppa_benchmark, tenor_capture_price
 from alea.market.risk import normal_var_check, value_at_risk
@@ -575,6 +580,110 @@ def test_capture_nan_on_no_generation():
 			capture_rate=0.0,
 			n_observations=0,
 		)
+
+
+# --------------------------------------------------------------------------
+# Exit criterion 5: the capture-rate curve falls as VRE share rises
+# --------------------------------------------------------------------------
+
+
+def _vre_curve_points() -> list[tuple[float, float, float]]:
+	"""``(vre_share, capture, time_weighted)`` at four rising solar penetrations.
+
+	The fixture is a real market, not a formula: two Kenya-like days, a
+	daytime-broad load (``420`` MW base with a modest evening peak) so that
+	solar's midday output never clips against the load it serves, and a
+	200-unit merit-order stack rising ``5 -> 85`` USD/MWh. Each point clears
+	every hour against that stack with solar bidding in at zero, so the price
+	series is the *model's* answer to the penetration, and the capture price is
+	computed from the dispatch and that series.
+
+	The load plateau is the load-bearing choice. A load that dips below solar's
+	midday output curtails the *lowest-priced* hours, which mechanically lifts
+	the capture rate as penetration rises -- a fixture artifact that would make
+	the curve turn up at high share and read as a defect in `capture.py` that
+	is not there. Keeping the load above solar's peak removes the saturation
+	regime, so what the test measures is cannibalisation alone.
+	"""
+	hours = np.arange(48) % 24
+	load = 420.0 + 30.0 * np.exp(-((hours - 8) ** 2) / 8.0) + 90.0 * np.exp(-((hours - 19) ** 2) / 8.0)
+	solar_shape = np.exp(-((hours - 13) ** 2) / 18.0)
+	stack = [(f"u{i:03d}", 5.0, 5.0 + 80.0 * i / 199.0) for i in range(200)]
+
+	points: list[tuple[float, float, float]] = []
+	for peak_mw in (40.0, 160.0, 280.0, 400.0):
+		prices = np.zeros(48)
+		generation = np.zeros(48)
+		for hour in range(48):
+			solar_mw = min(peak_mw * solar_shape[hour], load[hour])
+			generation[hour] = solar_mw
+			bids = [Bid(unit_id="solar", quantity_mw=solar_mw, price_usd_per_mwh=0.0)]
+			bids += [
+				Bid(unit_id=unit_id, quantity_mw=quantity, price_usd_per_mwh=price)
+				for unit_id, quantity, price in stack
+			]
+			prices[hour] = clear_market(
+				bids, float(load[hour]), value_of_lost_load_usd_per_mwh=10_000.0
+			).clearing_price_usd_per_mwh
+		vre_share = float(generation.sum() / load.sum())
+		points.append((vre_share, capture_price(generation, prices), time_weighted_price(prices)))
+	return points
+
+
+def test_the_capture_rate_curve_falls_monotonically_with_vre_share():
+	"""§10 criterion 5. Cannibalisation: a carrier's own output depresses the
+	price it receives, so the capture *rate* -- capture price over time-weighted
+	price -- falls as its share of generation rises.
+
+	Four increasing VRE shares on one real fixture, each a full hourly clearing,
+	and the rate must fall at *every* step. The curve is built through
+	`cannibalisation_curve` rather than by dividing here, so the test exercises
+	the same path a report reads, and the assertion is on the concrete rate at
+	each share, not on the curve being non-empty.
+	"""
+	points = _vre_curve_points()
+	curve = cannibalisation_curve(points)
+
+	assert len(curve) == 4
+	shares = [point.vre_share for point in curve]
+	assert shares == sorted(shares)
+	assert shares[0] < shares[-1], "the fixture must actually vary the VRE share"
+
+	rates: list[float] = []
+	prices: list[float] = []
+	cannibalisation: list[float] = []
+	for point in curve:
+		assert point.capture_rate is not None
+		assert point.capture_price_usd_per_mwh is not None
+		assert point.cannibalisation is not None
+		rates.append(point.capture_rate)
+		prices.append(point.capture_price_usd_per_mwh)
+		cannibalisation.append(point.cannibalisation)
+
+	# Strictly falling at every step: the standard cannibalisation result.
+	for lower, higher in zip(rates, rates[1:], strict=False):
+		assert higher < lower, f"capture rate rose from {lower} to {higher}"
+
+	# The concrete values, so a curve that fell for the wrong reason (a capture
+	# price collapsing to zero, say) is visible rather than merely monotone.
+	assert shares[0] == pytest.approx(0.0282, abs=5e-4)
+	assert shares[-1] == pytest.approx(0.2817, abs=5e-4)
+	assert rates[0] == pytest.approx(0.95569, abs=5e-4)
+	assert rates[-1] == pytest.approx(0.57069, abs=5e-4)
+
+	# The capture price itself falls with the rate -- the developer sizes
+	# against the price, and a curve that kept a flat price while the ratio
+	# fell would mean the time-weighted price was doing all the work.
+	for lower, higher in zip(prices, prices[1:], strict=False):
+		assert higher < lower, f"capture price rose from {lower} to {higher}"
+	assert prices[0] == pytest.approx(37.8354, abs=5e-3)
+	assert prices[-1] == pytest.approx(17.3932, abs=5e-3)
+
+	# Cannibalisation is 1 - rate, so it rises as the rate falls. Asserting it
+	# too pins the identity against a curve that reported the rate twice.
+	for lower, higher in zip(cannibalisation, cannibalisation[1:], strict=False):
+		assert higher > lower
+	assert cannibalisation[0] == pytest.approx(1.0 - rates[0])
 
 
 # --------------------------------------------------------------------------
