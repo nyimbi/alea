@@ -3665,3 +3665,103 @@ def test_the_summary_command_prints_the_registers_it_computes():
 	assert "equity_return_target" in result.output, (
 		"the one drifted status is not named on the summary"
 	)
+
+
+def test_every_key_the_summary_computes_reaches_a_door():
+	"""A register nobody can read is the declared-is-not-produced class.
+
+	`graph_summary` carried `cross_layer` and `catalog` for as long as they
+	existed and neither `alea prg summary` nor `PrgSummaryOut` rendered them, so
+	a check that ran on every solve was invisible to every reader. This is the
+	gate for that class, and it is a *cross* rather than a count: for each key
+	the summary computes, the key must appear in the CLI's rendering or in the
+	API's payload construction.
+
+	Read from the source text rather than by invoking both doors, because the
+	failure this catches is a key that exists and is never mentioned -- and a
+	door that silently dropped a key it read would pass an invocation-based
+	check while the drift happened at the other end.
+
+	An intentional one-door key is allowed and must be *named* in
+	:data:`SINGLE_DOOR_KEYS` with the reason, so a key cannot become
+	one-door by accident the way these two did.
+	"""
+	import re
+
+	from alea.config.paths import repo_root
+	from alea.prg.service import graph_summary
+
+	#: Keys deliberately served by one door, with the reason. A key here is a
+	#: decision; a key missing from both is the defect.
+	single_door = {
+		"endogenous_parameters": (
+			"the CLI prints `endogenous={count}` and the API serves the names; "
+			"the names are what a client acts on and a terminal reader does not "
+			"need three 24-character node names on a summary line"
+		),
+		"linearity": (
+			"per determined variable, thirty-three of them; served on the API "
+			"for a client that renders a table, and the CLI's `prg equations` "
+			"is where a reader looks for an equation's properties"
+		),
+	}
+
+	keys = set(graph_summary())
+	root = repo_root()
+	cli = (root / "src" / "alea" / "cli.py").read_text()
+	start = cli.index("def prg_summary")
+	cli_body = cli[start : cli.index("@prg_app.command", start + 10)]
+	api = (root / "src" / "alea" / "api" / "routes" / "prg.py").read_text()
+	api_start = api.index("def _summary_out")
+	api_body = api[api_start : api.index("def _violation_out", api_start)]
+
+	cli_keys = set(re.findall(r"summary\[.(\w+).\]", cli_body))
+	api_keys = set(re.findall(r'report\[.(\w+).\]', api_body))
+
+	unreached = keys - cli_keys - api_keys - set(single_door)
+	assert not unreached, (
+		f"the summary computes {sorted(unreached)} and neither door renders "
+		f"them; wire a door or name the key in SINGLE_DOOR_KEYS with the reason"
+	)
+	for key in single_door:
+		assert key in keys, (
+			f"{key!r} is recorded as a single-door key and the summary no longer "
+			f"computes it; the record outlived the field"
+		)
+
+
+def test_the_door_coverage_gate_notices_a_key_no_door_renders():
+	"""The canary for ``test_every_key_the_summary_computes_reaches_a_door``.
+
+	The mutation adds a key to `graph_summary` that neither door mentions, which
+	is exactly the state `cross_layer` and `catalog` were in. It is disjoint from
+	what the predicate reads: the predicate crosses the summary's keys against
+	two source bodies, so a mutation that adds a key to one of those bodies (or
+	to a door's rendering) is a different edit from adding one to the summary.
+
+	Restored from the canary harness's byte-level snapshot, so a killed process
+	cannot leave the summary carrying a key nothing serves.
+	"""
+	from tests.ci.canaries import REPO, planted, probe_exit_code
+
+	service_py = REPO / "src" / "alea" / "prg" / "service.py"
+	node = "tests/ci/test_prg.py::test_every_key_the_summary_computes_reaches_a_door"
+	program = (
+		"import sys\n"
+		"import pytest\n\n"
+		f"sys.exit(pytest.main(['-q', '-p', 'no:randomly', {node!r}]))\n"
+	)
+
+	shipped = '\t\t"catalog": catalog.catalog_report(graph=g),'
+	broken = (
+		'\t\t"catalog": catalog.catalog_report(graph=g),\n'
+		'\t\t"orphan_register": {"count": 0},  # canary: no door renders this'
+	)
+
+	assert probe_exit_code(program) == 0, "the gate was already failing"
+	with planted(service_py, shipped, broken):
+		assert probe_exit_code(program) != 0, (
+			"the summary gained a key neither door renders and the gate passed; "
+			"it is not crossing the keys against the doors"
+		)
+	assert probe_exit_code(program) == 0, "the gate did not recover"
