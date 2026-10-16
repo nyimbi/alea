@@ -52,6 +52,7 @@ STRATEGY_PY = REPO / "src" / "alea" / "market" / "strategy.py"
 CAPTURE_PY = REPO / "src" / "alea" / "market" / "capture.py"
 RISK_PY = REPO / "src" / "alea" / "market" / "risk.py"
 VIEWS_PY = REPO / "src" / "alea" / "market" / "views.py"
+BANKABILITY_PY = REPO / "src" / "alea" / "market" / "bankability.py"
 
 GATES = REPO / "tests" / "ci" / "test_market_layer3.py"
 
@@ -67,6 +68,9 @@ GATE_CAPTURE_NAN = "test_capture_nan_on_no_generation"
 GATE_VAR_SIGN = "test_var_matches_the_analytic_normal_quantile"
 GATE_CHOLESKY = "test_a_non_positive_definite_correlation_raises"
 GATE_FX = "test_a_ppa_price_records_its_fx_rate_and_date"
+GATE_MERIT_ORDER = "test_kenya_merit_order_clearing_matches_a_hand_computed_stack"
+GATE_CAPTURE_COMPUTED = "test_kenya_solar_and_wind_capture_prices_are_computed"
+GATE_BANKABILITY = "test_bankability_matches_a_hand_computed_fixture"
 
 
 def _run_gate(gate: str) -> subprocess.CompletedProcess[str]:
@@ -128,6 +132,9 @@ def test_the_canary_targets_are_the_gates_the_register_promises():
 		GATE_VAR_SIGN,
 		GATE_CHOLESKY,
 		GATE_FX,
+		GATE_MERIT_ORDER,
+		GATE_CAPTURE_COMPUTED,
+		GATE_BANKABILITY,
 	):
 		assert f"def {gate}(" in text, f"gate {gate} is not defined in {GATES.name}"
 
@@ -193,7 +200,13 @@ def test_the_capture_nan_gate_notices_a_zero_written_for_no_generation():
 
 
 def test_the_var_sign_gate_notices_a_negated_loss_magnitude():
-	"""Negate VaR; the model refuses the sign, so the gate fails on the defect."""
+	"""``test_var_matches_the_analytic_normal_quantile`` must notice.
+
+	Negate VaR; the model refuses the sign, so the gate fails on the defect.
+	The gate cites §9 ``test_var_sign_convention`` and drives the same
+	function, so both spellings name one gate; this canary cites the
+	function, which is the spelling the register can read.
+	"""
 	_assert_gate_notices(
 		GATE_VAR_SIGN,
 		RISK_PY,
@@ -219,6 +232,60 @@ def test_the_fx_rate_gate_notices_a_removed_local_price_check():
 		VIEWS_PY,
 		"\t\tif self.price_local_per_mwh is not None and self.fx is None:",
 		"\t\tif False:  # canary",
+	)
+
+
+def test_the_merit_order_gate_notices_a_stack_that_ignores_price():
+	"""``test_kenya_merit_order_clearing_matches_a_hand_computed_stack`` must notice.
+
+	Dispatch in list order instead of merit order; the hand-computed price moves.
+
+	The fixture is a five-unit stack whose marginal unit is coal at 40. Sorted by
+	anything but price, the marginal unit is whatever is listed third -- hydro's
+	80 MW leaves 180 served and coal still clears, so a weaker mutation hides.
+	Reversing the sort puts oil (120) at the margin, which no hand-computed
+	answer can match.
+	"""
+	_assert_gate_notices(
+		GATE_MERIT_ORDER,
+		CLEARING_PY,
+		"\treturn sorted(available, key=lambda b: (b.price_usd_per_mwh, b.unit_id))",
+		"\treturn sorted(available, key=lambda b: (b.price_usd_per_mwh, b.unit_id), reverse=True)",
+	)
+
+
+def test_the_capture_prices_gate_notices_a_carrier_independent_rate():
+	"""``test_kenya_solar_and_wind_capture_prices_are_computed`` must notice.
+
+	Return a constant rate; solar and wind stop differing, as they must.
+
+	The gate's load-bearing assertion is that solar captures *less* than wind on
+	this fixture, because solar's output sits nearer the trough. A rate that does
+	not depend on the generation profile satisfies every "is not None" check and
+	fails exactly that comparison.
+	"""
+	_assert_gate_notices(
+		GATE_CAPTURE_COMPUTED,
+		CAPTURE_PY,
+		"\treturn capture, time_weighted, capture / time_weighted",
+		"\treturn capture, time_weighted, 1.0",
+	)
+
+
+def test_the_bankability_gate_notices_a_dropped_debt_service():
+	"""``test_bankability_matches_a_hand_computed_fixture`` must notice.
+
+	Ignore the debt service; the hand-computed IRR and minimum DSCR move.
+
+	The fixture's project flows are CFADS less service, so an IRR computed from
+	CFADS alone is a different number (the gate pins 7.9308%). This is the defect
+	that reads as a *better* project, which is why it is the one worth planting.
+	"""
+	_assert_gate_notices(
+		GATE_BANKABILITY,
+		BANKABILITY_PY,
+		"\tproject_flows = cash - service",
+		"\tproject_flows = cash",
 	)
 
 

@@ -81,6 +81,112 @@ def test_the_register_notices_a_gate_that_lost_its_canary():
 	assert found[GATE].canaries, "the register did not recover after the restore"
 
 
+def test_the_unnamed_verdict_reads_both_spellings_of_a_gate_cell():
+	"""The fourth verdict, canaried on its own boundary.
+
+	``cell_describes_a_test`` reports an exit-criteria cell that *describes* a
+	test without naming one -- the 32 cells the other three verdicts cannot see
+	at all, because ``promised_gates`` reads backticked names and "Integration
+	test" contains none. A verdict added without watching it classify anything is
+	the same defect the register exists to catch, one level up.
+
+	**It calls the predicate rather than restating it.** The first version of
+	this canary reimplemented the three conditions inline, and a probe that
+	disabled the real predicate left the copy intact: the canary passed and
+	watched nothing. A canary whose logic is disjoint from its target's cannot
+	see the target change.
+
+	**Both sides of the boundary, and the instrument cases in between.** A check
+	is only as good as its default on known-good text: flagging a named gate
+	would make every named criterion a false positive, and flagging `CI` or `M8`
+	would demand a ``test_`` name from a criterion no test can satisfy.
+	"""
+	register = _load()
+	describes = register.cell_describes_a_test
+
+	# Flagged: the cell says a test exists and not which one.
+	assert describes("Integration test")
+	assert describes("Canary")
+	assert describes("Property test")
+	# Not flagged: the cell names its gate.
+	assert not describes("`test_kenya_solves`")
+	assert not describes("`test_a`, `test_b`")
+	# Not flagged: it names its gate *and* says "test". No cell in the corpus
+	# carries both, so without this line the `GATE_NAME` guard is unexercised and
+	# deleting it changes nothing a reader would see -- a condition kept for a
+	# case the plans happen not to contain yet.
+	assert not describes("Integration test `test_kenya_solves`")
+	assert not describes("Canary: `test_var_matches_the_analytic_normal_quantile`")
+	# Not flagged: not a test at all. Each of these is a criterion a `test_` name
+	# cannot satisfy, and demanding one would redden the register for good.
+	assert not describes("M8")
+	assert not describes("CI")
+	assert not describes("Determinism job")
+	assert not describes("M2 artefact")
+	# A backticked *path* is a named instrument, not a described test.
+	assert not describes("`tests/ci/canaries`")
+	assert not describes("`gh api .../actions/runs`")
+
+
+def test_the_unnamed_verdict_notices_a_disabled_predicate():
+	"""Disable the vocabulary test; the boundary cases must go red.
+
+	The canary proper. Without this the cases above could be passing because the
+	predicate is right *or* because nothing reads it -- and the mutation has to
+	be one the predicate's own logic cannot absorb: ``if False and ...`` makes
+	every cell classify as unnamed, which the "not flagged" assertions catch.
+	"""
+	register = _load()
+	assert register.cell_describes_a_test("Integration test"), "premise failed"
+
+	with planted(REGISTER, "return bool(_TEST_VOCABULARY.search", "return bool(True or _TEST_VOCABULARY.search"):
+		register = _load()
+		assert register.cell_describes_a_test("CI"), (
+			"a cell that names no test at all was classified as describing one, so "
+			"the vocabulary check is not what decides the verdict"
+		)
+
+	register = _load()
+	assert not register.cell_describes_a_test("CI"), "the register did not recover"
+
+
+def test_the_unnamed_verdict_reads_a_planted_cell():
+	"""Plant the defect in a real plan; the report must carry it.
+
+	The unit cases above pin the predicate. This one pins the wiring: a cell that
+	describes its gate, written into an actual exit-criteria table, must reach
+	``unnamed_criteria`` with its document and row number. Without it the
+	predicate could be right and the scan pointed at nothing -- a check that is
+	correct and disconnected reports clean forever.
+	"""
+	register = _load()
+	plan = REPO / "docs" / "plans" / "12-quality.md"
+	before = plan.read_text()
+	target = "| 8 | CI run history is non-empty and growing | `gh api .../actions/runs` |"
+	assert target in before, "canary target not found: the quality table moved"
+
+	planted_row = "| 8 | CI run history is non-empty and growing | Integration test |"
+	with planted(plan, target, planted_row):
+		rows = register.unnamed_criteria()
+		hits = [r for r in rows if r[0] == "12-quality" and r[2] == "8"]
+		assert hits, (
+			"a planted cell that describes its gate did not reach the report; the "
+			"scan is correct but pointed at nothing"
+		)
+		doc, heading, number, criterion, cell = hits[0]
+		assert (doc, number) == ("12-quality", "8"), (doc, number)
+		assert criterion == "CI run history is non-empty and growing", criterion
+		assert cell == "Integration test", cell
+		assert "Exit criteria" in heading, heading
+
+	# Restored, and the row must leave the report again -- a verdict that cannot
+	# clear is one nobody reads.
+	rows = register.unnamed_criteria()
+	assert not [r for r in rows if r[0] == "12-quality" and r[2] == "8"], (
+		"the planted cell is still reported after the restore"
+	)
+
+
 def test_the_register_reads_the_gate_tables_and_not_the_prose():
 	"""A gate named only in a narrative paragraph is not a promise.
 

@@ -1,22 +1,21 @@
 # SPDX-License-Identifier: MIT
 """Canary: a misspelled config key must be refused, not silently defaulted.
 
-`extra="forbid"` is the gate. Without it pydantic ignores an unknown key, so
-`planning_horizons` typed as `planning_horizonss` loads clean, the default
-horizons are used, and the run produces a plausible model of the wrong scenario.
-That is a defect with no symptom, which is why the key it lives in is canaried
-rather than the config loader as a whole.
+The gate is ``test_a_typo_in_a_config_key_is_refused``, in
+`tests/ci/test_config_typo.py`. ``extra="forbid"`` is what implements it.
+
+Without it pydantic ignores an unknown key, so `planning_horizons` typed as
+`planning_horizonss` loads clean, the default horizons are used, and the run
+produces a plausible model of the wrong scenario. That is a defect with no
+symptom, which is why the key it lives in is canaried rather than the config
+loader as a whole.
 """
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 from pydantic import ValidationError
 
-from alea.config.loader import ConfigError, load_config
-from alea.config.models import ScenarioConfig
 from tests.ci.canaries import REPO, planted
 
 BASE = {
@@ -25,23 +24,6 @@ BASE = {
 	"base_year": 2025,
 	"planning_horizons": [2030],
 }
-
-
-def test_a_typo_in_a_config_key_is_refused():
-	with pytest.raises(ValidationError, match="extra_forbidden"):
-		ScenarioConfig(**{**BASE, "planning_horizonss": [2030]})
-
-
-def test_a_typo_in_a_config_file_is_refused(tmp_path: Path):
-	config = REPO / "config" / "config.default.yaml"
-	original = config.read_text()
-	assert "scenario:" in original, "canary target not found"
-	# The mutation is on a copy, not the tracked file: a config is an input, and
-	# corrupting it in place would race every other test reading it.
-	broken = tmp_path / "config.typo.yaml"
-	broken.write_text(original.replace("scenario:", "scenariio:", 1))
-	with pytest.raises(ConfigError):
-		load_config(broken)
 
 
 def test_forbidding_extra_keys_is_the_gate():

@@ -26,7 +26,7 @@ import subprocess
 import sys
 import textwrap
 
-from tests.ci.canaries import REPO, planted
+from tests.ci.canaries import REPO, planted, probe_exit_code
 
 BASE_PY = REPO / "src" / "alea" / "scanning" / "connectors" / "base.py"
 TENDER_PY = REPO / "src" / "alea" / "scanning" / "connectors" / "tender.py"
@@ -178,3 +178,49 @@ def test_the_layout_gate_notices_a_page_with_content_and_no_matches():
 	# Restored.
 	_, status_restored = _layout_probe()
 	assert status_restored == "layout_changed"
+
+
+FINANCE_PY = REPO / "src" / "alea" / "scanning" / "connectors" / "finance.py"
+
+#: The gate node, as the register names it. The mutation is a source edit, so
+#: the gate has to run in a fresh interpreter: this process holds the connector
+#: modules in `sys.modules` and would run the original either way.
+CATEGORY_GATE = "tests/ci/test_scanning_gates.py::test_all_five_categories_have_a_connector"
+
+
+def _gate(node: str) -> str:
+	return (
+		"import sys\n"
+		"import pytest\n\n"
+		f"sys.exit(pytest.main(['-q', '-p', 'no:randomly', {node!r}]))\n"
+	)
+
+
+def test_the_category_gate_notices_a_connector_that_drops_a_category():
+	"""`test_all_five_categories_have_a_connector` must notice a missing one.
+
+	The gate collects the category each concrete connector reports and compares
+	the set against the taxonomy. Its blind spot is a connector answering with
+	the *wrong* category: the set still has five members, but one taxonomy entry
+	is served by nothing and another by two. Moving one connector's answer is
+	the mutation that exposes it, and the realistic one -- a copy-pasted
+	connector class keeps its neighbour's `category` property, and the gate goes
+	on reporting five of five.
+	"""
+	assert probe_exit_code(_gate(CATEGORY_GATE)) == 0, "the gate was already failing"
+
+	# The mutation targets the *constructor* kwarg, which is what the gate reads
+	# -- `FinanceFeedConnector()`. The module also carries `IfcProjectsConnector`,
+	# whose category is a property; moving that one changes nothing the gate
+	# consults, and a canary pointed there would report the gate blind when the
+	# gate was never asked the question.
+	with planted(
+		FINANCE_PY,
+		"category=SourceCategory.FINANCE,",
+		"category=SourceCategory.SOCIAL,",
+	):
+		assert probe_exit_code(_gate(CATEGORY_GATE)) != 0, (
+			"a taxonomy category served by no connector still satisfies the gate"
+		)
+
+	assert probe_exit_code(_gate(CATEGORY_GATE)) == 0, "the gate did not recover"

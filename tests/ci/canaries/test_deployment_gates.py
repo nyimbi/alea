@@ -31,7 +31,7 @@ from alea.ops import (
 	review_queue_restore_drill,
 	unpinned_images,
 )
-from tests.ci.canaries import REPO, planted
+from tests.ci.canaries import REPO, planted, probe_exit_code
 
 DEPLOY = REPO / "deploy"
 
@@ -225,3 +225,68 @@ def test_the_healthcheck_command_matches_the_dockerfile():
 	from alea.cli import app
 
 	assert CliRunner().invoke(app, ["health", "--help"]).exit_code == 0
+
+
+def _gate(node: str) -> str:
+	"""One pytest node, run in a fresh interpreter that reads the mutated file.
+
+	The mutation is a source edit, so the gate has to execute where it can see
+	it -- this process already holds the mutated module in `sys.modules` and
+	would run the original.
+	"""
+	return (
+		"import sys\n"
+		"import pytest\n\n"
+		f"sys.exit(pytest.main(['-q', '-p', 'no:randomly', {node!r}]))\n"
+	)
+
+
+ALERT_GATE = "tests/ci/test_deployment_gates.py::test_alerting_fires_on_a_planted_failure"
+IMAGE_GATE = "tests/ci/test_deployment_gates.py::test_the_alea_image_does_not_install_pypsa_earth"
+
+
+def test_the_alerting_gate_notices_an_alert_that_is_never_written():
+	"""`test_alerting_fires_on_a_planted_failure` must notice a dropped write.
+
+	The gate reads the alert back off the sink, so it is blind to exactly one
+	defect: an alert the process built and never wrote. `_write_alert` is the
+	one function every alert passes through, and blinding it is what makes the
+	gate's read-back an observation rather than a restatement of the return
+	value. §6.3: "an alert path that has never been exercised is an alert path
+	that does not exist."
+	"""
+	assert probe_exit_code(_gate(ALERT_GATE)) == 0, "the gate was already failing"
+
+	target = REPO / "src" / "alea" / "ops" / "service.py"
+	with planted(
+		target,
+		'\twith target.open("a", encoding="utf-8") as handle:\n\t\thandle.write(line + "\\n")\n',
+		"\treturn target  # canary: the alert is built and never written\n",
+	):
+		assert probe_exit_code(_gate(ALERT_GATE)) != 0, (
+			"an alert that is never written to the sink still satisfies the gate"
+		)
+
+	assert probe_exit_code(_gate(ALERT_GATE)) == 0, "the gate did not recover"
+
+
+def test_the_image_separation_gate_notices_a_shared_interpreter():
+	"""`test_the_alea_image_does_not_install_pypsa_earth` must notice a leak.
+
+	AD-1's seam is files, not imports. The gate strips comment lines and asserts
+	the ALEA image never names the workflow, so the defect is a `pip install
+	pypsa-earth` step arriving in it -- one image, one interpreter, the decision
+	dissolved. A source-text gate nobody has watched read a real line is a gate
+	that may be reading nothing.
+	"""
+	assert probe_exit_code(_gate(IMAGE_GATE)) == 0, "the gate was already failing"
+
+	target = REPO / "deploy" / "Dockerfile.alea"
+	# Inserted at a real build step, not appended after the last line: the gate
+	# strips comments, so a mutation inside one would prove nothing.
+	with planted(target, "\nRUN ", "\nRUN pip install pypsa-earth\nRUN "):
+		assert probe_exit_code(_gate(IMAGE_GATE)) != 0, (
+			"a Dockerfile that installs PyPSA-Earth still passes the separation gate"
+		)
+
+	assert probe_exit_code(_gate(IMAGE_GATE)) == 0, "the gate did not recover"
