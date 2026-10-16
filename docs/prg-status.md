@@ -670,6 +670,43 @@ manufacturing a decision no one took.
 
 ### Closed since this list was written
 
+**The route-inventory gate had no canary, and a stale exit-criteria cell was
+hiding it.** `11-layer8-api.md` §9's criterion 9 — *a route inventory matches the
+specification's endpoint table* — had its Gate column reading `Manual, once`
+while `test_the_route_inventory_sees_every_spec_endpoint` had existed in
+`tests/ci/test_api_layer8.py` since the layer was built. Correcting the cell to
+name the gate turned `scripts/gate_register.py --check` red on the spot:
+
+    promised gates: 113   verified: 112
+      uncanaried:    1
+      UNCANARIED:
+        test_the_route_inventory_sees_every_spec_endpoint
+
+That is the register working as designed and worth stating plainly, because the
+alternative reading is that the edit *broke* something. It did not: the cell was
+the only place the gate was recorded, so nothing had ever asked whether it could
+fail. `test_the_inventory_canaries_against_a_known_route` is canary-*shaped* and
+sits in the same file — it calls `assert_inventory`, which checks the walk
+against `GET /api/v1/health` before trusting the total — but it drives the
+production function rather than planting a defect, so it is a gate, not a
+canary, and the register classifies by behaviour for exactly this reason.
+
+`tests/ci/canaries/test_api_inventory_gate.py` closes it with two canaries on
+disjoint files and disjoint mutations. The first blinds the unwrap — returning
+early from `_walk`'s `original_router` branch — and is caught by
+`assert_inventory` inside `create_app`, which reports *5 routes* instead of 65
+and names the missing known route. That ordering is deliberate and the canary
+documents it: the guard runs before the gate's own comparison so a broken walk
+is caught before its total is read. The second renames `/capture-rates` to
+`/capture_rate`, which leaves the walk intact, the route count unchanged and
+`assert_every_router_mounted` satisfied — so the only thing that can notice is
+the comparison against §3.1's table, which is the half the first canary never
+reaches. Measured, both mutations fail the gate; both restore clean.
+
+Criterion 1's cell was corrected at the same time. It read `Route inventory
+test`, a description rather than a gate name, and criterion 1 is satisfied by the
+same function criterion 9 names.
+
 **`ParameterNode.initial` reaches a door, and the first reason written for it
 was false.** The field is where a feedback loop starts iterating, declared on
 the five loop variables, and until 2026-10-16 no door served it —

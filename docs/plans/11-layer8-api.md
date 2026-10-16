@@ -373,7 +373,7 @@ tests.
 
 | # | Criterion | Gate |
 |---|---|---|
-| 1 | Every endpoint in §3.1 implemented | Route inventory test |
+| 1 | Every endpoint in §3.1 implemented | `test_the_route_inventory_sees_every_spec_endpoint` |
 | 2 | No GET takes a body; no route blocks | `test_no_get_with_body`, `test_no_blocking_solve_in_route` |
 | 3 | Keys hashed, tiered, revocable | `test_keys_stored_hashed` |
 | 4 | Rate limiting per key and tier | `test_rate_limit_enforced` |
@@ -381,7 +381,7 @@ tests.
 | 6 | Long jobs durable across restart | `test_job_survives_restart` |
 | 7 | USSD and SMS adapters complete and bounded | `test_ussd_never_truncates` |
 | 8 | OpenAPI generated and valid | `test_openapi_valid` |
-| 9 | A route inventory matches the specification's endpoint table | Manual, once |
+| 9 | A route inventory matches the specification's endpoint table | `test_the_route_inventory_sees_every_spec_endpoint` |
 | 10 | Every artefact the API reads has a producer, or is a named gap | §7.1's four gates |
 | 11 | Every gate canaried | `tests/ci/canaries` |
 
@@ -389,4 +389,8 @@ tests.
 read from source is not an inventory of routes the app serves — a wrapper class
 around `include_router` once hid 1,074 of 1,080 routes from a static extractor,
 and three different wrong counts were each internally consistent. The inventory
-is read from `app.routes` at runtime and canaried against a route known to exist.
+is read from the running application through `alea.api.inventory.route_inventory`,
+which unwraps FastAPI's `_IncludedRouter`, and is canaried against a route known
+to exist before its total is trusted. Two canaries in
+`tests/ci/canaries/test_api_inventory_gate.py` watch the gate fail: one blinds the
+unwrap, one renames a route the spec table names.
