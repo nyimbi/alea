@@ -454,6 +454,39 @@ manufacturing a decision no one took.
   audited against the graph, because the graph does not know the quantity
   moved.
 
+  **Widening the seam was considered and refused, on measurement.** Five of the
+  seven knobs have a genuine catalog counterpart (`coal_eaf`, `renewable_multiplier`
+  → `solar_irradiance_multiplier`, `drought_multiplier` →
+  `hydro_drought_multiplier`, `battery_cost_multiplier` → `battery_cost`,
+  `hydrogen_export_twh_per_year` → `hydrogen_export_volume`); the other two
+  cannot be carried at all, because `to_scenario_parameters` writes
+  `float(value)` on both of its paths and `ssp_pathway` is a `str` while
+  `outages` is an `OutageSet`. The five counterparts are all `role: free`,
+  `uncoupled`, `unit: None`, range `(0, 1e6)`, default `500000.0` — and the
+  engine refuses that default (`coal_eaf` is bounded `le=2.0`), while narrowing
+  the PRG range to fit is refused at load by
+  `ParameterNode._range_contains_default`. So each would cost authoring a real
+  range and default for a node the catalog states no bounds for, to add a
+  translation over a node no equation names. The denominator did not change
+  either: the auditable core is **52** settable parameters, exactly as before
+  the catalog join, and **3 of 52 is 5.8%** — the same fraction it always was.
+  The 0.4% is the expansion diluting a denominator, not the seam narrowing.
+- **The declared range is now enforced on the settable path.** It was read in
+  three places and enforced in none of them for a caller's own value: it
+  brackets the solver for a derived parameter, it filters the corrections the
+  conflict detector proposes, and `ParameterNode._range_contains_default`
+  checks it against the document's default. So `propagate` accepted
+  `capacity_factor=999` against a declared `(0.05, 0.7)` and returned it as the
+  scenario's value, with `range_excursions()` empty — that register is written
+  from `_note_excursion`, and a settable node has no equation to derive it.
+  `ParameterGraph._refuse_out_of_range` closes it on both propagation paths,
+  with both bounds inclusive. **Settable only**: a derived value outside its
+  range is the graph's own answer and stays a reported finding, because the
+  incremental contract feeds `previous`'s derived values back in, and refusing
+  them would leave a run in which one equation lands outside its range unable
+  to propagate at all. The first draft checked every key and did exactly that,
+  on `reliability_cost_usd` at 1.096e12 against a declared 1e12 ceiling.
+
   **The three routes were, until 2026-10-14, reached by no production caller.**
   That is the register's own defect class — declared is not produced — applied
   to the register itself: `translate.py` was written, tested, and imported by

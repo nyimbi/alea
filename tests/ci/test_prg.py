@@ -1088,6 +1088,62 @@ def test_a_value_outside_its_range_is_reported_rather_than_refused(
 	)
 
 
+def test_a_settable_value_outside_its_range_is_refused(graph: ParameterGraph, defaults: dict):
+	"""The other half of the rule above, and the half that was missing.
+
+	A *derived* value outside its range is the graph's own answer and is
+	reported (the test above). A *settable* value outside its range is the
+	caller's statement, and it was neither refused nor reported: `range` was
+	read as a solver bracket and as a correction filter, and
+	`ParameterNode._range_contains_default` checked it only against the
+	document's own default. So `capacity_factor=999` against a declared
+	`(0.05, 0.7)` propagated and came back as the scenario's value, with
+	`range_excursions()` empty -- because that register is written from
+	`_note_excursion`, and a settable node has no equation to derive it.
+
+	Both propagation paths are checked, and both bounds are inclusive. The
+	boundary assertions are the ones that catch a gate written with `<` where
+	it needs `<=`: a value exactly on the declared bound is admissible, and a
+	gate that refuses it would reject the endpoints of every range in the
+	library.
+	"""
+	node = graph.node("capacity_factor")
+	assert node.range == (0.05, 0.7), node.range
+	assert graph.is_settable("capacity_factor")
+
+	for bad in (999.0, 0.0, -1.0):
+		scoped = dict(defaults)
+		scoped["capacity_factor"] = bad
+		with pytest.raises(GraphError, match="outside the range"):
+			graph.propagate(scoped)
+
+	# A negative value, on a node whose range starts at zero: the sign the
+	# node's own name makes obviously wrong, and the one a gate that only
+	# checked the upper bound would let through.
+	scoped = dict(defaults)
+	scoped["carbon_budget_mtco2"] = -1.0
+	with pytest.raises(GraphError, match="outside the range"):
+		graph.propagate(scoped)
+
+	# The incremental path refuses too. It is the path `propagate_change`
+	# actually takes, so a gate wired only into `propagate` would leave the
+	# route a scenario uses unguarded -- the "control that exists is not a
+	# control that is applied" shape.
+	previous = graph.propagate(defaults)
+	scoped = dict(defaults)
+	scoped["capacity_factor"] = 999.0
+	with pytest.raises(GraphError, match="outside the range"):
+		graph.propagate_incremental(scoped, previous, ["capacity_factor"])
+
+	# Both endpoints of the declared range are admissible. Asserted from both
+	# sides of each bound so the gate is pinned as inclusive rather than
+	# merely "somewhere between".
+	for on_bound in (0.05, 0.7):
+		scoped = dict(defaults)
+		scoped["capacity_factor"] = on_bound
+		assert graph.propagate(scoped).values["capacity_factor"] == on_bound
+
+
 def test_a_range_excursion_does_not_survive_into_the_next_scenario(
 	graph: ParameterGraph, defaults: dict
 ):
@@ -1676,6 +1732,20 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# understate how much of the graph went unread. 33, not 29, for the reason
 	# spelled out in `test_the_audit_reports_what_it_did_not_check`.
 	assert len(audit.skipped) == 33, audit.skipped
+
+	# A second way to reach the same contract, and the one that escaped when
+	# the range gate was added. `GraphError` is a `ValueError` and neither a
+	# `FeedbackError` nor a `DslError`, so `--set capacity_factor=999` arrived
+	# here through `overrides` and left as an uncaught exception -- a solve's
+	# valid answer destroyed inside a check that was never the answer, which is
+	# the first of the two wrong ways this test's docstring names.
+	out_of_range = audit_scenario_result(
+		_solved(), overrides={"capacity_factor": 999.0}
+	)
+	assert not out_of_range.ran, "an inadmissible override was audited as if admissible"
+	assert out_of_range.failure, "a check that did not run must say why"
+	assert not out_of_range.consistent
+	assert "outside the range" in out_of_range.failure, out_of_range.failure
 
 
 def test_the_audit_finds_an_unfinanceable_scenario_the_engine_solved():

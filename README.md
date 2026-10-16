@@ -432,6 +432,15 @@ knob is exactly the defect this project keeps having to fix. The numerator has
 not moved since the catalog join: the expansion added 781 settable knobs, and
 the engine can be driven from none of them.
 
+Widening the seam was measured and refused. The auditable core is 52 settable
+parameters — those an equation names — and it did not grow either, so **3 of 52
+is 5.8%**, the same fraction as before the join. Five of the seven unreached
+knobs have a genuine catalog counterpart, but each is `role: free`, uncoupled,
+carries a placeholder range and default, and the engine refuses that default
+(`coal_eaf` is bounded `le=2.0` while the graph defaults it to `500000.0`).
+Translating one would add a route into the engine from a node no equation
+names, to move a fraction whose numerator did not change.
+
 The symbolic DSL underneath (`alea expr`) creates, renders
 (LaTeX / Unicode / MathML / source), evaluates, differentiates, simplifies, and
 solves numerically.

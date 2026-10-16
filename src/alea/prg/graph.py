@@ -963,6 +963,14 @@ class ParameterGraph:
 		self._range_excursions.clear()
 		self._solve_paths.clear()
 		scoped: dict[str, float] = {k: float(v) for k, v in values.items()}
+		# Before any arithmetic: a value outside its declared range is refused
+		# here rather than propagated and reported. The whole mapping is
+		# checked, not a caller-supplied subset, because `propagate` cannot tell
+		# the two apart -- the convenience paths pass every default. It does not
+		# need to: a default outside its own range never reaches this method,
+		# since `ParameterNode._range_contains_default` refuses the document at
+		# load. So the only value that can trip this is one a caller chose.
+		self._refuse_out_of_range(scoped)
 		missing = set(self._nodes) - scoped.keys()
 		# An endogenous parameter is not *missing* when a caller omits it: no
 		# arithmetic can supply it and no user is required to, because the
@@ -1081,6 +1089,12 @@ class ParameterGraph:
 		# reads one would fail on a parameter set that is complete in fact.
 		scoped: dict[str, float] = {k: float(v) for k, v in previous.values.items()}
 		scoped.update({k: float(v) for k, v in values.items()})
+		# The same refusal `propagate` makes, at the same door. `values` is
+		# checked rather than `scoped`: `scoped` is seeded from `previous`, whose
+		# values have already been through this, so checking it again would
+		# re-refuse a set that was admitted -- and on the sparse contract this
+		# method documents, `values` is exactly what the caller is setting.
+		self._refuse_out_of_range({k: float(v) for k, v in values.items()})
 		before = dict(scoped)
 		dirty = set(self.affected_by(seeds))
 
@@ -1290,6 +1304,76 @@ class ParameterGraph:
 			return
 		if value < low or value > high:
 			self._range_excursions[parameter] = value
+
+	def _refuse_out_of_range(self, values: Mapping[str, float]) -> None:
+		"""Refuse a caller-supplied value outside the node's declared range.
+
+		The declared range was read in three places and enforced in none of them
+		for a value the *caller* supplied: it brackets the solver for a derived
+		parameter, it filters the corrections the conflict detector proposes,
+		and ``ParameterNode._range_contains_default`` checks it against the
+		node's own default -- which is the only caller-side check, and it runs on
+		the document rather than on a scenario. So ``propagate`` accepted
+		``capacity_factor=999`` against a declared ``(0.05, 0.7)`` and returned
+		it as the scenario's value.
+
+		That is a defect in the direction that hides: the graph reports the
+		parameter as set, every downstream identity that does not read it holds,
+		and ``range_excursions`` -- which reports exactly this finding for a
+		*derived* parameter -- stays empty because it is written from
+		:meth:`_note_excursion`, and a settable node has no equation to derive
+		it. The register that exists to report inadmissible values was
+		structurally blind to the class the caller controls.
+
+		The refusal is at the door and not at the read, because a parameter set
+		is propagated many times and a set that is inadmissible when it enters
+		is inadmissible throughout; refusing at the read would re-raise on every
+		derivation that touches it, and the message would name whichever
+		equation happened to ask first rather than the value that is wrong.
+
+		Every key in ``values`` is checked rather than a caller-supplied subset,
+		and the method does not need to distinguish them: a node whose *default*
+		is outside its range never reaches a propagation, because
+		``ParameterNode._range_contains_default`` refuses the document at load.
+		So a value that trips this is one a caller chose, whichever mapping it
+		arrived in.
+
+		Only *settable* nodes are checked, and the boundary is the point of the
+		method rather than a convenience. A derived node's value is the graph's
+		own output, and it already has a channel: :meth:`_note_excursion` files
+		an equation whose answer lands outside the range under
+		:meth:`range_excursions`, which ``check_scenario`` surfaces as a
+		scenario finding. Refusing it here would override that channel with a
+		refusal -- and worse, it would refuse the graph *its own result*: the
+		incremental contract is ``propagate_incremental(values, previous, ...)``
+		with ``values`` carrying ``previous``'s derived values, so a run in
+		which one equation lands outside its range would leave every later call
+		seeded from that result unable to propagate at all. A gate that a
+		correct graph cannot satisfy is not a gate. The first draft of this
+		method checked every key and did exactly that, on
+		``reliability_cost_usd`` at 1.096e12 against a declared 1e12 ceiling.
+		"""
+		for name, value in sorted(values.items()):
+			node = self._nodes.get(name)
+			if node is None or node.range is None:
+				continue
+			if not self.is_settable(name):
+				continue
+			low, high = node.range
+			if not math.isfinite(value):
+				# Not an excursion, for the reason :meth:`_note_excursion`
+				# gives: a non-finite value is a failed arithmetic, and filing
+				# it here would report an arithmetic fault as a scenario
+				# finding. ``propagate`` raises on it where the solve fails.
+				continue
+			if value < low or value > high:
+				raise GraphError(
+					f"{name}={value} is outside the range ({low}, {high}) the graph "
+					f"declares for it, so the scenario states a value the parameter "
+					f"is not admissible over. Widen the node's range in "
+					f"config/prg.yaml if the admissible set is wrong, rather than "
+					f"setting a value the graph cannot report"
+				)
 
 	# -- consistency ----------------------------------------------------
 

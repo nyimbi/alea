@@ -29,7 +29,7 @@ from typing import Any
 
 from alea.prg.dsl import DslError
 from alea.prg.feedback import FeedbackError
-from alea.prg.graph import ParameterGraph, Violation, load_graph
+from alea.prg.graph import GraphError, ParameterGraph, Violation, load_graph
 
 __all__ = [
 	"ScenarioAudit",
@@ -278,7 +278,15 @@ def audit_scenario_result(
 	# check as a pass. Neither is acceptable, so the failure is carried.
 	try:
 		propagated = g.propagate(values)
-	except (FeedbackError, DslError) as exc:
+	except (FeedbackError, DslError, GraphError) as exc:
+		# `GraphError` is here for the range refusal, and it belongs in the same
+		# bucket rather than escaping. It is a `ValueError` and neither of the
+		# other two, so a `--set capacity_factor=999` reached this call through
+		# `overrides` and left as an uncaught exception from inside a check that
+		# was never the answer -- which is exactly the failure this `except`
+		# exists to prevent. The graph still has no opinion about the identities
+		# in a scenario that states a value outside the parameter's admissible
+		# set, and that is what `failure` records.
 		return ScenarioAudit(
 			checked=(),
 			skipped=tuple(sorted(g.computed())),
