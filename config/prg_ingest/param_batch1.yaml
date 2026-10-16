@@ -1,0 +1,724 @@
+# Generated from docs/param_batch1.md by the parameter-equation ingestion.
+# Merged onto config/prg.yaml by alea.prg.graph.load_ingested().
+#
+# Repairs applied to the batch as delivered:
+#   R7: digital_divide_metrics also appears in param_batch3.md; that entry is kept and this one dropped
+#   R7: smart_metering_rollout also appears in param_batch7.md; that entry is kept and this one dropped
+#   R3: dropped rule 'demand_shares_over_unity' -- its condition needs arithmetic, which the cross-validation grammar refuses: residential_demand_share + commercial_demand_share + industrial_demand_share + agricultural_demand_share > 1.0
+#   R3: dropped rule 'share_parameters_sum_to_unity_fuel' -- its condition needs arithmetic, which the cross-validation grammar refuses: coal_ccs_adoption + gas_ccs_adoption > 1.0
+#   R3: dropped rule 'electrification_electrification_targets_exceed_demand' -- its condition needs arithmetic, which the cross-validation grammar refuses: industrial_electrification + industrial_heat_electrification > 1.5
+parameters:
+  carbon_tax_coverage:
+    name: Carbon tax coverage
+    description: Share of emissions the carbon tax applies to. A share; the shipped default of 500000
+      made every scenario that did not override it collect a tax five hundred thousand times larger than
+      intended.
+    category: Policy
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.5
+    role: free
+    determinism: policy
+    priority: P2
+    status: to_build
+    source: docs/params.md#4.3
+    users:
+    - Policymakers
+  coal_eaf:
+    name: Coal energy availability factor
+    description: Share of hours the coal fleet is available to generate. The EAF is a share; the shipped
+      range accepted values that would imply a fleet producing 500,000 times nameplate.
+    category: Supply-Side
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.55
+    role: free
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: docs/params.md#2.2
+    users:
+    - Utilities
+  gas_eaf:
+    name: Gas energy availability factor
+    description: Share of hours the gas fleet is available to generate. Same shape and same reasoning
+      as the coal EAF.
+    category: Supply-Side
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.85
+    role: free
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: docs/params.md#2.8
+    users:
+    - Utilities
+  oil_eaf:
+    name: Oil energy availability factor
+    description: Share of hours the oil fleet is available. Same shape as the other availability factors.
+    category: Supply-Side
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.85
+    role: free
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: docs/params.md#2.12
+    users:
+    - Utilities
+  cross_subsidy_level:
+    name: Cross-subsidy level
+    description: Share of one tariff class's revenue that subsidises another. A share; the shipped default
+      of 500000 would have moved 50,000,000% of revenue.
+    category: Policy
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.1
+    role: free
+    determinism: policy
+    priority: P2
+    status: to_build
+    source: docs/params.md#4.28
+    users:
+    - Regulators
+  ev_share_new_sales:
+    name: EV share of new vehicle sales
+    description: Fraction of new vehicle sales that are electric in the horizon year. A share of a flow,
+      not a stock; the shipped range admitted values 500,000 times the maximum.
+    category: Sector Coupling
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.2
+    role: free
+    determinism: stochastic
+    priority: P2
+    status: to_build
+    source: docs/params.md#6.22
+    users:
+    - Transport
+  industrial_electrification:
+    name: Industrial electrification share
+    description: Fraction of industrial process heat and motive power that is electric. A share; the shipped
+      default was wrong by five orders of magnitude.
+    category: Demand-Side
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.15
+    role: free
+    determinism: fixed
+    priority: P2
+    status: to_build
+    source: docs/params.md#1.33
+    users:
+    - Industry
+  industrial_heat_electrification:
+    name: Industrial heat electrification share
+    description: Fraction of industrial heat demand met by electricity. A share.
+    category: Sector Coupling
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.1
+    role: free
+    determinism: fixed
+    priority: P2
+    status: to_build
+    source: docs/params.md#6.20
+    users:
+    - Industry
+  mining_electrification:
+    name: Mining electrification share
+    description: Fraction of mining energy demand met by electricity. A share.
+    category: Sector Coupling
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.1
+    role: free
+    determinism: fixed
+    priority: P2
+    status: to_build
+    source: docs/params.md#6.39
+    users:
+    - Mining
+  local_content_requirement:
+    name: Local content requirement
+    description: Share of project inputs that must be sourced locally. A share; the shipped default of
+      500000 would have required 50,000,000% local content.
+    category: Policy
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.3
+    role: free
+    determinism: policy
+    priority: P2
+    status: to_build
+    source: docs/params.md#4.23
+    users:
+    - Regulators
+  local_content_requirements:
+    name: Local content requirements
+    description: Duplicate of `local_content_requirement` under a plural spelling. Corrected to the same
+      range and default; the duplication itself is a finding — the graph should not carry two ids for
+      one quantity, and the next batch should nominate one as canonical and mark the other deprecated.
+    category: Land Use & Community
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.3
+    role: free
+    determinism: policy
+    priority: P2
+    status: to_build
+    source: docs/params.md#28.9
+    users:
+    - Regulators
+  loss_factor_cross_border:
+    name: Cross-border loss factor
+    description: Share of cross-border flow lost in transit. A share; the shipped range admitted a loss
+      of 500,000 times the flow.
+    category: Transmission & Grid
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.03
+    role: free
+    determinism: physical
+    priority: P2
+    status: existing
+    source: docs/params.md#5.20
+    users:
+    - Planners
+  renewable_target:
+    name: Renewable target
+    description: Share of generation that must be renewable in the target year. A share; the shipped range
+      made a target of 500,000 a value the graph would accept.
+    category: Policy
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.6
+    role: free
+    determinism: policy
+    priority: P1
+    status: existing
+    source: docs/params.md#4.11
+    users:
+    - Policymakers
+  synthetic_fuel_share_aviation:
+    name: SAF share in aviation
+    description: Share of aviation fuel that is synthetic. A share.
+    category: Sector Coupling
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.05
+    role: free
+    determinism: policy
+    priority: P2
+    status: existing
+    source: docs/params.md#6.28
+    users:
+    - Aviation
+  synthetic_fuel_share_shipping:
+    name: Green shipping fuel share
+    description: Share of shipping fuel that is green. A share.
+    category: Sector Coupling
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.05
+    role: free
+    determinism: policy
+    priority: P2
+    status: existing
+    source: docs/params.md#6.29
+    users:
+    - Shipping
+  industrial_ccus_share:
+    name: Industrial CCUS adoption share
+    description: Share of industrial emissions captured. A share; the shipped graph declared [0, 1] with
+      default 0.5, which is a viable default but the range check already admitted it, so the correction
+      is to the default only.
+    category: Sector Coupling
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.1
+    role: free
+    determinism: fixed
+    priority: P2
+    status: integrate
+    source: docs/params.md#6.41
+    users:
+    - Industry
+  transmission_cost_multiplier:
+    name: Transmission cost multiplier
+    description: Scaling factor applied to a reference transmission cost. Not a share — a multiplier above
+      1.0 is admissible (harder terrain, higher labour costs) and one below 1.0 is admissible (competitive
+      tender). Shipped as a share, which refused every scenario with above-reference costs.
+    category: Transmission & Grid
+    type: float
+    unit: '1'
+    range:
+    - 0.5
+    - 3.0
+    default: 1.0
+    role: free
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: docs/params.md#5.2
+    users:
+    - Planners
+  tariff_indexation:
+    name: Tariff indexation rate
+    description: Annual rate at which the tariff is indexed. A rate, not a share; the shipped range admitted
+      an indexation of 500,000 per year.
+    category: Policy
+    type: float
+    unit: 1/year
+    range:
+    - 0.0
+    - 0.3
+    default: 0.05
+    role: free
+    determinism: policy
+    priority: P2
+    status: to_build
+    source: docs/params.md#4.31
+    users:
+    - Regulators
+  railway_electrification:
+    name: Railway electrification share
+    description: Share of the rail network that is electrified. A share; the shipped range admitted a
+      value 500,000 times the maximum.
+    category: Sector Coupling
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.2
+    role: free
+    determinism: fixed
+    priority: P3
+    status: to_build
+    source: docs/params.md#6.52
+    users:
+    - Transport
+  port_electrification:
+    name: Port electrification share
+    description: Share of port operations that are electric. A share.
+    category: Sector Coupling
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.1
+    role: free
+    determinism: fixed
+    priority: P3
+    status: to_build
+    source: docs/params.md#6.53
+    users:
+    - Ports
+  airport_electrification:
+    name: Airport electrification share
+    description: Share of airport ground operations that are electric. A share.
+    category: Sector Coupling
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.1
+    role: free
+    determinism: fixed
+    priority: P3
+    status: to_build
+    source: docs/params.md#6.54
+    users:
+    - Aviation
+  freight_electrification:
+    name: Freight electrification share
+    description: Share of freight tonne-kilometres moved by electric drivetrain. A share.
+    category: Sector Coupling
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.05
+    role: free
+    determinism: fixed
+    priority: P2
+    status: to_build
+    source: docs/params.md#6.31
+    users:
+    - Transport
+  agricultural_machinery:
+    name: Agricultural machinery electrification share
+    description: Share of agricultural machinery that is electric. A share.
+    category: Sector Coupling
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.05
+    role: free
+    determinism: fixed
+    priority: P3
+    status: to_build
+    source: docs/params.md#6.55
+    users:
+    - Agriculture
+  construction_machinery:
+    name: Construction machinery electrification share
+    description: Share of construction machinery that is electric. A share.
+    category: Sector Coupling
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.05
+    role: free
+    determinism: fixed
+    priority: P3
+    status: to_build
+    source: docs/params.md#6.56
+    users:
+    - Construction
+  internet_penetration:
+    name: Internet penetration
+    description: Share of the population with internet access. Shipped correctly as [0, 1]; the entry
+      is retained here only because a subsequent batch should reconcile the shipped shares into a single
+      naming convention (`_penetration` vs `_coverage` vs `_share` vs `_adoption`), and this is the register
+      where that reconciliation lands.
+    category: Digital
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.5
+    role: free
+    determinism: fixed
+    priority: P2
+    status: to_build
+    source: docs/params.md#21.9
+    users:
+    - Telecom
+  mobile_coverage:
+    name: Mobile network coverage
+    description: Share of the population covered by mobile signal. A share.
+    category: Digital
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.9
+    role: free
+    determinism: fixed
+    priority: P2
+    status: integrate
+    source: docs/params.md#21.8
+    users:
+    - Telecom
+  ammonia_export_share:
+    name: Ammonia export share
+    description: Share of hydrogen exported as ammonia rather than as hydrogen or a derivative. Shipped
+      correctly as [0, 1]; retained here for consistency of the register.
+    category: Sector Coupling
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.5
+    role: free
+    determinism: fixed
+    priority: P3
+    status: to_build
+    source: docs/params.md#6.12
+    users:
+    - Industry
+  district_heating_share:
+    name: District heating share
+    description: Share of urban heat demand met by district heating. Shipped correctly as [0, 1].
+    category: Sector Coupling
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.05
+    role: free
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: docs/params.md#6.17
+    users:
+    - Cities
+  public_transport_share:
+    name: Public transport modal share
+    description: Share of passenger-kilometres on public transport. Shipped correctly as [0, 1].
+    category: Sector Coupling
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.3
+    role: free
+    determinism: fixed
+    priority: P2
+    status: to_build
+    source: docs/params.md#6.30
+    users:
+    - Cities
+  hydrogen_vehicle_share:
+    name: Hydrogen vehicle share
+    description: Share of the vehicle stock powered by hydrogen. Shipped correctly as [0, 1].
+    category: Sector Coupling
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.02
+    role: free
+    determinism: fixed
+    priority: P3
+    status: existing
+    source: docs/params.md#6.27
+    users:
+    - Transport
+  commercial_demand_share:
+    name: Commercial demand share
+    description: Share of demand from the commercial sector. Shipped correctly as [0, 1]; retained for
+      register consistency.
+    category: Demand-Side
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.2
+    role: free
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: docs/params.md#1.9
+    users:
+    - Planners
+  residential_demand_share:
+    name: Residential demand share
+    description: Share of demand from households. Shipped correctly as [0, 1].
+    category: Demand-Side
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.35
+    role: free
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: docs/params.md#1.8
+    users:
+    - Planners
+  industrial_demand_share:
+    name: Industrial demand share
+    description: Share of demand from industry. Shipped correctly as [0, 1].
+    category: Demand-Side
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.35
+    role: free
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: docs/params.md#1.7
+    users:
+    - Planners
+  heat_pump_adoption:
+    name: Heat pump adoption share
+    description: Share of households with a heat pump. A share; shipped with [0, 1] but the default 0.5
+      was a placeholder half-market assumption and has been set to a defensible initial value.
+    category: Demand-Side
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.05
+    role: free
+    determinism: fixed
+    priority: P2
+    status: to_build
+    source: docs/params.md#1.28
+    users:
+    - Households
+  rooftop_solar_adoption:
+    name: Rooftop solar adoption share
+    description: Share of suitable rooftops with PV. A share; same reset of the placeholder default.
+    category: Demand-Side
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.1
+    role: free
+    determinism: fixed
+    priority: P2
+    status: to_build
+    source: docs/params.md#1.31
+    users:
+    - Households
+  battery_storage_adoption:
+    name: Behind-the-meter battery adoption share
+    description: Share of households with a battery. A share; same reset of the placeholder default.
+    category: Demand-Side
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.05
+    role: free
+    determinism: fixed
+    priority: P2
+    status: to_build
+    source: docs/params.md#1.32
+    users:
+    - Households
+  cooking_lpg_penetration:
+    name: LPG cooking penetration
+    description: Share of households cooking with LPG. A share; same reset of the placeholder default.
+    category: Demand-Side
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.2
+    role: free
+    determinism: fixed
+    priority: P2
+    status: to_build
+    source: docs/params.md#1.26
+    users:
+    - Households
+  time_of_use_tariff_adoption:
+    name: Time-of-use tariff adoption
+    description: Share of customers on a ToU tariff. A share; same reset of the placeholder default.
+    category: Demand-Side
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.1
+    role: free
+    determinism: fixed
+    priority: P2
+    status: to_build
+    source: docs/params.md#1.20
+    users:
+    - Regulators
+  irrigation_coverage:
+    name: Irrigation coverage
+    description: Share of arable land under irrigation. A share; the shipped range admitted a value 500,000
+      times the maximum.
+    category: Sector Coupling
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.15
+    role: free
+    determinism: fixed
+    priority: P2
+    status: to_build
+    source: docs/params.md#6.48
+    users:
+    - Agriculture
+  electrification_rate_target:
+    name: Electrification rate target
+    description: Target share of the population with electricity access. A share; the shipped range admitted
+      a target 500,000 times the maximum.
+    category: Demand-Side
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.9
+    role: free
+    determinism: policy
+    priority: P1
+    status: integrate
+    source: docs/params.md#1.21
+    users:
+    - Policymakers
+cross_validation:
+- id: learning_rates_out_of_range
+  condition: solar_pv_learning_rate > 0.40 or battery_learning_rate > 0.40 or electrolyser_learning_rate
+    > 0.40
+  severity: warning
+  message: A learning rate above 40% per doubling is outside the range the empirical literature reports
+    for any energy technology
+  suggestion: Use a rate from the empirical range, or record that this is a deliberately aggressive scenario

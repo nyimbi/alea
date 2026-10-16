@@ -24,7 +24,7 @@ from __future__ import annotations
 import math
 from collections import defaultdict, deque
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -57,11 +57,14 @@ from alea.prg.views import (
 __all__ = [
 	"CycleError",
 	"GraphError",
+	"IngestReport",
 	"ParameterGraph",
 	"PropagationResult",
 	"Violation",
+	"default_ingest_dir",
 	"default_prg_path",
 	"load_graph",
+	"load_ingested",
 ]
 
 
@@ -346,6 +349,93 @@ class ParameterGraph:
 		if not isinstance(document, dict):
 			raise GraphError(f"{path} does not hold a mapping at the top level")
 		return cls.from_mapping(document)
+
+	@classmethod
+	def from_fragments(
+		cls, paths: Iterable[str | Path]
+	) -> tuple[ParameterGraph, IngestReport]:
+		"""Merge generated fragments onto the shipped graph, or refuse.
+
+		WHY THIS EXISTS AT ALL. ``docs/param_ingest.md`` specifies
+		``config/prg_ingest/`` as the landing site for generated batches --
+		"the loader merges fragments and refuses a duplicate id whose bodies
+		differ" -- and until this method there was no such loader, so the eight
+		generated batches had no path into the graph. A specified location with
+		no reader is the recurring defect of this tree, and the specification
+		was the thing committing it.
+
+		WHY IT MERGES ONTO THE SHIPPED DOCUMENT RATHER THAN REPLACING IT. A
+		fragment states only what it adds or corrects. The shipped graph is the
+		reviewed kernel; a fragment that had to restate all 869 nodes to add
+		one would be a fragment nobody could review, and the one that omitted a
+		node would silently delete it.
+
+		WHY A DUPLICATE ID IS REFUSED RATHER THAN LAST-WINS. Two fragments
+		declaring one id with different bodies is two agents disagreeing about
+		a parameter, and there is no fact of the matter about which wrote
+		later: the file order is alphabetical, so last-wins would resolve the
+		disagreement by filename. An *identical* body is merged silently,
+		because two batches that agree are not a conflict.
+
+		The report is returned rather than logged because every count in it --
+		the merged total, the duplicates refused, the entries dropped -- is a
+		fact the caller has to act on, and a loader that printed them would let
+		a caller load a document it did not know was degraded.
+		"""
+		shipped = yaml.safe_load(default_prg_path().read_text())
+		if not isinstance(shipped, dict):
+			raise GraphError(
+				f"{default_prg_path()} does not hold a mapping at the top level"
+			)
+		document, report = _merge_fragments(shipped, paths)
+		graph = cls.from_mapping(document)
+		return graph, report
+
+	def _deprecated_reach(self) -> None:
+		"""Refuse an edge or an equation that reaches a deprecated node.
+
+		WHY THIS IS A LOAD ERROR AND NOT A REPORT. ``status: deprecated`` on a
+		node says the node should not be used, and the whole value of saying it
+		is that something acts on it. A status nothing reads is a label, and a
+		label on a node the graph still propagates through is worse than no
+		label: a reader who sees it believes the graph has stopped using the
+		parameter while every solve still does.
+
+		The check is on the *reach*, not the declaration. A deprecated node
+		with no edge and no equation naming it is a node nothing uses, which is
+		exactly what deprecating it was meant to achieve -- so it stays in the
+		document, and the alias register the fragment carries is how a caller
+		finds its replacement. Removing it would lose the record that it ever
+		existed, which is what a caller migrating a scenario needs.
+		"""
+		dead = {
+			name
+			for name, node in self._nodes.items()
+			if node.status == "deprecated"
+		}
+		if not dead:
+			return
+		for edge in self._edges:
+			for end, label in ((edge.source, "source"), (edge.target, "target")):
+				if end in dead:
+					raise GraphError(
+						f"edge {edge.source} -> {edge.target} has a deprecated "
+						f"{label} ({end}); the node's replacement is "
+						f"{self._nodes[end].deprecated_by!r}"
+					)
+		for equation in self._equations.values():
+			named = (
+				*equation.parameters,
+				*equation.free_variables,
+				*equation.determined_variables,
+			)
+			for name in named:
+				if name in dead:
+					raise GraphError(
+						f"equation {equation.id!r} names the deprecated "
+						f"parameter {name!r}; its replacement is "
+						f"{self._nodes[name].deprecated_by!r}"
+					)
 
 	# -- accessors ------------------------------------------------------
 
@@ -715,6 +805,7 @@ class ParameterGraph:
 	# -- validation -----------------------------------------------------
 
 	def _validate(self) -> None:
+		self._deprecated_reach()
 		for edge in self._edges:
 			if edge.source not in self._nodes:
 				raise GraphError(
@@ -731,6 +822,32 @@ class ParameterGraph:
 					f"edge {edge.source} -> {edge.target} cites equation "
 					f"{edge.equation_id!r}, which the library does not hold"
 				)
+
+		# Gate 6 of `docs/param_ingest.md`: both endpoints of every edge must
+		# appear in the symbols of the equation it cites. The spec states it as
+		# a rule and `docs/param_ingest.md` says the loader enforces it, and
+		# nothing did -- which is why 26 of one batch set's 145 edges cite an
+		# equation that does not hold them. The check is cheap here because the
+		# arithmetic is parsed below for a different reason; it is done first so
+		# the failure names the edge rather than the equation.
+		for edge in self._edges:
+			equation = self._equations[edge.equation_id]
+			try:
+				held = parse(equation.lhs).symbols | parse(equation.rhs).symbols
+			except DslError:
+				# The malformed-arithmetic error is raised by the loop below,
+				# with the equation's own id. Reporting it here as well would
+				# name the edge for a defect that is the equation's.
+				continue
+			for end, label in ((edge.source, "source"), (edge.target, "target")):
+				if end not in held:
+					raise GraphError(
+						f"edge {edge.source} -> {edge.target} names {end!r} as "
+						f"its {label}, and {edge.equation_id!r} does not hold "
+						f"it; an edge is a claim about a coupling the equation "
+						f"states, and this one claims a coupling that is not in "
+						f"the arithmetic"
+					)
 
 		for equation in self._equations.values():
 			unknown = (set(equation.parameters) | set(equation.free_variables)) - set(
@@ -1506,6 +1623,248 @@ class ParameterGraph:
 		if equation.relation == "leq":
 			return residual <= equation.tolerance
 		return residual >= -equation.tolerance
+
+
+#: The four registers a fragment may declare. Anything else is refused rather
+#: than ignored: a fragment whose key nothing reads is a batch that believes it
+#: contributed something, and the loader is the only place that can say it did
+#: not.
+_FRAGMENT_REGISTERS = (
+	"parameters",
+	"equations",
+	"relationships",
+	"cross_validation",
+	"aliases",
+)
+
+
+@dataclass(frozen=True)
+class IngestReport:
+	"""What a fragment merge did, entry by entry.
+
+	Every field is a count the caller has to act on, which is why this is
+	returned rather than printed. ``refused`` and ``unknown`` in particular are
+	not warnings: the first is two batches disagreeing about a parameter, and
+	the second is a fragment key this loader does not read. A loader that
+	logged either and returned a graph would hand the caller a document it did
+	not know was degraded -- the clean-bill-of-health failure the rest of this
+	module is built to avoid.
+	"""
+
+	#: fragment path -> how many entries of each register it contributed.
+	per_file: dict[str, dict[str, int]] = field(default_factory=dict)
+	#: ``(id, first file, second file)`` for every id two fragments declared
+	#: with differing bodies. Refused, never merged.
+	refused: tuple[tuple[str, str, str], ...] = ()
+	#: ``(file, key)`` for every top-level key this loader does not read.
+	unknown: tuple[tuple[str, str], ...] = ()
+	#: ``(id, file)`` for entries an *identical* body declared twice. Merged,
+	#: because two batches that agree are not a conflict.
+	redundant: tuple[tuple[str, str], ...] = ()
+	#: ``(register, id, file)`` for every shipped entry a fragment replaced.
+	#: Not a defect -- correcting a node is what Register 1 is for -- but the
+	#: count is the review surface: a batch that corrects 219 nodes and
+	#: reports none is one whose diff nobody can see.
+	corrected: tuple[tuple[str, str, str], ...] = ()
+	#: ``(id, file, why)`` for entries dropped before the merge: a node whose
+	#: body is not a mapping, an equation with no arithmetic.
+	dropped: tuple[tuple[str, str, str], ...] = ()
+	#: Totals after the merge, so a caller can see the register grow.
+	counts: dict[str, int] = field(default_factory=dict)
+
+	def __bool__(self) -> bool:
+		"""False when the merge lost or refused nothing."""
+		return not (self.refused or self.unknown or self.dropped)
+
+	def summary(self) -> str:
+		lines = [
+			f"fragments: {len(self.per_file)}",
+			"  " + "  ".join(f"{k}={v}" for k, v in sorted(self.counts.items())),
+		]
+		for label, rows in (
+			("REFUSED (duplicate id, bodies differ)", self.refused),
+			("UNKNOWN register", self.unknown),
+			("DROPPED", self.dropped),
+		):
+			if rows:
+				lines.append(f"  {label}: {len(rows)}")
+				for row in rows[:8]:
+					lines.append(f"    {' | '.join(str(r) for r in row)}")
+				if len(rows) > 8:
+					lines.append(f"    ... {len(rows)} total")
+		if self.redundant:
+			lines.append(f"  redundant (identical body twice): {len(self.redundant)}")
+		if self.corrected:
+			by_file: dict[str, int] = {}
+			for _register, _identifier, path in self.corrected:
+				by_file[path] = by_file.get(path, 0) + 1
+			lines.append(
+				f"  shipped entries corrected: {len(self.corrected)}  "
+				+ "  ".join(f"{k}={v}" for k, v in sorted(by_file.items()))
+			)
+		return "\n".join(lines)
+
+
+def default_ingest_dir() -> Path:
+	return paths.repo_root() / "config" / "prg_ingest"
+
+
+def _merge_fragments(
+	shipped: Mapping[str, Any], paths: Iterable[str | Path]
+) -> tuple[dict[str, Any], IngestReport]:
+	"""Merge generated fragments onto a shipped document.
+
+	The document is not mutated: a caller that merges twice from one parse
+	gets the same answer, and a refused merge leaves the shipped mapping
+	exactly as it was found.
+	"""
+	document: dict[str, Any] = {
+		"parameters": dict(shipped.get("parameters") or {}),
+		"equations": dict(shipped.get("equations") or {}),
+		"relationships": list(shipped.get("relationships") or []),
+		"cross_validation": list(shipped.get("cross_validation") or []),
+	}
+	# `(register, id) -> (body, file)` for every entry a *fragment* has
+	# claimed. The shipped document is deliberately absent from this table:
+	# Register 1 is "only nodes being added or corrected", so a fragment
+	# overwriting a shipped node is the register doing its job, and refusing
+	# it would make the 691 placeholder nodes uncorrectable. A duplicate is
+	# two *fragments* disagreeing, which is the case with no fact of the
+	# matter -- the file order is alphabetical, so resolving it by order would
+	# resolve it by filename.
+	seen: dict[tuple[str, str], tuple[Any, str]] = {}
+	#: Every shipped entry a fragment replaced, so the correction is counted
+	#: rather than silent. A batch that corrects 219 nodes and reports none is
+	#: a batch whose review cannot see what it changed.
+	corrected: list[tuple[str, str, str]] = []
+	shipped_bodies: dict[tuple[str, str], Any] = {}
+	for register in ("parameters", "equations"):
+		for key, body in document[register].items():
+			shipped_bodies[(register, key)] = body
+
+	per_file: dict[str, dict[str, int]] = {}
+	refused: list[tuple[str, str, str]] = []
+	unknown: list[tuple[str, str]] = []
+	redundant: list[tuple[str, str]] = []
+	dropped: list[tuple[str, str, str]] = []
+	aliases: dict[str, str] = {}
+
+	for path in paths:
+		path = Path(path)
+		raw = yaml.safe_load(path.read_text())
+		if not isinstance(raw, dict):
+			dropped.append((path.name, "<document>", "not a mapping at the top level"))
+			continue
+		counts: dict[str, int] = {}
+		for key in raw:
+			if key not in _FRAGMENT_REGISTERS:
+				unknown.append((path.name, str(key)))
+
+		for register in ("parameters", "equations"):
+			body_map = raw.get(register) or {}
+			if not isinstance(body_map, dict):
+				dropped.append(
+					(path.name, register, f"{type(body_map).__name__}, not a mapping")
+				)
+				continue
+			for entry_id, body in body_map.items():
+				if not isinstance(body, dict):
+					dropped.append(
+						(path.name, str(entry_id), f"body is {type(body).__name__}")
+					)
+					continue
+				prior = seen.get((register, entry_id))
+				if prior is not None:
+					if prior[0] != body:
+						refused.append((str(entry_id), prior[1], path.name))
+					else:
+						redundant.append((str(entry_id), path.name))
+					continue
+				seen[(register, entry_id)] = (body, path.name)
+				old = shipped_bodies.get((register, entry_id))
+				if old is not None and old != body:
+					corrected.append((register, str(entry_id), path.name))
+				document[register][entry_id] = dict(body)
+				counts[register] = counts.get(register, 0) + 1
+
+		for register in ("relationships", "cross_validation"):
+			items = raw.get(register) or []
+			if not isinstance(items, list):
+				dropped.append(
+					(path.name, register, f"{type(items).__name__}, not a list")
+				)
+				continue
+			for item in items:
+				if not isinstance(item, dict):
+					dropped.append(
+						(path.name, register, f"item is {type(item).__name__}")
+					)
+					continue
+				key = item.get("id") or f"{item.get('source')}->{item.get('target')}"
+				prior = seen.get((register, str(key)))
+				if prior is not None:
+					if prior[0] != item:
+						refused.append((str(key), prior[1], path.name))
+					else:
+						redundant.append((str(key), path.name))
+					continue
+				seen[(register, str(key))] = (item, path.name)
+				document[register].append(dict(item))
+				counts[register] = counts.get(register, 0) + 1
+
+		alias_map = raw.get("aliases") or {}
+		if isinstance(alias_map, dict):
+			for old, new in alias_map.items():
+				aliases[str(old)] = str(new)
+			counts["aliases"] = counts.get("aliases", 0) + len(alias_map)
+		per_file[path.name] = counts
+
+	# A deprecated node's replacement must exist, and the alias register is
+	# where a fragment states the mapping. Checked here rather than in the
+	# node validator, which cannot see the rest of the document.
+	known = set(document["parameters"])
+	for old, new in aliases.items():
+		if old not in known:
+			dropped.append(("<aliases>", old, "alias for a parameter not declared"))
+		elif new not in known:
+			dropped.append(("<aliases>", old, f"replacement {new!r} is not declared"))
+		elif (
+			isinstance(body := document["parameters"].get(old), dict)
+			and body.get("deprecated_by") not in (None, new)
+		):
+			refused.append(
+				(old, "<alias register>", f"deprecated_by={body.get('deprecated_by')!r}")
+			)
+
+	report = IngestReport(
+		per_file=per_file,
+		refused=tuple(refused),
+		unknown=tuple(unknown),
+		redundant=tuple(redundant),
+		corrected=tuple(corrected),
+		dropped=tuple(dropped),
+		counts={k: len(v) for k, v in document.items()},
+	)
+	return document, report
+
+
+def load_ingested(
+	directory: str | Path | None = None,
+) -> tuple[ParameterGraph, IngestReport]:
+	"""Load the shipped graph with every fragment in ``directory`` merged on.
+
+	The default directory is ``config/prg_ingest/``, the location
+	``docs/param_ingest.md`` names. Fragments are read in sorted filename
+	order so the merge is deterministic -- the order matters only for which
+	fragment a refusal *names first*, never for the result, because a
+	duplicate whose bodies differ is refused rather than resolved by order.
+
+	A directory that does not exist is not an error: it is the state of a tree
+	with no fragments generated yet, and the answer is the shipped graph.
+	"""
+	directory = Path(directory) if directory is not None else default_ingest_dir()
+	paths = sorted(directory.glob("*.yaml")) + sorted(directory.glob("*.yml"))
+	return ParameterGraph.from_fragments(paths)
 
 
 #: ``(resolved path, mtime_ns, size) -> graph`` for the last document loaded.

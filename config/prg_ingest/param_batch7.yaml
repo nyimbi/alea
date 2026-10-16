@@ -1,0 +1,436 @@
+# Generated from docs/param_batch7.md by the parameter-equation ingestion.
+# Merged onto config/prg.yaml by alea.prg.graph.load_ingested().
+#
+# Repairs applied to the batch as delivered:
+#   retired edge solar_pv_cost -> capex_solar_pv (Self-loop after alias resolution. Removed.)
+#   retired edge wind_onshore_cost -> capex_wind_onshore (Self-loop after alias resolution. Removed.)
+#   R7: battery_cost also appears in param_batch2.md; that entry is kept and this one dropped
+#   R7: biogas_cost also appears in param_batch3.md; that entry is kept and this one dropped
+#   R7: compressed_air_cost also appears in param_batch3.md; that entry is kept and this one dropped
+#   R7: customs_duty also appears in param_batch5.md; that entry is kept and this one dropped
+#   R7: electrolyser_cost also appears in param_batch2.md; that entry is kept and this one dropped
+#   R7: flywheel_cost also appears in param_batch3.md; that entry is kept and this one dropped
+#   R7: fusion_cost also appears in param_batch3.md; that entry is kept and this one dropped
+#   R7: gasification_cost also appears in param_batch3.md; that entry is kept and this one dropped
+#   R7: geothermal_cost also appears in param_batch2.md; that entry is kept and this one dropped
+#   R7: hydrogen_fuel_cell_cost also appears in param_batch3.md; that entry is kept and this one dropped
+#   R7: landfill_gas_cost also appears in param_batch3.md; that entry is kept and this one dropped
+#   R7: phs_cost also appears in param_batch2.md; that entry is kept and this one dropped
+#   R7: pyrolysis_cost also appears in param_batch3.md; that entry is kept and this one dropped
+#   R7: salinity_gradient_cost also appears in param_batch3.md; that entry is kept and this one dropped
+#   R7: small_modular_reactor_cost also appears in param_batch3.md; that entry is kept and this one dropped
+#   R7: smart_metering_rollout is claimed by ['param_batch1.md', 'param_batch7.md']; this entry kept
+#   R7: solar_pv_cost also appears in param_batch2.md; that entry is kept and this one dropped
+#   R7: tidal_range_cost also appears in param_batch3.md; that entry is kept and this one dropped
+#   R7: unit_commitment also appears in param_batch4.md; that entry is kept and this one dropped
+#   R7: waste_to_energy_cost also appears in param_batch3.md; that entry is kept and this one dropped
+#   R7: wave_energy_converter_cost also appears in param_batch3.md; that entry is kept and this one dropped
+#   R7: wind_offshore_cost also appears in param_batch2.md; that entry is kept and this one dropped
+#   R7: wind_onshore_cost also appears in param_batch2.md; that entry is kept and this one dropped
+#   R3: dropped rule 'alias_target_exists' -- its condition needs a function call, which the cross-validation grammar refuses: not (is_declared(capex_solar_pv) and is_declared(capex_wind_onshore) and is_declared(capex_battery) and is_declared(capex_phs) and is_declared(capex_geothermal) and is_declared(capex_hydrogen_electrolyser) and is_declared(capex_marine_wave) and is_declared(capex_smr) and is_declared(capex_fusion) and is_declared(capex_caes) and is_declared(capex_flywheel) and is_declared(capex_hydrogen_fuel_cell) and is_declared(capex_tidal_range) and is_declared(capex_salinity_gradient) and is_declared(capex_biogas) and is_declared(capex_landfill_gas) and is_declared(capex_waste_to_energy) and is_declared(capex_pyrolysis) and is_declared(capex_gasification) and is_declared(demand_growth) and is_declared(cross_border_trade_allowed) and is_declared(import_duty_equipment))
+#   R3: dropped rule 'alias_value_drift' -- its condition needs a function call, which the cross-validation grammar refuses: abs(solar_pv_cost - capex_solar_pv) > 0.01 or abs(wind_onshore_cost - capex_wind_onshore) > 0.01 or abs(battery_cost - capex_battery) > 0.01
+#   R3: dropped rule 'deprecated_node_referenced' -- its condition needs a function call, which the cross-validation grammar refuses: is_referenced(solar_pv_cost) or is_referenced(wind_onshore_cost) or is_referenced(battery_cost) or is_referenced(demand_growth_rate) or is_referenced(cross_border_trading)
+#   R3: dropped rule 'alias_cycle' -- its condition needs a function call, which the cross-validation grammar refuses: alias_of(solar_pv_cost) == capex_solar_pv and alias_of(capex_solar_pv) == solar_pv_cost
+#   R3: dropped rule 'endogenous_component_free_total' -- its condition needs a function call, which the cross-validation grammar refuses: is_free(coal_capacity) and is_endogenous(firm_capacity_mw)
+#   R3: dropped rule 'endogenous_without_range_or_default' -- its condition needs a function call, which the cross-validation grammar refuses: is_endogenous(coal_capacity) and (not has_range(coal_capacity) or not has_default(coal_capacity))
+parameters:
+  demand_growth_rate:
+    name: Demand growth rate (deprecated)
+    description: DEPRECATED. Duplicate of `demand_growth`. The shipped node declared unit "1" and range
+      [0, 1] and a placeholder default; the canonical id carries the correct unit `1/year` and the correct
+      range. A scenario that reads the deprecated id would silently get a growth rate on the wrong scale.
+    category: Demand-Side
+    type: float
+    unit: 1/year
+    range:
+    - -0.05
+    - 0.15
+    default: 0.04
+    role: free
+    determinism: fixed
+    priority: P3
+    status: deprecated
+    deprecated_by: demand_growth
+  cross_border_trading:
+    name: Cross-border trading (deprecated)
+    description: DEPRECATED. Duplicate of `cross_border_trade_allowed`. The shipped node was typed float;
+      the canonical is boolean.
+    category: Market Design
+    type: bool
+    range:
+    - 0.0
+    - 1.0
+    default: 1.0
+    role: free
+    determinism: policy
+    priority: P3
+    status: deprecated
+    deprecated_by: cross_border_trade_allowed
+  coal_capacity:
+    name: Coal capacity
+    description: 'Installed coal capacity, chosen by the optimiser. Corrected from `free` to `endogenous`:
+      the fleet total the graph already declares as endogenous is the sum of the components, and a component
+      the caller sets and a total the optimiser chooses would disagree silently.'
+    category: Supply-Side
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 200000.0
+    default: 20000.0
+    role: endogenous
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: docs/params.md#2.1
+    users:
+    - Utilities
+  gas_capacity:
+    name: Gas capacity
+    description: Installed gas capacity, chosen by the optimiser. Same role correction as coal.
+    category: Supply-Side
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 200000.0
+    default: 15000.0
+    role: endogenous
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: docs/params.md#2.7
+    users:
+    - Utilities
+  oil_capacity:
+    name: Oil capacity
+    description: Installed oil capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 50000.0
+    default: 5000.0
+    role: endogenous
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: docs/params.md#2.11
+    users:
+    - Utilities
+  nuclear_capacity:
+    name: Nuclear capacity
+    description: Installed nuclear capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 20000.0
+    default: 0.0
+    role: endogenous
+    determinism: fixed
+    priority: P3
+    status: existing
+    source: docs/params.md#2.13
+    users:
+    - Planners
+  hydro_capacity:
+    name: Hydro capacity
+    description: Installed hydropower capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 100000.0
+    default: 5000.0
+    role: endogenous
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: docs/params.md#2.27
+    users:
+    - All
+  solar_pv_capacity:
+    name: Solar PV capacity
+    description: Installed solar PV capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 500000.0
+    default: 10000.0
+    role: endogenous
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: docs/params.md#2.16
+    users:
+    - All
+  wind_onshore_capacity:
+    name: Onshore wind capacity
+    description: Installed onshore wind capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 300000.0
+    default: 8000.0
+    role: endogenous
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: docs/params.md#2.22
+    users:
+    - All
+  wind_offshore_capacity:
+    name: Offshore wind capacity
+    description: Installed offshore wind capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 100000.0
+    default: 0.0
+    role: endogenous
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: docs/params.md#2.24
+    users:
+    - All
+  biomass_capacity:
+    name: Biomass capacity
+    description: Installed biomass capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 30000.0
+    default: 500.0
+    role: endogenous
+    determinism: fixed
+    priority: P2
+    status: to_build
+    source: docs/params.md#2.35
+    users:
+    - Developers
+  geothermal_capacity:
+    name: Geothermal capacity
+    description: Installed geothermal capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 30000.0
+    default: 1000.0
+    role: endogenous
+    determinism: fixed
+    priority: P1
+    status: to_build
+    source: docs/params.md#2.32
+    users:
+    - Developers
+  csp_capacity:
+    name: CSP capacity
+    description: Installed CSP capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 30000.0
+    default: 0.0
+    role: endogenous
+    determinism: fixed
+    priority: P2
+    status: to_build
+    source: docs/params.md#2.38
+    users:
+    - Developers
+  battery_capacity:
+    name: Battery capacity
+    description: Installed battery power capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 200000.0
+    default: 2000.0
+    role: endogenous
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: docs/params.md#2.43
+    users:
+    - All
+  phs_capacity:
+    name: Pumped hydro capacity
+    description: Installed pumped hydro power capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 50000.0
+    default: 1000.0
+    role: endogenous
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: docs/params.md#2.48
+    users:
+    - Utilities
+  hydrogen_storage_capacity:
+    name: Hydrogen storage capacity
+    description: Installed hydrogen storage capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    type: float
+    unit: MWh
+    range:
+    - 0.0
+    - 10000000.0
+    default: 0.0
+    role: endogenous
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: docs/params.md#2.51
+    users:
+    - Industry
+  thermal_storage_capacity:
+    name: Thermal storage capacity
+    description: Installed thermal storage capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    type: float
+    unit: MWh
+    range:
+    - 0.0
+    - 5000000.0
+    default: 0.0
+    role: endogenous
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: docs/params.md#2.53
+    users:
+    - Industry
+  topology_switching_enabled:
+    name: Topology switching enabled
+    description: Corrected from float to bool. The parameter is on or off; the shipped [0, 1e6] admitted
+      a value 500,000 times the maximum.
+    category: Loss Mitigation
+    type: bool
+    role: free
+    determinism: policy
+    priority: P2
+    status: to_build
+    source: docs/params.md#8.21
+    users:
+    - Utilities
+  phase_shifting_enabled:
+    name: Phase shifting enabled
+    description: Corrected from float to bool.
+    category: Loss Mitigation
+    type: bool
+    role: free
+    determinism: policy
+    priority: P3
+    status: to_build
+    source: docs/params.md#8.22
+    users:
+    - Utilities
+  voltage_optimisation_enabled:
+    name: Voltage optimisation enabled
+    description: Corrected from float to bool.
+    category: Loss Mitigation
+    type: bool
+    role: free
+    determinism: policy
+    priority: P2
+    status: to_build
+    source: docs/params.md#8.23
+    users:
+    - Utilities
+  dg_placement_enabled:
+    name: Distributed generation placement enabled
+    description: Corrected from float to bool.
+    category: Loss Mitigation
+    type: bool
+    role: free
+    determinism: policy
+    priority: P2
+    status: to_build
+    source: docs/params.md#8.24
+    users:
+    - Utilities
+  storage_dispatch_enabled:
+    name: Storage dispatch enabled
+    description: Corrected from float to bool.
+    category: Loss Mitigation
+    type: bool
+    role: free
+    determinism: policy
+    priority: P2
+    status: existing
+    source: docs/params.md#8.25
+    users:
+    - Utilities
+  outage_coordination:
+    name: Outage coordination enabled
+    description: Corrected from float to bool. Whether planned outages are coordinated across the fleet;
+      a scenario either models the coordination or does not.
+    category: Operational
+    type: bool
+    role: free
+    determinism: policy
+    priority: P2
+    status: to_build
+    source: docs/params.md#11.23
+    users:
+    - Utilities
+  smart_metering_rollout:
+    name: Smart metering rollout (deprecated type marker)
+    description: Corrected from float to bool. The shipped node is a rollout — a programme that is either
+      on or off — not the penetration share; the share is `smart_metering_penetration`.
+    category: Digital
+    type: bool
+    role: free
+    determinism: policy
+    priority: P2
+    status: to_build
+    source: docs/params.md#21.10
+    users:
+    - Utilities
+aliases:
+  solar_pv_cost: capex_solar_pv
+  wind_onshore_cost: capex_wind_onshore
+  wind_offshore_cost: capex_wind_offshore
+  battery_cost: capex_battery
+  phs_cost: capex_phs
+  geothermal_cost: capex_geothermal
+  electrolyser_cost: capex_hydrogen_electrolyser
+  wave_energy_converter_cost: capex_marine_wave
+  small_modular_reactor_cost: capex_smr
+  fusion_cost: capex_fusion
+  compressed_air_cost: capex_caes
+  flywheel_cost: capex_flywheel
+  hydrogen_fuel_cell_cost: capex_hydrogen_fuel_cell
+  tidal_range_cost: capex_tidal_range
+  salinity_gradient_cost: capex_salinity_gradient
+  biogas_cost: capex_biogas
+  landfill_gas_cost: capex_landfill_gas
+  waste_to_energy_cost: capex_waste_to_energy
+  pyrolysis_cost: capex_pyrolysis
+  gasification_cost: capex_gasification
+  demand_growth_rate: demand_growth
+  cross_border_trading: cross_border_trade_allowed
+  customs_duty: import_duty_equipment

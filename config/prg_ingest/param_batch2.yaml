@@ -1,0 +1,1412 @@
+# Generated from docs/param_batch2.md by the parameter-equation ingestion.
+# Merged onto config/prg.yaml by alea.prg.graph.load_ingested().
+#
+# Repairs applied to the batch as delivered:
+#   R7: battery_cost is claimed by ['param_batch2.md', 'param_batch7.md']; this entry kept
+#   R7: electrolyser_cost is claimed by ['param_batch2.md', 'param_batch7.md']; this entry kept
+#   R7: geothermal_cost is claimed by ['param_batch2.md', 'param_batch7.md']; this entry kept
+#   R7: phs_cost is claimed by ['param_batch2.md', 'param_batch7.md']; this entry kept
+#   R7: solar_pv_cost is claimed by ['param_batch2.md', 'param_batch7.md']; this entry kept
+#   R7: wind_offshore_cost is claimed by ['param_batch2.md', 'param_batch7.md']; this entry kept
+#   R7: wind_onshore_cost is claimed by ['param_batch2.md', 'param_batch7.md']; this entry kept
+#   R8: coal_price_per_mwh -> fuel_cost_coal declared relationship='informational', which is a Strength value not a Relationship class; set to 'functional' (its strength is 'informational')
+#   R8: gas_price_per_mwh -> fuel_cost_gas declared relationship='informational', which is a Strength value not a Relationship class; set to 'functional' (its strength is 'informational')
+#   R9: dropped edge coal_price_per_mwh -> fuel_cost_coal -- 'coal_price_per_mwh_definition' does not hold both endpoints (gate 6)
+#   R9: dropped edge gas_price_per_mwh -> fuel_cost_gas -- 'gas_price_per_mwh_definition' does not hold both endpoints (gate 6)
+#   R3: dropped rule 'capex_duplicates_disagree' -- its condition needs a function call, which the cross-validation grammar refuses: abs(capex_solar_pv - solar_pv_cost) > 1.0 or abs(capex_wind_onshore - wind_onshore_cost) > 1.0 or abs(capex_battery - battery_cost) > 1.0
+#   R3: dropped rule 'hydrogen_price_far_from_lcoh' -- its condition needs a function call, which the cross-validation grammar refuses: abs(hydrogen_price - lcoe_hydrogen_usd_per_mwh) > 100
+#   R3: dropped rule 'lcoe_solar_and_wind_disagree' -- its condition needs a function call, which the cross-validation grammar refuses: abs(lcoe_solar_usd_per_mwh - lcoe_wind_usd_per_mwh) > 200 and lcoe_solar_usd_per_mwh > 0 and lcoe_wind_usd_per_mwh > 0
+#   R10: lcoe_solar_definition was cited at ['hard', 'soft']; every edge citing it set to strength='soft', because the strength is a property of the equation
+#   R10: lcoe_wind_definition was cited at ['hard', 'soft']; every edge citing it set to strength='soft', because the strength is a property of the equation
+parameters:
+  capex_solar_pv:
+    name: Solar PV capital cost
+    description: Overnight installed cost of utility-scale solar PV. Range spans the 5th–95th percentile
+      of IRENA's 2023 country-level observations; not a single point estimate, because the point estimate
+      is the parameter the caller is about to set.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 300.0
+    - 3000.0
+    default: 1100.0
+    role: free
+    determinism: stochastic
+    priority: P1
+    status: existing
+    source: IRENA, Renewable Power Generation Costs in 2023
+    users:
+    - All
+  capex_wind_onshore:
+    name: Onshore wind capital cost
+    description: Overnight installed cost of onshore wind. Range from IRENA's 2023 observations; the low
+      end is the best-in-class site, the high end is a first-of-a-kind project in a market with no wind
+      supply chain.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 800.0
+    - 3500.0
+    default: 1600.0
+    role: free
+    determinism: stochastic
+    priority: P1
+    status: existing
+    source: IRENA, Renewable Power Generation Costs in 2023
+    users:
+    - All
+  capex_wind_offshore:
+    name: Offshore wind capital cost
+    description: Overnight installed cost of offshore wind. Range spans fixed-bottom at the low end to
+      floating at the high end; the platform parameter selects which half of the range a scenario draws
+      from.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 1500.0
+    - 6000.0
+    default: 3200.0
+    role: free
+    determinism: stochastic
+    priority: P2
+    status: existing
+    source: IRENA, Renewable Power Generation Costs in 2023
+    users:
+    - Developers
+  capex_hydro:
+    name: Hydropower capital cost
+    description: Overnight installed cost of hydropower. The range is wide because it spans run-of-river
+      at the low end to large storage with significant civil works at the high end.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 1000.0
+    - 8000.0
+    default: 2500.0
+    role: free
+    determinism: stochastic
+    priority: P1
+    status: existing
+    source: IRENA, Renewable Power Generation Costs in 2023
+    users:
+    - Developers
+  capex_geothermal:
+    name: Geothermal capital cost
+    description: Overnight installed cost of geothermal. The high end of the range is the resource-risk
+      premium — a well that is drilled and found dry.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 2000.0
+    - 8000.0
+    default: 4000.0
+    role: free
+    determinism: stochastic
+    priority: P1
+    status: existing
+    source: IRENA, Renewable Power Generation Costs in 2023
+    users:
+    - Developers
+  capex_biomass:
+    name: Biomass capital cost
+    description: Overnight installed cost of biomass-fired generation. The range spans combustion at the
+      low end to gasification combined cycle at the high end.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 1000.0
+    - 5000.0
+    default: 2400.0
+    role: free
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: IRENA, Renewable Power Generation Costs in 2023
+    users:
+    - Developers
+  capex_csp:
+    name: CSP capital cost
+    description: Overnight installed cost of concentrated solar power with thermal storage. The range
+      spans a plant with 4 hours of storage at the low end to 15 hours at the high end.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 3000.0
+    - 10000.0
+    default: 5500.0
+    role: free
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: IRENA, Renewable Power Generation Costs in 2023
+    users:
+    - Developers
+  capex_coal:
+    name: Coal capital cost
+    description: Overnight installed cost of coal generation. Supercritical pulverised at the low end,
+      ultra-supercritical with partial CCS at the high end. US$/kW 2023.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 1000.0
+    - 4500.0
+    default: 2000.0
+    role: free
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: IEA, Projected Costs of Generating Electricity 2020
+    users:
+    - Planners
+  capex_gas_ccgt:
+    name: Gas CCGT capital cost
+    description: Overnight installed cost of combined-cycle gas turbine. Range spans single-shaft at the
+      low end to multi-shaft with district heating at the high end.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 500.0
+    - 2000.0
+    default: 1100.0
+    role: free
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: IEA, Projected Costs of Generating Electricity 2020
+    users:
+    - Planners
+  capex_gas_ocgt:
+    name: Gas OCGT capital cost
+    description: Overnight installed cost of open-cycle gas turbine. Lower capex and lower efficiency
+      than the CCGT; that trade is why both live in the graph.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 300.0
+    - 1200.0
+    default: 650.0
+    role: free
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: IEA, Projected Costs of Generating Electricity 2020
+    users:
+    - Planners
+  capex_nuclear:
+    name: Nuclear capital cost
+    description: Overnight installed cost of nuclear generation. Range spans a serial build in a mature
+      programme at the low end to a first-of-a-kind SMR at the high end; the sample contains neither and
+      the range is widened accordingly.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 3000.0
+    - 10000.0
+    default: 6000.0
+    role: free
+    determinism: fixed
+    priority: P3
+    status: existing
+    source: IEA, Projected Costs of Generating Electricity 2020
+    users:
+    - Planners
+  capex_battery:
+    name: Battery capital cost
+    description: Installed cost of grid-scale battery storage, in USD per kWh of energy capacity. The
+      unit is the kWh, not the kW, because a battery's cost scales with its energy, not its power.
+    category: Cost
+    type: float
+    unit: USD/kWh
+    range:
+    - 100.0
+    - 800.0
+    default: 250.0
+    role: free
+    determinism: stochastic
+    priority: P1
+    status: existing
+    source: BNEF Battery Price Survey 2024, adjusted to installed cost
+    users:
+    - All
+  capex_phs:
+    name: PHS capital cost
+    description: Installed cost of pumped hydro storage, in USD per kW of power capacity. The range depends
+      on the site — head, reservoir volume, geology — and no single value represents the technology.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 1000.0
+    - 5000.0
+    default: 2200.0
+    role: free
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: IEA, Projected Costs of Generating Electricity 2020
+    users:
+    - Utilities
+  capex_hydrogen_electrolyser:
+    name: Electrolyser capital cost
+    description: Installed cost of electrolysis capacity. The range spans alkaline at the low end to PEM
+      at the high end; SOEC is above the range and not a mature deployment technology in the sample.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 300.0
+    - 2000.0
+    default: 800.0
+    role: free
+    determinism: stochastic
+    priority: P2
+    status: existing
+    source: IEA Global Hydrogen Review 2024
+    users:
+    - Industry
+  capex_transmission:
+    name: Transmission line capital cost
+    description: Installed cost of transmission per megawatt of capacity per kilometre of route. Unit
+      is MW-km, not km, because cost scales with both. Range spans 220 kV overhead at the low end to 765
+      kV with substations at the high end.
+    category: Cost
+    type: float
+    unit: USD/MW-km
+    range:
+    - 50.0
+    - 5000.0
+    default: 400.0
+    role: free
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: World Bank Africa Grid Map costing annex
+    users:
+    - Planners
+  capex_distribution:
+    name: Distribution network capital cost
+    description: Installed cost of distribution network per kilowatt of served load. Unit is USD/kW, not
+      USD/connection, because the sample reports both and the kW is the comparable basis.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 100.0
+    - 1500.0
+    default: 400.0
+    role: free
+    determinism: fixed
+    priority: P2
+    status: to_build
+    source: World Bank Africa Grid Map costing annex
+    users:
+    - Utilities
+  capex_interconnector:
+    name: Interconnector capital cost
+    description: Installed cost of a cross-border interconnector per megawatt-kilometre. Range spans overhead
+      AC at the low end to submarine HVDC at the high end; the difference between the two is a factor
+      of five and that is why the parameter has a range rather than a value.
+    category: Cost
+    type: float
+    unit: USD/MW-km
+    range:
+    - 200.0
+    - 3000.0
+    default: 700.0
+    role: free
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: World Bank Africa Grid Map costing annex
+    users:
+    - Planners
+  opex_fixed_solar:
+    name: Solar PV fixed O&M
+    description: Annual fixed operation and maintenance cost of solar PV. The unit is USD per kW of capacity
+      per year, not per MWh — the cost is incurred whether the plant runs or not.
+    category: Cost
+    type: float
+    unit: USD/kW/year
+    range:
+    - 5.0
+    - 40.0
+    default: 15.0
+    role: free
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: IRENA, Renewable Power Generation Costs in 2023
+    users:
+    - All
+  opex_fixed_wind:
+    name: Wind fixed O&M
+    description: Annual fixed O&M of onshore wind. Offshore is materially higher and would need its own
+      parameter if the graph is to distinguish them; the shipped graph does not.
+    category: Cost
+    type: float
+    unit: USD/kW/year
+    range:
+    - 10.0
+    - 80.0
+    default: 40.0
+    role: free
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: IRENA, Renewable Power Generation Costs in 2023
+    users:
+    - All
+  opex_fixed_coal:
+    name: Coal fixed O&M
+    description: Annual fixed O&M of coal generation. Includes staffing, insurance and long-term maintenance
+      contracts; excludes fuel.
+    category: Cost
+    type: float
+    unit: USD/kW/year
+    range:
+    - 20.0
+    - 100.0
+    default: 45.0
+    role: free
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: IEA, Projected Costs of Generating Electricity 2020
+    users:
+    - Utilities
+  opex_fixed_gas:
+    name: Gas fixed O&M
+    description: Annual fixed O&M of gas generation. Includes staffing, insurance and long-term maintenance
+      contracts; excludes fuel.
+    category: Cost
+    type: float
+    unit: USD/kW/year
+    range:
+    - 10.0
+    - 60.0
+    default: 25.0
+    role: free
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: IEA, Projected Costs of Generating Electricity 2020
+    users:
+    - Utilities
+  opex_variable_coal:
+    name: Coal variable O&M
+    description: Variable operation and maintenance cost of coal, per megawatt-hour generated. Excludes
+      fuel and carbon, which are separate terms in the marginal cost.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 2.0
+    - 20.0
+    default: 5.0
+    role: free
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: IEA, Projected Costs of Generating Electricity 2020
+    users:
+    - Utilities
+  opex_variable_gas:
+    name: Gas variable O&M
+    description: Variable O&M of gas generation. Lower than coal because the plant has fewer consumable
+      parts.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 1.0
+    - 15.0
+    default: 3.0
+    role: free
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: IEA, Projected Costs of Generating Electricity 2020
+    users:
+    - Utilities
+  opex_variable_battery:
+    name: Battery variable O&M
+    description: Variable O&M of grid-scale battery storage. Very low, because there is no fuel and few
+      consumables; the cost is a small per-cycle charge.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 5.0
+    default: 1.0
+    role: free
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: NREL ATB 2024
+    users:
+    - All
+  opex_variable_electrolyser:
+    name: Electrolyser variable O&M
+    description: Variable O&M of electrolysis per megawatt-hour of hydrogen produced. Excludes electricity,
+      which is the dominant cost and enters as an input to the Link.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 5.0
+    default: 1.0
+    role: free
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: IEA Global Hydrogen Review 2024
+    users:
+    - Industry
+  fuel_cost_coal:
+    name: Coal fuel cost
+    description: Delivered coal cost per megawatt-hour of thermal energy. Converted from USD per tonne
+      at an assumed 25 GJ/tonne calorific value; the assumption is recorded here because the conversion
+      is where a unit error would hide.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 3.0
+    - 40.0
+    default: 12.0
+    role: free
+    determinism: stochastic
+    priority: P1
+    status: existing
+    source: IEA World Energy Outlook, delivered coal prices
+    users:
+    - Utilities
+  fuel_cost_gas:
+    name: Gas fuel cost
+    description: Delivered gas cost per megawatt-hour of thermal energy. Converted from USD per MMBtu
+      at 1 MMBtu = 0.293 MWh; the conversion is the parameter's own admission of a unit assumption.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 10.0
+    - 120.0
+    default: 35.0
+    role: free
+    determinism: stochastic
+    priority: P1
+    status: existing
+    source: IEA World Energy Outlook, delivered gas prices
+    users:
+    - Utilities
+  fuel_cost_oil:
+    name: Oil fuel cost
+    description: Delivered oil cost per megawatt-hour of thermal energy. The high end of the range is
+      a landlocked market with a transport premium.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 30.0
+    - 200.0
+    default: 80.0
+    role: free
+    determinism: stochastic
+    priority: P2
+    status: existing
+    source: IEA World Energy Outlook, delivered oil prices
+    users:
+    - Utilities
+  fuel_cost_nuclear:
+    name: Nuclear fuel cost
+    description: Fuel cycle cost per megawatt-hour of thermal energy. Includes enrichment, fabrication
+      and the eventual disposal; the disposal component is what makes it high relative to the raw uranium
+      price.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 5.0
+    - 25.0
+    default: 10.0
+    role: free
+    determinism: fixed
+    priority: P3
+    status: existing
+    source: IEA, Projected Costs of Generating Electricity 2020
+    users:
+    - Planners
+  fuel_cost_biomass:
+    name: Biomass fuel cost
+    description: Delivered biomass cost per megawatt-hour of thermal energy. The high end includes agricultural-residue
+      collection and transport, which is where the cost of the fuel actually lives.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 10.0
+    - 60.0
+    default: 25.0
+    role: free
+    determinism: stochastic
+    priority: P2
+    status: existing
+    source: IRENA bioenergy cost data
+    users:
+    - Developers
+  fuel_cost_hydrogen:
+    name: Hydrogen fuel cost
+    description: Delivered hydrogen cost per megawatt-hour of thermal energy. Converted from USD per kg
+      at 33.3 kWh/kg LHV; the conversion is an admission, not a fact — a different calorific value would
+      change the number.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 50.0
+    - 400.0
+    default: 120.0
+    role: free
+    determinism: stochastic
+    priority: P2
+    status: existing
+    source: IEA Global Hydrogen Review 2024, LCOH estimates
+    users:
+    - Industry
+  coal_price:
+    name: Coal price
+    description: Free-on-board thermal coal price. The graph's delivered fuel cost is a separate parameter;
+      this is the commodity price itself, which is what a price-scenario analysis is scored against.
+    category: Macroeconomic
+    type: float
+    unit: USD/tonne
+    range:
+    - 30.0
+    - 200.0
+    default: 80.0
+    role: free
+    determinism: stochastic
+    priority: P1
+    status: to_build
+    source: IEA World Energy Outlook
+    users:
+    - All
+  oil_price:
+    name: Oil price
+    description: Crude oil price, Brent-equivalent. The delivered cost of liquid fuel is a separate parameter;
+      this is the benchmark price the fuel market is scored against.
+    category: Macroeconomic
+    type: float
+    unit: USD/barrel
+    range:
+    - 20.0
+    - 200.0
+    default: 75.0
+    role: free
+    determinism: stochastic
+    priority: P1
+    status: to_build
+    source: IEA World Energy Outlook
+    users:
+    - All
+  gas_price:
+    name: Gas price
+    description: Wholesale natural gas price. Region-specific in reality — the sample contains no region
+      parameter, so this is a single global default with a range that admits the extremes the sample has
+      seen.
+    category: Macroeconomic
+    type: float
+    unit: USD/MMBtu
+    range:
+    - 1.0
+    - 40.0
+    default: 8.0
+    role: free
+    determinism: stochastic
+    priority: P1
+    status: existing
+    source: IEA World Energy Outlook
+    users:
+    - All
+  lng_price:
+    name: LNG price
+    description: Liquefied natural gas price, landed. The premium over the pipeline gas price is the liquefaction
+      and shipping; the parameter is the landed number because that is what a country buying LNG pays.
+    category: Macroeconomic
+    type: float
+    unit: USD/MMBtu
+    range:
+    - 2.0
+    - 50.0
+    default: 12.0
+    role: free
+    determinism: stochastic
+    priority: P2
+    status: to_build
+    source: IEA World Energy Outlook
+    users:
+    - All
+  uranium_price:
+    name: Uranium price
+    description: Uranium spot price. The fuel cycle cost of nuclear generation is a separate parameter,
+      because the uranium is a minority of that cost.
+    category: Macroeconomic
+    type: float
+    unit: USD/lb
+    range:
+    - 20.0
+    - 150.0
+    default: 60.0
+    role: free
+    determinism: stochastic
+    priority: P3
+    status: to_build
+    source: IEA/NEA Uranium Resources, Production and Demand
+    users:
+    - Planners
+  hydrogen_price:
+    name: Hydrogen price
+    description: Delivered hydrogen price, per kilogram. The delivered fuel cost per MWh is a separate
+      parameter; this is the price a hydrogen market is scored against.
+    category: Macroeconomic
+    type: float
+    unit: USD/kg
+    range:
+    - 0.5
+    - 10.0
+    default: 3.0
+    role: free
+    determinism: stochastic
+    priority: P2
+    status: to_build
+    source: IEA Global Hydrogen Review 2024
+    users:
+    - Industry
+  ammonia_price:
+    name: Ammonia price
+    description: Delivered ammonia price, per tonne. The premium over the hydrogen price is the synthesis
+      and the storage; the parameter is the delivered number because that is what a buyer pays.
+    category: Macroeconomic
+    type: float
+    unit: USD/tonne
+    range:
+    - 200.0
+    - 1500.0
+    default: 550.0
+    role: free
+    determinism: stochastic
+    priority: P2
+    status: to_build
+    source: IEA Global Hydrogen Review 2024
+    users:
+    - Industry
+  battery_cost:
+    name: Battery capital cost (legacy)
+    description: Duplicate of `capex_battery`. The shipped graph carries both under different ids; they
+      are the same quantity and the next batch should nominate one as canonical and mark the other deprecated.
+      Corrected here to match, so a scenario that reads either gets a sensible value.
+    category: Cost
+    type: float
+    unit: USD/kWh
+    range:
+    - 100.0
+    - 800.0
+    default: 250.0
+    role: free
+    determinism: stochastic
+    priority: P1
+    status: existing
+    source: BNEF Battery Price Survey 2024
+    users:
+    - All
+  phs_cost:
+    name: Pumped hydro capital cost (legacy)
+    description: Duplicate of `capex_phs`. Same treatment as `battery_cost`.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 1000.0
+    - 5000.0
+    default: 2200.0
+    role: free
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: IEA, Projected Costs of Generating Electricity 2020
+    users:
+    - Utilities
+  hydrogen_storage_cost:
+    name: Hydrogen storage cost
+    description: Installed cost of hydrogen storage. The unit is USD per kWh of energy capacity; the range
+      spans above-ground at the low end to salt cavern at the high end (the cavern is not expensive per
+      unit but the exploration is).
+    category: Cost
+    type: float
+    unit: USD/kWh
+    range:
+    - 1.0
+    - 100.0
+    default: 15.0
+    role: free
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: IEA Global Hydrogen Review 2024
+    users:
+    - Industry
+  heat_pump_cost:
+    name: Heat pump capital cost
+    description: Installed cost of a heat pump per kilowatt of thermal capacity. The range depends on
+      the source (air, ground, water) and on whether the building is a retrofit.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 300.0
+    - 2500.0
+    default: 900.0
+    role: free
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: IEA, The Future of Heat Pumps 2022
+    users:
+    - Households
+  hydrogen_pipeline_cost:
+    name: Hydrogen pipeline capital cost
+    description: Installed cost of a hydrogen pipeline per megawatt-kilometre of capacity. The range spans
+      repurposed natural-gas pipeline at the low end to new-build high-pressure hydrogen pipeline at the
+      high end.
+    category: Cost
+    type: float
+    unit: USD/MW-km
+    range:
+    - 10.0
+    - 500.0
+    default: 120.0
+    role: free
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: IEA Global Hydrogen Review 2024
+    users:
+    - Industry
+  biomass_feedstock_cost:
+    name: Biomass feedstock cost
+    description: Delivered feedstock cost per megawatt-hour of thermal energy. The high end is a residue
+      whose collection radius is large; the low end is a mill residue at the plant gate.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 5.0
+    - 60.0
+    default: 20.0
+    role: free
+    determinism: stochastic
+    priority: P2
+    status: to_build
+    source: IRENA bioenergy cost data
+    users:
+    - Developers
+  geothermal_cost:
+    name: Geothermal capital cost (legacy)
+    description: Duplicate of `capex_geothermal`. Corrected to match.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 2000.0
+    - 8000.0
+    default: 4000.0
+    role: free
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: IRENA, Renewable Power Generation Costs in 2023
+    users:
+    - Developers
+  electrolyser_cost:
+    name: Electrolyser capital cost (legacy)
+    description: Duplicate of `capex_hydrogen_electrolyser`. Corrected to match.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 300.0
+    - 2000.0
+    default: 800.0
+    role: free
+    determinism: stochastic
+    priority: P2
+    status: existing
+    source: IEA Global Hydrogen Review 2024
+    users:
+    - Industry
+  solar_pv_cost:
+    name: Solar PV capital cost (legacy)
+    description: Duplicate of `capex_solar_pv`. Corrected to match.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 300.0
+    - 3000.0
+    default: 1100.0
+    role: free
+    determinism: stochastic
+    priority: P1
+    status: existing
+    source: IRENA, Renewable Power Generation Costs in 2023
+    users:
+    - All
+  wind_onshore_cost:
+    name: Onshore wind capital cost (legacy)
+    description: Duplicate of `capex_wind_onshore`. Corrected to match.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 800.0
+    - 3500.0
+    default: 1600.0
+    role: free
+    determinism: stochastic
+    priority: P1
+    status: existing
+    source: IRENA, Renewable Power Generation Costs in 2023
+    users:
+    - All
+  wind_offshore_cost:
+    name: Offshore wind capital cost (legacy)
+    description: Duplicate of `capex_wind_offshore`. Corrected to match.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 1500.0
+    - 6000.0
+    default: 3200.0
+    role: free
+    determinism: stochastic
+    priority: P2
+    status: existing
+    source: IRENA, Renewable Power Generation Costs in 2023
+    users:
+    - Developers
+  annualised_capex_usd_per_kw_solar:
+    name: Annualised solar capex
+    description: Solar PV capex recovered per year, at the technology's own capex and the system discount
+      rate. Separate from the reference-technology `annualised_capex_usd_per_kw` because the LCOE identity
+      is evaluated per technology in a real comparison.
+    category: Cost
+    type: float
+    unit: USD/kW/year
+    range:
+    - 0.0
+    - 5000.0
+    role: derived
+    determinism: stochastic
+    priority: P2
+    status: to_build
+  annualised_capex_usd_per_kw_wind:
+    name: Annualised wind capex
+    description: Onshore wind capex recovered per year. Same construction as the solar node.
+    category: Cost
+    type: float
+    unit: USD/kW/year
+    range:
+    - 0.0
+    - 5000.0
+    role: derived
+    determinism: stochastic
+    priority: P2
+    status: to_build
+  lcoe_solar_usd_per_mwh:
+    name: Solar LCOE
+    description: Solar PV levelised cost, at the technology's own capex and capacity factor. The reference-technology
+      `lcoe_usd_per_mwh` is the generic case; this is the specific one.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 5000.0
+    role: derived
+    determinism: stochastic
+    priority: P1
+    status: to_build
+  lcoe_wind_usd_per_mwh:
+    name: Wind LCOE
+    description: Onshore wind levelised cost.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 5000.0
+    role: derived
+    determinism: stochastic
+    priority: P1
+    status: to_build
+  fuel_cost_escalated_coal_usd_per_mwh:
+    name: Escalated coal fuel cost
+    description: The delivered coal cost compounded to the horizon. The base-year cost and the escalation
+      are one quantity split in two, and this is the compound.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 500.0
+    role: derived
+    determinism: stochastic
+    priority: P2
+    status: to_build
+  fuel_cost_escalated_gas_usd_per_mwh:
+    name: Escalated gas fuel cost
+    description: The delivered gas cost compounded to the horizon.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 500.0
+    role: derived
+    determinism: stochastic
+    priority: P2
+    status: to_build
+  coal_price_per_mwh:
+    name: Coal price per MWh thermal
+    description: The commodity coal price converted to a thermal-energy basis, at 25 GJ per tonne. The
+      conversion factor is written into the equation, not hidden in a default, because the conversion
+      is where a unit error would hide.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 500.0
+    role: derived
+    determinism: stochastic
+    priority: P2
+    status: to_build
+  gas_price_per_mwh:
+    name: Gas price per MWh thermal
+    description: The commodity gas price converted to a thermal-energy basis, at 0.293 MWh per MMBtu.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 500.0
+    role: derived
+    determinism: stochastic
+    priority: P2
+    status: to_build
+equations:
+  annualised_capex_solar_definition:
+    name: Annualised solar capex
+    description: 'Solar capex recovered per year, at the system discount rate. Dimensional check: USD/kW
+      times a dimensionless factor is USD/kW/year.'
+    system: cost_accounting
+    lhs: annualised_capex_usd_per_kw_solar
+    rhs: capex_solar_pv * crf
+    relation: eq
+    parameters:
+    - capex_solar_pv
+    - crf
+    free_variables:
+    - capex_solar_pv
+    - crf
+    determined_variables:
+    - annualised_capex_usd_per_kw_solar
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+  annualised_capex_wind_definition:
+    name: Annualised wind capex
+    description: 'Onshore wind capex recovered per year, at the same discount rate. Dimensional check:
+      USD/kW times a dimensionless factor is USD/kW/year.'
+    system: cost_accounting
+    lhs: annualised_capex_usd_per_kw_wind
+    rhs: capex_wind_onshore * crf
+    relation: eq
+    parameters:
+    - capex_wind_onshore
+    - crf
+    free_variables:
+    - capex_wind_onshore
+    - crf
+    determined_variables:
+    - annualised_capex_usd_per_kw_wind
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+  lcoe_solar_definition:
+    name: Solar LCOE
+    description: 'Solar PV levelised cost at its own capex, capacity factor and O&M. Dimensional check:
+      USD/kW/year divided by (hours/year times dimensionless) is USD/MWh, plus USD/MWh is USD/MWh. The
+      1000 converts kW to MW.'
+    system: cost_accounting
+    lhs: lcoe_solar_usd_per_mwh
+    rhs: (annualised_capex_usd_per_kw_solar + opex_fixed_solar) * 1000 / (8760 * solar_pv_capacity_factor)
+      + opex_variable_battery
+    relation: eq
+    parameters:
+    - annualised_capex_usd_per_kw_solar
+    - opex_fixed_solar
+    - solar_pv_capacity_factor
+    - opex_variable_battery
+    free_variables:
+    - annualised_capex_usd_per_kw_solar
+    - opex_fixed_solar
+    - solar_pv_capacity_factor
+    - opex_variable_battery
+    determined_variables:
+    - lcoe_solar_usd_per_mwh
+    tolerance: 1.0e-08
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P1
+  lcoe_wind_definition:
+    name: Wind LCOE
+    description: 'Onshore wind levelised cost at its own capex and capacity factor. The variable O&M term
+      is small for wind; the shipped graph does not carry one, so the solar equation''s variable term
+      is reused as a conservative placeholder and this equation is marked `unit_check: true` on the strength
+      of that substitution being dimensional, not physical.'
+    system: cost_accounting
+    lhs: lcoe_wind_usd_per_mwh
+    rhs: (annualised_capex_usd_per_kw_wind + opex_fixed_wind) * 1000 / (8760 * capacity_factor) + opex_variable_battery
+    relation: eq
+    parameters:
+    - annualised_capex_usd_per_kw_wind
+    - opex_fixed_wind
+    - capacity_factor
+    - opex_variable_battery
+    free_variables:
+    - annualised_capex_usd_per_kw_wind
+    - opex_fixed_wind
+    - capacity_factor
+    - opex_variable_battery
+    determined_variables:
+    - lcoe_wind_usd_per_mwh
+    tolerance: 1.0e-08
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P1
+  fuel_cost_escalated_coal_definition:
+    name: Escalated coal fuel cost
+    description: 'The delivered coal cost compounded to the horizon. Dimensional check: USD/MWh times
+      a dimensionless factor is USD/MWh.'
+    system: cost_accounting
+    lhs: fuel_cost_escalated_coal_usd_per_mwh
+    rhs: fuel_cost_coal * (1 + fuel_price_escalation) ** horizon_years
+    relation: eq
+    parameters:
+    - fuel_cost_coal
+    - fuel_price_escalation
+    - horizon_years
+    free_variables:
+    - fuel_cost_coal
+    - fuel_price_escalation
+    - horizon_years
+    determined_variables:
+    - fuel_cost_escalated_coal_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P2
+  fuel_cost_escalated_gas_definition:
+    name: Escalated gas fuel cost
+    description: The delivered gas cost compounded to the horizon. Same shape as the coal equation.
+    system: cost_accounting
+    lhs: fuel_cost_escalated_gas_usd_per_mwh
+    rhs: fuel_cost_gas * (1 + fuel_price_escalation) ** horizon_years
+    relation: eq
+    parameters:
+    - fuel_cost_gas
+    - fuel_price_escalation
+    - horizon_years
+    free_variables:
+    - fuel_cost_gas
+    - fuel_price_escalation
+    - horizon_years
+    determined_variables:
+    - fuel_cost_escalated_gas_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P2
+  coal_price_per_mwh_definition:
+    name: Coal price per MWh thermal
+    description: 'Commodity coal price converted to a thermal basis. Dimensional check: USD/tonne divided
+      by (GJ/tonne times MWh/GJ) is USD/MWh. The 3.6 is MWh per GJ; the 25 is GJ per tonne. Both are written
+      so a reader can check the conversion, because the conversion is where a unit error would hide.'
+    system: cost_accounting
+    lhs: coal_price_per_mwh
+    rhs: coal_price / (25 * 3.6)
+    relation: eq
+    parameters:
+    - coal_price
+    free_variables:
+    - coal_price
+    determined_variables:
+    - coal_price_per_mwh
+    tolerance: 1.0e-09
+    unit_check: false
+    solution_method: direct
+    linearity: linear
+    priority: P2
+  gas_price_per_mwh_definition:
+    name: Gas price per MWh thermal
+    description: 'Commodity gas price converted to a thermal basis. Dimensional check: USD/MMBtu times
+      MMBtu/MWh is USD/MWh; 1 MMBtu is 0.293 MWh, so MMBtu/MWh is 1/0.293. The conversion is written so
+      the unit error has nowhere to hide. `unit_check: false` because the graph does not carry `MMBtu`
+      as a Pint-compatible unit string.'
+    system: cost_accounting
+    lhs: gas_price_per_mwh
+    rhs: gas_price / 0.293
+    relation: eq
+    parameters:
+    - gas_price
+    free_variables:
+    - gas_price
+    determined_variables:
+    - gas_price_per_mwh
+    tolerance: 1.0e-09
+    unit_check: false
+    solution_method: direct
+    linearity: linear
+    priority: P2
+relationships:
+- source: capex_solar_pv
+  target: annualised_capex_usd_per_kw_solar
+  equation_id: annualised_capex_solar_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: Capex is annualised at the recovery factor.
+  priority: P2
+- source: crf
+  target: annualised_capex_usd_per_kw_solar
+  equation_id: annualised_capex_solar_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The recovery factor is the annualisation.
+  priority: P2
+- source: capex_wind_onshore
+  target: annualised_capex_usd_per_kw_wind
+  equation_id: annualised_capex_wind_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: Same shape as the solar case.
+  priority: P2
+- source: crf
+  target: annualised_capex_usd_per_kw_wind
+  equation_id: annualised_capex_wind_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: Same recovery factor.
+  priority: P2
+- source: annualised_capex_usd_per_kw_solar
+  target: lcoe_solar_usd_per_mwh
+  equation_id: lcoe_solar_definition
+  relationship: equality
+  direction: forward
+  strength: soft
+  description: The capital charge is the fixed half of LCOE.
+  priority: P1
+- source: opex_fixed_solar
+  target: lcoe_solar_usd_per_mwh
+  equation_id: lcoe_solar_definition
+  relationship: equality
+  direction: forward
+  strength: soft
+  description: Fixed O&M is the other half of the fixed charge.
+  priority: P1
+- source: solar_pv_capacity_factor
+  target: lcoe_solar_usd_per_mwh
+  equation_id: lcoe_solar_definition
+  relationship: functional
+  direction: forward
+  strength: soft
+  description: A lower capacity factor spreads capex over less energy.
+  priority: P1
+- source: opex_variable_battery
+  target: lcoe_solar_usd_per_mwh
+  equation_id: lcoe_solar_definition
+  relationship: equality
+  direction: forward
+  strength: soft
+  description: A variable term — reused here as a conservative placeholder for solar's own variable O&M,
+    which the graph does not carry.
+  priority: P2
+- source: annualised_capex_usd_per_kw_wind
+  target: lcoe_wind_usd_per_mwh
+  equation_id: lcoe_wind_definition
+  relationship: equality
+  direction: forward
+  strength: soft
+  description: Same shape as the solar LCOE.
+  priority: P1
+- source: opex_fixed_wind
+  target: lcoe_wind_usd_per_mwh
+  equation_id: lcoe_wind_definition
+  relationship: equality
+  direction: forward
+  strength: soft
+  description: Same fixed term as solar, at wind's own O&M.
+  priority: P1
+- source: capacity_factor
+  target: lcoe_wind_usd_per_mwh
+  equation_id: lcoe_wind_definition
+  relationship: functional
+  direction: forward
+  strength: soft
+  description: Wind's capacity factor is the reference technology's in this equation.
+  priority: P1
+- source: opex_variable_battery
+  target: lcoe_wind_usd_per_mwh
+  equation_id: lcoe_wind_definition
+  relationship: equality
+  direction: forward
+  strength: soft
+  description: Same placeholder substitution as solar.
+  priority: P2
+- source: fuel_cost_coal
+  target: fuel_cost_escalated_coal_usd_per_mwh
+  equation_id: fuel_cost_escalated_coal_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Base-year cost is what the escalation compounds.
+  priority: P2
+- source: fuel_price_escalation
+  target: fuel_cost_escalated_coal_usd_per_mwh
+  equation_id: fuel_cost_escalated_coal_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The escalation is the rate.
+  priority: P2
+- source: horizon_years
+  target: fuel_cost_escalated_coal_usd_per_mwh
+  equation_id: fuel_cost_escalated_coal_definition
+  relationship: temporal
+  direction: forward
+  strength: hard
+  description: The horizon is the exponent.
+  priority: P2
+- source: fuel_cost_gas
+  target: fuel_cost_escalated_gas_usd_per_mwh
+  equation_id: fuel_cost_escalated_gas_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Same shape as coal.
+  priority: P2
+- source: fuel_price_escalation
+  target: fuel_cost_escalated_gas_usd_per_mwh
+  equation_id: fuel_cost_escalated_gas_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Same escalation for gas.
+  priority: P2
+- source: horizon_years
+  target: fuel_cost_escalated_gas_usd_per_mwh
+  equation_id: fuel_cost_escalated_gas_definition
+  relationship: temporal
+  direction: forward
+  strength: hard
+  description: Same exponent.
+  priority: P2
+- source: coal_price
+  target: coal_price_per_mwh
+  equation_id: coal_price_per_mwh_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The commodity price converts to a thermal basis at a stated calorific value.
+  priority: P2
+- source: gas_price
+  target: gas_price_per_mwh
+  equation_id: gas_price_per_mwh_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The commodity price converts to a thermal basis at a stated MMBtu-to-MWh factor.
+  priority: P2
+cross_validation:
+- id: lcoe_reference_sanity
+  condition: lcoe_usd_per_mwh < 10 or lcoe_usd_per_mwh > 500
+  severity: warning
+  message: The reference-technology LCOE is outside the range any 2020s technology exhibits. Either the
+    capex is wrong, the capacity factor is wrong, or the discount rate is wrong.
+  suggestion: Check capex_usd_per_kw, capacity_factor and discount_rate against their own ranges
+- id: fuel_cost_escalation_overtakes_carbon
+  condition: fuel_price_escalation > carbon_price_escalation and carbon_price_usd_per_tco2 > 0
+  severity: info
+  message: A fuel price rising faster than the carbon price is a scenario in which the carbon policy is
+    losing ground to the fuel market. Worth recording, not necessarily worth changing.
+  suggestion: Confirm the escalation pair is the intended scenario
+- id: delivered_fuel_below_commodity
+  condition: fuel_cost_coal < coal_price_per_mwh and coal_price > 0
+  severity: warning
+  message: The delivered coal cost is below the commodity-derived thermal cost, which would require the
+    transport to be free or negative
+  suggestion: Reconcile the two parameters, or check the calorific value used
+- id: delivered_gas_below_commodity
+  condition: fuel_cost_gas < gas_price_per_mwh and gas_price > 0
+  severity: warning
+  message: Same reconciliation for gas
+  suggestion: Reconcile the two parameters, or check the MMBtu conversion
+- id: capex_battery_units_consistent
+  condition: capex_battery > 5000
+  severity: info
+  message: A battery capex above 5000 USD/kWh is above any observed value for a complete grid-scale system
+  suggestion: Check the unit — the shipped parameter is USD/kWh, not USD/kW
+- id: capex_transmission_out_of_band
+  condition: capex_transmission < 20 or capex_transmission > 8000
+  severity: warning
+  message: A transmission line cost per MW-km outside 20–8000 is at the edge of what any documented African
+    project has cost
+  suggestion: Confirm the unit is USD/MW-km and not USD/km
+- id: discount_rate_gearing_interaction
+  condition: discount_rate > 0.20 and gearing_ratio > 0.8
+  severity: warning
+  message: A discount rate above 20% with gearing above 80% is a financing structure that prices equity
+    as if it were mezzanine debt
+  suggestion: Reconcile discount_rate with the WACC identity in wacc_definition
+- id: carbon_tax_rate_units
+  condition: carbon_tax_rate > 5 and carbon_tax_rate < 0.5
+  severity: warning
+  message: A carbon tax rate between 0.5 and 5 is outside the USD-per-tonne range every jurisdiction has
+    adopted — the value is likely in a local currency or in cents
+  suggestion: Convert to USD/tonne before setting

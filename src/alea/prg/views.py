@@ -136,11 +136,41 @@ class ParameterNode(BaseModel):
 	role: Role
 	determinism: Determinism
 
+	categories: tuple[str, ...] = ()
+	"""The admissible values of a ``categorical`` node, in the order declared.
+
+	WHY this is a field and not prose in the description. A categorical's
+	admissible set *is* its range -- there is no lower and upper bound to
+	enumerate, so the value list is the only thing that says which values are
+	legal, and a caller that sets ``market_structure`` to a string no
+	document lists gets no complaint from any gate. Leaving it in the
+	description is the same defect as a range written in prose: present to a
+	reader, invisible to every check. Empty for every other type, and the
+	validator below refuses a categorical that does not carry one.
+	"""
+
 	source: str | None = None
 	source_url: str | None = None
 	users: tuple[str, ...] = ()
 	priority: Priority = Priority.P2
-	status: Literal["existing", "to_build", "integrate"] = "to_build"
+	status: Literal["existing", "to_build", "integrate", "deprecated"] = "to_build"
+	"""Where the parameter stands in the build.
+
+	``deprecated`` is not a fourth kind of the same thing: the other three say
+	how far along a node is, and this one says the node should not be used at
+	all. It carries a :attr:`deprecated_by` naming what replaced it, and the
+	graph refuses an edge or an equation that reaches a deprecated node -- see
+	``ParameterGraph._validate``. Without that refusal the status is a label
+	nothing acts on, which is the failure mode this tree keeps finding.
+	"""
+
+	deprecated_by: str | None = None
+	"""The parameter id that replaced this one, when :attr:`status` is
+	``deprecated``. Required then, and forbidden otherwise: a live node naming
+	a replacement is a node whose status and whose field disagree, and a
+	deprecated node naming nothing is a removal with no successor -- the
+	caller has nowhere to go.
+	"""
 
 	@model_validator(mode="after")
 	def _range_contains_default(self) -> ParameterNode:
@@ -221,6 +251,38 @@ class ParameterNode(BaseModel):
 				f"{self.id}: type={self.type.value!r} cannot be carried by a "
 				f"scalar `default` or `range`, and this model has no field for "
 				f"the array; declare it `float` or leave the scalar fields unset"
+			)
+		if self.type is ParameterType.CATEGORICAL and not self.categories:
+			# The value list is a categorical's *range*. Without it the type
+			# constrains nothing a gate can check, and a caller setting the
+			# parameter to a value no document lists gets no complaint -- which
+			# is exactly the state the 19 mis-typed nodes were in before the
+			# type sweep: declared `float`, admitting 500,000.
+			raise ValueError(
+				f"{self.id}: a categorical node's `categories` list is its "
+				f"admissible set -- it has no numeric range to bound it, so "
+				f"without the list nothing says which values are legal"
+			)
+		if self.type is not ParameterType.CATEGORICAL and self.categories:
+			raise ValueError(
+				f"{self.id}: `categories` lists the admissible values of a "
+				f"categorical, and this node is {self.type.value!r}"
+			)
+		if self.status == "deprecated" and not self.deprecated_by:
+			# A removal with no successor leaves the caller nowhere to go, and
+			# the alias register the batch ships is the successor list. Naming
+			# it on the node is what makes the status actionable.
+			raise ValueError(
+				f"{self.id}: status='deprecated' names no replacement; a "
+				f"removed parameter with no successor is one a caller cannot "
+				f"migrate off"
+			)
+		if self.status != "deprecated" and self.deprecated_by:
+			raise ValueError(
+				f"{self.id}: `deprecated_by` is set to {self.deprecated_by!r} "
+				f"but the status is {self.status!r}; a live parameter naming a "
+				f"replacement is a node whose two fields disagree about whether "
+				f"it is live"
 			)
 		return self
 

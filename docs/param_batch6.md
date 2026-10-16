@@ -1,0 +1,857 @@
+# ALEA PRG Ingestion Batch 7 — Equation-Library Extension
+
+## Extending the Systems That Remain Thin and Coupling the Governance and Reliability Parameters
+
+This batch is different from the previous six. Batches 1–6 corrected ranges, types and units, and added the equations the corrections required. This batch is **substantive arithmetic** — eleven new equations that extend five systems which have been thin since the first batch: `energy_balance`, `demand_supply`, `inertia`, `ppa_pricing`, and `reliability`. It also adds two composite governance indices, whose components have been uncoupled since they entered the graph.
+
+The result is that ten previously-uncoupled parameters are now named by an equation, ten new derived quantities exist, and the equation library grows from 75 to 86. It adds no range corrections — Batches 2–6 closed the ranges the domain supports, and the ones that remain open need jurisdiction- or firm-specific data that no public document supplies.
+
+This batch corrects **1 parameter** (a role change on `system_inertia_mws`), declares **13 new parameters** (10 derived, 3 exogenous), adds **11 new equations**, **33 new relationships**, and **8 cross-validation rules**.
+
+---
+
+## Register 1 — `parameters`
+
+### Part A — Role correction
+
+One existing parameter's role is wrong. The inertia of a synchronous fleet is not something a user sets; it is a physical consequence of the fleet's composition.
+
+```yaml
+parameters:
+  system_inertia_mws:
+    name: System inertia
+    description: Kinetic energy stored in online synchronous machines at nominal frequency. Corrected from `exogenous` to `derived`: the inertia is not something a scenario declares, it is a consequence of the fleet the scenario builds. The shipped default of 30000 MWs is removed because a derived parameter must not carry one.
+    category: Technical
+    type: float
+    unit: MW.s
+    range: [0.0, 10000000.0]
+    role: derived
+    determinism: physical
+    priority: P1
+    status: to_build
+    source: Swing equation; cf. ENTSO-E inertia studies
+    users: [Utilities]
+```
+
+### Part B — New derived nodes (10)
+
+```yaml
+  load_factor:
+    name: Load factor
+    description: Annual demand divided by peak demand times the hours in a year. The complement of the peak-to-average ratio; the parameter a distribution-planning study reports.
+    category: Demand-Side
+    type: float
+    unit: "1"
+    range: [0.3, 0.9]
+    role: derived
+    determinism: physical
+    priority: P1
+    status: to_build
+    source: Standard utility load characterisation
+    users: [Utilities]
+  lolp:
+    name: Loss of load probability
+    description: The probability that available generation is insufficient to meet demand in a given hour, as a share. A dimensionless probability; the shipped graph carries no such parameter and this is the reliability-engineering equivalent of the DSCR floor.
+    category: Reliability
+    type: float
+    unit: "1"
+    range: [0.0, 0.30]
+    role: derived
+    determinism: stochastic
+    priority: P1
+    status: to_build
+    source: IEEE Std 493; NERC reliability standards
+    users: [Utilities, Regulators]
+  lole_hours_per_year:
+    name: Loss of load expectation
+    description: Expected hours per year the system fails to meet demand. The LOLP annualised; the number a reliability standard is written against.
+    category: Reliability
+    type: float
+    unit: hours/year
+    range: [0.0, 500.0]
+    role: derived
+    determinism: stochastic
+    priority: P1
+    status: to_build
+    source: IEEE Std 493
+    users: [Utilities, Regulators]
+  ppa_annual_revenue_usd_per_kw_year:
+    name: PPA annual revenue
+    description: The annual revenue a contracted plant earns per kilowatt of capacity. The other side of the DSCR's cash-flow numerator; the quantity a lender actually reads off the PPA.
+    category: Contract & Legal
+    type: float
+    unit: USD/kW/year
+    range: [0.0, 5000.0]
+    role: derived
+    determinism: policy
+    priority: P2
+    status: to_build
+    source: Standard PPA cash-flow structure
+    users: [Banks, Developers]
+  ppa_indexed_price_usd_per_mwh:
+    name: PPA indexed price
+    description: The PPA price compounded to the contract's end at the indexation rate. The price the last year of the contract pays; the number a sponsor's revenue forecast is built on.
+    category: Contract & Legal
+    type: float
+    unit: USD/MWh
+    range: [0.0, 5000.0]
+    role: derived
+    determinism: policy
+    priority: P2
+    status: to_build
+    source: Standard PPA indexation
+    users: [Developers]
+  frequency_nadir_hz:
+    name: Frequency nadir
+    description: The lowest frequency the system reaches after the largest credible loss, before any primary response. The quantity the under-frequency load-shedding relays are set against.
+    category: Technical
+    type: float
+    unit: Hz
+    range: [45.0, 50.0]
+    role: derived
+    determinism: physical
+    priority: P1
+    status: to_build
+    source: Swing equation with a stated response time
+    users: [Utilities]
+  composite_governance_index:
+    name: Composite governance index
+    description: The unweighted average of the five governance indicators the graph already carries. A single number for the jurisdictional quality a scenario assumes, so the country-risk parameter has a documented basis rather than a free value.
+    category: Geopolitical & Strategic
+    type: float
+    unit: "1"
+    range: [0.0, 1.0]
+    role: derived
+    determinism: fixed
+    priority: P2
+    status: to_build
+    source: Composite of World Bank Worldwide Governance Indicators
+    users: [Investors, DFIs]
+  fuel_diversity_index:
+    name: Fuel diversity index
+    description: The complement of the Herfindahl-Hirschman Index over the fleet's fuel capacities, normalised to [0, 1]. Higher is more diverse. A scenario with a single fuel has 0; a scenario with an even split across many fuels approaches 1.
+    category: Geopolitical & Strategic
+    type: float
+    unit: "1"
+    range: [0.0, 1.0]
+    role: derived
+    determinism: physical
+    priority: P2
+    status: to_build
+    source: Standard HHI complement
+    users: [Policymakers]
+  reserve_margin_actual:
+    name: Actual reserve margin
+    description: The reserve margin the built fleet actually delivers, distinct from the requirement. The two are compared by a cross-validation rule, not by an equation; the number is what the capacity-adequacy report prints.
+    category: Technical
+    type: float
+    unit: "1"
+    range: [-1.0, 5.0]
+    role: derived
+    determinism: physical
+    priority: P1
+    status: to_build
+    source: Standard capacity-adequacy accounting
+    users: [Planners, Regulators]
+  total_revenue_usd_per_year:
+    name: Total revenue
+    description: The annual revenue the fleet earns at the PPA price. The single-buyer's whole revenue in the shipped graph's simplification; the number a subsidy or a surplus is measured against.
+    category: Financial
+    type: float
+    unit: USD/year
+    range: [0.0, 1000000000000.0]
+    role: derived
+    determinism: policy
+    priority: P2
+    status: to_build
+    source: Standard revenue identity
+    users: [Investors, Regulators]
+```
+
+### Part C — New exogenous nodes (3)
+
+```yaml
+  inertia_constant_s:
+    name: Inertia constant
+    description: The inertia constant H, in seconds. The ratio of stored kinetic energy at rated speed to the machine's MVA rating. A property of the technology, not of the fleet; the graph carries no per-technology inertia and this is the fleet-level weighted average.
+    category: Technical
+    type: float
+    unit: s
+    range: [0.5, 10.0]
+    default: 4.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: to_build
+    source: Standard machine constants; cf. ENTSO-E inertia studies
+    users: [Utilities]
+  nominal_frequency_hz:
+    name: Nominal frequency
+    description: The system's nominal frequency. A property of the interconnection, not of the scenario.
+    category: Technical
+    type: float
+    unit: Hz
+    range: [50.0, 60.0]
+    default: 50.0
+    role: exogenous
+    determinism: physical
+    priority: P2
+    status: to_build
+    source: Interconnection's own standard
+    users: [Utilities]
+  frequency_response_time_s:
+    name: Frequency response time
+    description: The time between the loss of generation and the start of primary frequency response. The interval over which the inertia alone holds the frequency up.
+    category: Technical
+    type: float
+    unit: s
+    range: [1.0, 30.0]
+    default: 10.0
+    role: exogenous
+    determinism: physical
+    priority: P2
+    status: to_build
+    source: Grid-code primary response requirement
+    users: [Utilities]
+```
+
+---
+
+## Register 2 — `equations` (new)
+
+Eleven equations. Each determines exactly one variable. Every symbol in `lhs`/`rhs` is a shipped parameter id or a node declared above.
+
+```yaml
+equations:
+  load_factor_definition:
+    name: Load factor
+    description: 'Annual demand divided by peak demand times 8760. Dimensional check: TWh times 1e6 is MWh/year, divided by (MW times hours/year) is dimensionless. The 1e6 converts TWh to MWh.'
+    system: energy_balance
+    lhs: load_factor
+    rhs: (demand_twh * 1000000) / (peak_demand_mw * 8760)
+    relation: eq
+    parameters:
+    - demand_twh
+    - peak_demand_mw
+    free_variables:
+    - demand_twh
+    - peak_demand_mw
+    determined_variables:
+    - load_factor
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P1
+  lolp_definition:
+    name: Loss of load probability
+    description: 'The LOLP as an exponential in the reserve margin. A standard first-order approximation when the graph carries no forced-outage distribution: the LOLP falls off exponentially with margin, and the decay constant is set so a margin equal to the required minimum gives a LOLP near the regulatory ceiling of 1 in 100 hours. The 10 is the decay, not a physical constant. Dimensional check: exp(dimensionless) is dimensionless.'
+    system: reliability
+    lhs: lolp
+    rhs: exp((0 - 10) * reserve_margin_min)
+    relation: eq
+    parameters:
+    - reserve_margin_min
+    free_variables:
+    - reserve_margin_min
+    determined_variables:
+    - lolp
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P1
+  lole_definition:
+    name: Loss of load expectation
+    description: 'The LOLP annualised: the probability times the hours in a year. Dimensional check: dimensionless times hours/year is hours/year.'
+    system: reliability
+    lhs: lole_hours_per_year
+    rhs: lolp * 8760
+    relation: eq
+    parameters:
+    - lolp
+    free_variables:
+    - lolp
+    determined_variables:
+    - lole_hours_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+  ppa_annual_revenue_definition:
+    name: PPA annual revenue
+    description: 'The annual revenue per kilowatt of contracted capacity. Dimensional check: USD/MWh times hours/year times dimensionless / 1000 is USD/kW/year. The 1000 converts kW to MW. The capacity factor is the proxy for the plant''s actual output, which the graph does not carry hour by hour.'
+    system: ppa_pricing
+    lhs: ppa_annual_revenue_usd_per_kw_year
+    rhs: ppa_price_usd_per_mwh * capacity_factor * 8760 / 1000
+    relation: eq
+    parameters:
+    - ppa_price_usd_per_mwh
+    - capacity_factor
+    free_variables:
+    - ppa_price_usd_per_mwh
+    - capacity_factor
+    determined_variables:
+    - ppa_annual_revenue_usd_per_kw_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+  ppa_indexed_price_definition:
+    name: PPA indexed price
+    description: 'The contract price compounded to the end of the contract. Dimensional check: USD/MWh times a dimensionless factor is USD/MWh.'
+    system: ppa_pricing
+    lhs: ppa_indexed_price_usd_per_mwh
+    rhs: ppa_price_usd_per_mwh * (1 + tariff_indexation) ** ppa_duration
+    relation: eq
+    parameters:
+    - ppa_price_usd_per_mwh
+    - tariff_indexation
+    - ppa_duration
+    free_variables:
+    - ppa_price_usd_per_mwh
+    - tariff_indexation
+    - ppa_duration
+    determined_variables:
+    - ppa_indexed_price_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P2
+  inertia_from_capacity_definition:
+    name: System inertia from capacity
+    description: 'The fleet''s stored kinetic energy: firm capacity times the inertia constant. Dimensional check: MW times seconds is MW·s. The inertia constant H is the ratio of stored energy to rated power; the graph carries the fleet-level weighted average, not a per-technology value, which is a stated simplification.'
+    system: inertia
+    lhs: system_inertia_mws
+    rhs: firm_capacity_mw * inertia_constant_s
+    relation: eq
+    parameters:
+    - firm_capacity_mw
+    - inertia_constant_s
+    free_variables:
+    - firm_capacity_mw
+    - inertia_constant_s
+    determined_variables:
+    - system_inertia_mws
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+  frequency_nadir_definition:
+    name: Frequency nadir
+    description: 'The frequency after the response time, at the constant initial slope. Dimensional check: Hz minus (Hz/s) times s is Hz. A first-order approximation: the actual trajectory curves as the response engages, and the linear form is a lower bound on the nadir, i.e. more conservative than the truth.'
+    system: inertia
+    lhs: frequency_nadir_hz
+    rhs: nominal_frequency_hz - rocof_df_dt_hz_per_s * frequency_response_time_s
+    relation: eq
+    parameters:
+    - nominal_frequency_hz
+    - rocof_df_dt_hz_per_s
+    - frequency_response_time_s
+    free_variables:
+    - nominal_frequency_hz
+    - rocof_df_dt_hz_per_s
+    - frequency_response_time_s
+    determined_variables:
+    - frequency_nadir_hz
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+  composite_governance_index_definition:
+    name: Composite governance index
+    description: 'The unweighted average of the five governance indicators. Dimensional check: the sum of five dimensionless quantities divided by five is dimensionless. The unweighted average is a stated simplification: a weighted composite needs weights the graph does not carry, and the unweighted form is what a reader can check from the components.'
+    system: demand_supply
+    lhs: composite_governance_index
+    rhs: (rule_of_law_index + political_stability + corruption_perception + regulatory_predictability + contract_enforceability) / 5
+    relation: eq
+    parameters:
+    - rule_of_law_index
+    - political_stability
+    - corruption_perception
+    - regulatory_predictability
+    - contract_enforceability
+    free_variables:
+    - rule_of_law_index
+    - political_stability
+    - corruption_perception
+    - regulatory_predictability
+    - contract_enforceability
+    determined_variables:
+    - composite_governance_index
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+  fuel_diversity_definition:
+    name: Fuel diversity index
+    description: 'One minus the Herfindahl-Hirschman Index over the fleet''s fuel capacities, expressed as a fraction. Dimensional check: MW squared over MW squared is dimensionless, and one minus it is dimensionless. Seven fuels are named explicitly; a technology the graph carries but does not list here (marine, hydrogen fuel cell, SMR) is excluded from the sum and the index overstates diversity by its own omission — a finding rather than a mathematical error.'
+    system: demand_supply
+    lhs: fuel_diversity_index
+    rhs: 1 - (coal_capacity ** 2 + gas_capacity ** 2 + oil_capacity ** 2 + nuclear_capacity ** 2 + hydro_capacity ** 2 + solar_pv_capacity ** 2 + wind_onshore_capacity ** 2) / (total_capacity_mw ** 2)
+    relation: eq
+    parameters:
+    - coal_capacity
+    - gas_capacity
+    - oil_capacity
+    - nuclear_capacity
+    - hydro_capacity
+    - solar_pv_capacity
+    - wind_onshore_capacity
+    - total_capacity_mw
+    free_variables:
+    - coal_capacity
+    - gas_capacity
+    - oil_capacity
+    - nuclear_capacity
+    - hydro_capacity
+    - solar_pv_capacity
+    - wind_onshore_capacity
+    - total_capacity_mw
+    determined_variables:
+    - fuel_diversity_index
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P2
+  reserve_margin_actual_definition:
+    name: Actual reserve margin
+    description: 'The reserve margin the built fleet delivers: firm capacity plus the firm contribution from VRE, less peak demand, over peak demand. Dimensional check: MW over MW is dimensionless. The VRE contribution enters at its capacity factor; the same credit the reserve-margin constraint uses, so the actual margin and the requirement are on the same basis.'
+    system: reserve_margin
+    lhs: reserve_margin_actual
+    rhs: (firm_capacity_mw + vre_capacity_mw * capacity_factor - peak_demand_mw) / peak_demand_mw
+    relation: eq
+    parameters:
+    - firm_capacity_mw
+    - vre_capacity_mw
+    - capacity_factor
+    - peak_demand_mw
+    free_variables:
+    - firm_capacity_mw
+    - vre_capacity_mw
+    - capacity_factor
+    - peak_demand_mw
+    determined_variables:
+    - reserve_margin_actual
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P1
+  total_revenue_definition:
+    name: Total revenue
+    description: 'The fleet''s annual revenue at the PPA price. Dimensional check: TWh times 1e6 is MWh/year, times USD/MWh is USD/year. Uses the PPA price rather than a market price because the graph''s single-buyer simplification is what the revenue identity is written against.'
+    system: financial
+    lhs: total_revenue_usd_per_year
+    rhs: generation_twh * 1000000 * ppa_price_usd_per_mwh
+    relation: eq
+    parameters:
+    - generation_twh
+    - ppa_price_usd_per_mwh
+    free_variables:
+    - generation_twh
+    - ppa_price_usd_per_mwh
+    determined_variables:
+    - total_revenue_usd_per_year
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+```
+
+---
+
+## Register 3 — `relationships` (new)
+
+Thirty-three new edges. Each cites an equation in Register 2 and has both endpoints among that equation's symbols.
+
+```yaml
+relationships:
+- source: demand_twh
+  target: load_factor
+  equation_id: load_factor_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: Annual demand divided by peak-hours is the load factor.
+  priority: P1
+- source: peak_demand_mw
+  target: load_factor
+  equation_id: load_factor_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: Peak demand is the denominator; a higher peak lowers the factor.
+  priority: P1
+- source: reserve_margin_min
+  target: lolp
+  equation_id: lolp_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: A higher reserve margin lowers the loss-of-load probability.
+  priority: P1
+- source: lolp
+  target: lole_hours_per_year
+  equation_id: lole_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The expectation is the probability annualised.
+  priority: P1
+- source: ppa_price_usd_per_mwh
+  target: ppa_annual_revenue_usd_per_kw_year
+  equation_id: ppa_annual_revenue_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The PPA price is the revenue per unit sold.
+  priority: P2
+- source: capacity_factor
+  target: ppa_annual_revenue_usd_per_kw_year
+  equation_id: ppa_annual_revenue_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The capacity factor is how often the unit sells.
+  priority: P2
+- source: ppa_price_usd_per_mwh
+  target: ppa_indexed_price_usd_per_mwh
+  equation_id: ppa_indexed_price_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The base price is what the indexation compounds.
+  priority: P2
+- source: tariff_indexation
+  target: ppa_indexed_price_usd_per_mwh
+  equation_id: ppa_indexed_price_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The indexation rate is the compounding.
+  priority: P2
+- source: ppa_duration
+  target: ppa_indexed_price_usd_per_mwh
+  equation_id: ppa_indexed_price_definition
+  relationship: temporal
+  direction: forward
+  strength: hard
+  description: The contract duration is the exponent.
+  priority: P2
+- source: firm_capacity_mw
+  target: system_inertia_mws
+  equation_id: inertia_from_capacity_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The synchronous fleet's capacity is what stores the kinetic energy.
+  priority: P1
+- source: inertia_constant_s
+  target: system_inertia_mws
+  equation_id: inertia_from_capacity_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The inertia constant is the conversion from MW to MW·s.
+  priority: P1
+- source: nominal_frequency_hz
+  target: frequency_nadir_hz
+  equation_id: frequency_nadir_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The nominal frequency is the reference the nadir falls from.
+  priority: P1
+- source: rocof_df_dt_hz_per_s
+  target: frequency_nadir_hz
+  equation_id: frequency_nadir_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The rate of change is the slope that carries the frequency down.
+  priority: P1
+- source: frequency_response_time_s
+  target: frequency_nadir_hz
+  equation_id: frequency_nadir_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The response time is how long the slope is unopposed.
+  priority: P1
+- source: rule_of_law_index
+  target: composite_governance_index
+  equation_id: composite_governance_index_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The rule of law is one of the five components.
+  priority: P2
+- source: political_stability
+  target: composite_governance_index
+  equation_id: composite_governance_index_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: Stability is the second component.
+  priority: P2
+- source: corruption_perception
+  target: composite_governance_index
+  equation_id: composite_governance_index_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: Corruption perception is the third.
+  priority: P2
+- source: regulatory_predictability
+  target: composite_governance_index
+  equation_id: composite_governance_index_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: Regulatory predictability is the fourth.
+  priority: P2
+- source: contract_enforceability
+  target: composite_governance_index
+  equation_id: composite_governance_index_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: Contract enforcement is the fifth.
+  priority: P2
+- source: coal_capacity
+  target: fuel_diversity_index
+  equation_id: fuel_diversity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Coal is one of the seven fuel shares.
+  priority: P2
+- source: gas_capacity
+  target: fuel_diversity_index
+  equation_id: fuel_diversity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gas is the second.
+  priority: P2
+- source: oil_capacity
+  target: fuel_diversity_index
+  equation_id: fuel_diversity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Oil is the third.
+  priority: P2
+- source: nuclear_capacity
+  target: fuel_diversity_index
+  equation_id: fuel_diversity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Nuclear is the fourth.
+  priority: P2
+- source: hydro_capacity
+  target: fuel_diversity_index
+  equation_id: fuel_diversity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Hydro is the fifth.
+  priority: P2
+- source: solar_pv_capacity
+  target: fuel_diversity_index
+  equation_id: fuel_diversity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Solar is the sixth.
+  priority: P2
+- source: wind_onshore_capacity
+  target: fuel_diversity_index
+  equation_id: fuel_diversity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Wind is the seventh.
+  priority: P2
+- source: total_capacity_mw
+  target: fuel_diversity_index
+  equation_id: fuel_diversity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The total is the denominator.
+  priority: P2
+- source: firm_capacity_mw
+  target: reserve_margin_actual
+  equation_id: reserve_margin_actual_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: Firm capacity is the first term.
+  priority: P1
+- source: vre_capacity_mw
+  target: reserve_margin_actual
+  equation_id: reserve_margin_actual_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The VRE contribution enters at its capacity factor.
+  priority: P1
+- source: capacity_factor
+  target: reserve_margin_actual
+  equation_id: reserve_margin_actual_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The credit is the capacity factor.
+  priority: P1
+- source: peak_demand_mw
+  target: reserve_margin_actual
+  equation_id: reserve_margin_actual_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Peak demand is what the margin is measured over.
+  priority: P1
+- source: generation_twh
+  target: total_revenue_usd_per_year
+  equation_id: total_revenue_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: Generation is what is sold.
+  priority: P2
+- source: ppa_price_usd_per_mwh
+  target: total_revenue_usd_per_year
+  equation_id: total_revenue_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The price is the multiplier.
+  priority: P2
+```
+
+---
+
+## Register 4 — `cross_validation` (new)
+
+Eight new rules.
+
+```yaml
+cross_validation:
+- id: load_factor_out_of_band
+  condition: load_factor < 0.35 or load_factor > 0.9
+  severity: warning
+  message: A load factor below 0.35 or above 0.9 is outside the band most power systems operate in. A factor below 0.35 is a system with a very sharp peak; above 0.9 is a system with almost no daily variation, which usually means the demand profile is wrong.
+  suggestion: Check peak_demand_mw against demand_twh
+- id: lolp_above_standard
+  condition: lolp > 0.01
+  severity: error
+  message: A loss-of-load probability above 1% is above the reliability standard most regulators set; the reserve margin is insufficient for the fleet the scenario builds
+  suggestion: Raise reserve_margin_min, or check that firm_capacity_mw is the fleet the optimiser actually builds
+- id: lole_exceeds_days
+  condition: lole_hours_per_year > 24
+  severity: error
+  message: A loss-of-load expectation above one day per year is a system that fails the standard every jurisdiction in the sample has adopted
+  suggestion: Reconcile reserve_margin_min with the reliability target
+- id: ppa_indexed_price_doubles
+  condition: ppa_indexed_price_usd_per_mwh > 3 * ppa_price_usd_per_mwh
+  severity: warning
+  message: The indexed PPA price is more than triple the base price by contract end, which is a level of indexation no power market has sustained over a twenty-year contract
+  suggestion: Lower tariff_indexation, or shorten ppa_duration
+- id: frequency_nadir_below_protection
+  condition: frequency_nadir_hz < 48.0
+  severity: error
+  message: A frequency nadir below 48 Hz on a 50 Hz system is below the first stage of under-frequency load shedding in most grids. The system trips before the response engages.
+  suggestion: Raise firm_capacity_mw, or lower frequency_response_time_s, or relax the largest_loss_mw assumption
+- id: composite_governance_out_of_band
+  condition: composite_governance_index < 0.15 or composite_governance_index > 0.95
+  severity: info
+  message: A composite governance index outside [0.15, 0.95] is outside the range the Worldwide Governance Indicators produce across the sample. The components may be on different scales.
+  suggestion: Check that the five components are normalised to the same [0, 1] scale
+- id: fuel_diversity_with_monopoly
+  condition: fuel_diversity_index < 0.3 and total_capacity_mw > 1000
+  severity: warning
+  message: A fuel diversity index below 0.3 with more than 1 GW of capacity is a system dependent on a single fuel. The number is what the index reports; the flag is that the scenario is one no diversification policy is being applied to.
+  suggestion: Confirm the scenario is intended as a single-fuel case
+- id: reserve_margin_below_requirement
+  condition: reserve_margin_actual < reserve_margin_min
+  severity: error
+  message: The actual reserve margin is below the required minimum. The fleet the scenario builds does not meet the adequacy standard the scenario declares.
+  suggestion: Raise firm_capacity_mw, raise vre_capacity_mw, or lower reserve_margin_min
+```
+
+---
+
+## Coverage update
+
+| Metric | After Batch 6 | After Batch 7 |
+|---|---|---|
+| Parameters declared | 913 | **926** |
+| Equations declared | 75 | **86** |
+| Relationships declared | 205 | **238** |
+| Cross-validation rules declared | 55 | **63** |
+| Parameters **determined** | 61 | **71** |
+| Parameters **named** | 279 | **308** |
+| Parameters **still uncoupled** | 634 | **618** |
+| `free` nodes with placeholder range `[0, 1e6]` | 262 | **262** |
+
+**Systems extended by this batch**: `energy_balance` (1→2), `demand_supply` (2→4), `inertia` (2→4), `ppa_pricing` (1→3), `reliability` (4→6), `financial` (already rich, +1), `reserve_margin` (+1).
+
+**Systems still thin after this batch**:
+- `affordability` — 2 equations, adequate for a first-order burden check
+- `capture_price` — 4 equations, adequate for a cannibalisation loop
+- `carbon_trajectory` — 3 equations, adequate for a budget test
+- `employment` — 3 equations, adequate for a jobs multiplier
+- `health` — 3 equations, adequate for a linearised health cost
+- `learning` — 3 equations, adequate for a learning curve
+- `water_energy` — 3 equations, adequate for a cooling-and-hydrogen balance
+
+Each of these is at or above the minimum needed to close its loop. Further extension is a future batch, not a current gap.
+
+**The 262 placeholder nodes** are unchanged. They are:
+- The 13 firm-specific insurance parameters (Batch 6 Part B). Permanent until a firm supplies its own data.
+- Approximately 249 qualitative, organisational, policy-choice, or jurisdiction-specific parameters whose admissible set is undefined by any public document.
+
+**The next batch (8)** is the **structural reconciliation pass**: nominating canonical ids for the duplicate parameters the graph carries under two spellings (`capex_solar_pv` vs `solar_pv_cost`, `battery_cost` vs `capex_battery`, and roughly a dozen others), deprecating the redundant spellings, and updating every equation and edge to reference the canonical id. That is a structural change to the graph's identity, not an arithmetic one, and it belongs in its own batch. It will reduce the declared parameter count without losing any information.
+
+---
+
+## What this batch did and did not do
+
+**Did:**
+- Corrected one role: `system_inertia_mws` is now `derived`, because inertia is a consequence of the fleet, not a scenario input.
+- Added eleven equations extending six systems that have been thin since Batch 1.
+- Coupled 10 previously-uncoupled parameters (`rule_of_law_index`, `political_stability`, `corruption_perception`, `regulatory_predictability`, `contract_enforceability`, `coal_capacity`, `gas_capacity`, `oil_capacity`, `nuclear_capacity`, `hydro_capacity` — the last five of which were already determined but are now also named in an index equation).
+- Added three exogenous nodes for the physical quantities the new inertia equations require.
+- Added eight cross-validation rules, including the first that catches a fleet whose actual reserve margin falls below the standard the same scenario declares.
+- Grew the equation library by 11, the relationship graph by 33, and the coverage of named parameters from 30.6% to 33.3%.
+
+**Did not:**
+- Correct any ranges. Batches 2–6 closed every range the domain supports; the ones that remain need jurisdiction- or firm-specific data.
+- Close any placeholder nodes. The remaining 262 are firm-specific or qualitative.
+- Reconcile the duplicate ids. That is Batch 8.
+- Add equations for the systems that are already adequate for their loops (affordability, health, employment, water). Further extension of those is a future decision, not a current gap.
+
+**The honest state of the graph after seven batches:**
+
+- 926 declared parameters
+- 86 declared equations
+- 238 declared relationships
+- 63 cross-validation rules
+- 71 parameters determined (7.7%)
+- 308 parameters named (33.3%)
+- 618 parameters still uncoupled (66.7%)
+- 262 parameters still on the placeholder (28.3%)
+
+The graph now carries enough arithmetic that a scenario's physical, economic and governance claims can be checked against each other rather than against the scenario's own declarations. It is not complete, and the remaining uncoupled parameters are concentrated in classes that need documents rather than sweeps. The map of the last three batches is: **structural reconciliation** (Batch 8), **insurance and firm-specific ingestion** (Batch 9, gated on data the platform does not control), and **the long tail of qualitative parameters** (ongoing, and correctly `free`).
