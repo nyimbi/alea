@@ -19,7 +19,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, NamedTuple
 
-from alea.prg import constraints, translate
+from alea.prg import catalog, constraints, translate
 from alea.prg.crossval import CrossValidationReport
 from alea.prg.graph import ParameterGraph, Violation, load_graph
 from alea.prg.library import SYSTEM_IDS, coverage, systems_of
@@ -146,6 +146,16 @@ def graph_summary(graph: ParameterGraph | None = None) -> dict[str, Any]:
 		# with no deployment config says ``compared: false`` instead of
 		# serving an empty list that reads as agreement.
 		"cross_layer": translate.cross_layer_report(),
+		# The third document, and the only one whose claims are checked against
+		# itself. `docs/params.md` is the master catalog `ParameterNode.status`,
+		# `users` and `source` were copied from, and until this register nothing
+		# in `src/` had opened it -- which is why `status` could drift on the one
+		# node where the two documents name the same parameter. Its title claims
+		# 784 parameters, its own headings declare 824 rows, and its table holds
+		# 824 rows over 787 distinct names; carrying all four numbers is the only
+		# way a reader sees the disagreement, because each is consistent with the
+		# line it sits on. Degrades to `readable: false` on a tree without it.
+		"catalog": catalog.catalog_report(graph=g),
 		# The other half of the translation layer, and a different finding: of
 		# the six equations that could constrain a solve, two bind and four are
 		# post-solve checks. The denominator is the six inequalities, not the

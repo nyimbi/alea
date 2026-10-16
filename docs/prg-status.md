@@ -252,6 +252,41 @@ manufacturing a decision no one took.
   the register). Left as a finding because the choice between those two is the
   user's, not the code's.
 
+  **The join now has a reader, and it is the one that found the drift above.**
+  `prg/catalog.py` parses `docs/params.md` and `catalog.status_join` reconciles
+  the two vocabularies node by node; `prg summary` carries it as `catalog`, and
+  `tests/ci/test_prg_catalog.py` pins the six-node join, the five agreements and
+  the one disagreement by name. So the entry's claim that "nothing has ever
+  checked one against the other" was true until 2026-10-16 and is now false:
+  the check exists, it is on the summary, and it fails loudly if the drift
+  moves. What remains a finding is only the *resolution* — populate the
+  remaining 82 from the catalog, or drop the column and let the catalog be the
+  register.
+
+  Reading the catalog to build that join turned up three things about the
+  document itself, all of them the same defect class one level up: it states
+  its own size three times and the three disagree. The title claims **784**
+  parameters, its 28 category headings declare per-category counts summing to
+  exactly **824**, and the table holds **824 numbered rows over 787 distinct
+  names** — 35 names appear on more than one row. Each number is correct about
+  the thing it describes (the headings do match their rows, to the row), which
+  is why nothing caught the disagreement: no line is wrong, only the document
+  as a whole. `catalog.summary()` serves all three side by side and
+  `catalog.title_count()` reads the claim out of the heading rather than
+  serving the constant, so editing the title moves the register.
+
+  Of the 35 repeated names, 11 disagree somewhere and only **2 disagree on a
+  classification column** — `planned_outage_rate` on Priority (`P1` under
+  Outage, `P2` under Operational) and `resettlement_costs` on Users (`DFIs`
+  against `Developers`). The other 9 differ only in their prose columns, which
+  is by design: the catalog is organised by *concern*, so a quantity relevant
+  to two concerns is listed under both and its Algorithm cell is written for
+  each. `catalog.contradictions(classification_only=True)` is the narrow
+  register; the wide one keeps the two classes apart rather than merging them,
+  because reporting 11 findings where 2 are real is a register a reader stops
+  reading. Both classification conflicts are left as findings — which of the
+  two rows is right is an editorial call, not a code one.
+
 - **Four declared node fields are populated on zero nodes, and the spec's own
   example populates all four.** `source`, `source_url`, `users` and
   `subcategory` are on `ParameterNode` — `subcategory` as `str | None`, the
@@ -314,12 +349,25 @@ manufacturing a decision no one took.
     the citation for most rows either — `carbon_price`'s own row names an
     algorithm (`n.generators.marginal_cost += carbon_price * co2`) and a
     status, and no source — so the wiring would populate from the spec's
-    single example.
+    single example. `catalog.read_catalog()` now serves the Algorithm and
+    Implementation columns as data, so the internal half of that split is
+    readable; the external half is still one row in a spec example.
 
   Left as findings because every resolution here is a product decision: drop
   `subcategory`, populate `users` from the catalog on the joinable nodes or
   not, and adopt `Provenance` for parameter sources or keep parameter
   provenance out of the artefact layer.
+
+  **The catalog is no longer an unopened document, which changes the shape of
+  all four entries.** Until 2026-10-16 nothing in `src/` had read
+  `docs/params.md` — it was cited in prose by this file and by
+  `docs/modelling-alg-2.md:39` and read by no code, which is why a hand-copied
+  Status column could drift and why nobody could say what `users`' vocabulary
+  was. `prg/catalog.py` is that reader, `prg summary` carries its register, and
+  every number in the three bullets above is now computed rather than
+  transcribed. The four fields stay unpopulated, and that is still the right
+  call: populating 6 of 88 makes a field look served. What changed is that the
+  decision is now made against a measurement instead of against an impression.
 
 - **Part X's other backends are absent.** The spec names Pyomo for MILP, SymPy
   for symbolic manipulation and a custom iterative solver. Each is a separate
