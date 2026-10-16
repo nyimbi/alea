@@ -36,6 +36,14 @@
 #   R9: dropped edge land_acquisition_cost_per_hectare -> annualised_capex_usd_per_kw -- 'annualised_capex' does not hold both endpoints (gate 6)
 #   R3: dropped rule 'retention_plus_deductible_above_unity' -- its condition needs arithmetic, which the cross-validation grammar refuses: retention_share + deductible_share > 1.0
 #   R3: dropped rule 'local_employment_exceeds_total' -- its condition needs arithmetic, which the cross-validation grammar refuses: local_employment_share + women_employment_share + youth_employment_share > 2.0
+#   R10: dropped equation 'loss_ratio_from_claims_definition' and its two edges -- it stated
+#        `combined_ratio - loss_ratio == premium_share_of_asset`, which is not the accounting
+#        identity. An expense ratio is expenses over premiums; premium-per-asset is premiums over
+#        assets. The equation asserted a false relation between three real parameters, and a false
+#        equation is worse than a missing one because `cross_validate` reports it satisfied or
+#        violated at every scenario. It is replaced by `insurance_combined_ratio_definition`, which
+#        states the identity over an expense ratio, and by the `insurance_combined_below_loss` rule
+#        that already bounds the pair.
 parameters:
   loss_ratio:
     name: Loss ratio
@@ -59,17 +67,16 @@ parameters:
     - Insurance
   combined_ratio:
     name: Combined ratio
-    description: Loss ratio plus expense ratio. The market-level number; a combined ratio below 1.0 is
-      an underwriting profit, above 1.0 an underwriting loss. The range spans the best and worst market
-      years in the sample.
+    description: 'Loss ratio plus expense ratio. A combined ratio below 1.0 is an underwriting profit,
+      above 1.0 an underwriting loss. Determined by insurance_combined_ratio_definition over an expense
+      ratio; the market-level range here spans the best and worst years in the sample.'
     category: Insurance & Catastrophe
     type: float
     unit: '1'
     range:
     - 0.7
     - 1.5
-    default: 1.0
-    role: free
+    role: derived
     determinism: stochastic
     priority: P2
     status: to_build
@@ -1308,25 +1315,6 @@ equations:
     solution_method: direct
     linearity: linear
     priority: P2
-  loss_ratio_from_claims_definition:
-    name: Loss ratio from claims and premiums
-    description: 'The loss ratio: claims over premiums. The graph carries no premiums-and-claims pair,
-      so this equation uses the market-level loss ratio and the market-level combined ratio to state the
-      ratio relationship: the expense ratio is the combined ratio minus the loss ratio. Dimensional check:
-      dimensionless minus dimensionless is dimensionless.'
-    system: financial
-    lhs: combined_ratio - loss_ratio
-    rhs: premium_share_of_asset
-    relation: eq
-    parameters:
-    - combined_ratio
-    - loss_ratio
-    - premium_share_of_asset
-    tolerance: 1.0e-06
-    unit_check: true
-    solution_method: numeric
-    linearity: linear
-    priority: P2
 relationships:
 - source: vre_capacity_mw
   target: vre_firm_capacity_mw
@@ -1415,22 +1403,6 @@ relationships:
   direction: forward
   strength: hard
   description: The per-person cost is the multiplier.
-  priority: P2
-- source: loss_ratio
-  target: combined_ratio
-  equation_id: loss_ratio_from_claims_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: The combined ratio is loss plus expense.
-  priority: P2
-- source: premium_share_of_asset
-  target: combined_ratio
-  equation_id: loss_ratio_from_claims_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: The share-of-asset premium is the expense side.
   priority: P2
 cross_validation:
 - id: insurance_combined_below_loss

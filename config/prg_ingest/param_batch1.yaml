@@ -29,16 +29,17 @@ parameters:
     - Policymakers
   coal_eaf:
     name: Coal energy availability factor
-    description: Share of hours the coal fleet is available to generate. The EAF is a share; the shipped
-      range accepted values that would imply a fleet producing 500,000 times nameplate.
+    description: 'Share of rated energy the coal fleet can deliver. Determined by the forced and
+      planned outage rates in coal_eaf_definition rather than declared, so a scenario cannot state an
+      availability that its own outage rates contradict. Declared as a share and ranged (0, 1) by this
+      batch; Batch 10 supplies the identity those bounds were describing.'
     category: Supply-Side
     type: float
     unit: '1'
     range:
     - 0.0
     - 1.0
-    default: 0.55
-    role: free
+    role: derived
     determinism: fixed
     priority: P1
     status: existing
@@ -47,37 +48,40 @@ parameters:
     - Utilities
   gas_eaf:
     name: Gas energy availability factor
-    description: Share of hours the gas fleet is available to generate. Same shape and same reasoning
-      as the coal EAF.
+    description: 'Share of rated energy the gas fleet can deliver. Determined by the forced and
+      planned outage rates in gas_eaf_definition rather than declared, so a scenario cannot state an
+      availability that its own outage rates contradict. Declared as a share and ranged (0, 1) by this
+      batch; Batch 10 supplies the identity those bounds were describing.'
     category: Supply-Side
     type: float
     unit: '1'
     range:
     - 0.0
     - 1.0
-    default: 0.85
-    role: free
+    role: derived
     determinism: fixed
     priority: P1
     status: existing
-    source: docs/params.md#2.8
+    source: docs/params.md#2.2
     users:
     - Utilities
   oil_eaf:
     name: Oil energy availability factor
-    description: Share of hours the oil fleet is available. Same shape as the other availability factors.
+    description: 'Share of rated energy the oil fleet can deliver. Determined by the forced and
+      planned outage rates in oil_eaf_definition rather than declared, so a scenario cannot state an
+      availability that its own outage rates contradict. Declared as a share and ranged (0, 1) by this
+      batch; Batch 10 supplies the identity those bounds were describing.'
     category: Supply-Side
     type: float
     unit: '1'
     range:
     - 0.0
     - 1.0
-    default: 0.85
-    role: free
+    role: derived
     determinism: fixed
-    priority: P2
+    priority: P1
     status: existing
-    source: docs/params.md#2.12
+    source: docs/params.md#2.2
     users:
     - Utilities
   cross_subsidy_level:

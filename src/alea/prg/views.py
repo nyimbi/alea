@@ -387,6 +387,66 @@ class Equation(BaseModel):
 	solution_method: Literal["direct", "iterative", "symbolic", "numeric"] = "numeric"
 	linearity: Literal["linear", "nonlinear", "mixed"] = "linear"
 
+	latex: str | None = None
+	"""The relation as LaTeX, as the author of the equation wrote it.
+
+	WHY THIS IS STORED AND NOT ONLY RENDERED. :func:`alea.prg.dsl.Expr.latex`
+	already renders any parsed expression, and until this field existed that
+	was the only way to get a typeset relation -- computed on demand, never
+	kept. Rendering is enough to *display* an equation and not enough to
+	*explain* one, because the renderer folds constants at parse time: the
+	learning curve's ``log(1 - learning_rate) / log(2)`` typesets as
+	``\\frac{\\ln(1 - \\mathrm{learning}_{rate})}{0.693147}``. The ``log(2)``
+	is the base-2 doubling convention and is the single most load-bearing
+	piece of that equation; the renderer replaces it with a decimal and a
+	reader cannot tell which logarithm base the physics assumes. A stored
+	string is what lets an author write ``\\log_2`` and say what they meant.
+
+	So the field is a *declaration*, and the generated rendering is the
+	fallback for the equations that do not declare one. Both are reachable:
+	:func:`alea.prg.service.latex_of` returns this when it is set and renders
+	otherwise, so a caller never has to know which equations carry one. A
+	stored rendering that disagreed with the arithmetic would be a claim
+	nothing checks, which is why :func:`alea.prg.service.check_latex` exists
+	and why ``tests/ci`` runs it over the whole library.
+	"""
+
+	@model_validator(mode="after")
+	def _the_rendering_parses(self) -> Equation:
+		# A LaTeX string is the one field on this model that nothing else
+		# reads, so a malformed one is silent until a report is typeset. The
+		# check here is deliberately *syntactic* -- balanced braces and no
+		# stray ``$`` -- because a full parse would duplicate the LaTeX
+		# grammar and then have to agree with it forever. Semantic agreement
+		# with the arithmetic is a separate check over the graph
+		# (`service.check_latex`), which is where the two can be compared.
+		if self.latex is None:
+			return self
+		text = self.latex
+		depth = 0
+		for index, character in enumerate(text):
+			if character == "{":
+				depth += 1
+			elif character == "}":
+				depth -= 1
+				if depth < 0:
+					raise ValueError(
+						f"{self.id}: latex closes a brace at position {index} "
+						f"that it never opened; the string is {text!r}"
+					)
+		if depth:
+			raise ValueError(
+				f"{self.id}: latex leaves {depth} brace(s) unclosed; the "
+				f"string is {text!r}"
+			)
+		if "$" in text:
+			raise ValueError(
+				f"{self.id}: latex carries a math-mode delimiter '$'; the "
+				f"field holds the body of a relation, and the caller wraps it "
+				f"-- a delimiter stored here is a second one at render time"
+			)
+		return self
+
 	@model_validator(mode="after")
 	def _a_derivation_has_exactly_one_target(self) -> Equation:
 		# A determination is only meaningful for an equality: an inequality

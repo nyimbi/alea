@@ -16,11 +16,13 @@ it is how two callers end up disagreeing about what an equation says.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Any, NamedTuple
 
 from alea.prg import catalog, constraints, translate
 from alea.prg.crossval import CrossValidationReport
+from alea.prg.dsl import parse
 from alea.prg.graph import ParameterGraph, Violation, load_graph
 from alea.prg.library import SYSTEM_IDS, coverage, systems_of
 from alea.prg.uncertainty import register as uncertainty_register
@@ -320,13 +322,141 @@ def describe(equation: Equation, *, as_: str = "unicode") -> str:
 
 	lhs, rhs = parse(equation.lhs), parse(equation.rhs)
 	if as_ == "latex":
-		join = {"leq": r" \leq ", "geq": r" \geq ", "eq": " = "}[equation.relation]
-		return f"{lhs.latex()}{join}{rhs.latex()}"
+		# The declared rendering wins when there is one; see `latex_of`. A
+		# report that rendered the arithmetic instead would typeset the
+		# folded `0.693147` for an equation whose author wrote `\log_2`, and
+		# the report is exactly the place the author's meaning has to survive.
+		return latex_of(equation)
 	if as_ == "source":
 		join = {"leq": " <= ", "geq": " >= ", "eq": " == "}[equation.relation]
 		return f"{lhs.source()}{join}{rhs.source()}"
 	join = {"leq": " ≤ ", "geq": " ≥ ", "eq": " = "}[equation.relation]
 	return f"{lhs.unicode()}{join}{rhs.unicode()}"
+
+
+#: The LaTeX an equation's own ``relation`` renders as. Keyed by the same three
+#: values :class:`alea.prg.views.Relation` carries, and named here rather than
+#: inline so the stored-rendering check and the generated rendering cannot
+#: disagree about what ``leq`` looks like.
+_LATEX_RELATION = {"leq": r" \leq ", "geq": r" \geq ", "eq": " = "}
+
+
+def generated_latex(equation: Equation) -> str:
+	"""The LaTeX :func:`describe` computes for ``equation``, never the stored one.
+
+	Split out from :func:`latex_of` so the two are separately reachable: the
+	check over the library compares a declared rendering against the generated
+	one, and a function that returned the declared string whenever it was set
+	would compare a value with itself and report agreement for every equation
+	including the wrong ones.
+	"""
+	from alea.prg.dsl import parse
+
+	lhs, rhs = parse(equation.lhs), parse(equation.rhs)
+	return f"{lhs.latex()}{_LATEX_RELATION[equation.relation]}{rhs.latex()}"
+
+
+def latex_of(equation: Equation) -> str:
+	"""The LaTeX for ``equation``: what it declares, or what the DSL renders.
+
+	The one door a report should use. An author who writes ``\\log_2`` gets
+	``\\log_2``; an equation nobody has annotated gets the renderer's output,
+	which is correct and merely less explicit. A caller that read
+	``equation.latex`` directly would get ``None`` for most of the library and
+	have to reimplement this fallback, which is how the two paths drift.
+	"""
+	return equation.latex or generated_latex(equation)
+
+
+class LatexFinding(NamedTuple):
+	"""One declared LaTeX rendering that describes a different equation.
+
+	A ``NamedTuple`` of its own rather than a :class:`Violation`, which carries
+	a residual and a tolerance and is about an equation failing at a scenario's
+	values. This is about the *text* of an equation failing at no values at
+	all, and folding it into ``Violation`` would have meant inventing a
+	residual of zero for a defect that has no arithmetic in it.
+	"""
+
+	equation_id: str
+	detail: str
+
+	def __str__(self) -> str:
+		return f"{self.equation_id}: {self.detail}"
+
+
+def check_latex(graph: ParameterGraph | None = None) -> list[LatexFinding]:
+	"""Every declared LaTeX rendering that disagrees with its own arithmetic.
+
+	A stored string is a claim about an equation, and a claim nothing reads is
+	the defect this repository keeps paying for -- ``trained``, ``reference``,
+	``Interval``. So the claim is *checked*: strip the LaTeX down to the
+	parameter names it typesets, and compare that set against the symbols the
+	arithmetic actually holds. A rendering that names a parameter the equation
+	does not use, or omits one it does, is a rendering of a different equation.
+
+	WHY A NAME-SET COMPARISON AND NOT A STRING COMPARISON. A declared rendering
+	is *allowed* to differ from the generated one -- that is the whole point of
+	declaring it, so ``\\log_2`` can replace the renderer's folded ``0.693147``.
+	What it may not do is describe different physics. So the check is on the
+	operand set, which is the part that has to agree, and the difference in
+	notation is exactly what the field exists to permit.
+
+	WHY IT REPORTS RATHER THAN RAISES. An equation with no declared rendering
+	has nothing to check and is not a finding; one whose rendering disagrees is
+	a finding a reviewer acts on, the same shape as every other register in
+	this module.
+	"""
+	g = _graph(graph)
+	findings: list[LatexFinding] = []
+	for equation_id, equation in sorted(g.equations.items()):
+		if not equation.latex:
+			continue
+		held = parse(equation.lhs).symbols | parse(equation.rhs).symbols
+		named = _latex_symbols(equation.latex)
+		unknown = sorted(named - held)
+		missing = sorted(held - named)
+		if not (unknown or missing):
+			continue
+		detail: list[str] = []
+		if unknown:
+			detail.append(f"typesets {unknown}, which the arithmetic does not hold")
+		if missing:
+			detail.append(f"omits {missing}, which the arithmetic does hold")
+		findings.append(
+			LatexFinding(equation_id, f"{equation.latex!r} " + " and ".join(detail))
+		)
+	return findings
+
+
+#: The two shapes :meth:`alea.prg.dsl.Symbol._latex` writes a parameter name in.
+#: The renderer splits a name at its *first* underscore into a base and a
+#: subscript and escapes every later one, so recovery is the exact inverse.
+_LATEX_SUBSCRIPTED = re.compile(r"\\mathrm\{([^{}]*)\}_\{([^{}]*)\}")
+_LATEX_BARE = re.compile(r"\\mathrm\{([^{}]*)\}")
+
+
+def _latex_symbols(text: str) -> frozenset[str]:
+	"""Every declared parameter name a LaTeX rendering typesets.
+
+	The subscripted forms are consumed first and removed from the string, so
+	the bare-name sweep cannot match a subscripted name's *base* a second time
+	-- ``\\mathrm{capex}_{learning\\_usd\\_per\\_kw}`` yields ``capex_learning_usd_per_kw``
+	and not that plus a spurious ``capex``.
+
+	This is written against that one renderer's output rather than against
+	LaTeX in general: a rendering an author wrote by hand in some other style
+	will not round-trip, and that is a real limitation rather than a silent
+	one -- the whole equation's symbol set then reads as missing, which is a
+	loud failure that names the equation.
+	"""
+	names: set[str] = set()
+	remainder = _LATEX_SUBSCRIPTED.sub("", text)
+	for base, subscript in _LATEX_SUBSCRIPTED.findall(text):
+		names.add(f"{base}_{subscript}".replace(r"\_", "_"))
+	for bare in _LATEX_BARE.findall(remainder):
+		names.add(bare.replace(r"\_", "_"))
+	return frozenset(names)
 
 
 class EquationRow(NamedTuple):

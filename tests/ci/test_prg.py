@@ -630,10 +630,27 @@ def test_two_equations_determining_one_parameter_are_refused(document: dict):
 
 
 def test_a_derivation_cycle_is_refused_and_names_its_members(document: dict):
-	"""A cycle among derived parameters has no evaluation order."""
-	document["equations"]["marginal_cost"]["rhs"] = "lcoe_usd_per_mwh"
+	"""A cycle among derived parameters has no evaluation order.
+
+	WHY THE MUTATION *ADDS* AN OPERAND RATHER THAN REPLACING THEM. The cycle
+	needs ``marginal_cost`` to depend on ``lcoe``, and ``lcoe_definition``
+	already depends on ``marginal_cost`` -- so naming ``lcoe`` in this equation
+	is the whole of it. An earlier version replaced the right-hand side
+	outright, which dropped ``carbon_cost_usd_per_mwh`` from the equation while
+	the shipped edge ``carbon_cost -> marginal_cost`` still cited it. That
+	document is refused by the edge rule before ``order()`` is ever reached, so
+	the test failed on a defect it had introduced itself and reported a cycle
+	that nothing got to look for. Keeping the shipped operands and appending
+	``lcoe`` makes the document one the loader accepts, which is the only kind
+	on which "the cycle is refused" says anything.
+	"""
+	document["equations"]["marginal_cost"]["rhs"] = (
+		"fuel_price_usd_per_mwh + carbon_cost_usd_per_mwh + lcoe_usd_per_mwh"
+	)
 	document["equations"]["marginal_cost"]["parameters"] = [
 		"marginal_cost_usd_per_mwh",
+		"fuel_price_usd_per_mwh",
+		"carbon_cost_usd_per_mwh",
 		"lcoe_usd_per_mwh",
 	]
 	graph = ParameterGraph.from_mapping(document)

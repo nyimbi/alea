@@ -1,0 +1,278 @@
+# Generated from the Batch 10 relation set, in answer to the case-by-case review
+# of the nodes the graph declared and no equation reached.
+#
+# Merged onto config/prg.yaml by alea.prg.graph.load_ingested().
+#
+# WHAT THIS BATCH IS. Batches 0-9 corrected the shipped placeholder nodes and
+# added the parameters the catalog carried and the graph did not. This batch is
+# the first that adds *relations*: five identities whose operands are all
+# already declared, so each one closes its subject without a new operand, a new
+# unit, or a modelling decision.
+#
+# WHY ONLY FIVE. Every other relation in the review needs an operand the graph
+# does not carry -- a `generation_hydro_twh`, an `expense_ratio`, a
+# `population`, a per-technology learning capex. Declaring an operand to make an
+# identity writable is a modelling decision, and a batch that took those
+# decisions silently would be asserting physics nobody reviewed. The five here
+# are the ones where the arithmetic is over names that already exist and the
+# units already agree.
+#
+# WHY EVERY EQUATION CARRIES A `latex`. The DSL renders LaTeX on demand and
+# folds constants while doing it: `log(1 - rate) / log(2)` typesets with the
+# literal `0.693147` where the base-2 doubling convention belongs. A rendering
+# cannot explain a relation whose most load-bearing constant it has erased, so
+# the relations here declare their own rendering and `alea.prg.service.check_latex`
+# holds each one to the operand set of its arithmetic.
+#
+# REPAIRS APPLIED TO THIS BATCH AS DELIVERED:
+#   R13: coal_eaf, gas_eaf, oil_eaf, gearing_ratio and equity_share are moved from
+#        `role: free` to `role: derived` -- each is now determined by an equation
+#        here, and the loader refuses a determined node that is not `derived`
+#        (invariant v), because any other role lets a user set a value the
+#        equation then overwrites.
+#   R14: expense_ratio is declared because the accounting identity needs it. It is
+#        `exogenous`, so the relation is a check on a scenario rather than a
+#        derivation: the graph can say whether a scenario's expense ratio is
+#        consistent with its loss and combined ratios, and it cannot invent one.
+parameters:
+  equity_share:
+    name: Equity share
+    description: 'The share of the capital structure funded by equity: one minus the debt fraction.
+      Derived rather than declared so a scenario cannot state a debt fraction and an equity share that
+      do not sum to one.'
+    category: Financial
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: to_build
+    source: Derived from the debt fraction
+    source_url: https://www.ifc.org/en/what-we-do/sector-expertise/financial-institutions
+    users:
+    - Financial
+  expense_ratio:
+    name: Expense ratio
+    description: 'Underwriting expenses as a share of premiums earned. The second term of the combined
+      ratio: combined = loss + expense. Declared `exogenous` because an insurer''s expense ratio is an
+      observed fact about the book, not a quantity the graph can derive from the asset values it holds.'
+    category: Insurance & Catastrophe
+    type: float
+    unit: '1'
+    range:
+    - 0.15
+    - 0.40
+    default: 0.25
+    role: exogenous
+    determinism: fixed
+    priority: P2
+    status: to_build
+    source: Insurance industry expense ratios, non-life
+    source_url: https://www.oecd.org/en/topics/sub-issues/insurance.html
+    users:
+    - Insurance
+equations:
+  coal_eaf_definition:
+    name: Coal availability from its outage rates
+    description: 'The energy availability factor: the share of rated energy the fleet can deliver,
+      which is one minus the fraction lost to forced and planned outages. Both outage rates are shares
+      of the same rated energy, so they subtract from one without a capacity weighting.'
+    system: reliability
+    lhs: coal_eaf
+    rhs: 1 - forced_outage_rate - planned_outage_rate
+    relation: eq
+    parameters:
+    - forced_outage_rate
+    - planned_outage_rate
+    determined_variables:
+    - coal_eaf
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    latex: '\mathrm{coal}_{eaf} = 1 - \mathrm{forced}_{outage\_rate} - \mathrm{planned}_{outage\_rate}'
+  gas_eaf_definition:
+    name: Gas availability from its outage rates
+    description: 'The gas fleet''s energy availability. Gas has its own forced-outage node and shares
+      the fleet-level planned-outage rate, because planned outages are scheduled across the fleet
+      together while forced outages are a property of the unit type.'
+    system: reliability
+    lhs: gas_eaf
+    rhs: 1 - forced_outage_rate_gas - planned_outage_rate
+    relation: eq
+    parameters:
+    - forced_outage_rate_gas
+    - planned_outage_rate
+    determined_variables:
+    - gas_eaf
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    latex: '\mathrm{gas}_{eaf} = 1 - \mathrm{forced}_{outage\_rate\_gas} - \mathrm{planned}_{outage\_rate}'
+  oil_eaf_definition:
+    name: Oil availability from its outage rates
+    description: 'The oil fleet''s energy availability, over the same two outage rates as coal. Oil
+      and coal share the fleet-level forced-outage node because both are reported against one thermal
+      availability figure in the national statistics the catalog cites.'
+    system: reliability
+    lhs: oil_eaf
+    rhs: 1 - forced_outage_rate - planned_outage_rate
+    relation: eq
+    parameters:
+    - forced_outage_rate
+    - planned_outage_rate
+    determined_variables:
+    - oil_eaf
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    latex: '\mathrm{oil}_{eaf} = 1 - \mathrm{forced}_{outage\_rate} - \mathrm{planned}_{outage\_rate}'
+  gearing_ratio_definition:
+    name: Gearing from the debt fraction
+    description: 'Debt over equity, where equity is the complement of the debt fraction. The
+      singularity at a debt fraction of one is excluded by the node''s own range, which Batch 2
+      capped at 0.95.'
+    system: financial
+    lhs: gearing_ratio
+    rhs: debt_fraction / (1 - debt_fraction)
+    relation: eq
+    parameters:
+    - debt_fraction
+    determined_variables:
+    - gearing_ratio
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P1
+    latex: '\mathrm{gearing}_{ratio} = \frac{\mathrm{debt}_{fraction}}{1 - \mathrm{debt}_{fraction}}'
+  equity_share_definition:
+    name: Equity share from the debt fraction
+    description: 'The equity share is the complement of the debt fraction. This is the identity that
+      makes a scenario''s debt and equity claims consistent by construction rather than by a
+      cross-validation rule.'
+    system: financial
+    lhs: equity_share
+    rhs: 1 - debt_fraction
+    relation: eq
+    parameters:
+    - debt_fraction
+    determined_variables:
+    - equity_share
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    latex: '\mathrm{equity}_{share} = 1 - \mathrm{debt}_{fraction}'
+  insurance_combined_ratio_definition:
+    name: Combined ratio from the loss and expense ratios
+    description: 'The combined ratio is the loss ratio plus the expense ratio. This replaces the
+      equation dropped from param_batch5, which stated the same identity over `premium_share_of_asset`
+      -- premiums over assets, not expenses over premiums. Both terms here are shares of premiums, so
+      the sum is the share of premiums paid out in claims and underwriting.'
+    system: financial
+    lhs: combined_ratio
+    rhs: loss_ratio + expense_ratio
+    relation: eq
+    parameters:
+    - loss_ratio
+    - expense_ratio
+    determined_variables:
+    - combined_ratio
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    latex: '\mathrm{combined}_{ratio} = \mathrm{loss}_{ratio} + \mathrm{expense}_{ratio}'
+relationships:
+- source: forced_outage_rate
+  target: coal_eaf
+  equation_id: coal_eaf_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: A higher forced-outage rate lowers the availability.
+  priority: P1
+- source: planned_outage_rate
+  target: coal_eaf
+  equation_id: coal_eaf_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Planned outage time is unavailable energy.
+  priority: P1
+- source: forced_outage_rate_gas
+  target: gas_eaf
+  equation_id: gas_eaf_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The gas fleet's forced-outage rate.
+  priority: P1
+- source: planned_outage_rate
+  target: gas_eaf
+  equation_id: gas_eaf_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The fleet-level planned-outage rate.
+  priority: P1
+- source: forced_outage_rate
+  target: oil_eaf
+  equation_id: oil_eaf_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The shared thermal forced-outage rate.
+  priority: P1
+- source: planned_outage_rate
+  target: oil_eaf
+  equation_id: oil_eaf_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The fleet-level planned-outage rate.
+  priority: P1
+- source: debt_fraction
+  target: gearing_ratio
+  equation_id: gearing_ratio_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gearing rises without bound as the debt fraction approaches one.
+  priority: P1
+- source: debt_fraction
+  target: equity_share
+  equation_id: equity_share_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The equity share is what the debt fraction does not fund.
+  priority: P1
+- source: loss_ratio
+  target: combined_ratio
+  equation_id: insurance_combined_ratio_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The claims side of the combined ratio.
+  priority: P2
+- source: expense_ratio
+  target: combined_ratio
+  equation_id: insurance_combined_ratio_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The underwriting side of the combined ratio.
+  priority: P2
+cross_validation: []

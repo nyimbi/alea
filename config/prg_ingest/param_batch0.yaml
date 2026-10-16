@@ -181,16 +181,18 @@ parameters:
     - Policymakers
   gearing_ratio:
     name: Gearing ratio
-    description: Debt as a fraction of total capitalisation. Bounded below 1.0 because 100% debt is not
-      a structure a lender will accept.
+    description: 'Debt as a multiple of equity, the complement of the debt fraction. Determined by
+      gearing_ratio_definition. The description here previously read "debt as a fraction of total
+      capitalisation", which is the debt fraction and not the gearing ratio -- the two differ by the
+      factor 1/(1 - debt_fraction), so a scenario reading one for the other was out by 3.3x at the
+      default.'
     category: Investment & Finance
     type: float
     unit: '1'
     range:
     - 0.0
     - 0.95
-    default: 0.7
-    role: free
+    role: derived
     determinism: fixed
     priority: P1
     status: to_build
