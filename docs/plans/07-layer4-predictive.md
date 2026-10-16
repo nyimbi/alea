@@ -448,7 +448,7 @@ reader of the result consults. §7 and §8 each state that a parameter is config
 
 | # | Criterion | Gate |
 |---|---|---|
-| 1 | VIIRS detection runs over a Kenya year without OOM | Integration test |
+| 1 | VIIRS detection runs over a Kenya year without OOM | `test_viirs_detection_peak_memory_does_not_scale_with_the_granule_count` |
 | 2 | Cloud semantics pinned and canaried | `test_cloud_flag_semantics` |
 | 3 | Ghana AUC measured and recorded | M2 artefact |
 | 4 | Weather model PR-AUC and base rate reported | M2 artefact |

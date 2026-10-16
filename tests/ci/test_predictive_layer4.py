@@ -28,7 +28,7 @@ from alea.losses.flow import Network, susceptance_matrix
 from alea.losses.views import DECOMPOSITION_TOLERANCE, LossComponents, LossConfig
 from alea.outages.maintenance import MaintenanceDataError, fit_cox, simulate_survival_data
 from alea.outages.validate import ValidationError, binarise, detection_metrics
-from alea.outages.views import DetectionMetrics, ViirsConfig, WeatherConfig
+from alea.outages.views import DetectionMetrics, PredictiveConfig, ViirsConfig, WeatherConfig
 from alea.outages.viirs import (
 	GAP_FILLED_BAND,
 	MAX_CLOUD_CONFIDENCE,
@@ -795,6 +795,227 @@ def test_no_temporal_leakage():
 		target_column="outage",
 		group_column=ZONE_COLUMN,
 	)
+
+
+# --------------------------------------------------------------------------
+# Criterion 1: VIIRS detection over a Kenya year does not exhaust memory
+# --------------------------------------------------------------------------
+
+#: A tile geometry for the memory test. Small enough that a dozen synthetic
+#: granules cost a few MB on disk, large enough that one tile is a measurable
+#: fraction of a megabyte -- so a detector that held the sequence would show a
+#: slope an order of magnitude above the noise floor.
+_MEMORY_TILE = (4, 128, 128)
+
+
+def _write_granule(path: Path, seed: int, month: int) -> None:
+	"""One synthetic VNP46A2-shaped granule on the disk.
+
+	The arrays are random rather than constant so the baseline is a real
+	quantile and detection does real work; a constant radiance would let the
+	kernel short-circuit and understate what a tile costs.
+	"""
+	import xarray as xr
+
+	time, height, width = _MEMORY_TILE
+	rng = np.random.default_rng(seed)
+	shape = (time, height, width)
+	dataset = xr.Dataset(
+		{
+			RADIANCE_BAND: (("time", "y", "x"), rng.random(shape, dtype=np.float32) * 5.0),
+			"QF_Cloud_Mask": (("time", "y", "x"), np.zeros(shape, np.uint8)),
+			"Sensor_Zenith": (("time", "y", "x"), np.full(shape, 10.0, np.float32)),
+		},
+		coords={
+			"time": np.array(
+				[f"2030-{month:02d}-{day + 1:02d}" for day in range(time)],
+				dtype="datetime64[ns]",
+			)
+		},
+	)
+	dataset.to_netcdf(path)
+
+
+def _peak_bytes_for(granules: list[Path], zone_ids, out: Path) -> int:
+	"""Peak traced allocation for one shipped detection run over ``granules``.
+
+	The shipped path is the one that has to be bounded: a helper that reimplements
+	the streaming loop in the test would measure the test, not the detector.
+	"""
+	import tracemalloc
+
+	from alea.outages.service import detect_to_artefact
+
+	tracemalloc.start()
+	try:
+		detect_to_artefact(granules, granules[:1], zone_ids, 1, out, PredictiveConfig())
+		_, peak = tracemalloc.get_traced_memory()
+	finally:
+		tracemalloc.stop()
+	return peak
+
+
+def test_viirs_detection_peak_memory_does_not_scale_with_the_granule_count(tmp_path):
+	"""Criterion 1 (07-layer4 §11): a country-year detection pass is bounded.
+
+	§2.4 says "granule rasters never accumulate in memory -- a country-year is
+	thousands of ~100 MB granules and the working set is one tile plus the
+	running baseline". That is the property, and it is testable at CI scale
+	without a real year: run the *shipped* detection path over the same tile
+	geometry at two sequence lengths and assert the peak does not grow with the
+	sequence.
+
+	A real Kenya year cannot run here and pretending to is dishonest. What can
+	run is the invariant that makes a year survivable -- the working set is a
+	function of the tile, not of the sequence -- and this asserts it against the
+	production entry point rather than a reimplementation of it.
+
+	The bound is stated against *one tile*, not an absolute byte count: a
+	detector that accumulated the sequence would grow by roughly one tile per
+	granule, so a delta far below one tile's footprint separates bounded from
+	unbounded without pinning an allocator's exact overhead.
+	"""
+	import tracemalloc
+
+	from alea.outages.viirs import zone_ids_from_labels
+
+	time, height, width = _MEMORY_TILE
+	one_tile_bytes = time * height * width * (4 + 4 + 1)  # radiance, zenith, cloud
+	short = tmp_path / "short"
+	long = tmp_path / "long"
+	for directory in (short, long):
+		directory.mkdir()
+	zone_ids = zone_ids_from_labels(np.zeros((height, width), np.uint32))
+
+	short_granules = []
+	long_granules = []
+	for index in range(16):
+		path = tmp_path / f"g{index:02d}.nc"
+		_write_granule(path, seed=index, month=(index % 12) + 1)
+		long_granules.append(path)
+		if index < 4:
+			short_granules.append(path)
+
+	# Warm the allocator outside the trace: the first traced run pays one-time
+	# imports and pandas/xarray setup that dwarf the per-granule cost and would
+	# make the short run look *larger* than the long one for reasons unrelated
+	# to streaming.
+	tracemalloc.start()
+	tracemalloc.stop()
+	_peak_bytes_for(short_granules, zone_ids, short / "warm.parquet")
+
+	short_peak = _peak_bytes_for(short_granules, zone_ids, short / "out.parquet")
+	long_peak = _peak_bytes_for(long_granules, zone_ids, long / "out.parquet")
+
+	# Four times the granules. A bounded detector grows only by the zone series,
+	# which is (time x zones) -- negligible here. The tolerance is one tile,
+	# which is what an accumulating detector adds *per granule*: if the peak
+	# moved by a whole tile over twelve extra granules the working set is
+	# scaling, however small the absolute number looks on this fixture.
+	assert long_peak - short_peak < one_tile_bytes, (
+		f"peak allocation grew by {long_peak - short_peak:,} bytes going from "
+		f"4 to 16 granules ({short_peak:,} -> {long_peak:,}); one tile is "
+		f"{one_tile_bytes:,} bytes, so the working set scales with the sequence "
+		f"rather than with the tile (07-layer4 §2.4)"
+	)
+	# And the run produced a real result, so the bound is not the bound of a
+	# detector that did nothing.
+	frame = pd.read_parquet(long / "out.parquet")
+	assert len(frame) == len(long_granules) * time
+	assert frame.drop(columns="timestamp").to_numpy().size > 0
+
+
+def test_the_detection_path_streams_rather_than_materialising_the_sequence(tmp_path):
+	"""The mechanism behind criterion 1: the shipped path reads one granule at a time.
+
+	`stream_zones` is the streaming entry point and `detect_tiles` the in-memory
+	one; a shipped path that calls the second over a list of every granule has
+	the memory behaviour the criterion forbids whatever its peak happens to be on
+	a small fixture. This pins the *call*, because the count assertion above can
+	pass on a fixture small enough for a materialised sequence to hide.
+
+	The spy counts the tiles `read_granule` returns while the shipped
+	`detect_to_artefact` runs, and asserts the peak live tile count is one -- the
+	sequence is never held.
+	"""
+	from alea.outages import service as service_module
+	from alea.outages import viirs as viirs_module
+	from alea.outages.viirs import zone_ids_from_labels
+
+	time, height, width = _MEMORY_TILE
+	directory = tmp_path / "granules"
+	directory.mkdir()
+	granules = []
+	for index in range(6):
+		path = directory / f"g{index:02d}.nc"
+		_write_granule(path, seed=index, month=(index % 12) + 1)
+		granules.append(path)
+	zone_ids = zone_ids_from_labels(np.zeros((height, width), np.uint32))
+
+	real_read = viirs_module.read_granule
+	live = 0
+	peak_live = 0
+
+	def counting_read(path, **kwargs):
+		nonlocal live, peak_live
+		tile = real_read(path, **kwargs)
+		live += 1
+		peak_live = max(peak_live, live)
+		return tile
+
+	service_module.read_granule = counting_read
+	try:
+		service_module.detect_to_artefact(
+			granules, granules[:1], zone_ids, 1, tmp_path / "out.parquet", PredictiveConfig()
+		)
+	finally:
+		service_module.read_granule = real_read
+
+	# The baseline granule is read once and released; the detection pass reads
+	# one at a time. A materialised sequence would peak at len(granules).
+	assert peak_live <= 2, (
+		f"{peak_live} granules were held at once; the detection pass must hold "
+		f"one tile plus the baseline, not the sequence (07-layer4 §2.4)"
+	)
+
+
+def test_streaming_and_in_memory_detection_agree(tmp_path):
+	"""`stream_zones` is the bounded path and `detect_tiles` the in-memory one.
+
+	The shipped detection pass calls the streaming entry point, which is what
+	criterion 1 requires. The two implementations must produce the same series
+	and the same instants, or "the bounded path" is a different detector and the
+	gate above is proving a bound on the wrong one. This gives `detect_tiles` its
+	caller back (the shipped path no longer has one) and pins the equivalence.
+	"""
+	from alea.outages.viirs import (
+		build_baseline,
+		detect_tiles,
+		read_granule,
+		stream_zones,
+		zone_ids_from_labels,
+	)
+
+	time, height, width = _MEMORY_TILE
+	directory = tmp_path / "granules"
+	directory.mkdir()
+	granules = []
+	for index in range(5):
+		path = directory / f"g{index:02d}.nc"
+		_write_granule(path, seed=index, month=(index % 12) + 1)
+		granules.append(path)
+	zone_ids = zone_ids_from_labels(np.zeros((height, width), np.uint32))
+	cfg = ViirsConfig()
+
+	baseline = build_baseline([read_granule(granules[0])], cfg)
+	streamed, streamed_times = stream_zones(granules, baseline, zone_ids, 1, cfg)
+	in_memory, in_memory_times = detect_tiles(
+		[read_granule(path) for path in granules], baseline, zone_ids, 1, cfg
+	)
+
+	assert streamed.shape == (len(granules) * time, 1)
+	assert np.array_equal(streamed, in_memory, equal_nan=True)
+	assert streamed_times == in_memory_times
 
 
 if __name__ == "__main__":  # pragma: no cover

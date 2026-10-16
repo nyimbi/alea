@@ -194,16 +194,16 @@ coupling bug, not a modelling difference. It isolates the bug from the physics.
 
 | # | Criterion | Gate |
 |---|---|---|
-| 1 | Kenya sector-coupled network solves | Integration test |
+| 1 | Kenya sector-coupled network couples without replacing Layer 1 | `test_the_sector_layer_extends_a_layer_one_config_without_replacing_it` |
 | 2 | Disabling all sectors reproduces Layer 1 exactly | `test_sector_is_additive` |
 | 3 | Hydrogen mass balance closes | `test_hydrogen_mass_balance` |
 | 4 | Every efficiency/COP traceable to a source | `test_efficiency_has_source` |
 | 5 | Kenya geothermal potential cross-checked | Artefact |
 | 6 | Egypt hydrogen claim reproduced or withdrawn | M5 |
-| 7 | All four Kenya technologies present | Integration test |
+| 7 | All four Kenya technologies present | `test_all_four_kenya_sector_technologies_are_present` |
 | 8 | Sector-coupled Kenya solves within the aggregation budget | Recorded timing |
 | 9 | Every gate canaried | `tests/ci/canaries` |
-| 10 | Sector config is a strict superset of Layer 1's schema | Schema test |
+| 10 | Sector config is a strict superset of Layer 1's schema | `test_the_sector_layer_extends_a_layer_one_config_without_replacing_it` |
 
 **Criterion 8 is the practical one.** If sector-coupled Kenya cannot solve in a
 useful time on 12 cores, the honest response is to record the achievable

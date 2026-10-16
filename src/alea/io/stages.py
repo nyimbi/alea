@@ -1777,10 +1777,16 @@ def build_outage_history(config: Config, out: Path, context: BuildContext) -> De
 
 	from alea.outages.service import detect_to_artefact, detection_parameters_for
 	from alea.outages.views import PredictiveConfig
-	from alea.outages.viirs import iter_tiles
+	from alea.outages.viirs import read_granule
 
-	tiles = list(iter_tiles(granules))
-	zone_ids, n_zones = _zones(config, context, tiles)
+	# One tile, for the zone grid only: `_zones` needs the tile *shape*, and
+	# `list(iter_tiles(granules))` would hold every granule in the sequence -- a
+	# country-year is thousands of ~100 MB tiles and that list is the OOM the
+	# criterion names. The detection pass below streams; nothing else here needs
+	# a tile at all.
+	first = read_granule(granules[0])
+	zone_ids, n_zones = _zones(config, context, [first])
+	del first
 	cfg = PredictiveConfig(**context.parameters.get("predictive", {}))
 	checksum, times = detect_to_artefact(
 		granules,

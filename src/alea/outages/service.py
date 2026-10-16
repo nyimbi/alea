@@ -41,9 +41,9 @@ from alea.outages.validate import skip_outcome, validate_detector
 from alea.outages.views import PredictiveConfig, ValidationOutcome
 from alea.outages.viirs import (
 	build_baseline,
-	detect_tiles,
 	detection_parameters,
 	read_granule,
+	stream_zones,
 )
 from alea.outages.weather import (
 	METHOD_INTERVAL_RESIDUAL,
@@ -172,8 +172,14 @@ def detect_to_artefact(
 	baseline = build_baseline(baseline_tiles, cfg.viirs)
 	del baseline_tiles
 
-	tiles = [read_granule(path, band=cfg.viirs.radiance_band) for path in tile_paths]
-	series, times = detect_tiles(tiles, baseline, zone_ids, n_zones, cfg.viirs)
+	# The detection pass streams: ``stream_zones`` reads, detects and releases
+	# one granule at a time, so the working set is one tile plus the growing zone
+	# series. Materialising every tile first -- ``detect_tiles([read_granule(p)
+	# for p in tile_paths], ...)`` -- holds the whole granule sequence, and peak
+	# memory grows one tile per granule: a Kenya year is thousands of ~100 MB
+	# granules and the OOM the criterion exists to prevent (07-layer4 §2.4,
+	# §11 criterion 1).
+	series, times = stream_zones(tile_paths, baseline, zone_ids, n_zones, cfg.viirs)
 
 	frame = pd.DataFrame(series, columns=[f"zone_{index}" for index in range(n_zones)])
 	frame.insert(0, "timestamp", pd.to_datetime(list(times), utc=True))

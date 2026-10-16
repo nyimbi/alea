@@ -86,6 +86,50 @@ def test_couple_builds_the_renewable_portfolio_on_the_electricity_bus():
 	assert report.asset_counts["renewables"] == 4
 
 
+def test_all_four_kenya_sector_technologies_are_present():
+	"""Criterion 7 (05-layer2 §7): the four Kenya-critical technologies are built.
+
+	§3 names them -- solar, wind, geothermal and hydro -- and says a portfolio
+	missing one is a different system, not a smaller one, because geothermal
+	alone decides Kenya's least-cost expansion. The assertion is on the *built
+	network's* generators and their buses, not on the config keys that asked for
+	them: a `renewables:` block naming all four with a builder that emits three
+	is the defect class this repository keeps finding, and a config-key check
+	cannot see it.
+	"""
+	from alea.registry import Carrier
+	from alea.sector.renewables import KENYA_CRITICAL
+
+	config = _kenya_config(
+		solar=RenewableConfig(enabled=True),
+		onwind=RenewableConfig(enabled=True),
+		geothermal=RenewableConfig(enabled=True),
+		hydro=RenewableConfig(enabled=True),
+	)
+	coupled, report = couple(config, _network(), renewables=_full_portfolio_options())
+
+	# One generator per Kenya-critical carrier, each on the electricity bus.
+	on_network = set(coupled.generators.index)
+	assert on_network == {"solar_pv", "onwind", "geothermal", "hydro_reservoir"}, on_network
+	assert set(coupled.generators["bus"]) == {"KE_elec"}
+	assert set(coupled.generators["sector"]) == {"renewables"}
+
+	# The carriers the plan names are the carriers the network carries. `hydro`
+	# is modelled as reservoir hydro, which is the same resource as run-of-river
+	# (renewables.KENYA_CRITICAL notes the equivalence); the carrier column
+	# records it either way.
+	built = {row.carrier for row in report.rows if row.sector is Sector.RENEWABLES}
+	assert built == {"solar", "onwind", "geothermal", "hydro"}
+	assert {carrier.value for carrier in KENYA_CRITICAL} == built
+	assert Carrier.SOLAR.value in built
+
+	# Every row is a generator attached to the electricity bus, and the
+	# portfolio gate the plan names accepts exactly this set.
+	assert len(report.rows) == 4
+	assert all(row.values["bus"] == "KE_elec" for row in report.rows)
+	assert_kenya_portfolio(report)
+
+
 def test_a_kenya_portfolio_missing_geothermal_is_refused_through_couple():
 	"""The Kenya gate is live: dropping geothermal fails the coupled build."""
 	config = _kenya_config(

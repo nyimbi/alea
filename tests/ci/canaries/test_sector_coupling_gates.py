@@ -22,16 +22,17 @@ import sys
 from tests.ci.canaries import REPO, planted
 
 SECTOR_SERVICE_PY = REPO / "src" / "alea" / "sector" / "service.py"
+COUPLING_PY = REPO / "src" / "alea" / "sector" / "coupling.py"
 
 GATE_FILE = "tests/ci/test_serving_sector_coupling.py"
 RUNS_GATE = "test_the_stage_runs_and_writes_both_artefacts"
 REFUSAL_GATE = "test_the_stage_refuses_when_every_sector_is_disabled"
 
 
-def _gate_exit_code(test: str) -> int:
-	"""Exit code of one gate in the module, run in a fresh interpreter."""
+def _gate_exit_code(test: str, gate_file: str = GATE_FILE) -> int:
+	"""Exit code of one gate in a module, run in a fresh interpreter."""
 	completed = subprocess.run(
-		[sys.executable, "-m", "pytest", GATE_FILE, "-q", "-x", "-k", test],
+		[sys.executable, "-m", "pytest", gate_file, "-q", "-x", "-k", test],
 		capture_output=True,
 		text=True,
 		check=False,
@@ -94,3 +95,48 @@ def test_the_refusal_gate_catches_a_silent_empty_coupling():
 		)
 
 	assert _gate_exit_code(REFUSAL_GATE) == 0, "the restore was not proven"
+
+
+
+# --------------------------------------------------------------------------
+# 05-layer2 §7 criterion 7 -- all four Kenya technologies present
+# --------------------------------------------------------------------------
+
+KENYA_PORTFOLIO_FILE = "tests/ci/test_sector_units.py"
+KENYA_PORTFOLIO_GATE = "test_all_four_kenya_sector_technologies_are_present"
+
+#: The defect: a technology the config asked for never reaches the network.
+#:
+#: The gate asserts the four Kenya-critical carriers are on the *built network*,
+#: so the mutation drops one between the builder and the network. `renewables:`
+#: still names all four and the config check passes; the network carries three.
+#: That is the defect a config-key check cannot see, and it is why the gate reads
+#: `coupled.generators` rather than `config.renewables`.
+_HYDRO_DROPPED = (
+	"\t\tviews.extend(build.views)",
+	"\t\tviews.extend(v for v in build.views if v.carrier != \"hydro\")",
+)
+
+
+def test_the_kenya_portfolio_gate_notices_a_technology_missing_from_the_network():
+	"""`test_all_four_kenya_sector_technologies_are_present` must notice a drop.
+
+	The mutation removes hydro after the builder and before ``apply_views``, so
+	the coupled network is missing Kenya's fourth technology while the config
+	still names it. The gate reads the network's own generators, so it fails;
+	a gate reading the config keys would pass (05-layer2 §3, §7 criterion 7).
+	"""
+	old, new = _HYDRO_DROPPED
+	assert old in COUPLING_PY.read_text(), (
+		"the canary target moved; the coupling layer no longer extends its views "
+		"where this canary expects, so the canary would be a no-op"
+	)
+	assert _gate_exit_code(KENYA_PORTFOLIO_GATE, KENYA_PORTFOLIO_FILE) == 0, "the gate does not pass on the shipped tree"
+
+	with planted(COUPLING_PY, old, new):
+		assert _gate_exit_code(KENYA_PORTFOLIO_GATE, KENYA_PORTFOLIO_FILE) != 0, (
+			"the Kenya portfolio gate passed with hydro dropped from the coupled "
+			"network; it cannot tell four technologies from three"
+		)
+
+	assert _gate_exit_code(KENYA_PORTFOLIO_GATE, KENYA_PORTFOLIO_FILE) == 0, "the restore was not proven"

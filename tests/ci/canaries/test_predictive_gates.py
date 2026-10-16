@@ -672,5 +672,73 @@ def test_the_gate_is_the_basis_property():
 	assert _run(_PROXY_PROGRAM) == "proxy"
 
 
+# --------------------------------------------------------------------------
+# 07-layer4 §11 criterion 1 -- VIIRS detection over a Kenya year without OOM
+# --------------------------------------------------------------------------
+
+OUTAGE_SERVICE_PY = REPO / "src" / "alea" / "outages" / "service.py"
+DETECTION_GATE_FILE = "tests/ci/test_predictive_layer4.py"
+DETECTION_GATE = "test_viirs_detection_peak_memory_does_not_scale"
+
+#: The defect: the detection pass holds the whole granule sequence.
+#:
+#: `stream_zones` reads, detects and releases one granule at a time; the
+#: in-memory `detect_tiles` over a list of every granule holds the sequence, so
+#: peak memory grows one tile per granule -- the OOM criterion 1 exists to
+#: prevent, and the shape §2.4 forbids by name. The mutation restores exactly
+#: the materialising call.
+_STREAMING_CALL = (
+	"\tseries, times = stream_zones(tile_paths, baseline, zone_ids, n_zones, cfg.viirs)",
+	"\tfrom alea.outages.viirs import detect_tiles\n"
+	"\t_tiles = [read_granule(p, band=cfg.viirs.radiance_band) for p in tile_paths]\n"
+	"\tseries, times = detect_tiles(_tiles, baseline, zone_ids, n_zones, cfg.viirs)",
+)
+
+
+def _detection_gate_exit_code() -> int:
+	"""The memory gate itself, run in a fresh interpreter."""
+	completed = subprocess.run(
+		[
+			sys.executable,
+			"-m",
+			"pytest",
+			DETECTION_GATE_FILE,
+			"-q",
+			"-x",
+			"-k",
+			DETECTION_GATE,
+		],
+		capture_output=True,
+		text=True,
+		check=False,
+		cwd=REPO,
+	)
+	return completed.returncode
+
+
+def test_the_memory_gate_catches_a_detection_pass_that_holds_the_sequence():
+	"""`test_viirs_detection_peak_memory_does_not_scale_with_the_granule_count`.
+
+	The criterion is that a country-year pass is bounded; the property that makes
+	it so is that the working set is one tile, not the sequence. The mutation
+	restores the materialising call, and the gate must notice: peak allocation
+	grows one tile per granule.
+	"""
+	old, new = _STREAMING_CALL
+	assert old in OUTAGE_SERVICE_PY.read_text(), (
+		"the canary target moved; the detection pass no longer streams where this "
+		"canary expects, so the canary would be a no-op"
+	)
+	assert _detection_gate_exit_code() == 0, "the gate does not pass on the shipped tree"
+
+	with planted(OUTAGE_SERVICE_PY, old, new):
+		assert _detection_gate_exit_code() != 0, (
+			"the memory gate passed with the whole granule sequence held; it "
+			"cannot tell a bounded working set from one that scales with input"
+		)
+
+	assert _detection_gate_exit_code() == 0, "the restore was not proven"
+
+
 if __name__ == "__main__":  # pragma: no cover
 	raise SystemExit(pytest.main([__file__, "-q"]))
