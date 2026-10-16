@@ -46,6 +46,33 @@ def prg_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Config:
 
 
 @pytest.fixture
+def prg_client_with_registers(
+	tmp_path: Path, prg_config: Config, monkeypatch: pytest.MonkeyPatch
+) -> Iterator[TestClient]:
+	"""A client whose scratch root also carries the two files the registers read.
+
+	`prg_config` copies only `prg.yaml`, which is the right minimal fixture for
+	the routes that serve the graph. Two registers on the summary read *other*
+	files -- `cross_layer` compares `config/config.default.yaml` and `catalog`
+	parses `docs/params.md` -- so against the minimal root they report
+	`compared: false` / `readable: false`, which is the correct behaviour and
+	the reason this fixture exists rather than a widened shared one: the
+	minimal root is what makes `test_a_register_that_cannot_run_says_so`
+	meaningful, and widening it would take that case away.
+	"""
+	source = repo_root()
+	(tmp_path / "docs").mkdir(parents=True, exist_ok=True)
+	shutil.copy(
+		source / "config" / "config.default.yaml",
+		tmp_path / "config" / "config.default.yaml",
+	)
+	shutil.copy(source / "docs" / "params.md", tmp_path / "docs" / "params.md")
+	app = create_app(prg_config)
+	with TestClient(app) as client:
+		yield client
+
+
+@pytest.fixture
 def prg_client(prg_config: Config) -> Iterator[TestClient]:
 	app = create_app(prg_config)
 	with TestClient(app) as client:
@@ -846,3 +873,52 @@ def test_the_translate_route_names_what_did_not_reach_the_engine(
 	), accounted.symmetric_difference(
 		set(body["coverage"]["translated"]) | set(body["coverage"]["untranslated"])
 	)
+
+
+def test_the_summary_serves_the_cross_layer_register(
+	prg_client_with_registers: TestClient,
+) -> None:
+	"""The register that compares `config/` against the graph reaches a door.
+
+	It was computed on the summary and served by neither the API nor the CLI
+	for as long as it existed -- `declared is not produced`, on the register
+	built to catch that class. The payload carries both measured values and
+	their ratio, not only the prose that describes them, because a sentence is
+	not a measurement and nothing parses one.
+	"""
+	body = prg_client_with_registers.get("/api/v1/prg/summary").json()
+	cross = body["cross_layer"]
+	assert cross["compared"] is True, cross["reason"]
+	assert cross["disagreements"], (
+		"the VoLL disagreement is no longer reported; either the layers agree "
+		"now or the register went blind"
+	)
+	row = next(
+		r for r in cross["disagreements"] if r["prg_parameter"] == "voll_usd_per_mwh"
+	)
+	assert row["config_value"] == 2000.0, row
+	assert row["graph_value"] == 5000.0, row
+	assert row["ratio"] == pytest.approx(2.5), row
+	assert row["unit"] == "USD/MWh"
+
+
+def test_the_summary_serves_the_catalog_join(
+	prg_client_with_registers: TestClient,
+) -> None:
+	"""`docs/params.md` as data, with the one drifted node named.
+
+	The status join is the half that matters: the graph's `status` was
+	hand-copied from the catalog's column, so a disagreement is a transcription
+	with no diff -- a defect no other check can see. Serving only the counts
+	would let a client render the catalog as a document rather than a register
+	with a live disagreement in it.
+	"""
+	body = prg_client_with_registers.get("/api/v1/prg/summary").json()
+	catalog = body["catalog"]
+	assert catalog["readable"] is True, catalog["reason"]
+	assert catalog["row_count"] > 0
+	assert catalog["status_join"], "no status join on the summary"
+	joined = {row["parameter"]: row for row in catalog["status_join"]}
+	assert "equity_return_target" in joined, sorted(joined)
+	assert joined["equity_return_target"]["agrees"] is False
+	assert catalog["status_disagreements"], "the drift is not named"

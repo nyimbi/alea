@@ -544,6 +544,15 @@ def cross_layer_report() -> dict[str, Any]:
 	good news. ``reason`` names why when it could not -- a scratch tree with no
 	``config.default.yaml`` is a legitimate state (several tests build one) and
 	must not read as "the layers agree".
+
+	**Each disagreement carries both measured values, not just the prose that
+	describes them.** The first version served ``note`` alone, and every note in
+	the register quotes its pair in words -- "config is 2000.0 and the graph is
+	5000.0", "a 2.5x disagreement". Move either number and the payload keeps
+	asserting the old one, because nothing reads a sentence. That is the
+	register-prose class this project has already paid for once, so the values
+	are carried as numbers and a gate asserts each note's figures are the ones
+	the payload holds.
 	"""
 	from alea.config.paths import default_config_path
 
@@ -554,19 +563,41 @@ def cross_layer_report() -> dict[str, Any]:
 			"reason": f"no deployment config at {path}; nothing to compare against",
 			"disagreements": [],
 		}
-	return {
-		"compared": True,
-		"reason": "",
-		"disagreements": [
+	config = _read_default_config()
+	disagreements = []
+	for entry in cross_layer_disagreements(config=config):
+		disagreements.append(
 			{
 				"config_path": entry.config_path,
 				"prg_parameter": entry.prg_parameter,
 				"unit": entry.unit,
 				"note": entry.note,
+				"config_value": _dig(config, entry.config_path),
+				"graph_value": _graph_value(entry.prg_parameter),
+				"ratio": _ratio(
+					_dig(config, entry.config_path), _graph_value(entry.prg_parameter)
+				),
 			}
-			for entry in cross_layer_disagreements()
-		],
-	}
+		)
+	return {"compared": True, "reason": "", "disagreements": disagreements}
+
+
+def _ratio(config_value: Any, graph_value: Any) -> float | None:
+	"""``graph / config`` where both sides resolved and the config side is non-zero.
+
+	None rather than a raise or an infinity: a zero config value is a legitimate
+	declaration (a quantity a deployment switched off), and the ratio is then
+	undefined while the disagreement is not.
+	"""
+	if config_value is None or graph_value is None:
+		return None
+	try:
+		denominator = float(config_value)
+	except (TypeError, ValueError):
+		return None
+	if denominator == 0.0:
+		return None
+	return float(graph_value) / denominator
 
 
 def _read_default_config() -> dict[str, Any] | None:

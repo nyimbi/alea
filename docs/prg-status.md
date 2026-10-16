@@ -682,6 +682,42 @@ manufacturing a decision no one took.
   the same mistake as inventing a referent for `linearity`. Recorded so the
   2.5x is not rediscovered as a report discrepancy.
 
+  **Closed 2026-10-16, and the closing found two defects one level down.**
+
+  The register itself was built — `CROSS_LAYER_QUANTITIES` declares the two
+  quantities, `cross_layer_disagreements` compares them, and
+  `cross_layer_report` serves the result — and **neither door rendered it**.
+  `graph_summary` has carried `cross_layer` and `catalog` since they were
+  written, and `alea prg summary` printed neither, nor did `PrgSummaryOut` carry
+  either field. That is the declared-is-not-produced class *on the registers
+  built to catch it*: the check ran, was correct, was tested, and no reader
+  could see its verdict. Both doors now render it, and the CLI line carries both
+  measured values rather than only the sentence describing them.
+
+  **The prose was asserting numbers nothing compared.** Every `note` in the
+  register quotes its pair in words — "config is 2000.0 and the graph is
+  5000.0", "a 2.5x disagreement" — and the payload carried the sentence and
+  neither number, so moving either side would leave the register asserting the
+  old figure forever. `cross_layer_report` now carries `config_value`,
+  `graph_value` and the derived `ratio`, and
+  `test_every_cross_layer_note_quotes_the_values_the_payload_holds` requires
+  every note to *name* both measured values as whole numbers — positively, not
+  by rejecting a blocklist of forbidden figures, because a blocklist passes when
+  the note quotes a third number neither side holds. Canaried: mutating 5000.0
+  to 4500.0 in the note fails the gate.
+
+  **A third defect surfaced from the API test, and it was not about this
+  register.** `prg/catalog.py`, `prg/graph.py` and `prg/library.py` did
+  `from alea.config.paths import repo_root`, binding the function object at
+  import time. Every fixture in the suite redirects a scratch tree by patching
+  `paths.repo_root` — the documented seam, which `paths.resolve` honours because
+  it calls the name as a module global — so those three modules never saw the
+  patch and read the *real* repository. `test_the_summary_serves_the_catalog_join`
+  was the first test to notice, and it noticed as an ordering dependence:
+  passing alone, failing after another test had patched. All three now call
+  `paths.repo_root()`, so the module attribute is what is consulted, and a
+  scratch tree is a scratch tree for every reader.
+
 ### Closed since this list was written
 
 **Six layer-5 gates ran and passed while the register counted them as

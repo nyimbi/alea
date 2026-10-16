@@ -30,7 +30,7 @@ from typing import Any
 
 import yaml
 
-from alea.config.paths import repo_root
+from alea.config import paths
 from alea.prg.crossval import (
 	CrossValidationReport,
 	CrossValidationRule,
@@ -137,7 +137,7 @@ class PropagationResult:
 
 
 def default_prg_path() -> Path:
-	return repo_root() / "config" / "prg.yaml"
+	return paths.repo_root() / "config" / "prg.yaml"
 
 
 class ParameterGraph:

@@ -338,6 +338,42 @@ def prg_summary() -> None:
 	)
 	for issue in summary["structure_issues"]:
 		typer.secho(f"structure: {issue}", fg=typer.colors.YELLOW, err=True)
+	# The cross-layer register. Printed because it was computed on the summary
+	# and reached no door for as long as it existed -- the declared-is-not-
+	# produced class, on the register built to catch that class. Each line
+	# carries both measured values, so the sentence cannot drift from them.
+	cross = summary["cross_layer"]
+	if not cross["compared"]:
+		typer.echo(f"cross-layer: not compared -- {cross['reason']}")
+	elif not cross["disagreements"]:
+		typer.echo("cross-layer: every declared quantity agrees across the two layers")
+	else:
+		typer.secho(
+			f"cross-layer: {len(cross['disagreements'])} quantity(ies) declared in "
+			f"both config/ and the graph disagree",
+			fg=typer.colors.YELLOW,
+		)
+		for row in cross["disagreements"]:
+			ratio = f"{row['ratio']:.3g}x" if row["ratio"] is not None else "n/a"
+			typer.secho(
+				f"  {row['config_path']} = {row['config_value']} vs "
+				f"{row['prg_parameter']} = {row['graph_value']} "
+				f"({ratio}, {row['unit']})",
+				fg=typer.colors.YELLOW,
+			)
+	# The catalog join, and the one disagreement in it. A count of joined nodes
+	# says nothing on its own; the drift is the finding, so it is named.
+	catalog = summary["catalog"]
+	if not catalog["readable"]:
+		typer.echo(f"catalog: not readable -- {catalog['reason']}")
+	else:
+		typer.echo(
+			f"catalog: {catalog['title_count']} title(s) over "
+			f"{catalog['row_count']} row(s); {len(catalog['status_join'])} node(s) "
+			f"join the graph's status by name"
+		)
+		for drift in catalog["status_disagreements"]:
+			typer.secho(f"  status drift: {drift}", fg=typer.colors.YELLOW)
 
 
 @prg_app.command("equations")

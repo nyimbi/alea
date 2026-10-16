@@ -3643,3 +3643,25 @@ def test_both_feedback_loops_converge_in_the_iteration_count_this_tree_pins(
 	assert [loop.iterations for loop in again.loops] == [
 		loop.iterations for loop in result.loops
 	], "the loop count is not deterministic; pinning it would be a flake"
+
+
+def test_the_summary_command_prints_the_registers_it_computes():
+	"""Both registers reach the shell, not only the summary dict.
+
+	`cross_layer` and `catalog` were computed on `graph_summary` and rendered by
+	neither door -- the declared-is-not-produced class, on the registers built to
+	catch that class. Asserted through the runner because the defect is
+	*reaching a door*, which importing the function cannot show: the register
+	was correct, tested, and invisible.
+	"""
+	result = _prg("summary")
+	assert result.exit_code == 0, result.output
+	assert "cross-layer:" in result.output, result.output
+	assert "2000.0" in result.output and "5000.0" in result.output, (
+		"the cross-layer line does not carry both measured values; a reader "
+		"cannot see the disagreement without them"
+	)
+	assert "catalog:" in result.output, result.output
+	assert "equity_return_target" in result.output, (
+		"the one drifted status is not named on the summary"
+	)

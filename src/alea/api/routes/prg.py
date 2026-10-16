@@ -26,6 +26,8 @@ from fastapi import APIRouter, HTTPException, Query, Response, status
 
 from alea.api.deps import AnalystDep, PublicDep
 from alea.api.views import (
+	CatalogReportOut,
+	CatalogStatusJoinOut,
 	CitationGapOut,
 	CitationOut,
 	CitationReportOut,
@@ -37,6 +39,8 @@ from alea.api.views import (
 	ConstraintReportOut,
 	ConstraintRouteOut,
 	CorrectionOut,
+	CrossLayerQuantityOut,
+	CrossLayerReportOut,
 	CrossValidationFindingOut,
 	CrossValidationReportOut,
 	CrossValidationRuleOut,
@@ -232,6 +236,26 @@ def _summary_out(graph: Any) -> PrgSummaryOut:
 			summary=uncertainty.summary(),
 		),
 		linearity=report["linearity"],
+		cross_layer=CrossLayerReportOut(
+			compared=report["cross_layer"]["compared"],
+			reason=report["cross_layer"]["reason"],
+			disagreements=[
+				CrossLayerQuantityOut(**row)
+				for row in report["cross_layer"]["disagreements"]
+			],
+		),
+		catalog=CatalogReportOut(
+			readable=report["catalog"]["readable"],
+			reason=report["catalog"]["reason"],
+			title_count=report["catalog"]["title_count"],
+			row_count=report["catalog"]["row_count"],
+			distinct_names=report["catalog"]["distinct_names"],
+			declared_total=report["catalog"]["declared_total"],
+			status_join=[
+				CatalogStatusJoinOut(**row) for row in report["catalog"]["status_join"]
+			],
+			status_disagreements=list(report["catalog"]["status_disagreements"]),
+		),
 	)
 
 

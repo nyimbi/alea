@@ -593,3 +593,102 @@ def test_a_quantity_that_agrees_is_not_reported():
 		(entry,), config=config, graph_values={"voll_usd_per_mwh": None}
 	)
 	assert absent == ()
+
+
+def test_every_cross_layer_note_quotes_the_values_the_payload_holds():
+	"""A register's prose is a claim, and a claim nothing checks is one that drifts.
+
+	Every `note` in the register states its pair in words -- "config is 2000.0
+	and the graph is 5000.0", "a 2.5x disagreement" -- and until this test the
+	payload carried the sentence and neither number. Move either side and the
+	register keeps asserting the old figure, because no reader parses a
+	sentence: the same class as the loss kernel's 333x unit error and the
+	`interim` config key, where a declaration is right on its own line and
+	nothing compares the lines.
+
+	So the payload now carries `config_value`, `graph_value` and `ratio`, and
+	this gate requires the note to *name* both measured values. The check is
+	positive rather than a blocklist: rejecting a set of forbidden numbers would
+	pass when the note quotes a third figure neither side holds, which is the
+	subset predicate this project has already shipped once.
+	"""
+	import re
+
+	from alea.prg.translate import cross_layer_report
+
+	report = cross_layer_report()
+	assert report["compared"] is True, report["reason"]
+	assert report["disagreements"], (
+		"the register reports no disagreement; either the layers now agree or it "
+		"went blind, and this test cannot tell the difference from here"
+	)
+	for row in report["disagreements"]:
+		for side, value in (
+			("config", row["config_value"]),
+			("graph", row["graph_value"]),
+		):
+			assert value is not None, (
+				f"{row['config_path']} reported as a disagreement with no "
+				f"{side} value; the note describes a number the payload lacks"
+			)
+			# An exact token, not a substring: `"2000" in note` passes against
+			# `12000.0`, which is the substring-checking failure this project
+			# has shipped more than once. The lookarounds pin the whole number.
+			token = re.escape(f"{float(value)}")
+			assert re.search(rf"(?<![\d.]){token}(?![\d.])", row["note"]), (
+				f"the {side} value is {value!r} and the note does not name it as "
+				f"a whole number: {row['note']!r}. The register's prose has "
+				f"drifted from the measurement it describes."
+			)
+
+
+def test_the_ratio_is_derived_from_the_two_measured_values():
+	"""`ratio` is arithmetic on the pair, not a third transcribed number."""
+	from alea.prg.translate import _ratio
+
+	assert _ratio(2000.0, 5000.0) == pytest.approx(2.5)
+	assert _ratio(4.0, 2.0) == pytest.approx(0.5)
+	# A zero config value is a legitimate declaration -- a quantity a
+	# deployment switched off -- and the ratio is undefined while the
+	# disagreement is not, so it is None rather than an infinity.
+	assert _ratio(0.0, 5000.0) is None
+	assert _ratio(None, 5000.0) is None
+	assert _ratio(2000.0, None) is None
+	assert _ratio("not a number", 5000.0) is None
+
+
+def test_the_note_drift_gate_notices_a_note_that_quotes_the_wrong_figure():
+	"""The canary for ``test_every_cross_layer_note_quotes_the_values_the_payload_holds``.
+
+	The mutation changes the note's *prose* from 5000.0 to a figure neither side
+	holds. That is disjoint from what the predicate looks for: the predicate
+	reads the payload's measured pair and asks whether the sentence names it, so
+	a mutation on the sentence is the one class it must catch and the class no
+	other check in the tree can see.
+
+	Restored from the canary harness's own byte-level snapshot, so a killed
+	process cannot leave the register asserting a number nothing measured.
+	"""
+	from tests.ci.canaries import REPO, planted, probe_exit_code
+
+	translate_py = REPO / "src" / "alea" / "prg" / "translate.py"
+	node = (
+		"tests/ci/test_prg_translate.py::"
+		"test_every_cross_layer_note_quotes_the_values_the_payload_holds"
+	)
+	program = (
+		"import sys\n"
+		"import pytest\n\n"
+		f"sys.exit(pytest.main(['-q', '-p', 'no:randomly', {node!r}]))\n"
+	)
+
+	shipped = "disagree: config is 2000.0 and the graph is 5000.0"
+	broken = "disagree: config is 2000.0 and the graph is 4500.0"
+
+	assert probe_exit_code(program) == 0, "the gate was already failing"
+	with planted(translate_py, shipped, broken):
+		assert probe_exit_code(program) != 0, (
+			"the note quoted 4500.0 for a side the payload measures at 5000.0 and "
+			"the gate passed; it is not reading the sentence"
+		)
+	assert probe_exit_code(program) == 0, "the gate did not recover"

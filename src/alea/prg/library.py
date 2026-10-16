@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from alea.config.paths import repo_root
+from alea.config import paths
 from alea.prg.views import Equation
 
 __all__ = [
@@ -312,7 +312,7 @@ def spec_equations(path: Path | None = None) -> dict[str, tuple[str, ...]]:
 	"""
 	import re
 
-	document = path or (repo_root() / "docs" / "alea_prg.md")
+	document = path or (paths.repo_root() / "docs" / "alea_prg.md")
 	text = document.read_text()
 	marker = "### 13. Equation Systems"
 	if marker not in text:
@@ -450,7 +450,7 @@ def spec_systems(path: Path | None = None) -> dict[str, str]:
 	"""
 	import re
 
-	document = path or (repo_root() / "docs" / "params-prg1.md")
+	document = path or (paths.repo_root() / "docs" / "params-prg1.md")
 	text = document.read_text()
 	# A restructured document that matches no heading returns an empty dict,
 	# and the caller's count check then reports "0 != 20" -- a true statement

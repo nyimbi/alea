@@ -52,7 +52,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from alea.config.paths import repo_root
+from alea.config import paths
 
 __all__ = [
 	"CATALOG_PATH",
@@ -175,7 +175,7 @@ class CatalogSummary:
 
 
 def _read(path: Path | None = None) -> str:
-	document = path or (repo_root() / CATALOG_PATH)
+	document = path or (paths.repo_root() / CATALOG_PATH)
 	if not document.exists():
 		raise FileNotFoundError(
 			f"no parameter catalog at {document}; `read_catalog` reads the "
@@ -523,7 +523,7 @@ def catalog_report(
 	:data:`CATALOG_TITLE_COUNT` would have the register asserting the contents
 	of a file it could not open.
 	"""
-	document = path or (repo_root() / CATALOG_PATH)
+	document = path or (paths.repo_root() / CATALOG_PATH)
 	if not document.exists():
 		return {
 			"readable": False,
@@ -590,7 +590,7 @@ def summary(path: Path | None = None) -> CatalogSummary:
 	counts = category_counts(path)
 	counts_by_name = Counter(row.name for row in rows)
 	return CatalogSummary(
-		path=path or (repo_root() / CATALOG_PATH),
+		path=path or (paths.repo_root() / CATALOG_PATH),
 		title_count=title_count(path),
 		declared_total=sum(declared for declared, _ in counts.values()),
 		row_count=len(rows),

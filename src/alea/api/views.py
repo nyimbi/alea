@@ -997,6 +997,74 @@ class ConstraintReportOut(ApiModel):
 	routes: list[ConstraintRouteOut]
 
 
+class CrossLayerQuantityOut(ApiModel):
+	"""One quantity two layers declare, with both values and their ratio.
+
+	``config_value`` and ``graph_value`` are the measured pair, carried beside
+	the prose ``note`` rather than left to it. Every note in the register quotes
+	its numbers in words -- "config is 2000.0 and the graph is 5000.0" -- and a
+	sentence is not a measurement: move either side and the note keeps asserting
+	the old one until a reader notices. A gate asserts each note's figures are
+	the ones this payload holds.
+	"""
+
+	config_path: str
+	prg_parameter: str
+	unit: str
+	note: str
+	config_value: float | None = None
+	graph_value: float | None = None
+	ratio: float | None = None
+	"""``graph_value / config_value``, or None where either side is unresolvable.
+
+	The number a reader acts on: 2.5x is the VoLL disagreement, and stating it
+	as a ratio rather than leaving it to be divided by hand is what makes the
+	payload usable without the note.
+	"""
+
+
+class CrossLayerReportOut(ApiModel):
+	"""Quantities the deployment config and the relation library both declare.
+
+	``compared`` distinguishes an empty disagreement list from a register that
+	could not run -- identical JSON otherwise, and only one of them is good
+	news. ``reason`` names why when it could not.
+	"""
+
+	compared: bool = False
+	reason: str = ""
+	disagreements: list[CrossLayerQuantityOut] = Field(default_factory=list)
+
+
+class CatalogStatusJoinOut(ApiModel):
+	"""One node whose ``status`` joins the catalog's Status column by name."""
+
+	parameter: str
+	graph_status: str
+	catalog_status: str
+	agrees: bool
+
+
+class CatalogReportOut(ApiModel):
+	"""`docs/params.md` read as data, and the join `ParameterNode.status` came from.
+
+	``status_join`` is the half that matters: the graph's ``status`` was
+	transcribed from the catalog's Status column by hand, six nodes join by
+	name, and a disagreement is a hand-copied column with no diff. Counts alone
+	would let a client render the catalog as a document rather than as a
+	register with a live disagreement in it.
+	"""
+
+	readable: bool = False
+	reason: str = ""
+	title_count: int = Field(default=0, ge=0)
+	row_count: int = Field(default=0, ge=0)
+	distinct_names: int = Field(default=0, ge=0)
+	declared_total: int = Field(default=0, ge=0)
+	status_join: list[CatalogStatusJoinOut] = Field(default_factory=list)
+	status_disagreements: list[str] = Field(default_factory=list)
+
+
 class PrgSummaryOut(ApiModel):
 	"""The graph's own counts, and the registers that qualify them.
 
@@ -1041,6 +1109,24 @@ class PrgSummaryOut(ApiModel):
 	constraints: ConstraintReportOut
 	units: UnitReportOut
 	uncertainty: UncertaintyOut
+	cross_layer: CrossLayerReportOut = Field(default_factory=CrossLayerReportOut)
+	"""Quantities the deployment config and the relation library both declare.
+
+	Reported because the two layers are self-consistent and nothing else in the
+	tree compares them: `value_of_lost_load_usd_per_mwh` is 2000 in
+	`config.default.yaml` and `voll_usd_per_mwh` is 5000 in the graph, so the
+	market layer and the reliability accounting price an unserved MWh at 2.5x
+	different rates. Computed on the summary since 2026-10-16 and served by no
+	door until now, which is the defect this project keeps finding one level up.
+	"""
+	catalog: CatalogReportOut = Field(default_factory=CatalogReportOut)
+	"""`docs/params.md`, read as data: the join `ParameterNode.status` was copied from.
+
+	Also computed on the summary and unserved until now. The status join is the
+	half that matters -- six nodes join by name, five agree, and
+	`equity_return_target` has drifted -- because a hand-copied column with no
+	diff is a defect no other check can see.
+	"""
 	linearity: dict[str, str] = Field(default_factory=dict)
 	"""Per determined variable: ``linear`` or ``nonlinear`` in its own unknown.
 

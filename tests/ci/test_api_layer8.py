@@ -951,6 +951,22 @@ PRG_EXACT_FIELDS: dict[str, frozenset[str]] = {
 	# number, so it never reaches this gate. It carries the three-state
 	# distinction (a path, an empty string, ``n/a``) that a bool would collapse.
 	"CitationReportOut": frozenset({"archived", "registered"}),
+	# The pair a cross-layer quantity is *about*, and the ratio between them.
+	# `config_value` and `graph_value` are the same quantity measured in two
+	# files, and the model carries the `unit` they share on the adjacent
+	# `unit` field -- which is why the two are not wrapped: a `ValueOut` per
+	# side would repeat that one unit twice and invent a basis for a number
+	# read straight out of a YAML file. `ratio` is their quotient, dimensionless
+	# by construction, so there is no unit to name at all.
+	"CrossLayerQuantityOut": frozenset({"config_value", "graph_value", "ratio"}),
+	# Four cardinalities over `docs/params.md`: how many titles, how many rows,
+	# how many distinct names, and the total the document declares. The same
+	# class as `CitationReportOut`'s two -- there is no unit of "a row" -- and
+	# exempt per model for the same reason: exempting the *names* would also
+	# exempt a genuinely modelled `row_count` on any future response model.
+	"CatalogReportOut": frozenset(
+		{"title_count", "row_count", "distinct_names", "declared_total"}
+	),
 }
 """The graph's own arithmetic, exempt per model.
 
