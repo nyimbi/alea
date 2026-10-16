@@ -235,58 +235,64 @@ performance claim without its hardware is not a claim.**
 
 ## 7. The gate register
 
-Every gate in the plan, with its canary. A gate without a canary is listed as
-**unverified**.
+Every gate the plans promise, with the test that implements it and the canary
+that has watched it fail. **The table is generated, not written.**
 
-| Gate | Document | Canary | Status |
-|---|---|---|---|
-| Config rejects unknown key | 01 §1.7 | ✅ | Verified |
-| Registry has 55 countries | 01 §3.3 | ✅ | Verified |
-| `raw/` is immutable | 01 §4.3 | ✅ | Verified |
-| Determinism job | 01 §5.3 | ✅ | Verified |
-| CI run history non-empty | 01 §5.4 | ✅ | Verified |
-| Stage idempotence | 02 §4.2 | ✅ | Verified |
-| No bare unit columns | 02 §2.3 | ✅ | Verified |
-| VIIRS cloud semantics | 02 §1.1, 03 §3.4 | ✅ | Verified |
-| Network connected, no orphans | 04 §7 | ✅ | Verified |
-| Demand within 2% of AFREC | 04 §7 | ✅ | Verified |
-| Aggregation requires validation | 04 §4.3 | ✅ | Verified |
-| Losses default on | 04 §7 | ✅ | Verified |
-| Sector coupling is additive | 05 §6 | ✅ | Verified |
-| Efficiency has a source | 05 §6 | ✅ | Verified |
-| V2G has a degradation cost | 05 §6 | ✅ | Verified |
-| Clearing is deterministic | 06 §9 | ✅ | Verified |
-| Shortage priced at VoLL | 06 §9 | ✅ | Verified |
-| Capture price NaN on no generation | 06 §9 | ✅ | Verified |
-| VaR sign convention | 06 §9 | ✅ | Verified |
-| Cholesky checked | 06 §9 | ✅ | Verified |
-| FX rate recorded | 06 §9 | ✅ | Verified |
-| Cloud flag → NaN not 0 | 07 §10 | ✅ | Verified |
-| No temporal leakage | 07 §10 | ✅ | Verified |
-| Class imbalance not double-corrected | 07 §10 | ✅ | Verified |
-| Base rate reported | 07 §10 | ✅ | Verified |
-| Contingency input immutable | 07 §10 | ✅ | Verified |
-| Decomposition sums to total | 07 §10 | ✅ | Verified |
-| SAIDI proxy flagged | 07 §10 | ✅ | Verified |
-| Cache key stable across processes | 08 §9 | ✅ | Verified |
-| Cache actually hits | 08 §9 | ✅ | Verified |
-| Apply does not mutate base | 08 §9 | ✅ | Verified |
-| Every value has provenance | 09 §8 | ✅ | Verified |
-| Proxy values marked | 09 §8 | ✅ | Verified |
-| Precision matches uncertainty | 09 §8 | ✅ | Verified |
-| No unverified benchmark in a report | 09 §8 | ✅ | Verified |
-| Dedup deterministic | 10 §9 | ✅ | Verified |
-| Prompt injection ignored | 10 §9 | ✅ | Verified |
-| Integrate refuses unreviewed | 10 §9 | ✅ | Verified |
-| No GET with body | 11 §8 | ✅ | Verified |
-| Values carry basis | 11 §8 | ✅ | Verified |
-| Job survives restart | 11 §8 | ✅ | Verified |
-| USSD never truncates | 11 §8 | ✅ | Verified |
+    uv run python scripts/gate_register.py --markdown
+    uv run python scripts/gate_register.py --check   # non-zero on any gap
 
-**Every row's status becomes "Verified" only when its canary has been observed
-to fail.** Until then it is "Unverified" and the plan says so.
+This section used to carry a hand-written table of 42 rows headed "Every gate in
+the plan". Measured 2026-10-16, the plans promise **112** gates, so the table
+described a third of them and every gate added since was invisible to the
+criterion that reads it. It was also the *second* copy of a set the register
+derives, which is the defect the register exists to remove: two lists that agree
+on the day one is written and diverge on the next change, with the stale one
+being the one a reader trusts.
 
----
+**The register is derived from two authoritative sources.**
+
+* **The plans.** A gate is *promised* when its name appears in backticks in a
+  per-document gate table or exit-criteria table. Those tables are the
+  specification of what must be gated.
+* **The tests.** A gate is *implemented* when a test function carries its name,
+  or when a test's docstring cites it -- the idiom this codebase already uses
+  (`"""§9 ``test_connector_rate_limit``."""`). It is *canaried* when a canary
+  does the same.
+
+Three verdicts come out, and each is a distinct defect:
+
+* **unimplemented** -- the plan promises a gate and no test exists. The gate is
+  prose.
+* **uncanaried** -- a gate is implemented but never watched failing. AD-10: exit
+  0 from a gate nobody has seen fail is not evidence.
+* **orphaned** -- a test cites a gate name no plan promises. Either a typo in the
+  citation or a gate dropped from the plan and left in the tree.
+
+A gate with both a test and a canary is **verified**, which is the only status
+criterion 2 below allows.
+
+### 7.1 The two discovery rules this register got wrong
+
+Both were found by canarying the register against its own output, and both are
+worth keeping because each is a shape a checker can take.
+
+**A section heading is not always `##`.** Gate sections were matched with
+`^## `, and four plan documents state their gates under an `### N.N Gates`
+heading. Eleven promised gates were invisible: the register reported
+`unimplemented: 0  uncanaried: 0` while three of the eleven had no test and seven
+no canary. A checker that reads one of the two spellings a document uses fails
+open, and this one failed toward "clean" -- which is the direction that looks
+like success.
+
+**A canary is a behaviour, not a directory.** Canary status was decided by
+`"canaries" in path.parts`, but `tests/ci/canaries/` is where the *plan* puts
+them, not where they all are: a gate's own test can plant a defect in-process,
+and a module under `canaries/` can hold four ordinary gate tests beside one
+canary. Both directions were wrong at once. The discriminator is now a
+per-*function* harness call (`planted(`, `probe(`), not a module-level import --
+an import sits in the header and is shared by every function in the file, so
+keying on it classifies the whole module and trades one false verdict for
+another.
 
 ## 8. Code review checklist
 
@@ -317,7 +323,7 @@ Before any change is merged:
 | 4 | Every validation target writes an artefact | Directory inventory |
 | 5 | The `[UNVERIFIED]` register is reviewed at every milestone | Milestone checklist |
 | 6 | Every benchmark records its hardware | Artefact schema |
-| 7 | The gate register has no "Unverified" rows for shipped gates | Manual |
+| 7 | The gate register has no "Unverified" rows for shipped gates | `gate_register.py --check` |
 | 8 | CI run history is non-empty and growing | `gh api .../actions/runs` |
 
 **Criterion 7 is the one that decays.** A gate added in a hurry ships without a

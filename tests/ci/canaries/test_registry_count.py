@@ -88,10 +88,18 @@ def _run_gate(test: str) -> subprocess.CompletedProcess[str]:
 
 
 def test_the_registry_holds_every_au_member_state():
+	"""The gate's own premise: the shipped registry is the complete set.
+
+	Named for the state of the tree rather than for the plan's gate, because
+	this is the control the canaries below measure their defect against. The
+	plan's ``test_registry_covers_all_au_members`` is the gate; this asserts the
+	tree it passes on.
+	"""
 	assert len(registry()) == AU_MEMBER_STATE_COUNT == 55
 
 
 def test_tiers_partition_the_registry():
+	"""The premise for ``test_registry_tier_counts_match_tables``."""
 	counts = tier_counts()
 	assert sum(counts.values()) == AU_MEMBER_STATE_COUNT
 
@@ -105,6 +113,10 @@ def test_dropping_a_country_fails_the_count():
 	entered, and the test passed for a reason unrelated to the count. The gate
 	is `_build`'s own check, which raises rather than returning a short
 	registry, so the canary has to remove a row and watch it raise.
+
+	The gate this canaries is ``test_registry_covers_all_au_members``, run by
+	name below rather than re-measured: a canary that recomputes the count
+	itself is a canary of its own arithmetic, not of the gate.
 	"""
 	source = REPO / "src" / "alea" / "registry" / "countries.py"
 	row = '\t("KE", "KEN", "Kenya", PowerPool.EAPP, CompletenessTier.HIGH, 56_433_000),\n'
@@ -169,3 +181,48 @@ def test_moving_a_country_between_tiers_fails_the_tier_gate():
 			f"the gate failed for a reason other than the moved country:\n{mutated.stdout[-2000:]}"
 		)
 	assert _probe()["tiers"]["low"] == 8, "the registry was not restored"
+
+
+def test_a_country_in_no_power_pool_without_a_reason_fails_the_gate():
+	"""Plant the defect ``test_every_country_has_a_power_pool`` exists for.
+
+	The gate has two halves and this exercises the one a count cannot see. A
+	country whose ``power_pool`` is ``NONE`` is a country the continental model
+	drops, and §3.3 says the value is legitimate only "with a note" -- so the
+	gate asserts the note, not just the enum.
+
+	Algeria, because it is in COMELEC and carries no note: moving it to ``NONE``
+	leaves the registry at 55 with every tier unchanged, so the count and tier
+	gates stay green and only the pool gate can catch it. That is what makes it
+	a canary for *this* gate rather than for the registry in general.
+
+	The move is planted in the row, and the gate is run by name and asserted --
+	not re-measured here, because a canary that recomputes the pool set is a
+	canary of its own arithmetic.
+	"""
+	source = REPO / "src" / "alea" / "registry" / "countries.py"
+	shipped = '\t("DZ", "DZA", "Algeria", PowerPool.COMELEC, CompletenessTier.MEDIUM, 46_164_000),\n'
+	dropped = '\t("DZ", "DZA", "Algeria", PowerPool.NONE, CompletenessTier.MEDIUM, 46_164_000),\n'
+	assert shipped in source.read_text(), "canary target not found: no DZ row to move"
+
+	clean = _run_gate("test_every_country_has_a_power_pool")
+	assert clean.returncode == 0, (
+		f"the gate does not pass on the shipped tree, so the canary below would "
+		f"prove nothing:\n{clean.stdout[-2000:]}"
+	)
+
+	with planted(source, shipped, dropped):
+		shape = _probe()
+		assert shape["n"] == 55, "the planted move changed the total, so this is not the test"
+		assert "DZ" in shape["pools"]["none"], f"the move did not apply: {shape['pools']['none']}"
+
+		mutated = _run_gate("test_every_country_has_a_power_pool")
+		assert mutated.returncode != 0, (
+			"the pool gate passed with a country in no power pool and no note; a "
+			"country the continental model cannot place was accepted silently"
+		)
+		assert "no note saying why" in mutated.stdout, (
+			f"the gate failed for a reason other than the missing note:\n"
+			f"{mutated.stdout[-2000:]}"
+		)
+	assert "DZ" not in _probe()["pools"]["none"], "the registry was not restored"

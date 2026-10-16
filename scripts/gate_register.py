@@ -2,13 +2,19 @@
 # SPDX-License-Identifier: MIT
 """Derive the gate register from the plans and the tests, and report the gaps.
 
-`12-quality.md` §7 is a hand-written table of every gate in the plan with its
-canary and a status column. §9 criteria 2 and 7 read that table: "every gate has
-a canary that has been observed to fail", "the gate register has no 'Unverified'
-rows for shipped gates". Both are marked **Manual**, which is the failure mode
-this project has already paid for more than once -- a register maintained by
-hand is a register that describes the tree as it was when someone last edited
-it, and every gate added since is invisible.
+`12-quality.md` §7 is the register of every gate in the plan with its canary and
+a status column. §9 criteria 2 and 7 read it: "every gate has a canary that has
+been observed to fail", "the gate register has no 'Unverified' rows for shipped
+gates". Both were marked **Manual**, which is the failure mode this project has
+already paid for more than once -- a register maintained by hand is a register
+that describes the tree as it was when someone last edited it, and every gate
+added since is invisible.
+
+§7 carried such a table: 42 rows under the heading "Every gate in the plan",
+against the 112 the plans actually promise (measured 2026-10-16). It is now this
+script's `--markdown` output. The section is prose about *how* the register is
+derived and what its discovery rules got wrong; the table is generated, so it
+cannot describe a tree other than the one on disk.
 
 So the register is *derived* here, from two sources that are already
 authoritative:
@@ -64,7 +70,68 @@ Bare `test_foo` in prose is usually a module name -- `tests/ci/test_planning_lay
 The citation and the promise must be the same shape or the diff between them is
 noise."""
 
-_SECTION = re.compile(r"^## .*(Gates|Exit criteria)", re.MULTILINE)
+_SECTION = re.compile(r"^(#{2,3}) .*(Gates|Exit criteria)", re.MULTILINE)
+"""A gate section, at either heading level.
+
+It matched `^## ` only, and four plan documents state their gates under an
+`### N.N Gates` heading -- `01-foundations` `### 3.3` and `### 4.3`,
+`02-data-pipeline` `### 4.2`, `03-rust-core` at `### 3.5`, `4.3`, `5.4`, `6.4`
+and `7.3`. Eleven promised gates were invisible to this register because of it,
+and the register reported `unimplemented: 0  uncanaried: 0` while three of the
+eleven had no test and seven no canary. A discovery rule that reads one of the
+two spellings a document uses is the defect wearing the gate's clothes: the
+report is not wrong about what it looked at, it is wrong about what it claims
+to have looked at.
+
+The level is captured rather than matched loosely because the *stop* has to
+match it: an `###` section ends at the next `###` or `##`, an `##` section at
+the next `##`. A single `^#{2,3} ` stop would truncate an h2 gate table at the
+first h3 subheading inside it. No h2 gate section in the plans nests an h3
+today -- checked, not assumed -- so this changes nothing for them; it is what
+keeps that a fact rather than a coincidence."""
+
+_USES_CANARY_HARNESS = re.compile(
+	r"\b(?:planted|probe|probe_exit_code|leaked_mutations)\s*\("
+)
+"""Whether a test *function* is a canary by behaviour rather than by directory.
+
+The rule was `"canaries" in path.parts`, and modules that plant a defect, run
+the gate and assert it fails live in `tests/ci/` too -- `test_stage_output_gates.py`,
+`test_planning_inputs.py`, `test_units_columns.py` and
+`test_config_reachability.py` import the harness from `tests.ci.canaries` to do
+it. Reading the directory counted them as ordinary tests, so gates with a
+working canary were reported **uncanaried**: the verdict was about where a file
+sits, not what it does.
+
+**The signal is a harness *call*, not the import.** The import sits in the
+module header and is shared by every function in the file, so keying on it
+classifies the whole module -- and `test_stage_output_gates.py` is both: four
+real gate tests and one canary that plants a broken stage. Module-level
+classification moved `test_topology_schema` and `test_fleet_carriers_known`
+*out* of the implemented set and into the canaried one, so the register then
+reported them unimplemented -- trading one false verdict for another. A
+`planted(...)` in the function body is what actually makes one test a canary
+and its neighbour a gate, so that is what this matches.
+
+`probe` and `probe_exit_code` are the subprocess half of the same discipline
+and are matched for the same reason.""""""A gate section, at either heading level.
+
+It matched `^## ` only, and four plan documents state their gates under an
+`### N.N Gates` heading -- `01-foundations` `### 3.3` and `### 4.3`,
+`02-data-pipeline` `### 4.2`, `03-rust-core` at `### 3.5`, `4.3`, `5.4`, `6.4`
+and `7.3`. Eleven promised gates were invisible to this register because of it,
+and the register reported `unimplemented: 0  uncanaried: 0` while three of the
+eleven had no test and seven no canary. A discovery rule that reads one of the
+two spellings a document uses is the defect wearing the gate's clothes: the
+report is not wrong about what it looked at, it is wrong about what it claims
+to have looked at.
+
+The level is captured rather than matched loosely because the *stop* has to
+match it: an `###` section ends at the next `###` or `##`, an `##` section at
+the next `##`. A single `^#{2,3} ` stop would truncate an h2 gate table at the
+first h3 subheading inside it. No h2 gate section in the plans nests an h3
+today -- checked, not assumed -- so this changes nothing for them; it is what
+keeps that a fact rather than a coincidence."""
 
 
 def promised_gates() -> dict[str, set[str]]:
@@ -81,8 +148,14 @@ def promised_gates() -> dict[str, set[str]]:
 		text = plan.read_text()
 		for section in _SECTION.finditer(text):
 			rest = text[section.end() :]
-			# Up to the next `## ` heading: the table plus its trailing note.
-			next_heading = re.search(r"^## ", rest, re.MULTILINE)
+			# Up to the next heading *at or above* this one: the table plus its
+			# trailing note. A `###` section stops at `###` or `##`; an `##`
+			# section stops at `##`, so an h3 subheading inside it stays in the
+			# body rather than cutting the table short.
+			level = len(section.group(1))
+			next_heading = re.search(
+				rf"^#{{2,{level}}} ", rest, re.MULTILINE
+			)
 			body = rest[: next_heading.start()] if next_heading else rest
 			for name in GATE_NAME.findall(body):
 				gates.setdefault(name, set()).add(plan.stem)
@@ -135,6 +208,11 @@ def scan_tests() -> tuple[dict[str, Implementation], set[str]]:
 			doc = re.search(r'"""(.*?)"""', body, re.DOTALL)
 			mentions = module_citations | set(CITED.findall(doc.group(1) if doc else ""))
 			cited |= mentions
+			# Canary by behaviour: the function plants a defect through the
+			# harness. Scoped per function, because a module can hold both -- see
+			# `_USES_CANARY_HARNESS`. A file under `canaries/` is a canary
+			# throughout, which is the plan's own layout.
+			plants = is_canary or _USES_CANARY_HARNESS.search(body) is not None
 			# The function implements the gate it is named for, plus any gate it
 			# cites. `test_connector_rate_limit` is one; a module that calls its
 			# function `test_no_connector_exceeds_its_declared_rate` and cites
@@ -143,7 +221,7 @@ def scan_tests() -> tuple[dict[str, Implementation], set[str]]:
 				if not gate.startswith("test_"):
 					continue
 				entry = found.setdefault(gate, Implementation())
-				target = entry.canaries if is_canary else entry.tests
+				target = entry.canaries if plants else entry.tests
 				if relative not in target:
 					target.append(relative)
 	return found, cited

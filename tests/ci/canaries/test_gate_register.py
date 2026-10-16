@@ -116,27 +116,45 @@ def test_the_check_mode_exits_non_zero_while_a_gate_is_unverified():
 
 	Removing a citation is the smallest defect the register can see: one gate
 	falls from Verified to Uncanaried, and `--check` must notice.
+
+	**Scoped to the gate, not the tree.** This asserted
+	``main(["--check"]) == 0`` before planting, on the reasoning that a canary
+	cannot attribute a failure it did not cause. The premise was true only
+	while the register was blind: widening it to the h3 gate sections on
+	2026-10-16 moved the tree from 0 gaps to 9, and this assertion then failed
+	for a reason that had nothing to do with the citation it plants. A canary
+	whose precondition is "the tree has no other defect anywhere" is a canary
+	that reddens on every unrelated gap -- and the honest reading of that
+	failure is not that this canary broke, but that it was measuring the wrong
+	thing. It now measures the *delta*: the planted gate must fall out of the
+	verified set and the exit must be non-zero, whatever the rest of the tree
+	holds.
 	"""
 	before = CANARY.read_text()
 	assert CITATION in before, "canary target not found"
 
 	register = _load()
-	assert register.main(["--check"]) == 0, (
-		"the register is not clean before the canary plants anything; this canary "
-		"cannot attribute the failure it is about to cause"
+	_, trusted_before, _ = register.report()
+	assert trusted_before[GATE].canaries, (
+		"premise failed: the gate was not canaried before the plant, so a "
+		"fall from the verified set cannot be attributed to it"
 	)
 
 	with planted(CANARY, CITATION, "``the retention gate``"):
 		register = _load()
-		_, uncanaried, _ = register.gaps()
-		assert uncanaried, "the planted defect produced no gap for --check to find"
+		_, trusted_after, _ = register.report()
+		assert not trusted_after[GATE].canaries, (
+			"the planted defect did not move the gate out of the verified set"
+		)
 		assert register.main(["--check"]) == 1, (
 			"--check exited 0 with a gate that lost its canary"
 		)
 
-	# Restored, and the register must clear.
+	# Restored, and the gate must be trusted again -- otherwise the canary
+	# proves the register can fail but not that it recovers.
 	register = _load()
-	assert register.main(["--check"]) == 0, "the register did not recover after the restore"
+	_, trusted_restored, _ = register.report()
+	assert trusted_restored[GATE].canaries, "the register did not recover after the restore"
 
 
 def test_the_markdown_register_marks_unverified_gates():

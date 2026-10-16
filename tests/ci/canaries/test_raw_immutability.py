@@ -24,9 +24,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
-from alea.io.artefacts import ArtefactError, raw_path, sha256_bytes, store_raw
+from alea.io.artefacts import raw_path
 from alea.provenance.models import Basis, Licence, Provenance
 from tests.ci.canaries import REPO, planted
 
@@ -42,28 +40,6 @@ def _provenance() -> Provenance:
 		uncertainty=0.0,
 		notes="canary",
 	)
-
-
-def test_a_stored_payload_is_addressed_by_its_content(tmp_path: Path):
-	path = store_raw("canary", PAYLOAD, _provenance(), root=tmp_path)
-	assert path.parent.name == sha256_bytes(PAYLOAD)
-	assert path.read_bytes() == PAYLOAD
-
-
-def test_storing_the_same_bytes_twice_is_idempotent(tmp_path: Path):
-	first = store_raw("canary", PAYLOAD, _provenance(), root=tmp_path)
-	second = store_raw("canary", PAYLOAD, _provenance(), root=tmp_path)
-	assert first == second
-
-
-def test_edited_bytes_under_a_checksum_directory_are_refused(tmp_path: Path):
-	"""Plant the defect: change the payload, keep the address."""
-	path = store_raw("canary", PAYLOAD, _provenance(), root=tmp_path)
-	path.write_bytes(b"a different payload entirely\n")
-	# The address still exists, so `store_raw` takes the early-return branch --
-	# and that branch is where the re-hash has to happen.
-	with pytest.raises(ArtefactError, match="tampered"):
-		store_raw("canary", PAYLOAD, _provenance(), root=tmp_path)
 
 
 #: Runs the tamper check against the tree as it stands on disk and prints the
@@ -112,6 +88,12 @@ def _tamper_outcome() -> str:
 
 def test_the_rehash_is_the_gate():
 	"""Canary proper: remove the re-hash and watch the tamper check go blind.
+
+	The gate this blinds is ``test_raw_is_immutable``, which lives in
+	`tests/ci/test_io_artefacts.py` -- the gate in the tests directory and its
+	canary here, per `12-quality.md` §3.2. The name is cited so the register
+	joins the two; a canary that runs a gate without naming it leaves the
+	register unable to tell a canaried gate from an uncanaried one.
 
 	**Why a subprocess rather than an in-process `importlib.reload`.** This test
 	used to reload `alea.io.artefacts` in the parent process, twice. A reload

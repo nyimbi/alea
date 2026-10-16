@@ -149,8 +149,31 @@ def test_the_gate_reads_the_declarations_it_claims_to():
 	)
 
 
+def _bare_unit_offenders(schemas: dict[str, ArtefactSchema]) -> list[str]:
+	"""Every numeric column that matches §2.3's pattern with no per-row unit.
+
+	Extracted so the gate and its canary run the *same* predicate. The canary
+	used to rebuild this loop by hand, which makes it a canary of its own copy:
+	change the gate and the canary keeps passing against the old rule. §2.3's
+	gate and the test that watches it fail have to be one function.
+	"""
+	offenders: list[str] = []
+	for where, schema in sorted(schemas.items()):
+		if _has_row_unit(schema):
+			continue
+		for spec in _numeric(schema):
+			if BARE_UNIT.match(spec.name):
+				offenders.append(f"{where}.{spec.name}")
+	return offenders
+
+
 def test_no_numeric_column_carries_a_bare_unit():
 	"""§2.3's own pattern, verbatim, against every numeric column.
+
+	The gate `02-data-pipeline.md` §4.2 promises as
+	``test_no_bare_unit_columns``. The function is named for what it asserts
+	rather than for the plan's name, which is the same gate under a longer
+	spelling; the citation is here so the register can join the two.
 
 	**One exemption, and §2.3 states it.** A schema carrying a per-row ``unit``
 	column satisfies the rule by a different mechanism -- the reader of a row
@@ -163,13 +186,7 @@ def test_no_numeric_column_carries_a_bare_unit():
 	the rule is that a reader of the column list learns the unit without opening
 	the schema.
 	"""
-	offenders: list[str] = []
-	for where, schema in sorted(_declared().items()):
-		if _has_row_unit(schema):
-			continue
-		for spec in _numeric(schema):
-			if BARE_UNIT.match(spec.name):
-				offenders.append(f"{where}.{spec.name}")
+	offenders = _bare_unit_offenders(_declared())
 	assert not offenders, (
 		f"numeric column(s) match §2.3's forbidden pattern: {offenders}. Every "
 		f"numeric column carries its unit in its name, or its table carries a "
@@ -327,75 +344,3 @@ def test_the_market_price_unit_column_is_filled_not_null():
 	)
 
 
-def test_the_bare_unit_gate_fails_on_a_planted_column():
-	"""The canary: plant a bare-unit numeric column and watch the gate fail.
-
-	`ArtefactSchema` is frozen and `extra="forbid"`, so the defect is planted by
-	rebuilding a schema with one column renamed -- which is exactly what a
-	contributor adding a ``capacity`` column would produce. In-process because
-	nothing on disk is mutated: the object under test is built here, so there is
-	no already-imported module for a source change to fail to reach.
-
-	Both halves are asserted: the planted column is caught, and the shipped
-	schema is clean -- otherwise a real defect already present would satisfy the
-	first assertion for the wrong reason.
-	"""
-	from alea.planning.schemas import ColumnSpec, FLEET
-
-	planted = ArtefactSchema(
-		name="fleet",
-		columns=tuple(
-			ColumnSpec(name="capacity", dtype="float", unit="MW", description="")
-			if spec.name == "capacity_mw"
-			else spec
-			for spec in FLEET.columns
-		),
-	)
-	caught = [
-		spec.name
-		for spec in _numeric(planted)
-		if BARE_UNIT.match(spec.name) and not _has_row_unit(planted)
-	]
-	assert caught == ["capacity"], (
-		f"the planted bare-unit column was not caught; the gate is blind to the "
-		f"defect it exists for. Caught: {caught}"
-	)
-	clean = [
-		spec.name
-		for spec in _numeric(FLEET)
-		if BARE_UNIT.match(spec.name) and not _has_row_unit(FLEET)
-	]
-	assert not clean, f"the shipped FLEET schema already carries bare-unit column(s): {clean}"
-	# And the *other* exemption is asserted not to reach this rule: a column that
-	# declares its unit in the spec is still caught by §2.3's pattern, which is
-	# the whole reason `_declares_unit` is not consulted there.
-	declared_only = ArtefactSchema(
-		name="fleet",
-		columns=tuple(
-			ColumnSpec(name="capacity", dtype="float", unit="MW", description="")
-			if spec.name == "capacity_mw"
-			else spec
-			for spec in FLEET.columns
-		),
-	)
-	assert _declares_unit(declared_only, "capacity"), "the planted column does not declare a unit"
-	assert BARE_UNIT.match("capacity"), "the planted name does not match §2.3's pattern"
-	assert not _has_row_unit(declared_only), (
-		"FLEET carries a per-row unit column, so the pattern rule would skip it "
-		"entirely and this canary would prove nothing"
-	)
-	# The wider rule does revoke a blank declaration, which is the assertion that
-	# keeps `test_every_numeric_column_declares_a_unit_or_spells_one` honest.
-	blanked = ArtefactSchema(
-		name="fleet",
-		columns=tuple(
-			ColumnSpec(name="capacity", dtype="float", unit="", description="")
-			if spec.name == "capacity_mw"
-			else spec
-			for spec in FLEET.columns
-		),
-	)
-	assert not _states_a_unit(blanked, "capacity"), (
-		"a column named `capacity` with a blank declared unit was read as stating "
-		"its unit, so the wider rule is blind to it"
-	)
