@@ -35,6 +35,10 @@ rhs: base_demand_twh * (1 + demand_growth) ** horizon_years
 graph ids. Note that none of them is a row in your table, and that the graph
 already ships this exact equation — which is the standard to hit.
 
+**That equation is illustration, not a task.** It exists as `energy_demand` in
+`config/prg.yaml`, so rule 14 below forbids adding it again. Find the parameters
+that have no equation yet and write those.
+
 Do **not** rename a graph parameter to match a symbol in a formula. Do **not**
 emit an equation whose left-hand side is `D_y`, `\text{LF}`, `C^{\text{solar}}_y`
 or any other physics symbol. Do **not** use a name that is not in
@@ -42,7 +46,9 @@ or any other physics symbol. Do **not** use a name that is not in
 `curtailment`, `busmap`, `lcoe`, `cfads` appear in your arrows and formulas but
 are **not parameters**. If such a quantity is genuinely needed as an input,
 declare it in Register 1 first, with a unit and a range; otherwise eliminate it
-from the right-hand side.
+from the right-hand side. **That list is illustrative, not exhaustive:** there
+are **266** such names in your documents. The full list is every name your
+arrows and formulas cite that `config/prg.yaml` does not declare.
 
 ## READ FIRST
 
@@ -51,12 +57,28 @@ from the right-hand side.
    equations** (your models to extend) and **88 relationships**. Your output
    must use these ids verbatim.
 2. `docs/param_eqn.md` — your linkage table. Useful as a *hint* about which
-   parameters relate; its 1,085 authorable arrows suggest couplings. It states
-   no arithmetic, so it cannot be transcribed.
+   parameters relate; its **1,085 authorable arrows** (of the 1,583 it states)
+   suggest couplings. It states no arithmetic, so it cannot be transcribed.
 3. `docs/param_eqn_formula.md` and `docs/param_eqn_formula1.md` — your formula
    reference. Useful for the physics; the left-hand sides need rewriting.
 4. `docs/params.md` — the 784-row catalog. Its `algorithm` column is prose
    ("Logistic / Gompertz growth curve"), not an expression.
+
+### The four totals, reconciled
+
+They are different counts of different things. Do not use one where another is
+meant.
+
+| Number | What it counts |
+|---|---|
+| **869** | parameters in the graph (`config/prg.yaml`). The authority. |
+| **787** | distinct parameters with a row in `docs/param_eqn.md`. All 787 are graph nodes; the other **82** nodes have no row. |
+| **781** | graph nodes whose `role` is `free` — 869 − 88, where the 88 are 33 `derived` + 52 `exogenous` + 3 `endogenous`. |
+| **784** | rows in the `docs/params.md` catalog. A fourth thing: a row may cover a node, or describe a quantity the graph does not carry. |
+
+**1,583 vs 1,085 arrows.** `param_eqn.md` states 1,583 arrows in total. **1,085**
+of them have *both* endpoints among the graph's 869 nodes, and only those are
+addressable; the other 498 name at least one of the 266 non-parameter quantities.
 
 ## OUTPUT FORMAT
 
@@ -72,8 +94,8 @@ parameters:
     description: System peak demand over the planning horizon
     category: Demand-Side            # one of the 28 catalog categories
     type: float                      # float|int|bool|categorical|timeseries|spatial
-    unit: MW                         # REQUIRED for float and int
-    range: [0.0, 500000.0]           # REQUIRED for float and int
+    unit: MW                         # supply it whenever you know it
+    range: [0.0, 500000.0]           # required for endogenous; strongly wanted everywhere else
     default: 30000.0                 # required for free|exogenous|endogenous; FORBIDDEN for derived
     role: exogenous                  # exogenous|endogenous|derived|free
     determinism: policy              # fixed|stochastic|policy|physical
@@ -85,6 +107,15 @@ parameters:
 
 Do not restate a shipped value that is already correct; an entry that disagrees
 with `config/prg.yaml` is reported as drift, not merged.
+
+**What is actually required, as opposed to what you should supply.** Only three
+of these are loader rules: `default` inside `range`; `range` and `default` both
+present on an `endogenous` node; no `default` on a `derived` node. `unit` and
+`range` are **not** required on a `free` or `exogenous` float node — a node with
+neither loads cleanly. Supply them anyway wherever you know them, because
+without a `range` the range gate cannot refuse a caller's nonsense value, and
+without a `unit` the dimensional walker cannot decide any equation the node
+appears in. Both are what makes the parameter *usable*, not merely loadable.
 
 **691 of the 781 `free` nodes currently carry placeholder metadata:**
 `range: [0.0, 1000000.0]` and `default: 500000.0`. If you have the real
@@ -152,8 +183,16 @@ cross_validation:
     suggestion: Raise reserve_margin_min, or lower vre_capacity_target_mw
 ```
 
-The `condition` is text, parsed by the engine. Operators `and`, `or`, `not`,
-comparisons and arithmetic over parameter names.
+The `condition` is text, parsed by the engine. **It is not `eval`** — it is
+`ast.parse` with an allow-list, and the grammar is narrow: comparisons
+`< <= > >= == !=` between a parameter name and a literal or another parameter,
+joined with `and` / `or` / `not`, with parentheses. **Arithmetic is refused.**
+`a * 2 > b`, `a + b > c`, `2 * a > b` and `a ** 2 > b` are all rejected at load
+with `BinOp is not part of a cross-validation condition`.
+
+So if a relation needs arithmetic — a ratio, a product, a sum — it is an
+**equation** in Register 2, not a rule here. A rule is for a comparison of
+already-computed values.
 
 ## ENUMERATED VOCABULARIES
 
@@ -163,10 +202,13 @@ comparisons and arithmetic over parameter names.
 `health`, `inertia`, `learning`, `ppa_pricing`, `price_demand`, `reliability`,
 `reserve_margin`, `water_energy`.
 
-These are the systems that **exist**. If a system your physics needs is not in
-this list, say so in the coverage report rather than inventing an id — a
-misspelt system is a load error, and a new system is a change to the library's
-own enumeration.
+These are the systems that **exist**. The library holds **17**, not 20 — the
+specification enumerates 20 §4 headings, and three of them are refinements of a
+system already here (System 16 is the capture-price loop, 17 is the carbon
+trajectory, 18 is the learning curve, 19 is debt sizing, which is part of
+`financial`). If a system your physics needs is not in this list, say so in the
+coverage report rather than inventing an id — a misspelt system is a load error,
+and a new system is a change to the library's own enumeration.
 
 **DSL grammar** for `lhs`/`rhs`: arithmetic `+ - * / **`, parentheses,
 subscripts `x[i]`, and an explicit summation with integer bounds:
@@ -195,7 +237,7 @@ match the catalog. Do not add a 41st spelling.
 
 ## RULES THE LOADER ENFORCES (each is a hard error)
 
-1. `default` must lie inside `range`.
+1. `default` must lie inside `range` (checked only when both are present).
 2. `role: derived` must **not** carry a `default`.
 3. `role: endogenous` **must** carry both `range` and `default`.
 4. `initial` is valid only on a `derived` node that carries a `range`.
@@ -229,9 +271,33 @@ State, in your reply, the value you expect for each:
    inequality` requires the equation's `relation` to be `leq`/`geq`;
    `equality` requires `eq`.
 6. **Dimensional** — equations must be dimensionally consistent. The shipped
-   graph has 39 equations, 31 consistent and **8 inconsistent**. Your batch must
-   not raise that count. If an equation's dimensions genuinely cannot be
-   decided, set `unit_check: false` and say why in the `description`.
+   graph has 39 equations: **31 consistent, 8 inconsistent, 0 undecidable, 0
+   exempt**. Your batch must not raise the 8. If an equation's dimensions
+   genuinely cannot be decided, set `unit_check: false` and say why in the
+   `description`.
+
+   **The 8 are a deliverable, not just a bound.** They are a known set, pinned
+   by a test, and three of them are one class. Fixing them is welcome and is
+   part of the work:
+
+   | equation | why it is flagged |
+   |---|---|
+   | `crf_definition`, `debt_service_definition`, `energy_demand` | the `(1 + rate)` convention: `discount_rate`, `cost_of_debt` and `demand_growth` are declared `unit: 1/year`, and `1 + 1/year` cannot be added to `1` |
+   | `rocof_definition` | missing nominal frequency |
+   | `emissions_definition`, `hydrogen_water_definition`, `premature_deaths_definition` | the two sides do not share a dimension |
+   | `tariff_cost_recovery` | annual quantities declared without a per-year divisor |
+
+   The `(1 + rate)` class is the one with a clean fix and it is a **modelling
+   decision, not a patch**: a per-year growth or discount rate used as `(1 + r)`
+   is *dimensionless*, and declaring it `1/year` is what breaks it. Say in your
+   reply which convention you are adopting and correct the declarations
+   consistently. The `tariff_cost_recovery` class is the same shape one level
+   down — `equilibrium_demand_twh` is an annual energy declared as bare `TWh`,
+   so `USD/year / TWh` reads as `USD/(MWh·year)` when the physics is
+   `USD/year / (MWh/year) = USD/MWh`. Declaring the `TWh` nodes as `TWh/year`
+   clears this one and opens five others in the same class (`energy_balance`,
+   `energy_demand`, `equilibrium_demand`, `unserved_definition`,
+   `cooling_water_definition`), so decide it once and say so.
 7. **Coverage** — report how many of the 869 parameters are now *determined*
    (a `determined_variables` entry), *named* (appear in some equation), and
    *still uncoupled*. This is progress, not a pass condition.
@@ -243,7 +309,9 @@ State, in your reply, the value you expect for each:
 - Using one of the non-parameter names (`available_capacity`, `clearing_price`,
   `curtailment`, `busmap`, `lcoe`, `cfads`, `ens`, `debt_service`,
   `cumulative_capacity`, `heat_pump_load`, `hydrogen_revenue`, …) without first
-  declaring it in Register 1 with a unit and a range.
+  declaring it in Register 1 with a unit and a range. There are 266 such names;
+  the list above is a sample, and the set is every cited name that
+  `config/prg.yaml` does not declare.
 - An edge citing an equation that does not hold both endpoints.
 - A `default` on a `derived` node; a `free` node as a determined variable.
 - Inventing a range or a unit to fill a schema slot.
@@ -269,3 +337,13 @@ State, in your reply, the value you expect for each:
 - A list of every place you could not write an equation because the parameter's
   admissible set is unknown, with the reason. That list is a deliverable, not a
   failure.
+- **A unit-convention note**, if you touch gate 6: which convention you adopted
+  for per-year rates (`1/year` vs dimensionless) and for annual energies
+  (`TWh` vs `TWh/year`), which equations it moves, and whether the inconsistent
+  count went down or stayed at 8. Do not change a unit without saying which
+  equations it re-decides — the dimensional register is pinned by a test, and a
+  unit edit that clears one equation and flags five is a net regression the
+  count alone will not show.
+- **A list of any relation that is not expressible** in the cross-validation
+  grammar because it needs arithmetic, and which equation you wrote for it
+  instead.
