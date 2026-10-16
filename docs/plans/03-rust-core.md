@@ -458,9 +458,9 @@ uv run pytest tests/ci -q
 | 2 | `maturin develop` works on a clean clone | CI |
 | 3 | Every kernel has a Python reference implementation | `tests/reference/` |
 | 4 | Every kernel passes differential tests | CI |
-| 5 | VIIRS cloud semantics pinned by test | Synthetic flag test |
-| 6 | Aggregation weights sum exactly | Property test |
-| 7 | Loss decomposition sums to the total | Property test |
+| 5 | VIIRS cloud semantics pinned by test | `test_cloud_flag_semantics` |
+| 6 | Aggregation weights sum exactly | `test_the_aggregation_weights_are_the_hours_each_period_stands_for` |
+| 7 | Loss decomposition sums to the total | `test_decompose_losses_components_sum_to_total` |
 | 8 | All seeded functions are deterministic across processes | Determinism job |
 | 9 | Performance targets measured and recorded | Benchmark artefact |
 | 10 | `abi3` wheel imports under Python 3.14 | CI |

@@ -313,12 +313,12 @@ artefacts where the pipeline writes one.
 | # | Criterion | Gate |
 |---|---|---|
 | 1 | Kenya network builds, connected, no orphans | `test_network_connected` |
-| 2 | Kenya expansion solve completes under HiGHS | Integration test |
+| 2 | Kenya expansion solve completes under HiGHS | `test_the_expansion_solve_completes` |
 | 3 | Demand matches AFREC within 2% | `test_demand_matches_national` |
 | 4 | Aggregation validated and recorded | Validation artefact |
 | 5 | Losses on, difference vs. lossless recorded | M1 artefact |
 | 6 | Kenya case study reproduced or discrepancy recorded | M1 artefact |
-| 7 | Continental config builds (not solves) | Integration test |
+| 7 | Continental config builds (not solves) | `test_the_continental_config_builds_without_solving` |
 | 8 | Two solves byte-identical | Determinism job |
 | 9 | Every gate canaried | `tests/ci/canaries` |
 | 10 | Layer 1 solves without PyPSA-Earth present | CI job with conda absent |

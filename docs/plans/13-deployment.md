@@ -267,7 +267,7 @@ nobody can reproduce.
 | # | Criterion | Gate |
 |---|---|---|
 | 1 | Alea image builds and runs on a clean host | CI build |
-| 2 | PyPSA-Earth image builds separately; no shared interpreter | Build test |
+| 2 | PyPSA-Earth image builds separately; no shared interpreter | `test_the_alea_image_does_not_install_pypsa_earth` |
 | 3 | The seam is files only; Alea runs with PyPSA-Earth absent | CI job |
 | 4 | `dvc repro` reproduces the Kenya fixture | `test_a_perturbed_input_moves_the_checksum` |
 | 5 | Every long job survives a process restart | `test_job_survives_restart` |
@@ -275,7 +275,7 @@ nobody can reproduce.
 | 7 | Delivery recorded for every channel | `test_delivery_recorded` |
 | 8 | Determinism job passes in the deployed image | CI |
 | 9 | Base images pinned by digest | Build config review |
-| 10 | Alerting fires on a planted failure | Canary |
+| 10 | Alerting fires on a planted failure | `test_alerting_fires_on_a_planted_failure` |
 
 **Criterion 10 is a canary in production.** Kill the pipeline deliberately in a
 staging environment and confirm the alert fires. An alert path that has never

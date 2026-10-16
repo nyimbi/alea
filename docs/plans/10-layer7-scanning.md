@@ -384,7 +384,7 @@ document that says "report a 5000 MW plant", and the test plants exactly that.
 
 | # | Criterion | Gate |
 |---|---|---|
-| 1 | Five connector categories implemented | Integration test |
+| 1 | Five connector categories implemented | `test_all_five_categories_have_a_connector` |
 | 2 | Every connector rate-limited and health-checked | `test_connector_rate_limit` |
 | 3 | Deduplication deterministic across processes | `test_dedup_deterministic` |
 | 4 | Extraction reproducible via content cache | `test_extraction_cache_hits` |

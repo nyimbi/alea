@@ -307,7 +307,7 @@ the daily cadence, so nothing raised while both were absent.
 
 | # | Criterion | Gate |
 |---|---|---|
-| 1 | All five cadences render end-to-end on fixtures | Integration test |
+| 1 | All five cadences render end-to-end on fixtures | `test_each_cadence_renders_end_to_end_on_fixtures` |
 | 2 | Every value carries provenance and a basis marker | `test_every_value_has_provenance` |
 | 3 | Proxy values visibly marked | `test_proxy_values_marked` |
 | 4 | Precision respects uncertainty | `test_precision_matches_uncertainty` |
