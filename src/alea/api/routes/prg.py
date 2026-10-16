@@ -212,6 +212,8 @@ def _summary_out(graph: Any) -> PrgSummaryOut:
 		derived=report["derived"],
 		endogenous=report["endogenous"],
 		endogenous_parameters=report["endogenous_parameters"],
+		exogenous=report["exogenous"],
+		free=report["free"],
 		systems=report["systems"],
 		systems_declared=report["systems_declared"],
 		unmodelled_systems=report["unmodelled_systems"],

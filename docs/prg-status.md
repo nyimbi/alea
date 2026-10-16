@@ -34,7 +34,8 @@ the code and `config/prg.yaml` are the authority, and this says where to look.
 | API | `src/alea/api/routes/prg.py` | The §43 surface: `GET /prg/summary`, `/graph`, `/graph/export`, `/parameters`, `/parameters/{id}`, `/parameters/{id}/dependents`, `/equations`, `/equations/{id}`, `/consistency/check`, `/consistency/report`; `POST /prg/propagate`, `/conflicts` (`/conflicts/detect`), `/conflicts/resolve`, `/feedback/solve`, `/translate`, `/sensitivity`, `/cross-validation`. The two reads and the two `/consistency` routes are public; the rest are analyst-tier |
 | Python SDK | `src/alea/prg/sdk.py` | The §45 `PRGClient`: async, one method per §43 operation, returning the JSON the service served rather than re-modelling it. Transport failures and service errors both raise `PrgClientError`, so a caller writes one `except` and does not import `httpx` |
 | Load cache | `src/alea/prg/graph.py` | `load_graph` memoised on the document's *identity* -- resolved path, mtime and size. Measured: a propagation is 6.5 ms and an incremental one 6.1 ms, while parsing the YAML is 73.0 ms of a 73.4 ms load, so §30's propagation cache targets the cheap half and the parse is what the workload asks for |
-| The graph | `config/prg.yaml` | 88 parameters, 39 equations, 88 edges, 2 feedback loops (5 loop variables between them); 52 exogenous, 3 endogenous (the optimiser's fleet), 33 derived |
+| The graph | `config/prg.yaml` | 869 parameters, 39 equations, 88 edges, 2 feedback loops (5 loop variables between them); 833 settable, 3 endogenous (the optimiser's fleet), 33 derived. The 781 with no equation carry `role: free` — the schema's word for "unconstrained within its range" — and `ParameterGraph.uncoupled()` names them, so the register is countable rather than implied |
+| The catalog join | `scripts/build/prg_from_catalog.py` | The generator that joins `docs/params.md`'s 787 distinct names to the 88 shipped nodes, assigns each a system from the catalog's own category column, and writes `config/prg.yaml`. `--check` re-derives the file and diffs it, so the document and the graph cannot drift apart silently. It carries `cross_validation` through verbatim — a key it dropped once, which is the "declared is not produced" defect committed by the tool written to avoid it |
 
 Commands: `alea prg summary|equations|check|propagate|conflicts|sensitivity|units|constraints|audit`,
 `alea whatif scenario`, and `alea expr render|eval|diff|simplify|solve`.
@@ -248,16 +249,16 @@ manufacturing a decision no one took.
   mutation is in the *document*, which is the gate's input, and is therefore
   disjoint from what the predicate compares.
 
-- **`ParameterNode.status` is declared on all 88 nodes, read by nothing, and
-  stale.** 70 `to_build` / 18 `existing`, and five of the `to_build` nodes are
-  already reached by a production path: `carbon_budget_mtco2`,
-  `dispatchable_re_capacity_mw`, `horizon_years`, `storage_capacity_mw`,
-  `thermal_capacity_mw`. No spec doc defines what the label means — whether it
-  tracks "a builder writes this" or "a solve consumes this" — and the two
-  disagree on exactly those five. Same class as `linearity` above: a
-  declaration whose referent was never fixed, drifted from the tree because
-  nothing could read it to notice. Left as a finding; giving it a reader would
-  mean choosing a meaning and then retrofitting 87 labels to it.
+- **`ParameterNode.status` is declared on all 869 nodes, and now has a reader.**
+  When this was written it was on all 88, read by nothing, and stale: 70
+  `to_build` / 18 `existing`, with five of the `to_build` nodes already reached
+  by a production path (`carbon_budget_mtco2`, `dispatchable_re_capacity_mw`,
+  `horizon_years`, `storage_capacity_mw`, `thermal_capacity_mw`). Same class as
+  `linearity`: a declaration whose referent was never fixed, drifted from the
+  tree because nothing could read it to notice. The reader now exists —
+  `catalog.py` groups the nodes by `status` and the API serves it — and the
+  catalog join took the field to all 869 nodes (644 `to_build`, 160 `existing`,
+  65 `integrate`), copied from the same column the legend defines.
 
   Two corrections to the entry as it first stood. The field is not read by
   *nothing*: `_parameter_out` serves it on `GET /prg/parameters` and
@@ -551,8 +552,52 @@ manufacturing a decision no one took.
   refuses a non-scalar type carrying a scalar `default` or `range`, because
   the model has no field for an array. `float` and `int` are the types it can
   honestly carry; the other four wait on a field that holds the array.
-- **Not the 784-parameter graph.** 88 of them, over the systems with the
-  clearest physical or accounting statement.
+- **The 784-parameter catalog is joined, and 781 of its nodes carry no
+  equation — deliberately.** Every one of `docs/params.md`'s 787 distinct
+  names is now a node in `config/prg.yaml`, and the honest count of the ones no
+  equation names is `uncoupled()`: 782 (781 settable plus
+  `storage_capacity_mw`). They are `role: free`, not `exogenous`, because
+  nothing downstream reads them: `free` is the schema's own word for
+  "unconstrained within its range", and calling them exogenous would claim a
+  modelling decision the document does not make.
+
+  The alternative — authoring an equation per node — was measured and refused.
+  The catalog states **no formula**: `=` appears in 0 of its 787
+  algorithm/description cells, and the 16 rows matching an operator word are
+  PyPSA API bindings (`n.generators.p_nom`), not arithmetic. `docs/params-prg1.md`
+  does state 20 systems of equations, but over parameter *classes*
+  (`capex_*`, `opex_fixed_*`), and the catalog instantiates those classes
+  sparsely — only three technologies carry three or more class members
+  (`coal`, `gas`, `biomass`), so class instantiation reaches a handful of
+  nodes, not 787.
+
+  A per-node equation is also the one shape the loader refuses outright:
+  `'1000000.0' names no parameter; a constant expression relates nothing and
+  would pass every consistency check vacuously`. A bounds equation over a
+  single node is a constant RHS, so it is refused by construction; a sum
+  identity over the technology capacities is not sound either, because the
+  catalog declares **no unit** for them (its columns are number, category,
+  name, title, algorithm, binding, status, users, priority) while the fleet
+  totals it would sum against are in MW. And every candidate total is already
+  determined by a shipped equation or is `endogenous` — a sum would
+  over-determine the first and remove the optimiser's choice from the second.
+
+  `params-prg1.md` §3.2 proposes its own split for these 784 — ~420
+  exogenous, ~180 endogenous, ~140 derived, ~44 free — and names
+  `coal_capacity` as endogenous. Measured against the tree and refused in both
+  directions. `derived` needs an equation and the catalog states none:
+  flipping the nine derived-by-name nodes makes the graph refuse to propagate
+  with *"a parameter that is not derived has no equation to compute it from"*.
+  `endogenous` is legal — those nodes carry the range and default the schema
+  demands — but would be a false diagnosis: `propagate_change` refuses an
+  endogenous parameter with *"the optimisation, not the graph"*, and no
+  optimiser in this tree reads `coal_capacity`. The fleet the solve chooses is
+  `thermal_capacity_mw` and its three siblings. Marking 14 catalog names
+  endogenous would assert a mechanism that does not exist.
+- **The engine seam did not widen with the graph.** Three of 833 settable
+  parameters reach a what-if knob, down from three of 52. The expansion added
+  781 knobs the engine cannot be driven from, and `test_the_coverage_count_is_a_literal_and_matches_the_register`
+  pins both numbers so the numerator cannot quietly grow to hide it.
 - **No UI.** Packaging rather than capability, and the last door left shut. The
   CLI and the API both reach every register; a UI would render them.
 - **§37's Anderson acceleration is not built, and measurement says building it

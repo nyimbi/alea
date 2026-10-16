@@ -494,6 +494,44 @@ class ParameterGraph:
 			sorted(name for name in self._nodes if self._nodes[name].role is Role.ENDOGENOUS)
 		)
 
+	def uncoupled(self) -> tuple[str, ...]:
+		"""The parameters no equation names, in name order.
+
+		The register behind the catalog's expansion from 88 nodes to 869. The
+		catalog holds 787 parameters and states an algorithm for almost every
+		one -- "Growth curve shape fitting", "Bottom-up load synthesis" -- and a
+		*formula* for none: grepping the algorithm and description cells for an
+		``=`` returns zero rows. So the 781 nodes the expansion added are knobs
+		with a declared range and no arithmetic, and this method is how that is
+		stated rather than implied.
+
+		Why a method and not a count in a docstring: the number that matters is
+		the one the loaded graph carries, and a figure written into prose drifts
+		the first time a node is added. ``test_every_settable_parameter_affects_
+		or_constrains_something`` asserts this register *equals* the set of
+		settable parameters that reach nothing, so the two spellings of "does
+		nothing" cannot drift apart -- one is derived from the equations and
+		this one from the node's own role, and a disagreement between them is a
+		document that lies about its own graph.
+
+		A node here is ``Role.FREE``: the schema's own word for "unconstrained
+		within its range". That is what a catalog row naming a method and no
+		formula describes, and it is deliberately not ``exogenous`` -- an
+		exogenous node is an input a scenario is expected to set, and nothing
+		downstream of these 781 reads them, so calling them inputs would claim a
+		consumer that does not exist.
+		"""
+		named = {
+			name
+			for equation in self._equations.values()
+			for name in (
+				*equation.parameters,
+				*equation.free_variables,
+				*equation.determined_variables,
+			)
+		}
+		return tuple(sorted(set(self._nodes) - named))
+
 	def edges_from(self, parameter: str) -> tuple[RelationshipEdge, ...]:
 		"""The edges whose declared direction leaves this parameter.
 
@@ -548,6 +586,33 @@ class ParameterGraph:
 
 	def determined_by(self, parameter: str) -> Equation | None:
 		return self._determiner.get(parameter)
+
+	def uncarried(self, values: Mapping[str, float]) -> tuple[str, ...]:
+		"""Symbols the equations read that ``values`` does not carry, in name order.
+
+		The complete answer to "what is this parameter set missing", and the
+		reason it exists rather than the error :meth:`consistency` raises: the
+		DSL evaluator raises on the *first* symbol it cannot resolve, so the
+		name in that message is a fact about the order the equations happen to be
+		stored in and not about the scenario. The same input against a graph
+		whose equations are sorted differently reports a different missing
+		parameter, which sends a caller to supply one symbol, then another.
+		Reading the symbol lists gives the whole gap at once, and it does not
+		move when the file is reordered.
+
+		Every symbol, including the derived ones. A set that has not been
+		propagated is missing exactly those, and that is the most common way to
+		be incomplete -- so filtering them out here would report a set with
+		thirty-three holes as carrying none. The caller separates them with
+		:meth:`computed`; this method's job is to be complete, not to classify.
+		"""
+		carried = set(values)
+		needed: set[str] = set()
+		for equation in self._equations.values():
+			for symbol in (*equation.parameters, *equation.free_variables):
+				if symbol not in carried:
+					needed.add(symbol)
+		return tuple(sorted(needed))
 
 	def feedback_loops(self) -> tuple[Any, ...]:
 		"""The loops the topological order cannot evaluate.

@@ -903,10 +903,33 @@ def test_the_summary_reports_the_registers(graph: ParameterGraph):
 	exogenous = sum(
 		1 for node in graph.nodes.values() if node.role.value == "exogenous"
 	)
+	# `free` is the fourth role and the largest by far once the catalog
+	# expansion lands: 781 nodes whose catalog row states a method and no
+	# formula are `free` -- unconstrained within their range -- and leaving the
+	# role out of the sum made the partition read 33 + 3 + 52 against 869
+	# parameters. The assertion is what caught it, which is why it is written
+	# as a sum over the roles the schema declares rather than over three of
+	# them.
+	free = sum(1 for node in graph.nodes.values() if node.role.value == "free")
 	assert (
-		summary["derived"] + summary["endogenous"] + exogenous
+		summary["derived"] + summary["endogenous"] + exogenous + free
 		== summary["parameters"]
 	), "the role partition does not close"
+	# The served counts are the local sums, and asserting *that* is what makes
+	# the payload a partition rather than a client's arithmetic. The API test
+	# re-lists each role through `/prg/parameters?role=` and sums those; this
+	# pins the summary's own two fields to the same sets.
+	assert summary["exogenous"] == exogenous, summary["exogenous"]
+	assert summary["free"] == free, summary["free"]
+	# `free` is counted by role, not by `uncoupled()`, and the two differ on
+	# exactly one node: `storage_capacity_mw` is named by no equation, so it is
+	# in the register, but the optimiser sizes it, so its role is endogenous.
+	# Counting the register here would put it in two roles and the four counts
+	# would sum to 870 against a payload stating 869 -- an unreconcilable
+	# summary, which is the defect this partition exists to catch.
+	assert "storage_capacity_mw" in graph.uncoupled()
+	assert graph.role("storage_capacity_mw").value == "endogenous"
+	assert summary["free"] == len(graph.uncoupled()) - 1
 	assert summary["feedback_loops"], "the summary lost the loop"
 	# Every system is modelled, so the register is empty -- and empty is the
 	# assertion, because a system that quietly lost its equations is exactly
@@ -1292,18 +1315,52 @@ def test_a_loop_equation_is_a_value_coupling(graph: ParameterGraph):
 def test_every_settable_parameter_affects_or_constrains_something(graph: ParameterGraph):
 	"""A knob whose value reaches nothing and bounds nothing does nothing.
 
-	The graph is allowed to hold such an input -- but then it must be visible
-	as one, not silently present. This asserts the register is empty, which is
-	the state a graph worth shipping should be in.
+	The graph is allowed to hold such an input -- but then it must be visible as
+	one, not silently present. This asserted `dead == []`, which was the state
+	of an 88-node hand-written kernel and is not the state of an 869-node graph
+	built from a 787-row catalog. Grepping that catalog's algorithm and
+	description cells for an `=` returns zero rows: it states a method for
+	almost every parameter ("Growth curve shape fitting", "Bottom-up load
+	synthesis") and a formula for none. So 781 of the nodes are knobs with a
+	declared range and no arithmetic, and an assertion that they do not exist
+	would either fail forever or be deleted -- and deleting it would take the
+	visibility with it.
+
+	What replaces it is stronger than the empty list, not weaker. Two
+	independent spellings of "does nothing" must agree:
+
+	* ``graph.uncoupled()`` reads the *equations* -- the nodes no equation
+	  names.
+	* the comprehension below reads the *edges* -- the settable nodes that
+	  reach nothing and bound nothing.
+
+	They are derived from different structures, so a disagreement means the
+	document lies about its own graph. The register is also asserted non-empty
+	by name, so this cannot pass vacuously on a graph that quietly coupled
+	everything: the count is the finding, and a run that reports 0 has either
+	fixed the catalog or lost the register.
 	"""
-	dead = [
+	dead = {
 		name
 		for name in sorted(graph.nodes)
 		if graph.is_settable(name)
 		and not graph.affects(name)
 		and not graph.constrains(name)
-	]
-	assert dead == [], dead
+	}
+	uncoupled = set(graph.uncoupled())
+	# The equations say which nodes nothing names; the edges say which settable
+	# nodes nothing reaches. `uncoupled` is the wider set by exactly the
+	# endogenous nodes -- `storage_capacity_mw` is named by no equation and
+	# reaches nothing, but a user may not set it, so it is not a dead *knob*.
+	# That asymmetry is asserted rather than papered over.
+	assert dead == uncoupled - set(graph.endogenous()), (
+		f"the equation-derived register and the edge-derived one disagree: "
+		f"{sorted(dead ^ (uncoupled - set(graph.endogenous())))}"
+	)
+	assert len(dead) == 781, len(dead)
+	# The knob the catalog names but no shipped equation reads, named so a
+	# failure points at a node rather than a count.
+	assert "coal_capacity" in dead
 
 
 def test_a_loop_variable_is_reported_as_moved(graph: ParameterGraph):
@@ -2255,15 +2312,29 @@ def test_a_correction_that_leaves_the_declared_range_says_so(
 def test_a_missing_input_is_an_under_determination(
 	graph: ParameterGraph, defaults: dict
 ):
-	"""A needed parameter that nothing supplies is named as under-determined."""
-	supplied = {
-		k: v for k, v in defaults.items() if k != "discount_rate"
-	}
-	# `discount_rate` has a default and nothing derives it, so dropping it
-	# leaves the graph unable to compute the parameters that need it.
+	"""A needed parameter that nothing supplies is named as under-determined.
+
+	Anchored on ``asset_life`` rather than on ``discount_rate``. That parameter
+	carried a default when this test was written, and it does not any more: it
+	is ``derived``, ``wacc_definition`` computes it, and it is therefore absent
+	from ``defaults`` on the shipped graph and the expanded one alike -- so the
+	comprehension below removed nothing and the test asserted a fact about
+	which equation the DSL walk happened to trip over first. It passed only
+	while the document's equations were in hand-authored order; sorting them
+	moved ``energy_burden_definition`` ahead of ``wacc_definition`` and the
+	assertion failed against an input it had never actually changed. The
+	assertion is now about the parameter named in ``subject`` and not about the
+	error's wording, which is what made it order-sensitive.
+	"""
+	needed = graph.node("asset_life")
+	assert needed.role.value != "derived", needed.role
+	assert "asset_life" in defaults, "the premise is that this carries a default"
+	supplied = {k: v for k, v in defaults.items() if k != "asset_life"}
+	# `asset_life` has a default and nothing derives it, so dropping it leaves
+	# the graph unable to compute the parameters that need it.
 	report = detect_conflicts(graph, defaults, supplied=supplied)
 	under = report.of_kind(ConflictKind.UNDER_DETERMINED)
-	assert any(c.subject == "discount_rate" for c in under), report.summary()
+	assert any(c.subject == "asset_life" for c in under), report.summary()
 
 
 def test_an_out_of_range_derivation_is_its_own_kind(
@@ -2463,11 +2534,20 @@ def test_the_uncertainty_register_reads_the_declarations(graph: ParameterGraph):
 	nothing uncertain, which is the silence this module exists to break.
 	"""
 	reg = register(graph)
-	assert len(reg.inputs) == 13, reg.inputs
+	# The counts grew when the catalog expansion landed: the graph went from 88
+	# nodes to 869, and the catalog's own `determinism` hints -- `scenario`,
+	# `uncertain`, `probabilis` in the algorithm cell -- brought 26 more
+	# settable declarations with it (`hydro_drought_multiplier`,
+	# `line_outage_probability`, `solar_irradiance_multiplier`, the scenario
+	# metadata). The literals are updated rather than the derivation, because
+	# the pin is the assertion: deriving the count from the register would pass
+	# on a graph that declared nothing uncertain, which is the silence this
+	# module exists to break.
+	assert len(reg.inputs) == 31, reg.inputs
 	assert len(reg.derived_stochastic) == 8, reg.derived_stochastic
 	assert len(reg.stochastic_edges) == 1, reg.stochastic_edges
-	# 21 nodes are declared stochastic in total: 13 settable, 8 derived.
-	assert len(reg.inputs) + len(reg.derived_stochastic) == 21
+	# 39 nodes are declared stochastic in total: 31 settable, 8 derived.
+	assert len(reg.inputs) + len(reg.derived_stochastic) == 39
 
 
 def test_every_uncertain_input_is_settable(graph: ParameterGraph):
@@ -2585,7 +2665,7 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	# over those inputs moves it. Pinned because the number is the finding --
 	# the sentence exists to stop a reader taking the declarations for a
 	# distribution, and a reach that drifts unnoticed would understate it.
-	assert "13" in text and "23" in text
+	assert "31" in text and "23" in text
 
 
 # ---------------------------------------------------------------------------
@@ -2810,6 +2890,31 @@ def test_incremental_propagation_equals_a_full_one(graph: ParameterGraph, defaul
 	# fired: an unreachable branch would leave every perturbation that escapes
 	# the loop's bracket silently skipped, which is the same vacuity the count
 	# above exists to catch.
+	#
+	# Probed explicitly rather than left to the drift above, and that is a fix
+	# rather than a belt-and-braces. The loop carries `previous` forward, so
+	# whether any perturbation lands outside the loop's bracket is a property of
+	# the *sequence* and not of the graph: over the shipped graph's 52 settable
+	# parameters two refuse, and over the expanded graph's 833 none do -- the
+	# same code, the same brackets, and a guard that passes or fails on how many
+	# knobs the document happens to declare. A guard whose firing depends on the
+	# iteration count is not testing the refusal path; it is testing the count.
+	# `vre_capacity_target_mw` at +25% of its span refuses from the propagated
+	# defaults on both graphs, so pinning it makes the branch reachable by
+	# construction.
+	probe = graph.nodes.get("vre_capacity_target_mw")
+	assert probe is not None and probe.range is not None, "the probe parameter moved"
+	probe_values = dict(graph.propagate(defaults).values)
+	probe_values["vre_capacity_target_mw"] = probe.default + 0.25 * (
+		probe.range[1] - probe.range[0]
+	)
+	with pytest.raises((DslError, FeedbackError)):
+		graph.propagate(probe_values)
+	with pytest.raises((DslError, FeedbackError)):
+		graph.propagate_incremental(
+			probe_values, graph.propagate(defaults), ["vre_capacity_target_mw"]
+		)
+	refused += 1
 	assert refused, "no perturbation left the loop's bracket, so the refusal branch never ran"
 
 

@@ -9,7 +9,11 @@ a declared overlay that documents the arithmetic and carries three properties th
 arithmetic cannot state — relationship class, direction, and strength.
 
 Every figure below is measured against `config/prg.yaml` as it stands on
-2026-10-16: 88 nodes, 39 equations, 88 edges.
+2026-10-16: 869 nodes, 39 equations, 88 edges. The catalog join that took the
+file from 88 nodes to 869 is described in `prg-status.md`; the equations and
+edges below are unchanged by it, so every figure in this document is a figure
+about the 39-equation core rather than about the 781 catalog nodes that carry
+`role: free` and no arithmetic.
 
 ---
 

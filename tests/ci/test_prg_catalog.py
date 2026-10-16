@@ -261,24 +261,33 @@ def test_the_prose_only_conflicts_are_kept_apart_from_the_classification_ones():
 # ---------------------------------------------------------------------------
 
 
-def test_the_join_is_six_nodes_and_a_name_match_is_all_it_is(graph: ParameterGraph):
-	"""Six graph nodes the catalog names, and the join is on the identifier.
+def test_the_join_is_every_node_the_catalog_names(graph: ParameterGraph):
+	"""787 nodes joined, and the join is on the identifier.
 
-	The number is the finding behind three node fields being populated on
-	nothing: the catalog is technology- and concern-specific and the graph is a
-	country aggregate, so they name the same quantity rarely and the same
-	*string* six times. The register reports the six; it does not claim the six
-	are the same quantity, and nothing here could verify that.
+	This was six nodes before the catalog join, and the six *were* the finding:
+	the catalog is technology- and concern-specific and the graph was a
+	country aggregate, so the two named the same quantity rarely and the same
+	*string* six times. The expansion inverted that -- the graph's node names
+	are now the catalog's own -- so the register covers all 787 distinct names,
+	and the six are a subset rather than the whole.
+
+	The register still does not claim the 787 are the same *quantity* as their
+	catalog rows; nothing here could verify that. It claims the same string,
+	which is what a join on the identifier can honestly report.
 	"""
 	joined = graph_join(graph=graph)
-	assert set(joined) == {
+	assert len(joined) == 787, len(joined)
+	# The six the register was built on are still in it, by name. Pinned so a
+	# join that quietly stopped matching them is a failure rather than a
+	# smaller number.
+	assert {
 		"cost_of_debt",
 		"cost_of_equity",
 		"direct_jobs",
 		"discount_rate",
 		"equity_return_target",
 		"offtake_risk_premium",
-	}, sorted(joined)
+	} <= set(joined)
 	for name, rows in joined.items():
 		assert name in graph.nodes
 		assert rows, name
@@ -301,7 +310,7 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 	have. Pinned by name so a fix has to move this test.
 	"""
 	joins = {join.parameter: join for join in status_join(graph=graph)}
-	assert len(joins) == 6, sorted(joins)
+	assert len(joins) == 787, len(joins)
 	disagreeing = {name: join for name, join in joins.items() if not join.agrees}
 	assert set(disagreeing) == {"equity_return_target"}, sorted(disagreeing)
 
@@ -317,8 +326,13 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 	assert "catalog says integrate" in drifted.describe()
 
 	# The other five are the control: a join that reported every node as
-	# disagreeing would pass the assertion above and mean nothing.
-	assert sum(1 for join in joins.values() if join.agrees) == 5
+	# disagreeing would pass the assertion above and mean nothing. The
+	# expansion took this from 5 to 786: the catalog join wrote every node's
+	# `status` from the same column, so all but the one drifted node agree by
+	# construction. The control is weaker than it was -- it no longer shows the
+	# join can *detect* agreement, only that it does not report disagreement --
+	# and `equity_return_target` above is what carries the detection.
+	assert sum(1 for join in joins.values() if join.agrees) == 786
 
 
 def test_a_node_the_catalog_does_not_name_is_absent_rather_than_guessed(
@@ -363,7 +377,7 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 	assert report["status_disagreements"] == [
 		"equity_return_target: the graph says to_build and the catalog says integrate"
 	]
-	assert len(report["status_join"]) == 6
+	assert len(report["status_join"]) == 787
 
 
 def test_a_tree_with_no_catalog_says_so_rather_than_reporting_agreement(
@@ -443,3 +457,39 @@ def test_the_summary_carries_the_catalog_register(graph: ParameterGraph):
 	assert register["readable"] is True
 	assert register["surplus_over_title"] == 40
 	assert register["status_disagreements"]
+
+
+# ---------------------------------------------------------------------------
+# The generator, and the gate it did not have
+# ---------------------------------------------------------------------------
+
+
+def test_the_generator_reproduces_the_shipped_graph():
+	"""``config/prg.yaml`` is exactly what the generator writes from the catalog.
+
+	The generator is the only thing that can put 787 catalog names into the
+	graph, and until this test nothing ran it: ``--check`` existed, was
+	documented in the module's own CLI help, and had no caller in ``tests/``.
+	A drift mode no test invokes is a drift mode that cannot fail, which is the
+	class of defect this repository has paid for most -- so this is the caller.
+
+	Run as a subprocess rather than by importing the module. The generator
+	reads the catalog and the shipped graph at import time and holds both in
+	module-level tables, so an in-process call would test whatever the first
+	import bound and not what the script does when a person runs it.
+	"""
+	import subprocess
+	import sys
+
+	script = repo_root() / "scripts" / "build" / "prg_from_catalog.py"
+	assert script.exists(), script
+	done = subprocess.run(
+		[sys.executable, str(script), "--check"],
+		capture_output=True,
+		text=True,
+		cwd=str(repo_root()),
+	)
+	assert done.returncode == 0, (
+		f"the graph is not what the generator writes:\n{done.stdout}\n{done.stderr}"
+	)
+	assert "is current" in done.stdout, done.stdout

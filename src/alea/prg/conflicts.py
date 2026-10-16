@@ -35,7 +35,6 @@ move, with its cost in units the reader can judge.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
@@ -323,17 +322,55 @@ def detect_conflicts(
 		)
 		violations = []
 	except DslError as exc:
-		conflicts.append(
-			Conflict(
-				kind=ConflictKind.UNDER_DETERMINED,
-				subject=_missing_from(exc) or "parameters",
-				detail=(
-					f"the arithmetic could not be checked: {exc}; every equation "
-					f"reading this parameter was skipped, so this report covers "
-					f"the rest of the scenario and not these"
-				),
+		# The complete gap, read from the symbol lists, and *not* the name in
+		# the error: the DSL evaluator raises on the first symbol it cannot
+		# resolve, so `_missing_from(exc)` reports a fact about the order the
+		# equations happen to be stored in. That was invisible while the
+		# document's equation order was hand-authored, and it surfaced the
+		# moment the equations were sorted -- the same input, a different
+		# finding, and the one it named (`energy_burden`) was not the one the
+		# test that reads this branch was about. Naming every uncarried symbol
+		# is stable under reordering, which is what makes it a fact about the
+		# scenario.
+		missing = graph.uncarried(values)
+		derived = set(graph.computed())
+		# A derived symbol is absent because the set was never propagated, not
+		# because nothing supplies it -- a different finding with a different
+		# fix. Only the genuinely unaccounted symbols are under-determination;
+		# if the gap is entirely derived ones, the arithmetic failed for the
+		# propagation reason and there is no input-level conflict to report.
+		unaccounted = [name for name in missing if name not in derived]
+		if unaccounted:
+			for name in unaccounted:
+				conflicts.append(
+					Conflict(
+						kind=ConflictKind.UNDER_DETERMINED,
+						subject=name,
+						detail=(
+							"needed to compute the graph and neither supplied nor "
+							"derived; nothing in the scenario fixes it"
+						),
+					)
+				)
+		else:
+			# Every uncarried symbol is one the graph computes, so the set was
+			# never propagated. That is not under-determination -- nothing needs
+			# supplying -- and reporting it as thirty-three separate conflicts
+			# would bury the input-level findings under a list of parameters the
+			# graph is about to derive anyway. Filed as one conflict under
+			# ``propagation``, which is the fix.
+			conflicts.append(
+				Conflict(
+					kind=ConflictKind.UNDER_DETERMINED,
+					subject="propagation",
+					detail=(
+						f"the arithmetic could not be checked: {exc}; all "
+						f"{len(missing)} uncarried symbol(s) are computed by the "
+						f"graph, so the set was not propagated before it was "
+						f"checked rather than missing an input"
+					),
+				)
 			)
-		)
 		violations = []
 
 	for violation in violations:
@@ -367,23 +404,6 @@ def detect_conflicts(
 		sorted(name for name in graph.computed() if name in values)
 	)
 	return ConflictReport(conflicts=tuple(conflicts), checked=checked)
-
-
-def _missing_from(exc: DslError) -> str | None:
-	"""The parameter name a "does not carry" error is about, if that is what it is.
-
-	`dsl.evaluate` names the missing symbols in its message, and the report
-	wants the parameter rather than the sentence. This reads the name back out
-	so the under-determined conflict is filed under the parameter that is
-	actually missing, and returns ``None`` for any other DslError -- a
-	different arithmetic failure is not an under-determination and must not be
-	misfiled as one.
-	"""
-	match = re.search(r"needs \[(?P<names>[^\]]+)\]", str(exc))
-	if match is None:
-		return None
-	first = match.group("names").split(",")[0].strip().strip("'\"")
-	return first or None
 
 
 def _classify(violation: Violation) -> tuple[ConflictKind, str]:

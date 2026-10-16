@@ -115,6 +115,26 @@ def graph_summary(graph: ParameterGraph | None = None) -> dict[str, Any]:
 		# neither.
 		"endogenous": len(g.endogenous()),
 		"endogenous_parameters": list(g.endogenous()),
+		# The other two thirds of the role partition, and the reason the
+		# summary carries counts rather than letting a client subtract.
+		# `exogenous` and `free` are both settable and they are different
+		# claims: an exogenous node is a knob the document says a scenario
+		# sets, and a free node is one no equation names and no system reads --
+		# the catalog join made that the majority, 781 of 869. A client that
+		# computed `exogenous` as `parameters - derived - endogenous` would fold
+		# all 781 into the first claim, which is why both are served. The four
+		# are a partition and `tests/ci` asserts them as one by listing each
+		# role through the API rather than summing here.
+		"exogenous": sum(1 for n in g.nodes.values() if n.role is Role.EXOGENOUS),
+		# Counted by *role*, not by `uncoupled()`. The two differ on
+		# `storage_capacity_mw`: no equation names it, so it is in the uncoupled
+		# register, but its role is `endogenous` -- the optimiser sizes it. A
+		# partition counted off the register would put that node in two roles
+		# and the four counts would sum to 870 against a payload stating 869,
+		# which is the same unreconcilable-summary defect this field exists to
+		# close. `uncoupled()` answers "what does no equation read"; the role
+		# answers "who sets the value", and only the second partitions.
+		"free": sum(1 for n in g.nodes.values() if n.role is Role.FREE),
 		"feedback_loops": [str(loop) for loop in g.feedback_loops()],
 		"structure_issues": g.structure_issues(),
 		# The cross-validation rules the document declares. Reported as a count

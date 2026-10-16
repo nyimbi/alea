@@ -8,10 +8,15 @@ __pycache__/
 .mypy_cache/
 .DS_Store
 
-# Build artefacts
-dist/
-build/
-target/
+# Build artefacts. Anchored to the repo root on purpose: an unanchored
+# `build/` also matches `scripts/build/`, which is where the catalog generator
+# lives -- so the script that writes `config/prg.yaml` was invisible to git
+# while the file it writes was tracked, and the gate that runs it would have
+# failed on a fresh clone with "no such file". A pattern meant for build output
+# must not swallow source.
+/dist/
+/build/
+/target/
 # Built by `maturin develop`; the wheel is built from source, so the
 # extension is a build artefact like `target/` and `dist/` above.
 src/alea/_core/*.so

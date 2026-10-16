@@ -1090,6 +1090,26 @@ class PrgSummaryOut(ApiModel):
 
 	endogenous_parameters: list[str] = Field(default_factory=list)
 	"""Their names, so the count is not the only thing a client can act on."""
+	exogenous: int = Field(default=0, ge=0)
+	"""Parameters the document says a scenario sets.
+
+	Served so the four roles sum to ``parameters`` without a client doing
+	arithmetic. Before this field a client computed it as
+	``parameters - derived - endogenous``, which was correct while those were
+	the only three roles in use -- and became wrong the moment the catalog join
+	made ``free`` the majority: the remainder then folded 781 nodes carrying no
+	equation into a role claiming the document sets them.
+	"""
+	free: int = Field(default=0, ge=0)
+	"""Parameters no equation names and no system reads.
+
+	The schema's fourth role, and the majority after the catalog join: 781 of
+	869. A node here has a declared range and no arithmetic, so the graph can
+	hold it and cannot compute it. Counted by *role* rather than by
+	``uncoupled()``, which differs on ``storage_capacity_mw`` -- the optimiser
+	sizes it, so it is endogenous, and a count off the register would put that
+	node in two roles and the four would sum past the total.
+	"""
 	systems: dict[str, int]
 	systems_declared: int = Field(ge=0)
 	unmodelled_systems: list[str]

@@ -428,12 +428,30 @@ def test_the_summary_serves_the_endogenous_layer(
 	# while ``derived`` was undercounting by five, and an undercount that still
 	# leaves room under the total is exactly what an inequality cannot catch.
 	assert body["derived"] + body["endogenous"] <= body["parameters"]
-	exogenous = body["parameters"] - body["derived"] - body["endogenous"]
-	# And the third role is the remainder: every parameter is in exactly one of
-	# the three, which is what makes the counts a partition rather than three
-	# unrelated numbers.
+	# The partition is four-way, not three. `free` is the schema's fourth role
+	# -- a node unconstrained within its range, carrying a declared range and no
+	# arithmetic -- and the catalog join made it the majority: 781 of 869 nodes
+	# have no equation, so computing `exogenous` as the remainder would fold
+	# every one of them into a role that claims a modelling decision the
+	# document does not make. Asserted by listing each role and summing, which
+	# is what makes this a partition rather than three numbers that happen to
+	# fit under the total.
 	listed = prg_client.get("/api/v1/prg/parameters?role=exogenous").json()
-	assert len(listed) == exogenous, (len(listed), exogenous)
+	free = prg_client.get("/api/v1/prg/parameters?role=free").json()
+	derived_listed = prg_client.get("/api/v1/prg/parameters?role=derived").json()
+	endo_listed = prg_client.get("/api/v1/prg/parameters?role=endogenous").json()
+	assert len(listed) == body["exogenous"], (len(listed), body["exogenous"])
+	assert (
+		len(listed) + len(free) + len(derived_listed) + len(endo_listed)
+		== body["parameters"]
+	), (
+		len(listed),
+		len(free),
+		len(derived_listed),
+		len(endo_listed),
+		body["parameters"],
+	)
+	assert len(free) == 781, len(free)
 
 
 # ---------------------------------------------------------------------------

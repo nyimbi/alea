@@ -91,21 +91,28 @@ def _network(*, gas_cost: float = 40.0) -> pypsa.Network:
 def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	graph: ParameterGraph,
 ):
-	"""Three of fifty-two, asserted rather than derived.
+	"""Three of eight hundred and thirty-three, asserted rather than derived.
 
 	Deriving the expected count from ``TRANSLATIONS`` would make this vacuous:
 	it would pass on a layer that translated everything and on one that
 	translated nothing. The literal is the claim; the register is the witness.
 
-	The denominator moved 53 -> 52 when the three endogenous fleet nodes
-	landed: they are chosen by the optimiser, so ``is_settable`` is False for
-	them and they are not part of the surface the engine can be *driven* from.
-	They are not missing from the register -- ``endogenous`` carries them, and
+	The numerator is the finding and it has not moved. The denominator went
+	52 -> 833 when the catalog's 787 parameters became nodes, and the three
+	translations still cover three of them: the expansion added 781 settable
+	knobs, none of which the engine can be driven from. That is the honest
+	state of the seam between the document and PyPSA, and pinning only the
+	denominator would have hidden it -- a register that grew its own coverage
+	tenfold and its translated count by zero.
+
+	The three fleet nodes are still outside the denominator: they are chosen by
+	the optimiser, so ``is_settable`` is False for them. They are not missing
+	from the register -- ``endogenous`` carries them, and
 	``audit.fleet_parameters`` reads them back out of a solved result.
 	"""
 	cov = coverage(graph)
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 52, cov
+	assert cov["total"] == 833, cov
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -165,7 +172,7 @@ def test_the_untranslated_register_is_not_empty_and_says_why(
 	network can be perturbed by.
 	"""
 	missing = untranslated(graph)
-	assert len(missing) == 49, missing
+	assert len(missing) == 830, missing
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact

@@ -413,19 +413,24 @@ tree:
 - **Not every inequality is bindable.** The reserve margin and the carbon
   budget are added to the optimiser; the rest are checked, not enforced.
 - **`derived` counts two different things in two different frames.** The graph
-  declares 32 derived parameters, but `alea prg summary` prints `derived=29`:
-  the three loop variables are solved by iteration, not by the acyclic order, so
-  they are excluded from the topological sort. Both numbers are right; neither
-  is the other.
+  declares 33 derived parameters, and `alea prg summary` prints `derived=33`:
+  `computed()` is the determiner map plus the loop variables, so the three loop
+  variables are counted here even though the topological *order* excludes them
+  — a sequence has no place for a feedback loop. The two agreed only after the
+  summary was changed to count `computed()` rather than `order`; before that it
+  stated 29 against its own 88-parameter payload, and a client could not
+  reconcile the two.
 
-**The translation is 5.8% complete, and the graph says so.** `alea prg summary`
-reports that 3 of the 52 settable parameters reach a what-if knob, and that 7
+**The translation is 0.4% complete, and the graph says so.** `alea prg summary`
+reports that 3 of the 833 settable parameters reach a what-if knob, and that 7
 engine knobs — `battery_cost_multiplier`, `coal_eaf`, `drought_multiplier`,
 `hydrogen_export_twh_per_year`, `outages`, `renewable_multiplier`,
 `ssp_pathway` — are named by no parameter, so a scenario pulling one cannot be
 audited against the graph. Both numbers are printed by the command rather than
 left for a reader to derive, because a scenario stated in a name that reaches no
-knob is exactly the defect this project keeps having to fix.
+knob is exactly the defect this project keeps having to fix. The numerator has
+not moved since the catalog join: the expansion added 781 settable knobs, and
+the engine can be driven from none of them.
 
 The symbolic DSL underneath (`alea expr`) creates, renders
 (LaTeX / Unicode / MathML / source), evaluates, differentiates, simplifies, and

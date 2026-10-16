@@ -458,10 +458,13 @@ def status_join(
 ) -> tuple[StatusJoin, ...]:
 	"""Every graph node the catalog names, with the two statuses reconciled.
 
-	The reader ``ParameterNode.status`` never had. The field is on all 88 nodes
-	and, until this, was read by no gate, no register and no solve -- it reached
-	two API doors and decided nothing, which is why it could drift from the
-	catalog the labels were copied from.
+	The reader ``ParameterNode.status`` never had. The field was on all 88
+	shipped nodes and, until this, was read by no gate, no register and no
+	solve -- it reached two API doors and decided nothing, which is why it could
+	drift from the catalog the labels were copied from. The catalog join then
+	took the field to all 869 nodes, so the register this function serves grew
+	with the graph: the six-name join it once reconciled is now every node the
+	catalog and the graph both name.
 
 	A node whose catalog rows *disagree with each other* is reported against
 	the first row and is a finding of its own (:func:`contradictions` names
