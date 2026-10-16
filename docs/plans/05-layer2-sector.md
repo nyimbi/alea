@@ -22,8 +22,8 @@ machine (12 cores / 96 GB) at full resolution — it is reachable only with the
 aggregation Layer 1 already validates (AD-9).
 
 **The governing rule:** sector coupling is a **config layer over Layer 1**, not a
-separate pipeline. `config.sector.yaml` extends `config.kenya.yaml`; it does not
-replace it.
+separate pipeline. The `sector` section of `config.default.yaml` is overlaid by
+the environment file (`config.kenya.yaml`); it does not replace it.
 
 ---
 
@@ -120,7 +120,7 @@ Atlas for Africa, and the cross-check is an artefact.
 ## 4. Configuration
 
 ```yaml
-# config/config.sector.yaml — extends, does not replace
+# config.default.yaml — the `sector:` section; extends, does not replace
 sector:
   hydrogen:
     enabled: true

@@ -212,27 +212,41 @@ manufacturing a decision no one took.
 
 ## Not built
 
-- **`00-architecture.md` §6's repository layout declares 34 paths and 8 do not
-  exist.** Checked against the tree rather than read: `config/config.africa.yaml`,
-  `config/config.sector.yaml`, `config/config.predictive.yaml`,
-  `config/config.whatif.yaml`, `config/config.reporting.yaml`, `data/interim`,
-  `docs/research` and `sources/` were all absent. One of the eight has since
-  been built (`sources/`, see below); the other seven stand.
+- **`00-architecture.md` §6's repository layout declares 37 paths and one does
+  not exist.** Closed 2026-10-16 by `alea.quality.layout` and
+  `tests/ci/test_layout_register.py`, which parse the tree out of the document
+  and require every declared path to exist or be a named gap. The finding is kept
+  because the resolution is the interesting part: seven of the eight absences
+  were not build tasks, and three different defects wore the same shape.
 
-  The five config files are not a missing feature, and the distinction is the
-  reason this is a doc finding rather than a build task. `config.sector` is a
-  *section* of `config.default.yaml` — `sector/service.py`, `sector/coupling.py`
-  and `outages/service.py` all read it there — and no loader anywhere opens a
-  `config.sector.yaml`. So the tree sketch describes a file layout the loader
-  never adopted, and `05-layer2-sector.md` §1 and §4 both repeat it, including a
-  YAML sample headed `# config/config.sector.yaml — extends, does not
-  replace`. A reader following either document creates a file nothing reads.
+  **The five `config.*.yaml` files were a doc defect, and the tree was wrong.**
+  `sector`, `predictive`, `whatif` and `reporting` are *sections* of
+  `config.default.yaml` — lines 111, 18, 70 and 153 — and the loader opens
+  exactly two files: `config.default.yaml` and one environment file. So §6 now
+  draws `config.default.yaml`, `config.kenya.yaml` and `scenarios/`, with a
+  comment saying every layer's section lives in the default file.
+  `05-layer2-sector.md` §4's YAML sample headed `# config/config.sector.yaml —
+  extends, does not replace` is still the older spelling and still tells a reader
+  to create a file nothing reads; correcting it means rewriting the sample, which
+  is a larger edit to a layer plan than a layout fix.
 
-  The sketch is labelled as a layout rather than a contract, which is why this
-  went unnoticed: no gate reads a directory tree in a fenced code block. It is
-  recorded because the *shape* of the defect is the one this file keeps
-  counting — a declaration with no reader — and because the next person to look
-  for the sector config will look for a file.
+  **`docs/research` was a real absence and has been built**, with a `README.md`
+  stating the distinction from `sources/`: a citation archive is not a research
+  note, and the tree declares both.
+
+  **`data/interim` is registered as a deliberate gap.** Declared in §6, in
+  `config.default.yaml:175` and as `paths.interim` in `alea.config.models:285` —
+  and read by nothing. Every stage writes to `paths.processed` and reads from
+  `data/raw` or another stage's processed artefact. The directory was not
+  created: an empty directory would look like a place something lands while
+  `paths.interim` kept no reader. Closing it is a choice — drop the tier and the
+  config key, or name the stage that needs a non-processed intermediate — so it
+  is registered with the closer named rather than resolved by fiat.
+
+  The gate was watched failing: the canary plants a `phantom/` entry into §6 and
+  asserts `test_every_declared_path_exists_or_is_a_named_gap` notices. The
+  mutation is in the *document*, which is the gate's input, and is therefore
+  disjoint from what the predicate compares.
 
 - **`ParameterNode.status` is declared on all 88 nodes, read by nothing, and
   stale.** 70 `to_build` / 18 `existing`, and five of the `to_build` nodes are

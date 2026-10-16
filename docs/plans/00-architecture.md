@@ -488,13 +488,8 @@ alea/
 │   ├── reference/              # Python reference impls for Rust differential tests
 │   └── data/                   # fixtures
 ├── config/
-│   ├── config.default.yaml
+│   ├── config.default.yaml     # every layer's section lives here
 │   ├── config.kenya.yaml
-│   ├── config.africa.yaml
-│   ├── config.sector.yaml
-│   ├── config.predictive.yaml
-│   ├── config.whatif.yaml
-│   ├── config.reporting.yaml
 │   └── scenarios/
 ├── rules/                      # Snakemake, thin (AD-5)
 ├── scripts/                    # thin CLI shims, no logic

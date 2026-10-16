@@ -17,6 +17,15 @@ from alea.quality.claims import (
 	milestone_of,
 	review,
 )
+from alea.quality.layout import (
+	ABSENT,
+	ARCHITECTURE,
+	SECTION_HEADING,
+	DeclaredPath,
+	LayoutGap,
+	layout_gaps,
+	parse_layout,
+)
 from alea.quality.service import (
 	benchmark_artefact,
 	missing_validation_targets,
@@ -38,14 +47,19 @@ from alea.quality.views import (
 )
 
 __all__ = [
+	"ABSENT",
+	"ARCHITECTURE",
 	"BENCHMARK_TARGET_CORES",
 	"MILESTONES",
 	"REGISTER",
+	"SECTION_HEADING",
 	"VALIDATION_KEYS",
 	"VALIDATION_TARGETS",
 	"BenchmarkArtefact",
 	"Claim",
+	"DeclaredPath",
 	"Hardware",
+	"LayoutGap",
 	"Review",
 	"ValidationArtefact",
 	"ValidationStatus",
@@ -53,8 +67,10 @@ __all__ = [
 	"benchmark_artefact",
 	"benchmark_targets",
 	"due_at",
+	"layout_gaps",
 	"milestone_of",
 	"missing_validation_targets",
+	"parse_layout",
 	"review",
 	"validation_artefact",
 	"validation_coverage",
