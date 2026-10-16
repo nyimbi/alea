@@ -411,10 +411,28 @@ def test_a_scenario_on_a_coupled_network_reads_the_base_it_recorded(tmp_path: Pa
 
 
 def test_the_cost_emissions_frontier_is_computed(tmp_path: Path):
-	"""Criterion 5. A real solve per point, over a real network."""
-	engine = WhatIfEngine(
-		_solved(), cache_root=tmp_path / "cache2", solve_fn=_CountingSolve()
-	)
+	"""Criterion 5. A real solve per point, over a real network.
+
+	**Both axes are asserted to carry the solve, and the first version of this
+	test asserted neither.** It passed ``solve_fn=_CountingSolve()`` -- a stand-in
+	that counts calls and computes nothing -- while its own docstring claimed a
+	real solve, and it checked the emissions column with ``notna()`` and
+	``>= 0.0``. So a frontier of three identical points whose emissions were
+	zeroed passed, and a canary that planted exactly that went **MISSED**: the
+	gate was measuring the frame's *shape* and calling it the computation.
+
+	The two assertions that close it are the ones a shape check cannot make. The
+	cost axis must *move* with the swept parameter -- three points at one cost is
+	a sweep that solved nothing, which is what the counting stand-in produces --
+	and the emissions axis must be strictly positive, because a column of zeros
+	is the "riskless frontier" defect arriving on the other axis.
+
+	Emissions are *not* asserted to move with the carbon price, and the reason is
+	physical rather than convenient: this fixture's fleet is fixed coal plus
+	extendable solar, so a carbon price raises the objective without changing the
+	dispatch. Requiring the axis to move would fail against a correct solve.
+	"""
+	engine = WhatIfEngine(_solved(), cache_root=tmp_path / "cache2")
 	frame = efficient_frontier(
 		engine, "carbon_price_usd_per_tco2", [0.0, 100.0, 300.0], workers=1
 	)
@@ -422,7 +440,22 @@ def test_the_cost_emissions_frontier_is_computed(tmp_path: Path):
 	assert len(frame) == 3
 	assert frame["total_cost_usd"].notna().all()
 	assert frame["total_emissions_tco2"].notna().all()
-	assert (frame["total_emissions_tco2"] >= 0.0).all()
+	# The cost axis carries the sweep. A no-op solver returns one cost for every
+	# point, and the previous assertions accepted it.
+	assert frame["total_cost_usd"].nunique() == 3, (
+		"the frontier's three points report the same cost, so the sweep solved "
+		"nothing; a real solve moves the objective with the carbon price"
+	)
+	assert frame["total_cost_usd"].is_monotonic_increasing, (
+		f"cost does not rise with the carbon price: "
+		f"{frame['total_cost_usd'].tolist()}"
+	)
+	# The emissions axis is populated from generation, not defaulted. `>= 0.0`
+	# accepted a column of zeros, which is a frontier with one axis.
+	assert (frame["total_emissions_tco2"] > 0.0).all(), (
+		f"the emissions axis is not populated from the solve: "
+		f"{frame['total_emissions_tco2'].tolist()}"
+	)
 
 
 def test_a_cost_risk_frontier_without_a_price_model_refuses(tmp_path: Path):

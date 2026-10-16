@@ -242,7 +242,7 @@ that has watched it fail. **The table is generated, not written.**
     uv run python scripts/gate_register.py --check   # non-zero on any gap
 
 This section used to carry a hand-written table of 42 rows headed "Every gate in
-the plan". Measured 2026-10-16, the plans promise **113** gates, so the table
+the plan". Measured 2026-10-16, the plans promise **119** gates, so the table
 described a third of them and every gate added since was invisible to the
 criterion that reads it. It was also the *second* copy of a set the register
 derives, which is the defect the register exists to remove: two lists that agree

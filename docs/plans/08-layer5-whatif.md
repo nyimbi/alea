@@ -332,14 +332,14 @@ src/alea/whatif/
 | # | Criterion | Gate |
 |---|---|---|
 | 1 | Cache hits across processes | `test_cache_actually_hits` in a subprocess |
-| 2 | Cache key covers params, network, code | Three key tests |
+| 2 | Cache key covers params, network, code | `test_cache_key_includes_params`, `test_cache_key_includes_network`, `test_cache_key_includes_code_version` |
 | 3 | No parameter is a silent no-op | `test_demand_growth_requires_multi_period` |
 | 4 | Base network never mutated | `test_apply_does_not_mutate_base` |
-| 5 | Cost–emissions frontier computed | Integration test |
-| 6 | Cost–risk frontier computed | Integration test |
-| 7 | A 20-point sweep completes on 12 cores | Recorded timing |
-| 8 | Partial sweep resumes from cache | Integration test |
-| 9 | Scenarios are reproducible from their artefact alone | Reproduce a saved scenario |
+| 5 | Cost–emissions frontier computed | `test_the_cost_emissions_frontier_is_computed` |
+| 6 | Cost–risk frontier computed | `test_the_cost_risk_frontier_is_computed_when_a_price_model_is_present` |
+| 7 | A 20-point sweep completes on 12 cores | `test_a_twenty_point_sweep_completes` |
+| 8 | Partial sweep resumes from cache | `test_a_partial_sweep_resumes_from_cache` |
+| 9 | Scenarios are reproducible from their artefact alone | `test_a_saved_scenario_reproduces_from_its_artefact_alone` |
 | 10 | Every gate canaried | `tests/ci/canaries` |
 
 **Criterion 1 is the one the specification's own test cannot make.** It must run

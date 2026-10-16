@@ -670,6 +670,40 @@ manufacturing a decision no one took.
 
 ### Closed since this list was written
 
+**Six layer-5 gates ran and passed while the register counted them as
+unpromised, and the first one was blind.** `08-layer5-whatif.md` §10's exit
+criteria recorded their gates in prose — `Integration test`, `Three key tests`,
+`Recorded timing`, `Recorded practice` — and the register reads a backticked
+`test_` name or nothing. Naming the six turned `--check` red with six uncanaried
+gates on the spot, the same way the route-inventory cell did:
+
+    promised gates: 119   verified: 113
+      unimplemented: 0
+      uncanaried:    6
+
+The six are now named in the plan and canaried in
+`tests/ci/canaries/test_whatif_layer5_gates.py`; `--check` reports **119/119**.
+
+One of the six was a real defect, not a bookkeeping gap.
+`test_the_cost_emissions_frontier_is_computed` claimed *"a real solve per
+point"* in its docstring and then passed `solve_fn=_CountingSolve()` — a
+stand-in that counts calls and computes nothing — while checking the emissions
+axis with `notna()` and `>= 0.0`. Both are shape predicates: they accept a
+zeroed axis and three identical costs. The canary planted exactly the defect the
+docstring promised to catch, and it went **MISSED**. The tell was measurable in
+one run — the no-op solver returned `cost=14400.0, emissions=456.0` for all
+three carbon prices, where the real solve returns `17857.76 / 74407.33 /
+187506.47`. The gate was the finding, so it was fixed rather than canaried
+around: the stand-in is gone, and it now asserts that the cost axis is
+`nunique() == 3` and monotonic in the carbon price, and that the emissions axis
+is strictly positive. The re-probe fires.
+
+Emissions are deliberately *not* asserted to move with the carbon price. They
+are flat (`565.495697` at all three prices) and that is the correct behaviour for
+this fixture — a carbon price re-prices the objective, it does not rebuild the
+dispatch. Asserting the intuitive relationship would have written a second
+blind gate in place of the first.
+
 **The route-inventory gate had no canary, and a stale exit-criteria cell was
 hiding it.** `11-layer8-api.md` §9's criterion 9 — *a route inventory matches the
 specification's endpoint table* — had its Gate column reading `Manual, once`

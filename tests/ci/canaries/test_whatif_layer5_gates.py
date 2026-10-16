@@ -44,7 +44,7 @@ import pandas as pd
 import pytest
 
 from alea.whatif import ScenarioParameters
-from tests.ci.canaries import REPO, planted
+from tests.ci.canaries import REPO, planted, probe_exit_code
 from tests.ci.test_whatif_layer5 import _CountingSolve, _network, _solved
 
 CACHE_PY = REPO / "src" / "alea" / "whatif" / "cache.py"
@@ -512,6 +512,205 @@ def test_the_scenario_provenance_gate_catches_a_dropped_network(tmp_path: Path):
 	importlib.reload(store_module)
 	restored = _scenario_payload(tmp_path / "restored")
 	assert "network_checksum" in restored, "the restore was not proven"
+
+
+# --------------------------------------------------------------------------
+# The exit-criteria gates §10 names, which §9's canary list did not cover
+#
+# Six rows of `08-layer5-whatif.md` §10 named their gate in prose -- "Integration
+# test", "Three key tests", "Recorded timing" -- and the gate register reads a
+# backticked `test_` name or nothing. So six gates ran, passed, and were counted
+# as *unpromised*: no row in the register, no canary, and nothing asking whether
+# any of them could fail. Naming them in the plan turned the register red with
+# six uncanaried gates on the spot, which is the same finding the route-inventory
+# cell produced in `11-layer8-api.md` §9.
+#
+# The first of these canaries is the reason the whole exercise was worth doing.
+# `test_the_cost_emissions_frontier_is_computed` passed a counting stand-in for
+# the solver while its docstring claimed "a real solve per point", and checked
+# the emissions column with `notna()` and `>= 0.0`. The mutation below -- zeroing
+# the emissions axis -- went **MISSED** against it. The gate was the finding, and
+# it now asserts that the cost axis moves with the swept parameter and that the
+# emissions axis is strictly positive.
+# --------------------------------------------------------------------------
+
+
+def _gate(node: str) -> str:
+	"""One pytest node, run in a fresh interpreter that reads the mutated file.
+
+	The mutation is a source edit, so the gate has to execute where it can see
+	it. `probe` hands the program to a child process through the environment,
+	which is why this is a string rather than a call.
+	"""
+	return (
+		"import sys\n"
+		"import pytest\n\n"
+		f"sys.exit(pytest.main(['-q', '-p', 'no:randomly', {node!r}]))\n"
+	)
+
+
+def test_the_frontier_emissions_gate_catches_a_zeroed_axis():
+	"""``test_the_cost_emissions_frontier_is_computed`` must fail on a flat axis.
+
+	The frontier's second axis is populated from the solve's generation, so a
+	column of zeros is a frontier with one axis wearing a second. The gate's
+	first version accepted exactly that -- see the note above -- which is why
+	this canary exists and why it is written against the *zeroed* axis rather
+	than against a missing one.
+	"""
+	node = "tests/ci/test_whatif_layer5.py::test_the_cost_emissions_frontier_is_computed"
+	assert probe_exit_code(_gate(node)) == 0, "the gate already fails on clean source"
+
+	target = '\t\t"total_emissions_tco2": result.total_emissions_tco2,\n'
+	assert target in SWEEP_PY.read_text(), "canary target not found: the emissions column moved"
+
+	with planted(SWEEP_PY, target, '\t\t"total_emissions_tco2": 0.0,\n'):
+		assert probe_exit_code(_gate(node)) != 0, (
+			"the gate passes with the emissions axis zeroed; it is checking the "
+			"frame's shape and calling it the computation"
+		)
+
+	assert probe_exit_code(_gate(node)) == 0, "the restore was not proven"
+
+
+def test_the_frontier_cost_gate_catches_a_sweep_that_solves_nothing():
+	"""``test_the_cost_emissions_frontier_is_computed`` must fail on one cost.
+
+	The other half of the same defect. A solver that computes nothing returns
+	one cost for every point, and `notna()` accepts three identical numbers.
+	The mutation pins every swept point to the first value, which is what a
+	no-op solve produces.
+	"""
+	node = "tests/ci/test_whatif_layer5.py::test_the_cost_emissions_frontier_is_computed"
+	assert probe_exit_code(_gate(node)) == 0, "the gate already fails on clean source"
+
+	target = "\tparams_list = [base.with_value(param_name, value) for value in values]\n"
+	assert target in SWEEP_PY.read_text(), "canary target not found: the sweep loop moved"
+
+	with planted(SWEEP_PY, target, "\tparams_list = [base.with_value(param_name, values[0]) for value in values]\n"):
+		assert probe_exit_code(_gate(node)) != 0, (
+			"the gate passes when every swept point solves to the same cost, so "
+			"it is not asserting that the cost axis carries the sweep"
+		)
+
+	assert probe_exit_code(_gate(node)) == 0, "the restore was not proven"
+
+
+def test_the_params_key_gate_catches_a_dropped_parameter_record():
+	"""``test_cache_key_includes_params`` must fail when the params leave the key.
+
+	The component the other two key canaries do not cover: ``network`` and
+	``code`` are watched in this file already, and the parameter half is the one
+	whose omission is quietest -- two different scenarios then collide on one
+	entry and serve each other's answers, which is the failure the whole key
+	exists to prevent.
+	"""
+	node = "tests/ci/test_whatif_layer5.py::test_cache_key_includes_params"
+	assert probe_exit_code(_gate(node)) == 0, "the gate already fails on clean source"
+
+	target = "parts.append('\"params\":' + params.canonical_json())\n"
+	assert target in CACHE_PY.read_text(), "canary target not found: the params line moved"
+
+	with planted(CACHE_PY, target, "parts.append('\"params\":' + json.dumps({}, separators=(\",\", \":\")))\n"):
+		assert probe_exit_code(_gate(node)) != 0, (
+			"the gate passes with the parameter record dropped from the key, so "
+			"two scenarios collide on one cache entry"
+		)
+
+	assert probe_exit_code(_gate(node)) == 0, "the restore was not proven"
+
+
+def test_the_resume_gate_catches_a_cache_that_is_never_read():
+	"""``test_a_partial_sweep_resumes_from_cache`` must fail on a cache miss.
+
+	The sweep's cost grows without bound on a re-run if the cache is not
+	consulted, and the observable is the solve count rather than the result --
+	a sweep that recomputes everything returns the same frame.
+	"""
+	node = "tests/ci/test_whatif_layer5.py::test_a_partial_sweep_resumes_from_cache"
+	assert probe_exit_code(_gate(node)) == 0, "the gate already fails on clean source"
+
+	target = "\t\t\tcached = self._cache.get(key)\n"
+	assert target in SERVICE_PY.read_text(), "canary target not found: the cache read moved"
+
+	with planted(SERVICE_PY, target, "\t\t\tcached = None\n"):
+		assert probe_exit_code(_gate(node)) != 0, (
+			"the gate passes with the cache never read, so a resumed sweep "
+			"re-solves every point it already had"
+		)
+
+	assert probe_exit_code(_gate(node)) == 0, "the restore was not proven"
+
+
+def test_the_sweep_size_gate_catches_a_collapsed_sweep():
+	"""``test_a_twenty_point_sweep_completes`` must fail on a deduplicated sweep.
+
+	A sweep whose points collapse to one value produces the right number of rows
+	and one distinct cost. The gate asserts ``nunique() == 20`` for exactly this
+	reason, and the mutation is the collapse it guards against.
+	"""
+	node = "tests/ci/test_whatif_layer5.py::test_a_twenty_point_sweep_completes"
+	assert probe_exit_code(_gate(node)) == 0, "the gate already fails on clean source"
+
+	target = "\tparams_list = [base.with_value(param_name, value) for value in values]\n"
+	assert target in SWEEP_PY.read_text(), "canary target not found: the sweep loop moved"
+
+	with planted(SWEEP_PY, target, "\tparams_list = [base.with_value(param_name, values[0]) for value in values]\n"):
+		assert probe_exit_code(_gate(node)) != 0, (
+			"the gate passes when every swept point is the same solve, so the "
+			"twenty distinct costs it asserts are not being asserted"
+		)
+
+	assert probe_exit_code(_gate(node)) == 0, "the restore was not proven"
+
+
+def test_the_reproduction_gate_catches_a_version_that_is_not_the_key():
+	"""``test_a_saved_scenario_reproduces_from_its_artefact_alone`` must fail.
+
+	The version is the solve's cache key, which is what makes a scenario
+	reproducible from its record: read the record, rebuild the key from its own
+	fields, and the two agree. A version that is a counter or a constant breaks
+	that, and the gate asserts the equality rather than the record's shape.
+	"""
+	node = "tests/ci/test_whatif_layer5.py::test_a_saved_scenario_reproduces_from_its_artefact_alone"
+	assert probe_exit_code(_gate(node)) == 0, "the gate already fails on clean source"
+
+	target = "\tversion = cache_key(params, network_checksum, code_version)\n"
+	assert target in STORE_PY.read_text(), "canary target not found: the version derivation moved"
+
+	with planted(STORE_PY, target, '\tversion = "v1"\n'):
+		assert probe_exit_code(_gate(node)) != 0, (
+			"the gate passes with the version no longer derived from the record, "
+			"so a scenario is filed under a name that does not describe it"
+		)
+
+	assert probe_exit_code(_gate(node)) == 0, "the restore was not proven"
+
+
+def test_the_cost_risk_gate_catches_a_risk_axis_filled_with_the_objective():
+	"""``test_the_cost_risk_frontier_is_computed_when_a_price_model_is_present``.
+
+	The "uninformative axis" defect `check_cost_risk_axis` documents: a present
+	CVaR that equals the objective is the cost-emissions frontier with a risk
+	label. The mutation makes the price model return a single cost, so every
+	draw is the same and CVaR collapses onto the objective.
+	"""
+	node = (
+		"tests/ci/test_whatif_layer5.py"
+		"::test_the_cost_risk_frontier_is_computed_when_a_price_model_is_present"
+	)
+	assert probe_exit_code(_gate(node)) == 0, "the gate already fails on clean source"
+
+	target = "\t\t\tcosts, threshold = self._price_fn(\n"
+	assert target in SERVICE_PY.read_text(), "canary target not found: the price-model call moved"
+
+	with planted(SERVICE_PY, target, "\t\t\tcosts, threshold = [1000.0] if True else self._price_fn(\n"):
+		assert probe_exit_code(_gate(node)) != 0, (
+			"the gate passes with a zero-dispersion price draw, so the risk axis "
+			"is the objective wearing a risk label"
+		)
+
+	assert probe_exit_code(_gate(node)) == 0, "the restore was not proven"
 
 
 if __name__ == "__main__":  # pragma: no cover
