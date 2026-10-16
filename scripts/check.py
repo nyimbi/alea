@@ -124,6 +124,12 @@ def groups() -> list[Group]:
 			"every promised gate has a test and a canary (12-quality §9 criteria 2 and 7)",
 		),
 		Group(
+			"citations",
+			_uv("pytest", "-q", "tests/ci/test_citation_register.py"),
+			"every citation the library makes resolves to an archived source "
+			"(00-architecture §6, sources/INDEX.md)",
+		),
+		Group(
 			"determinism",
 			[sys.executable, str(ROOT / "scripts" / "determinism.py")],
 			"two separate processes must produce byte-identical output",

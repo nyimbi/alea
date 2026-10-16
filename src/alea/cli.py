@@ -1884,6 +1884,37 @@ def prg_units() -> None:
 			raise typer.Exit(code=1)
 
 
+@prg_app.command("citations")
+def prg_citations() -> None:
+	"""Check every citation the library makes against the source register.
+
+	The library's nine equation citations were prose and nothing else -- parsed,
+	validated, served at four doors, joined to nothing. This is the join: each
+	citation must resolve to a row in `sources/INDEX.md`, and each row must be
+	reached by a citation.
+
+	Exits non-zero on a defect -- an unresolvable citation, a row cited by
+	nothing, or a row claiming an archived copy that is not on disk. A work
+	whose copy is genuinely absent (a paywall, a JavaScript shell) is *printed*
+	and does not fail, because a gate nobody can pass is a gate nobody runs; the
+	count is the finding.
+	"""
+	from alea.provenance.citations import citation_report
+
+	with _run("cli.prg.citations"):
+		report = citation_report()
+		for gap in report.gaps:
+			colour = (
+				typer.colors.BRIGHT_BLACK
+				if gap.kind == "unarchived"
+				else typer.colors.RED
+			)
+			typer.secho(gap.summary(), fg=colour, err=True)
+		typer.echo(report.summary())
+		if report.failures:
+			raise typer.Exit(code=1)
+
+
 @prg_app.command("constraints")
 def prg_constraints() -> None:
 	"""Which equations can constrain a solve, and which cannot.

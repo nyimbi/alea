@@ -940,6 +940,17 @@ PRG_EXACT_FIELDS: dict[str, frozenset[str]] = {
 	"LoopResultOut": frozenset({"change", "iterations"}),
 	"FeedbackLoopOut": frozenset({"change", "iterations", "values"}),
 	"FeedbackReportOut": frozenset({"values"}),
+	# Two cardinalities, the same class as `CrossValidationReportOut`'s:
+	# ``registered`` is how many rows the register holds and ``archived`` how
+	# many of them have a copy on disk. Neither is a modelled quantity -- there
+	# is no unit of "a citation" -- and wrapping them in a ``ValueOut`` would
+	# invent a basis and an uncertainty to satisfy the validator, which is what
+	# this contract exists to prevent.
+	#
+	# Note what is *not* exempt here: ``CitationOut.archived`` is a `str`, not a
+	# number, so it never reaches this gate. It carries the three-state
+	# distinction (a path, an empty string, ``n/a``) that a bool would collapse.
+	"CitationReportOut": frozenset({"archived", "registered"}),
 }
 """The graph's own arithmetic, exempt per model.
 

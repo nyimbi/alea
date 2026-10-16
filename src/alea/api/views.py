@@ -1062,6 +1062,59 @@ class PrgSummaryOut(ApiModel):
 	"""
 
 
+class CitationOut(ApiModel):
+	"""One work the library leans on, and where the local copy is.
+
+	``archived`` is a string rather than a bool because it has three states and
+	two of them are not "yes". A path means a copy is on disk; ``""`` means the
+	work is real and not archived -- a paywall, a JavaScript shell -- and
+	``n/a`` means a textbook derivation with no single work behind it. A bool
+	would collapse the last two into "no copy", which reads as a defect on five
+	rows nobody can close.
+	"""
+
+	key: str
+	work: str
+	custodian: str
+	year: str
+	url: str
+	licence: str
+	archived: str
+	cites: list[str]
+
+
+class CitationGapOut(ApiModel):
+	"""One way the register and the tree disagree."""
+
+	kind: str
+	"""``unregistered`` | ``unarchived`` | ``unreachable`` | ``missing_file``."""
+	subject: str
+	detail: str
+
+
+class CitationReportOut(ApiModel):
+	"""The citation register, and every gap between it and the tree.
+
+	The register is served rather than only gated because a client reading
+	``reference`` off ``GET /prg/equations`` cannot tell a citation naming a
+	real work from one naming a work nobody archived -- the two render
+	identically. ``gaps`` is the difference, and ``archived`` beside
+	``registered`` is the count that says whether the archive is one.
+	"""
+
+	citations: list[CitationOut]
+	gaps: list[CitationGapOut]
+	registered: int = Field(ge=0)
+	archived: int = Field(ge=0)
+	"""How many registered works have a copy on disk.
+
+	A register of ten works with one archived is a bibliography, and a payload
+	carrying only ``citations`` would let a client render the list and never
+	notice.
+	"""
+	summary: str
+
+
 class EngineTranslationOut(ApiModel):
 	"""How much of the graph reaches a what-if knob. Three of fifty-two.
 

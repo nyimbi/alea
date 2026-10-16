@@ -26,6 +26,9 @@ from fastapi import APIRouter, HTTPException, Query, Response, status
 
 from alea.api.deps import AnalystDep, PublicDep
 from alea.api.views import (
+	CitationGapOut,
+	CitationOut,
+	CitationReportOut,
 	ConflictOut,
 	ConflictReportOut,
 	ConflictRequest,
@@ -255,6 +258,51 @@ async def summary(principal: PublicDep) -> PrgSummaryOut:
 	three of fifty-two settable parameters reach a what-if knob.
 	"""
 	return _summary_out(_graph())
+
+
+@router.get(
+	"/citations",
+	response_model=CitationReportOut,
+	summary="The works the library cites, and where the copies are",
+)
+async def citations(principal: PublicDep) -> CitationReportOut:
+	"""Every citation the library makes, joined to the source register.
+
+	The register is a door rather than only a gate because ``GET
+	/prg/equations`` serves each equation's ``reference`` as prose, and prose
+	cannot tell a citation naming a real work from one naming a work nobody
+	archived. ``gaps`` is that difference.
+
+	Does not 404 when the register is absent: ``sources/INDEX.md`` is a document
+	a deployment may not ship, and an empty register with every citation
+	reported unregistered is the honest answer -- the alternative is a route
+	that fails for a reason the client cannot act on.
+	"""
+	from alea.provenance.citations import citation_report
+
+	report = citation_report()
+	return CitationReportOut(
+		citations=[
+			CitationOut(
+				key=citation.key,
+				work=citation.work,
+				custodian=citation.custodian,
+				year=citation.year,
+				url=citation.url,
+				licence=citation.licence,
+				archived=citation.archived,
+				cites=list(citation.cites),
+			)
+			for citation in report.citations
+		],
+		gaps=[
+			CitationGapOut(kind=gap.kind, subject=gap.subject, detail=gap.detail)
+			for gap in report.gaps
+		],
+		registered=report.registered,
+		archived=len(report.archived),
+		summary=report.summary(),
+	)
 
 
 @router.get("/graph", response_model=GraphOut, summary="The whole graph")

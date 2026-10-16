@@ -212,6 +212,28 @@ manufacturing a decision no one took.
 
 ## Not built
 
+- **`00-architecture.md` §6's repository layout declares 34 paths and 8 do not
+  exist.** Checked against the tree rather than read: `config/config.africa.yaml`,
+  `config/config.sector.yaml`, `config/config.predictive.yaml`,
+  `config/config.whatif.yaml`, `config/config.reporting.yaml`, `data/interim`,
+  `docs/research` and `sources/` were all absent. One of the eight has since
+  been built (`sources/`, see below); the other seven stand.
+
+  The five config files are not a missing feature, and the distinction is the
+  reason this is a doc finding rather than a build task. `config.sector` is a
+  *section* of `config.default.yaml` — `sector/service.py`, `sector/coupling.py`
+  and `outages/service.py` all read it there — and no loader anywhere opens a
+  `config.sector.yaml`. So the tree sketch describes a file layout the loader
+  never adopted, and `05-layer2-sector.md` §1 and §4 both repeat it, including a
+  YAML sample headed `# config/config.sector.yaml — extends, does not
+  replace`. A reader following either document creates a file nothing reads.
+
+  The sketch is labelled as a layout rather than a contract, which is why this
+  went unnoticed: no gate reads a directory tree in a fenced code block. It is
+  recorded because the *shape* of the defect is the one this file keeps
+  counting — a declaration with no reader — and because the next person to look
+  for the sector config will look for a file.
+
 - **`ParameterNode.status` is declared on all 88 nodes, read by nothing, and
   stale.** 70 `to_build` / 18 `existing`, and five of the `to_build` nodes are
   already reached by a production path: `carbon_budget_mtco2`,
@@ -352,6 +374,33 @@ manufacturing a decision no one took.
     single example. `catalog.read_catalog()` now serves the Algorithm and
     Implementation columns as data, so the internal half of that split is
     readable; the external half is still one row in a spec example.
+
+    **The external half now has a referent, and it is not the spec's example.**
+    `sources/INDEX.md` — the directory `00-architecture.md` §6 declares and the
+    tree did not have — registers every work the library leans on, and
+    `alea.provenance.citations` joins those rows to the citations the equations
+    make. So `source_url` has something to point at, and the finding narrows
+    from "there is nowhere to put an external citation" to "the nine equations
+    that declare one are registered and the 88 nodes still declare none".
+    Wiring `ParameterNode.source`/`source_url` into `Provenance` is now a
+    decision about whether a parameter's source is the same kind of fact as a
+    signal's, which was always the question — but it is no longer blocked on
+    there being no register to cite.
+
+    What the register found on its first run is worth recording, because it is
+    the reason it is a gate and not a document. Of the nine citations, **four
+    name a custodian** — IRENA's cost statistics, WHO's AirQ+ methodology,
+    ENTSO-E's adequacy practice, IEA/NEA's LCOE definition — and **five name a
+    derivation**: the annuity formula, the WACC identity, the swing equation,
+    average-cost pricing, and the N-1 criterion. The five are textbook results
+    with no single work behind them, and recording them as unattributed works
+    would have read as five missing citations; they are marked `n/a` so the
+    register says what they are. Of the four with a custodian, **one is
+    archived** (IRENA's executive summary, 3 MB, `sources/archive/`) and three
+    are not — IEA/NEA and the *Journal of the Aeronautical Sciences* are behind
+    paywalls, and WHO's AirQ+ landing page is a JavaScript shell that archives
+    as 755 bytes of nothing. The gate reports those three and does not fail
+    them, because a gate nobody can pass is a gate nobody runs.
 
   Left as findings because every resolution here is a product decision: drop
   `subcategory`, populate `users` from the catalog on the joinable nodes or
