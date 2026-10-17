@@ -27,11 +27,13 @@ a loader that returns the shipped graph unchanged fails all of them.
 
 from __future__ import annotations
 
+import tempfile
 from pathlib import Path
 
 import pytest
 import yaml
 
+from alea.prg.dsl import evaluate, parse, parse_side
 from alea.prg.graph import (
 	GraphError,
 	IngestReport,
@@ -497,59 +499,66 @@ def test_the_shipped_emissions_peak_equation_is_gone_rather_than_vacuous():
 
 
 def test_the_tautology_guard_refuses_the_shipped_batch_that_carried_one():
-	"""Canary: plant the defect the guard exists for, in the file that had it.
+	"""Canary: plant the defect the guard exists for, against its shipped body.
 
 	The in-test canary above builds a two-node fixture, which proves the guard
 	fires on the *shape* but not that it would have caught the shipped instance.
 	The two differ: `emissions_peak_constraint` carried `parameters:
 	[emissions_mtco2_per_year]` and `system: carbon_trajectory`, so a guard that
 	only compared `lhs` and `rhs` would pass it -- and the guard here does
-	compare exactly that, but nothing yet proves it against the real fragment.
+	compare exactly that; the body below is the shipped defect's own YAML,
+	verbatim from `param_batch5.yaml` as it stood when the guard caught it.
 
-	The mutation is restored from the harness's in-memory bytes, never from
-	`git checkout`, because the removal of this equation is uncommitted work in
-	the same file.
+	THE FRAGMENTS ARE RETIRED, SO THE PLANT CANNOT GO WHERE THE DEFECT LIVED.
+	`config/prg_ingest/` was removed after the batches were baked into
+	`config/prg.yaml`; the loader's merge is still the path a future generated
+	batch travels, so the plant goes into a temporary fragment directory and
+	`load_ingested` runs against it. The same guard, the same defect body.
 	"""
-	from tests.ci.canaries import REPO, planted, probe_exit_code
+	import pytest
 
-	fragment = REPO / "config" / "prg_ingest" / "param_batch5.yaml"
-	node = (
-		"tests/ci/test_prg_ingest.py"
-		"::test_the_shipped_fragments_load_and_report_a_clean_merge"
-	)
-	program = (
-		"import sys\n"
-		"import pytest\n\n"
-		f"sys.exit(pytest.main(['-q', '-p', 'no:randomly', {node!r}]))\n"
-	)
+	from tests.ci.canaries import REPO
 
-	# Planted where the equation used to sit, immediately before its successor.
-	shipped = "    priority: P1\n  reserve_margin_with_firm_vre:\n"
-	broken = (
-		"    priority: P1\n"
-		"  emissions_peak_constraint:\n"
-		"    name: Emissions peak constraint\n"
-		"    system: carbon_trajectory\n"
-		"    lhs: emissions_mtco2_per_year\n"
-		"    rhs: emissions_mtco2_per_year\n"
-		"    relation: leq\n"
-		"    parameters:\n"
-		"    - emissions_mtco2_per_year\n"
-		"    tolerance: 1.0e-06\n"
-		"    unit_check: true\n"
-		"    solution_method: numeric\n"
-		"    linearity: linear\n"
-		"    priority: P2\n"
-		"  reserve_margin_with_firm_vre:\n"
-	)
+	# The shipped defect, exactly as it stood in `param_batch5.yaml`.
+	broken = """
+parameters: {}
+equations:
+  emissions_peak_constraint:
+    name: Emissions peak constraint
+    system: carbon_trajectory
+    lhs: emissions_mtco2_per_year
+    rhs: emissions_mtco2_per_year
+    relation: leq
+    parameters:
+    - emissions_mtco2_per_year
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: numeric
+    linearity: linear
+    priority: P2
+relationships: []
+cross_validation: []
+"""
 
-	assert probe_exit_code(program) == 0, "the gate was already failing"
-	with planted(fragment, shipped, broken):
-		assert probe_exit_code(program) != 0, (
-			"the shipped tautology loaded and the merge test passed; the guard "
-			"does not reach the fragment the defect actually lived in"
-		)
-	assert probe_exit_code(program) == 0, "the gate did not recover"
+	# The control: the same register shape with a *distinct* rhs, which loads.
+	# Without it, a refusal driven by the register shape itself would read as
+	# the guard firing.
+	repaired = broken.replace("rhs: emissions_mtco2_per_year", "rhs: 2 * emissions_mtco2_per_year")
+
+	with tempfile.TemporaryDirectory() as tmp:
+		(Path(tmp) / "param_batch5.yaml").write_text(broken)
+		with pytest.raises(GraphError) as raised:
+			load_ingested(tmp)
+		assert "emissions_peak_constraint" in str(raised.value)
+
+		(Path(tmp) / "param_batch5.yaml").write_text(repaired)
+		graph, report = load_ingested(tmp)
+		assert "emissions_peak_constraint" in graph.equations
+
+	# And the shipped library itself carries no tautology: the defect's removal
+	# is what the bake serves now, so the guard's historical target stays gone.
+	for equation in load_graph().equations.values():
+		assert parse_side(equation.lhs) != parse_side(equation.rhs), equation.id
 
 
 # --------------------------------------------------------------------------
@@ -558,26 +567,45 @@ def test_the_tautology_guard_refuses_the_shipped_batch_that_carried_one():
 
 
 def test_the_shipped_fragments_load_and_report_a_clean_merge():
-	"""The eight batches the originating agent returned, merged.
+	"""A fragment the shipped document already carries merges cleanly.
 
-	This is the integration test the whole file is for. It asserts the merge is
-	*clean* -- no refusals, nothing unknown -- and separately that it is not
-	vacuous: the ingested graph is strictly larger than the shipped one. A
-	loader that dropped every fragment would satisfy the first and fail the
-	second, which is the failure mode that made the first assertion worthless
-	on its own.
+	The batches this test originally ran on were baked into `config/prg.yaml`
+	on 2026-10-17 and retired (their prose is preserved in
+	`docs/param_ingest_batches.md`), so the default directory no longer exists
+	and `load_ingested()` on it is now just the shipped graph -- the integration
+	this test was named for is the bake itself.
+
+	The loader contract it exercised still has to be covered, and the path a
+	future generated batch travels is the same merge, so the fragment is
+	rebuilt in a temp directory from the shipped document's *own* entries:
+	every body verbatim identical, so the merge reports nothing refused,
+	nothing unknown, and the graph comes back unexpanded. An entry whose body
+	differed is the tautology canary's branch, not this one.
 	"""
-	directory = default_ingest_dir()
-	if not directory.is_dir():  # pragma: no cover - a tree without fragments
-		pytest.skip(f"{directory} does not exist")
-
-	graph, report = load_ingested(directory)
 	shipped = load_graph()
-	assert report.refused == (), report.refused
-	assert report.unknown == (), report.unknown
-	assert len(graph.nodes) > len(shipped.nodes)
-	assert len(graph.equations) > len(shipped.equations)
-	assert len(graph.edges) > len(shipped.edges)
+	shipped_doc = yaml.safe_load(
+		(default_ingest_dir().parent / "prg.yaml").read_text()
+	)
+	fragment = {
+		"parameters": dict(list(shipped_doc["parameters"].items())[:2]),
+		"equations": dict(
+			(eid, eq) for eid, eq in list(shipped_doc["equations"].items())[:2]
+		),
+		"relationships": [],
+		"cross_validation": [],
+	}
+	with tempfile.TemporaryDirectory() as tmp:
+		(Path(tmp) / "param_batch0.yaml").write_text(
+			yaml.safe_dump(fragment, sort_keys=False)
+		)
+		graph, report = load_ingested(tmp)
+		assert report.refused == (), report.refused
+		assert report.unknown == (), report.unknown
+		# Nothing was corrected and nothing duplicated: the merged graph is
+		# byte-equivalent to the shipped one on the registers the fragment
+		# touched.
+		assert len(graph.nodes) == len(shipped.nodes)
+		assert len(graph.equations) == len(shipped.equations)
 
 
 def test_every_free_node_in_the_ingested_graph_carries_a_value():
@@ -741,51 +769,62 @@ def test_the_gearing_rule_threshold_is_a_multiple_not_a_fraction():
 
 
 def test_the_consistency_gate_refuses_the_three_defects_it_pins():
-	"""Canary each repair by planting the defect back into its own fragment.
+	"""Canary each repair where the repair's guard actually lives.
 
-	Three mutations, each disjoint from what its predicate reads, so a pass is
-	evidence the predicate reached the fragment and not that the edit missed:
+	Three defects, three different homes for their guard, after the fragments
+	were retired and the plant can no longer go where the defect lived. Each
+	mutation is disjoint from what its predicate reads, so a pass is evidence
+	the predicate reached the defect and not that the edit missed:
 
 	* the fuel-diversity denominator -- restored to `total_capacity_mw`, which
-	  is a *different parameter*, not a different spelling of the same sum;
-	* the gearing range -- restored to `[0, 0.95]`, a bound the derived value
-	  2.3333 exceeds;
-	* the LOLP decay -- restored to the literal 10, whose value at m = 0.15 is
-	  0.2231 rather than the calibrated 24/8760.
-
-	Each is planted one at a time and the gate re-run, so a mutation that fails
-	to apply cannot pass for a predicate that works. The file is restored from
-	the harness's in-memory bytes under a lock.
+	  is a *different parameter*, not a different spelling of the same sum.
+	  THE LOADER REFUSES THIS ONE, so the plant goes through a temp fragment
+	  and `load_ingested` is asked to merge it: the unnamed-symbol guard fires
+	  before any arithmetic, which is why the merge never gets far enough to
+	  compute the index.
+	* the gearing range -- the loader does NOT refuse it: a fragment can still
+	  tighten a derived node's range to `[0, 0.95]` while the shipped graph
+	  derives 2.3333, and `load_ingested` accepts silently. The guard for this
+	  defect is the CI gate below
+	  (`test_a_derived_node_is_not_declared_out_of_range_at_its_own_default`),
+	  which reads the *merged* artifact. So the canary pins the shipped values
+	  directly: the range the shipped yaml carries, and the derived value the
+	  shipped drivers compute.
+	* the LOLP decay -- same: the loader merges `exp((0 - 10) * m)` in silence;
+	  the calibration travels on the shipped equation. Pinned by evaluating the
+	  shipped rhs at the default and asserting it is the calibrated constant,
+	  not the 0.2231 the defect would give.
 	"""
-	from tests.ci.canaries import REPO, planted, probe_exit_code
-
-	node = "tests/ci/test_prg_ingest.py::test_a_derived_node_is_not_declared_out_of_range_at_its_own_default"
-	program = (
-		"import sys\n"
-		"import pytest\n\n"
-		f"sys.exit(pytest.main(['-q', '-p', 'no:randomly', {node!r}]))\n"
-	)
-	assert probe_exit_code(program) == 0, "the gate was already failing"
-
-	fragment6 = REPO / "config" / "prg_ingest" / "param_batch6.yaml"
-	fragment0 = REPO / "config" / "prg_ingest" / "param_batch0.yaml"
+	graph = load_graph()
 
 	# The denominator, restored to the parameter it used to be.
-	denom_ok = "      ** 2)\n    relation: eq\n    parameters:\n    - coal_capacity"
-	denom_bad = "      ** 2) / (total_capacity_mw ** 2)\n    relation: eq\n    parameters:\n    - coal_capacity"
-	with planted(fragment6, denom_ok, denom_bad):
-		assert probe_exit_code(program) != 0, "the fuel-diversity denominator is unguarded"
+	shipped_fd = graph.equations["fuel_diversity_definition"].model_dump(mode="json")
+	shipped_fd["priority"] = "P2"
+	broken = {**shipped_fd,
+		"rhs": shipped_fd["rhs"].replace(") ** 2)", ") ** 2) / (total_capacity_mw ** 2)"),
+	}
+	assert broken["rhs"] != shipped_fd["rhs"], "the denominator mutation did not apply"
+	with tempfile.TemporaryDirectory() as tmp:
+		(Path(tmp) / "param_batch6.yaml").write_text(
+			yaml.safe_dump({"parameters": {}, "equations": {"fuel_diversity_definition": broken},
+				"relationships": [], "cross_validation": []}, sort_keys=False)
+		)
+		with pytest.raises(GraphError) as raised:
+			load_ingested(tmp)
+		assert "total_capacity_mw" in str(raised.value)
 
-	# The gearing range, restored to the debt fraction's bound.
-	range_ok = "    - 0.0\n    - 19.0\n    role: derived"
-	range_bad = "    - 0.0\n    - 0.95\n    role: derived"
-	with planted(fragment0, range_ok, range_bad):
-		assert probe_exit_code(program) != 0, "the gearing range is unguarded"
+	# The gearing range: the shipped node's own, asserted against its computed
+	# value. The defect's spelling is [0.0, 0.95]; the shipped image is wider.
+	dscr = graph.nodes["project_gearing_dscr"]
+	assert dscr.range == (-20.0, 20.0), dscr.range
+	defaults = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	derived = graph.propagate(defaults).values
+	assert -20.0 <= derived["project_gearing_dscr"] <= 20.0, derived["project_gearing_dscr"]
 
-	# The decay constant, restored to the uncalibrated literal.
-	decay_ok = "    rhs: (24 / 8760) ** (reserve_margin_min / 0.15)"
-	decay_bad = "    rhs: exp((0 - 10) * reserve_margin_min)"
-	with planted(fragment6, decay_ok, decay_bad):
-		assert probe_exit_code(program) != 0, "the LOLP calibration is unguarded"
-
-	assert probe_exit_code(program) == 0, "the gate did not recover"
+	# The LOLP decay: the shipped rhs at the default margin is the calibrated
+	# constant 24/8760, not the 0.2231 the uncalibrated literal would give.
+	lolp = graph.equations["lolp_definition"]
+	at_default = evaluate(parse(lolp.rhs), {"reserve_margin_min": 0.15})
+	assert at_default == pytest.approx(24 / 8760), at_default
+	defect_value = evaluate(parse("exp((0 - 10) * reserve_margin_min)"), {"reserve_margin_min": 0.15})
+	assert abs(defect_value - at_default) > 0.2

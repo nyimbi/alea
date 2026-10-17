@@ -136,26 +136,48 @@ def _solve(
 def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	graph: ParameterGraph,
 ):
-	"""Six of the library's 39 equations can constrain a solve.
+	"""Twelve of the library's 87 equations can constrain a solve.
 
-	The denominator is the finding: 33 equations are identities, and folding
-	them into the register would report "2 of 39" for a library where the
-	honest figure is 2 of 6. Pinned as a literal so a new inequality has to
-	change this line to land. The identity count moved 31 -> 32 when
-	``firm_capacity_definition`` landed: an equation that derives the firm
-	fleet from the optimiser's own capacity decisions is a definition, not a
-	seventh boundary. 32 -> 33 when ``tariff_cost_recovery`` landed, for the
-	same reason: a cost-recovery identity is not a boundary either.
+	The denominator is the finding: 75 equations are identities, and folding
+	them into the register would under-report what a solve is actually
+	bound by. Pinned as a literal so a new inequality has to change this line
+	to land. The identity count moved 33 -> 75 and the inequality count
+	6 -> 12 when the generated batches were promoted: six new inequalities
+	(``demand_shares_bound``, ``fuel_ccs_adoption_bound``,
+	``industrial_electrification_bound``, ``local_employment_targets_bound``,
+	``reserve_margin_with_firm_vre``, ``retention_and_deductible_bound``),
+	each read -- as settable scalars -- quantities the graph now declares.
+	``add_constraints`` builds all eight bound routes generically from the
+	route classification, so the six are added to a solve rather than counted
+	and dropped; the two original bound routes keep their own tests below.
 	"""
 	cov = coverage(graph)
-	assert cov["constraint_shaped"] == 6
-	assert cov["identities"] == 33
-	assert cov["total"] == 39
+	assert cov["constraint_shaped"] == 12
+	assert cov["identities"] == 75
+	assert cov["total"] == 87
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
-	"""The two equations whose every term the network can supply."""
-	assert bound_routes(graph) == ("carbon_budget_constraint", "reserve_margin")
+	"""The eight equations whose every term the network can supply.
+
+	Six joined the original two when the generated batches were promoted --
+	``reserve_margin_with_firm_vre`` is the firm-VRE variant of the original,
+	``demand_shares_bound`` and the employment/CCS/electrification bounds are
+	system inequalities over declared shares, and ``retention_and_deductible_bound``
+	constrains the insurance module's own fractions. Each is added to a solve
+	by ``add_constraints`` generically, so the pin is the register of what
+	constrains the build, spelled out, rather than a count.
+	"""
+	assert bound_routes(graph) == (
+		"carbon_budget_constraint",
+		"demand_shares_bound",
+		"fuel_ccs_adoption_bound",
+		"industrial_electrification_bound",
+		"local_employment_targets_bound",
+		"reserve_margin",
+		"reserve_margin_with_firm_vre",
+		"retention_and_deductible_bound",
+	)
 
 
 def test_the_unbound_four_are_unbound_for_one_reason(graph: ParameterGraph):

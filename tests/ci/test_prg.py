@@ -53,7 +53,7 @@ from alea.prg.library import SYSTEM_IDS, coverage, systems_of
 from alea.prg.sensitivity import elasticity, gradients, sensitivity
 from alea.prg.service import check_scenario, describe, graph_summary, propagate_change
 from alea.prg.uncertainty import register
-from alea.prg.views import Equation
+from alea.prg.views import Equation, ParameterType
 
 PRG_PATH = repo_root() / "config" / "prg.yaml"
 
@@ -938,15 +938,32 @@ def test_the_summary_reports_the_registers(graph: ParameterGraph):
 	# pins the summary's own two fields to the same sets.
 	assert summary["exogenous"] == exogenous, summary["exogenous"]
 	assert summary["free"] == free, summary["free"]
-	# `free` is counted by role, not by `uncoupled()`, and the two differ on
-	# exactly one node: `storage_capacity_mw` is named by no equation, so it is
-	# in the register, but the optimiser sizes it, so its role is endogenous.
-	# Counting the register here would put it in two roles and the four counts
-	# would sum to 870 against a payload stating 869 -- an unreconcilable
-	# summary, which is the defect this partition exists to catch.
+	# `free` is counted by role, not by `uncoupled()`, and the two are
+	# *different sets*. The register is "named by no equation"; the role is
+	# "unconstrained within its range". Every uncoupled node is one of the two
+	# roles the schema gives a node nothing computes -- `free` (a knob) or
+	# `endogenous` (a value the optimiser sizes, which no *equation* fixes) --
+	# and neither role is wholly inside the register, because an equation may
+	# name a `free` node as an input.
+	#
+	# The earlier form of this assertion was `free == len(uncoupled()) - 1`,
+	# which held on the shipped graph by coincidence: exactly one endogenous
+	# node (`storage_capacity_mw`) was uncoupled there, so subtracting one
+	# reconciled the two counts. The ingested graph carries nine -- the eight
+	# storage capacities the catalog adds plus `storage_capacity_mw` -- and the
+	# coincidence broke. Asserting the *containment* is the claim that was
+	# meant, and it holds at any count.
+	uncoupled_roles = {graph.role(name).value for name in graph.uncoupled()}
+	assert uncoupled_roles <= {"free", "endogenous"}, uncoupled_roles
 	assert "storage_capacity_mw" in graph.uncoupled()
 	assert graph.role("storage_capacity_mw").value == "endogenous"
-	assert summary["free"] == len(graph.uncoupled()) - 1
+	# A `free` node named by an equation is an input, not a knob, so the two
+	# sets overlap without either containing the other. Asserting the
+	# difference is non-empty is what stops a future edit from *making* the
+	# coincidental identity true again and calling it the invariant.
+	assert set(graph.uncoupled()) - {
+		n for n, node in graph.nodes.items() if node.role.value == "free"
+	}, "every uncoupled node is free, so the containment above is trivial"
 	assert summary["feedback_loops"], "the summary lost the loop"
 	# Every system is modelled, so the register is empty -- and empty is the
 	# assertion, because a system that quietly lost its equations is exactly
@@ -1430,10 +1447,22 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 		f"the equation-derived register and the edge-derived one disagree: "
 		f"{sorted(dead ^ (uncoupled - set(graph.endogenous())))}"
 	)
-	assert len(dead) == 781, len(dead)
+	# The count is pinned as a literal rather than asserted as a property, so
+	# that a document which quietly couples or uncouples a node makes this fail
+	# and be looked at. It was 781 on the shipped graph and is 784 after the
+	# generated batches were promoted: the batches added 110 nodes and coupled
+	# 39 of them (a `free` node an equation names is an input, not a knob), so
+	# the register grew by less than the node count. `graph.uncoupled()` and
+	# the comprehension above agree exactly at this number, which is the
+	# assertion that carries the weight -- this one is the record of what it
+	# agreed *at*.
+	assert len(dead) == 784, len(dead)
 	# The knob the catalog names but no shipped equation reads, named so a
-	# failure points at a node rather than a count.
-	assert "coal_capacity" in dead
+	# failure points at a node rather than a count. It was `coal_capacity`
+	# until the endogenous fleet layer made that node derived -- at which
+	# point it left this register, because a node the graph computes is not a
+	# knob a user is left holding.
+	assert "ac_voltage_limit" in dead
 
 
 def test_a_loop_variable_is_reported_as_moved(graph: ParameterGraph):
@@ -1699,16 +1728,28 @@ def test_the_audit_reports_what_it_did_not_check():
 	the parameter left ``order()``, the total stayed 29, and nothing failed.
 	The set is now ``computed()``, which is what the docstring above already
 	described, and the four reachable loop variables join ``checked``.
+
+	WHY 40 AND 35 AND NOT 23 AND 10. The generated batches were promoted into
+	the shipped library, and the derived set grew from 33 to 75: forty-two new
+	equations, each with a determined variable. Seventeen of the new derived
+	parameters are reachable from what a solved result supplies and join
+	``checked``; the remaining twenty-five are not, and are named as not
+	carried. The partition total is what the test is really asserting -- the
+	two counts must sum to ``len(graph.computed())`` -- and the counts are
+	pinned beside it so a change to the register is looked at rather than
+	absorbed.
 	"""
 	from alea.prg.audit import audit_scenario_result
+	from alea.prg.graph import load_graph
 
 	audit = audit_scenario_result(_solved())
 	assert audit.consistent
-	assert len(audit.checked) == 23, audit.checked
-	assert len(audit.skipped) == 10, audit.skipped
+	assert len(audit.checked) == 40, audit.checked
+	assert len(audit.skipped) == 35, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
+	assert len(audit.checked) + len(audit.skipped) == len(load_graph().computed())
 	assert not (set(audit.checked) & set(audit.skipped))
 	assert "not carried" in audit.summary()
 
@@ -1746,9 +1787,9 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	assert audit.violations == (), "a failure is not a violation of an identity"
 	assert "not run" in audit.summary(), audit.summary()
 	# The whole derived set is named as unexamined: a partial count here would
-	# understate how much of the graph went unread. 33, not 29, for the reason
+	# understate how much of the graph went unread. 75, not 33, for the reason
 	# spelled out in `test_the_audit_reports_what_it_did_not_check`.
-	assert len(audit.skipped) == 33, audit.skipped
+	assert len(audit.skipped) == 75, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -2621,20 +2662,24 @@ def test_the_uncertainty_register_reads_the_declarations(graph: ParameterGraph):
 	nothing uncertain, which is the silence this module exists to break.
 	"""
 	reg = register(graph)
-	# The counts grew when the catalog expansion landed: the graph went from 88
-	# nodes to 869, and the catalog's own `determinism` hints -- `scenario`,
-	# `uncertain`, `probabilis` in the algorithm cell -- brought 26 more
-	# settable declarations with it (`hydro_drought_multiplier`,
+	# The counts grew twice. First when the catalog expansion landed: the graph
+	# went from 88 nodes to 869, and the catalog's own `determinism` hints --
+	# `scenario`, `uncertain`, `probabilis` in the algorithm cell -- brought 26
+	# more settable declarations with it (`hydro_drought_multiplier`,
 	# `line_outage_probability`, `solar_irradiance_multiplier`, the scenario
-	# metadata). The literals are updated rather than the derivation, because
-	# the pin is the assertion: deriving the count from the register would pass
-	# on a graph that declared nothing uncertain, which is the silence this
-	# module exists to break.
-	assert len(reg.inputs) == 31, reg.inputs
-	assert len(reg.derived_stochastic) == 8, reg.derived_stochastic
+	# metadata). Then when the generated batches were promoted: 110 more nodes,
+	# 53 of them settable and declared `stochastic`. The literals are updated
+	# rather than the derivation, because the pin is the assertion: deriving
+	# the count from the register would pass on a graph that declared nothing
+	# uncertain, which is the silence this module exists to break.
+	assert len(reg.inputs) == 84, reg.inputs
+	assert len(reg.derived_stochastic) == 24, reg.derived_stochastic
 	assert len(reg.stochastic_edges) == 1, reg.stochastic_edges
-	# 39 nodes are declared stochastic in total: 31 settable, 8 derived.
-	assert len(reg.inputs) + len(reg.derived_stochastic) == 39
+	# 108 nodes are declared stochastic in total: 84 settable, 24 derived.
+	assert len(reg.inputs) + len(reg.derived_stochastic) == 108
+	assert len(reg.inputs) + len(reg.derived_stochastic) == sum(
+		1 for node in graph.nodes.values() if str(node.determinism) == "stochastic"
+	), "the register and the declarations disagree"
 
 
 def test_every_uncertain_input_is_settable(graph: ParameterGraph):
@@ -2746,13 +2791,14 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	"""
 	text = register(graph).summary()
 	assert "not a distribution" in text
-	# 13 inputs reaching 23 derived parameters. The reach grew by one when the
-	# tariff loop landed: `regulated_tariff_usd_per_mwh` is now derived and is
-	# downstream of the uncertain demand and price inputs, so a sensitivity
-	# over those inputs moves it. Pinned because the number is the finding --
-	# the sentence exists to stop a reader taking the declarations for a
-	# distribution, and a reach that drifts unnoticed would understate it.
-	assert "31" in text and "23" in text
+	# 84 inputs reaching 53 derived parameters, 24 of those stochastic by their
+	# own relation. The reach grew when the generated batches were promoted:
+	# 53 new settable nodes declared `stochastic` and the equations they feed
+	# brought thirty more derived parameters into the closure. Pinned because
+	# the number is the finding -- the sentence exists to stop a reader taking
+	# the declarations for a distribution, and a reach that drifts unnoticed
+	# would understate it.
+	assert "84" in text and "53" in text
 
 
 # ---------------------------------------------------------------------------
@@ -2856,11 +2902,35 @@ def test_the_unit_report_separates_inconsistent_from_undecidable(
 def test_the_flagged_equations_are_a_known_set(graph: ParameterGraph):
 	"""The inconsistent set is pinned, so a new one is a failing test.
 
-	Eight equations are flagged today. They are not eight of one kind -- three
-	are the ``(1 + rate)`` convention, one is a missing nominal frequency, and
-	the rest are annual quantities declared without a per-year divisor. This
-	test does not bless them; it makes the set move only when someone means it
-	to, because a count that drifts unnoticed is how a dimensional defect ships.
+	Twenty equations are flagged today, and they are four kinds rather than
+	one. Ten are the ``(1 + rate)`` convention: a rate node declared as
+	``1/year`` so that ``1 + rate`` adds a dimensionless constant to a
+	frequency. Five are annual quantities declared without a per-year divisor
+	(``generation_twh`` is ``TWh`` and the equation's own description says
+	"MWh/year"). Two are compounding slips where a factor was dropped or added
+	-- ``premature_deaths_definition`` carries a ``pm25_kt_per_year`` against a
+	``1/kt`` risk coefficient, and ``rocof_definition`` divides MW by MW·s to
+	get a per-second rate the node declares as Hz/s. The rest are single
+	declarations that disagree with their own equation's stated dimensional
+	check. This test does not bless them; it makes the set move only when
+	someone means it to, because a count that drifts unnoticed is how a
+	dimensional defect ships.
+
+	WHY THE PROMOTION GREW THE SET FROM EIGHT TO TWENTY AND WHY NONE OF THE
+	TWELVE WERE FIXED HERE. The generated batches added forty-two equations,
+	and the twelve new flags are all one decision: the graph's unit vocabulary
+	for *annual* quantities. Every candidate fix is a re-declaration that
+	trades clears for new flags, which is measurable and was measured.
+	Declaring ``generation_twh`` as ``TWh/year`` clears three equations and
+	opens ``cooling_water_definition`` and ``energy_balance``; declaring
+	``equilibrium_demand_twh`` the same way clears two and opens three;
+	declaring the ten rate nodes dimensionless clears six and opens four. The
+	arithmetic of each equation is right and the *declaration* is coarse, so
+	fixing one node in isolation moves the inconsistency rather than removing
+	it -- the vocabulary is a modelling decision to make once, deliberately,
+	and across the whole family of nodes it touches. Pinned here so the twelve
+	are visible in the meantime and a fix shows up as a set change rather than
+	as a count that drifted.
 
 	WHY ``tariff_cost_recovery`` IS FLAGGED AND IS NOT WRONG. It is the
 	per-year-divisor class, and the coarse declaration is the *demand node's*,
@@ -2880,14 +2950,26 @@ def test_the_flagged_equations_are_a_known_set(graph: ParameterGraph):
 	report = check_graph(graph)
 	flagged = {check.equation_id for check in report.inconsistent}
 	assert flagged == {
+		"benefit_sharing_from_revenue_definition",
+		"carbon_price_escalated_definition",
+		"coal_price_per_mwh_definition",
+		"consumer_surplus_definition",
 		"crf_definition",
-		"energy_demand",
 		"debt_service_definition",
-		"rocof_definition",
 		"emissions_definition",
+		"energy_demand",
+		"equity_irr_definition",
+		"fuel_cost_escalated_coal_definition",
+		"fuel_cost_escalated_gas_definition",
+		"fuel_price_escalated_definition",
 		"hydrogen_water_definition",
+		"llcr_definition",
+		"load_factor_definition",
+		"ppa_indexed_price_definition",
 		"premature_deaths_definition",
+		"rocof_definition",
 		"tariff_cost_recovery",
+		"total_revenue_definition",
 	}, sorted(flagged)
 
 
@@ -2930,10 +3012,24 @@ def test_incremental_propagation_equals_a_full_one(graph: ParameterGraph, defaul
 		# to its default each turn would hand the incremental path a base its
 		# `previous` does not describe -- a caller error, not a graph one.
 		values = dict(previous.values)
-		span = (node.range[1] - node.range[0]) if node.range else abs(node.default)
-		values[name] = node.default + (span * 0.25 if span else 0.1)
-		if node.range is not None and not (node.range[0] <= values[name] <= node.range[1]):
-			continue
+		if isinstance(node.default, str):
+			# A categorical's value is a level *name*, so there is no delta to
+			# take and no "25% of the span" to move it by: the perturbation is
+			# the next level in the declared order, wrapping. Skipping these
+			# two would leave the incremental path untested on the one class of
+			# node whose value is not a number -- which is exactly the class
+			# that broke it, since `abs(got - expected)` is a TypeError when
+			# both sides are level names.
+			levels = list(node.categories or ())
+			assert levels, f"{name} is categorical with no declared levels"
+			values[name] = levels[(levels.index(node.default) + 1) % len(levels)]
+		else:
+			span = (node.range[1] - node.range[0]) if node.range else abs(node.default)
+			values[name] = node.default + (span * 0.25 if span else 0.1)
+			if node.range is not None and not (
+				node.range[0] <= values[name] <= node.range[1]
+			):
+				continue
 		# A perturbation can leave the *loop's* declared bracket even while
 		# sitting inside its own node's range: 25% of `total_capacity_mw`'s
 		# 1e6 MW span is a 260,000 MW fleet whose revenue requirement exceeds
@@ -2961,6 +3057,16 @@ def test_incremental_propagation_equals_a_full_one(graph: ParameterGraph, defaul
 		downstream = set(looped) | set(graph.affected_by(looped))
 		for key, expected in full.values.items():
 			got = step.values[key]
+			if isinstance(expected, str):
+				# A level name has no arithmetic, so a tolerance is meaningless
+				# here and the two paths must agree exactly. `abs(got - expected)`
+				# is a TypeError on two strings, which is how this class went
+				# untested until the categorical model landed.
+				assert got == expected, (
+					f"{name}: incremental {key}={got!r} but a full propagation "
+					f"gives {expected!r}"
+				)
+				continue
 			tolerance = 1e-7 * max(abs(expected), 1.0) if key in downstream else 0.0
 			assert abs(got - expected) <= tolerance, (
 				f"{name}: incremental {key}={got} but a full propagation gives "
@@ -3078,28 +3184,78 @@ def test_every_declared_rule_can_fire(graph: ParameterGraph, defaults: dict):
 	# the rule undecided rather than untriggerable.
 	base = graph.propagate(dict(defaults)).values
 	for rule in graph.rules:
-		# The probe moves every parameter the rule names, together, over the
-		# corners of their declared ranges. One parameter at a time is too weak:
-		# a conjunctive condition -- "carbon_price > 150 AND budget_ratio > 1"
-		# -- needs both past their thresholds, and a probe that held one at its
-		# default would report the rule untriggerable when it is merely a rule
-		# about a combination.
+		# The probe moves every parameter the rule names, together, over a set
+		# of points that spans each declared range: both endpoints, the
+		# midpoint, and two interior points either side of it. One parameter at
+		# a time is too weak -- a conjunctive condition ("carbon_price > 150
+		# AND budget_ratio > 1") needs both past their thresholds, and a probe
+		# that held one at its default would report the rule untriggerable when
+		# it is merely a rule about a combination.
+		#
+		# The interior points are what a corners-only sweep missed, and each
+		# miss was a false report of a dead rule:
+		#
+		# * `total_water_demand_m3 > water_availability_m3` over two identical
+		#   `(0, 1e11)` ranges holds only *strictly inside*, because at every
+		#   corner the two are equal and `>` is false;
+		# * `carbon_tax_rate > 0 and carbon_tax_rate < 0.5` over `(0, 500)`
+		#   holds only strictly inside too, and both its endpoints fail -- `0`
+		#   the lower comparison, `500` the upper.
+		#
+		# So a probe sampling only `{low, high, mid}` reports a live rule as
+		# dead whenever the live band excludes all three, which a strict
+		# comparison against a bound guarantees at one end.
+		#
+		# The interior points are therefore *geometric* as well as arithmetic.
+		# A fixed fraction of the span cannot find a narrow band:
+		# `carbon_tax_rate > 0 and carbon_tax_rate < 0.5` over `(0, 500)` holds
+		# on 0.1% of the range, and a sweep of `{0, 125, 250, 375, 500}` lands
+		# nowhere near it. Multiplying the span by `10^-k` for a few `k` puts
+		# points at 0.5, 5, 50 as well, which is what a threshold guarding a
+		# *scale* -- "this value is in cents, not dollars" -- actually needs.
 		names = sorted(rule.parameters)
-		endpoints = []
+		points = []
 		for parameter in names:
 			node = graph.node(parameter)
+			# A parameter's admissible set is not always a numeric range. A
+			# `categorical` is admissible over its `categories` and carries no
+			# range at all, and a `bool` carries none either -- the earlier
+			# form of this probe asserted `node.range is not None` for every
+			# parameter, which reported the two rules naming a categorical as
+			# unevaluable and said so in a way that read like a dead rule. A
+			# probe has to sample the domain the node actually has.
+			if node.type is ParameterType.CATEGORICAL:
+				points.append(sorted(node.categories))
+				continue
+			if node.type is ParameterType.BOOL:
+				points.append([0.0, 1.0])
+				continue
 			assert node.range is not None, parameter
-			endpoints.append(node.range)
+			low, high = node.range
+			span = high - low
+			candidates = {low, high}
+			for fraction in (0.25, 0.5, 0.75):
+				candidates.add(low + span * fraction)
+			# Geometric points near each end, where a narrow band sits. Six
+			# decades because a band can be arbitrarily narrow relative to its
+			# range: `carbon_tax_rate`'s live band is `(0, 0.5)` against a
+			# `(0, 500)` range, so the nearest decade point, `0.5`, misses it
+			# by the strictness of `<` and only `0.05` lands inside.
+			for decade in range(1, 7):
+				candidates.add(low + span * (10.0**-decade))
+				candidates.add(high - span * (10.0**-decade))
+			points.append(sorted(candidates))
 		fired = False
-		for corner in itertools.product(*endpoints):
+		for corner in itertools.product(*points):
 			probe = dict(base)
 			probe.update(dict(zip(names, corner, strict=True)))
 			if evaluate_condition(rule.condition, probe):
 				fired = True
 				break
 		assert fired, (
-			f"rule {rule.id!r} cannot be made to fire at any corner of its "
-			f"parameters' declared ranges, so it checks nothing"
+			f"rule {rule.id!r} cannot be made to fire at any of five points "
+			f"spanning each of its parameters' declared ranges, so it checks "
+			f"nothing"
 		)
 
 
@@ -3244,30 +3400,50 @@ def test_the_cli_gates_on_an_error_rule(graph: ParameterGraph):
 
 
 def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
-	"""The register is the finding: the shipped graph declares two tiers.
+	"""The register is the finding: the graph declares all three tiers.
 
 	The spec gives every relationship a strength, and until this was wired the
 	field was declared on all 84 edges and read by nothing. A summary that
 	reported only the edge count would leave a reader assuming the tiers were
 	in use; the count says which of them the model actually uses.
+
+	The shipped graph declared no `soft` equation, and the promotion of the
+	generated batches added two: `lcoe_solar_definition` and
+	`lcoe_wind_definition`, each carried by four `soft` edges. The count is
+	pinned rather than asserted as a property, because it is a fact about
+	*this* document -- a new tier appearing should make this test fail and be
+	looked at, not pass silently. That is what it did here.
+
+	84 hard and not 83: five of the six equations no edge cites are the
+	`*_bound` inequalities the batches added (`demand_shares_bound`,
+	`fuel_ccs_adoption_bound`, `industrial_electrification_bound`,
+	`local_employment_targets_bound`, `retention_and_deductible_bound`), and
+	`strength_of` defaults an uncited equation to `hard`. See the note on the
+	previous form of this assertion -- `firm_capacity_definition` was the one
+	such equation in the shipped graph, and the count was wrong about it until
+	it was moved onto `strength_of`.
 	"""
 	counts = graph.strength_counts()
 	assert counts, "no strength was counted"
 	assert sum(counts.values()) == len(graph.equations)
 	assert set(counts) <= {"hard", "soft", "informational"}
-	# The shipped graph declares no `soft` equation. Pinned rather than
-	# asserted as a property, because it is a fact about *this* document: a new
-	# soft edge should make this test fail and be looked at, not pass silently.
-	#
-	# 38 hard and not 37: `firm_capacity_definition` is an equation no edge
-	# cites, and this register counted it as no equation at all until the
-	# count was moved onto `strength_of` -- which, like the propagation,
-	# defaults an uncited equation to `hard`. The count and the two readers
-	# that use `strength_of` disagreed by exactly the number of edge-less
-	# equations, and the register was the one that was wrong. 38 and not 37
-	# today because `tariff_cost_recovery` landed as the second loop's second
-	# equation, and it is `hard` like every other identity.
-	assert counts == {"hard": 38, "informational": 1}, counts
+	assert counts == {"hard": 84, "informational": 1, "soft": 2}, counts
+	# Every equation the count puts in a non-hard tier is one some edge
+	# declares that way -- the tier is read off the edges, so a `soft` equation
+	# with no `soft` edge would mean the register invented it.
+	for equation_id in graph.equations:
+		tier = graph.strength_of(equation_id)
+		if tier == "hard":
+			continue
+		declared = {
+			edge.strength.value
+			for edge in graph.edges
+			if edge.equation_id == equation_id
+		}
+		assert tier in declared, (
+			f"{equation_id} is counted {tier!r} but its edges declare "
+			f"{sorted(declared) or 'none'}"
+		)
 
 
 def test_a_soft_or_informational_violation_does_not_block_and_a_hard_one_does(
@@ -3378,20 +3554,58 @@ def test_the_summary_serves_the_strength_register(graph: ParameterGraph):
 def test_the_conflict_gate_reads_the_tier_and_a_softened_edge_stops_blocking():
 	"""The CLI exit code follows the declared strength, not the residual.
 
-	`prg conflicts --set carbon_price_usd_per_tco2=200` fails `dscr_requirement`
+	`prg conflicts --set carbon_price_usd_per_tco2=150` fails `dscr_requirement`
 	and exits 1. The same scenario with that equation's edge declared
 	`informational` must exit 0 while still *printing* the finding -- a gate
 	that ignored the tier would exit 1 either way, and this is the canary that
 	tells the two apart.
+
+	WHY THE CARBON PRICE IS 150 AND NOT 200. The canary's claim is "softening
+	*this* edge flips the gate", and that claim needs the softened edge to be
+	the *only* thing blocking -- otherwise the exit code stays 1 for a reason
+	the canary is not about, and it would fail while the tier mechanism works
+	perfectly. At 200 a second, unrelated blocker fires: the fleet's cash
+	available for debt service goes negative, so `llcr_estimate` derives to
+	-0.20 against a declared floor of 0 and reports an out-of-range conflict of
+	its own. That is the graph working -- a carbon price that bankrupts the
+	project *should* say so -- but it makes 200 a scenario with two blockers
+	and a canary with one. The premise is asserted below rather than assumed,
+	so a future equation that starts blocking at 150 fails this test on the
+	premise instead of on the mechanism.
 	"""
 	from typer.testing import CliRunner
 
 	from alea.cli import app
+	from alea.prg import load_graph
+	from alea.prg.conflicts import detect_conflicts
+
+	target = "dscr_requirement"
+	carbon_price = "150"
+
+	# The premise: the softened edge is the only blocker at this scenario.
+	graph = load_graph()
+	scenario = {
+		k: n.default for k, n in graph.nodes.items() if n.default is not None
+	}
+	scenario["carbon_price_usd_per_tco2"] = float(carbon_price)
+	propagated = graph.propagate(scenario)
+	blockers = {
+		c.subject
+		for c in detect_conflicts(
+			graph, propagated.values, supplied=scenario, rank=1
+		).conflicts
+		if c.blocks
+	}
+	assert blockers == {target}, (
+		f"the canary needs {target!r} to be the only blocker at carbon price "
+		f"{carbon_price}, and the scenario blocks on {sorted(blockers)} -- so "
+		f"softening the edge could not flip the exit code and this test would "
+		f"fail for a reason it is not about"
+	)
 
 	path = repo_root() / "config" / "prg.yaml"
 	backup = path.read_bytes()
 	document = yaml.safe_load(path.read_text())
-	target = "dscr_requirement"
 	softened = False
 	for edge in document["relationships"]:
 		if edge["equation_id"] == target:
@@ -3402,7 +3616,7 @@ def test_the_conflict_gate_reads_the_tier_and_a_softened_edge_stops_blocking():
 		path.write_text(yaml.safe_dump(document, sort_keys=False))
 		runner = CliRunner()
 		result = runner.invoke(
-			app, ["prg", "conflicts", "--set", "carbon_price_usd_per_tco2=200"]
+			app, ["prg", "conflicts", "--set", f"carbon_price_usd_per_tco2={carbon_price}"]
 		)
 		assert result.exit_code == 0, result.output
 		# Printed, not hidden: the finding survives and only the gate moves.
@@ -3413,7 +3627,7 @@ def test_the_conflict_gate_reads_the_tier_and_a_softened_edge_stops_blocking():
 		path.write_bytes(backup)
 	# The backup restored the hard edge, so the gate fires again.
 	restored = CliRunner().invoke(
-		app, ["prg", "conflicts", "--set", "carbon_price_usd_per_tco2=200"]
+		app, ["prg", "conflicts", "--set", f"carbon_price_usd_per_tco2={carbon_price}"]
 	)
 	assert restored.exit_code == 1, restored.output
 
@@ -3549,10 +3763,20 @@ def test_the_specs_unit_check_field_loads_and_is_read(graph: ParameterGraph):
 	# And it is read. `False` reclassifies the verdict; it does not skip the
 	# walk, so the equation is still checked and still reported.
 	report = check_graph(graph)
-	assert report.exempt == (), (
-		f"the shipped graph declares no exemption, so `exempt` must be empty; "
-		f"it holds {report.exempt}"
-	)
+	# Four equations in the shipped library declare the exemption, and all four
+	# are the same kind: a unit *conversion* whose constant the walker cannot
+	# see. ``coal_price_per_mwh = coal_price / (25 * 3.6)`` divides USD/tonne by
+	# a bare 31.6 that means GJ/tonne times MWh/GJ, so the dimensional check is
+	# discharged by the comment and not by the arithmetic. The declaration is
+	# the author saying so, which is what the field is for -- so this asserts
+	# the set rather than its emptiness, and a fifth exemption is a failing
+	# test.
+	assert set(report.exempt) == {
+		"coal_price_per_mwh_definition",
+		"consumer_surplus_definition",
+		"gas_price_per_mwh_definition",
+		"llcr_definition",
+	}, report.exempt
 	assert len(report.checks) == len(graph.equations), (
 		"an exempt equation must still be checked -- skipping it would hide an "
 		"equation that later became decidable"
@@ -3563,12 +3787,15 @@ def test_the_specs_unit_check_field_loads_and_is_read(graph: ParameterGraph):
 	patched[target] = patched[target].model_copy(update={"unit_check": False})
 	exempted = ParameterGraph(graph.nodes, patched, graph.edges, rules=graph.rules)
 	after = check_graph(exempted)
-	assert after.exempt == (target,), after.exempt
+	# The four declarations above, plus the one just patched in. Asserted as a
+	# set so this reads as "the patch was read" rather than as a count that
+	# happens to be five.
+	assert set(after.exempt) == set(report.exempt) | {target}, after.exempt
 	# The check still ran: the exempt equation is in `checks` as before.
 	assert len(after.checks) == len(graph.equations)
 	# And the exemption is announced rather than silently shrinking a count.
 	assert "exempt by declaration" in after.summary(), after.summary()
-	assert "1 is exempt" in after.summary(), after.summary()
+	assert f"{len(after.exempt)} are exempt" in after.summary(), after.summary()
 
 
 # ---------------------------------------------------------------------------
@@ -3696,10 +3923,13 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 				f"numeric {numeric!r}"
 			)
 			compared += 1
-	assert compared == 33, (
-		f"expected 33 determined variables in the shipped library, compared "
+	assert compared == 75, (
+		f"expected 75 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
-		f"check's coverage"
+		f"check's coverage. It was 33 before the generated batches were "
+		f"promoted, and every one of the 42 new equations is affine in the "
+		f"variable it solves for -- which is the claim the `exact is not None` "
+		f"above makes, at the wider coverage"
 	)
 
 

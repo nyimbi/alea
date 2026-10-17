@@ -308,11 +308,27 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 	Both catalog rows for this name say ``🔗``, so this is not an artefact of
 	which row the join read -- which is the failure mode a first-row join would
 	have. Pinned by name so a fix has to move this test.
+
+	WHY THE PROMOTION LEFT THREE DISAGREEING RATHER THAN ONE. The generated
+	batches corrected two nodes into their canonical forms and the catalog
+	cannot follow them: ``cross_border_trading`` is a duplicate of
+	``cross_border_trade_allowed`` and ``demand_growth_rate`` of
+	``demand_growth``, and the graph marks each ``deprecated`` with the
+	replacement named on the node -- which is the field's own contract. The
+	catalog's legend has three glyphs (✅ 🔨 🔗) and no way to say a row should
+	not exist, so these two disagreements are the register doing its job on a
+	drift the catalog format cannot absorb. Pinned beside
+	``equity_return_target`` with the reason, so a fourth disagreement is the
+	failure rather than the number.
 	"""
 	joins = {join.parameter: join for join in status_join(graph=graph)}
 	assert len(joins) == 787, len(joins)
 	disagreeing = {name: join for name, join in joins.items() if not join.agrees}
-	assert set(disagreeing) == {"equity_return_target"}, sorted(disagreeing)
+	assert set(disagreeing) == {
+		"cross_border_trading",
+		"demand_growth_rate",
+		"equity_return_target",
+	}, sorted(disagreeing)
 
 	drifted = disagreeing["equity_return_target"]
 	assert drifted.graph_status == "to_build", drifted.graph_status
@@ -324,15 +340,18 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 		"this test cannot say which one the graph drifted from"
 	)
 	assert "catalog says integrate" in drifted.describe()
+	# The two deprecations carry their replacements on the node, which is what
+	# makes the graph's claim actionable -- a caller can migrate.
+	for name in ("cross_border_trading", "demand_growth_rate"):
+		node = graph.nodes[name]
+		assert node.status == "deprecated", node.status
+		assert node.deprecated_by in graph.nodes, node.deprecated_by
 
-	# The other five are the control: a join that reported every node as
+	# The other 784 are the control: a join that reported every node as
 	# disagreeing would pass the assertion above and mean nothing. The
-	# expansion took this from 5 to 786: the catalog join wrote every node's
-	# `status` from the same column, so all but the one drifted node agree by
-	# construction. The control is weaker than it was -- it no longer shows the
-	# join can *detect* agreement, only that it does not report disagreement --
-	# and `equity_return_target` above is what carries the detection.
-	assert sum(1 for join in joins.values() if join.agrees) == 786
+	# expansion took the agreeing count to 786 and the promotion left it at
+	# 784, for the two deprecations above.
+	assert sum(1 for join in joins.values() if join.agrees) == 784
 
 
 def test_a_node_the_catalog_does_not_name_is_absent_rather_than_guessed(
@@ -375,7 +394,9 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 		"resettlement_costs",
 	}
 	assert report["status_disagreements"] == [
-		"equity_return_target: the graph says to_build and the catalog says integrate"
+		"cross_border_trading: the graph says deprecated and the catalog says existing",
+		"demand_growth_rate: the graph says deprecated and the catalog says to_build",
+		"equity_return_target: the graph says to_build and the catalog says integrate",
 	]
 	assert len(report["status_join"]) == 787
 
