@@ -1460,7 +1460,16 @@ class ParameterOut(ApiModel):
 	type: str
 	unit: str
 	range: list[float] | None
-	default: float | None
+	default: float | str | None
+	"""A categorical's declared default is a level *name*, never its index.
+
+	`float` alone 422'd every parameter-listing route on the promoted graph:
+	`market_structure` carries `default: single_buyer`, the response failed
+	pydantic's float parse, and a plain `GET /parameters` returned the error
+	payload instead of the register. Narrowing to float here served the
+	pre-categorical graph; the type is the payload's own claim about what a
+	default can be, and a categorical's can be a level name.
+	"""
 	role: str
 	determinism: str
 	priority: str

@@ -268,9 +268,19 @@ def detect_conflicts(
 	# `_corrections_for` -- is a TypeError naming neither the parameter nor the
 	# reason. The set the graph hands over is the whole graph's, so the numeric
 	# half is selected here rather than promised by the caller.
+	# The narrowing is for the arithmetic, and only for the arithmetic. Whether
+	# the caller *fixed* a parameter is a question about the supplied set as a
+	# whole -- a level name is a supplied value like any other -- so the names
+	# are kept before the numeric half is selected. Reading the narrowed set for
+	# both questions made every supplied categorical read as an input nobody
+	# supplied: the shipped graph reported ``market_model`` and
+	# ``market_structure`` under-determined while both sat in the scenario with
+	# their declared defaults, which is a conflict about the reader, not the
+	# scenario.
 	numeric: dict[str, float] = {
 		k: v for k, v in values.items() if not isinstance(v, str)
 	}
+	supplied_names: set[str] = set(supplied) if supplied is not None else set()
 	supplied_numeric: dict[str, float] | None = (
 		None
 		if supplied is None
@@ -301,7 +311,7 @@ def detect_conflicts(
 					),
 				)
 			)
-		missing = set(graph.nodes) - set(supplied)
+		missing = set(graph.nodes) - supplied_names
 		needed = {
 			name
 			for name in missing

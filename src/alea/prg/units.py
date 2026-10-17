@@ -37,6 +37,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+import re
+
 import pint
 from pint.facets.plain.unit import PlainUnit
 
@@ -84,6 +86,24 @@ def _registry() -> pint.UnitRegistry:
 	speed, and this graph means the kilotonne. Redefinition raises a warning
 	that would print on every run, so the knot is removed first -- the graph's
 	meaning is the one that survives, and Pint's is the one that goes.
+
+	WHY EVERY UNIT THE GRAPH DECLARES IS IN HERE. A unit the registry does not
+	know makes the walker return ``None``, which reads as *undecidable* -- and
+	an undecidable equation is not a pass. So a gap in this vocabulary is a
+	hole in the coverage of the whole unit check, and it is a hole that grows
+	whenever an author writes a unit this list has not been told about. The
+	three cases that arrived with the generated batches were ``events/year``
+	(SAIDI and SAIFI, whose ``events`` is a count of interruptions and not a
+	time), ``parcels/km2`` and ``sites/100km2`` (land take, where the counted
+	thing is a parcel or a site), and ``USD/MMBtu`` (a gas price, in the unit
+	the market quotes it in). Each is a base dimension of this domain for the
+	same reason ``[job]`` is: the graph has no reason to express a parcel as a
+	combination of SI units, and doing so would manufacture a mismatch.
+
+	``million`` and ``basis_points`` are dimensionless scales, and Pint refuses
+	a bare ``million`` in a compound expression only because it is not a unit --
+	declaring it as ``1e6`` makes ``USD million`` parse as a currency and
+	``basis_points`` as the dimensionless ratio it is.
 	"""
 	registry = pint.UnitRegistry()
 	# Remove Pint's `kt` (knot) before the graph's `kt` (kilotonne) replaces
@@ -107,6 +127,25 @@ def _registry() -> pint.UnitRegistry:
 		# arithmetic is exactly right, which is a finding manufactured by the
 		# registry rather than found in the graph.
 		"DALY = person * year",
+		# The counted things this domain counts. Each is a base dimension for
+		# the reason given above: a parcel is not a combination of SI units, and
+		# ``sites`` against ``parcels`` is a real mismatch that this registry
+		# should be able to see.
+		"event = [event]",
+		"events = event",
+		"connection = [connection]",
+		"connections = connection",
+		"parcel = [parcel]",
+		"parcels = parcel",
+		"site = [site]",
+		"sites = site",
+		# A million British thermal units, which is how a gas price is quoted.
+		"MMBtu = 1e6 * Btu",
+		# Dimensionless scales. ``million`` is not a unit of anything, which is
+		# exactly why Pint rejects it bare; as a scale it multiplies cleanly.
+		"million = 1e6",
+		"billion = 1e9",
+		"basis_points = 1e-4",
 	):
 		registry.define(definition)
 	return registry
@@ -138,16 +177,38 @@ class DimensionalMismatch(ValueError):
 def _parse_unit(text: str) -> Unit:
 	"""Parse one of the graph's unit strings.
 
-	``m3`` is the graph's spelling of a cubic metre and ``MW.s`` its spelling
-	of a megawatt-second; Pint reads the first as an unknown symbol and the
-	second as a decimal point. Both are normalised to what Pint parses rather
-	than the graph being asked to spell them Pint's way -- the unit strings are
-	read by people, and ``MW.s`` is what a person writes.
+	The unit strings are written to be *read* -- they appear in the YAML beside
+	a parameter's name and in the CLI's report -- so this normalises them to
+	what Pint parses rather than asking the graph to spell them Pint's way.
+	Four spellings need it, and each is a notation a person writes:
+
+	* ``m3`` is a cubic metre. Pint reads the bare ``3`` as an exponent only
+	  when it is written ``**3``, so the digit is spelled out.
+	* ``MW.s`` is a megawatt-second. Pint reads the dot as a decimal point, so
+	  it becomes ``*``.
+	* ``USD/MW-km`` is a currency per megawatt-kilometre. Pint reads the hyphen
+	  as subtraction and raises ``TypeError`` on two unit helpers, which is a
+	  crash rather than an undecidable -- the worst of the three outcomes. A
+	  hyphen between two unit symbols is a product in every unit notation.
+	* ``USD million`` and ``sites/100km2`` put a space and a numeric factor
+	  where Pint wants an operator. The space becomes ``*``; the numeric factor
+	  in a denominator is a scale, and since it divides, folding it into the
+	  numerator as its reciprocal keeps the dimensionality and drops the scale
+	  the walker has no use for. A ``2`` closing a unit name is an exponent
+	  (``km2`` is ``km**2``).
+
+	Every rewrite is guarded by a lookbehind for a unit-symbol character, so
+	none of them can fire on a spelling Pint already reads.
 	"""
 	text = text.strip()
 	if text in ("", "1"):
 		return ureg.dimensionless
-	return ureg.parse_units(text.replace("m3", "m**3").replace(".", "*"))
+	text = text.replace("m3", "m**3")
+	text = re.sub(r"(?<=[a-z])2(?![0-9*.])", "**2", text)
+	text = re.sub(r"/\s*\d+(?:\.\d+)?(?=[A-Za-z])", "/", text)
+	text = re.sub(r"(?<=[A-Za-z0-9*\]])\s*-\s*(?=[A-Za-z])", "*", text)
+	text = re.sub(r"(?<=[A-Za-z0-9\]])\s+(?=[A-Za-z])", "*", text)
+	return ureg.parse_units(text.replace(".", "*"))
 
 
 def unit_of(expression: Expr, graph: ParameterGraph) -> Unit | None:
