@@ -3,6 +3,27 @@
 #
 # Repairs applied to the batch as delivered:
 #   R3: dropped rule 'ppa_indexed_price_doubles' -- its condition needs arithmetic, which the cross-validation grammar refuses: ppa_indexed_price_usd_per_mwh > 3 * ppa_price_usd_per_mwh
+#   R19: 'lolp_definition' recalibrated. It read `exp(-10 * m)`, and at the default
+#        `reserve_margin_min = 0.15` that returns lolp = 0.2231 -- a loss-of-load of
+#        one hour in 4.5 -- which puts LOLE at 1954.6 h/yr, 81x the 24 h/yr ceiling
+#        this same batch's `lole_exceeds_days` rule enforces and outside the node's
+#        own declared range [0, 500]. The batch's prose claimed the decay constant
+#        was "set so a margin equal to the required minimum gives a LOLP near the
+#        regulatory ceiling of 1 in 100 hours"; 10 does not do that, and nothing
+#        compared the claim to the curve it describes. Recalibrated to the graph's
+#        own reliability rule instead: `(24 / 8760) ** (m / 0.15)` is pinned to
+#        lolp = 24/8760 at m = 0.15, so LOLE = 24 h/yr exactly at the required
+#        minimum margin. A base in [0, 1] to a non-negative power is in [0, 1], so
+#        the node's range is now a property of the form for every value set.
+#   R20: 'fuel_diversity_definition' denominator corrected from `total_capacity_mw`
+#        to the sum of the seven fuels it indexes. An HHI divides by the total of
+#        the shares it is taken over, and the two are different parameters free to
+#        disagree: at the shipped defaults the seven sum to 63000 MW while
+#        `total_capacity_mw` is 10000 MW, so the index returned 1 - 8.39 = -7.39
+#        against a declared range of [0, 1]. With the seven's own total the shares
+#        sum to 1 by construction and Cauchy-Schwarz bounds the index in [0, 1] for
+#        every value set. The `total_capacity_mw -> fuel_diversity_index` edge was
+#        dropped with it: the equation no longer holds that endpoint (gate 6).
 parameters:
   system_inertia_mws:
     name: System inertia
@@ -282,13 +303,23 @@ equations:
   lolp_definition:
     name: Loss of load probability
     description: 'The LOLP as an exponential in the reserve margin. A standard first-order approximation
-      when the graph carries no forced-outage distribution: the LOLP falls off exponentially with margin,
-      and the decay constant is set so a margin equal to the required minimum gives a LOLP near the regulatory
-      ceiling of 1 in 100 hours. The 10 is the decay, not a physical constant. Dimensional check: exp(dimensionless)
-      is dimensionless.'
+      when the graph carries no forced-outage distribution: the LOLP falls off exponentially with margin.
+      The decay is CALIBRATED to this graph''s own reliability rules, not chosen: `lole_exceeds_days`
+      (Batch 6) flags a loss-of-load expectation above one day per year, and 24 hours / 8760 hours
+      is a LOLP of 24/8760, so the curve is pinned to pass through `lolp = 24/8760` at the required
+      minimum margin `reserve_margin_min = 0.15`. Written as `(24/8760) ** (m / 0.15)` that is exact
+      at the pin and stays inside [0, 1] for every m >= 0, because a base in [0, 1] raised to a non-negative
+      power is in [0, 1] — the range is a property of the form. The previous form, `exp(-10 * m)`,
+      was the same family with an uncalibrated constant: at the default m = 0.15 it returned 0.2231,
+      a LOLP of 1 hour in 4.5, which put LOLE at 1954.6 h/yr — 81x the batch''s own 24 h/yr ceiling
+      and outside the node''s declared range of [0, 500]. The batch''s prose said the constant was
+      "set so a margin equal to the required minimum gives a LOLP near the regulatory ceiling of 1
+      in 100 hours"; 10 does not do that (it gives 0.2231, not 0.01), and the arithmetic never named
+      `reserve_margin_min`''s default, so the claim was never checked against the curve it describes.
+      Dimensional check: dimensionless raised to a dimensionless power is dimensionless.'
     system: reliability
     lhs: lolp
-    rhs: exp((0 - 10) * reserve_margin_min)
+    rhs: (24 / 8760) ** (reserve_margin_min / 0.15)
     relation: eq
     parameters:
     - reserve_margin_min
@@ -449,11 +480,19 @@ equations:
       as a fraction. Dimensional check: MW squared over MW squared is dimensionless, and one minus it
       is dimensionless. Seven fuels are named explicitly; a technology the graph carries but does not
       list here (marine, hydrogen fuel cell, SMR) is excluded from the sum and the index overstates diversity
-      by its own omission — a finding rather than a mathematical error.'
+      by its own omission — a finding rather than a mathematical error. The denominator is the SUM OF
+      THE SEVEN, not `total_capacity_mw`: an HHI divides by the total of the shares it is taken over,
+      and the two totals are different parameters that are free to disagree. At the shipped defaults
+      the seven sum to 63000 MW while `total_capacity_mw` is 10000 MW, so dividing by the latter gave
+      1 - 8.39 = -7.39, outside the index''s own [0, 1]. Dividing by the seven''s own total makes the
+      sum of the shares exactly 1 by construction, so Cauchy-Schwarz bounds the index in [0, 1] for
+      every value set — the range is then a property of the formula, not a coincidence of the defaults.'
     system: demand_supply
     lhs: fuel_diversity_index
     rhs: 1 - (coal_capacity ** 2 + gas_capacity ** 2 + oil_capacity ** 2 + nuclear_capacity ** 2 + hydro_capacity
-      ** 2 + solar_pv_capacity ** 2 + wind_onshore_capacity ** 2) / (total_capacity_mw ** 2)
+      ** 2 + solar_pv_capacity ** 2 + wind_onshore_capacity ** 2) / ((coal_capacity + gas_capacity
+      + oil_capacity + nuclear_capacity + hydro_capacity + solar_pv_capacity + wind_onshore_capacity)
+      ** 2)
     relation: eq
     parameters:
     - coal_capacity
@@ -463,7 +502,6 @@ equations:
     - hydro_capacity
     - solar_pv_capacity
     - wind_onshore_capacity
-    - total_capacity_mw
     free_variables:
     - coal_capacity
     - gas_capacity
@@ -472,7 +510,6 @@ equations:
     - hydro_capacity
     - solar_pv_capacity
     - wind_onshore_capacity
-    - total_capacity_mw
     determined_variables:
     - fuel_diversity_index
     tolerance: 1.0e-09
@@ -737,14 +774,6 @@ relationships:
   direction: forward
   strength: hard
   description: Wind is the seventh.
-  priority: P2
-- source: total_capacity_mw
-  target: fuel_diversity_index
-  equation_id: fuel_diversity_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: The total is the denominator.
   priority: P2
 - source: firm_capacity_mw
   target: reserve_margin_actual

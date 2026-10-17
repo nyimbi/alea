@@ -18,6 +18,14 @@
 #   R3: dropped rule 'lcoe_solar_and_wind_disagree' -- its condition needs a function call, which the cross-validation grammar refuses: abs(lcoe_solar_usd_per_mwh - lcoe_wind_usd_per_mwh) > 200 and lcoe_solar_usd_per_mwh > 0 and lcoe_wind_usd_per_mwh > 0
 #   R10: lcoe_solar_definition was cited at ['hard', 'soft']; every edge citing it set to strength='soft', because the strength is a property of the equation
 #   R10: lcoe_wind_definition was cited at ['hard', 'soft']; every edge citing it set to strength='soft', because the strength is a property of the equation
+#   R22: rule 'discount_rate_gearing_interaction' threshold corrected from
+#        `gearing_ratio > 0.8` to `> 4.0`. The rule's own message reads "gearing
+#        above 80%", which is the debt FRACTION, but `gearing_ratio` is a multiple
+#        of equity (`debt_fraction / (1 - debt_fraction)`) and Batch 0 corrected
+#        its range to the image [0, 19] (R21). Under the multiple reading a
+#        threshold of 0.8 fires at a debt fraction of 0.444 -- a gearing of 44%,
+#        not 80% -- so the rule would have warned on ordinary capital structures.
+#        80% debt is a multiple of 4.0.
 parameters:
   capex_solar_pv:
     name: Solar PV capital cost
@@ -1399,10 +1407,10 @@ cross_validation:
     project has cost
   suggestion: Confirm the unit is USD/MW-km and not USD/km
 - id: discount_rate_gearing_interaction
-  condition: discount_rate > 0.20 and gearing_ratio > 0.8
+  condition: discount_rate > 0.20 and gearing_ratio > 4.0
   severity: warning
-  message: A discount rate above 20% with gearing above 80% is a financing structure that prices equity
-    as if it were mezzanine debt
+  message: A discount rate above 20% with gearing above 4.0 (a debt fraction above 80%) is a financing
+    structure that prices equity as if it were mezzanine debt
   suggestion: Reconcile discount_rate with the WACC identity in wacc_definition
 - id: carbon_tax_rate_units
   condition: carbon_tax_rate > 5 and carbon_tax_rate < 0.5

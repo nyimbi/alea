@@ -18,6 +18,14 @@
 #   R9: dropped edge carbon_revenue_usd_per_year -> carbon_budget_ratio -- 'carbon_budget_ratio_definition' does not hold both endpoints (gate 6)
 #   R9: dropped edge system_saidi_hours_per_year -> grid_reliability_target -- 'saidi_definition' does not hold both endpoints (gate 6)
 #   R9: dropped edge system_saifi_events_per_year -> grid_reliability_saifi -- 'saifi_definition' does not hold both endpoints (gate 6)
+#   R21: 'gearing_ratio' range corrected from [0, 0.95] to [0, 19]. The node is
+#        `debt_fraction / (1 - debt_fraction)`, a multiple of equity, and [0, 0.95]
+#        is `debt_fraction`'s bound, not this node's -- the same confusion the
+#        description above records for the prose, left standing in the range. The
+#        image of the driver's own range [0, 0.95] is [0, 19], and at the default
+#        debt_fraction = 0.7 the ratio is 2.3333, which the old range refused: the
+#        node was declared out of range at its own default. The bound is derived
+#        from the definition, so it moves if `debt_fraction`'s range moves.
 parameters:
   gdp_growth_rate:
     name: GDP growth rate
@@ -185,13 +193,19 @@ parameters:
       gearing_ratio_definition. The description here previously read "debt as a fraction of total
       capitalisation", which is the debt fraction and not the gearing ratio -- the two differ by the
       factor 1/(1 - debt_fraction), so a scenario reading one for the other was out by 3.3x at the
-      default.'
+      default. The range was corrected for the same reason and is the larger half of the same error:
+      it read [0, 0.95], which is `debt_fraction`''s bound and not this node''s. A multiple of equity
+      is unbounded above as the debt fraction approaches 1, and over the driver''s own range [0, 0.95]
+      the image is [0, 19]. At the default debt_fraction = 0.7 the ratio is 2.3333, which the old
+      range refused -- the node was declared out of range at its own default. The bound is the image
+      of `debt_fraction`''s range under the definition, so it is derived rather than chosen; if that
+      range moves, this one moves with it.'
     category: Investment & Finance
     type: float
     unit: '1'
     range:
     - 0.0
-    - 0.95
+    - 19.0
     role: derived
     determinism: fixed
     priority: P1

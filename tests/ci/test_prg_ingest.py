@@ -634,3 +634,170 @@ def test_the_ingested_graph_is_one_default_short_of_a_runnable_scenario():
 	assert len(scalars) == len(values)
 
 
+
+
+def test_the_ingested_graph_is_consistent_at_its_own_defaults():
+	"""The whole batch set, evaluated at the defaults it declares.
+
+	This is the assertion the other integration tests stop short of: the merge
+	can be clean, the graph strictly larger, and the graph still *unevaluable*.
+	It was -- `mtbf_from_failure_rate_definition` computed MTBF from a variable
+	`availability_definition` computes from MTBF, so the derived subgraph was
+	cyclic and every `check_scenario` raised `CycleError ... form a cycle and
+	have no evaluation order`, at any value set. A clean merge was silent about
+	it because a cycle is a property of the edges, not of the fragments.
+
+	The value set supplies the three nodes no fragment gives a default (see the
+	test above); everything else comes from the graph.
+	"""
+	graph, _ = load_ingested(default_ingest_dir())
+	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	values.update({"market_model": 1.0, "market_structure": 1.0, "smart_metering_rollout": 0.0})
+
+	# Must not raise. A cycle raises here, and so does a missing node.
+	result = graph.propagate(values)
+	assert len(result.values) == len(graph.nodes)
+
+	report = check_scenario(values, graph)
+	assert report.violations == (), report.violations
+	assert not report.excursions, report.excursions  # a mapping, empty when clean
+	assert report.cross_validation.violations == (), report.cross_validation.violations
+
+
+def test_a_derived_node_is_not_declared_out_of_range_at_its_own_default():
+	"""Three derived nodes were, and each for a different reason.
+
+	Pinned separately from the consistency test because the mechanism differs
+	and a future batch could reintroduce any one of them without a cycle:
+
+	* `fuel_diversity_index` -- the HHI divided by `total_capacity_mw` instead
+	  of the sum of the seven fuels it indexes. Two parameters free to disagree;
+	  at the shipped defaults they differ by 6.3x, giving 1 - 8.39 = -7.39.
+	* `gearing_ratio` -- the range was `debt_fraction`'s [0, 0.95], but the node
+	  is `debt_fraction / (1 - debt_fraction)`, whose image over that range is
+	  [0, 19]. The default debt fraction of 0.7 gives 2.3333, which the declared
+	  range refused.
+	* `lole_hours_per_year` -- `exp(-10 * m)` at the default m = 0.15 gives a
+	  LOLP of 0.2231, so 1954.6 h/yr against a declared ceiling of 500 and 81x
+	  the 24 h/yr the batch's own `lole_exceeds_days` rule enforces.
+
+	Each is asserted at the value the graph derives, so the test fails on the
+	*arithmetic* and not only on the range: a range widened to hide a wrong
+	value would still be caught by the expected magnitudes.
+	"""
+	graph, _ = load_ingested(default_ingest_dir())
+	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	values.update({"market_model": 1.0, "market_structure": 1.0, "smart_metering_rollout": 0.0})
+	derived = graph.propagate(values).values
+
+	# The HHI is over the seven named fuels, so their shares sum to 1 by
+	# construction and the index is in [0, 1] for every value set.
+	fuels = [
+		"coal_capacity", "gas_capacity", "oil_capacity", "nuclear_capacity",
+		"hydro_capacity", "solar_pv_capacity", "wind_onshore_capacity",
+	]
+	shares = [derived[f] for f in fuels]
+	total = sum(shares)
+	hhi = sum(s * s for s in shares) / (total * total)
+	assert 0.0 <= hhi <= 1.0
+	assert derived["fuel_diversity_index"] == pytest.approx(1.0 - hhi)
+	assert 0.0 <= derived["fuel_diversity_index"] <= 1.0
+
+	# The gearing ratio is the image of the debt fraction, so it is checked
+	# against the fraction the graph actually carries rather than a literal.
+	debt_fraction = derived["debt_fraction"]
+	assert derived["gearing_ratio"] == pytest.approx(debt_fraction / (1.0 - debt_fraction))
+	# Asserted against the node's own declared range, not against a literal:
+	# the defect was the range, so a predicate that only read the value would
+	# pass with the range restored to the debt fraction's bound. The range must
+	# contain the image of the driver's range, of which this value is one point.
+	node = graph.nodes["gearing_ratio"]
+	assert node.range is not None
+	assert node.range[0] <= derived["gearing_ratio"] <= node.range[1], (
+		f"gearing_ratio {derived['gearing_ratio']} is outside its declared "
+		f"range {node.range}"
+	)
+	driver = graph.nodes["debt_fraction"].range
+	assert driver is not None
+	assert node.range[1] >= driver[1] / (1.0 - driver[1]), (
+		"the declared range does not cover the image of debt_fraction's range"
+	)
+
+	# The LOLP is pinned to the graph's own reliability rule: a margin at the
+	# required minimum gives LOLE = 24 h/yr, one day per year.
+	assert derived["lole_hours_per_year"] == pytest.approx(24.0)
+	assert derived["lolp"] == pytest.approx(24.0 / 8760.0)
+
+
+def test_the_gearing_rule_threshold_is_a_multiple_not_a_fraction():
+	"""The rule's message said "80%" and its condition tested the fraction.
+
+	`gearing_ratio` is a multiple of equity, so 80% debt is a multiple of 4.0,
+	not 0.8. With the old threshold the rule fired at a debt fraction of 0.444
+	-- an ordinary capital structure -- while claiming to flag 80%. This canaries
+	both sides of the corrected threshold: it must fire above 4.0 and stay silent
+	at 3.9, so a threshold that drifted back to a fraction reading fails here.
+	"""
+	graph, _ = load_ingested(default_ingest_dir())
+	base = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	base.update({"market_model": 1.0, "market_structure": 1.0, "smart_metering_rollout": 0.0})
+	base["discount_rate"] = 0.25  # above the rule's other threshold
+
+	def fires(gearing: float) -> bool:
+		report = graph.cross_validate({**base, "gearing_ratio": gearing})
+		return any(f.rule.id == "discount_rate_gearing_interaction" for f in report.violations)
+
+	assert fires(4.1), "the rule must fire above a debt fraction of 80%"
+	assert not fires(3.9), "3.9 is a debt fraction of 0.796 -- below the threshold"
+	assert not fires(2.3333), "the default gearing is an ordinary structure"
+
+
+def test_the_consistency_gate_refuses_the_three_defects_it_pins():
+	"""Canary each repair by planting the defect back into its own fragment.
+
+	Three mutations, each disjoint from what its predicate reads, so a pass is
+	evidence the predicate reached the fragment and not that the edit missed:
+
+	* the fuel-diversity denominator -- restored to `total_capacity_mw`, which
+	  is a *different parameter*, not a different spelling of the same sum;
+	* the gearing range -- restored to `[0, 0.95]`, a bound the derived value
+	  2.3333 exceeds;
+	* the LOLP decay -- restored to the literal 10, whose value at m = 0.15 is
+	  0.2231 rather than the calibrated 24/8760.
+
+	Each is planted one at a time and the gate re-run, so a mutation that fails
+	to apply cannot pass for a predicate that works. The file is restored from
+	the harness's in-memory bytes under a lock.
+	"""
+	from tests.ci.canaries import REPO, planted, probe_exit_code
+
+	node = "tests/ci/test_prg_ingest.py::test_a_derived_node_is_not_declared_out_of_range_at_its_own_default"
+	program = (
+		"import sys\n"
+		"import pytest\n\n"
+		f"sys.exit(pytest.main(['-q', '-p', 'no:randomly', {node!r}]))\n"
+	)
+	assert probe_exit_code(program) == 0, "the gate was already failing"
+
+	fragment6 = REPO / "config" / "prg_ingest" / "param_batch6.yaml"
+	fragment0 = REPO / "config" / "prg_ingest" / "param_batch0.yaml"
+
+	# The denominator, restored to the parameter it used to be.
+	denom_ok = "      ** 2)\n    relation: eq\n    parameters:\n    - coal_capacity"
+	denom_bad = "      ** 2) / (total_capacity_mw ** 2)\n    relation: eq\n    parameters:\n    - coal_capacity"
+	with planted(fragment6, denom_ok, denom_bad):
+		assert probe_exit_code(program) != 0, "the fuel-diversity denominator is unguarded"
+
+	# The gearing range, restored to the debt fraction's bound.
+	range_ok = "    - 0.0\n    - 19.0\n    role: derived"
+	range_bad = "    - 0.0\n    - 0.95\n    role: derived"
+	with planted(fragment0, range_ok, range_bad):
+		assert probe_exit_code(program) != 0, "the gearing range is unguarded"
+
+	# The decay constant, restored to the uncalibrated literal.
+	decay_ok = "    rhs: (24 / 8760) ** (reserve_margin_min / 0.15)"
+	decay_bad = "    rhs: exp((0 - 10) * reserve_margin_min)"
+	with planted(fragment6, decay_ok, decay_bad):
+		assert probe_exit_code(program) != 0, "the LOLP calibration is unguarded"
+
+	assert probe_exit_code(program) == 0, "the gate did not recover"
