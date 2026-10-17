@@ -1,0 +1,1868 @@
+parameters:
+  solar_pv_cost:
+    name: Solar PV capital cost (legacy)
+    description: Solar PV capital cost (legacy) -- one of two ids for the quantity `capex_solar_pv` carries;
+      corrected to the same value by the earlier batches and resolved here by an equality, so the graph
+      answers the question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kW
+    range:
+    - 300.0
+    - 3000.0
+    initial: null
+    role: derived
+    determinism: stochastic
+    categories: []
+    source: IRENA, Renewable Power Generation Costs in 2023
+    source_url: null
+    users:
+    - All
+    priority: P1
+    status: existing
+    deprecated_by: null
+  wind_onshore_cost:
+    name: Onshore wind capital cost (legacy)
+    description: Onshore wind capital cost (legacy) -- one of two ids for the quantity `capex_wind_onshore`
+      carries; corrected to the same value by the earlier batches and resolved here by an equality, so
+      the graph answers the question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kW
+    range:
+    - 800.0
+    - 3500.0
+    initial: null
+    role: derived
+    determinism: stochastic
+    categories: []
+    source: IRENA, Renewable Power Generation Costs in 2023
+    source_url: null
+    users:
+    - All
+    priority: P1
+    status: existing
+    deprecated_by: null
+  wind_offshore_cost:
+    name: Offshore wind capital cost (legacy)
+    description: Offshore wind capital cost (legacy) -- one of two ids for the quantity `capex_wind_offshore`
+      carries; corrected to the same value by the earlier batches and resolved here by an equality, so
+      the graph answers the question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kW
+    range:
+    - 1500.0
+    - 6000.0
+    initial: null
+    role: derived
+    determinism: stochastic
+    categories: []
+    source: IRENA, Renewable Power Generation Costs in 2023
+    source_url: null
+    users:
+    - Developers
+    priority: P2
+    status: existing
+    deprecated_by: null
+  battery_cost:
+    name: Battery capital cost (legacy)
+    description: Battery capital cost (legacy) -- one of two ids for the quantity `capex_battery` carries;
+      corrected to the same value by the earlier batches and resolved here by an equality, so the graph
+      answers the question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kWh
+    range:
+    - 100.0
+    - 800.0
+    initial: null
+    role: derived
+    determinism: stochastic
+    categories: []
+    source: BNEF Battery Price Survey 2024
+    source_url: null
+    users:
+    - All
+    priority: P1
+    status: existing
+    deprecated_by: null
+  phs_cost:
+    name: Pumped hydro capital cost (legacy)
+    description: Pumped hydro capital cost (legacy) -- one of two ids for the quantity `capex_phs` carries;
+      corrected to the same value by the earlier batches and resolved here by an equality, so the graph
+      answers the question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kW
+    range:
+    - 1000.0
+    - 5000.0
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: IEA, Projected Costs of Generating Electricity 2020
+    source_url: null
+    users:
+    - Utilities
+    priority: P2
+    status: existing
+    deprecated_by: null
+  geothermal_cost:
+    name: Geothermal capital cost (legacy)
+    description: Geothermal capital cost (legacy) -- one of two ids for the quantity `capex_geothermal`
+      carries; corrected to the same value by the earlier batches and resolved here by an equality, so
+      the graph answers the question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kW
+    range:
+    - 2000.0
+    - 8000.0
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: IRENA, Renewable Power Generation Costs in 2023
+    source_url: null
+    users:
+    - Developers
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  electrolyser_cost:
+    name: Electrolyser capital cost (legacy)
+    description: Electrolyser capital cost (legacy) -- one of two ids for the quantity `capex_hydrogen_electrolyser`
+      carries; corrected to the same value by the earlier batches and resolved here by an equality, so
+      the graph answers the question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kW
+    range:
+    - 300.0
+    - 2000.0
+    initial: null
+    role: derived
+    determinism: stochastic
+    categories: []
+    source: IEA Global Hydrogen Review 2024
+    source_url: null
+    users:
+    - Industry
+    priority: P2
+    status: existing
+    deprecated_by: null
+  wave_energy_converter_cost:
+    name: Wave energy converter cost
+    description: Wave energy converter cost -- one of two ids for the quantity `capex_marine_wave` carries;
+      corrected to the same value by the earlier batches and resolved here by an equality, so the graph
+      answers the question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kW
+    range:
+    - 2000.0
+    - 12000.0
+    initial: null
+    role: derived
+    determinism: stochastic
+    categories: []
+    source: IRENA, Ocean Energy 2023
+    source_url: null
+    users:
+    - Developers
+    priority: P3
+    status: to_build
+    deprecated_by: null
+  small_modular_reactor_cost:
+    name: SMR capital cost
+    description: SMR capital cost -- one of two ids for the quantity `capex_smr` carries; corrected to
+      the same value by the earlier batches and resolved here by an equality, so the graph answers the
+      question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kW
+    range:
+    - 3000.0
+    - 12000.0
+    initial: null
+    role: derived
+    determinism: stochastic
+    categories: []
+    source: IEA Nuclear Power and Secure Energy Transitions
+    source_url: null
+    users:
+    - Planners
+    priority: P3
+    status: to_build
+    deprecated_by: null
+  fusion_cost:
+    name: Fusion capital cost
+    description: Fusion capital cost -- one of two ids for the quantity `capex_fusion` carries; corrected
+      to the same value by the earlier batches and resolved here by an equality, so the graph answers
+      the question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kW
+    range:
+    - 5000.0
+    - 25000.0
+    initial: null
+    role: derived
+    determinism: stochastic
+    categories: []
+    source: Projected from ITER cost extrapolation, marked speculative
+    source_url: null
+    users:
+    - Planners
+    priority: P3
+    status: to_build
+    deprecated_by: null
+  compressed_air_cost:
+    name: CAES capital cost
+    description: CAES capital cost -- one of two ids for the quantity `capex_caes` carries; corrected
+      to the same value by the earlier batches and resolved here by an equality, so the graph answers
+      the question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kWh
+    range:
+    - 50.0
+    - 800.0
+    initial: null
+    role: derived
+    determinism: stochastic
+    categories: []
+    source: IEA Energy Storage Outlook
+    source_url: null
+    users:
+    - Developers
+    priority: P3
+    status: to_build
+    deprecated_by: null
+  flywheel_cost:
+    name: Flywheel capital cost
+    description: Flywheel capital cost -- one of two ids for the quantity `capex_flywheel` carries; corrected
+      to the same value by the earlier batches and resolved here by an equality, so the graph answers
+      the question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kW
+    range:
+    - 200.0
+    - 2000.0
+    initial: null
+    role: derived
+    determinism: stochastic
+    categories: []
+    source: NREL ATB 2024
+    source_url: null
+    users:
+    - Developers
+    priority: P3
+    status: to_build
+    deprecated_by: null
+  hydrogen_fuel_cell_cost:
+    name: Hydrogen fuel cell capital cost
+    description: Hydrogen fuel cell capital cost -- one of two ids for the quantity `capex_hydrogen_fuel_cell`
+      carries; corrected to the same value by the earlier batches and resolved here by an equality, so
+      the graph answers the question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kW
+    range:
+    - 500.0
+    - 5000.0
+    initial: null
+    role: derived
+    determinism: stochastic
+    categories: []
+    source: IEA Global Hydrogen Review 2024
+    source_url: null
+    users:
+    - Industry
+    priority: P2
+    status: to_build
+    deprecated_by: null
+  tidal_range_cost:
+    name: Tidal range capital cost
+    description: Tidal range capital cost -- one of two ids for the quantity `capex_tidal_range` carries;
+      corrected to the same value by the earlier batches and resolved here by an equality, so the graph
+      answers the question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kW
+    range:
+    - 3000.0
+    - 15000.0
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: IRENA, Ocean Energy 2023
+    source_url: null
+    users:
+    - Developers
+    priority: P3
+    status: to_build
+    deprecated_by: null
+  salinity_gradient_cost:
+    name: Salinity gradient capital cost
+    description: Salinity gradient capital cost -- one of two ids for the quantity `capex_salinity_gradient`
+      carries; corrected to the same value by the earlier batches and resolved here by an equality, so
+      the graph answers the question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kW
+    range:
+    - 5000.0
+    - 20000.0
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: IRENA, Ocean Energy 2023
+    source_url: null
+    users:
+    - Developers
+    priority: P3
+    status: to_build
+    deprecated_by: null
+  biogas_cost:
+    name: Biogas plant capital cost
+    description: Biogas plant capital cost -- one of two ids for the quantity `capex_biogas` carries;
+      corrected to the same value by the earlier batches and resolved here by an equality, so the graph
+      answers the question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kW
+    range:
+    - 1500.0
+    - 6000.0
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: IRENA bioenergy cost data
+    source_url: null
+    users:
+    - Agriculture
+    priority: P2
+    status: to_build
+    deprecated_by: null
+  landfill_gas_cost:
+    name: Landfill gas plant capital cost
+    description: Landfill gas plant capital cost -- one of two ids for the quantity `capex_landfill_gas`
+      carries; corrected to the same value by the earlier batches and resolved here by an equality, so
+      the graph answers the question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kW
+    range:
+    - 1000.0
+    - 4000.0
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: IRENA bioenergy cost data
+    source_url: null
+    users:
+    - Cities
+    priority: P2
+    status: to_build
+    deprecated_by: null
+  waste_to_energy_cost:
+    name: Waste-to-energy plant capital cost
+    description: Waste-to-energy plant capital cost -- one of two ids for the quantity `capex_waste_to_energy`
+      carries; corrected to the same value by the earlier batches and resolved here by an equality, so
+      the graph answers the question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kW
+    range:
+    - 3000.0
+    - 10000.0
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: IRENA bioenergy cost data
+    source_url: null
+    users:
+    - Cities
+    priority: P2
+    status: to_build
+    deprecated_by: null
+  pyrolysis_cost:
+    name: Pyrolysis plant capital cost
+    description: Pyrolysis plant capital cost -- one of two ids for the quantity `capex_pyrolysis` carries;
+      corrected to the same value by the earlier batches and resolved here by an equality, so the graph
+      answers the question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kW
+    range:
+    - 800.0
+    - 4000.0
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: IRENA bioenergy cost data
+    source_url: null
+    users:
+    - Industry
+    priority: P3
+    status: to_build
+    deprecated_by: null
+  gasification_cost:
+    name: Gasification plant capital cost
+    description: Gasification plant capital cost -- one of two ids for the quantity `capex_gasification`
+      carries; corrected to the same value by the earlier batches and resolved here by an equality, so
+      the graph answers the question one way and the label a report may cite keeps an id.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kW
+    range:
+    - 1500.0
+    - 6000.0
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: IRENA bioenergy cost data
+    source_url: null
+    users:
+    - Industry
+    priority: P3
+    status: to_build
+    deprecated_by: null
+  lifeline_tariff:
+    name: Lifeline tariff
+    description: Lifeline tariff -- one of two ids for the quantity `lifeline_tariff_usd_per_mwh` carries;
+      corrected to the same value by the earlier batches and resolved here by an equality, so the graph
+      answers the question one way and the label a report may cite keeps an id.
+    category: Consumer
+    subcategory: null
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 1000000.0
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  disability_inclusion:
+    name: Disability inclusion
+    description: Disability inclusion -- one of two ids for the quantity `disability_inclusion_share`
+      carries; corrected to the same value by the earlier batches and resolved here by an equality, so
+      the graph answers the question one way and the label a report may cite keeps an id.
+    category: JustTrans
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1000000.0
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Policymakers
+    priority: P3
+    status: to_build
+    deprecated_by: null
+  property_tax:
+    name: Property tax
+    description: 'Property tax, computed: the rate applied to regulatory_asset_base. A rate has to land
+      on a base to be a cost, and the base the graph carries is the fleet''s own.'
+    category: Tax
+    subcategory: null
+    type: float
+    unit: USD million
+    range:
+    - 0.0
+    - 1000000.0
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Developers
+    priority: P2
+    status: to_build
+    deprecated_by: null
+  investment_allowance:
+    name: Investment allowance
+    description: 'Investment allowance, computed: the rate applied to capex_usd_per_kw. A rate has to
+      land on a base to be a cost, and the base the graph carries is the fleet''s own.'
+    category: Tax
+    subcategory: null
+    type: float
+    unit: USD/kW
+    range:
+    - 0.0
+    - 1000000.0
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Developers
+    priority: P2
+    status: to_build
+    deprecated_by: null
+  indirect_employment_multiplier:
+    name: Indirect employment multiplier
+    description: 'Supply-chain multiplier on the direct jobs: purchases, haulage, feeds and services the
+      construction and fleet spending generates. Input-output employment multipliers; the range states
+      the empirical band, 1.0 a bare pass-through.'
+    category: Employment
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 3.0
+    default: 1.2
+    role: free
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: Leontief input-output employment multipliers
+    users:
+    - Planners
+  induced_employment_multiplier:
+    name: Induced employment multiplier
+    description: 'Consumption multiplier: jobs from worker spending, the second round of the Leontief
+      demand-pull. Usually below the indirect one and above zero.'
+    category: Employment
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 3.0
+    default: 0.7
+    role: free
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: Leontief input-output employment multipliers
+    users:
+    - Planners
+  indirect_jobs:
+    name: Indirect jobs
+    description: 'Indirect jobs: the indirect employment the input-output method derives from the direct
+      jobs the fleet construction and O&M support. Was a 50-million-node placeholder -- a number with
+      no fleet behind it.'
+    category: JustTrans
+    subcategory: null
+    type: float
+    unit: jobs
+    range:
+    - 0.0
+    - 100000000.0
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Policymakers
+    priority: P2
+    status: integrate
+    deprecated_by: null
+  induced_jobs:
+    name: Induced jobs
+    description: 'Induced jobs: the induced employment the input-output method derives from the direct
+      jobs the fleet construction and O&M support. Was a 50-million-node placeholder -- a number with
+      no fleet behind it.'
+    category: JustTrans
+    subcategory: null
+    type: float
+    unit: jobs
+    range:
+    - 0.0
+    - 100000000.0
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Policymakers
+    priority: P2
+    status: integrate
+    deprecated_by: null
+  women_jobs:
+    name: Women jobs
+    description: Jobs in women group, at the composition share the employment programme targets. Derived
+      from the direct jobs the fleet supports.
+    category: Employment
+    type: float
+    unit: jobs
+    range:
+    - 0.0
+    - 10000000.0
+    role: derived
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: Composition targets stated by the local employment policy
+    users:
+    - Planners
+  youth_jobs:
+    name: Youth jobs
+    description: Jobs in youth group, at the composition share the employment programme targets. Derived
+      from the direct jobs the fleet supports.
+    category: Employment
+    type: float
+    unit: jobs
+    range:
+    - 0.0
+    - 10000000.0
+    role: derived
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: Composition targets stated by the local employment policy
+    users:
+    - Planners
+  locally_sourced_jobs:
+    name: Locally sourced jobs
+    description: Jobs in locally group, at the composition share the employment programme targets. Derived
+      from the direct jobs the fleet supports.
+    category: Employment
+    type: float
+    unit: jobs
+    range:
+    - 0.0
+    - 10000000.0
+    role: derived
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: Composition targets stated by the local employment policy
+    users:
+    - Planners
+equations:
+  wacc_alias:
+    id: wacc_alias
+    name: WACC is the discount rate
+    description: The catalog's WACC row and the financial block's discount rate are one quantity, so the
+      duplicate derives from the computed one and the graph keeps a single blend. An equality between
+      two ids for one number is the closure that keeps a scenario setting either name consistent; the
+      alternative -- deprecating the id -- loses the label a report may cite.
+    system: financial
+    lhs: weighted_average_cost_of_capital
+    rhs: discount_rate
+    relation: eq
+    parameters:
+    - weighted_average_cost_of_capital
+    - discount_rate
+    free_variables:
+    - discount_rate
+    determined_variables:
+    - weighted_average_cost_of_capital
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Standard WACC with the interest tax shield
+    latex: \mathrm{WACC} = \mathrm{discount\_rate}
+  regulatory_asset_base_definition:
+    id: regulatory_asset_base_definition
+    name: Regulated asset base from the fleet
+    description: Gross fleet capital less what the books have written down. The gross capital is the capacity-weighted
+      capex; the 1000 converts kW-per-MW and the million converts USD. A fraction the regulator's roll-forward
+      states, not one the model invents.
+    system: financial
+    lhs: regulatory_asset_base
+    rhs: capex_usd_per_kw * total_capacity_mw * (1 - accumulated_depreciation_fraction) / 1000
+    relation: eq
+    parameters:
+    - regulatory_asset_base
+    - capex_usd_per_kw
+    - total_capacity_mw
+    - accumulated_depreciation_fraction
+    free_variables:
+    - capex_usd_per_kw
+    - total_capacity_mw
+    - accumulated_depreciation_fraction
+    determined_variables:
+    - regulatory_asset_base
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Ofwat PR24 Appendix 11, allowed return on capital
+    latex: \mathrm{RAB} = \mathrm{capex} \cdot C_{MW} \cdot 10^3 \cdot (1 - d_{acc}) \, /\, 10^6
+  regulatory_depreciation_definition:
+    id: regulatory_depreciation_definition
+    name: Regulatory depreciation
+    description: Straight-line write-down of the asset base over the regulatory asset life. The rate-of-return
+      revenue requirement's first term; the second is the return on the base below.
+    system: financial
+    lhs: regulatory_depreciation
+    rhs: regulatory_asset_base / depreciation_life_by_asset
+    relation: eq
+    parameters:
+    - regulatory_depreciation
+    - regulatory_asset_base
+    - depreciation_life_by_asset
+    free_variables:
+    - depreciation_life_by_asset
+    determined_variables:
+    - regulatory_depreciation
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Ofwat PR24 Appendix 11, allowed return on capital
+    latex: D_{reg} = \mathrm{RAB} / L_{reg}
+  allowed_revenue_requirement_definition:
+    id: allowed_revenue_requirement_definition
+    name: Allowed revenue requirement
+    description: Depreciation plus the allowed return on the base, with that return taken as the blend
+      the financial block computes -- the vanilla regulatory WACC the UKRN guidance builds. A tariff that
+      recovers less than this under-recovers the utility; the revenue cap and the applied tariff are the
+      instruments around it.
+    system: financial
+    lhs: allowed_revenue_requirement
+    rhs: regulatory_depreciation + regulatory_asset_base * discount_rate
+    relation: eq
+    parameters:
+    - allowed_revenue_requirement
+    - regulatory_depreciation
+    - regulatory_asset_base
+    - discount_rate
+    free_variables:
+    - regulatory_depreciation
+    - regulatory_asset_base
+    determined_variables:
+    - allowed_revenue_requirement
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: UKRN cost of capital guidance (2023), §allowed returns
+    latex: R^* = D_{reg} + \mathrm{RAB} \cdot \mathrm{WACC}
+  cost_of_debt_capped:
+    id: cost_of_debt_capped
+    name: Debt cost within the allowed return
+    description: 'The regulator''s debt allowance binds the commercial cost of debt the scenario may assume:
+      a component priced above the allowed return is the pass-through the cap regime forbids, so a scenario
+      carrying it is inadmissible rather than silently under-recovering.'
+    system: financial
+    lhs: cost_of_debt
+    rhs: allowed_return_on_debt
+    relation: leq
+    parameters:
+    - cost_of_debt
+    - allowed_return_on_debt
+    free_variables:
+    - cost_of_debt
+    - allowed_return_on_debt
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: UKRN cost of capital guidance (2023), §overall framework
+    latex: K_d \le A_d
+  cost_of_equity_capped:
+    id: cost_of_equity_capped
+    name: Equity cost within the allowed return
+    description: 'The equity-return allowance binds the cost of equity: the CAPM-estimated return a project
+      demands cannot exceed what the regulatory settlement awards.'
+    system: financial
+    lhs: cost_of_equity
+    rhs: allowed_return_on_equity
+    relation: leq
+    parameters:
+    - cost_of_equity
+    - allowed_return_on_equity
+    free_variables:
+    - cost_of_equity
+    - allowed_return_on_equity
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Ofwat PR24 Appendix 11, allowed return on capital
+    latex: K_e \le A_e
+  applied_tariff_definition:
+    id: applied_tariff_definition
+    name: Applied tariff under the cap
+    description: The revenue cap's multiplier applied to the cost-recovery tariff. A cap below 1.0 withholds
+      part of the revenue requirement -- the incentive instrument a price-control settlement actually
+      sets -- and a cap above 1.0 is a premium the accounts must carry.
+    system: price_demand
+    lhs: applied_tariff_usd_per_mwh
+    rhs: regulated_tariff_usd_per_mwh * revenue_cap
+    relation: eq
+    parameters:
+    - applied_tariff_usd_per_mwh
+    - regulated_tariff_usd_per_mwh
+    - revenue_cap
+    free_variables:
+    - revenue_cap
+    determined_variables:
+    - applied_tariff_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: World Bank Regulation of Utilities handbook, revenue caps
+    latex: p_{applied} = p_{cr} \cdot x_{cap}
+  solar_pv_cost_alias:
+    id: solar_pv_cost_alias
+    name: Solar PV capital cost (legacy) is Solar PV capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `solar_pv_cost`
+      and `capex_solar_pv` are two spellings of one quantity. The equality states it in the graph''s own
+      idiom, so a reader of either id sees the derivation; the drift that made this alias list exist cannot
+      return, because the equation holds at every value set.'
+    system: employment
+    lhs: solar_pv_cost
+    rhs: capex_solar_pv
+    relation: eq
+    parameters:
+    - solar_pv_cost
+    - capex_solar_pv
+    free_variables:
+    - capex_solar_pv
+    determined_variables:
+    - solar_pv_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{solar\_pv\_cost} \equiv \mathrm{capex\_solar\_pv}
+  wind_onshore_cost_alias:
+    id: wind_onshore_cost_alias
+    name: Onshore wind capital cost (legacy) is Onshore wind capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `wind_onshore_cost`
+      and `capex_wind_onshore` are two spellings of one quantity. The equality states it in the graph''s
+      own idiom, so a reader of either id sees the derivation; the drift that made this alias list exist
+      cannot return, because the equation holds at every value set.'
+    system: employment
+    lhs: wind_onshore_cost
+    rhs: capex_wind_onshore
+    relation: eq
+    parameters:
+    - wind_onshore_cost
+    - capex_wind_onshore
+    free_variables:
+    - capex_wind_onshore
+    determined_variables:
+    - wind_onshore_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{wind\_onshore\_cost} \equiv \mathrm{capex\_wind\_onshore}
+  wind_offshore_cost_alias:
+    id: wind_offshore_cost_alias
+    name: Offshore wind capital cost (legacy) is Offshore wind capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `wind_offshore_cost`
+      and `capex_wind_offshore` are two spellings of one quantity. The equality states it in the graph''s
+      own idiom, so a reader of either id sees the derivation; the drift that made this alias list exist
+      cannot return, because the equation holds at every value set.'
+    system: employment
+    lhs: wind_offshore_cost
+    rhs: capex_wind_offshore
+    relation: eq
+    parameters:
+    - wind_offshore_cost
+    - capex_wind_offshore
+    free_variables:
+    - capex_wind_offshore
+    determined_variables:
+    - wind_offshore_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{wind\_offshore\_cost} \equiv \mathrm{capex\_wind\_offshore}
+  battery_cost_alias:
+    id: battery_cost_alias
+    name: Battery capital cost (legacy) is Battery capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `battery_cost`
+      and `capex_battery` are two spellings of one quantity. The equality states it in the graph''s own
+      idiom, so a reader of either id sees the derivation; the drift that made this alias list exist cannot
+      return, because the equation holds at every value set.'
+    system: employment
+    lhs: battery_cost
+    rhs: capex_battery
+    relation: eq
+    parameters:
+    - battery_cost
+    - capex_battery
+    free_variables:
+    - capex_battery
+    determined_variables:
+    - battery_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{battery\_cost} \equiv \mathrm{capex\_battery}
+  phs_cost_alias:
+    id: phs_cost_alias
+    name: Pumped hydro capital cost (legacy) is PHS capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `phs_cost`
+      and `capex_phs` are two spellings of one quantity. The equality states it in the graph''s own idiom,
+      so a reader of either id sees the derivation; the drift that made this alias list exist cannot return,
+      because the equation holds at every value set.'
+    system: employment
+    lhs: phs_cost
+    rhs: capex_phs
+    relation: eq
+    parameters:
+    - phs_cost
+    - capex_phs
+    free_variables:
+    - capex_phs
+    determined_variables:
+    - phs_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{phs\_cost} \equiv \mathrm{capex\_phs}
+  geothermal_cost_alias:
+    id: geothermal_cost_alias
+    name: Geothermal capital cost (legacy) is Geothermal capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `geothermal_cost`
+      and `capex_geothermal` are two spellings of one quantity. The equality states it in the graph''s
+      own idiom, so a reader of either id sees the derivation; the drift that made this alias list exist
+      cannot return, because the equation holds at every value set.'
+    system: employment
+    lhs: geothermal_cost
+    rhs: capex_geothermal
+    relation: eq
+    parameters:
+    - geothermal_cost
+    - capex_geothermal
+    free_variables:
+    - capex_geothermal
+    determined_variables:
+    - geothermal_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{geothermal\_cost} \equiv \mathrm{capex\_geothermal}
+  electrolyser_cost_alias:
+    id: electrolyser_cost_alias
+    name: Electrolyser capital cost (legacy) is Electrolyser capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `electrolyser_cost`
+      and `capex_hydrogen_electrolyser` are two spellings of one quantity. The equality states it in the
+      graph''s own idiom, so a reader of either id sees the derivation; the drift that made this alias
+      list exist cannot return, because the equation holds at every value set.'
+    system: employment
+    lhs: electrolyser_cost
+    rhs: capex_hydrogen_electrolyser
+    relation: eq
+    parameters:
+    - electrolyser_cost
+    - capex_hydrogen_electrolyser
+    free_variables:
+    - capex_hydrogen_electrolyser
+    determined_variables:
+    - electrolyser_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{electrolyser\_cost} \equiv \mathrm{capex\_hydrogen\_electrolyser}
+  wave_energy_converter_cost_alias:
+    id: wave_energy_converter_cost_alias
+    name: Wave energy converter cost is Wave energy capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `wave_energy_converter_cost`
+      and `capex_marine_wave` are two spellings of one quantity. The equality states it in the graph''s
+      own idiom, so a reader of either id sees the derivation; the drift that made this alias list exist
+      cannot return, because the equation holds at every value set.'
+    system: employment
+    lhs: wave_energy_converter_cost
+    rhs: capex_marine_wave
+    relation: eq
+    parameters:
+    - wave_energy_converter_cost
+    - capex_marine_wave
+    free_variables:
+    - capex_marine_wave
+    determined_variables:
+    - wave_energy_converter_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{wave\_energy\_converter\_cost} \equiv \mathrm{capex\_marine\_wave}
+  small_modular_reactor_cost_alias:
+    id: small_modular_reactor_cost_alias
+    name: SMR capital cost is Small modular reactor capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `small_modular_reactor_cost`
+      and `capex_smr` are two spellings of one quantity. The equality states it in the graph''s own idiom,
+      so a reader of either id sees the derivation; the drift that made this alias list exist cannot return,
+      because the equation holds at every value set.'
+    system: employment
+    lhs: small_modular_reactor_cost
+    rhs: capex_smr
+    relation: eq
+    parameters:
+    - small_modular_reactor_cost
+    - capex_smr
+    free_variables:
+    - capex_smr
+    determined_variables:
+    - small_modular_reactor_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{small\_modular\_reactor\_cost} \equiv \mathrm{capex\_smr}
+  fusion_cost_alias:
+    id: fusion_cost_alias
+    name: Fusion capital cost is Fusion capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `fusion_cost`
+      and `capex_fusion` are two spellings of one quantity. The equality states it in the graph''s own
+      idiom, so a reader of either id sees the derivation; the drift that made this alias list exist cannot
+      return, because the equation holds at every value set.'
+    system: employment
+    lhs: fusion_cost
+    rhs: capex_fusion
+    relation: eq
+    parameters:
+    - fusion_cost
+    - capex_fusion
+    free_variables:
+    - capex_fusion
+    determined_variables:
+    - fusion_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{fusion\_cost} \equiv \mathrm{capex\_fusion}
+  compressed_air_cost_alias:
+    id: compressed_air_cost_alias
+    name: CAES capital cost is Compressed air storage capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `compressed_air_cost`
+      and `capex_caes` are two spellings of one quantity. The equality states it in the graph''s own idiom,
+      so a reader of either id sees the derivation; the drift that made this alias list exist cannot return,
+      because the equation holds at every value set.'
+    system: employment
+    lhs: compressed_air_cost
+    rhs: capex_caes
+    relation: eq
+    parameters:
+    - compressed_air_cost
+    - capex_caes
+    free_variables:
+    - capex_caes
+    determined_variables:
+    - compressed_air_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{compressed\_air\_cost} \equiv \mathrm{capex\_caes}
+  flywheel_cost_alias:
+    id: flywheel_cost_alias
+    name: Flywheel capital cost is Flywheel storage capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `flywheel_cost`
+      and `capex_flywheel` are two spellings of one quantity. The equality states it in the graph''s own
+      idiom, so a reader of either id sees the derivation; the drift that made this alias list exist cannot
+      return, because the equation holds at every value set.'
+    system: employment
+    lhs: flywheel_cost
+    rhs: capex_flywheel
+    relation: eq
+    parameters:
+    - flywheel_cost
+    - capex_flywheel
+    free_variables:
+    - capex_flywheel
+    determined_variables:
+    - flywheel_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{flywheel\_cost} \equiv \mathrm{capex\_flywheel}
+  hydrogen_fuel_cell_cost_alias:
+    id: hydrogen_fuel_cell_cost_alias
+    name: Hydrogen fuel cell capital cost is Hydrogen fuel cell capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `hydrogen_fuel_cell_cost`
+      and `capex_hydrogen_fuel_cell` are two spellings of one quantity. The equality states it in the
+      graph''s own idiom, so a reader of either id sees the derivation; the drift that made this alias
+      list exist cannot return, because the equation holds at every value set.'
+    system: employment
+    lhs: hydrogen_fuel_cell_cost
+    rhs: capex_hydrogen_fuel_cell
+    relation: eq
+    parameters:
+    - hydrogen_fuel_cell_cost
+    - capex_hydrogen_fuel_cell
+    free_variables:
+    - capex_hydrogen_fuel_cell
+    determined_variables:
+    - hydrogen_fuel_cell_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{hydrogen\_fuel\_cell\_cost} \equiv \mathrm{capex\_hydrogen\_fuel\_cell}
+  tidal_range_cost_alias:
+    id: tidal_range_cost_alias
+    name: Tidal range capital cost is Tidal range capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `tidal_range_cost`
+      and `capex_tidal_range` are two spellings of one quantity. The equality states it in the graph''s
+      own idiom, so a reader of either id sees the derivation; the drift that made this alias list exist
+      cannot return, because the equation holds at every value set.'
+    system: employment
+    lhs: tidal_range_cost
+    rhs: capex_tidal_range
+    relation: eq
+    parameters:
+    - tidal_range_cost
+    - capex_tidal_range
+    free_variables:
+    - capex_tidal_range
+    determined_variables:
+    - tidal_range_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{tidal\_range\_cost} \equiv \mathrm{capex\_tidal\_range}
+  salinity_gradient_cost_alias:
+    id: salinity_gradient_cost_alias
+    name: Salinity gradient capital cost is Salinity gradient capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `salinity_gradient_cost`
+      and `capex_salinity_gradient` are two spellings of one quantity. The equality states it in the graph''s
+      own idiom, so a reader of either id sees the derivation; the drift that made this alias list exist
+      cannot return, because the equation holds at every value set.'
+    system: employment
+    lhs: salinity_gradient_cost
+    rhs: capex_salinity_gradient
+    relation: eq
+    parameters:
+    - salinity_gradient_cost
+    - capex_salinity_gradient
+    free_variables:
+    - capex_salinity_gradient
+    determined_variables:
+    - salinity_gradient_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{salinity\_gradient\_cost} \equiv \mathrm{capex\_salinity\_gradient}
+  biogas_cost_alias:
+    id: biogas_cost_alias
+    name: Biogas plant capital cost is Biogas plant capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `biogas_cost`
+      and `capex_biogas` are two spellings of one quantity. The equality states it in the graph''s own
+      idiom, so a reader of either id sees the derivation; the drift that made this alias list exist cannot
+      return, because the equation holds at every value set.'
+    system: employment
+    lhs: biogas_cost
+    rhs: capex_biogas
+    relation: eq
+    parameters:
+    - biogas_cost
+    - capex_biogas
+    free_variables:
+    - capex_biogas
+    determined_variables:
+    - biogas_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{biogas\_cost} \equiv \mathrm{capex\_biogas}
+  landfill_gas_cost_alias:
+    id: landfill_gas_cost_alias
+    name: Landfill gas plant capital cost is Landfill gas plant capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `landfill_gas_cost`
+      and `capex_landfill_gas` are two spellings of one quantity. The equality states it in the graph''s
+      own idiom, so a reader of either id sees the derivation; the drift that made this alias list exist
+      cannot return, because the equation holds at every value set.'
+    system: employment
+    lhs: landfill_gas_cost
+    rhs: capex_landfill_gas
+    relation: eq
+    parameters:
+    - landfill_gas_cost
+    - capex_landfill_gas
+    free_variables:
+    - capex_landfill_gas
+    determined_variables:
+    - landfill_gas_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{landfill\_gas\_cost} \equiv \mathrm{capex\_landfill\_gas}
+  waste_to_energy_cost_alias:
+    id: waste_to_energy_cost_alias
+    name: Waste-to-energy plant capital cost is Waste-to-energy plant capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `waste_to_energy_cost`
+      and `capex_waste_to_energy` are two spellings of one quantity. The equality states it in the graph''s
+      own idiom, so a reader of either id sees the derivation; the drift that made this alias list exist
+      cannot return, because the equation holds at every value set.'
+    system: employment
+    lhs: waste_to_energy_cost
+    rhs: capex_waste_to_energy
+    relation: eq
+    parameters:
+    - waste_to_energy_cost
+    - capex_waste_to_energy
+    free_variables:
+    - capex_waste_to_energy
+    determined_variables:
+    - waste_to_energy_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{waste\_to\_energy\_cost} \equiv \mathrm{capex\_waste\_to\_energy}
+  pyrolysis_cost_alias:
+    id: pyrolysis_cost_alias
+    name: Pyrolysis plant capital cost is Pyrolysis plant capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `pyrolysis_cost`
+      and `capex_pyrolysis` are two spellings of one quantity. The equality states it in the graph''s
+      own idiom, so a reader of either id sees the derivation; the drift that made this alias list exist
+      cannot return, because the equation holds at every value set.'
+    system: employment
+    lhs: pyrolysis_cost
+    rhs: capex_pyrolysis
+    relation: eq
+    parameters:
+    - pyrolysis_cost
+    - capex_pyrolysis
+    free_variables:
+    - capex_pyrolysis
+    determined_variables:
+    - pyrolysis_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{pyrolysis\_cost} \equiv \mathrm{capex\_pyrolysis}
+  gasification_cost_alias:
+    id: gasification_cost_alias
+    name: Gasification plant capital cost is Gasification plant capital cost
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `gasification_cost`
+      and `capex_gasification` are two spellings of one quantity. The equality states it in the graph''s
+      own idiom, so a reader of either id sees the derivation; the drift that made this alias list exist
+      cannot return, because the equation holds at every value set.'
+    system: employment
+    lhs: gasification_cost
+    rhs: capex_gasification
+    relation: eq
+    parameters:
+    - gasification_cost
+    - capex_gasification
+    free_variables:
+    - capex_gasification
+    determined_variables:
+    - gasification_cost
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{gasification\_cost} \equiv \mathrm{capex\_gasification}
+  lifeline_tariff_alias:
+    id: lifeline_tariff_alias
+    name: Lifeline tariff is Lifeline tariff
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `lifeline_tariff`
+      and `lifeline_tariff_usd_per_mwh` are two spellings of one quantity. The equality states it in the
+      graph''s own idiom, so a reader of either id sees the derivation; the drift that made this alias
+      list exist cannot return, because the equation holds at every value set.'
+    system: cost_accounting
+    lhs: lifeline_tariff
+    rhs: lifeline_tariff_usd_per_mwh
+    relation: eq
+    parameters:
+    - lifeline_tariff
+    - lifeline_tariff_usd_per_mwh
+    free_variables:
+    - lifeline_tariff_usd_per_mwh
+    determined_variables:
+    - lifeline_tariff
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{lifeline\_tariff} \equiv \mathrm{lifeline\_tariff\_usd\_per\_mwh}
+  disability_inclusion_alias:
+    id: disability_inclusion_alias
+    name: Disability inclusion is Disability inclusion target
+    description: 'The alias resolution the fragments'' alias register declared and nothing applied: `disability_inclusion`
+      and `disability_inclusion_share` are two spellings of one quantity. The equality states it in the
+      graph''s own idiom, so a reader of either id sees the derivation; the drift that made this alias
+      list exist cannot return, because the equation holds at every value set.'
+    system: employment
+    lhs: disability_inclusion
+    rhs: disability_inclusion_share
+    relation: eq
+    parameters:
+    - disability_inclusion
+    - disability_inclusion_share
+    free_variables:
+    - disability_inclusion_share
+    determined_variables:
+    - disability_inclusion
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The fragments' alias register (docs/param_batch7.md and successors), applied
+    latex: \mathrm{disability\_inclusion} \equiv \mathrm{disability\_inclusion\_share}
+  property_tax_definition:
+    id: property_tax_definition
+    name: Property tax (computed)
+    description: 'The rate times its base: property tax is the annual charge on the regulated asset base;
+      the investment allowance is the fiscal credit against capital expenditure. Both are rates with no
+      arithmetic beyond the product, so the definition is the whole of the coupling.'
+    system: financial
+    lhs: property_tax
+    rhs: property_tax_rate * regulatory_asset_base
+    relation: eq
+    parameters:
+    - property_tax
+    - property_tax_rate
+    - regulatory_asset_base
+    free_variables:
+    - property_tax_rate
+    determined_variables:
+    - property_tax
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+    latex: \mathrm{property\_tax} = \mathrm{property\_tax\_rate} \cdot \mathrm{regulatory\_asset\_base}
+  investment_allowance_definition:
+    id: investment_allowance_definition
+    name: Investment allowance (computed)
+    description: 'The rate times its base: property tax is the annual charge on the regulated asset base;
+      the investment allowance is the fiscal credit against capital expenditure. Both are rates with no
+      arithmetic beyond the product, so the definition is the whole of the coupling.'
+    system: financial
+    lhs: investment_allowance
+    rhs: investment_allowance_rate * capex_usd_per_kw
+    relation: eq
+    parameters:
+    - investment_allowance
+    - investment_allowance_rate
+    - capex_usd_per_kw
+    free_variables:
+    - investment_allowance_rate
+    determined_variables:
+    - investment_allowance
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+    latex: \mathrm{investment\_allowance} = \mathrm{investment\_allowance\_rate} \cdot \mathrm{capex\_usd\_per\_kw}
+  indirect_jobs_derivation:
+    id: indirect_jobs_derivation
+    name: Indirect jobs (derived)
+    description: 'The multiplier form of the input-output employment method: direct jobs computed by the
+      kernel''s own definition, times the supply-chain or consumption multiplier the method states.'
+    system: employment
+    lhs: indirect_jobs
+    rhs: direct_jobs * indirect_employment_multiplier
+    relation: eq
+    parameters:
+    - indirect_jobs
+    - direct_jobs
+    - indirect_employment_multiplier
+    free_variables:
+    - indirect_employment_multiplier
+    determined_variables:
+    - indirect_jobs
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: Leontief input-output employment multipliers
+    latex: J_{\mathrm{indirect}} = J_{direct} \cdot m_{\mathrm{indirect}}
+  induced_jobs_derivation:
+    id: induced_jobs_derivation
+    name: Induced jobs (derived)
+    description: 'The multiplier form of the input-output employment method: direct jobs computed by the
+      kernel''s own definition, times the supply-chain or consumption multiplier the method states.'
+    system: employment
+    lhs: induced_jobs
+    rhs: direct_jobs * induced_employment_multiplier
+    relation: eq
+    parameters:
+    - induced_jobs
+    - direct_jobs
+    - induced_employment_multiplier
+    free_variables:
+    - induced_employment_multiplier
+    determined_variables:
+    - induced_jobs
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: Leontief input-output employment multipliers
+    latex: J_{\mathrm{induced}} = J_{direct} \cdot m_{\mathrm{induced}}
+  women_jobs_definition:
+    id: women_jobs_definition
+    name: Women employment target applied
+    description: 'The composition share applied to the direct jobs: jobs by group equal the share times
+      the count the equation is a member of. Nothing deeper -- the share''s whole content is who the jobs
+      go to.'
+    system: employment
+    lhs: women_jobs
+    rhs: direct_jobs * women_employment_share
+    relation: eq
+    parameters:
+    - women_jobs
+    - direct_jobs
+    - women_employment_share
+    free_variables:
+    - women_employment_share
+    determined_variables:
+    - women_jobs
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: Composition-target shares (planning policy)
+    latex: ' J_{g} = s_g \, J_{direct}'
+  youth_jobs_definition:
+    id: youth_jobs_definition
+    name: Youth employment target applied
+    description: 'The composition share applied to the direct jobs: jobs by group equal the share times
+      the count the equation is a member of. Nothing deeper -- the share''s whole content is who the jobs
+      go to.'
+    system: employment
+    lhs: youth_jobs
+    rhs: direct_jobs * youth_employment_share
+    relation: eq
+    parameters:
+    - youth_jobs
+    - direct_jobs
+    - youth_employment_share
+    free_variables:
+    - youth_employment_share
+    determined_variables:
+    - youth_jobs
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: Composition-target shares (planning policy)
+    latex: ' J_{g} = s_g \, J_{direct}'
+  locally_sourced_jobs_definition:
+    id: locally_sourced_jobs_definition
+    name: Local employment target applied
+    description: 'The composition share applied to the direct jobs: jobs by group equal the share times
+      the count the equation is a member of. Nothing deeper -- the share''s whole content is who the jobs
+      go to.'
+    system: employment
+    lhs: locally_sourced_jobs
+    rhs: direct_jobs * local_employment_share
+    relation: eq
+    parameters:
+    - locally_sourced_jobs
+    - direct_jobs
+    - local_employment_share
+    free_variables:
+    - local_employment_share
+    determined_variables:
+    - locally_sourced_jobs
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: Composition-target shares (planning policy)
+    latex: ' J_{g} = s_g \, J_{direct}'
+relationships:
+- source: discount_rate
+  target: weighted_average_cost_of_capital
+  equation_id: wacc_alias
+  relationship: equality
+  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
+    computes.'
+- source: capex_usd_per_kw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: Gross fleet capital enters the base the allowed return is earned on.
+- source: total_capacity_mw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: The fleet's size sets the scale of the capital in the accounts.
+- source: accumulated_depreciation_fraction
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: What the books have written down between gross capital and the base.
+- source: regulatory_asset_base
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: equality
+  description: Straight-line write-down of the base over the regulatory asset life.
+- source: depreciation_life_by_asset
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: functional
+  description: A longer regulatory life spreads the base thinner over the years.
+- source: regulatory_depreciation
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: Depreciation is the first term of the revenue requirement.
+- source: regulatory_asset_base
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return is earned on the base, not on gross capital.
+- source: discount_rate
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return rate is the blend the financial block computes.
+- source: allowed_return_on_debt
+  target: cost_of_debt
+  equation_id: cost_of_debt_capped
+  relationship: constraint
+  description: The allowance binds the debt rate a scenario may carry.
+- source: allowed_return_on_equity
+  target: cost_of_equity
+  equation_id: cost_of_equity_capped
+  relationship: constraint
+  description: The allowance binds the equity return a valuation may assume.
+- source: regulated_tariff_usd_per_mwh
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: equality
+  description: The applied tariff is the recovery level in the absence of a cap.
+- source: revenue_cap
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: functional
+  description: The cap scales the recovery level; below 1 it withholds part of it.
+- source: capex_solar_pv
+  target: solar_pv_cost
+  equation_id: solar_pv_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: capex_wind_onshore
+  target: wind_onshore_cost
+  equation_id: wind_onshore_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: capex_wind_offshore
+  target: wind_offshore_cost
+  equation_id: wind_offshore_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: capex_battery
+  target: battery_cost
+  equation_id: battery_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: capex_phs
+  target: phs_cost
+  equation_id: phs_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: capex_geothermal
+  target: geothermal_cost
+  equation_id: geothermal_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: capex_hydrogen_electrolyser
+  target: electrolyser_cost
+  equation_id: electrolyser_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: capex_marine_wave
+  target: wave_energy_converter_cost
+  equation_id: wave_energy_converter_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: capex_smr
+  target: small_modular_reactor_cost
+  equation_id: small_modular_reactor_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: capex_fusion
+  target: fusion_cost
+  equation_id: fusion_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: capex_caes
+  target: compressed_air_cost
+  equation_id: compressed_air_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: capex_flywheel
+  target: flywheel_cost
+  equation_id: flywheel_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: capex_hydrogen_fuel_cell
+  target: hydrogen_fuel_cell_cost
+  equation_id: hydrogen_fuel_cell_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: capex_tidal_range
+  target: tidal_range_cost
+  equation_id: tidal_range_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: capex_salinity_gradient
+  target: salinity_gradient_cost
+  equation_id: salinity_gradient_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: capex_biogas
+  target: biogas_cost
+  equation_id: biogas_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: capex_landfill_gas
+  target: landfill_gas_cost
+  equation_id: landfill_gas_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: capex_waste_to_energy
+  target: waste_to_energy_cost
+  equation_id: waste_to_energy_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: capex_pyrolysis
+  target: pyrolysis_cost
+  equation_id: pyrolysis_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: capex_gasification
+  target: gasification_cost
+  equation_id: gasification_cost_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: lifeline_tariff_usd_per_mwh
+  target: lifeline_tariff
+  equation_id: lifeline_tariff_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: disability_inclusion_share
+  target: disability_inclusion
+  equation_id: disability_inclusion_alias
+  relationship: equality
+  strength: hard
+  description: The canonical value; the duplicate derives.
+- source: property_tax_rate
+  target: property_tax
+  equation_id: property_tax_definition
+  relationship: functional
+  strength: hard
+  description: The rate; the base carries the scale.
+- source: regulatory_asset_base
+  target: property_tax
+  equation_id: property_tax_definition
+  relationship: functional
+  strength: hard
+  description: The base the rate lands on.
+- source: investment_allowance_rate
+  target: investment_allowance
+  equation_id: investment_allowance_definition
+  relationship: functional
+  strength: hard
+  description: The rate; the base carries the scale.
+- source: capex_usd_per_kw
+  target: investment_allowance
+  equation_id: investment_allowance_definition
+  relationship: functional
+  strength: hard
+  description: The base the rate lands on.
+- source: direct_jobs
+  target: indirect_jobs
+  equation_id: indirect_jobs_derivation
+  relationship: functional
+  strength: hard
+  description: Enters the multiplier form.
+- source: indirect_employment_multiplier
+  target: indirect_jobs
+  equation_id: indirect_jobs_derivation
+  relationship: functional
+  strength: hard
+  description: Enters the multiplier form.
+- source: direct_jobs
+  target: induced_jobs
+  equation_id: induced_jobs_derivation
+  relationship: functional
+  strength: hard
+  description: Enters the multiplier form.
+- source: induced_employment_multiplier
+  target: induced_jobs
+  equation_id: induced_jobs_derivation
+  relationship: functional
+  strength: hard
+  description: Enters the multiplier form.
+- source: direct_jobs
+  target: women_jobs
+  equation_id: women_jobs_definition
+  relationship: functional
+  strength: hard
+  description: Enters the group composition.
+- source: women_employment_share
+  target: women_jobs
+  equation_id: women_jobs_definition
+  relationship: functional
+  strength: hard
+  description: Enters the group composition.
+- source: direct_jobs
+  target: youth_jobs
+  equation_id: youth_jobs_definition
+  relationship: functional
+  strength: hard
+  description: Enters the group composition.
+- source: youth_employment_share
+  target: youth_jobs
+  equation_id: youth_jobs_definition
+  relationship: functional
+  strength: hard
+  description: Enters the group composition.
+- source: direct_jobs
+  target: locally_sourced_jobs
+  equation_id: locally_sourced_jobs_definition
+  relationship: functional
+  strength: hard
+  description: Enters the group composition.
+- source: local_employment_share
+  target: locally_sourced_jobs
+  equation_id: locally_sourced_jobs_definition
+  relationship: functional
+  strength: hard
+  description: Enters the group composition.
+cross_validation: []

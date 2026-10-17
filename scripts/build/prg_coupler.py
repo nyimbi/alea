@@ -544,7 +544,7 @@ def emit(batch: str) -> int:
 
 	graph = load_graph()
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -567,11 +567,16 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b13_equations)
 		edges = list(BATCH12_EDGES) + b13_edges
+	elif batch == "14":
+		b14_nodes, b14_equations, b14_edges, _b14_rules = build_batch14(graph)
+		nodes.update(b14_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b14_equations)
+		edges = list(BATCH12_EDGES) + b14_edges
 	else:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		edges = list(BATCH12_EDGES)
 
-	out_dir = ROOT / "config"
 	out_dir = ROOT / "config" / "prg_ingest"
 	out_dir.mkdir(parents=True, exist_ok=True)
 	path = out_dir / f"param_batch{batch}.yaml"
@@ -1220,6 +1225,299 @@ def build_batch13(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	})
 	return nodes, equations, edges
 
+
+
+
+# ---------------------------------------------------------------------------
+# Batch 14 -- the resolved duplicates and the employment family.
+#
+# The alias register the fragments shipped was validated by nothing that
+# applied it. Its content, applied as equations: 20 technology-cost
+# duplicate pairs (the `*_cost` vs `capex_*` spellings, corrected to agree
+# by the earlier batches but still two ids for one number) become
+# equality equations whose duplicate side derives; the duplicate keeps its
+# id (a report may cite it) and loses the free placeholder's default. One
+# pair that is not an equality but a definition is written as its
+# definition: property tax is the rate on the asset base, and the
+# investment allowance is the rate on the capital. Two placeholder-only
+# rows (lifeline tariff, disability inclusion) alias to the nodes that
+# carry real values and real units; their own units are declared so the
+# equality is decidable.
+#
+# Employment: the indirect and induced jobs the input-output method
+# derives from the direct jobs the kernel computes, at the multipliers
+# that method states. The shipped `indirect_jobs`/`induced_jobs` carried
+# 50-million-job placeholder defaults -- a number with no fleet behind it.
+# Theory: input-output employment multipliers (Leontief demand-pull):
+# indirect = direct x supply-chain multiplier, induced = direct x
+# consumption multiplier; the group-job shares multiply the direct count.
+# ---------------------------------------------------------------------------
+
+DUPLICATE_PAIRS: list[tuple[str, str]] = [
+	("solar_pv_cost", "capex_solar_pv"), ("wind_onshore_cost", "capex_wind_onshore"),
+	("wind_offshore_cost", "capex_wind_offshore"), ("battery_cost", "capex_battery"),
+	("phs_cost", "capex_phs"), ("geothermal_cost", "capex_geothermal"),
+	("electrolyser_cost", "capex_hydrogen_electrolyser"),
+	("wave_energy_converter_cost", "capex_marine_wave"),
+	("small_modular_reactor_cost", "capex_smr"), ("fusion_cost", "capex_fusion"),
+	("compressed_air_cost", "capex_caes"), ("flywheel_cost", "capex_flywheel"),
+	("hydrogen_fuel_cell_cost", "capex_hydrogen_fuel_cell"),
+	("tidal_range_cost", "capex_tidal_range"),
+	("salinity_gradient_cost", "capex_salinity_gradient"),
+	("biogas_cost", "capex_biogas"), ("landfill_gas_cost", "capex_landfill_gas"),
+	("waste_to_energy_cost", "capex_waste_to_energy"),
+	("pyrolysis_cost", "capex_pyrolysis"),
+	("gasification_cost", "capex_gasification"),
+	("lifeline_tariff", "lifeline_tariff_usd_per_mwh"),
+	("disability_inclusion", "disability_inclusion_share"),
+]
+
+#: Placeholder-only rows whose own unit must be declared for their alias
+#: equality to be decidable.
+PLACEHOLDER_UNITS: dict[str, dict[str, str]] = {
+	"lifeline_tariff": {"unit": "USD/MWh"},
+	"disability_inclusion": {"unit": "1"},
+}
+
+
+def build_batch14(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, str]], list[dict[str, Any]]]:
+	"""Batch 14: duplicate alias-equations plus the employment family."""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, str]] = []
+	rules: list[dict[str, Any]] = []
+
+	for dup, can in DUPLICATE_PAIRS:
+		dup_node, can_node = graph.nodes.get(dup), graph.nodes.get(can)
+		assert dup_node is not None and can_node is not None, (dup, can)
+		assert dup_node.unit == can_node.unit or dup in PLACEHOLDER_UNITS, (
+			f"{dup}={can}: units {dup_node.unit!r} vs {can_node.unit!r}"
+		)
+		full = dict(dup_node.model_dump(exclude={"id"}, mode="json"))
+		unit_override = PLACEHOLDER_UNITS.get(dup) or {}
+		full.update(unit_override)
+		full.update({
+			"role": "derived",
+			"description": (
+				f"{dup_node.name} -- one of two ids for the quantity `{can}` "
+				"carries; corrected to the same value by the earlier batches and "
+				"resolved here by an equality, so the graph answers the question "
+				"one way and the label a report may cite keeps an id."
+			),
+		})
+		full.pop("default", None)
+		nodes[dup] = full
+		eq_id = f"{dup}_alias"
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": f"{dup_node.name} is {can_node.name}",
+			"description": (
+				f"The alias resolution the fragments' alias register declared and "
+				f"nothing applied: `{dup}` and `{can}` are two spellings of one "
+				"quantity. The equality states it in the graph's own idiom, so a "
+				"reader of either id sees the derivation; the drift that made "
+				"this alias list exist cannot return, because the equation holds "
+				"at every value set."
+			),
+			"system": "cost_accounting" if "cost" in can or "tariff" in can else "employment",
+			"lhs": dup,
+			"rhs": can,
+			"relation": "eq",
+			"parameters": [dup, can],
+			"free_variables": [can],
+			"determined_variables": [dup],
+			"tolerance": 1.0e-09,
+			"unit_check": can_node.unit is not None or dup not in PLACEHOLDER_UNITS,
+			"solution_method": "direct",
+			"linearity": "linear",
+			"priority": "P2",
+			"reference": "The fragments' alias register (docs/param_batch7.md and successors), applied",
+			"latex": r"\mathrm{" + dup.replace("_", r"\_") + r"} \equiv \mathrm{" + can.replace("_", r"\_") + r"}",
+		}
+		edges.append({
+			"source": can, "target": dup, "equation_id": eq_id,
+			"relationship": "equality", "strength": "hard",
+			"description": "The canonical value; the duplicate derives.",
+		})
+
+	# The four definitions the placeholders were standing next to.
+	rate_nodes = {
+		"property_tax": ("property_tax_rate", "regulatory_asset_base", "Regulatory Finance"),
+		"investment_allowance": ("investment_allowance_rate", "capex_usd_per_kw", "Tax & Fiscal"),
+	}
+	for target, (rate, base, category) in rate_nodes.items():
+		full = dict(graph.nodes[target].model_dump(exclude={"id"}, mode="json"))
+		full.update({
+			"role": "derived",
+			"unit": "USD/kW" if base == "capex_usd_per_kw" else "USD million",
+			"description": (
+				f"{graph.nodes[target].name}, computed: the rate applied to {base}. "
+				"A rate has to land on a base to be a cost, and the base the "
+				"graph carries is the fleet's own."
+			),
+		})
+		full.pop("default", None)
+		nodes[target] = full
+		eq_id = f"{target}_definition"
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": graph.nodes[target].name + " (computed)",
+			"description": (
+				f"The rate times its base: property tax is the annual charge on "
+				"the regulated asset base; the investment allowance is the "
+				"fiscal credit against capital expenditure. Both are rates with "
+				"no arithmetic beyond the product, so the definition is the "
+				"whole of the coupling."
+			),
+			"system": "financial",
+			"lhs": target,
+			"rhs": f"{rate} * {base}",
+			"relation": "eq",
+			"parameters": [target, rate, base],
+			"free_variables": [rate],
+			"determined_variables": [target],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P2",
+			"reference": "Rate-based levy and allowance definitions (standard fiscal accounting)",
+			"latex": r"\mathrm{" + target.replace("_", r"\_") + r"} = \mathrm{" + rate.replace("_", r"\_") + r"} \cdot \mathrm{" + base.replace("_", r"\_") + r"}",
+		}
+		edges.append({
+			"source": rate, "target": nodes[target]["name"].lower().replace(" ", "_"),
+			"equation_id": eq_id, "relationship": "functional", "strength": "hard",
+			"description": "The rate; the base carries the scale.",
+		})
+		edges.append({
+			"source": base, "target": target,
+			"equation_id": eq_id, "relationship": "functional", "strength": "hard",
+			"description": "The base the rate lands on.",
+		})
+
+	# --- employment ---
+	multiplier_nodes = {
+		"indirect_employment_multiplier": (
+			"Supply-chain multiplier on the direct jobs: purchases, haulage, "
+			"feeds and services the construction and fleet spending generates. "
+			"Input-output employment multipliers; the range states the "
+			"empirical band, 1.0 a bare pass-through."
+		),
+		"induced_employment_multiplier": (
+			"Consumption multiplier: jobs from worker spending, the second "
+			"round of the Leontief demand-pull. Usually below the indirect "
+			"one and above zero."
+		),
+	}
+	for name, prose in multiplier_nodes.items():
+		nodes[name] = {
+			"name": name.replace("_", " ").capitalize(),
+			"description": prose,
+			"category": "Employment", "type": "float", "unit": "1",
+			"range": [0.0, 3.0],
+			"default": 1.2 if "indirect" in name else 0.7,
+			"role": "free", "determinism": "fixed", "priority": "P2",
+			"status": "existing",
+			"source": "Leontief input-output employment multipliers",
+			"users": ["Planners"],
+		}
+	for target, multiplier in (
+		("indirect_jobs", "indirect_employment_multiplier"),
+		("induced_jobs", "induced_employment_multiplier"),
+	):
+		full = dict(graph.nodes[target].model_dump(exclude={"id"}, mode="json"))
+		full.update({
+			"role": "derived",
+			"unit": "jobs",
+			"description": (
+				f"{graph.nodes[target].name}: the {target.split('_')[0]} employment the "
+				"input-output method derives from the direct jobs the fleet "
+				"construction and O&M support. Was a 50-million-node placeholder "
+				"-- a number with no fleet behind it."
+			),
+		})
+		full.pop("default", None)
+		nodes[target] = full
+		eq_id = f"{target}_derivation"
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": graph.nodes[target].name + " (derived)",
+			"description": (
+				"The multiplier form of the input-output employment method: "
+				"direct jobs computed by the kernel's own definition, times the "
+				"supply-chain or consumption multiplier the method states."
+			),
+			"system": "employment",
+			"lhs": target,
+			"rhs": f"direct_jobs * {multiplier}",
+			"relation": "eq",
+			"parameters": [target, "direct_jobs", multiplier],
+			"free_variables": [multiplier],
+			"determined_variables": [target],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P2",
+			"reference": "Leontief input-output employment multipliers",
+			"latex": r"J_{\mathrm{" + target.split("_")[0] + r"}} = J_{direct} \cdot m_{\mathrm{" + target.split("_")[0] + r"}}",
+		}
+		for sym in ("direct_jobs", multiplier):
+			edges.append({
+				"source": sym, "target": target,
+				"equation_id": eq_id, "relationship": "functional", "strength": "hard",
+				"description": "Enters the multiplier form.",
+			})
+
+	# The group-job shares multiply the direct count -- the standard
+	# demographic composition of renewables employment.
+	group_nodes = {
+		"women_employment_share": "women_jobs",
+		"youth_employment_share": "youth_jobs",
+		"local_employment_share": "locally_sourced_jobs",
+	}
+	for share, target in group_nodes.items():
+		share_node = graph.nodes.get(share)
+		assert share_node is not None, share
+		nodes[target] = {
+			"name": target.replace("_", " ").capitalize(),
+			"description": (
+				f"Jobs in {target.split('_')[0]} group, at the composition share "
+				"the employment programme targets. Derived from the direct jobs "
+				"the fleet supports."
+			),
+			"category": "Employment", "type": "float", "unit": "jobs",
+			"range": [0.0, 10000000.0], "role": "derived", "determinism": "fixed",
+			"priority": "P2", "status": "existing",
+			"source": "Composition targets stated by the local employment policy",
+			"users": ["Planners"],
+		}
+		eq_id = f"{target}_definition"
+		share_name = share
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": graph.nodes[share].name + " applied",
+			"description": (
+				"The composition share applied to the direct jobs: jobs by "
+				"group equal the share times the count the equation is a "
+				"member of. Nothing deeper -- the share's whole content is "
+				"who the jobs go to."
+			),
+			"system": "employment",
+			"lhs": target,
+			"rhs": f"direct_jobs * {share_name}",
+			"relation": "eq",
+			"parameters": [target, "direct_jobs", share_name],
+			"free_variables": [share_name],
+			"determined_variables": [target],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P2", "reference": "Composition-target shares (planning policy)",
+			"latex": r" J_{g} = s_g \, J_{direct}",
+		}
+		for sym in ("direct_jobs", share_name):
+			edges.append({
+				"source": sym, "target": target,
+				"equation_id": eq_id, "relationship": "functional", "strength": "hard",
+				"description": "Enters the group composition.",
+			})
+	return nodes, equations, edges, rules
 
 
 if __name__ == "__main__":
