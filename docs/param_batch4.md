@@ -855,6 +855,7 @@ These are the parameters whose **type** is wrong. Each is currently declared `fl
     category: Policy
     type: categorical
     categories: [monopoly, single_buyer, wholesale, retail]
+    default: single_buyer
     role: free
     determinism: policy
     priority: P1
@@ -867,6 +868,7 @@ These are the parameters whose **type** is wrong. Each is currently declared `fl
     category: Market Design
     type: categorical
     categories: [regulated, uniform_price, pay_as_bid, nodal]
+    default: regulated
     role: free
     determinism: policy
     priority: P1
@@ -1193,10 +1195,10 @@ cross_validation:
   message: The PPA extends beyond the asset's economic life. Either the duration is wrong, or the asset life should be extended.
   suggestion: Lower ppa_duration, or raise asset_life
 - id: market_structure_without_model
-  condition: market_structure == 1 and market_model == 0
+  condition: (market_structure == 'monopoly' or market_structure == 'single_buyer') and market_model != 'regulated'
   severity: warning
-  message: A single-buyer market structure with a regulated market model is a coherent pairing but the graph's categorical encoding is ambiguous. A scenario reading these as floats would silently get a value of 500,000 and no error.
-  suggestion: Confirm the categorical encoding, and if the corrected type is not yet deployed, set the value to the categorical's numeric index
+  message: A market structure with no competition at the wholesale level is paired with a market model that is not regulated. A monopoly or a single buyer is administered, so a competitive model beside it describes a market that does not exist.
+  suggestion: Set market_model to 'regulated', or move market_structure to 'wholesale' or 'retail'
 - id: contract_for_difference_without_guarantees
   condition: contract_for_difference == 1 and ppa_guarantees == 0
   severity: info

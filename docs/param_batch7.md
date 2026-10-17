@@ -636,6 +636,7 @@ Batch 5 corrected 19 booleans and categoricals. Eight more are still typed as fl
     description: 'Corrected from float to bool. The shipped node is a rollout — a programme that is either on or off — not the penetration share; the share is `smart_metering_penetration`.'
     category: Digital
     type: bool
+    default: true
     role: free
     determinism: policy
     priority: P2

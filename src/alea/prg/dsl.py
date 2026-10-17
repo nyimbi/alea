@@ -1271,8 +1271,16 @@ def diff(expression: Expr, symbol: str) -> Expr:
 # ---------------------------------------------------------------------------
 
 
-def evaluate(expression: Expr, values: Mapping[str, float]) -> float:
-	"""The value of ``expression`` at ``values``."""
+def evaluate(expression: Expr, values: Mapping[str, float | str]) -> float:
+	"""The value of ``expression`` at ``values``.
+
+	``values`` may carry a *level name* for a categorical parameter, which this
+	expression does not read: an equation is arithmetic and a categorical has no
+	arithmetic, so a symbol bound to a name raises the same ``TypeError`` a
+	missing operator would. The annotation admits it because the parameter set
+	the graph passes is one mapping for the whole graph, and a categorical's
+	value lives in it beside every number.
+	"""
 	missing = expression.symbols - values.keys()
 	if missing:
 		raise DslError(
@@ -1295,7 +1303,7 @@ def evaluate_array(expression: Expr, values: Mapping[str, Any]) -> np.ndarray:
 def solve_for(
 	expression: Expr,
 	symbol: str,
-	values: Mapping[str, float],
+	values: Mapping[str, float | str],
 	*,
 	bracket: tuple[float, float],
 	residual: float = 0.0,
@@ -1511,7 +1519,7 @@ def linear_coefficients(expression: Expr, symbol: str) -> tuple[Expr, Expr] | No
 def solve_affine(
 	expression: Expr,
 	symbol: str,
-	values: Mapping[str, float],
+	values: Mapping[str, float | str],
 	*,
 	residual: float = 0.0,
 ) -> float | None:

@@ -246,9 +246,9 @@ class ConflictReport:
 
 def detect_conflicts(
 	graph: ParameterGraph,
-	values: Mapping[str, float],
+	values: Mapping[str, float | str],
 	*,
-	supplied: Mapping[str, float] | None = None,
+	supplied: Mapping[str, float | str] | None = None,
 	rank: int = 5,
 ) -> ConflictReport:
 	"""Every inconsistency in ``values``, with ranked corrections.
@@ -260,6 +260,24 @@ def detect_conflicts(
 	checked and the input-level conflicts are invisible.
 	"""
 	from alea.prg.feedback import FeedbackError
+
+	# Every correction here is a *move* -- a delta divided by a derivative -- so
+	# it is arithmetic and a level name has none. Narrowing once at the door is
+	# what keeps that honest: a categorical is not a quantity the residual can
+	# be reduced by, and the alternative -- letting a level name reach
+	# `_corrections_for` -- is a TypeError naming neither the parameter nor the
+	# reason. The set the graph hands over is the whole graph's, so the numeric
+	# half is selected here rather than promised by the caller.
+	numeric: dict[str, float] = {
+		k: v for k, v in values.items() if not isinstance(v, str)
+	}
+	supplied_numeric: dict[str, float] | None = (
+		None
+		if supplied is None
+		else {k: v for k, v in supplied.items() if not isinstance(v, str)}
+	)
+	values = numeric
+	supplied = supplied_numeric
 
 	conflicts: list[Conflict] = []
 

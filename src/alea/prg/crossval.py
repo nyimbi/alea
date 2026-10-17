@@ -219,7 +219,7 @@ class CrossValidationReport:
 		return f"{len(self.violations)} of {len(self.rules)} rule(s) violated: {head}"
 
 
-def evaluate_condition(condition: str, values: Mapping[str, float]) -> bool:
+def evaluate_condition(condition: str, values: Mapping[str, float | str]) -> bool:
 	"""Evaluate a cross-validation condition at ``values``.
 
 	``True`` means the condition *holds* -- which for a rule declared as
@@ -257,7 +257,7 @@ def evaluate_condition(condition: str, values: Mapping[str, float]) -> bool:
 	)
 
 
-def _eval(node: ast.AST, values: Mapping[str, float]) -> Any:
+def _eval(node: ast.AST, values: Mapping[str, float | str]) -> Any:
 	if isinstance(node, ast.BoolOp):
 		operands = [_eval(value, values) for value in node.values]
 		if isinstance(node.op, ast.And):
@@ -303,8 +303,17 @@ def _eval(node: ast.AST, values: Mapping[str, float]) -> Any:
 			)
 		return values[node.id]
 	if isinstance(node, ast.Constant):
-		if isinstance(node.value, bool) or not isinstance(node.value, (int, float)):
-			raise DslError(f"{node.value!r} is not a number")
+		# A string constant is a categorical's *level name*, and admitting it is
+		# the whole of what lets a rule speak about a categorical at all. Before
+		# this, the only way to name a level was its index into `categories` --
+		# ``market_structure == 1`` -- and the index is a fact about the list's
+		# order rather than about the level, so reordering `categories` silently
+		# repointed the rule at a different level. A `bool` stays out: it is not
+		# a level name and not a number, and `True == 1` would quietly admit it.
+		if isinstance(node.value, bool) or not isinstance(
+			node.value, (int, float, str)
+		):
+			raise DslError(f"{node.value!r} is not a number or a level name")
 		return node.value
 	raise DslError(f"cannot evaluate {type(node).__name__} in a condition")
 
@@ -431,7 +440,7 @@ def rules_from_document(document: Mapping[str, Any]) -> tuple[CrossValidationRul
 
 def run_rules(
 	rules: tuple[CrossValidationRule, ...],
-	values: Mapping[str, float],
+	values: Mapping[str, float | str],
 	graph: ParameterGraph | None = None,
 ) -> CrossValidationReport:
 	"""Evaluate every rule against ``values``.

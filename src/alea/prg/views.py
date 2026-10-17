@@ -110,7 +110,7 @@ class ParameterNode(BaseModel):
 	type: ParameterType
 	unit: str | None = None
 	range: tuple[float, float] | None = None
-	default: float | None = None
+	default: float | str | None = None
 	"""The value used when nothing else supplies one.
 
 	Three roles read it three ways. For an *exogenous* node it is the value a
@@ -120,6 +120,22 @@ class ParameterNode(BaseModel):
 	with no starting point makes every one of them unrunnable. A *derived*
 	node must not carry one: its value comes from an equation, and a default is
 	a value that would stand in whenever the equation is not run.
+
+	WHY A STRING IS ADMISSIBLE. A ``categorical`` node's value is one of its
+	``categories`` -- a level name, not a number -- and this field is where that
+	value lives. While the annotation was ``float | None`` a free categorical
+	could carry *no* default at all: pydantic refuses ``"single_buyer"`` as a
+	float, and :attr:`_NON_SCALAR_TYPES` refuses a numeric one on a categorical,
+	so both doors were shut. ``propagate`` refuses a value set that is missing
+	a settable parameter, so a graph holding one such node was unservable by
+	every convenience path -- ``check_scenario``, the what-if default graph and
+	the API's own defaults all build their set from this field.
+
+	The alternative considered and rejected was encoding the level as its
+	*index* into ``categories`` (an ``int`` default). The index is a fact about
+	the list's order and not about the level, so reordering ``categories`` --
+	a change no reviewer would read as semantic -- would silently repoint the
+	default at a different level. The name is the value; the order is not.
 	"""
 
 	initial: float | None = None
@@ -177,7 +193,17 @@ class ParameterNode(BaseModel):
 		# A default outside its own declared range is a contradiction the graph
 		# can see and nothing else can: the value would be refused at
 		# validation time and shipped as the starting point at the same time.
-		if self.range is not None and self.default is not None:
+		# A string default is a categorical's level name, and a categorical has no
+		# numeric range for it to lie in -- the `categories` check below is the
+		# one that bounds it. Comparing a level name against floats would be a
+		# TypeError rather than a finding, so the numeric check is skipped for it
+		# and the branch that refuses a string on a *non*-categorical type is
+		# what keeps this from being a hole.
+		if (
+			self.range is not None
+			and self.default is not None
+			and not isinstance(self.default, str)
+		):
 			low, high = self.range
 			if low > high:
 				raise ValueError(f"{self.id}: range ({low}, {high}) is inverted")
@@ -236,7 +262,19 @@ class ParameterNode(BaseModel):
 					f"({low}, {high})"
 				)
 		if self.type in _NON_SCALAR_TYPES and (
-			self.default is not None or self.range is not None
+			self.range is not None
+			or (
+				self.default is not None
+				# A categorical's default is a level *name*, which this model
+				# carries as a string; a numeric one on a categorical is the
+				# defect below. For a timeseries or a spatial field neither
+				# spelling is expressible -- there is no array field -- so any
+				# default at all is refused for those two.
+				and not (
+					self.type is ParameterType.CATEGORICAL
+					and isinstance(self.default, str)
+				)
+			)
 		):
 			# A timeseries, a spatial field, or a categorical is not one number.
 			# The scalar fields on this model cannot express one, and nothing
@@ -268,6 +306,30 @@ class ParameterNode(BaseModel):
 				f"{self.id}: `categories` lists the admissible values of a "
 				f"categorical, and this node is {self.type.value!r}"
 			)
+		if isinstance(self.default, str):
+			# A string default is a level name, and a level name is meaningful
+			# only against the list that admits it. On any other type the string
+			# reaches `propagate`, whose first act is `float(v)`, and raises
+			# there -- one frame away from the document that is wrong, with a
+			# message naming neither the node nor the field. Refusing it here is
+			# the same argument the range/default check above makes: a
+			# contradiction the document can see is one the loader should state.
+			if self.type is not ParameterType.CATEGORICAL:
+				raise ValueError(
+					f"{self.id}: `default` is the string {self.default!r} and this "
+					f"node is {self.type.value!r}; a string default is a level name "
+					f"and only a categorical has levels to name"
+				)
+			if self.default not in self.categories:
+				# The list is the categorical's range, so this is exactly the
+				# check `_range_contains_default` makes for a numeric node. A
+				# default outside it would be admitted as the scenario's starting
+				# value and be a level no document lists.
+				raise ValueError(
+					f"{self.id}: default {self.default!r} is not one of its "
+					f"categories {list(self.categories)}; the list is the "
+					f"categorical's admissible set"
+				)
 		if self.status == "deprecated" and not self.deprecated_by:
 			# A removal with no successor leaves the caller nowhere to go, and
 			# the alias register the batch ships is the successor list. Naming

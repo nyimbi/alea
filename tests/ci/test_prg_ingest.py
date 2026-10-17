@@ -580,7 +580,7 @@ def test_the_shipped_fragments_load_and_report_a_clean_merge():
 	assert len(graph.edges) > len(shipped.edges)
 
 
-def test_the_ingested_graph_is_one_default_short_of_a_runnable_scenario():
+def test_every_free_node_in_the_ingested_graph_carries_a_value():
 	"""The batches re-typed 26 nodes to `bool`/`categorical` and gave no default.
 
 	`docs/param_ingest.md:78` says a `default` is required for a free node, and
@@ -588,22 +588,24 @@ def test_the_ingested_graph_is_one_default_short_of_a_runnable_scenario():
 	declared all 26 as `float` on the `(0, 1e6)` placeholder with `default:
 	500000.0`, and re-typing them to `bool` dropped that placeholder -- which
 	made `check_scenario` over any defaults-built value set raise `the parameter
-	set is missing [...]`.
+	set is missing [...]`. The shipped graph has no such node; the ingested one
+	had three.
 
-	This test pins the state after the repair, which is *not* a runnable graph:
-	23 booleans now carry the value `docs/what-if.md` documents, and three nodes
-	remain, each for its own reason. Asserting the three by name is the point --
-	an assertion that the set is empty would fail today, and one that skips the
-	check would let a *fourth* node join the list unremarked. The three:
+	The three were closed on 2026-10-17, each from its own on-record source:
 
-	* `market_model`, `market_structure` -- categoricals. The model refuses a
-	  scalar `default` on one (`_NON_SCALAR_TYPES`), and `propagate` coerces
-	  every value with `float()`, so a categorical cannot carry a value through
-	  this graph at all. `docs/what-if.md` documents `Single Buyer` for both.
-	* `smart_metering_rollout` -- the three documents disagree about its type:
+	* `market_structure`, `market_model` -- categoricals, now carrying the level
+	  `docs/what-if.md` documents (`Single Buyer` for the structure; the market
+	  model's row repeats it, and the batch's own four levels are the *model*
+	  vocabulary, so the structure's level maps to `regulated`).
+	* `smart_metering_rollout` -- the documents disagree about its type:
 	  `param_batch1.md` a share with `default: 0.3`, `param_batch7.md` a bool,
-	  `docs/param_eqn_formula1.md` a year-indexed count. No default can be
-	  written until that is settled.
+	  `docs/param_eqn_formula1.md` a year-indexed count. The batch kept the bool
+	  and `true` is what its own 23 sibling booleans and `docs/what-if.md`'s
+	  boolean rows take.
+
+	The assertion is that the set is *empty*, not that it names three. Pinning
+	three by name would go green again the moment a fourth node lost its default
+	-- which is exactly how this defect arrived the first time.
 	"""
 	graph, _ = load_ingested(default_ingest_dir())
 	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
@@ -613,27 +615,12 @@ def test_the_ingested_graph_is_one_default_short_of_a_runnable_scenario():
 		for k, n in graph.nodes.items()
 		if n.default is None and n.role.value != "derived"
 	)
-	assert absent == ["market_model", "market_structure", "smart_metering_rollout"], absent
+	assert absent == [], absent
 
-	# The three are exactly what stops a defaults-built scenario, so the raise
-	# names them and nothing else -- a fourth would be a new omission, not this
-	# defect, and would change the message.
-	with pytest.raises(GraphError) as caught:
-		check_scenario(values, graph)
-	assert "'market_model', 'market_structure', 'smart_metering_rollout'" in str(
-		caught.value
-	)
-
-	# And every free *scalar* node is now supplied, so removing the three
-	# non-scalars leaves a value set the graph can propagate.
-	scalars = {
-		k: v
-		for k, v in values.items()
-		if graph.nodes[k].type.value in {"float", "int", "bool"}
-	}
-	assert len(scalars) == len(values)
-
-
+	# A value set built from the graph's own defaults is therefore a scenario the
+	# graph can run, which is the property the three omissions denied it.
+	result = check_scenario(values, graph)
+	assert result is not None
 
 
 def test_the_ingested_graph_is_consistent_at_its_own_defaults():
@@ -647,12 +634,13 @@ def test_the_ingested_graph_is_consistent_at_its_own_defaults():
 	have no evaluation order`, at any value set. A clean merge was silent about
 	it because a cycle is a property of the edges, not of the fragments.
 
-	The value set supplies the three nodes no fragment gives a default (see the
-	test above); everything else comes from the graph.
+	Every node's value now comes from the graph, because every free node carries
+	a default (see the test above). The two categoricals are the exception the
+	value set cannot supply from `float` -- their defaults are level names, so
+	they arrive from the document and not from a numeric placeholder.
 	"""
 	graph, _ = load_ingested(default_ingest_dir())
 	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
-	values.update({"market_model": 1.0, "market_structure": 1.0, "smart_metering_rollout": 0.0})
 
 	# Must not raise. A cycle raises here, and so does a missing node.
 	result = graph.propagate(values)
@@ -687,7 +675,8 @@ def test_a_derived_node_is_not_declared_out_of_range_at_its_own_default():
 	"""
 	graph, _ = load_ingested(default_ingest_dir())
 	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
-	values.update({"market_model": 1.0, "market_structure": 1.0, "smart_metering_rollout": 0.0})
+	# The two categoricals come from the document as level names, not as
+	# numeric placeholders: a level is a name, and the gate refuses an index.
 	derived = graph.propagate(values).values
 
 	# The HHI is over the seven named fuels, so their shares sum to 1 by
@@ -740,7 +729,6 @@ def test_the_gearing_rule_threshold_is_a_multiple_not_a_fraction():
 	"""
 	graph, _ = load_ingested(default_ingest_dir())
 	base = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
-	base.update({"market_model": 1.0, "market_structure": 1.0, "smart_metering_rollout": 0.0})
 	base["discount_rate"] = 0.25  # above the rule's other threshold
 
 	def fires(gearing: float) -> bool:

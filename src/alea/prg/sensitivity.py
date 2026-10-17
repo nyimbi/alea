@@ -311,7 +311,7 @@ def _loop_gradients(
 def sensitivity(
 	graph: ParameterGraph,
 	parameter: str,
-	values: Mapping[str, float],
+	values: Mapping[str, float | str],
 	*,
 	table: GradientTable | None = None,
 ) -> Sensitivity:
@@ -322,7 +322,17 @@ def sensitivity(
 	routes to the same answer is two answers to keep in step, and the earlier
 	one here returned a row that dropped the zeros the table carries.
 	"""
-	gradient_table = table if table is not None else gradients(graph, values)
+	# A derivative is arithmetic, so a level name has none and no equation can
+	# be differentiated with respect to a categorical. The set the graph hands
+	# over is the whole graph's, so the numeric half is selected here rather
+	# than promised by the caller.
+	gradient_table = (
+		table
+		if table is not None
+		else gradients(
+			graph, {k: v for k, v in values.items() if not isinstance(v, str)}
+		)
+	)
 	return gradient_table.of(parameter)
 
 
@@ -342,7 +352,7 @@ def sensitivity_table(
 def elasticity(
 	graph: ParameterGraph,
 	parameter: str,
-	values: Mapping[str, float],
+	values: Mapping[str, float | str],
 	*,
 	table: GradientTable | None = None,
 ) -> dict[str, float]:
@@ -353,9 +363,16 @@ def elasticity(
 	[0, 1] produce derivatives of wildly different magnitude for the same
 	real-world importance -- and a ranking that mixes them ranks the units.
 	"""
-	gradient_table = table if table is not None else gradients(graph, values)
+	# An elasticity is a ratio of two quantities, so it is arithmetic and a
+	# level name has none. Narrowing once here keeps the ratio below a float
+	# rather than a union, and a categorical is skipped for the same reason it
+	# has no derivative: no percentage move is defined for a level.
+	numeric: dict[str, float] = {
+		k: v for k, v in values.items() if not isinstance(v, str)
+	}
+	gradient_table = table if table is not None else gradients(graph, numeric)
 	row = sensitivity(graph, parameter, values, table=gradient_table)
-	level = values.get(parameter)
+	level = numeric.get(parameter)
 	if level in (None, 0.0):
 		raise ValueError(
 			f"{parameter!r} has value {level!r}, so its elasticity is not "
@@ -363,7 +380,7 @@ def elasticity(
 		)
 	out: dict[str, float] = {}
 	for name, derivative in row.derivatives.items():
-		input_level = values.get(name)
+		input_level = numeric.get(name)
 		if input_level in (None, 0.0):
 			continue
 		out[name] = float(derivative * input_level / level)

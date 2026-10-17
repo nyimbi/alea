@@ -1379,7 +1379,7 @@ class SensitivityOut(ApiModel):
 
 	parameter: str
 	method: str
-	value: float | None
+	value: float | str | None
 	derivatives: dict[str, float]
 
 
@@ -1387,7 +1387,7 @@ class SensitivityRequest(ApiModel):
 	"""A parameter set to differentiate at, with optional overrides."""
 
 	parameter: str
-	set: dict[str, float] = Field(default_factory=dict)
+	set: dict[str, float | str] = Field(default_factory=dict)
 	top: int = Field(default=10, ge=1, le=100)
 
 
@@ -1398,7 +1398,7 @@ class ConflictRequest(ApiModel):
 	setting one is exactly the over-determination this endpoint reports.
 	"""
 
-	set: dict[str, float] = Field(default_factory=dict)
+	set: dict[str, float | str] = Field(default_factory=dict)
 	rank: int = Field(default=3, ge=1, le=20)
 
 
@@ -1550,7 +1550,7 @@ class ConsistencyRequest(ApiModel):
 	have to assemble a different payload to ask the follow-up question.
 	"""
 
-	set: dict[str, float] = Field(default_factory=dict)
+	set: dict[str, float | str] = Field(default_factory=dict)
 
 
 class ViolationOut(ApiModel):
@@ -1585,14 +1585,14 @@ class ConsistencyReportOut(ApiModel):
 class PropagateRequest(ApiModel):
 	"""A change to apply to a parameter set, and the set to apply it to."""
 
-	set: dict[str, float] = Field(default_factory=dict)
-	changes: dict[str, float] = Field(default_factory=dict)
+	set: dict[str, float | str] = Field(default_factory=dict)
+	changes: dict[str, float | str] = Field(default_factory=dict)
 
 
 class PropagationOut(ApiModel):
 	"""What a change moved, and the path it moved along."""
 
-	values: dict[str, float]
+	values: dict[str, float | str]
 	changed: dict[str, float]
 	order: list[str]
 	loops: list[LoopResultOut]
@@ -1617,7 +1617,7 @@ class LoopResultOut(ApiModel):
 class ResolveRequest(ApiModel):
 	"""A parameter set whose conflicts should be resolved, and how many to take."""
 
-	set: dict[str, float] = Field(default_factory=dict)
+	set: dict[str, float | str] = Field(default_factory=dict)
 	rank: int = Field(default=1, ge=1, le=20)
 	"""How many corrections to accept per conflict, highest-ranked first."""
 
@@ -1628,7 +1628,7 @@ class ResolutionOut(ApiModel):
 	conflict: ConflictOut
 	applied: CorrectionOut | None
 	resolved: bool
-	values_after: dict[str, float]
+	values_after: dict[str, float | str]
 	"""The parameter set after the correction, propagated.
 
 	Carried per conflict rather than once at the end because a client stepping
@@ -1640,7 +1640,7 @@ class ResolutionOut(ApiModel):
 class FeedbackSolveRequest(ApiModel):
 	"""A parameter set to solve the feedback loops at."""
 
-	set: dict[str, float] = Field(default_factory=dict)
+	set: dict[str, float | str] = Field(default_factory=dict)
 
 
 class FeedbackLoopOut(ApiModel):
@@ -1652,20 +1652,20 @@ class FeedbackLoopOut(ApiModel):
 	converged: bool
 	iterations: int = Field(ge=0)
 	change: float
-	values: dict[str, float]
+	values: dict[str, float | str]
 
 
 class FeedbackReportOut(ApiModel):
 	"""Every loop's solve, and the value set that came out."""
 
 	loops: list[FeedbackLoopOut]
-	values: dict[str, float]
+	values: dict[str, float | str]
 
 
 class TranslateRequest(ApiModel):
 	"""A parameter set to build engine constraints from."""
 
-	set: dict[str, float] = Field(default_factory=dict)
+	set: dict[str, float | str] = Field(default_factory=dict)
 
 
 class TranslateRouteOut(ApiModel):

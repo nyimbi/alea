@@ -59,11 +59,14 @@ from alea.prg.dsl import (
 from alea.prg.graph import (
 	CycleError,
 	GraphError,
+	IngestReport,
 	ParameterGraph,
 	PropagationResult,
 	Violation,
+	default_ingest_dir,
 	default_prg_path,
 	load_graph,
+	load_ingested,
 )
 from alea.prg.sensitivity import (
 	GradientTable,
@@ -113,6 +116,7 @@ __all__ = [
 	"Func",
 	"GradientTable",
 	"GraphError",
+	"IngestReport",
 	"Mul",
 	"ParameterGraph",
 	"ParameterNode",
@@ -130,6 +134,7 @@ __all__ = [
 	"Symbol",
 	"Violation",
 	"const",
+	"default_ingest_dir",
 	"default_prg_path",
 	"detect_conflicts",
 	"elasticity",
@@ -138,6 +143,7 @@ __all__ = [
 	"evaluate_condition",
 	"gradients",
 	"load_graph",
+	"load_ingested",
 	"parse",
 	"parse_rule",
 	"rules_from_document",

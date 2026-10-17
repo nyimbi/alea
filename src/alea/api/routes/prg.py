@@ -142,7 +142,9 @@ def _unit_of(graph: Any, parameter: str) -> str:
 	return node.unit if node is not None and node.unit is not None else ""
 
 
-def _values(graph: Any, supplied: dict[str, float]) -> dict[str, float]:
+def _values(
+	graph: Any, supplied: dict[str, float | str]
+) -> dict[str, float | str]:
 	"""Every node's default, with ``supplied`` laid over it.
 
 	The convenience paths all need this and they all had it inline. Building it

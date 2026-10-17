@@ -23,7 +23,7 @@ from typing import Any, NamedTuple
 from alea.prg import catalog, constraints, translate
 from alea.prg.crossval import CrossValidationReport
 from alea.prg.dsl import parse_side
-from alea.prg.graph import ParameterGraph, Violation, load_graph
+from alea.prg.graph import ParameterGraph, ParameterValue, Violation, load_graph
 from alea.prg.library import SYSTEM_IDS, coverage, systems_of
 from alea.prg.uncertainty import register as uncertainty_register
 from alea.prg.units import check_graph as check_units
@@ -207,7 +207,7 @@ def graph_summary(graph: ParameterGraph | None = None) -> dict[str, Any]:
 
 
 def check_scenario(
-	values: dict[str, float], graph: ParameterGraph | None = None
+	values: dict[str, ParameterValue], graph: ParameterGraph | None = None
 ) -> ScenarioCheck:
 	"""Validate a parameter set, propagating the derived parameters first.
 
@@ -240,8 +240,8 @@ def check_scenario(
 
 
 def propagate_change(
-	values: dict[str, float],
-	changes: dict[str, float],
+	values: dict[str, ParameterValue],
+	changes: dict[str, ParameterValue],
 	graph: ParameterGraph | None = None,
 ) -> dict[str, Any]:
 	"""Apply ``changes`` to ``values`` and report what moved."""
@@ -282,13 +282,22 @@ def propagate_change(
 	# the result agrees with a full propagation to the loop solver's tolerance
 	# -- which `tests/ci` asserts rather than assumes.
 	result = g.propagate_incremental(scoped, baseline, changes)
-	moved = {
-		name: result.values[name] - baseline.values[name]
-		for name in result.values
-		if name in baseline.values
-		and abs(result.values[name] - baseline.values[name])
-		> 1e-12 * max(abs(result.values[name]), 1.0)
-	}
+	# A categorical's value is a level name and has no magnitude, so a level
+	# that moved is reported as a unit step rather than dropped. Dropping it
+	# would be the defect this report exists to prevent -- a caller who changed
+	# `market_structure` and was told nothing moved -- and the arithmetic below
+	# is a subtraction, which a level name cannot survive.
+	moved: dict[str, float] = {}
+	for name in result.values:
+		if name not in baseline.values:
+			continue
+		after, before = result.values[name], baseline.values[name]
+		if isinstance(after, str) or isinstance(before, str):
+			if after != before:
+				moved[name] = 1.0
+			continue
+		if abs(after - before) > 1e-12 * max(abs(after), 1.0):
+			moved[name] = after - before
 	return {
 		"values": result.values,
 		"changed": moved,

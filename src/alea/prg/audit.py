@@ -29,7 +29,13 @@ from typing import Any
 
 from alea.prg.dsl import DslError
 from alea.prg.feedback import FeedbackError
-from alea.prg.graph import GraphError, ParameterGraph, Violation, load_graph
+from alea.prg.graph import (
+	GraphError,
+	ParameterGraph,
+	ParameterValue,
+	Violation,
+	load_graph,
+)
 
 __all__ = [
 	"ScenarioAudit",
@@ -258,7 +264,7 @@ def audit_scenario_result(
 	# the audit checks the identities the result's values take part in, and a
 	# parameter left at its default can only make an identity harder to
 	# satisfy, never easier -- so a pass is not an artefact of the fill.
-	values: dict[str, float] = {
+	values: dict[str, ParameterValue] = {
 		name: node.default for name, node in g.nodes.items() if node.default is not None
 	}
 	values.update(supplied)

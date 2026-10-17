@@ -416,6 +416,7 @@ parameters:
       on or off — not the penetration share; the share is `smart_metering_penetration`.
     category: Digital
     type: bool
+    default: true
     role: free
     determinism: policy
     priority: P2

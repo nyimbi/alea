@@ -51,6 +51,7 @@ from alea.prg.views import (
 	Direction,
 	Equation,
 	ParameterNode,
+	ParameterType,
 	RelationshipEdge,
 	Role,
 )
@@ -60,6 +61,7 @@ __all__ = [
 	"GraphError",
 	"IngestReport",
 	"ParameterGraph",
+	"ParameterValue",
 	"PropagationResult",
 	"Violation",
 	"default_ingest_dir",
@@ -69,8 +71,71 @@ __all__ = [
 ]
 
 
+#: A parameter's value: a number for every numeric type, a level *name* for a
+#: categorical.
+#:
+#: WHY THE VALUE SET IS NOT ``dict[str, float]``. A categorical's admissible set
+#: is its ``categories`` list, and its value is one of those names. The engine
+#: used to spell every value ``float`` and coerce with ``float(v)`` at the door,
+#: which made a level name unrepresentable: the coercion raised, one frame away
+#: from the document that was wrong, with a message naming neither the node nor
+#: the field. A graph carrying one free categorical could therefore never be
+#: propagated at all -- ``propagate`` refuses a set missing a settable
+#: parameter, and no path could put the level into the set.
+#:
+#: The numeric types stay ``float`` even where the declared type is ``int`` or
+#: ``bool``: every equation is arithmetic, an ``int`` is a ``float`` that
+#: happens to be whole, and widening that would touch every derivation for no
+#: gain. Only a categorical is not a number, and only it is spelled as one.
+ParameterValue = float | str
+
+
 class GraphError(ValueError):
 	"""The graph is malformed: an edge or equation names what does not exist."""
+
+
+def _numeric_only(values: Mapping[str, ParameterValue]) -> dict[str, float]:
+	"""``values`` without its level names, for the loop solver.
+
+	A feedback loop is iterated toward a fixed point by arithmetic, and the DSL
+	has no operator that yields a level name, so no loop variable can be a
+	categorical -- ``ParameterGraph._validate`` refuses a loop whose variable has
+	no range, and ``_NON_SCALAR_TYPES`` refuses a range on a categorical, so the
+	two cannot both hold. Dropping the names here is therefore lossless for the
+	solver, and it keeps ``solve_loop``'s signature numeric rather than widening
+	every subtraction inside it to a union that cannot occur.
+
+	``solve_loop`` writes its iterates back into the mapping it is given, so the
+	caller merges this projection into ``scoped`` afterwards -- otherwise the
+	loop variables the solver just solved for would land in a copy and
+	``scoped`` would carry the seeds instead of the fixed point.
+	"""
+	return {k: v for k, v in values.items() if not isinstance(v, str)}
+
+
+def _coerce_value(graph: ParameterGraph, name: str, value: Any) -> ParameterValue:
+	"""``value`` as the graph spells ``name``: a level name, or a number.
+
+	A categorical keeps its string; everything else is coerced with ``float``,
+	which is what the engine has always done and what ``bool``/``int`` need (a
+	``True`` arriving from YAML becomes ``1.0``, and every equation is
+	arithmetic over floats).
+
+	WHY THIS IS A FUNCTION AND NOT AN INLINE ``float(v)``. There were four
+	inline coercions -- ``propagate``, the two in ``propagate_incremental``, and
+	the range check -- and a fix landing in one of four is the defect class this
+	tree keeps finding. One helper means the rule is stated once: the *node's
+	declared type* decides the spelling, not the caller and not the literal.
+
+	A name the graph does not hold keeps the ``float`` attempt, so an unknown
+	parameter still raises the coercion error it always did; naming an unknown
+	parameter is caught by each caller's own membership check before this runs,
+	and this is the backstop rather than the message.
+	"""
+	node = graph.nodes.get(name)
+	if node is not None and node.type is ParameterType.CATEGORICAL:
+		return str(value)
+	return float(value)
 
 
 class CycleError(GraphError):
@@ -124,7 +189,7 @@ class PropagationResult:
 	re-running ``propagate`` recomputes from the input rather than from this.
 	"""
 
-	values: dict[str, float]
+	values: dict[str, ParameterValue]
 	changed: dict[str, float]
 	"""Parameters whose value moved, and by how much.
 
@@ -678,7 +743,7 @@ class ParameterGraph:
 	def determined_by(self, parameter: str) -> Equation | None:
 		return self._determiner.get(parameter)
 
-	def uncarried(self, values: Mapping[str, float]) -> tuple[str, ...]:
+	def uncarried(self, values: Mapping[str, ParameterValue]) -> tuple[str, ...]:
 		"""Symbols the equations read that ``values`` does not carry, in name order.
 
 		The complete answer to "what is this parameter set missing", and the
@@ -1091,7 +1156,7 @@ class ParameterGraph:
 
 	def propagate(
 		self,
-		values: Mapping[str, float],
+		values: Mapping[str, ParameterValue],
 		changed: Iterable[str] | None = None,
 	) -> PropagationResult:
 		"""Recompute every derived parameter from ``values``.
@@ -1118,7 +1183,9 @@ class ParameterGraph:
 				)
 		self._range_excursions.clear()
 		self._solve_paths.clear()
-		scoped: dict[str, float] = {k: float(v) for k, v in values.items()}
+		scoped: dict[str, ParameterValue] = {
+			k: _coerce_value(self, k, v) for k, v in values.items()
+		}
 		# Before any arithmetic: a value outside its declared range is refused
 		# here rather than propagated and reported. The whole mapping is
 		# checked, not a caller-supplied subset, because `propagate` cannot tell
@@ -1156,7 +1223,16 @@ class ParameterGraph:
 		# A loop's inputs may themselves be derived, so the loops are solved
 		# after the first pass and the parameters that depend on the fixed
 		# point are derived after them.
-		loop_results = [solve_loop(self, loop, scoped) for loop in self.feedback_loops()]
+		loop_results = []
+		for loop in self.feedback_loops():
+			# The solver's own mapping is numeric and its iterates are written
+			# into the mapping it is handed, so it gets a projection and the
+			# solved values are merged back. Passing `scoped` itself would work
+			# only while no level name is in it, which is not a property this
+			# graph promises.
+			numeric = _numeric_only(scoped)
+			loop_results.append(solve_loop(self, loop, numeric))
+			scoped.update(numeric)
 		for parameter in waits_on_loop:
 			scoped[parameter] = self._derive(parameter, scoped)
 
@@ -1176,6 +1252,21 @@ class ParameterGraph:
 				start = self._loop_seed(name)
 			if start is None:
 				continue
+			# A categorical's value is a level name and has no arithmetic. It
+			# cannot reach here -- `computed` is the derived parameters and the
+			# loop variables, an equation is arithmetic and so produces no level
+			# name, and a loop variable is iterated toward a fixed point -- but
+			# the guard is stated rather than inferred, because the day a level
+			# name reaches this subtraction is the day it raises a TypeError
+			# naming neither the parameter nor the reason.
+			if isinstance(value, str) or isinstance(start, str):
+				if value != start:
+					# A *changed level* is a change a caller asked about, and
+					# dropping it silently is the defect `changed` exists to
+					# prevent. It has no magnitude, so it is reported with one:
+					# a level move is a unit step, not a measured delta.
+					moved[name] = 1.0
+				continue
 			# Relative, so a solver's last-bit noise on a 2700 MW capacity is
 			# not reported as a change. An absolute floor would call the same
 			# noise a change on a capacity factor and not on a capacity.
@@ -1190,7 +1281,7 @@ class ParameterGraph:
 
 	def propagate_incremental(
 		self,
-		values: Mapping[str, float],
+		values: Mapping[str, ParameterValue],
 		previous: PropagationResult,
 		changed: Iterable[str],
 	) -> PropagationResult:
@@ -1243,14 +1334,18 @@ class ParameterGraph:
 		# a caller who passes only the knobs they edited would otherwise leave
 		# every carried-over parameter absent, and the next derivation that
 		# reads one would fail on a parameter set that is complete in fact.
-		scoped: dict[str, float] = {k: float(v) for k, v in previous.values.items()}
-		scoped.update({k: float(v) for k, v in values.items()})
+		scoped: dict[str, ParameterValue] = {
+			k: _coerce_value(self, k, v) for k, v in previous.values.items()
+		}
+		scoped.update({k: _coerce_value(self, k, v) for k, v in values.items()})
 		# The same refusal `propagate` makes, at the same door. `values` is
 		# checked rather than `scoped`: `scoped` is seeded from `previous`, whose
 		# values have already been through this, so checking it again would
 		# re-refuse a set that was admitted -- and on the sparse contract this
 		# method documents, `values` is exactly what the caller is setting.
-		self._refuse_out_of_range({k: float(v) for k, v in values.items()})
+		self._refuse_out_of_range(
+			{k: _coerce_value(self, k, v) for k, v in values.items()}
+		)
 		before = dict(scoped)
 		dirty = set(self.affected_by(seeds))
 
@@ -1268,7 +1363,9 @@ class ParameterGraph:
 		for loop in self.feedback_loops():
 			members = set(loop.variables)
 			if members & dirty or members & seeds:
-				loop_results.append(solve_loop(self, loop, scoped))
+				numeric = _numeric_only(scoped)
+				loop_results.append(solve_loop(self, loop, numeric))
+				scoped.update(numeric)
 				continue
 			for member in members:
 				if member in previous.values:
@@ -1291,6 +1388,13 @@ class ParameterGraph:
 				start = self._loop_seed(name)
 			if start is None:
 				continue
+			# The same level-name guard the full propagation carries, for the
+			# same reason: a level has no arithmetic, and the report must still
+			# name a level that moved rather than drop it in silence.
+			if isinstance(value, str) or isinstance(start, str):
+				if value != start:
+					moved[name] = 1.0
+				continue
 			if abs(value - start) > 1e-12 * max(abs(value), 1.0):
 				moved[name] = value - start
 		return PropagationResult(
@@ -1304,7 +1408,7 @@ class ParameterGraph:
 		self,
 		residual: Expr,
 		parameter: str,
-		values: Mapping[str, float],
+		values: Mapping[str, ParameterValue],
 		bracket: tuple[float, float],
 	) -> float | None:
 		"""The equation's root, searching past ``bracket`` until it is found.
@@ -1355,7 +1459,7 @@ class ParameterGraph:
 			return 0.5 * (low + high)
 		return None
 
-	def _derive(self, parameter: str, values: Mapping[str, float]) -> float:
+	def _derive(self, parameter: str, values: Mapping[str, ParameterValue]) -> float:
 		equation = self._determiner[parameter]
 		if equation.relation != "eq":
 			raise GraphError(
@@ -1415,7 +1519,7 @@ class ParameterGraph:
 			return widened
 
 	def _solve_affine(
-		self, residual: Expr, parameter: str, values: Mapping[str, float]
+		self, residual: Expr, parameter: str, values: Mapping[str, ParameterValue]
 	) -> float | None:
 		"""The root of an affine residual, or ``None`` if it is not affine.
 
@@ -1461,7 +1565,7 @@ class ParameterGraph:
 		if value < low or value > high:
 			self._range_excursions[parameter] = value
 
-	def _refuse_out_of_range(self, values: Mapping[str, float]) -> None:
+	def _refuse_out_of_range(self, values: Mapping[str, ParameterValue]) -> None:
 		"""Refuse a caller-supplied value outside the node's declared range.
 
 		The declared range was read in three places and enforced in none of them
@@ -1511,10 +1615,44 @@ class ParameterGraph:
 		"""
 		for name, value in sorted(values.items()):
 			node = self._nodes.get(name)
-			if node is None or node.range is None:
+			if node is None:
 				continue
 			if not self.is_settable(name):
 				continue
+			if node.type is ParameterType.CATEGORICAL:
+				# A categorical's admissible set is its `categories` list, not a
+				# numeric range, so the `node.range is None` test this method
+				# used to open with skipped exactly the class whose admissible
+				# set the caller controls most directly -- and `propagate`
+				# accepted ``market_structure='nonsense'`` in silence, which is
+				# the same defect the docstring above describes, one class over.
+				# The comparison is against the names, not their positions: an
+				# index would repoint at a different level the moment anyone
+				# reorders `categories`, a change no reviewer reads as semantic.
+				if value not in node.categories:
+					raise GraphError(
+						f"{name}={value!r} is not one of the levels the graph "
+						f"declares for it ({list(node.categories)}); a categorical's "
+						f"admissible set is its `categories` list, so this scenario "
+						f"states a level that does not exist"
+					)
+				continue
+			if node.range is None:
+				continue
+			if isinstance(value, str):
+				# A level name, which is admissible only against `categories` --
+				# the check `ParameterNode._range_contains_default` makes at load
+				# and which `ParameterNode._string_default_names_a_level` makes
+				# for the document. A node that is `categorical` and carries a
+				# *range* is refused at load by `_NON_SCALAR_TYPES`, so reaching
+				# here with a string and a range means the node is not a
+				# categorical at all, and a string is not a value it admits.
+				raise GraphError(
+					f"{name}={value!r} is a string and the graph declares a numeric "
+					f"range ({node.range[0]}, {node.range[1]}) for it; a level name "
+					f"is admissible only on a `categorical` node, whose admissible "
+					f"set is its `categories` list"
+				)
 			low, high = node.range
 			if not math.isfinite(value):
 				# Not an excursion, for the reason :meth:`_note_excursion`
@@ -1570,7 +1708,7 @@ class ParameterGraph:
 		}
 
 	def consistency(
-		self, values: Mapping[str, float], *, only: str | None = None
+		self, values: Mapping[str, ParameterValue], *, only: str | None = None
 	) -> list[Violation]:
 		"""Every equation that does not hold at ``values``.
 
@@ -1629,7 +1767,7 @@ class ParameterGraph:
 				)
 		return violations
 
-	def cross_validate(self, values: Mapping[str, float]) -> CrossValidationReport:
+	def cross_validate(self, values: Mapping[str, ParameterValue]) -> CrossValidationReport:
 		"""Every declared cross-validation rule against ``values``.
 
 		A separate pass from :meth:`consistency` because it answers a different
@@ -1643,12 +1781,12 @@ class ParameterGraph:
 
 		return run_rules(self._rules, values, self)
 
-	def _residual(self, equation: Equation, values: Mapping[str, float]) -> float:
+	def _residual(self, equation: Equation, values: Mapping[str, ParameterValue]) -> float:
 		return evaluate(parse_side(equation.lhs), values) - evaluate(
 			parse_side(equation.rhs), values
 		)
 
-	def _scale(self, equation: Equation, values: Mapping[str, float]) -> float:
+	def _scale(self, equation: Equation, values: Mapping[str, ParameterValue]) -> float:
 		return max(
 			1.0,
 			abs(evaluate(parse_side(equation.lhs), values)),
@@ -1656,7 +1794,7 @@ class ParameterGraph:
 		)
 
 	def _inequality_holds(
-		self, equation: Equation, values: Mapping[str, float]
+		self, equation: Equation, values: Mapping[str, ParameterValue]
 	) -> bool:
 		residual = self._residual(equation, values)
 		if equation.relation == "leq":

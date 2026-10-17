@@ -484,7 +484,7 @@ def prg_propagate(
 	with _run("cli.prg.propagate"):
 		graph = load_graph()
 		values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
-		changes: dict[str, float] = {}
+		changes: dict[str, float | str] = {}
 		for override in set_ or []:
 			key, _, raw = override.partition("=")
 			if key not in graph.nodes:
@@ -494,7 +494,33 @@ def prg_propagate(
 				raise typer.Exit(code=2)
 			if not graph.is_settable(key):
 				_refuse_unsettable(graph, key)
-			changes[key] = float(raw)
+			node = graph.nodes[key]
+			if node.type.value == "categorical":
+				# A level name, not a number: `market_structure=single_buyer`.
+				# Coercing it would raise a ValueError naming neither the
+				# parameter nor the list of levels it admits, so the check is
+				# made here against the node's own `categories` -- the list that
+				# *is* a categorical's range.
+				if raw not in node.categories:
+					typer.secho(
+						f"{raw!r} is not one of {key}'s categories "
+						f"{list(node.categories)}",
+						fg=typer.colors.RED,
+						err=True,
+					)
+					raise typer.Exit(code=2)
+				changes[key] = raw
+				continue
+			try:
+				changes[key] = float(raw)
+			except ValueError:
+				typer.secho(
+					f"{raw!r} is not a number, and {key} is declared "
+					f"{node.type.value}",
+					fg=typer.colors.RED,
+					err=True,
+				)
+				raise typer.Exit(code=2) from None
 		result = propagate_change(values, changes)
 		for name, delta in sorted(result["changed"].items()):
 			typer.echo(f"  {name:38s} {result['values'][name]:14.6f}  ({delta:+.6f})")
