@@ -1,0 +1,823 @@
+parameters:
+  mwh_per_oil_unit:
+    name: MWh per oil unit
+    description: A barrel of crude is, on the EIA distillate average, 5.8 MMBtu; at 0.29307 MWh per MMBtu
+      that is 1.699 MWh delivered. The factor is a node so a reviewer can check the basis.
+    category: Cost
+    type: float
+    unit: '1'
+    range:
+    - 0.005
+    - 40.0
+    default: 1.699
+    role: exogenous
+    determinism: physical
+    priority: P2
+    status: existing
+    source: EIA conversion basis (5.8 MMBtu/barrel); physical constant 0.29307 MWh/MMBtu
+    users:
+    - Planners
+  oil_price_per_mwh:
+    name: Oil price per mwh
+    description: The commodity price delivered per MWh, from the market quote (USD/barrel). The conversion's
+      constant is a node named beside it, so a reviewer checks the basis rather than trusting a folded
+      number.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 1000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: EIA conversion basis (5.8 MMBtu/barrel); physical constant 0.29307 MWh/MMBtu
+    users:
+    - Planners
+    - Traders
+  mwh_per_lng_unit:
+    name: MWh per lng unit
+    description: LNG trades on the same Btu basis as pipeline gas; the MWh conversion is the inverse of
+      the Btu content.
+    category: Cost
+    type: float
+    unit: '1'
+    range:
+    - 0.005
+    - 40.0
+    default: 3.4121540928788345
+    role: exogenous
+    determinism: physical
+    priority: P2
+    status: existing
+    source: 'Physical constant: 1 MMBtu = 0.29307 MWh (HHV)'
+    users:
+    - Planners
+  lng_price_per_mwh:
+    name: Lng price per mwh
+    description: The commodity price delivered per MWh, from the market quote (USD/MMBtu). The conversion's
+      constant is a node named beside it, so a reviewer checks the basis rather than trusting a folded
+      number.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 1000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: 'Physical constant: 1 MMBtu = 0.29307 MWh (HHV)'
+    users:
+    - Planners
+    - Traders
+  mwh_per_ammonia_unit:
+    name: MWh per ammonia unit
+    description: Ammonia's lower heating value is 18.6 GJ per tonne; at 3.6 GJ per MWh that is 5.167 MWh
+      delivered per tonne.
+    category: Cost
+    type: float
+    unit: '1'
+    range:
+    - 0.005
+    - 40.0
+    default: 0.19353590090961875
+    role: exogenous
+    determinism: physical
+    priority: P2
+    status: existing
+    source: 'LHV of NH3: 18.6 GJ/t (standard fuel tables)'
+    users:
+    - Planners
+  ammonia_price_per_mwh:
+    name: Ammonia price per mwh
+    description: The commodity price delivered per MWh, from the market quote (USD/tonne). The conversion's
+      constant is a node named beside it, so a reviewer checks the basis rather than trusting a folded
+      number.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 1000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: 'LHV of NH3: 18.6 GJ/t (standard fuel tables)'
+    users:
+    - Planners
+    - Traders
+  mwh_per_hydrogen_unit:
+    name: MWh per hydrogen unit
+    description: Hydrogen's lower heating value is 33.33 kWh per kg; the delivered MWh basis is the LHV.
+    category: Cost
+    type: float
+    unit: '1'
+    range:
+    - 0.005
+    - 40.0
+    default: 30.003000300030003
+    role: exogenous
+    determinism: physical
+    priority: P2
+    status: existing
+    source: 'LHV of H2: 33.33 kWh/kg (standard fuel tables)'
+    users:
+    - Planners
+  hydrogen_price_per_mwh:
+    name: Hydrogen price per mwh
+    description: The commodity price delivered per MWh, from the market quote (USD/kg). The conversion's
+      constant is a node named beside it, so a reviewer checks the basis rather than trusting a folded
+      number.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 1000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: 'LHV of H2: 33.33 kWh/kg (standard fuel tables)'
+    users:
+    - Planners
+    - Traders
+  battery_cycles_per_day:
+    name: Battery cycles per day
+    description: Deep cycles the battery completes per day. One is a daily-cycle shifting battery; below
+      one is a peaker duty; above two is frequent cycling whose degradation the warranty would price.
+    category: Technology
+    type: float
+    unit: 1/day
+    range:
+    - 0.0
+    - 4.0
+    default: 1.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: Lazard LCOS; ATB battery duty assumptions
+    users:
+    - Developers
+  battery_round_trip_efficiency:
+    name: Battery round trip efficiency
+    description: 'Round-trip efficiency of the storage system: energy in against energy out, the DC-coupled
+      system''s own number. Was a placeholder 500000.'
+    category: Supply
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.5
+    - 1.0
+    default: 0.85
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - All
+    priority: P1
+    status: existing
+    deprecated_by: null
+  battery_duration:
+    name: Battery duration
+    description: Hours the battery delivers at rated power. Four hours is a grid-shifting duty; was a
+      placeholder 500000.
+    category: Supply
+    subcategory: null
+    type: float
+    unit: hours
+    range:
+    - 0.5
+    - 12.0
+    default: 4.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - All
+    priority: P1
+    status: existing
+    deprecated_by: null
+  lcoe_battery_usd_per_kwh:
+    name: Levelised cost of storage
+    description: 'The LCOS: annualised energy-capex per delivered energy, divided by the round-trip efficiency,
+      plus the variable O&M per kWh. A USD/kWh number beside the generation technologies'' USD/MWh ones.'
+    category: Cost
+    type: float
+    unit: USD/kWh
+    range:
+    - 0.0
+    - 10.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025 battery system cost; Lazard LCOS
+    users:
+    - Developers
+    - Investors
+  pass_through_tariff_usd_per_mwh:
+    name: Tariff with pass-through
+    description: 'The cost-recovery level plus the variable stack carried at the pass-through share. The
+      regulator''s lever: the share the variable costs pass to consumers against what the utility absorbs.'
+    category: Market
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 4000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: Pass-through pricing rules (African utility tariff designs)
+    users:
+    - Regulators
+  wholesale_cost_pass_through:
+    name: Wholesale pass-through
+    description: 'The share of the recovery tariff that is the variable stack: fuel, carbon and losses,
+      which the pass-through pricing rule carries at the wholesale level. A policy dial; zero is full
+      absorption, one is full pass-through.'
+    category: Market
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.8
+    role: free
+    determinism: policy
+    priority: P2
+    status: existing
+    source: Pass-through pricing rules (African utility tariff designs)
+    users:
+    - Regulators
+  variable_stack_usd_per_mwh:
+    name: Variable cost stack
+    description: 'Fuel plus carbon, the dispatchable fleet''s own marginal cost: the quantity a pass-through
+      rule passes and the tariff''s recovery level sits on top of.'
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 400.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The dispatch's own variable cost
+    users:
+    - Traders
+equations:
+  wacc_alias:
+    id: wacc_alias
+    name: WACC is the discount rate
+    description: The catalog's WACC row and the financial block's discount rate are one quantity, so the
+      duplicate derives from the computed one and the graph keeps a single blend. An equality between
+      two ids for one number is the closure that keeps a scenario setting either name consistent; the
+      alternative -- deprecating the id -- loses the label a report may cite.
+    system: financial
+    lhs: weighted_average_cost_of_capital
+    rhs: discount_rate
+    relation: eq
+    parameters:
+    - weighted_average_cost_of_capital
+    - discount_rate
+    free_variables:
+    - discount_rate
+    determined_variables:
+    - weighted_average_cost_of_capital
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Standard WACC with the interest tax shield
+    latex: \mathrm{WACC} = \mathrm{discount\_rate}
+  regulatory_asset_base_definition:
+    id: regulatory_asset_base_definition
+    name: Regulated asset base from the fleet
+    description: Gross fleet capital less what the books have written down. The gross capital is the capacity-weighted
+      capex; the 1000 converts kW-per-MW and the million converts USD. A fraction the regulator's roll-forward
+      states, not one the model invents.
+    system: financial
+    lhs: regulatory_asset_base
+    rhs: capex_usd_per_kw * total_capacity_mw * (1 - accumulated_depreciation_fraction) / 1000
+    relation: eq
+    parameters:
+    - regulatory_asset_base
+    - capex_usd_per_kw
+    - total_capacity_mw
+    - accumulated_depreciation_fraction
+    free_variables:
+    - capex_usd_per_kw
+    - total_capacity_mw
+    - accumulated_depreciation_fraction
+    determined_variables:
+    - regulatory_asset_base
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Ofwat PR24 Appendix 11, allowed return on capital
+    latex: \mathrm{RAB} = \mathrm{capex} \cdot C_{MW} \cdot 10^3 \cdot (1 - d_{acc}) \, /\, 10^6
+  regulatory_depreciation_definition:
+    id: regulatory_depreciation_definition
+    name: Regulatory depreciation
+    description: Straight-line write-down of the asset base over the regulatory asset life. The rate-of-return
+      revenue requirement's first term; the second is the return on the base below.
+    system: financial
+    lhs: regulatory_depreciation
+    rhs: regulatory_asset_base / depreciation_life_by_asset
+    relation: eq
+    parameters:
+    - regulatory_depreciation
+    - regulatory_asset_base
+    - depreciation_life_by_asset
+    free_variables:
+    - depreciation_life_by_asset
+    determined_variables:
+    - regulatory_depreciation
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Ofwat PR24 Appendix 11, allowed return on capital
+    latex: D_{reg} = \mathrm{RAB} / L_{reg}
+  allowed_revenue_requirement_definition:
+    id: allowed_revenue_requirement_definition
+    name: Allowed revenue requirement
+    description: Depreciation plus the allowed return on the base, with that return taken as the blend
+      the financial block computes -- the vanilla regulatory WACC the UKRN guidance builds. A tariff that
+      recovers less than this under-recovers the utility; the revenue cap and the applied tariff are the
+      instruments around it.
+    system: financial
+    lhs: allowed_revenue_requirement
+    rhs: regulatory_depreciation + regulatory_asset_base * discount_rate
+    relation: eq
+    parameters:
+    - allowed_revenue_requirement
+    - regulatory_depreciation
+    - regulatory_asset_base
+    - discount_rate
+    free_variables:
+    - regulatory_depreciation
+    - regulatory_asset_base
+    determined_variables:
+    - allowed_revenue_requirement
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: UKRN cost of capital guidance (2023), §allowed returns
+    latex: R^* = D_{reg} + \mathrm{RAB} \cdot \mathrm{WACC}
+  cost_of_debt_capped:
+    id: cost_of_debt_capped
+    name: Debt cost within the allowed return
+    description: 'The regulator''s debt allowance binds the commercial cost of debt the scenario may assume:
+      a component priced above the allowed return is the pass-through the cap regime forbids, so a scenario
+      carrying it is inadmissible rather than silently under-recovering.'
+    system: financial
+    lhs: cost_of_debt
+    rhs: allowed_return_on_debt
+    relation: leq
+    parameters:
+    - cost_of_debt
+    - allowed_return_on_debt
+    free_variables:
+    - cost_of_debt
+    - allowed_return_on_debt
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: UKRN cost of capital guidance (2023), §overall framework
+    latex: K_d \le A_d
+  cost_of_equity_capped:
+    id: cost_of_equity_capped
+    name: Equity cost within the allowed return
+    description: 'The equity-return allowance binds the cost of equity: the CAPM-estimated return a project
+      demands cannot exceed what the regulatory settlement awards.'
+    system: financial
+    lhs: cost_of_equity
+    rhs: allowed_return_on_equity
+    relation: leq
+    parameters:
+    - cost_of_equity
+    - allowed_return_on_equity
+    free_variables:
+    - cost_of_equity
+    - allowed_return_on_equity
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Ofwat PR24 Appendix 11, allowed return on capital
+    latex: K_e \le A_e
+  applied_tariff_definition:
+    id: applied_tariff_definition
+    name: Applied tariff under the cap
+    description: The revenue cap's multiplier applied to the cost-recovery tariff. A cap below 1.0 withholds
+      part of the revenue requirement -- the incentive instrument a price-control settlement actually
+      sets -- and a cap above 1.0 is a premium the accounts must carry.
+    system: price_demand
+    lhs: applied_tariff_usd_per_mwh
+    rhs: regulated_tariff_usd_per_mwh * revenue_cap
+    relation: eq
+    parameters:
+    - applied_tariff_usd_per_mwh
+    - regulated_tariff_usd_per_mwh
+    - revenue_cap
+    free_variables:
+    - revenue_cap
+    determined_variables:
+    - applied_tariff_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: World Bank Regulation of Utilities handbook, revenue caps
+    latex: p_{applied} = p_{cr} \cdot x_{cap}
+  oil_price_per_mwh_definition:
+    id: oil_price_per_mwh_definition
+    name: oil price per mwh (computed)
+    description: 'A barrel of crude is, on the EIA distillate average, 5.8 MMBtu; at 0.29307 MWh per MMBtu
+      that is 1.699 MWh delivered. The factor is a node so a reviewer can check the basis. The conversion
+      is dimensional: a price over an energy basis scales by the unit''s own MWh content.'
+    system: cost_accounting
+    lhs: oil_price_per_mwh
+    rhs: oil_price * mwh_per_oil_unit
+    relation: eq
+    parameters:
+    - oil_price_per_mwh
+    - oil_price
+    - mwh_per_oil_unit
+    free_variables:
+    - oil_price
+    - mwh_per_oil_unit
+    determined_variables:
+    - oil_price_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA conversion basis (5.8 MMBtu/barrel); physical constant 0.29307 MWh/MMBtu
+    latex: \mathrm{oil\_price\_per\_mwh} = \mathrm{oil\_price} \cdot f_{\mathrm{conv}}
+  lng_price_per_mwh_definition:
+    id: lng_price_per_mwh_definition
+    name: lng price per mwh (computed)
+    description: 'LNG trades on the same Btu basis as pipeline gas; the MWh conversion is the inverse
+      of the Btu content. The conversion is dimensional: a price over an energy basis scales by the unit''s
+      own MWh content.'
+    system: cost_accounting
+    lhs: lng_price_per_mwh
+    rhs: lng_price * mwh_per_lng_unit
+    relation: eq
+    parameters:
+    - lng_price_per_mwh
+    - lng_price
+    - mwh_per_lng_unit
+    free_variables:
+    - lng_price
+    - mwh_per_lng_unit
+    determined_variables:
+    - lng_price_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: 'Physical constant: 1 MMBtu = 0.29307 MWh (HHV)'
+    latex: \mathrm{lng\_price\_per\_mwh} = \mathrm{lng\_price} \cdot f_{\mathrm{conv}}
+  ammonia_price_per_mwh_definition:
+    id: ammonia_price_per_mwh_definition
+    name: ammonia price per mwh (computed)
+    description: 'Ammonia''s lower heating value is 18.6 GJ per tonne; at 3.6 GJ per MWh that is 5.167
+      MWh delivered per tonne. The conversion is dimensional: a price over an energy basis scales by the
+      unit''s own MWh content.'
+    system: cost_accounting
+    lhs: ammonia_price_per_mwh
+    rhs: ammonia_price * mwh_per_ammonia_unit
+    relation: eq
+    parameters:
+    - ammonia_price_per_mwh
+    - ammonia_price
+    - mwh_per_ammonia_unit
+    free_variables:
+    - ammonia_price
+    - mwh_per_ammonia_unit
+    determined_variables:
+    - ammonia_price_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: 'LHV of NH3: 18.6 GJ/t (standard fuel tables)'
+    latex: \mathrm{ammonia\_price\_per\_mwh} = \mathrm{ammonia\_price} \cdot f_{\mathrm{conv}}
+  hydrogen_price_per_mwh_definition:
+    id: hydrogen_price_per_mwh_definition
+    name: hydrogen price per mwh (computed)
+    description: 'Hydrogen''s lower heating value is 33.33 kWh per kg; the delivered MWh basis is the
+      LHV. The conversion is dimensional: a price over an energy basis scales by the unit''s own MWh content.'
+    system: cost_accounting
+    lhs: hydrogen_price_per_mwh
+    rhs: hydrogen_price * mwh_per_hydrogen_unit
+    relation: eq
+    parameters:
+    - hydrogen_price_per_mwh
+    - hydrogen_price
+    - mwh_per_hydrogen_unit
+    free_variables:
+    - hydrogen_price
+    - mwh_per_hydrogen_unit
+    determined_variables:
+    - hydrogen_price_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: 'LHV of H2: 33.33 kWh/kg (standard fuel tables)'
+    latex: \mathrm{hydrogen\_price\_per\_mwh} = \mathrm{hydrogen\_price} \cdot f_{\mathrm{conv}}
+  lcoe_battery_definition:
+    id: lcoe_battery_definition
+    name: Levelised cost of storage
+    description: 'The LCOS form: the capital cost per delivered kilowatt-hour over the battery''s daily
+      cycle count, annualised by the financial block''s CRF, discounted by the round-trip efficiency,
+      plus the variable O&M the per-cycle wear prices. The charging cost is deliberately absent: the price
+      of the electricity the battery buys is the system''s own economics and not the asset''s.'
+    system: cost_accounting
+    lhs: lcoe_battery_usd_per_kwh
+    rhs: crf * capex_battery / (365 * battery_cycles_per_day * battery_round_trip_efficiency) + opex_variable_battery
+      / 1000
+    relation: eq
+    parameters:
+    - lcoe_battery_usd_per_kwh
+    - crf
+    - capex_battery
+    - battery_cycles_per_day
+    - battery_round_trip_efficiency
+    - opex_variable_battery
+    free_variables:
+    - capex_battery
+    - battery_cycles_per_day
+    - battery_round_trip_efficiency
+    - opex_variable_battery
+    determined_variables:
+    - lcoe_battery_usd_per_kwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025 battery equations; Lazard LCOS
+    latex: \mathrm{LCOS} = \mathrm{CRF} \cdot c_{kWh} / (365 \cdot n_c \cdot \eta_{rt}) + \mathrm{VOM}
+      / 10^3
+  variable_stack_definition:
+    id: variable_stack_definition
+    name: The variable cost stack
+    description: 'Fuel and carbon: the marginal cost''s variable part. The shipped marginal-cost definition
+      adds them already; this one is named so the pass-through and the applied-tariff chain can name what
+      they scale, rather than reading the whole marginal cost.'
+    system: cost_accounting
+    lhs: variable_stack_usd_per_mwh
+    rhs: fuel_price_usd_per_mwh + carbon_cost_usd_per_mwh
+    relation: eq
+    parameters:
+    - variable_stack_usd_per_mwh
+    - fuel_price_usd_per_mwh
+    - carbon_cost_usd_per_mwh
+    free_variables: []
+    determined_variables:
+    - variable_stack_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: The shipped marginal-cost definition, split
+    latex: c_v = p_{fuel} + c_{CO2}
+  pass_through_tariff_definition:
+    id: pass_through_tariff_definition
+    name: Tariff with pass-through
+    description: 'The cost-recovery level plus the variable stack carried at the pass-through share the
+      policy sets. The regulator''s lever: the share the variable costs pass to consumers against what
+      the utility absorbs.'
+    system: price_demand
+    lhs: pass_through_tariff_usd_per_mwh
+    rhs: applied_tariff_usd_per_mwh + wholesale_cost_pass_through * variable_stack_usd_per_mwh
+    relation: eq
+    parameters:
+    - pass_through_tariff_usd_per_mwh
+    - applied_tariff_usd_per_mwh
+    - wholesale_cost_pass_through
+    - variable_stack_usd_per_mwh
+    free_variables:
+    - applied_tariff_usd_per_mwh
+    - wholesale_cost_pass_through
+    determined_variables:
+    - pass_through_tariff_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Pass-through pricing
+    latex: p_c = p_a + s_t \\cdot c_v
+relationships:
+- source: discount_rate
+  target: weighted_average_cost_of_capital
+  equation_id: wacc_alias
+  relationship: equality
+  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
+    computes.'
+- source: capex_usd_per_kw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: Gross fleet capital enters the base the allowed return is earned on.
+- source: total_capacity_mw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: The fleet's size sets the scale of the capital in the accounts.
+- source: accumulated_depreciation_fraction
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: What the books have written down between gross capital and the base.
+- source: regulatory_asset_base
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: equality
+  description: Straight-line write-down of the base over the regulatory asset life.
+- source: depreciation_life_by_asset
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: functional
+  description: A longer regulatory life spreads the base thinner over the years.
+- source: regulatory_depreciation
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: Depreciation is the first term of the revenue requirement.
+- source: regulatory_asset_base
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return is earned on the base, not on gross capital.
+- source: discount_rate
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return rate is the blend the financial block computes.
+- source: allowed_return_on_debt
+  target: cost_of_debt
+  equation_id: cost_of_debt_capped
+  relationship: constraint
+  description: The allowance binds the debt rate a scenario may carry.
+- source: allowed_return_on_equity
+  target: cost_of_equity
+  equation_id: cost_of_equity_capped
+  relationship: constraint
+  description: The allowance binds the equity return a valuation may assume.
+- source: regulated_tariff_usd_per_mwh
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: equality
+  description: The applied tariff is the recovery level in the absence of a cap.
+- source: revenue_cap
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: functional
+  description: The cap scales the recovery level; below 1 it withholds part of it.
+- source: oil_price
+  target: oil_price_per_mwh
+  equation_id: oil_price_per_mwh_definition
+  relationship: functional
+  strength: hard
+  description: Enters the delivered price.
+- source: mwh_per_oil_unit
+  target: oil_price_per_mwh
+  equation_id: oil_price_per_mwh_definition
+  relationship: functional
+  strength: hard
+  description: Enters the delivered price.
+- source: lng_price
+  target: lng_price_per_mwh
+  equation_id: lng_price_per_mwh_definition
+  relationship: functional
+  strength: hard
+  description: Enters the delivered price.
+- source: mwh_per_lng_unit
+  target: lng_price_per_mwh
+  equation_id: lng_price_per_mwh_definition
+  relationship: functional
+  strength: hard
+  description: Enters the delivered price.
+- source: ammonia_price
+  target: ammonia_price_per_mwh
+  equation_id: ammonia_price_per_mwh_definition
+  relationship: functional
+  strength: hard
+  description: Enters the delivered price.
+- source: mwh_per_ammonia_unit
+  target: ammonia_price_per_mwh
+  equation_id: ammonia_price_per_mwh_definition
+  relationship: functional
+  strength: hard
+  description: Enters the delivered price.
+- source: hydrogen_price
+  target: hydrogen_price_per_mwh
+  equation_id: hydrogen_price_per_mwh_definition
+  relationship: functional
+  strength: hard
+  description: Enters the delivered price.
+- source: mwh_per_hydrogen_unit
+  target: hydrogen_price_per_mwh
+  equation_id: hydrogen_price_per_mwh_definition
+  relationship: functional
+  strength: hard
+  description: Enters the delivered price.
+- source: crf
+  target: lcoe_battery_usd_per_kwh
+  equation_id: lcoe_battery_definition
+  relationship: functional
+  strength: hard
+  description: Enters the LCOS.
+- source: capex_battery
+  target: lcoe_battery_usd_per_kwh
+  equation_id: lcoe_battery_definition
+  relationship: functional
+  strength: hard
+  description: Enters the LCOS.
+- source: battery_cycles_per_day
+  target: lcoe_battery_usd_per_kwh
+  equation_id: lcoe_battery_definition
+  relationship: functional
+  strength: hard
+  description: Enters the LCOS.
+- source: battery_round_trip_efficiency
+  target: lcoe_battery_usd_per_kwh
+  equation_id: lcoe_battery_definition
+  relationship: functional
+  strength: hard
+  description: Enters the LCOS.
+- source: opex_variable_battery
+  target: lcoe_battery_usd_per_kwh
+  equation_id: lcoe_battery_definition
+  relationship: functional
+  strength: hard
+  description: Enters the LCOS.
+- source: fuel_price_usd_per_mwh
+  target: variable_stack_usd_per_mwh
+  equation_id: variable_stack_definition
+  relationship: functional
+  strength: hard
+  description: A variable-cost term.
+- source: carbon_cost_usd_per_mwh
+  target: variable_stack_usd_per_mwh
+  equation_id: variable_stack_definition
+  relationship: functional
+  strength: hard
+  description: A variable-cost term.
+- source: applied_tariff_usd_per_mwh
+  target: pass_through_tariff_usd_per_mwh
+  equation_id: pass_through_tariff_definition
+  relationship: functional
+  strength: hard
+  description: Enters the pass-through tariff.
+- source: wholesale_cost_pass_through
+  target: pass_through_tariff_usd_per_mwh
+  equation_id: pass_through_tariff_definition
+  relationship: functional
+  strength: hard
+  description: Enters the pass-through tariff.
+- source: variable_stack_usd_per_mwh
+  target: pass_through_tariff_usd_per_mwh
+  equation_id: pass_through_tariff_definition
+  relationship: functional
+  strength: hard
+  description: Enters the pass-through tariff.
+cross_validation: []

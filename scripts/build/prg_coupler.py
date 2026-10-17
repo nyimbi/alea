@@ -545,7 +545,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -582,6 +582,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b15_equations)
 		edges = list(BATCH12_EDGES) + b15_edges
+	elif batch == "16":
+		b16_nodes, b16_equations, b16_edges, b16_rules = build_batch16(graph)
+		rules.extend(b16_rules)
+		nodes.update(b16_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b16_equations)
+		edges = list(BATCH12_EDGES) + b16_edges
 	else:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		edges = list(BATCH12_EDGES)
@@ -1722,6 +1729,298 @@ def build_batch15(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 			),
 		},
 	]
+	return nodes, equations, edges, rules
+
+
+
+# ---------------------------------------------------------------------------
+# Batch 16 -- fuel conversions, storage, and the tariff's own stack.
+#
+# Fuels: a commodity price in the unit its market quotes becomes the
+# delivered price at the conversion constant the thermodynamics states.
+# Every constant is named, cited and carried as a node rather than folded,
+# so the researcher can question it (the graph's own principle: constants
+# written so a reader can check them).
+#
+#   1 MMBtu = 0.29307 MWh (HHV); the graph already converts gas with 0.293,
+#   and LNG trades at the same Btu basis. A barrel of crude: 5.8 MMBtu
+#   (EIA average distillate basis) = 1.699 MWh. A tonne of ammonia: LHV
+#   18.6 GJ/t = 5.167 MWh/t. Hydrogen: LHV 33.33 kWh/kg. Biomass: the
+#   delivered heat depends on moisture; the graph carries the fuel cost
+#   per MWh directly, so no conversion is needed there.
+#
+# Storage: the battery's levelised cost of storage (LCOS) is the annualised
+# energy-capex per delivered energy, divided by the round-trip efficiency,
+# plus the variable O&M. ATB battery equations; Lazard LCOS method.
+# Corrections: battery_round_trip_efficiency and battery_duration carried
+# placeholder midpoints (500000 -- a round-trip efficiency of half a
+# million); 0.85 and 4 hours is what a grid battery is.
+# ---------------------------------------------------------------------------
+
+FUEL_CONVERSIONS: tuple[tuple[str, str, str, float, str, str], ...] = (
+	# (lhs, source price node, source unit, factor, description, reference)
+	(
+		"oil_price_per_mwh", "oil_price", "USD/barrel", 1.699,
+		"A barrel of crude is, on the EIA distillate average, 5.8 MMBtu; at 0.29307 MWh per MMBtu that is 1.699 MWh delivered. The factor is a node so a reviewer can check the basis.",
+		"EIA conversion basis (5.8 MMBtu/barrel); physical constant 0.29307 MWh/MMBtu",
+	),
+	(
+		"lng_price_per_mwh", "lng_price", "USD/MMBtu", 1 / 0.29307,
+		"LNG trades on the same Btu basis as pipeline gas; the MWh conversion is the inverse of the Btu content.",
+		"Physical constant: 1 MMBtu = 0.29307 MWh (HHV)",
+	),
+	(
+		"ammonia_price_per_mwh", "ammonia_price", "USD/tonne", 1 / 5.167,
+		"Ammonia's lower heating value is 18.6 GJ per tonne; at 3.6 GJ per MWh that is 5.167 MWh delivered per tonne.",
+		"LHV of NH3: 18.6 GJ/t (standard fuel tables)",
+	),
+	(
+		"hydrogen_price_per_mwh", "hydrogen_price", "USD/kg", 1 / 0.03333,
+		"Hydrogen's lower heating value is 33.33 kWh per kg; the delivered MWh basis is the LHV.",
+		"LHV of H2: 33.33 kWh/kg (standard fuel tables)",
+	),
+)
+
+
+def build_batch16(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, str]], list[dict[str, Any]]]:
+	"""Batch 16: fuel conversions, storage costs, tariff stack."""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, str]] = []
+	rules: list[dict[str, Any]] = []
+
+	for lhs, source, unit, factor, prose, cite in FUEL_CONVERSIONS:
+		target_unit = "USD/MWh"
+		factor_name = f"mwh_per_{source.split('_')[0]}_unit"
+		nodes[factor_name] = {
+			"name": f"MWh per {source.split('_')[0]} unit",
+			"description": prose,
+			"category": "Cost", "type": "float", "unit": "1",
+			"range": [0.005, 40.0], "default": factor, "role": "exogenous",
+			"determinism": "physical", "priority": "P2", "status": "existing",
+			"source": cite, "users": ["Planners"],
+		}
+		nodes[lhs] = {
+			"name": lhs.replace("_", " ").capitalize(),
+			"description": (
+				f"The commodity price delivered per MWh, from the market quote "
+				f"({unit}). The conversion's constant is a node named beside it, "
+				"so a reviewer checks the basis rather than trusting a folded number."
+			),
+			"category": "Cost", "type": "float", "unit": target_unit,
+			"range": [0.0, 1000.0], "role": "derived", "determinism": "physical",
+			"priority": "P1", "status": "existing", "source": cite,
+			"users": ["Planners", "Traders"],
+		}
+		eq_id = f"{lhs}_definition"
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": f"{lhs.replace('_', ' ')} (computed)",
+			"description": prose + " The conversion is dimensional: a price over an energy basis scales by the unit's own MWh content.",
+			"system": "cost_accounting",
+			"lhs": lhs,
+			"rhs": f"{source} * {factor_name}",
+			"relation": "eq",
+			"parameters": [lhs, source, factor_name],
+			"free_variables": [source, factor_name],
+			"determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{" + lhs.replace("_", r"\_") + r"} = \mathrm{" + source.replace("_", r"\_") + r"} \cdot f_{\mathrm{conv}}",
+		}
+		for sym in (source, factor_name):
+			edges.append({
+				"source": sym, "target": lhs,
+				"equation_id": eq_id, "relationship": "functional", "strength": "hard",
+				"description": "Enters the delivered price.",
+			})
+
+	# --- the battery's LCOS ---
+	nodes["battery_cycles_per_day"] = {
+		"name": "Battery cycles per day",
+		"description": (
+			"Deep cycles the battery completes per day. One is a daily-cycle "
+			"shifting battery; below one is a peaker duty; above two is "
+			"frequent cycling whose degradation the warranty would price."
+		),
+		"category": "Technology", "type": "float", "unit": "1/day",
+		"range": [0.0, 4.0], "default": 1.0, "role": "free",
+		"determinism": "physical", "priority": "P1", "status": "existing",
+		"source": "Lazard LCOS; ATB battery duty assumptions",
+		"users": ["Developers"],
+	}
+	for name, unit, rng, default, prose in (
+		("battery_round_trip_efficiency", "1", [0.5, 1.0], 0.85,
+		 "Round-trip efficiency of the storage system: energy in against energy out, the DC-coupled system's own number. Was a placeholder 500000."),
+		("battery_duration", "hours", [0.5, 12.0], 4.0,
+		 "Hours the battery delivers at rated power. Four hours is a grid-shifting duty; was a placeholder 500000."),
+	):
+		full = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
+		full.update({
+			"unit": unit, "range": rng, "default": default,
+			"description": prose,
+		})
+		nodes[name] = full
+
+	nodes["lcoe_battery_usd_per_kwh"] = {
+		"name": "Levelised cost of storage",
+		"description": (
+			"The LCOS: annualised energy-capex per delivered energy, divided "
+			"by the round-trip efficiency, plus the variable O&M per kWh. A "
+			"USD/kWh number beside the generation technologies' USD/MWh ones."
+		),
+		"category": "Cost", "type": "float", "unit": "USD/kWh",
+		"range": [0.0, 10.0], "role": "derived", "determinism": "physical",
+		"priority": "P1", "status": "existing",
+		"source": "NREL ATB 2025 battery system cost; Lazard LCOS",
+		"users": ["Developers", "Investors"],
+	}
+	equations["lcoe_battery_definition"] = {
+		"id": "lcoe_battery_definition",
+		"name": "Levelised cost of storage",
+		"description": (
+			"The LCOS form: the capital cost per delivered kilowatt-hour over "
+			"the battery's daily cycle count, annualised by the financial "
+			"block's CRF, discounted by the round-trip efficiency, plus the "
+			"variable O&M the per-cycle wear prices. The charging cost is "
+			"deliberately absent: the price of the electricity the battery "
+			"buys is the system's own economics and not the asset's."
+		),
+		"system": "cost_accounting",
+		"lhs": "lcoe_battery_usd_per_kwh",
+		"rhs": (
+			"crf * capex_battery / (365 * battery_cycles_per_day "
+			"* battery_round_trip_efficiency) + opex_variable_battery / 1000"
+		),
+		"relation": "eq",
+		"parameters": [
+			"lcoe_battery_usd_per_kwh", "crf", "capex_battery",
+			"battery_cycles_per_day", "battery_round_trip_efficiency",
+			"opex_variable_battery",
+		],
+		"free_variables": [
+			"capex_battery", "battery_cycles_per_day",
+			"battery_round_trip_efficiency", "opex_variable_battery",
+		],
+		"determined_variables": ["lcoe_battery_usd_per_kwh"],
+		"tolerance": 1.0e-09, "unit_check": True,
+		"solution_method": "direct", "linearity": "linear",
+		"priority": "P1",
+		"reference": "NREL ATB 2025 battery equations; Lazard LCOS",
+		"latex": r"\mathrm{LCOS} = \mathrm{CRF} \cdot c_{kWh} / (365 \cdot n_c \cdot \eta_{rt}) + \mathrm{VOM} / 10^3",
+	}
+	for sym in ("crf", "capex_battery", "battery_cycles_per_day",
+	            "battery_round_trip_efficiency", "opex_variable_battery"):
+		edges.append({
+			"source": sym, "target": "lcoe_battery_usd_per_kwh",
+			"equation_id": "lcoe_battery_definition", "relationship": "functional",
+			"strength": "hard", "description": "Enters the LCOS.",
+		})
+
+	# --- the tariff stack: what the recovery tariff is on top of ---
+	# The applied tariff already couples revenue_cap; the recovery level the
+	# applied tariff scales now carries the fuel and carbon stack a variable-
+	# cost pass-through is made of. (Read-only reads of derived nodes -- no
+	# over-determination.)
+	nodes["pass_through_tariff_usd_per_mwh"] = {
+		"name": "Tariff with pass-through",
+		"description": (
+			"The cost-recovery level plus the variable stack carried at the "
+			"pass-through share. The regulator's lever: the share the "
+			"variable costs pass to consumers against what the utility absorbs."
+		),
+		"category": "Market", "type": "float", "unit": "USD/MWh",
+		"range": [0.0, 4000.0], "role": "derived", "determinism": "policy",
+		"priority": "P1", "status": "existing",
+		"source": "Pass-through pricing rules (African utility tariff designs)",
+		"users": ["Regulators"],
+	}
+	nodes["wholesale_cost_pass_through"] = {
+		"name": "Wholesale pass-through",
+		"description": (
+			"The share of the recovery tariff that is the variable stack: "
+			"fuel, carbon and losses, which the pass-through pricing rule "
+			"carries at the wholesale level. A policy dial; zero is full "
+			"absorption, one is full pass-through."
+		),
+		"category": "Market", "type": "float", "unit": "1",
+		"range": [0.0, 1.0], "default": 0.8, "role": "free",
+		"determinism": "policy", "priority": "P2", "status": "existing",
+		"source": "Pass-through pricing rules (African utility tariff designs)",
+		"users": ["Regulators"],
+	}
+	nodes["variable_stack_usd_per_mwh"] = {
+		"name": "Variable cost stack",
+		"description": (
+			"Fuel plus carbon, the dispatchable fleet's own marginal cost: "
+			"the quantity a pass-through rule passes and the tariff's "
+			"recovery level sits on top of."
+		),
+		"category": "Cost", "type": "float", "unit": "USD/MWh",
+		"range": [0.0, 400.0], "role": "derived", "determinism": "physical",
+		"priority": "P1", "status": "existing", "source": "The dispatch's own variable cost",
+		"users": ["Traders"],
+	}
+	equations["variable_stack_definition"] = {
+		"id": "variable_stack_definition",
+		"name": "The variable cost stack",
+		"description": (
+			"Fuel and carbon: the marginal cost's variable part. The "
+			"shipped marginal-cost definition adds them already; this one is "
+			"named so the pass-through and the applied-tariff chain can name "
+			"what they scale, rather than reading the whole marginal cost."
+		),
+		"system": "cost_accounting",
+		"lhs": "variable_stack_usd_per_mwh",
+		"rhs": "fuel_price_usd_per_mwh + carbon_cost_usd_per_mwh",
+		"relation": "eq",
+		"parameters": ["variable_stack_usd_per_mwh", "fuel_price_usd_per_mwh", "carbon_cost_usd_per_mwh"],
+		"free_variables": [],
+		"determined_variables": ["variable_stack_usd_per_mwh"],
+		"tolerance": 1.0e-09, "unit_check": True,
+		"solution_method": "direct", "linearity": "linear",
+		"priority": "P2", "reference": "The shipped marginal-cost definition, split",
+		"latex": r"c_v = p_{fuel} + c_{CO2}",
+	}
+	for sym in ("fuel_price_usd_per_mwh", "carbon_cost_usd_per_mwh"):
+		edges.append({
+			"source": sym, "target": "variable_stack_usd_per_mwh",
+			"equation_id": "variable_stack_definition", "relationship": "functional",
+			"strength": "hard", "description": "A variable-cost term.",
+		})
+	equations["pass_through_tariff_definition"] = {
+		"id": "pass_through_tariff_definition",
+		"name": "Tariff with pass-through",
+		"description": (
+			"The cost-recovery level plus the variable stack carried at the "
+			"pass-through share the policy sets. The regulator's lever: the "
+			"share the variable costs pass to consumers against what the "
+			"utility absorbs."
+		),
+		"system": "price_demand",
+		"lhs": "pass_through_tariff_usd_per_mwh",
+		"rhs": "applied_tariff_usd_per_mwh + wholesale_cost_pass_through * variable_stack_usd_per_mwh",
+		"relation": "eq",
+		"parameters": [
+			"pass_through_tariff_usd_per_mwh", "applied_tariff_usd_per_mwh",
+			"wholesale_cost_pass_through", "variable_stack_usd_per_mwh",
+		],
+		"free_variables": [
+			"applied_tariff_usd_per_mwh", "wholesale_cost_pass_through",
+		],
+		"determined_variables": ["pass_through_tariff_usd_per_mwh"],
+		"tolerance": 1.0e-09, "unit_check": True,
+		"solution_method": "direct", "linearity": "linear",
+		"priority": "P1", "reference": "Pass-through pricing",
+		"latex": r"p_c = p_a + s_t \\cdot c_v",
+	}
+	for sym in ("applied_tariff_usd_per_mwh", "wholesale_cost_pass_through", "variable_stack_usd_per_mwh"):
+		edges.append({
+			"source": sym, "target": "pass_through_tariff_usd_per_mwh",
+			"equation_id": "pass_through_tariff_definition", "relationship": "functional",
+			"strength": "hard", "description": "Enters the pass-through tariff.",
+		})
 	return nodes, equations, edges, rules
 
 
