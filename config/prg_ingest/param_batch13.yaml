@@ -1,0 +1,3639 @@
+parameters:
+  solar_pv_capacity_factor:
+    name: Solar pv capacity factor
+    description: 'Utility PV annual net output over rated capacity, at the regional resource level. Was
+      a 0.5 placeholder: the midpoint of a range nobody declared, not a capacity factor any plant produces.
+      NREL ATB 2025 global baseline is 0.16-0.24 across regions; this setting takes 0.22.'
+    category: Supply
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.22
+    initial: null
+    role: exogenous
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - All
+    priority: P1
+    status: existing
+    deprecated_by: null
+  asset_life_solar_pv:
+    name: Asset life solar pv
+    description: Economic life of solar pv assets, over which the capital charge annualises; a longer
+      life is a smaller annuity at the same discount rate.
+    category: Cost
+    type: float
+    unit: years
+    range:
+    - 5.0
+    - 80.0
+    role: exogenous
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: NREL ATB 2025 economic lifetime by technology
+    users:
+    - Investors
+    default: 25.0
+  opex_fixed_solar:
+    name: Solar PV fixed O&M
+    description: 'Fixed operations and maintenance for solar pv: the per-kilowatt annual cost of staff,
+      inspection and scheduled overhaul, paid whether or not the plant runs.'
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/kW/year
+    range:
+    - 0.0
+    - 400.0
+    default: 9.0
+    initial: null
+    role: exogenous
+    determinism: physical
+    categories: []
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    source_url: null
+    users:
+    - Operators
+    priority: P1
+    status: existing
+    deprecated_by: null
+  opex_variable_solar:
+    name: Opex variable solar
+    description: 'Variable O&M for solar pv: wear and consumables paid per megawatt-hour produced, the
+      cost that runs with the energy.'
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 20.0
+    role: exogenous
+    determinism: physical
+    priority: P2
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Operators
+    default: 0.5
+  capacity_factor_solar_pv:
+    name: Capacity factor solar pv
+    description: 'Annual net output over rated capacity for solar pv, in the single-country setting: solar
+      and wind carry the regional climate and resource levels, thermal carries the plant''s own duty.'
+    category: Technology
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025 capacity factors, adjusted to the regional resource
+    users:
+    - Planners
+    default: 0.22
+  crf_solar_pv:
+    name: Crf solar pv
+    description: 'Capital recovery factor at the fleet discount rate over the solar pv asset life: the
+      annual charge per unit of capital. Same formula as the kernel''s fleet crf, per technology, because
+      a 60-year nuclear life and a 25-year PV life discount differently.'
+    category: Cost
+    type: float
+    unit: 1/year
+    range:
+    - 0.001
+    - 1.0
+    role: derived
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: Standard annuity formula
+    users:
+    - Investors
+  asset_life_wind_onshore:
+    name: Asset life wind onshore
+    description: Economic life of wind onshore assets, over which the capital charge annualises; a longer
+      life is a smaller annuity at the same discount rate.
+    category: Cost
+    type: float
+    unit: years
+    range:
+    - 5.0
+    - 80.0
+    role: exogenous
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: NREL ATB 2025 economic lifetime by technology
+    users:
+    - Investors
+    default: 25.0
+  opex_fixed_wind_onshore:
+    name: Opex fixed wind onshore
+    description: 'Fixed operations and maintenance for wind onshore: the per-kilowatt annual cost of staff,
+      inspection and scheduled overhaul, paid whether or not the plant runs.'
+    category: Cost
+    type: float
+    unit: USD/kW/year
+    range:
+    - 0.0
+    - 400.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Operators
+    default: 30.0
+  opex_variable_wind:
+    name: Opex variable wind
+    description: 'Variable O&M for wind onshore: wear and consumables paid per megawatt-hour produced,
+      the cost that runs with the energy.'
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 20.0
+    role: exogenous
+    determinism: physical
+    priority: P2
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Operators
+    default: 3.0
+  capacity_factor_wind_onshore:
+    name: Capacity factor wind onshore
+    description: 'Annual net output over rated capacity for wind onshore, in the single-country setting:
+      solar and wind carry the regional climate and resource levels, thermal carries the plant''s own
+      duty.'
+    category: Technology
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025 capacity factors, adjusted to the regional resource
+    users:
+    - Planners
+    default: 0.4
+  crf_wind_onshore:
+    name: Crf wind onshore
+    description: 'Capital recovery factor at the fleet discount rate over the wind onshore asset life:
+      the annual charge per unit of capital. Same formula as the kernel''s fleet crf, per technology,
+      because a 60-year nuclear life and a 25-year PV life discount differently.'
+    category: Cost
+    type: float
+    unit: 1/year
+    range:
+    - 0.001
+    - 1.0
+    role: derived
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: Standard annuity formula
+    users:
+    - Investors
+  asset_life_wind_offshore:
+    name: Asset life wind offshore
+    description: Economic life of wind offshore assets, over which the capital charge annualises; a longer
+      life is a smaller annuity at the same discount rate.
+    category: Cost
+    type: float
+    unit: years
+    range:
+    - 5.0
+    - 80.0
+    role: exogenous
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: NREL ATB 2025 economic lifetime by technology
+    users:
+    - Investors
+    default: 25.0
+  opex_fixed_wind_offshore:
+    name: Opex fixed wind offshore
+    description: 'Fixed operations and maintenance for wind offshore: the per-kilowatt annual cost of
+      staff, inspection and scheduled overhaul, paid whether or not the plant runs.'
+    category: Cost
+    type: float
+    unit: USD/kW/year
+    range:
+    - 0.0
+    - 400.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Operators
+    default: 80.0
+  capacity_factor_wind_offshore:
+    name: Capacity factor wind offshore
+    description: 'Annual net output over rated capacity for wind offshore, in the single-country setting:
+      solar and wind carry the regional climate and resource levels, thermal carries the plant''s own
+      duty.'
+    category: Technology
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025 capacity factors, adjusted to the regional resource
+    users:
+    - Planners
+    default: 0.42
+  crf_wind_offshore:
+    name: Crf wind offshore
+    description: 'Capital recovery factor at the fleet discount rate over the wind offshore asset life:
+      the annual charge per unit of capital. Same formula as the kernel''s fleet crf, per technology,
+      because a 60-year nuclear life and a 25-year PV life discount differently.'
+    category: Cost
+    type: float
+    unit: 1/year
+    range:
+    - 0.001
+    - 1.0
+    role: derived
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: Standard annuity formula
+    users:
+    - Investors
+  lcoe_wind_offshore_usd_per_mwh:
+    name: Lcoe wind offshore usd per mwh
+    description: Wind offshore levelised cost, from its own capex, O&M, capacity factor, fuel and carbon
+      terms.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 500.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Planners
+    - Investors
+  asset_life_geothermal:
+    name: Asset life geothermal
+    description: Economic life of geothermal assets, over which the capital charge annualises; a longer
+      life is a smaller annuity at the same discount rate.
+    category: Cost
+    type: float
+    unit: years
+    range:
+    - 5.0
+    - 80.0
+    role: exogenous
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: NREL ATB 2025 economic lifetime by technology
+    users:
+    - Investors
+    default: 30.0
+  opex_fixed_geothermal:
+    name: Opex fixed geothermal
+    description: 'Fixed operations and maintenance for geothermal: the per-kilowatt annual cost of staff,
+      inspection and scheduled overhaul, paid whether or not the plant runs.'
+    category: Cost
+    type: float
+    unit: USD/kW/year
+    range:
+    - 0.0
+    - 400.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Operators
+    default: 130.0
+  opex_variable_geothermal:
+    name: Opex variable geothermal
+    description: 'Variable O&M for geothermal: wear and consumables paid per megawatt-hour produced, the
+      cost that runs with the energy.'
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 20.0
+    role: exogenous
+    determinism: physical
+    priority: P2
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Operators
+    default: 1.0
+  capacity_factor_geothermal:
+    name: Capacity factor geothermal
+    description: 'Annual net output over rated capacity for geothermal, in the single-country setting:
+      solar and wind carry the regional climate and resource levels, thermal carries the plant''s own
+      duty.'
+    category: Technology
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025 capacity factors, adjusted to the regional resource
+    users:
+    - Planners
+    default: 0.85
+  emission_factor_geothermal_t_per_mwh:
+    name: Emission factor geothermal t per mwh
+    description: 'CO2 per megawatt-hour for geothermal: stack factor from the fuel''s carbon content;
+      lifecycle additions folded in for the low-carbon technologies, whose stack term is zero.'
+    category: Technology
+    type: float
+    unit: tonne/MWh
+    range:
+    - 0.0
+    - 1.5
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: IPCC lifecycle emission factors, 2014; fuel carbon contents
+    users:
+    - Regulators
+    default: 0.03
+  crf_geothermal:
+    name: Crf geothermal
+    description: 'Capital recovery factor at the fleet discount rate over the geothermal asset life: the
+      annual charge per unit of capital. Same formula as the kernel''s fleet crf, per technology, because
+      a 60-year nuclear life and a 25-year PV life discount differently.'
+    category: Cost
+    type: float
+    unit: 1/year
+    range:
+    - 0.001
+    - 1.0
+    role: derived
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: Standard annuity formula
+    users:
+    - Investors
+  lcoe_geothermal_usd_per_mwh:
+    name: Lcoe geothermal usd per mwh
+    description: Geothermal levelised cost, from its own capex, O&M, capacity factor, fuel and carbon
+      terms.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 500.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Planners
+    - Investors
+  asset_life_hydro:
+    name: Asset life hydro
+    description: Economic life of hydro assets, over which the capital charge annualises; a longer life
+      is a smaller annuity at the same discount rate.
+    category: Cost
+    type: float
+    unit: years
+    range:
+    - 5.0
+    - 80.0
+    role: exogenous
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: NREL ATB 2025 economic lifetime by technology
+    users:
+    - Investors
+    default: 50.0
+  opex_fixed_hydro:
+    name: Opex fixed hydro
+    description: 'Fixed operations and maintenance for hydro: the per-kilowatt annual cost of staff, inspection
+      and scheduled overhaul, paid whether or not the plant runs.'
+    category: Cost
+    type: float
+    unit: USD/kW/year
+    range:
+    - 0.0
+    - 400.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Operators
+    default: 22.0
+  opex_variable_hydro:
+    name: Opex variable hydro
+    description: 'Variable O&M for hydro: wear and consumables paid per megawatt-hour produced, the cost
+      that runs with the energy.'
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 20.0
+    role: exogenous
+    determinism: physical
+    priority: P2
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Operators
+    default: 0.5
+  capacity_factor_hydro:
+    name: Capacity factor hydro
+    description: 'Annual net output over rated capacity for hydro, in the single-country setting: solar
+      and wind carry the regional climate and resource levels, thermal carries the plant''s own duty.'
+    category: Technology
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025 capacity factors, adjusted to the regional resource
+    users:
+    - Planners
+    default: 0.55
+  emission_factor_hydro_t_per_mwh:
+    name: Emission factor hydro t per mwh
+    description: 'CO2 per megawatt-hour for hydro: stack factor from the fuel''s carbon content; lifecycle
+      additions folded in for the low-carbon technologies, whose stack term is zero.'
+    category: Technology
+    type: float
+    unit: tonne/MWh
+    range:
+    - 0.0
+    - 1.5
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: IPCC lifecycle emission factors, 2014; fuel carbon contents
+    users:
+    - Regulators
+    default: 0.01
+  crf_hydro:
+    name: Crf hydro
+    description: 'Capital recovery factor at the fleet discount rate over the hydro asset life: the annual
+      charge per unit of capital. Same formula as the kernel''s fleet crf, per technology, because a 60-year
+      nuclear life and a 25-year PV life discount differently.'
+    category: Cost
+    type: float
+    unit: 1/year
+    range:
+    - 0.001
+    - 1.0
+    role: derived
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: Standard annuity formula
+    users:
+    - Investors
+  lcoe_hydro_usd_per_mwh:
+    name: Lcoe hydro usd per mwh
+    description: Hydro levelised cost, from its own capex, O&M, capacity factor, fuel and carbon terms.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 500.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Planners
+    - Investors
+  asset_life_biomass:
+    name: Asset life biomass
+    description: Economic life of biomass assets, over which the capital charge annualises; a longer life
+      is a smaller annuity at the same discount rate.
+    category: Cost
+    type: float
+    unit: years
+    range:
+    - 5.0
+    - 80.0
+    role: exogenous
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: NREL ATB 2025 economic lifetime by technology
+    users:
+    - Investors
+    default: 25.0
+  opex_fixed_biomass:
+    name: Opex fixed biomass
+    description: 'Fixed operations and maintenance for biomass: the per-kilowatt annual cost of staff,
+      inspection and scheduled overhaul, paid whether or not the plant runs.'
+    category: Cost
+    type: float
+    unit: USD/kW/year
+    range:
+    - 0.0
+    - 400.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Operators
+    default: 65.0
+  opex_variable_biomass:
+    name: Opex variable biomass
+    description: 'Variable O&M for biomass: wear and consumables paid per megawatt-hour produced, the
+      cost that runs with the energy.'
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 20.0
+    role: exogenous
+    determinism: physical
+    priority: P2
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Operators
+    default: 5.0
+  capacity_factor_biomass:
+    name: Capacity factor biomass
+    description: 'Annual net output over rated capacity for biomass, in the single-country setting: solar
+      and wind carry the regional climate and resource levels, thermal carries the plant''s own duty.'
+    category: Technology
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025 capacity factors, adjusted to the regional resource
+    users:
+    - Planners
+    default: 0.7
+  emission_factor_biomass_t_per_mwh:
+    name: Emission factor biomass t per mwh
+    description: 'CO2 per megawatt-hour for biomass: stack factor from the fuel''s carbon content; lifecycle
+      additions folded in for the low-carbon technologies, whose stack term is zero.'
+    category: Technology
+    type: float
+    unit: tonne/MWh
+    range:
+    - 0.0
+    - 1.5
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: IPCC lifecycle emission factors, 2014; fuel carbon contents
+    users:
+    - Regulators
+    default: 0.04
+  crf_biomass:
+    name: Crf biomass
+    description: 'Capital recovery factor at the fleet discount rate over the biomass asset life: the
+      annual charge per unit of capital. Same formula as the kernel''s fleet crf, per technology, because
+      a 60-year nuclear life and a 25-year PV life discount differently.'
+    category: Cost
+    type: float
+    unit: 1/year
+    range:
+    - 0.001
+    - 1.0
+    role: derived
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: Standard annuity formula
+    users:
+    - Investors
+  lcoe_biomass_usd_per_mwh:
+    name: Lcoe biomass usd per mwh
+    description: Biomass levelised cost, from its own capex, O&M, capacity factor, fuel and carbon terms.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 500.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Planners
+    - Investors
+  asset_life_csp:
+    name: Asset life csp
+    description: Economic life of csp assets, over which the capital charge annualises; a longer life
+      is a smaller annuity at the same discount rate.
+    category: Cost
+    type: float
+    unit: years
+    range:
+    - 5.0
+    - 80.0
+    role: exogenous
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: NREL ATB 2025 economic lifetime by technology
+    users:
+    - Investors
+    default: 30.0
+  opex_fixed_csp:
+    name: Opex fixed csp
+    description: 'Fixed operations and maintenance for csp: the per-kilowatt annual cost of staff, inspection
+      and scheduled overhaul, paid whether or not the plant runs.'
+    category: Cost
+    type: float
+    unit: USD/kW/year
+    range:
+    - 0.0
+    - 400.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Operators
+    default: 95.0
+  opex_variable_csp:
+    name: Opex variable csp
+    description: 'Variable O&M for csp: wear and consumables paid per megawatt-hour produced, the cost
+      that runs with the energy.'
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 20.0
+    role: exogenous
+    determinism: physical
+    priority: P2
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Operators
+    default: 2.0
+  capacity_factor_csp:
+    name: Capacity factor csp
+    description: 'Annual net output over rated capacity for csp, in the single-country setting: solar
+      and wind carry the regional climate and resource levels, thermal carries the plant''s own duty.'
+    category: Technology
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025 capacity factors, adjusted to the regional resource
+    users:
+    - Planners
+    default: 0.38
+  crf_csp:
+    name: Crf csp
+    description: 'Capital recovery factor at the fleet discount rate over the csp asset life: the annual
+      charge per unit of capital. Same formula as the kernel''s fleet crf, per technology, because a 60-year
+      nuclear life and a 25-year PV life discount differently.'
+    category: Cost
+    type: float
+    unit: 1/year
+    range:
+    - 0.001
+    - 1.0
+    role: derived
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: Standard annuity formula
+    users:
+    - Investors
+  lcoe_csp_usd_per_mwh:
+    name: Lcoe csp usd per mwh
+    description: Csp levelised cost, from its own capex, O&M, capacity factor, fuel and carbon terms.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 500.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Planners
+    - Investors
+  asset_life_coal:
+    name: Asset life coal
+    description: Economic life of coal assets, over which the capital charge annualises; a longer life
+      is a smaller annuity at the same discount rate.
+    category: Cost
+    type: float
+    unit: years
+    range:
+    - 5.0
+    - 80.0
+    role: exogenous
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: NREL ATB 2025 economic lifetime by technology
+    users:
+    - Investors
+    default: 40.0
+  opex_variable_coal:
+    name: Coal variable O&M
+    description: 'Variable O&M for coal: wear and consumables paid per megawatt-hour produced, the cost
+      that runs with the energy.'
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 20.0
+    default: 4.5
+    initial: null
+    role: exogenous
+    determinism: physical
+    categories: []
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    source_url: null
+    users:
+    - Operators
+    priority: P2
+    status: existing
+    deprecated_by: null
+  capacity_factor_coal:
+    name: Capacity factor coal
+    description: 'Annual net output over rated capacity for coal, in the single-country setting: solar
+      and wind carry the regional climate and resource levels, thermal carries the plant''s own duty.'
+    category: Technology
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025 capacity factors, adjusted to the regional resource
+    users:
+    - Planners
+    default: 0.75
+  emission_factor_coal_t_per_mwh:
+    name: Emission factor coal t per mwh
+    description: 'CO2 per megawatt-hour for coal: stack factor from the fuel''s carbon content; lifecycle
+      additions folded in for the low-carbon technologies, whose stack term is zero.'
+    category: Technology
+    type: float
+    unit: tonne/MWh
+    range:
+    - 0.0
+    - 1.5
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: IPCC lifecycle emission factors, 2014; fuel carbon contents
+    users:
+    - Regulators
+    default: 0.92
+  crf_coal:
+    name: Crf coal
+    description: 'Capital recovery factor at the fleet discount rate over the coal asset life: the annual
+      charge per unit of capital. Same formula as the kernel''s fleet crf, per technology, because a 60-year
+      nuclear life and a 25-year PV life discount differently.'
+    category: Cost
+    type: float
+    unit: 1/year
+    range:
+    - 0.001
+    - 1.0
+    role: derived
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: Standard annuity formula
+    users:
+    - Investors
+  lcoe_coal_usd_per_mwh:
+    name: Lcoe coal usd per mwh
+    description: Coal levelised cost, from its own capex, O&M, capacity factor, fuel and carbon terms.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 500.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Planners
+    - Investors
+  capex_gas:
+    name: Capex gas
+    description: Overnight capital cost of gas capacity; the level is the installed-cost literature's,
+      at the regional adjustment the single-country setting carries.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 100.0
+    - 15000.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Developers
+    default: 1100.0
+  asset_life_gas:
+    name: Asset life gas
+    description: Economic life of gas assets, over which the capital charge annualises; a longer life
+      is a smaller annuity at the same discount rate.
+    category: Cost
+    type: float
+    unit: years
+    range:
+    - 5.0
+    - 80.0
+    role: exogenous
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: NREL ATB 2025 economic lifetime by technology
+    users:
+    - Investors
+    default: 30.0
+  opex_variable_gas:
+    name: Gas variable O&M
+    description: 'Variable O&M for gas: wear and consumables paid per megawatt-hour produced, the cost
+      that runs with the energy.'
+    category: Cost
+    subcategory: null
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 20.0
+    default: 2.5
+    initial: null
+    role: exogenous
+    determinism: physical
+    categories: []
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    source_url: null
+    users:
+    - Operators
+    priority: P2
+    status: existing
+    deprecated_by: null
+  capacity_factor_gas:
+    name: Capacity factor gas
+    description: 'Annual net output over rated capacity for gas, in the single-country setting: solar
+      and wind carry the regional climate and resource levels, thermal carries the plant''s own duty.'
+    category: Technology
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025 capacity factors, adjusted to the regional resource
+    users:
+    - Planners
+    default: 0.6
+  emission_factor_gas_t_per_mwh:
+    name: Emission factor gas t per mwh
+    description: 'CO2 per megawatt-hour for gas: stack factor from the fuel''s carbon content; lifecycle
+      additions folded in for the low-carbon technologies, whose stack term is zero.'
+    category: Technology
+    type: float
+    unit: tonne/MWh
+    range:
+    - 0.0
+    - 1.5
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: IPCC lifecycle emission factors, 2014; fuel carbon contents
+    users:
+    - Regulators
+    default: 0.45
+  crf_gas:
+    name: Crf gas
+    description: 'Capital recovery factor at the fleet discount rate over the gas asset life: the annual
+      charge per unit of capital. Same formula as the kernel''s fleet crf, per technology, because a 60-year
+      nuclear life and a 25-year PV life discount differently.'
+    category: Cost
+    type: float
+    unit: 1/year
+    range:
+    - 0.001
+    - 1.0
+    role: derived
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: Standard annuity formula
+    users:
+    - Investors
+  lcoe_gas_usd_per_mwh:
+    name: Lcoe gas usd per mwh
+    description: Gas levelised cost, from its own capex, O&M, capacity factor, fuel and carbon terms.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 500.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Planners
+    - Investors
+  asset_life_nuclear:
+    name: Asset life nuclear
+    description: Economic life of nuclear assets, over which the capital charge annualises; a longer life
+      is a smaller annuity at the same discount rate.
+    category: Cost
+    type: float
+    unit: years
+    range:
+    - 5.0
+    - 80.0
+    role: exogenous
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: NREL ATB 2025 economic lifetime by technology
+    users:
+    - Investors
+    default: 60.0
+  opex_fixed_nuclear:
+    name: Opex fixed nuclear
+    description: 'Fixed operations and maintenance for nuclear: the per-kilowatt annual cost of staff,
+      inspection and scheduled overhaul, paid whether or not the plant runs.'
+    category: Cost
+    type: float
+    unit: USD/kW/year
+    range:
+    - 0.0
+    - 400.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Operators
+    default: 95.0
+  opex_variable_nuclear:
+    name: Opex variable nuclear
+    description: 'Variable O&M for nuclear: wear and consumables paid per megawatt-hour produced, the
+      cost that runs with the energy.'
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 20.0
+    role: exogenous
+    determinism: physical
+    priority: P2
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Operators
+    default: 2.0
+  capacity_factor_nuclear:
+    name: Capacity factor nuclear
+    description: 'Annual net output over rated capacity for nuclear, in the single-country setting: solar
+      and wind carry the regional climate and resource levels, thermal carries the plant''s own duty.'
+    category: Technology
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025 capacity factors, adjusted to the regional resource
+    users:
+    - Planners
+    default: 0.9
+  emission_factor_nuclear_t_per_mwh:
+    name: Emission factor nuclear t per mwh
+    description: 'CO2 per megawatt-hour for nuclear: stack factor from the fuel''s carbon content; lifecycle
+      additions folded in for the low-carbon technologies, whose stack term is zero.'
+    category: Technology
+    type: float
+    unit: tonne/MWh
+    range:
+    - 0.0
+    - 1.5
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: IPCC lifecycle emission factors, 2014; fuel carbon contents
+    users:
+    - Regulators
+    default: 0.006
+  crf_nuclear:
+    name: Crf nuclear
+    description: 'Capital recovery factor at the fleet discount rate over the nuclear asset life: the
+      annual charge per unit of capital. Same formula as the kernel''s fleet crf, per technology, because
+      a 60-year nuclear life and a 25-year PV life discount differently.'
+    category: Cost
+    type: float
+    unit: 1/year
+    range:
+    - 0.001
+    - 1.0
+    role: derived
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: Standard annuity formula
+    users:
+    - Investors
+  lcoe_nuclear_usd_per_mwh:
+    name: Lcoe nuclear usd per mwh
+    description: Nuclear levelised cost, from its own capex, O&M, capacity factor, fuel and carbon terms.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 500.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Planners
+    - Investors
+  capex_oil:
+    name: Capex oil
+    description: Overnight capital cost of oil capacity; the level is the installed-cost literature's,
+      at the regional adjustment the single-country setting carries.
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 100.0
+    - 15000.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Developers
+    default: 800.0
+  asset_life_oil:
+    name: Asset life oil
+    description: Economic life of oil assets, over which the capital charge annualises; a longer life
+      is a smaller annuity at the same discount rate.
+    category: Cost
+    type: float
+    unit: years
+    range:
+    - 5.0
+    - 80.0
+    role: exogenous
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: NREL ATB 2025 economic lifetime by technology
+    users:
+    - Investors
+    default: 25.0
+  opex_fixed_oil:
+    name: Opex fixed oil
+    description: 'Fixed operations and maintenance for oil: the per-kilowatt annual cost of staff, inspection
+      and scheduled overhaul, paid whether or not the plant runs.'
+    category: Cost
+    type: float
+    unit: USD/kW/year
+    range:
+    - 0.0
+    - 400.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Operators
+    default: 25.0
+  opex_variable_oil:
+    name: Opex variable oil
+    description: 'Variable O&M for oil: wear and consumables paid per megawatt-hour produced, the cost
+      that runs with the energy.'
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 20.0
+    role: exogenous
+    determinism: physical
+    priority: P2
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Operators
+    default: 6.0
+  capacity_factor_oil:
+    name: Capacity factor oil
+    description: 'Annual net output over rated capacity for oil, in the single-country setting: solar
+      and wind carry the regional climate and resource levels, thermal carries the plant''s own duty.'
+    category: Technology
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025 capacity factors, adjusted to the regional resource
+    users:
+    - Planners
+    default: 0.15
+  emission_factor_oil_t_per_mwh:
+    name: Emission factor oil t per mwh
+    description: 'CO2 per megawatt-hour for oil: stack factor from the fuel''s carbon content; lifecycle
+      additions folded in for the low-carbon technologies, whose stack term is zero.'
+    category: Technology
+    type: float
+    unit: tonne/MWh
+    range:
+    - 0.0
+    - 1.5
+    role: exogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: IPCC lifecycle emission factors, 2014; fuel carbon contents
+    users:
+    - Regulators
+    default: 0.78
+  crf_oil:
+    name: Crf oil
+    description: 'Capital recovery factor at the fleet discount rate over the oil asset life: the annual
+      charge per unit of capital. Same formula as the kernel''s fleet crf, per technology, because a 60-year
+      nuclear life and a 25-year PV life discount differently.'
+    category: Cost
+    type: float
+    unit: 1/year
+    range:
+    - 0.001
+    - 1.0
+    role: derived
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: Standard annuity formula
+    users:
+    - Investors
+  lcoe_oil_usd_per_mwh:
+    name: Lcoe oil usd per mwh
+    description: Oil levelised cost, from its own capex, O&M, capacity factor, fuel and carbon terms.
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 500.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: NREL ATB 2025; IEA/NEA Projected Costs of Generating Electricity 2020; IRENA Renewable Power
+      Generation Costs in 2022
+    users:
+    - Planners
+    - Investors
+  coal_capacity:
+    name: Coal capacity
+    description: 'Installed coal capacity, chosen by the optimiser. Corrected from `free` to `endogenous`:
+      the fleet total the graph already declares as endogenous is the sum of the components, and a component
+      the caller sets and a total the optimiser chooses would disagree silently.'
+    category: Supply-Side
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 200000.0
+    default: 3000.0
+    initial: null
+    role: endogenous
+    determinism: fixed
+    categories: []
+    source: docs/params.md#2.1
+    source_url: null
+    users:
+    - Utilities
+    priority: P1
+    status: existing
+    deprecated_by: null
+  gas_capacity:
+    name: Gas capacity
+    description: Installed gas capacity, chosen by the optimiser. Same role correction as coal.
+    category: Supply-Side
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 200000.0
+    default: 1500.0
+    initial: null
+    role: endogenous
+    determinism: fixed
+    categories: []
+    source: docs/params.md#2.7
+    source_url: null
+    users:
+    - Utilities
+    priority: P1
+    status: existing
+    deprecated_by: null
+  oil_capacity:
+    name: Oil capacity
+    description: Installed oil capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 50000.0
+    default: 300.0
+    initial: null
+    role: endogenous
+    determinism: fixed
+    categories: []
+    source: docs/params.md#2.11
+    source_url: null
+    users:
+    - Utilities
+    priority: P2
+    status: existing
+    deprecated_by: null
+  nuclear_capacity:
+    name: Nuclear capacity
+    description: Installed nuclear capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 20000.0
+    default: 0.0
+    initial: null
+    role: endogenous
+    determinism: fixed
+    categories: []
+    source: docs/params.md#2.13
+    source_url: null
+    users:
+    - Planners
+    priority: P3
+    status: to_build
+    deprecated_by: null
+  hydro_capacity:
+    name: Hydro capacity
+    description: Installed hydropower capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 100000.0
+    default: 1500.0
+    initial: null
+    role: endogenous
+    determinism: fixed
+    categories: []
+    source: docs/params.md#2.27
+    source_url: null
+    users:
+    - All
+    priority: P1
+    status: existing
+    deprecated_by: null
+  geothermal_capacity:
+    name: Geothermal capacity
+    description: Installed geothermal capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 30000.0
+    default: 800.0
+    initial: null
+    role: endogenous
+    determinism: fixed
+    categories: []
+    source: docs/params.md#2.32
+    source_url: null
+    users:
+    - Developers
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  biomass_capacity:
+    name: Biomass capacity
+    description: Installed biomass capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 30000.0
+    default: 100.0
+    initial: null
+    role: endogenous
+    determinism: fixed
+    categories: []
+    source: docs/params.md#2.35
+    source_url: null
+    users:
+    - Developers
+    priority: P2
+    status: to_build
+    deprecated_by: null
+  wind_onshore_capacity:
+    name: Onshore wind capacity
+    description: Installed onshore wind capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 300000.0
+    default: 2000.0
+    initial: null
+    role: endogenous
+    determinism: fixed
+    categories: []
+    source: docs/params.md#2.22
+    source_url: null
+    users:
+    - All
+    priority: P1
+    status: existing
+    deprecated_by: null
+  wind_offshore_capacity:
+    name: Offshore wind capacity
+    description: Installed offshore wind capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 100000.0
+    default: 0.0
+    initial: null
+    role: endogenous
+    determinism: fixed
+    categories: []
+    source: docs/params.md#2.24
+    source_url: null
+    users:
+    - All
+    priority: P2
+    status: existing
+    deprecated_by: null
+  csp_capacity:
+    name: CSP capacity
+    description: Installed CSP capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 30000.0
+    default: 0.0
+    initial: null
+    role: endogenous
+    determinism: fixed
+    categories: []
+    source: docs/params.md#2.38
+    source_url: null
+    users:
+    - Developers
+    priority: P2
+    status: to_build
+    deprecated_by: null
+  battery_capacity:
+    name: Battery capacity
+    description: Installed battery power capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 200000.0
+    default: 300.0
+    initial: null
+    role: endogenous
+    determinism: fixed
+    categories: []
+    source: docs/params.md#2.43
+    source_url: null
+    users:
+    - All
+    priority: P1
+    status: existing
+    deprecated_by: null
+  phs_capacity:
+    name: Pumped hydro capacity
+    description: Installed pumped hydro power capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 50000.0
+    default: 200.0
+    initial: null
+    role: endogenous
+    determinism: fixed
+    categories: []
+    source: docs/params.md#2.48
+    source_url: null
+    users:
+    - Utilities
+    priority: P1
+    status: existing
+    deprecated_by: null
+  hydrogen_storage_capacity:
+    name: Hydrogen storage capacity
+    description: Installed hydrogen storage capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    subcategory: null
+    type: float
+    unit: MWh
+    range:
+    - 0.0
+    - 10000000.0
+    default: 0.0
+    initial: null
+    role: endogenous
+    determinism: fixed
+    categories: []
+    source: docs/params.md#2.51
+    source_url: null
+    users:
+    - Industry
+    priority: P2
+    status: existing
+    deprecated_by: null
+  thermal_storage_capacity:
+    name: Thermal storage capacity
+    description: Installed thermal storage capacity, chosen by the optimiser. Same role correction.
+    category: Supply-Side
+    subcategory: null
+    type: float
+    unit: MWh
+    range:
+    - 0.0
+    - 5000000.0
+    default: 0.0
+    initial: null
+    role: endogenous
+    determinism: fixed
+    categories: []
+    source: docs/params.md#2.53
+    source_url: null
+    users:
+    - Industry
+    priority: P2
+    status: existing
+    deprecated_by: null
+  fusion_capacity:
+    name: Fusion capacity
+    description: 'Installed fusion capacity capacity in the reference build, at zero: the technology is
+      not deployed in the single-country setting today, and a placeholder midpoint of an unknown range
+      is not a reference build.'
+    category: Supply
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 1000.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Planners
+    priority: P3
+    status: to_build
+    deprecated_by: null
+  small_modular_reactor_capacity:
+    name: Small modular reactor capacity
+    description: 'Installed small modular reactor capacity capacity in the reference build, at zero: the
+      technology is not deployed in the single-country setting today, and a placeholder midpoint of an
+      unknown range is not a reference build.'
+    category: Supply
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 1000.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Planners
+    priority: P3
+    status: to_build
+    deprecated_by: null
+  tidal_range_capacity:
+    name: Tidal range capacity
+    description: 'Installed tidal range capacity capacity in the reference build, at zero: the technology
+      is not deployed in the single-country setting today, and a placeholder midpoint of an unknown range
+      is not a reference build.'
+    category: Supply
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 1000.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Developers
+    priority: P3
+    status: to_build
+    deprecated_by: null
+  salinity_gradient_capacity:
+    name: Salinity gradient capacity
+    description: 'Installed salinity gradient capacity capacity in the reference build, at zero: the technology
+      is not deployed in the single-country setting today, and a placeholder midpoint of an unknown range
+      is not a reference build.'
+    category: Supply
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 1000.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Developers
+    priority: P3
+    status: to_build
+    deprecated_by: null
+  flywheel_capacity:
+    name: Flywheel capacity
+    description: 'Installed flywheel capacity capacity in the reference build, at zero: the technology
+      is not deployed in the single-country setting today, and a placeholder midpoint of an unknown range
+      is not a reference build.'
+    category: Supply
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 1000.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Developers
+    priority: P3
+    status: to_build
+    deprecated_by: null
+  compressed_air_capacity:
+    name: Compressed air capacity
+    description: 'Installed compressed air capacity capacity in the reference build, at zero: the technology
+      is not deployed in the single-country setting today, and a placeholder midpoint of an unknown range
+      is not a reference build.'
+    category: Supply
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 1000.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: physical
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Developers
+    priority: P3
+    status: to_build
+    deprecated_by: null
+  hydrogen_fuel_cell_capacity:
+    name: Hydrogen fuel cell capacity
+    description: 'Installed hydrogen fuel cell capacity capacity in the reference build, at zero: the
+      technology is not deployed in the single-country setting today, and a placeholder midpoint of an
+      unknown range is not a reference build.'
+    category: Supply
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 1000.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Transport
+    priority: P2
+    status: to_build
+    deprecated_by: null
+  electrolyser_capacity:
+    name: Electrolyser capacity
+    description: 'Installed electrolyser capacity capacity in the reference build, at zero: the technology
+      is not deployed in the single-country setting today, and a placeholder midpoint of an unknown range
+      is not a reference build.'
+    category: Sector
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 1000.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Industry
+    priority: P2
+    status: existing
+    deprecated_by: null
+  biogas_capacity:
+    name: Biogas capacity
+    description: 'Installed biogas capacity capacity in the reference build, at zero: the technology is
+      not deployed in the single-country setting today, and a placeholder midpoint of an unknown range
+      is not a reference build.'
+    category: Supply
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 1000.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Agriculture
+    priority: P2
+    status: to_build
+    deprecated_by: null
+  landfill_gas_capacity:
+    name: Landfill gas capacity
+    description: 'Installed landfill gas capacity capacity in the reference build, at zero: the technology
+      is not deployed in the single-country setting today, and a placeholder midpoint of an unknown range
+      is not a reference build.'
+    category: Supply
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 1000.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Cities
+    priority: P2
+    status: to_build
+    deprecated_by: null
+  waste_to_energy_capacity:
+    name: Waste to energy capacity
+    description: 'Installed waste to energy capacity capacity in the reference build, at zero: the technology
+      is not deployed in the single-country setting today, and a placeholder midpoint of an unknown range
+      is not a reference build.'
+    category: Supply
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 1000.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Cities
+    priority: P2
+    status: to_build
+    deprecated_by: null
+  gasification_capacity:
+    name: Gasification capacity
+    description: 'Installed gasification capacity capacity in the reference build, at zero: the technology
+      is not deployed in the single-country setting today, and a placeholder midpoint of an unknown range
+      is not a reference build.'
+    category: Supply
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 1000.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Industry
+    priority: P3
+    status: to_build
+    deprecated_by: null
+  pyrolysis_capacity:
+    name: Pyrolysis capacity
+    description: 'Installed pyrolysis capacity capacity in the reference build, at zero: the technology
+      is not deployed in the single-country setting today, and a placeholder midpoint of an unknown range
+      is not a reference build.'
+    category: Supply
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 1000.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Industry
+    priority: P3
+    status: to_build
+    deprecated_by: null
+  firm_build_fleet_mw:
+    name: Fleet build total
+    description: Sum of the optimiser's per-technology builds. Not a decision the graph computes in propagation
+      -- the technologies' variables are the LP's -- but the identity every build set must satisfy is
+      declared here, and the reserve margins read the firm part of it.
+    category: Supply
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 2000000.0
+    default: 10000.0
+    role: endogenous
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The optimiser's own capacity decisions
+    users:
+    - Planners
+  storage_headroom_mw:
+    name: Storage build headroom
+    description: 'How far the storage builds may exceed the generation fleet''s declared size: storage
+      is energy-shifting, not generation, so a plan can carry battery plus pumped hydro without the fleet''s
+      nameplate growing by the same amount.'
+    category: Supply
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 500000.0
+    default: 5000.0
+    role: free
+    determinism: policy
+    priority: P2
+    status: existing
+    source: Planning policy; the storage allowance a capacity plan grants
+    users:
+    - Planners
+equations:
+  wacc_alias:
+    id: wacc_alias
+    name: WACC is the discount rate
+    description: The catalog's WACC row and the financial block's discount rate are one quantity, so the
+      duplicate derives from the computed one and the graph keeps a single blend. An equality between
+      two ids for one number is the closure that keeps a scenario setting either name consistent; the
+      alternative -- deprecating the id -- loses the label a report may cite.
+    system: financial
+    lhs: weighted_average_cost_of_capital
+    rhs: discount_rate
+    relation: eq
+    parameters:
+    - weighted_average_cost_of_capital
+    - discount_rate
+    free_variables:
+    - discount_rate
+    determined_variables:
+    - weighted_average_cost_of_capital
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Standard WACC with the interest tax shield
+    latex: \mathrm{WACC} = \mathrm{discount\_rate}
+  regulatory_asset_base_definition:
+    id: regulatory_asset_base_definition
+    name: Regulated asset base from the fleet
+    description: Gross fleet capital less what the books have written down. The gross capital is the capacity-weighted
+      capex; the 1000 converts kW-per-MW and the million converts USD. A fraction the regulator's roll-forward
+      states, not one the model invents.
+    system: financial
+    lhs: regulatory_asset_base
+    rhs: capex_usd_per_kw * total_capacity_mw * (1 - accumulated_depreciation_fraction) / 1000
+    relation: eq
+    parameters:
+    - regulatory_asset_base
+    - capex_usd_per_kw
+    - total_capacity_mw
+    - accumulated_depreciation_fraction
+    free_variables:
+    - capex_usd_per_kw
+    - total_capacity_mw
+    - accumulated_depreciation_fraction
+    determined_variables:
+    - regulatory_asset_base
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Ofwat PR24 Appendix 11, allowed return on capital
+    latex: \mathrm{RAB} = \mathrm{capex} \cdot C_{MW} \cdot 10^3 \cdot (1 - d_{acc}) \, /\, 10^6
+  regulatory_depreciation_definition:
+    id: regulatory_depreciation_definition
+    name: Regulatory depreciation
+    description: Straight-line write-down of the asset base over the regulatory asset life. The rate-of-return
+      revenue requirement's first term; the second is the return on the base below.
+    system: financial
+    lhs: regulatory_depreciation
+    rhs: regulatory_asset_base / depreciation_life_by_asset
+    relation: eq
+    parameters:
+    - regulatory_depreciation
+    - regulatory_asset_base
+    - depreciation_life_by_asset
+    free_variables:
+    - depreciation_life_by_asset
+    determined_variables:
+    - regulatory_depreciation
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Ofwat PR24 Appendix 11, allowed return on capital
+    latex: D_{reg} = \mathrm{RAB} / L_{reg}
+  allowed_revenue_requirement_definition:
+    id: allowed_revenue_requirement_definition
+    name: Allowed revenue requirement
+    description: Depreciation plus the allowed return on the base, with that return taken as the blend
+      the financial block computes -- the vanilla regulatory WACC the UKRN guidance builds. A tariff that
+      recovers less than this under-recovers the utility; the revenue cap and the applied tariff are the
+      instruments around it.
+    system: financial
+    lhs: allowed_revenue_requirement
+    rhs: regulatory_depreciation + regulatory_asset_base * discount_rate
+    relation: eq
+    parameters:
+    - allowed_revenue_requirement
+    - regulatory_depreciation
+    - regulatory_asset_base
+    - discount_rate
+    free_variables:
+    - regulatory_depreciation
+    - regulatory_asset_base
+    determined_variables:
+    - allowed_revenue_requirement
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: UKRN cost of capital guidance (2023), §allowed returns
+    latex: R^* = D_{reg} + \mathrm{RAB} \cdot \mathrm{WACC}
+  cost_of_debt_capped:
+    id: cost_of_debt_capped
+    name: Debt cost within the allowed return
+    description: 'The regulator''s debt allowance binds the commercial cost of debt the scenario may assume:
+      a component priced above the allowed return is the pass-through the cap regime forbids, so a scenario
+      carrying it is inadmissible rather than silently under-recovering.'
+    system: financial
+    lhs: cost_of_debt
+    rhs: allowed_return_on_debt
+    relation: leq
+    parameters:
+    - cost_of_debt
+    - allowed_return_on_debt
+    free_variables:
+    - cost_of_debt
+    - allowed_return_on_debt
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: UKRN cost of capital guidance (2023), §overall framework
+    latex: K_d \le A_d
+  cost_of_equity_capped:
+    id: cost_of_equity_capped
+    name: Equity cost within the allowed return
+    description: 'The equity-return allowance binds the cost of equity: the CAPM-estimated return a project
+      demands cannot exceed what the regulatory settlement awards.'
+    system: financial
+    lhs: cost_of_equity
+    rhs: allowed_return_on_equity
+    relation: leq
+    parameters:
+    - cost_of_equity
+    - allowed_return_on_equity
+    free_variables:
+    - cost_of_equity
+    - allowed_return_on_equity
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Ofwat PR24 Appendix 11, allowed return on capital
+    latex: K_e \le A_e
+  applied_tariff_definition:
+    id: applied_tariff_definition
+    name: Applied tariff under the cap
+    description: The revenue cap's multiplier applied to the cost-recovery tariff. A cap below 1.0 withholds
+      part of the revenue requirement -- the incentive instrument a price-control settlement actually
+      sets -- and a cap above 1.0 is a premium the accounts must carry.
+    system: price_demand
+    lhs: applied_tariff_usd_per_mwh
+    rhs: regulated_tariff_usd_per_mwh * revenue_cap
+    relation: eq
+    parameters:
+    - applied_tariff_usd_per_mwh
+    - regulated_tariff_usd_per_mwh
+    - revenue_cap
+    free_variables:
+    - revenue_cap
+    determined_variables:
+    - applied_tariff_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: World Bank Regulation of Utilities handbook, revenue caps
+    latex: p_{applied} = p_{cr} \cdot x_{cap}
+  crf_solar_pv_definition:
+    id: crf_solar_pv_definition
+    name: CRF (solar pv)
+    description: 'The standard annuity: a constant annual charge whose present value equals one unit of
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      NREL ATB 2025 states the same form.'
+    system: financial
+    lhs: crf_solar_pv
+    rhs: discount_rate * (1 + discount_rate) ** asset_life_solar_pv / ((1 + discount_rate) ** asset_life_solar_pv
+      - 1)
+    relation: eq
+    parameters:
+    - crf_solar_pv
+    - discount_rate
+    - asset_life_solar_pv
+    free_variables:
+    - discount_rate
+    - asset_life_solar_pv
+    determined_variables:
+    - crf_solar_pv
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: numeric
+    linearity: nonlinear
+    priority: P2
+    reference: Standard annuity formula
+    latex: \mathrm{CRF}_{tech} = r(1+r)^L / ((1+r)^L - 1)
+  lcoe_solar_definition:
+    id: lcoe_solar_definition
+    name: Solar LCOE
+    description: 'Solar PV levelised cost at its own capex, capacity factor and O&M. Dimensional check:
+      USD/kW/year divided by (hours/year times dimensionless) is USD/MWh, plus USD/MWh is USD/MWh. The
+      1000 converts kW to MW. Corrected from its predecessor, which carried opex_variable_battery in a
+      generation technology''s numerator -- a battery cost inside a plant with no battery; the battery''s
+      cost now belongs to the battery''s own LCOE.'
+    system: cost_accounting
+    lhs: lcoe_solar_usd_per_mwh
+    rhs: (annualised_capex_usd_per_kw_solar + opex_fixed_solar) * 1000 / (8760 * solar_pv_capacity_factor)
+      + opex_variable_solar
+    relation: eq
+    parameters:
+    - annualised_capex_usd_per_kw_solar
+    - lcoe_solar_usd_per_mwh
+    - opex_fixed_solar
+    - opex_variable_solar
+    - solar_pv_capacity_factor
+    free_variables:
+    - annualised_capex_usd_per_kw_solar
+    - opex_fixed_solar
+    - opex_variable_solar
+    - solar_pv_capacity_factor
+    determined_variables:
+    - lcoe_solar_usd_per_mwh
+    tolerance: 1.0e-08
+    unit_check: true
+    reference: null
+    priority: P1
+    solution_method: direct
+    linearity: nonlinear
+    latex: null
+  crf_wind_onshore_definition:
+    id: crf_wind_onshore_definition
+    name: CRF (wind onshore)
+    description: 'The standard annuity: a constant annual charge whose present value equals one unit of
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      NREL ATB 2025 states the same form.'
+    system: financial
+    lhs: crf_wind_onshore
+    rhs: discount_rate * (1 + discount_rate) ** asset_life_wind_onshore / ((1 + discount_rate) ** asset_life_wind_onshore
+      - 1)
+    relation: eq
+    parameters:
+    - crf_wind_onshore
+    - discount_rate
+    - asset_life_wind_onshore
+    free_variables:
+    - discount_rate
+    - asset_life_wind_onshore
+    determined_variables:
+    - crf_wind_onshore
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: numeric
+    linearity: nonlinear
+    priority: P2
+    reference: Standard annuity formula
+    latex: \mathrm{CRF}_{tech} = r(1+r)^L / ((1+r)^L - 1)
+  lcoe_wind_definition:
+    id: lcoe_wind_definition
+    name: Wind LCOE
+    description: 'Onshore wind levelised cost at its own capex and capacity factor. The variable O&M term
+      is small for wind; the technology''s own variable O&M, at the level the cost literature states,
+      so the solar equation''s variable term is reused as a conservative placeholder and this equation
+      is marked `unit_check: true` on the strength of that substitution being dimensional, not physical.
+      Corrected from its predecessor, which carried opex_variable_battery in a generation technology''s
+      numerator -- a battery cost inside a plant with no battery; the battery''s cost now belongs to the
+      battery''s own LCOE.'
+    system: cost_accounting
+    lhs: lcoe_wind_usd_per_mwh
+    rhs: (annualised_capex_usd_per_kw_wind + opex_fixed_wind) * 1000 / (8760 * capacity_factor_wind_onshore)
+      + opex_variable_wind
+    relation: eq
+    parameters:
+    - annualised_capex_usd_per_kw_wind
+    - capacity_factor_wind_onshore
+    - lcoe_wind_usd_per_mwh
+    - opex_fixed_wind
+    - opex_variable_wind
+    free_variables:
+    - annualised_capex_usd_per_kw_wind
+    - capacity_factor_wind_onshore
+    - opex_fixed_wind
+    - opex_variable_wind
+    determined_variables:
+    - lcoe_wind_usd_per_mwh
+    tolerance: 1.0e-08
+    unit_check: true
+    reference: null
+    priority: P1
+    solution_method: direct
+    linearity: nonlinear
+    latex: null
+  crf_wind_offshore_definition:
+    id: crf_wind_offshore_definition
+    name: CRF (wind offshore)
+    description: 'The standard annuity: a constant annual charge whose present value equals one unit of
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      NREL ATB 2025 states the same form.'
+    system: financial
+    lhs: crf_wind_offshore
+    rhs: discount_rate * (1 + discount_rate) ** asset_life_wind_offshore / ((1 + discount_rate) ** asset_life_wind_offshore
+      - 1)
+    relation: eq
+    parameters:
+    - crf_wind_offshore
+    - discount_rate
+    - asset_life_wind_offshore
+    free_variables:
+    - discount_rate
+    - asset_life_wind_offshore
+    determined_variables:
+    - crf_wind_offshore
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: numeric
+    linearity: nonlinear
+    priority: P2
+    reference: Standard annuity formula
+    latex: \mathrm{CRF}_{tech} = r(1+r)^L / ((1+r)^L - 1)
+  lcoe_wind_offshore_definition:
+    id: lcoe_wind_offshore_definition
+    name: LCOE (wind offshore)
+    description: 'Wind offshore levelised cost in the fixed-charge-annuity form the field standardises
+      on: the annualised capital charge over the energy the plant actually produces, plus fixed and variable
+      O&M, the fuel the fleet''s heat rate prices, and the stack''s carbon at carbon_price. Dimensional
+      check: a USD/kW/year rate over an hours/year denominator with a dimensionless capacity factor is
+      USD/MWh, and every per-MWh term shares it.'
+    system: cost_accounting
+    lhs: lcoe_wind_offshore_usd_per_mwh
+    rhs: (capex_wind_offshore * crf_wind_offshore + opex_fixed_wind_offshore) * 1000 / (8760 * capacity_factor_wind_offshore)
+    relation: eq
+    parameters:
+    - lcoe_wind_offshore_usd_per_mwh
+    - capex_wind_offshore
+    - opex_fixed_wind_offshore
+    - capacity_factor_wind_offshore
+    - crf_wind_offshore
+    free_variables:
+    - capex_wind_offshore
+    - opex_fixed_wind_offshore
+    - capacity_factor_wind_offshore
+    - crf_wind_offshore
+    determined_variables:
+    - lcoe_wind_offshore_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025 Equations & Variables; Short, Packey & Holt (1995), NREL/TP-462-5173; EIA
+      AEO LCOE methodology
+    latex: \mathrm{LCOE}_{t} = ((\mathrm{capex}_t \\cdot \\mathrm{CRF}_t + \\mathrm{FOM}_t) \\cdot 10^3)
+      / (8760 \\cdot \\mathrm{CF}_t) + \\mathrm{VOM}_t + \\mathrm{fuel}_t + e_t \\cdot p_{\\mathrm{CO2}}
+  crf_geothermal_definition:
+    id: crf_geothermal_definition
+    name: CRF (geothermal)
+    description: 'The standard annuity: a constant annual charge whose present value equals one unit of
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      NREL ATB 2025 states the same form.'
+    system: financial
+    lhs: crf_geothermal
+    rhs: discount_rate * (1 + discount_rate) ** asset_life_geothermal / ((1 + discount_rate) ** asset_life_geothermal
+      - 1)
+    relation: eq
+    parameters:
+    - crf_geothermal
+    - discount_rate
+    - asset_life_geothermal
+    free_variables:
+    - discount_rate
+    - asset_life_geothermal
+    determined_variables:
+    - crf_geothermal
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: numeric
+    linearity: nonlinear
+    priority: P2
+    reference: Standard annuity formula
+    latex: \mathrm{CRF}_{tech} = r(1+r)^L / ((1+r)^L - 1)
+  lcoe_geothermal_definition:
+    id: lcoe_geothermal_definition
+    name: LCOE (geothermal)
+    description: 'Geothermal levelised cost in the fixed-charge-annuity form the field standardises on:
+      the annualised capital charge over the energy the plant actually produces, plus fixed and variable
+      O&M, the fuel the fleet''s heat rate prices, and the stack''s carbon at carbon_price. Dimensional
+      check: a USD/kW/year rate over an hours/year denominator with a dimensionless capacity factor is
+      USD/MWh, and every per-MWh term shares it.'
+    system: cost_accounting
+    lhs: lcoe_geothermal_usd_per_mwh
+    rhs: (capex_geothermal * crf_geothermal + opex_fixed_geothermal) * 1000 / (8760 * capacity_factor_geothermal)
+      + opex_variable_geothermal + emission_factor_geothermal_t_per_mwh * carbon_price_usd_per_tco2
+    relation: eq
+    parameters:
+    - lcoe_geothermal_usd_per_mwh
+    - capex_geothermal
+    - opex_fixed_geothermal
+    - capacity_factor_geothermal
+    - opex_variable_geothermal
+    - emission_factor_geothermal_t_per_mwh
+    - carbon_price_usd_per_tco2
+    - crf_geothermal
+    free_variables:
+    - capex_geothermal
+    - opex_fixed_geothermal
+    - capacity_factor_geothermal
+    - opex_variable_geothermal
+    - emission_factor_geothermal_t_per_mwh
+    - carbon_price_usd_per_tco2
+    - crf_geothermal
+    determined_variables:
+    - lcoe_geothermal_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025 Equations & Variables; Short, Packey & Holt (1995), NREL/TP-462-5173; EIA
+      AEO LCOE methodology
+    latex: \mathrm{LCOE}_{t} = ((\mathrm{capex}_t \\cdot \\mathrm{CRF}_t + \\mathrm{FOM}_t) \\cdot 10^3)
+      / (8760 \\cdot \\mathrm{CF}_t) + \\mathrm{VOM}_t + \\mathrm{fuel}_t + e_t \\cdot p_{\\mathrm{CO2}}
+  crf_hydro_definition:
+    id: crf_hydro_definition
+    name: CRF (hydro)
+    description: 'The standard annuity: a constant annual charge whose present value equals one unit of
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      NREL ATB 2025 states the same form.'
+    system: financial
+    lhs: crf_hydro
+    rhs: discount_rate * (1 + discount_rate) ** asset_life_hydro / ((1 + discount_rate) ** asset_life_hydro
+      - 1)
+    relation: eq
+    parameters:
+    - crf_hydro
+    - discount_rate
+    - asset_life_hydro
+    free_variables:
+    - discount_rate
+    - asset_life_hydro
+    determined_variables:
+    - crf_hydro
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: numeric
+    linearity: nonlinear
+    priority: P2
+    reference: Standard annuity formula
+    latex: \mathrm{CRF}_{tech} = r(1+r)^L / ((1+r)^L - 1)
+  lcoe_hydro_definition:
+    id: lcoe_hydro_definition
+    name: LCOE (hydro)
+    description: 'Hydro levelised cost in the fixed-charge-annuity form the field standardises on: the
+      annualised capital charge over the energy the plant actually produces, plus fixed and variable O&M,
+      the fuel the fleet''s heat rate prices, and the stack''s carbon at carbon_price. Dimensional check:
+      a USD/kW/year rate over an hours/year denominator with a dimensionless capacity factor is USD/MWh,
+      and every per-MWh term shares it.'
+    system: cost_accounting
+    lhs: lcoe_hydro_usd_per_mwh
+    rhs: (capex_hydro * crf_hydro + opex_fixed_hydro) * 1000 / (8760 * capacity_factor_hydro) + opex_variable_hydro
+      + emission_factor_hydro_t_per_mwh * carbon_price_usd_per_tco2
+    relation: eq
+    parameters:
+    - lcoe_hydro_usd_per_mwh
+    - capex_hydro
+    - opex_fixed_hydro
+    - capacity_factor_hydro
+    - opex_variable_hydro
+    - emission_factor_hydro_t_per_mwh
+    - carbon_price_usd_per_tco2
+    - crf_hydro
+    free_variables:
+    - capex_hydro
+    - opex_fixed_hydro
+    - capacity_factor_hydro
+    - opex_variable_hydro
+    - emission_factor_hydro_t_per_mwh
+    - carbon_price_usd_per_tco2
+    - crf_hydro
+    determined_variables:
+    - lcoe_hydro_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025 Equations & Variables; Short, Packey & Holt (1995), NREL/TP-462-5173; EIA
+      AEO LCOE methodology
+    latex: \mathrm{LCOE}_{t} = ((\mathrm{capex}_t \\cdot \\mathrm{CRF}_t + \\mathrm{FOM}_t) \\cdot 10^3)
+      / (8760 \\cdot \\mathrm{CF}_t) + \\mathrm{VOM}_t + \\mathrm{fuel}_t + e_t \\cdot p_{\\mathrm{CO2}}
+  crf_biomass_definition:
+    id: crf_biomass_definition
+    name: CRF (biomass)
+    description: 'The standard annuity: a constant annual charge whose present value equals one unit of
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      NREL ATB 2025 states the same form.'
+    system: financial
+    lhs: crf_biomass
+    rhs: discount_rate * (1 + discount_rate) ** asset_life_biomass / ((1 + discount_rate) ** asset_life_biomass
+      - 1)
+    relation: eq
+    parameters:
+    - crf_biomass
+    - discount_rate
+    - asset_life_biomass
+    free_variables:
+    - discount_rate
+    - asset_life_biomass
+    determined_variables:
+    - crf_biomass
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: numeric
+    linearity: nonlinear
+    priority: P2
+    reference: Standard annuity formula
+    latex: \mathrm{CRF}_{tech} = r(1+r)^L / ((1+r)^L - 1)
+  lcoe_biomass_definition:
+    id: lcoe_biomass_definition
+    name: LCOE (biomass)
+    description: 'Biomass levelised cost in the fixed-charge-annuity form the field standardises on: the
+      annualised capital charge over the energy the plant actually produces, plus fixed and variable O&M,
+      the fuel the fleet''s heat rate prices, and the stack''s carbon at carbon_price. Dimensional check:
+      a USD/kW/year rate over an hours/year denominator with a dimensionless capacity factor is USD/MWh,
+      and every per-MWh term shares it.'
+    system: cost_accounting
+    lhs: lcoe_biomass_usd_per_mwh
+    rhs: (capex_biomass * crf_biomass + opex_fixed_biomass) * 1000 / (8760 * capacity_factor_biomass)
+      + opex_variable_biomass + fuel_cost_biomass + emission_factor_biomass_t_per_mwh * carbon_price_usd_per_tco2
+    relation: eq
+    parameters:
+    - lcoe_biomass_usd_per_mwh
+    - capex_biomass
+    - opex_fixed_biomass
+    - capacity_factor_biomass
+    - opex_variable_biomass
+    - fuel_cost_biomass
+    - emission_factor_biomass_t_per_mwh
+    - carbon_price_usd_per_tco2
+    - crf_biomass
+    free_variables:
+    - capex_biomass
+    - opex_fixed_biomass
+    - capacity_factor_biomass
+    - opex_variable_biomass
+    - fuel_cost_biomass
+    - emission_factor_biomass_t_per_mwh
+    - carbon_price_usd_per_tco2
+    - crf_biomass
+    determined_variables:
+    - lcoe_biomass_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025 Equations & Variables; Short, Packey & Holt (1995), NREL/TP-462-5173; EIA
+      AEO LCOE methodology
+    latex: \mathrm{LCOE}_{t} = ((\mathrm{capex}_t \\cdot \\mathrm{CRF}_t + \\mathrm{FOM}_t) \\cdot 10^3)
+      / (8760 \\cdot \\mathrm{CF}_t) + \\mathrm{VOM}_t + \\mathrm{fuel}_t + e_t \\cdot p_{\\mathrm{CO2}}
+  crf_csp_definition:
+    id: crf_csp_definition
+    name: CRF (csp)
+    description: 'The standard annuity: a constant annual charge whose present value equals one unit of
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      NREL ATB 2025 states the same form.'
+    system: financial
+    lhs: crf_csp
+    rhs: discount_rate * (1 + discount_rate) ** asset_life_csp / ((1 + discount_rate) ** asset_life_csp
+      - 1)
+    relation: eq
+    parameters:
+    - crf_csp
+    - discount_rate
+    - asset_life_csp
+    free_variables:
+    - discount_rate
+    - asset_life_csp
+    determined_variables:
+    - crf_csp
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: numeric
+    linearity: nonlinear
+    priority: P2
+    reference: Standard annuity formula
+    latex: \mathrm{CRF}_{tech} = r(1+r)^L / ((1+r)^L - 1)
+  lcoe_csp_definition:
+    id: lcoe_csp_definition
+    name: LCOE (csp)
+    description: 'Csp levelised cost in the fixed-charge-annuity form the field standardises on: the annualised
+      capital charge over the energy the plant actually produces, plus fixed and variable O&M, the fuel
+      the fleet''s heat rate prices, and the stack''s carbon at carbon_price. Dimensional check: a USD/kW/year
+      rate over an hours/year denominator with a dimensionless capacity factor is USD/MWh, and every per-MWh
+      term shares it.'
+    system: cost_accounting
+    lhs: lcoe_csp_usd_per_mwh
+    rhs: (capex_csp * crf_csp + opex_fixed_csp) * 1000 / (8760 * capacity_factor_csp) + opex_variable_csp
+    relation: eq
+    parameters:
+    - lcoe_csp_usd_per_mwh
+    - capex_csp
+    - opex_fixed_csp
+    - capacity_factor_csp
+    - opex_variable_csp
+    - crf_csp
+    free_variables:
+    - capex_csp
+    - opex_fixed_csp
+    - capacity_factor_csp
+    - opex_variable_csp
+    - crf_csp
+    determined_variables:
+    - lcoe_csp_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025 Equations & Variables; Short, Packey & Holt (1995), NREL/TP-462-5173; EIA
+      AEO LCOE methodology
+    latex: \mathrm{LCOE}_{t} = ((\mathrm{capex}_t \\cdot \\mathrm{CRF}_t + \\mathrm{FOM}_t) \\cdot 10^3)
+      / (8760 \\cdot \\mathrm{CF}_t) + \\mathrm{VOM}_t + \\mathrm{fuel}_t + e_t \\cdot p_{\\mathrm{CO2}}
+  crf_coal_definition:
+    id: crf_coal_definition
+    name: CRF (coal)
+    description: 'The standard annuity: a constant annual charge whose present value equals one unit of
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      NREL ATB 2025 states the same form.'
+    system: financial
+    lhs: crf_coal
+    rhs: discount_rate * (1 + discount_rate) ** asset_life_coal / ((1 + discount_rate) ** asset_life_coal
+      - 1)
+    relation: eq
+    parameters:
+    - crf_coal
+    - discount_rate
+    - asset_life_coal
+    free_variables:
+    - discount_rate
+    - asset_life_coal
+    determined_variables:
+    - crf_coal
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: numeric
+    linearity: nonlinear
+    priority: P2
+    reference: Standard annuity formula
+    latex: \mathrm{CRF}_{tech} = r(1+r)^L / ((1+r)^L - 1)
+  lcoe_coal_definition:
+    id: lcoe_coal_definition
+    name: LCOE (coal)
+    description: 'Coal levelised cost in the fixed-charge-annuity form the field standardises on: the
+      annualised capital charge over the energy the plant actually produces, plus fixed and variable O&M,
+      the fuel the fleet''s heat rate prices, and the stack''s carbon at carbon_price. Dimensional check:
+      a USD/kW/year rate over an hours/year denominator with a dimensionless capacity factor is USD/MWh,
+      and every per-MWh term shares it.'
+    system: cost_accounting
+    lhs: lcoe_coal_usd_per_mwh
+    rhs: (capex_coal * crf_coal + opex_fixed_coal) * 1000 / (8760 * capacity_factor_coal) + opex_variable_coal
+      + fuel_cost_coal + emission_factor_coal_t_per_mwh * carbon_price_usd_per_tco2
+    relation: eq
+    parameters:
+    - lcoe_coal_usd_per_mwh
+    - capex_coal
+    - opex_fixed_coal
+    - capacity_factor_coal
+    - opex_variable_coal
+    - fuel_cost_coal
+    - emission_factor_coal_t_per_mwh
+    - carbon_price_usd_per_tco2
+    - crf_coal
+    free_variables:
+    - capex_coal
+    - opex_fixed_coal
+    - capacity_factor_coal
+    - opex_variable_coal
+    - fuel_cost_coal
+    - emission_factor_coal_t_per_mwh
+    - carbon_price_usd_per_tco2
+    - crf_coal
+    determined_variables:
+    - lcoe_coal_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025 Equations & Variables; Short, Packey & Holt (1995), NREL/TP-462-5173; EIA
+      AEO LCOE methodology
+    latex: \mathrm{LCOE}_{t} = ((\mathrm{capex}_t \\cdot \\mathrm{CRF}_t + \\mathrm{FOM}_t) \\cdot 10^3)
+      / (8760 \\cdot \\mathrm{CF}_t) + \\mathrm{VOM}_t + \\mathrm{fuel}_t + e_t \\cdot p_{\\mathrm{CO2}}
+  crf_gas_definition:
+    id: crf_gas_definition
+    name: CRF (gas)
+    description: 'The standard annuity: a constant annual charge whose present value equals one unit of
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      NREL ATB 2025 states the same form.'
+    system: financial
+    lhs: crf_gas
+    rhs: discount_rate * (1 + discount_rate) ** asset_life_gas / ((1 + discount_rate) ** asset_life_gas
+      - 1)
+    relation: eq
+    parameters:
+    - crf_gas
+    - discount_rate
+    - asset_life_gas
+    free_variables:
+    - discount_rate
+    - asset_life_gas
+    determined_variables:
+    - crf_gas
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: numeric
+    linearity: nonlinear
+    priority: P2
+    reference: Standard annuity formula
+    latex: \mathrm{CRF}_{tech} = r(1+r)^L / ((1+r)^L - 1)
+  lcoe_gas_definition:
+    id: lcoe_gas_definition
+    name: LCOE (gas)
+    description: 'Gas levelised cost in the fixed-charge-annuity form the field standardises on: the annualised
+      capital charge over the energy the plant actually produces, plus fixed and variable O&M, the fuel
+      the fleet''s heat rate prices, and the stack''s carbon at carbon_price. Dimensional check: a USD/kW/year
+      rate over an hours/year denominator with a dimensionless capacity factor is USD/MWh, and every per-MWh
+      term shares it.'
+    system: cost_accounting
+    lhs: lcoe_gas_usd_per_mwh
+    rhs: (capex_gas * crf_gas + opex_fixed_gas) * 1000 / (8760 * capacity_factor_gas) + opex_variable_gas
+      + fuel_cost_gas + emission_factor_gas_t_per_mwh * carbon_price_usd_per_tco2
+    relation: eq
+    parameters:
+    - lcoe_gas_usd_per_mwh
+    - capex_gas
+    - opex_fixed_gas
+    - capacity_factor_gas
+    - opex_variable_gas
+    - fuel_cost_gas
+    - emission_factor_gas_t_per_mwh
+    - carbon_price_usd_per_tco2
+    - crf_gas
+    free_variables:
+    - capex_gas
+    - opex_fixed_gas
+    - capacity_factor_gas
+    - opex_variable_gas
+    - fuel_cost_gas
+    - emission_factor_gas_t_per_mwh
+    - carbon_price_usd_per_tco2
+    - crf_gas
+    determined_variables:
+    - lcoe_gas_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025 Equations & Variables; Short, Packey & Holt (1995), NREL/TP-462-5173; EIA
+      AEO LCOE methodology
+    latex: \mathrm{LCOE}_{t} = ((\mathrm{capex}_t \\cdot \\mathrm{CRF}_t + \\mathrm{FOM}_t) \\cdot 10^3)
+      / (8760 \\cdot \\mathrm{CF}_t) + \\mathrm{VOM}_t + \\mathrm{fuel}_t + e_t \\cdot p_{\\mathrm{CO2}}
+  crf_nuclear_definition:
+    id: crf_nuclear_definition
+    name: CRF (nuclear)
+    description: 'The standard annuity: a constant annual charge whose present value equals one unit of
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      NREL ATB 2025 states the same form.'
+    system: financial
+    lhs: crf_nuclear
+    rhs: discount_rate * (1 + discount_rate) ** asset_life_nuclear / ((1 + discount_rate) ** asset_life_nuclear
+      - 1)
+    relation: eq
+    parameters:
+    - crf_nuclear
+    - discount_rate
+    - asset_life_nuclear
+    free_variables:
+    - discount_rate
+    - asset_life_nuclear
+    determined_variables:
+    - crf_nuclear
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: numeric
+    linearity: nonlinear
+    priority: P2
+    reference: Standard annuity formula
+    latex: \mathrm{CRF}_{tech} = r(1+r)^L / ((1+r)^L - 1)
+  lcoe_nuclear_definition:
+    id: lcoe_nuclear_definition
+    name: LCOE (nuclear)
+    description: 'Nuclear levelised cost in the fixed-charge-annuity form the field standardises on: the
+      annualised capital charge over the energy the plant actually produces, plus fixed and variable O&M,
+      the fuel the fleet''s heat rate prices, and the stack''s carbon at carbon_price. Dimensional check:
+      a USD/kW/year rate over an hours/year denominator with a dimensionless capacity factor is USD/MWh,
+      and every per-MWh term shares it.'
+    system: cost_accounting
+    lhs: lcoe_nuclear_usd_per_mwh
+    rhs: (capex_nuclear * crf_nuclear + opex_fixed_nuclear) * 1000 / (8760 * capacity_factor_nuclear)
+      + opex_variable_nuclear + fuel_cost_nuclear + emission_factor_nuclear_t_per_mwh * carbon_price_usd_per_tco2
+    relation: eq
+    parameters:
+    - lcoe_nuclear_usd_per_mwh
+    - capex_nuclear
+    - opex_fixed_nuclear
+    - capacity_factor_nuclear
+    - opex_variable_nuclear
+    - fuel_cost_nuclear
+    - emission_factor_nuclear_t_per_mwh
+    - carbon_price_usd_per_tco2
+    - crf_nuclear
+    free_variables:
+    - capex_nuclear
+    - opex_fixed_nuclear
+    - capacity_factor_nuclear
+    - opex_variable_nuclear
+    - fuel_cost_nuclear
+    - emission_factor_nuclear_t_per_mwh
+    - carbon_price_usd_per_tco2
+    - crf_nuclear
+    determined_variables:
+    - lcoe_nuclear_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025 Equations & Variables; Short, Packey & Holt (1995), NREL/TP-462-5173; EIA
+      AEO LCOE methodology
+    latex: \mathrm{LCOE}_{t} = ((\mathrm{capex}_t \\cdot \\mathrm{CRF}_t + \\mathrm{FOM}_t) \\cdot 10^3)
+      / (8760 \\cdot \\mathrm{CF}_t) + \\mathrm{VOM}_t + \\mathrm{fuel}_t + e_t \\cdot p_{\\mathrm{CO2}}
+  crf_oil_definition:
+    id: crf_oil_definition
+    name: CRF (oil)
+    description: 'The standard annuity: a constant annual charge whose present value equals one unit of
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      NREL ATB 2025 states the same form.'
+    system: financial
+    lhs: crf_oil
+    rhs: discount_rate * (1 + discount_rate) ** asset_life_oil / ((1 + discount_rate) ** asset_life_oil
+      - 1)
+    relation: eq
+    parameters:
+    - crf_oil
+    - discount_rate
+    - asset_life_oil
+    free_variables:
+    - discount_rate
+    - asset_life_oil
+    determined_variables:
+    - crf_oil
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: numeric
+    linearity: nonlinear
+    priority: P2
+    reference: Standard annuity formula
+    latex: \mathrm{CRF}_{tech} = r(1+r)^L / ((1+r)^L - 1)
+  lcoe_oil_definition:
+    id: lcoe_oil_definition
+    name: LCOE (oil)
+    description: 'Oil levelised cost in the fixed-charge-annuity form the field standardises on: the annualised
+      capital charge over the energy the plant actually produces, plus fixed and variable O&M, the fuel
+      the fleet''s heat rate prices, and the stack''s carbon at carbon_price. Dimensional check: a USD/kW/year
+      rate over an hours/year denominator with a dimensionless capacity factor is USD/MWh, and every per-MWh
+      term shares it.'
+    system: cost_accounting
+    lhs: lcoe_oil_usd_per_mwh
+    rhs: (capex_oil * crf_oil + opex_fixed_oil) * 1000 / (8760 * capacity_factor_oil) + opex_variable_oil
+      + fuel_cost_oil + emission_factor_oil_t_per_mwh * carbon_price_usd_per_tco2
+    relation: eq
+    parameters:
+    - lcoe_oil_usd_per_mwh
+    - capex_oil
+    - opex_fixed_oil
+    - capacity_factor_oil
+    - opex_variable_oil
+    - fuel_cost_oil
+    - emission_factor_oil_t_per_mwh
+    - carbon_price_usd_per_tco2
+    - crf_oil
+    free_variables:
+    - capex_oil
+    - opex_fixed_oil
+    - capacity_factor_oil
+    - opex_variable_oil
+    - fuel_cost_oil
+    - emission_factor_oil_t_per_mwh
+    - carbon_price_usd_per_tco2
+    - crf_oil
+    determined_variables:
+    - lcoe_oil_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025 Equations & Variables; Short, Packey & Holt (1995), NREL/TP-462-5173; EIA
+      AEO LCOE methodology
+    latex: \mathrm{LCOE}_{t} = ((\mathrm{capex}_t \\cdot \\mathrm{CRF}_t + \\mathrm{FOM}_t) \\cdot 10^3)
+      / (8760 \\cdot \\mathrm{CF}_t) + \\mathrm{VOM}_t + \\mathrm{fuel}_t + e_t \\cdot p_{\\mathrm{CO2}}
+  fleet_build_balance:
+    id: fleet_build_balance
+    name: The build set within the fleet
+    description: The optimiser's per-technology builds must not exceed the fleet size the plan declares
+      for them. This is a *constraint* coupling -- the equation the LP carries, not an identity the evaluator
+      solves -- because the builds are decision variables with no single value until the solve settles
+      them.
+    system: reserve_margin
+    lhs: battery_capacity + biomass_capacity + coal_capacity + csp_capacity + gas_capacity + geothermal_capacity
+      + hydro_capacity + hydrogen_storage_capacity + nuclear_capacity + oil_capacity + phs_capacity +
+      thermal_storage_capacity + wind_offshore_capacity + wind_onshore_capacity
+    rhs: total_capacity_mw + storage_headroom_mw
+    relation: leq
+    parameters:
+    - battery_capacity
+    - biomass_capacity
+    - coal_capacity
+    - csp_capacity
+    - gas_capacity
+    - geothermal_capacity
+    - hydro_capacity
+    - hydrogen_storage_capacity
+    - nuclear_capacity
+    - oil_capacity
+    - phs_capacity
+    - thermal_storage_capacity
+    - wind_offshore_capacity
+    - wind_onshore_capacity
+    - total_capacity_mw
+    - storage_headroom_mw
+    free_variables:
+    - total_capacity_mw
+    - storage_headroom_mw
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: 'Least-cost generation expansion: Koltsaklis & Dagoumas (2018), Applied Energy 230:563-589'
+    latex: \\sum_t C_t \\le C_{total} + H_{storage}
+relationships:
+- source: discount_rate
+  target: weighted_average_cost_of_capital
+  equation_id: wacc_alias
+  relationship: equality
+  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
+    computes.'
+- source: capex_usd_per_kw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: Gross fleet capital enters the base the allowed return is earned on.
+- source: total_capacity_mw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: The fleet's size sets the scale of the capital in the accounts.
+- source: accumulated_depreciation_fraction
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: What the books have written down between gross capital and the base.
+- source: regulatory_asset_base
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: equality
+  description: Straight-line write-down of the base over the regulatory asset life.
+- source: depreciation_life_by_asset
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: functional
+  description: A longer regulatory life spreads the base thinner over the years.
+- source: regulatory_depreciation
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: Depreciation is the first term of the revenue requirement.
+- source: regulatory_asset_base
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return is earned on the base, not on gross capital.
+- source: discount_rate
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return rate is the blend the financial block computes.
+- source: allowed_return_on_debt
+  target: cost_of_debt
+  equation_id: cost_of_debt_capped
+  relationship: constraint
+  description: The allowance binds the debt rate a scenario may carry.
+- source: allowed_return_on_equity
+  target: cost_of_equity
+  equation_id: cost_of_equity_capped
+  relationship: constraint
+  description: The allowance binds the equity return a valuation may assume.
+- source: regulated_tariff_usd_per_mwh
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: equality
+  description: The applied tariff is the recovery level in the absence of a cap.
+- source: revenue_cap
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: functional
+  description: The cap scales the recovery level; below 1 it withholds part of it.
+- source: discount_rate
+  target: crf_solar_pv
+  equation_id: crf_solar_pv_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: asset_life_solar_pv
+  target: crf_solar_pv
+  equation_id: crf_solar_pv_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: annualised_capex_usd_per_kw_solar
+  target: lcoe_solar_usd_per_mwh
+  equation_id: lcoe_solar_definition
+  relationship: functional
+  strength: soft
+  description: Enters the technology's levelised cost.
+- source: lcoe_solar_usd_per_mwh
+  target: lcoe_solar_usd_per_mwh
+  equation_id: lcoe_solar_definition
+  relationship: functional
+  strength: soft
+  description: Enters the technology's levelised cost.
+- source: opex_fixed_solar
+  target: lcoe_solar_usd_per_mwh
+  equation_id: lcoe_solar_definition
+  relationship: functional
+  strength: soft
+  description: Enters the technology's levelised cost.
+- source: opex_variable_solar
+  target: lcoe_solar_usd_per_mwh
+  equation_id: lcoe_solar_definition
+  relationship: functional
+  strength: soft
+  description: Enters the technology's levelised cost.
+- source: solar_pv_capacity_factor
+  target: lcoe_solar_usd_per_mwh
+  equation_id: lcoe_solar_definition
+  relationship: functional
+  strength: soft
+  description: Enters the technology's levelised cost.
+- source: discount_rate
+  target: crf_wind_onshore
+  equation_id: crf_wind_onshore_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: asset_life_wind_onshore
+  target: crf_wind_onshore
+  equation_id: crf_wind_onshore_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: annualised_capex_usd_per_kw_wind
+  target: lcoe_wind_usd_per_mwh
+  equation_id: lcoe_wind_definition
+  relationship: functional
+  strength: soft
+  description: Enters the technology's levelised cost.
+- source: capacity_factor_wind_onshore
+  target: lcoe_wind_usd_per_mwh
+  equation_id: lcoe_wind_definition
+  relationship: functional
+  strength: soft
+  description: Enters the technology's levelised cost.
+- source: lcoe_wind_usd_per_mwh
+  target: lcoe_wind_usd_per_mwh
+  equation_id: lcoe_wind_definition
+  relationship: functional
+  strength: soft
+  description: Enters the technology's levelised cost.
+- source: opex_fixed_wind
+  target: lcoe_wind_usd_per_mwh
+  equation_id: lcoe_wind_definition
+  relationship: functional
+  strength: soft
+  description: Enters the technology's levelised cost.
+- source: opex_variable_wind
+  target: lcoe_wind_usd_per_mwh
+  equation_id: lcoe_wind_definition
+  relationship: functional
+  strength: soft
+  description: Enters the technology's levelised cost.
+- source: discount_rate
+  target: crf_wind_offshore
+  equation_id: crf_wind_offshore_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: asset_life_wind_offshore
+  target: crf_wind_offshore
+  equation_id: crf_wind_offshore_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: capex_wind_offshore
+  target: lcoe_wind_offshore_usd_per_mwh
+  equation_id: lcoe_wind_offshore_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: opex_fixed_wind_offshore
+  target: lcoe_wind_offshore_usd_per_mwh
+  equation_id: lcoe_wind_offshore_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: capacity_factor_wind_offshore
+  target: lcoe_wind_offshore_usd_per_mwh
+  equation_id: lcoe_wind_offshore_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: crf_wind_offshore
+  target: lcoe_wind_offshore_usd_per_mwh
+  equation_id: lcoe_wind_offshore_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: discount_rate
+  target: crf_geothermal
+  equation_id: crf_geothermal_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: asset_life_geothermal
+  target: crf_geothermal
+  equation_id: crf_geothermal_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: capex_geothermal
+  target: lcoe_geothermal_usd_per_mwh
+  equation_id: lcoe_geothermal_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: opex_fixed_geothermal
+  target: lcoe_geothermal_usd_per_mwh
+  equation_id: lcoe_geothermal_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: capacity_factor_geothermal
+  target: lcoe_geothermal_usd_per_mwh
+  equation_id: lcoe_geothermal_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: opex_variable_geothermal
+  target: lcoe_geothermal_usd_per_mwh
+  equation_id: lcoe_geothermal_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: emission_factor_geothermal_t_per_mwh
+  target: lcoe_geothermal_usd_per_mwh
+  equation_id: lcoe_geothermal_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: carbon_price_usd_per_tco2
+  target: lcoe_geothermal_usd_per_mwh
+  equation_id: lcoe_geothermal_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: crf_geothermal
+  target: lcoe_geothermal_usd_per_mwh
+  equation_id: lcoe_geothermal_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: discount_rate
+  target: crf_hydro
+  equation_id: crf_hydro_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: asset_life_hydro
+  target: crf_hydro
+  equation_id: crf_hydro_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: capex_hydro
+  target: lcoe_hydro_usd_per_mwh
+  equation_id: lcoe_hydro_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: opex_fixed_hydro
+  target: lcoe_hydro_usd_per_mwh
+  equation_id: lcoe_hydro_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: capacity_factor_hydro
+  target: lcoe_hydro_usd_per_mwh
+  equation_id: lcoe_hydro_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: opex_variable_hydro
+  target: lcoe_hydro_usd_per_mwh
+  equation_id: lcoe_hydro_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: emission_factor_hydro_t_per_mwh
+  target: lcoe_hydro_usd_per_mwh
+  equation_id: lcoe_hydro_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: carbon_price_usd_per_tco2
+  target: lcoe_hydro_usd_per_mwh
+  equation_id: lcoe_hydro_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: crf_hydro
+  target: lcoe_hydro_usd_per_mwh
+  equation_id: lcoe_hydro_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: discount_rate
+  target: crf_biomass
+  equation_id: crf_biomass_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: asset_life_biomass
+  target: crf_biomass
+  equation_id: crf_biomass_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: capex_biomass
+  target: lcoe_biomass_usd_per_mwh
+  equation_id: lcoe_biomass_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: opex_fixed_biomass
+  target: lcoe_biomass_usd_per_mwh
+  equation_id: lcoe_biomass_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: capacity_factor_biomass
+  target: lcoe_biomass_usd_per_mwh
+  equation_id: lcoe_biomass_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: opex_variable_biomass
+  target: lcoe_biomass_usd_per_mwh
+  equation_id: lcoe_biomass_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: fuel_cost_biomass
+  target: lcoe_biomass_usd_per_mwh
+  equation_id: lcoe_biomass_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: emission_factor_biomass_t_per_mwh
+  target: lcoe_biomass_usd_per_mwh
+  equation_id: lcoe_biomass_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: carbon_price_usd_per_tco2
+  target: lcoe_biomass_usd_per_mwh
+  equation_id: lcoe_biomass_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: crf_biomass
+  target: lcoe_biomass_usd_per_mwh
+  equation_id: lcoe_biomass_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: discount_rate
+  target: crf_csp
+  equation_id: crf_csp_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: asset_life_csp
+  target: crf_csp
+  equation_id: crf_csp_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: capex_csp
+  target: lcoe_csp_usd_per_mwh
+  equation_id: lcoe_csp_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: opex_fixed_csp
+  target: lcoe_csp_usd_per_mwh
+  equation_id: lcoe_csp_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: capacity_factor_csp
+  target: lcoe_csp_usd_per_mwh
+  equation_id: lcoe_csp_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: opex_variable_csp
+  target: lcoe_csp_usd_per_mwh
+  equation_id: lcoe_csp_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: crf_csp
+  target: lcoe_csp_usd_per_mwh
+  equation_id: lcoe_csp_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: discount_rate
+  target: crf_coal
+  equation_id: crf_coal_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: asset_life_coal
+  target: crf_coal
+  equation_id: crf_coal_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: capex_coal
+  target: lcoe_coal_usd_per_mwh
+  equation_id: lcoe_coal_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: opex_fixed_coal
+  target: lcoe_coal_usd_per_mwh
+  equation_id: lcoe_coal_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: capacity_factor_coal
+  target: lcoe_coal_usd_per_mwh
+  equation_id: lcoe_coal_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: opex_variable_coal
+  target: lcoe_coal_usd_per_mwh
+  equation_id: lcoe_coal_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: fuel_cost_coal
+  target: lcoe_coal_usd_per_mwh
+  equation_id: lcoe_coal_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: emission_factor_coal_t_per_mwh
+  target: lcoe_coal_usd_per_mwh
+  equation_id: lcoe_coal_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: carbon_price_usd_per_tco2
+  target: lcoe_coal_usd_per_mwh
+  equation_id: lcoe_coal_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: crf_coal
+  target: lcoe_coal_usd_per_mwh
+  equation_id: lcoe_coal_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: discount_rate
+  target: crf_gas
+  equation_id: crf_gas_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: asset_life_gas
+  target: crf_gas
+  equation_id: crf_gas_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: capex_gas
+  target: lcoe_gas_usd_per_mwh
+  equation_id: lcoe_gas_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: opex_fixed_gas
+  target: lcoe_gas_usd_per_mwh
+  equation_id: lcoe_gas_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: capacity_factor_gas
+  target: lcoe_gas_usd_per_mwh
+  equation_id: lcoe_gas_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: opex_variable_gas
+  target: lcoe_gas_usd_per_mwh
+  equation_id: lcoe_gas_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: fuel_cost_gas
+  target: lcoe_gas_usd_per_mwh
+  equation_id: lcoe_gas_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: emission_factor_gas_t_per_mwh
+  target: lcoe_gas_usd_per_mwh
+  equation_id: lcoe_gas_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: carbon_price_usd_per_tco2
+  target: lcoe_gas_usd_per_mwh
+  equation_id: lcoe_gas_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: crf_gas
+  target: lcoe_gas_usd_per_mwh
+  equation_id: lcoe_gas_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: discount_rate
+  target: crf_nuclear
+  equation_id: crf_nuclear_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: asset_life_nuclear
+  target: crf_nuclear
+  equation_id: crf_nuclear_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: capex_nuclear
+  target: lcoe_nuclear_usd_per_mwh
+  equation_id: lcoe_nuclear_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: opex_fixed_nuclear
+  target: lcoe_nuclear_usd_per_mwh
+  equation_id: lcoe_nuclear_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: capacity_factor_nuclear
+  target: lcoe_nuclear_usd_per_mwh
+  equation_id: lcoe_nuclear_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: opex_variable_nuclear
+  target: lcoe_nuclear_usd_per_mwh
+  equation_id: lcoe_nuclear_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: fuel_cost_nuclear
+  target: lcoe_nuclear_usd_per_mwh
+  equation_id: lcoe_nuclear_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: emission_factor_nuclear_t_per_mwh
+  target: lcoe_nuclear_usd_per_mwh
+  equation_id: lcoe_nuclear_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: carbon_price_usd_per_tco2
+  target: lcoe_nuclear_usd_per_mwh
+  equation_id: lcoe_nuclear_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: crf_nuclear
+  target: lcoe_nuclear_usd_per_mwh
+  equation_id: lcoe_nuclear_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: discount_rate
+  target: crf_oil
+  equation_id: crf_oil_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: asset_life_oil
+  target: crf_oil
+  equation_id: crf_oil_definition
+  relationship: functional
+  description: Enters the annuity whose yearly charge carries the capital.
+- source: capex_oil
+  target: lcoe_oil_usd_per_mwh
+  equation_id: lcoe_oil_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: opex_fixed_oil
+  target: lcoe_oil_usd_per_mwh
+  equation_id: lcoe_oil_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: capacity_factor_oil
+  target: lcoe_oil_usd_per_mwh
+  equation_id: lcoe_oil_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: opex_variable_oil
+  target: lcoe_oil_usd_per_mwh
+  equation_id: lcoe_oil_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: fuel_cost_oil
+  target: lcoe_oil_usd_per_mwh
+  equation_id: lcoe_oil_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: emission_factor_oil_t_per_mwh
+  target: lcoe_oil_usd_per_mwh
+  equation_id: lcoe_oil_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: carbon_price_usd_per_tco2
+  target: lcoe_oil_usd_per_mwh
+  equation_id: lcoe_oil_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: crf_oil
+  target: lcoe_oil_usd_per_mwh
+  equation_id: lcoe_oil_definition
+  relationship: functional
+  strength: hard
+  description: Enters the technology's levelised cost.
+- source: battery_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  description: The build is one term the fleet size governs; the build set may not exceed it plus storage
+    headroom.
+- source: biomass_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  description: The build is one term the fleet size governs; the build set may not exceed it plus storage
+    headroom.
+- source: coal_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  description: The build is one term the fleet size governs; the build set may not exceed it plus storage
+    headroom.
+- source: csp_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  description: The build is one term the fleet size governs; the build set may not exceed it plus storage
+    headroom.
+- source: gas_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  description: The build is one term the fleet size governs; the build set may not exceed it plus storage
+    headroom.
+- source: geothermal_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  description: The build is one term the fleet size governs; the build set may not exceed it plus storage
+    headroom.
+- source: hydro_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  description: The build is one term the fleet size governs; the build set may not exceed it plus storage
+    headroom.
+- source: hydrogen_storage_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  description: The build is one term the fleet size governs; the build set may not exceed it plus storage
+    headroom.
+- source: nuclear_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  description: The build is one term the fleet size governs; the build set may not exceed it plus storage
+    headroom.
+- source: oil_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  description: The build is one term the fleet size governs; the build set may not exceed it plus storage
+    headroom.
+- source: phs_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  description: The build is one term the fleet size governs; the build set may not exceed it plus storage
+    headroom.
+- source: thermal_storage_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  description: The build is one term the fleet size governs; the build set may not exceed it plus storage
+    headroom.
+- source: wind_offshore_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  description: The build is one term the fleet size governs; the build set may not exceed it plus storage
+    headroom.
+- source: wind_onshore_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  description: The build is one term the fleet size governs; the build set may not exceed it plus storage
+    headroom.
+- source: storage_headroom_mw
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  description: The storage allowance widens the fleet ceiling for energy-shifting builds.
+cross_validation: []

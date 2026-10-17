@@ -1,0 +1,1602 @@
+Crawford School of Public Policy
+
+
+
+CAMA
+Centre for Applied Macroeconomic Analysis
+
+
+Understanding the energy-GDP elasticity: A
+sectoral approach
+
+CAMA Working Paper 45/2016
+July 2016
+
+Paul J. Burke
+Crawford School of Public Policy ANU and
+Centre for Applied Macroeconomic Analysis, ANU
+
+
+Zsuzsanna Csereklyei
+Crawford School of Public Policy ANU
+
+
+Abstract
+This paper uses per capita data for 132 countries over 1960–2010 to estimate
+elasticities of sectoral energy use with respect to national gross domestic product (GDP).
+We estimate models in both levels and growth rates and use our estimates to sectorally
+decompose the aggregate energy-GDP elasticity. Our estimates show that residential
+energy use is very inelastic to GDP if primary solid biofuels are counted in energy use
+tallies, especially at low income levels. Residential use of electricity is more tightly linked
+to GDP, as is energy use by the transportation, industrial, and services sectors.
+Agriculture typically accounts for a small share of energy use and has a modest energy-
+GDP elasticity. The aggregate energy-GDP elasticity tends to be higher for countries at
+higher income levels, in large part because traditional use of primary solid biofuels is
+less important. Gasoline prices, winter temperature, population, and land area are
+among other factors influencing sectoral energy use.
+
+
+
+
+| T HE A U S T R A L I A N NA T I O NA L U NI V E RS I T Y
+Keywords
+
+elasticity, sectoral, energy use, economic development, economic growth, decomposition
+
+
+JEL Classification
+
+O13, Q43, O11
+
+
+Address for correspondence:
+
+(E) cama.admin@anu.edu.au
+
+
+
+ISSN 2206-0332
+
+
+
+
+The Centre for Applied Macroeconomic Analysis in the Crawford School of Public Policy has been
+established to build strong links between professional macroeconomists. It provides a forum for quality
+macroeconomic research and discussion of policy issues between academia, government and the private
+sector.
+The Crawford School of Public Policy is the Australian National University’s public policy school,
+serving and influencing Australia, Asia and the Pacific through advanced policy research, graduate and
+executive education, and policy impact.
+
+
+
+| T HE A U S T R A L I A N NA T I O NA L U NI V E RS I T Y
+Understanding the energy-GDP elasticity: A sectoral approach
+
+Paul J. Burke1* and Zsuzsanna Csereklyei1
+
+1
+ Australian National University, ACT 2601, Australia
+* Corresponding author: paul.j.burke@anu.edu.au, +61 2 6125 6566
+
+July 2016
+
+This paper uses per capita data for 132 countries over 1960–2010 to estimate elasticities of
+sectoral energy use with respect to national gross domestic product (GDP). We estimate
+models in both levels and growth rates and use our estimates to sectorally decompose the
+aggregate energy-GDP elasticity. Our estimates show that residential energy use is very
+inelastic to GDP if primary solid biofuels are counted in energy use tallies, especially at low
+income levels. Residential use of electricity is more tightly linked to GDP, as is energy use
+by the transportation, industrial, and services sectors. Agriculture typically accounts for a
+small share of energy use and has a modest energy-GDP elasticity. The aggregate energy-
+GDP elasticity tends to be higher for countries at higher income levels, in large part because
+traditional use of primary solid biofuels is less important. Gasoline prices, winter
+temperature, population, and land area are among other factors influencing sectoral energy
+use.
+
+Keywords: elasticity, sectoral, energy use, economic development, economic growth,
+decomposition
+JEL classifications: O13, Q43, O11
+Acknowledgements: We are grateful for comments from three reviewers, David I. Stern, and
+seminar participants at Central European University, CNRS Université Pierre Mendès-
+France, and the U.S. Energy Information Administration.
+
+
+
+
+                                               1
+1. Introduction
+There has been longstanding interest in the energy-GDP elasticity – the % change in energy
+use associated with a 1% change in gross domestic product (GDP). In early work this
+parameter was called the “energy elasticity” (Adams and Miovic, 1968) or the “energy
+coefficient” (Brookes, 1972; Ang, 1991). Other names are the income elasticity of energy use
+and the energy intensity of income growth (van Benthem, 2015). Using cross-sectional data,
+Csereklyei et al. (2016) recently reported that the mean long-run energy-GDP elasticity is
+around 0.7, and that this has been quite stable over time.
+
+In this paper we use per capita data for 132 countries to estimate elasticities of sectoral
+energy use with respect to GDP and use these to decompose the aggregate energy-GDP
+elasticity into sectoral contributions. While it is known that the sectoral composition of
+energy use evolves as economies develop (e.g. Nakićenović et al., 1998; Judson et al., 1999;
+Smil, 2000; Medlock and Soligo, 2001; Schäfer, 2005; Lescaroux, 2011; Arseneau, 2012),
+the contributions of end-use sectors to the aggregate energy-GDP elasticity are less well
+understood. Our estimates are potentially useful for energy planning and forecasting,
+particularly in rapidly-growing economies.
+
+Our approach involves studying final energy use by five sectors – residences, agriculture
+(including fishing), transport, industry, and services – as well as other energy use not
+allocated to final energy use by these five sectors. We estimate both a levels model and a
+model in 10-year growth rates. In addition to energy-GDP elasticities we also present
+electricity-GDP elasticities by sector; if economic growth induces a relative shift toward
+electricity, electricity-GDP elasticities should exceed the energy-GDP elasticities. Our
+models will allow GDP elasticities to vary according to GDP per capita level.
+
+Fig. 1 shows International Energy Agency (2016) data on per capita energy use by residences
+and the transport sector, plotted against GDP per capita. The data are for the 132 countries in
+our sample over the 51 years 1960–2010, with the Organisation for Economic Co-operation
+and Development (OECD23) shown separately.1 The energy use data include traditional
+energy forms such as primary solid biofuels.2 Quadratic best fits have been added. Because
+the Figure is in log-log space, the slopes are the unconditional mean energy-GDP elasticities
+evaluated at each GDP per capita level. The Figure reveals that at low and middle income
+levels, energy use by residences tends to fall and then slowly rise again as higher GDP per
+capita levels are reached. At high income levels, residential energy use is more closely tied to
+GDP. Energy use for transport is positively linked to GDP in quite a stable way across the
+income spectrum.
+
+
+
+1
+  We use OECD membership at the end of 1971, which covers 23 countries (“OECD23”), to avoid
+self-selection into the OECD based on economic performance over the later decades of the period.
+2
+  We use “traditional” to refer principally to primary solid biofuels, and “commercial” to refer to
+transitional and modern energy forms such as oil, coal, natural gas, and electricity. We recognize that
+divergences from these definitions exist. For example, solid biofuels can be traded commercially.
+
+                                                  2
+Fig. 1. Per capita final energy use for (a) residential purposes and (b) transport, by GDP per
+ capita. Quadratic best fits have been added. Each dot is one of 4,840 annual observations
+ from 132 countries over 1960–2010. Sources: Heston et al. (2012), International Energy
+                                     Agency (IEA, 2016).
+
+                                             3
+It makes sense that the GDP elasticity of residential energy use is relatively low – and even
+negative – at low income levels. Households in low-income countries tend to depend on
+traditional energy sources such as primary solid biofuels, which are inefficient sources of
+energy. Household demand for traditional fuels might well have a negative income elasticity
+on account of their inferior status vis-à-vis transition and modern fuels. There may also be
+supply-side constraints on the use of traditional fuels. Residential use of commercial fuels is
+likely to have a higher GDP elasticity, and these fuels offer energy efficiency gains.
+Economic growth in countries with low incomes might thus not induce sizeable increases in
+residential energy use measured in energy content terms, even if increases in the value of
+residential energy services are achieved (Adams and Miovic, 1968).
+
+The evolution of sectoral energy use as economies develop is closely related to the evolution
+of sectoral output itself, early documentations of which were provided by Kuznets (1971) and
+Chenery and Syrquin (1975). Economic development typically sees economies transition
+from being dominated by agriculture, to becoming increasingly industrial, and then finally
+services-oriented. This pattern is to some extent reflected in energy use data also, although
+rather than agriculture it is residential energy use that dominates low-income energy profiles.
+
+Among recent contributions, Jakob et al. (2012) estimated sectoral energy-GDP elasticities
+for 5-yearly growth rate panels of 21 OECD and 30 non-OECD countries, concluding that the
+effect of GDP growth on energy use may be smaller in OECD countries. For our large sample
+we instead find that energy-GDP elasticities actually tend to be higher at higher income
+levels, principally because traditional fuels play a smaller role in the energy mix. We obtain
+larger point estimates for the energy-GDP elasticity for OECD23 countries than for the non-
+OECD. That the energy-GDP elasticity is higher at higher GDP per capita has also been
+observed by, for example, van Benthem and Romani (2009) and Csereklyei and Stern (2015).
+
+Among other recent work, Burke et al. (2015) report short-run sectoral and aggregate energy-
+GDP elasticities, finding that the aggregate same-year elasticity is 0.4, with a two-year
+elasticity of 0.5. They report a higher same-year energy-GDP elasticity for OECD countries
+(0.6) than for non-OECD countries (0.4), but do not explore longer-term effects. Csereklyei
+and Stern (2015) and Csereklyei et al. (2016) report long-run elasticities that exceed the
+short-run effects estimated by Burke et al., but do not explore effects at the sectoral level. van
+Benthem (2015) presents sectoral energy-GDP elasticities for a sub-sample of countries,
+reporting a low elasticity for residential energy use for lighting, heating, and cooking.
+
+Prior work has also examined how the fuel mix varies as economies develop, finding that
+countries typically transition from primary solid biomass to fossil fuels and then increasingly
+to nuclear power and/or modern renewables (Tahvonen and Salo, 2001; Burke, 2010, 2013).
+There are studies that examine energy use in a single sector or a group of sub-sectors (Miketa
+and Mulder, 2005; Adeyemi and Hunt, 2007, 2014; Lescaroux, 2013; Mulder et al., 2014;
+Gao et al., 2015). Previous research also documents energy intensity convergence among
+
+
+                                                4
+countries (e.g. Liddle, 2010; Herrerias, 2012; Mulder and de Groot, 2007, 2012). Our growth
+rates model will allow for sector-by-sector beta convergence in per capita energy use.
+
+Our main contribution is to provide rigorous, up-to-date estimates of long-run and 10-year
+sectoral energy-GDP elasticities and demonstrate how these help in understanding the
+aggregate energy-GDP elasticity. Our study uses a long time dimension (1960–2010), broad
+geographical coverage (132 countries), and a broad definition of energy. While there are
+measurement issues for traditional fuels, it is important for these fuels to be considered given
+the large contribution they make to the energy mixes of many developing economies and our
+desire for broad geographical coverage. We will investigate the role of primary solid biofuels
+in explaining our results. The paper also explores potential heterogeneity among regions and
+country groupings.
+
+Section 2 explains our approach. Section 3 provides the results. Section 4 concludes.
+
+2. Models and data
+We disaggregate the IEA (2016)’s primary energy use data into six categories: final energy
+use by (a) residences, (b) agriculture, (c) transport, (d) industry, and (e) services; as well as
+(f) all other energy use, a category that includes primary energy lost in transformation (e.g.
+the generation of electricity) and distribution; primary energy used by the energy industry;
+other final energy use not allocated to one of the above sectors; use of non-biomass fuels for
+non-energy purposes; and transfers and statistical differences. Using E and EF for primary
+and final energy use per capita, the following applies:
+
+       𝐸𝐸 = 𝐸𝐸𝐹𝐹 + 𝐸𝐸𝐹𝐹 + 𝐸𝐸𝐹𝐹 + 𝐸𝐸𝐹𝐹 + 𝐸𝐸𝐹𝐹 + 𝐸𝐸𝑂𝑂                                            (1)
+               𝑅𝑅     𝐴𝐴     𝑇𝑇    𝐼𝐼     𝑆𝑆
+
+
+where R is residences, A is agriculture, T is transport, I is industry, S is services, and O is
+other. The data allow a greater level of disaggregation if one wishes. For example, industry
+could be disaggregated into sub-sectors. Further disaggregation would, however, reduce our
+country coverage due to instances of ln(0). Data uncertainties are also often exacerbated at
+finer levels of disaggregation.
+
+Year-2010 data for Eq. (1) are presented in Fig. 2 for low-, middle-, and high-income
+countries. The data show substantial inequality: per capita energy use tends to be much
+higher in countries with higher average incomes. The sectoral composition of energy use also
+varies across the income groups. 70% of energy used by the low-income group is in the form
+of final energy consumed by residences. (It is not shown in the Figure, but nine-tenths of this
+is the use of primary solid biofuels such as wood.) Final energy use by residences accounts
+for only 13% of primary energy use in the high-income group, little of which is primary solid
+biofuels. Final energy use by the transport, services, and industry sectors increases
+substantially as one moves across the income groups. Agriculture is a relatively small energy
+user in all income groups, although we note that energy data do not include all energy inputs,
+such as sunlight energy used in photosynthesis. The “other” category accounts for 40% of
+primary energy use in both middle-income and high-income countries, and only 13% of
+
+                                                5
+primary energy use in the low-income group. This category mostly represents energy losses
+in transformation processes, principally electricity generation.
+
+
+
+
+  Fig. 2. Per capita energy use in 2010, by sector, for low-income, middle-income, and high-income
+  countries. The data are population-weighted measures for the 132 countries in our sample (11 low
+income; 71 middle income; 50 high income). The F superscript means “final” energy use. The “other”
+  category includes transformation losses and additional categories (see Appendix A1). Source: IEA
+                (2016). Income groups are based on the World Bank (2015) definition.
+
+Differentiating Eq. (1) by time (t), dividing by E, and denoting dx/dt by a dot over the
+variable x, we have:
+       𝐸𝐸         𝐸𝐸𝐹𝐹 𝐸𝐸𝐹𝐹       𝐸𝐸𝐹𝐹 𝐸𝐸𝐹𝐹    𝐸𝐸𝐹𝐹 𝐸𝐸𝐹𝐹      𝐸𝐸𝐹𝐹 𝐸𝐸𝐹𝐹          𝐸𝐸𝐹𝐹 𝐸𝐸𝐹𝐹     𝐸𝐸𝑂𝑂 𝐸𝐸𝑂𝑂
+            =     𝑅 𝑅 𝑅𝑅
+                                 + 𝐴 𝐴 𝐴𝐴 + 𝑇 𝑇 𝑇𝑇 + 𝐼𝐼 + 𝑆 𝑆 𝑆𝑆 +                                                                 (2)
+            𝐼 𝐼                                                                       𝐸𝐸 𝐹𝐹
+                       𝐹𝐹              𝐹𝐹               𝐹𝐹
+       𝐸𝐸         𝐸𝐸 𝐸𝐸𝑅𝑅         𝐸𝐸 𝐸𝐸𝐴𝐴          𝐸𝐸 𝐸𝐸𝑇𝑇    𝐸𝐸 𝐸𝐸𝐼𝐼𝐹𝐹          𝐸𝐸     𝑆𝑆      𝐸𝐸 𝐸𝐸𝑂𝑂
+
+
+Dividing by the proportional real growth rate of GDP per capita in purchasing power parity
+(PPP) terms (𝑌𝑌
+             1
+                /𝑌𝑌), and using 𝑒𝑒𝐸𝐸 to denote an energy-GDP elasticity:
+        𝑒𝑒 = (𝐸𝐸𝐹𝐹. 𝑒𝑒 𝐹𝐹 + 𝐸𝐸𝐹𝐹. 𝑒𝑒 𝐹𝐹 + 𝐸𝐸𝐹𝐹. 𝑒𝑒 𝐹𝐹 + 𝐸𝐸𝐹𝐹. 𝑒𝑒 𝐹𝐹 + 𝐸𝐸𝐹𝐹. 𝑒𝑒 𝐹𝐹 + 𝐸𝐸 . 𝑒𝑒 ) (3)
+         𝐸𝐸        𝐸𝐸       𝑅𝑅     𝐸𝐸𝑅𝑅       𝐴𝐴       𝐸𝐸𝐴𝐴      𝑇𝑇       𝐸𝐸𝑇𝑇          𝐼𝐼    𝐸𝐸𝐼𝐼         𝑆𝑆   𝐸𝐸𝑆𝑆   𝑂𝑂   𝐸𝐸𝑂𝑂
+
+
+For small changes, the energy-GDP elasticity is thus the sum of the six sectoral energy-GDP
+elasticities, weighted by the sectoral share of total energy use.
+
+
+
+
+                                                                             6
+Our approach involves obtaining unweighted estimates of the six elasticities on the right-
+hand side of Eq. (3). For example we estimate 𝑒𝑒𝐸𝐸𝐹𝐹 , the GDP elasticity for the final energy use
+                                                     𝑅𝑅
+of residences. These elasticities are of interest in their own right. We then apply the weights
+to provide a simple sectoral decomposition of the energy-GDP elasticity. We use two types of
+model for estimating energy-GDP elasticities: a model in levels, and a model in growth rates.
+
+2.1. Levels estimates
+Our levels estimates use:
+
+       ln𝐸𝐸𝐹𝐹 = 𝛼𝛼 + 𝛽𝛽 ln𝑌𝑌 + 𝛾𝛾 (ln𝑌𝑌 )2 + 𝐗𝐗′ 𝜹𝜹 + 𝜀𝜀                                      (4)
+           𝑠𝑠,𝑐𝑐   𝑠𝑠    𝑠𝑠   𝑐𝑐    𝑠𝑠   𝑐𝑐         𝑐𝑐 𝑠𝑠   𝑠𝑠,𝑐𝑐
+
+
+where 𝐸𝐸𝐹𝐹 is final energy use per capita in sector s of country c, Y is real GDP per capita in
+PPP terms, X is a vector of controls, and ε an error term. We use logs to produce coefficients
+that have an elasticity interpretation, and present estimates both with and without the
+quadratic term. When the quadratic is included, the energy-GDP elasticity is given by
+𝛽𝛽 + 2𝛾𝛾ln𝑌𝑌𝑐𝑐, which means that it varies linearly with log GDP per capita if 𝛾𝛾 ≠ 0. We also
+estimate Eq. (4) for total primary energy use (E) and other energy use (𝐸𝐸𝑂𝑂). Our main levels
+estimates are for a year-2010 cross section. We also present between estimates for a panel
+dataset covering the period 1960–2010.
+
+Our vector of controls includes the log gasoline price; the average temperature in the coldest
+and warmest months of the year; log annual precipitation; log population and log land, to
+measure scale effects; a dummy for former transition economies in Europe and Central Asia;
+and dummies for six regions (Sub-Saharan Africa, Middle East and North Africa, South Asia,
+Latin America and Caribbean, Europe and Central Asia, North America). The base region is
+East Asia and the Pacific. It should be noted that transition economies are covered by both
+the transition dummy and the Europe and Central Asia dummy.
+
+The controls are likely to mostly be exogenous to sectoral energy use and not be channels
+through which a country’s GDP affects energy use. A possible exception is the gasoline
+price, but we obtain nearly identical energy-GDP elasticities without this control. We avoid
+controlling for variables, such as trade openness, that may be influenced by GDP per capita.
+Our estimates are, however, similar when trade openness is controlled for. We expect the
+coefficients for log gasoline price and winter temperature to often be negative, as higher
+energy prices should reduce the quantity of energy demanded and cold weather increases
+heating requirements. A positive coefficient may in some instances be expected for summer
+temperature, as a warmer summer likely increases the demand for air conditioning. Because
+our regressions include the same control vector for each sector, seemingly unrelated
+regressions offer no advantage over an equation-by-equation approach.
+
+Cross-sectional regressions use between variation, meaning that coefficients will have a long-
+run interpretation if variables are at long-run equilibria (Pesaran and Smith, 1995). The
+between estimator for our panel estimates uses the mean of each series over time in each
+
+
+                                                7
+country, which provides long-run effects while avoiding the need for specifying dynamics
+(Baltagi and Griffin, 1983, 1984; Pirotte, 1999, 2003; Baltagi, 2008). The between estimator
+is not affected by time-series issues related to unit roots (Stern, 2010) and has been found
+superior to alternative panel estimators in the presence of explanatory-variable measurement
+error (Hauk and Wacziarg, 2009).
+
+
+2.2. Growth rates estimates
+Our second estimation approach uses within variation from a model in 10-year growth rates.
+Advantages of the approach include that time-invariant level effects are removed by
+differencing; elements of the time series are used without introducing unit root issues; we are
+able to control for beta convergence and decade-specific time factors; and the estimates
+provide effects for the reasonably long window of 10 years, a period often relevant for
+forecasting and planning. Ordás Criado et al. (2011), Jakob et al. (2012), Anjum et al. (2014),
+and Csereklyei and Stern (2015) are among others to have previously estimated growth rate
+models of emissions and/or energy use.
+
+We estimate the following model:
+
+     𝐸𝐸� 𝐹𝐹 = (𝛽𝛽𝑠𝑠 + 𝜂𝜂𝑠𝑠 l�
+                            n𝑌𝑌𝑐𝑐,𝑡𝑡−10 )𝑌�𝑐𝑐,𝑡𝑡 + 𝜃𝜃𝑠𝑠ln𝑌𝑌𝑐𝑐,𝑡𝑡−10 + 𝜅𝜅𝑠𝑠ln𝐸𝐸𝐹𝐹             + 𝐗𝐗′𝑠𝑠,𝑡𝑡𝝆𝝆𝑠𝑠 + 𝜋𝜋𝑠𝑠,𝑡𝑡 + 𝜀𝜀𝑠𝑠,𝑐𝑐,𝑡𝑡
+      𝑠𝑠,𝑐𝑐,𝑡𝑡                                                                 𝑠𝑠,𝑐𝑐,𝑡𝑡−10
+                                                                                                                                     (5)
+
+where hats indicate a 10-year average annual growth rate, calculated using e.g. 𝑌� = (ln𝑌𝑌𝑡𝑡 −
+ln𝑌𝑌𝑡𝑡−10)/10. The interaction between GDP per capita growth and t–10 log GDP per capita is
+included to allow the 10-year energy-GDP elasticity to equal 𝛽𝛽 + 𝜂𝜂 l �
+                                                                       n𝑌𝑌𝑐𝑐 , 𝑡𝑡 −1 0 , i.e. to vary by t–
+10 log GDP per capita. A positive 𝜂𝜂 would mean that the 10-year elasticity is higher at higher
+t–10 log GDP per capita. A negative 𝜂𝜂 would mean that the impact of economic growth on
+energy use growth is lower at higher t–10 GDP per capita levels. The tilde (~) indicates that
+we have subtracted the sample mean from this variable, implying that the 10-year energy-
+GDP elasticity in a country with mean t–10 log GDP per capita is β. As for our levels
+estimates, we present results for 𝐸𝐸𝑂𝑂 and E in addition to results for each final-use sector.
+
+The long-run energy-GDP elasticity from Eq. (5), evaluated for a future GDP per capita
+growth rate of zero, is −𝜃𝜃/𝜅𝜅.3 The likely existence of lagged effects lead us to believe that
+long-run elasticities will exceed the 10-year elasticities. See De Boef and Keele (2008) for a
+review of dynamic models.
+
+The inclusion of t–10 log energy use per capita in Eq. (5) allows for conditional beta
+convergence – the tendency for energy-intense economies to experience larger reductions in
+
+3
+  A generalized formula is −(𝜃𝜃 + 𝜂𝜂𝜂𝜂)/𝜅𝜅, where x is the average annual future per capita GDP growth
+rate. If 𝜂𝜂 > 0 and future GDP per capita growth is positive, our reported long-run elasticities will be
+underestimates, as they do not capture the amplified effect of future GDP per capita growth on per
+capita energy use growth at higher GDP per capita levels. Unreported simulations suggest, however,
+that it takes many decades before long-run effects differ substantially from 10-year effects.
+
+                                                              8
+energy intensity, and for potential catch-up from below. For a discussion of other approaches
+to studying convergence, see Csereklyei et al. (2016). We follow the advice of Barro (2015)
+to not include country fixed effects in a model that has a convergence term, as doing so can
+introduce a mechanical correlation between the convergence term and the error (Hurwicz,
+1950). Eq. (5) does, however, include decade time effects (𝜋𝜋𝑠𝑠,𝑡𝑡) and the X vector of controls,
+for which we use period averages. We do not difference the controls, so their coefficients
+now measure effects on per capita energy use growth. We use the 2010 gasoline price, as data
+are not available for the full period.4
+
+Our panel covers the decades to 1970, 1981, 1990, 2000, and 2010. The second period covers
+1971–1981 as the IEA (2016) data commence in 1971 for most countries. The second and
+third periods thus have one year of overlap. In an additional specification we present
+estimates using 39-year growth rates (Appendix A5). Sectoral energy-GDP elasticities from
+39-year estimates tend to be slightly larger than the elasticities from 10-year estimates.
+
+The potential for reverse causality is a concern in both our levels and growth rates estimates,
+although, if energy prices are controlled for, the only genuine effect in the current literature
+appears to be that GDP causes energy use rather than vice versa (Bruns et al., 2014).5 Liddle
+and Lung (2015) also found that GDP Granger-causes sectoral energy use. Csereklyei and
+Stern (2015) presented a simple analysis of potential reverse causality bias in aggregate
+energy-GDP elasticities, finding that it is likely to be around +0.05. We note that national
+GDP is likely to be less affected by energy use in an individual sector than it is by national
+energy use. While for these reasons reverse causality may not be a substantial issue for our
+estimates, the close interconnections between energy and GDP mean that our results should
+be interpreted as associations rather than unidirectional effects.
+
+2.3. Data
+The IEA (2016) energy use data, aggregated in tonnes of oil equivalent, are provided by
+national statistical agencies and other sources, and standardized by the IEA. They cover both
+commercial and non-commercial energy use. The data are not without measurement error.
+The IEA (2016) specifically cautions about the quality of the primary solid biofuels data, the
+time series of which is often estimated using simple modelling or interpolation/extrapolation.
+For this reason, and to obtain additional insights into the energy-GDP elasticity, we present
+results both including and excluding primary solid biofuels. Visual inspection of the energy
+use data for agriculture also reveals unrealistically large jumps in early years. We restrict our
+agriculture estimates to 1990–2010 to avoid these. The data for residences, agriculture,
+transport, industry, and services only cover final use of energy. The energy used in producing
+fertilizer and agricultural machinery is consequently allocated to industry rather than
+agriculture. The energy lost in transformation processes (e.g. electricity generation) is not
+passed through to sectoral end-users. It is included in 𝐸𝐸𝑂𝑂.
+
+4
+  We obtain similar results if we exclude this variable from our growth rate estimates.
+5
+  Bruns and Gross (2013) find that the results of electricity-GDP Granger causality tests are generally
+similar to energy-GDP Granger causality tests.
+
+                                                   9
+Other data sources include Penn World Table 7.1 (Heston et. al., 2012) for GDP and
+population; Harris et al. (2014) for temperature and precipitation; the World Bank (2015) for
+land area, gasoline prices, and regional classifications; and Easterly (2001) for the dummy
+covering former transition economies. We chose version 7.1 of the Penn World Table as it
+covers more countries than versions 8.0 or 8.1. A list of variable definitions is in Appendix
+A1.
+
+The (unbalanced) panel for our between estimates covers 4,840 observations from 132
+countries over 1960–2010. A list of the countries is in Appendix A2. They accounted for 95%
+of the world’s population and primary energy consumption in 2010. The most populous
+countries excluded due to the non-availability of energy (and in some cases GDP) data are
+Myanmar, Uganda, Afghanistan, the Democratic Republic of Korea, and Madagascar. With
+the exception of Myanmar (middle income), these are low-income countries (World Bank,
+2015).
+
+Descriptive statistics are tabled in Appendix A3. Figs. 1–2 already showed that there is
+substantial variation in GDP per capita and sectoral energy use across countries, as should be
+expected. Our results tables will show standard errors that are robust to heteroskedasticity
+and, for our panel growth rate estimates, clustered by country to allow for possible country-
+by-country patterns of autocorrelation.
+
+3. Results
+3.1. Levels results
+Cross-sectional estimates of Eq. (4) for the year 2010 are presented in Table 1. The estimates
+suggest that final per capita energy use by residences and agriculture are both relatively
+inelastic to GDP per capita, with mean elasticities of 0.33 and 0.50. Transport (0.86), industry
+(0.88), and services (1.08) have larger mean energy-GDP elasticities. The elasticity for the
+“other” category is also high (0.98). The aggregate energy-GDP elasticity is 0.74, similar to
+the estimates of Csereklyei et al. (2016). As shown by Eq. (3), this elasticity is a weighted
+average of the elasticities in columns 1–6.
+
+The point estimates and 95% confidence intervals from Table 1 are displayed in Fig. 3. The
+widest confidence interval is for agriculture, a sector for which data quality is likely to be
+relatively poor. The elasticities suggest that economic growth typically results in: (a)
+increased energy use; (b) increased energy use in each sector; (c) a reorientation of final
+energy use away from residences and agriculture, towards transport, industry, and services;
+and (d) a reduction in the energy intensity of the economy, as the energy-GDP elasticity is
+less than 1. The relatively high coefficient for the “Other” category largely reflects the switch
+towards electricity as economies develop, as the transformation losses from electricity
+generation make up a large share of this category.
+
+
+
+
+                                               10
+Table 1
+Levels estimates, 2010 cross-section and 1960–2010 panel between estimator.
+Dependent variable: Ln per capita energy use by …
+                           (1)               (2)             (3)          (4)        (5)          (6)         (7)
+                           ResidencesF AgricultureF TransportF IndustryF ServicesF Other                      Total
+Ln GDP per capita          0.33***           0.50**          0.86***      0.88***    1.08***      0.98***     0.74***
+                           (0.08)            (0.23)          (0.06)       (0.10)     (0.13)       (0.08)      (0.07)
+Ln gasoline price          -0.12             0.61***         -0.22***     -0.28*** -0.24**        -0.26*** -0.28***
+                           (0.10)            (0.20)          (0.07)       (0.10)     (0.12)       (0.08)      (0.05)
+Temperature (coldest       -0.03***          -0.01           -0.01*       -0.02      -0.04*** -0.01           -0.01**
+month)                     (0.01)            (0.02)          (0.01)       (0.01)     (0.01)       (0.01)      (0.01)
+Temperature (warmest       0.01              -0.04           0.03         -0.01      0.04         0.01        0.00
+month)                     (0.02)            (0.05)          (0.02)       (0.02)     (0.04)       (0.03)      (0.02)
+Ln precipitation           0.15              -0.10           0.16*        -0.08      0.16         -0.14       -0.07
+                           (0.12)            (0.27)          (0.08)       (0.15)     (0.20)       (0.11)      (0.08)
+Ln Population              0.01              -0.16           -0.16***     -0.02      0.04         0.06        -0.03
+                           (0.06)            (0.14)          (0.04)       (0.07)     (0.10)       (0.08)      (0.05)
+Ln Land                    0.02              0.30***         0.13***      0.10       -0.08        -0.01       0.02
+                           (0.05)            (0.09)          (0.03)       (0.06)     (0.09)       (0.06)      (0.04)
+Transition economy         -0.47***          -0.11           -0.18        0.02       -0.22        0.43*       -0.06
+                           (0.16)            (0.46)          (0.13)       (0.21)     (0.27)       (0.23)      (0.13)
+Europe & Central Asia      0.54***           -0.02           0.21         -0.38*     0.14         -0.48**     -0.14
+                           (0.17)            (0.41)          (0.13)       (0.20)     (0.26)       (0.21)      (0.13)
+Latin America &            -0.02             -0.24           -0.06        -0.24      -0.18        -0.62*** -0.38***
+Caribbean                  (0.18)            (0.38)          (0.17)       (0.20)     (0.25)       (0.21)      (0.12)
+Middle East & North        0.39              0.30            0.40**       -0.39      -0.39        -0.31       -0.24
+Africa                     (0.35)            (0.80)          (0.19)       (0.36)     (0.64)       (0.30)      (0.20)
+North America              0.39**            -0.59           0.56***      -0.93*** 0.44           -0.33       -0.09
+                           (0.15)            (0.49)          (0.15)       (0.23)     (0.31)       (0.22)      (0.13)
+South Asia                 0.25              -0.72           -0.34        -0.37      -0.56        -1.24**     -0.38**
+                           (0.28)            (0.72)          (0.20)       (0.31)     (0.34)       (0.48)      (0.17)
+Sub-Saharan Africa         0.85***           -1.61***        -0.09        -0.53*     0.21         -0.03       0.16
+                           (0.30)            (0.59)          (0.17)       (0.28)     (0.37)       (0.27)      (0.19)
+R2                         0.56              0.60            0.91         0.79       0.73         0.83        0.87
+Observations               132               114             132          132        130          132         132
+Panel between estimate     0.37***           0.57***         0.95***      0.93***    1.16***      1.01*** 0.78***
+for Ln GDP per capita
+Notes: ***, **, and * indicate statistical significance at 1, 5, and 10%. Robust standard errors are in parentheses.
+The samples in columns 2 and 5 are reduced due to instances of ln(0). The base region is East Asia and the Pacific.
+Coefficients on constants not shown. The between estimates are for panel samples that cover up to 4,840
+observations from 132 countries over 1960–2010, and include the controls. The between estimates for agriculture
+are restricted to 1990–2010. See Appendix A4 for further details.
+
+
+The results on the other variables in Table 1 are of interest. Higher road-sector gasoline prices
+are associated with less energy use, consistent with a negative price elasticity of demand (Burke
+and Nishitateno, 2013). An exception is agriculture, perhaps because higher fuel prices
+discourage industrialization. Colder winters are associated with more energy use in several
+sectors including residences, a logical result given the higher heating requirements in colder
+climates. The estimates provide no evidence that summer temperature or annual precipitation
+significantly influence sectoral or total energy use at the 5% significance level.6 Densely
+populated countries tend to use less energy for transport, which makes sense as domestic travel
+
+6
+ In our 39-year growth rates estimates we find that residential and service-sector electricity use have
+grown faster in countries with warmer summers. See Appendix A5.
+
+                                                       11
+distances are shorter.7 Countries with more land tend to use more energy for agriculture, likely to
+be because they have more space for farms.
+
+
+
+
+        Fig. 3. Mean long-run energy-GDP elasticities from levels regressions, 2010. These are the
+    conditional effects from Table 1. Both point estimates and 95% confidence intervals are shown. All
+     estimates differ from zero at 5% significance (see Table 1). All except the industry, services, and
+                            other estimates differ from unity at 5% significance.
+
+
+The region and transition dummies also reveal interesting information. Sub-Saharan African
+countries report low energy use in agriculture, likely due to relatively unmechanized
+production. On the other hand Sub-Saharan Africa countries use a relatively large amount of
+energy at the residential level for countries at their GDP per capita levels, presumably due to
+high reliance on energy-inefficient biomass combustion. Holding other variables fixed,
+countries in (a) South Asia and (b) Latin America and the Caribbean tend to use less energy,
+particularly in the “Other” category. Countries outside East Asia and the Pacific often devote
+less energy to industrial production, consistent with a lower average industry share of GDP.8
+North American countries tend to use more energy at the residential level and for transport,
+and less for industrial production. Europe and Central Asia countries outside the group of
+former transition economies also use a disproportionate amount of energy at the residential
+level. This is probably in part caused by climate factors not fully picked up by our controls,
+7
+ We control for log land, so the coefficient for log population is the effect of log population density.
+8
+ The average share of industrial value-added in GDP in 2010 was 35% among East Asia and the
+Pacific economies in our sample, and 31% among other countries (World Bank, 2015).
+
+                                                    12
+such as the length of winters. The transition economies use less energy at the residential level
+than other countries in Europe and Central Asia, and more “Other” energy.
+
+The R2 values in Table 1 are high. The variables account for 56% of the variation in log
+residential energy use per capita in 2010, and up to 91% of the variation in log transport
+energy use per capita.
+
+Between estimates for our 1960–2010 panel are shown in the base of Table 1, and in more
+detail in Appendix A4. The estimations include the controls, but to save space we do not
+report their coefficients. The elasticities are similar: residential and agricultural energy use
+are relatively inelastic to GDP (elasticities of 0.37 and 0.57), whereas transport, industry, and
+services have energy-GDP elasticities closer to unity. The average energy-GDP elasticity is
+0.78, similar to the cross-sectional estimate for 2010. 2010 is thus not an unusual year; the
+cross-sectional relationships are relatively stable.
+
+Table 2 presents cross-sectional estimates for 2010 with the squared log GDP per capita term.
+The table also shows the implied energy-GDP elasticity point estimates at the 25th, 50th, and
+75th percentiles of GDP per capita. The estimates include the vector of controls, but to save
+space we do not show the coefficients. The Table confirms that per capita sectoral energy use
+is generally positively associated with per capita GDP. An exception is for residences at low
+GDP per capita levels, where the GDP elasticity is close to zero and, in point-estimate terms,
+even becomes negative at GDP per capita levels less than $1,600 (as also seen in Fig. 1). This
+can be explained by high dependence on primary solid biofuels: residential use of these fuels
+tends to decrease as incomes increase, as we will soon see. Residential use of other fuels
+tends to increase, and these other fuels can be used more efficiently. That middle-income
+countries tend to use less energy at the residential level can be observed in Fig. 2.
+
+The statistical significance of the quadratic term in column 7 of Table 2 indicates that the
+aggregate energy-GDP elasticity tends to be higher at higher GDP per capita. The point
+estimates of the energy-GDP elasticity equal 0.63 at the 25th percentile of GDP per capita,
+increasing to 1.04 at the 75th percentile. Some sectoral energy-GDP elasticities are
+themselves also higher at higher GDP per capita, most notably the elasticity for residences.
+The existence of a strictly convex pattern in the log-log energy-GDP relationship – an
+increasing energy-GDP elasticity – is demonstrated in Panel A of Fig. 4.
+
+Table 3 presents estimates that exclude primary solid biofuels. As expected, the mean energy-
+GDP elasticities are now generally larger, especially for residences (0.59) and in total (0.95).
+This is consistent with economic growth inducing an energy-mix switch away from primary
+solid biofuels. Table 3 provides no strong evidence that the GDP elasticity for commercial
+fuels is higher for countries at higher GDP per capita levels. That the energy-GDP elasticity
+excluding primary solid biofuels is relatively stable across different GDP per capita levels
+can also be seen in Panel B of Fig. 4.
+
+
+
+                                               13
+Table 2
+Levels estimates with the quadratic, 2010.
+
+Dependent variable: Ln per capita energy use by …
+                                     (1)                  (2)                  (3)                (4)              (5)                 (6)             (7)
+                                     ResidencesF          AgricultureF         TransportF         IndustryF        ServicesF           Other           Total
+Ln GDP per capita                    -1.85***             0.28                 1.19**             -0.79            0.50                0.52            -1.20**
+                                     (0.55)               (3.88)               (0.48)             (1.05)           (1.60)              (0.75)          (0.49)
+(Ln GDP per capita)2                 0.12***              0.01                 -0.02              0.10*            0.03                0.03            0.11***
+                                     (0.03)               (0.21)               (0.03)             (0.06)           (0.09)              (0.04)          (0.03)
+Controls and region dummies          Yes                  Yes                  Yes                Yes              Yes                 Yes             Yes
+Energy-GDP relationship is:          U (turning point     Positive             Positive           Positive         Positive            Positive        Positive
+                                     at $1,622)
+Elasticity evaluated at xth percentile of GDP per capita…
+  25th                               0.20**               0.49                 0.88***            0.78***          1.05***             0.96***         0.63***
+  50th                               0.44***              0.51***              0.84***            0.97***          1.11***             1.01***         0.84***
+  75th                               0.66***              0.53                 0.81***            1.14***          1.17***             1.05***         1.04***
+R2                                   0.63                 0.60                 0.91               0.81             0.73                0.83            0.90
+Observations                         132                  114                  132                132              130                 132             132
+Notes: ***, **, and * indicate statistical significance at 1, 5, and 10%. Robust standard errors are in parentheses. The samples in columns 2 and 5 are reduced due
+to instances of ln(0). The GDP per capita percentiles are for the full sample. The energy-GDP relationship is only classed as U or inverse U if the quadratic term is
+statistically significant and GDP per capita at the turning point exceeds $1,000 and is less than $100,000. Coefficients for controls and region dummies not shown.
+
+
+
+
+                                                                                       14
+ Fig. 4. Primary energy use per capita, with and without primary solid biofuels, by GDP per capita.
+Quadratic best fits have been added. Each dot is one of 4,840 annual observations from 132 countries
+ over 1960–2010. The lighter dots are the OECD23. The exclusion of primary sold biofuels mostly
+       affects the left-hand-side of the distribution. Sources: Heston et al. (2012), IEA (2016).
+
+                                                15
+ Table 3
+ Levels estimates for energy use excluding primary solid biofuels, 2010.
+Dependent variable: Ln per capita use of energy …
+                             (1)            (2)            (3)          (4)          (5)           (6)          (7)
+                             Excluding primary solid biofuels, by …
+                             ResidencesF AgricultureF TransportF IndustryF           ServicesF     Other        Total
+Panel A: No quadratic
+Ln GDP per capita            0.59***        0.53**         0.86***      0.97***      1.12***       1.00***      0.95***
+                             (0.07)         (0.22)         (0.06)       (0.10)       (0.13)        (0.14)       (0.07)
+Ln gasoline price            -0.15*         0.57***        -0.22***     -0.31**      -0.22*        -0.29**      -0.29***
+                             (0.08)         (0.20)         (0.07)       (0.12)       (0.11)        (0.13)       (0.05)
+Temperature (coldest         -0.04***       -0.01          -0.01*       -0.02        -0.04***      -0.01        -0.02***
+month)                       (0.01)         (0.02)         (0.01)       (0.01)       (0.01)        (0.01)       (0.01)
+Temperature (warmest 0.02                   -0.03          0.03         -0.01        0.03          0.00         0.01
+month)                       (0.02)         (0.04)         (0.02)       (0.02)       (0.03)        (0.04)       (0.02)
+Ln precipitation             0.12           -0.11          0.16*        -0.15        0.07          -0.30**      -0.07
+                             (0.13)         (0.27)         (0.08)       (0.13)       (0.18)        (0.14)       (0.07)
+Ln Population                0.08           -0.18          -0.16***     0.02         0.04          0.12         -0.04
+                             (0.07)         (0.14)         (0.04)       (0.08)       (0.10)        (0.10)       (0.05)
+Ln Land                      -0.03          0.29***        0.13***      0.06         -0.08         -0.06        0.03
+                             (0.05)         (0.09)         (0.03)       (0.06)       (0.09)        (0.08)       (0.04)
+R2                           0.83           0.62           0.91         0.84         0.78          0.76         0.93
+Panel B: With quadratic (coefficients for controls not shown)
+Ln GDP per capita            -0.18          0.77           1.19**       0.06         0.46          -0.12        0.78
+                             (0.73)         (3.81)         (0.48)       (0.91)       (1.55)        (1.96)       (0.80)
+(Ln GDP per capita)2         0.04           -0.01          -0.02        0.05         0.04          0.06         0.01
+                             (0.04)         (0.21)         (0.03)       (0.05)       (0.09)        (0.10)       (0.04)
+R2                           0.83           0.62           0.91         0.84         0.78          0.76         0.93
+Energy-GDP                   Positive       Positive       Positive     Positive     Positive      Positive     Positive
+relationship is:
+Elasticity evaluated at xth percentile of GDP per capita…
+  25th                       0.54***        0.54           0.88***      0.92***      1.08***       0.91***      0.94***
+     th
+  50                         0.63***        0.52***        0.84***      1.02***      1.16***       1.03***      0.96***
+  75th                       0.70***        0.49           0.81***      1.11***      1.22***       1.14***      0.97***
+Panel C: Dependent variable: Ln Per capita use of primary solid biofuel energy (coefficients on controls not shown)
+Ln GDP per capita            -0.67***       -0.13          n.a.         0.59**       -0.42         0.56***      0.06
+                             (0.22)         (0.60)                      (0.26)       (0.37)        (0.19)       (0.22)
+Controls and region          Yes            Yes            Yes          Yes          Yes           Yes          Yes
+dummies
+Observations (max)           132            114            132          132          130           121          132
+Notes: ***, **, and * indicate statistical significance at 1, 5, and 10%. Robust standard errors are in parentheses.
+Coefficients for the transition economy dummy and region dummies not shown. The samples in columns 2, 5, and 6
+are reduced due to instances of ln(0) or, in the case of column 6, ln(<0). Panel B: The GDP per capita percentiles are
+for the full sample. The energy-GDP relationship is never classed as U or inverse U because the quadratic terms are
+not significant. Panel C: Estimation samples are reduced due to instances of ln(0). It is not possible to estimate an
+elasticity for transport for this reason.
+
+
+ Panel C of Table 3 presents GDP elasticities for primary solid biofuels alone.9 We obtain a
+ negative elasticity for residences, statistically significant at the 1% level. When looking
+ across countries, higher GDP per capita is thus associated with less per capita use of primary
+
+
+
+ 9
+  The reader is reminded of measurement issues for the biofuels data. This specification uses only the
+ cross-sectional variation.
+
+                                                         16
+solid biofuels by residences.10 Positive elasticities are obtained for industry and the “other”
+category, the latter reflecting increased use of primary solid biofuels at higher income levels
+for transformation processes such as electricity generation and the making of liquid biofuels.
+The GDP elasticity for aggregate primary solid biofuel use is 0.06, insignificantly different
+from zero. At a macro level, primary solid biofuel use is thus very GDP inelastic.
+
+The results together suggest that the role of primary solid biofuels – particularly by
+residences – is the key to understanding why the energy-GDP elasticity is on average higher
+at higher GDP per capita. Primary solid biofuels dominate the energy mixes of low-income
+economies such as the Democratic Republic of the Congo, but residential use of these fuels
+tends to fall if these economies experience economic growth. Use of commercial fuels tends
+to increase, and commercial fuels offer energy efficiency improvements over traditional
+fuels. As a result, the aggregate energy-GDP elasticity is on average low at low income
+levels. Once commercial fuels are dominant, the energy-GDP elasticity becomes higher.
+
+Table 4 presents results for electricity use. Electricity is the highest-quality energy form for
+many purposes. As expected, the electricity-GDP elasticities are generally larger than the
+energy-GDP elasticities presented in Table 1, suggesting that economic growth induces a
+switch toward electricity. This is particularly so for residences (electricity-GDP elasticity of
+0.78) and transport (1.35). The aggregate electricity-GDP is 0.88 (Panel A). This elasticity
+appears to be relatively stable across the GDP per capita distribution, as evidenced by the
+insignificant estimates for the quadratic term in Panel B of Table 4.
+
+In sum, the energy-GDP elasticity for residences varies substantially by fuel. The elasticity
+for residential use of primary solid biofuels is negative, consistent with this fuel being an
+inferior good at the residential level. Excluding primary solid fuels, or restricting energy use
+to electricity only, the residential GDP elasticity is positive. Once the negative and positive
+effects are netted out, the energy-GDP elasticity for residences is positive, but rather small
+(0.33). Agriculture has a mid-range energy-GDP elasticity point estimate of 0.50. Transport
+has a high energy-GDP elasticity, particularly for electricity. Industry and services have
+relatively high energy-GDP elasticities. GDP elasticities are generally higher for the use of
+commercial energy sources such as electricity than the use of traditional sources such as
+primary solid biofuels.
+
+
+
+
+10
+  Female labor force participation is among other variables associated with reductions in residential
+use of biofuels; see Burke and Dundas (2015).
+
+                                                  17
+Table 4
+Levels estimates for electricity use, 2010.
+Dependent variable: Ln per capita electricity use (final) by …
+                       (1)            (2)           (3)            (4)         (5)          (6)             (7)
+                       Residences Agriculture Transport Industry               Services     Other           Total
+Panel A: No quadratic
+Ln GDP per capita 0.78***             0.50**        1.35***        0.88***     1.18***      1.18            0.88***
+                       (0.08)         (0.22)        (0.22)         (0.13)      (0.11)       (0.82)          (0.09)
+Ln gasoline price      -0.06          0.04          0.08           -0.03       -0.03        0.05            -0.05
+                       (0.09)         (0.17)        (0.23)         (0.19)      (0.10)       (1.68)          (0.10)
+Temperature            -0.01          -0.00         -0.07**        -0.04**     -0.01        -0.01           -0.01
+(coldest month)        (0.01)         (0.03)        (0.03)         (0.02)      (0.01)       (0.12)          (0.01)
+Temperature            -0.00          -0.03         0.04           -0.04       0.02         -0.16           -0.02
+(warmest month)        (0.02)         (0.07)        (0.05)         (0.03)      (0.02)       (0.26)          (0.02)
+Ln precipitation       0.01           -0.24         0.07           -0.06       0.08         -2.31           -0.08
+                       (0.10)         (0.33)        (0.41)         (0.18)      (0.11)       (1.80)          (0.11)
+Ln Population          -0.10**        -0.10         0.19           0.03        -0.10        0.45            -0.06
+                       (0.05)         (0.14)        (0.15)         (0.11)      (0.07)       (0.69)          (0.06)
+Ln Land                0.02           0.17          -0.04          -0.02       0.03         -0.64           0.00
+                       (0.05)         (0.11)        (0.18)         (0.10)      (0.05)       (0.55)          (0.05)
+R2                     0.87           0.49          0.70           0.74        0.89         0.24            0.88
+Panel B: With quadratic (coefficients for controls not shown)
+Ln GDP per capita 0.17                1.08          -2.54          0.06        1.36         6.66            0.18
+                       (0.83)         (3.06)        (3.43)         (1.08)      (1.20)       (8.78)          (0.89)
+(Ln GDP per            0.04           -0.03         0.21           0.05        -0.01        -0.31           0.04
+capita)2               (0.05)         (0.17)        (0.19)         (0.06)      (0.07)       (0.49)          (0.05)
+R2                     0.88           0.49          0.71           0.74        0.89         0.25            0.88
+Electricity-GDP        Positive       Positive      Positive       Positive    Positive     Insignificant Positive
+relationship is:
+Elasticity evaluated at xth percentile of GDP per capita…
+  25th                 0.74***        0.53          0.96**         0.84***     1.19***      1.55            0.84***
+  50th                 0.81***        0.47**        1.37***        0.93***     1.17***      0.95            0.92***
+  75th                 0.87***        0.41          1.75***        1.01***     1.15***      0.40            0.99***
+Controls and           Yes            Yes           Yes            Yes         Yes          Yes             Yes
+region dummies
+Observations           131            101           74             131         125          97              132
+Notes: ***, **, and * indicate statistical significance at 1, 5, and 10%. Robust standard errors are in parentheses.
+Coefficients for the transition economy dummy and region dummies not shown. Samples are reduced below 132
+due to instances of ln(0). The “other” category includes only non-specified final electricity use. The GDP per
+capita percentiles are for the full sample. The electricity-GDP relationship is never classed as U or inverse U
+because the quadratic terms are not significant.
+
+
+3.2. Growth rates results
+Estimates of our 10-year growth rates model are in Table 5. The first row provides the
+energy-GDP elasticities for countries with mean t–10 log GDP per capita. As expected, these
+are generally smaller than the cross-sectional estimates. The mean elasticity is particularly
+low for residences: 0.05, which is not significantly different from zero. The mean 10-year
+energy-GDP elasticity for transport is 0.66; for industry is 0.73; and for services is 0.56. The
+10-year energy-GDP elasticity for agriculture is similar to the levels regression (0.52). The
+10-year GDP elasticity for all energy use is 0.48, two-thirds the size of the estimate in Table
+1. This is similar to the energy-GDP elasticity reported by Csereklyei and Stern (2015) in
+their base 39-year growth rates model with spatial filtering (Model 1 of their Table 2) and to
+the two-year response reported by Burke et al. (2015).
+
+
+                                                        18
+Table 5
+Panel estimates in 10-year growth rates, 1960–2010.
+                                                          (1)                   (2)                    (3)              (4)            (5)            (6)               (7)
+10-year average annual growth rate of per                 energy use by …
+capita...                                                 ResidencesF           AgricultureF           TransportF       IndustryF      ServicesF      Other             Total
+GDP per capita growth rate10-year                         0.05                  0.52*                  0.66***          0.73***        0.56***        0.59***           0.48***
+                                                          (0.11)                (0.28)                 (0.06)           (0.19)         (0.19)         (0.09)            (0.05)
+GDP per capita growth rate10-year * Ln GDP                0.05                  0.25                   0.05             0.25**         0.41***        -0.04             0.13***
+per capitat-10; sample demeaned                           (0.06)                (0.22)                 (0.04)           (0.11)         (0.14)         (0.09)            (0.03)
+Ln GDP per capitat-10                                     0.008**               0.006                  0.029***         0.012***       0.033***       0.032***          0.016***
+                                                          (0.003)               (0.011)                (0.005)          (0.004)        (0.008)        (0.005)           (0.004)
+Ln Energy or electricity use per capita in that           -0.033***             -0.025***              -0.035***        -0.025***      -0.040***      -0.028***         -0.023***
+sectort-10                                                (0.008)               (0.009)                (0.004)          (0.005)        (0.004)        (0.003)           (0.004)
+1981 dummy                                                -0.027**                                     -0.011*          -0.026***      -0.007         -0.032***         -0.021***
+                                                          (0.011)                                      (0.006)          (0.007)        (0.018)        (0.008)           (0.005)
+1990 dummy                                                -0.030***                                    -0.011*          -0.027**       0.002          -0.034***         -0.025***
+                                                          (0.010)                                      (0.006)          (0.011)        (0.018)        (0.008)           (0.005)
+2000 dummy                                                -0.030***                                    -0.007           -0.030***      0.004          -0.043***         -0.029***
+                                                          (0.011)                                      (0.005)          (0.010)        (0.017)        (0.009)           (0.005)
+2010 dummy                                                -0.032***             0.000                  -0.004           -0.035***      -0.004         -0.046***         -0.029***
+                                                          (0.010)               (0.012)                (0.006)          (0.008)        (0.018)        (0.008)           (0.005)
+Controls and region dummies                               Yes                   Yes                    Yes              Yes            Yes            Yes               Yes
+R2                                                        0.46                  0.19                   0.46             0.37           0.47           0.42              0.61
+10-year elasticity evaluated at xth percentile of GDP per capitat-10…
+  25th                                                    0.00                  0.28                   0.62***          0.50***        0.19           0.63***           0.36***
+  75th                                                    0.11                  0.78**                 0.71***          0.98***        0.98***        0.55***           0.62***
+Long-run elasticity                                       0.25**                0.25                   0.84***          0.48***        0.83***        1.15***           0.71***
+Countries                                                 131                   109                    131              131            126            131               131
+Observations                                              463                   195                    463              459            419            463               463
+Notes: ***, **, and * indicate statistical significance at 1, 5, and 10%. Robust standard errors, clustered by country, are in parentheses. The standard error for the long-run
+elasticity was calculated using the delta method. Regressions also control for: Ln(Gasoline price 2010); Temperature (coldest month)10-year average; Temperature (warmest
+month)10-year average; Ln(Precipitation10-year average); Ln(Population10-year average); Ln(Landt); Transition economy dummy; and region dummies. Coefficients on controls not
+reported. The decade-dummy base year is 1970. The sample demeaning and percentiles are for the 463-observation sample. Some samples are reduced due to instances of
+ln(0). The estimates for agriculture are restricted to the two 10-year periods ending in 2000 and 2010. Growth rates are annual averages, calculated using differenced logs
+divided by 10; 0.01 approximately equals 1% average annual growth. The long-run elasticity is evaluated for a future GDP per capita growth rate of zero.
+
+
+
+
+                                                                                                  19
+The second row of coefficients in Table 5 shows how the energy-GDP elasticity varies with
+the level of t–10 log GDP per capita. The significant positive coefficient in column 7 again
+suggests that the aggregate energy-GDP elasticity is higher at higher GDP per capita. Energy-
+GDP elasticities evaluated at the 25th and 75th percentiles of t–10 log GDP per capita are
+shown at the base of the table, with the point elasticities equalling 0.36 at the 25th percentile
+of t–10 GDP per capita, and 0.62 at the 75th percentile. The estimates thus provide no
+evidence of a reduction in the conditional energy-GDP elasticity at higher GDP per capita as
+might have been expected if there was a delinking of energy use from economic growth. The
+second-row coefficients are also positive and statistically significant for industry and
+services.
+
+The long-run energy-GDP elasticities from our growth rates estimates are also in the base of
+Table 5. These measure the cumulative effect of a current shock to GDP per capita, assuming
+that the GDP per capita growth rate in future periods is zero. The general story is similar to
+Table 1, with the long-run energy-GDP elasticity equalling around 0.7. At the sectoral level,
+the elasticity for residences is 0.25 and for transport and services around 0.8, again similar to
+Table 1. The main difference is that the long-run elasticity for industry is here only 0.48. An
+imprecise estimate of the long-run energy-GDP elasticity is obtained for agriculture. We only
+use two decades of data for this sector.
+
+Results for the controls in Table 5 also contain valuable information. We find strong beta
+convergence in each sector: conditional on the covariates, convergence in per capita energy
+use occurs at 2.3% per annum on average, strikingly similar to the conditional GDP per
+capita convergence rate reported by Barro (2015). The estimates also reveal that higher t–10
+GDP per capita is associated with faster subsequent growth in energy use, holding the other
+variables – including the decade’s GDP per capita growth rate and t–10 energy use – fixed.
+This makes sense: it is natural to expect that countries with lower t–10 energy intensity will
+experience smaller reductions in energy intensity over time.11 The coefficients for the decade
+dummies are generally negative, suggestive of downward pressure on per capita energy use
+growth relative to the 1960s.
+
+Table 6 presents 10-year growth rates estimates for (a) energy use excluding primary solid
+biofuels, and (b) electricity use. We consolidate to six categories. We again obtain larger
+mean 10-year energy-GDP elasticities for residences (0.18) and in total (0.62) when primary
+solid biofuels are excluded. The estimate for residences differs from zero at the 10% level.
+There is again no evidence that the total 10-year energy-GDP elasticity is higher for countries
+with higher t–10 GDP per capita once primary solid biofuels are excluded (see the second-
+row coefficients). The 10-year electricity-GDP elasticity (0.61) exceeds the 10-year energy-
+GDP elasticity (0.48; see Table 5), reflecting electrification of the energy mix as economies
+
+11
+  An alternative parameterization is to include t–10 log energy intensity instead of t–10 log energy
+use per capita, with log energy intensity defined as lnE – lnY. This will produce the same coefficient
+(–0.023*** in column 7 of Table 5). The coefficient for lnY becomes –0.007**, the sum of 𝜃𝜃 and 𝜅𝜅 in
+Eq. (5) (i.e. 0.016 – 0.023). Csereklyei and Stern (2015) refer to a negative coefficient for lnY in this
+specification as evidence of a “weak decoupling” that is separable from an energy intensity effect.
+
+                                                   20
+grow. Conditional convergence and generally negative time effects continue to be observed.
+The long-run energy-GDP elasticities are generally similar to the levels estimates in Tables 3
+and 4.
+
+Table 6
+Panel estimates in 10-year growth rates for energy excluding primary solid biofuels and for
+electricity, 1960–2010.
+                                       (1)               (2)            (3)                (4)         (5)         (6)
+10-year average annual growth          energy use excluding             electricity use (final) by …
+rate of per capita...                  primary solid biofuels by …
+                                       ResidencesF       Total          Residences       Industry      Services    Total
+GDP per capita growth rate10-year        0.18*            0.62***       0.38***          0.73***       0.67***     0.61***
+                                         (0.11)           (0.06)        (0.11)           (0.16)        (0.17)      (0.10)
+GDP per capita growth rate10-year *      -0.02            -0.03         -0.08            -0.11         0.21*       -0.05
+Ln GDP per capitat-10; sample demeaned   (0.06)           (0.05)        (0.05)           (0.15)        (0.11)      (0.08)
+Ln GDP per capitat-10                    0.021***         0.028***      0.023***         0.014**       0.049***    0.022***
+                                         (0.005)          (0.006)       (0.006)          (0.006)       (0.011)     (0.006)
+Ln Energy or electricity use per         -0.035***        -0.027***     -0.028***        -0.019***     -0.043***   -0.024***
+capita in that sectort-10                (0.007)          (0.005)       (0.005)          (0.004)       (0.006)     (0.005)
+1981 dummy                               -0.031***        -0.026***     -0.022***        -0.018**      -0.003      -0.015***
+                                         (0.010)          (0.005)       (0.007)          (0.008)       (0.012)     (0.005)
+1990 dummy                               -0.035***        -0.033***     -0.029***        -0.018**      0.011       -0.020***
+                                         (0.010)          (0.005)       (0.007)          (0.007)       (0.013)     (0.006)
+2000 dummy                               -0.030***        -0.032***     -0.027***        -0.023**      0.017       -0.021***
+                                         (0.010)          (0.005)       (0.008)          (0.010)       (0.013)     (0.007)
+2010 dummy                               -0.038***        -0.035***     -0.030***        -0.026***     0.017       -0.022***
+                                         (0.010)          (0.005)       (0.009)          (0.009)       (0.014)     (0.007)
+Controls and region dummies              Yes              Yes           Yes              Yes           Yes         Yes
+R2                                       0.45             0.55          0.53             0.37          0.49        0.55
+10-year elasticity evaluated at xth percentile of GDP per capitat-10…
+  25th                                   0.20*            0.64***       0.45***          0.82***       0.48***     0.66***
+  75th                                   0.16             0.59***       0.30**           0.62***       0.88***     0.56***
+Long-run elasticity                      0.60***          1.03***       0.84***          0.72***       1.13***     0.94***
+Countries                                131              131           130              129           120         131
+Observations                             463              463           443              448           395         463
+Notes: As per Table 5.
+
+
+3.3 Heterogeneity
+We now turn to tests of group-based heterogeneity in the energy-income elasticity. We use
+our 10-year growth rates model, restricting the sample to countries with a year-2010
+population exceeding one million people. We do so because heterogeneity analysis hones in
+on effects for sub-groups, and we do not want the results to be overly influenced by small
+countries. The restriction excludes five small countries: Brunei Darussalam, Iceland,
+Luxembourg, Malta, and Qatar. We remove the growth-level interaction (i.e. impose 𝜂𝜂 = 0),
+instead adding interactions between GDP per capita growth and group dummies. Our
+estimates control for group level effects and the controls from Eq. (5). We do not present the
+coefficients for the controls. We also do not consider potential group-by-group heterogeneity
+in the effects of other variables.
+
+Panel A of Table 7 presents the mean 10-year energy-GDP elasticities without any
+interactions. They are similar to the 10-year energy-GDP elasticities from Tables 5 and 6.
+
+
+                                                                 21
+Table 7
+Heterogeneity analysis using 10-year growth rates, 1960–2010: by region.
+                                       Energy-GDP elasticity                                                          Energy-GDP elasticity,     Electricity-GDP elasticity
+                                                                                                                      excluding primary
+                                                                                                                      solid biofuels
+                                       ResidencesF     TransportF    IndustryF    ServicesF    Other      Total       ResidencesF Total          Residences      Industry     Services   Total
+
+A. Overall average                       0.04            0.64***       0.66***      0.45**      0.63*** 0.43*** 0.22*                  0.64*** 0.44***            0.77*** 0.63*** 0.67***
+B. By region (bold italic = differs from East Asia and Pacific at 5% significance)
+    East Asia and Pacific                0.25            0.87***       0.86***      1.08***     0.81*** 0.75*** 0.33                   0.89*** 0.81***            1.31*** 0.64**          1.11***
+    Europe & Central Asia                -0.18           0.51***       0.37         0.33        0.54*** 0.40*** -0.08                  0.46*** 0.00               0.55**     0.55*        0.35***
+    Latin America & Caribbean            0.31***         0.71***       0.82***      0.78**      0.89*** 0.59*** 0.57***                0.69*** 0.54***            1.06*** 0.75**          0.81***
+    Middle East & North Africa           0.35            0.50***       1.51**       0.93        0.46*      0.57*** 0.49                0.61*** 0.72               -0.28      1.07         0.79**
+    North America                        -0.15           1.52***       1.35***      2.52**      0.74*** 0.83*** 0.26                   0.87*** 0.47               1.47*** 2.61*** 0.90***
+    South Asia                           0.34            1.03***       0.82**       -0.28       0.43       0.47*** 0.67***             0.40*        0.89**        0.70*      0.24         0.76**
+    Sub-Saharan Africa                   -0.11           0.72***       0.36         -0.11       0.64**     0.16**      0.17            0.78*** 0.66***            1.06*** 0.53**          0.73***
+Notes: ***, **, and * indicate statistically different from zero at the 1, 5, and 10% levels. These are 10-year elasticities from estimates of the type in Tables 5–6, excluding the interaction
+between GDP per capita growth and t-10 log GDP per capita. Panel B instead uses interactions between GDP per capita growth and region. Each cell in Panel B shows the implied
+elasticity for that region. Regions follow the World Bank definition. Countries with a year-2010 population of less than 1,000,000 are excluded. Maximum sample: 443 observations from
+126 countries. Coefficients on controls not shown. Agriculture is excluded given the small size of the sector and the relative imprecision of our energy-GDP elasticities for this sector (see
+Fig. 3).
+
+
+
+
+                                                                                                  22
+Panel B of Table 7 presents the mean 10-year energy-GDP elasticities by region. These are
+calculated by adding the coefficient on GDP per capita growth and the coefficient on the
+relevant growth-country group interaction. The energy-GDP elasticity for residences is only
+significantly different from zero in Latin America and the Caribbean, with a point estimate of
+0.31. The elasticity for transport is significant in all regions, highest in North America, and
+lowest in the Middle East and North Africa. For industry the lowest elasticities are for (a)
+Sub-Saharan Africa and (b) Europe and Central Asia, although these are not significantly
+different from the elasticity for East Asia and the Pacific. The services elasticity for Sub-
+Saharan Africa is not significantly different from zero and is substantially lower than that for
+East Asia and the Pacific (1.08). The lowest 10-year energy-GDP elasticity for energy use
+across all sectors is Sub-Saharan Africa’s (0.16). The highest is North America’s (0.83). Our
+earlier results suggest that Sub-Saharan Africa’s low energy-GDP elasticity is due to high
+reliance on traditional fuels.
+
+Turning to electricity, we find that East Asia and the Pacific has had the highest electricity
+intensity of GDP growth in point estimate terms. The smallest 10-year electricity-GDP
+elasticity is for Europe and Central Asia (0.35), well below the overall mean of 0.67 but still
+significantly different from zero. Europe and Central Asia’s use of electricity by residences is
+particularly GDP inelastic (point estimate of 0.00). While some European countries such as
+Germany and Sweden have experienced a maturation of per capita residential electricity use
+during our sample period, this is not the case in every country. The very low electricity-GDP
+elasticity indicates, however, that increases/decreases in residential electricity use in the
+region have not been strongly correlated with economic growth on a decadal basis, after the
+effects of the control variables have been considered.
+
+Panel A of Table 8 suggests that energy-GDP elasticities are similar for fossil-fuel rich
+economies and others. Panel B then presents elasticities for the World Bank’s high income
+group and for other countries. When primary solid biofuels are included, the 10-year energy-
+GDP elasticity is higher for high-income countries (0.70) than others (0.36), with the
+difference significant at the 1% level. This is consistent with our finding that the energy-GDP
+elasticity increases along the GDP per capita spectrum. This phenomenon reduces when
+energy excludes primary solid biofuels, or is restricted to only electricity (the later columns).
+
+
+
+
+                                               23
+ Table 8
+ Heterogeneity analysis using 10-year growth rates, 1960–2010: by country group.
+                       Number      Energy-GDP elasticity                                                       Energy-GDP                Electricity-GDP elasticity
+                       of                                                                                      elasticity, excluding
+                       countries                                                                               primary solid biofuels
+                                    ResidencesF TransportF IndustryF ServicesF Other                   Total   ResidencesF Total            Residences Industry Services Total
+A. Fossil fuel rich vs others (coefficients for the two groups never different at the 5% significance level)
+    Non-fossil fuel     93          0.03             0.67***      0.71***      0.31        0.62*** 0.42*** 0.20**                 0.65*** 0.42***         0.73*** 0.51**        0.66***
+    rich
+    Fossil fuel rich    33          0.06             0.60***      0.58***      0.69*       0.61*** 0.47*** 0.22                   0.61*** 0.54**          0.88*** 0.96*** 0.74***
+B. High income vs others (bold italic = differs from high-income countries at 5% significance)
+    High income         45          -0.04            0.78***      0.82***      0.99***     0.78*** 0.70*** 0.02                   0.75*** 0.50**          0.40       0.94*** 0.70***
+    Middle & low        81          0.04             0.61***      0.61**       0.27        0.60*** 0.36*** 0.26**                 0.62*** 0.42***         0.86*** 0.51**        0.66***
+    income
+C. OECD23 vs others (bold italic = differs from OECD23 at 5% significance)
+    OECD23              21          -0.14            0.74***      0.94***      0.66        0.80*** 0.71*** -0.09                  0.77*** 0.55***         1.08*** 0.27          0.79***
+    Non-OECD23          105         0.05             0.64***      0.64***      0.43*       0.62*** 0.41*** 0.24**                 0.64*** 0.43***         0.74*** 0.67*** 0.66***
+Restricted to two most recent decades (1990–2000; 2000–2010)
+    OECD23              21          0.09             0.97***      1.22***      0.47*       0.96*** 0.77*** 0.20                   0.86*** 0.36**          1.13*** 0.88*** 0.83***
+    Non-OECD23          105         -0.02            0.60***      0.47**       0.38        0.60*** 0.37*** 0.10                   0.62*** 0.27**          0.74*** 0.74*** 0.51***
+Notes: ***, **, and * indicate statistically different from zero at the 1, 5, and 10% levels. These are 10-year elasticities from estimates of the type in Tables 5–6, excluding the
+interaction between GDP per capita growth and t-10 log GDP per capita. Interactions between GDP per capita growth and group are instead included. Group is also controlled for
+separately. Each cell provides the implied elasticity for that group. Fossil fuel rich countries are those with fossil fuel rents never exceeding 15% of GDP in any year during 1970–
+2010. High income countries are based on current groupings as defined by the World Bank (2015). OECD23 is the 23 OECD member countries as at the end of 1971.
+Countries with a year-2010 population of less than 1,000,000 are excluded. Maximum sample: 443 observations from 126 countries. Coefficients on controls not shown.
+Agriculture is excluded given the small size of the sector and the relative imprecision of our energy-GDP elasticities for this sector (see Fig. 3).
+
+
+
+
+                                                                                         24
+Remarkably, the United States’ per capita energy use was lower in 2010 than in 1969.
+Denmark’s was lower than in 1969; and the United Kingdom’s lower than in 1965. Spurred
+along by the oil price rises of the 1970s, these reductions have occurred despite sizeable
+increases in per capita GDP, with the largest proportional energy use reductions in these three
+countries occurring in the industry sector. To explore, Panel C presents separate effects for
+both OECD23 and non-OECD23 countries. We find that it is the OECD23 that has the higher
+10-year energy-GDP elasticity (0.71, versus 0.41 for other countries). This is again consistent
+with our earlier finding that low-income countries tend to have lower energy-GDP elasticities
+due to their higher reliance on primary solid biofuels, although we note that some non-
+OECD23 countries have high incomes. Similar results are obtained if the sample is restricted
+to the two most recent decades (bottom of Panel C). The reductions in energy use in some
+OECD23 countries thus appear to be explained by factors other than a lowering of the
+conditional energy-GDP elasticity. Using different approaches, similar results have been
+presented by Burke et al. (2015), Csereklyei and Stern (2015), and Csereklyei et al. (2016).
+
+3.4 Decompositions
+Our final step is to use Eq. (3) to provide a sectoral decomposition of the aggregate energy-
+GDP elasticity. The sectoral shares of the energy-GDP elasticity are not the same as the
+sectoral shares of energy use because, as we have seen, the responsiveness of sectoral energy
+use to GDP differs by sector. We focus on the long-run point estimates from levels
+regressions, evaluated using sample-mean energy mix shares. It would be straightforward to
+perform a similar decomposition using the sectoral energy weights of any specific country, or
+using the 10-year elasticities. Decompositions for total energy use, energy use excluding
+primary solid biofuels, and electricity use are presented in Fig. 5.
+
+Fig. 5 shows that the largest contributor to the total energy-GDP elasticity of 0.74 is the
+“Other” category, a sector that mostly represents primary energy lost in transformation
+processes such as electricity generation. This is in large part due to electrification of energy
+systems as economies expand. The second largest contributor is the transport sector. As seen
+in Fig. 2, much more energy is consumed by this sector in economies with higher incomes.
+Industry also contributes about one-fifth of the energy-GDP elasticity. Despite its relatively
+large size (Fig. 2), the inelasticity of residential energy use to GDP means that the sector
+makes a quite small contribution to the energy-GDP elasticity. Agriculture’s contribution is
+small due to the small energy use of the sector and the moderate GDP elasticity of its energy
+use. The services sector accounts for almost one-tenth of the mean energy-GDP elasticity.
+
+The energy-GDP elasticity is larger once primary solid biofuels are excluded, as shown by
+the second bar in Fig. 5. The contribution of the transport sector increases substantially
+because the sector receives a larger weighting now that we are excluding primary solid
+biofuels. Residences and industry account for most of the remainder of the increase.
+
+
+
+
+                                               25
+   Fig. 5. Decomposition of mean conditional GDP elasticities for (a) all energy use, (b) energy use
+ excluding primary solid biofuels, and (c) electricity use. The decomposition employs Eq. (3) and the
+  estimates from Tables 1, 3, and 4. Year-2010 simple-average energy-mix weights are used. Minor
+rescalings were performed. “Other” has a different meaning for the electricity regressions, accounting
+              for only other categories of final use. See Appendix A1 for full definitions.
+
+
+The sectoral contributions to the electricity-GDP elasticity (third bar in Fig. 5) are rather
+different to the sectoral contributions to the energy-GDP elasticity. The principal reason is
+that the electricity data cover only use of final electricity. They do not include transformation
+losses. The “other” category thus has a different interpretation, covering only other final end-
+uses of electricity. The contribution of residences to the electricity-GDP elasticity is much
+larger than it was for the energy-GDP elasticity, for two reasons: (1) residential electricity use
+has a higher GDP elasticity than residential energy use; and (2) residences account for a
+larger share of final electricity use than of national primary energy use. The contributions of
+industry and services to the electricity-GDP elasticity are also larger. The contribution of
+transport is smaller, as this sector remains largely dependent on oil.
+
+4. Conclusion
+This paper has used data for 132 countries over 51 years to estimate sectoral energy-GDP
+elasticities. We applied these elasticities to perform a simple decomposition of the aggregate
+energy-GDP elasticity. The results indicate that residential energy use is very inelastic to
+national GDP due to the high reliance of many developing economies on traditional fuels.
+Once primary solid biofuels are excluded, residential energy use is more responsive to GDP,
+
+                                                 26
+with a long-run elasticity of 0.59. Residential use of electricity has an even higher GDP
+elasticity (0.78). Economic growth thus induces residential fuel switching toward higher-
+quality energy types. Energy use by agriculture is relatively small and has a below-average
+GDP elasticity in point estimate terms (0.50). The transport, industry, and services sectors
+have larger energy-GDP elasticities. The aggregate energy-GDP elasticity tends to be higher
+for higher-income countries, a key reason being that these economies are mostly reliant on
+commercial rather than traditional energy sources. The long-run energy-GDP elasticity is less
+than unity, indicating that economic growth induces reductions in the energy intensity of
+GDP (i.e. improvements in the overall economic productivity of energy use). That energy-
+GDP elasticities vary by end-use sector is consistent with the energy mix evolving as
+economies grow. In particular, the share of residences and agriculture tends to fall.
+
+Our results also identify roles played by factors such as fuel prices, climate, population, and
+land area in explaining energy use. Other things equal, countries with higher gasoline prices
+tend to use less energy, countries with cold winters tend to use more energy, more densely-
+populated countries use less energy for transport, and more spacious countries use more
+energy for agriculture. Conditional convergence in per capita energy use occurs at around
+2.3% per annum, similar to the rate for per capita GDP reported by Barro (2015).
+
+Many of our results are in line with the expectations of earlier authors. For example, Ang
+(1987) concluded that the GDP elasticity of commercial fuels should be higher than that of
+non-commercial fuels. Other results help to update earlier expectations. For example, we find
+no evidence to support the fairly common (e.g. Jakob et al., 2012) expectation that the
+energy-GDP elasticity will be lower at higher incomes. We find the opposite, in large part
+due to lower dependence on (GDP-inelastic) primary solid biofuels in higher-income
+countries.
+
+Looking to the future, our results suggest that economic growth is likely to continue to place
+upward pressure on energy use, particularly in the transport, industry, and services sectors,
+and also for energy transformation processes such as electricity generation. At the same time,
+other factors – such as time-specific common technology effects, or energy price increases –
+can exert downward pressure on energy use. Trends to watch include robotification, the move
+to electric vehicles, and further improvements in low-emission technologies. The third of
+these could allow faster energy use growth by reducing the link between energy services and
+adverse environmental outcomes.
+
+
+
+
+                                               27
+References
+Adams, F.G., Miovic, P., 1968. On relative fuel efficiency and the output elasticity of energy
+consumption in Western Europe. Journal of Industrial Economics 17(1), 41–56.
+
+Adeyemi, O.I., Hunt, L.C., 2007. Modelling OECD industrial energy demand:
+Asymmetric price responses and energy-saving technical change. Energy Economics 29,
+693–709.
+
+Adeyemi, O.I., Hunt, L.C., 2014. Accounting for asymmetric price responses and underlying
+energy demand trends in OECD industrial energy demand. Energy Economics 45, 435–444.
+
+Ang, B.W., 1987. Energy-output ratios and sectoral energy use: The case of Southeast Asian
+countries. Energy Policy 15(3), 262–282.
+
+Ang, B.W., 1991. A statistical analysis of energy coefficients. Energy Economics 13(2), 93–
+110.
+
+Anjum Z., Burke, P.J., Gerlagh, R., Stern, D.I., 2014. Modeling the emissions-income
+relationship using long-run growth rates. CCEP Working Paper 1403.
+
+Arseneau, D.M., 2012. Explaining the energy consumption portfolio in a cross-section of
+countries: Are the BRICs different? Law and Business Review of the Americas 18(4), 553–
+584.
+
+Baltagi, B.H., 2008. Econometric Analysis of Panel Data. 4th ed. West Sussex, UK: John
+Wiley & Sons.
+
+Baltagi, B.H., Griffin, J.M., 1983. Gasoline demand in the OECD: An application of pooling
+and testing procedures. European Economic Review 22(2), 117–137.
+
+Baltagi, B.H., Griffin, J.M., 1984. Short and long run effects in pooled models. International
+Economic Review 25(3), 631–645.
+
+Barro, R.J., 2015. Convergence and modernisation. Economic Journal 125(585), 911–942.
+
+Brookes, L.G., 1972. More on the output elasticity of energy consumption. Journal of
+Industrial Economics, 21(1), pp. 83–92.
+
+Bruns S., Gross, C. 2013. What if energy time series are not independent? Implications for
+energy-GDP causality analysis. Energy Economics, 40, 753–759.
+
+Bruns, S., Gross, C., Stern, D.I., 2014. Is there really Granger causality between energy use
+and output? Energy Journal 35(4), 101–134.
+
+Burke, P.J., 2010. Income, resources, and electricity mix. Energy Economics 32(3), 616–626.
+
+Burke, P.J., 2013. The national-level energy ladder and its carbon implications. Environment
+and Development Economics 18(4), 484–503.
+
+
+
+
+                                              28
+Burke, P.J., Dundas, G., 2015. Female labor force participation and household dependence on
+biomass energy: Evidence from national longitudinal data. World Development 67, 424–437.
+
+Burke, P.J., Nishitateno, S., 2013. Gasoline prices, gasoline consumption, and new-vehicle
+fuel economy: Evidence for a large sample of countries. Energy Economics 36, 363–370.
+
+Burke, P.J., Shahiduzzaman, M., Stern, D.I., 2015. Carbon dioxide emissions in the short run:
+The rate and sources of economic growth matter. Global Environmental Change 33, 109–
+121.
+
+Chenery, H.B. Syrquin, M., 1975. Patterns of Development, 1950–1970. London: Oxford
+University Press.
+
+Csereklyei Z., Rubio Varas, M.d.M., Stern, D.I., 2016. Energy and economic growth: The
+stylized facts. Energy Journal 37(2), 223–255.
+
+Csereklyei, Z., Stern, D.I., 2015. Global energy use: Decoupling or convergence? Energy
+Economics 51, 633–641.
+
+De Boef, S., Keele, L., 2008. Taking time seriously. American Journal of Political Science
+52(1), 184–200.
+
+Easterly, W.R., 2001. Global Development Network Growth Database.
+http://go.worldbank.org/ZSQKYFU6J0.
+
+Gao, Y.-X., Liao, H., Burke, P.J., Wei, Y.-M., 2015. Road transport energy consumption in
+the G7 and BRICS: 1973–2010. International Journal of Global Energy Issues 38(4-5-6),
+342–356.
+
+Harris, I., Jones, P.D., Osborn, T.J., Lister, D.H., 2014. Updated high resolution grids of
+monthly climatic observations – the CRU TS3.10 Dataset. International Journal of
+Climatology 34, 623–642.
+
+Hauk, W.R. Jr., Wacziarg, R., 2009. A Monte Carlo study of growth regressions. Journal of
+Economic Growth 14, 103–147.
+
+Herrerias, M.J., 2012. World energy intensity convergence revisited: A weighted distribution
+dynamics approach. Energy Policy 49, 383–399.
+
+Heston, A., Summers, R., Aten, B., 2012. Penn World Table Version 7.1. University of
+Pennsylvania: Center for International Comparisons of Production, Income and Prices,
+http://www.rug.nl/research/ggdc/data/pwt/pwt-7.1.
+
+Hurwicz, L., 1950. Least-squares bias in time series. In Koopmans, T.C., Statistical Inference
+in Dynamic Economic Models, 365–383. New York, NY: Wiley.
+
+International Energy Agency, 2016. World Energy Statistics and Balances. Paris, France:
+International Energy Agency.
+
+
+
+
+                                               29
+Jakob, M., Haller, M., Marschinski, R., 2012. Will history repeat itself? Economic
+convergence and convergence in energy use patterns. Energy Economics 34(1), 95–104.
+
+Judson, R.A., Schmalensee, R., Stoker, T.M., 1999. Economic development and the structure
+of the demand for commercial energy. Energy Journal 20(2), 29–57.
+
+Kuznets, S., 1971. Economic Growth of Nations: Total Output and Production Structure.
+Cambridge, MA: Harvard University Press.
+
+Lescaroux, F., 2011. Dynamics of final sectoral energy demand and aggregate energy
+intensity. Energy Policy 39, 66–82.
+
+Lescaroux, F., 2013. Industrial energy demand, a forecasting model based on an index
+decomposition of structural and efficiency effects. OPEC Energy Review 37(4), 477–502.
+
+Liddle, B., 2010. Revisiting world energy intensity convergence for regional differences.
+Applied Energy 87, 3218–3225.
+
+Liddle, B., Lung, S., 2015. Revisiting energy consumption and GDP causality: Importance of
+a priori hypothesis testing, disaggregated data, and heterogeneous panels. Applied Energy
+142, 44–55.
+
+Medlock, K.B. III, Soligo, R., 2001. Economic development and end-use energy demand.
+Energy Journal 22(2), 77–105.
+
+Miketa, A., Mulder, P., 2005. Energy productivity across developed and developing countries
+in 10 manufacturing sectors: Patterns of growth and convergence. Energy Economics 27,
+429–453.
+
+Mulder, P., de Groot, H.L.F., 2007. Sectoral energy- and labour-productivity convergence.
+Environmental and Resource Economics 36, 85–112.
+
+Mulder, P., de Groot, H.L.F., 2012. Structural change and convergence of energy intensity
+across OECD countries, 1970–2005. Energy Economics 34, 1910–1921.
+
+Mulder, P., de Groot, H.L.F., Pfeiffer, B., 2014. Dynamics and determinants of energy
+intensity in the service sector: A cross-country analysis, 1980–2005, Ecological Economics
+100, 1–15.
+
+Nakićenović, N., Grübler, A., McDonald, A., 1998. Global Energy Perspectives. Cambridge,
+UK: Cambridge University Press.
+
+Ordás Criado, C., Valente, S., Stengos, T., 2011. Growth and pollution convergence: Theory
+and evidence. Journal of Environmental Economics and Management 62, 199–214.
+
+Pesaran, M.H., Smith, R., 1995. Estimating long-run relationships from dynamic
+heterogeneous panels. Journal of Econometrics 68(1), 79–113.
+
+Pirotte, A., 1999. Convergence of the static estimation toward the long run effects of dynamic
+panel data models. Economics Letters 63(2), 151–158.
+
+                                              30
+Pirotte, A., 2003. Convergence of the static estimation toward the long run effects of dynamic
+panel data models: A labour demand illustration. Applied Economics Letters 10(13), 843–
+847.
+
+Schäfer, A., 2005. Structural change in energy use. Energy Policy 33(4), 429–437.
+
+Smil, V., 2000. Energy in the twentieth century: Resources, conversions, costs, uses, and
+consequences. Annual Review of Energy and the Environment 25, 21–51.
+
+Stern, D.I., 2010. Between estimates of the emissions-income elasticity. Ecological
+Economics 69(11): 2173–2182.
+
+Tahvonen, O., Salo, S., 2001. Economic growth and transitions between renewable and
+nonrenewable energy resources. European Economic Review 45(8), 1379–1398.
+
+van Benthem, A., 2015. Energy leapfrogging. Journal of the Association of Environmental
+and Resource Economists 2(1): 93–132.
+
+van Benthem, A., Romani, M., 2009. Fuelling growth: What drives energy demand in
+developing countries? Energy Journal 30(3), 91–114.
+
+World Bank, 2015. World Development Indicators. http://data.worldbank.org/data-
+catalog/world-development-indicators.
+
+
+
+
+                                              31
+Appendix
+A1. Variable definitions
+Final energy use by residences: Total final consumption of energy by households, excluding
+for transport, in oil-equivalent terms. Source: IEA (2016).
+
+Final energy use by agriculture: Total final consumption of energy by the agriculture,
+hunting, forestry, and fishing sectors in oil-equivalent terms. Covers ISIC Rev. 4 Divisions
+01–03. Source: IEA (2016).
+
+Final energy use by transport: Total final consumption of energy by all transport forms, in
+oil-equivalent terms. Covers ISIC Rev. 4 Divisions 49–51. Source: IEA (2016).
+
+Final energy use by industry: Total final consumption of energy by industry, in oil-equivalent
+terms. Industry includes iron and steel; chemical and petrochemical; non-ferrous metals; non-
+metallic minerals; transport equipment; machinery; mining and quarrying; food and tobacco;
+paper, pulp, and print; wood and wood products; construction; textile and leather; and non-
+specified. Source: IEA (2016).
+
+Final energy use by services: Total final consumption of energy by the commercial and
+public services sector in oil-equivalent terms. This is a broad category that includes repair
+and installation of machinery and equipment; water, sewerage, and waste services; wholesale
+and retail trade; warehousing and postal services; accommodation and food services;
+information and communication; finance and insurance; real estate; professional, scientific
+and technical activities; administrative and support services; public administration; education;
+health and social work; arts, entertainment, and recreation; and other. Source: IEA (2016).
+
+Other energy use: Total primary energy use minus final energy use in the above five
+categories. Includes primary energy lost in transformation (e.g. the generation of electricity)
+and distribution; primary energy used by the energy industry itself; other final energy use not
+allocated to one of the above sectors; use of non-biomass fuels for non-energy purposes; and
+transfers and statistical differences. Source: IEA (2016).
+
+Total energy use: Total primary energy supply (TPES) in oil-equivalent terms. This is the
+total use of all energy types. This is a broader concept than total final consumption (TFC) of
+energy because it includes energy used in transformation and distribution processes, energy
+consumed by the energy industry itself, and additional transfers and statistical differences.
+Source: IEA (2016).
+
+** Unless otherwise mentioned, the above seven categories include primary solid biofuels. In
+additional specifications we deduct use of primary solid biofuels from each measure (e.g.
+Table 3). This involves subtracting two IEA categories: “primary solid biofuels” and “non-
+specified primary biofuels and waste”. The IEA (2016) defines primary solid biofuels as “any
+
+
+                                               32
+plant matter used directly as fuel or converted into other forms before combustion. This
+covers a multitude of woody materials generated by industrial process or provided directly by
+forestry and agriculture (firewood, wood chips, bark, sawdust, shavings, chips, sulphite lyes
+also known as black liquor, animal materials/wastes and other solid biofuels)”. We have not
+deducted charcoal use. **
+
+Electricity use by residences: Total consumption of electricity by households, excluding for
+transport, in oil-equivalent terms. Source: IEA (2016).
+
+Electricity use by agriculture: Total consumption of electricity by the agriculture, hunting,
+forestry, and fishing sectors in oil-equivalent terms. Covers ISIC Rev. 4 Divisions 01–03.
+Source: IEA (2016).
+
+Electricity use by transport: Total consumption of electricity by all transport forms, in oil-
+equivalent terms. Covers ISIC Rev. 4 Divisions 49–51. Source: IEA (2016).
+
+Electricity use by industry: Total final consumption of electricity by industry, in oil-
+equivalent terms. Industry is defined above. Source: IEA (2016).
+
+Electricity use by services: Total final consumption of electricity by the commercial and
+public services sector in oil-equivalent terms. Services is defined above. Source: IEA (2016).
+
+Electricity use (other): Total final consumption of electricity by other users in oil-equivalent
+terms. This category is named “Non-specified (other)” in the IEA data. Source: IEA (2016).
+
+Electricity use total: Total final consumption of electricity by all sectors, in oil-equivalent
+terms. Source: IEA (2016).
+
+GDP per capita: PPP-converted GDP per capita (chain series) at 2005 constant prices.
+Source: Heston et al. (2012).
+
+Gasoline price: Pump price of the most widely sold grade of road-sector gasoline, in $US.
+Source: World Bank (2015).
+
+Temperature (coldest month): Average temperature over each country’s land area in that
+country’s coldest month, in ◦C. Source: Harris et al. (2014), data version CRU TS v3.22. See
+http://www.cru.uea.ac.uk/cru/data/hrg/.
+
+Temperature (warmest month): Average temperature over each country’s land area in that
+country’s warmest month, in ◦C. Source: Harris et al. (2014), data version CRU TS v3.22.
+See http://www.cru.uea.ac.uk/cru/data/hrg/.
+
+
+
+
+                                                33
+Precipitation: Precipitation averaged over each country’s land area and over the 12 months of
+the year, in millimeters. Source: Harris et al. (2014), data version CRU TS v3.22. See
+http://www.cru.uea.ac.uk/cru/data/hrg/.
+
+Population: Total population, in people. This variable was used in the construction of the per
+capita energy/electricity use variables. Source: Heston et al. (2012).
+
+Land area: Land area in square kilometers, excluding inland water bodies, national claims to
+continental shelf, and exclusive economic zones. Source: World Bank (2015).
+
+Transition economy dummy: Equal to one for former transition economies, 0 otherwise. This
+measure focuses on former transition economies in our sample in Europe and Central Asia:
+Albania, Armenia, Azerbaijan, Belarus, Bosnia and Herzegovina, Bulgaria, Croatia, Czech
+Republic, Estonia, Georgia, Hungary, Kazakhstan, Kyrgyz Republic, Latvia, Lithuania,
+Macedonia FYR, Moldova, Montenegro, Poland, Romania, Russian Federation, Serbia,
+Slovak Republic, Slovenia, Tajikistan, Turkmenistan, Ukraine, and Uzbekistan. Source:
+Easterly (2001).
+
+Region dummies: These dummies cover six of the seven World Bank (2015) regions. The
+base region (i.e. excluded region) is East Asia and the Pacific.
+
+
+
+
+                                              34
+A2. List of countries in the 132-country sample
+Low income (11)     Middle income (71)                                                      High income (50)
+Benin               Albania                    Georgia                Nicaragua             Argentina              Kuwait
+Cambodia            Algeria                    Ghana                  Nigeria               Australia*             Latvia
+Congo, Dem. Rep.    Angola                     Guatemala              Pakistan              Austria*               Lithuania
+Eritrea             Armenia                    Honduras               Panama                Bahrain                Luxembourg*
+Ethiopia            Azerbaijan                 India                  Paraguay              Belgium*               Malta
+Mozambique          Bangladesh                 Indonesia              Peru                  Brunei Darussalam      Netherlands*
+Nepal               Belarus                    Iran, Islamic Rep.     Philippines           Canada*                New Zealand
+Niger               Bolivia                    Iraq                   Romania               Chile                  Norway*
+Tanzania            Bosnia and Herzegovina     Jamaica                Senegal               Croatia                Oman
+Togo                Botswana                   Jordan                 Serbia                Cyprus                 Poland
+Zimbabwe            Brazil                     Kazakhstan             South Africa          Czech Republic         Portugal*
+                    Bulgaria                   Kenya                  Sri Lanka             Denmark*               Qatar
+                    Cameroon                   Kyrgyz Republic        Sudan                 Estonia                Russian Federation
+                    China                      Lebanon                Syrian Arab Republic Finland*                Saudi Arabia
+                    Colombia                   Libya                  Tajikistan            France*                Singapore
+                    Congo, Rep.                Macedonia, FYR         Thailand              Germany*               Slovak Republic
+                    Costa Rica                 Malaysia               Tunisia               Greece*                Slovenia
+                    Cote d'Ivoire              Mauritius              Turkey*               Hong Kong SAR, China   Spain*
+                    Cuba                       Mexico                 Turkmenistan          Hungary                Sweden*
+                    Dominican Republic         Moldova                Ukraine               Iceland*               Switzerland*
+                    Ecuador                    Mongolia               Uzbekistan            Ireland*               United Arab Emirates
+                    Egypt, Arab Rep.           Montenegro             Vietnam               Israel                 United Kingdom*
+                    El Salvador                Morocco                Yemen, Rep.           Italy*                 United States*
+                                               Namibia                Zambia                Japan*                 Uruguay
+                                                                                            Korea, Rep.            Venezuela, RB
+Source: World Bank (2015). Country classifications are as at August 2015. OECD23 countries are indicated by a *.
+
+
+
+
+                                                                  35
+A3. Descriptive statistics, 2010 cross-section
+                                                                         Mean          Standard    Minimum   Maximum      Mean for income group
+                                                                                       deviation                          Low        Middle       High
+Per-capita energy use (kgoe per year) by
+     ResidencesF                                                               361.2    265.3     33.3        1,222.0     249.1     218.9         587.9
+                 F
+     Agriculture                                                               39.6     77.6      0.0         788.7       8.9       22.3          70.9
+     Transport F                                                               470.6    611.4     7.9         4,392.0     38.2      214.4         929.4
+             F
+     Industry                                                                  494.7    827.5     2.0         5,542.3     33.1      202.3         1,011.4
+              F
+     Services                                                                  172.0    220.2     0.0         1,273.4     9.9       65.6          358.8
+     Other                                                                     1,187.8  2,357.0   4.1         21,839.4    57.0      465.8         2,461.8
+     Total                                                                     2,725.8  3,832.3   127.9       32,871.7    396.2     1,189.3       5,420.2
+Per-capita energy use (kgoe per year), excluding primary solid biofuels, by
+     ResidencesF                                                               270.8    268.8     3.3         1,222.0     32.8      131.3         521.2
+                 F
+     Agriculture                                                               37.7     76.9      0.0         788.7       4.8       21.6          67.8
+     Transport F                                                               470.6    611.4     7.9         4,392.0     38.2      214.4         929.4
+             F
+     Industry                                                                  461.0    818.6     2.0         5,542.3     15.3      184.8         951.3
+     ServicesF                                                                 169.0    220.1     0.0         1,273.4     4.9       63.1          355.5
+                                                                                                        a
+     Other                                                                     1,141.0  2,364.3   -63.2       21,839.4    -7.3a     426.9         2,407.6
+     Total                                                                     2,550.0  3,855.1   17.8        32,871.7    88.7      1,042.1       5,232.8
+GDP per capita (I$ per year, 2005 prices)                                      15,472.9 18,049.5  240.5       136,248.1   841.5     6,292.7       31,727.8
+Gasoline price (US$ per liter)                                                 1.2      0.5       0.0         2.5         1.3       1.1           1.4
+Temperature (coldest month) (◦C)                                               9.5      13.1      -26.5       26.3        20.5      12.4          3.1
+Temperature (warmest month) (◦C)                                               25.3     5.5       10.1        38.2        27.5      26.5          23.1
+Precipitation (millimeters per year)                                           1,097.2  858.8     30.1        3,830.3     993.1     1,207.9       962.8
+Population (million people)                                                    49.2     157.8     0.3         1,330.1     28.6      68.5          26.4
+Land (thousand square kilometers)                                              907.7    2,184.3   0.3         16,376.9    652.8     817.7         1,091.4
+Transition dummy                                                               0.2      0.4       0.0         1.0         0.0       0.3           0.2
+Notes: kgoe = kilograms oil equivalent. The data cover 132 countries. The income groups follow World Bank (2015).
+a
+  : Negative values are dropped from the estimations as the logarithm is undefined.
+
+
+
+
+                                                                                  36
+A4. Between estimates, 1960–2010
+                                   (1)                 (2)                  (3)               (4)             (5)              (6)           (7)
+                                   ResidencesF         AgricultureF         TransportF        IndustryF       ServicesF        Other         Total
+Panel A: Ln per capita energy use
+Ln GDP per capita                   0.37***               0.57***             0.95***            0.93***         1.16***         1.01***       0.78***
+                                    (0.07)                (0.16)              (0.05)             (0.09)          (0.12)          (0.07)        (0.05)
+R2                                  0.49                  0.60                0.92               0.78            0.70            0.85          0.87
+Panel B: Ln per capita energy use excluding primary solid biofuels
+Ln GDP per capita                   0.69***               0.59***             0.95***            1.10***         1.21***         1.07***       1.02***
+                                    (0.07)                (0.15)              (0.05)             (0.08)          (0.11)          (0.10)        (0.05)
+R2                                  0.82                  0.62                0.92               0.85            0.79            0.84          0.92
+Panel C: Ln per capita final electricity use
+Ln GDP per capita                   0.90***               0.58***             1.32***            1.01***         1.21***         -0.08         0.99***
+                                    (0.07)                (0.16)              (0.21)             (0.10)          (0.09)          (0.71)        (0.07)
+R2                                  0.87                  0.55                0.72               0.78            0.85            0.13          0.87
+Countries                           132                   121                 132                132             131             132           132
+Observations (maximum)              4,840                 2,266               4,840              4,814           4,487           4,840         4,840
+Notes: ***, **, and * indicate statistical significance at 1, 5, and 10%. Standard errors are in parentheses. All estimates control for Ln(Gasoline
+price2010); Temperature (coldest month); Temperature (warmest month); Ln(Precipitation); Ln(Population); Ln(Land); transition economy dummy;
+region dummies. Coefficients on controls not reported. Some samples in Panels B and C are reduced below the displayed totals due to instances of
+ln(0). The agriculture sample has been restricted to 1990–2010 due to data irregularities for early years. Panel C: “Other” and “Total” are for final
+electricity use (not primary).
+
+
+
+
+                                                                                         37
+  A5. 39-year growth rates estimates, 1971–2010
+Dependent variable:               (1)            (2)              (3)          (4)           (5)          (6)           (7)             (8)           (9)              (10)        (11)         (12)
+39-year annual average growth     energy use by …                                                                       energy use excluding          electricity use (final) by …
+rate of per capita ...                                                                                                  primary solid biofuels by
+                                                                                                                        …
+                                  ResidencesF      TransportF     IndustryF    ServicesF     Other        Total         ResidencesF     Total         Residences     Industry      Services     Total
+GDP per capita growth rate39-     0.08             0.72***        0.72***      0.79***       0.61***      0.47***       0.44***         0.74***       0.68***        0.79***       1.11***      0.72***
+year                              (0.11)           (0.10)         (0.24)       (0.24)        (0.18)       (0.12)        (0.11)          (0.13)        (0.17)         (0.23)        (0.22)       (0.15)
+GDP per capita growth rate39-     0.04             0.03           0.17*        0.10          -0.15        0.06          -0.01           -0.04         0.02           -0.06         0.15         -0.02
+year * Ln GDP per capita1971;     (0.05)           (0.05)         (0.10)       (0.12)        (0.10)       (0.06)        (0.04)          (0.06)        (0.08)         (0.15)        (0.16)       (0.07)
+sample demeaned
+Ln GDP per capita1971              0.005**           0.013***        0.006          0.016***       0.024***       0.011***     0.014***     0.016***     0.012**       0.006         0.020**       0.011***
+                                   (0.002)           (0.002)         (0.004)        (0.006)        (0.004)        (0.003)      (0.002)      (0.004)      (0.005)       (0.005)       (0.008)       (0.004)
+Ln Energy or electricity use       -0.019***         -0.019***       -0.016*** -0.021*** -0.021*** -0.018*** -0.021***                      -0.018*** -0.017***        -0.012*** -0.022*** -0.016***
+per capita in that sector1971      (0.003)           (0.001)         (0.002)        (0.002)        (0.002)        (0.003)      (0.001)      (0.003)      (0.002)       (0.002)       (0.002)       (0.002)
+Ln Gasoline price2010              -0.005            -0.008***       -0.011*** -0.005              -0.002         -0.007*** -0.004**        -0.007*** -0.004**         -0.006**      -0.003        -0.004**
+                                   (0.003)           (0.003)         (0.002)        (0.003)        (0.003)        (0.002)      (0.002)      (0.002)      (0.002)       (0.002)       (0.002)       (0.002)
+Temperature (coldest               -0.000*           -0.000          0.000          -0.001         0.000          -0.000       -0.0004*     -0.000       -0.001**      -0.000        -0.001*** -0.000
+month)39-year average              (0.000)           (0.000)         (0.000)        (0.001)        (0.000)        (0.000)      (0.0002)     (0.000)      (0.000)       (0.000)       (0.000)       (0.000)
+Temperature (warmest               -0.000            0.001           -0.001         0.000          -0.000         -0.000       0.000        0.000        0.001**       -0.001        0.002***      0.000
+month)39-year average              (0.000)           (0.000)         (0.001)        (0.001)        (0.001)        (0.000)      (0.000)      (0.000)      (0.000)       (0.001)       (0.000)       (0.001)
+Controls and region dummies        Yes               Yes             Yes            Yes            Yes            Yes          Yes          Yes          Yes           Yes           Yes           Yes
+R2                                 0.84              0.77            0.77           0.77           0.73           0.81         0.89         0.82         0.88          0.68          0.89          0.85
+39-year growth rates elasticity evaluated at xth percentile of GDP per capita1971…
+  25th                             0.04              0.70***         0.57**         0.70***        0.74***        0.42***      0.45***      0.77***      0.66***       0.84***       0.99***       0.74***
+  75th                             0.12              0.75***         0.90***        0.90***        0.45*          0.53***      0.44***      0.70***      0.71***       0.73**        1.27***       0.71***
+Long-run elasticity                0.24**            0.68***         0.37*          0.75***        1.16***        0.60***      0.70***      0.92***      0.70***       0.50          0.92***       0.68***
+Observations                       97                97              96             83             97             97           97           97           87            91            74            97
+Notes: ***, **, and * indicate statistical significance at 1, 5, and 10%. Robust standard errors are in parentheses. The standard error for the long-run elasticity was calculated using the delta method.
+Regressions also control for Ln(Precipitation39-year average), Ln(Population39-year average), Ln(Land2010), the transition economy dummy, and regional dummies. Coefficients on controls not reported. The
+sample is smaller than the cross-sectional estimates due to missing data for 1971. The samples for some columns are reduced below 97 due to instances of ln(0). The sample demeaning and
+percentiles are for the 97-country sample. “39-year average” refers to the period 1972–2010. Growth rates are annual averages, calculated using differenced logs divided by 39; 0.01 approximately
+equals 1% average annual growth. The long-run elasticity is evaluated for a future GDP per capita growth rate of zero.
+
+
+
+
+                                                                                                   38
+

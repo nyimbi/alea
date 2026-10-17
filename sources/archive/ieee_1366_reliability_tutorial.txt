@@ -1,0 +1,1843 @@
+IEEE 1366- Reliability
+Indices
+
+IEEE Boston Section- February 19, 2019
+John Teixeira, National Grid
+Some Important
+Definitions
+Purpose of IEEE-1366
+
+
+
+
+1.    To foster uniformity in the development
+      of distribution service reliability indices
+      and to aid in consistent reporting
+      practices among utilities.
+
+
+2.    To provide guidance for new personnel
+      in the reliability area and to provide tools
+      for internal as well as external
+      comparisons.
+
+
+
+
+National Grid                                        3
+What’s a customer
+
+
+
+Customer:
+“A metered electrical service point for which an active bill account
+is established at a specific location.”
+
+
+Sounds like common sense.
+
+
+Just remember:
+A Three-decker is three customers.
+An apartment building may be 100 customers.
+
+
+Load doesn’t matter.
+Population doesn’t matter.
+
+
+
+
+National Grid                                                          4
+Interruption vs. Outage
+
+
+
+Interruption:                                      Outage:
+“The total loss of electric power on one or more   “The loss of ability of a component to deliver
+normally energized conductors to one or more       power.”
+customers connected to the distribution portion
+of the system.”
+
+
+Does not include “Power Quality” issues (sags,
+swells, etc.)
+
+
+Part power?
+Loss of “power” not “voltage”?
+
+
+Distinction:
+Interruption refers to CUSTOMERS
+Outage refers to EQUIPMENT
+
+
+
+
+National Grid                                                                                       5
+Momentary vs. Sustained Interruption
+
+
+
+Momentary Interruption:                             Sustained Interruption:
+“The brief loss of power delivery to one or more    “Any interruption not classified as a part of a
+customers caused by the opening and closing         momentary event. That is, any interruption that
+operation of an interrupting device.”               lasts more than five minutes.”
+
+
+Each recloser operation is a separate               Some companies and/or jurisdictions may use
+momentary interruption                              one minute or some other interval.
+
+
+
+
+The original intent was probably to exclude interruptions restored by automatic operation
+
+
+
+
+National Grid                                                                                         6
+Duration and Step Restoration
+
+
+
+Interruption Duration:                            Step Restoration:
+“The time period from the initiation of an        “The process of restoring all interrupted
+interruption until service has been restored to   customers in stages over time.”
+the affected customers.”
+
+
+
+
+National Grid                                                                                 7
+Fundamental Factors
+
+
+
+CI = Customers Interrupted
+
+
+CMI = Customer Minutes Interrupted
+
+
+CS = Customers Served (IEEE 1366 call this NT)
+
+
+
+
+National Grid                                    8
+CAIDI and Her Sisters
+The Big Three- SAIFI, SAIDI, CAIDI
+
+
+
+SAIFI (System Average Interruption Frequency Index):
+How often the average customer experiences an interruption
+
+
+
+
+SAIDI (System Average Interruption Duration Index)
+The total number of minutes (or hours) of interruption the average
+customer experiences
+
+
+
+
+CAIDI (Customer Average Interruption Duration Index)
+The average time required to restore service
+ Be careful with this one. The numbers can be deceiving.
+
+
+
+
+National Grid                                                        10
+Comments on the Big Three
+
+
+
+Sustained interruptions only (no momentary)
+
+
+Usually applied over a specified time period (typically one year)
+
+
+Usually applied over a specified customer base (typically an entire
+system, state, town, feeder, etc.)
+
+
+Averages can be deceiving.
+If the average system SAIFI is 0.5. That’s pretty good.
+But if 90% of customers had no interruptions and 10% had 5, is
+that good?
+
+
+
+
+National Grid                                                         11
+The Building Blocks-
+Calculating CI and CMI
+Typical Distribution Feeder- Calculate CI and CMI
+
+
+
+
+CI and CMI provide the basis for calculating the indices
+
+
+
+
+National Grid                                              13
+Customers Served by Branch
+
+
+
+
+                                           CS = 10
+
+
+
+
+                                                               CS = 500
+
+
+
+                               CS = 1000
+Total Customers Served= 1525
+
+
+                                                     CS = 15
+
+
+
+
+National Grid                                                             14
+Simple Fault
+
+
+
+                   X
+                            CS = 10
+
+
+
+
+                                                CS = 500
+
+
+
+                CS = 1000
+Fault Occurs
+
+
+                                      CS = 15
+
+
+
+
+National Grid                                              15
+Simple Fault
+
+
+
+                                     X
+                                              CS = 10
+
+
+
+                                         Open                     CS = 500
+
+
+
+                                  CS = 1000
+Fault Occurs
+Fuse Opens
+10 Customers out for 90 minutes                         CS = 15
+
+
+CI = 10
+CMI = (10) * (90) = 900 CMI
+
+
+National Grid                                                                16
+Recloser Operation
+
+
+
+
+                                 CS = 10
+
+
+
+
+                                                     CS = 500
+
+
+
+                     CS = 1000
+Fault Occurs
+
+
+                                           CS = 15
+
+
+
+
+National Grid                                                   17
+Recloser Operation
+
+
+
+
+                                                   CS = 10
+
+
+                    Open
+                2 reclose operations                                       CS = 500
+
+
+
+                                       CS = 1000
+Fault Occurs
+Station recloser trips and recloses twice at 10 sec. intervals
+Recloser locks out (stays open)                                  CS = 15
+2 hours to restore (120 minutes)
+
+
+
+
+National Grid                                                                         18
+Recloser Operation
+
+
+
+
+                                                   CS = 10
+
+
+                    Open
+                2 reclose operations                                   CS = 500
+
+
+
+                                       CS = 1000
+CI = 1525
+Momentary interruptions do not count
+Duration = 120 minutes                                       CS = 15
+CMI = (1525) * (120) = 180,000 CMI
+
+
+
+
+National Grid                                                                     19
+Recloser With Fuse Save
+
+
+
+
+                                              CS = 10
+
+
+
+
+                                                                  CS = 500
+
+
+
+                                  CS = 1000
+1. Fault occurs on fused branch
+
+
+                                                        CS = 15
+
+
+
+
+National Grid                                                                20
+Recloser With Fuse Save
+
+
+
+
+                                                 CS = 10
+
+
+
+                                                           Trips             CS = 500
+
+
+
+                                     CS = 1000
+1.    Fault occurs on fused branch
+2.    Line recloser trips
+                                                                   CS = 15
+
+
+
+
+National Grid                                                                           21
+Recloser With Fuse Save
+
+
+
+
+                                                 CS = 10
+
+
+
+                                                           10 sec reclose             CS = 500
+
+
+
+                                     CS = 1000
+1.    Fault occurs on fused branch
+2.    Line recloser trips
+3.    Line recloser closes in 10 seconds                                    CS = 15
+
+
+
+
+National Grid                                                                                    22
+Recloser With Fuse Save
+
+
+
+
+                                                 CS = 10
+
+
+
+                                                           Successful             CS = 500
+                                                            reclose
+
+
+
+                                     CS = 1000                                               Opens
+
+1.    Fault occurs on fused branch
+2.    Line recloser trips
+3.    Line recloser closes in 10 seconds                                CS = 15
+4.    Fuse opens
+
+
+
+
+National Grid                                                                                        23
+Recloser With Fuse Save
+
+
+
+
+                                                 CS = 10
+
+
+
+                                                           Successful             CS = 500
+                                                            reclose
+
+
+
+                                     CS = 1000                                               Opens
+
+1.    Fault occurs on fused branch
+2.    Line recloser trips
+3.    Line recloser closes in 10 seconds                                CS = 15
+4.    Fuse opens
+5.    45 minutes to restore
+
+
+
+National Grid                                                                                        24
+Recloser With Fuse Save
+
+
+
+
+                                              CS = 10
+
+
+
+                                                        Successful             CS = 500
+                                                         reclose
+
+
+
+                                  CS = 1000                                               Opens
+
+CI = 15
+Momentary interruptions do not count
+Duration = 45 minutes                                                CS = 15
+CMI = (15) * (45) = 675 minutes
+
+
+
+
+National Grid                                                                                     25
+National Grid   26
+Step Restoration
+
+
+
+
+                               CS = 10
+
+
+
+
+                                                   CS = 500
+
+
+
+                   CS = 1000
+
+
+
+                                         CS = 15
+
+
+
+
+National Grid                                                 27
+Step Restoration
+
+
+
+
+                                 CS = 10
+
+
+
+
+                                                     CS = 500
+
+
+
+                     CS = 1000
+1.    Fault occurs
+
+
+                                           CS = 15
+
+
+
+
+National Grid                                                   28
+Step Restoration
+
+
+
+
+                                                 CS = 10
+
+
+
+                 Open                                                CS = 500
+
+
+
+                                     CS = 1000
+1.    Fault occurs
+2.    Station recloser/breaker opens and locks out
+                                                           CS = 15
+
+
+
+
+National Grid                                                                   29
+Step Restoration
+
+
+
+
+                                                 CS = 10
+
+
+
+                                                           Open
+                    Close                                                   CS = 500
+
+
+
+                                     CS = 1000
+1.    Fault occurs
+2.    Station recloser/breaker opens and locks out
+3.    20 Minutes later:                                           CS = 15
+                Open Switch
+                Close breaker
+
+
+
+National Grid                                                                          30
+Step Restoration
+
+
+
+
+                                                     CS = 10
+
+
+
+                                                               Closed
+                                                                                  CS = 500
+
+
+
+                                         CS = 1000
+1.    Fault occurs
+2.    Station recloser/breaker opens and locks out
+3.    20 Minutes later:                                                 CS = 15
+                Open Switch
+                Close breaker
+4. 60 minutes later
+                Close switch
+National Grid                                                                                31
+                All customers restored
+Step Restoration
+
+
+
+
+                               CS = 10
+
+
+
+
+                                                   CS = 500
+
+
+
+                   CS = 1000
+
+
+
+                                         CS = 15
+
+
+
+
+National Grid                                                 32
+Step 1
+
+
+
+
+                                                   CS = 10
+
+
+
+                 Open                                                  CS = 500
+
+
+
+                                       CS = 1000
+CI = 1525 (the entire circuit)
+Duration = 20 minutes
+CMI = (1525) * (20) = 30,500 minutes                         CS = 15
+
+
+
+
+National Grid                                                                     33
+Step 2
+
+
+
+
+                                                  CS = 10
+
+
+
+                                                            Open
+                Close                                                        CS = 500
+
+
+
+                                      CS = 1000
+CI = 515
+Duration = 60 minutes
+CMI = (515) * (60) = 30,900 minutes                                CS = 15
+
+
+
+
+National Grid                                                                           34
+Event Total
+
+
+
+
+                            CS = 10
+
+
+
+
+                                                CS = 500
+
+
+
+                CS = 1000
+CI = 1525
+
+
+                                      CS = 15
+
+
+
+
+National Grid                                              35
+Event Total
+
+
+
+
+                                               CS = 10
+
+
+
+
+                                                                      CS = 500
+
+
+
+                                   CS = 1000
+CI = 1525 (each customer experienced only 1 interruption)
+CMI = (step 1) + (step 2)
+                                                            CS = 15
+
+
+
+
+National Grid                                                                    36
+Event Total
+
+
+
+
+                                               CS = 10
+
+
+
+
+                                                                      CS = 500
+
+
+
+                                   CS = 1000
+CI = 1525 (each customer experienced only 1 interruption)
+CMI = (30,500) + (30,900)
+                                                            CS = 15
+
+
+
+
+National Grid                                                                    37
+Event Total
+
+
+
+
+                                                CS = 10
+
+
+
+
+                                                                      CS = 500
+
+
+
+                                    CS = 1000
+CI = 1525 (each customer experienced only 1 interruption)
+CMI = (30,500) + (30,900) = 61,400 minutes
+                                                            CS = 15
+
+
+
+
+National Grid                                                                    38
+Calculating SAIFI, SAIDI
+and CAIDI
+Total of All Events
+
+
+
+4 events in our universe:
+    Event            Type            CI           CMI
+
+      1           Fuse Branch               10       900
+
+      2         Feeder Outage             1,525   180,000
+
+      3            Fuse Save                15       675
+
+      4         Step Restoration          1,525    61,400
+
+                     Total                3,075   242,975
+
+
+Assume that this is the only feeder in our system
+Calculate SAIFI, SAIDI, and CAIDI
+
+
+
+
+National Grid                                               40
+Calculate: SAIFI, SAIDI, CAIDI
+
+
+
+CS = 1,525
+CI = 3,075
+CMI = 242,975
+
+
+
+                    CI 3075
+                =     =     = 2.02
+                    CS 1525
+
+
+                    CMI       242975
+                =         =          = 159
+                               1525
+
+
+                              242975             SAIDI 159
+                =         =          = 79    =        =     = 79
+                               3075              SAIFI 2.02
+
+
+
+National Grid                                                      41
+Let’s Expand Our Universe
+
+
+
+Four Feeders
+
+
+   Feeder       CS       CI        CMI
+     1           1,525   3,075    242,975
+     2           2,200   3,000    120,000
+     3             800      875    50,000
+     4           2,000      200    15,000
+
+
+
+
+National Grid                               42
+Let’s Expand Our Universe
+
+
+
+Four Feeders
+
+
+   Feeder       CS       CI        CMI
+     1           1,525   3,075    242,975
+     2           2,200   3,000    120,000
+     3             800      875    50,000
+     4           2,000      200    15,000
+    Total        6,525   7,150    427,975
+
+Maybe this is an entire utility, maybe it’s a town or district
+
+
+
+
+National Grid                                                    43
+Calculate: SAIFI, SAIDI, CAIDI
+
+
+
+CS = 6,525
+CI = 7,150
+CMI = 427,975
+
+
+
+
+                    CI 7150
+                =     =     = 1.10
+                    CS 6525
+
+                    CMI       427975
+                =         =          = 66
+                               6525
+
+                            427975              SAIDI   66
+                =         =        = 60     =         =    = 60
+                             7150               SAIFI 1.10
+
+
+
+
+National Grid                                                     44
+Some Lesser Known
+Cousins
+CAIFI and CTAIDI
+
+
+
+CAIFI: Customer Average Interruption Frequency Index
+
+
+CTAIDI: Customer Total Average Interruption Duration Index
+
+
+Similar to SAIFI and SAIDI EXCEPT Only includes customers that
+actually experienced an interruption
+
+
+                                      CI
+      CAIFI =
+                Total number of distinct customers interrupted
+
+                                    CMI
+      CTAIDI =
+               Total number of distinct customers interrupted
+
+
+
+
+National Grid                                                    46
+CAIFI and CTAIDI
+
+
+
+Why?
+
+
+Let’s say that a company’s overall reliability is:
+SAIDI = 90 minutes
+SAIFI = 1.5
+
+
+But half the company is served by a secondary network that
+hasn’t and an interruption in the past ten years.
+
+
+Is that important?
+
+
+Averages can deceive
+
+
+
+
+National Grid                                                47
+CEMIn and CELID
+
+
+
+CEMIn: Customers Experiencing Multiple Interruptions
+
+
+CELID: Customers Experiencing Long Interruption Durations
+
+
+Intended to give a view of the relative number of customers with reliability below some
+threshold
+
+
+         Tot num of customers that experienced n or more sustained interruptions
+ CEMIn =
+                                           CS
+
+
+                Tot num customers that experienced S or more hours duration
+  CELID =
+                                            CS
+
+These are both measured in PERCENT
+
+
+
+
+National Grid                                                                             48
+Momentary: MAIFI, MAIFIE, CEMSMIn
+
+
+
+MAIFI: Momentary Average Interruption Frequency Index
+
+
+MAIFIE: Momentary Average Interruption Event Frequency Index
+
+
+CEMSMIn: Customers Experiencing Multiple Sustained Interruption and Momentary
+Interruption Events
+
+
+
+
+National Grid                                                                   49
+Momentary: MAIFI, MAIFIE, CEMSMIn
+
+
+
+MAIFI: Momentary Average Interruption Frequency Index- Similar to SAIFI
+
+
+MAIFIE: Momentary Average Interruption Event Frequency Index- Excludes momentaries associated
+with a sustained interruption (counts events)
+
+
+CEMSMIn: Customers Experiencing Multiple Sustained Interruption and Momentary
+Interruption Events- Similar to CEMIn
+
+
+
+
+National Grid                                                                                   50
+Load Based: ASIFI, ASIDI
+
+
+
+ASIFI: Average System Interruption Frequency Index
+
+
+ASIDI: Average System Interruption Duration Index
+
+
+Similar to SAIFI and SAIDI but based on kVA rather than customers
+
+
+
+                Total connected kVA of load interrupted   kVA
+   ASIFI =                                              =
+                      Total connected kVA served          kVA
+
+                Connected kVA duration of load interrupted   kVA)(Minutes
+   ASIDI =                                                 =
+                       Total connected kVA served                kVA
+
+
+
+
+National Grid                                                               51
+Lies, Damn Lies, and
+Statistics
+  Effect of Distribution Automation
+Ckt. A             #1                 #2             #3
+
+
+
+                             CS=100        CS=100
+                                                            CS=100
+
+
+                                                    Norm.
+                                                              #4
+                                                    Open
+
+
+
+                                                            CS=100
+                             CS=100        CS=100
+
+
+
+Ckt. B             #5                 #6             #7
+  Simple two feeder system
+  CS = 600
+  Seven switches
+
+  National Grid                                               53
+Ckt.
+ A              #1                  #2               #3
+
+
+                          CS=100         CS=100
+                                                          CS=100
+
+                                                  Norm.
+                                                            #4
+                                                  Open
+
+
+                                                          CS=100
+                          CS=100         CS=100
+
+
+Ckt.            #5                  #6               #7
+ B
+
+Assume:
+No automation
+Manual switching time: 20 minutes
+Repair time: 60 minutes
+
+
+
+
+National Grid                                                      54
+Ckt.
+ A                    #1              #2               #3
+
+
+                            CS=100         CS=100
+                                                            CS=100
+
+                                                    Norm.
+                                                              #4
+                                                    Open
+
+
+                                                            CS=100
+                            CS=100         CS=100
+
+
+Ckt.                  #5              #6               #7
+ B
+  Time      Action         Cust out
+            Fault
+   0:00     #2 open auto     200
+
+
+
+
+National Grid                                                        55
+Ckt.
+ A                    #1                 #2               #3
+
+
+                               CS=100         CS=100
+                                                               CS=100
+
+
+                                                       Close     #4
+
+
+                                                               CS=100
+                               CS=100         CS=100
+
+
+Ckt.                  #5                 #6               #7
+ B
+  Time      Action            Cust out
+            Fault
+   0:00     #2 open auto        200
+            #3 open manually
+   0:20     #4 close manually   100
+
+
+
+
+National Grid                                                           56
+Ckt.
+ A                    #1                 #2              #3
+
+
+                               CS=100         CS=100
+                                                              CS=100
+
+
+                                                       Open     #4
+
+
+                                                              CS=100
+                               CS=100         CS=100
+
+
+Ckt.                  #5                 #6              #7
+ B
+  Time      Action            Cust out
+            Fault
+   0:00     #2 open auto        200
+            #3 open manually
+   0:20     #4 close manually   100
+            #3 close manually
+            #2 close manually
+   1:20     #4 open manually     0
+
+
+National Grid                                                          57
+National Grid   58
+Ckt.
+ A              #1                 #2               #3
+
+
+                          CS=100        CS=100
+                                                         CS=100
+
+                                                 Norm.
+                                                           #4
+                                                 Open
+
+
+                                                         CS=100
+                          CS=100        CS=100
+
+
+Ckt.            #5                 #6               #7
+ B
+Assume:
+Distribution Automation
+Repair time: 60 minutes
+
+
+
+
+National Grid                                                     59
+Ckt.
+ A                      #1                     #2               #3
+
+
+                                 CS=100             CS=100
+                                                                     CS=100
+
+
+                                                             Close     #4
+
+
+                                                                     CS=100
+                                 CS=100             CS=100
+
+
+Ckt.                    #5                     #6               #7
+ B
+    Time                            Cust out
+                Fault
+                #2 opens auto
+    0:00                              100
+                #3 opens auto
+                #4 closes auto
+
+
+
+
+National Grid                                                                 60
+Ckt.
+ A                      #1                        #2              #3
+
+
+                                    CS=100             CS=100
+                                                                       CS=100
+
+
+                                                                Open     #4
+
+
+                                                                       CS=100
+                                    CS=100             CS=100
+
+
+Ckt.                    #5                        #6              #7
+ B
+    Time                               Cust out
+                Fault
+                #2 opens auto
+    0:00                                 100
+                #3 opens auto
+                #4 closes auto
+                #2 close manually
+    1:00                                  0
+                #4 open manually
+
+
+
+National Grid                                                                   61
+Compare CAIDI (How quickly the utility restores power)
+
+
+
+Without Automation                      With Automation
+2 Steps                                 1 Step
+CS = 600                                CS = 600
+
+            Duration                            Duration
+   Step      (Min)      CI     CMI      Step     (Min)     CI    CMI
+
+     1          20      200   4,000      1        60       100   6,000
+
+     2          60      100   6,000     Total     60             6,000
+
+  Total         80            10,000
+
+                     CMI 10000                    CMI 6000
+  CAIDI =                =     = 50    CAIDI =        =     = 60
+                      CI   200                     CI   100
+
+
+
+
+National Grid                                                            62
+Compare CAIDI (How quickly the utility restores power)
+
+
+
+Without Automation                      With Automation
+2 Steps                                 1 Step
+CS = 600                                CS = 600
+
+            Duration                            Duration
+   Step      (Min)      CI     CMI      Step     (Min)     CI    CMI
+
+     1          20      200   4,000      1        60       100   6,000
+
+     2          60      100   6,000     Total     60             6,000
+
+  Total         80            10,000
+
+                     CMI 10000                    CMI 6000
+  CAIDI =                =     = 50    CAIDI =        =     = 60
+                      CI   200                     CI   100
+          CI 200                               CI 100
+  SAIFI =   =    = 0.67                SAIFI =   =    = 0.17
+          CS 600                               CS 600
+                 CMI 10000                        CMI 6000
+  SAIDI =            =     = 17        SAIDI =        =     = 10
+                  CS   600                         CS   600
+
+National Grid                                                            63
+Availability: ASAI
+
+
+
+ASAI: Average Service Availability Index
+
+
+
+         Customer Hours Service Available
+  ASAI =
+         Customer Hours Service Demand
+
+Usually expressed as a decimal or a percent
+
+
+
+
+National Grid                                 64
+ASAI
+
+
+
+What’s a good available number?
+
+
+How many think:
+
+
+0.99?
+
+
+0.999?
+
+
+0.9999?
+
+
+
+
+National Grid                     65
+ASAI
+
+
+
+What’s a good available number?
+
+
+How many think:
+
+
+0.99? – Two 9’s
+
+
+0.999? – Three 9’s
+
+
+0.9999? – Four 9’s
+
+
+
+
+National Grid                     66
+ASAI
+
+
+
+                Annual Hours    SAIDI    SAIDI
+  ASAI          Hours Available Hours   Minutes
+
+   0.99         8,760   8,672   87.6     5,256
+
+
+
+
+National Grid                                     67
+ASAI
+
+
+
+                Annual Hours    SAIDI    SAIDI
+  ASAI          Hours Available Hours   Minutes
+
+   0.99         8,760   8,672   87.6     5,256
+
+  0.999         8,760   8,751    8.8     526
+
+
+
+
+National Grid                                     68
+ASAI
+
+
+
+                Annual Hours    SAIDI    SAIDI
+  ASAI          Hours Available Hours   Minutes
+
+   0.99         8,760   8,672   87.6     5,256
+
+  0.999         8,760   8,751    8.8     526
+
+ 0.9999         8,760   8,759    0.9      53
+
+
+
+
+You better have something better than “three 9’s”
+
+
+
+
+National Grid                                       69
+Some days are diamond,
+Some days are stone
+Storms/Major Events
+
+
+
+Usually reliability is reported two ways:
+•    Including ALL events
+•    Excluding MAJOR events
+
+
+Why?
+What level of service is reasonable and economical?
+
+
+
+
+National Grid                                         71
+What’s a major event?
+
+
+
+Definitions vary by utility, regulator, and/or others
+
+
+Some typical definitions:
+•    Named Storms
+•    Declaration of Emergency
+•    Worst x% of Days
+•    Specifically exclusion by regulators
+•    “Not our fault”
+
+
+IEEE-1366:
+2.5 β Method
+
+
+
+
+National Grid                                           72
+        Background
+
+ 1400
+                                               SAIDI by day
+ 1200
+
+ 1000
+
+
+
+
+Frequency
+      800
+
+      600
+
+      400
+
+                                                              Frequency
+      200
+
+            0
+
+
+                                               Bin
+
+
+        Eight years of data from one utility
+        Vast majority of days are at one end
+        But there are outliers
+
+
+
+
+        National Grid                                                     73
+Background
+                        Natural Log (SAIDI) by day
+               1000
+               900
+               800
+               700
+
+
+
+   Frequency
+               600
+               500
+               400
+                                                                    Frequency
+               300
+               200
+               100
+                 0
+
+
+                                      Bin
+
+
+Ln (SAIDI) is a reasonable bell curve (“log-normal distribution”)
+
+
+
+
+National Grid                                                                   74
+2.5 β Method
+
+
+
+For complete discussion see IEEE-1366
+•    The method relies on calculating SAIDI/day
+•    It determines a threshold (SIADI/day) above which a day is
+     classified as a MAJOR EVENT DAY (MED)
+•    That Threshold is defined as:
+
+
+                    .
+                =
+
+
+
+
+National Grid                                                     75
+Don’t be Intimidated!
+
+
+
+
+                        .
+
+
+
+
+National Grid               76
+Don’t be Intimidated!
+
+
+
+
+                        .
+
+
+
+
+National Grid               77
+Don’t be Intimidated!
+
+
+
+
+                        .
+
+
+
+
+National Grid               78
+Don’t be Intimidated!
+
+
+
+
+                        .
+
+
+
+
+National Grid               79
+Don’t be Intimidated!
+
+
+
+
+                                                    .
+
+
+
+
+Basically, two and a half standard deviations on an average!
+
+
+
+
+National Grid                                                  80
+Calculating TMED
+
+
+
+Step 1: Don’t Panic!
+
+
+Step 2:
+In a table:
+Collect daily SAIDI for five years
+Days with no interruptions will be excluded
+Calculate Ln(SAIDI) for each day
+Find α
+Find β
+Calculate TMED
+
+                        .
+                =
+
+
+
+
+National Grid                                 81
+Calculating α and β
+
+
+
+ α is the average of Ln(SAIDI)
+ β is the standard deviation of Ln(SAIDI)
+
+
+It’s easier than it sounds
+
+
+
+
+National Grid                               82
+Develop the Spreadsheet                                   Date        SAIDI/day (min)   ln(SAIDI/day)
+                                                       Dec 1, 1993        26.974           3.295
+                                                       Dec 2, 1993        0.956            -0.046
+                                                       Dec 3, 1993        0.131            -2.033
+                                                       Dec 4, 1993        1.292            0.256
+                                                       Dec 5, 1993         4.25            1.447
+Typically use 5 years worth of data
+                                                       Dec 6, 1993        0.119            -2.127
+
+Calculate CMI and SAIDI for each day                   Dec 7, 1993         0.13            -2.042
+                                                       Dec 8, 1993        12.883           2.556
+                                                       Dec 9, 1993        0.226            -1.487
+                                                       Dec 10, 1993       13.864           2.629
+                                                       Dec 11, 1993       0.015            -4.232
+                                                       Dec 12, 1993       1.788            0.581
+                                                       Dec 13, 1993        0.41            -0.891
+                                                       Dec 14, 1993       0.007            -4.967
+                                                       Dec 15, 1993       1.124            0.117
+
+         Date       SAIDI/day (min)    ln(SAIDI/day)   Dec 16, 1993       1.951            0.668
+                                                       Dec 17, 1993       0.329            -1.112
+                                                       Dec 19, 1993       0.281            -1.268
+                                                       Dec 20, 1993        1.81            0.593
+                                                       Dec 21, 1993        0.25            -1.388
+                                                       Dec 22, 1993       0.021            -3.876
+                                                       Dec 23, 1993       1.233            0.209
+                                                       Dec 24, 1993       0.996            -0.004
+                                                       Dec 25, 1993       0.162            -1.818
+                                                       Dec 26, 1993       0.288            -1.244
+                                                       Dec 27, 1993       0.535            -0.626
+                                                       Dec 28, 1993       0.291            -1.234
+                                                       Dec 29, 1993        0.6             -0.511
+                                                       Dec 30, 1993        1.75             0.56
+                                                       Dec 31, 1993       3.622            1.287
+National Grid                                                                                       83
+Develop the Spreadsheet
+                                          Date        SAIDI/day (min)   ln(SAIDI/day)
+                                       Dec 1, 1993        26.974            3.295
+                                       Dec 2, 1993         0.956           -0.046
+                                       Dec 3, 1993         0.131           -2.033
+                                       Dec 4, 1993         1.292            0.256
+Typically use 5 years worth of data    Dec 5, 1993          4.25            1.447
+Calculate CMI and SAIDI for each day   Dec 6, 1993         0.119           -2.127
+                                            .               .                .
+                                            .               .                .
+                                            .               .                .
+                                       Dec 30, 1993        1.75             0.56
+                                       Dec 31, 1993       3.622            1.287
+
+
+
+
+National Grid                                                                 84
+Develop the Spreadsheet
+                                          Date        SAIDI/day (min)   ln(SAIDI/day)
+                                       Dec 1, 1993        26.974            3.295
+                                       Dec 2, 1993         0.956           -0.046
+                                       Dec 3, 1993         0.131           -2.033
+                                       Dec 4, 1993         1.292            0.256
+Typically use 5 years worth of data    Dec 5, 1993          4.25            1.447
+Calculate CMI and SAIDI for each day   Dec 6, 1993         0.119           -2.127
+                                            .               .                .
+                                            .               .                .
+                                            .               .                .
+                                       Dec 30, 1993        1.75             0.56
+                                       Dec 31, 1993       3.622            1.287
+
+
+
+
+                                                           Average=     -0.557
+                                                      Standard Dev=      1.91
+Calculate α and β
+
+
+
+
+National Grid                                                                 85
+Calculate TMED
+
+
+                    .
+                =
+
+α = -0.557
+β = 1.91
+
+
+TMED = 66.7 Minutes
+
+
+This TMED is used to evaluate the next year
+
+
+For 2019, Calculate TMED using 2014 – 2018 data
+
+
+
+
+National Grid                                     86
+Apply TMED                                          Date
+                                                 Jan 1, 1994
+                                                                SAIDI/Day
+                                                                  0.24
+                                                 Jan 2, 1994     0.014
+                                                 Jan 3, 1994     0.075
+                                                 Jan 4, 1994     2.649
+                                                 Jan 5, 1994     0.666
+TMED is 66.7                                     Jan 6, 1994     0.189
+                                                 Jan 7, 1994     0.009
+                                                 Jan 8, 1994     1.117
+                                                 Jan 9, 1994     0.111
+Any day where SAIDI >66.7 is a Major Event Day   Jan 10, 1994    8.683
+                                                 Jan 11, 1994    0.277
+                                                 Jan 12, 1994    0.057
+                                                 Jan 13, 1994    0.974
+                                                 Jan 14, 1994     0.15
+                                                 Jan 15, 1994    0.633
+                                                 Jan 16, 1994    0.434
+                                                 Jan 17 1994      5.7
+                                                 Jan 18, 1994    0.109
+                                                 Jan 19, 1994    0.259
+                                                 Jan 20, 1994    1.142
+                                                 Jan 21, 1994    0.262
+                                                 Jan 22, 1994    0.044
+                                                 Jan 23, 1994    0.243
+                                                 Jan 24, 1994    5.932
+                                                 Jan 25, 1994    2.698
+                                                 Jan 26, 1994    5.894
+                                                 Jan 27, 1994    0.408
+                                                 Jan 28, 1994   237.493
+                                                 Jan 29, 1994     2.73
+                                                 Jan 30, 1994     8.11
+                                                 Jan 31, 1994    0.046
+
+
+National Grid                                                               87
+Apply TMED                                          Date
+                                                 Jan 1, 1994
+                                                                SAIDI/Day
+                                                                  0.24
+                                                 Jan 2, 1994     0.014
+                                                 Jan 3, 1994     0.075
+                                                 Jan 4, 1994     2.649
+                                                 Jan 5, 1994     0.666
+TMED is 66.7                                     Jan 6, 1994     0.189
+                                                 Jan 7, 1994     0.009
+                                                 Jan 8, 1994     1.117
+                                                 Jan 9, 1994     0.111
+Any day where SAIDI >66.7 is a Major Event Day   Jan 10, 1994    8.683
+                                                 Jan 11, 1994    0.277
+                                                 Jan 12, 1994    0.057
+Jan. 28 is a Major Event Day                     Jan 13, 1994    0.974
+                                                 Jan 14, 1994     0.15
+       Date        SAIDI/Day                     Jan 15, 1994    0.633
+    Jan 28, 1994   237.493                       Jan 16, 1994    0.434
+                                                 Jan 17 1994      5.7
+                                                 Jan 18, 1994    0.109
+                                                 Jan 19, 1994    0.259
+                                                 Jan 20, 1994    1.142
+                                                 Jan 21, 1994    0.262
+                                                 Jan 22, 1994    0.044
+                                                 Jan 23, 1994    0.243
+                                                 Jan 24, 1994    5.932
+                                                 Jan 25, 1994    2.698
+                                                 Jan 26, 1994    5.894
+                                                 Jan 27, 1994    0.408
+                                                 Jan 28, 1994   237.493
+                                                 Jan 29, 1994     2.73
+                                                 Jan 30, 1994     8.11
+                                                 Jan 31, 1994    0.046
+
+
+National Grid                                                               88
+An Actual Dataset
+
+
+
+                Day   Events    CI    CMI      CS     SAIDI    Natural Log SAIDI
+          1/12/2011     2      362    20198   12496   1.6164        0.4802
+          2/25/2011     1       1      86     12517   0.0069        -4.9805
+           3/1/2011     1       7     469     12512   0.0375        -3.2838
+          3/22/2011     1       2     127     12512   0.0102        -4.5903
+          4/13/2011     1       9     630     12516   0.0503        -2.9890
+           5/2/2011     1       6      80     12532   0.0064        -5.0540
+           5/4/2011     1       6     1542    12532   0.1230        -2.0952
+           5/6/2011     2      214    10908   12532   0.8704        -0.1388
+          5/11/2011     1      23     5428    12532   0.4331        -0.8367
+          5/12/2011     1       4     608     12532   0.0485        -3.0259
+          5/19/2011     1      616    30619   12532   2.4433        0.8933
+          5/21/2011     1      35     6440    12532   0.5139        -0.6658
+          5/24/2011     1      174    15611   12532   1.2457        0.2197
+          5/27/2011     1       3     234     12532   0.0187        -3.9807
+           6/4/2011     1      20     4000    12565   0.3183        -1.1446
+           6/6/2011     1      1564   79764   12565   6.3481        1.8482
+           6/9/2011     2       4     421     12565   0.0335        -3.3960
+          6/22/2011     1      15     5115    12565   0.4071        -0.8987
+
+
+
+
+National Grid                                                                      89
+Don’t be Intimidated!
+
+
+
+
+                                                    .
+
+
+
+
+Basically, two and a half standard deviations on an average!
+
+
+
+
+National Grid                                                  90
+

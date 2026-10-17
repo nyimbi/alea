@@ -1,0 +1,423 @@
+parameters:
+  weighted_average_cost_of_capital:
+    name: Weighted average cost of capital
+    description: The market's blend of debt and equity, computed by wacc_definition a duplicate id for
+      the quantity `discount_rate` computes, left as a free placeholder with no unit by the catalog expansion.
+      Carried as an alias-equation to the derived form so the two ids serve one number and a scenario
+      setting either reads a consistent blend.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: 1/year
+    range:
+    - 0.0
+    - 0.5
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: docs/params.md
+    source_url: null
+    users:
+    - Investors
+    priority: P1
+    status: integrate
+    deprecated_by: null
+  allowed_return_on_debt:
+    name: Allowed return on debt
+    description: The regulator's allowance for debt service, pre-tax. Was 0.08, below the commercial cost
+      of debt it is meant to cap (0.09); an allowed return below market debt pricing closes every project
+      in the jurisdiction and caps nothing. A 300 basis point spread over the policy rate is the level
+      utility debt actually clears at.
+    category: Regulatory Finance
+    subcategory: null
+    type: float
+    unit: 1/year
+    range:
+    - 0.02
+    - 0.25
+    default: 0.12
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: Regulator's determination
+    source_url: null
+    users:
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  allowed_return_on_equity:
+    name: Allowed return on equity
+    description: The regulator's allowed equity return for a transmission or distribution utility. Was
+      0.14, below the cost of equity the financial block carries (0.16), so the cap bound investments
+      the utility's own financing terms refuse. 18% is an emerging-market utility's level; the range keeps
+      30% as the ceiling.
+    category: Regulatory Finance
+    subcategory: null
+    type: float
+    unit: 1/year
+    range:
+    - 0.03
+    - 0.3
+    default: 0.18
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: Regulator's determination; cf. AER Rate of Return Instrument
+    source_url: null
+    users:
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  regulatory_asset_base:
+    name: Regulatory asset base
+    description: 'The net regulated asset base: the fleet''s gross capital less accumulated depreciation,
+      computed from the fleet rather than declared. This is Ofwat''s RAB line -- the base the allowed
+      return is earned on -- and computing it is what ties the utility''s accounts to the fleet the graph
+      carries.'
+    category: Regulatory Finance
+    subcategory: null
+    type: float
+    unit: USD million
+    range:
+    - 0.0
+    - 500000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: Regulator's determination
+    source_url: null
+    users:
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  regulatory_depreciation:
+    name: Regulatory depreciation
+    description: 'Straight-line depreciation the regulator admits into the revenue requirement: the net
+      asset base written down over the regulatory asset life. This is Ofwat''s RAB depreciation line and
+      the UKRN build-up''s second term, computed from the base and the life rather than declared.'
+    category: Regulatory Finance
+    subcategory: null
+    type: float
+    unit: USD million/year
+    range:
+    - 0.0
+    - 50000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: Regulator's determination
+    source_url: null
+    users:
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  accumulated_depreciation_fraction:
+    name: Accumulated depreciation fraction
+    description: 'The share of the fleet''s gross capital the books have already depreciated, which is
+      what stands between gross fleet capital and the net regulated asset base. 0.6 on the shipped fleet:
+      a fleet whose assets are, on average, more than ten years into a 25-year life. Book-specific; the
+      range admits a book that has not depreciated at all.'
+    category: Cost
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 0.9
+    default: 0.6
+    role: free
+    determinism: fixed
+    priority: P2
+    status: existing
+    source: Regulator's accounts (the RAB roll-forward)
+    users:
+    - Regulators
+  allowed_revenue_requirement:
+    name: Allowed revenue requirement
+    description: 'Depreciation plus the allowed return on the asset base: the revenue the utility must
+      recover for the regulator''s accounts to balance. The tariff a cost-recovery regime sets is exactly
+      this spread over the energy the fleet delivers, which is why the revenue cap''s multiplier reads
+      a tariff the recovery identity computes rather than a second cost build-up.'
+    category: Cost
+    type: float
+    unit: USD million/year
+    range:
+    - 0.0
+    - 20000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: UKRN cost of capital guidance (2023), revenue-requirement build-up
+    users:
+    - Regulators
+  applied_tariff_usd_per_mwh:
+    name: Applied tariff
+    description: 'The tariff the utility actually charges: the cost-recovery level scaled by the revenue
+      cap. The cap lives in [0.5, 2.0] around the recovery level, so a cap below 1 withholds part of the
+      revenue requirement -- the regulatory instrument it is.'
+    category: Market
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 4000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: World Bank Regulation of Utilities handbook
+    users:
+    - Regulators
+equations:
+  wacc_alias:
+    id: wacc_alias
+    name: WACC is the discount rate
+    description: The catalog's WACC row and the financial block's discount rate are one quantity, so the
+      duplicate derives from the computed one and the graph keeps a single blend. An equality between
+      two ids for one number is the closure that keeps a scenario setting either name consistent; the
+      alternative -- deprecating the id -- loses the label a report may cite.
+    system: financial
+    lhs: weighted_average_cost_of_capital
+    rhs: discount_rate
+    relation: eq
+    parameters:
+    - weighted_average_cost_of_capital
+    - discount_rate
+    free_variables:
+    - discount_rate
+    determined_variables:
+    - weighted_average_cost_of_capital
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Standard WACC with the interest tax shield
+    latex: \mathrm{WACC} = \mathrm{discount\_rate}
+  regulatory_asset_base_definition:
+    id: regulatory_asset_base_definition
+    name: Regulated asset base from the fleet
+    description: Gross fleet capital less what the books have written down. The gross capital is the capacity-weighted
+      capex; the 1000 converts kW-per-MW and the million converts USD. A fraction the regulator's roll-forward
+      states, not one the model invents.
+    system: financial
+    lhs: regulatory_asset_base
+    rhs: capex_usd_per_kw * total_capacity_mw * (1 - accumulated_depreciation_fraction) / 1000
+    relation: eq
+    parameters:
+    - regulatory_asset_base
+    - capex_usd_per_kw
+    - total_capacity_mw
+    - accumulated_depreciation_fraction
+    free_variables:
+    - capex_usd_per_kw
+    - total_capacity_mw
+    - accumulated_depreciation_fraction
+    determined_variables:
+    - regulatory_asset_base
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Ofwat PR24 Appendix 11, allowed return on capital
+    latex: \mathrm{RAB} = \mathrm{capex} \cdot C_{MW} \cdot 10^3 \cdot (1 - d_{acc}) \, /\, 10^6
+  regulatory_depreciation_definition:
+    id: regulatory_depreciation_definition
+    name: Regulatory depreciation
+    description: Straight-line write-down of the asset base over the regulatory asset life. The rate-of-return
+      revenue requirement's first term; the second is the return on the base below.
+    system: financial
+    lhs: regulatory_depreciation
+    rhs: regulatory_asset_base / depreciation_life_by_asset
+    relation: eq
+    parameters:
+    - regulatory_depreciation
+    - regulatory_asset_base
+    - depreciation_life_by_asset
+    free_variables:
+    - depreciation_life_by_asset
+    determined_variables:
+    - regulatory_depreciation
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Ofwat PR24 Appendix 11, allowed return on capital
+    latex: D_{reg} = \mathrm{RAB} / L_{reg}
+  allowed_revenue_requirement_definition:
+    id: allowed_revenue_requirement_definition
+    name: Allowed revenue requirement
+    description: Depreciation plus the allowed return on the base, with that return taken as the blend
+      the financial block computes -- the vanilla regulatory WACC the UKRN guidance builds. A tariff that
+      recovers less than this under-recovers the utility; the revenue cap and the applied tariff are the
+      instruments around it.
+    system: financial
+    lhs: allowed_revenue_requirement
+    rhs: regulatory_depreciation + regulatory_asset_base * discount_rate
+    relation: eq
+    parameters:
+    - allowed_revenue_requirement
+    - regulatory_depreciation
+    - regulatory_asset_base
+    - discount_rate
+    free_variables:
+    - regulatory_depreciation
+    - regulatory_asset_base
+    determined_variables:
+    - allowed_revenue_requirement
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: UKRN cost of capital guidance (2023), §allowed returns
+    latex: R^* = D_{reg} + \mathrm{RAB} \cdot \mathrm{WACC}
+  cost_of_debt_capped:
+    id: cost_of_debt_capped
+    name: Debt cost within the allowed return
+    description: 'The regulator''s debt allowance binds the commercial cost of debt the scenario may assume:
+      a component priced above the allowed return is the pass-through the cap regime forbids, so a scenario
+      carrying it is inadmissible rather than silently under-recovering.'
+    system: financial
+    lhs: cost_of_debt
+    rhs: allowed_return_on_debt
+    relation: leq
+    parameters:
+    - cost_of_debt
+    - allowed_return_on_debt
+    free_variables:
+    - cost_of_debt
+    - allowed_return_on_debt
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: UKRN cost of capital guidance (2023), §overall framework
+    latex: K_d \le A_d
+  cost_of_equity_capped:
+    id: cost_of_equity_capped
+    name: Equity cost within the allowed return
+    description: 'The equity-return allowance binds the cost of equity: the CAPM-estimated return a project
+      demands cannot exceed what the regulatory settlement awards.'
+    system: financial
+    lhs: cost_of_equity
+    rhs: allowed_return_on_equity
+    relation: leq
+    parameters:
+    - cost_of_equity
+    - allowed_return_on_equity
+    free_variables:
+    - cost_of_equity
+    - allowed_return_on_equity
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Ofwat PR24 Appendix 11, allowed return on capital
+    latex: K_e \le A_e
+  applied_tariff_definition:
+    id: applied_tariff_definition
+    name: Applied tariff under the cap
+    description: The revenue cap's multiplier applied to the cost-recovery tariff. A cap below 1.0 withholds
+      part of the revenue requirement -- the incentive instrument a price-control settlement actually
+      sets -- and a cap above 1.0 is a premium the accounts must carry.
+    system: price_demand
+    lhs: applied_tariff_usd_per_mwh
+    rhs: regulated_tariff_usd_per_mwh * revenue_cap
+    relation: eq
+    parameters:
+    - applied_tariff_usd_per_mwh
+    - regulated_tariff_usd_per_mwh
+    - revenue_cap
+    free_variables:
+    - revenue_cap
+    determined_variables:
+    - applied_tariff_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: World Bank Regulation of Utilities handbook, revenue caps
+    latex: p_{applied} = p_{cr} \cdot x_{cap}
+relationships:
+- source: discount_rate
+  target: weighted_average_cost_of_capital
+  equation_id: wacc_alias
+  relationship: equality
+  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
+    computes.'
+- source: capex_usd_per_kw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: Gross fleet capital enters the base the allowed return is earned on.
+- source: total_capacity_mw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: The fleet's size sets the scale of the capital in the accounts.
+- source: accumulated_depreciation_fraction
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: What the books have written down between gross capital and the base.
+- source: regulatory_asset_base
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: equality
+  description: Straight-line write-down of the base over the regulatory asset life.
+- source: depreciation_life_by_asset
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: functional
+  description: A longer regulatory life spreads the base thinner over the years.
+- source: regulatory_depreciation
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: Depreciation is the first term of the revenue requirement.
+- source: regulatory_asset_base
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return is earned on the base, not on gross capital.
+- source: discount_rate
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return rate is the blend the financial block computes.
+- source: allowed_return_on_debt
+  target: cost_of_debt
+  equation_id: cost_of_debt_capped
+  relationship: constraint
+  description: The allowance binds the debt rate a scenario may carry.
+- source: allowed_return_on_equity
+  target: cost_of_equity
+  equation_id: cost_of_equity_capped
+  relationship: constraint
+  description: The allowance binds the equity return a valuation may assume.
+- source: regulated_tariff_usd_per_mwh
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: equality
+  description: The applied tariff is the recovery level in the absence of a cap.
+- source: revenue_cap
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: functional
+  description: The cap scales the recovery level; below 1 it withholds part of it.
+cross_validation: []

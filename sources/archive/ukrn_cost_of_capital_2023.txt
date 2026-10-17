@@ -1,0 +1,1690 @@
+                        UK Regulators Network
+
+UKRN guidance for regulators on the methodology for setting the cost of capital
+
+
+
+
+                                                                           Page 1 of 36
+                                                    UK Regulators Network
+Contents
+ Executive Summary ............................................................................................................................................................ 3
+ Introduction ........................................................................................................................................................................ 6
+    Scope of the guidance..................................................................................................................................................... 7
+ Overall framework for estimating allowed returns .......................................................................................................... 10
+ CAPM cost of equity ......................................................................................................................................................... 12
+    Risk free rate: current approach ................................................................................................................................... 12
+    Risk-free rate: guidance ................................................................................................................................................ 14
+    TMR/ERP: current approach ......................................................................................................................................... 16
+    TMR/ERP: guidance ...................................................................................................................................................... 19
+    Equity Beta: current approach ...................................................................................................................................... 21
+    Equity beta: guidance ................................................................................................................................................... 22
+    Deriving a CAPM cost of equity range and point estimate ........................................................................................... 25
+ Cross-checks to the CAPM cost of equity ......................................................................................................................... 26
+    Cross-checks: current approach ................................................................................................................................... 26
+    Cross-checks: guidance ................................................................................................................................................. 27
+ Cost of debt and notional gearing .................................................................................................................................... 31
+    Cost of debt................................................................................................................................................................... 31
+    Notional gearing ........................................................................................................................................................... 33
+ Annexes............................................................................................................................................................................. 34
+    1.      Building blocks approach to setting price controls............................................................................................... 34
+    2.      BEIS Economic Regulation paper Terms of Reference.......................................................................................... 34
+    3.      Risk-free rate time series ...................................................................................................................................... 36
+
+
+
+
+                                                                                                                                                                      Page 2 of 36
+                                        UK Regulators Network
+Executive Summary
+In most sectors subject to economic regulation, regulators rely on price controls as a tool to protect the interests of
+consumers. Where regulators set price controls with reference to expected efficient costs of delivering the service, the
+allowed return on capital is an important component of the price for that service – particularly where there is a
+significant quantum of regulated capital assets. This is why companies, investors and consumer bodies take a strong
+interest in how the allowed return is derived. The allowed return in revenue terms is calculated as the percentage rate
+of return multiplied by the value of the asset base for the regulated service in question.
+
+The provision of debt and equity finance is crucial to the successful operation and delivery of investment in the
+regulated sectors. Ensuring the allowed rate of return appropriately reflects the market risks taken by investors, given
+the underlying regulatory framework in each sector, is vital for promoting the long-term interests of consumers by
+encouraging investment and innovation, whilst protecting consumers from excessive prices. Regulators which use a
+'building blocks' approach to set cost-based price controls in their sectors: The Water Services Regulation Authority
+(Ofwat), Office for Gas and Electricity Markets (Ofgem), Office of Communications (Ofcom), the Civil Aviation Authority
+(CAA), and the Utility Regulator for Northern Ireland (UREGNI) typically set the allowed rate of return by reference to a
+weighted average cost of capital (WACC).1 These regulators start from a position of significant alignment in the overall
+framework and methodologies used to estimate the WACC,2 but ultimately final decisions are taken independently, in
+light of each individual regulator’s duties.
+
+The Government has asked Ofwat, Ofgem and Ofcom ('the Named Regulators') to work together, through the UKRN,
+to identify areas where there is already significant alignment in cost of capital methodologies and areas where further
+alignment could be achieved.3 Greater transparency and consistency in decisions should reduce the uncertainty
+associated with the final price control outcome and should allow for easier cross-sector comparisons. Estimating the
+WACC involves judgement where there are different possible approaches to estimate many of the cost of capital
+parameters. In some cases, differences between methodological approaches applied will be due to sector specific
+issues. Where this is not the case, aligning around a reasonable methodology for market parameters where practicable
+would reduce the need to continue revisiting theoretical debates where there is not a clear benefit of doing so. This in
+turn would allow companies and regulators to focus on the effective running of their respective sectors and allow all
+parties to focus on delivering best outcomes for customers. In addition, greater alignment should improve the
+predictability of regulatory decisions and may reduce the risk of investing in UK infrastructure, benefitting consumers
+by lowering costs and supporting sustainable investment.
+
+The Named Regulators have been joined by the Civil Aviation Authority (CAA), Office of Rail and Road (ORR) and the
+Utility Regulator of Northern Ireland (UREGNI), to form a taskforce to put forward a set of recommendations which
+reflect the outcome of this joint work. Following a request from BEIS, the Competition and Markets Authority (CMA),
+as the appeal body for the majority of regulated utilities in the United Kingdom, has participated as an observer with
+respect to the development of this guidance. In addition, the taskforce has considered peer review comments
+provided by John Earwaker4 and Craig Lonie5 in the development of this guidance.6 Finally, the taskforce has
+
+
+
+1
+  In some sectors, cost-based price controls apply to the entire value chain (e.g. water), whereas in others they may only be used
+for a relatively small sub-set of wholesale services (e.g. telecoms).
+2
+  Cost of Capital – Annual Update Report, July 2022.
+3
+  BEIS: Economic regulation policy paper, p.20. See Annex 2 for the terms of reference from BEIS.
+4
+  John is a director at consultancy First Economics, specialising in regulatory economics, regulatory finance, and periodic reviews.
+5
+  Craig is a specialist partner at consultancy Flint Global and has three decades of experience in utility infrastructure,
+communications and media sectors, particularly around financial matters.
+6
+  The views expressed in this report should not be interpreted as necessarily reflecting the views of the external peer reviewers.
+
+
+                                                                                                                         Page 3 of 36
+                                        UK Regulators Network
+considered the submissions of 13 respondents to our draft guidance consultation.7 The taskforce is grateful for the
+input of all contributors.
+
+The primary focus of this guidance is on the common parameters for the cost of equity and the overall framework for
+choosing a point estimate for the allowed return on equity, due to these areas having the greatest commonality across
+regulators. The proposals in this document bring together and consolidate existing methodologies, recognising the
+importance of both consistency across sectors as well as across time and recognising the benefits brought about by
+aligning regulatory approaches to investors and customers. In formulating proposals, the taskforce has considered
+responses to the draft guidance consultation carefully, and a summary table explaining how we have addressed
+responses is published alongside this guidance. The taskforce considers that future iterations of this guidance should
+likewise involve consultation, giving stakeholders an adequate opportunity to contribute their perspective.
+
+This guidance is not binding and each regulator will continue to make decisions in accordance with its own statutory
+duties. Nothing in this guidance overrides relevant legislation or the principle of regulatory independence.
+However, the expectation is that the Named Regulators8 together with ORR and UREGNI would commit to having
+regard to the recommendations in this guidance in their future price control decisions where this is permitted by their
+statutory duties and to deviate only where they consider there are good reasons to depart from these
+recommendations. We recognise that the development and publication of this document is at a time when some
+regulators from the wider taskforce have been in the process of making draft or final price control decisions. The
+approach to making those decisions has been subject to appropriate consultation and careful consideration and we
+therefore do not expect the recommendations in this guidance to be adopted for those decisions. Nothing in this
+document should be taken as suggesting that any regulator should change its approach to such decisions.9 The CMA
+has confirmed its expectation that the independent groups of decision-makers which it convenes to make decisions on
+regulatory appeals will have due regard to the guidance, alongside the other evidence and submissions received, and
+taking into account the relevant standard of review and legal grounds in a particular appeal.
+
+Following consultation on the draft guidance, the recommendations for application in future cost of capital decisions
+are set out below.
+
+Recommendation 1 - Notional company: Regulators should continue to estimate the allowed rate of return in price
+controls based on the weighted average cost of capital for a notionally financed firm within their sector.
+
+Recommendation 2 – CAPM: Since the cost of equity is not directly observable, it must be estimated using a widely
+accepted method. Regulators should continue to use the capital asset pricing model (CAPM) as their primary approach
+for estimating the cost of equity.
+
+Recommendation 3 – Risk-free rate: To estimate the real risk-free rate (RFR) within the CAPM, regulators should use
+recent yields on the index-linked gilts, with a maturity which matches the assumed investment horizon for their sector.
+
+Recommendation 4 – Equity risk premium: Regulators should estimate the equity risk premium (ERP) within the
+CAPM as the difference between total market return (TMR) and the risk-free rate (RFR). We recommend that the TMR
+should be primarily based on historical ex post and historical ex ante evidence.
+
+Recommendation 5 – Equity beta: Regulators should estimate equity beta for the notional company using comparable
+listed companies and standard regression techniques (i.e. ordinary least squares (OLS)). Where the listed comparator
+
+7
+  Anglian Water, British Telecom, Citizens Advice, CCWater, The Energy Networks Association, The Global Infrastructure Investor
+Association, National Grid, The Office of Rail and Road, Southern Gas Networks, South West Water, Thames Water, United
+Utilities, WaterUK.
+8
+  i.e. Ofwat, Ofgem and Ofcom.
+9
+  This includes the CAA, which will review its approach to the cost of capital and how to best have regard to the positions set out in
+this document after the end of the H7 and NR23 reviews.
+
+
+                                                                                                                         Page 4 of 36
+                                   UK Regulators Network
+has different gearing to the notional company, regulators should continue to de-lever and re-lever the raw equity
+beta.
+
+Recommendation 6 – CAPM point estimate: The RFR, TMR and (re-levered) equity beta assumptions should be
+combined using the CAPM to produce a cost of equity range. The mid-point of the range should be used as the central
+estimate for the CAPM cost of equity.
+
+Recommendation 7 – Cross-checks: Cross checks may be used to sense check the CAPM derived point estimate.
+However regulators should only deviate from the mid-point of the CAPM cost of equity range if there are strong
+reasons to do so.
+
+Recommendation 8 – Cost of debt: Regulators should estimate an allowance for an efficient company under the
+notional financial structure, with actual debt costs suitably benchmarked against other market evidence.
+
+Recommendation 9 – Gearing: The notional gearing assumption should reflect the regulator's assessment of the
+balance of risks facing the regulated company, a wide range of benchmarks on gearing levels, and overall regulatory
+policy objectives - not just the gearing level of the actual company (or companies) in question.
+
+The value of a common methodology is its transparency and predictability. Nevertheless, we recognise that changes to
+market conditions, finance theory, statutory frameworks regulators operate under, and the type of assets being
+regulated, could constitute a case for revising regulatory practice. For these reasons, the UKRN taskforce agrees that
+the recommendations on a common methodology are subject to a periodic review by the regulators.
+
+
+
+
+                                                                                                           Page 5 of 36
+                                       UK Regulators Network
+Introduction
+Economic regulators use price controls to protect consumers from excessive prices and to incentivise companies to
+invest, innovate, deliver cost efficiencies, and provide a decent quality of service. In effect, regulators are trying to
+recreate incentives which are prevalent in competitive markets.
+
+Price controls can take different forms, but in the majority of regulated sectors they are set with reference to the
+expected efficient costs of delivering the service over the control period, including an appropriate allowance for
+remunerating the providers of equity and debt capital.
+
+Ensuring regulated companies have a reasonable expectation of earning returns which compensate capital providers
+for the risk of investing in these businesses is an important aspect of setting price controls. The "allowed return" is
+applied to the value of the regulated asset base (or capital employed) to calculate a revenue requirement within the
+building blocks of a price control (see Annex 1). The allowed return is typically estimated by reference to the weighted
+average cost of capital (WACC) for the relevant regulated activity. The WACC is an important part of overall revenue
+allowances and bills – particularly in sectors where the regulated asset base is large in financial value.10
+
+The approach of most regulators is to allocate risk to those parties which are best placed to manage it. Companies
+maintain significant discretion over their own financing and capital structure arrangements, but they also bear the
+risks of their decisions in these areas in the context of the price control and the wider regulatory framework.
+
+The allowed return is typically the base return for a 'notional' company with a particular financial capital structure, as
+opposed to allowances corresponding to company-specific financing costs. The actual return that companies achieve
+will depend on their actual capital structure and their performance during the control period, including in areas such
+as cost efficiency or service delivery, where incentive payments may drive revenue adjustments. These incentives are
+designed to align the interests of companies and investors with those of customers, with regulators typically aiming to
+attach financial incentives to the behaviour and outcomes most valued by customers.
+
+The overall methodology used to estimate the allowed rate of return is broadly similar across all major price controls.
+Through the UKRN Cost of Capital working group (including through the publication of the annual Cost of Capital
+report) significant alignment has already been achieved.11
+
+The Government's 2022 Economic Regulation Policy Paper set out the expectation that regulators should work
+towards greater consistency, and towards a common methodology, where appropriate for the WACC in setting price
+controls. It stated that alignment would encourage greater confidence in the price control for consumers, businesses
+and investors.12 Regulators involved in setting the main price controls recognise the value of further alignment in the
+approaches and ultimately the common parameter values used in each sector. Ofwat, Ofgem and Ofcom (the 'Named
+Regulators' in the paper), have worked in tandem with the CAA, ORR, and UREGNI, in a UKRN taskforce to produce this
+guidance and anticipate further collaboration on these issues going forward. Following a request from BEIS, the
+Competition and Markets Authority (CMA), as the appeal body of the majority of regulated utilities in the United
+Kingdom, has participated as an observer with respect to the development of this guidance. In addition, the taskforce
+
+
+
+
+10
+   For example, the allowed return accounts for around a fifth of regulated water and energy network revenues.
+11
+   See UKRN, 'Cost of Capital – Annual Update Report', July 2022.
+12
+   Department for Business, Energy and Industrial Strategy (BEIS), Economic Regulation Policy Paper, January 2022.
+
+
+                                                                                                                     Page 6 of 36
+                                        UK Regulators Network
+has considered peer review comments provided by John Earwaker13 and Craig Lonie14 in the development of this
+guidance.15
+
+The true cost of capital for any service or line of business is unknown, and there are many analytical judgements to be
+made in deriving a reasonable estimate. Well-informed academics and practitioners can often disagree on the best
+approach to take. However, we consider that there is value from further alignment on some aspects of the
+methodology used to estimate the allowed rate of return. Greater alignment would provide a greater degree of
+predictability for investors, potentially reducing the risk premium associated with investing in UK infrastructure, to the
+long-term benefit of consumers. Further, greater alignment would reduce the burden on regulators, appeal bodies and
+other stakeholders by not revisiting certain methodological debates for every price control decision, unless there is a
+good reason to do so.
+
+This guidance document largely seeks to bring together and consolidate existing methodologies, rather than re-open
+theoretical debates, recognising the importance of consistency across sectors but also across time. We intend that this
+common methodology would be updated periodically to confirm agreement on the material amongst the regulators
+and to capture any additional insights that may stem from evolving circumstances.
+
+The allowed return is one of many aspects of the regulatory framework which influences the relative attractiveness of
+a given sector to investors and which ensures that consumers get value for money. Long-term protection of
+investments from the use of a Regulated Asset Base (RAB), inflation indexation, a stable and predictable framework for
+remunerating expenditure, the use of reconciliation mechanisms to drive incentives and provide risk protection,
+competitive tendering for large scale projects, greater pricing freedom in the presence of stronger competitive
+pressure – are some examples of the other features of the regulatory framework which would also have a significant
+bearing on investment incentives.
+
+Within this context, a more tightly-defined methodology for the allowed rate of return, while supportive of greater
+predictability in the regulatory regime and potentially increasing the attractiveness of UK regulated infrastructure as
+an asset class, will not be the only aspect which influences investment decisions.
+
+
+Scope of the guidance
+
+We intend that this guidance would be applicable where regulators explicitly set cost-based price controls using the
+'building blocks' approach referenced earlier (and described in Annex 1). In some sectors, in particular in telecoms,
+regulators also use other approaches to cap prices, such as anchor pricing16 or safeguard caps, where the prices do not
+necessarily follow the projected path of efficient costs (including capital costs), and therefore, this guidance would not
+directly influence prices. There will also be other instances where regulators require an estimate of a cost of capital or
+a discount rate (e.g. to appraise investments or to settle disputes), or are seeking to secure financing for novel or
+bespoke investment projects, and these cases are also not covered by this guidance.
+
+The recommendations in the guidance reflect an aim by regulators to find defensible and evidence-based common
+approaches to cost of capital estimation which improve the predictability of regulatory decisions. While acknowledging
+the views of past CMA panels as important considerations in informing this guidance, regulators were not convinced
+that this guidance should be based solely on the approach taken by any one CMA panel. Overall, regulators agree with
+
+13
+   John is a director at consultancy First Economics, specialising in regulatory economics, regulatory finance, and periodic reviews.
+14
+   Craig is a specialist partner at consultancy Flint Global and has three decades of experience in utility infrastructure,
+communications and media sectors, particularly around financial matters.
+15
+   The views expressed in this report should not be interpreted as necessarily reflecting the views of the external peer reviewers.
+16
+   Anchor pricing refers to setting a regulated price cap on a basic “anchor” product (e.g. wholesale access to a basic broadband
+connection) with pricing flexibility on other products (e.g. wholesale access to higher speed broadband connections).
+
+
+                                                                                                                         Page 7 of 36
+                                        UK Regulators Network
+the conclusions of the RIIO-2 CMA panel that the PR19 redetermination does not set down the unquestionable
+methodological best practice that must automatically be applied in future regulatory determinations.17 In particular,
+there was a consensus within the taskforce in favour of guidance that did not derive from an approach focused on a
+particular sector, and which could incorporate emerging evidence.
+
+This guidance is not binding and each regulator will continue to make decisions in accordance with its own statutory
+duties. Nothing in this guidance overrides relevant legislation or the principles of regulatory independence.
+However, the expectation is that the Named Regulators18 together with ORR and UREGNI would commit to having
+regard to the recommendations in this guidance in their future price control decisions where this is permitted by their
+statutory duties and to deviate only where they consider there are good reasons to depart from these
+recommendations. We recognise that the development and publication of this document is at a time when some
+regulators from the wider taskforce have been in the process of making draft or final price control decisions. The
+approach to making those decisions has been subject to appropriate consultation and careful consideration and we
+therefore do not expect the recommendations in this guidance to be adopted for those decisions. Nothing in this
+document should be taken as suggesting that any regulator should change its approach to such decisions.19 The CMA
+has confirmed its expectation that the independent groups of decision-makers which it convenes to make decisions on
+regulatory appeals will have due regard to the guidance, alongside the other evidence and submissions received, and
+taking into account the relevant standard of review and legal grounds in a particular appeal. The CMA has noted that,
+in the context of an appeal, the relevant regulator may wish to explain how it has applied the guidance agreed by the
+UKRN, or, if it has departed from that guidance, to explain its reasons for doing so.
+
+The focus of this guidance is on parameters relevant to the cost of equity part of the allowed return, given that there is
+greater scope for cross-sector alignment and given that the cost of equity is typically subject to greater uncertainty
+than the cost of debt.
+
+We have treated the following policy choices as out of scope for a common methodology since they require only
+internal consistency in their treatment and we do not see much value in consistency between regulators in these
+areas:
+
+     •   Tax – The expression of the allowed return in pre-tax or "vanilla" terms depends on the price control
+         modelling choices made by each regulator.20 We do not consider that guidance or a common methodology is
+         required in this area.
+     •   Real or nominal returns – The choice of whether to express the allowed return as a real rate or a nominal rate
+         remains with each regulator and is largely dependent on the approach in previous reviews in the sector. All
+         sector regulators need not apply one or other approach, however regulators should adopt internally
+         consistent approaches. Nevertheless, the move to measuring inflation in CPI(H) rather than RPI terms does
+         raise some complications in how we measure and estimate returns. We do, therefore, discuss issues around
+         converting between RPI, CPI(H), and nominal values in further sections.
+
+The value of a common methodology is its transparency and predictability. Nevertheless, we recognise that material
+changes to market conditions, finance theory, statutory frameworks regulators operate under, and the type of assets
+
+17
+   CMA, 'RIIO-2 Final Determination, Volume 2A: Joined Grounds: Cost of equity', p.46, para. 5.120
+18
+   i.e. Ofwat, Ofgem and Ofcom.
+19
+   This includes the CAA, which will review its approach to the cost of capital and how to best have regard to the positions set out
+in this document after the end of the H7 and NR23 reviews.
+20
+   For example, when a regulator models the tax position of the regulated entity, the appropriate allowed return is net of any tax
+allowance – which is often referred to as the "vanilla" WACC. Alternatively, price controls can be set without explicitly modelling
+the tax position of the regulated entity. In this case, the allowed return used to set the price control needs to be on a pre-tax basis
+to allow sufficient funding to compensate equity investors (whose returns would be net of corporation tax). The concepts of
+vanilla and pre-tax WACC are explained further in the next section.
+
+
+                                                                                                                          Page 8 of 36
+                                    UK Regulators Network
+being regulated, could constitute a case for revising regulatory practice. For this reason, the UKRN taskforce agrees
+that the guidance should be kept under review and updated as necessary. The taskforce considers that there is likely
+to be limited benefit in constraining such updates to a review timetable that is predetermined at this point in time. For
+these reasons, the regulators expect the guidance set out in this document to be subject to a periodic review by the
+UKRN taskforce, with future reviews subject to consultation.
+
+
+
+
+                                                                                                             Page 9 of 36
+                                     UK Regulators Network
+Overall framework for estimating allowed returns
+The allowed rate of return is typically estimated by reference to the weighted average cost of capital (WACC) for the
+relevant regulated activity. Investments are typically funded by both debt and equity, so the WACC represents an
+average of the costs of debt and equity, weighted by their relative share of the total market value:
+
+                                   𝑊𝐴𝐶𝐶 = (𝑔𝑒𝑎𝑟𝑖𝑛𝑔) × 𝐾𝑑 + (1 − 𝑔𝑒𝑎𝑟𝑖𝑛𝑔) × 𝐾𝑒
+
+
+Where:
+
+𝐾𝑑 is the cost of debt,
+
+𝐾𝑒 is the cost of equity, and
+
+gearing is the amount of debt financing as a proportion of the combined debt and equity value of the firm.
+
+The cost of debt is measured in pre-tax terms (since interest payments are deductible from profits when calculating
+liability for corporate taxation), whereas equity returns are measured in post-tax terms (since equity investors receive
+any profits net of the payment of corporation tax). The WACC in the formula above is therefore a vanilla WACC – in
+that the cost of equity is not uplifted for the corporate tax wedge between debt and equity (i.e. by 1 / (1-t)).
+
+Regulators typically place most weight on the Capital Asset Pricing Model (CAPM) to estimate the cost of equity. Under
+the CAPM the cost of equity (Ke) is a function of the risk-free rate (RFR, Rf), the expected return on the equity market
+above the risk-free rate, i.e. the equity risk premium (ERP), and the systematic risk of the relevant activity, i.e. equity
+beta (βe).
+
+                                               𝐾𝑒 = 𝑅𝑓 + (𝑅𝑚 − 𝑅𝑓 ) × 𝛽𝑒
+
+Where:
+
+𝑅𝑓 is the risk-free rate (RFR)
+
+𝑅𝑚 is the Total Market Return (TMR)
+
+(𝑅𝑚 − 𝑅𝑓 ) is the Equity Risk Premium (ERP)
+
+𝛽𝑒 is the equity beta.
+
+A range of alternative models to the CAPM exist, however these alternatives have not seriously challenged the
+dominance of the CAPM as the workhorse model within economic regulation in the UK.
+
+The CAPM remains in use by a wide cross-section of financial practitioners and benefits from requiring only three
+inputs, the data for which can be transparently derived with relative ease. A UKRN-commissioned report in 2018
+recommended that regulators should continue to use the CAPM to estimate the cost of equity, which remains the
+recommendation that we follow in this guidance.21
+
+The cost of debt (Kd) is typically estimated with reference to observed market yields on corporate bonds, either issued
+directly by the regulated entities or by entities with similar credit risk. Most regulated sectors make an allowance for
+historically incurred debt costs as well as expected costs of new debt expected to be issued during the control period.
+
+21
+  Burns, P., Mason, R., Pickford, D., Wright, S., 'Estimating the cost of capital for implementation of price controls by UK
+Regulators,' March 2018, pp.16-22 and appendices A and B. The report recommended that the CAPM is used to calculate both the
+cost of debt and the cost of equity. However, regulatory determinations typically take account the fact that some debt is
+embedded in a company's structure through the period of the price control.
+
+
+                                                                                                               Page 10 of 36
+                                    UK Regulators Network
+It is commonplace in sectors with several companies for regulators to set a single allowance either benchmarked to an
+average of companies’ actual debt costs or to a general bond index.
+
+To assign weights to the costs of equity and debt, regulators typically assume a notional capital structure for their
+sector or regulated company, drawing on evidence on actual debt structures in their sectors, previous regulatory
+determinations, policy objectives, and other market benchmarks.
+
+We set out two recommendations on the overall framework.
+
+Recommendation 1): Regulators should continue to estimate the allowed rate of return in price controls based on the
+weighted average cost of capital for a notionally financed firm within their sector.
+
+Recommendation 2): Since the cost of equity is not directly observable, it must be estimated using a widely accepted
+method. Regulators should continue to use the capital asset pricing model (CAPM) as their primary approach for
+estimating the cost of equity.
+
+
+
+
+                                                                                                             Page 11 of 36
+                                     UK Regulators Network
+CAPM cost of equity
+While the CAPM is a relatively simple model, judgement is required because there are different approaches to derive
+the model inputs and a degree of parameter uncertainty. This section discusses key estimation issues and the scope
+for greater harmonisation.
+
+Risk free rate: current approach
+
+The risk-free rate (RFR) is an economy-wide figure which does not vary depending on the sector being considered. It is
+the required return on a riskless asset in the CAPM. Such an asset does not exist in practice, but textbooks,
+practitioners and regulators have tended to use the rates on inflation-linked government issued debt as a proxy for the
+real RFR. More recently, there has been a debate as to whether real government bonds provide the best proxy for the
+RFR in the CAPM, and whether there may be a rationale for placing some weight on alternative debt instruments.
+
+Choice of benchmark:
+Most regulators have in recent years used yields on index-linked gilts of 10 to 20 years maturity as the closest available
+market proxy of a risk-free instrument, having no inflation risk and very low default risk and liquidity risk. All recent
+regulatory determinations have placed weight on index-linked gilts. In the aftermath of the Global Financial Crisis
+(GFC), it was commonplace in regulatory decisions to set the RFR considerably above prevailing spot rates. This
+reflected a degree of regulatory caution when estimating allowed returns in a newly-depressed interest rate
+environment. As interest rates have remained low, in more recent decisions, the allowed RFR has moved closer to spot
+yields on index-linked gilts. Figure 5 in Annex 3 shows the history of regulatory decisions on the RFR against the yields
+on index-linked gilts.
+
+In proceedings related to recent regulatory decisions, some regulated companies and their consultants have argued
+that index-linked gilt yields underestimate the true risk-free rate due to the presence of a 'convenience yield'. This is
+often described as a yield discount that investors are willing to accept due to the convenient attributes of government
+bonds (e.g. money-like safety and liquidity characteristics). Proponents of the convenience yield concept have tended
+to argue that an estimate of its value should be added to the base RPI-linked yield before its use as an input to the
+CAPM,22 or that regulators should use an average of the RPI-linked gilt yield and the yield of an AAA-rated corporate
+bond index.
+
+In the CMA’s redetermination following the appeals of the PR19 decision by four water companies the panel also
+considered recent yields on index-linked gilts as a suitable proxy for the RFR. However, the panel concluded that there
+was some theoretical and empirical support for the argument that index-linked gilts could underestimate the true RFR
+in the CAPM, and that yields on AAA-rated non-government bonds were also a suitable input in the RFR estimation.23
+In the RIIO-2 appeal,24 the CMA found that Ofgem was not wrong in using index-linked gilts as the main basis for the
+RFR, and furthermore that it was not wrong in its use of 20 year Sterling Overnight Index Average (SONIA) swaps as a
+cross-check.25 Recent appeal submissions have also highlighted other potential RFR proxies as inputs into the
+estimation process or appropriate cross-checks of ILG-based estimates, such as nominal gilts.
+
+
+
+
+22
+   For instance, Oxera's consultation response argues for an adjustment of 50-100 basis ponts.
+23
+   On the basis that government bonds might be trading at a premium to low-risk non-government bonds; and that the market RFR
+for borrowing and lending might be different. ‘PR19 Redeterminations: Final report’, paragraphs 9.263-9.264.
+24
+   In which the CMA was not required to do a full redetermination but had to decide whether the appellants had shown that
+Ofgem’s decision was “wrong”
+25
+    CMA RIIO2 Final determination: Volume 2A: Joined Grounds: Cost of equity, 28 October 2021, paragraphs 5.146-5.149.
+
+
+                                                                                                                Page 12 of 36
+                                            UK Regulators Network
+Inflation issues
+The transition of several regulators to the use of CPI(H)-based rates of return has meant that index-linked yields need
+to be converted from an RPI to a CPI(H) basis. Sector regulators and the CMA have typically relied on externally-
+anchored inflation assumptions,26 or inflation forecasts from official sources like the OBR, rather than forecasting
+inflation themselves. Ofcom estimates the cost of capital in nominal terms and typically uses OBR long-run RPI
+forecasts to convert index-linked yields into nominal values.
+
+Addressing the risk of forecast error
+Recent regulatory determinations have addressed the potential for forecast error in different ways. Ofgem has
+adopted indexation for the RFR for RIIO-2, reducing the importance of making an accurate ex-ante forecast. Other
+regulators (for instance Ofwat at PR19) have used market-implied interest rate changes from yield curves to uplift
+prevailing rates at the time of final determinations. This latter approach has however been challenged on the grounds
+that rates uplifted in this way have not in recent years been a better predictor of future rates than spot rates.27
+
+
+
+Figure 1 summarises the most recent set of RFR decisions.
+
+
+
+Figure 1: Risk-free rate in recent regulatory decisions (CPI(H)-real)
+
+
+
+
+Source: Cost of Capital – Annual Update Report, July 2022. Tables 2 and 3. Ofgem RIIO-ED 2 and UREGNI GD23 final determinations. Note: Where
+determinations have been set in RPI terms without an explicit forecast of the RPI-CPI(H) wedge, a 90 basis points RPI-CPI(H) wedge has been
+applied to convert to CPI(H) basis. Asterisks denote an indexed risk-free rate, for which an illustrative estimate has been provided using spot gilt
+yields uplifted using forward rates.
+
+
+
+
+26
+  For instance, the Bank of England's 2.0% CPI inflation target.
+27
+  The CMA's redetermination of PR19 concluded that forward rates do not offer a better assessment of future spot rates than
+current spot rates, and did not include this uplift. Source: CMA, 'PR19 Redeterminations: Final report' Paras 9.228 – 9.234
+
+
+                                                                                                                                    Page 13 of 36
+                                      UK Regulators Network
+Risk-free rate: guidance
+
+Choice of benchmark:
+Regulators note that index-linked gilts (ILGs) have many characteristics that qualify them as a good proxy for the true
+risk-free rate, due to a combination of inflation protection, low default risk and low liquidity risk that is not typically
+found to the same extent in other proxies. The commonly-cited alternatives – nominal gilts, SONIA swap rates and
+AAA-rated non-government bonds – all contain risk premia that would not feature in the true risk-free rate and so
+should be adjusted for. However, judgement is required in calibrating the appropriate adjustment for each risk
+premium, with a higher number of adjustments increasing the scope for estimation error.
+
+For example, there are currently relatively few corporate AAA-rated issues available to serve as constituents in AAA-
+rated corporate bond indices, and AAA-rated corporate bond indices may also feature instruments that have tenors
+significantly longer than the usual 10-20 year CAPM investment horizon common to regulatory determinations. A
+weighting to very illiquid or long-tenor instruments may make the headline index yield less relevant as an RFR proxy
+for the notional company at the regulators' chosen investment horizon.28 This scenario was addressed in the RIIO-2
+CMA panel's final determination, where the panel noted evidence from Ofgem that stripping out instruments with
+irrelevantly long tenors reduced the pool of bonds in the reference AAA-rated index to a single usable instrument.
+Once adjusted for estimated liquidity and interest risk premia, this remaining instrument had a yield that was almost
+identical to that of the comparable ILG yield. As a result, the CMA noted that ‘there is little practical impact from
+including the most relevant AAA bond data into the [RFR] estimation process’.29
+
+Regulators should use long-dated index-linked gilts at the assumed investment horizon in their sector as their risk-free
+proxy. Consistent with recent precedent, maturities of 10 to 20 years are likely to be suitable for most sectors. Recent
+yields (going back no more than a year from the analysis cut-off point) should be reasonable to inform the RFR. The
+weight a regulator places on the sample of recent yields (for example 1, 6 or 12 months) in determining a RFR point
+estimate or range will be influenced by the methodological approach adopted in its calculation of the RFR (for example
+a range for the RFR may not need to be derived if the RFR is indexed annually).
+
+While noting arguments for a convenience yield in gilts, this is not a well-established topic in economic regulation, and
+the taskforce notes that in academic literature there are no empirical estimates of the convenience yield in index-
+linked gilts at the 10-20 year CAPM investment horizon used by most regulators.30 Given divergence in approaches
+across regulators, this guidance does not therefore propose alignment to a particular stance; however regulators
+should clearly set out their assessment of the evidence base in making their decisions. Regulators identify this as an
+area that may benefit from further work to consider the necessity of adjustments to index-linked gilt yields at the 10-
+20 year horizon.
+
+Despite the drawbacks of non-ILG RFR proxies, regulators agree that nearly any risk-free proxy stripped of accurately-
+measured risk premia should give a value close to the 'true' risk-free rate. In principle this suggests that evidence from
+these proxies could provide a useful sense check in times of ILG market volatility or to help define the range within
+which the point estimate for the risk-free rate should be drawn.
+
+
+
+
+28
+   Specifically, as at 28/06/2022 the CMA's PR19 redetermination synthetic index (the simple average of the GBP non-gilt AAA-
+rated 10-15 and 10+ indices) contained three bonds of 49.1, 49.3 and 95.7 years to maturity, respectively; far outside the
+indicative investment horizon of 10-20 years.
+29
+   CMA RIIO2 Final determination: Volume 2A: Joined Grounds: Cost of equity, paragraphs 5.101-103.
+30
+   Regulators were only able to identify one academic paper with estimates of the convenience yield in a UK context, with
+estimates confined to nominal bonds up to a horizon of only 2 years. See Diamond & Van Tassel (2021), 'Risk-Free Rates and
+Convenience Yields Around the World)
+
+
+                                                                                                                    Page 14 of 36
+                                      UK Regulators Network
+Inflation issues
+Regulators should continue to adjust the RPI yields into CPI(H) or nominal yields, if required by their price control
+methodology. Using inflation swaps or long-run inflation forecasts or assumptions from official sources such as the
+OBR to estimate the long-run RPI or the long-run RPI-CPI(H) wedge are recognised as acceptable approaches by the
+regulators. During periods of atypically high or low inflation, regulators should however consider carefully whether
+using long-run assumptions is appropriate for the next price control period.
+
+The UK Statistics Authority has consulted on future changes to the calculation of RPI with the intention of bringing the
+methods and data of CPIH into the RPI measure and has confirmed its intention to implement the change in February
+2030.31 The implication of the reform is that RPI will align with CPIH from 2030. The reform is still some years away and
+there is uncertainty around how the market is pricing this reform into RPI-linked gilts, and most official forecasts of RPI
+and CPIH typically do not extend beyond the next 5 years. Until there is more clarity around the reform, we consider
+that regulators will need to exercise judgement in deciding how to adjust available RPI and CPIH forecasts for the
+expected convergence in RPI and CPIH from 2030.
+
+Addressing the risk of forecast error
+Regulators recognise a number of appropriate measures which can reduce forecast error in setting a RFR. These
+include:
+
+     •   Choosing the length of trailing average (of up to 1 year) which is calculated to provide the most appropriate
+         estimate of the risk-free rate over the ensuing control period.
+     •   Indexation of the risk-free rate proxy.
+There is some debate about the predictive power of using forward rates to forecast future risk-free yields, as there is
+evidence that using forward rates leads to upwardly-biased estimates of the risk-free rate.32 As a result, regulators
+agree that the two approaches above are likely to be preferable in terms of limiting forecast error. However, the
+decision on whether to index the RFR component of the cost of equity should remain with each regulator, given the
+interactions with the other elements of the price control methodology.
+
+Recommendation
+Recommendation 3) To estimate the real risk-free rate (RFR) within the CAPM, regulators should use recent yields on
+index-linked gilts, with a maturity which matches the assumed investment horizon for their sector.
+
+
+
+
+31
+   https://uksa.statisticsauthority.gov.uk/correspondence/response-from-the-chair-to-the-chancellor-of-the-exchequer-rpi-
+consultation-response/
+32
+   CMA, 'PR19 redeterminations: Final report', March 2021, pp. 788-789
+
+
+                                                                                                                  Page 15 of 36
+                                       UK Regulators Network
+
+TMR/ERP: current approach
+
+The Total Market Return (TMR)33 measures the return expected by the marginal investor from holding a diversified
+portfolio of securities. Regulators have tended to use a broad index of equities as a proxy for the market of investible
+securities; for instance, the UK FTSE-All Share.
+
+The Equity Risk Premium(ERP)34 is the difference in expected return between the TMR and the RFR. It denotes the
+additional compensation that investors require from being invested in the market compared to the risk-free asset. It is
+an important input to the CAPM as the ERP is multiplied by the beta of the company in question to give a risk premium
+specific to that company.
+
+Consistent with the recommendations of the 2018 UKRN Cost of Capital study,35 as well as earlier reports by the same
+authors,36 there is a long-standing practice in UK regulation to assume that the TMR is a more stable component of the
+cost of equity than the ERP. In part, this approach is informed by long-run empirical evidence which suggests that
+equity returns are more stable over time than the ERP.37 Hence regulators have typically focused on estimating the
+TMR directly, often relying on long-run historical data (as explained below). The ERP is then calculated as the
+difference between the estimated TMR and the RFR.
+
+An alternative approach is to assume that the ERP remains broadly stable over time. This latter approach is used by
+international regulators, for instance, in continental Europe and Australia.38 The methodology used for estimating the
+ERP needs to be considered jointly with the methodology used for the RFR, to understand the overall impact on the
+TMR.
+
+The TMR estimate is typically derived from one or more of the following three approaches:
+
+        •    'Historical ex-post' approaches use observed historical equity returns as a benchmark for investors'
+             current expectations for the TMR;
+        •    'Historical ex-ante' approaches also use observed historical returns to infer the expected TMR but adjust
+             them for historical factors which are unlikely to be repeated; and
+        •    'Forward-looking' approaches use more recent market data, such as current market valuations, and / or
+             surveys of market practitioners to infer the expected rate of return on the market index.
+
+All regulators place weight on historical ex-post approaches and many of them on historical ex-ante methods. Some
+regulators have also considered forward-looking evidence in their most recent decisions.
+
+With significant weight placed on TMR estimates derived from the historical ex post approach, the application of UK
+regulatory practice typically results in relatively stable cost of equity allowances over time. While we have generally
+seen the assumed levels of the TMR (and subsequently) the allowed cost of equity decline in most sectors following
+the 2007/08 Financial Crisis, the assumed TMR has not declined one-for-one with the RFR, consistent with the
+
+
+33
+   Sometimes referred to as the EMR (Expected Market Return).
+34
+   Sometimes referred to as the MRP (Market Risk Premium).
+35
+   S. Wright et. al. 'Estimating the cost of capital for implementation of price controls by UK Regulators', 2018
+36
+   Smithers and Co Ltd ‘A Study into certain aspects of the cost of capital for regulated utilities in the UK’, 2003
+37
+   See e.g. Wright and Smithers 'The Cost of Equity Capital for Regulated Companies: A Review for Ofgem', 2014 pp. 13-16
+38
+   See for example, BEREC guidance for the calculation of the cost of capital for legacy infrastructure in telecoms, BEREC Report on
+WACC parameter calculations according to the European Commission's WACC notice of 6th November 2019, updated June 2021;
+and IPART, New South Wales, Review of our WACC method, February 2018.
+
+
+                                                                                                                      Page 16 of 36
+                                          UK Regulators Network
+assumption of greater stability in the equity returns compared to government bond returns. Conversely, in an
+environment of increasing interest rates, the allowed cost of equity would not rise as quickly as the RFR under current
+UK regulatory practice.
+
+Figure 2 below shows the real CPI(H) values for the TMR in recent regulatory decisions – which lie in the range of 6.3%
+to 6.8%. The implied ERPs are in the range of 7.2% to 8.2%; significantly above the long-run historical UK ERP of 4.9%.39
+
+
+
+Figure 2: Total Market Return in recent regulatory decisions (CPI(H)-real)
+
+
+
+
+Source: Cost of Capital – Annual Update Report, July 2022. Tables 2 and 3, and Ofgem RIIO-ED 2 and UREGNI GD23 final determinations. Note:
+Where determinations have been set in RPI terms without an explicit forecast of the RPI-CPI(H) wedge, a 90 basis points RPI-CPI(H) wedge has
+been applied to convert to CPI(H) basis.
+
+Historical ex post approach: key issues
+Historical ex post evidence is a key source of evidence for the TMR. The Credit Suisse Global Investment Returns
+Yearbook (“DMS Yearbook”) provides the data on annual returns from 1900 to the most recent year.40 The data is
+available both in nominal and real format, although there has been recent debate in regulatory proceedings about
+how best to deflate historical nominal returns.
+
+Historical inflation data for adjusting nominal returns to real returns is incomplete, with regulators needing to use
+composite series which chain together previous consumer price indices.
+
+For the period 1900-1947, there are two main inflation measures available, the Consumption Expenditure Deflator
+(CED) and the Cost of Living Index (COLI). Regulators have focussed on the CED as the most reliable source of inflation
+data for 1900-1947, because the Office for National Statistics has stated its preference for using the implied deflator,
+
+
+39
+   Source: Dimson et. al 'Credit Suisse Global Investment Returns Yearbook,' 2022, the figure refers to the UK ERP (whole-period
+arithmetic mean).
+40
+  Dimson et. al 'Credit Suisse Global Investment Returns Yearbook,' 2022.
+
+
+                                                                                                                                Page 17 of 36
+                                       UK Regulators Network
+due to COLI's relatively limited coverage in terms of products and population, and concerns about the quality of
+weights.41
+
+From 1949 onwards, there are also two choices: RPI and CPI, and there are potential issues with both measures. It
+used to be common practice to deflate returns using RPI, given it is available over the full time period, and that it used
+to be the main measure of inflation until the 1990s. However, it is now well-established that RPI is a flawed, upwardly-
+biased and inconsistent measure of inflation over the full measurement period. In particular, there has been a
+pronounced increase in the 'formula effect' – an artefact of the RPI averaging formula which is a source of upwards
+bias to RPI inflation – which makes post-2010 RPI values difficult to compare to historical series. In 2013, the ONS
+declassified the UK RPI index as a national statistic. More recently, the UKSA has urged both public and private sectors
+to stop using RPI as a measure of inflation.42
+
+As a result, regulators have been increasingly using CPI to deflate historical nominal returns. However, this is also not
+without challenges as actual CPI data is only available since 1988. For the period 1948-1988 various modelled series
+are available, such as the Bank of England Millennial Dataset and the ONS back-cast series, but these are imperfect
+estimates of CPI, as they have out of necessity drawn on a more limited range of data than is used to calculate latter-
+day CPI. More recently, the ONS has also published a back-cast series for CPIH.43 CPIH is the preferred measure of
+inflation by the ONS going forward and one which is being used by some regulators as the basis for estimating real
+returns.
+
+In the CMA's PR19 redetermination, the panel gave some weight to RPI-deflated returns (albeit adjusting for the post-
+2010 increase in RPI formula effect).44 However, in the RIIO2 appeals, the CMA found Ofgem not wrong in relying on
+CPI-deflated returns alone.
+
+Another key issue with historical ex post evidence is how to average historical returns (which are available at an
+annual frequency). Regulators have tended to rely on a variety of approaches, often combined to triangulate a
+plausible range. There is generally agreement that the expected return from such past data is the arithmetic average
+return, because the expected return of a probability distribution is the arithmetic mean. However, this does not mean
+that the arithmetic average of 1-year returns is the most appropriate estimator. The 1-year arithmetic average would
+be appropriate for short investment horizons (e.g. 1 year). However, for longer investment horizons, an arithmetic
+average of 1-year returns will be an upwardly-biased estimator of expected returns, due to some evidence of negative
+serial correlation in returns over time.45
+
+There are broadly two approaches to estimating the arithmetic average of historical returns. given the assumptions
+above. One is to take an arithmetic average over holding periods aligned with the CAPM investment horizon (usually
+10-20 years). This approach takes into account the lower volatility of returns over longer holding periods. The averages
+can be calculated for overlapping and non-overlapping periods.
+
+The other approach is to take a whole-period geometric average and then adjust it for the impact of arithmetic
+averaging (i.e. accounting for the volatility of returns).46 UK regulators have in recent years tended to interpret this as
+
+
+
+41
+   'PR19 Redeterminations: Final report', paragraph 9.294
+42
+   https://uksa.statisticsauthority.gov.uk/news/uk-statistics-authority-statement-on-the-future-of-the-rpi/
+43
+   See: ONS, 'Consumer price inflation, historical estimates, UK 1950 to 1988 – methodology', May 18 2022
+44
+   ONS's 2010 changes to how clothing and footwear are accounted for in inflation statistics led to a step-change increase in the
+level of the 'formula effect'. The CMA's redetermination of the PR19 price controls subtracted a 30bps estimate of this increase
+from historical RPI-real averages for this reason.
+45
+   See CMA, 'PR19 redeterminations final report' March 2021, pp.813-819
+46
+   This approach uses the result that the approximate difference between the arithmetic and geometric means for a lognormally
+distributed series is half the variance of log returns.
+
+
+                                                                                                                      Page 18 of 36
+                                        UK Regulators Network
+requiring an adjustment of between 1% and 2% to the geometric whole period average, with the lower end of this
+range more appropriate for longer forecast horizons.47
+
+Both approaches have been considered by the CMA in recent decisions. While the approach of adjusting the geometric
+average has been subject to challenge in the PR19 appeal, due to disputes over the appropriate size of uplift;48 in RIIO2
+the CMA found Ofgem ‘not wrong’ in adopting this approach.49
+
+Historical ex ante evidence: key issues
+The historical ex ante approach also relies on historical data but considers how it needs to be adjusted to better reflect
+forward-looking expectations of investors. For instance, the authors of the Credit Suisse Global Investment Returns
+Yearbook decompose the historical equity risk premium into a contribution from factors unlikely to be repeated in
+future, which can then be used to infer an expected TMR adjusted for these factors. Similar to the historical ex post
+approach, there are some issues around appropriately deflating any historical data. The other issue is producing an
+estimate that is consistent with the chosen investment horizon in the presence of serial correlation in annual returns.
+
+Forward-looking evidence: key issues
+Forward-looking evidence usually refers to recent estimates of the expected market return implied by dividend
+discount models, professional forecasts and/or surveys of market practitioners. Dividend discount models can be
+applied to current market prices to infer the investors’ required rates of return, but these estimates are heavily
+influenced by the choice of input assumptions, such as the expected long-run growth rate of dividends, which are
+difficult to verify. Estimates from surveys are liable to be subjective, volatile and reflect how the survey questions are
+framed.
+
+The CMA did not place significant weight on forward-looking approaches in its PR19 redetermination, due to estimates
+lying within a wide range and being to a large extent driven by assumptions which were difficult to verify. However, for
+its RIIO-2 appeals, the CMA panel recognised the value of such approaches as cross-checks in providing some insight
+into market expectations of returns in the relatively near term, and argued that they supported the hypothesis that
+investors expected returns lower than they have been, historically.50
+
+
+TMR/ERP: guidance
+
+There is significant alignment amongst regulators in the overall approach to the TMR/ERP, namely that in recent
+determinations UK regulators assume greater stability in the TMR and therefore estimate it directly from historical
+equity returns data. In the interests of maintaining consistency across sectors and also across time, continuing with
+this approach remains preferable. This approach does not imply that regulators should simply pick the same fixed
+value for the TMR in each decision for all time, but that the TMR would be relatively less variable than the underlying
+RFR. This would support greater stability in the cost of equity allowances over time. This policy choice seems
+appropriate in the wider context of the aspiration for greater predictability and transparency in the regulators’
+methodologies for estimating the allowed rate of return, and one that is fair to investors and customers over time.
+
+However, it is important to recognise that depending on the macroeconomic environment, this largely ‘through-the-
+cycle’ approach could either overstate or understate returns required by investors in a specific price determination. In
+the low interest rate environment following the 2008 Financial Crisis, such an approach likely overestimated the TMR
+
+
+47
+   This reflects the tendency of returns measured over longer holding periods to have lower volatility. See Wright et al. 'Estimating
+the cost of capital for implementation of price controls by UK regulators', March 2018, Annex E.
+48
+   CMA, 'Ofwat price determinations, final report', March 2021, paras 9.335 to 9.338
+49
+   CMA RIIO2 Final determination: Volume 2A: Joined Grounds: Cost of equity, paragraphs 5.255 to 5.258
+50
+   CMA RIIO2 Final determination: Volume 2A: Joined Grounds: Cost of equity, 28 October 2021, paragraph 5.286
+
+
+                                                                                                                       Page 19 of 36
+                                       UK Regulators Network
+expected by the market. This is in part because there is empirical evidence of a positive relationship between real
+interest rates and real returns on equity, for example, as shown in the DMS Yearbook.51
+
+The potential for this methodology to produce upwardly-biased estimates of the TMR is recognised by regulators, the
+CMA52 and the authors of the 2018 UKRN Report.53 This bias is likely to persist for as long as interest rates remain low
+compared to long-run historical averages.
+
+Historical ex post evidence
+To estimate the TMR, it is appropriate to place weight on historical ex post evidence, as it remains one of the more
+objective pieces of evidence for use in regulatory determinations.
+
+Traditionally, regulators have used long-term equity return data from sources such as the DMS Yearbook as the source
+of historical equity returns. Although in theoretical terms the taskforce agrees that regulators should adopt an
+approach that draws on average returns across all assets and not only equities, there are significant practical obstacles
+to the introduction of such an approach, as referenced in past regulatory determinations.54,55 Regulators should
+therefore continue with the established practice of using historical equity return data.
+
+With respect to inflation, we recognise that any measure of inflation is likely to have imperfections over such a long
+horizon. There have been various changes in how inflation is measured over time, and any back-cast series could be
+subject to statistical revision in the future. However, given the established methodological problems with RPI
+discussed earlier and the proposed alignment of RPI with CPIH from 2030, anchoring TMR estimates around real
+CPI(H)-deflated historical returns, where possible, is likely to be a more transparent and implementable approach for
+regulators to take in future. If RPI is used to deflate returns, additional adjustments would be required (such as for the
+change in the formula effect over time).
+
+Irrespective of the historical inflation measure chosen, regulators agree that for the period of 1900-1947 (which
+predates RPI, CPI and CPIH), the Consumption Expenditure Deflator (CED) should be preferred to the Cost of Living
+Index (COLI), on account of its more realistic treatment of weights applied to consumed goods.56 For the period 1947-
+1988, regulators consider that relying on backcast CPI or CPIH data is likely to be preferable to using RPI data (including
+RPI data with formula effect adjustment).57 From 1988 onwards, sufficient data exists to directly produce reasonable
+estimates of CPI and CPIH.
+
+To estimate the arithmetic average of historical returns, consistent with the chosen investment horizon, regulators
+could use both of the approaches described earlier. The first approach is to take an arithmetic average of historical
+returns over the corresponding holding periods (which could include both overlapping and non-overlapping periods).
+Using overlapping periods has the advantage of more data points when compared to non-overlapping periods, but the
+individual data points will exhibit serial correlation. Using non-overlapping periods avoids the issue of serial correlation
+but typically leads to estimates that are volatile year-on-year due to small sample sizes. The second approach is to
+uplift whole-period geometric average to reflect volatility in returns. We consider that both approaches are
+acceptable, while recognising that there remains a role for judgement in interpreting the data and deriving a range for
+the historical ex post evidence.
+
+
+51
+   The authors conclude that “when real interest rates are low, expected future risky-asset returns are also lower”. Source: Dimson
+et. al 'Credit Suisse Global Investment Returns Yearbook,' 2022, p.69
+52
+   CMA, 'Ofwat price determinations, final report', March 2021’, paragraphs 9.387-9.388 and 9.1314.
+53
+   CMA RIIO2 Final determination: Volume 2A: Joined Grounds: Cost of equity, 28 October 2021, paragraph 5.283(b)
+54
+   CMA, 'Ofwat price determinations, final report', March 2021, p.800, para 9.283
+55
+   CMA, Final determination: Volume 2A: Joined Grounds: Cost of equity (publishing.service.gov.uk), October 2021,
+p. 71, para.5.202
+56
+   See O'Donoghue et al. 'Consumer Price Inflation since 1750', ONS Economic Trends, March 2004
+57
+   See: ONS, 'Consumer price inflation, historical estimates, UK 1950 to 1988 – methodology', May 18 2022
+
+
+                                                                                                                     Page 20 of 36
+                                        UK Regulators Network
+Historical ex ante evidence
+We propose that regulators should place weight on historical ex-ante evidence. Since there is evidence that historical
+returns were not expected by investors (a phenomenon referred to as the 'Equity Premium Puzzle'), using achieved
+returns as a guide to future return expectations may be unreliable.58 Dimson, Marsh & Staunton note that using the
+historical risk premium of equities as a guide to future return expectations is liable to be misleading if it is non-
+stationary.59 The authors decompose the historical return to provide insights into the contribution of a) luck, and b)
+repricing resulting from changes in the underlying risk premium.60 They argue that the 'ex-ante' forward-looking equity
+risk premium is liable to be much lower than historical estimates using long-run averages.61
+
+Producing a range for the TMR
+Combining the lowest "low" estimate and highest "high" estimate from the historical ex post and historical ex ante
+evidence is likely to result in a wide range for the TMR (at least 100 basis points wide). Regulators could identify a
+narrower range from this evidence to achieve greater alignment and predictability in regulatory decisions over time.
+For example, the area of overlap for the ranges provides a more tightly focussed range which may be more useful,
+assuming the historical ex-ante and ex-post ranges overlap. Alternatively, regulators could look to derive a range
+based on the top end of the ex-ante range and the bottom end of the ex-post range or a range based on the mid-
+points of the two ranges (assuming it is possible to construct a range from both sources of evidence).
+
+We consider that this is an area where regulators would need to continue to exercise their judgement, depending on
+the latest available evidence.
+
+Recommendation
+Recommendation 4) Regulators should estimate the equity risk premium (ERP) within the CAPM as the difference
+between the total market return (TMR) and the risk-free rate (RFR). We recommend that the TMR should be primarily
+based on historical ex post and historical ex ante evidence.
+
+
+Equity beta: current approach
+
+
+The final component of the cost of equity in the CAPM is the equity beta, which is the firm- or sector-specific
+parameter in the CAPM. For given values of the common parameters for the cost of equity (i.e. RFR and TMR), it is the
+choice of equity beta that would be the main driver of differences in the allowed returns on equity between sectors.
+
+Equity beta is a measure of the sensitivity of a stock’s return to 'systematic', or market-wide risks, measured relative to
+the aggregate systematic risk exposure of the market portfolio of equities. By definition, the market portfolio has an
+equity beta of 1. Individual stocks with an equity beta less than 1 are less sensitive to the market and investors require
+lower returns on such stocks than on the overall market (i.e. the overall cost of equity is less than the TMR). The
+converse is true for stocks with equity betas above 1.
+
+Like the TMR, the equity beta component of the cost of equity is not directly observable but must be estimated,
+usually using historical data. The most common technique to estimate equity betas is regression analysis of past
+returns on the listed stock(s) of interest and the market index.
+
+
+
+58
+   See e.g. Mehra, R. "The equity premium puzzle: A review." Foundations and Trends in Finance 2.1 (2007): 1-81.
+59
+   Dimson et al, 'The worldwide equity premium: A smaller puzzle', 2006, Chapter 11 of R Mehra (ed), 'Handbook of the Equity Risk
+Premium', Elesevier 2008, pp. 467-514.
+60
+   The authors note that a significant part of the excess return to equity is due to capital gain triggered by past repricings that were
+triggered by a reduction in the risk premium.
+61
+   Credit Suisse Global Investment Returns Yearbook 2022, page 62.
+
+
+                                                                                                                          Page 21 of 36
+                                          UK Regulators Network
+All regulators follow broadly similar steps in estimating the equity beta:
+
+     •   First, identify listed companies which could form suitable comparators for the regulated activities for which
+         price controls are being set. In some sectors, this is more straightforward than in others, but, in practice, there
+         are very few pure-play listed benchmarks.62
+     •   Second, estimate raw equity betas for these comparators through regression analysis, typically using a range
+         of estimation periods (e.g. 2-year, 5-year and sometimes longer estimation windows) and a range of returns
+         data (e.g. daily, weekly or monthly).
+     •   Third, de-lever raw equity betas using the Harris-Pringle approach.63 This requires an estimate of gearing and
+         a debt beta. This produces an asset beta – a measure of operating risk, not affected by the financial capital
+         structure choices of each comparator.
+     •   Fourth, re-lever the asset beta using the regulator’s assumptions for the notional gearing and debt beta for the
+         relevant notional company.
+
+Figure 3 shows recent regulatory decisions on the asset beta.
+
+Figure 3: Asset betas from recent regulatory decisions64
+
+
+
+
+Source: UKRN analysis of regulatory publications
+
+
+
+
+Equity beta: guidance
+
+Estimating raw equity betas
+Regulators should estimate "raw" equity betas using comparable listed companies. Appropriate comparable
+companies are those that either individually or in aggregate have similar exposure to systematic risk as the notional
+company for whom the regulator is estimating a return. Significant regulatory judgement will need to be applied
+where pure play comparators from the sector in question cannot be identified. This could involve, for instance,
+adjusting the beta from a pure play company in a different sector to reflect the relative business risk between the
+sectors or adjusting a sector beta to reflect project risk. Currently, the suite of UK companies which are likely to be
+
+
+62
+   In some circumstances there may be no suitable comparators in which case the regulator may need to estimate an appropriate
+beta by benchmarking or inferencing from other beta estimates or precedents.
+63
+   The Harris Pringle formula is: 𝛽𝑎 = 𝛽𝑒 ∙ (1 − 𝑔) + 𝛽𝑑 ∙ 𝑔, where 𝛽𝑎 is the asset beta, 𝛽𝑒 is the raw equity beta of the listed
+comparator, 𝛽𝑑 is the debt beta, and 𝑔 is gearing, as defined by debt/(debt+equity).
+64
+   UREGNI did not calculate an asset beta in its recent decision PC21 for NI Water.
+
+
+                                                                                                                     Page 22 of 36
+                                      UK Regulators Network
+most relevant in the markets of interest are Severn Trent, United Utilities, National Grid, BT Group and, going forward,
+Pennon.65
+
+Despite the periodic suggestion that regulators could use betas estimated against a World index as an input to their
+implementation of the CAPM, we note that this is in practice beset with difficulties, such as identifying the appropriate
+World Index and proxy for the World risk-free rate, and controlling for exchange rate effects. Regulators consider that
+the more pragmatic and implementable approach remains, where possible, estimating betas from the markets in
+which the regulated companies operate and from which the estimates of the risk-free rate and total market return are
+derived. However, where there are no (or limited) relevant beta data points in the relevant market, regulators may
+choose to consider extending the dataset to other markets to consider relevant estimates of beta.
+
+In estimating betas, there is a trade-off between relevance and reliability. Recent data may be more relevant to
+market expectations of future risk than historical data, but the longer the sample of observations used, the more
+reliable (statistically robust) estimates will be, and the less heavily influenced by atypical and transient events which
+may not be representative of the ensuing control period.66
+
+Considering a range of lengths of estimation window (for example, 2 year, 5 year and 10 year) should be sufficient to
+balance the dual objectives of minimising unrepresentative noise from small samples of data and recent data relevant
+to a forecast. The use of historical data to set beta offers an approach that is transparent and which can be replicated.
+It allows beta changes to be reflected over time in the calculations subject to a timing lag, the result being that these
+changes are fairly reflected in customer bills and investor returns over time. Further, relying on standard regression
+techniques such as ordinary least squares (OLS) is also likely to be sufficient in most cases. The use of daily data should
+be reasonable for the types of stocks generally considered (as they tend to be highly traded liquid stocks) rather than
+weekly or monthly data in regressions, as these significantly increase the analytical work involved67 but without
+necessarily producing more reliable results. Finally, the market index based on the most diversified local index in the
+relevant currency for the relevant country/economic area is preferable.68
+
+Betas can change over time reflecting macroeconomic factors whose impacts may vary between sectors because of
+the form of the control, changes in the composition of the market portfolio and changes in regulation. For instance,
+share prices of airports have been affected quite differently to the share prices of water companies by the COVID-19
+pandemic. One reason for this is that airports are exposed to volume risk, whereas water companies benefit from a
+control on total revenue with reconciliations for revenue under- or over-recovery. In addition, availability of relevant
+data over a long enough period may constrain the length of estimation window which can be used in some sectors.
+The role of the regulator therefore lies in using their judgement to interpret which specification of beta (i.e. estimation
+window, rolling average, frequency) is liable to be most relevant to the specific circumstances of their sector and listed
+comparator(s). For these reasons a ‘one-size-fits-all’ approach for regulators is unlikely to be appropriate, and
+regulators must be free to exercise their judgement in a manner best suiting the prevailing circumstances.
+
+
+
+
+65
+   Even these listed comparators are not entirely pure play regulated monopolists. Severn Trent and United Utilities are close to
+pure play for England and Wales water and sewerage companies, as is Pennon following its disposal of Viridor which completed on
+8 July 2020, but National Grid has international assets and operates in some competitive market segments. BT Group similarly
+operates in a range of market segments only some of which are subject to economic regulation.
+66
+   The impact of the Covid-19 pandemic is an example of this.
+67
+   Specifically, weekly or monthly estimates are affected by the 'reference day bias' in which betas of the same frequency and
+estimation window can be different because of the day picked.
+68
+   For UK stocks, this would be the FTSE All Share. For European stocks, this would be an index which covered most European
+stocks traded in euros, e.g. the STOXX 600 or the FTSE All World Europe (ex UK).
+
+
+                                                                                                                   Page 23 of 36
+                                       UK Regulators Network
+Estimating the unlevered beta
+Betas are typically unlevered to allow for more precise comparisons of risk across firms with different levels of gearing.
+This approach of unlevering beta remains valid going forward, in particular, if notional gearing differs from observed
+gearing.
+
+However, gearing itself needs to be estimated, and there is some uncertainty around the market value of gearing.
+Traditionally, gearing is defined as the ratio of book value of debt to the enterprise value. For practical reasons using
+book values of debt is likely to be reasonable, although, if appropriate, market values of debt could also be considered.
+
+Other considerations which regulators may wish to consider when determining the asset beta are the characteristics
+of the services which are in scope for the price control, such as:
+
+     •   Systematic demand risk: services in sectors that exhibit more demand risk (greater income elasticity of
+         demand) may be expected to have higher asset betas while services that have less demand risk (i.e. services
+         that are ‘necessities’) may have lower asset betas; and
+     •   Operating leverage: services in sectors that have greater operating leverage (i.e. require significant upfront
+         investments or have a higher proportion of fixed costs) may be more exposed to systematic risk and thus have
+         higher asset betas. However, this effect may be more relevant to new projects rather than ongoing investment
+         in existing projects, and depend also on the form of regulation or other regulatory protections in place which
+         could serve to reduce exposure to systematic risk than might otherwise be the case.
+Estimating the debt beta
+Debt betas are required to convert the unlevered equity beta to an asset beta, which is the measure of business risk
+with the effect of financial gearing removed. There are several approaches which can be used to estimate the debt
+beta.
+
+The debt beta itself is only important in so far as it aims to ensure that the re-levered notional equity beta is
+reasonable, given the assumptions on the unlevered operating risk of the notional company and the assumed notional
+level of gearing.
+
+The CAPM and the Harris-Pringle formula for de-levering and re-levering used by regulators typically relies on standard
+corporate finance theory ('Modigliani-Miller Theorem')69 that the cost of capital is invariant to gearing changes (absent
+frictions such as tax). It is important to note that this applies to a pure forward-looking cost of capital, rather than to
+the overall allowed rate of return applied to regulated assets in price controls, which will tend to include an allowance
+for embedded debt costs. In a pure forward-looking and CAPM-consistent WACC, the cost of debt reflects (a) the cost
+of new debt only; and (b) a debt premium (over the risk-free rate) which is entirely explained by the risk inherent in
+the debt beta.70
+
+In 2019, the UKRN published a report commissioned from CEPA on relevant considerations for setting debt beta. This
+set out four approaches which could be used to derive estimates (i.e. Direct, Indirect, Structural, Decompositional).71
+This report argued that no single approach should be either discounted entirely or relied on exclusively – and that the
+weight placed on each approach should vary based on the regulatory context and specific details of the estimation
+exercise. We consider that this report remains of ongoing relevance to estimators choosing a point estimate for debt
+beta. This guidance does not prescribe the use of a particular methodology for estimating the debt beta at this stage.
+
+
+
+69
+   Modigliani F., Miller M., 'The Cost of Capital, Corporation Finance, and the Theory of Investment', The American Economic
+Review, Volume XLVIII, 1958
+70
+   Other premia inherent in the debt premium are likely to include default risk (since the promised yield is greater than the
+expected yield) and a liquidity risk premium.
+71
+   CEPA, 'Considerations for UK regulators setting the value for debt beta', report for UKRN, Dec 2019
+
+
+                                                                                                                      Page 24 of 36
+                                    UK Regulators Network
+Estimating a notional equity beta range
+Based on the considerations above regulators should clearly state their equity beta range, at the notional gearing
+level, and should state the underlying debt beta and asset beta assumptions consistent with this range.
+
+Recommendation
+Recommendation 5: Regulators should estimate equity beta for the notional company using comparable listed
+companies and standard regression techniques (i.e. ordinary least squares (OLS)). Where the listed comparator has
+different gearing to the notional company, regulators should continue to de-lever and re-lever the raw equity beta.
+
+
+
+Deriving a CAPM cost of equity range and point estimate
+
+
+The CAPM parameters are forecasts which are subject to uncertainty. It is appropriate to reflect this uncertainty in the
+CAPM's output in the form of a CAPM cost of equity range, obtained using low and high case estimates for the RFR,
+TMR and beta. We propose that the starting assumption should be that the distribution of values in this range is
+broadly symmetric, and that the mid-point of range would therefore represent a suitable point estimate for the CAPM
+cost of equity (which would then feed into the allowed rate of return for the relevant price control, before considering
+cross-checks). While this may not be precisely right, there is unlikely to be a straightforward and objective way of
+picking a different point estimate. We address the issue of potential parameter asymmetry in the next section.
+
+Recommendation 6: The RFR, TMR and (re-levered) equity beta assumptions should be combined using the CAPM to
+produce a cost of equity range. The mid-point of the range should be used as the point estimate for the CAPM cost of
+equity.
+
+
+
+
+                                                                                                           Page 25 of 36
+                                      UK Regulators Network
+Cross-checks to the CAPM cost of equity
+The CAPM is a model of required returns; there is inherently some degree of parameter uncertainty. It is therefore
+important to sense check the resulting point estimate where there is evidence to do so. As available cross-checks
+themselves may be uncertain and reliant on assumptions, there should be a high evidential bar to deviating from the
+mid-point of the CAPM cost of equity range, derived using the recommendations in the previous sections.
+
+We focus our discussion on the allowed return on equity, as the cost of debt can be estimated more directly using
+market evidence and is generally considered to be subject to less uncertainty than the cost of equity. For instance, in
+the PR19 appeals the CMA used this as an argument for selecting its point estimate within the range for the cost of
+equity, with the cost of debt being based on a point estimate.72 We adopt the same approach in this guidance.
+
+Cross-checks: current approach
+There is uncertainty around the true level of the cost of equity for the notional company. To reflect this uncertainty,
+regulators typically derive a range for the overall cost of equity and/or its constituent parameters, and then pick a
+point estimate within the range. In the past, the choice of a point estimate has usually reflected judgement in the
+round, rather than an outcome of a specific analytical framework.
+
+Judgements have factored in considerations such as the view that a point estimate that is higher than a mid-point
+might minimise the perceived risk of under-investment and associated welfare costs. However, there is debate as to
+whether this approach delivers the best outcome for investors and customers in the long term, particularly where
+there are other mechanisms and protections in place that require and incentivise companies to meet their obligations.
+In recent determinations, the approach taken by regulators has been mixed. In water, Ofwat chose a mid-point for the
+cost of equity in PR19, whereas the CMA panel applied an uplift of 25bps to the mid-point cost of equity for the four
+companies which had appealed the PR19 determinations. In energy, Ofgem chose a point estimate of the cost of
+equity 25bps below the mid-point, which the CMA panel subsequently rejected on appeal.
+
+Main considerations in choosing a point estimate
+Recent decisions have variously considered the following issues, when choosing a point estimate within the CAPM cost
+of equity range.
+
+     1. Cross-checks from market evidence: Since the CAPM is just one model of expected returns, market
+        benchmarks (such as market valuations from public markets or transactions) provide a sense-check on the
+        CAPM point estimate when such market data are available. Despite judgement being required over their
+        interpretation, such cross checks are important given they are founded on market pricing data.
+     2. The welfare impact from under-investment. Views have been set out that given that the true required return
+        is not known, this could result in under-investment if the allowed return is set too low. It has been argued that
+        the consequences of misstatement are asymmetrical, with under-investment a worse outcome for customers
+        than over-remuneration.
+     3. Asymmetry in the package of incentives: The expected returns to capital providers depend not only on the
+        allowed rate of return but also on performance against a range of financial incentives in a price control. If the
+        overall distribution of returns is skewed such that the expected return on equity does not equal the base
+        return on equity, it has been argued it may be appropriate to adjust the base level of allowed return to
+        achieve this.
+
+
+72
+  The CMA focused on using median values on samples including a broad range of companies and considered that the backward-
+looking nature of the evidence did not merit creating ranges. See paras 9.632 -9.635 'Ofwat price determinations, final report'.
+
+
+                                                                                                                    Page 26 of 36
+                                      UK Regulators Network
+     4. Asymmetry in the choice of parameters: Ranges for the individual CAPM parameters rely on a degree of
+        judgement, and it has been argued that it might be inappropriate to assume that the mid-point of the CAPM
+        range is the most likely point estimate.
+     5. Financeability: Some regulators model the financial ratios of the regulated entity to assess the adequacy of
+        expected cash flows to service debt payments and to raise new finance on reasonable terms. It has been
+        argued that where modelled cashflow ratios are too low regulators should adjust the allowed return on equity
+        to remedy this.
+
+
+Different weight has been placed on the arguments above in recent decisions, depending on the circumstances of the
+relevant price control.
+
+Cross-checks: guidance
+It has periodically been suggested that regulators should choose a cost of equity point estimate above the midpoint of
+the CAPM range by default, in order to address issues 2 through 5 from the above list.
+
+As customers ultimately bear the cost of the allowed return, regulators agree there must be clear and convincing
+evidence to support that this is in their best interests where the cost of equity is set above a reasonable mid-point.
+Regulators agree that any decision to do so must be justified on a case-by-case basis by an assessment of the extent to
+which existing regulatory mechanisms can address these issues, or whether alternative new mechanisms could do so
+in a more targeted manner.
+
+Cross-checks from market evidence
+The CAPM is just one of the models of expected returns – even if it is the most frequently used by regulators and
+market practitioners. Where market evidence provides convincing evidence that the required return on equity is
+different to the CAPM point estimate, it is advisable to consider whether an adjustment to the CAPM derived cost of
+equity is appropriate. However, this would need careful judgement where the data is uncertain and difficult to
+interpret.
+
+The primary example of a market cross-check that is important in regulated sectors is the Market-to-Asset Ratio
+(MAR). Where the regulated business comprises a large part of the value of a listed entity, it is possible to compare
+the traded enterprise value to the regulated asset value and this can provide information about the returns investors
+are willing to accept. A MAR above 1 indicates the market is willing to pay a premium over the regulated asset value of
+the business. As the regulated asset value represents the discounted value of future cash flows, MAR premia could be
+indicative of expected outperformance against future price controls (including potential outperformance on the cost
+of capital). MARs can also sometimes be observed when there is a transaction involving a regulated entity, with the
+purchase price representing the current market value of the business.73
+
+The use of, and weight applied to, any cross-check requires careful judgement. For example there are a range of
+factors that could drive a MAR multiple above 1. Nonetheless, uncertainty from confounding factors can be addressed
+through presenting implied cost of equity results as ranged estimates. Regulators should consider MARs data over a
+suitably long period (e.g. several months) – or several transactions if focusing on unlisted equity - to gain assurance
+that conclusions are not overly influenced by transient volatility in share prices.
+
+While recognising the principle that equity bears more risk than debt and so should normally receive a higher return,
+regulators consider that using the historical excess premium of equity over debt as a cross-check to the allowed return
+on equity may be misleading. A regulatory cost of equity founded on a long-run average 'through-the-cycle' TMR will
+
+73
+  For instance, Pennon acquired Bristol Water in June 2021 at a premium to Regulatory Capital Value of 44% and National Grid
+acquired Western Power Distribution in March 2021 at a premium of approximately 60% to Regulated Asset Value.
+
+
+                                                                                                                  Page 27 of 36
+                                      UK Regulators Network
+reflect a wider set of historical risk premia than the premium priced into the current cost of new debt – therefore the
+comparison is not like-for-like. In addition, the difference between the determined cost of new debt and equity will be
+influenced by expectations of long-term inflation, which have changed over subsequent regulatory determinations.
+
+Multi-factor models (MFMs) have in recent regulatory consultations been proposed by companies and their
+consultants as another cross-check to the CAPM-derived cost of equity. Regulators consider that the predictions of
+these models should be interpreted with caution. Firstly, MFMs are extensions of the CAPM rather than representing a
+truly independent cross-check. Secondly, there are doubts around the out-of-sample predictive power of such models.
+For instance, size, which was included in the original Fama-French 3-Factor model has subsequently largely found to be
+empirically insignificant as a factor predicting returns.74 Thirdly, the models themselves are significantly more complex
+and less transparent than other approaches, meaning they can be burdensome to replicate and keep up-to-date. The
+taskforce does not consider the suggested MFM cross-checks to be appropriate for inclusion in this guidance, but are
+willing to consider this issue further if evidence suggests such models meet evidential, transparency and stability
+thresholds that would justify placing weight on their results.
+
+Welfare impacts from under-investment
+While any welfare impacts from under-investment are a valid concern, most regulatory frameworks have developed
+alternative ways of incentivising investment within the building blocks of a cost-based price control. These reduce or
+remove the need to explicitly uplift the allowed rate of return:
+
+     •   Statutory requirements: significant investment is driven by statutory requirements or official planning
+         exercises, as opposed to purely commercial motivations. Where statutory investment is included in business
+         plans, regulators typically allow for the recovery of these costs (subject to an appropriate efficiency challenge)
+         in the allowed expenditure profile. Failure by regulated companies to fulfil their statutory duties can result in
+         enforcement action and could ultimately result in them forfeiting control of the license to operate, which is a
+         powerful incentive against under-investment.
+     •   Service delivery incentives: regulators increasingly rely on service delivery incentives to reduce the risk of
+         under-investment (e.g. in general maintenance, asset health and in circumstances where spend is
+         discretionary). Such incentives may mitigate the risk of under-investment in existing infrastructure.
+     •   Separate treatment of large one-off projects: it may be possible to treat new investments separately from
+         existing assets within the price control, where the cost of capital is set by a market exercise. For example,
+         Ofgem has used a separate delivery approach for offshore investment (through the Offshore Transmission
+         Owner (OFTO) regime) and Ofwat is making use of direct procurement for customers (DPC) in which water
+         companies seek bids from third parties to design, finance, operate and build new infrastructure.
+     •   Pricing freedom for new investments when competing infrastructure and/or regulation of legacy services
+         constrains market power: For example, in recognising the scale of investment required for gigabit capable
+         networks and the scope for competing network build in many parts of the country, Ofcom has allowed
+         Openreach pricing freedom on most fibre broadband services, with anchor pricing (a safeguard cap) on the
+         entry-level superfast broadband service. This approach allows scope for returns above the cost of capital on
+         the new investment, in order to offset the risk that demand in future turns out to be insufficient to allow for
+         recovery of the upfront investment.
+
+There are also other features of the regulatory model which are favourable towards maintaining incentives to invest,
+such as the use of uncertainty and cost reconciliation mechanisms that provide remuneration for efficient investment.
+
+
+
+
+74
+   See e.g. S.Cho, 'The Size Premium and Macro Volatility Risks: Evidence from US and UK Equity Markets', 2019, which notes that
+'the US or UK SMB [small minus big] factor… has almost zero risk premium unconditionally
+
+
+                                                                                                                    Page 28 of 36
+                                       UK Regulators Network
+Choosing a non-central point estimate for consumer welfare reasons is therefore only likely to be relevant in very
+specific circumstances, in particular, where there is uncertainty around cost recovery of investment and a lack of
+alternative mechanisms to incentivise investment.
+
+Asymmetry in the package of incentives
+It has been argued that the cost of equity should be adjusted where the incentive regime leads to a downward skew in
+expected returns, suggesting that an efficiently-run company may not earn its cost of equity.75 For instance, penalty-
+only incentives imply a downward skew to returns as there is potential for downside risk without any prospect of
+offsetting upside risk.
+
+We recommend that analysis of asymmetry in the regulatory package should consider:
+
+     a) asymmetry of incentives in the overall package; and
+     b) the distribution of expected performance against which incentives are applied.
+
+Asymmetry in incentives (e.g. the payment rates for rewards or penalties) by itself is not necessarily sufficient to
+demonstrate a case for choosing a point estimate different to the mid-point of the CAPM cost of equity range. This is
+because a countervailing skew in expected performance outcomes can have the effect of offsetting the asymmetry,
+resulting in a neutral (or even positive) impact on the distribution of achieved returns. 76
+
+In any case, we consider that regulators could aim in the first instance to address any returns asymmetry 'at source'
+through recalibrating incentives and/or performance commitments in a given policy area, rather than aiming off the
+allowed return on equity.
+
+Asymmetry in the choice of parameters
+Where possible, we consider that any potential parameter asymmetry could be addressed in the choice of individual
+parameter ranges. While this document prescribes a more tightly defined methodology for some of the parameters,
+the final range will still be determined by each regulator. Especially for parameters such as the TMR and the beta,
+regulators, where possible, should aim to derive the low and high ends such that the range could be assumed to be
+broadly symmetric.77 If it is not possible to derive a symmetric range for the parameters, regulators should explain the
+reasons for the asymmetry and why the mid-point of the range is not appropriate.
+
+Financeability
+It has been common practice for regulators to test the cashflow adequacy of the regulatory settlement. 78 As part of
+this financeability assessment, regulators have typically modelled the cash flows of the notional company over the
+price control period to test whether key financial ratios (e.g. interest cover) would be consistent with a sufficiently
+strong credit rating. However, assessing financeability is a judgement in the round, and individual financial ratios are
+not mechanistically linked to credit ratings.
+
+While return on equity adjustments can improve certain financial ratios, it is not clear that cash flow shortfalls or the
+need to meet specified levels of financial ratios indicates a need to adjust the allowed return on equity. Debt financial
+ratios are heavily influenced by assumptions on historical debt costs and capital structure. There is no clear link
+between these assumptions and the forward-looking cost of equity. For this reason, alternatives to uplifting the
+
+
+
+
+75
+   This follows from the usual regulatory convention that the base return is the cost of capital for a notional company.
+76
+   This would be observed if (as seems plausible) companies respond to the financial incentives they are set, and are on balance
+more likely to outperform them, as opposed to underperforming.
+77
+   This may be a defensible interpretation given that asymmetry may be due to sampling issues rather than a true reflection of the
+underlying parameter distribution.
+78
+   With the exception of Ofcom.
+
+
+                                                                                                                     Page 29 of 36
+                                    UK Regulators Network
+allowed return on equity (e.g. assuming equity injections) are likely to be more suitable remedies for resolving
+financeability issues.
+
+Recommendation 7: Cross checks may be used to sense check the CAPM derived point estimate. However regulators
+should only deviate from the mid-point of the CAPM cost of equity range if there are strong reasons to do so.
+
+
+
+
+                                                                                                            Page 30 of 36
+                                      UK Regulators Network
+Cost of debt and notional gearing
+Cost of debt
+Unlike the cost of equity, the required return on debt is more easily observed. Setting an allowance for the cost of
+debt therefore lends itself more readily to benchmarking approaches.
+
+Cost of debt: current approach
+As discussed in the beta section above, the standard CAPM-WACC framework defines the cost of capital as a weighted
+average of the cost of equity and the cost of marginal (i.e. new) debt. This forward-looking cost of capital is the
+relevant figure for capital budgeting and investment appraisal.
+
+For the purposes of setting an allowed rate of return within a price control, most regulators allow for the recovery of
+costs from historically-incurred debt as well as the expected costs of raising new debt in the subsequent price control
+period. This largely reflects the regulators’ interpretation of their financing duty.79
+
+Rating agencies consider financial ratios based on the servicing of both existing and new borrowings, so an allowance
+based on new debt alone could work against the ability of companies to secure a strong investment grade rating.
+
+In most sectors, the focus is on market yields on long-term investment grade corporate debt, as this is the primary
+source of debt financing for most regulated companies. Regulators use a mix of corporate bond indices and actual
+costs incurred by the companies they regulate to benchmark the cost of debt.
+
+For historically-incurred debt, two estimation approaches are commonplace:
+
+     a) Balance sheet approaches: using debt instruments issued by regulated companies to inform the notional
+        benchmark, typically through company-level statistics (e.g. the sector median cost of debt).
+     b) Benchmark index approaches: using external market indices with broadly similar credit ratings to the notional
+        company to inform the allowance, typically via a multi-year trailing average.
+
+Under both approaches, regulators have tended to set a single allowance for an efficiently-financed company under
+their chosen notional financing assumptions, as opposed to allowing each company their actual costs. Sector-wide
+actual costs have, however, remained important at least as a cross-check to avoid setting an allowance that is unduly
+generous or harsh relative to companies' actual costs.
+
+The cost of new debt is typically benchmarked to a suitable corporate bond index, although this may also need to be
+cross-checked against available company data (e.g. on recent issuances).
+
+Other forms of financing and the use of derivatives
+Regulated companies use other forms of financing, not just bonds, depending on their financing strategy and risk
+appetite. Depending on their materiality within their sector, some weight has been given to these instruments in
+previous regulatory determinations.
+
+     •   Bank loans: Bilaterally-arranged borrowings which may have index-linked, floating or fixed-rate
+         characteristics. These instruments are not traded on public exchanges.
+     •   Short-term facilities: These facilities fulfil working capital or liquidity requirements. Such facilities may incur a
+         charge for both drawn down and non-drawn-down (capacity) elements as well as an arrangement fee.
+     •   Preference shares: These instruments combine elements of equity and debt financing, for instance discretion
+         over coupon payments.
+
+79
+  Ofcom does not have an explicit financing duty and does not model the balance sheet or cash flows of the regulated entity.
+However, in recent decisions, given the declining interest rate environment, Ofcom has also tended to set an allowance for the
+cost of debt which gave some weight to historical debt costs.
+
+
+                                                                                                                    Page 31 of 36
+                                       UK Regulators Network
+     •   Derivatives: Companies use such instruments to change the cash flows of debt instruments, for example, the
+         timing of coupon repayments and/or principal. Typically, regulators have not reflected these impacts in the
+         cost of debt allowance. This is primarily because the function of swaps is around treasury risk management
+         rather than financing investment; the allowed return is intended to compensate only the latter.
+Indexation
+Unlike historical debt, the cost of new debt is not known in advance and must be forecast. This raises the prospect of
+forecasting error, and either over- or under-recovery of efficient costs. To address this issue some regulators (e.g.
+Ofwat and Ofgem) have adopted indexation. This has allowed these regulators to mitigate forecast risk by using debt
+yield data much closer to the charging year in question to derive an allowance.80 This results in a cost of debt that
+tracks market movements more closely. Where it has judged that the level of its preferred index could be improved
+upon as a fit for the debt costs of the notional company, Ofwat has applied an adjustment to the benchmark index to
+improve its accuracy, although such an adjustment was not included in the CMA PR19 panel's redetermination.
+
+Cost of debt: guidance
+Given their significant control over the timing, tenor and nature of debt issued, regulated companies should be
+incentivised to strike a balance between minimising interest costs and managing risk.81 Regulators have a role in
+supporting this by adopting a consistent approach to remunerating debt costs over time, to minimise the potential for
+windfall gains and losses, however this does not mean that each company's costs should be precisely remunerated at
+any point in time. A company's actual debt costs may vary from the regulatory allowed return on debt depending on
+the company's past financing choices. The allowance should be based on the notional financial structure, to limit the
+ability of individual companies to 'pass through' their costs to customers without checking these costs are efficient and
+reasonable.
+
+This guidance recognises that the cost of debt is an area where it is reasonable for regulators to take different
+approaches, because the circumstances across the various sectors can be very different. For sectors with multiple
+regulated companies, an approach where the notional allowance is based on a benchmark drawn from sector average
+balance sheet costs and/or a benchmark index is likely to be reasonable in most circumstances. In sectors with one
+regulated company, it would also be reasonable to consider suitable benchmarks, potentially as cross-checks to
+provide assurance that actual debt has been prudently incurred.
+
+Regulators using an index to benchmark notional company costs should consider how aligned the index characteristics
+are with both accepted features of the notional company and evidence from actual sector issuance (which provides
+insight into the cost base of an efficiently-run notional company). An adjustment to the index may be appropriate
+where there is strong and consistent evidence that suggests the unadjusted index is likely to provide a poor proxy for
+the notional company's cost of debt. In making such an adjustment, regulators should clearly set out the evidence
+base informing their decision, and the size of adjustment made.
+
+UK economic regulators have not historically tended to make allowance for the cost of derivatives in the allowed
+return on debt, and this guidance supports a continuation of this policy. Derivatives are put in place for a variety of
+reasons, many of which relate to treasury management choices of particular companies that may not reflect the
+financial structure of the notional company - and so do not need to be included the notional allowance.
+
+Finally, where regulators require a real cost of debt input, they should carefully consider the inflation assumptions
+required to deflate nominal yields. This is because outturn inflation above or below the regulatory assumption has the
+potential to be a driver of return on equity to the extent that the notional company has nominal fixed-rate debt in its
+
+80
+   Ofgem's RIIO-2 approach uses benchmark index data from the year prior to the charging year to set the allowance for that year.
+Ofwat's PR19 approach uses an end-of-period reconciliation to set an allowance using benchmark index data for the charging
+years.
+81
+   For instance, refinancing risk, which can be exacerbated by widespread adoption of very short tenor issuance.
+
+
+                                                                                                                    Page 32 of 36
+                                    UK Regulators Network
+capital structure. Using medium term forecasts or a long-term assumption (e.g. the Bank of England inflation target) to
+deflate are both acceptable approaches. Recognising the value of predictability and stability when attracting finance
+that may span several control periods, regulators agree that early signalling and an evidence-based rationale will be
+necessary to manage the effects of a change of approach in this area.
+
+Recommendation 8: Regulators should estimate an allowance for an efficient company under the notional financial
+structure with actual debt costs suitably benchmarked against other market evidence.
+
+Notional gearing
+Consistent with the other parameters of the cost of capital, regulators estimate the notional gearing, using a range of
+evidence, with the notional gearing not necessarily equal to the actual gearing of the regulated company (or
+companies). This approach protects customers from bearing much of the risk of companies' actual financing decisions.
+While companies are usually free to deviate from the notional gearing, they do so at their own risk, because
+incremental costs due to adopting a financial structure different to the notional company are not passed through to
+customers. The level of notional gearing chosen represents the regulator's judgement on the level of gearing which is
+appropriate for an average, efficiently-run, company, given the characteristics of the price control.
+
+This guidance does not set a reasonable range for values which notional gearing should lie between, and regulators
+are agreed that this should reflect the particular circumstances of the sector in question. The following factors are
+relevant to regulators' decisions in this respect:
+
+    •   Notional company risk profile: Whether the level of gearing provides the notional company with a sufficiently
+        large equity buffer to absorb shocks, given its risk exposure in the market it operates in – including the extent
+        of protection (or exposure) under the regulatory framework. Higher risk is associated with lower gearing
+        levels.
+    •   Financial resilience: The notional gearing assumption determines the basis on which allowed returns are set
+        and underpins the financeability assessment (where this is relevant). As such, notional gearing has an
+        important signalling and incentive function and should be set in a way which is consistent with the regulator's
+        aims for sector-wide financial resilience.
+    •   Trends in actual gearing: While the intention is to set a notional level of gearing (and thus avoid being solely
+        reliant on the actual choices of the regulated company), the current and previous financing choices of the
+        companies in the sector may give an indication of what the companies themselves judge to be an efficient
+        capital structure, particularly where companies maintain a strong investment grade credit rating.
+    •   External benchmarks: A range of benchmarks could be considered, not just the gearing of the regulated
+        company in question. For example, the gearing of other firms in the sector (domestically or overseas) and/or
+        that of firms undertaking similar activities can all provide useful benchmarks.
+    •   Relationship with the allowed return: It may be important to sense check the combination of the notional
+        gearing, asset beta and debt assumptions, and the relative impact of gearing on the WACC.
+
+
+Where regulators decide to change the notional structure from one period to the next, it is reasonable that they
+consider whether the change is feasible for the notionally structured company, reflecting also the policy objectives of
+the sector in question.
+
+Recommendation 9: The notional gearing assumption should reflect the regulator’s assessment of the balance of risks
+facing the regulated company, a wide range of benchmarks on gearing levels and overall regulatory policy objectives,
+not just that of the actual company (or companies) in question.
+
+
+
+
+                                                                                                             Page 33 of 36
+                                      UK Regulators Network
+Annexes
+1. Building blocks approach to setting price controls
+
+
+Figure 4: Building blocks diagram
+
+
+
+
+The classic building block diagram of how price controls work and where the allowed return on capital fits in is set out
+above. In simple terms, the annual allowed revenues within a building blocks control have three main components:
+
+      •   An allowance for operating costs (sometimes referred to as fast money)
+      •   An allowance for depreciation of capital expenditure (sometimes referred to as slow money)
+      •   An allowance for profit: calculated as the average asset base (RAB, RAV, RCV) multiplied by the WACC
+
+In some price controls, there could be other components, for example, financial rewards or penalties associated with
+different incentive mechanisms and an allowance for tax.
+
+
+2. BEIS Economic Regulation paper Terms of Reference
+
+
+Below is an excerpt from the BEIS consultation on economic regulation, which sets out the terms of reference for the
+Cost of Capital Taskforce.82
+
+"In relation to the building blocks of the price control, it is the allowed return on the regulated assets which
+determines the base return for the regulated companies. This is typically set by reference to the Weighted Average
+Cost of Capital (WACC). While there are a number of similarities in how this assessment is made, in recent price
+
+
+
+82
+     BEIS, Economic Regulation Policy Paper', January 2022.
+
+
+
+                                                                                                            Page 34 of 36
+                                    UK Regulators Network
+controls, some differences remain with determining certain components of the Weighted Average Cost of Capital
+(WACC), such as the risk-free rate.
+
+The economic regulators are working together to consider where there may be scope to achieve greater consensus on
+the approach to setting the WACC, via a taskforce supported by the UK Regulators Network (UKRN). The CMA have
+also agreed to provide input to this work. We welcome the collaborative input and expertise of the sector regulators,
+the CMA, and the UKRN in tackling the common challenges in setting the WACC.
+
+The aim is to work towards greater consistency, and towards a common methodology, where appropriate, for the
+WACC when setting price controls. Ultimately, this will encourage greater confidence in the price control process
+across sectors for consumers, businesses, and investors, and in turn, to help encourage sustainable investment.
+
+Broadly, the requirements are to identify those areas:
+
+    •   where there is already close alignment of methodology on the cost of capital;
+    •   where there is scope for greater alignment.
+In doing so, the taskforce would be expected to consider:
+
+    •   both methodology and sources of data; and
+    •   the role of cross-checks and broader considerations which have a bearing on the determination of the allowed
+        return in price controls.
+It is not expected that the outcomes of this taskforce will result in complete alignment on all aspects of the cost of
+capital by all regulators, as there are key sectoral differences that will require bespoke approaches from regulators.
+
+The Government expects the regulators, via the UKRN taskforce, to work towards alignment where clear benefits can
+be identified. This would include, where appropriate, consistency in three areas with regards to calculation of the
+WACC:
+
+    •   Where common components of WACC methodologies are not influenced by sector-specific variables, there is
+        a strong case for alignment on methodologies, input data and, ultimately the output used in the WACC
+        calculation itself
+    •   Where sectoral circumstances, e.g. sector-specific financial data, often lead to justified variation in outputs but
+        where there may be greater scope for consistency in methodologies between sectors.
+    •   Where different sector regulators include components in their WACC methodologies that are not used in other
+        sectors, regulators could examine the case for greater alignment.
+This work has commenced and the relevant regulators will work towards publishing findings on price control
+methodology in 2022. The Government will support the regulators, the CMA and UKRN where appropriate, to act on
+the taskforce’s recommendations. Recognising the UKRN’s key enabling role, and the positive impact on consumers
+and investors of greater consistency and transparency across economic regulators, the proposed review of economic
+regulator duties will consider whether any changes to regulator’s duties could enhance cross-regulator collaboration."
+
+
+
+
+                                                                                                              Page 35 of 36
+                                            UK Regulators Network
+3. Risk-free rate time series
+
+
+Figure 5: Yields on index-linked gilts and selected regulatory decisions (RPI-real)
+
+
+
+
+Source: Bank of England Gilt data and UKRN analysis of published regulatory decisions.
+
+Note: All decisions as stated in RPI terms (or converted using an RPI-CPI(H) wedge of 90 basis points).
+
+
+
+
+                                                                                                          Page 36 of 36
+

@@ -1,0 +1,2011 @@
+WORKING PAPER SERIES
+
+
+
+
+Review of Key International
+Demand Elasticities for Major
+Industrializing Economies
+
+Hillard G. Huntington,
+James J. Barrios and
+Vipin Arora
+December 2017
+
+
+
+
+This paper is released to encourage discussion and critical comment. The analysis and conclusions expressed here
+are those of the authors and not necessarily those of the U.S. Energy Information Administration.
+
+
+
+
+Independent Statistics & Analysis                                           U.S. Energy Information Administration
+www.eia.gov                                                                                 Washington, DC 20585
+Contents
+Abstract ......................................................................................................................................................... 1
+1.     Motivation and Scope of the Study ....................................................................................................... 2
+2.     A Conceptual Discussion of Economic Factors Shaping Energy Use...................................................... 3
+     Stock-Utilization Framework ................................................................................................................... 3
+     Irreversible Price Effects .......................................................................................................................... 4
+     Substitute Fuels ....................................................................................................................................... 4
+     Adjustments to Long-Run Path ................................................................................................................ 5
+     Technical Progress ................................................................................................................................... 5
+     Growing Importance of Emerging Economies ......................................................................................... 5
+3.     Approaches for Estimating the Responses ............................................................................................ 6
+     Econometric Studies ................................................................................................................................ 6
+     Surveys, Meta Studies or Judgment ........................................................................................................ 7
+     Estimates for Existing Macroeconometric, Process and CGE Models ..................................................... 8
+4.     Liquid Fuel Consumption ....................................................................................................................... 8
+     Estimates by Type, Region and Sector ..................................................................................................... 8
+     Responses to Crude Oil Prices ............................................................................................................... 13
+     Gasoline ................................................................................................................................................. 13
+     Findings and Gaps .................................................................................................................................. 18
+5. Non-Liquid Fuel Consumption ................................................................................................................ 19
+     Natural Gas ............................................................................................................................................ 19
+     Electricity ............................................................................................................................................... 20
+     Aggregate Energy ................................................................................................................................... 21
+     Findings and Gaps .................................................................................................................................. 21
+4.     Estimates from Large Energy-Economy Models .................................................................................. 21
+5.     Economywide Impacts of Energy Price Movements ........................................................................... 23
+     Empirical Studies.................................................................................................................................... 23
+     Oxford Economics’ Global Economic Model.......................................................................................... 24
+     Research GDP Elasticities for the United States .................................................................................... 25
+     Research Findings and Gaps .................................................................................................................. 25
+6.     Conclusions and Next Research Steps ................................................................................................. 25
+     Liquid Fuels ............................................................................................................................................ 26
+     Non-Liquid Fuels and Power .................................................................................................................. 27
+     Macroeconomic Impacts ....................................................................................................................... 27
+     Gaps and Future Research ..................................................................................................................... 27
+5.    References ........................................................................................................................................... 29
+6.    Appendix A. Income and Price Elasticities by Country ........................................................................ 31
+7.    References for Reviewed Studies ........................................................................................................ 43
+Abstract
+This report conducts a selective review of various estimates for energy demand responses. It
+emphasizes recent empirical studies that include trends from studies published after 2000. Emphasis is
+placed on the five major emerging or transitional economies in Brazil, China, India, Mexico and Russia,
+although other important nations like Chile and South Korea are also discussed when studies are
+available. The review focuses attention on the long-run responses to changes in prices and income after
+capital stock turnover has been completed. The terminology often refers to elasticities, or the
+percentage change in energy use divided by the percentage change in price (or income), holding
+constant all other factors that could influence energy-use decisions. Most studies have focused upon
+household and transportation use of liquid fuels; many fewer studies have investigated fuels used by
+industry or commerce or for electric generation. Based upon the available estimates, price and income
+elasticities for liquid fuels are generally less than one (unity) for many countries and sectors, except for
+the long-run income effect for transportation purposes, which can range widely by country between
+0.24 and 1.75 while averaging 0.94 for all countries.
+
+This report was prepared for the U.S. Energy Information Administration by:
+
+Energy Modeling Forum
+
+475 Via Ortega
+
+Stanford University
+
+Stanford, CA 94305-4121
+
+
+
+
+                                                     1
+1. Motivation and Scope of the Study
+The U.S. Energy Information Administration provides annual projections of domestic energy markets
+through 2050 in its Annual Energy Outlook (AEO) and comparable assessments for international energy
+markets in its International Energy Outlook (IEO). These evaluations include cases that provide projected
+energy markets given different assumptions of macroeconomic growth, world oil prices, technological
+progress, and energy policies. Other offices within the U.S. Department of Energy often use the models
+or these projections in their efforts to evaluate the potential energy implications of introducing various
+policy and technology options in energy markets. For these reasons, it is important to understand and
+update key response parameters contained in these models as new information is processed. Insights
+gained from this information will assist in determining key parameters for specifying internal models of
+global energy markets as well as for understanding and interpreting simulation results for different
+scenarios.
+
+Among these parameters, specifying determinants of international energy demand behavior is often one
+of the most challenging. Determining how different sectors across international regions and countries
+respond to price and income changes plays a critical role in the energy demand projections for any
+particular scenario. Reliable and consistent data is usually difficult to obtain, particularly for economies
+that are still industrializing. Countries with rapidly growing industrializing economies, however, comprise
+an increasing important role in determining trends in global energy markets. Defined as countries
+currently outside of the Organization for Economic Co-operation and Development (OECD), these
+economies account for approximately 58% of world total primary energy consumption in 2015. The
+Reference case in the IEO 2016 calls for their energy demand to grow by 1.9% per year through 2040
+compared to 0.6% within the more industrialized OECD countries.
+
+This report conducts a selective review of various estimates for energy demand responses. It
+emphasizes recent empirical studies that include trends from studies published after 2000. Emphasis is
+placed on the five major emerging or transitional economies in Brazil, China, India, Mexico and Russia,
+although other important nations like Chile and South Korea are also discussed when studies are
+available. 1 The review focuses attention on the long-run responses to changes in prices and income
+after capital stock turnover has been completed. The terminology often refers to elasticities, or the
+percentage change in energy use divided by the percentage change in price (or income), holding
+constant all other factors that could influence energy-use decisions.
+
+Being selective, this document is not intended to be comprehensive in its treatment of the full literature
+on this heavily researched area. The purpose has been to integrate various research strands to provide
+an overview of what empirical economists consider to be the main findings related to energy demand
+responses within the developing world. It is hoped that this collection of studies will serve as a
+foundation for organizing other estimates that can be added.
+
+The next section provides a brief conceptual discussion of the economic factors that determine energy
+use. Section 3 discusses the various empirical approaches used by researchers to determine these
+
+
+1 Mexico became an OECD member in 1994 and South Korea in 1996, but they are included because their experiences appear
+
+relevant to fast-growing industrializing economies.
+
+                                                           2
+responses, often from historical data but also from surveys and existing models used by other groups.
+Section 4 summarizes responses for liquid fuel consumption (principally gasoline or fuel oil) by sector,
+while section 5 evaluates responses for the other major energy sources—natural gas and electricity.
+Shifting focus slightly, section 6 examines available macroeconomic responses indicating how the
+economy’s inflation-adjusted gross domestic product (real GDP) changes with energy price movements.
+Section 7 covers the few estimates available from large-scale, energy-economy models. Conclusions
+about how responsive energy demand is to price and income along with recommended next research
+steps are developed in the final section 8.
+
+2. A Conceptual Discussion of Economic Factors Shaping Energy
+   Use
+This section begins with a discussion of the stock-utilization framework that distinguishes between
+short- and long-run energy use decisions. Data constraints often prevent empirical researchers from
+relying solely upon this approach. The remaining subsections cover several key issues that arise in many
+empirical studies.
+
+Stock-Utilization Framework
+Energy use is a derived demand for meeting a range of energy-using services like space heating, mobility
+and production of products like steel or vehicles. For this reason, the purchase and use of energy-using
+equipment, buildings and other capital stock feature prominently in shaping energy demand trends. The
+gradual purchase of this equipment over time explains why long-run energy responses may differ starkly
+from their short-run counterparts.
+
+Economists have recognized two distinct and separate decisions about energy use: (1) the purchase of
+new equipment to replace old equipment or expand activities and (2) its utilization rate. This capital-
+stock-utilization framework (Fisher and Kaysen, 1962) explicitly represents the normal energy usage
+associated with specific energy-using technologies and equipment for a particular vintage or year when
+the equipment is purchased. Utilization rates may vary in the short run as income, price and other
+economic and demographic factors change. Energy use evolves over a longer period as new capital stock
+replaces older vintages. Equipment stocks and utilization are aggregated across individual technologies
+to reach the desired level of aggregation. Although these frameworks rank highly in terms of how they
+represent actual decisions, they require massive data on energy-using equipment and are not easy to
+estimate and maintain. These challenges often become overly burdensome when one wants to
+understand trends across many sectors for an entire economy like the United States.
+
+In a less data-intensive approach, practitioners frequently opt for a variation of the flow-adjustment
+model (Houtakker and Taylor, 1970) that incorporates the stocks of capital implicitly but that maintain
+the distinction between short- and long-run effects. This framework assumes that consumers have a
+long-run desired flow of energy consumption that they want to reach if all equipment could be turned
+over immediately. In the short run, they can adjust only partially to the difference between desired and
+actual flows. A popular version of this approach is the Koyck adjusted-lag specification where current
+energy consumption (Yt) is explained by current exogenous variables (Xt) like prices and income as well
+as the last period’s consumption level (Yt-1). Using this notation, the estimated equation becomes
+
+                                                    3
+                                        𝑌𝑌𝑡𝑡 = 𝑎𝑎0 + 𝑎𝑎1 𝑋𝑋𝑡𝑡 + 𝑎𝑎2 𝑌𝑌𝑡𝑡−1 ,
+
+where the a coefficients are estimated parameters. Short-run effects of each independent variable on
+energy consumption are revealed by the a1 coefficient, while long-run effects are determined by the
+ratio, a1/(1-a2). Adding additional lagged terms for the independent variable will change the long-run
+effects, although the dynamic pattern will be similar as actual consumption flows adjust gradually to the
+difference between desired and actual consumption flows.
+
+The independent variables (Xt) will differ from one empirical study to another depending upon the
+availability of data for each country. Most studies of industrializing economies surveyed in this paper
+include real (inflation-adjusted) prices of the fuel and real income or gross national product. When
+available or relevant, the equations may also include the real prices of other important substitute fuels,
+the unemployment rate, the interest rate, and occasionally a time trend.
+
+The equations are often estimated in natural logarithms, which means that changes in the variables can
+be interpreted as percent deviations. Thus, the short- and long-run effects discussed above will also
+equal elasticities, which are defined as the percent change in consumption (Δ%Y) divided by the percent
+change in price or income (Δ%X). Some studies estimate total fuel consumption as functions of total
+income (or GDP), while other studies estimate the equation where both variables are converted to per-
+capita terms. Below is further discussion of some key independent variables that conceptually could be
+included.
+
+Irreversible Price Effects
+There exists a voluminous literature (e.g., Dargay, 1992, Walker and Wirl, 1993, Dargay and Gately 1995,
+1997, 2010, Gately and Huntington, 2002, Huntington, 2010) on the irreversibility of the price impact on
+energy consumption. A number of studies have estimated an asymmetric response to price, where
+consumption increases with lower energy prices by much less than it decreased with higher prices in
+prior years. An important reason for this asymmetric response is that consumers cannot easily replace
+the more energy-efficient capital stock once energy prices begin to retreat from previous higher levels.
+This effect is most pronounced after energy prices reach their peak or maximum levels, which for many
+studies occurs in the period around 1980.
+
+Substitute Fuels
+It is very important to represent competition from other fuels and energy sources. Substitute fuel prices
+can be incorporated directly into either the stock-utilization or the flow-adjustment methods when the
+interest is in evaluating a single fuel. For example, purchasing new equipment often involves a decision
+not only about how much energy to use but also about which fuel to use. In these cases, fuel choice is a
+long-run decision that is tied to the specific equipment that is purchased. In other cases, the new
+equipment may be able to use more than one fuel depending upon how the equipment is used and
+which fuel is more competitive. For these applications, substitute fuel prices may affect both the short-
+and long-run decisions.
+
+
+
+
+                                                         4
+In other cases, analysts (e.g., Atkinson & Halvorsen (1976), Fuss, 1977, Pindyck 1979a, 1979b) have
+evaluated multiple fuels with a systems approach that evaluates the interfuel substitution opportunities.
+Systems approaches require specifications that are robust across all fuels and sectors if they are to
+provide reliable estimates of the opportunities to substitute between fuels. It is difficult to extend this
+approach to most industrializing economies due to data constraints.
+
+Adjustments to Long-Run Path
+Even when one cannot represent the capital stock explicitly, it is important to include the process by
+which energy consumers adjust to variations in long-run energy market and economic conditions. This
+issue requires one to consider the long-run relationship between energy use and variables like energy
+prices and economic activity, or what economists call a co-integrating relationship. This relationship may
+include a time trend in the long-run equilibrium condition if its inclusion is supported by the data.
+
+In the short run, energy use may depart from this long-run relationship because consumers have not yet
+adjusted their equipment completely to the new conditions. Current decisions are not yet in balance
+with long-run goals and consumers gradually react over time by moving towards the new long-run
+equilibrium. 2 This approach is particularly well suited for separating short-run responses and their
+longer-run counterparts that evolve as energy use gradually moves closer to its optimal long-run path.
+
+Technical Progress
+There has been active discussion about the best way to incorporate technical progress and related time-
+variant processes that govern energy use. There appears to be general agreement that engineering data
+is often the best way to incorporate this issue (Kouris, 1983a; Kouris, 1983b), but such data frequently
+fails to cover all of the important end uses. Although the limitations are widely recognized, many
+researchers argue that including a simple time trend is superior to ignoring this factor altogether
+(Beenstock and Willcocks, 1981, Beenstock and Willcocks, 1983). Hunt and Ninomiya (2003, 2005) and
+Hunt, Judge and Ninomiya (2003a, 2003b) offer an alternative approach that captures the exogenous
+underlying energy demand trend through a stochastic trend. This latter approach has featured
+prominently in a debate about whether technical progress is truly exogenous or whether it is induced by
+(particularly large) price shocks. See, for example, the individual papers by Gately and Huntington
+(2002), Griffin and Schulman, Huntington (2006), and Adeyami and Hunt (2007, 2014).
+
+Growing Importance of Emerging Economies
+Empirical studies on emerging and developing economies confront additional data constraints that can
+often be overcome to some extent in studies on the United States and other industrialized economies.
+The lack of relevant data often prevents analysts from exploring some important issues that are directly
+relevant to the rapidly growing emerging economies that are operating at a different stage of
+development with less mobility, urbanization and industrialization. Energy demand is often considered
+
+
+
+2 Econometricians refer to this adjustment as an error-correction process, where short-run decisions eventually lead back to the
+
+desired long-term goals.
+
+                                                               5
+more responsive to economic growth and less responsive to fuel prices than its counterpart within the
+developed world.
+
+3. Approaches for Estimating the Responses
+This survey focuses upon estimates of the response of energy consumption by major fuel type to
+changes in energy-market conditions (e.g., energy prices) and to economic environments (e.g., per-
+capita gross national product or disposable income). While the term “consumption” will be reserved for
+the energy use variable itself, the designation “demand” will cover a wider concept that includes the
+relationship between consumption and its major determinants like energy prices, technical progress,
+and real GDP (or real income). These responses are summarized by elasticities that measure the percent
+change in consumption divided by the percent change in either price or real income (real GDP).
+Reported price elasticity estimates hold constant other important factors like per-capita income,
+socioeconomic traits or other conditions that are unrelated to energy prices. Reported income
+elasticities are similar in that they hold constant other factors unrelated to income (or GDP) including
+energy prices.
+
+Parameters describing energy demand behavior can be drawn from a range of different sources:
+econometric studies of past behavior, surveys or meta-analysis studies of multiple studies, or existing
+large-scale energy or energy-economy models.
+
+Econometric Studies 3
+Empirical estimates representing energy demand behavior are derived primarily from econometric
+studies of past energy demand trends. These studies explain energy consumption levels (or sometimes
+their changes over time) and their relationship to such factors as economic growth or service activity,
+energy prices, demographic trends, and technical progress. Projections based upon these estimates will
+assume that energy demand behavior—the relationship between energy use and prices (or income)—
+will be similar to the past. Future energy consumption trends may vary from past trends, however,
+because future energy market prices, demographic drivers and economic activity may shift.
+Relationships are expressed as linear or linear in logarithms, although polynomial functions are
+sometimes used as well.
+
+Econometric studies seek to reduce the estimation error, the variation that is left unexplained after
+independent variables have been included. 4 Standard econometric practice will adjust the estimation
+procedure to remove any relationship between the current error and past ones (autocorrelation) or to
+make the error term have similar variances over all observations (homoscedasticity).
+
+A potential bias in the estimated response may exist if one or more of the independent variables used to
+explain energy use is not exogenous. The most common culprit is the price of energy, which may be
+
+
+3 This section is an informal discussion of the basic econometric approach. Interested readers should consult other sources if
+
+they want a more technical and precise explanation.
+4 Technically, the estimates minimize the sum of all squared differences between the observed and explained values. The
+
+difference or error associated with any one observation can be either positive or negative. Squaring the errors before their
+summation means that both positive and negative errors contribute to how well the estimate fits the data.
+
+                                                                6
+determined endogenously by the same factors explaining energy consumption. Certain circumstances
+could lead to a situation where the estimated response to price is too low and below its true value. The
+demand for oil or gasoline within the United States may be one example, because changes in U.S.
+consumption represent a large share of world oil market activity. This problem will tend to be less
+serious when prices can be viewed as unresponsive to the market quantity, as might be the case for a
+single developing country whose consumption does not dominate global markets. It may also be less of
+a problem if the demand relationship is relatively stable, while the oil supply relationship fluctuates
+greatly due to OPEC producers. If the researcher considers this bias to be important, s/he will usually
+adopt an estimation procedure that uses two-stage least squares or an instrumental variable to
+represent the exogenous component of the price variable. 5
+
+Cross-section analysis of multiple regions for a given year provides estimates of the long-run response to
+changes in prices and income. This approach estimates a price and an income response that applies to
+all regions. It assumes that a region has had sufficient time to adjust to the new price and income
+conditions.
+
+Time-series analysis of a single region (including vector autocorrelation regression (VAR) and Bayesian
+methods) allows one to derive short-term responses to key variable changes. This approach often uses
+lagged values of the dependent (and sometimes independent) variables to provide a more dynamic
+response that includes both short and long-run effects. When prices in the region do not vary much over
+time, the estimated response may not be very robust because it covers only a very small price range.
+
+Many recent studies use panel data techniques combining cross section with time series. The data
+covers a time series for each nation or state within a country. Estimated responses are often similar
+across the different nations, but techniques do exist that allow for heterogeneous responses across
+nations. When they include lagged values of the dependent (and sometimes independent) variables,
+these systems allow both short- and long-run responses to be estimated. There are several reasons why
+this approach has become more popular. First, more regions are becoming covered by published data.
+And second, researchers often believe that their estimates are more robust because more varied
+conditions can be accommodated by allowing data to vary by both regions and time.
+
+Surveys, Meta Studies or Judgment
+Other efforts try to assign values for energy consumer responses by reviewing multiple studies that have
+been done by individual researchers. They can be comprehensive surveys covering the range and
+representative values (means or medians) of price and income elasticities. A limitation of the survey
+approach is that each study is done by applying different assumptions and methodologies that make it
+difficult to compare them appropriately. Meta-analysis studies try to circumvent this problem by
+estimating the responses found in different studies, after controlling for key differences in their
+
+
+5 A more recent technique for deriving short-term responses involves structural vector autoregressive (SVAR) estimates where
+
+the signs of the error terms are restricted to be consistent with economic theory. This approach is not discussed here because it
+requires short-run data that is often not available for countries outside the OECD members. Moreover, the approach estimates
+the response to surprise events that are unexpected rather than to long-term evolutionary changes often associated with
+energy outlooks extending a decade or longer.
+
+                                                                7
+methodologies. They can be valuable if the researchers have successfully used all of the correct criteria
+to explain differences in the responses. Otherwise, they can be quite misleading. In both surveys and
+meta-analysis studies, judgment is often a key ingredient in any effort to be representative, because the
+literature often includes a few estimates that appear to be “outliers”.
+
+Estimates for Existing Macroeconometric, Process and CGE Models
+Although all large-scale, energy-economy models allow energy consumption to vary with energy prices
+and real GDP, it is difficult to summarize these responses. First, they include many elasticity estimates
+that cover responses for different fuels, sectors and regions. And second, model documentation tends
+to emphasize the best way to use the system or the framework’s structure rather than individual
+response parameters. Section 6 includes a brief summary of several responses from some larger energy
+models.
+
+4. Liquid Fuel Consumption
+Estimates by Type, Region and Sector
+The articles reviewed to date provided 258 different demand estimates. 6 There are fewer studies in this
+sample because each study often included both price and income responses, as well as more than one
+specification or region. Table 1 emphasizes that the estimates focus principally upon explaining the
+consumption of gasoline (178), electricity (30), crude oil (25), and natural gas (16). About 69% of the
+estimates refer to gasoline, and 74% cover four countries: Brazil, China, India and Mexico.
+
+Table 1. Number of Estimates by Fuel Use
+                                                                                 Energy              Natural
+ Country/Region                Crude Oil      Diesel      Electricity      Composite      Gasoline        Gas   Total
+ Brazil                                                     1                              49         7         57
+ China                          13             2            9                              22         8         54
+ East Asia                                                                                  2                   2
+ India                          1              1            10                             25                   37
+ Iran                                                                                      12                   12
+ Mexico                                                     10               4             30                   44
+ Middle East                    1                                                           4                   5
+ Nigeria                                       2                                            2                   4
+ Non-OECD Global                10                                                                    1         11
+ Composite
+ Russia                                                                                     6                   6
+ Saudi Arabia                                                                              12                   12
+ South Africa                                                                               2                   2
+ United Emirates                                                                            4                   4
+ Venezuela                                                                                  8                   8
+
+
+6 Summaries and references for the surveyed studies are presented in Appendix B.
+
+
+
+                                                             8
+ Total                      25           5           30             4            178         16        258
+
+
+
+This information is also provided graphically in Figure 1.
+
+Figure 1. Number of Estimates by Region and Fuel
+  number of estimates
+   60
+                                                                                        Crude Oil
+  50                                                                                    Diesel
+                                                                                        Electricity
+  40                                                                                    Energy Composite
+  30                                                                                    Gasoline
+                                                                                        Natural Gas
+  20
+
+  10
+
+   0
+
+
+
+
+These estimates are based upon a very wide range of econometric specifications ranging from ordinary
+least squares to several estimated with two-stage-least squares. The auto-regressive distributed lag
+model appears to be a popular approach for deriving both short- and long-run responses. Table 2
+displays the adopted procedure by year of publication. In addition, the studies use different data
+sources from both national accounts and special household surveys. The combined effect of both
+different methodologies and data sources contributes importantly to the very wide range of results by
+study. It is unlikely that much of the variation across studies is primarily due to country differences
+alone.
+
+They are nearly equally divided between income and own-price responses, as revealed by Table 3 and
+between short- and long-term responses, as shown by Table 4. Again, this information is provided
+graphically in Figure 2 for elasticity type (price or income) and in Figure 3 for time horizon (short or long
+run). Most price responses refer to own-price effects (e.g., the effect of gasoline prices on its own
+consumption) rather than cross-price effects (e.g., the effect of other energy prices for fuels that can be
+substituted for gasoline consumption). Most estimates are based upon annual data that is more readily
+available for these countries. Thus, short-run effects can be considered as adjustments that occur within
+the same year while long-run effects cover a longer period that can reach at least 10 years. The latter
+may be quite useful for evaluating the longer-run properties of the AEO projections.
+
+
+
+
+                                                      9
+Table 2. Number of Estimates by Technique and Publication Year
+Row Labels                           1984   1994   1996   1997   1998   1999   2003    2004     2005   2006   2008   2009   2010   2011   2012   2013   2014   2015   2016   Total
+2SLS Regression                                                                                                       6                                                       6
+ANCOVA-EC                                                                                                                                                              4      4
+Auto Regressive Distributed Lag                                                                                2     50                                                       52
+CGE                                                                                                                          1                                         4      5
+Cointegration error correction                                           4      2          4                   4                                                2      4      20
+Dynamic OLS                                                                                                                         2             6                           8
+Fixed Effect OLS Non-Spatial                                                                                                               1                                  1
+Fixed Effect OLS Spatial Error                                                                                                             2                                  2
+Fixed Effect OLS Spatial Lag                                                                                                               2                                  2
+Fixed Effect OLS Non-Spatial                                                                                                               1                                  1
+Fully Modified OLS                                                                                                                                6                           6
+GARCH                                               2                                                                                                                         2
+Linear Fixed Effects                                                                                                  2                                                       2
+Linear Intersectal                                                       2                                                                                                    2
+Log Dynamic OLS                                                                                                                                         20                    20
+Log- multi-var reg                    8      2            20                    5                4      2      8             6             2             4             5      66
+multi-var reg                                                     4                        6                                                      4                    3      17
+Non-Linear Fixed Effects                                                                                              6                                                       6
+PCA Regression                                                                                                                                                         2      2
+Pooled OLS Lag                                                                                                                                                         1      1
+Pooled OLS Non-Spatial                                                                                                                     2                                  2
+Pooled OLS Spatial Error                                                                                                                   2                                  2
+Pooled OLS Spatial Lag                                                                                                                     2                                  2
+Random Effect OLS Non-Spatial                                                                                                              2                                  2
+Random Effect OLS Spatial Error                                                                                                            2                                  2
+Random Effect OLS Spatial Error ML                                                                                                         1                                  1
+Random Effect OLS Spatial Lag                                                                                                              3                                  3
+Random Effect OLS Spatial                                                                                                                  2                                  2
+Trans-log                                                                                                            13                                                       13
+Time Series                                                                                                                                                            4      4
+                  Total               8      2      2     20      4      6      7          10    4      2     14     77      7      2     24     16     24      2     27     258
+
+
+                                                                                      10
+Table 3. Number of Estimates by Country and Elasticity Type
+ Country/Region                    Cross-Price        Income          Own-Price                Total
+ Brazil                               6               26                25                57
+ China                                                24                30                54
+ East Asia                                            1                  1                 2
+ India                                                17                20                37
+ Iran                                                 6                  6                12
+ Mexico                                               19                25                44
+ Middle East                                          4                  1                 5
+ Nigeria                                              2                  2                 4
+ Non-OECD Global Composite                            6                  5                11
+ Russia                                               2                  4                 6
+ Saudi Arabia                                         8                  4                12
+ South Africa                                         1                  1                 2
+ United Emirates                                      4                                    4
+ Venezuela                                            4                  4                 8
+ Total                                6               124               128               258
+
+
+
+
+Table 4. Number of Estimates by Country and Time Horizon
+ Country/Region                           Long-Term         Short-Term                 Total
+ Brazil                                    22                   35                57
+ China                                     26                   28                54
+ East Asia                                  2                                     2
+ India                                     16                   21                37
+ Iran                                       8                   4                 12
+ Mexico                                    23                   21                44
+ Middle East                                5                                     5
+ Nigeria                                    4                                     4
+ Non-OECD Global Composite                 11                                     11
+ Russia                                     1                   5                 6
+ Saudi Arabia                               8                   4                 12
+ South Africa                               2                                     2
+ United Emirates                            4                                     4
+ Venezuela                                  4                   4                 8
+ Total                                     136                  122               258
+
+
+
+
+                                                           11
+Figure 2. Number of Estimates by Region and Elasticity Type
+ number of estimates
+ 35
+                                                              Cross-Price
+ 30
+                                                              Income
+ 25
+                                                              Own-Price
+ 20
+
+ 15
+
+ 10
+
+  5
+
+  0
+
+
+
+
+Figure 3. Number of Estimates by Region and Time Horizon
+ number of estimates
+ 40
+                                                                   Long-Term
+ 35
+                                                                   Short-Term
+ 30
+ 25
+ 20
+ 15
+ 10
+  5
+  0
+
+
+
+
+                                                      12
+Responses to Crude Oil Prices
+Table 5 reports the average income and price elasticities by country and sector for liquid energy
+products when prices are measured at the crude oil level. For reasons discussed below, these estimates
+are often smaller than those based upon refined product prices, which will be discussed in the next
+section. Long-run effects are shown at the top while short-run effects are covered at the bottom.
+
+Each of the first four columns displays results for an end-use sector. This information may be useful
+when one is primarily interested in the response for a particular end use. The last column displays the
+average response without regard to which end-use is covered. It summarizes the simple average
+responses within any country computed from all studies. This is a useful metric when one is primarily
+interested in the average response across all studies. This result is not weighted by the consumption
+shares for each sector shown in the first four leftward columns.
+
+The average long-run income response is 0.50 for all estimates, while the short-run response is only
+slightly lower at 0.39. The average long-run price response is -0.15, while its short-run counterpart is
+about half at -0.07. Variations by country are very large. Long-run income responses range from 0.42 for
+all Non-OECD countries combined to 0.66 in China. Long-run price responses appear very small for China
+(-0.01) but can be about -0.25 in the Middle East and -0.26 for all Non-OECD countries combined.
+
+Gasoline
+The survey has a much richer set of estimates for gasoline than for other liquid fuels. Table 6
+summarizes the long- and short-run responses by sector and country in the same format as Table 5.
+Results are few and unreliable for gasoline use outside households and commercial entities that are
+classified in the industrial sector. Those for the transportation sector are similar to those for all
+estimates (the last column) because most gasoline studies focus upon household and commercial use in
+the transportation sector. When averaged across all nations, the long-run income elasticity for the
+transportation sector (second column) averages 0.94 and the long-run price elasticity averages -0.61.
+Short-run averages for these two responses are smaller than their longer-run counterparts: 0.64 for the
+income effect and -0.33 for the price response.
+
+The price elasticities are substantially larger (more negative) in Table 6 than in the previous Table 5.
+Percent price changes appear in the denominator of the elasticity measure. If refinery costs and taxes do
+not change, a ten percent increase in crude oil prices will result in a smaller percent increase in end-use
+prices for gasoline. With a smaller denominator, the measured price elasticity should be higher when
+prices are measured at the refined product level than at the crude oil level.
+
+Although averages are a useful metric for summarizing the aggregate results, there exists a very wide
+range in the country-by-country estimates for gasoline use within the transportation sector. Figures 4
+and 5 amply demonstrate the broad range in short-run and long-run price elasticities across different
+countries and regions. 7 Short-run responses range from -0.05 (Venezuela) to -0.77 (Russia) and long-run
+price responses range from -0.06 (Nigeria) to -1.03 (Brazil). Countries relatively rich with oil resources
+(e.g., Iran, Nigeria, Saudi Arabia and Venezuela) often have relatively small own-price elasticities that are
+
+7 Appendix A provides more results on price and income responses by country, relating them to such factors as the GDP level
+
+and gasoline price level.
+
+
+                                                              13
+-0.10 or smaller (closer to zero). Households in these countries purchase fuels under administered
+rather than market prices, a situation where governments apply very large subsidies to prevent prices
+from increasing when supplies are tight. All consumers may not have readily available access to energy.
+As a result, these estimates may not adequately represent the true consumer demand response for
+changes in energy prices. Meanwhile, the higher Brazilian response is expected, because gasoline faces
+considerable competitive pressure from a vigorous substitute fuel program instituted by the
+government over the last several decades.
+
+Table 5. Average Crude Oil Elasticity by Region and Sector
+                                                                       Power
+ Type/Region                                    Industrial             Sector      Residential   Transportation      All Estimatesa
+ Long-Term
+       Income                                  0.49                                   0.54           0.49                 0.50
+              China                                                                                  0.66                 0.66
+              Non-OECD Global                  0.49                                   0.54           0.23                 0.42
+              Composite
+       Own-Price                              -0.33                -0.25             -0.30           -0.03               -0.15
+              China                                                -0.25                             0.07                -0.01
+              Middle East                                                                            -0.25               -0.25
+              Non-OECD Global                 -0.33                                  -0.30           -0.12               -0.26
+              Composite
+ Short-Term
+       Income                                                                                        0.39                 0.39
+              China                                                                                  0.39                 0.39
+       Own-Price                                                                                     -0.07               -0.07
+              China                                                                                  0.05                 0.05
+              India                                                                                  -0.41               -0.41
+
+
+a This column reports the average response for a country or region from all studies regardless of end-use sector. It is not an
+
+average of the sectoral estimates in the leftward columns, nor is it a consumption-weighted average of these sectoral
+estimates. The metric reported in this column serves as a useful aggregate indicator of the responses derived from all of the
+studies.
+
+
+
+Table 6. Average Gasoline Elasticity by Region and Sector
+ Type/Region                                                 Industrial         Transportation    All Estimatesa
+ Long-Term
+ Cross-Price                                                                       0.03              0.03
+      Brazil                                                                       0.03              0.03
+ Income                                                2.10                        0.94              0.99
+     Brazil                                            2.10                        0.83              1.15
+     China                                                                         0.84              0.84
+     East Asia                                                                     0.55              0.55
+
+
+
+                                                                  14
+Type/Region             Industrial   Transportation   All Estimatesa
+   India                                1.53            1.53
+   Iran                                 1.75            1.75
+    Mexico                              1.14            1.14
+   Middle East                          0.79            0.79
+   Nigeria                              0.75            0.75
+   Russia                               0.24            0.24
+   Saudi Arabia                         0.50            0.50
+   South Africa                         0.36            0.36
+   United Emirates                      0.43            0.43
+   Venezuela                            1.20            1.20
+Own-Price            -0.12              -0.61           -0.58
+   Brazil            -0.12              -1.03           -0.80
+   China                                -0.91           -0.91
+   East Asia                            -0.41           -0.41
+   India                                -0.40           -0.40
+   Iran                                 -0.73           -0.73
+   Mexico                               -0.46           -0.46
+   Nigeria                              -0.06           -0.06
+   Saudi Arabia                         -0.20           -0.20
+   South Africa                         -0.47           -0.47
+   Venezuela                            -0.26           -0.26
+Short-Term
+Cross-Price                             0.61            0.50
+   Brazil                               0.61            0.50
+Income               1.13               0.64            0.66
+   Brazil                               0.44            0.44
+   China                                1.80            1.80
+   India             1.13               0.82            0.91
+   Iran                                 0.08            0.08
+   Mexico                               0.41            0.41
+   Russia                               0.22            0.22
+   Saudi Arabia                         0.52            0.52
+   Venezuela                            0.21            0.21
+Own-Price            -0.50              -0.33           -0.34
+   Brazil                               -0.48           -0.48
+   China                                -0.37           -0.37
+   India                                -0.20           -0.20
+   Iran                                 -0.10           -0.10
+   Mexico                               -0.22           -0.22
+   Russia            -0.50              -0.77           -0.70
+
+
+
+                             15
+    Type/Region                                           Industrial      Transportation         All Estimatesa
+      Saudi Arabia                                                           -0.08                 -0.08
+      Venezuela                                                              -0.05                 -0.05
+
+
+a
+ This column reports the average response for a country or region from all studies regardless of end-use sector. It is not an
+average of the sectoral estimates in the leftward columns, nor is it a consumption-weighted average of these sectoral
+estimates. The metric reported in this column serves as a useful aggregate indicator of the responses derived from all of the
+studies.
+
+
+
+Figure 4. Average Short-Run Price Elasticities by Region for Gasoline
+
+
+
+     0.00
+    -0.20
+    -0.40
+    -0.60
+    -0.80
+    -1.00
+
+
+
+Figure 5. Average Long-Run Price Elasticities by Region for Gasoline
+
+
+
+
+     0.00
+
+    -0.20
+
+    -0.40
+
+    -0.60
+
+    -0.80
+
+    -1.00
+
+    -1.20
+
+
+Figure 6 and 7 underscore the variability in the income responses by country for gasoline use in the
+transportation sector. Short-run income responses range from 0.08 (Iran) to 1.80 (China), while long-run
+income responses vary between 0.24 (Russia) and 1.92 (India). The results for India and China emphasize
+the rapid, energy-intensive growth in many Asian economies. Some oil-rich nations have relatively small
+income elasticities at the moment, but these conditions could shift if these economies become much
+more diversified in future decades. In addition, subsidies and government allocation, rather than income
+levels alone, may determine liquid fuel consumption in these countries.
+
+
+
+                                                               16
+Figure 6. Average Short-Run Income Elasticities by Region and Sector (Liquid Energy Products)
+ 2.00
+ 1.80
+ 1.60
+ 1.40
+ 1.20
+ 1.00
+ 0.80
+ 0.60
+ 0.40
+ 0.20
+ 0.00
+
+
+
+
+Figure 7. Average Long-Run Income Elasticities by Region and Sector (Liquid Energy Products)
+ 2.00
+ 1.80
+ 1.60
+ 1.40
+ 1.20
+ 1.00
+ 0.80
+ 0.60
+ 0.40
+ 0.20
+ 0.00
+
+
+
+
+The estimates provide little information about substitution between fuels. This conclusion applies not
+only to the gasoline results but also to the other estimates in this survey. This gap is unfortunate
+because many of the interesting policy analysis issues will be focusing on the degree to which natural
+gas and electricity can replace liquid fuels in the transportation sector. The substitute fuel for the cross-
+price effects shown for Brazil in Table 6 is alcohol.
+
+
+
+
+                                                       17
+Estimates for diesel fuel are rarer. Table 7 reports a long-run own-price elasticity equal to -0.80 in China
+and a short-run own-price elasticity of -0.41 for India. The Chinese results are classified as residential
+because the data source was a household survey.
+
+ Table 7. Average Diesel Elasticity by Region and Sector
+ Type/Region                                              Residential       Transportation          All Estimatesa
+ Long-Term
+ Income                                                                         -0.10                  -0.10
+      Nigeria                                                                   -0.10                  -0.10
+ Own-Price                                              -0.80                   0.10                   -0.50
+      China                                             -0.80                                          -0.80
+      Nigeria                                                                   0.10                   0.10
+ Short-Term
+ Own-Price                                                                      -0.41                  -0.41
+      India                                                                     -0.41                  -0.41
+a This column reports the average response for a country or region from all studies regardless of end-use sector. It is not an
+
+average of the sectoral estimates in the leftward columns, nor is it a consumption-weighted average of these sectoral
+estimates. The metric reported in this column serves as a useful aggregate indicator of the responses derived from all of the
+studies.
+
+Findings and Gaps
+The major conclusion from the gasoline results suggests that gasoline consumption is both price and
+income inelastic (absolute value <1) in the short as well as long run. When averaged across all nations,
+the long-run income elasticity for the transportation sector averages near unity at 0.94 and the long-run
+price elasticity averages -0.61. Short-run averages for these two responses are smaller than their longer-
+run counterparts: 0.64 for the income effect and -0.33 for the price response. 8 The longer-run response
+to price incorporating equipment adjustments appears to be about twice as large as the near term
+effect. There is also a tendency for price responses to be considerably lower in the major oil-exporting
+countries than elsewhere. As the developing world matures and vehicle ownership begins to saturate,
+one should expect lower income responses over time.
+
+Most empirical estimates cover liquid fuels with a heavy emphasis on gasoline consumption. Coverage
+for petroleum product consumption by industry and for electric generation is much sparser and hence
+more uncertain. The other major omission is the very limited results for vehicles powered by natural gas,
+ethanol and electric power, as well as those that are dual fueled.
+
+A promising area for future research will be to expand the analysis to incorporate inter-fuel substitution
+opportunities for electricity, natural gas, and biofuels as replacements for gasoline or diesel. There is
+also a need for more evaluation of countries at different stages of development in order to understand
+the complex role of vehicle penetration in shaping future transportation fuel demands. As available data
+
+
+
+
+8 At the crude oil level, this short-run response could be about -0.15 if half of the gasoline price covers refinery costs and taxes
+
+and these non-crude costs do not change.
+
+
+                                                                 18
+covers more industrializing countries over longer durations, pooled samples will provide the basis for
+evaluating these types of issues.
+
+5. Non-Liquid Fuel Consumption
+Outside of liquid fuels, most studies have focused upon natural gas and electricity. There has been very
+limited investigation of coal use.
+
+Natural Gas
+Table 8 summarizes the long-run and short-run responses for natural gas demand by sector and country.
+The last column summarizes the simple average responses within any country computed from all
+studies. This response is not weighted by the consumption shares for each sector shown to the left.
+Averaged across all nations, the long-run income elasticity was 0.89 while its long-run own-price
+counterpart was -1.36. Both responses appear quite strong, although they are based upon fewer
+estimates than those for liquid fuels evaluated above. A surprising finding was the very strong price and
+income responses within the residential sector, relative to those within the power sector. Short-run
+responses to both price and income appear to be much more modest.
+
+Table 8. Avg. Natural Gas Elasticity by Region and Sector
+    Type/Region                                               Power Sector          Residential         All Estimatesa
+    Long-Term
+      Cross-Price                                                                          2.16                   2.16
+        Brazil                                                                             2.16                   2.16
+      Income                                                            1.00               0.85                   0.89
+        Brazil                                                                             0.66                   0.66
+        China                                                           1.00               1.23                   1.12
+      Own-Price                                                        -0.25              -1.59                  -1.36
+        Brazil                                                                            -1.03                  -1.03
+        China                                                          -0.25              -1.88                  -1.48
+        Non-OECD Global Composite                                                         -1.25                  -1.25
+    Short-Term
+      Cross-Price                                                                         -0.01                  -0.01
+        Brazil                                                                            -0.01                  -0.01
+      Income                                                                               0.11                   0.11
+        Brazil                                                                             0.11                   0.11
+      Own-Price                                                                           -0.23                  -0.23
+        Brazil                                                                            -0.02                  -0.02
+        China                                                                             -0.33                  -0.33
+a
+ This column reports the average response for a country or region from all studies regardless of end-use sector. It is not an
+average of the sectoral estimates in the leftward columns, nor is it a consumption-weighted average of these sectoral
+estimates. The metric reported in this column serves as a useful aggregate indicator of the responses derived from all of the
+studies.
+
+The natural gas responses need to be interpreted carefully. Natural gas use in many industrializing
+countries is probably more constrained by infrastructure and pipeline availability rather than by price
+
+                                                               19
+and interfuel competition issues. Strong income elasticities in some countries may reflect decisions by
+the national government to expand pipelines rather than by end-use natural gas consumers. Additional
+studies on the fuel would be quite valuable.
+
+Electricity
+Table 9 summarizes the long- and short-run responses for electricity demand by sector and country. The
+last column summarizes the simple average responses within any country computed from all studies
+without regard to which sector was analyzed. This response is not weighted by the consumption shares
+for each sector shown to the left.
+
+Table 9. Avg. Electricity Elasticity by Region and Sector
+    Type/Region                                Industrial           Residential          Totala
+    Long-Term
+      Income                                     0.76                  0.53               0.59
+        Brazil                                                         0.48               0.48
+        India                                                          0.62               0.62
+        Mexico                                   0.76                  0.28               0.60
+      Own-Price                                  -0.81                 -0.32             -0.46
+        China                                                          -0.32             -0.32
+        India                                                          -0.41             -0.41
+        Mexico                                   -0.81                 -0.08             -0.57
+    Short-Term
+      Income                                     0.38                  0.36               0.36
+        China                                                          0.27               0.27
+        India                                    0.49                  0.88               0.69
+        Mexico                                   0.33                                     0.33
+      Own-Price                                  -0.38                 -0.49             -0.44
+        China                                                          -0.42             -0.42
+        India                                    -0.45                 -0.65             -0.55
+      Mexico                                      -0.35                                   -0.35
+a
+ This column reports the average response for a country or region from all studies regardless of end-use sector. It is not an
+average of the sectoral estimates in the leftward columns, nor is it a consumption-weighted average of these sectoral
+estimates. The metric reported in this column serves as a useful aggregate indicator of the responses derived from all of the
+studies.
+
+Averaged across all nations, the long-run income elasticity was 0.59, while its long-run own-price
+counterpart was -0.46. Both responses are considerably less elastic than those for natural gas.
+Residential sector long-run elasticities are lower than industrial responses—a result that is not
+unexpected. Again, there are fewer estimates than with liquid fuels. Short-run responses are lower than
+they are for the long run but still register 0.36 for income and -0.44 for price when averaged across all
+sectors and countries.
+
+As was the case with natural gas, electricity responses need to be interpreted carefully. Electricity use in
+many industrializing countries is probably more constrained by infrastructure and electric grid access
+rather than by price and interfuel competition issues. Strong income elasticities in some countries may
+
+
+                                                               20
+reflect decisions by the national government to expand the electrical grid network rather than by
+consumer decisions.
+
+Aggregate Energy
+Table 10 reports the results from one study on aggregate energy use within Mexico. The authors found a
+short-run elasticity equal to -0.20 and a long-run response equal to -0.35.
+
+Table 10. Avg. Energy Composite Elasticity by Region and Sector
+ Type/Country                            Residential              Total
+ Long-Term
+   Own-Price                                -0.35                 -0.35
+     Mexico                                 -0.35                 -0.35
+ Short-Term
+   Own-Price                                -0.20                 -0.20
+     Mexico                                 -0.20                 -0.20
+
+Findings and Gaps
+It is much more challenging to derive general conclusions about natural gas and electricity demand
+responses, because access to key infrastructure will often dictate responses within each country. The
+general impression is that natural gas use may respond strongly to price (with a long-run elasticity in the
+range of -1.2 to -1.3) and to income (with a long-run elasticity of 0.9). Similarly, electricity use may
+respond to price with a long-run elasticity in the range of -0.4 or -0.5 and to income with a long-run
+elasticity of 0.6.
+
+Important caveats include the need for additional studies on a range of countries focused upon
+electricity and non-liquid fuel use. Until these estimates are done, one needs to qualify what one knows
+about the underlying demand responses. A promising area for future research will be to expand the
+analysis to incorporate interfuel substitution opportunities between electricity, natural gas, petroleum
+products and new energy sources like biofuels.
+
+6. Estimates from Large Energy-Economy Models
+The Global Change Assessment Model (GCAM) is a climate framework for exploring climate change
+mitigation policies. It adopts a dynamic-recursive approach with considerable technology detail in
+representing the economy, energy sector, land use and water. This framework uses income elasticities
+that decline over time in order to incorporate eventual saturation of energy-using equipment in the long
+run. Table 11 reports income elasticities for 2015 and 2040 for six major industrializing economies.
+Income elasticities for both industry and transportation sectors range widely across key countries.
+Industry elasticities in 2015 vary between 0.16 for Russia and South Korea to 1.10 for India. By 2040,
+they decline to 0.12 in Russia to 0.70 in Mexico. Transportation elasticities in 2015 vary between 0.54 in
+South Korea to 1.20 in India, falling to 0.45 in South Korea and to 1.09 in India by 2040.
+
+
+
+
+                                                       21
+Table 11. Income Elasticities in GCAM3
+ Industry                            2015        2040
+   Brazil                            0.599       0.447
+   China                             0.456       0.257
+   India                             1.102       0.647
+   Mexico                             0.82       0.696
+   Russia                            0.158       0.124
+   South Korea                        0.16       0.141
+
+
+ Transportation                      2015        2040
+   Brazil                            0.946       0.804
+   China                             1.094       0.698
+   India                             1.202       1.093
+   Mexico                            0.858       0.751
+   Russia                             1.07       0.828
+   South Korea                       0.537       0.452
+
+
+
+The current study excludes computable general equilibrium (CGE) models because their structures
+prevent useful estimates that would be comparable to those derived in this survey. This approach is
+briefly reviewed in the remainder of this section. 9
+
+CGE models estimate how an economy might react to changes in policy, technology or other external
+factors. They employ numerous elasticities showing how easily inputs to production or consumption for
+different goods and services may be substituted for each other or how final consumption changes with
+income. Inputs are bundled together in a series of composites, often nested within each other, such as
+electricity and direct fuels to form an energy composite that can be combined with capital and labor to
+produce output. Prices and quantities in all sectors are determined endogenously within the
+framework. Through an input-output framework for the economy, these models can provide important
+insights when evaluating how changes in one part of the economy (the energy sector) influence the
+remaining sectors.
+
+It is not meaningful to express the CGE model’s outcome in terms of simple price and income elasticities.
+The challenge is that the response of any energy demand like oil and natural gas to changes in price is
+governed by several factors: the ability to substitute between fuels in each sector, the market shares of
+different fuels, the willingness to change the composition of goods and services, the costs of alternative
+fuels like biofuels, and the costs of important technologies like electric vehicles. These responses
+depend very much upon the initial conditions such as energy price levels and market shares for different
+fuels and can vary widely.
+
+Informal discussions with modeling teams like those at the Massachusetts Institute of Technology (MIT)
+suggest that simulations support that the general equilibrium elasticity of demand for oil and natural gas
+
+
+9 Readers who want more information about CGE models and how they compare with other macroeconomic models for
+
+representing energy-economy linkages are referred to Arora (2013).
+
+
+                                                            22
+varies across scenarios and by year but are often between -0.35 and -0.6. Another reference point is the
+values with which CGE modelers use to calibrate their systems. CGE modelers carefully review their
+parameters to make them as consistent as possible with the empirical literature, such as emphasized in
+this report. Dimaranan, McDougall, and Hertel (n.d.) report targeted income elasticities of about unity
+and uncompensated own-price elasticity ranging between -0.2 and -0.6 in the long run for household
+purchases within the utilities sector that includes electricity and fuels.
+
+It may be possible to derive these responses directly from CGE models by choosing appropriate
+scenarios, but this effort would not be simple. If one allows changes in the fuel supply conditions
+(perhaps including fuel tax changes) while holding demand conditions unchanged, 10 there may be some
+useful insights about energy demand responses.
+
+7. Economy-Wide Impacts of Energy Price Movements
+Empirical Studies
+Whether they are sudden surprises or gradual long-term shifts, energy price changes have short- and
+long-run effects on energy use. By contrast, the available empirical literature on oil price changes in
+developed economies like the United States emphasizes the short-run impacts of sudden surprise
+upward price shocks. They tend to show little effects from gradual price changes or price decreases.
+Moreover, they tend to show no long-run effects from energy price changes.
+
+The survey includes 29 estimates for emerging economies outside the OECD membership. Some studies
+include more than one estimate. Table 12 classifies these 29 estimates by country, with nine of them
+done for China. For the reasons stated above, these estimates should be considered as short-run
+estimates that might cover the first two years after a sudden oil price change. Figure 8 shows relatively
+small GDP impacts (with elasticities -0.03 or less) for most countries, except China (-0.09) and two oil-
+producing nations (Nigeria and Russia). The very large positive impacts of higher oil prices on the two
+oil-producing countries reflect the dominant role of the oil and natural gas producing sector in the total
+economy. This industry’s export revenue comprised 58% of Nigeria's total government revenue in
+2014. 11 Their revenues accounted for 43% of Russia's federal budget revenues in 2015. 12
+
+Table 12. Number of Oil-GDP Estimates by Country
+ Country/Region                                Total
+ Brazil                                          2
+ China                                           9
+ Developing Countries                            4
+ Emerging Asia                                   1
+ India                                           3
+ Mexico                                          4
+
+10 Holding demand conditions unchanged would mean not allowing exogenous non-price factors to shift energy demand. The
+
+remaining changes in energy consumption would be attributable to changing delivered energy prices.
+11 U.S. Energy Information Administration, https://www.eia.gov/beta/international/analysis.cfm?iso=NGA (accessed August 2,
+
+2017).
+12 U.S. Energy Information Administration, https://www.eia.gov/beta/international/analysis.cfm?iso=RUS (accessed August 2,
+
+2017).
+
+
+                                                            23
+ Nigeria                                       2
+ Russia                                        3
+ Grand Total                                   28
+
+
+
+Figure 8. Oil Price Elasticity of Real GDP
+  GDP/Oil Price Elasticity (Oil-Shock Studies)
+  0.60
+                                                                                             0.50
+  0.50
+  0.40
+                                                                                 0.29
+  0.30
+  0.20
+  0.10                                                           0.02
+               0.00
+  0.00
+                                       -0.02        -0.01               -0.03
+ -0.10
+                          -0.09
+ -0.20
+
+
+
+
+Oxford Economics’ Global Economic Model
+The U.S. Energy Information Administration conducted a series of simulations with the Oxford
+Economics’ Global Economic Model. The exercise focused upon understanding how that system
+represented the impacts of oil and natural gas price shocks on inflation-adjusted gross national product
+(real GDP). It compared the GDP impacts on the United States, the European Union (EU) and the major
+Asian economies of India and China. Crude oil and natural gas prices were escalated by 10, 20, 30, 40,
+and 50% over 2 and 4 quarters as well as for 1 and 2 years. The oil price shocks represented sudden
+price increases due to three separate events: an oil supply shock, U.S. productivity increases, and an
+upward shift in world petroleum stocks and inventories. The natural gas price shocks represented
+sudden price increases due only to a natural gas supply shock.
+
+Results were summarized as oil (gas) price elasticities that measured the percent difference in the real
+GDP path divided by the energy price difference between the shock and no-shock cases. A key finding
+was that the oil price elasticities in this large-scale macroeconomic model do not depend much on why
+the oil price change occurs. A 1% oil price rise leads GDP to fall by about 0.02% in China, EU, and India
+and by about 0.015% in the U.S. With the exception of the EU, the natural gas price elasticities are small.
+A 1% price rise for this fuel causes GDP to fall by about 0.002% in China, 0.004% in India, 0.009% in the
+EU, and 0.005% in the U.S.
+
+
+
+
+                                                            24
+Research on GDP Elasticities for the United States
+Much of the previous research on this topic was conducted on the U.S. economy. Over time, these
+estimates have been declining due to a range of factors including macroeconomic policy that has
+moderated the high inflation conditions of the 1970s, the declining aggregate energy intensity of
+economic activity, the compositional shifts within the economy, and world oil market conditions in the
+last several decades that are almost completely void of major geopolitical disruptions like those in 1973,
+1979-80, and 1990.
+
+Krupnick et al (2017) provide a useful comparison of several recent modeling exercises on the U.S.
+economy. They provide a point estimate of -0.018 for what they call the newer literature, based upon a
+dynamic stochastic general equilibrium (DSGE) model, structural vector autoregressive (SVAR)
+specifications, and various scenarios from EIA’s National Energy Modeling System (NEMS) model used
+for the AEO. These estimates are sensitive to key input assumptions about important parameters and
+the historical experience from which the estimates are derived. For example, the DSGE estimates tend
+to vary around midpoints of -0.007 and -0.010, while the SVAR estimates tend to vary around midpoints
+of -0.027. The NEMS results range between -0.013 and -0.025. These results are broadly consistent with
+the estimates of -0.03 or less in the above survey of developing countries as well as the range of -0.015
+to -0.020 provided by the Oxford model above.
+
+Research Findings and Gaps
+For the most part, the general findings for developing countries appear consistent with the evidence for
+developed economies, with important exceptions for important oil and gas producing regions like Russia
+and Nigeria. The oil-price elasticity of real GDP is relatively modest compared to the response of energy
+demand. This result appears confirmed by at least one major macroeconomic model.
+
+Additional studies on a range of different emerging nations would help to clarify the impact of oil price
+shocks on these economies. It would also be useful to expand these studies to include the GDP impacts
+of sudden changes in either the natural gas or electricity price.
+
+8. Conclusions and Next Research Steps
+The developing world’s consumption of most major energy sources, with perhaps the exception of
+natural gas, appear to be both price and income inelastic (absolute value <1) in the short as well as long
+run. Within this very diverse group of countries, however, there are some striking differences. Given
+that there are sometimes only a few estimates for each country, one should not necessarily attribute
+these differences to the varying consumption patterns in these countries alone. For this reason, we
+caution readers to use the country estimates judiciously and perhaps emphasize the average responses
+across all countries as being representative. These average estimates serve as useful benchmarks, which
+can then be adjusted upward or downward to incorporate new factors shaping future energy demand
+patterns.
+
+Although price responses are generally in line with those for developed countries, the income responses
+are often larger. The latter result is expected because these energy-intensive lifestyles and economic
+activities often grow rapidly when the economy expands.
+
+
+
+                                                    25
+Liquid Fuels
+When averaged across all nations, the long-run income elasticity for gasoline use in the transportation
+sector averages near unity at 0.94 and the long-run price elasticity averages -0.61. Short-run averages
+for these two responses are smaller than their longer-run counterparts: 0.64 for the income effect and -
+0.33 for the price response. 13 The longer-run response to price incorporating equipment adjustments
+appears to be about twice as large as the near-term effect. There is also a tendency for price responses
+to be considerably lower in the major oil-exporting countries than elsewhere, because administered
+prices change relatively infrequently. As the developing world matures and vehicle ownership begins to
+saturate, one should expect income responses to decline over time.
+
+This long-run response to price appears similar to those estimated for more advanced economies, but
+the income response is somewhat higher (36%). Table 13 compares the price and income elasticities in
+this survey at the top with those for higher-income countries towards the middle and bottom. The latter
+have been reported by Dahl and Roman (2004) in a set of studies that cover many more estimates than
+have been included in this study. The last set of entries refer to a survey (Dahl, 2014) of recent estimates
+for gasoline elasticities covering both developed and developing countries.
+
+Table 13. Comparison of Elasticities for Developing and Industrialized Economies
+                                                    Price                           Income
+                                                Short         Long               Short         Long
+ LDC Estimates
+      Oil (wrt Crude Price)                      -0.07        -0.15               0.39         0.50
+      Gasoline                                   -0.33        -0.61               0.64         0.94
+      Diesel                                     -0.41        -0.50              #N/A          -0.10
+      Natural Gas                                -0.23        -1.36               0.11         0.89
+      Electricity                                -0.44        -0.46               0.36         0.59
+      Electricity-residential                    -0.32        -0.49               0.36         0.53
+ Dahl (2004)
+      Oil                                        -0.11       -0.43                0.47         0.84
+      Gasoline                                  -0.13         -0.61              0.25          0.69
+      Diesel                                     -0.13        -0.67               0.55         1.13
+      Natural Gas Industry                       -0.03        -1.35               0.12         1.39
+      Natural Gas Residential                    -0.13        -0.56               0.18         0.11
+      Electricity                               -0.14         -0.32               0.37         1.04
+      Electricity - residential                  -0.23        -0.43               0.28         0.60
+ Dahl (2014)
+    Gasoline
+      Low Response                               -0.20        -0.60               0.30         0.50
+      High Response                              -0.30        -0.90               0.50         1.50
+
+
+
+
+13 At the crude oil level, this short-run response could be about -0.15 if half of the gasoline price covers refinery costs and taxes
+
+and these non-crude costs do not change.
+
+
+                                                                 26
+Most empirical estimates cover liquid fuels with a heavy emphasis on gasoline consumption. The results
+for diesel use are too sparse for revealing broad conclusions about this fuel. Moreover, coverage for
+petroleum product consumption by industry and for electric generation is much sparser and hence more
+uncertain. The other major omission is the very limited results for vehicles powered by natural gas,
+ethanol and electric power as well as those that are dual fueled.
+
+Non-Liquid Fuels and Power
+It is much more challenging to derive general conclusions about natural gas and electricity demand
+responses, because access to key infrastructure will often dictate responses within each country. The
+general impression is that natural gas use may respond strongly to price (with a long-run elasticity in the
+range of -1.2 to -1.3) and to income (with a long-run elasticity of 0.9). Similarly, electricity use may
+respond to price with a long-run elasticity in the range of -0.4 or -0.5 and to income with a long-run
+elasticity of 0.6.
+
+The long-run natural gas price elasticity is similar to those for the developed world, although the income
+response appears to be smaller. Meanwhile, the long-run electricity price elasticity is bigger, while the
+income response is again smaller. The smaller income effects may reflect constraints imposed by
+underdeveloped infrastructure (pipelines and electric grids) that limit the expansion of this fuel when
+incomes rise. Interestingly, the long-run electricity price elasticity and income response for residential
+consumption are both similar to the estimates for the more developed economies.
+
+Macroeconomic Impacts
+Higher oil prices seldom curtail macroeconomic performance by much in many developing economies—
+a result very similar to those for developed countries. Doubling the oil price generally reduces real gross
+national product by no more than 3%. Important exceptions, however, are some significant oil and gas
+producing regions like Russia and Nigeria. Additional studies on a range of different emerging nations
+would help to clarify the impact of oil price shocks on these economies. It would also be useful to
+expand these studies to include the GDP impacts of sudden changes in either the natural gas or
+electricity price.
+
+Gaps and Future Research
+Although energy economists and other researchers have conducted many more studies on energy
+demand than on other major market factors, there are some important gaps in the current literature.
+
+First, a systematic study of all fuels for many countries would provide significant value added to the
+energy policy community. There have been surprisingly very few efforts to be as comprehensive in
+scope as the early studies by Pindyck (1979a, 1979b). A systematic study would apply the same
+methodology to all countries and fuels, thereby eliminating one of the main contributors—functional
+form of the regression equation—to the wide range of estimates in the literature. It would also allow
+researchers to evaluate the critical interfuel substitution opportunities that play such a critical role in
+many emerging topics. These issues include the policy discussions about climate-change strategies, as
+well as the sharp shift in relative fuel prices caused by such developments as the hydraulic fracturing
+revolution in the discovery and development of oil and natural gas shale resources. There is also a need
+for more evaluation of countries at different stages of development in order to understand the complex
+
+                                                     27
+role of vehicle penetration in shaping future transportation fuel demands. As available data covers more
+industrializing countries over longer durations, pooled samples will provide the basis for evaluating
+these types of issues.
+
+Second, technical progress has made some major shifts in the consumption pattern of different fuels
+and power. Most economists recognize the limitations of assuming a constant rate of energy-efficiency
+improvements. However, there are limited opportunities to use an alternative to a constant time trend
+in a regression equation. Stochastic trends (Adeyemi and Hunt, 2007, 2014) provide an interesting
+alternative, but more studies need to be done to understand the benefits and limitations of this
+approach.
+
+Third, more single-fuel studies should expand outside gasoline use. Other oil products such as diesel, jet
+fuel, and fuel oil are important contributors to the demand for crude oil. Another promising area for
+future research will be to expand the analysis to incorporate interfuel substitution opportunities for
+electricity, natural gas, and biofuels as replacements for gasoline or diesel.
+
+Fourth, researchers should carefully consider the evolving nature of future energy consumption. In
+addition to the rapidly expanding scope for interfuel substitution discussed above, major transitions are
+underway in the demand for mobility, the lifestyles and changing age structure of future drivers,
+advancements in car connectivity and technology, and business plans influencing how people own and
+use vehicles. These factors are often difficult to incorporate in empirical studies using aggregate
+demand, but there may be opportunities to supplement national studies with more specialized efforts to
+track these developments with more focused data sets.
+
+And fifth, studies on each country’s national economy and its response to oil price shocks are becoming
+more plentiful. Many efforts try to distinguish by the source of the price shock: (i) aggregate demand
+stimulated by higher GDP levels and increasing productivity, (ii) sudden petroleum supply interruptions,
+and (iii) petroleum-specific adjustments (such as precautionary inventory behavior). One useful
+extension would be to expand consideration to natural gas and electricity shocks causing both price
+increases and decreases. Another contribution would be to an explicit treatment of how an energy
+shock affects a country through not only the direct effect but also through its trading linkages with other
+countries that are also experiencing the shock.
+
+
+
+
+                                                    28
+9. References
+Adeyemi, O.I., Hunt, L.C., 2007. Modelling OECD industrial energy demand: asymmetric price responses
+      and energy-saving technical change. Energy Econ. 29, 693–709.
+Adeyemi, O.I., L.C. Hunt, 2014. Accounting for asymmetric price responses and underlying energy
+      demand trends in OECD industrial energy demand, Energy Economics 45 (2014) 435–444.
+Arora, Vipin, 2013. Models for Use at EIA. Working Paper Series, U.S. Energy Information Administration,
+      Washington, DC 20585, December, available at
+      https://www.eia.gov/workingpapers/pdf/macro_models-vipin-wappendix.pdf.
+Atkinson, S., & Halvorsen, R. (1976). Interfuel Substitution in Steam Electric Power Generation. Journal
+      of Political Economy, 84(5), 959-978.
+Beenstock, M., Willcocks, P., 1981. Energy consumption and economic activity in industrialized
+      countries. Energy Econ. 3, 225–232.
+Beenstock, M., Willcocks, P., 1983. Energy and economic activity: a reply to Kouris. Energy Econ. 5, 212.
+Dahl, C., 2014. What Do We Know about Gasoline Demand Elasticities?, Colorado School of Mines,
+      Division of Economics and Business Working Paper No. 2014-11, November.
+Dahl, C. and C. Roman, 2004. Energy Demand Elasticities - Fact or Fiction: A Survey Update, Colorado
+      School of Mines, Division of Economics and Business, Golden, CO 80401, April.
+Dargay, J.M., 1992. The irreversible effects of high oil prices: empirical evidence for the demand for
+      motor fuels in France, Germany and the UK. Chapter 6 In: Hawdon, D. (Ed.), Energy Demand:
+      Evidence and Expectations. Surrey University Press, Guildford, UK, pp. 165–182.
+Dargay, J.M., Gately, D., 1995. The Imperfect Price-reversibility of Non-transport Oil Demand in the
+      OECD. Energy Econ 17 (1), 59–71.
+Dargay, J.M. Gately, D., 1997. The demand for transportation fuels: imperfect price reversibility? Transp.
+      Res. B 31, 71–82.
+Dargay, J.M., Gately, D., 2010. World oil demand's shift toward faster growing and less price-responsive
+      products and regions. Energy Policy 38, 6261–6277.
+Dimaranan, B.V., R.A. McDougall, and T.W. Hertel (n.d.), GTAP Resource 783, Chapter 20: Behavioral
+      Parameters, https://www.gtap.agecon.purdue.edu/resources/download/861.pdf
+Fisher, F.M. and C. Kaysen, 1962. A Study in Econometrics: The Demand for Electricity in the United
+      States, Amsterdam: North–Holland Publishing Co.
+Fuss, Melvyn A., 1977. The demand for energy in Canadian manufacturing: An example of the estimation
+      of production structures with many inputs, Journal of Econometrics, 5(1): 89-116.
+Gately, D., Huntington, H.G., 2002. The asymmetric effects of changes in price and income on energy
+      and oil demand. Energy J. 23, 19–55.
+Griffin, J.M., Schulman, C.T., 2005. Price asymmetry in energy demand models: a proxy for energy-saving
+      technical change? Energy J. 26, 1–21.
+Houthakker, H.S. and L.D. Taylor, 1970. Consumer Demand in the United States, 1929-1970 Cambridge:
+      Harvard University Press.
+Hunt, L.C., Ninomiya, Y., 2003. Unravelling trends and seasonality: a structural time series analysis of
+      transport oil demand in the UK and Japan. Energy J. 24, 63–96.
+Hunt, L.C., Ninomiya, Y., 2005. Primary energy demand in Japan: an empirical analysis of long-term
+      trends and future C02 emissions. Energy Policy 33, 1409–1424.
+Hunt, L.C., Judge, G., Ninomiya, Y., 2003a. Underlying trends and seasonality in UK energy demand: a
+      sectoral analysis. Energy Econ. 25, 93–118.
+Hunt, L.C., Judge, G., Ninomiya, Y., 2003b. Modelling underlying demand trends. Chapter 9 In: Hunt, L.C.
+      (Ed.), Energy in a Competitive Market: Essays in Honour of Colin Robinson. Edward Elgar,
+      Cheltenham, UK, pp. 140–174.
+Huntington, H., 2006. A note on price asymmetry as induced technical change. Energy J. 27, 1–7.
+
+                                                    29
+Huntington, H.G., 2010. Short- and long-run adjustments in U.S. petroleum consumption. Energy Econ.
+    33, 63–72.
+Kouris, G., 1983a. Fuel consumption for road transport in the USA. Energy Econ. 5, 89–99.
+Kouris, G., 1983b. Energy consumption and economic activity in industrialised economies: a note. Energy
+    Econ. 5, 207–212.
+Krupnick, A., R. Morganstern, N.S. Balke, S.P.A. Brown, A.M. Herrera, and S. Mohan, 2017. Oil Supply
+    Shocks, US Gross Domestic Product and the Oil Security Premium, Report, Resources for the Future,
+    Washington, D.C.
+Pindyck, R.S., 1979a. The Structure of World Energy Demand. Cambridge, MA: MIT Press.
+Pindyck, R.S., 1979b. Interfuel Substitution and the Industrial Demand for Energy: An International
+    Comparison. The Review of Economics and Statistics, 61(2), 169-179.
+Prosser, R.D., 1985. Demand elasticities in OECD: dynamic aspects. Energy Econ. 7, 9–12.
+Walker, I.O., Wirl, F., 1993. Irreversible price-induced efficiency improvements: theory and empirical
+    application to road transportation. Energy J. 14, 183–205.
+
+
+
+
+                                                  30
+10. Appendix A. Income and Price Elasticities by Country
+There are only a few estimates for some countries. As a result, the methodology used to estimate a
+country’s response may explain as much or more of the variation in elasticities as does the energy
+demand pattern within that country. This appendix shows that it is difficult to generalize about country-
+level elasticities by showing that the gasoline response estimates do not conform to the following
+hypothesis: (a) estimated income elasticities are higher when GDP levels are lower, and (b) estimated
+price elasticities decline when gasoline price levels are lower.
+
+Table A-1 reports the average income elasticity and real per-capita GDP level (2005 $) for 2016. These
+two variables are plotted in Figure A-1. The United States is one of the most industrialized, high-income
+countries. The remaining economies are industrializing with lower income levels and display a mixed
+pattern. Although China, Mexico, Venezuela and Iran have higher income elasticities than the United
+States, South Africa and Russia do not. The oil-rich and wealthier countries, Saudi Arabia and United
+Arab Emirates, have per-capita GDP levels closer to the United States but have slightly lower income
+elasticities than the U.S. response. Despite much smaller GDP levels, Nigeria and Brazil have similar
+income elasticities.
+
+Table A-2 reports the average price elasticity and gasoline price level ($ per liter) for May 15, 2017.
+These two variables are plotted in Figure A-2. Venezuela, Saudi Arabia have lower (administered) prices
+and lower price elasticities. Iran has lower prices but a relatively high price response. The other
+countries have higher price elasticities and higher price levels. Thus, there exists some modest support
+for the relationship that the price response shifts higher as the price level increases. Once again, these
+results are suggestive but by no means conclusive.
+
+
+
+
+                                                    31
+Table A- 1. Income Elasticity and GDP Level
+GDP per capita, 2016
+
+                                                                                   Income
+ Country                                                     $                   Elasticity
+ United Arab Emirates                                    67,871                       0.43
+ United States                                           57,436                       0.69
+ Saudi Arabia                                            55,158                       0.50
+ Russia                                                  26,490                       0.24
+ Mexico                                                  18,938                       1.14
+ Iran                                                    18,077                       1.75
+ China                                                   15,399                       0.84
+ Brazil                                                  15,242                       0.73
+ Venezuela                                               13,761                       1.20
+ South Africa                                            13,225                       0.36
+ India                                                    6,616                       1.92
+  Nigeria                                               5,942                         0.75
+Source: International Monetary Fund, World Economic Outlook Database, April 2017 (Database updated on April 12, 2017,
+accessed on May 19, 2017). http://www.imf.org/external/pubs/ft/weo/2017/01/weodata/index.aspx
+
+Figure A- 1. Income Elasticity and GDP Level
+ Avg. Long-Run Income Elasticity at Different GDP Levels (2005$)
+
+              2.50
+
+
+
+              2.00
+
+                          India
+                                      Iran
+              1.50
+ income
+ elasticity
+              1.00       Venezuela             Mexico
+                                            China
+                                                                                         United States
+                         Nigeria   Brazil
+              0.50
+                                                                            Saudi Arabia
+                                                                                              United Arab
+                             South Africa
+                                                                                               Emirates
+                                                Russia
+              0.00
+                     0       10000     20000        30000   40000      50000         60000        70000     80000
+                                                      GDP per capita, 2016
+
+
+
+
+                                                             32
+Table A- 2. Gasoline Price and Price Elasticity
+Gasoline Prices, May 15, 2017
+
+                                                                                             Price
+ Country                                                             $/liter               Elasticity
+ Venezuela                                                              0.01                    -0.26
+ Saudi Arabia                                                           0.24                    -0.20
+ Iran                                                                   0.37                    -0.73
+ Nigeria                                                                0.47                    -0.06
+ UA Emirates                                                            0.52
+ Russia                                                                 0.69
+ USA                                                                    0.69                    -0.61
+ Mexico                                                                 0.93                    -0.46
+ China                                                                  0.96                    -0.91
+ South Africa                                                           1.02                    -0.47
+ India                                                                  1.12                    -0.60
+ Brazil                                                                1.14                    -0.89
+Source: GlobalPetrolPrices.com, http://www.globalpetrolprices.com/gasoline_prices/ , accessed May 19, 2017 (Includes taxes
+and subsidies)
+
+ Figure A- 2. Price Elasticity and Gasoline Price Level
+   Avg. Long-Run Price Elasticity at Different Gasoline Price Levels
+
+                   $0.00           $0.20           $0.40           $0.60         $0.80           $1.00           $1.20
+                0.00
+
+                -0.10                                    Nigeria
+                -0.20
+                               Saudi Arabia
+                -0.30    Venezuela
+
+                -0.40                                                                             South Africa
+     price -0.50
+   elasticity                                                                             Mexico
+                -0.60
+                                                                    United States                         India
+                -0.70
+
+                -0.80                             Iran
+
+                -0.90
+                                                                                             China         Brazil
+                -1.00
+                                                   Gasoline Prices, May 15, 2017
+
+
+
+
+                                                             33
+Appendix Table B-1: Energy Demand Elasticity Studies
+ Authors                Date Region               Horizon      Sector              Key Findings
+ Agrawal                2012   India             Short-Term    Transportation      This paper empirically estimates demand relations for crude oil, diesel,
+                                                                                   and petrol for India for the period between 1970–71 and 2010–11 using
+                                                                                   the ARDL co-integration procedure and uses these estimations to project
+                                                                                   demand for these products up to 2025 under various scenarios of
+                                                                                   gross domestic product (GDP) growth (with a mean of 7%) and oil prices.
+
+
+ Akinboade, Ziramba     2008   South Africa      Long-Term     Transportation      Using Cointegration Techniques to estimate the price and income
+                                                                                   elasticity in South Africa. Results show that demand for gasoline is
+                                                                                   income and price inelastic.
+ Alves, Bueno           2003   Brazil            Long-Term     Transportation      Paper examines income/price elasticity, as well as cross price elasticity
+                                                                                   between gas and alcohol inside of Brazil. Findings show that demand is
+                                                                                   inelastic in short and long run.
+ Bentham & Romani       2009   Non-OECD          Long-Term     Transportation,     Paper examines 24 Non-OECD countries price/income elasticities, finding
+                               Global                          Residential,        demand increases non-linearly with respect to price and that demand is
+                               Composite                       Industrial          more responsive to end user price than international prices.
+ Berndt & Samaniego     1984   Mexico            Short-Term,   Industrial          Study aimed at determining electricity income and price elasticity for
+                                                 Long-Term                         electricity inside of Mexico. Study suggest that demand is both price and
+                                                                                   income inelastic in the short and long-run
+ Bose                   1998   India             Short-Term    Residential,        Study looking at India's elasticity pertaining to electricity consumption.
+                                                               Industrial          The results show that electricity consumption in commercial and large
+                                                                                   industrial sectors are income elastic, while residential, agricultural and
+                                                                                   small and medium industries are income inelastic. The short-run price
+                                                                                   elasticities vary from sector to sector.
+ Burke and Yang         2016   Non-OECD          Long-Term     Residential         Aggregate long run price elasticity is around -1.25 for natural gas
+                               Global                                              according to a cross-section study focused on many international
+                               Composite                                           countries.
+ Cheung and Thompson 2004      China             Short-Term,   Transportation      Using Cointegration techniques, study finds demand to be inelastic to price
+                                                 Long-Term                         between 1980-2002. The study suggest that gasoline demand is long-run
+                                                                                   inelastic to price.
+
+
+
+
+                                                                              34
+Authors                Date   Region           Horizon       Sector             Key Findings
+Crotte and Nolan       2010   Mexico           Short-Term,   Transportation     Time series panel study focusing on income and price elasticity of
+                                               Long-Term                        Mexico's transportation sector. Study suggest that the rapid increase in
+                                                                                light vehicle sales have contributed to an inelastic gasoline demand
+                                                                                and that the vehicle stock greatly influences gasoline consumption.
+Dos Santos and Faria   2012   Brazil, China,   Short-Term,   Transportation     Using spatial models to estimate price, income, and cross-price
+                              India, Iran,     Long-Term                        elasticity inside of Brazil fuel market for light vehicles. Study shows
+                              Mexico, Saudi                                     gasoline demand to be inelastic, especially in population dense
+                              Arabia,                                           regions.
+                              Venezuela
+Filippini and          2004   India            Long-Term     Residential        Estimating residential electricity demand inside of India. Results
+Pachauri                                                                        suggest India is income and price inelastic and that household,
+                                                                                demographic and geographical variables are significant in determining
+                                                                                electricity demand.
+Fullerton & Salazar    2015   Mexico           Long-Term     Transportation     Using cointegration to estimate the price and income elasticity for
+                                                                                residential gasoline consumption. Study found income to be inelastic
+                                                                                and that the income effects outweigh the substitution effects.
+Galiando               2005   Mexico           Short-Term,   Residential        Paper analyzing the relationship between Mexican income and price
+                                               Long-Term                        elasticity across various sectors. Study found demand to be inelastic
+                                                                                and the substitution effect to be low.
+
+He, Yang, and          2010   China            Long-Term     Residential        The elasticity absolute value of Industry & Commerce is around
+Wang                                                                            0.018, that of Residents is around 0.300 and that of Agriculture is
+                                                                                around 0.066.
+Iwayen, Adenikinju     2008   Nigeria          Long-Term     Transportation     Using cointegration techniques to estimate the price and income
+                                                                                elasticity of various fuel types (mainly gas and diesel) inside of
+                                                                                Nigeria.
+Jobling & Jamasab      2011   Non-OECD         Long-Term     Residential        Using a dynamic model to compare the elasticities of developing and
+                              Global                                            developed countries from 1980 to 2012. Found large income effect
+                              Composite                                         inside of developing countries.
+
+
+
+
+                                                                           35
+Authors           Date   Region   Horizon       Sector             Key Findings
+Lin and Zeng      2009   China    Short-Term    Transportation     Study focused on using various log based models to estimate the elasticity
+                                                                   of price and income in China for gasoline fuels, aggregated across all
+                                                                   industries.
+
+Lopez and Perez   2008   Mexico   Short-Term    Residential        Study find demand to be both price and income inelastic in northern
+                                                                   region of Mexico (Note: Paper is published in Spanish)
+
+Ma and Sturn      2016   China    Long-Term     Residential        The results show that demand for coal and electricity in China is very
+                                                                   inelastic, while demand for diesel and gasoline is elastic.
+
+McRae             1994   India    Short-Term,   Transportation      This paper presents econometric estimates of motor gasoline demand in
+                                  Long-Term                        eleven developing countries of Asia. The price and GDP per capita
+                                                                   elasticities are estimated for each country separately, and for several
+                                                                   pooled combinations.
+Nolan & Crotte    2008   Mexico   Short-Term    Transportation     Estimating the elasticity for the transportation sector inside of Mexico City.
+
+
+Orlov             2016   Russia   Short-Term    Transportation,    Estimating the elasticity of natural gas across various sectors of the
+                                                Residential,       Russian Economy.
+                                                Industrial
+Parry & Shang     2016   China    Long-Term     Power Sector,      Paper estimates the effects of different elasticities on the power sector and
+                                                Transportation     evaluating the effect taxes on carbon emissions in China.
+                                                                   Empirical studies mentioned inside the paper found for different
+                                                                   countries suggests a range for this elasticity of around 0.5–1.5.
+
+Perroni           2016   Brazil   Long-term     Transportation,    This study aims to estimate and analyze the income elasticities of Brazil’s
+                                                Residential,       energy matrix, represented by the supply and consumption of energy.
+                                                Industrial         Compares the income elasticities of both energy products and consumption
+                                                                   through secondary sources and consumer sectors.
+
+Phoumin and       2014   China    Short-Term,   Transportation,    This study uses time series data of selected ASEAN and East Asia countries
+Kimura                            Long-Term     Residential        to investigate the patterns of price and income elasticity of energy
+                                                                   demand.
+
+
+
+
+                                                              36
+Authors             Date   Region   Horizon       Sector             Key Findings
+Ramathan            1999   India    Short-Term,   Transportation     In this paper, the relationship between gasoline demand, national
+                                    Long-Term                        Indian income and price of gasoline is empirically examined using
+                                                                     cointegration and error correction techniques.
+Santos              2009   Brazil   Short-Term,   Transportation,    This paper is to evaluate the sensitivity of fuel consumers regarding
+                                    Long-Term     Residential        price and income, taking recent changes in the Brazilian fuel market
+                                                                     into account. While demands for gasoline and natural gas are inelastic
+                                                                     to price, demand for ethanol is elastic in Brazil.
+
+Sheinbaum &         1996   Mexico   Long-Term     Residential        Paper looks a Mexican household electricity use. The top-down
+Martinez                                                             approach shows that household energy demand has been non-elastic
+                                                                     to energy price and that changes in household size were more
+                                                                     important than income in determining per capita energy demand
+                                                                     between 1970 and 1990.
+Silva and Tiryaki   2003   Brazil   Short-Term,   Transportation     Using a dynamic model with panel data including all Brazilian
+                                    Long-Term                        federal states, this paper estimates an econometric model to measure
+                                                                     the effect of the introduction of this flex fuel technology on the
+                                                                     demand for gasoline in Brazil. The results indicate the expansion of
+                                                                     ethanol’s participation in the fuels market has led to a
+                                                                     substantial increase in the price and cross-price elasticity of the
+                                                                     demand for gasoline.
+Sun/ Ouyang         2016   China    Long-Term     Transportation,    Paper analyzes residential sector elasticities in regard to natural gas
+                                                  Residential        and transport fuels inside China. Empirical results from the Almost
+                                                                     Ideal Demand System model are in accordance with the basic
+                                                                     expectations: the demands for electricity, natural gas and transport
+                                                                     fuels are inelastic in the residential sector due to the unreasonable
+                                                                     pricing mechanism.
+Takeuchi and        2006   India    Short-Term    Transportation     Paper explores impact of measures to reduce air pollution inside of
+Cropper                                                              Mumbai, India. Study found that a higher percent of the total
+                                                                     reduction in emissions will come from a tax on gasoline, the more
+                                                                     elastic is the demand for gasoline.
+
+
+
+
+                                                                37
+Authors              Date   Region            Horizon       Sector             Key Findings
+Tiwari               1999   India             Short-Term    Industrial         The paper uses an input-output framework to calculate energy
+                                                                               intensities for different sectors in Indian economy. As the GDP
+                                                                               growth rate tends to fluctuate under the influence of monsoons (rainy
+                                                                               season on which agricultural output is dependent), such elasticity
+                                                                               estimates are affected by the fluctuations.
+Trotter & Bolkesja   2016   Brazil            Long-Term     Residential        This paper examines the relationship between electricity use and the
+                                                                               effects of weather patterns on Brazilian electricity use.
+Wohlgemuth           1997   Mexico, Brazil,   Long-Term     Transportation     The paper also shows the underlying long-term income and price
+                            Middle East,                                       elasticities for OECD and non-OECD regions inside of the
+                            China, India,                                      transportation sector.
+                            East Asia
+Xie, Ouyang, and     2016   China             Short-Term    Residential        This study proposes an innovative hybrid model for estimation of
+Gao                                                                            residential electricity demand based on the three categories of
+                                                                               variables as building & appliances, family features and householders'
+                                                                               evaluation about indoor thermal comfort. The empirical results
+                                                                               indicate that the thermal environment rated as neutral or slightly
+                                                                               warm by householder has a positive coefficient with residential
+                                                                               electricity demand.
+Yousef               2013   Saudi Arabia,     Long-Term     Transportation     The goal of this paper is to examine the determinants of oil refined
+                            United                                             products’ consumption for a panel consisting of 7 OPEC countries,
+                            Emirates, Iran                                     namely, Algeria, Kuwait, Libya, Qatar, Saudi Arabia, United Emirates
+                                                                               and Iran for the period of 1980–2010. The study estimates the demand
+                                                                               for Gasoline, Kerosene and Diesel.
+
+Yu and Zheng         2014   China             Short-Term,   Residential        Using a set of unbalanced panel data for Chinese's cities during the
+                                              Long-Term                        period of 2006–2009, this study aims to estimate the price and income
+                                                                               elasticities of residential demand for natural gas. Paper finds that
+                                                                               natural gas consumption is price elastic and income inelastic.
+
+
+
+
+                                                                          38
+Authors         Date   Region   Horizon      Sector             Key Findings
+Zhou and Teng   2013   China    Short-Term   Residential        This paper uses annual urban household survey data of Sichuan
+                                                                Province from 2007 to 2009 to estimate the income and price
+                                                                elasticities of residential electricity demand, along with the effects of
+                                                                lifestyle-related variables. The empirical results show that in the urban
+                                                                area of Sichuan province, the residential electricity demand is price-
+                                                                and income-inelastic, with price and income elasticities ranging from
+                                                                0.35 to 0.50 and from 0.14 to 0.33, respectively.
+
+
+
+
+                                                           39
+Appendix Table B-2: Macroeconomic Response Studies
+ Authors           Date   Region      Horizon        Sector         Shock Type   Key Findings
+
+
+ Adegboye         2013   Russia      Long-Term       Macroeconomy   Increase     This paper seeks to assess the impact of oil price shock and real
+                                                                                 exchange rate instability on real economic growth in Nigeria on the
+                                                                                 basis of quarterly data from 1986 to 2012. Nigeria appears to
+                                                                                 increase GDP output in the face of an oil-price shock.
+
+ Akay             2016   Mexico      Long-Term       Macroeconomy   Increase     The aim of this study is to investigate that how economic
+                                                                                 conditions change when crude oil shocks occurred in 1980-2013 for
+                                                                                 Mexico, Indonesia, South Korea, Turkey (MIST) countries. Another
+                                                                                 objective of the study is to determine accurately the functional
+                                                                                 forms of the relationships between oil prices and macroeconomic
+                                                                                 variables. Papers suggest that Oil Shocks have very little effect on
+                                                                                 GDP.
+
+ Cashin           2014   Mexico,     Short-Term      Macroeconomy   Increase     The results indicate that the economic consequences of a supply-
+                         China,                                                  driven oil-price shock are very different from those of an oil-
+                         Nigeria                                                 demand shock driven by global economic activity, and vary for oil-
+                                                                                 importing countries compared to energy exporters.
+
+ Cavalcanti &     2012   Brazil      Short-Term,     Macroeconomy   Increase     This paper studies the effects of oil price shocks in the last 30 years
+ Jalles                              Long-Term                                   on the Brazilian and American inflation rate and rhythm of economic
+                                                                                 activity. Paper shows oil shocks have very little effect on GDP output.
+
+
+ Cuando           2015   China,      Short-Term      Macroeconomy   Increase     Paper identifies 3 different structural oil shocks via sign restrictions:
+                         India                                                   an oil supply shock, an oil demand shock driven by global economic
+                                                                                 activity and an oil-specific demand shock. The main results suggest
+                                                                                 that economic activity and prices respond very differently to oil-
+                                                                                 price shocks depending on their types.
+
+
+
+
+                                                                      40
+Authors         Date   Region     Horizon      Sector         Shock Type    Key Findings
+
+
+Ito             2008   Russia     Short-Term   Macroeconomy   Increase      The analysis leads to the finding that a 1% increase in oil prices
+                                                                            contributes to real GDP growth by 0.25% over the next 12
+                                                                            quarters, whereas that to inflation by 0.36% over the
+                                                                            corresponding periods. We also find that the monetary shock
+                                                                            through interest rate channel immediately affects real GDP and
+                                                                            inflation as predicted by theory.
+
+Kumar           2009   India      Short-Term   Macroeconomy   Increase      Evidence of asymmetric impact of oil price shocks on industrial
+                                                                            growth is found. Oil price shocks negatively affect the growth of
+                                                                            industrial production and we find that an hundred percent increase
+                                                                            in oil prices lowers the growth of industrial production by one
+                                                                            percent.
+Malakhovskaya   2013   Russia     Long-Term    Macroeconomy   Increase     The model yields plausible estimates, and the impulse response
+                                                                            functions are in line with empirical evidence. We found that
+                                                                            despite a strong impact on GDP from commodity export shocks,
+                                                                            business cycles in Russia are mostly domestically based.
+
+Raghavan        2015   Emerging   Short-Term   Macroeconomy   Increase      The empirical results highlight that for monetary policy responses
+                       Asia                                                 to be more supportive of growth, policy makers in these
+                                                                            economies should examine the underlying causes of the future oil
+                                                                            shocks.
+Rasmussen       2011   Developing Short-Term   Macroeconomy   Increase      Paper finds that the impact of higher oil prices on oil-importing
+                       Countries                                            economies is generally small: a 25% increase in oil prices
+                                                                            typically causes GDP to fall by about 0.5% or less.
+
+Shi & Sun       2014   China      Short-Term   Macroeconomy   Increase      In contrast to the usual argument for price control, paper
+                                                                            finds that the price distortion negatively affects the output growth
+                                                                            in China in both the short run and long run, 16 which is robust
+                                                                            to different measures of output and price distortion.
+
+
+
+
+                                                                41
+Authors       Date   Region   Horizon      Sector         Shock Type   Key Findings
+
+
+Tang and Wu   2009   China    Short-Term   Macroeconomy   Increase     Results show that an oil-price increase negatively affects output
+                                                                       and investment, but positively affects inflation rate and interest
+                                                                       rate.
+Yoshino &     2014   China    Short-Term   Macroeconomy   Increase     The results obtained suggest that the impact of oil price
+Hesary                                                                 fluctuations on developed oil importers’ GDP growth is much
+                                                                       milder than on the GDP growth of an emerging economy.
+
+
+
+
+                                                           42
+                                                                                           Month 2013
+
+
+11. References for Reviewed Studies
+Adegboye, Matthew &. 2012. “Impact of Oil Price Shock and Exchange Rate on Economic Growth in
+      Nigeria: An Empirical Investigation.” Munich Personal RePEc Archive (MPRA) (39944): 94–107.
+Agrawal, Pradeep. 2012. “India’s Petroleum Demand: Empirical Estimations and Projections for the
+      Future.” http://iegindia.org/upload/pdf/wp319.pdf
+Akay, Ebru Caglayan, Sinem Guler, and Kangalli Uyar. 2016. “Determining the Functional Form of
+      Relationships between Oil Prices and Macroeconomic Variables: The Case of Mexico, Indonesia,
+      South Korea, Turkey Countries,” International Journal of Economics and Financial Issues 6(3): 880–
+      91.
+Akinboade, Oludele A., Emmanuel Ziramba, and Wolassa L. Kumo. 2008. “The Demand for Gasoline in
+      South Africa: An Empirical Analysis Using Co-Integration Techniques.” Energy Economics 30(6):
+      3222–29.
+Alom, Fardous. 2011. “Economic Effects of Oil and Food Price Shocks in Asia and Pacific Countries: An
+      Application of SVAR Model.” New Zealand Agricultural & Resources Economics Society: 1–43.
+Alves, Denisard C O, and Rodrigo De Losso da Silveira Bueno. 2003. “Short-Run, Long-Run and Cross
+      Elasticities of Gasoline Demand in Brazil.” Energy Economics 25(2): 191–99.
+Alyousef, Nourah. 2011. “Demand for Oil Products in OPEC Countries: A Panel Cointegration Analysis.”
+      34th IAEE conference, 19-24 June 2011 3(2): 1–18.
+van Benthem, Arthur and Mattia Romani. 2009. “Fuelling Growth: What Drives Energy Demand in
+      Developing Countries?” Energy Journal 30(3): 91–114.
+Berndt, Ernst R., and Ricardo Samaniego. "Residential Electricity Demand in Mexico: A Model
+      Distinguishing Access from Consumption." Land Economics 60, no. 3 (1984), 268. doi:
+      10.2307/3146187.
+Bildirici, Elif Melike, and Tahsin Bakirtas. 2016. “The Relationship among Oil and Coal Consumption,
+      Carbon Dioxide Emissions, and Economic Growth in BRICTS Countries.” Journal of Renewable and
+      Sustainable Energy 8(4). http://dx.doi.org/10.1063/1.4955090.
+Bose, Ranjan Kumar, and Megha Shukla. 1999. “Elasticities of Electricity Demand in India.” Energy Policy
+      27 (3): 137–46. doi: 10.1016/S0301-4215(99)00011-7.
+Burke, Paul J., and Hewen Yang. 2016. “The Price and Income Elasticities of Natural Gas Demand:
+      International Evidence.” Energy Economics 59: 466–74.
+      http://dx.doi.org/10.1016/j.eneco.2016.08.025.
+Cashin, Paul, Kamiar Mohaddes, Maziar Raissi, and Mehdi Raissi. 2014. “The Differential Effects of Oil
+      Demand and Supply Shocks on the Global Economy.” Energy Economics 44: 113–34.
+      http://dx.doi.org/10.1016/j.eneco.2014.03.014.
+Cavalcanti, Tiago, and João Tovar Jalles. 2013. “Macroeconomic Effects of Oil Price Shocks in Brazil and
+      in the United States.” Applied Energy 104: 475–86.
+      http://dx.doi.org/10.1016/j.apenergy.2012.10.039.
+Cheewatrakoolpong, Kornkarun, Chayodom Sabhasri, and Nath Bunditwattanawong, 2013. "Impact of
+      the ASEAN Economic Community on ASEAN Production Networks," ADBI Working Papers 409, Asian
+      Development Bank Institute.
+Cheung, Kui-Yin, and Elspeth Thomson. 2004. “The Demand for Gasoline in China: A Cointegration
+      Analysis.” Journal of Applied Statistics 31(5): 533–44.
+Crôtte, A., R.B. Noland, and D.J. Graham. 2009. “Estimation of Road Traffic Demand Elasticities for
+      Mexico City, Mexico.” Transportation Research Record (2134): 99–105.
+Crôtte, Amado, Robert B. Noland, and Daniel J. Graham. 2010. “An Analysis of Gasoline Demand
+      Elasticities at the National and Local Levels in Mexico.” Energy Policy 38(8): 4445–56.
+
+
+
+
+                                                   43
+                                                                                             Month 2013
+
+
+Cunado, Juncal, Soojin Jo, and Fernando Perez de Gracia. 2015. “Macroeconomic Impacts of Oil Price
+      Shocks in Asian Economies.” Energy Policy 86: 867–79.
+      http://dx.doi.org/10.1016/j.enpol.2015.05.004.
+Dossary, Nasser, and Dahl, Carol. 2009. “Is Global Gasoline Demand Still as Responsive to Price?
+      Colorado School of Mines. Working Paper No. 200901.
+Elekdag, Selim et al. 2008. “Oil Price Movements and the Global Economy: A Model-Based Assessment.”
+      IMF Staff Papers 55(2): 297–311.
+Filippini, Massimo, and Shonali Pachauri. 2004. “Elasticities of Electricity Demand in Urban Indian
+      Households.” Energy Policy 32(3): 429–36.
+Fullerton, Thomas M., Jorge Ibarra Salazar, and Mario Elizalde. 2015. “Microeconomic Gasoline
+      Consumption Anomalies in Mexico: 1997-2007.” Asian Economic and Financial Review 5(4): 709–22.
+Galindo, Luis Miguel. 2005. “Short- and Long-Run Demand for Energy in Mexico: A Cointegration
+      Approach.” Energy Policy 33(9): 1179–85.
+Haro, Alejandro, and Luis Ibarrola. 1986. “Gasolina En La Zona Fronteriza Norte de México.”
+He, Y. X. et al. 2011. “Electricity Demand Price Elasticity in China Based on Computable General
+      Equilibrium Model Analysis.” Energy 36(2): 1115–23.
+Ibarra, Jorge, and Lida Sotres. 2008. “La Demanda de Gasolina En México. El Efecto En La Frontera
+      Norte.” Frontera Norte 20, núm. 3: 131–56.
+Ito, Katsuya. 2008. “Oil Price and Macroeconomy in Russia.” Economics Bulletin 17 (17): 1–9.
+Iwayemi, Akin, Adeola Adenikinju, and M. Adetunji Babatunde. 2010. “Estimating Petroleum Products
+      Demand Elasticities in Nigeria: A Multivariate Cointegration Approach.” Energy Economics 32(1):
+      73–85. http://dx.doi.org/10.1016/j.eneco.2009.05.002.
+Jobling, Andrew, and Tooraj Jamasb. "Price volatility and demand for oil: A comparative analysis of
+      developed and developing countries." Economic Analysis and Policy 53 (2017), 96-113.
+      doi:10.1016/j.eap.2017.01.001.
+Ju, Keyi, Dequn Zhou, P. Zhou, and Junmin Wu. 2014. “Macroeconomic Effects of Oil Price Shocks in
+      China: An Empirical Study Based on Hilbert-Huang Transform and Event Study.” Applied Energy 136:
+      1053–66. http://dx.doi.org/10.1016/j.apenergy.2014.08.037.
+Kumar, Surender. 2009. “The Macroeconomic Effects of Oil Price Shocks: Empirical Evidence for India.”
+      Economic Bulletin 29(1): 15–37.
+Labandeira, Xavier, José M. Labeaga, and Xiral López-Otero. 2017. “A Meta-Analysis on the Price
+      Elasticity of Energy Demand.” Energy Policy, 102: 549-568.
+Lenzen, Manfred et al. 2006. “A Comparative Multivariate Analysis of Household Energy Requirements
+      in Australia, Brazil, Denmark, India and Japan.” Energy 31(2–3): 181–207.
+Lin, C.-Y. Cynthia, and Jieyin (Jean) Zeng. 2013. “The Elasticity of Demand for Gasoline in China,” Energy
+      Policy 59, 189-97.
+Ma, Chunbo, and David I. Stern. 2016. “Long-Run Estimates of Interfuel and Interfactor Elasticities.”
+      Resource and Energy Economics 46: 114–30.
+Malakhovskaya, Oxana A. and Alexey R. Minabutdinov. 2013. “Are Commodity Price Shocks Important?
+      A Bayesian Estimation of a DSGE Model for Russia,” SSRN Electronic Journal (n.d.).
+      doi:10.2139/ssrn.2385898.
+McRae, Robert. 1994. “Gasoline Demand in Developing Asian Countries,” Energy Journal 15(1): 143–55.
+Orlov, Anton. 2015. “An Assessment of Optimal Gas Pricing in Russia: A CGE Approach.” Energy
+      Economics 49 (October): 492–506.
+Parry, Ian, Baoping Shang, Philippe Wingender, Nate Vernon, and Tarun Narasimhan. 2016. “Climate
+      Mitigation in China : Which Policies Are Most Effective?”
+
+
+
+
+                                                    44
+                                                                                             Month 2013
+
+
+Perroni, Marcos Gonçalves, Sérgio Eduardo Gouvêa da Costa, Wesley Vieira da Silva, Edson Pinheiro de
+      Lima, Claudimar Pereira da Veiga Costa, 2016. “Analysis of Income Elasticities of Brazil’s Energy
+      Matrix.” International Journal of Energy Economics and Policy 6(3): 431–41.
+Personal, Munich et al. 2007. “MPRA.” Economic Policy (2116): 0–36.
+Phoumin, Han, and Shigeru Kimura. 2014. “Analysis on Price Elasticity of Energy Demand in East Asia:
+      Empirical Evidence and Policy Implications for ASEAN and East Asia.” ERIA Discussion Paper Series 5:
+      1–26.
+Raghavan, Mala. 2015. “The Macroeconomic Effects of Oil Price Shocks on ASEAN - 5 Economies.”
+      Tasmanian School of Business and Economics, University of Tasmania, Discussion Paper Series N
+      2015‐10.
+Ramanathan, R. 1999. “Short- and Long-Run Elasticities of Gasoline Demand in India: An Empirical
+      Analysis Using Cointegration Techniques.” Energy Economics 21(4): 321–30.
+Rasmussen, Tobias N, and Agustín Roitman. 2011. “Oil Shocks in a Global Perspective: Are They Really
+      That Bad?” IMF Working Paper.
+Sánchez, Armando, Suriel Islas, and Claudia Sheinbaum. 2015. “Demanda de Gasolina Y La
+      Heteregeneidad En Los Ingresos de Los Hogares En México.” Investigacion Economica 74(291): 117–
+      43. http://dx.doi.org/10.1016/j.inveco.2015.07.004.
+Santos, Ana Isabel and Marcelo Colomer. 2014. “The Elasticity of Demand for Gasoline in Brazil with the
+      Introduction of the Flex-Fuel Fleet.” IAEE International Conference Proceedings,
+      http://www.usaee.org/usaee2014/submissions/OnlineProceedings/3716-Paper.pdf.
+Santos, Gervásio F. 2013. “Fuel Demand in Brazil in a Dynamic Panel Data Approach.” Energy Economics
+      36: 229–40. http://dx.doi.org/10.1016/j.eneco.2012.08.012.
+Santos, GF Dos, and WR Faria. 2012. “Spatial Panel Data Models and Fuel Demand in Brazil.” TD Nereus.
+      http://www.usp.br/nereus/wp-content/uploads/TD_Nereus_10_2012.pdf.
+Shi, Xunpeng, East Asia, and Sizhong Sun. 2007. “Oil Price Shocks, Market Distortion and Output Growth:
+      Theory and Evidence from China.” Chinese Economics Society Australia Working Paper.
+      http://www.ces-aus.org/wp-content/uploads/2014/01/the-oil-market-distortion-and-industrial-
+      development-13-March.pdf.
+Silva, Giovani, Gisele Tiryaki, and Luiz Pontes. 2009. “The Impact of a Growing Ethanol Market on the
+      Demand Elasticity for Gasoline in Brazil.” 32nd Annual International Association for Energy
+      Economics Conference, San Francisco.
+Sun, Chuanwang, and Xiaoling Ouyang. 2016. “Price and Expenditure Elasticities of Residential Energy
+      Demand during Urbanization: An Empirical Analysis Based on the Household-Level Survey Data in
+      China.” Energy Policy 88: 56–63. http://dx.doi.org/10.1016/j.enpol.2015.10.012.
+Swaroop R. Chary and Alok K. Bohara. 2010. "Energy Consumption in Bangladesh, India, and Pakistan:
+      Cointegration Analysis," Journal of Developing Areas, 44(1): 41-50, September.
+Takeuchi, Akie, Maureen Cropper and Antonio Bento. 2007. “The Impact of Policies To Control Motor
+      Vehicle Emissions in Mumbai, India,” Journal of Regional Science, 47(1): 27–46.
+Tang, Weiqi, Libo Wu, and ZhongXiang Zhang. 2010. “Oil Price Shocks and Their Short- and Long-Term
+      Effects on the Chinese Economy.” Energy Economics, 32(Supplement): 3-14, September.
+Tiwari, Piyush. 2000. “An Analysis of Sectoral Energy Intensity in India.” Energy Policy 28(11): 771–78.
+Trotter, Ian M., Torjus Folsland Bolkesj, Jos Gustavo Fes, and Lavinia Hollanda. 2016. “Climate Change
+      and Electricity Demand in Brazil: A Stochastic Approach.” Energy 102: 596–604.
+Wohlgemuth, Norbert. 1997. “World Transport Energy Demand Modelling.” Energy Policy 25(14–15):
+      1109–19.
+Xie, Qing, Hongbing Ouyang, and Xiang Gao. 2016. “Estimation of Electricity Demand in the Residential
+      Buildings of China Based on Household Survey Data.” International Journal of Hydrogen Energy
+      41(35): 15879–86. http://dx.doi.org/10.1016/j.ijhydene.2016.03.152.
+
+
+                                                    45
+                                                                                           Month 2013
+
+
+Yoshino, Naoyuki, and Farhad Taghizadeh-hesary. 2014. “Economic Impacts of Oil Price Fluctuations in
+     Developed and Emerging Economies.” IEEJ Energy Journal 9(3): 1–17.
+Yu, Yihua, Xinye Zheng, and Yi Han. 2014. “On the Demand for Natural Gas in Urban China.” Energy
+     Policy 70(October 2016): 57–63.
+ZhiDong, Li. 2003. “An Econometric Study on China’s Economy, Energy and Environment to the Year
+     2030.” Energy Policy 31(11): 1137–50.
+Zhou, Shaojie, and Fei Teng. 2013. “Estimation of Urban Residential Electricity Demand in China Using
+     Household Survey Data.” Energy Policy 61(2013): 394–402.
+     http://dx.doi.org/10.1016/j.enpol.2013.06.092.
+
+
+
+
+                                                  46
+

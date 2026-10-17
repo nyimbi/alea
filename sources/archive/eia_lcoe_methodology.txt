@@ -1,0 +1,581 @@
+Levelized Costs of New
+Generation Resources in the
+Annual Energy Outlook
+
+April 2026
+
+
+
+
+                                     www.eia.gov
+                        U.S. Department of Energy
+                           Washington, DC 20585
+U.S. Energy Information Administration | Levelized Cost of New Generation Resources in the Annual Energy Outlook   i
+The U.S. Energy Information Administration (EIA), the statistical and analytical agency within the
+U.S. Department of Energy (DOE), prepared this report. By law, our data, analyses, and forecasts are
+independent of approval by any other officer or employee of the U.S. Government. The views in this
+report do not represent those of DOE or any other federal agencies.
+
+
+
+
+U.S. Energy Information Administration | Levelized Cost of New Generation Resources in the Annual Energy Outlook   ii
+                                                                                                                                                 April 2026
+
+
+
+Table of Contents
+Introduction .................................................................................................................................................. 1
+Levelized Cost of Electricity and Levelized Cost of Storage .......................................................................... 1
+    Representation of tax incentives ............................................................................................................. 2
+Levelized Avoided Cost of Electricity ............................................................................................................ 3
+Value-Cost Ratio............................................................................................................................................ 3
+LCOE, LCOS, and LACE Calculations .............................................................................................................. 4
+    Levelized cost of electricity (LCOE) .......................................................................................................... 5
+           LCOE example.................................................................................................................................... 7
+    Levelized avoided cost of electricity (LACE) ............................................................................................ 7
+           LACE Example .................................................................................................................................... 9
+    Value-cost ratio...................................................................................................................................... 10
+           Value-cost ratio example ................................................................................................................ 10
+
+
+
+
+U.S. Energy Information Administration | Levelized Cost of New Generation Resources in the Annual Energy Outlook                                               ii
+                                                                                                                                            April 2026
+
+
+Table of Tables
+Table 1. Energy value .................................................................................................................................... 9
+Table 2. Spinning reserve value .................................................................................................................. 10
+
+
+
+
+U.S. Energy Information Administration | Levelized Cost of New Generation Resources in the Annual Energy Outlook                                          iii
+                                                                                                                         April 2026
+
+
+Introduction
+Every year, we publish updates to our Annual Energy Outlook (AEO), which provides long-term
+projections of energy production and consumption in the United States using our National Energy
+Modeling System (NEMS). The AEO reports our projections based on specific assumptions and
+methodologies.
+
+Investment in the expansion of electric generation capacity requires an assessment of the competitive
+value of generation technologies in the future. To better understand investment decisions in NEMS, we
+use specialized measures that simplify those modeled decisions. Levelized cost of electricity (LCOE)
+refers to the estimated revenue required to build and operate an electric-generation plant over a
+specified cost recovery period. Levelized avoided cost of electricity (LACE) is the revenue available to
+that plant owner during the same period. We also include estimates for the levelized cost of storage
+(LCOS) for diurnal storage technology. Although LCOE, LCOS, and LACE do not fully capture all the factors
+considered in NEMS, when used together as a value-cost ratio (the ratio of LACE-to-LCOE or LACE-to-
+LCOS), they provide a reasonable comparison of first-order economic competitiveness among a wider
+variety of technologies than is possible using LCOE, LCOS, or LACE individually.
+
+Levelized Cost of Electricity and Levelized Cost of Storage
+The levelized cost of electricity (LCOE) represents the average revenue per unit of electricity generated
+that would be required to recover the costs of building and operating a generation plant during an
+assumed cost recovery period and for a specific duty cycle. 1 LCOE is often cited as a convenient
+summary measure of the overall competitiveness of different generation technologies.
+
+The levelized cost of storage (LCOS) represents the average revenue per unit of electricity discharged
+that would be required to recover the costs of building and operating a battery storage facility during an
+assumed cost recovery period and for a specific duty cycle. Although the concept is similar to LCOE,
+LCOS is different in that, rather than being a primary source of energy, it represents an energy storage
+technology that contributes to electricity generation when discharging and consumes electricity from
+the grid when charging. Furthermore, LCOS is calculated differently depending on whether it is supplying
+electricity to the grid or is on standby providing grid reliability services. In NEMS, we model battery
+storage in energy arbitrage applications (where the storage technology provides energy to the grid
+during periods of high-cost generation and recharges during periods of lower-cost generation), resource
+adequacy applications, and spinning reserve requirements.
+
+Key inputs 2 to calculating LCOE and LCOS include:
+
+     •    Capital costs
+     •    Fixed operations and maintenance (O&M) costs
+     •    Variable costs that include O&M and fuel costs
+     •    Financing costs
+
+1 Duty cycle refers to the typical utilization or dispatch of a plant to serve base, intermediate, or peak load. Wind, solar, or other
+
+intermittently available resources are not dispatched and do not necessarily follow a duty cycle based on load conditions.
+2 The specific assumptions for each of these factors are provided in the Assumptions to the Annual Energy Outlook.
+
+
+
+
+U.S. Energy Information Administration | Levelized Cost of New Generation Resources in the Annual Energy Outlook                     1
+                                                                                                                   April 2026
+
+
+     •    An assumed utilization rate for each plant type, corresponding to a typical duty cycle for
+          dispatchable technologies or typical resource availability factor for resource-constrained
+          technologies.
+
+For LCOS, in lieu of fuel cost, the levelized variable cost includes the cost of purchasing electricity from
+the electric power grid for charging. The importance of each of these factors varies across technologies.
+For technologies with no fuel costs and relatively small variable costs, such as solar and wind electric-
+generating technologies, LCOE changes nearly in proportion to the estimated capital cost of the
+technology. For technologies that use fuel, both fuel cost and capital cost estimates significantly affect
+LCOE. Incentives, including federal tax credits, also affect the calculation of LCOE. As with any projection,
+these factors are uncertain because their values can vary regionally and temporally as technologies
+evolve and as fuel prices change. Solar photovoltaic-battery (PV-battery) hybrid technology is
+represented by LCOE and not LCOS because we assume it operates as an integrated unit supplying
+primary solar-generated electricity to the grid, with the storage component simply allowing the dispatch
+of that energy during non-daylight hours.
+
+Actual plant investment decisions consider the specific technological and regional characteristics of a
+project, which involve many other factors not reflected in LCOE (or LCOS) values. One factor is the
+difference between the assumed technology duty cycle used in the LCOE calculation and the projected
+utilization rate, which depends on the amount of electricity required over time and the existing resource
+mix in an area where additional capacity is needed. A related factor is the capacity value (the ability to
+contribute to regional resource adequacy reserve margins), which depends on both the existing capacity
+mix and the load characteristics in a region. Because load must be continuously balanced, generating
+units that can vary output to follow demand (dispatchable technologies) generally have more value to a
+system than less flexible units that use intermittent resources to operate (resource-constrained
+technologies). We list the LCOE values for dispatchable and resource-constrained technologies
+separately because they are built to provide different services to the grid, and direct comparisons of
+cost between dispatchable and resource-constrained technologies may not be meaningful in most
+contexts. We include the PV-battery hybrid LCOE under resource-constrained technologies because it is
+more limited in dispatch capability than generators with essentially continuous fuel supply. Similarly,
+conventional hydroelectric generators typically have seasonal limitations to their dispatch and are also
+included with resource-constrained technologies. Combustion turbine and battery storage technologies
+are often used to meet regional capacity reserve requirements or when intermittent resources are not
+available for generation, such as during evening peak demand periods, and we show them as capacity
+resource technologies.
+
+Representation of tax incentives
+Federal tax credits for electric generation facilities can substantially reduce their realized cost. Cost
+estimates in this report are for generators in the electric power sector, for which certain technologies
+are eligible for federal tax credits. These estimates are not for systems in the residential or commercial
+sectors. Where applicable, we show LCOE both with and without tax credits that we assume would be
+available in the year in which the plant enters service. For further detail on NEMS representation of tax
+credits, see the Renewable Fuels Module (RFM) and Electricity Market Module (EMM) assumptions.
+
+
+
+U.S. Energy Information Administration | Levelized Cost of New Generation Resources in the Annual Energy Outlook            2
+                                                                                                                    April 2026
+
+
+Levelized Avoided Cost of Electricity
+LCOE and LCOS by themselves do not capture all of the factors that contribute to actual investment
+decisions, making direct comparisons of LCOE and LCOS across technologies problematic and misleading
+as a method to assess the economic competitiveness of various generation alternatives. We use
+levelized avoided cost of electricity (LACE) as a companion metric for LCOE to improve comparisons of
+economic competitiveness between generation technologies.
+
+LACE provides a proxy measure for potential revenues (or value) from the sale of electricity generated or
+other ancillary services produced from a candidate project displacing (or the cost of avoiding) another
+marginal asset. We sum this value over a project’s financial life and convert that sum into an annualized
+value (that is, dividing by the average annual electrical output of the project). Using LACE along with
+LCOE and LCOS provides a more intuitive indication of economic competitiveness for each technology
+than either metric separately when several technologies are available to meet load and provide other
+service requirements.
+
+Estimating LACE is more complex than estimating LCOE or LCOS because it requires information about
+how the electrical generators on the grid would operate without the new power plant or storage facility
+entering service. We calculate LACE based on the marginal value of energy, capacity, and spinning
+reserves that would result from adding a unit of a given technology to the grid as it exists or as we
+project it to exist at a specific future date. It also takes into account a limit on the total contribution that
+intermittent generators can make to regional electricity supply. 3 LACE accounts for both the variation in
+daily and seasonal electricity demand and the characteristics of the existing generation fleet to which
+new capacity will be added. Therefore, LACE compares the prospective new generation resource against
+the mix of new and existing generation and capacity that it would displace. For example, a wind
+resource that would primarily displace generation from a relatively expensive natural gas-fired peaking
+unit will usually have a different value than one that would displace generation from a more efficient
+natural gas-fired, combined-cycle unit or coal-fired unit with low fuel costs.
+
+Value-Cost Ratio
+We calculate LACE-to-LCOE and LACE-to-LCOS ratios (or value-cost ratios) for each technology to
+determine which project provides the most value relative to its cost. When the LACE of a particular
+technology exceeds its LCOE or LCOS, that technology would generally be economically attractive to
+build. A value-cost ratio greater than one indicates that the marginal new unit brings in value higher
+than its cost by displacing more expensive generation and capacity options, and a value index of less
+than one indicates that the cost of the marginal new unit of capacity exceeds its value to the system.
+
+The value-cost ratio of one represents a stable solution point (breakeven point) where LACE equals
+LCOE. Both LCOE or LCOS and LACE values are determined within an optimization model, which
+generally represents efficient markets. If the LCOE or LCOS exceeds LACE for a given technology, the
+
+3 EIA currently models a limit of 85% of annual generation within an electricity region coming from wind and solar energy
+
+because our model currently lacks the resolution or model structure to accurately represent the cost of providing reliable
+generation services under very high penetration levels of intermittent resources.
+
+
+
+
+U.S. Energy Information Administration | Levelized Cost of New Generation Resources in the Annual Energy Outlook             3
+                                                                                                                     April 2026
+
+
+model generally finds it uneconomical to build that technology unless forced by factors outside the LCOE
+and optimization framework. In most cases when the LACE for a given technology exceeds its LCOE or
+LCOS, the model will build that technology to the point where the two values are equal. However,
+sometimes constraints on build rates or other model factors may limit the ability of the model to fully
+build out an otherwise economically attractive technology, leading to occasional instances with a value-
+cost of greater than one.
+
+External factors such as technology change, policy developments, or fuel price volatility can cause
+divergence of LACE and LCOE or LCOS from the breakeven point and decrease the value-cost ratio of any
+given technology. LCOE can increase when federal tax credits expire or when operating fuel prices rise,
+although LCOE generally declines over time because of technological advancements through lower
+capital costs or improved performance. LACE can decrease over time, particularly for solar, as
+generation from solar resources become more saturated with similar hourly operation patterns within a
+given region, forcing generation from new facilities to compete with lower-cost options in the dispatch
+merit order. However, we expect the market to correct the divergence between LACE and LCOE. If the
+value-cost ratio becomes greater than one, the model (and the market) will quickly build out the
+technology until it meets the demand growth or displaces the higher-cost marginal generation. In
+contrast, if the value-cost ratio becomes less than one, continued load growth, technology cost declines,
+or perhaps higher fuel costs for a competing resource will tend to boost its value over time.
+
+However, LACE, LCOE, and LCOS are still simplified estimates of modeled decisions. The build decisions
+(and as we model in the AEO) are more complex than a simple LACE-to-LCOE or LACE-to-LCOS
+comparison because they include factors not included in the LCOE, LCOS, or LACE calculations, including
+some policy or economic factors that operate beyond the resolution of the model. Nonetheless, the
+value-cost ratio (the ratio of LACE-to-LCOE or LACE-to-LCOS) provides a reasonable point of comparison
+of first-order economic competitiveness among a wider variety of technologies than is possible using
+LCOE, LCOS, or LACE individually.
+
+LCOE, LCOS, and LACE Calculations
+We calculate all levelized costs and values based on a 30-year cost recovery period, using an after-tax
+weighted average cost of capital (WACC). 4 In reality, a plant’s cost recovery period and cost of capital
+can vary for specific projects and by differing investors. The represented technologies are selected from
+available electric power sector technologies modeled in NEMS’s Electricity Market Module (EMM). 5 We
+focus on technologies that have the largest projected builds across the cases of the Annual Energy
+Outlook. We do not include technologies from distributed residential and commercial applications,
+which are built based on substantially different economic and market criteria than used in the electric
+power sector.
+
+
+4 An overview of the WACC assumptions and methodology is available in the Electricity Market Module of the National Energy
+
+Modeling System: Model Documentation.
+5 The list of all technologies modeled in EMM is available in Table 3. Cost and performance characteristics of new central station
+
+electricity generation technologies in the Assumptions to the Annual Energy Outlook: Electricity Market Module.
+
+
+
+
+U.S. Energy Information Administration | Levelized Cost of New Generation Resources in the Annual Energy Outlook                 4
+                                                                                                                         April 2026
+
+
+The levelized capital component reflects costs calculated using technology-specific tax depreciation
+schedules and a corporate tax rate consistent with current tax laws. 6 We evaluate LCOE, LCOS, and LACE
+for each technology based on an assumed capacity factor, which generally corresponds to the high end
+of the technology’s likely utilization range. This convention is consistent with using LCOE and LCOS to
+evaluate competing technologies in baseload operation, such as coal and nuclear plants. Although
+sometimes used in baseload operation, some technologies, such as combined-cycle plants, are also built
+to serve load-following or other intermediate dispatch duty cycles.
+
+We evaluate combustion turbines that are typically used for peak-load duty cycles at a 10% capacity
+factor, which reflects the historical average utilization rate. We also evaluate battery storage at a 10%
+capacity factor, reflecting an expected use for energy arbitrage, especially with intermittent renewable
+generation such as solar.
+
+The duty cycle for intermittent resources is not operator controlled but depends on the weather, which
+does not necessarily correspond to operator-dispatched duty cycles. As a result, LCOE values for wind
+and solar technologies are not directly comparable with the LCOE values for other technologies that may
+have a similar average annual capacity factor, and we show them separately as resource-constrained
+technologies. Hydroelectric resources, including facilities where storage reservoirs allow more flexible
+day-to-day operation, and PV-battery hybrid technologies generally have significant seasonal and daily
+variation, respectively, in availability. We label them as resource-constrained to discourage comparison
+with technologies that have more consistent seasonal and diurnal availability. The capacity factors for
+solar, wind, and hydroelectric resources are the average of the capacity factors (weighted or
+unweighted) for the marginal site in each region, taking into account estimated curtailments 7 that can
+vary significantly by region and will not necessarily correspond to the cumulative projected capacity
+factors for both new and existing units for resources in the AEO or our other analyses.
+
+Levelized cost of electricity (LCOE)
+The computation for LCOE takes the following general form:
+
+              (fixed charge factor × capital cost) + fixed O&M
+    LCOE =                                                     + variable O&M + fuel - federal tax credits
+                              generating hours
+
+where:
+
+          LCOE                            =         the levelized cost of electricity, expressed in units of dollars per
+                                                    megawatthour ($/MWh).
+
+          fixed charge factor             =         annualizes the capital cost, accounting for the weighted average
+                                                    cost of capital (return on debt and return on equity), financing
+
+6 The One Big Beautiful Bill Act (OBBBA) of 2025 made permanent a one-year depreciation schedule that affects the cost of
+
+financing new generating assets across all technologies. New power plant constructions are assumed to be financed using
+parameters as assumed in the Assumptions to the Annual Energy Outlook: Electricity Market Module.
+7 Intermittent resources such as wind or solar may sometimes generate at levels in excess of immediate electricity demand. If
+
+storage is not available to absorb the excess generation, it will be curtailed to ensure system stability. That is, unit operators will
+be instructed to turn off or temporarily disconnect from the grid until the grid can safely accommodate the generation.
+Curtailed generation does not provide value to the grid and is deducted from technology capacity factors.
+
+
+
+U.S. Energy Information Administration | Levelized Cost of New Generation Resources in the Annual Energy Outlook                     5
+                                                                                                                   April 2026
+
+
+                                                    accrued during construction, federal tax burden for the project,
+                                                    and the assumed cost recovery period for the project. This
+                                                    factor is estimated using a cash-flow model within NEMS and
+                                                    may vary over time due to changes to the cost of debt and cost
+                                                    of equity. The factor also may vary across technologies due to
+                                                    differing tax depreciation treatments or market risks associated
+                                                    with certain generation options.
+
+          capital cost                    =         the initial investment per unit of capacity in the project, the
+                                                    overnight capital cost, expressed in dollars per megawatt
+                                                    ($/MW). For any given technology, this cost may vary over time
+                                                    based on a number of factors, including declining technology
+                                                    costs due to learning and cost adjustments from broader
+                                                    economic factors, such as the construction commodity costs
+                                                    and resource availability for geographically constrained energy
+                                                    sources such as wind, geothermal, or hydro.
+
+          fixed O&M                       =         the annual operations and maintenance expenditure per unit of
+                                                    capacity, expressed in dollars per megawatt per year
+                                                    ($/MW/year). This expenditure includes costs that remain
+                                                    relatively constant, regardless of plant utilization levels, such as
+                                                    worker salaries and maintenance or refurbishment costs that
+                                                    are scheduled on a calendar basis rather than an operating-
+                                                    hours basis.
+
+          generating hours                =         the number of hours per year that the plant is assumed to
+                                                    operate. For dispatchable generation such as coal, nuclear, or
+                                                    combined-cycle natural gas-fired plants, we calculate this
+                                                    number based on an annual capacity factor that corresponds to
+                                                    the maximum annual availability for that unit, accounting for
+                                                    planned maintenance and forced outages. Alternatively, in the
+                                                    case of units primarily serving peak load, including simple
+                                                    combustion turbines and battery storage, this calculation is
+                                                    based on a 10% annual capacity factor. For intermittent
+                                                    renewable resources, the calculation is based on location-
+                                                    specific resource availability.
+
+          variable O&M                    =         the operations and maintenance expenditure per unit of
+                                                    generation, expressed in dollars per megawatthour ($/MWh).
+                                                    This expenditure includes costs that are closely tied to the
+                                                    actual operating hours of the equipment, such as consumable
+                                                    maintenance items and refurbishment costs that are scheduled
+                                                    based on operating hours (rather than on a calendar basis).
+
+
+
+
+U.S. Energy Information Administration | Levelized Cost of New Generation Resources in the Annual Energy Outlook            6
+                                                                                                                   April 2026
+
+
+          fuel                            =         the expenditure for fuel, expressed in terms of dollars per
+                                                    megawatthour ($/MWh). Fuel cost is the product of the plant
+                                                    heat rate (a measure of unit conversion efficiency) and the fuel
+                                                    price in native units (for example, dollars per thousand cubic
+                                                    feet for natural gas or dollars per ton for coal). For battery
+                                                    storage, the cost of grid charging is used as a proxy for fuel.
+                                                    These costs represent the hourly average of the long-term fuel
+                                                    costs over the assumed financial life of the equipment (not the
+                                                    fuel costs for the single year for which the estimate is provided).
+
+          federal tax credits             =         the tax credit per unit of electricity generation, expressed in
+                                                    units of dollars per megawatthour ($/MWh), and includes any
+                                                    pertinent policy such as levelized investment tax credits,
+                                                    production tax credits for generation from qualified resources,
+                                                    or carbon capture credits net of costs associated with the
+                                                    transport and sequestration of the captured carbon. LCOE
+                                                    calculations are shown with and without the inclusion of tax
+                                                    credits.
+
+LCOE example
+Consider a wind turbine with a capital cost of $2,000 per kilowatt (kW) ($2 million/MW) and a fixed
+O&M cost of $40/kW/year ($40,000/MW/year). The wind turbine has no fuel cost and no variable O&M.
+The fixed charge factor for wind is 9% per year. The capacity factor is an average of 30% per year. Tax
+credits are not included in this example for simplicity.
+
+     •    Annualized capital cost              =    $2 million/MW × 9% =$180,000/MW/year
+     •    Total annual expenditure             =    $180,000/MW/year + $40,000/MW/year = $220,000/MW/year
+     •    Generating hours                     =    30% × 8,760 hours/year = 2,628 hours/year
+     •    Levelized cost                       =    $220,000/MW/year ÷ 2,628 hours/year= $84/MWh
+
+Levelized avoided cost of electricity (LACE)
+LACE takes the following general form:
+             energy revenue + spinning reserve revenue + capacity revenue + RPS compliance revenue - intermittent limit cost
+    LACE =
+                                                           generating hours
+
+where:
+
+          LACE                            =         the levelized avoided cost of electricity, expressed in units of
+                                                    dollars per megawatthour ($/MWh).
+
+          energy revenue                  =         the revenue derived from serving load to meet the demand in a
+                                                    year, in units of dollars per megawatt per year ($/MW/year).
+                                                    Energy revenue is the sum over all time periods of the marginal
+                                                    generation price (in units of dollars per megawatthour or
+                                                    $/MWh) multiplied by the dispatch hours in the time period (in
+
+
+U.S. Energy Information Administration | Levelized Cost of New Generation Resources in the Annual Energy Outlook               7
+                                                                                                                   April 2026
+
+
+                                                    units of hours). The marginal generation price is typically
+                                                    determined by the variable cost (fuel cost plus variable O&M) of
+                                                    the most expensive generating unit that needs to be dispatched
+                                                    to meet energy demand. The dispatch hours are the number of
+                                                    hours in the specific time period (summer, winter, and
+                                                    spring/fall and peak, intermediate, and off-peak) the unit is
+                                                    dispatched multiplied by the capacity factor in that time period.
+
+          spinning reserve revenue =                the revenue made from providing spinning reserves based on
+                                                    the technology’s ability to contribute excess capacity to the
+                                                    overall peak load, in units of dollars per megawatt per year
+                                                    ($/MW/year). This revenue is calculated as the spinning reserve
+                                                    price multiplied by the spinning reserve hours over a time
+                                                    period. Spinning reserve price is the cost of procuring reserves,
+                                                    and it is typically determined by the variable cost (fuel cost plus
+                                                    variable O&M) of the most expensive unit that is providing
+                                                    spinning reserves to meet the requirement. Spinning reserve
+                                                    hours are the number of hours in a time period that the unit is
+                                                    providing spinning reserves. Generation from intermittent
+                                                    technologies, including wind and solar, adds to the spinning
+                                                    reserve requirement because more variable renewable
+                                                    generation means more uncertainty, so those intermittent
+                                                    technologies have a negative spinning reserve revenue.
+
+          capacity revenue                =         the revenue made by providing capacity to meet the planning
+                                                    reserve margin reliability requirement over all years in a unit’s
+                                                    lifetime per megawatt of capacity, in units of dollars per
+                                                    megawatt per year ($/MW/year). This revenue is calculated as
+                                                    the capacity payment times the capacity credit of the
+                                                    technology. Capacity payment is the payment required to
+                                                    incentivize the last unit to meet the regional planning reserve
+                                                    margin reliability requirement to the grid. Capacity credit is the
+                                                    technology’s ability to provide system reliability reserves. For
+                                                    dispatchable units, the entire nameplate capacity is allowed to
+                                                    participate in the reliability capacity market (capacity credit of
+                                                    1, or 100%). For intermittent renewables, the capacity credit is
+                                                    derated as a function of the availability of the resource during
+                                                    peak load periods and the estimated probability of correlated
+                                                    resource-derived outages within a given region.
+
+          RPS compliance revenue =                  the value of building an operating generating asset to ensure
+                                                    state Renewable Portfolio Standards (RPS) are met in each
+                                                    region over each year of its lifetime, in units of dollars per
+                                                    megawatt per year ($/MW/year).
+
+
+U.S. Energy Information Administration | Levelized Cost of New Generation Resources in the Annual Energy Outlook            8
+                                                                                                                        April 2026
+
+
+          intermittent limit cost =                 the cost of limiting the annual intermittent generation in each
+                                                    region over each year of its lifetime, in units of dollars per
+                                                    megawatt per year ($/MW/year). The intermittency limit is
+                                                    included as a constraint in EMM based on modeler judgement
+                                                    because the model lacks the temporal and spatial resolution to
+                                                    accurately represent system reliability and stability with very
+                                                    high levels of wind and solar generation; it does not represent
+                                                    actual current or assumed policy with respect to any current
+                                                    grid operator. If this limit is hit, the EMM produces a figure that
+                                                    reflects how much total system costs could be reduced if the
+                                                    model was allowed build capacity beyond the intermittency
+                                                    limit, or conversely, the loss in value to the system of imposing
+                                                    the intermittency limit. It is, therefore, included as a reduction
+                                                    in the value (LACE). This cost is non-zero only in regions and
+                                                    years in which the intermittency limit is met.
+
+          generating hours                =         the number of hours per year that the plant is assumed to
+                                                    operate; the derivation is identical to that described in the LCOE
+                                                    section.
+
+LACE Example
+EMM projects marginal generation price for nine time periods each year, representing the peak hours,
+intermediate hours, and off-peak hours during the winter, summer, and spring/fall seasons.
+
+The following example examines the same wind turbine mentioned in the previous example. We
+calculate the number of dispatched hours for each period by multiplying the number of hours in that
+period by the corresponding assumed capacity factor. The energy revenue available for each period, in
+units of dollars per megawatt per year, is calculated by multiplying dispatched hours by the marginal
+generation price (Table 1).
+
+Table 1. Energy value
+                                                     Marginal
+               Time period                    generation price        Capacity
+                                                  (dollars per          factor         Hours in      Dispatched    Energy revenue per
+ Season             Hour type                  megawatthour)         (percent)          period            hours    megawatt per year
+                    Peak                                   $110            20%               29              5.8               $638
+ Summer             Intermediate                            $90            30%            1,435            430.5             $38,745
+                    Off-peak                                $80            20%            1,464            292.8             $23,424
+                    Peak                                    $90            30%               29              8.7               $783
+ Winter             Intermediate                            $80            20%            1,423            284.6             $22,768
+                    Off-peak                                $70            35%            1,452            508.2             $35,574
+                    Peak                                    $80            30%               29              8.7               $696
+ Spring/fall        Intermediate                            $70            40%            1,435              574             $40,180
+                    Off-peak                                $60            35%            1,464            512.4             $30,744
+ Annual total                                                                                              2,626            $193,552
+Data source: U.S. Energy Information Administration
+
+
+
+
+U.S. Energy Information Administration | Levelized Cost of New Generation Resources in the Annual Energy Outlook                   9
+                                                                                                                        April 2026
+
+
+Because of the uncertainty of its output, we assume that additional spinning reserves equal to 25% of
+wind generation will need to be maintained. This value is based on an analysis of historical wind
+generation versus operational forecasts. We calculate the number of spinning reserve hours for each
+period by multiplying the number of hours in that period by the corresponding spinning reserve
+assessment factor (Table 2). The cost available for each period is calculated by multiplying the spinning
+reserve hours by the spinning reserve price. We then subtract the total spinning reserve cost from the
+wind revenue because wind is increasing the need for spinning reserve (that is, adding to cost, rather
+than increasing its value to the system in this respect).
+
+Table 2. Spinning reserve value
+                                                                 Spinning
+                                             Spinning             reserve
+                                        reserve price         assessment                                             Spinning reserve
+                                          (dollars per              factor         Hours in            Spinning    cost per megawatt
+ Season           Hour type           megawatthour)             (percent)           period        reserve hours              per year
+                  Peak                           $300                  5%                29                 1.5                  $435
+ Summer           Intermediate                    $10                7.5%             1,435               107.6                $1,076
+                  Off-peak                         $0                  5%             1,464                73.2                    $0
+                  Peak                            $90                7.5%                29                 2.2                  $196
+ Winter           Intermediate                    $10                  5%             1,423                71.2                  $712
+                  Off-peak                         $0               8.75%             1,452               127.1                    $0
+                  Peak                             $5                7.5%                29                 2.2                   $11
+ Spring/fall      Intermediate                     $0                 10%             1,435               143.5                    $0
+                  Off-peak                         $0               8.75%             1,464               128.1                    $0
+ Annual total                                                                                             657.0                $2,429
+Data source: U.S. Energy Information Administration
+
+In the region used in this example, wind has a capacity credit of 15% and a capacity payment of
+$60,000/MW/year. The wind plant does not have a binding intermittent limit constraint or a binding RPS
+constraint, so the intermittent and RPS constraint costs are $0.
+
+The wind plant earns an energy revenue of $193,552/MW/year, accrues a spinning reserve cost of
+$2,429/MW/year and receives a capacity payment of 15% × $60,000/MW/year = $9,000/MW/year. The
+total annual revenue stream is $200,123/MW/year. With annual generation of 2,628 MWh/MW (2,628
+equivalent operating hours), the average revenue per megawatthour for this plant is $76/MWh.
+
+Value-cost ratio
+The value-cost ratio is simply the ratio between the LACE (value) and the LCOE (cost) and can be thought
+of as the value-per-cost (unitless) for the plant. Generally, the value-cost ratio includes tax incentives in
+the LCOE to show a given technology’s competitiveness within NEMS.
+                                                                             LACE
+                                                     value-cost ratio =
+                                                                             LCOE
+Value-cost ratio example
+From the examples above, the wind plant has LCOE of $84/MWh and LACE of $76/MWh, resulting in a
+value-cost ratio of 0.905.
+
+
+
+U.S. Energy Information Administration | Levelized Cost of New Generation Resources in the Annual Energy Outlook                 10
+

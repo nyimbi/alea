@@ -1886,6 +1886,28 @@ def default_ingest_dir() -> Path:
 	return paths.repo_root() / "config" / "prg_ingest"
 
 
+def _parse_side_for_stale(equation: Mapping[str, Any]) -> list[str]:
+	"""Every symbol the equation's own arithmetic names, left to right.
+
+	`parse_side` is called bare rather than through the loader's own
+	equation walk, so a side that fails to parse answers "not judged" with an
+	empty list and the edge is kept: a stale-edge claim requires an equation
+	whose arithmetic can be read.
+	"""
+	named: list[str] = []
+	from alea.prg.dsl import parse_side
+
+	for side in (equation.get("lhs"), equation.get("rhs")):
+		try:
+			expr = parse_side(str(side))
+		except Exception:
+			continue
+		for symbol in sorted(expr.symbols):
+			if symbol not in named:
+				named.append(symbol)
+	return named
+
+
 def _merge_fragments(
 	shipped: Mapping[str, Any], paths: Iterable[str | Path]
 ) -> tuple[dict[str, Any], IngestReport]:
@@ -2012,6 +2034,41 @@ def _merge_fragments(
 			refused.append(
 				(old, "<alias register>", f"deprecated_by={body.get('deprecated_by')!r}")
 			)
+
+	# An edge whose equation no longer holds its source is a stale claim. The
+	# loader used to refuse such an edge outright, which was right for the
+	# shipped document -- a self-contradiction a reader should be told about
+	# -- but wrong after a fragment *corrects* the equation: the correction
+	# is the very thing that makes the shipped edge stale, and refusing it
+	# would make symbol-changing equation corrections impossible to load.
+	# A corrected equation's stale edges are therefore dropped here, and
+	# named, so the disappearance is counted rather than silent.
+	corrected_equations = {
+		key for register, key, _file in corrected if register == "equations"
+	}
+	stale_edges: list[tuple[str, str, str]] = []
+	if corrected_equations:
+		kept: list[dict[str, Any]] = []
+		for item in document["relationships"]:
+			equation_id = str(item.get("equation_id") or "")
+			equation = document["equations"].get(equation_id)
+			if equation is None or equation_id not in corrected_equations:
+				kept.append(item)
+				continue
+			# Stale is about the *arithmetic*, not the declared lists: the
+			# declared lists are exactly what a correcting fragment may not
+			# have touched, and an edge judged against them would stay live
+			# while every reader of the rhs would call it gone.
+			named = set(_parse_side_for_stale(equation))  # type: ignore[name-defined]
+			source = str(item.get("source") or "")
+			if source in named:
+				kept.append(item)
+			else:
+				stale_edges.append(
+					(equation_id, item.get("source") or "", item.get("target") or "")
+				)
+		document["relationships"] = kept
+	dropped.extend(("<stale-edge>", eq, f"{src} -> {tgt}") for eq, src, tgt in stale_edges)
 
 	report = IngestReport(
 		per_file=per_file,

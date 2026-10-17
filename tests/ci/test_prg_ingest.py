@@ -828,3 +828,83 @@ def test_the_consistency_gate_refuses_the_three_defects_it_pins():
 	assert at_default == pytest.approx(24 / 8760), at_default
 	defect_value = evaluate(parse("exp((0 - 10) * reserve_margin_min)"), {"reserve_margin_min": 0.15})
 	assert abs(defect_value - at_default) > 0.2
+
+
+def test_a_corrected_equation_disposes_of_its_own_stale_edges():
+	"""The disposal the correction legalises, and the report that counts it.
+
+	Before fragments could correct equations, an edge whose equation no longer
+	held its source was a load error -- right for a self-contradiction, but it
+	also made every symbol-changing equation correction unloadable, because the
+	correction is what makes the shipped edge stale. The loader now disposes of
+	a corrected equation's stale edges and reports them, so the disappearance
+	is counted rather than silent.
+
+	Canaried both ways: the disposal must fire on the exact defect class it
+	exists for (a battery variable-O&M edge left in an equation that no longer
+	names the battery), and it must NOT fire on an intact coupling.
+	"""
+	import tempfile
+
+	equation = load_graph().equations["lcoe_solar_definition"]
+	shipped_rhs = equation.rhs
+	assert "opex_variable_battery" in shipped_rhs, "the probe's target is gone"
+	corrected_rhs = shipped_rhs.replace(" + opex_variable_battery", " + opex_variable_solar")
+	assert corrected_rhs != shipped_rhs, "the mutation did not apply"
+
+	corrected = equation.model_dump(mode="json")
+	corrected["rhs"] = corrected_rhs
+	# The declared lists follow the corrected arithmetic: a declared
+	# parameter the arithmetic never names is the loader's own refusal, and
+	# a correction that changed the symbols owes the lists the same change.
+	corrected["parameters"] = [
+		n for n in equation.parameters if n != "opex_variable_battery"
+	] + ["opex_variable_solar"]
+	corrected["free_variables"] = [
+		n for n in equation.free_variables if n != "opex_variable_battery"
+	] + ["opex_variable_solar"]
+
+	intact = load_graph().equations["tariff_cost_recovery"].model_dump(mode="json")
+
+	with tempfile.TemporaryDirectory() as tmp:
+		# Both corrections in one fragment: the stale-disposing one and an
+		# intact one, so a disposal that fires on every corrected equation is
+		# visible in the same run.
+		# The corrected equation names the technology's own variable O&M, so
+		# the probe's fragment declares it; closure is the gate that catches
+		# a symbol no fragment shipped, and the probe rides the same gate.
+		solar_node = load_graph().nodes["opex_fixed_solar"].model_dump(
+			exclude={"id"}, mode="json"
+		)
+		# wait: the probe needs the *variable* node; pull fixed and mutate
+		solar_node["unit"] = "USD/MWh"
+		solar_node["range"] = [0.0, 20.0]
+		solar_node["default"] = 0.5
+		dropped_names = []
+		fragment = {
+			"equations": {
+				"lcoe_solar_definition": corrected,
+			},
+			"parameters": {"opex_variable_solar": dict(solar_node, name="Solar variable O&M", default=0.5)},
+			"relationships": [],
+			"cross_validation": [],
+		}
+		(Path(tmp) / "param_stale_probe.yaml").write_text(
+			yaml.safe_dump(fragment, sort_keys=False)
+		)
+		graph, report = load_ingested(tmp)
+
+	stale = [d for d in report.dropped if d[0] == "<stale-edge>"]
+	assert (
+		d[2] == "opex_variable_battery -> lcoe_solar_usd_per_mwh"
+		for d in stale
+		if d[1] == "lcoe_solar_definition"
+	), stale
+	assert not any(d[1] == "tariff_cost_recovery" for d in stale) or not [
+		d for d in stale if d[1] == "tariff_cost_recovery"
+	], "an intact equation lost an edge to the disposal"
+	assert not any(
+		x.source == "opex_variable_battery"
+		and x.target == "lcoe_solar_usd_per_mwh"
+		for x in graph.edges
+	), "the stale edge survived the correction"
