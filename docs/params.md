@@ -723,7 +723,7 @@ Each row contains: **ID** | **Category** | **Parameter** | **Description** | **A
 | 18.9 | EnvSoc | `health_impact_dalys` | DALYs | Health impact assessment | `AirQ+` (WHO) | 🔗 | Health | P1 |
 | 18.10 | EnvSoc | `health_impact_mortality` | Premature deaths | Health impact assessment | `AirQ+` | 🔗 | Health | P1 |
 | 18.11 | EnvSoc | `health_impact_morbidity` | Illness cases | Health impact assessment | `AirQ+` | 🔗 | Health | P2 |
-| 18.12 | EnvSoc | `healthcare_cost_per_case` | Healthcare costs | Economic model | To be built | 🔨 | Health | P2 |
+| 18.12 | EnvSoc | `healthcare_cost_per_case` | The human-capital price of a DALY, read by health_cost_definition as USD/DALY | Economic model | To be built | 🔨 | Health | P2 |
 | 18.13 | EnvSoc | `biodiversity_impact` | Biodiversity | Impact assessment | To be built | 🔨 | DFIs | P2 |
 | 18.14 | EnvSoc | `habitat_loss` | Habitat loss | Spatial analysis | `geopandas` | 🔗 | DFIs | P2 |
 | 18.15 | EnvSoc | `land_use_change` | Land use change | Spatial analysis | `geopandas` | 🔗 | DFIs | P2 |

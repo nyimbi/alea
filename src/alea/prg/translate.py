@@ -644,9 +644,19 @@ def _dig(config: Any, dotted: str) -> Any:
 
 
 def _graph_value(parameter: str) -> float | None:
-	"""The declared default of a graph node, or None when it has none."""
+	"""The declared default of a graph node, or None when it has none.
+
+	A `categorical` node's default is a level *name*, and a level has no
+	arithmetic, so it has no place in the numeric comparison this feeds --
+	`float('single_buyer')` raises, and coercing the level to its index would
+	compare a config file against a position in a list. Reporting None says
+	"this quantity is not comparable", which is what the callers already treat
+	a missing default as.
+	"""
 	from alea.prg.graph import load_graph
 
 	graph = load_graph()
 	node = graph.nodes.get(parameter)
-	return None if node is None or node.default is None else float(node.default)
+	if node is None or node.default is None or isinstance(node.default, str):
+		return None
+	return float(node.default)

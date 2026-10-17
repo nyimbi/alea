@@ -354,7 +354,14 @@ def fleet_intensity_gap(result: Any, graph: ParameterGraph | None = None) -> dic
 		return {"engine_intensity": 0.0, "graph_factor": 0.0, "ratio": 0.0}
 
 	node = g.nodes.get("emission_factor_t_per_mwh")
-	factor = float(node.default) if node is not None and node.default is not None else 0.0
+	# A level name has no place in a ratio, so a categorical default is read as
+	# 0.0 -- the same answer as an absent default, and the branch below already
+	# treats 0.0 as "no factor to compare against".
+	factor = (
+		float(node.default)
+		if node is not None and node.default is not None and not isinstance(node.default, str)
+		else 0.0
+	)
 	engine_intensity = emissions_tco2 / total_mwh
 	return {
 		"engine_intensity": engine_intensity,
@@ -406,7 +413,13 @@ def reliability_gap(result: Any, graph: ParameterGraph | None = None) -> dict[st
 	# declaring no standard, which is a claim about the graph made from a
 	# fact about the result.
 	node = g.nodes.get("expected_unserved_fraction")
-	declared = float(node.default) if node is not None and node.default is not None else 0.0
+	# Read as 0.0 for a level name, for the reason the factor above is: the
+	# declared standard is a number, and a categorical default is not one.
+	declared = (
+		float(node.default)
+		if node is not None and node.default is not None and not isinstance(node.default, str)
+		else 0.0
+	)
 
 	# `generation_mwh` includes the load-shedding carrier, so the dispatched
 	# total already contains the shortfall when the engine recorded it there.

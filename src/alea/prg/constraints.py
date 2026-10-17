@@ -548,8 +548,12 @@ def _symbol(name: str, ctx: _Context) -> Any:
 	if ctx.graph.is_settable(name):
 		if name in ctx.params:
 			ctx.assumed.add(name)
-			return float(ctx.params[name])
-		if node.default is not None:
+			# A level name has no arithmetic, so it cannot enter a constraint
+			# expression; it is reported unresolved, which is the same answer
+			# the DSL gives any symbol it cannot evaluate.
+			value = ctx.params[name]
+			return None if isinstance(value, str) else float(value)
+		if node.default is not None and not isinstance(node.default, str):
 			ctx.assumed.add(name)
 			return float(node.default)
 	ctx.unresolved.add(name)

@@ -88,6 +88,13 @@ STATUS = {"✅": "existing", "🔨": "to_build", "🔗": "integrate"}
 #: is recorded as a per-kW one and every dimensional check downstream compares
 #: a rate against a level.
 UNITS: tuple[tuple[str, str], ...] = (
+	# The two whose unit is not inferable from a suffix pattern: the name says
+	# "per case" while the equation reads a per-DALY price, and an outage
+	# duration that is a per-event mean. Pinned by name because a suffix
+	# pattern cannot say it and the dimensional check that reads these units
+	# goes undecidable without them.
+	(r"^healthcare_cost_per_case$", "USD/DALY"),
+	(r"^outage_duration$", "hours/event"),
 	(r"_usd_per_kw_year$", "USD/kW/year"),
 	(r"_usd_per_mwh$", "USD/MWh"),
 	(r"_usd_per_tco2$", "USD/tonne"),
