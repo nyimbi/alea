@@ -543,8 +543,9 @@ def emit(batch: str) -> int:
 	from alea.prg.graph import load_graph
 
 	graph = load_graph()
+	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -569,23 +570,32 @@ def emit(batch: str) -> int:
 		edges = list(BATCH12_EDGES) + b13_edges
 	elif batch == "14":
 		b14_nodes, b14_equations, b14_edges, _b14_rules = build_batch14(graph)
+		rules.extend(_b14_rules)
 		nodes.update(b14_nodes)
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b14_equations)
 		edges = list(BATCH12_EDGES) + b14_edges
+	elif batch == "15":
+		b15_nodes, b15_equations, b15_edges, b15_rules = build_batch15(graph)
+		rules.extend(b15_rules)
+		nodes.update(b15_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b15_equations)
+		edges = list(BATCH12_EDGES) + b15_edges
 	else:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		edges = list(BATCH12_EDGES)
 
-	out_dir = ROOT / "config" / "prg_ingest"
-	out_dir.mkdir(parents=True, exist_ok=True)
-	path = out_dir / f"param_batch{batch}.yaml"
 	document = {
 		"parameters": nodes,
 		"equations": equations,
 		"relationships": edges,
-		"cross_validation": [],
+		"cross_validation": rules,
 	}
+
+	out_dir = ROOT / "config" / "prg_ingest"
+	out_dir.mkdir(parents=True, exist_ok=True)
+	path = out_dir / f"param_batch{batch}.yaml"
 	path.write_text(yaml.safe_dump(document, sort_keys=False, allow_unicode=True, width=100))
 	print(f"wrote {path} ({len(nodes)} nodes, {len(equations)} equations, {len(edges)} edges)")
 	return 0
@@ -1517,6 +1527,201 @@ def build_batch14(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 				"equation_id": eq_id, "relationship": "functional", "strength": "hard",
 				"description": "Enters the group composition.",
 			})
+	return nodes, equations, edges, rules
+
+
+
+# ---------------------------------------------------------------------------
+# Batch 15 -- the demand synthesis and the macro driver.
+#
+# Bottom-up load synthesis, the method the catalog states for the demand
+# rows, means the sector demands derive from the total and the shares;
+# the shares' sum-coherence is already constrained (demand_shares_bound).
+# The macro driver: electricity demand grows with income at the income
+# elasticity, and the planner's direct dial is *checked* against the
+# implication rather than overruled by it -- a derived implied growth the
+# cross-validation rules compare against, both directions, at warning
+# severity, because the dial may legitimately diverge (an electrification
+# push lifts it; a recession lowers it) and the check's job is to say so,
+# not to forbid it.
+#
+# Theory: elasticity decomposition (Burke & Csereklyei 2016 -- aggregate
+# energy-GDP elasticity = share-weighted sectoral elasticities, electricity
+# 0.88-0.95; EIA/Stanford EMF review -- long-run income elasticity ~0.59
+# average, residential 0.53, industrial 0.76; Hou & Tan 2008 -- China
+# 0.85, the developed-market levels converge toward or below unity). The
+# implied-growth form is the log-linear standard
+# (1 + g_D) = (1 + g_Y)^eps.
+# ---------------------------------------------------------------------------
+
+SECTOR_DEMANDS: tuple[tuple[str, str], ...] = (
+	("residential_demand_share", "residential_demand_twh"),
+	("commercial_demand_share", "commercial_demand_twh"),
+	("industrial_demand_share", "industrial_demand_twh"),
+	("agricultural_demand_share", "agricultural_demand_twh"),
+)
+
+
+def build_batch15(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, str]], list[dict[str, Any]]]:
+	"""Batch 15: sector demands, the macro elasticity, and the rules."""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, str]] = []
+	rules: list[dict[str, Any]] = []
+
+	for share, target in SECTOR_DEMANDS:
+		share_node = graph.nodes[share]
+		sector = target.split("_")[0]
+		nodes[target] = {
+			"name": f"{sector.replace('_', ' ')} demand",
+			"description": (
+				f"Sector demand at the bottom-up synthesis the catalog states: "
+				f"the sector's share of the fleet-served demand, over the "
+				"total. The share is a policy and settlement dial; the demand "
+				"is what the sector's own metering would report."
+			),
+			"category": "Demand-Side", "type": "float", "unit": "TWh",
+			"range": [0.0, 20000.0], "role": "derived", "determinism": "fixed",
+			"priority": "P1", "status": "existing",
+			"source": "Bottom-up load synthesis (the catalog's own method cell)",
+			"users": ["Planners", "Utilities"],
+		}
+		eq_id = f"{sector}_demand_definition"
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": f"{sector.capitalize()} demand",
+			"description": (
+				"The share times the demand it is a share OF. A share with no "
+				"numerator is a word; with the total demand as its base it is "
+				"a quantity the metering checks the synthesis against. Units: "
+				"a dimensionless share times TWh is TWh."
+			),
+			"system": "demand_supply",
+			"lhs": target,
+			"rhs": f"{share} * base_demand_twh",
+			"relation": "eq",
+			"parameters": [target, share, "base_demand_twh"],
+			"free_variables": [share, "base_demand_twh"],
+			"determined_variables": [target],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P1",
+			"reference": "Bottom-up load synthesis (catalog method cell)",
+			"latex": r"D_{\mathrm{" + sector + r"}} = s_{\mathrm{" + sector + r"}} \cdot D_{\mathrm{total}}",
+		}
+		for sym in (share, "base_demand_twh"):
+			edges.append({
+				"source": sym, "target": target,
+				"equation_id": eq_id, "relationship": "functional", "strength": "hard",
+				"description": "Enters the sector's synthesis.",
+			})
+
+	nodes["gdp_growth"] = {
+		"name": "GDP growth rate",
+		"description": (
+			"Annual real GDP growth the scenario carries. Bounded to refuse a "
+			"value that would compound to a nonsense economy over a 30-year "
+			"horizon; 0.05 is the East-African reference decade."
+		),
+		"category": "Macro", "type": "float", "unit": "1/year",
+		"range": [0.0, 0.15], "default": 0.05, "role": "free",
+		"determinism": "policy", "priority": "P1", "status": "existing",
+		"source": "World Bank national accounts; the reference decade",
+		"users": ["Planners", "Investors"],
+	}
+	nodes["income_elasticity"] = {
+		"name": "Income elasticity of electricity demand",
+		"description": (
+			"The rate electricity demand grows with income. Empirical range: "
+			"0.59 average across reviewed countries (EIA/Stanford EMF), "
+			"0.85 for China (Hou & Tan 2008), 0.88-0.95 for the "
+			"electricity-specific long run (Burke & Csereklyei 2016); "
+			"electrifying economies land at or above 1 and converge down. "
+			"The default is the reviewed cross-country average; the range is "
+			"the literature band."
+		),
+		"category": "Macro", "type": "float", "unit": "1",
+		"range": [0.0, 1.9], "default": 0.65, "role": "free",
+		"determinism": "policy", "priority": "P1", "status": "existing",
+		"source": "Burke & Csereklyei 2016; EIA/Stanford EMF demand elasticities; Hou & Tan 2008",
+		"users": ["Planners"],
+	}
+	nodes["demand_growth_implied"] = {
+		"name": "Demand growth implied by the macro driver",
+		"description": (
+			"Log-linear implication of the income elasticity on GDP growth: "
+			"(1 + g_D) = (1 + g_Y) ^ eps. What electricity demand grows at "
+			"if it grows with income and nothing else; the dial the planner "
+			"sets is checked against it, not replaced by it."
+		),
+		"category": "Macro", "type": "float", "unit": "1/year",
+		"range": [0.0, 0.30], "role": "derived", "determinism": "fixed",
+		"priority": "P1", "status": "existing",
+		"source": "Burke & Csereklyei 2016; EIA/Stanford EMF demand elasticities",
+		"users": ["Planners"],
+	}
+	equations["demand_growth_implied_definition"] = {
+		"id": "demand_growth_implied_definition",
+		"name": "Implied demand growth",
+		"description": (
+			"The elasticity's own implication: demand grows with income at "
+			"the income elasticity, in the log-linear form the growth "
+			"literature uses. A dimensionless base to a dimensionless power "
+			"is dimensionless; the 1/year unit is the growth rate's own."
+		),
+		"system": "demand_supply",
+		"lhs": "demand_growth_implied",
+		"rhs": "(1 + gdp_growth) ** income_elasticity - 1",
+		"relation": "eq",
+		"parameters": ["demand_growth_implied", "gdp_growth", "income_elasticity"],
+		"free_variables": ["gdp_growth", "income_elasticity"],
+		"determined_variables": ["demand_growth_implied"],
+		"tolerance": 1.0e-09, "unit_check": True,
+		"solution_method": "numeric", "linearity": "nonlinear",
+		"priority": "P1",
+		"reference": "Burke & Csereklyei 2016; EIA/Stanford EMF demand elasticities",
+		"latex": r"(1 + g_D) = (1 + g_Y)^{\varepsilon}",
+	}
+	for sym in ("gdp_growth", "income_elasticity"):
+		edges.append({
+			"source": sym, "target": "demand_growth_implied",
+			"equation_id": "demand_growth_implied_definition", "relationship": "functional",
+			"strength": "hard",
+			"description": "Enters the elasticity's implication.",
+		})
+
+	rules = [
+		{
+			"id": "demand_growth_above_macro_implied",
+			"condition": "demand_growth > demand_growth_implied",
+			"severity": "warning",
+			"message": (
+				"Demand grows faster than the income elasticity's implication. "
+				"Electrification programmes and special loads do exactly this, "
+				"so it is a warning with content, not an error: the plan is "
+				"asserting a demand pull the macro driver does not explain, "
+				"and the reviewer should be able to name the programme behind it."
+			),
+			"suggestion": (
+				"Name the electrification programme or the industrial load behind it, or lower demand_growth"
+			),
+		},
+		{
+			"id": "demand_growth_below_macro_implied",
+			"condition": "demand_growth < demand_growth_implied",
+			"severity": "warning",
+			"message": (
+				"Demand grows slower than the income elasticity's implication "
+				"of the GDP growth the scenario also carries. A plan where the "
+				"economy compounds at 5% and electricity demand lags at a "
+				"fraction of that carries an efficiency or structural story "
+				"the scenario should also state."
+			),
+			"suggestion": (
+				"Carry the efficiency or structural story in the plan, or align demand_growth with the macro driver"
+			),
+		},
+	]
 	return nodes, equations, edges, rules
 
 
