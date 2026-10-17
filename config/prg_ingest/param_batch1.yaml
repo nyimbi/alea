@@ -7,6 +7,14 @@
 #   R3: dropped rule 'demand_shares_over_unity' -- its condition needs arithmetic, which the cross-validation grammar refuses: residential_demand_share + commercial_demand_share + industrial_demand_share + agricultural_demand_share > 1.0
 #   R3: dropped rule 'share_parameters_sum_to_unity_fuel' -- its condition needs arithmetic, which the cross-validation grammar refuses: coal_ccs_adoption + gas_ccs_adoption > 1.0
 #   R3: dropped rule 'electrification_electrification_targets_exceed_demand' -- its condition needs arithmetic, which the cross-validation grammar refuses: industrial_electrification + industrial_heat_electrification > 1.5
+#   R18: added 'agricultural_demand_share', which the batch's own rule names and no fragment
+#        declared. The batch corrected the three sibling shares to their real values
+#        (residential 0.35, commercial 0.2, industrial 0.35) and skipped the fourth, so it kept
+#        the shipped placeholder 0.5 while its three siblings already summed to 0.9 -- 1.4
+#        against the ceiling of 1.0 that the batch's own cross-validation rule states, and that
+#        `demand_shares_bound` (Batch 11) enforces as an equation. Set to 0.1 so the four are
+#        the decomposition of the total the rule describes. The omission was Batch 1's: its own
+#        rule at docs/param_batch1.md:645 names all four shares, so the node was in scope.
 parameters:
   carbon_tax_coverage:
     name: Carbon tax coverage
@@ -594,6 +602,27 @@ parameters:
     priority: P1
     status: existing
     source: docs/params.md#1.7
+    users:
+    - Planners
+  agricultural_demand_share:
+    name: Agricultural demand share
+    description: Share of demand from agriculture. The three sibling shares were corrected to their real
+      values in this batch and this one was missed, so it kept the shipped placeholder 0.5 while
+      `residential + commercial + industrial` already sum to 0.9. Set to 0.1 so the four are a decomposition
+      of the total, which is the relation the batch's own cross-validation rule states and which
+      `demand_shares_bound` now enforces as an equation.
+    category: Demand-Side
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.1
+    role: free
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: docs/params.md#1.10
     users:
     - Planners
   heat_pump_adoption:

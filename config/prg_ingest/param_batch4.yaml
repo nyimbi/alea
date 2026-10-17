@@ -2,6 +2,27 @@
 # Merged onto config/prg.yaml by alea.prg.graph.load_ingested().
 #
 # Repairs applied to the batch as delivered:
+#   R16: dropped equation 'mtbf_from_failure_rate_definition' and its two edges,
+#        and reverted 'mean_time_between_failures' to `free`. The equation made
+#        the derived subgraph CYCLIC -- it computed MTBF from
+#        `forced_outage_rate`, which 'availability_definition' computes from
+#        MTBF -- so the ingested graph could not propagate at all: every
+#        `check_scenario` raised `CycleError ... form a cycle and have no
+#        evaluation order`. Its arithmetic was also dimensionally incoherent and
+#        said so itself: the description gives the dimensional check "1/(1/hour)
+#        is hour", but the divisor is `forced_outage_rate`, unit `1`, so the RHS
+#        is dimensionless. The equation the description actually wants divides by
+#        a *failure rate* in 1/hour, and the graph carries no such node (only
+#        `failure_rate_curve`, a dimensionless shape selector). The tell is that
+#        it shipped with `unit_check: false` -- the check was switched off on the
+#        one equation that needed it. Dropping it keeps 'availability_definition',
+#        whose two inputs (`mean_time_to_repair`, `mean_time_between_failures`)
+#        are then both free, and restores the shipped default for MTBF.
+#   R17: 'availability_definition' described its result as "the steady-state
+#        availability: the fraction of time the asset is up". MTTR/(MTBF+MTTR) is
+#        the DOWN fraction, and the node it assigns to is `forced_outage_rate`,
+#        an outage rate. The arithmetic is right and the description was its
+#        complement; corrected to say unavailability.
 #   R15: 17 nodes re-typed float -> bool were given the `default` this batch
 #        omitted. `docs/param_ingest.md:78` requires a default on a free node and
 #        the loader does not enforce it, so the omission loaded -- and because the
@@ -44,7 +65,8 @@ parameters:
     range:
     - 500.0
     - 500000.0
-    role: derived
+    default: 500000.0
+    role: free
     determinism: stochastic
     priority: P1
     status: integrate
@@ -1097,34 +1119,13 @@ parameters:
     - Utilities
     source: docs/params.md
 equations:
-  mtbf_from_failure_rate_definition:
-    name: MTBF from the failure rate
-    description: 'The mean time between failures is the reciprocal of the failure rate when the rate is
-      constant — the exponential case. Dimensional check: 1/(1/hour) is hour, times a dimensionless shape
-      factor is hour. The shape factor selects between exponential (0), bathtub (1) and wear-out (2);
-      at 0 the equation reduces to the reciprocal.'
-    system: reliability
-    lhs: mean_time_between_failures
-    rhs: (1 + failure_rate_curve) / forced_outage_rate
-    relation: eq
-    parameters:
-    - failure_rate_curve
-    - forced_outage_rate
-    free_variables:
-    - failure_rate_curve
-    - forced_outage_rate
-    determined_variables:
-    - mean_time_between_failures
-    tolerance: 1.0e-06
-    unit_check: false
-    solution_method: direct
-    linearity: nonlinear
-    priority: P1
   availability_definition:
     name: Availability from MTBF and MTTR
-    description: 'The steady-state availability: the fraction of time the asset is up. Dimensional check:
-      hours / (hours + hours) is dimensionless. Uses the shipped `forced_outage_rate` as the availability
-      proxy and reconciles it against the MTBF-MTTR pair.'
+    description: 'The steady-state UNAVAILABILITY: the fraction of time the asset is down, which is what
+      `forced_outage_rate` means. MTTR / (MTBF + MTTR) is the down fraction, not the up fraction -- the
+      batch described this result as "availability, the fraction of time the asset is up", which is its
+      complement, 1 - MTTR/(MTBF+MTTR). The arithmetic is unchanged; only the description was inverted.
+      Dimensional check: hours / (hours + hours) is dimensionless.'
     system: reliability
     lhs: forced_outage_rate
     rhs: mean_time_to_repair / (mean_time_between_failures + mean_time_to_repair)
@@ -1168,22 +1169,6 @@ equations:
     linearity: linear
     priority: P1
 relationships:
-- source: failure_rate_curve
-  target: mean_time_between_failures
-  equation_id: mtbf_from_failure_rate_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: The shape factor scales the reciprocal of the failure rate.
-  priority: P1
-- source: forced_outage_rate
-  target: mean_time_between_failures
-  equation_id: mtbf_from_failure_rate_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: A higher failure rate means a shorter time between failures.
-  priority: P1
 - source: mean_time_to_repair
   target: forced_outage_rate
   equation_id: availability_definition
