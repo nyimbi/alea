@@ -41,6 +41,7 @@ from alea.prg.graph import (
 	load_graph,
 	load_ingested,
 )
+from alea.prg.service import check_scenario
 
 # --------------------------------------------------------------------------
 # A minimal shipped document and the fragments that correct it.
@@ -577,5 +578,59 @@ def test_the_shipped_fragments_load_and_report_a_clean_merge():
 	assert len(graph.nodes) > len(shipped.nodes)
 	assert len(graph.equations) > len(shipped.equations)
 	assert len(graph.edges) > len(shipped.edges)
+
+
+def test_the_ingested_graph_is_one_default_short_of_a_runnable_scenario():
+	"""The batches re-typed 26 nodes to `bool`/`categorical` and gave no default.
+
+	`docs/param_ingest.md:78` says a `default` is required for a free node, and
+	the loader does not enforce it, so the omission loaded. The shipped graph had
+	declared all 26 as `float` on the `(0, 1e6)` placeholder with `default:
+	500000.0`, and re-typing them to `bool` dropped that placeholder -- which
+	made `check_scenario` over any defaults-built value set raise `the parameter
+	set is missing [...]`.
+
+	This test pins the state after the repair, which is *not* a runnable graph:
+	23 booleans now carry the value `docs/what-if.md` documents, and three nodes
+	remain, each for its own reason. Asserting the three by name is the point --
+	an assertion that the set is empty would fail today, and one that skips the
+	check would let a *fourth* node join the list unremarked. The three:
+
+	* `market_model`, `market_structure` -- categoricals. The model refuses a
+	  scalar `default` on one (`_NON_SCALAR_TYPES`), and `propagate` coerces
+	  every value with `float()`, so a categorical cannot carry a value through
+	  this graph at all. `docs/what-if.md` documents `Single Buyer` for both.
+	* `smart_metering_rollout` -- the three documents disagree about its type:
+	  `param_batch1.md` a share with `default: 0.3`, `param_batch7.md` a bool,
+	  `docs/param_eqn_formula1.md` a year-indexed count. No default can be
+	  written until that is settled.
+	"""
+	graph, _ = load_ingested(default_ingest_dir())
+	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+
+	absent = sorted(
+		k
+		for k, n in graph.nodes.items()
+		if n.default is None and n.role.value != "derived"
+	)
+	assert absent == ["market_model", "market_structure", "smart_metering_rollout"], absent
+
+	# The three are exactly what stops a defaults-built scenario, so the raise
+	# names them and nothing else -- a fourth would be a new omission, not this
+	# defect, and would change the message.
+	with pytest.raises(GraphError) as caught:
+		check_scenario(values, graph)
+	assert "'market_model', 'market_structure', 'smart_metering_rollout'" in str(
+		caught.value
+	)
+
+	# And every free *scalar* node is now supplied, so removing the three
+	# non-scalars leaves a value set the graph can propagate.
+	scalars = {
+		k: v
+		for k, v in values.items()
+		if graph.nodes[k].type.value in {"float", "int", "bool"}
+	}
+	assert len(scalars) == len(values)
 
 

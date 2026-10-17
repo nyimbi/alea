@@ -2,6 +2,13 @@
 # Merged onto config/prg.yaml by alea.prg.graph.load_ingested().
 #
 # Repairs applied to the batch as delivered:
+#   R15: 6 nodes re-typed float -> bool were given the `default` this batch
+#        omitted -- the same defect as batch 4's 17, and the same repair. See
+#        param_batch4.yaml's R15 for the full account. `smart_metering_rollout`
+#        is the one bool left without a default, and deliberately: batch 1 types
+#        it a share (`default: 0.3`), this batch a bool, and
+#        `docs/param_eqn_formula1.md` a year-indexed count, so the documents
+#        disagree about what the node is and a default would pick a side.
 #   retired edge solar_pv_cost -> capex_solar_pv (Self-loop after alias resolution. Removed.)
 #   retired edge wind_onshore_cost -> capex_wind_onshore (Self-loop after alias resolution. Removed.)
 #   R7: battery_cost also appears in param_batch2.md; that entry is kept and this one dropped
@@ -329,6 +336,7 @@ parameters:
       a value 500,000 times the maximum.
     category: Loss Mitigation
     type: bool
+    default: true
     role: free
     determinism: policy
     priority: P2
@@ -341,6 +349,7 @@ parameters:
     description: Corrected from float to bool.
     category: Loss Mitigation
     type: bool
+    default: false
     role: free
     determinism: policy
     priority: P3
@@ -353,6 +362,7 @@ parameters:
     description: Corrected from float to bool.
     category: Loss Mitigation
     type: bool
+    default: true
     role: free
     determinism: policy
     priority: P2
@@ -365,6 +375,7 @@ parameters:
     description: Corrected from float to bool.
     category: Loss Mitigation
     type: bool
+    default: true
     role: free
     determinism: policy
     priority: P2
@@ -377,6 +388,7 @@ parameters:
     description: Corrected from float to bool.
     category: Loss Mitigation
     type: bool
+    default: true
     role: free
     determinism: policy
     priority: P2
@@ -390,6 +402,7 @@ parameters:
       a scenario either models the coordination or does not.
     category: Operational
     type: bool
+    default: true
     role: free
     determinism: policy
     priority: P2

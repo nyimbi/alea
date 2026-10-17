@@ -2,6 +2,15 @@
 # Merged onto config/prg.yaml by alea.prg.graph.load_ingested().
 #
 # Repairs applied to the batch as delivered:
+#   R15: 17 nodes re-typed float -> bool were given the `default` this batch
+#        omitted. `docs/param_ingest.md:78` requires a default on a free node and
+#        the loader does not enforce it, so the omission loaded -- and because the
+#        shipped graph had declared each of these `float` with `default: 500000.0`
+#        on the `(0, 1e6)` placeholder, re-typing them to `bool` *removed* the
+#        only value they had. `check_scenario` over a defaults-built set then
+#        raised `the parameter set is missing [...]` for all 26 such nodes across
+#        batches 4 and 7. The values are the ones `docs/what-if.md` documents for
+#        each parameter, so nothing here is invented.
 #   R11: dropped equation 'mtbf_from_history_definition' -- its own description declares it a placeholder that cannot load
 #   R11: dropped equation 'saifi_from_outage_frequency_definition' -- it determines 'system_saifi_events_per_year', which 'saifi_definition' already determines
 #   R11: dropped equation 'saidi_from_reliability_definition' -- it determines 'system_saidi_hours_per_year', which 'saidi_definition' already determines
@@ -819,6 +828,7 @@ parameters:
       the shipped declaration admitted an ETS that was 500,000 times enabled.
     category: Policy
     type: bool
+    default: false
     role: free
     determinism: policy
     priority: P2
@@ -831,6 +841,7 @@ parameters:
     description: Whether the dispatch model enforces unit commitment. A boolean.
     category: Operational
     type: bool
+    default: true
     role: free
     determinism: fixed
     priority: P1
@@ -843,6 +854,7 @@ parameters:
     description: Whether the dispatch model enforces N-1 security. A boolean.
     category: Operational
     type: bool
+    default: true
     role: free
     determinism: fixed
     priority: P1
@@ -855,6 +867,7 @@ parameters:
     description: Whether the dispatch model enforces N-2 security. A boolean.
     category: Operational
     type: bool
+    default: false
     role: free
     determinism: fixed
     priority: P2
@@ -867,6 +880,7 @@ parameters:
     description: Whether the dispatch is constrained by network limits. A boolean.
     category: Operational
     type: bool
+    default: true
     role: free
     determinism: fixed
     priority: P1
@@ -879,6 +893,7 @@ parameters:
     description: Whether a day-ahead market is modelled. A boolean.
     category: Operational
     type: bool
+    default: true
     role: free
     determinism: fixed
     priority: P1
@@ -891,6 +906,7 @@ parameters:
     description: Whether a real-time market is modelled. A boolean.
     category: Operational
     type: bool
+    default: false
     role: free
     determinism: fixed
     priority: P2
@@ -903,6 +919,7 @@ parameters:
     description: Whether an intraday market is modelled. A boolean.
     category: Operational
     type: bool
+    default: false
     role: free
     determinism: fixed
     priority: P2
@@ -915,6 +932,7 @@ parameters:
     description: Whether a balancing market is modelled. A boolean.
     category: Operational
     type: bool
+    default: true
     role: free
     determinism: fixed
     priority: P2
@@ -927,6 +945,7 @@ parameters:
     description: Whether cross-border trade is permitted. A boolean.
     category: Transmission & Grid
     type: bool
+    default: true
     role: free
     determinism: policy
     priority: P1
@@ -939,6 +958,7 @@ parameters:
     description: Whether the expansion model may build transmission. A boolean.
     category: Transmission & Grid
     type: bool
+    default: true
     role: free
     determinism: policy
     priority: P1
@@ -951,6 +971,7 @@ parameters:
     description: Whether the model may extend an ageing plant's life. A boolean.
     category: Supply-Side
     type: bool
+    default: false
     role: free
     determinism: policy
     priority: P2
@@ -964,6 +985,7 @@ parameters:
       either on or off, not a quantity.
     category: Policy
     type: bool
+    default: false
     role: free
     determinism: policy
     priority: P2
@@ -976,6 +998,7 @@ parameters:
     description: Whether a capacity market is modelled. A boolean.
     category: Policy
     type: bool
+    default: false
     role: free
     determinism: policy
     priority: P2
@@ -988,6 +1011,7 @@ parameters:
     description: Whether an ancillary services market is modelled. A boolean.
     category: Policy
     type: bool
+    default: false
     role: free
     determinism: policy
     priority: P2
@@ -1000,6 +1024,7 @@ parameters:
     description: Whether a CfD mechanism is modelled. A boolean.
     category: Policy
     type: bool
+    default: false
     role: free
     determinism: policy
     priority: P2
@@ -1012,6 +1037,7 @@ parameters:
     description: Whether the government guarantees the PPA. A boolean.
     category: Policy
     type: bool
+    default: false
     role: free
     determinism: policy
     priority: P2
