@@ -317,17 +317,43 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 	replacement named on the node -- which is the field's own contract. The
 	catalog's legend has three glyphs (✅ 🔨 🔗) and no way to say a row should
 	not exist, so these two disagreements are the register doing its job on a
-	drift the catalog format cannot absorb. Pinned beside
-	``equity_return_target`` with the reason, so a fourth disagreement is the
-	failure rather than the number.
+	drift the catalog format cannot absorb. Batch 20's coupling then promoted
+	twenty more parameters onto the graph as ``existing`` -- the finance,
+	outage and degradation batches landed them as defined -- while the
+	catalog still marks them ``to_build`` (``integrate`` for
+	``capacity_price``, ``cbam_price``, ``steel_production``), taking the
+	register to 23 disagreements, each one the register doing its job on a
+	catalog the generator has outpaced. Pinned beside
+	``equity_return_target`` with the reason, so the next landed batch moves
+	this test rather than passing silently.
 	"""
 	joins = {join.parameter: join for join in status_join(graph=graph)}
 	assert len(joins) == 787, len(joins)
 	disagreeing = {name: join for name, join in joins.items() if not join.agrees}
 	assert set(disagreeing) == {
+		"blended_finance_share",
+		"bond_share",
+		"capacity_price",
+		"carbon_finance_share",
+		"cbam_price",
+		"cement_production",
+		"chemicals_ammonia_production",
+		"commercial_bank_share",
+		"construction_period",
+		"cost_of_debt",
 		"cross_border_trading",
 		"demand_growth_rate",
+		"dfi_share",
 		"equity_return_target",
+		"green_bond_share",
+		"line_outage_duration",
+		"line_outage_probability",
+		"maintenance_duration",
+		"net_zero_year",
+		"retraining_duration",
+		"solar_degradation",
+		"steel_production",
+		"wind_degradation",
 	}, sorted(disagreeing)
 
 	drifted = disagreeing["equity_return_target"]
@@ -347,11 +373,12 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 		assert node.status == "deprecated", node.status
 		assert node.deprecated_by in graph.nodes, node.deprecated_by
 
-	# The other 784 are the control: a join that reported every node as
+	# The other 764 are the control: a join that reported every node as
 	# disagreeing would pass the assertion above and mean nothing. The
-	# expansion took the agreeing count to 786 and the promotion left it at
-	# 784, for the two deprecations above.
-	assert sum(1 for join in joins.values() if join.agrees) == 784
+	# expansion took the agreeing count to 786, the promotion left it at 784
+	# for the two deprecations above, and batch 20 took it to 764 for the
+	# twenty promotions the set above names.
+	assert sum(1 for join in joins.values() if join.agrees) == 764
 
 
 def test_a_node_the_catalog_does_not_name_is_absent_rather_than_guessed(
@@ -393,10 +420,34 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 		"planned_outage_rate",
 		"resettlement_costs",
 	}
+	# Pinned to the shipped graph's own list, alphabetical as catalog_report
+	# emits it: the two deprecations, equity_return_target, and the twenty
+	# parameters batch 20 promoted to ``existing`` while the catalog still
+	# says to_build or integrate.
 	assert report["status_disagreements"] == [
+		"blended_finance_share: the graph says existing and the catalog says to_build",
+		"bond_share: the graph says existing and the catalog says to_build",
+		"capacity_price: the graph says existing and the catalog says integrate",
+		"carbon_finance_share: the graph says existing and the catalog says to_build",
+		"cbam_price: the graph says existing and the catalog says integrate",
+		"cement_production: the graph says existing and the catalog says to_build",
+		"chemicals_ammonia_production: the graph says existing and the catalog says to_build",
+		"commercial_bank_share: the graph says existing and the catalog says to_build",
+		"construction_period: the graph says existing and the catalog says to_build",
+		"cost_of_debt: the graph says existing and the catalog says to_build",
 		"cross_border_trading: the graph says deprecated and the catalog says existing",
 		"demand_growth_rate: the graph says deprecated and the catalog says to_build",
+		"dfi_share: the graph says existing and the catalog says to_build",
 		"equity_return_target: the graph says to_build and the catalog says integrate",
+		"green_bond_share: the graph says existing and the catalog says to_build",
+		"line_outage_duration: the graph says existing and the catalog says to_build",
+		"line_outage_probability: the graph says existing and the catalog says to_build",
+		"maintenance_duration: the graph says existing and the catalog says to_build",
+		"net_zero_year: the graph says existing and the catalog says to_build",
+		"retraining_duration: the graph says existing and the catalog says to_build",
+		"solar_degradation: the graph says existing and the catalog says to_build",
+		"steel_production: the graph says existing and the catalog says integrate",
+		"wind_degradation: the graph says existing and the catalog says to_build",
 	]
 	assert len(report["status_join"]) == 787
 

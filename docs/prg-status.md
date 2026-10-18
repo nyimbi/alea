@@ -1736,6 +1736,50 @@ judged by the arithmetic's own symbol closure, canaried in
 symbol-changing equation correction was unloadable, because the correction is
 what makes the shipped edge stale.
 
+**Batch 20 and the current state (2026-10-18).** The share family closed
+through an overlap-aware framing — the financing-mix shares do not sum to one
+(green bonds are bonds; blended packages draw on the DFI and commercial
+tranches), so they couple as subset and envelope inequalities against bases
+that exist: `debt_mix_bound` against the D/E ratio's own `D/(D+E)`,
+`blended_finance_bound`, `green_bond_bound`, `carbon_finance_bound` against the
+carbon revenue's weight in total revenue, `steel_route_bound`,
+`urban_heat_supply_bound`, `powertrain_stock_bound`, `v2g_subset_bound`. The
+time-index family (all 24) coupled as its own arithmetic: policy-clock lead
+times, the growth window and its compound factor, retraining within
+construction, the storage power-energy cost split
+(`capex_battery * battery_duration` per kW; `capex_phs / phs_duration` per
+kWh), and the vintage capacity factors — the factor today compounded by its
+technology's degradation rate to the dataset's vintage year
+(`solar_pv_capacity_factor * (1 - solar_degradation) ** solar_cf_year`), which
+is what makes `solar_cf_year`/`wind_cf_year` the dataset-vintage dials they
+are. 11 of the 18 shares coupled; `public_transport_share` waits on a
+passenger-km base (the base-node batch). Eight placeholders found their units:
+`construction_period` months, `settlement_period` half-hours,
+`phs_duration`/`thermal_storage_duration` hours, the line-outage pair
+(`line_outage_probability` reframed from a probability ≤1 to the expected
+events-per-year rate the frequency×duration product needs, IEEE 1366's r_i
+term), `chemicals_ammonia_production` and `interconnector_capacity`, the two
+degradation rates. State after batch 20: **1114 parameters, 206 equations, 456
+edges, 54 rules, 649 uncoupled** (694 → 649; 45 this batch). Generator
+`--check` idempotent; the two batch-19 references that resolved to no register
+row are corrected to null in this fragment (the products are definitions; the
+H2 intensity's provenance lives on the node) and the degradation identity
+carries Jordan & Kurtz (2016) in the degradation nodes' source text pending
+archive.
+
+**A bake lesson worth keeping.** The bake is a *document-level* merge, never a
+whole-graph re-dump: the shipped file's bodies deliberately carry mixed shapes
+(catalog rows compact, corrected nodes the model's own dump), and re-dumping
+the merged graph reshapes every untouched entry — adding `source:
+docs/params.md` keys that `load_existing` treats as generated and drops. Two
+consequences surfaced once and are pinned: the generator re-emits
+newly-coupled catalog nodes with their catalog roles (the uncoupled register
+no longer forces them `free` — 15 role flips, accepted), and `net_zero_year`
+is derived-*by-name* in the catalog heuristic but is not computed by anything
+once it is only a coupled milestone — so a coupled milestone needs its own
+preserved body (role `exogenous`, its default restored), not a name heuristics'
+pass.
+
 ## Evaluation of the design docs against the code (2026-10-17)
 
 **`docs/how_prg_works.md` (read-only; a teaching narrative, not read as spec).**

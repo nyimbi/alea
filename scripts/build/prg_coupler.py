@@ -546,7 +546,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -611,6 +611,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b19_equations)
 		edges = list(BATCH12_EDGES) + b19_edges
+	elif batch == "20":
+		b20_nodes, b20_equations, b20_edges, b20_rules = build_batch20(graph)
+		rules.extend(b20_rules)
+		nodes.update(b20_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b20_equations)
+		edges = list(BATCH12_EDGES) + b20_edges
 	else:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		edges = list(BATCH12_EDGES)
@@ -2745,6 +2752,799 @@ def build_batch19(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 				"strength": "hard", "description": "Enters the sector product.",
 			})
 	return nodes, equations, edges, rules
+
+
+# ---------------------------------------------------------------------------
+# Batch 20: the share family's remaining products, and the time-index family.
+#
+# The share family is where the coupling has to be overlap-aware. The
+# financing-mix shares (bonds, green bonds, DFI facilities, commercial bank
+# lines, blended packages, carbon-financed instruments) do NOT sum to one:
+# a green bond is a bond, a blended package draws on DFI money and commercial
+# money, so a sum-to-one identity over them would be wrong on the graph's own
+# semantics. What they obey are subset and envelope inequalities, and these
+# are the couplings they get:
+#
+#   * debt_mix_bound        -- bond + DFI + commercial <= debt's own share of
+#                              the capital structure (D/(D+E) from the shipped
+#                              debt_equity_ratio). The three instrument
+#                              classes fund the same debt tranche, so together
+#                              they may not exceed it.
+#   * blended_finance_bound -- a blended package draws on the concessional
+#                              (DFI) and commercial tranche, so its share is
+#                              bounded by the two together.
+#   * green_bond_bound      -- green bonds are a subset of bond issuance
+#                              (ICMA Green Bond Principles).
+#   * carbon_finance_bound  -- carbon-backed financing may not exceed the
+#                              carbon revenue stream it is collateral on,
+#                              which the shipped carbon/total-revenue pair
+#                              computes.
+#   * steel_route_bound     -- the scrap-EAF and H2-DRI routes are shares of
+#                              the same crude-steel output: together <= 1.
+#   * urban_heat_supply_bound / powertrain_stock_bound -- the two couples'
+#                              modes are disjoint supply/powertrain classes
+#                              of one stock, so each pair sums to at most 1.
+#   * v2g_subset_bound      -- V2G-capable EVs are a subset of the EV stock.
+#
+# The time-index family couples as its own arithmetic, not as products with
+# missing bases: lead times between policy milestones (differences of the
+# same clock, [time] - [time]), windows (the growth window), schedules against
+# durations (retraining within construction), and the storage power-energy
+# cost split (cost per kW of the unit-power view of a store, and cost per kWh
+# of the per-energy view), which is what makes battery_duration and
+# phs_duration the sizing knobs they are. The vintage years (solar_cf_year,
+# wind_cf_year) couple through the degradation rates: the capacity factor the
+# graph quotes is the factor AT the vintage year, i.e. the factor today
+# compounded by the technology's own degradation.
+# ---------------------------------------------------------------------------
+
+# The financing-mix defaults, aligned so that every bound above holds at the
+# defaults the shipped graph carries -- the same constraint as the batch-13
+# products (a bound violated at its own defaults is a validation failure, not
+# a coupling). The alignment is itself the finding the overlap-aware framing
+# demands: bond 25%, DFI 20%, commercial 20% sums to 65%, inside the 69.97%
+# the debt/equity ratio of 2.33 implies; a blended package (35%) and green
+# bonds (10%) sit under their own envelopes.
+BATCH20_SHARE_DEFAULTS: tuple[tuple[str, str, float, str], ...] = (
+	(
+		"bond_share",
+		"The bond market's supply of the project's debt financing. Default "
+		"aligned so that the three instrument classes' shares sit inside "
+		"debt's own share of the capital structure (debt_mix_bound).",
+		0.25,
+		"The financing-mix corrections (batch 20)",
+	),
+	(
+		"green_bond_share",
+		"The share of the project's debt financing the bond market supplies "
+		"through green-labelled instruments. A subset of bond issuance (the "
+		"same tranche funded under a use-of-proceeds label), so it is "
+		"bounded by bond itself.",
+		0.10,
+		"The financing-mix corrections (batch 20)",
+	),
+	(
+		"dfi_share",
+		"The DFI facilities' supply of the project's debt financing. "
+		"Default aligned so the three instrument classes' shares sit inside "
+		"debt's own share of the capital structure.",
+		0.20,
+		"The financing-mix corrections (batch 20)",
+	),
+	(
+		"commercial_bank_share",
+		"The commercial banks' supply of the project's debt financing. "
+		"Default aligned so the three instrument classes' shares sit inside "
+		"debt's own share of the capital structure.",
+		0.20,
+		"The financing-mix corrections (batch 20)",
+	),
+	(
+		"blended_finance_share",
+		"The share of the project's financing structured as a blended "
+		"package. Blending combines a concessional and a commercial tranche, "
+		"so the share's scale is bounded by the two funding sources "
+		"together -- which is the coupling, not a sum-to-one identity.",
+		0.35,
+		"The financing-mix corrections (batch 20)",
+	),
+	(
+		"carbon_finance_share",
+		"The share of the project's financing backed by carbon credit sales. "
+		"Bounded by the carbon revenue stream itself (the finance the carbon "
+		"instrument can carry), which the shipped carbon/total-revenue pair "
+		"computes.",
+		0.05,
+		"The financing-mix corrections (batch 20)",
+	),
+)
+
+# The placeholder nodes the time-index products read: every one ships with
+# the placeholder default (500 000, unit None) and every one needs a unit the
+# arithmetic and the walker can carry, a default inside its own declared range,
+# and a range whose images hold the defaults.
+BATCH20_PLACEHOLDER_CORRECTIONS: dict[
+	str, tuple[str, list[float], float, str, str, str]
+] = {
+	"chemicals_ammonia_production": (
+		"tonnes/year", [0.0, 1000000.0], 600000.0, "free", "physical",
+		"The chemical sector's ammonia output per year, in tonnes. The "
+		"catalog's placeholder scale (0-1e6 t) retained as the range; the "
+		"green-ammonia product below derives from it.",
+	),
+	"interconnector_capacity": (
+		"MW", [0.0, 1000000.0], 1000.0, "free", "physical",
+		"The MW capacity the cross-border link nominally carries: 1,000 MW "
+		"is the scale an early interconnector takes (the EAC's proposed "
+		"cross-border reinforcements are of this order).",
+	),
+	"phs_duration": (
+		"hours", [0.0, 48.0], 6.0, "free", "physical",
+		"Hours the PHS reservoir discharges at rated power: pumped storage "
+		"sizes at 6-24 h.",
+	),
+	"thermal_storage_duration": (
+		"hours", [0.0, 72.0], 8.0, "free", "physical",
+		"Hours the thermal store discharges at rated output: molten-salt "
+		"and pressurised-water stores sizes at 6-12 h, industrial heat "
+		"stores up to days.",
+	),
+	"settlement_period": (
+		"hours", [0.05, 24.0], 0.5, "free", "physical",
+		"Hours one settlement period spans: half an hour is the standard "
+		"settlement interval at mature system operators.",
+	),
+	"construction_period": (
+		"months", [1.0, 96.0], 30.0, "free", "physical",
+		"Months between financial close and commercial operation for a "
+		"utility-scale IPP: thermal units build at 24-36 months, solar "
+		"and wind faster; the range carries the project classes.",
+	),
+	"retraining_duration": (
+		"months", [0.0, 60.0], 12.0, "free", "policy",
+		"Months of retraining a displaced or in-plant worker takes: "
+		"a year is the programme the utilities' plans budget.",
+	),
+	"line_outage_duration": (
+		"hours/event", [0.5, 48.0], 6.0, "free", "physical",
+		"Mean hours a line outage event spans: transmission faults with "
+		"auto-reclose clear in minutes, repairs take hours.",
+	),
+	"line_outage_probability": (
+		"1/year", [0.0, 365.0], 2.0, "free", "physical",
+		"Expected line outage events per year. Shipped as a probability, "
+		"which admits at most one event a year; reframed as the expected "
+		"rate (the r_i term of the reliability indices' frequency-times-"
+		"duration product), which is the quantity the product below needs.",
+	),
+	"maintenance_duration": (
+		"hours/event", [2.0, 720.0], 48.0, "free", "physical",
+		"Mean hours per planned maintenance event: routine servicing at "
+		"the low end, a major inspection at the high end. Unit spelled as "
+		"the per-event form the frequency product reads.",
+	),
+	"solar_degradation": (
+		"1/year", [0.0, 0.02], 0.005, "free", "physical",
+		"Relative PV degradation per year: the field's measured band "
+		"centres near 0.5%/yr, with the faster technologies above 1%.",
+	),
+	"wind_degradation": (
+		"1/year", [0.0, 0.02], 0.003, "free", "physical",
+		"Relative wind-degradation per year: blade surface erosion and "
+		"control drift are the mechanisms; the band sits well below PV's "
+		"and the literature quotes ~0.3%/yr.",
+	),
+}
+
+# The product targets: unit, range, category, and the prose the fragment
+# carries. Every one is `derived`, so the propagate computes its value and
+# the range must contain the image at defaults.
+BATCH20_PRODUCT_NODES: dict[str, tuple[str, list[float], str, str]] = {
+	"debt_financing_share": (
+		"1", [0.0, 1.0], "Financial",
+		"Debt's share of the capital structure: D/(D+E) from the shipped "
+		"debt/equity ratio, which is the envelope the financing-mix "
+		"instrument shares are bounded by.",
+	),
+	"carbon_revenue_share_of_revenue": (
+		"1", [0.0, 1.0], "Financial",
+		"The carbon revenue stream's weight in the fleet's total revenue: "
+		"the envelope carbon-backed financing is bounded by.",
+	),
+	"steel_eaf_route_mt": (
+		"million tonnes/year", [0.0, 200.0], "Industry",
+		"Crude steel the scrap-EAF route makes: the mix share times the "
+		"sector's own output.",
+	),
+	"chemicals_green_ammonia_tonnes_per_year": (
+		"tonnes/year", [0.0, 1000000.0], "Industry",
+		"Ammonia the chemical programme makes through the green route: the "
+		"mix share times the sector's own output.",
+	),
+	"hvdc_interconnector_capacity_mw": (
+		"MW", [0.0, 1000000.0], "Transmission",
+		"Cross-border capacity in HVDC: the technology's share of the "
+		"interconnector's own rating.",
+	),
+	"solar_pv_capacity_factor_at_vintage": (
+		"1", [0.0, 1.0], "Generation",
+		"The PV capacity factor AT the vintage year the dataset quotes: the "
+		"factor today compounded by the technology's own degradation rate.",
+	),
+	"wind_capacity_factor_at_vintage": (
+		"1", [0.0, 1.0], "Generation",
+		"The onshore-wind capacity factor AT its dataset's vintage year: "
+		"the factor today compounded by the technology's degradation.",
+	),
+	"hydro_inflow_vintage_offset_years": (
+		"years", [-100.0, 100.0], "Generation",
+		"How much the hydro inflow record's design year leads or trails the "
+		"PV data's vintage. The vintage selectors are set independently, and "
+		"this offset is the check a scenario author runs for consistency.",
+	),
+	"years_from_peak_to_net_zero": (
+		"years", [-100.0, 100.0], "Planning",
+		"Years between the emissions peak and the net-zero year, on the "
+		"policy clock; the pace the trajectory must hold between the two "
+		"milestones.",
+	),
+	"years_from_carbon_tax_to_net_zero": (
+		"years", [-100.0, 100.0], "Planning",
+		"Years between the carbon tax's start and the net-zero year: the "
+		"carbon pricing's own running length on the policy clock.",
+	),
+	"years_from_renewable_target_to_net_zero": (
+		"years", [-100.0, 100.0], "Planning",
+		"Years between the renewable target's year and net zero.",
+	),
+	"construction_share_of_concession": (
+		"1", [0.0, 1.0], "Financial",
+		"The fraction of the concession term the construction period "
+		"consumes: months over the term's own months.",
+	),
+	"financing_close_share_of_licence": (
+		"1", [0.0, 1.0], "Financial",
+		"The fraction of the licence term the financing-close deadline "
+		"spans: months over the term's own months.",
+	),
+	"taxed_fraction_of_concession": (
+		"1", [0.0, 1.0], "Financial",
+		"The fraction of the concession term the income tax does apply to: "
+		"one minus the holiday's share.",
+	),
+	"fit_annuity_factor": (
+		"years", [0.0, 200.0], "Financial",
+		"The present-value annuity factor over the FiT contract term, at "
+		"the real discount rate: the PV-per-annum weight the tariff's "
+		"cash flows carry.",
+	),
+	"total_loss_utilisation_window_years": (
+		"years", [0.0, 30.0], "Financial",
+		"The total window tax losses may be utilised over: the carryback "
+		"and carryforward years together.",
+	),
+	"demand_growth_window_years": (
+		"years", [-100.0, 100.0], "Demand-Side",
+		"Years the growth trajectory spans: end year minus start year on "
+		"the trajectory's own clock.",
+	),
+	"demand_growth_factor": (
+		"1", [0.0, 10.0], "Demand-Side",
+		"The compound growth factor over the trajectory's window: (1+g) to "
+		"the window's years, the factor a forecast escalates demand by.",
+	),
+	"capex_battery_power_usd_per_kw": (
+		"USD/kW", [0.0, 50000.0], "Storage",
+		"The battery's energy store expressed per kW of power rating: the "
+		"per-energy cost times the duration, the power-energy split the "
+		"storage sizing literature keeps.",
+	),
+	"phs_energy_capex_usd_per_kwh": (
+		"USD/kWh", [0.0, 10000.0], "Storage",
+		"Pumped hydro's cost per kWh of energy: the power-quoted installed "
+		"cost divided by the reservoir's hours, the power-energy split's "
+		"other direction -- and the reason PHS is cheap per energy and "
+		"expensive per power.",
+	),
+	"thermal_phs_duration_ratio": (
+		"1", [0.0, 10.0], "Storage",
+		"The thermal store's duration relative to pumped hydro's: the "
+		"long-duration comparison a portfolio's sizing check starts from.",
+	),
+	"settlement_intervals_per_hour": (
+		"1/hour", [0.0, 100.0], "Demand-Side",
+		"How many settlement periods an hour carries: the inverse of the "
+		"interval, which is what a dispatch or a data series counts.",
+	),
+	"line_outage_hours_per_year": (
+		"hours/year", [0.0, 8760.0], "Reliability",
+		"Hours per year the line spends out: the frequency-times-duration "
+		"product, the line-level figure of the same form the SAIDI sum "
+		"takes at system level.",
+	),
+	"planned_maintenance_hours_per_year": (
+		"hours/year", [0.0, 8760.0], "Reliability",
+		"Hours per year planned maintenance takes: the events' frequency "
+		"times their duration, the planned-outage term against "
+		"availability.",
+	),
+}
+
+# The bounds: (id, lhs, rhs, prose, system, priority). `relation` leq on all.
+BATCH20_BOUNDS: tuple[tuple[str, str, str, str, str, str], ...] = (
+	(
+		"debt_mix_bound",
+		"bond_share + dfi_share + commercial_bank_share",
+		"debt_financing_share",
+		"The three debt-instrument classes cannot, together, exceed debt's "
+		"own share of the capital structure: they fund the same debt "
+		"tranche, which the D/E ratio declares.",
+		"financial", "P1",
+	),
+	(
+		"blended_finance_bound",
+		"blended_finance_share",
+		"dfi_share + commercial_bank_share",
+		"A blended package draws on the concessional and the commercial "
+		"tranche, so its share's scale is bounded by the two together.",
+		"financial", "P2",
+	),
+	(
+		"green_bond_bound",
+		"green_bond_share",
+		"bond_share",
+		"Green bonds are a subset of bond issuance -- the same tranche "
+		"funded under a use-of-proceeds label -- so their share is bounded "
+		"by the bond market's own share.",
+		"financial", "P2",
+	),
+	(
+		"carbon_finance_bound",
+		"carbon_finance_share",
+		"carbon_revenue_share_of_revenue",
+		"Financing backed by carbon credit sales cannot exceed the carbon "
+		"revenue stream it is collateral on: the carbon stream is the "
+		"repayment source, and its weight in total revenue bounds "
+		"the share.",
+		"financial", "P2",
+	),
+	(
+		"steel_route_bound",
+		"steel_scrap_eaf_share + steel_h2_dri_share",
+		"1.0",
+		"The scrap-EAF and H2-DRI routes are shares of the same crude-steel "
+		"output: together they may not exceed it.",
+		"price_demand", "P1",
+	),
+	(
+		"urban_heat_supply_bound",
+		"district_heating_share + heat_pump_adoption",
+		"1.0",
+		"District heating and heat pumps are disjoint supply modes of the "
+		"same urban building stock's heat: together they may not exceed the "
+		"stock.",
+		"demand_supply", "P2",
+	),
+	(
+		"powertrain_stock_bound",
+		"hydrogen_vehicle_share + electric_vehicle_adoption",
+		"1.0",
+		"Fuel-cell and battery vehicles are disjoint powertrains of the "
+		"same vehicle stock: together they may not exceed it.",
+		"demand_supply", "P2",
+	),
+	(
+		"v2g_subset_bound",
+		"v2g_adoption",
+		"electric_vehicle_adoption",
+		"V2G-capable vehicles are a subset of the EV stock: their share of "
+		"the fleet cannot exceed the EV share itself.",
+		"demand_supply", "P2",
+	),
+	(
+		"retraining_schedule_bound",
+		"retraining_duration",
+		"construction_period",
+		"The retraining programme completes within construction: workers "
+		"are trained while the plant is built, and the schedule bound is "
+		"months against months.",
+		"employment", "P2",
+	),
+)
+
+# The equations: (id, name, lhs, rhs, prose, system, determined, parameters,
+# linearity, reference). Every product is an equality whose target is the
+# derived node; the parameters carry the rhs's own names.
+BATCH20_EQUATIONS: tuple[
+	tuple[str, str, str, str, str, str, str, str, str | None], ...
+] = (
+	(
+		"debt_financing_share_definition",
+		"Debt's share of the capital structure",
+		"debt_financing_share",
+		"debt_equity_ratio / (1.0 + debt_equity_ratio)",
+		"Debt's own share of the capital structure: D/(D+E), the conversion "
+		"of the shipped debt/equity ratio to the share the financing-mix "
+		"bounds are expressed against.",
+		"financial", "linear", "1",
+		"Short, Packey & Holt (1995), NREL/TP-462-5173",
+	),
+	(
+		"carbon_revenue_share_of_revenue_definition",
+		"Carbon revenue's weight in total revenue",
+		"carbon_revenue_share_of_revenue",
+		"carbon_revenue_usd_per_year / total_revenue_usd_per_year",
+		"The carbon stream's weight in the fleet's revenue: the ratio the "
+		"carbon-backed-financing bound is expressed against.",
+		"financial", "linear", "1",
+		"Stoft 2002, Power System Economics, ch. 5",
+	),
+	(
+		"steel_eaf_route_definition",
+		"Crude steel the scrap-EAF route makes",
+		"steel_eaf_route_mt",
+		"steel_scrap_eaf_share * steel_production",
+		"Crude steel the scrap-EAF route makes: the mix share times the "
+		"sector's own output, in million tonnes.",
+		"price_demand", "linear", "million tonnes/year",
+		None,
+	),
+	(
+		"chemicals_green_ammonia_definition",
+		"Ammonia the green route makes",
+		"chemicals_green_ammonia_tonnes_per_year",
+		"chemicals_green_ammonia_share * chemicals_ammonia_production",
+		"Ammonia the chemical programme makes through the green route: the "
+		"mix share times the sector's own output, in tonnes.",
+		"price_demand", "linear", "tonnes/year",
+		None,
+	),
+	(
+		"hvdc_capacity_definition",
+		"Cross-border capacity in HVDC",
+		"hvdc_interconnector_capacity_mw",
+		"hvdc_share * interconnector_capacity",
+		"The interconnector's MW rating that carries HVDC: the technology's "
+		"share times the link's own capacity.",
+		"demand_supply", "linear", "MW",
+		None,
+	),
+	(
+		"solar_pv_capacity_factor_at_vintage_definition",
+		"The PV capacity factor at the dataset's vintage year",
+		"solar_pv_capacity_factor_at_vintage",
+		"solar_pv_capacity_factor * (1.0 - solar_degradation) ** solar_cf_year",
+		"The PV capacity factor AT the vintage year the dataset quotes: "
+		"the factor today compounded by the technology's own degradation "
+		"rate, whose field-measured band the degradation node carries.",
+		"demand_supply", "nonlinear", "1",
+		None,
+	),
+	(
+		"wind_capacity_factor_at_vintage_definition",
+		"The onshore-wind capacity factor at its vintage year",
+		"wind_capacity_factor_at_vintage",
+		"capacity_factor_wind_onshore * (1.0 - wind_degradation) ** wind_cf_year",
+		"The onshore-wind capacity factor AT its dataset's vintage year: "
+		"the factor compounded by the technology's degradation.",
+		"demand_supply", "nonlinear", "1",
+		None,
+	),
+	(
+		"hydro_inflow_vintage_offset_definition",
+		"The inflow record's vintage offset",
+		"hydro_inflow_vintage_offset_years",
+		"hydro_inflow_year - solar_cf_year",
+		"How much the hydro inflow record's design year leads or trails the "
+		"PV data's vintage. The vintage selectors are set independently, and "
+		"this offset is the check a scenario author runs for consistency.",
+		"demand_supply", "linear", "years",
+		None,
+	),
+	(
+		"years_from_peak_to_net_zero_definition",
+		"Years from the emissions peak to net zero",
+		"years_from_peak_to_net_zero",
+		"net_zero_year - emissions_peak_year",
+		"Years between the emissions peak and the net-zero year on the "
+		"policy clock: the pace the trajectory must hold between the two "
+		"milestones.",
+		"carbon_trajectory", "linear", "years",
+		None,
+	),
+	(
+		"years_from_carbon_tax_to_net_zero_definition",
+		"Years the carbon tax runs to net zero",
+		"years_from_carbon_tax_to_net_zero",
+		"net_zero_year - carbon_tax_start_year",
+		"Years between the carbon tax's start and the net-zero year: the "
+		"pricing's own running length on the policy clock.",
+		"carbon_trajectory", "linear", "years",
+		None,
+	),
+	(
+		"years_from_renewable_target_to_net_zero_definition",
+		"Years from the renewable target to net zero",
+		"years_from_renewable_target_to_net_zero",
+		"net_zero_year - renewable_target_year",
+		"Years between the renewable target's year and net zero on the "
+		"policy clock.",
+		"carbon_trajectory", "linear", "years",
+		None,
+	),
+	(
+		"construction_share_of_concession_definition",
+		"The construction period's share of the concession",
+		"construction_share_of_concession",
+		"construction_period / (concession_duration * 12.0)",
+		"The fraction of the concession term construction consumes: months "
+		"over the term's own months. The metric the concessionaire's "
+		"downtime exposure is stated against.",
+		"financial", "linear", "1",
+		None,
+	),
+	(
+		"financing_close_share_of_licence_definition",
+		"The financing-close deadline's share of the licence",
+		"financing_close_share_of_licence",
+		"financing_close_deadline / (licence_duration * 12.0)",
+		"The fraction of the licence term the financing-close deadline "
+		"spans: months over the term's own months. The metric the "
+		"licence-lapse risk is stated against.",
+		"financial", "linear", "1",
+		None,
+	),
+	(
+		"taxed_fraction_of_concession_definition",
+		"The taxed fraction of the concession",
+		"taxed_fraction_of_concession",
+		"1.0 - tax_holiday_duration / concession_duration",
+		"The fraction of the concession term income tax does apply to: one "
+		"minus the holiday's share. The multiplier the taxable-income "
+		"accounts carry.",
+		"financial", "linear", "1",
+		None,
+	),
+	(
+		"fit_annuity_factor_definition",
+		"The annuity factor over the FiT term",
+		"fit_annuity_factor",
+		"(1.0 - (1.0 + real_discount_rate) ** (-fit_duration)) / real_discount_rate",
+		"The present-value annuity factor over the FiT contract term, at "
+		"the real discount rate the Fisher identity derives: the "
+		"PV-per-annum weight the tariff's cash flows carry.",
+		"financial", "nonlinear", "years",
+		"Short, Packey & Holt (1995), NREL/TP-462-5173",
+	),
+	(
+		"total_loss_utilisation_window_definition",
+		"The tax-loss utilisation window",
+		"total_loss_utilisation_window_years",
+		"loss_carryback_years + loss_carryforward_years",
+		"The total window tax losses may be utilised over: the carryback "
+		"and carryforward years together, which is what the effective "
+		"tax-rate smoothing relies on.",
+		"financial", "linear", "years",
+		None,
+	),
+	(
+		"demand_growth_window_definition",
+		"The growth trajectory's window",
+		"demand_growth_window_years",
+		"demand_growth_end_year - demand_growth_start_year",
+		"Years the demand growth trajectory spans: end year minus start "
+		"year on the trajectory's own clock.",
+		"price_demand", "linear", "years",
+		None,
+	),
+	(
+		"demand_growth_factor_definition",
+		"The compound growth factor over the window",
+		"demand_growth_factor",
+		"(1.0 + demand_growth) ** demand_growth_window_years",
+		"The compound growth factor over the trajectory's window: (1+g) to "
+		"the window's years, the factor a forecast escalates demand by.",
+		"price_demand", "nonlinear", "1",
+		"Short, Packey & Holt (1995), NREL/TP-462-5173",
+	),
+	(
+		"capex_battery_power_usd_per_kw_definition",
+		"The battery store's cost per kW",
+		"capex_battery_power_usd_per_kw",
+		"capex_battery * battery_duration",
+		"The battery's energy store expressed per kW of power rating: the "
+		"per-energy cost times the duration, the power-energy cost split "
+		"the storage sizing literature keeps.",
+		"cost_accounting", "linear", "USD/kW",
+		"NREL ATB 2025 Equations & Variables",
+	),
+	(
+		"phs_energy_capex_usd_per_kwh_definition",
+		"Pumped hydro's cost per kWh",
+		"phs_energy_capex_usd_per_kwh",
+		"capex_phs / phs_duration",
+		"Pumped hydro's cost per kWh of energy: the power-quoted installed "
+		"cost divided by the reservoir's hours, the power-energy split's "
+		"other direction -- and the reason PHS is cheap per energy and "
+		"expensive per power.",
+		"cost_accounting", "linear", "USD/kWh",
+		"NREL ATB 2025 Equations & Variables",
+	),
+	(
+		"thermal_phs_duration_ratio_definition",
+		"The thermal store's duration against pumped hydro's",
+		"thermal_phs_duration_ratio",
+		"thermal_storage_duration / phs_duration",
+		"The thermal store's duration relative to pumped hydro's: the "
+		"long-duration comparison a portfolio's sizing check starts from.",
+		"cost_accounting", "linear", "1",
+		None,
+	),
+	(
+		"settlement_intervals_per_hour_definition",
+		"How many settlement periods an hour carries",
+		"settlement_intervals_per_hour",
+		"1.0 / settlement_period",
+		"How many settlement periods an hour carries: the interval's "
+		"inverse, which is what a dispatch count or a data series reads.",
+		"price_demand", "linear", "1/hour",
+		None,
+	),
+	(
+		"line_outage_hours_per_year_definition",
+		"Hours the line spends out per year",
+		"line_outage_hours_per_year",
+		"line_outage_probability * line_outage_duration",
+		"Hours per year the line spends out: expected events times the "
+		"mean event duration, the line-level figure of the same form the "
+		"SAIDI sum takes at system level.",
+		"reliability", "linear", "hours/year",
+		"IEEE Guide for Electric Power Distribution Reliability Indices (1366), "
+		"tutorial deck",
+	),
+	(
+		"planned_maintenance_hours_per_year_definition",
+		"Hours planned maintenance takes per year",
+		"planned_maintenance_hours_per_year",
+		"maintenance_frequency * maintenance_duration",
+		"Hours per year planned maintenance takes: the events' frequency "
+		"times their duration, the planned-outage term against "
+		"availability.",
+		"reliability", "linear", "hours/year",
+		"IEEE Guide for Electric Power Distribution Reliability Indices (1366), "
+		"tutorial deck",
+	),
+)
+
+# Two batch-19 citations never registered: the products are definitional, and
+# the intensity's provenance lives on the hydrogen_per_t_steel_kg node. The
+# references go to null rather than to prose no row resolves.
+BATCH20_EQUATION_REPAIRS: tuple[str, ...] = (
+	"steel_hydrogen_demand_tonnes_definition",
+	"ammonia_export_volume_tonnes_definition",
+	"co2_captured_cement_tonnes_definition",
+	"co2_captured_industry_tonnes_definition",
+	"interruptible_load_mw_definition",
+)
+
+
+def build_batch20(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, str]], list[dict[str, Any]]]:
+	"""Batch 20: the share family's remaining products and the time-index family."""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, str]] = []
+	rules: list[dict[str, Any]] = []
+
+	# --- the financing-mix defaults ---
+	for name, prose, default, _source in BATCH20_SHARE_DEFAULTS:
+		full = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
+		full.update({
+			"default": default, "role": "free", "description": prose,
+			"range": [0.0, 1.0], "priority": "P2", "status": "existing",
+			"source": _source,
+		})
+		nodes[name] = full
+
+	# --- the placeholder corrections ---
+	for name, (unit, rng, default, role, determinism, prose) in (
+		BATCH20_PLACEHOLDER_CORRECTIONS.items()
+	):
+		full = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
+		full.update({
+			"unit": unit, "range": rng, "default": default, "role": role,
+			"description": prose, "determinism": determinism,
+			"priority": "P1", "status": "existing",
+			"source": "The coupling build's own corrections (batch 20)",
+			"users": ["Planners", "Financial analysts"],
+		})
+		nodes[name] = full
+
+	# --- the two batch-19 citation repairs ---
+	for eq_id in BATCH20_EQUATION_REPAIRS:
+		body = dict(graph.equations[eq_id].model_dump(mode="json"))
+		body["reference"] = None
+		equations[eq_id] = body
+
+	# --- the product equations ---
+	for eq_id, name, lhs, rhs, prose, system, linearity, unit, cite in (
+		BATCH20_EQUATIONS
+	):
+		rhs_params = []
+		parsed_ok = False
+		try:
+			from alea.prg.dsl import parse_side
+
+			rhs_params = sorted(parse_side(rhs).symbols)
+			parsed_ok = True
+		except Exception:
+			pass
+		assert parsed_ok, f"{eq_id}: rhs does not parse: {rhs}"
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": name,
+			"description": prose,
+			"system": system,
+			"lhs": lhs,
+			"rhs": rhs,
+			"relation": "eq",
+			"parameters": [lhs] + rhs_params,
+			"free_variables": [],
+			"determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": linearity,
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs,
+				"equation_id": eq_id, "relationship": "functional",
+				"strength": "hard", "description": "Enters the product.",
+			})
+
+	# --- the product targets, declared ---
+	for target, (unit, rng, category, prose) in BATCH20_PRODUCT_NODES.items():
+		nodes[target] = {
+			"name": target.replace("_", " ").capitalize(),
+			"description": (
+				f"{target.replace('_', ' ')}: the coupling's derived quantity, "
+				"so a scenario's dial has a number the reports can name."
+			) + " " + prose,
+			"category": category, "type": "float", "unit": unit,
+			"range": rng, "role": "derived",
+			"determinism": "physical", "priority": "P1", "status": "existing",
+			"source": "The coupling build's own corrections (batch 20)",
+			"users": ["Planners", "Financial analysts"],
+		}
+
+	# --- the bounds ---
+	for eq_id, lhs, rhs, prose, system, priority in BATCH20_BOUNDS:
+		named = sorted(set(
+			sym for side in (lhs, rhs)
+			for sym in _side_symbols(side)
+		))
+		equations[eq_id] = {
+			"id": eq_id, "name": eq_id.replace("_", " ").capitalize(),
+			"description": prose, "system": system, "lhs": lhs, "rhs": rhs,
+			"relation": "leq",
+			"parameters": named, "free_variables": named,
+			"determined_variables": (),
+			"tolerance": 1.0e-06, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": priority, "reference": None,
+			"latex": r"\mathrm{see\ equation}",
+		}
+	return nodes, equations, edges, rules
+
+
+def _side_symbols(side: str) -> list[str]:
+	"""The node symbols one side of a bound names, through the DSL."""
+	from alea.prg.dsl import parse_side
+
+	try:
+		return sorted(parse_side(side).symbols)
+	except Exception:
+		return []
 
 
 if __name__ == "__main__":

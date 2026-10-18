@@ -136,48 +136,58 @@ def _solve(
 def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	graph: ParameterGraph,
 ):
-	"""Twelve of the library's 87 equations can constrain a solve.
+	"""Twenty-four of the library's 206 equations can constrain a solve.
 
-	The denominator is the finding: 75 equations are identities, and folding
+	The denominator is the finding: 182 equations are identities, and folding
 	them into the register would under-report what a solve is actually
 	bound by. Pinned as a literal so a new inequality has to change this line
-	to land. The identity count moved 33 -> 75 and the inequality count
-	6 -> 12 when the generated batches were promoted: six new inequalities
-	(``demand_shares_bound``, ``fuel_ccs_adoption_bound``,
-	``industrial_electrification_bound``, ``local_employment_targets_bound``,
-	``reserve_margin_with_firm_vre``, ``retention_and_deductible_bound``),
-	each read -- as settable scalars -- quantities the graph now declares.
-	``add_constraints`` builds all eight bound routes generically from the
-	route classification, so the six are added to a solve rather than counted
-	and dropped; the two original bound routes keep their own tests below.
-	"""
+	to land. The counts moved 15/153/168 -> 24/182/206 when batch 20 landed:
+	nine new inequalities, seven of them bound routes
+	(``blended_finance_bound``, ``green_bond_bound``,
+	``powertrain_stock_bound``, ``retraining_schedule_bound``,
+	``steel_route_bound``, ``urban_heat_supply_bound``,
+	``v2g_subset_bound``) and two post-solve checks
+	(``carbon_finance_bound``, ``debt_mix_bound``) over derived finance
+	and carbon-revenue shares."""
 	cov = coverage(graph)
-	assert cov["constraint_shaped"] == 15
-	assert cov["identities"] == 153
-	assert cov["total"] == 168
+	assert cov["constraint_shaped"] == 24
+	assert cov["identities"] == 182
+	assert cov["total"] == 206
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
-	"""The eight equations whose every term the network can supply.
+	"""The sixteen equations whose every term the network can supply.
 
 	Six joined the original two when the generated batches were promoted --
 	``reserve_margin_with_firm_vre`` is the firm-VRE variant of the original,
 	``demand_shares_bound`` and the employment/CCS/electrification bounds are
 	system inequalities over declared shares, and ``retention_and_deductible_bound``
-	constrains the insurance module's own fractions. Each is added to a solve
-	by ``add_constraints`` generically, so the pin is the register of what
-	constrains the build, spelled out, rather than a count.
+	constrains the insurance module's own fractions. Seven more joined with
+	batch 20 (``blended_finance_bound``, ``green_bond_bound``,
+	``powertrain_stock_bound``, ``retraining_schedule_bound``,
+	``steel_route_bound``, ``urban_heat_supply_bound``, ``v2g_subset_bound``),
+	each over transport, steel, heat, V2G, retraining and finance shares the
+	batch declares. Each is added to a solve by ``add_constraints`` generically,
+	so the pin is the register of what constrains the build, spelled out,
+	rather than a count.
 	"""
 	assert bound_routes(graph) == (
+		"blended_finance_bound",
 		"carbon_budget_constraint",
 		"cost_of_equity_capped",
 		"demand_shares_bound",
 		"fuel_ccs_adoption_bound",
+		"green_bond_bound",
 		"industrial_electrification_bound",
 		"local_employment_targets_bound",
+		"powertrain_stock_bound",
 		"reserve_margin",
 		"reserve_margin_with_firm_vre",
 		"retention_and_deductible_bound",
+		"retraining_schedule_bound",
+		"steel_route_bound",
+		"urban_heat_supply_bound",
+		"v2g_subset_bound",
 	)
 
 

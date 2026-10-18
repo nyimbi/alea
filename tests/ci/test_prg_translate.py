@@ -91,7 +91,7 @@ def _network(*, gas_cost: float = 40.0) -> pypsa.Network:
 def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	graph: ParameterGraph,
 ):
-	"""Three of eight hundred and eighty-six, asserted rather than derived.
+	"""Three of nine hundred and thirteen, asserted rather than derived.
 
 	Deriving the expected count from ``TRANSLATIONS`` would make this vacuous:
 	it would pass on a layer that translated everything and on one that
@@ -105,6 +105,11 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	denominator would have hidden it -- two expansions grew the register by
 	834 and the translated count by zero.
 
+	911 -> 913 when batch 19's sector-coupling layer added two exogenous
+	hydrogen knobs (``hydrogen_per_t_steel_kg``, ``hydrogen_share_of_ammonia``);
+	the batch-20 re-bake moved nothing settable -- its uncoupled disposal
+	(694 -> 649) lives in the coupling register, not this denominator.
+
 	The eighteen the engine cannot carry are still outside the denominator:
 	they are chosen by the optimiser, so ``is_settable`` is False for them.
 	They are not missing from the register -- ``endogenous`` carries them, and
@@ -112,7 +117,7 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	"""
 	cov = coverage(graph)
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 911, cov
+	assert cov["total"] == 913, cov  # 911 -> 913: batch 19 added two settable hydrogen knobs
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -172,7 +177,7 @@ def test_the_untranslated_register_is_not_empty_and_says_why(
 	network can be perturbed by.
 	"""
 	missing = untranslated(graph)
-	assert len(missing) == 908, missing
+	assert len(missing) == 910, missing  # 908 -> 910: batch 19's two hydrogen knobs landed untranslated
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact

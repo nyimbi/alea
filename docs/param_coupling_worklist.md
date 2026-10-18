@@ -1,10 +1,10 @@
 # Coupling worklist
 
-Every node still in `uncoupled()` (710 of 1078, as of the batch 12-17 bake on 2026-10-17) and the family class its coupling belongs to. Batches 12-17 coupled 83 nodes (793 -> 710). The classes name the method each coupling gets; nothing escapes the register.
+Every node still in `uncoupled()` (649 of 1114, as of the batch 20 bake on 2026-10-18) and the family class its coupling belongs to. Batches 12-20 coupled 144 nodes (793 -> 649): the financial core and fleet, the duplicate-pair aliases, sector demand, fuel conversions, rate aliases, the instrument and sector-coupling layers, and (batch 20) the share family's products and the time-index family's arithmetic. The classes name the method each coupling gets; nothing escapes the register.
 
-## unassigned (567)
+## unassigned (527)
 
-`ac_voltage_limit`, `accelerated_depreciation`, `accelerated_depreciation_factor`, `accumulation_risk`, `adaptation_benefits`, `adaptation_costs`, `adaptation_measures`, `adaptive_capacity`, `affordability_threshold`, `agricultural_irrigation_load`, `agricultural_machinery`, `airport_electrification`, `ami_infrastructure`, `archaeological_sites`, `archaeological_sites_density`, `arrears_management`, `article_6_2_parameters`, `article_6_4_parameters`, `article_6_credits`, `asset_age_distribution`, `asset_management_maturity`, `asset_management_systems`, `assignment_rights`, `auction_frequency`, `auction_mechanism`, `auction_price_cap`, `auction_volume`, `aviation_fuel_demand`, `balance_of_payments`, `baseline_emissions`, `battery_storage_adoption`, `bid_ask_spread`, `bill_shock_protection`, `billing_systems`, `biodiversity_impact`, `biodiversity_intactness_before`, `biodiversity_intactness_index`, `biogas_capacity`, `biomass_sustainability_limit`, `black_start_capability` ... and 527 more
+`ac_voltage_limit`, `accelerated_depreciation`, `accelerated_depreciation_factor`, `accumulation_risk`, `adaptation_benefits`, `adaptation_costs`, `adaptation_measures`, `adaptive_capacity`, `affordability_threshold`, `agricultural_irrigation_load`, `agricultural_machinery`, `airport_electrification`, `ami_infrastructure`, `archaeological_sites`, `archaeological_sites_density`, `arrears_management`, `article_6_2_parameters`, `article_6_4_parameters`, `article_6_credits`, `asset_age_distribution`, `asset_management_maturity`, `asset_management_systems`, `assignment_rights`, `auction_frequency`, `auction_mechanism`, `auction_price_cap`, `auction_volume`, `aviation_fuel_demand`, `balance_of_payments`, `baseline_emissions`, `battery_storage_adoption`, `bid_ask_spread`, `bill_shock_protection`, `billing_systems`, `biodiversity_impact`, `biodiversity_intactness_before`, `biodiversity_intactness_index`, `biogas_capacity`, `biomass_sustainability_limit`, `black_start_capability` ... and 487 more
 
 ## compliance register (46)
 
@@ -14,13 +14,19 @@ Every node still in `uncoupled()` (710 of 1078, as of the batch 12-17 bake on 20
 
 `ancillary_services_market`, `balancing_market`, `capacity_market`, `carbon_border_adjustment`, `contract_for_difference`, `cross_border_trade_allowed`, `cross_border_trading`, `day_ahead_market`, `dg_placement_enabled`, `ets_enabled`, `intraday_market`, `life_extension_possible`, `n_1_criterion`, `n_2_criterion`, `outage_coordination`, `phase_shifting_enabled`, `ppa_guarantees`, `real_time_market`, `security_constrained_dispatch`, `smart_metering_rollout`, `storage_dispatch_enabled`, `topology_switching_enabled`, `transmission_expansion_allowed`, `unit_commitment`, `voltage_optimisation_enabled`
 
-## time-index family (24)
+## share family -- remaining (1)
 
-`battery_duration`, `carbon_tax_start_year`, `concession_duration`, `construction_period`, `demand_growth_end_year`, `demand_growth_start_year`, `emissions_peak_year`, `financing_close_deadline`, `fit_duration`, `hydro_inflow_year`, `licence_duration`, `line_outage_duration`, `loss_carryback_years`, `loss_carryforward_years`, `maintenance_duration`, `net_zero_year`, `phs_duration`, `renewable_target_year`, `retraining_duration`, `settlement_period`, `solar_cf_year`, `tax_holiday_duration`, `thermal_storage_duration`, `wind_cf_year`
+`public_transport_share` -- deferred from batch 20: it is a share of passenger-kilometres and the graph carries no passenger-km base, so its product waits for the base-node batch (a `passenger_kilometres_per_year` base with a referenced default is the shape the steel/cement/hydrogen bases took in batch 19).
 
-## share family (18)
+## time-index family (0) -- coupled in batch 20
 
-`ammonia_export_share`, `blended_finance_share`, `bond_share`, `carbon_finance_share`, `cement_ccus_share`, `chemicals_green_ammonia_share`, `commercial_bank_share`, `community_development_fund_share`, `dfi_share`, `district_heating_share`, `green_bond_share`, `hvdc_share`, `hydrogen_vehicle_share`, `industrial_ccus_share`, `interruptible_load_share`, `public_transport_share`, `steel_h2_dri_share`, `steel_scrap_eaf_share`
+Coupled as its own arithmetic: policy-clock lead times (the peak/net-zero/carbon-tax/renewable-target year differences), the growth window and its compound factor, the schedules against durations (retraining within construction), the storage power-energy cost split (`capex_battery * battery_duration` per kW; `capex_phs / phs_duration` per kWh), the vintage capacity factors (the factor today compounded by the degradation rate to the vintage year), and the reliability frequency-times-duration products. `public_transport_share` stays above for the base-node batch.
+
+## share family -- products done (17 of 18), public_transport deferred
+
+Batch 19 covered the six with activity bases (ammonia export, cement CCUS, industrial CCUS, interruptible load, community fund, steel H2-DRI); batch 20 covered the remaining eleven through the overlap-aware mix bounds and the products with bases that exist. `public_transport_share` is deferred to the base-node batch above.
+
+`public_transport_share` (the one deferral, waiting on its passenger-km base)
 
 ## cost family (16)
 

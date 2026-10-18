@@ -1369,7 +1369,7 @@ parameters:
     - 0.0
     - 100.0
     default: 24.0
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P1
     status: existing
@@ -1682,38 +1682,51 @@ parameters:
     source: docs/params.md
   blended_finance_share:
     name: Blended finance share
-    description: Blended finance share
+    description: The share of the project's financing structured as a blended package. Blending combines
+      a concessional and a commercial tranche, so the share's scale is bounded by the two funding sources
+      together -- which is the coupling, not a sum-to-one identity.
     category: Macro
+    subcategory: null
     type: float
     unit: '1'
     range:
     - 0.0
     - 1.0
-    default: 0.5
+    default: 0.35
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The financing-mix corrections (batch 20)
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P2
+    status: existing
+    deprecated_by: null
   bond_share:
     name: Bond share
-    description: Bond market share
+    description: The bond market's supply of the project's debt financing. Default aligned so that the
+      three instrument classes' shares sit inside debt's own share of the capital structure (debt_mix_bound).
     category: Macro
+    subcategory: null
     type: float
     unit: '1'
     range:
     - 0.0
     - 1.0
-    default: 0.5
+    default: 0.25
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The financing-mix corrections (batch 20)
+    source_url: null
     users:
     - Investors
-    source: docs/params.md
+    priority: P2
+    status: existing
+    deprecated_by: null
   buffer_pool_contribution:
     name: Buffer pool contribution
     description: Buffer pool
@@ -2132,6 +2145,25 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  capex_battery_power_usd_per_kw:
+    name: Capex battery power usd per kw
+    description: 'capex battery power usd per kw: the coupling''s derived quantity, so a scenario''s dial
+      has a number the reports can name. The battery''s energy store expressed per kW of power rating:
+      the per-energy cost times the duration, the power-energy split the storage sizing literature keeps.'
+    category: Storage
+    type: float
+    unit: USD/kW
+    range:
+    - 0.0
+    - 50000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
   capex_biogas:
     name: Biogas plant capital cost
     description: Installed cost of an anaerobic digestion plant per kilowatt of electrical capacity. The
@@ -3256,21 +3288,28 @@ parameters:
     source: docs/params.md
   carbon_finance_share:
     name: Carbon finance share
-    description: Carbon finance share
+    description: The share of the project's financing backed by carbon credit sales. Bounded by the carbon
+      revenue stream itself (the finance the carbon instrument can carry), which the shipped carbon/total-revenue
+      pair computes.
     category: Macro
+    subcategory: null
     type: float
     unit: '1'
     range:
     - 0.0
     - 1.0
-    default: 0.5
+    default: 0.05
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The financing-mix corrections (batch 20)
+    source_url: null
     users:
     - Carbon
-    source: docs/params.md
+    priority: P2
+    status: existing
+    deprecated_by: null
   carbon_price:
     name: Carbon price
     description: Carbon price
@@ -3391,6 +3430,25 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  carbon_revenue_share_of_revenue:
+    name: Carbon revenue share of revenue
+    description: 'carbon revenue share of revenue: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. The carbon revenue stream''s weight in the fleet''s total
+      revenue: the envelope carbon-backed financing is bounded by.'
+    category: Financial
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
   carbon_revenue_usd_per_year:
     name: Carbon revenue
     description: The revenue a carbon price collects on the covered emissions. The other side of the carbon
@@ -3485,7 +3543,7 @@ parameters:
     - 0.0
     - 100.0
     default: 25.0
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P2
     status: to_build
@@ -3719,20 +3777,28 @@ parameters:
     source: docs/params.md
   chemicals_ammonia_production:
     name: Chemicals ammonia production
-    description: Ammonia production
+    description: The chemical sector's ammonia output per year, in tonnes. The catalog's placeholder scale
+      (0-1e6 t) retained as the range; the green-ammonia product below derives from it.
     category: Sector
+    subcategory: null
     type: float
+    unit: tonnes/year
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 600000.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: physical
+    categories: []
+    source: The coupling build's own corrections (batch 20)
+    source_url: null
     users:
-    - Industry
-    source: docs/params.md
+    - Planners
+    - Financial analysts
+    priority: P1
+    status: existing
+    deprecated_by: null
   chemicals_green_ammonia_share:
     name: Chemicals green ammonia share
     description: Green ammonia share
@@ -3743,13 +3809,32 @@ parameters:
     - 0.0
     - 1.0
     default: 0.5
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P2
     status: to_build
     users:
     - Industry
     source: docs/params.md
+  chemicals_green_ammonia_tonnes_per_year:
+    name: Chemicals green ammonia tonnes per year
+    description: 'chemicals green ammonia tonnes per year: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. Ammonia the chemical programme makes through the green route:
+      the mix share times the sector''s own output.'
+    category: Industry
+    type: float
+    unit: tonnes/year
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
   child_labour_prohibition:
     name: Child labour prohibition
     description: Child labour
@@ -4282,21 +4367,27 @@ parameters:
     deprecated_by: null
   commercial_bank_share:
     name: Commercial bank share
-    description: Commercial bank share
+    description: The commercial banks' supply of the project's debt financing. Default aligned so the
+      three instrument classes' shares sit inside debt's own share of the capital structure.
     category: Macro
+    subcategory: null
     type: float
     unit: '1'
     range:
     - 0.0
     - 1.0
-    default: 0.5
+    default: 0.2
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The financing-mix corrections (batch 20)
+    source_url: null
     users:
     - Banks
-    source: docs/params.md
+    priority: P2
+    status: existing
+    deprecated_by: null
   commercial_demand_share:
     name: Commercial demand share
     description: Share of demand from the commercial sector. Shipped correctly as [0, 1]; retained for
@@ -4781,20 +4872,47 @@ parameters:
     deprecated_by: null
   construction_period:
     name: Construction period
-    description: Construction period
+    description: 'Months between financial close and commercial operation for a utility-scale IPP: thermal
+      units build at 24-36 months, solar and wind faster; the range carries the project classes.'
     category: Macro
+    subcategory: null
     type: float
+    unit: months
+    range:
+    - 1.0
+    - 96.0
+    default: 30.0
+    initial: null
+    role: free
+    determinism: physical
+    categories: []
+    source: The coupling build's own corrections (batch 20)
+    source_url: null
+    users:
+    - Planners
+    - Financial analysts
+    priority: P1
+    status: existing
+    deprecated_by: null
+  construction_share_of_concession:
+    name: Construction share of concession
+    description: 'construction share of concession: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. The fraction of the concession term the construction period
+      consumes: months over the term''s own months.'
+    category: Financial
+    type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 1.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
     users:
-    - Developers
-    source: docs/params.md
+    - Planners
+    - Financial analysts
   consumer_education:
     name: Consumer education
     description: Consumer education
@@ -6153,6 +6271,25 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
+  debt_financing_share:
+    name: Debt financing share
+    description: 'debt financing share: the coupling''s derived quantity, so a scenario''s dial has a
+      number the reports can name. Debt''s share of the capital structure: D/(D+E) from the shipped debt/equity
+      ratio, which is the envelope the financing-mix instrument shares are bounded by.'
+    category: Financial
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
   debt_fraction:
     name: Debt share
     description: Share of capex financed with debt rather than equity.
@@ -6416,13 +6553,32 @@ parameters:
     - 0.0
     - 100.0
     default: 25.0
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P1
     status: to_build
     users:
     - All
     source: docs/params.md
+  demand_growth_factor:
+    name: Demand growth factor
+    description: 'demand growth factor: the coupling''s derived quantity, so a scenario''s dial has a
+      number the reports can name. The compound growth factor over the trajectory''s window: (1+g) to
+      the window''s years, the factor a forecast escalates demand by.'
+    category: Demand-Side
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 10.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
   demand_growth_implied:
     name: Demand growth implied by the macro driver
     description: 'Log-linear implication of the income elasticity on GDP growth: (1 + g_D) = (1 + g_Y)
@@ -6495,13 +6651,32 @@ parameters:
     - 0.0
     - 100.0
     default: 25.0
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P1
     status: to_build
     users:
     - All
     source: docs/params.md
+  demand_growth_window_years:
+    name: Demand growth window years
+    description: 'demand growth window years: the coupling''s derived quantity, so a scenario''s dial
+      has a number the reports can name. Years the growth trajectory spans: end year minus start year
+      on the trajectory''s own clock.'
+    category: Demand-Side
+    type: float
+    unit: years
+    range:
+    - -100.0
+    - 100.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
   demand_response_capacity:
     name: Demand response capacity
     description: Demand response capacity
@@ -6708,21 +6883,27 @@ parameters:
     source: docs/params.md
   dfi_share:
     name: Dfi share
-    description: DFI share
+    description: The DFI facilities' supply of the project's debt financing. Default aligned so the three
+      instrument classes' shares sit inside debt's own share of the capital structure.
     category: Macro
+    subcategory: null
     type: float
     unit: '1'
     range:
     - 0.0
     - 1.0
-    default: 0.5
+    default: 0.2
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The financing-mix corrections (batch 20)
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P2
+    status: existing
+    deprecated_by: null
   dg_placement_enabled:
     name: Distributed generation placement enabled
     description: Corrected from float to bool.
@@ -7223,7 +7404,7 @@ parameters:
     - 0.0
     - 1.0
     default: 0.5
-    role: free
+    role: exogenous
     determinism: stochastic
     priority: P2
     status: integrate
@@ -7606,7 +7787,7 @@ parameters:
     - 0.0
     - 100.0
     default: 25.0
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P2
     status: to_build
@@ -8418,6 +8599,25 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  financing_close_share_of_licence:
+    name: Financing close share of licence
+    description: 'financing close share of licence: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. The fraction of the licence term the financing-close deadline
+      spans: months over the term''s own months.'
+    category: Financial
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
   firm_build_fleet_mw:
     name: Fleet build total
     description: Sum of the optimiser's per-technology builds. Not a decision the graph computes in propagation
@@ -8499,6 +8699,25 @@ parameters:
     users:
     - Fisheries
     source: docs/params.md
+  fit_annuity_factor:
+    name: Fit annuity factor
+    description: 'fit annuity factor: the coupling''s derived quantity, so a scenario''s dial has a number
+      the reports can name. The present-value annuity factor over the FiT contract term, at the real discount
+      rate: the PV-per-annum weight the tariff''s cash flows carry.'
+    category: Financial
+    type: float
+    unit: years
+    range:
+    - 0.0
+    - 200.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
   fit_capacity_cap:
     name: Fit capacity cap
     description: FiT capacity cap
@@ -9709,21 +9928,28 @@ parameters:
     source: docs/params.md
   green_bond_share:
     name: Green bond share
-    description: Green bond share
+    description: The share of the project's debt financing the bond market supplies through green-labelled
+      instruments. A subset of bond issuance (the same tranche funded under a use-of-proceeds label),
+      so it is bounded by bond itself.
     category: Macro
+    subcategory: null
     type: float
     unit: '1'
     range:
     - 0.0
     - 1.0
-    default: 0.5
+    default: 0.1
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The financing-mix corrections (batch 20)
+    source_url: null
     users:
     - Investors
-    source: docs/params.md
+    priority: P2
+    status: existing
+    deprecated_by: null
   grid_connection_cost:
     name: Grid connection cost
     description: Cost to connect a generator to the transmission or distribution network, per kilowatt
@@ -10134,6 +10360,25 @@ parameters:
     users:
     - All
     source: docs/params.md
+  hvdc_interconnector_capacity_mw:
+    name: Hvdc interconnector capacity mw
+    description: 'hvdc interconnector capacity mw: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. Cross-border capacity in HVDC: the technology''s share of
+      the interconnector''s own rating.'
+    category: Transmission
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
   hvdc_share:
     name: Hvdc share
     description: Share of HVDC in new lines
@@ -10144,7 +10389,7 @@ parameters:
     - 0.0
     - 1.0
     default: 0.5
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P2
     status: to_build
@@ -10230,6 +10475,26 @@ parameters:
     users:
     - Planners
     source: docs/params.md
+  hydro_inflow_vintage_offset_years:
+    name: Hydro inflow vintage offset years
+    description: 'hydro inflow vintage offset years: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. How much the hydro inflow record''s design year leads or
+      trails the PV data''s vintage. The vintage selectors are set independently, and this offset is the
+      check a scenario author runs for consistency.'
+    category: Generation
+    type: float
+    unit: years
+    range:
+    - -100.0
+    - 100.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
   hydro_inflow_year:
     name: Hydro inflow year
     description: Hydro inflow year
@@ -10240,7 +10505,7 @@ parameters:
     - 0.0
     - 100.0
     default: 25.0
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P2
     status: existing
@@ -11232,20 +11497,28 @@ parameters:
     source: docs/params.md
   interconnector_capacity:
     name: Interconnector capacity
-    description: Interconnector capacity
+    description: 'The MW capacity the cross-border link nominally carries: 1,000 MW is the scale an early
+      interconnector takes (the EAC''s proposed cross-border reinforcements are of this order).'
     category: Grid
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 1000.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: existing
+    determinism: physical
+    categories: []
+    source: The coupling build's own corrections (batch 20)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    - Financial analysts
+    priority: P1
+    status: existing
+    deprecated_by: null
   interest_rate:
     name: Central bank policy rate
     description: Policy rate, bounded to reject a nominal rate below deflation or above the levels seen
@@ -12371,20 +12644,28 @@ parameters:
     source: docs/params.md
   line_outage_duration:
     name: Line outage duration
-    description: Expected duration
+    description: 'Mean hours a line outage event spans: transmission faults with auto-reclose clear in
+      minutes, repairs take hours.'
     category: Outage
+    subcategory: null
     type: float
+    unit: hours/event
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.5
+    - 48.0
+    default: 6.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: physical
+    categories: []
+    source: The coupling build's own corrections (batch 20)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Planners
+    - Financial analysts
+    priority: P1
+    status: existing
+    deprecated_by: null
   line_outage_end:
     name: Line outage end
     description: When the outage ends
@@ -12401,22 +12682,50 @@ parameters:
     users:
     - Utilities
     source: docs/params.md
-  line_outage_probability:
-    name: Line outage probability
-    description: Probability of outage
-    category: Outage
+  line_outage_hours_per_year:
+    name: Line outage hours per year
+    description: 'line outage hours per year: the coupling''s derived quantity, so a scenario''s dial
+      has a number the reports can name. Hours per year the line spends out: the frequency-times-duration
+      product, the line-level figure of the same form the SAIDI sum takes at system level.'
+    category: Reliability
     type: float
+    unit: hours/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: stochastic
+    - 8760.0
+    role: derived
+    determinism: physical
     priority: P1
-    status: to_build
+    status: existing
+    source: The coupling build's own corrections (batch 20)
     users:
-    - Utilities
-    source: docs/params.md
+    - Planners
+    - Financial analysts
+  line_outage_probability:
+    name: Line outage probability
+    description: Expected line outage events per year. Shipped as a probability, which admits at most
+      one event a year; reframed as the expected rate (the r_i term of the reliability indices' frequency-times-duration
+      product), which is the quantity the product below needs.
+    category: Outage
+    subcategory: null
+    type: float
+    unit: 1/year
+    range:
+    - 0.0
+    - 365.0
+    default: 2.0
+    initial: null
+    role: free
+    determinism: physical
+    categories: []
+    source: The coupling build's own corrections (batch 20)
+    source_url: null
+    users:
+    - Planners
+    - Financial analysts
+    priority: P1
+    status: existing
+    deprecated_by: null
   line_outage_start:
     name: Line outage start
     description: When the outage begins
@@ -12913,26 +13222,27 @@ parameters:
     source: docs/params.md
   maintenance_duration:
     name: Maintenance duration
-    description: Mean hours per planned maintenance event. The high end is a major inspection; the low
-      end is routine servicing.
+    description: 'Mean hours per planned maintenance event: routine servicing at the low end, a major
+      inspection at the high end. Unit spelled as the per-event form the frequency product reads.'
     category: Operational
     subcategory: null
     type: float
-    unit: hours
+    unit: hours/event
     range:
     - 2.0
     - 720.0
     default: 48.0
     initial: null
     role: free
-    determinism: fixed
+    determinism: physical
     categories: []
-    source: Standard utility maintenance practice
+    source: The coupling build's own corrections (batch 20)
     source_url: null
     users:
-    - Utilities
-    priority: P2
-    status: to_build
+    - Planners
+    - Financial analysts
+    priority: P1
+    status: existing
     deprecated_by: null
   maintenance_frequency:
     name: Maintenance frequency
@@ -13806,14 +14116,15 @@ parameters:
     range:
     - 0.0
     - 100.0
-    role: free
+    default: 25.0
+    role: exogenous
     determinism: fixed
     priority: P2
-    status: to_build
+    status: existing
     users:
     - Policymakers
-    source: docs/params.md
-    default: 25.0
+    source: The policy-clock coupling (batch 20) -- a milestone the scenario sets, read by the lead-time
+      equations
   netting_agreements:
     name: Netting agreements
     description: Netting
@@ -15207,20 +15518,47 @@ parameters:
     deprecated_by: null
   phs_duration:
     name: Phs duration
-    description: PHS duration
+    description: 'Hours the PHS reservoir discharges at rated power: pumped storage sizes at 6-24 h.'
     category: Supply
+    subcategory: null
     type: float
+    unit: hours
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 48.0
+    default: 6.0
+    initial: null
     role: free
-    determinism: fixed
+    determinism: physical
+    categories: []
+    source: The coupling build's own corrections (batch 20)
+    source_url: null
+    users:
+    - Planners
+    - Financial analysts
     priority: P1
     status: existing
+    deprecated_by: null
+  phs_energy_capex_usd_per_kwh:
+    name: Phs energy capex usd per kwh
+    description: 'phs energy capex usd per kwh: the coupling''s derived quantity, so a scenario''s dial
+      has a number the reports can name. Pumped hydro''s cost per kWh of energy: the power-quoted installed
+      cost divided by the reservoir''s hours, the power-energy split''s other direction -- and the reason
+      PHS is cheap per energy and expensive per power.'
+    category: Storage
+    type: float
+    unit: USD/kWh
+    range:
+    - 0.0
+    - 10000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
     users:
-    - Utilities
-    source: docs/params.md
+    - Planners
+    - Financial analysts
   physical_risk_score:
     name: Physical risk score
     description: A composite score of the asset's physical climate risk, normalised to [0, 1]. Higher
@@ -15244,6 +15582,25 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
+  planned_maintenance_hours_per_year:
+    name: Planned maintenance hours per year
+    description: 'planned maintenance hours per year: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. Hours per year planned maintenance takes: the events'' frequency
+      times their duration, the planned-outage term against availability.'
+    category: Reliability
+    type: float
+    unit: hours/year
+    range:
+    - 0.0
+    - 8760.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
   planned_outage_rate:
     name: Planned outage rate
     description: Fraction of hours a unit is on planned outage. Same bound as the forced rate.
@@ -16828,7 +17185,7 @@ parameters:
     - 0.0
     - 100.0
     default: 25.0
-    role: free
+    role: exogenous
     determinism: policy
     priority: P2
     status: to_build
@@ -17219,20 +17576,28 @@ parameters:
     source: docs/params.md
   retraining_duration:
     name: Retraining duration
-    description: Retraining time
+    description: 'Months of retraining a displaced or in-plant worker takes: a year is the programme the
+      utilities'' plans budget.'
     category: JustTrans
+    subcategory: null
     type: float
+    unit: months
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 60.0
+    default: 12.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The coupling build's own corrections (batch 20)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Financial analysts
+    priority: P1
+    status: existing
+    deprecated_by: null
   revenue_cap:
     name: Revenue cap
     description: The maximum revenue a regulated utility may recover, as a share of the cost-recovery
@@ -17754,22 +18119,49 @@ parameters:
     users:
     - Regulators
     source: docs/params.md
-  settlement_period:
-    name: Settlement period
-    description: Settlement period
-    category: Market
+  settlement_intervals_per_hour:
+    name: Settlement intervals per hour
+    description: 'settlement intervals per hour: the coupling''s derived quantity, so a scenario''s dial
+      has a number the reports can name. How many settlement periods an hour carries: the inverse of the
+      interval, which is what a dispatch or a data series counts.'
+    category: Demand-Side
     type: float
+    unit: 1/hour
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
+    - 100.0
+    role: derived
+    determinism: physical
+    priority: P1
     status: existing
+    source: The coupling build's own corrections (batch 20)
     users:
-    - Traders
-    source: docs/params.md
+    - Planners
+    - Financial analysts
+  settlement_period:
+    name: Settlement period
+    description: 'Hours one settlement period spans: half an hour is the standard settlement interval
+      at mature system operators.'
+    category: Market
+    subcategory: null
+    type: float
+    unit: hours
+    range:
+    - 0.05
+    - 24.0
+    default: 0.5
+    initial: null
+    role: free
+    determinism: physical
+    categories: []
+    source: The coupling build's own corrections (batch 20)
+    source_url: null
+    users:
+    - Planners
+    - Financial analysts
+    priority: P1
+    status: existing
+    deprecated_by: null
   settlement_risk:
     name: Settlement risk
     description: Settlement risk
@@ -18096,7 +18488,7 @@ parameters:
     - 0.0
     - 100.0
     default: 25.0
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P2
     status: existing
@@ -18105,20 +18497,28 @@ parameters:
     source: docs/params.md
   solar_degradation:
     name: Solar degradation
-    description: Solar degradation
+    description: 'Relative PV degradation per year: the field''s measured band centres near 0.5%/yr, with
+      the faster technologies above 1%.'
     category: Climate
+    subcategory: null
     type: float
+    unit: 1/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.02
+    default: 0.005
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: physical
+    categories: []
+    source: The coupling build's own corrections (batch 20)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    - Financial analysts
+    priority: P1
+    status: existing
+    deprecated_by: null
   solar_home_system_deployment:
     name: Solar home system deployment
     description: SHS units added
@@ -18197,6 +18597,25 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  solar_pv_capacity_factor_at_vintage:
+    name: Solar pv capacity factor at vintage
+    description: 'solar pv capacity factor at vintage: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. The PV capacity factor AT the vintage year the dataset quotes:
+      the factor today compounded by the technology''s own degradation rate.'
+    category: Generation
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
   solar_pv_cost:
     name: Solar PV capital cost (legacy)
     description: Solar PV capital cost (legacy) -- one of two ids for the quantity `capex_solar_pv` carries;
@@ -18590,6 +19009,25 @@ parameters:
     users:
     - Utilities
     source: docs/params.md
+  steel_eaf_route_mt:
+    name: Steel eaf route mt
+    description: 'steel eaf route mt: the coupling''s derived quantity, so a scenario''s dial has a number
+      the reports can name. Crude steel the scrap-EAF route makes: the mix share times the sector''s own
+      output.'
+    category: Industry
+    type: float
+    unit: million tonnes/year
+    range:
+    - 0.0
+    - 200.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
   steel_h2_dri_share:
     name: Steel h2 dri share
     description: H₂-DRI share of steel
@@ -18664,7 +19102,7 @@ parameters:
     - 0.0
     - 1.0
     default: 0.5
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P2
     status: to_build
@@ -19183,6 +19621,25 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  taxed_fraction_of_concession:
+    name: Taxed fraction of concession
+    description: 'taxed fraction of concession: the coupling''s derived quantity, so a scenario''s dial
+      has a number the reports can name. The fraction of the concession term the income tax does apply
+      to: one minus the holiday''s share.'
+    category: Financial
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
   technology_risk_premium:
     name: Technology risk premium
     description: Technology risk premium
@@ -19335,6 +19792,25 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
+  thermal_phs_duration_ratio:
+    name: Thermal phs duration ratio
+    description: 'thermal phs duration ratio: the coupling''s derived quantity, so a scenario''s dial
+      has a number the reports can name. The thermal store''s duration relative to pumped hydro''s: the
+      long-duration comparison a portfolio''s sizing check starts from.'
+    category: Storage
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 10.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
   thermal_storage_capacity:
     name: Thermal storage capacity
     description: Installed thermal storage capacity, chosen by the optimiser. Same role correction.
@@ -19359,20 +19835,28 @@ parameters:
     deprecated_by: null
   thermal_storage_duration:
     name: Thermal storage duration
-    description: Thermal storage duration
+    description: 'Hours the thermal store discharges at rated output: molten-salt and pressurised-water
+      stores sizes at 6-12 h, industrial heat stores up to days.'
     category: Supply
+    subcategory: null
     type: float
+    unit: hours
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 72.0
+    default: 8.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: existing
+    determinism: physical
+    categories: []
+    source: The coupling build's own corrections (batch 20)
+    source_url: null
     users:
-    - Industry
-    source: docs/params.md
+    - Planners
+    - Financial analysts
+    priority: P1
+    status: existing
+    deprecated_by: null
   thin_capitalisation_limit:
     name: Thin capitalisation limit
     description: The debt-to-equity ceiling above which interest deductibility is limited. A ratio; the
@@ -19552,6 +20036,25 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  total_loss_utilisation_window_years:
+    name: Total loss utilisation window years
+    description: 'total loss utilisation window years: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. The total window tax losses may be utilised over: the carryback
+      and carryforward years together.'
+    category: Financial
+    type: float
+    unit: years
+    range:
+    - 0.0
+    - 30.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
   total_revenue_usd_per_year:
     name: Total revenue
     description: The annual revenue the fleet earns at the PPA price. The single-buyer's whole revenue
@@ -20046,7 +20549,7 @@ parameters:
     - 0.0
     - 1.0
     default: 0.5
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P3
     status: to_build
@@ -20728,6 +21231,25 @@ parameters:
     users:
     - Regulators
     source: docs/params.md
+  wind_capacity_factor_at_vintage:
+    name: Wind capacity factor at vintage
+    description: 'wind capacity factor at vintage: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. The onshore-wind capacity factor AT its dataset''s vintage
+      year: the factor today compounded by the technology''s degradation.'
+    category: Generation
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
   wind_cf_year:
     name: Wind cf year
     description: Wind capacity factor year
@@ -20738,7 +21260,7 @@ parameters:
     - 0.0
     - 100.0
     default: 25.0
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P2
     status: existing
@@ -20747,20 +21269,28 @@ parameters:
     source: docs/params.md
   wind_degradation:
     name: Wind degradation
-    description: Wind degradation
+    description: 'Relative wind-degradation per year: blade surface erosion and control drift are the
+      mechanisms; the band sits well below PV''s and the literature quotes ~0.3%/yr.'
     category: Climate
+    subcategory: null
     type: float
+    unit: 1/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.02
+    default: 0.003
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: physical
+    categories: []
+    source: The coupling build's own corrections (batch 20)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    - Financial analysts
+    priority: P1
+    status: existing
+    deprecated_by: null
   wind_offshore_capacity:
     name: Offshore wind capacity
     description: Installed offshore wind capacity, chosen by the optimiser. Same role correction.
@@ -21099,6 +21629,62 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
+  years_from_carbon_tax_to_net_zero:
+    name: Years from carbon tax to net zero
+    description: 'years from carbon tax to net zero: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. Years between the carbon tax''s start and the net-zero year:
+      the carbon pricing''s own running length on the policy clock.'
+    category: Planning
+    type: float
+    unit: years
+    range:
+    - -100.0
+    - 100.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
+  years_from_peak_to_net_zero:
+    name: Years from peak to net zero
+    description: 'years from peak to net zero: the coupling''s derived quantity, so a scenario''s dial
+      has a number the reports can name. Years between the emissions peak and the net-zero year, on the
+      policy clock; the pace the trajectory must hold between the two milestones.'
+    category: Planning
+    type: float
+    unit: years
+    range:
+    - -100.0
+    - 100.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
+  years_from_renewable_target_to_net_zero:
+    name: Years from renewable target to net zero
+    description: 'years from renewable target to net zero: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. Years between the renewable target''s year and net zero.'
+    category: Planning
+    type: float
+    unit: years
+    range:
+    - -100.0
+    - 100.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 20)
+    users:
+    - Planners
+    - Financial analysts
   years_of_life_lost:
     name: Years of life lost
     description: Mean years lost per premature death, the YLL half of a DALY.
@@ -21247,10 +21833,10 @@ equations:
     - allowed_revenue_requirement
     tolerance: 1.0e-09
     unit_check: true
-    reference: UKRN cost of capital guidance (2023), §allowed returns
-    priority: P1
     solution_method: direct
     linearity: linear
+    priority: P1
+    reference: UKRN cost of capital guidance (2023), §allowed returns
     latex: \mathrm{allowed}_{revenue\_requirement} = \mathrm{regulatory}_{depreciation} + \mathrm{regulatory}_{asset\_base}
       \mathrm{discount}_{rate}
   ammonia_export_volume_tonnes_definition:
@@ -21271,7 +21857,7 @@ equations:
     - ammonia_export_volume_tonnes
     tolerance: 1.0e-09
     unit_check: true
-    reference: The export terminal's own product mix; the fuel tables' LHV basis
+    reference: null
     priority: P1
     solution_method: direct
     linearity: linear
@@ -21388,10 +21974,10 @@ equations:
     - applied_tariff_usd_per_mwh
     tolerance: 1.0e-09
     unit_check: true
-    reference: World Bank Regulation of Utilities handbook, revenue caps
-    priority: P1
     solution_method: direct
     linearity: linear
+    priority: P1
+    reference: World Bank Regulation of Utilities handbook, revenue caps
     latex: \mathrm{applied}_{tariff\_usd\_per\_mwh} = \mathrm{regulated}_{tariff\_usd\_per\_mwh} \mathrm{revenue}_{cap}
   availability_definition:
     name: Availability from MTBF and MTTR
@@ -21494,6 +22080,27 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{biogas}_{cost} = \mathrm{capex}_{biogas}
+  blended_finance_bound:
+    name: Blended finance bound
+    description: A blended package draws on the concessional and the commercial tranche, so its share's
+      scale is bounded by the two together.
+    system: financial
+    lhs: blended_finance_share
+    rhs: dfi_share + commercial_bank_share
+    relation: leq
+    parameters: &id001
+    - blended_finance_share
+    - commercial_bank_share
+    - dfi_share
+    free_variables: *id001
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{blended}_{finance\_share} \leq \mathrm{dfi}_{share} + \mathrm{commercial}_{bank\_share}
   capacity_credit_definition:
     name: VRE capacity credit
     description: 'The firm contribution a renewable fleet makes to the reserve margin. Approximated as
@@ -21546,6 +22153,28 @@ equations:
     linearity: linear
     latex: \mathrm{capacity}_{revenue\_usd\_per\_year} = \frac{\mathrm{capacity}_{market} \mathrm{capacity}_{price}
       \mathrm{firm}_{capacity\_mw}}{1000000}
+  capex_battery_power_usd_per_kw_definition:
+    name: The battery store's cost per kW
+    description: 'The battery''s energy store expressed per kW of power rating: the per-energy cost times
+      the duration, the power-energy cost split the storage sizing literature keeps.'
+    system: cost_accounting
+    lhs: capex_battery_power_usd_per_kw
+    rhs: capex_battery * battery_duration
+    relation: eq
+    parameters:
+    - capex_battery_power_usd_per_kw
+    - battery_duration
+    - capex_battery
+    free_variables: []
+    determined_variables:
+    - capex_battery_power_usd_per_kw
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025 Equations & Variables
+    latex: \mathrm{capex}_{battery\_power\_usd\_per\_kw} = \mathrm{capex}_{battery} \mathrm{battery}_{duration}
   capture_price_equation:
     name: Capture price under cannibalisation
     description: 'The price a renewable unit receives falls as its own share rises. This is `params-prg1.md`
@@ -21661,6 +22290,27 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  carbon_finance_bound:
+    name: Carbon finance bound
+    description: 'Financing backed by carbon credit sales cannot exceed the carbon revenue stream it is
+      collateral on: the carbon stream is the repayment source, and its weight in total revenue bounds
+      the share.'
+    system: financial
+    lhs: carbon_finance_share
+    rhs: carbon_revenue_share_of_revenue
+    relation: leq
+    parameters: &id002
+    - carbon_finance_share
+    - carbon_revenue_share_of_revenue
+    free_variables: *id002
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{carbon}_{finance\_share} \leq \mathrm{carbon}_{revenue\_share\_of\_revenue}
   carbon_price_alias:
     name: Carbon price is Carbon price
     description: Two ids for one rate, resolved in the graph's own idiom; the equality holds at every
@@ -21734,6 +22384,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  carbon_revenue_share_of_revenue_definition:
+    name: Carbon revenue's weight in total revenue
+    description: 'The carbon stream''s weight in the fleet''s revenue: the ratio the carbon-backed-financing
+      bound is expressed against.'
+    system: financial
+    lhs: carbon_revenue_share_of_revenue
+    rhs: carbon_revenue_usd_per_year / total_revenue_usd_per_year
+    relation: eq
+    parameters:
+    - carbon_revenue_share_of_revenue
+    - carbon_revenue_usd_per_year
+    - total_revenue_usd_per_year
+    free_variables: []
+    determined_variables:
+    - carbon_revenue_share_of_revenue
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Stoft 2002, Power System Economics, ch. 5
+    latex: \mathrm{carbon}_{revenue\_share\_of\_revenue} = \frac{\mathrm{carbon}_{revenue\_usd\_per\_year}}{\mathrm{total}_{revenue\_usd\_per\_year}}
   carbon_tax_rate_alias:
     name: Carbon tax rate is Carbon price
     description: Two ids for one rate, resolved in the graph's own idiom; the equality holds at every
@@ -21805,6 +22477,29 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  chemicals_green_ammonia_definition:
+    name: Ammonia the green route makes
+    description: 'Ammonia the chemical programme makes through the green route: the mix share times the
+      sector''s own output, in tonnes.'
+    system: price_demand
+    lhs: chemicals_green_ammonia_tonnes_per_year
+    rhs: chemicals_green_ammonia_share * chemicals_ammonia_production
+    relation: eq
+    parameters:
+    - chemicals_green_ammonia_tonnes_per_year
+    - chemicals_ammonia_production
+    - chemicals_green_ammonia_share
+    free_variables: []
+    determined_variables:
+    - chemicals_green_ammonia_tonnes_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{chemicals}_{green\_ammonia\_tonnes\_per\_year} = \mathrm{chemicals}_{green\_ammonia\_share}
+      \mathrm{chemicals}_{ammonia\_production}
   co2_captured_cement_tonnes_definition:
     name: Co2 captured cement tonnes
     description: 'CO2 the cement programme captures: the sector''s tonnes times the cement put through
@@ -21823,7 +22518,7 @@ equations:
     - co2_captured_cement_tonnes
     tolerance: 1.0e-09
     unit_check: true
-    reference: IPCC cement process emissions; the clinker factor
+    reference: null
     priority: P1
     solution_method: direct
     linearity: linear
@@ -21846,7 +22541,7 @@ equations:
     - co2_captured_industry_tonnes
     tolerance: 1.0e-09
     unit_check: true
-    reference: The emissions accounting the emissions system derives
+    reference: null
     priority: P1
     solution_method: direct
     linearity: linear
@@ -22000,6 +22695,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{compressed}_{air\_cost} = \mathrm{capex}_{caes}
+  construction_share_of_concession_definition:
+    name: The construction period's share of the concession
+    description: 'The fraction of the concession term construction consumes: months over the term''s own
+      months. The metric the concessionaire''s downtime exposure is stated against.'
+    system: financial
+    lhs: construction_share_of_concession
+    rhs: construction_period / (concession_duration * 12.0)
+    relation: eq
+    parameters:
+    - construction_share_of_concession
+    - concession_duration
+    - construction_period
+    free_variables: []
+    determined_variables:
+    - construction_share_of_concession
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{construction}_{share\_of\_concession} = \frac{\mathrm{construction}_{period}}{12 \mathrm{concession}_{duration}}
   consumer_surplus_definition:
     name: Consumer surplus
     description: 'A linear approximation of the triangle under the demand curve. Dimensional check: (USD/MWh)
@@ -22116,13 +22833,12 @@ equations:
     free_variables:
     - cost_of_debt
     - allowed_return_on_debt
-    determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
-    reference: UKRN cost of capital guidance (2023), §overall framework
-    priority: P1
     solution_method: direct
     linearity: linear
+    priority: P1
+    reference: UKRN cost of capital guidance (2023), §overall framework
     latex: \mathrm{cost}_{of\_debt} \leq \mathrm{allowed}_{return\_on\_debt}
   cost_of_debt_priced:
     name: Cost of debt from the spread
@@ -22163,13 +22879,12 @@ equations:
     free_variables:
     - cost_of_equity
     - allowed_return_on_equity
-    determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
-    reference: Ofwat PR24 Appendix 11, allowed return on capital
-    priority: P1
     solution_method: direct
     linearity: linear
+    priority: P1
+    reference: Ofwat PR24 Appendix 11, allowed return on capital
     latex: \mathrm{cost}_{of\_equity} \leq \mathrm{allowed}_{return\_on\_equity}
   crf_biomass_definition:
     name: CRF (biomass)
@@ -22514,6 +23229,50 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  debt_financing_share_definition:
+    name: Debt's share of the capital structure
+    description: 'Debt''s own share of the capital structure: D/(D+E), the conversion of the shipped debt/equity
+      ratio to the share the financing-mix bounds are expressed against.'
+    system: financial
+    lhs: debt_financing_share
+    rhs: debt_equity_ratio / (1.0 + debt_equity_ratio)
+    relation: eq
+    parameters:
+    - debt_financing_share
+    - debt_equity_ratio
+    free_variables: []
+    determined_variables:
+    - debt_financing_share
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Short, Packey & Holt (1995), NREL/TP-462-5173
+    latex: \mathrm{debt}_{financing\_share} = \frac{\mathrm{debt}_{equity\_ratio}}{\mathrm{debt}_{equity\_ratio}
+      + 1}
+  debt_mix_bound:
+    name: Debt mix bound
+    description: 'The three debt-instrument classes cannot, together, exceed debt''s own share of the
+      capital structure: they fund the same debt tranche, which the D/E ratio declares.'
+    system: financial
+    lhs: bond_share + dfi_share + commercial_bank_share
+    rhs: debt_financing_share
+    relation: leq
+    parameters: &id003
+    - bond_share
+    - commercial_bank_share
+    - debt_financing_share
+    - dfi_share
+    free_variables: *id003
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{bond}_{share} + \mathrm{dfi}_{share} + \mathrm{commercial}_{bank\_share} \leq \mathrm{debt}_{financing\_share}
   debt_service_definition:
     name: Debt service
     description: The annuity a lender is repaid per kilowatt of debt-financed capex.
@@ -22538,6 +23297,28 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  demand_growth_factor_definition:
+    name: The compound growth factor over the window
+    description: 'The compound growth factor over the trajectory''s window: (1+g) to the window''s years,
+      the factor a forecast escalates demand by.'
+    system: price_demand
+    lhs: demand_growth_factor
+    rhs: (1.0 + demand_growth) ** demand_growth_window_years
+    relation: eq
+    parameters:
+    - demand_growth_factor
+    - demand_growth
+    - demand_growth_window_years
+    free_variables: []
+    determined_variables:
+    - demand_growth_factor
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P1
+    reference: Short, Packey & Holt (1995), NREL/TP-462-5173
+    latex: \mathrm{demand}_{growth\_factor} = {\left(1 + \mathrm{demand}_{growth}\right)}^{\mathrm{demand}_{growth\_window\_years}}
   demand_growth_implied_definition:
     name: Implied demand growth
     description: 'The elasticity''s own implication: demand grows with income at the income elasticity,
@@ -22563,6 +23344,28 @@ equations:
     solution_method: numeric
     linearity: nonlinear
     latex: \mathrm{demand}_{growth\_implied} = \mathrm{income}_{elasticity} \mathrm{gdp}_{growth}
+  demand_growth_window_definition:
+    name: The growth trajectory's window
+    description: 'Years the demand growth trajectory spans: end year minus start year on the trajectory''s
+      own clock.'
+    system: price_demand
+    lhs: demand_growth_window_years
+    rhs: demand_growth_end_year - demand_growth_start_year
+    relation: eq
+    parameters:
+    - demand_growth_window_years
+    - demand_growth_end_year
+    - demand_growth_start_year
+    free_variables: []
+    determined_variables:
+    - demand_growth_window_years
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{demand}_{growth\_window\_years} = \mathrm{demand}_{growth\_end\_year} - \mathrm{demand}_{growth\_start\_year}
   demand_shares_bound:
     name: Sector demand shares sum to at most one
     description: 'The four sector shares are a decomposition of total demand, so they cannot sum above
@@ -22876,6 +23679,29 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{equity}_{share} = 1 - \mathrm{debt}_{fraction}
+  financing_close_share_of_licence_definition:
+    name: The financing-close deadline's share of the licence
+    description: 'The fraction of the licence term the financing-close deadline spans: months over the
+      term''s own months. The metric the licence-lapse risk is stated against.'
+    system: financial
+    lhs: financing_close_share_of_licence
+    rhs: financing_close_deadline / (licence_duration * 12.0)
+    relation: eq
+    parameters:
+    - financing_close_share_of_licence
+    - financing_close_deadline
+    - licence_duration
+    free_variables: []
+    determined_variables:
+    - financing_close_share_of_licence
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{financing}_{close\_share\_of\_licence} = \frac{\mathrm{financing}_{close\_deadline}}{12
+      \mathrm{licence}_{duration}}
   firm_capacity_definition:
     name: Firm capacity
     description: 'The firm fleet is the thermal units plus the dispatchable renewables: the generators
@@ -22901,6 +23727,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  fit_annuity_factor_definition:
+    name: The annuity factor over the FiT term
+    description: 'The present-value annuity factor over the FiT contract term, at the real discount rate
+      the Fisher identity derives: the PV-per-annum weight the tariff''s cash flows carry.'
+    system: financial
+    lhs: fit_annuity_factor
+    rhs: (1.0 - (1.0 + real_discount_rate) ** (-fit_duration)) / real_discount_rate
+    relation: eq
+    parameters:
+    - fit_annuity_factor
+    - fit_duration
+    - real_discount_rate
+    free_variables: []
+    determined_variables:
+    - fit_annuity_factor
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P1
+    reference: Short, Packey & Holt (1995), NREL/TP-462-5173
+    latex: \mathrm{fit}_{annuity\_factor} = \frac{1 - {\left(1 + \mathrm{real}_{discount\_rate}\right)}^{-\mathrm{fit}_{duration}}}{\mathrm{real}_{discount\_rate}}
   fleet_build_balance:
     name: The build set within the fleet
     description: The optimiser's per-technology builds must not exceed the fleet size the plan declares
@@ -23314,6 +24162,26 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{geothermal}_{cost} = \mathrm{capex}_{geothermal}
+  green_bond_bound:
+    name: Green bond bound
+    description: Green bonds are a subset of bond issuance -- the same tranche funded under a use-of-proceeds
+      label -- so their share is bounded by the bond market's own share.
+    system: financial
+    lhs: green_bond_share
+    rhs: bond_share
+    relation: leq
+    parameters: &id004
+    - bond_share
+    - green_bond_share
+    free_variables: *id004
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{green}_{bond\_share} \leq \mathrm{bond}_{share}
   health_cost_definition:
     name: Health cost
     description: 'The DALY burden priced at the value of a statistical life year. Dimensional check: DALY/year
@@ -23339,6 +24207,51 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  hvdc_capacity_definition:
+    name: Cross-border capacity in HVDC
+    description: 'The interconnector''s MW rating that carries HVDC: the technology''s share times the
+      link''s own capacity.'
+    system: demand_supply
+    lhs: hvdc_interconnector_capacity_mw
+    rhs: hvdc_share * interconnector_capacity
+    relation: eq
+    parameters:
+    - hvdc_interconnector_capacity_mw
+    - hvdc_share
+    - interconnector_capacity
+    free_variables: []
+    determined_variables:
+    - hvdc_interconnector_capacity_mw
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{hvdc}_{interconnector\_capacity\_mw} = \mathrm{hvdc}_{share} \mathrm{interconnector}_{capacity}
+  hydro_inflow_vintage_offset_definition:
+    name: The inflow record's vintage offset
+    description: How much the hydro inflow record's design year leads or trails the PV data's vintage.
+      The vintage selectors are set independently, and this offset is the check a scenario author runs
+      for consistency.
+    system: demand_supply
+    lhs: hydro_inflow_vintage_offset_years
+    rhs: hydro_inflow_year - solar_cf_year
+    relation: eq
+    parameters:
+    - hydro_inflow_vintage_offset_years
+    - hydro_inflow_year
+    - solar_cf_year
+    free_variables: []
+    determined_variables:
+    - hydro_inflow_vintage_offset_years
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{hydro}_{inflow\_vintage\_offset\_years} = \mathrm{hydro}_{inflow\_year} - \mathrm{solar}_{cf\_year}
   hydrogen_fuel_cell_cost_alias:
     name: Hydrogen fuel cell capital cost is Hydrogen fuel cell capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `hydrogen_fuel_cell_cost`
@@ -23588,7 +24501,7 @@ equations:
     - interruptible_load_mw
     tolerance: 1.0e-09
     unit_check: true
-    reference: Demand-response programme design (the interruptible contract's own definition)
+    reference: null
     priority: P1
     solution_method: direct
     linearity: linear
@@ -24211,6 +25124,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{lifeline}_{tariff} = \mathrm{lifeline}_{tariff\_usd\_per\_mwh}
+  line_outage_hours_per_year_definition:
+    name: Hours the line spends out per year
+    description: 'Hours per year the line spends out: expected events times the mean event duration, the
+      line-level figure of the same form the SAIDI sum takes at system level.'
+    system: reliability
+    lhs: line_outage_hours_per_year
+    rhs: line_outage_probability * line_outage_duration
+    relation: eq
+    parameters:
+    - line_outage_hours_per_year
+    - line_outage_duration
+    - line_outage_probability
+    free_variables: []
+    determined_variables:
+    - line_outage_hours_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: IEEE Guide for Electric Power Distribution Reliability Indices (1366), tutorial deck
+    latex: \mathrm{line}_{outage\_hours\_per\_year} = \mathrm{line}_{outage\_probability} \mathrm{line}_{outage\_duration}
   llcr_definition:
     name: Loan life coverage ratio
     description: 'Cash available over the loan life, discounted, against debt outstanding. Dimensional
@@ -24564,6 +25499,71 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{phs}_{cost} = \mathrm{capex}_{phs}
+  phs_energy_capex_usd_per_kwh_definition:
+    name: Pumped hydro's cost per kWh
+    description: 'Pumped hydro''s cost per kWh of energy: the power-quoted installed cost divided by the
+      reservoir''s hours, the power-energy split''s other direction -- and the reason PHS is cheap per
+      energy and expensive per power.'
+    system: cost_accounting
+    lhs: phs_energy_capex_usd_per_kwh
+    rhs: capex_phs / phs_duration
+    relation: eq
+    parameters:
+    - phs_energy_capex_usd_per_kwh
+    - capex_phs
+    - phs_duration
+    free_variables: []
+    determined_variables:
+    - phs_energy_capex_usd_per_kwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025 Equations & Variables
+    latex: \mathrm{phs}_{energy\_capex\_usd\_per\_kwh} = \frac{\mathrm{capex}_{phs}}{\mathrm{phs}_{duration}}
+  planned_maintenance_hours_per_year_definition:
+    name: Hours planned maintenance takes per year
+    description: 'Hours per year planned maintenance takes: the events'' frequency times their duration,
+      the planned-outage term against availability.'
+    system: reliability
+    lhs: planned_maintenance_hours_per_year
+    rhs: maintenance_frequency * maintenance_duration
+    relation: eq
+    parameters:
+    - planned_maintenance_hours_per_year
+    - maintenance_duration
+    - maintenance_frequency
+    free_variables: []
+    determined_variables:
+    - planned_maintenance_hours_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: IEEE Guide for Electric Power Distribution Reliability Indices (1366), tutorial deck
+    latex: \mathrm{planned}_{maintenance\_hours\_per\_year} = \mathrm{maintenance}_{frequency} \mathrm{maintenance}_{duration}
+  powertrain_stock_bound:
+    name: Powertrain stock bound
+    description: 'Fuel-cell and battery vehicles are disjoint powertrains of the same vehicle stock: together
+      they may not exceed it.'
+    system: demand_supply
+    lhs: hydrogen_vehicle_share + electric_vehicle_adoption
+    rhs: '1.0'
+    relation: leq
+    parameters: &id005
+    - electric_vehicle_adoption
+    - hydrogen_vehicle_share
+    free_variables: *id005
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{hydrogen}_{vehicle\_share} + \mathrm{electric}_{vehicle\_adoption} \leq 1
   ppa_annual_revenue_definition:
     name: PPA annual revenue
     description: 'The annual revenue per kilowatt of contracted capacity. Dimensional check: USD/MWh times
@@ -24761,10 +25761,10 @@ equations:
     - regulatory_asset_base
     tolerance: 1.0e-09
     unit_check: true
-    reference: Ofwat PR24 Appendix 11, allowed return on capital
-    priority: P1
     solution_method: direct
     linearity: linear
+    priority: P1
+    reference: Ofwat PR24 Appendix 11, allowed return on capital
     latex: \mathrm{regulatory}_{asset\_base} = \frac{\mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}
       \left(1 - \mathrm{accumulated}_{depreciation\_fraction}\right)}{1000}
   regulatory_depreciation_definition:
@@ -24785,10 +25785,10 @@ equations:
     - regulatory_depreciation
     tolerance: 1.0e-09
     unit_check: true
-    reference: Ofwat PR24 Appendix 11, allowed return on capital
-    priority: P1
     solution_method: direct
     linearity: linear
+    priority: P1
+    reference: Ofwat PR24 Appendix 11, allowed return on capital
     latex: \mathrm{regulatory}_{depreciation} = \frac{\mathrm{regulatory}_{asset\_base}}{\mathrm{depreciation}_{life\_by\_asset}}
   reliability_cost_definition:
     name: Reliability cost
@@ -24991,6 +25991,26 @@ equations:
     solution_method: numeric
     linearity: linear
     latex: \mathrm{retention}_{share} + \mathrm{deductible}_{share} \leq 1
+  retraining_schedule_bound:
+    name: Retraining schedule bound
+    description: 'The retraining programme completes within construction: workers are trained while the
+      plant is built, and the schedule bound is months against months.'
+    system: employment
+    lhs: retraining_duration
+    rhs: construction_period
+    relation: leq
+    parameters: &id006
+    - construction_period
+    - retraining_duration
+    free_variables: *id006
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{retraining}_{duration} \leq \mathrm{construction}_{period}
   rocof_definition:
     name: Rate of change of frequency
     description: 'The swing equation''s first instant: the largest credible loss divided by twice the
@@ -25086,6 +26106,27 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{salinity}_{gradient\_cost} = \mathrm{capex}_{salinity\_gradient}
+  settlement_intervals_per_hour_definition:
+    name: How many settlement periods an hour carries
+    description: 'How many settlement periods an hour carries: the interval''s inverse, which is what
+      a dispatch count or a data series reads.'
+    system: price_demand
+    lhs: settlement_intervals_per_hour
+    rhs: 1.0 / settlement_period
+    relation: eq
+    parameters:
+    - settlement_intervals_per_hour
+    - settlement_period
+    free_variables: []
+    determined_variables:
+    - settlement_intervals_per_hour
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{settlement}_{intervals\_per\_hour} = {\mathrm{settlement}_{period}}^{-1}
   small_modular_reactor_cost_alias:
     name: SMR capital cost is Small modular reactor capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `small_modular_reactor_cost`
@@ -25110,6 +26151,30 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{small}_{modular\_reactor\_cost} = \mathrm{capex}_{smr}
+  solar_pv_capacity_factor_at_vintage_definition:
+    name: The PV capacity factor at the dataset's vintage year
+    description: 'The PV capacity factor AT the vintage year the dataset quotes: the factor today compounded
+      by the technology''s own degradation rate, whose field-measured band the degradation node carries.'
+    system: demand_supply
+    lhs: solar_pv_capacity_factor_at_vintage
+    rhs: solar_pv_capacity_factor * (1.0 - solar_degradation) ** solar_cf_year
+    relation: eq
+    parameters:
+    - solar_pv_capacity_factor_at_vintage
+    - solar_cf_year
+    - solar_degradation
+    - solar_pv_capacity_factor
+    free_variables: []
+    determined_variables:
+    - solar_pv_capacity_factor_at_vintage
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P1
+    reference: null
+    latex: \mathrm{solar}_{pv\_capacity\_factor\_at\_vintage} = \mathrm{solar}_{pv\_capacity\_factor}
+      {\left(1 - \mathrm{solar}_{degradation}\right)}^{\mathrm{solar}_{cf\_year}}
   solar_pv_cost_alias:
     name: Solar PV capital cost (legacy) is Solar PV capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `solar_pv_cost`
@@ -25134,6 +26199,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{solar}_{pv\_cost} = \mathrm{capex}_{solar\_pv}
+  steel_eaf_route_definition:
+    name: Crude steel the scrap-EAF route makes
+    description: 'Crude steel the scrap-EAF route makes: the mix share times the sector''s own output,
+      in million tonnes.'
+    system: price_demand
+    lhs: steel_eaf_route_mt
+    rhs: steel_scrap_eaf_share * steel_production
+    relation: eq
+    parameters:
+    - steel_eaf_route_mt
+    - steel_production
+    - steel_scrap_eaf_share
+    free_variables: []
+    determined_variables:
+    - steel_eaf_route_mt
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{steel}_{eaf\_route\_mt} = \mathrm{steel}_{scrap\_eaf\_share} \mathrm{steel}_{production}
   steel_hydrogen_demand_tonnes_definition:
     name: Steel hydrogen demand tonnes
     description: 'Hydrogen the H2-DRI steel route consumes: the sector''s tonnes times the mix share times
@@ -25152,12 +26239,32 @@ equations:
     - steel_hydrogen_demand_tonnes
     tolerance: 1.0e-09
     unit_check: true
-    reference: HYBRIT; the sector-coupling hydrogen-demand identity
+    reference: null
     priority: P1
     solution_method: direct
     linearity: linear
     latex: \mathrm{steel}_{hydrogen\_demand\_tonnes} = 1000 \mathrm{steel}_{production} \mathrm{steel}_{h2\_dri\_share}
       \mathrm{hydrogen}_{per\_t\_steel\_kg}
+  steel_route_bound:
+    name: Steel route bound
+    description: 'The scrap-EAF and H2-DRI routes are shares of the same crude-steel output: together
+      they may not exceed it.'
+    system: price_demand
+    lhs: steel_scrap_eaf_share + steel_h2_dri_share
+    rhs: '1.0'
+    relation: leq
+    parameters: &id007
+    - steel_h2_dri_share
+    - steel_scrap_eaf_share
+    free_variables: *id007
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{steel}_{scrap\_eaf\_share} + \mathrm{steel}_{h2\_dri\_share} \leq 1
   tariff_cost_recovery:
     name: Cost-recovery tariff
     description: 'What serving the load costs, per unit sold: the annualised fixed charge spread over
@@ -25211,6 +26318,50 @@ equations:
     linearity: linear
     latex: \mathrm{tariff}_{vat\_inclusive\_usd\_per\_mwh} = \mathrm{applied}_{tariff\_usd\_per\_mwh}
       + \mathrm{applied}_{tariff\_usd\_per\_mwh} \mathrm{vat}_{rate}
+  taxed_fraction_of_concession_definition:
+    name: The taxed fraction of the concession
+    description: 'The fraction of the concession term income tax does apply to: one minus the holiday''s
+      share. The multiplier the taxable-income accounts carry.'
+    system: financial
+    lhs: taxed_fraction_of_concession
+    rhs: 1.0 - tax_holiday_duration / concession_duration
+    relation: eq
+    parameters:
+    - taxed_fraction_of_concession
+    - concession_duration
+    - tax_holiday_duration
+    free_variables: []
+    determined_variables:
+    - taxed_fraction_of_concession
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{taxed}_{fraction\_of\_concession} = 1 - \frac{\mathrm{tax}_{holiday\_duration}}{\mathrm{concession}_{duration}}
+  thermal_phs_duration_ratio_definition:
+    name: The thermal store's duration against pumped hydro's
+    description: 'The thermal store''s duration relative to pumped hydro''s: the long-duration comparison
+      a portfolio''s sizing check starts from.'
+    system: cost_accounting
+    lhs: thermal_phs_duration_ratio
+    rhs: thermal_storage_duration / phs_duration
+    relation: eq
+    parameters:
+    - thermal_phs_duration_ratio
+    - phs_duration
+    - thermal_storage_duration
+    free_variables: []
+    determined_variables:
+    - thermal_phs_duration_ratio
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{thermal}_{phs\_duration\_ratio} = \frac{\mathrm{thermal}_{storage\_duration}}{\mathrm{phs}_{duration}}
   tidal_range_cost_alias:
     name: Tidal range capital cost is Tidal range capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `tidal_range_cost`
@@ -25257,6 +26408,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  total_loss_utilisation_window_definition:
+    name: The tax-loss utilisation window
+    description: 'The total window tax losses may be utilised over: the carryback and carryforward years
+      together, which is what the effective tax-rate smoothing relies on.'
+    system: financial
+    lhs: total_loss_utilisation_window_years
+    rhs: loss_carryback_years + loss_carryforward_years
+    relation: eq
+    parameters:
+    - total_loss_utilisation_window_years
+    - loss_carryback_years
+    - loss_carryforward_years
+    free_variables: []
+    determined_variables:
+    - total_loss_utilisation_window_years
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{total}_{loss\_utilisation\_window\_years} = \mathrm{loss}_{carryback\_years} + \mathrm{loss}_{carryforward\_years}
   total_revenue_definition:
     name: Total revenue
     description: 'The fleet''s annual revenue at the PPA price. Dimensional check: TWh times 1e6 is MWh/year,
@@ -25324,6 +26497,46 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  urban_heat_supply_bound:
+    name: Urban heat supply bound
+    description: 'District heating and heat pumps are disjoint supply modes of the same urban building
+      stock''s heat: together they may not exceed the stock.'
+    system: demand_supply
+    lhs: district_heating_share + heat_pump_adoption
+    rhs: '1.0'
+    relation: leq
+    parameters: &id008
+    - district_heating_share
+    - heat_pump_adoption
+    free_variables: *id008
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{district}_{heating\_share} + \mathrm{heat}_{pump\_adoption} \leq 1
+  v2g_subset_bound:
+    name: V2g subset bound
+    description: 'V2G-capable vehicles are a subset of the EV stock: their share of the fleet cannot exceed
+      the EV share itself.'
+    system: demand_supply
+    lhs: v2g_adoption
+    rhs: electric_vehicle_adoption
+    relation: leq
+    parameters: &id009
+    - electric_vehicle_adoption
+    - v2g_adoption
+    free_variables: *id009
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{v2g}_{adoption} \leq \mathrm{electric}_{vehicle\_adoption}
   variable_stack_definition:
     name: The variable cost stack
     description: 'Fuel and carbon: the marginal cost''s variable part. The shipped marginal-cost definition
@@ -25413,10 +26626,10 @@ equations:
     - weighted_average_cost_of_capital
     tolerance: 1.0e-09
     unit_check: true
-    reference: Standard WACC with the interest tax shield
-    priority: P1
     solution_method: direct
     linearity: linear
+    priority: P1
+    reference: Standard WACC with the interest tax shield
     latex: \mathrm{weighted}_{average\_cost\_of\_capital} = \mathrm{discount}_{rate}
   wacc_definition:
     name: Weighted average cost of capital
@@ -25515,6 +26728,30 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{wave}_{energy\_converter\_cost} = \mathrm{capex}_{marine\_wave}
+  wind_capacity_factor_at_vintage_definition:
+    name: The onshore-wind capacity factor at its vintage year
+    description: 'The onshore-wind capacity factor AT its dataset''s vintage year: the factor compounded
+      by the technology''s degradation.'
+    system: demand_supply
+    lhs: wind_capacity_factor_at_vintage
+    rhs: capacity_factor_wind_onshore * (1.0 - wind_degradation) ** wind_cf_year
+    relation: eq
+    parameters:
+    - wind_capacity_factor_at_vintage
+    - capacity_factor_wind_onshore
+    - wind_cf_year
+    - wind_degradation
+    free_variables: []
+    determined_variables:
+    - wind_capacity_factor_at_vintage
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P1
+    reference: null
+    latex: \mathrm{wind}_{capacity\_factor\_at\_vintage} = \mathrm{capacity}_{factor\_wind\_onshore} {\left(1
+      - \mathrm{wind}_{degradation}\right)}^{\mathrm{wind}_{cf\_year}}
   wind_offshore_cost_alias:
     name: Offshore wind capital cost (legacy) is Offshore wind capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `wind_offshore_cost`
@@ -25587,6 +26824,71 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{women}_{jobs} = \mathrm{direct}_{jobs} \mathrm{women}_{employment\_share}
+  years_from_carbon_tax_to_net_zero_definition:
+    name: Years the carbon tax runs to net zero
+    description: 'Years between the carbon tax''s start and the net-zero year: the pricing''s own running
+      length on the policy clock.'
+    system: carbon_trajectory
+    lhs: years_from_carbon_tax_to_net_zero
+    rhs: net_zero_year - carbon_tax_start_year
+    relation: eq
+    parameters:
+    - years_from_carbon_tax_to_net_zero
+    - carbon_tax_start_year
+    - net_zero_year
+    free_variables: []
+    determined_variables:
+    - years_from_carbon_tax_to_net_zero
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{years}_{from\_carbon\_tax\_to\_net\_zero} = \mathrm{net}_{zero\_year} - \mathrm{carbon}_{tax\_start\_year}
+  years_from_peak_to_net_zero_definition:
+    name: Years from the emissions peak to net zero
+    description: 'Years between the emissions peak and the net-zero year on the policy clock: the pace
+      the trajectory must hold between the two milestones.'
+    system: carbon_trajectory
+    lhs: years_from_peak_to_net_zero
+    rhs: net_zero_year - emissions_peak_year
+    relation: eq
+    parameters:
+    - years_from_peak_to_net_zero
+    - emissions_peak_year
+    - net_zero_year
+    free_variables: []
+    determined_variables:
+    - years_from_peak_to_net_zero
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{years}_{from\_peak\_to\_net\_zero} = \mathrm{net}_{zero\_year} - \mathrm{emissions}_{peak\_year}
+  years_from_renewable_target_to_net_zero_definition:
+    name: Years from the renewable target to net zero
+    description: Years between the renewable target's year and net zero on the policy clock.
+    system: carbon_trajectory
+    lhs: years_from_renewable_target_to_net_zero
+    rhs: net_zero_year - renewable_target_year
+    relation: eq
+    parameters:
+    - years_from_renewable_target_to_net_zero
+    - net_zero_year
+    - renewable_target_year
+    free_variables: []
+    determined_variables:
+    - years_from_renewable_target_to_net_zero
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{years}_{from\_renewable\_target\_to\_net\_zero} = \mathrm{net}_{zero\_year} - \mathrm{renewable}_{target\_year}
   youth_jobs_definition:
     name: Youth employment target applied
     description: 'The composition share applied to the direct jobs: jobs by group equal the share times
@@ -29311,6 +30613,438 @@ relationships:
   direction: forward
   strength: hard
   description: Enters the sector product.
+  reference: null
+  priority: P1
+- source: debt_equity_ratio
+  target: debt_financing_share
+  equation_id: debt_financing_share_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: carbon_revenue_usd_per_year
+  target: carbon_revenue_share_of_revenue
+  equation_id: carbon_revenue_share_of_revenue_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: total_revenue_usd_per_year
+  target: carbon_revenue_share_of_revenue
+  equation_id: carbon_revenue_share_of_revenue_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: steel_production
+  target: steel_eaf_route_mt
+  equation_id: steel_eaf_route_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: steel_scrap_eaf_share
+  target: steel_eaf_route_mt
+  equation_id: steel_eaf_route_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: chemicals_ammonia_production
+  target: chemicals_green_ammonia_tonnes_per_year
+  equation_id: chemicals_green_ammonia_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: chemicals_green_ammonia_share
+  target: chemicals_green_ammonia_tonnes_per_year
+  equation_id: chemicals_green_ammonia_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: hvdc_share
+  target: hvdc_interconnector_capacity_mw
+  equation_id: hvdc_capacity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: interconnector_capacity
+  target: hvdc_interconnector_capacity_mw
+  equation_id: hvdc_capacity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: solar_cf_year
+  target: solar_pv_capacity_factor_at_vintage
+  equation_id: solar_pv_capacity_factor_at_vintage_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: solar_degradation
+  target: solar_pv_capacity_factor_at_vintage
+  equation_id: solar_pv_capacity_factor_at_vintage_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: solar_pv_capacity_factor
+  target: solar_pv_capacity_factor_at_vintage
+  equation_id: solar_pv_capacity_factor_at_vintage_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: capacity_factor_wind_onshore
+  target: wind_capacity_factor_at_vintage
+  equation_id: wind_capacity_factor_at_vintage_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: wind_cf_year
+  target: wind_capacity_factor_at_vintage
+  equation_id: wind_capacity_factor_at_vintage_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: wind_degradation
+  target: wind_capacity_factor_at_vintage
+  equation_id: wind_capacity_factor_at_vintage_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: hydro_inflow_year
+  target: hydro_inflow_vintage_offset_years
+  equation_id: hydro_inflow_vintage_offset_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: solar_cf_year
+  target: hydro_inflow_vintage_offset_years
+  equation_id: hydro_inflow_vintage_offset_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: emissions_peak_year
+  target: years_from_peak_to_net_zero
+  equation_id: years_from_peak_to_net_zero_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: net_zero_year
+  target: years_from_peak_to_net_zero
+  equation_id: years_from_peak_to_net_zero_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: carbon_tax_start_year
+  target: years_from_carbon_tax_to_net_zero
+  equation_id: years_from_carbon_tax_to_net_zero_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: net_zero_year
+  target: years_from_carbon_tax_to_net_zero
+  equation_id: years_from_carbon_tax_to_net_zero_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: net_zero_year
+  target: years_from_renewable_target_to_net_zero
+  equation_id: years_from_renewable_target_to_net_zero_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: renewable_target_year
+  target: years_from_renewable_target_to_net_zero
+  equation_id: years_from_renewable_target_to_net_zero_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: concession_duration
+  target: construction_share_of_concession
+  equation_id: construction_share_of_concession_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: construction_period
+  target: construction_share_of_concession
+  equation_id: construction_share_of_concession_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: financing_close_deadline
+  target: financing_close_share_of_licence
+  equation_id: financing_close_share_of_licence_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: licence_duration
+  target: financing_close_share_of_licence
+  equation_id: financing_close_share_of_licence_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: concession_duration
+  target: taxed_fraction_of_concession
+  equation_id: taxed_fraction_of_concession_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: tax_holiday_duration
+  target: taxed_fraction_of_concession
+  equation_id: taxed_fraction_of_concession_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: fit_duration
+  target: fit_annuity_factor
+  equation_id: fit_annuity_factor_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: real_discount_rate
+  target: fit_annuity_factor
+  equation_id: fit_annuity_factor_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: loss_carryback_years
+  target: total_loss_utilisation_window_years
+  equation_id: total_loss_utilisation_window_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: loss_carryforward_years
+  target: total_loss_utilisation_window_years
+  equation_id: total_loss_utilisation_window_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: demand_growth_end_year
+  target: demand_growth_window_years
+  equation_id: demand_growth_window_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: demand_growth_start_year
+  target: demand_growth_window_years
+  equation_id: demand_growth_window_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: demand_growth
+  target: demand_growth_factor
+  equation_id: demand_growth_factor_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: demand_growth_window_years
+  target: demand_growth_factor
+  equation_id: demand_growth_factor_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: battery_duration
+  target: capex_battery_power_usd_per_kw
+  equation_id: capex_battery_power_usd_per_kw_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: capex_battery
+  target: capex_battery_power_usd_per_kw
+  equation_id: capex_battery_power_usd_per_kw_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: capex_phs
+  target: phs_energy_capex_usd_per_kwh
+  equation_id: phs_energy_capex_usd_per_kwh_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: phs_duration
+  target: phs_energy_capex_usd_per_kwh
+  equation_id: phs_energy_capex_usd_per_kwh_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: phs_duration
+  target: thermal_phs_duration_ratio
+  equation_id: thermal_phs_duration_ratio_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: thermal_storage_duration
+  target: thermal_phs_duration_ratio
+  equation_id: thermal_phs_duration_ratio_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: settlement_period
+  target: settlement_intervals_per_hour
+  equation_id: settlement_intervals_per_hour_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: line_outage_duration
+  target: line_outage_hours_per_year
+  equation_id: line_outage_hours_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: line_outage_probability
+  target: line_outage_hours_per_year
+  equation_id: line_outage_hours_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: maintenance_duration
+  target: planned_maintenance_hours_per_year
+  equation_id: planned_maintenance_hours_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: maintenance_frequency
+  target: planned_maintenance_hours_per_year
+  equation_id: planned_maintenance_hours_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
   reference: null
   priority: P1
 cross_validation:
