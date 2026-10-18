@@ -2904,12 +2904,24 @@ def test_the_unit_checker_decides_the_graph_without_giving_up(
 def test_the_unit_report_separates_inconsistent_from_undecidable(
 	graph: ParameterGraph,
 ):
-	"""The three sets partition the equations, and none is folded into another."""
+	"""The three sets, plus the declared exemptions, partition the equations.
+
+	The exemption is a fourth category by design -- the walker's own register
+	carries it apart from "nobody has annotated this" -- so the partition the
+	assertion really states is the four-way one, and folding the exempt into
+	undecidable is exactly what the field exists to prevent.
+	"""
 	from alea.prg.units import check_graph
 
+	# The invariant at the set level, rather than as four counts with an
+	# inclusion-exclusion term: every equation has either a *decided* verdict
+	# (the walk ran) or a *declared* one (the exemption), and no equation
+	# has neither. The three property lists are views of the checks; the
+	# exemption is the reason they do not partition on their own.
 	report = check_graph(graph)
-	total = len(report.consistent) + len(report.inconsistent) + len(report.undecidable)
-	assert total == len(graph.equations)
+	decided = {c.equation_id for c in report.checks if c.decidable}
+	assert decided | set(report.exempt) == set(graph.equations)
+	assert not (set(report.consistent) & set(report.inconsistent))
 	assert "not a pass" in report.summary()
 
 
