@@ -174,54 +174,114 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
-  additionality_test:
-    name: Additionality test
-    description: Additionality
-    category: Carbon
+  additional_abatement_mtco2:
+    name: Additional abatement mtco2
+    description: 'additional abatement mtco2: the compliance register''s derived quantity. The abatement
+      volume that clears the additionality screen: the budget-scaled annual volume times the screened
+      share.'
+    category: Regulatory
     type: float
+    unit: MtCO2/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
+    - 60.0
+    role: derived
+    determinism: policy
     priority: P1
-    status: to_build
-    users:
-    - Carbon
-    source: docs/params.md
-  adms_requirements:
-    name: Adms requirements
-    description: ADMS
-    category: Digital
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
-    users:
-    - Utilities
-    source: docs/params.md
-  affordability_threshold:
-    name: Affordability threshold
-    description: Affordability limit
-    category: Consumer
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    status: existing
+    source: The compliance-register coupling (batch 22)
     users:
     - Regulators
-    source: docs/params.md
+    - Planners
+  additionality_test:
+    name: Additionality test
+    description: The share of the abatement programme's volume that clears the additionality screen the
+      crediting rules require.
+    category: Carbon
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.9
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
+    users:
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
+  adms_controlled_feeders:
+    name: Adms controlled feeders
+    description: 'adms controlled feeders: the compliance register''s derived quantity. The feeders the
+      ADMS control room covers: the share times the system''s primary feeders.'
+    category: Regulatory
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 5000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
+  adms_requirements:
+    name: Adms requirements
+    description: The share of primary distribution feeders the ADMS control room covers.
+    category: Digital
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.35
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
+    users:
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
+  affordability_threshold:
+    name: Affordability threshold
+    description: The energy-burden share of income above which a household is in energy poverty -- the
+      10% line, the same statistic the shipped energy_burden_limit carries.
+    category: Consumer
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 0.5
+    default: 0.1
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
+    users:
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   agricultural_demand_share:
     name: Agricultural demand share
     description: Share of demand from agriculture. The three sibling shares were corrected to their real
@@ -312,20 +372,28 @@ parameters:
     deprecated_by: null
   air_quality_standards:
     name: Air quality standards
-    description: Air quality limits
+    description: The ambient PM2.5 limit the standards set, against the WHO 2021 annual guideline of 5
+      ug/m3; the graph's own ambient mean (the base node below) is the concentration the limit binds.
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: ug/m3
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 100.0
+    default: 5.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   airport_electrification:
     name: Airport electrification share
     description: Share of airport ground operations that are electric. A share.
@@ -1165,6 +1233,24 @@ parameters:
     users:
     - Regulators
     source: docs/params.md
+  audit_accounts_per_year:
+    name: Audit accounts per year
+    description: Accounts in the regulator's annual audit sample across the licensed fleet.
+    category: Regulatory
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 2000.0
+    default: 120.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   aviation_fuel_demand:
     name: Aviation fuel demand
     description: Aviation fuel demand
@@ -1256,20 +1342,27 @@ parameters:
     source: docs/params.md
   baseline_methodology:
     name: Baseline methodology
-    description: Baseline
+    description: The share of the crediting pipeline applying an approved baseline methodology.
     category: Carbon
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.8
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
-    - Carbon
-    source: docs/params.md
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   baseline_mortality_rate:
     name: Baseline mortality rate
     description: Annual all-cause mortality in the exposed population, before any air quality effect.
@@ -1648,6 +1741,25 @@ parameters:
     users:
     - Planners
     source: docs/params.md
+  biomass_variable_cost_usd_per_mwh:
+    name: Biomass variable cost usd per mwh
+    description: 'biomass variable cost usd per mwh: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. The biomass plant''s own variable cost incl. fuel: the feedstock
+      price plus the non-fuel O&M the plant accounts.'
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 100.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 21)
+    users:
+    - Planners
+    - Financial analysts
   black_start_capability:
     name: Black start capability
     description: Black start units available
@@ -1664,22 +1776,47 @@ parameters:
     users:
     - Utilities
     source: docs/params.md
-  black_start_requirement:
-    name: Black start requirement
-    description: Black start capability
-    category: Operational
+  black_start_capable_mw:
+    name: Black start capable mw
+    description: 'black start capable mw: the compliance register''s derived quantity. The capacity the
+      operator holds in black-start-capable units: the required share of the fleet''s own firm capacity.'
+    category: Regulatory
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 500.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
     users:
-    - Utilities
-    source: docs/params.md
+    - Regulators
+    - Planners
+  black_start_requirement:
+    name: Black start requirement
+    description: The share of firm capacity the operator must hold in black-start-capable units.
+    category: Operational
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.02
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
+    users:
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   blended_finance_share:
     name: Blended finance share
     description: The share of the project's financing structured as a blended package. Blending combines
@@ -3907,52 +4044,112 @@ parameters:
     deprecated_by: null
   clean_cooking_target:
     name: Clean cooking target
-    description: Clean cooking access target
+    description: The clean-cooking access target; it cannot sit below the LPG penetration already reached,
+      which is the bound below.
     category: Demand
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.3
+    initial: null
     role: free
     determinism: policy
-    priority: P2
-    status: to_build
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
+  clearing_house_default_fund_usd_per_year:
+    name: Clearing house default fund usd per year
+    description: 'clearing house default fund usd per year: the compliance register''s derived quantity.
+      The default fund the clearing house collects: the share of the settled carbon-trade value the carbon
+      revenue computes.'
+    category: Regulatory
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 200000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   clearing_house_requirements:
     name: Clearing house requirements
-    description: Clearing house
+    description: The share of settled carbon-trade value the clearing house collects as its default fund.
     category: MktOps
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.02
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
-    - Banks
-    source: docs/params.md
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
+  climate_proofed_capex_mm_usd:
+    name: Climate proofed capex mm usd
+    description: 'climate proofed capex mm usd: the compliance register''s derived quantity. The fleet''s
+      capex passing the screen: the per-kW cost times the capacity in MW, at the MW-to-kW conversion and
+      the USD-million scale.'
+    category: Regulatory
+    type: float
+    unit: USD million
+    range:
+    - 0.0
+    - 20000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   climate_proofing_requirements:
     name: Climate proofing requirements
-    description: Climate proofing
+    description: The share of capex passing the climate-proofing screen (the taxonomy-style test).
     category: Adapt
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.35
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
-    - DFIs
-    source: docs/params.md
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   climate_risk_disclosure:
     name: Climate risk disclosure
     description: TCFD
@@ -4207,6 +4404,25 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  coal_retirement_half_life_years:
+    name: Coal retirement half life years
+    description: 'coal retirement half life years: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. Years for the coal fleet to half-retire at the annual rate:
+      ln 2 over the rate, the half-life of an exponential retirement.'
+    category: Generation
+    type: float
+    unit: years
+    range:
+    - 0.0
+    - 500.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 21)
+    users:
+    - Planners
+    - Financial analysts
   coal_retirement_rate:
     name: Coal retirement rate
     description: Annual coal retirement, as a fraction of the fleet. A rate, bounded in [0, 1].
@@ -4294,22 +4510,48 @@ parameters:
     - Agriculture
     - Health
     source: docs/params.md
-  collateral_requirements:
-    name: Collateral requirements
-    description: Collateral
-    category: MktOps
+  collateral_posted_usd_per_year:
+    name: Collateral posted usd per year
+    description: 'collateral posted usd per year: the compliance register''s derived quantity. The security
+      provisioned annually: the share of the revenue requirement the regulator''s accounts state.'
+    category: Regulatory
     type: float
+    unit: USD million/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 100.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
     users:
-    - Banks
-    source: docs/params.md
+    - Regulators
+    - Planners
+  collateral_requirements:
+    name: Collateral requirements
+    description: The security provisioned as a share of the annual revenue requirement, declared here
+      as an annualised provisioning share.
+    category: MktOps
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.02
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
+    users:
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   collateral_valuation:
     name: Collateral valuation
     description: Collateral valuation
@@ -4678,6 +4920,24 @@ parameters:
     users:
     - Regulators
     source: docs/params.md
+  compliant_contract_jobs:
+    name: Compliant contract jobs
+    description: 'compliant contract jobs: the compliance register''s derived quantity. The construction-phase
+      jobs carrying standard contracts: the share of the jobs the build''s per-MW factor states.'
+    category: Regulatory
+    type: float
+    unit: jobs
+    range:
+    - 0.0
+    - 200000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   composite_governance_index:
     name: Composite governance index
     description: The unweighted average of the five governance indicators the graph already carries. A
@@ -4945,22 +5205,49 @@ parameters:
     users:
     - Regulators
     source: docs/params.md
-  consumer_protection_standards:
-    name: Consumer protection standards
-    description: Consumer standards
-    category: Consumer
+  consumer_protection_spend_usd_per_year:
+    name: Consumer protection spend usd per year
+    description: 'consumer protection spend usd per year: the compliance register''s derived quantity.
+      The metering-accuracy and dispute-resolution systems'' spend: the mandated share of the revenue
+      requirement.'
+    category: Regulatory
     type: float
+    unit: USD million/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 20.0
+    role: derived
     determinism: policy
     priority: P1
-    status: to_build
+    status: existing
+    source: The compliance-register coupling (batch 22)
     users:
     - Regulators
-    source: docs/params.md
+    - Planners
+  consumer_protection_standards:
+    name: Consumer protection standards
+    description: The mandated metering-accuracy and dispute-resolution spend as a share of the revenue
+      requirement.
+    category: Consumer
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.005
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
+    users:
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   consumer_surplus_usd_per_year:
     name: Consumer surplus
     description: The triangle under the demand curve above the price. What a cost-recovery tariff leaves
@@ -5224,20 +5511,28 @@ parameters:
     source: docs/params.md
   cost_allocation_methodology:
     name: Cost allocation methodology
-    description: Cost allocation
+    description: The share of fixed cost recovered through demand and customer charges rather than energy
+      charges (Stoft's cost-of-service allocation).
     category: RegFin
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.3
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   cost_of_debt:
     name: Cost of debt
     description: 'The utility''s borrowing rate: the policy rate plus its own credit spread, derived rather
@@ -5329,22 +5624,65 @@ parameters:
     users:
     - Investors
     source: docs/params.md
-  credit_support_requirements:
-    name: Credit support requirements
-    description: Credit support
-    category: MktOps
+  credit_support_posted_usd_per_year:
+    name: Credit support posted usd per year
+    description: 'credit support posted usd per year: the compliance register''s derived quantity. The
+      credit-support annex pre-funding: the share of the revenue requirement.'
+    category: Regulatory
     type: float
+    unit: USD million/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 100.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
     users:
-    - Banks
-    source: docs/params.md
+    - Regulators
+    - Planners
+  credit_support_requirements:
+    name: Credit support requirements
+    description: The credit-support annex pre-funding as a share of the revenue requirement.
+    category: MktOps
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.02
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
+    users:
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
+  crediting_projects_approved:
+    name: Crediting projects approved
+    description: 'crediting projects approved: the compliance register''s derived quantity. The pipeline''s
+      projects applying an approved baseline methodology: the share times the pipeline.'
+    category: Regulatory
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 500.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   crew_availability:
     name: Crew availability
     description: Share of hours a maintenance crew is available to the fleet. A share; the shipped [0,
@@ -6130,20 +6468,46 @@ parameters:
     source: docs/params.md
   cybersecurity_requirements:
     name: Cybersecurity requirements
-    description: Cybersecurity
+    description: The control-system security spend (the IEC 62443 / NERC CIP class) as a share of the
+      revenue requirement.
     category: Digital
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.1
+    default: 0.01
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
+  cybersecurity_spend_usd_per_year:
+    name: Cybersecurity spend usd per year
+    description: 'cybersecurity spend usd per year: the compliance register''s derived quantity. The control-system
+      security spend: the mandated share of the revenue requirement.'
+    category: Regulatory
+    type: float
+    unit: USD million/year
+    range:
+    - 0.0
+    - 20.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   dalys_per_year:
     name: DALYs
     description: Disability-adjusted life years lost, which is the burden the emissions cost in health.
@@ -6198,36 +6562,68 @@ parameters:
     source: docs/params.md
   data_privacy_requirements:
     name: Data privacy requirements
-    description: Privacy (GDPR/POPIA)
+    description: The DPIA and consent-system spend as a share of the revenue requirement.
     category: Digital
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.005
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
+  data_privacy_spend_usd_per_year:
+    name: Data privacy spend usd per year
+    description: 'data privacy spend usd per year: the compliance register''s derived quantity. The DPIA
+      and consent-system spend: the mandated share of the revenue requirement.'
+    category: Regulatory
+    type: float
+    unit: USD million/year
+    range:
+    - 0.0
+    - 20.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   data_sovereignty_requirements:
     name: Data sovereignty requirements
-    description: Data sovereignty
+    description: The share of operational SCADA/EMS/meter data that must be hosted in-country.
     category: Digital
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.9
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   day_ahead_market:
     name: Day-ahead market active
     description: Whether a day-ahead market is modelled. A boolean.
@@ -6504,22 +6900,49 @@ parameters:
     users:
     - Utilities
     source: docs/params.md
-  demand_forecast_methodology:
-    name: Demand forecast methodology
-    description: Demand forecast
-    category: RegFin
+  demand_charge_revenue_usd_per_year:
+    name: Demand charge revenue usd per year
+    description: 'demand charge revenue usd per year: the compliance register''s derived quantity. The
+      fixed cost recovered through demand and customer charges: the allocable share of the revenue requirement,
+      Stoft''s cost-of-service split.'
+    category: Regulatory
     type: float
+    unit: USD million/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 500.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
     users:
     - Regulators
-    source: docs/params.md
+    - Planners
+  demand_forecast_methodology:
+    name: Demand forecast methodology
+    description: The allowed forecast error (MAPE); the band is what adequacy planning must absorb on
+      top of the forecast.
+    category: RegFin
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 0.5
+    default: 0.05
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
+    users:
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   demand_growth:
     name: Demand growth
     description: 'Compound annual growth in final electricity demand.. Default aligned exactly with the
@@ -6695,20 +7118,29 @@ parameters:
     source: docs/params.md
   demand_response_cost:
     name: Demand response cost
-    description: Cost of demand response
+    description: 'The demand-response programme''s capacity payment per kilowatt of enrolled capacity,
+      per year: 40 is the scale a standing curtailment contract pays; the range spans the interruptible-tariff
+      classes.'
     category: Demand
+    subcategory: null
     type: float
+    unit: USD/kW/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 200.0
+    default: 40.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: physical
+    categories: []
+    source: The coupling build's own corrections (batch 21)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Planners
+    - Financial analysts
+    priority: P1
+    status: existing
+    deprecated_by: null
   demand_response_potential:
     name: Demand response potential
     description: Share of demand that is flexible
@@ -6725,6 +7157,25 @@ parameters:
     users:
     - Utilities
     source: docs/params.md
+  demand_response_programme_cost_usd_per_year:
+    name: Demand response programme cost usd per year
+    description: 'demand response programme cost usd per year: the coupling''s derived quantity, so a
+      scenario''s dial has a number the reports can name. The demand-response programme''s annual cost:
+      the per-kW-year payment times the curtailment capacity, at the MW-to-kW conversion.'
+    category: Cost
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 5000000000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 21)
+    users:
+    - Planners
+    - Financial analysts
   demand_twh:
     name: Demand
     description: Final demand in the horizon year, after growth is compounded.
@@ -7176,6 +7627,24 @@ parameters:
     users:
     - Utilities
     source: docs/params.md
+  distribution_feeders_total:
+    name: Distribution feeders total
+    description: 'Primary distribution feeders: a 10 GW system at 30-50 MW per feeder implies 200-500.'
+    category: Grid
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 5000.0
+    default: 500.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   distribution_loss_factor:
     name: Distribution loss factor
     description: Distribution losses
@@ -7193,6 +7662,24 @@ parameters:
     users:
     - Utilities
     source: docs/params.md
+  distribution_network_km:
+    name: Distribution network km
+    description: 'Distribution circuit-km: a 10 GW single-country network at about 4-5 km per MW.'
+    category: Grid
+    type: float
+    unit: km
+    range:
+    - 0.0
+    - 200000.0
+    default: 45000.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   distribution_wheeling_charges:
     name: Distribution wheeling charges
     description: Distribution wheeling charge
@@ -7466,6 +7953,24 @@ parameters:
     users:
     - Policymakers
     source: docs/params.md
+  electrified_population:
+    name: Electrified population
+    description: 'electrified population: the compliance register''s derived quantity. The population
+      the access target names: the target share times the country''s population.'
+    category: Regulatory
+    type: float
+    unit: people
+    range:
+    - 0.0
+    - 200000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   electrolyser_capacity:
     name: Electrolyser capacity
     description: Electrolyser capacity
@@ -8028,22 +8533,48 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
-  environmental_flow_requirements:
-    name: Environmental flow requirements
-    description: E-flows
-    category: EnvSoc
+  environmental_flow_m3_per_s:
+    name: Environmental flow m3 per s
+    description: 'environmental flow m3 per s: the compliance register''s derived quantity. The flow the
+      basins must carry for habitat: the fair-habitat share of the rivers'' mean annual flow.'
+    category: Regulatory
     type: float
+    unit: m3/s
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 2000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
     users:
     - Regulators
-    source: docs/params.md
+    - Planners
+  environmental_flow_requirements:
+    name: Environmental flow requirements
+    description: The environmental flow as a share of the river's mean annual flow, in the Tennant fair-habitat
+      band.
+    category: EnvSoc
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.3
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
+    users:
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   environmental_representations:
     name: Environmental representations
     description: Environmental reps
@@ -8182,23 +8713,49 @@ parameters:
     users:
     - Policymakers
     source: docs/params.md
+  ets_cap_half_life_years:
+    name: Ets cap half life years
+    description: 'ets cap half life years: the coupling''s derived quantity, so a scenario''s dial has
+      a number the reports can name. Years for the ETS cap to halve at its annual reduction rate: ln 2
+      over the rate.'
+    category: Carbon
+    type: float
+    unit: years
+    range:
+    - 0.0
+    - 100.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 21)
+    users:
+    - Planners
+    - Financial analysts
   ets_cap_reduction_rate:
     name: Ets cap reduction rate
-    description: Annual cap reduction
+    description: The annual rate the ETS cap is cut by. Shipped with unit '1', which leaves the annualisation
+      implicit; spelled as the rate the half-life product reads.
     category: Policy
+    subcategory: null
     type: float
-    unit: '1'
+    unit: 1/year
     range:
     - 0.0
     - 1.0
     default: 0.5
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The coupling build's own corrections (batch 21)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Financial analysts
+    priority: P1
+    status: existing
+    deprecated_by: null
   ets_enabled:
     name: Emissions trading system enabled
     description: Whether the jurisdiction operates an emissions trading system. A boolean, not a float;
@@ -8911,6 +9468,25 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
+  forecast_error_band_twh:
+    name: Forecast error band twh
+    description: 'forecast error band twh: the compliance register''s derived quantity. The energy the
+      adequacy plan must absorb on top of the forecast: the allowed MAPE times the demand the balance
+      computes.'
+    category: Regulatory
+    type: float
+    unit: TWh/year
+    range:
+    - 0.0
+    - 200.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   foreign_direct_investment:
     name: Foreign direct investment
     description: Foreign direct investment
@@ -9001,20 +9577,28 @@ parameters:
     deprecated_by: null
   fpic_requirements:
     name: Fpic requirements
-    description: FPIC
+    description: The minimum documented-consent share the lender audits; the audited score must clear
+      it.
     category: Land
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.6
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   free_trade_zone_benefits:
     name: Free trade zone benefits
     description: FTZ benefits
@@ -9077,20 +9661,28 @@ parameters:
     deprecated_by: null
   frequency_response_requirement:
     name: Frequency response requirement
-    description: Frequency response
+    description: Primary-response capability must at least cover the largest credible infeed loss, which
+      is the bound below.
     category: Operational
+    subcategory: null
     type: float
+    unit: MW
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    - 20000.0
+    default: 1200.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   frequency_response_time_s:
     name: Frequency response time
     description: The time between the loss of generation and the start of primary frequency response.
@@ -9728,20 +10320,45 @@ parameters:
     deprecated_by: null
   gender_action_plan:
     name: Gender action plan
-    description: Gender plan
+    description: The share of the community development fund ring-fenced for the plan's line items.
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.3
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
-    - DFIs
-    source: docs/params.md
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
+  gender_action_plan_spend_usd_per_year:
+    name: Gender action plan spend usd per year
+    description: 'gender action plan spend usd per year: the compliance register''s derived quantity.
+      The plan''s ring-fenced share of the community development fund the benefit-sharing programme capitalises.'
+    category: Regulatory
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 50000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   gender_impact:
     name: Gender impact
     description: Gender dimensions
@@ -9864,20 +10481,27 @@ parameters:
     source: docs/params.md
   gis_requirements:
     name: Gis requirements
-    description: GIS
+    description: The share of network assets in the GIS.
     category: Digital
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.6
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   glacial_lake_outburst:
     name: Glacial lake outburst
     description: GLOF
@@ -9950,6 +10574,24 @@ parameters:
     priority: P2
     status: existing
     deprecated_by: null
+  grid_code_compliant_capacity_mw:
+    name: Grid code compliant capacity mw
+    description: 'grid code compliant capacity mw: the compliance register''s derived quantity. The connected
+      capacity meeting the interconnection standard: the share of the fleet.'
+    category: Regulatory
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 15000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   grid_connection_cost:
     name: Grid connection cost
     description: Cost to connect a generator to the transmission or distribution network, per kilowatt
@@ -9974,23 +10616,49 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  grid_extension_completion_years:
+    name: Grid extension completion years
+    description: 'grid extension completion years: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. The programme''s characteristic completion time at its annual
+      connection rate: ln 2 over the rate.'
+    category: Planning
+    type: float
+    unit: years
+    range:
+    - 0.0
+    - 100.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 21)
+    users:
+    - Planners
+    - Financial analysts
   grid_extension_rate:
     name: Grid extension rate
-    description: Annual grid connection rate
+    description: The annual rate the grid-extension programme connects at. Shipped with unit '1'; spelled
+      as the rate the completion-horizon product reads.
     category: Demand
+    subcategory: null
     type: float
-    unit: '1'
+    unit: 1/year
     range:
     - 0.0
     - 1.0
     default: 0.5
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The coupling build's own corrections (batch 21)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Planners
+    - Financial analysts
+    priority: P1
+    status: existing
+    deprecated_by: null
   grid_reliability_saifi:
     name: Grid reliability saifi
     description: Reliability target (SAIFI)
@@ -10009,20 +10677,28 @@ parameters:
     source: docs/params.md
   grid_reliability_target:
     name: Grid reliability target
-    description: Reliability target (SAIDI)
+    description: The SAIDI ceiling the regulator sets, per the reliability indices' own definition; the
+      shipped baseline sits below it.
     category: Grid
+    subcategory: null
     type: float
+    unit: hours/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500.0
+    default: 120.0
+    initial: null
     role: free
     determinism: policy
-    priority: P1
-    status: to_build
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   grievance_redress_effectiveness:
     name: Grievance redress effectiveness
     description: Share of grievances resolved to the complainant's satisfaction, per the project's own
@@ -10210,6 +10886,25 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  heat_pump_annualised_cost_usd_per_kw_year:
+    name: Heat pump annualised cost usd per kw year
+    description: 'heat pump annualised cost usd per kw year: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. The installed heat pump''s annuity, per kW-year: the capital
+      cost times the shipped crf the discount rate implies.'
+    category: Cost
+    type: float
+    unit: USD/kW/year
+    range:
+    - 0.0
+    - 6000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 21)
+    users:
+    - Planners
+    - Financial analysts
   heat_pump_cop:
     name: Heat pump cop
     description: Heat pump COP
@@ -10578,20 +11273,47 @@ parameters:
     source: docs/params.md
   hydrogen_export_price:
     name: Hydrogen export price
-    description: Export price
+    description: 'The price green hydrogen realises at the export terminal: 100 USD/MWh is about 3.3 USD/kg
+      at the gas''s LHV basis, the early-terminal scale the shipping schedule quotes.'
     category: Sector
+    subcategory: null
     type: float
+    unit: USD/MWh
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500.0
+    default: 100.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: existing
+    determinism: physical
+    categories: []
+    source: The coupling build's own corrections (batch 21)
+    source_url: null
     users:
-    - Industry
-    source: docs/params.md
+    - Planners
+    - Financial analysts
+    priority: P1
+    status: existing
+    deprecated_by: null
+  hydrogen_export_revenue_usd_per_year:
+    name: Hydrogen export revenue usd per year
+    description: 'hydrogen export revenue usd per year: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. The export programme''s revenue: the terminal price times
+      the export volume the sector-coupling layer declared.'
+    category: Financial
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 500000000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 21)
+    users:
+    - Planners
+    - Financial analysts
   hydrogen_export_volume:
     name: Hydrogen export volume
     description: 'Hydrogen energy the export terminals load per year: 20,000 MWh (about 600 tonnes at
@@ -10952,20 +11674,28 @@ parameters:
     deprecated_by: null
   ifc_performance_standards:
     name: Ifc performance standards
-    description: IFC PS
+    description: The share of the portfolio covenanted under the performance standards -- only what DFI
+      money touches can be covenanted, which is the bound below.
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.3
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
-    - DFIs
-    source: docs/params.md
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   ilo_conventions:
     name: Ilo conventions
     description: ILO conventions
@@ -11037,6 +11767,24 @@ parameters:
     users:
     - Developers
     source: docs/params.md
+  in_country_telemetry_sites:
+    name: In country telemetry sites
+    description: 'in country telemetry sites: the compliance register''s derived quantity. The operational
+      sites whose data must be hosted in-country: the share times the system''s telemetry sites.'
+    category: Regulatory
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   income_elasticity:
     name: Income elasticity of electricity demand
     description: 'The rate electricity demand grows with income. Empirical range: 0.59 average across
@@ -11064,6 +11812,24 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  independently_verified_accounts:
+    name: Independently verified accounts
+    description: 'independently verified accounts: the compliance register''s derived quantity. The audited
+      accounts the regulator requires independently verified: the share times the annual audit sample.'
+    category: Regulatory
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 2000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   indigenous_peoples_rights:
     name: Indigenous peoples rights
     description: FPIC
@@ -11293,6 +12059,25 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  industrial_growth_factor:
+    name: Industrial growth factor
+    description: 'industrial growth factor: the coupling''s derived quantity, so a scenario''s dial has
+      a number the reports can name. The factor industrial output grows by over the horizon at the industrialisation
+      rate: (1+r) to the horizon''s years.'
+    category: Industry
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 10.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 21)
+    users:
+    - Planners
+    - Financial analysts
   industrial_heat_demand:
     name: Industrial heat demand
     description: Industrial heat demand
@@ -11380,20 +12165,28 @@ parameters:
     deprecated_by: null
   inertia_requirement:
     name: Inertia requirement
-    description: Minimum system inertia
+    description: 'The minimum synchronous inertia the system must hold: the largest-loss-over-ROCOF floor
+      the shipped inertia equation encodes, stated against the inventory here.'
     category: Cost
+    subcategory: null
     type: float
+    unit: MW.s
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 5000.0
+    default: 500.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   inflation_rate:
     name: Inflation rate
     description: Annual consumer price inflation. Bounded below at deflation and above at hyperinflation.
@@ -11456,6 +12249,25 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  insurance_premium_usd_per_kw_year:
+    name: Insurance premium usd per kw year
+    description: 'insurance premium usd per kw year: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. The fleet''s insurance premium per kW-year: the installed
+      cost''s own share, per the share-of-cost basis the insurance product declares.'
+    category: Financial
+    type: float
+    unit: USD/kW/year
+    range:
+    - 0.0
+    - 100.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 21)
+    users:
+    - Planners
+    - Financial analysts
   insurance_premiums:
     name: Insurance premiums (absolute)
     description: FIRM-SPECIFIC. The absolute premium depends on the asset value and the firm's rate. The
@@ -11585,20 +12397,27 @@ parameters:
     deprecated_by: null
   interoperability_standards:
     name: Interoperability standards
-    description: Interoperability
+    description: The share of connected capacity meeting the interconnection standard.
     category: Digital
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.75
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   interruptible_load_mw:
     name: Interruptible load mw
     description: 'interruptible load mw: the sector-mix share''s product, derived, so a scenario''s mix
@@ -11804,20 +12623,27 @@ parameters:
     source: docs/params.md
   labour_standards:
     name: Labour standards
-    description: Labour standards
+    description: The share of construction-phase jobs carrying standard contracts.
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.8
+    initial: null
     role: free
     determinism: policy
-    priority: P1
-    status: to_build
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
-    - DFIs
-    source: docs/params.md
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   land_acquisition_cost_per_hectare:
     name: Land acquisition cost per hectare
     description: Purchase or lease cost of land per hectare, in USD. The high end is peri-urban arable
@@ -12553,20 +13379,47 @@ parameters:
     deprecated_by: null
   life_extension_cost:
     name: Life extension cost
-    description: Life extension cost
+    description: 'The capital cost of a life-extension programme, per kilowatt of the fleet it extends:
+      600 is the scale a mid-life overhaul of a thermal unit carries against a 1,200 USD/kW new build.'
     category: Supply
+    subcategory: null
     type: float
+    unit: USD/kW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 3000.0
+    default: 600.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: physical
+    categories: []
+    source: The coupling build's own corrections (batch 21)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    - Financial analysts
+    priority: P1
+    status: existing
+    deprecated_by: null
+  life_extension_fraction_of_new_build:
+    name: Life extension fraction of new build
+    description: 'life extension fraction of new build: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. The life-extension cost against a new build per kW: the
+      fraction the retire-vs-extend decision is stated against.'
+    category: Cost
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 5.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 21)
+    users:
+    - Planners
+    - Financial analysts
   life_extension_possible:
     name: Life extension possible
     description: Whether the model may extend an ageing plant's life. A boolean.
@@ -12902,6 +13755,25 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
+  local_content_capex_mm_usd:
+    name: Local content capex mm usd
+    description: 'local content capex mm usd: the compliance register''s derived quantity. The fleet''s
+      capex that must be sourced in-country: the content share times the total, at the MW-to-kW conversion
+      and the USD-million scale.'
+    category: Regulatory
+    type: float
+    unit: USD million
+    range:
+    - 0.0
+    - 20000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   local_content_employment:
     name: Local content employment
     description: Local employment
@@ -13331,22 +14203,49 @@ parameters:
     users:
     - DFIs
     source: docs/params.md
-  margin_requirements:
-    name: Margin requirements
-    description: Margin requirements
-    category: MktOps
+  margin_posted_usd_per_year:
+    name: Margin posted usd per year
+    description: 'margin posted usd per year: the compliance register''s derived quantity. The trading
+      position''s initial margin: the required share of the position''s annual value, which the carbon
+      revenue computes.'
+    category: Regulatory
     type: float
+    unit: USD/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 100000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
     users:
-    - Banks
-    source: docs/params.md
+    - Regulators
+    - Planners
+  margin_requirements:
+    name: Margin requirements
+    description: The initial margin on the carbon trading position, as a share of the position's annual
+      revenue value.
+    category: MktOps
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.05
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
+    users:
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   marginal_cost_usd_per_mwh:
     name: Marginal cost
     description: 'Short-run marginal cost: fuel plus carbon.'
@@ -13799,20 +14698,47 @@ parameters:
     deprecated_by: null
   mini_grid_deployment:
     name: Mini grid deployment
-    description: Mini-grid capacity added
+    description: Connections the mini-grid programme serves per year. The catalog's placeholder scale
+      retained as the range; the programme-spend product derives from it.
     category: Demand
+    subcategory: null
     type: float
+    unit: 1/year
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 100000.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: integrate
+    determinism: physical
+    categories: []
+    source: The coupling build's own corrections (batch 21)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Planners
+    - Financial analysts
+    priority: P1
+    status: existing
+    deprecated_by: null
+  mini_grid_programme_spend_usd_per_year:
+    name: Mini grid programme spend usd per year
+    description: 'mini grid programme spend usd per year: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. The mini-grid programme''s spend: per-connection cost times
+      the connections served per year.'
+    category: Cost
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 5000000000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 21)
+    users:
+    - Planners
+    - Financial analysts
   mini_grid_subsidies:
     name: Mini grid subsidies
     description: Mini-grid capital subsidy
@@ -14197,20 +15123,28 @@ parameters:
     source: docs/params.md
   non_spinning_reserve_requirement:
     name: Non spinning reserve requirement
-    description: Non-spinning reserve
+    description: The non-spinning slice of the operating reserve, inside the margin the reserve requirement
+      holds (the bound below).
     category: Operational
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 3000.0
+    default: 400.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   novation_terms:
     name: Novation terms
     description: Novation
@@ -15671,6 +16605,25 @@ parameters:
     users:
     - DFIs
     source: docs/params.md
+  pm25_annual_mean_ug_per_m3:
+    name: Pm25 annual mean ug per m3
+    description: The ambient PM2.5 annual mean; sub-Saharan urban means run 30-50 ug/m3, against the WHO
+      guideline of 5 -- the exceedance the ratio below states.
+    category: Environment
+    type: float
+    unit: ug/m3
+    range:
+    - 0.0
+    - 200.0
+    default: 35.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   pm25_emissions:
     name: Pm25 emissions
     description: PM2.5 emissions
@@ -15687,6 +16640,25 @@ parameters:
     users:
     - DFIs
     source: docs/params.md
+  pm25_exceedance_ratio:
+    name: Pm25 exceedance ratio
+    description: 'pm25 exceedance ratio: the compliance register''s derived quantity. How many times the
+      ambient mean exceeds the WHO-guideline limit: the finding computed rather than shipped as a violated
+      inequality.'
+    category: Regulatory
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 100.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   pm25_kt_per_year:
     name: PM2.5 emissions
     description: Fine particulate emissions, which is what the health impact is a function of.
@@ -15771,6 +16743,25 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
+  population_growth_factor:
+    name: Population growth factor
+    description: 'population growth factor: the coupling''s derived quantity, so a scenario''s dial has
+      a number the reports can name. The factor population grows by over the horizon at its growth rate:
+      (1+r) to the horizon''s years.'
+    category: Demand-Side
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 10.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 21)
+    users:
+    - Planners
+    - Financial analysts
   population_growth_rate:
     name: Population growth rate
     description: Annual population growth. Below the sample's observed range, the horizon compounds to
@@ -15794,6 +16785,25 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
+  population_total:
+    name: Population total
+    description: 'The country''s population: 45 M, back-solved from the shipped residential demand share
+      and per-household consumption at five persons per household.'
+    category: Demographics
+    type: float
+    unit: people
+    range:
+    - 1000000.0
+    - 200000000.0
+    default: 45000000.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   port_electrification:
     name: Port electrification share
     description: Share of port operations that are electric. A share.
@@ -16369,6 +17379,24 @@ parameters:
     users:
     - Investors
     source: docs/params.md
+  project_pipeline_count:
+    name: Project pipeline count
+    description: Crediting projects in the country's annual pipeline, across the programmes.
+    category: Carbon
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 500.0
+    default: 40.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   property_tax:
     name: Property tax
     description: Property tax
@@ -16587,22 +17615,48 @@ parameters:
     users:
     - Policymakers
     source: docs/params.md
-  reactive_power_requirement:
-    name: Reactive power requirement
-    description: Reactive power
-    category: Operational
+  reactive_capability_mvar:
+    name: Reactive capability mvar
+    description: 'reactive capability mvar: the compliance register''s derived quantity. The reactive
+      capability the system must hold at peak: the per-MW requirement (tan-phi of the 0.95 power factor)
+      times peak demand.'
+    category: Regulatory
     type: float
+    unit: MVAr
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 30000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
     users:
-    - Utilities
-    source: docs/params.md
+    - Regulators
+    - Planners
+  reactive_power_requirement:
+    name: Reactive power requirement
+    description: Required reactive capability per MW of peak, the tan-phi of a 0.95 power factor.
+    category: Operational
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 2.0
+    default: 0.33
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
+    users:
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   real_discount_rate:
     name: Real discount rate
     description: 'The nominal blend deflated: (1 + r_n) = (1 + r_r)(1 + pi), restated as r_r = (r_n -
@@ -17120,6 +18174,25 @@ parameters:
     users:
     - Planners
     source: docs/params.md
+  renewable_generation_twh:
+    name: Renewable generation twh
+    description: 'renewable generation twh: the compliance register''s derived quantity. The renewable
+      target in energy terms: the share of the generation the balance computes. Nameplate share and energy
+      share are different statistics; this is the energy one.'
+    category: Regulatory
+    type: float
+    unit: TWh/year
+    range:
+    - 0.0
+    - 50.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   renewable_penetration_limit:
     name: Renewable penetration limit
     description: Maximum instantaneous penetration
@@ -17192,22 +18265,47 @@ parameters:
     users:
     - Policymakers
     source: docs/params.md
-  reporting_requirements:
-    name: Reporting requirements
-    description: Reporting
-    category: MktOps
+  reporting_compliance_usd_per_year:
+    name: Reporting compliance usd per year
+    description: 'reporting compliance usd per year: the compliance register''s derived quantity. The
+      quarterly-filing systems'' spend: the mandated share of the revenue requirement.'
+    category: Regulatory
     type: float
+    unit: USD million/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 20.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
     users:
     - Regulators
-    source: docs/params.md
+    - Planners
+  reporting_requirements:
+    name: Reporting requirements
+    description: The mandated quarterly-filing systems spend as a share of the revenue requirement.
+    category: MktOps
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.003
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
+    users:
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   representative_days:
     name: Representative days
     description: Representative days
@@ -17302,22 +18400,48 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
-  reserve_margin_requirement:
-    name: Reserve margin requirement
-    description: Minimum reserve margin
-    category: Cost
+  reserve_margin_required_mw:
+    name: Reserve margin required mw
+    description: 'reserve margin required mw: the compliance register''s derived quantity. The planning
+      margin''s face value in MW: the margin share times peak demand.'
+    category: Regulatory
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
+    - 3000.0
+    role: derived
+    determinism: policy
     priority: P1
-    status: to_build
+    status: existing
+    source: The compliance-register coupling (batch 22)
     users:
-    - Utilities
-    source: docs/params.md
+    - Regulators
+    - Planners
+  reserve_margin_requirement:
+    name: Reserve margin requirement
+    description: The planning reserve margin, duplicate semantics of reserve_margin_min; the product states
+      its MW face value.
+    category: Cost
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.15
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
+    users:
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   resettlement_cost_per_person:
     name: Resettlement cost per person
     description: Delivered cost of physical and economic resettlement per displaced person, in USD. The
@@ -17403,20 +18527,27 @@ parameters:
     deprecated_by: null
   resettlement_requirements:
     name: Resettlement requirements
-    description: Resettlement
+    description: The cap on the physically or economically displaced population share the safeguard allows.
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.5
+    default: 0.05
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
-    - DFIs
-    source: docs/params.md
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   residential_demand_share:
     name: Residential demand share
     description: Share of demand from households. Shipped correctly as [0, 1].
@@ -17715,6 +18846,25 @@ parameters:
     users:
     - DFIs
     source: docs/params.md
+  river_mean_annual_flow_m3_per_s:
+    name: River mean annual flow m3 per s
+    description: 'The hydro-bearing basins'' cumulative mean annual flow: the ~1.5 GW hydro fleet at ~55%
+      CF implies a design flow of order 150-250 m3/s.'
+    category: Water
+    type: float
+    unit: m3/s
+    range:
+    - 0.0
+    - 2000.0
+    default: 150.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   rocof_df_dt_hz_per_s:
     name: Rate of change of frequency
     description: The frequency slope after the largest loss, before any response.
@@ -17913,20 +19063,63 @@ parameters:
     source: docs/params.md
   scada_ems_requirements:
     name: Scada ems requirements
-    description: SCADA/EMS
+    description: The share of connected capacity under SCADA/EMS telemetry.
     category: Digital
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.9
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
+  scada_telemetered_capacity_mw:
+    name: Scada telemetered capacity mw
+    description: 'scada telemetered capacity mw: the compliance register''s derived quantity. The connected
+      capacity under telemetry: the share of the fleet.'
+    category: Regulatory
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 15000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
+  scada_telemetry_sites:
+    name: Scada telemetry sites
+    description: Generation sites plus bulk supply points of a 10 GW system.
+    category: Grid
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1000.0
+    default: 220.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   scenario_description:
     name: Scenario description
     description: Scenario description
@@ -18081,6 +19274,25 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  service_quality_penalty_usd_per_year:
+    name: Service quality penalty usd per year
+    description: 'service quality penalty usd per year: the compliance register''s derived quantity. The
+      unconditional exposure the penalty clause caps: the share of the revenue requirement; the trigger
+      is the SAIDI/SAIFI pair below.'
+    category: Regulatory
+    type: float
+    unit: USD million/year
+    range:
+    - 0.0
+    - 100.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The compliance-register coupling (batch 22)
+    users:
+    - Regulators
+    - Planners
   service_quality_reward:
     name: Service quality reward
     description: Share of allowed revenue added when service quality exceeds the target. A share.
@@ -18105,20 +19317,27 @@ parameters:
     deprecated_by: null
   service_quality_standards:
     name: Service quality standards
-    description: Service standards
+    description: The SAIFI ceiling; the shipped baseline sits below it.
     category: Consumer
+    subcategory: null
     type: float
+    unit: events/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 200.0
+    default: 15.0
+    initial: null
     role: free
     determinism: policy
-    priority: P1
-    status: to_build
+    categories: []
+    source: The compliance-register coupling (batch 22)
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   settlement_intervals_per_hour:
     name: Settlement intervals per hour
     description: 'settlement intervals per hour: the coupling''s derived quantity, so a scenario''s dial
@@ -18196,27 +19415,47 @@ parameters:
     source: docs/params.md
   shs_cost:
     name: Solar home system cost
-    description: Delivered cost of a solar home system to the customer, in USD. The range spans a basic
-      lighting kit at the low end to a system with a fridge and a television at the high end.
+    description: Delivered cost per solar home system to the customer. The unit reads as the per-system
+      price the deployment product multiplies.
     category: Transmission & Grid
     subcategory: null
     type: float
-    unit: USD/unit
+    unit: USD
     range:
     - 50.0
     - 2000.0
     default: 400.0
     initial: null
     role: free
-    determinism: fixed
+    determinism: physical
     categories: []
-    source: ESMAP Solar Home System Market Trends
+    source: The coupling build's own corrections (batch 21)
     source_url: null
     users:
-    - Households
-    priority: P2
-    status: to_build
+    - Planners
+    - Financial analysts
+    priority: P1
+    status: existing
     deprecated_by: null
+  shs_programme_spend_usd_per_year:
+    name: Shs programme spend usd per year
+    description: 'shs programme spend usd per year: the coupling''s derived quantity, so a scenario''s
+      dial has a number the reports can name. The solar-home-system programme''s spend: per-unit delivered
+      cost times the units delivered per year.'
+    category: Cost
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 1000000000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 21)
+    users:
+    - Planners
+    - Financial analysts
   shs_subsidies:
     name: Shs subsidies
     description: Solar home system subsidy
@@ -18521,20 +19760,28 @@ parameters:
     deprecated_by: null
   solar_home_system_deployment:
     name: Solar home system deployment
-    description: SHS units added
+    description: Units the solar-home-system programme delivers per year. The catalog's placeholder scale
+      retained as the range; the programme-spend product derives from it.
     category: Demand
+    subcategory: null
     type: float
+    unit: 1/year
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 150000.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: physical
+    categories: []
+    source: The coupling build's own corrections (batch 21)
+    source_url: null
     users:
-    - Households
-    source: docs/params.md
+    - Planners
+    - Financial analysts
+    priority: P1
+    status: existing
+    deprecated_by: null
   solar_irradiance_multiplier:
     name: Solar irradiance multiplier
     description: Solar irradiance multiplier
@@ -20494,6 +21741,44 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  uranium_burnup_lb_per_mwh:
+    name: Uranium burnup per MWh
+    description: 'Pounds of U3O8 the LWR fuel cycle burns per megawatt-hour electric: ~10 tU per GW-year
+      electric at the LWR''s own burnup, converted to the U3O8 lb basis the spot market quotes. A named
+      node, not a folded figure.'
+    category: Generation
+    type: float
+    unit: lb/MWh
+    range:
+    - 0.0
+    - 0.02
+    default: 0.0025
+    role: free
+    determinism: physical
+    priority: P2
+    status: existing
+    source: LWR refuelling practice (10 tU/GW(e)-yr), the spot market's U3O8 lb basis
+    users:
+    - Planners
+  uranium_fuel_cost_usd_per_mwh:
+    name: Uranium fuel cost usd per mwh
+    description: 'uranium fuel cost usd per mwh: the coupling''s derived quantity, so a scenario''s dial
+      has a number the reports can name. The nuclear fleet''s fuel cost per megawatt-hour: the spot price
+      times the LWR burnup the unit''s refuelling implies, per the named constant.'
+    category: Cost
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 5.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 21)
+    users:
+    - Planners
+    - Financial analysts
   uranium_price:
     name: Uranium price
     description: Uranium spot price. The fuel cycle cost of nuclear generation is a separate parameter,
@@ -20517,6 +21802,25 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  urban_share_growth_factor:
+    name: Urban share growth factor
+    description: 'urban share growth factor: the coupling''s derived quantity, so a scenario''s dial has
+      a number the reports can name. The factor the urban share grows by over the horizon at the urbanisation
+      rate: (1+r) to the horizon''s years, the first-order form since the share is itself bounded.'
+    category: Demand-Side
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 10.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 21)
+    users:
+    - Planners
+    - Financial analysts
   urbanisation_rate:
     name: Urbanisation rate
     description: Annual change in the urban share of population. Bounded because the share is itself bounded.
@@ -20783,6 +22087,25 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  vre_connection_spend_usd:
+    name: Vre connection spend usd
+    description: 'vre connection spend usd: the coupling''s derived quantity, so a scenario''s dial has
+      a number the reports can name. The connection spend the VRE target fleet carries: the per-kW connection
+      cost times the target''s megawatts, at the MW-to-kW conversion.'
+    category: Cost
+    type: float
+    unit: USD
+    range:
+    - 0.0
+    - 5000000000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The coupling build's own corrections (batch 21)
+    users:
+    - Planners
+    - Financial analysts
   vre_firm_capacity_mw:
     name: VRE firm capacity
     description: The VRE fleet's contribution to firm capacity, at its capacity credit. The value is a
@@ -21767,6 +23090,50 @@ parameters:
     status: existing
     deprecated_by: null
 equations:
+  additional_abatement_definition:
+    name: Abatement clearing additionality
+    description: 'The abatement volume that clears the additionality screen: the budget-scaled annual
+      volume times the screened share.'
+    system: carbon_trajectory
+    lhs: additional_abatement_mtco2
+    rhs: additionality_test * carbon_budget_mtco2 / horizon_years
+    relation: eq
+    parameters:
+    - additional_abatement_mtco2
+    - additionality_test
+    - carbon_budget_mtco2
+    - horizon_years
+    free_variables: []
+    determined_variables:
+    - additional_abatement_mtco2
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{additional}_{abatement\_mtco2} = \frac{\mathrm{additionality}_{test} \mathrm{carbon}_{budget\_mtco2}}{\mathrm{horizon}_{years}}
+  adms_controlled_feeders_definition:
+    name: Feeders under ADMS control
+    description: 'The feeders the ADMS control room covers: the share times the system''s primary feeders.'
+    system: reliability
+    lhs: adms_controlled_feeders
+    rhs: adms_requirements * distribution_feeders_total
+    relation: eq
+    parameters:
+    - adms_controlled_feeders
+    - adms_requirements
+    - distribution_feeders_total
+    free_variables: []
+    determined_variables:
+    - adms_controlled_feeders
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{adms}_{controlled\_feeders} = \mathrm{adms}_{requirements} \mathrm{distribution}_{feeders\_total}
   affordability_constraint:
     name: Affordability limit
     description: The burden above which a tariff is politically impossible, whatever its LCOE.
@@ -22080,6 +23447,50 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{biogas}_{cost} = \mathrm{capex}_{biogas}
+  biomass_variable_cost_definition:
+    name: The biomass plant's variable cost incl. fuel
+    description: 'Fuel plus non-fuel O&M: the variable cost the biomass plant''s own dispatch economics
+      are stated against, the two line items the cost accounts carry separately.'
+    system: cost_accounting
+    lhs: biomass_variable_cost_usd_per_mwh
+    rhs: biomass_feedstock_cost + opex_variable_biomass
+    relation: eq
+    parameters:
+    - biomass_variable_cost_usd_per_mwh
+    - biomass_feedstock_cost
+    - opex_variable_biomass
+    free_variables: []
+    determined_variables:
+    - biomass_variable_cost_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{biomass}_{variable\_cost\_usd\_per\_mwh} = \mathrm{biomass}_{feedstock\_cost} + \mathrm{opex}_{variable\_biomass}
+  black_start_capable_mw_definition:
+    name: Black-start-capable capacity
+    description: 'The capacity the operator holds in black-start-capable units: the required share of
+      the fleet''s own firm capacity.'
+    system: reserve_margin
+    lhs: black_start_capable_mw
+    rhs: black_start_requirement * firm_capacity_mw
+    relation: eq
+    parameters:
+    - black_start_capable_mw
+    - black_start_requirement
+    - firm_capacity_mw
+    free_variables: []
+    determined_variables:
+    - black_start_capable_mw
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{black}_{start\_capable\_mw} = \mathrm{black}_{start\_requirement} \mathrm{firm}_{capacity\_mw}
   blended_finance_bound:
     name: Blended finance bound
     description: A blended package draws on the concessional and the commercial tranche, so its share's
@@ -22500,6 +23911,53 @@ equations:
     reference: null
     latex: \mathrm{chemicals}_{green\_ammonia\_tonnes\_per\_year} = \mathrm{chemicals}_{green\_ammonia\_share}
       \mathrm{chemicals}_{ammonia\_production}
+  clearing_house_default_fund_definition:
+    name: The clearing house's default fund
+    description: 'The default fund the clearing house collects: the share of the settled carbon-trade
+      value the carbon revenue computes.'
+    system: financial
+    lhs: clearing_house_default_fund_usd_per_year
+    rhs: clearing_house_requirements * carbon_revenue_usd_per_year
+    relation: eq
+    parameters:
+    - clearing_house_default_fund_usd_per_year
+    - carbon_revenue_usd_per_year
+    - clearing_house_requirements
+    free_variables: []
+    determined_variables:
+    - clearing_house_default_fund_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{clearing}_{house\_default\_fund\_usd\_per\_year} = \mathrm{clearing}_{house\_requirements}
+      \mathrm{carbon}_{revenue\_usd\_per\_year}
+  climate_proofed_capex_definition:
+    name: Capex passing the climate-proofing screen
+    description: 'The fleet''s capex passing the screen: the per-kW cost times the capacity in MW, at
+      the MW-to-kW conversion and the USD-million scale.'
+    system: cost_accounting
+    lhs: climate_proofed_capex_mm_usd
+    rhs: climate_proofing_requirements * capex_usd_per_kw * total_capacity_mw * 1000.0 / 1000000.0
+    relation: eq
+    parameters:
+    - climate_proofed_capex_mm_usd
+    - capex_usd_per_kw
+    - climate_proofing_requirements
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - climate_proofed_capex_mm_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025 Equations & Variables
+    latex: \mathrm{climate}_{proofed\_capex\_mm\_usd} = \frac{1000 \mathrm{climate}_{proofing\_requirements}
+      \mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}}{1000000}
   co2_captured_cement_tonnes_definition:
     name: Co2 captured cement tonnes
     description: 'CO2 the cement programme captures: the sector''s tonnes times the cement put through
@@ -22590,6 +24048,49 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  coal_retirement_half_life_definition:
+    name: The coal fleet's retirement half-life
+    description: 'Years for the coal fleet to half-retire at the annual rate: the half-life of an exponential
+      retirement, ln 2 over the rate.'
+    system: carbon_trajectory
+    lhs: coal_retirement_half_life_years
+    rhs: log(2.0) / coal_retirement_rate
+    relation: eq
+    parameters:
+    - coal_retirement_half_life_years
+    - coal_retirement_rate
+    free_variables: []
+    determined_variables:
+    - coal_retirement_half_life_years
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{coal}_{retirement\_half\_life\_years} = \frac{\ln\left(2\right)}{\mathrm{coal}_{retirement\_rate}}
+  collateral_posted_definition:
+    name: Collateral provisioned
+    description: 'The security provisioned annually: the share of the revenue requirement the regulator''s
+      accounts state.'
+    system: financial
+    lhs: collateral_posted_usd_per_year
+    rhs: collateral_requirements * allowed_revenue_requirement
+    relation: eq
+    parameters:
+    - collateral_posted_usd_per_year
+    - allowed_revenue_requirement
+    - collateral_requirements
+    free_variables: []
+    determined_variables:
+    - collateral_posted_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{collateral}_{posted\_usd\_per\_year} = \mathrm{collateral}_{requirements} \mathrm{allowed}_{revenue\_requirement}
   commercial_demand_definition:
     name: Commercial demand
     description: 'The share times the demand it is a share OF. A share with no numerator is a word; with
@@ -22639,6 +24140,30 @@ equations:
     linearity: linear
     latex: \mathrm{community}_{development\_fund\_usd\_per\_year} = \mathrm{community}_{development\_fund\_share}
       \mathrm{total}_{revenue\_usd\_per\_year}
+  compliant_contract_jobs_definition:
+    name: Jobs under standard contracts
+    description: 'The construction-phase jobs carrying standard contracts: the share of the jobs the build''s
+      per-MW factor states.'
+    system: employment
+    lhs: compliant_contract_jobs
+    rhs: labour_standards * construction_jobs_per_mw * total_capacity_mw
+    relation: eq
+    parameters:
+    - compliant_contract_jobs
+    - construction_jobs_per_mw
+    - labour_standards
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - compliant_contract_jobs
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{compliant}_{contract\_jobs} = \mathrm{labour}_{standards} \mathrm{construction}_{jobs\_per\_mw}
+      \mathrm{total}_{capacity\_mw}
   composite_governance_index_definition:
     name: Composite governance index
     description: 'The unweighted average of the five governance indicators. Dimensional check: the sum
@@ -22717,6 +24242,29 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{construction}_{share\_of\_concession} = \frac{\mathrm{construction}_{period}}{12 \mathrm{concession}_{duration}}
+  consumer_protection_spend_definition:
+    name: Consumer-protection spend
+    description: 'The metering-accuracy and dispute-resolution systems'' spend: the mandated share of
+      the revenue requirement.'
+    system: cost_accounting
+    lhs: consumer_protection_spend_usd_per_year
+    rhs: consumer_protection_standards * allowed_revenue_requirement
+    relation: eq
+    parameters:
+    - consumer_protection_spend_usd_per_year
+    - allowed_revenue_requirement
+    - consumer_protection_standards
+    free_variables: []
+    determined_variables:
+    - consumer_protection_spend_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{consumer}_{protection\_spend\_usd\_per\_year} = \mathrm{consumer}_{protection\_standards}
+      \mathrm{allowed}_{revenue\_requirement}
   consumer_surplus_definition:
     name: Consumer surplus
     description: 'A linear approximation of the triangle under the demand curve. Dimensional check: (USD/MWh)
@@ -22775,6 +24323,25 @@ equations:
     linearity: linear
     latex: \mathrm{contingency}_{reserve\_mw} = \mathrm{n}_{1\_criterion} \mathrm{largest}_{loss\_mw}
       + \mathrm{n}_{2\_criterion} \mathrm{largest}_{loss\_mw}
+  cooking_clean_target_bound:
+    name: Cooking clean target bound
+    description: The clean-cooking target cannot sit below the LPG penetration already reached.
+    system: reserve_margin
+    lhs: cooking_lpg_penetration
+    rhs: clean_cooking_target
+    relation: leq
+    parameters: &id003
+    - clean_cooking_target
+    - cooking_lpg_penetration
+    free_variables: *id003
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{cooking}_{lpg\_penetration} \leq \mathrm{clean}_{cooking\_target}
   cooling_water_definition:
     name: Cooling water demand
     description: Water the thermal fleet withdraws, per megawatt-hour generated.
@@ -22886,6 +24453,50 @@ equations:
     priority: P1
     reference: Ofwat PR24 Appendix 11, allowed return on capital
     latex: \mathrm{cost}_{of\_equity} \leq \mathrm{allowed}_{return\_on\_equity}
+  credit_support_posted_definition:
+    name: Credit support posted
+    description: 'The credit-support annex pre-funding: the share of the revenue requirement.'
+    system: financial
+    lhs: credit_support_posted_usd_per_year
+    rhs: credit_support_requirements * allowed_revenue_requirement
+    relation: eq
+    parameters:
+    - credit_support_posted_usd_per_year
+    - allowed_revenue_requirement
+    - credit_support_requirements
+    free_variables: []
+    determined_variables:
+    - credit_support_posted_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{credit}_{support\_posted\_usd\_per\_year} = \mathrm{credit}_{support\_requirements}
+      \mathrm{allowed}_{revenue\_requirement}
+  crediting_projects_approved_definition:
+    name: Crediting projects under an approved methodology
+    description: 'The pipeline''s projects applying an approved baseline methodology: the share times
+      the pipeline.'
+    system: carbon_trajectory
+    lhs: crediting_projects_approved
+    rhs: baseline_methodology * project_pipeline_count
+    relation: eq
+    parameters:
+    - crediting_projects_approved
+    - baseline_methodology
+    - project_pipeline_count
+    free_variables: []
+    determined_variables:
+    - crediting_projects_approved
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{crediting}_{projects\_approved} = \mathrm{baseline}_{methodology} \mathrm{project}_{pipeline\_count}
   crf_biomass_definition:
     name: CRF (biomass)
     description: 'The standard annuity: a constant annual charge whose present value equals one unit of
@@ -23208,6 +24819,27 @@ equations:
     linearity: nonlinear
     latex: \mathrm{crf}_{wind\_onshore} = \frac{\mathrm{discount}_{rate} {\left(1 + \mathrm{discount}_{rate}\right)}^{\mathrm{asset}_{life\_wind\_onshore}}}{{\left(\mathrm{discount}_{rate}
       + 1\right)}^{\mathrm{asset}_{life\_wind\_onshore}} - 1}
+  cybersecurity_spend_definition:
+    name: Cybersecurity spend
+    description: 'The control-system security spend: the mandated share of the revenue requirement.'
+    system: cost_accounting
+    lhs: cybersecurity_spend_usd_per_year
+    rhs: cybersecurity_requirements * allowed_revenue_requirement
+    relation: eq
+    parameters:
+    - cybersecurity_spend_usd_per_year
+    - allowed_revenue_requirement
+    - cybersecurity_requirements
+    free_variables: []
+    determined_variables:
+    - cybersecurity_spend_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{cybersecurity}_{spend\_usd\_per\_year} = \mathrm{cybersecurity}_{requirements} \mathrm{allowed}_{revenue\_requirement}
   dalys_definition:
     name: DALYs
     description: Years of life lost per premature death, which is the burden the emissions cost in health.
@@ -23229,6 +24861,27 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  data_privacy_spend_definition:
+    name: Data-privacy spend
+    description: 'The DPIA and consent-system spend: the mandated share of the revenue requirement.'
+    system: cost_accounting
+    lhs: data_privacy_spend_usd_per_year
+    rhs: data_privacy_requirements * allowed_revenue_requirement
+    relation: eq
+    parameters:
+    - data_privacy_spend_usd_per_year
+    - allowed_revenue_requirement
+    - data_privacy_requirements
+    free_variables: []
+    determined_variables:
+    - data_privacy_spend_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{data}_{privacy\_spend\_usd\_per\_year} = \mathrm{data}_{privacy\_requirements} \mathrm{allowed}_{revenue\_requirement}
   debt_financing_share_definition:
     name: Debt's share of the capital structure
     description: 'Debt''s own share of the capital structure: D/(D+E), the conversion of the shipped debt/equity
@@ -23259,12 +24912,12 @@ equations:
     lhs: bond_share + dfi_share + commercial_bank_share
     rhs: debt_financing_share
     relation: leq
-    parameters: &id003
+    parameters: &id004
     - bond_share
     - commercial_bank_share
     - debt_financing_share
     - dfi_share
-    free_variables: *id003
+    free_variables: *id004
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -23297,6 +24950,29 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  demand_charge_revenue_definition:
+    name: Demand-charge component of revenue
+    description: 'The fixed cost recovered through demand and customer charges: the allocable share of
+      the revenue requirement, Stoft''s cost-of-service split.'
+    system: financial
+    lhs: demand_charge_revenue_usd_per_year
+    rhs: cost_allocation_methodology * allowed_revenue_requirement
+    relation: eq
+    parameters:
+    - demand_charge_revenue_usd_per_year
+    - allowed_revenue_requirement
+    - cost_allocation_methodology
+    free_variables: []
+    determined_variables:
+    - demand_charge_revenue_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Stoft 2002, Power System Economics, ch. 5
+    latex: \mathrm{demand}_{charge\_revenue\_usd\_per\_year} = \mathrm{cost}_{allocation\_methodology}
+      \mathrm{allowed}_{revenue\_requirement}
   demand_growth_factor_definition:
     name: The compound growth factor over the window
     description: 'The compound growth factor over the trajectory''s window: (1+g) to the window''s years,
@@ -23366,6 +25042,29 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{demand}_{growth\_window\_years} = \mathrm{demand}_{growth\_end\_year} - \mathrm{demand}_{growth\_start\_year}
+  demand_response_programme_cost_definition:
+    name: The demand-response programme's annual cost
+    description: 'The programme''s annual cost: the per-kW-year payment times the curtailment capacity
+      the interruptible contracts declare, at the MW-to-kW conversion.'
+    system: cost_accounting
+    lhs: demand_response_programme_cost_usd_per_year
+    rhs: demand_response_cost * interruptible_load_mw * 1000.0
+    relation: eq
+    parameters:
+    - demand_response_programme_cost_usd_per_year
+    - demand_response_cost
+    - interruptible_load_mw
+    free_variables: []
+    determined_variables:
+    - demand_response_programme_cost_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{demand}_{response\_programme\_cost\_usd\_per\_year} = 1000 \mathrm{demand}_{response\_cost}
+      \mathrm{interruptible}_{load\_mw}
   demand_shares_bound:
     name: Sector demand shares sum to at most one
     description: 'The four sector shares are a decomposition of total demand, so they cannot sum above
@@ -23480,6 +25179,27 @@ equations:
     solution_method: numeric
     linearity: linear
     latex: null
+  electrified_population_definition:
+    name: Electrified population
+    description: 'The population the access target names: the target share times the country''s population.'
+    system: price_demand
+    lhs: electrified_population
+    rhs: electrification_rate_target * population_total
+    relation: eq
+    parameters:
+    - electrified_population
+    - electrification_rate_target
+    - population_total
+    free_variables: []
+    determined_variables:
+    - electrified_population
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{electrified}_{population} = \mathrm{electrification}_{rate\_target} \mathrm{population}_{total}
   electrolyser_cost_alias:
     name: Electrolyser capital cost (legacy) is Electrolyser capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `electrolyser_cost`
@@ -23551,6 +25271,25 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  energy_burden_affordability_bound:
+    name: Energy burden affordability bound
+    description: The household energy burden at the shipped tariff sits inside the 10% affordability line.
+    system: reserve_margin
+    lhs: energy_burden
+    rhs: affordability_threshold
+    relation: leq
+    parameters: &id005
+    - affordability_threshold
+    - energy_burden
+    free_variables: *id005
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{energy}_{burden} \leq \mathrm{affordability}_{threshold}
   energy_burden_definition:
     name: Energy burden
     description: 'The share of household income spent on electricity. The system that stops a scenario
@@ -23601,6 +25340,28 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  environmental_flow_definition:
+    name: The environmental flow
+    description: 'The flow the basins must carry for habitat: the fair-habitat share of the rivers'' mean
+      annual flow.'
+    system: water_energy
+    lhs: environmental_flow_m3_per_s
+    rhs: environmental_flow_requirements * river_mean_annual_flow_m3_per_s
+    relation: eq
+    parameters:
+    - environmental_flow_m3_per_s
+    - environmental_flow_requirements
+    - river_mean_annual_flow_m3_per_s
+    free_variables: []
+    determined_variables:
+    - environmental_flow_m3_per_s
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{environmental}_{flow\_m3\_per\_s} = \mathrm{environmental}_{flow\_requirements} \mathrm{river}_{mean\_annual\_flow\_m3\_per\_s}
   equilibrium_demand:
     name: Demand at the tariff
     description: 'Demand after the tariff moves, at a constant elasticity, against the tariff the system''s
@@ -23679,6 +25440,27 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{equity}_{share} = 1 - \mathrm{debt}_{fraction}
+  ets_cap_half_life_definition:
+    name: The ETS cap's half-life
+    description: 'Years for the ETS cap to halve at its annual reduction rate: ln 2 over the rate, the
+      same exponential arithmetic.'
+    system: carbon_trajectory
+    lhs: ets_cap_half_life_years
+    rhs: log(2.0) / ets_cap_reduction_rate
+    relation: eq
+    parameters:
+    - ets_cap_half_life_years
+    - ets_cap_reduction_rate
+    free_variables: []
+    determined_variables:
+    - ets_cap_half_life_years
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{ets}_{cap\_half\_life\_years} = \frac{\ln\left(2\right)}{\mathrm{ets}_{cap\_reduction\_rate}}
   financing_close_share_of_licence_definition:
     name: The financing-close deadline's share of the licence
     description: 'The fraction of the licence term the financing-close deadline spans: months over the
@@ -23837,6 +25619,47 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{flywheel}_{cost} = \mathrm{capex}_{flywheel}
+  forecast_error_band_definition:
+    name: The forecast error band
+    description: 'The energy the adequacy plan must absorb on top of the forecast: the allowed MAPE times
+      the demand the balance computes.'
+    system: price_demand
+    lhs: forecast_error_band_twh
+    rhs: demand_forecast_methodology * demand_twh
+    relation: eq
+    parameters:
+    - forecast_error_band_twh
+    - demand_forecast_methodology
+    - demand_twh
+    free_variables: []
+    determined_variables:
+    - forecast_error_band_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{forecast}_{error\_band\_twh} = \mathrm{demand}_{forecast\_methodology} \mathrm{demand}_{twh}
+  fpic_consent_bound:
+    name: Fpic consent bound
+    description: The documented-consent floor cannot exceed the audited consent score.
+    system: reserve_margin
+    lhs: fpic_requirements
+    rhs: fpic_compliance_score
+    relation: leq
+    parameters: &id006
+    - fpic_compliance_score
+    - fpic_requirements
+    free_variables: *id006
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{fpic}_{requirements} \leq \mathrm{fpic}_{compliance\_score}
   frequency_nadir_definition:
     name: Frequency nadir
     description: 'The frequency after the response time, at the constant initial slope. Dimensional check:
@@ -24138,6 +25961,28 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: \mathrm{gearing}_{ratio} = \frac{\mathrm{debt}_{fraction}}{1 - \mathrm{debt}_{fraction}}
+  gender_action_plan_spend_definition:
+    name: Gender action plan spending
+    description: The plan's ring-fenced share of the community development fund the benefit-sharing programme
+      capitalises.
+    system: employment
+    lhs: gender_action_plan_spend_usd_per_year
+    rhs: gender_action_plan * community_development_fund_usd_per_year
+    relation: eq
+    parameters:
+    - gender_action_plan_spend_usd_per_year
+    - community_development_fund_usd_per_year
+    - gender_action_plan
+    free_variables: []
+    determined_variables:
+    - gender_action_plan_spend_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{gender}_{action\_plan\_spend\_usd\_per\_year} = \mathrm{gender}_{action\_plan} \mathrm{community}_{development\_fund\_usd\_per\_year}
   geothermal_cost_alias:
     name: Geothermal capital cost (legacy) is Geothermal capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `geothermal_cost`
@@ -24170,10 +26015,10 @@ equations:
     lhs: green_bond_share
     rhs: bond_share
     relation: leq
-    parameters: &id004
+    parameters: &id007
     - bond_share
     - green_bond_share
-    free_variables: *id004
+    free_variables: *id007
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -24182,6 +26027,48 @@ equations:
     priority: P2
     reference: null
     latex: \mathrm{green}_{bond\_share} \leq \mathrm{bond}_{share}
+  grid_code_compliant_capacity_definition:
+    name: Grid-code compliant capacity
+    description: 'The connected capacity meeting the interconnection standard: the share of the fleet.'
+    system: reserve_margin
+    lhs: grid_code_compliant_capacity_mw
+    rhs: interoperability_standards * total_capacity_mw
+    relation: eq
+    parameters:
+    - grid_code_compliant_capacity_mw
+    - interoperability_standards
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - grid_code_compliant_capacity_mw
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{grid}_{code\_compliant\_capacity\_mw} = \mathrm{interoperability}_{standards} \mathrm{total}_{capacity\_mw}
+  grid_extension_completion_definition:
+    name: The grid-extension programme's completion time
+    description: 'The characteristic time the programme completes in at its annual connection rate: ln
+      2 over the rate.'
+    system: price_demand
+    lhs: grid_extension_completion_years
+    rhs: log(2.0) / grid_extension_rate
+    relation: eq
+    parameters:
+    - grid_extension_completion_years
+    - grid_extension_rate
+    free_variables: []
+    determined_variables:
+    - grid_extension_completion_years
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{grid}_{extension\_completion\_years} = \frac{\ln\left(2\right)}{\mathrm{grid}_{extension\_rate}}
   health_cost_definition:
     name: Health cost
     description: 'The DALY burden priced at the value of a statistical life year. Dimensional check: DALY/year
@@ -24207,6 +26094,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  heat_pump_annualised_cost_definition:
+    name: The heat pump's annuity per kW-year
+    description: 'The installed heat pump''s annuity: the capital cost per kW annualised by the shipped
+      crf the discount rate implies.'
+    system: cost_accounting
+    lhs: heat_pump_annualised_cost_usd_per_kw_year
+    rhs: heat_pump_cost * crf
+    relation: eq
+    parameters:
+    - heat_pump_annualised_cost_usd_per_kw_year
+    - crf
+    - heat_pump_cost
+    free_variables: []
+    determined_variables:
+    - heat_pump_annualised_cost_usd_per_kw_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Short, Packey & Holt (1995), NREL/TP-462-5173
+    latex: \mathrm{heat}_{pump\_annualised\_cost\_usd\_per\_kw\_year} = \mathrm{heat}_{pump\_cost} \mathrm{crf}
   hvdc_capacity_definition:
     name: Cross-border capacity in HVDC
     description: 'The interconnector''s MW rating that carries HVDC: the technology''s share times the
@@ -24252,6 +26161,28 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{hydro}_{inflow\_vintage\_offset\_years} = \mathrm{hydro}_{inflow\_year} - \mathrm{solar}_{cf\_year}
+  hydrogen_export_revenue_definition:
+    name: The export programme's revenue
+    description: 'The export programme''s revenue: the terminal price per MWh times the energy the terminals
+      load per year.'
+    system: financial
+    lhs: hydrogen_export_revenue_usd_per_year
+    rhs: hydrogen_export_price * hydrogen_export_volume
+    relation: eq
+    parameters:
+    - hydrogen_export_revenue_usd_per_year
+    - hydrogen_export_price
+    - hydrogen_export_volume
+    free_variables: []
+    determined_variables:
+    - hydrogen_export_revenue_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{hydrogen}_{export\_revenue\_usd\_per\_year} = \mathrm{hydrogen}_{export\_price} \mathrm{hydrogen}_{export\_volume}
   hydrogen_fuel_cell_cost_alias:
     name: Hydrogen fuel cell capital cost is Hydrogen fuel cell capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `hydrogen_fuel_cell_cost`
@@ -24322,6 +26253,70 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  ifc_covenant_scope_bound:
+    name: Ifc covenant scope bound
+    description: Only the DFI-financed tranche can be covenanted, so the covenanted share cannot exceed
+      the debt-financing share.
+    system: reserve_margin
+    lhs: ifc_performance_standards
+    rhs: debt_financing_share
+    relation: leq
+    parameters: &id008
+    - debt_financing_share
+    - ifc_performance_standards
+    free_variables: *id008
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{ifc}_{performance\_standards} \leq \mathrm{debt}_{financing\_share}
+  in_country_telemetry_sites_definition:
+    name: Telemetry sites hosted in-country
+    description: 'The operational sites whose data must be hosted in-country: the share times the system''s
+      telemetry sites.'
+    system: reliability
+    lhs: in_country_telemetry_sites
+    rhs: data_sovereignty_requirements * scada_telemetry_sites
+    relation: eq
+    parameters:
+    - in_country_telemetry_sites
+    - data_sovereignty_requirements
+    - scada_telemetry_sites
+    free_variables: []
+    determined_variables:
+    - in_country_telemetry_sites
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{in}_{country\_telemetry\_sites} = \mathrm{data}_{sovereignty\_requirements} \mathrm{scada}_{telemetry\_sites}
+  independently_verified_accounts_definition:
+    name: Accounts independently verified
+    description: 'The audited accounts the regulator requires independently verified: the share times
+      the annual audit sample.'
+    system: reliability
+    lhs: independently_verified_accounts
+    rhs: regulatory_audit_requirements * audit_accounts_per_year
+    relation: eq
+    parameters:
+    - independently_verified_accounts
+    - audit_accounts_per_year
+    - regulatory_audit_requirements
+    free_variables: []
+    determined_variables:
+    - independently_verified_accounts
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{independently}_{verified\_accounts} = \mathrm{regulatory}_{audit\_requirements} \mathrm{audit}_{accounts\_per\_year}
   indirect_jobs_derivation:
     name: Indirect jobs (derived)
     description: 'The multiplier form of the input-output employment method: direct jobs computed by the
@@ -24416,6 +26411,28 @@ equations:
     solution_method: numeric
     linearity: linear
     latex: \mathrm{industrial}_{electrification} + \mathrm{industrial}_{heat\_electrification} \leq 1.5
+  industrial_growth_factor_definition:
+    name: The industrial growth factor over the horizon
+    description: 'The factor industrial output grows by over the horizon at the industrialisation rate:
+      the compound factor, (1+r) to the horizon''s years.'
+    system: price_demand
+    lhs: industrial_growth_factor
+    rhs: (1.0 + industrialisation_rate) ** horizon_years
+    relation: eq
+    parameters:
+    - industrial_growth_factor
+    - horizon_years
+    - industrialisation_rate
+    free_variables: []
+    determined_variables:
+    - industrial_growth_factor
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P1
+    reference: Short, Packey & Holt (1995), NREL/TP-462-5173
+    latex: \mathrm{industrial}_{growth\_factor} = {\left(1 + \mathrm{industrialisation}_{rate}\right)}^{\mathrm{horizon}_{years}}
   inertia_from_capacity_definition:
     name: System inertia from capacity
     description: 'The fleet''s stored kinetic energy: firm capacity times the inertia constant. Dimensional
@@ -24441,6 +26458,25 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  inertia_minimum_enforced:
+    name: Inertia minimum enforced
+    description: The minimum inertia must sit inside the synchronous inventory the firm fleet carries.
+    system: reserve_margin
+    lhs: inertia_requirement
+    rhs: system_inertia_mws
+    relation: leq
+    parameters: &id009
+    - inertia_requirement
+    - system_inertia_mws
+    free_variables: *id009
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{inertia}_{requirement} \leq \mathrm{system}_{inertia\_mws}
   inertia_requirement:
     name: RoCoF limit
     description: The frequency slope the protection settings tolerate before tripping.
@@ -24483,6 +26519,29 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{combined}_{ratio} = \mathrm{loss}_{ratio} + \mathrm{expense}_{ratio}
+  insurance_premium_definition:
+    name: The fleet's insurance premium per kW-year
+    description: 'The premium the fleet carries per kW-year, on the share-of-cost basis the insurance
+      product itself declares: the share acts on the installed cost.'
+    system: financial
+    lhs: insurance_premium_usd_per_kw_year
+    rhs: insurance_loss_share_of_cost * capex_usd_per_kw
+    relation: eq
+    parameters:
+    - insurance_premium_usd_per_kw_year
+    - capex_usd_per_kw
+    - insurance_loss_share_of_cost
+    free_variables: []
+    determined_variables:
+    - insurance_premium_usd_per_kw_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{insurance}_{premium\_usd\_per\_kw\_year} = \mathrm{insurance}_{loss\_share\_of\_cost}
+      \mathrm{capex}_{usd\_per\_kw}
   interruptible_load_mw_definition:
     name: Interruptible load mw
     description: 'The load the utility may curtail on contract: its share of peak demand, which is the
@@ -24554,6 +26613,25 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{landfill}_{gas\_cost} = \mathrm{capex}_{landfill\_gas}
+  largest_loss_response_bound:
+    name: Largest loss response bound
+    description: Primary response must cover the largest credible infeed loss.
+    system: reserve_margin
+    lhs: largest_loss_mw
+    rhs: frequency_response_requirement
+    relation: leq
+    parameters: &id010
+    - frequency_response_requirement
+    - largest_loss_mw
+    free_variables: *id010
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: Stoft 2002, Power System Economics, ch. 5
+    latex: \mathrm{largest}_{loss\_mw} \leq \mathrm{frequency}_{response\_requirement}
   lcoe_battery_definition:
     name: Levelised cost of storage
     description: 'The LCOS form: the capital cost per delivered kilowatt-hour over the battery''s daily
@@ -25100,6 +27178,28 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  life_extension_fraction_definition:
+    name: The life-extension cost against a new build
+    description: 'The life-extension programme''s cost per kW against the fleet''s own per-kW new build:
+      the fraction the retire-vs-extend decision turns on.'
+    system: cost_accounting
+    lhs: life_extension_fraction_of_new_build
+    rhs: life_extension_cost / capex_usd_per_kw
+    relation: eq
+    parameters:
+    - life_extension_fraction_of_new_build
+    - capex_usd_per_kw
+    - life_extension_cost
+    free_variables: []
+    determined_variables:
+    - life_extension_fraction_of_new_build
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{life}_{extension\_fraction\_of\_new\_build} = \frac{\mathrm{life}_{extension\_cost}}{\mathrm{capex}_{usd\_per\_kw}}
   lifeline_tariff_alias:
     name: Lifeline tariff is Lifeline tariff
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `lifeline_tariff`
@@ -25225,6 +27325,30 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  local_content_capex_definition:
+    name: Capex sourced in-country
+    description: 'The fleet''s capex that must be sourced in-country: the content share times the total,
+      at the MW-to-kW conversion and the USD-million scale.'
+    system: cost_accounting
+    lhs: local_content_capex_mm_usd
+    rhs: local_content_requirements * capex_usd_per_kw * total_capacity_mw * 1000.0 / 1000000.0
+    relation: eq
+    parameters:
+    - local_content_capex_mm_usd
+    - capex_usd_per_kw
+    - local_content_requirements
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - local_content_capex_mm_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025 Equations & Variables
+    latex: \mathrm{local}_{content\_capex\_mm\_usd} = \frac{1000 \mathrm{local}_{content\_requirements}
+      \mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}}{1000000}
   local_employment_targets_bound:
     name: Local, women and youth employment shares are bounded together
     description: 'The three employment shares are overlapping measures over one workforce: a woman employed
@@ -25351,6 +27475,28 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  margin_posted_definition:
+    name: Margin posted on the carbon position
+    description: 'The trading position''s initial margin: the required share of the position''s annual
+      value, which the carbon revenue computes.'
+    system: financial
+    lhs: margin_posted_usd_per_year
+    rhs: margin_requirements * carbon_revenue_usd_per_year
+    relation: eq
+    parameters:
+    - margin_posted_usd_per_year
+    - carbon_revenue_usd_per_year
+    - margin_requirements
+    free_variables: []
+    determined_variables:
+    - margin_posted_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{margin}_{posted\_usd\_per\_year} = \mathrm{margin}_{requirements} \mathrm{carbon}_{revenue\_usd\_per\_year}
   marginal_cost:
     name: Marginal cost
     description: 'Short-run marginal cost. The carbon cost enters here rather than as a separate term
@@ -25375,6 +27521,48 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  mini_grid_programme_spend_definition:
+    name: The mini-grid programme's spend
+    description: 'The mini-grid programme''s spend per year: the per-connection installed cost times the
+      connections served per year.'
+    system: cost_accounting
+    lhs: mini_grid_programme_spend_usd_per_year
+    rhs: mini_grid_cost * mini_grid_deployment
+    relation: eq
+    parameters:
+    - mini_grid_programme_spend_usd_per_year
+    - mini_grid_cost
+    - mini_grid_deployment
+    free_variables: []
+    determined_variables:
+    - mini_grid_programme_spend_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{mini}_{grid\_programme\_spend\_usd\_per\_year} = \mathrm{mini}_{grid\_cost} \mathrm{mini}_{grid\_deployment}
+  non_spinning_reserve_inside_margin:
+    name: Non spinning reserve inside margin
+    description: The non-spinning slice must sit inside the operating reserve the margin holds.
+    system: reserve_margin
+    lhs: non_spinning_reserve_requirement
+    rhs: reserve_margin_min * peak_demand_mw
+    relation: leq
+    parameters: &id011
+    - non_spinning_reserve_requirement
+    - peak_demand_mw
+    - reserve_margin_min
+    free_variables: *id011
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: Stoft 2002, Power System Economics, ch. 5
+    latex: \mathrm{non}_{spinning\_reserve\_requirement} \leq \mathrm{reserve}_{margin\_min} \mathrm{peak}_{demand\_mw}
   offtake_risk_premium_applied_definition:
     name: Offtake risk premium applied
     description: 'The risk premium a project actually prices: a government guarantee on the PPA removes
@@ -25544,6 +27732,49 @@ equations:
     priority: P1
     reference: IEEE Guide for Electric Power Distribution Reliability Indices (1366), tutorial deck
     latex: \mathrm{planned}_{maintenance\_hours\_per\_year} = \mathrm{maintenance}_{frequency} \mathrm{maintenance}_{duration}
+  pm25_exceedance_definition:
+    name: The PM2.5 exceedance ratio
+    description: 'How many times the ambient mean exceeds the WHO-guideline limit: the finding computed
+      rather than shipped as a violated inequality.'
+    system: carbon_trajectory
+    lhs: pm25_exceedance_ratio
+    rhs: pm25_annual_mean_ug_per_m3 / air_quality_standards
+    relation: eq
+    parameters:
+    - pm25_exceedance_ratio
+    - air_quality_standards
+    - pm25_annual_mean_ug_per_m3
+    free_variables: []
+    determined_variables:
+    - pm25_exceedance_ratio
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{pm25}_{exceedance\_ratio} = \frac{\mathrm{pm25}_{annual\_mean\_ug\_per\_m3}}{\mathrm{air}_{quality\_standards}}
+  population_growth_factor_definition:
+    name: The population growth factor over the horizon
+    description: 'The factor population compounds by over the horizon: (1+r) to the horizon''s years.'
+    system: price_demand
+    lhs: population_growth_factor
+    rhs: (1.0 + population_growth_rate) ** horizon_years
+    relation: eq
+    parameters:
+    - population_growth_factor
+    - horizon_years
+    - population_growth_rate
+    free_variables: []
+    determined_variables:
+    - population_growth_factor
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P1
+    reference: Short, Packey & Holt (1995), NREL/TP-462-5173
+    latex: \mathrm{population}_{growth\_factor} = {\left(1 + \mathrm{population}_{growth\_rate}\right)}^{\mathrm{horizon}_{years}}
   powertrain_stock_bound:
     name: Powertrain stock bound
     description: 'Fuel-cell and battery vehicles are disjoint powertrains of the same vehicle stock: together
@@ -25552,10 +27783,10 @@ equations:
     lhs: hydrogen_vehicle_share + electric_vehicle_adoption
     rhs: '1.0'
     relation: leq
-    parameters: &id005
+    parameters: &id012
     - electric_vehicle_adoption
     - hydrogen_vehicle_share
-    free_variables: *id005
+    free_variables: *id012
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -25714,6 +27945,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{pyrolysis}_{cost} = \mathrm{capex}_{pyrolysis}
+  reactive_capability_definition:
+    name: Reactive capability at peak
+    description: 'The reactive capability the system must hold at peak: the per-MW requirement (tan-phi
+      of the 0.95 power factor) times peak demand.'
+    system: inertia
+    lhs: reactive_capability_mvar
+    rhs: reactive_power_requirement * peak_demand_mw
+    relation: eq
+    parameters:
+    - reactive_capability_mvar
+    - peak_demand_mw
+    - reactive_power_requirement
+    free_variables: []
+    determined_variables:
+    - reactive_capability_mvar
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{reactive}_{capability\_mvar} = \mathrm{reactive}_{power\_requirement} \mathrm{peak}_{demand\_mw}
   real_discount_rate_definition:
     name: Fisher bridge
     description: 'r_real = (r_nominal - inflation) / (1 + inflation): the nominal blend deflated by the
@@ -25840,6 +28093,49 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  renewable_generation_target_definition:
+    name: The renewable target's energy face value
+    description: 'The renewable target in energy terms: the share of the generation the balance computes.
+      Nameplate share and energy share are different statistics; this is the energy one.'
+    system: carbon_trajectory
+    lhs: renewable_generation_twh
+    rhs: renewable_target * generation_twh
+    relation: eq
+    parameters:
+    - renewable_generation_twh
+    - generation_twh
+    - renewable_target
+    free_variables: []
+    determined_variables:
+    - renewable_generation_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{renewable}_{generation\_twh} = \mathrm{renewable}_{target} \mathrm{generation}_{twh}
+  reporting_compliance_definition:
+    name: Reporting systems' spend
+    description: 'The quarterly-filing systems'' spend: the mandated share of the revenue requirement.'
+    system: cost_accounting
+    lhs: reporting_compliance_usd_per_year
+    rhs: reporting_requirements * allowed_revenue_requirement
+    relation: eq
+    parameters:
+    - reporting_compliance_usd_per_year
+    - allowed_revenue_requirement
+    - reporting_requirements
+    free_variables: []
+    determined_variables:
+    - reporting_compliance_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{reporting}_{compliance\_usd\_per\_year} = \mathrm{reporting}_{requirements} \mathrm{allowed}_{revenue\_requirement}
   reserve_margin:
     name: Reserve margin
     description: 'Firm capacity plus the renewable fleet''s contribution at its capacity factor must cover
@@ -25895,6 +28191,27 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  reserve_margin_required_mw_definition:
+    name: The reserve margin's MW face value
+    description: 'The planning margin''s face value in MW: the margin share times peak demand.'
+    system: reserve_margin
+    lhs: reserve_margin_required_mw
+    rhs: reserve_margin_requirement * peak_demand_mw
+    relation: eq
+    parameters:
+    - reserve_margin_required_mw
+    - peak_demand_mw
+    - reserve_margin_requirement
+    free_variables: []
+    determined_variables:
+    - reserve_margin_required_mw
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Stoft 2002, Power System Economics, ch. 5
+    latex: \mathrm{reserve}_{margin\_required\_mw} = \mathrm{reserve}_{margin\_requirement} \mathrm{peak}_{demand\_mw}
   reserve_margin_with_firm_vre:
     name: Reserve margin with firm VRE
     description: 'The reserve margin identity with the renewable fleet''s firm contribution made explicit.
@@ -25945,6 +28262,25 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  resettlement_share_bound:
+    name: Resettlement share bound
+    description: The displaced population share must sit inside the safeguard's cap.
+    system: reserve_margin
+    lhs: resettlement_population_share
+    rhs: resettlement_requirements
+    relation: leq
+    parameters: &id013
+    - resettlement_population_share
+    - resettlement_requirements
+    free_variables: *id013
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{resettlement}_{population\_share} \leq \mathrm{resettlement}_{requirements}
   residential_demand_definition:
     name: Residential demand
     description: 'The share times the demand it is a share OF. A share with no numerator is a word; with
@@ -25999,10 +28335,10 @@ equations:
     lhs: retraining_duration
     rhs: construction_period
     relation: leq
-    parameters: &id006
+    parameters: &id014
     - construction_period
     - retraining_duration
-    free_variables: *id006
+    free_variables: *id014
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -26036,6 +28372,25 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  saidi_ceiling_bound:
+    name: Saidi ceiling bound
+    description: The system's SAIDI must sit inside the regulator's ceiling.
+    system: reserve_margin
+    lhs: system_saidi_hours_per_year
+    rhs: grid_reliability_target
+    relation: leq
+    parameters: &id015
+    - grid_reliability_target
+    - system_saidi_hours_per_year
+    free_variables: *id015
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: IEEE Guide for Electric Power Distribution Reliability Indices (1366), tutorial deck
+    latex: \mathrm{system}_{saidi\_hours\_per\_year} \leq \mathrm{grid}_{reliability\_target}
   saidi_definition:
     name: SAIDI
     description: 'Outage duration times the frequency, against 8760 hours. Dimensional check: hours/event
@@ -26060,6 +28415,25 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  saifi_ceiling_bound:
+    name: Saifi ceiling bound
+    description: The system's SAIFI must sit inside the regulator's ceiling.
+    system: reserve_margin
+    lhs: system_saifi_events_per_year
+    rhs: service_quality_standards
+    relation: leq
+    parameters: &id016
+    - service_quality_standards
+    - system_saifi_events_per_year
+    free_variables: *id016
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: IEEE Guide for Electric Power Distribution Reliability Indices (1366), tutorial deck
+    latex: \mathrm{system}_{saifi\_events\_per\_year} \leq \mathrm{service}_{quality\_standards}
   saifi_definition:
     name: SAIFI
     description: 'Interruption frequency, normalised to the customer base. Dimensional check: events/year.
@@ -26106,6 +28480,49 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{salinity}_{gradient\_cost} = \mathrm{capex}_{salinity\_gradient}
+  scada_telemetered_capacity_definition:
+    name: Capacity under SCADA telemetry
+    description: 'The connected capacity under telemetry: the share of the fleet.'
+    system: reliability
+    lhs: scada_telemetered_capacity_mw
+    rhs: scada_ems_requirements * total_capacity_mw
+    relation: eq
+    parameters:
+    - scada_telemetered_capacity_mw
+    - scada_ems_requirements
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - scada_telemetered_capacity_mw
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{scada}_{telemetered\_capacity\_mw} = \mathrm{scada}_{ems\_requirements} \mathrm{total}_{capacity\_mw}
+  service_quality_penalty_exposure_definition:
+    name: The service-quality penalty's exposure cap
+    description: 'The unconditional exposure the penalty clause caps: the share of the revenue requirement;
+      the trigger is the SAIDI/SAIFI pair below.'
+    system: financial
+    lhs: service_quality_penalty_usd_per_year
+    rhs: service_quality_penalty * allowed_revenue_requirement
+    relation: eq
+    parameters:
+    - service_quality_penalty_usd_per_year
+    - allowed_revenue_requirement
+    - service_quality_penalty
+    free_variables: []
+    determined_variables:
+    - service_quality_penalty_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{service}_{quality\_penalty\_usd\_per\_year} = \mathrm{service}_{quality\_penalty} \mathrm{allowed}_{revenue\_requirement}
   settlement_intervals_per_hour_definition:
     name: How many settlement periods an hour carries
     description: 'How many settlement periods an hour carries: the interval''s inverse, which is what
@@ -26127,6 +28544,28 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{settlement}_{intervals\_per\_hour} = {\mathrm{settlement}_{period}}^{-1}
+  shs_programme_spend_definition:
+    name: The solar-home-system programme's spend
+    description: 'The programme''s spend per year: the delivered per-unit cost times the units delivered
+      per year.'
+    system: cost_accounting
+    lhs: shs_programme_spend_usd_per_year
+    rhs: shs_cost * solar_home_system_deployment
+    relation: eq
+    parameters:
+    - shs_programme_spend_usd_per_year
+    - shs_cost
+    - solar_home_system_deployment
+    free_variables: []
+    determined_variables:
+    - shs_programme_spend_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{shs}_{programme\_spend\_usd\_per\_year} = \mathrm{shs}_{cost} \mathrm{solar}_{home\_system\_deployment}
   small_modular_reactor_cost_alias:
     name: SMR capital cost is Small modular reactor capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `small_modular_reactor_cost`
@@ -26253,10 +28692,10 @@ equations:
     lhs: steel_scrap_eaf_share + steel_h2_dri_share
     rhs: '1.0'
     relation: leq
-    parameters: &id007
+    parameters: &id017
     - steel_h2_dri_share
     - steel_scrap_eaf_share
-    free_variables: *id007
+    free_variables: *id017
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -26497,6 +28936,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  uranium_fuel_cost_definition:
+    name: The nuclear fuel cost per MWh
+    description: 'The fuel cycle''s spot-price component: the U3O8 spot price times the pounds the LWR
+      burnup consumes per megawatt-hour electric, per the named burnup constant.'
+    system: cost_accounting
+    lhs: uranium_fuel_cost_usd_per_mwh
+    rhs: uranium_price * uranium_burnup_lb_per_mwh
+    relation: eq
+    parameters:
+    - uranium_fuel_cost_usd_per_mwh
+    - uranium_burnup_lb_per_mwh
+    - uranium_price
+    free_variables: []
+    determined_variables:
+    - uranium_fuel_cost_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{uranium}_{fuel\_cost\_usd\_per\_mwh} = \mathrm{uranium}_{price} \mathrm{uranium}_{burnup\_lb\_per\_mwh}
   urban_heat_supply_bound:
     name: Urban heat supply bound
     description: 'District heating and heat pumps are disjoint supply modes of the same urban building
@@ -26505,10 +28966,10 @@ equations:
     lhs: district_heating_share + heat_pump_adoption
     rhs: '1.0'
     relation: leq
-    parameters: &id008
+    parameters: &id018
     - district_heating_share
     - heat_pump_adoption
-    free_variables: *id008
+    free_variables: *id018
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -26517,6 +28978,28 @@ equations:
     priority: P2
     reference: null
     latex: \mathrm{district}_{heating\_share} + \mathrm{heat}_{pump\_adoption} \leq 1
+  urban_share_growth_factor_definition:
+    name: The urban share's growth factor over the horizon
+    description: 'The factor the urban share compounds by over the horizon at the urbanisation rate: (1+r)
+      to the horizon''s years, the first-order form since the share itself is bounded.'
+    system: price_demand
+    lhs: urban_share_growth_factor
+    rhs: (1.0 + urbanisation_rate) ** horizon_years
+    relation: eq
+    parameters:
+    - urban_share_growth_factor
+    - horizon_years
+    - urbanisation_rate
+    free_variables: []
+    determined_variables:
+    - urban_share_growth_factor
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P1
+    reference: Short, Packey & Holt (1995), NREL/TP-462-5173
+    latex: \mathrm{urban}_{share\_growth\_factor} = {\left(1 + \mathrm{urbanisation}_{rate}\right)}^{\mathrm{horizon}_{years}}
   v2g_subset_bound:
     name: V2g subset bound
     description: 'V2G-capable vehicles are a subset of the EV stock: their share of the fleet cannot exceed
@@ -26525,10 +29008,10 @@ equations:
     lhs: v2g_adoption
     rhs: electric_vehicle_adoption
     relation: leq
-    parameters: &id009
+    parameters: &id019
     - electric_vehicle_adoption
     - v2g_adoption
-    free_variables: *id009
+    free_variables: *id019
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -26586,6 +29069,28 @@ equations:
     solution_method: iterative
     linearity: linear
     latex: null
+  vre_connection_spend_definition:
+    name: The VRE fleet's connection spend
+    description: 'The connection spend the target VRE fleet carries: the per-kW cost of joining the network
+      times the fleet''s megawatts, at the MW-to-kW conversion.'
+    system: cost_accounting
+    lhs: vre_connection_spend_usd
+    rhs: grid_connection_cost * vre_capacity_target_mw * 1000.0
+    relation: eq
+    parameters:
+    - vre_connection_spend_usd
+    - grid_connection_cost
+    - vre_capacity_target_mw
+    free_variables: []
+    determined_variables:
+    - vre_connection_spend_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{vre}_{connection\_spend\_usd} = 1000 \mathrm{grid}_{connection\_cost} \mathrm{vre}_{capacity\_target\_mw}
   vre_share_definition:
     name: Renewable share
     description: Renewable capacity as a fraction of the system's total.
@@ -31041,6 +33546,825 @@ relationships:
 - source: maintenance_frequency
   target: planned_maintenance_hours_per_year
   equation_id: planned_maintenance_hours_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: biomass_feedstock_cost
+  target: biomass_variable_cost_usd_per_mwh
+  equation_id: biomass_variable_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: opex_variable_biomass
+  target: biomass_variable_cost_usd_per_mwh
+  equation_id: biomass_variable_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: grid_connection_cost
+  target: vre_connection_spend_usd
+  equation_id: vre_connection_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: vre_capacity_target_mw
+  target: vre_connection_spend_usd
+  equation_id: vre_connection_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: crf
+  target: heat_pump_annualised_cost_usd_per_kw_year
+  equation_id: heat_pump_annualised_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: heat_pump_cost
+  target: heat_pump_annualised_cost_usd_per_kw_year
+  equation_id: heat_pump_annualised_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: hydrogen_export_price
+  target: hydrogen_export_revenue_usd_per_year
+  equation_id: hydrogen_export_revenue_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: hydrogen_export_volume
+  target: hydrogen_export_revenue_usd_per_year
+  equation_id: hydrogen_export_revenue_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: capex_usd_per_kw
+  target: insurance_premium_usd_per_kw_year
+  equation_id: insurance_premium_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: insurance_loss_share_of_cost
+  target: insurance_premium_usd_per_kw_year
+  equation_id: insurance_premium_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: capex_usd_per_kw
+  target: life_extension_fraction_of_new_build
+  equation_id: life_extension_fraction_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: life_extension_cost
+  target: life_extension_fraction_of_new_build
+  equation_id: life_extension_fraction_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: mini_grid_cost
+  target: mini_grid_programme_spend_usd_per_year
+  equation_id: mini_grid_programme_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: mini_grid_deployment
+  target: mini_grid_programme_spend_usd_per_year
+  equation_id: mini_grid_programme_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: demand_response_cost
+  target: demand_response_programme_cost_usd_per_year
+  equation_id: demand_response_programme_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: interruptible_load_mw
+  target: demand_response_programme_cost_usd_per_year
+  equation_id: demand_response_programme_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: shs_cost
+  target: shs_programme_spend_usd_per_year
+  equation_id: shs_programme_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: solar_home_system_deployment
+  target: shs_programme_spend_usd_per_year
+  equation_id: shs_programme_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: uranium_burnup_lb_per_mwh
+  target: uranium_fuel_cost_usd_per_mwh
+  equation_id: uranium_fuel_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: uranium_price
+  target: uranium_fuel_cost_usd_per_mwh
+  equation_id: uranium_fuel_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: coal_retirement_rate
+  target: coal_retirement_half_life_years
+  equation_id: coal_retirement_half_life_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: ets_cap_reduction_rate
+  target: ets_cap_half_life_years
+  equation_id: ets_cap_half_life_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: grid_extension_rate
+  target: grid_extension_completion_years
+  equation_id: grid_extension_completion_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: horizon_years
+  target: industrial_growth_factor
+  equation_id: industrial_growth_factor_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: industrialisation_rate
+  target: industrial_growth_factor
+  equation_id: industrial_growth_factor_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: horizon_years
+  target: population_growth_factor
+  equation_id: population_growth_factor_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: population_growth_rate
+  target: population_growth_factor
+  equation_id: population_growth_factor_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: horizon_years
+  target: urban_share_growth_factor
+  equation_id: urban_share_growth_factor_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: urbanisation_rate
+  target: urban_share_growth_factor
+  equation_id: urban_share_growth_factor_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: additionality_test
+  target: additional_abatement_mtco2
+  equation_id: additional_abatement_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: carbon_budget_mtco2
+  target: additional_abatement_mtco2
+  equation_id: additional_abatement_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: horizon_years
+  target: additional_abatement_mtco2
+  equation_id: additional_abatement_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: adms_requirements
+  target: adms_controlled_feeders
+  equation_id: adms_controlled_feeders_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: distribution_feeders_total
+  target: adms_controlled_feeders
+  equation_id: adms_controlled_feeders_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: air_quality_standards
+  target: pm25_exceedance_ratio
+  equation_id: pm25_exceedance_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: pm25_annual_mean_ug_per_m3
+  target: pm25_exceedance_ratio
+  equation_id: pm25_exceedance_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: baseline_methodology
+  target: crediting_projects_approved
+  equation_id: crediting_projects_approved_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: project_pipeline_count
+  target: crediting_projects_approved
+  equation_id: crediting_projects_approved_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: black_start_requirement
+  target: black_start_capable_mw
+  equation_id: black_start_capable_mw_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: firm_capacity_mw
+  target: black_start_capable_mw
+  equation_id: black_start_capable_mw_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: carbon_revenue_usd_per_year
+  target: clearing_house_default_fund_usd_per_year
+  equation_id: clearing_house_default_fund_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: clearing_house_requirements
+  target: clearing_house_default_fund_usd_per_year
+  equation_id: clearing_house_default_fund_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: capex_usd_per_kw
+  target: climate_proofed_capex_mm_usd
+  equation_id: climate_proofed_capex_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: climate_proofing_requirements
+  target: climate_proofed_capex_mm_usd
+  equation_id: climate_proofed_capex_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: climate_proofed_capex_mm_usd
+  equation_id: climate_proofed_capex_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: allowed_revenue_requirement
+  target: collateral_posted_usd_per_year
+  equation_id: collateral_posted_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: collateral_requirements
+  target: collateral_posted_usd_per_year
+  equation_id: collateral_posted_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: allowed_revenue_requirement
+  target: consumer_protection_spend_usd_per_year
+  equation_id: consumer_protection_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: consumer_protection_standards
+  target: consumer_protection_spend_usd_per_year
+  equation_id: consumer_protection_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: allowed_revenue_requirement
+  target: demand_charge_revenue_usd_per_year
+  equation_id: demand_charge_revenue_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: cost_allocation_methodology
+  target: demand_charge_revenue_usd_per_year
+  equation_id: demand_charge_revenue_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: allowed_revenue_requirement
+  target: credit_support_posted_usd_per_year
+  equation_id: credit_support_posted_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: credit_support_requirements
+  target: credit_support_posted_usd_per_year
+  equation_id: credit_support_posted_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: allowed_revenue_requirement
+  target: cybersecurity_spend_usd_per_year
+  equation_id: cybersecurity_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: cybersecurity_requirements
+  target: cybersecurity_spend_usd_per_year
+  equation_id: cybersecurity_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: allowed_revenue_requirement
+  target: data_privacy_spend_usd_per_year
+  equation_id: data_privacy_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: data_privacy_requirements
+  target: data_privacy_spend_usd_per_year
+  equation_id: data_privacy_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: data_sovereignty_requirements
+  target: in_country_telemetry_sites
+  equation_id: in_country_telemetry_sites_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: scada_telemetry_sites
+  target: in_country_telemetry_sites
+  equation_id: in_country_telemetry_sites_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: demand_forecast_methodology
+  target: forecast_error_band_twh
+  equation_id: forecast_error_band_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: demand_twh
+  target: forecast_error_band_twh
+  equation_id: forecast_error_band_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: electrification_rate_target
+  target: electrified_population
+  equation_id: electrified_population_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: population_total
+  target: electrified_population
+  equation_id: electrified_population_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: environmental_flow_requirements
+  target: environmental_flow_m3_per_s
+  equation_id: environmental_flow_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: river_mean_annual_flow_m3_per_s
+  target: environmental_flow_m3_per_s
+  equation_id: environmental_flow_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: community_development_fund_usd_per_year
+  target: gender_action_plan_spend_usd_per_year
+  equation_id: gender_action_plan_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: gender_action_plan
+  target: gender_action_plan_spend_usd_per_year
+  equation_id: gender_action_plan_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: interoperability_standards
+  target: grid_code_compliant_capacity_mw
+  equation_id: grid_code_compliant_capacity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: grid_code_compliant_capacity_mw
+  equation_id: grid_code_compliant_capacity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: construction_jobs_per_mw
+  target: compliant_contract_jobs
+  equation_id: compliant_contract_jobs_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: labour_standards
+  target: compliant_contract_jobs
+  equation_id: compliant_contract_jobs_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: compliant_contract_jobs
+  equation_id: compliant_contract_jobs_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: capex_usd_per_kw
+  target: local_content_capex_mm_usd
+  equation_id: local_content_capex_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: local_content_requirements
+  target: local_content_capex_mm_usd
+  equation_id: local_content_capex_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: local_content_capex_mm_usd
+  equation_id: local_content_capex_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: carbon_revenue_usd_per_year
+  target: margin_posted_usd_per_year
+  equation_id: margin_posted_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: margin_requirements
+  target: margin_posted_usd_per_year
+  equation_id: margin_posted_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: peak_demand_mw
+  target: reactive_capability_mvar
+  equation_id: reactive_capability_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: reactive_power_requirement
+  target: reactive_capability_mvar
+  equation_id: reactive_capability_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: audit_accounts_per_year
+  target: independently_verified_accounts
+  equation_id: independently_verified_accounts_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: regulatory_audit_requirements
+  target: independently_verified_accounts
+  equation_id: independently_verified_accounts_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: generation_twh
+  target: renewable_generation_twh
+  equation_id: renewable_generation_target_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: renewable_target
+  target: renewable_generation_twh
+  equation_id: renewable_generation_target_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: allowed_revenue_requirement
+  target: reporting_compliance_usd_per_year
+  equation_id: reporting_compliance_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: reporting_requirements
+  target: reporting_compliance_usd_per_year
+  equation_id: reporting_compliance_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: peak_demand_mw
+  target: reserve_margin_required_mw
+  equation_id: reserve_margin_required_mw_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: reserve_margin_requirement
+  target: reserve_margin_required_mw
+  equation_id: reserve_margin_required_mw_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: scada_ems_requirements
+  target: scada_telemetered_capacity_mw
+  equation_id: scada_telemetered_capacity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: scada_telemetered_capacity_mw
+  equation_id: scada_telemetered_capacity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: allowed_revenue_requirement
+  target: service_quality_penalty_usd_per_year
+  equation_id: service_quality_penalty_exposure_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: service_quality_penalty
+  target: service_quality_penalty_usd_per_year
+  equation_id: service_quality_penalty_exposure_definition
   relationship: functional
   direction: forward
   strength: hard

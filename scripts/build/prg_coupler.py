@@ -546,7 +546,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -611,6 +611,20 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b19_equations)
 		edges = list(BATCH12_EDGES) + b19_edges
+	elif batch == "22":
+		b22_nodes, b22_equations, b22_edges, b22_rules = build_batch22(graph)
+		rules.extend(b22_rules)
+		nodes.update(b22_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b22_equations)
+		edges = list(BATCH12_EDGES) + b22_edges
+	elif batch == "21":
+		b21_nodes, b21_equations, b21_edges, b21_rules = build_batch21(graph)
+		rules.extend(b21_rules)
+		nodes.update(b21_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b21_equations)
+		edges = list(BATCH12_EDGES) + b21_edges
 	elif batch == "20":
 		b20_nodes, b20_equations, b20_edges, b20_rules = build_batch20(graph)
 		rules.extend(b20_rules)
@@ -3545,6 +3559,940 @@ def _side_symbols(side: str) -> list[str]:
 		return sorted(parse_side(side).symbols)
 	except Exception:
 		return []
+
+
+# ---------------------------------------------------------------------------
+# Batch 21: the cost family's products against bases that exist, and the rate
+# family's own arithmetic.
+#
+# The cost family couples as spend and annuities: a cost is a price, and its
+# coupling is the quantity it multiplies. The feedstock cost joins the biomass
+# variable cost the plant accounts (fuel + non-fuel O&M); the connection cost
+# multiplies the VRE target fleet; the heat pump's installed cost annuitises
+# through the shipped crf; the hydrogen export price multiplies the export
+# volume the sector-coupling layer declared; the insurance share acts on the
+# fleet's own USD/kW; the SHS and mini-grid costs multiply their deployment
+# counts; the uranium price meets the burnup its LWR fuel cycle implies, as a
+# named constant. Three costs (hydrogen pipeline per MW-km, right-of-way per
+# km, the currency hedge's exposure) have no length or exposure base in the
+# graph and wait for the base-node batch; the learning rates wait for a
+# cumulative-deployment base, because Wright's law acts on cumulative
+# deployment and the graph carries none yet.
+#
+# The rate family couples in two forms. An annual exponential rate has a
+# half-life, `ln 2 / r` — the coal retirement's, the ETS cap's, the grid
+# extension programme's — and a compound growth factor over the horizon,
+# `(1 + r) ** horizon_years`, is what the industrial, population and
+# urbanisation rates say about the horizon's own clock. `demand_growth_rate`
+# stays uncoupled permanently: it is deprecated with its replacement named
+# and the loader refuses any equation reaching a deprecated node by design.
+# ---------------------------------------------------------------------------
+
+# Placeholder corrections: unit completed, default inside its own range,
+# range whose images hold the products (and whose bounds make sense).
+BATCH21_PLACEHOLDER_CORRECTIONS: dict[
+	str, tuple[str, list[float], float, str, str, str]
+] = {
+	"demand_response_cost": (
+		"USD/kW/year", [0.0, 200.0], 40.0, "free", "physical",
+		"The demand-response programme's capacity payment per kilowatt of "
+		"enrolled capacity, per year: 40 is the scale a standing "
+		"curtailment contract pays; the range spans the interruptible-"
+		"tariff classes.",
+	),
+	"life_extension_cost": (
+		"USD/kW", [0.0, 3000.0], 600.0, "free", "physical",
+		"The capital cost of a life-extension programme, per kilowatt of "
+		"the fleet it extends: 600 is the scale a mid-life overhaul of a "
+		"thermal unit carries against a 1,200 USD/kW new build.",
+	),
+	"hydrogen_export_price": (
+		"USD/MWh", [0.0, 500.0], 100.0, "free", "physical",
+		"The price green hydrogen realises at the export terminal: 100 "
+		"USD/MWh is about 3.3 USD/kg at the gas's LHV basis, the early-"
+		"terminal scale the shipping schedule quotes.",
+	),
+	"solar_home_system_deployment": (
+		"1/year", [0.0, 1000000.0], 150000.0, "free", "physical",
+		"Units the solar-home-system programme delivers per year. The "
+		"catalog's placeholder scale retained as the range; the "
+		"programme-spend product derives from it.",
+	),
+	"mini_grid_deployment": (
+		"1/year", [0.0, 1000000.0], 100000.0, "free", "physical",
+		"Connections the mini-grid programme serves per year. The catalog's "
+		"placeholder scale retained as the range; the programme-spend "
+		"product derives from it.",
+	),
+	"ets_cap_reduction_rate": (
+		"1/year", [0.0, 1.0], 0.5, "free", "policy",
+		"The annual rate the ETS cap is cut by. Shipped with unit '1', "
+		"which leaves the annualisation implicit; spelled as the rate the "
+		"half-life product reads.",
+	),
+	"grid_extension_rate": (
+		"1/year", [0.0, 1.0], 0.5, "free", "policy",
+		"The annual rate the grid-extension programme connects at. Shipped "
+		"with unit '1'; spelled as the rate the completion-horizon product "
+		"reads.",
+	),
+	"shs_cost": (
+		"USD", [50.0, 2000.0], 400.0, "free", "physical",
+		"Delivered cost per solar home system to the customer. The unit "
+		"reads as the per-system price the deployment product multiplies.",
+	),
+}
+
+# The product targets (unit, range, category, prose).
+BATCH21_PRODUCT_NODES: dict[str, tuple[str, list[float], str, str]] = {
+	"biomass_variable_cost_usd_per_mwh": (
+		"USD/MWh", [0.0, 100.0], "Cost",
+		"The biomass plant's own variable cost incl. fuel: the feedstock "
+		"price plus the non-fuel O&M the plant accounts.",
+	),
+	"vre_connection_spend_usd": (
+		"USD", [0.0, 5000000000.0], "Cost",
+		"The connection spend the VRE target fleet carries: the per-kW "
+		"connection cost times the target's megawatts, at the MW-to-kW "
+		"conversion.",
+	),
+	"heat_pump_annualised_cost_usd_per_kw_year": (
+		"USD/kW/year", [0.0, 6000.0], "Cost",
+		"The installed heat pump's annuity, per kW-year: the capital cost "
+		"times the shipped crf the discount rate implies.",
+	),
+	"hydrogen_export_revenue_usd_per_year": (
+		"USD/year", [0.0, 500000000.0], "Financial",
+		"The export programme's revenue: the terminal price times the "
+		"export volume the sector-coupling layer declared.",
+	),
+	"insurance_premium_usd_per_kw_year": (
+		"USD/kW/year", [0.0, 100.0], "Financial",
+		"The fleet's insurance premium per kW-year: the installed cost's "
+		"own share, per the share-of-cost basis the insurance product "
+		"declares.",
+	),
+	"life_extension_fraction_of_new_build": (
+		"1", [0.0, 5.0], "Cost",
+		"The life-extension cost against a new build per kW: the fraction "
+		"the retire-vs-extend decision is stated against.",
+	),
+	"mini_grid_programme_spend_usd_per_year": (
+		"USD/year", [0.0, 5000000000.0], "Cost",
+		"The mini-grid programme's spend: per-connection cost times the "
+		"connections served per year.",
+	),
+	"demand_response_programme_cost_usd_per_year": (
+		"USD/year", [0.0, 5000000000.0], "Cost",
+		"The demand-response programme's annual cost: the per-kW-year "
+		"payment times the curtailment capacity, at the MW-to-kW "
+		"conversion.",
+	),
+	"shs_programme_spend_usd_per_year": (
+		"USD/year", [0.0, 1000000000.0], "Cost",
+		"The solar-home-system programme's spend: per-unit delivered cost "
+		"times the units delivered per year.",
+	),
+	"uranium_fuel_cost_usd_per_mwh": (
+		"USD/MWh", [0.0, 5.0], "Cost",
+		"The nuclear fleet's fuel cost per megawatt-hour: the spot price "
+		"times the LWR burnup the unit's refuelling implies, per the named "
+		"constant.",
+	),
+	"coal_retirement_half_life_years": (
+		"years", [0.0, 500.0], "Generation",
+		"Years for the coal fleet to half-retire at the annual rate: "
+		"ln 2 over the rate, the half-life of an exponential retirement.",
+	),
+	"ets_cap_half_life_years": (
+		"years", [0.0, 100.0], "Carbon",
+		"Years for the ETS cap to halve at its annual reduction rate: "
+		"ln 2 over the rate.",
+	),
+	"grid_extension_completion_years": (
+		"years", [0.0, 100.0], "Planning",
+		"The programme's characteristic completion time at its annual "
+		"connection rate: ln 2 over the rate.",
+	),
+	"industrial_growth_factor": (
+		"1", [0.0, 10.0], "Industry",
+		"The factor industrial output grows by over the horizon at the "
+		"industrialisation rate: (1+r) to the horizon's years.",
+	),
+	"population_growth_factor": (
+		"1", [0.0, 10.0], "Demand-Side",
+		"The factor population grows by over the horizon at its growth "
+		"rate: (1+r) to the horizon's years.",
+	),
+	"urban_share_growth_factor": (
+		"1", [0.0, 10.0], "Demand-Side",
+		"The factor the urban share grows by over the horizon at the "
+		"urbanisation rate: (1+r) to the horizon's years, the first-order "
+		"form since the share is itself bounded.",
+	),
+}
+
+# A named process constant, the way hydrogen_per_t_steel_kg was: the LWR
+# refuelling figure the fuel-cost product reads.
+BATCH21_CONSTANT_NODES: dict[str, dict[str, Any]] = {
+	"uranium_burnup_lb_per_mwh": {
+		"name": "Uranium burnup per MWh",
+		"description": (
+			"Pounds of U3O8 the LWR fuel cycle burns per megawatt-hour "
+			"electric: ~10 tU per GW-year electric at the LWR's own "
+			"burnup, converted to the U3O8 lb basis the spot market "
+			"quotes. A named node, not a folded figure."
+		),
+		"category": "Generation", "type": "float",
+		"unit": "lb/MWh", "range": [0.0, 0.02], "default": 0.0025,
+		"role": "free", "determinism": "physical", "priority": "P2",
+		"status": "existing",
+		"source": "LWR refuelling practice (10 tU/GW(e)-yr), the spot market's U3O8 lb basis",
+		"users": ["Planners"],
+	},
+}
+
+# The equations: (id, name, lhs, rhs, prose, system, linearity, target-unit,
+# reference). Products and half-lives and growth factors.
+BATCH21_EQUATIONS: tuple[
+	tuple[str, str, str, str, str, str, str, str, str | None], ...
+] = (
+	(
+		"biomass_variable_cost_definition",
+		"The biomass plant's variable cost incl. fuel",
+		"biomass_variable_cost_usd_per_mwh",
+		"biomass_feedstock_cost + opex_variable_biomass",
+		"Fuel plus non-fuel O&M: the variable cost the biomass plant's own "
+		"dispatch economics are stated against, the two line items the "
+		"cost accounts carry separately.",
+		"cost_accounting", "linear", "USD/MWh", None,
+	),
+	(
+		"vre_connection_spend_definition",
+		"The VRE fleet's connection spend",
+		"vre_connection_spend_usd",
+		"grid_connection_cost * vre_capacity_target_mw * 1000.0",
+		"The connection spend the target VRE fleet carries: the per-kW "
+		"cost of joining the network times the fleet's megawatts, at the "
+		"MW-to-kW conversion.",
+		"cost_accounting", "linear", "USD", None,
+	),
+	(
+		"heat_pump_annualised_cost_definition",
+		"The heat pump's annuity per kW-year",
+		"heat_pump_annualised_cost_usd_per_kw_year",
+		"heat_pump_cost * crf",
+		"The installed heat pump's annuity: the capital cost per kW "
+		"annualised by the shipped crf the discount rate implies.",
+		"cost_accounting", "linear", "USD/kW/year",
+		"Short, Packey & Holt (1995), NREL/TP-462-5173",
+	),
+	(
+		"hydrogen_export_revenue_definition",
+		"The export programme's revenue",
+		"hydrogen_export_revenue_usd_per_year",
+		"hydrogen_export_price * hydrogen_export_volume",
+		"The export programme's revenue: the terminal price per MWh times "
+		"the energy the terminals load per year.",
+		"financial", "linear", "USD/year", None,
+	),
+	(
+		"insurance_premium_definition",
+		"The fleet's insurance premium per kW-year",
+		"insurance_premium_usd_per_kw_year",
+		"insurance_loss_share_of_cost * capex_usd_per_kw",
+		"The premium the fleet carries per kW-year, on the share-of-cost "
+		"basis the insurance product itself declares: the share acts on "
+		"the installed cost.",
+		"financial", "linear", "USD/kW/year", None,
+	),
+	(
+		"life_extension_fraction_definition",
+		"The life-extension cost against a new build",
+		"life_extension_fraction_of_new_build",
+		"life_extension_cost / capex_usd_per_kw",
+		"The life-extension programme's cost per kW against the fleet's "
+		"own per-kW new build: the fraction the retire-vs-extend decision "
+		"turns on.",
+		"cost_accounting", "linear", "1", None,
+	),
+	(
+		"mini_grid_programme_spend_definition",
+		"The mini-grid programme's spend",
+		"mini_grid_programme_spend_usd_per_year",
+		"mini_grid_cost * mini_grid_deployment",
+		"The mini-grid programme's spend per year: the per-connection "
+		"installed cost times the connections served per year.",
+		"cost_accounting", "linear", "USD/year", None,
+	),
+	(
+		"demand_response_programme_cost_definition",
+		"The demand-response programme's annual cost",
+		"demand_response_programme_cost_usd_per_year",
+		"demand_response_cost * interruptible_load_mw * 1000.0",
+		"The programme's annual cost: the per-kW-year payment times the "
+		"curtailment capacity the interruptible contracts declare, at the "
+		"MW-to-kW conversion.",
+		"cost_accounting", "linear", "USD/year", None,
+	),
+	(
+		"shs_programme_spend_definition",
+		"The solar-home-system programme's spend",
+		"shs_programme_spend_usd_per_year",
+		"shs_cost * solar_home_system_deployment",
+		"The programme's spend per year: the delivered per-unit cost times "
+		"the units delivered per year.",
+		"cost_accounting", "linear", "USD/year", None,
+	),
+	(
+		"uranium_fuel_cost_definition",
+		"The nuclear fuel cost per MWh",
+		"uranium_fuel_cost_usd_per_mwh",
+		"uranium_price * uranium_burnup_lb_per_mwh",
+		"The fuel cycle's spot-price component: the U3O8 spot price times "
+		"the pounds the LWR burnup consumes per megawatt-hour electric, "
+		"per the named burnup constant.",
+		"cost_accounting", "linear", "USD/MWh", None,
+	),
+	(
+		"coal_retirement_half_life_definition",
+		"The coal fleet's retirement half-life",
+		"coal_retirement_half_life_years",
+		"log(2.0) / coal_retirement_rate",
+		"Years for the coal fleet to half-retire at the annual rate: the "
+		"half-life of an exponential retirement, ln 2 over the rate.",
+		"carbon_trajectory", "linear", "years", None,
+	),
+	(
+		"ets_cap_half_life_definition",
+		"The ETS cap's half-life",
+		"ets_cap_half_life_years",
+		"log(2.0) / ets_cap_reduction_rate",
+		"Years for the ETS cap to halve at its annual reduction rate: "
+		"ln 2 over the rate, the same exponential arithmetic.",
+		"carbon_trajectory", "linear", "years", None,
+	),
+	(
+		"grid_extension_completion_definition",
+		"The grid-extension programme's completion time",
+		"grid_extension_completion_years",
+		"log(2.0) / grid_extension_rate",
+		"The characteristic time the programme completes in at its annual "
+		"connection rate: ln 2 over the rate.",
+		"price_demand", "linear", "years", None,
+	),
+	(
+		"industrial_growth_factor_definition",
+		"The industrial growth factor over the horizon",
+		"industrial_growth_factor",
+		"(1.0 + industrialisation_rate) ** horizon_years",
+		"The factor industrial output grows by over the horizon at the "
+		"industrialisation rate: the compound factor, (1+r) to the "
+		"horizon's years.",
+		"price_demand", "nonlinear", "1",
+		"Short, Packey & Holt (1995), NREL/TP-462-5173",
+	),
+	(
+		"population_growth_factor_definition",
+		"The population growth factor over the horizon",
+		"population_growth_factor",
+		"(1.0 + population_growth_rate) ** horizon_years",
+		"The factor population compounds by over the horizon: (1+r) to the "
+		"horizon's years.",
+		"price_demand", "nonlinear", "1",
+		"Short, Packey & Holt (1995), NREL/TP-462-5173",
+	),
+	(
+		"urban_share_growth_factor_definition",
+		"The urban share's growth factor over the horizon",
+		"urban_share_growth_factor",
+		"(1.0 + urbanisation_rate) ** horizon_years",
+		"The factor the urban share compounds by over the horizon at the "
+		"urbanisation rate: (1+r) to the horizon's years, the first-order "
+		"form since the share itself is bounded.",
+		"price_demand", "nonlinear", "1",
+		"Short, Packey & Holt (1995), NREL/TP-462-5173",
+	),
+)
+
+
+def build_batch21(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, str]], list[dict[str, Any]]]:
+	"""Batch 21: the cost family's spend products and the rate family's arithmetic."""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, str]] = []
+	rules: list[dict[str, Any]] = []
+
+	for name, (unit, rng, default, role, determinism, prose) in (
+		BATCH21_PLACEHOLDER_CORRECTIONS.items()
+	):
+		full = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
+		full.update({
+			"unit": unit, "range": rng, "default": default, "role": role,
+			"description": prose, "determinism": determinism,
+			"priority": "P1", "status": "existing",
+			"source": "The coupling build's own corrections (batch 21)",
+			"users": ["Planners", "Financial analysts"],
+		})
+		nodes[name] = full
+
+	for name, body in BATCH21_CONSTANT_NODES.items():
+		nodes[name] = dict(body)
+
+	for eq_id, name, lhs, rhs, prose, system, linearity, unit, cite in (
+		BATCH21_EQUATIONS
+	):
+		rhs_params = []
+		parsed_ok = False
+		try:
+			from alea.prg.dsl import parse_side
+
+			rhs_params = sorted(parse_side(rhs).symbols)
+			parsed_ok = True
+		except Exception:
+			pass
+		assert parsed_ok, f"{eq_id}: rhs does not parse: {rhs}"
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": name,
+			"description": prose,
+			"system": system,
+			"lhs": lhs,
+			"rhs": rhs,
+			"relation": "eq",
+			"parameters": [lhs] + rhs_params,
+			"free_variables": [],
+			"determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": linearity,
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs,
+				"equation_id": eq_id, "relationship": "functional",
+				"strength": "hard", "description": "Enters the product.",
+			})
+
+	for target, (unit, rng, category, prose) in BATCH21_PRODUCT_NODES.items():
+		nodes[target] = {
+			"name": target.replace("_", " ").capitalize(),
+			"description": (
+				f"{target.replace('_', ' ')}: the coupling's derived quantity, "
+				"so a scenario's dial has a number the reports can name."
+			) + " " + prose,
+			"category": category, "type": "float", "unit": unit,
+			"range": rng, "role": "derived",
+			"determinism": "physical", "priority": "P1", "status": "existing",
+			"source": "The coupling build's own corrections (batch 21)",
+			"users": ["Planners", "Financial analysts"],
+		}
+	return nodes, equations, edges, rules
+
+
+# ---------------------------------------------------------------------------
+# Batch 22: the compliance register.
+#
+# The register family's nodes are *requirements* -- shares of a base the
+# regulator or the lender specifies, or ceilings a shipped quantity must sit
+# under. The coupling forms:
+#
+#   * register-share products: the requirement's share acts on the base that
+#     exists (the revenue requirement for compliance spend, peak demand for
+#     the capability requirements, total capacity for the telemetry and
+#     grid-code shares, the carbon stream for the clearing-house fund);
+#   * thresholds (leq): the shipped quantity the requirement binds must sit
+#     inside it at the document's own defaults (SAIDI 96 <= 120, SAIFI
+#     12 <= 15, largest loss 1000 <= 1200, inertia 500 <= 36000, the
+#     resettlement share 0.02 <= 0.05);
+#   * the exceedance product: the WHO annual PM2.5 guideline is *exceeded* by
+#     the ambient mean the graph carries, and the honest statement is the
+#     ratio (35 / 5 = 7) -- a bound would be a conflict at the document's own
+#     defaults, which is the finding itself, computed rather than shipped as
+#     a violated inequality.
+#
+# Eight bases arrive with the register (population, feeders, telemetry sites,
+# audit accounts, pipeline count, river flow, distribution km, the ambient
+# PM2.5 mean) -- each with a justified default, none with an invented
+# citation.
+# ---------------------------------------------------------------------------
+
+# Register share/ceiling retypes: (name, unit, range, default, prose).
+BATCH22_RETYPES: tuple[tuple[str, str, list[float], float, str], ...] = (
+	("additionality_test", "1", [0.0, 1.0], 0.9,
+	 "The share of the abatement programme's volume that clears the "
+	 "additionality screen the crediting rules require."),
+	("adms_requirements", "1", [0.0, 1.0], 0.35,
+	 "The share of primary distribution feeders the ADMS control room "
+	 "covers."),
+	("air_quality_standards", "ug/m3", [0.0, 100.0], 5.0,
+	 "The ambient PM2.5 limit the standards set, against the WHO 2021 "
+	 "annual guideline of 5 ug/m3; the graph's own ambient mean (the "
+	 "base node below) is the concentration the limit binds."),
+	("baseline_methodology", "1", [0.0, 1.0], 0.8,
+	 "The share of the crediting pipeline applying an approved baseline "
+	 "methodology."),
+	("black_start_requirement", "1", [0.0, 1.0], 0.02,
+	 "The share of firm capacity the operator must hold in black-start-"
+	 "capable units."),
+	("clean_cooking_target", "1", [0.0, 1.0], 0.3,
+	 "The clean-cooking access target; it cannot sit below the LPG "
+	 "penetration already reached, which is the bound below."),
+	("clearing_house_requirements", "1", [0.0, 1.0], 0.02,
+	 "The share of settled carbon-trade value the clearing house collects "
+	 "as its default fund."),
+	("climate_proofing_requirements", "1", [0.0, 1.0], 0.35,
+	 "The share of capex passing the climate-proofing screen (the "
+	 "taxonomy-style test)."),
+	("collateral_requirements", "1", [0.0, 1.0], 0.02,
+	 "The security provisioned as a share of the annual revenue "
+	 "requirement, declared here as an annualised provisioning share."),
+	("consumer_protection_standards", "1", [0.0, 1.0], 0.005,
+	 "The mandated metering-accuracy and dispute-resolution spend as a "
+	 "share of the revenue requirement."),
+	("cost_allocation_methodology", "1", [0.0, 1.0], 0.3,
+	 "The share of fixed cost recovered through demand and customer "
+	 "charges rather than energy charges (Stoft's cost-of-service "
+	 "allocation)."),
+	("credit_support_requirements", "1", [0.0, 1.0], 0.02,
+	 "The credit-support annex pre-funding as a share of the revenue "
+	 "requirement."),
+	("cybersecurity_requirements", "1", [0.0, 0.1], 0.01,
+	 "The control-system security spend (the IEC 62443 / NERC CIP class) "
+	 "as a share of the revenue requirement."),
+	("data_privacy_requirements", "1", [0.0, 1.0], 0.005,
+	 "The DPIA and consent-system spend as a share of the revenue "
+	 "requirement."),
+	("data_sovereignty_requirements", "1", [0.0, 1.0], 0.9,
+	 "The share of operational SCADA/EMS/meter data that must be hosted "
+	 "in-country."),
+	("demand_forecast_methodology", "1", [0.0, 0.5], 0.05,
+	 "The allowed forecast error (MAPE); the band is what adequacy "
+	 "planning must absorb on top of the forecast."),
+	("environmental_flow_requirements", "1", [0.0, 1.0], 0.3,
+	 "The environmental flow as a share of the river's mean annual flow, "
+	 "in the Tennant fair-habitat band."),
+	("fpic_requirements", "1", [0.0, 1.0], 0.6,
+	 "The minimum documented-consent share the lender audits; the audited "
+	 "score must clear it."),
+	("frequency_response_requirement", "MW", [1.0, 20000.0], 1200.0,
+	 "Primary-response capability must at least cover the largest credible "
+	 "infeed loss, which is the bound below."),
+	("gender_action_plan", "1", [0.0, 1.0], 0.3,
+	 "The share of the community development fund ring-fenced for the "
+	 "plan's line items."),
+	("gis_requirements", "1", [0.0, 1.0], 0.6,
+	 "The share of network assets in the GIS."),
+	("grid_reliability_target", "hours/year", [0.0, 500.0], 120.0,
+	 "The SAIDI ceiling the regulator sets, per the reliability indices' "
+	 "own definition; the shipped baseline sits below it."),
+	("ifc_performance_standards", "1", [0.0, 1.0], 0.3,
+	 "The share of the portfolio covenanted under the performance "
+	 "standards -- only what DFI money touches can be covenanted, which "
+	 "is the bound below."),
+	("inertia_requirement", "MW.s", [0.0, 5000.0], 500.0,
+	 "The minimum synchronous inertia the system must hold: the "
+	 "largest-loss-over-ROCOF floor the shipped inertia equation encodes, "
+	 "stated against the inventory here."),
+	("interoperability_standards", "1", [0.0, 1.0], 0.75,
+	 "The share of connected capacity meeting the interconnection "
+	 "standard."),
+	("labour_standards", "1", [0.0, 1.0], 0.8,
+	 "The share of construction-phase jobs carrying standard "
+	 "contracts."),
+	("margin_requirements", "1", [0.0, 1.0], 0.05,
+	 "The initial margin on the carbon trading position, as a share of "
+	 "the position's annual revenue value."),
+	("non_spinning_reserve_requirement", "MW", [0.0, 3000.0], 400.0,
+	 "The non-spinning slice of the operating reserve, inside the margin "
+	 "the reserve requirement holds (the bound below)."),
+	("reactive_power_requirement", "1", [0.0, 2.0], 0.33,
+	 "Required reactive capability per MW of peak, the tan-phi of a "
+	 "0.95 power factor."),
+	("reporting_requirements", "1", [0.0, 1.0], 0.003,
+	 "The mandated quarterly-filing systems spend as a share of the "
+	 "revenue requirement."),
+	("reserve_margin_requirement", "1", [0.0, 1.0], 0.15,
+	 "The planning reserve margin, duplicate semantics of "
+	 "reserve_margin_min; the product states its MW face value."),
+	("resettlement_requirements", "1", [0.0, 0.5], 0.05,
+	 "The cap on the physically or economically displaced population "
+	 "share the safeguard allows."),
+	("scada_ems_requirements", "1", [0.0, 1.0], 0.9,
+	 "The share of connected capacity under SCADA/EMS telemetry."),
+	("service_quality_standards", "events/year", [0.0, 200.0], 15.0,
+	 "The SAIFI ceiling; the shipped baseline sits below it."),
+	("affordability_threshold", "1", [0.0, 0.5], 0.10,
+	 "The energy-burden share of income above which a household is in "
+	 "energy poverty -- the 10% line, the same statistic the shipped "
+	 "energy_burden_limit carries."),
+)
+
+# The eight base nodes: (name, unit, range, default, category, prose).
+BATCH22_BASES: tuple[tuple[str, str, list[float], float, str, str], ...] = (
+	("population_total", "people", [1000000.0, 200000000.0], 45000000.0, "Demographics",
+	 "The country's population: 45 M, back-solved from the shipped "
+	 "residential demand share and per-household consumption at five "
+	 "persons per household."),
+	("distribution_feeders_total", "1", [0.0, 5000.0], 500.0, "Grid",
+	 "Primary distribution feeders: a 10 GW system at 30-50 MW per "
+	 "feeder implies 200-500."),
+	("pm25_annual_mean_ug_per_m3", "ug/m3", [0.0, 200.0], 35.0, "Environment",
+	 "The ambient PM2.5 annual mean; sub-Saharan urban means run "
+	 "30-50 ug/m3, against the WHO guideline of 5 -- the exceedance the "
+	 "ratio below states."),
+	("project_pipeline_count", "1", [0.0, 500.0], 40.0, "Carbon",
+	 "Crediting projects in the country's annual pipeline, across the "
+	 "programmes."),
+	("scada_telemetry_sites", "1", [0.0, 1000.0], 220.0, "Grid",
+	 "Generation sites plus bulk supply points of a 10 GW system."),
+	("river_mean_annual_flow_m3_per_s", "m3/s", [0.0, 2000.0], 150.0, "Water",
+	 "The hydro-bearing basins' cumulative mean annual flow: the ~1.5 GW "
+	 "hydro fleet at ~55% CF implies a design flow of order "
+	 "150-250 m3/s."),
+	("distribution_network_km", "km", [0.0, 200000.0], 45000.0, "Grid",
+	 "Distribution circuit-km: a 10 GW single-country network at about "
+	 "4-5 km per MW."),
+	("audit_accounts_per_year", "1", [0.0, 2000.0], 120.0, "Regulatory",
+	 "Accounts in the regulator's annual audit sample across the "
+	 "licensed fleet."),
+)
+
+# The products: (id, name, lhs, rhs, prose, system, linearity, target unit,
+# range, reference).
+BATCH22_EQUATIONS: tuple[
+	tuple[str, str, str, str, str, str, str, str, list[float], str | None], ...
+] = (
+	("additional_abatement_definition",
+	 "Abatement clearing additionality",
+	 "additional_abatement_mtco2",
+	 "additionality_test * carbon_budget_mtco2 / horizon_years",
+	 "The abatement volume that clears the additionality screen: the "
+	 "budget-scaled annual volume times the screened share.",
+	 "carbon_trajectory", "linear", "MtCO2/year", [0.0, 60.0], None),
+	("adms_controlled_feeders_definition",
+	 "Feeders under ADMS control",
+	 "adms_controlled_feeders",
+	 "adms_requirements * distribution_feeders_total",
+	 "The feeders the ADMS control room covers: the share times the "
+	 "system's primary feeders.",
+	 "reliability", "linear", "1", [0.0, 5000.0], None),
+	("pm25_exceedance_definition",
+	 "The PM2.5 exceedance ratio",
+	 "pm25_exceedance_ratio",
+	 "pm25_annual_mean_ug_per_m3 / air_quality_standards",
+	 "How many times the ambient mean exceeds the WHO-guideline limit: "
+	 "the finding computed rather than shipped as a violated inequality.",
+	 "carbon_trajectory", "linear", "1", [0.0, 100.0], None),
+	("crediting_projects_approved_definition",
+	 "Crediting projects under an approved methodology",
+	 "crediting_projects_approved",
+	 "baseline_methodology * project_pipeline_count",
+	 "The pipeline's projects applying an approved baseline "
+	 "methodology: the share times the pipeline.",
+	 "carbon_trajectory", "linear", "1", [0.0, 500.0], None),
+	("black_start_capable_mw_definition",
+	 "Black-start-capable capacity",
+	 "black_start_capable_mw",
+	 "black_start_requirement * firm_capacity_mw",
+	 "The capacity the operator holds in black-start-capable units: the "
+	 "required share of the fleet's own firm capacity.",
+	 "reserve_margin", "linear", "MW", [0.0, 500.0], None),
+	("clearing_house_default_fund_definition",
+	 "The clearing house's default fund",
+	 "clearing_house_default_fund_usd_per_year",
+	 "clearing_house_requirements * carbon_revenue_usd_per_year",
+	 "The default fund the clearing house collects: the share of the "
+	 "settled carbon-trade value the carbon revenue computes.",
+	 "financial", "linear", "USD/year", [0.0, 200000000.0], None),
+	("climate_proofed_capex_definition",
+	 "Capex passing the climate-proofing screen",
+	 "climate_proofed_capex_mm_usd",
+	 "climate_proofing_requirements * capex_usd_per_kw * total_capacity_mw * 1000.0 / 1000000.0",
+	 "The fleet's capex passing the screen: the per-kW cost times the "
+	 "capacity in MW, at the MW-to-kW conversion and the USD-million "
+	 "scale.",
+	 "cost_accounting", "linear", "USD million", [0.0, 20000.0], "NREL ATB 2025 Equations & Variables"),
+	("collateral_posted_definition",
+	 "Collateral provisioned",
+	 "collateral_posted_usd_per_year",
+	 "collateral_requirements * allowed_revenue_requirement",
+	 "The security provisioned annually: the share of the revenue "
+	 "requirement the regulator's accounts state.",
+	 "financial", "linear", "USD million/year", [0.0, 100.0], None),
+	("consumer_protection_spend_definition",
+	 "Consumer-protection spend",
+	 "consumer_protection_spend_usd_per_year",
+	 "consumer_protection_standards * allowed_revenue_requirement",
+	 "The metering-accuracy and dispute-resolution systems' spend: the "
+	 "mandated share of the revenue requirement.",
+	 "cost_accounting", "linear", "USD million/year", [0.0, 20.0], None),
+	("demand_charge_revenue_definition",
+	 "Demand-charge component of revenue",
+	 "demand_charge_revenue_usd_per_year",
+	 "cost_allocation_methodology * allowed_revenue_requirement",
+	 "The fixed cost recovered through demand and customer charges: the "
+	 "allocable share of the revenue requirement, Stoft's cost-of-service "
+	 "split.",
+	 "financial", "linear", "USD million/year", [0.0, 500.0],
+	 "Stoft 2002, Power System Economics, ch. 5"),
+	("credit_support_posted_definition",
+	 "Credit support posted",
+	 "credit_support_posted_usd_per_year",
+	 "credit_support_requirements * allowed_revenue_requirement",
+	 "The credit-support annex pre-funding: the share of the revenue "
+	 "requirement.",
+	 "financial", "linear", "USD million/year", [0.0, 100.0], None),
+	("cybersecurity_spend_definition",
+	 "Cybersecurity spend",
+	 "cybersecurity_spend_usd_per_year",
+	 "cybersecurity_requirements * allowed_revenue_requirement",
+	 "The control-system security spend: the mandated share of the "
+	 "revenue requirement.",
+	 "cost_accounting", "linear", "USD million/year", [0.0, 20.0], None),
+	("data_privacy_spend_definition",
+	 "Data-privacy spend",
+	 "data_privacy_spend_usd_per_year",
+	 "data_privacy_requirements * allowed_revenue_requirement",
+	 "The DPIA and consent-system spend: the mandated share of the "
+	 "revenue requirement.",
+	 "cost_accounting", "linear", "USD million/year", [0.0, 20.0], None),
+	("in_country_telemetry_sites_definition",
+	 "Telemetry sites hosted in-country",
+	 "in_country_telemetry_sites",
+	 "data_sovereignty_requirements * scada_telemetry_sites",
+	 "The operational sites whose data must be hosted in-country: the "
+	 "share times the system's telemetry sites.",
+	 "reliability", "linear", "1", [0.0, 1000.0], None),
+	("forecast_error_band_definition",
+	 "The forecast error band",
+	 "forecast_error_band_twh",
+	 "demand_forecast_methodology * demand_twh",
+	 "The energy the adequacy plan must absorb on top of the forecast: "
+	 "the allowed MAPE times the demand the balance computes.",
+	 "price_demand", "linear", "TWh/year", [0.0, 200.0], None),
+	("electrified_population_definition",
+	 "Electrified population",
+	 "electrified_population",
+	 "electrification_rate_target * population_total",
+	 "The population the access target names: the target share times the "
+	 "country's population.",
+	 "price_demand", "linear", "people", [0.0, 200000000.0], None),
+	("environmental_flow_definition",
+	 "The environmental flow",
+	 "environmental_flow_m3_per_s",
+	 "environmental_flow_requirements * river_mean_annual_flow_m3_per_s",
+	 "The flow the basins must carry for habitat: the fair-habitat share "
+	 "of the rivers' mean annual flow.",
+	 "water_energy", "linear", "m3/s", [0.0, 2000.0], None),
+	("gender_action_plan_spend_definition",
+	 "Gender action plan spending",
+	 "gender_action_plan_spend_usd_per_year",
+	 "gender_action_plan * community_development_fund_usd_per_year",
+	 "The plan's ring-fenced share of the community development fund "
+	 "the benefit-sharing programme capitalises.",
+	 "employment", "linear", "USD/year", [0.0, 50000000.0], None),
+	("grid_code_compliant_capacity_definition",
+	 "Grid-code compliant capacity",
+	 "grid_code_compliant_capacity_mw",
+	 "interoperability_standards * total_capacity_mw",
+	 "The connected capacity meeting the interconnection standard: the "
+	 "share of the fleet.",
+	 "reserve_margin", "linear", "MW", [0.0, 15000.0], None),
+	("compliant_contract_jobs_definition",
+	 "Jobs under standard contracts",
+	 "compliant_contract_jobs",
+	 "labour_standards * construction_jobs_per_mw * total_capacity_mw",
+	 "The construction-phase jobs carrying standard contracts: the "
+	 "share of the jobs the build's per-MW factor states.",
+	 "employment", "linear", "jobs", [0.0, 200000.0], None),
+	("local_content_capex_definition",
+	 "Capex sourced in-country",
+	 "local_content_capex_mm_usd",
+	 "local_content_requirements * capex_usd_per_kw * total_capacity_mw * 1000.0 / 1000000.0",
+	 "The fleet's capex that must be sourced in-country: the content "
+	 "share times the total, at the MW-to-kW conversion and the "
+	 "USD-million scale.",
+	 "cost_accounting", "linear", "USD million", [0.0, 20000.0], "NREL ATB 2025 Equations & Variables"),
+	("margin_posted_definition",
+	 "Margin posted on the carbon position",
+	 "margin_posted_usd_per_year",
+	 "margin_requirements * carbon_revenue_usd_per_year",
+	 "The trading position's initial margin: the required share of the "
+	 "position's annual value, which the carbon revenue computes.",
+	 "financial", "linear", "USD/year", [0.0, 100000000.0], None),
+	("reactive_capability_definition",
+	 "Reactive capability at peak",
+	 "reactive_capability_mvar",
+	 "reactive_power_requirement * peak_demand_mw",
+	 "The reactive capability the system must hold at peak: the per-MW "
+	 "requirement (tan-phi of the 0.95 power factor) times peak "
+	 "demand.",
+	 "inertia", "linear", "MVAr", [0.0, 30000.0], None),
+	("independently_verified_accounts_definition",
+	 "Accounts independently verified",
+	 "independently_verified_accounts",
+	 "regulatory_audit_requirements * audit_accounts_per_year",
+	 "The audited accounts the regulator requires independently "
+	 "verified: the share times the annual audit sample.",
+	 "reliability", "linear", "1", [0.0, 2000.0], None),
+	("renewable_generation_target_definition",
+	 "The renewable target's energy face value",
+	 "renewable_generation_twh",
+	 "renewable_target * generation_twh",
+	 "The renewable target in energy terms: the share of the generation "
+	 "the balance computes. Nameplate share and energy share are "
+	 "different statistics; this is the energy one.",
+	 "carbon_trajectory", "linear", "TWh/year", [0.0, 50.0], None),
+	("reporting_compliance_definition",
+	 "Reporting systems' spend",
+	 "reporting_compliance_usd_per_year",
+	 "reporting_requirements * allowed_revenue_requirement",
+	 "The quarterly-filing systems' spend: the mandated share of the "
+	 "revenue requirement.",
+	 "cost_accounting", "linear", "USD million/year", [0.0, 20.0], None),
+	("reserve_margin_required_mw_definition",
+	 "The reserve margin's MW face value",
+	 "reserve_margin_required_mw",
+	 "reserve_margin_requirement * peak_demand_mw",
+	 "The planning margin's face value in MW: the margin share times "
+	 "peak demand.",
+	 "reserve_margin", "linear", "MW", [0.0, 3000.0],
+	 "Stoft 2002, Power System Economics, ch. 5"),
+	("scada_telemetered_capacity_definition",
+	 "Capacity under SCADA telemetry",
+	 "scada_telemetered_capacity_mw",
+	 "scada_ems_requirements * total_capacity_mw",
+	 "The connected capacity under telemetry: the share of the fleet.",
+	 "reliability", "linear", "MW", [0.0, 15000.0], None),
+	("service_quality_penalty_exposure_definition",
+	 "The service-quality penalty's exposure cap",
+	 "service_quality_penalty_usd_per_year",
+	 "service_quality_penalty * allowed_revenue_requirement",
+	 "The unconditional exposure the penalty clause caps: the share of "
+	 "the revenue requirement; the trigger is the SAIDI/SAIFI pair "
+	 "below.",
+	 "financial", "linear", "USD million/year", [0.0, 100.0], None),
+)
+
+# The thresholds: (id, lhs, rhs, prose, reference). All relation leq.
+BATCH22_BOUNDS: tuple[tuple[str, str, str, str, str | None], ...] = (
+	("cooking_clean_target_bound", "cooking_lpg_penetration", "clean_cooking_target",
+	 "The clean-cooking target cannot sit below the LPG penetration "
+	 "already reached.", None),
+	("fpic_consent_bound", "fpic_requirements", "fpic_compliance_score",
+	 "The documented-consent floor cannot exceed the audited consent "
+	 "score.", None),
+	("largest_loss_response_bound", "largest_loss_mw", "frequency_response_requirement",
+	 "Primary response must cover the largest credible infeed loss.",
+	 "Stoft 2002, Power System Economics, ch. 5"),
+	("saidi_ceiling_bound", "system_saidi_hours_per_year", "grid_reliability_target",
+	 "The system's SAIDI must sit inside the regulator's ceiling.",
+	 "IEEE Guide for Electric Power Distribution Reliability Indices (1366), "
+	 "tutorial deck"),
+	("ifc_covenant_scope_bound", "ifc_performance_standards", "debt_financing_share",
+	 "Only the DFI-financed tranche can be covenanted, so the covenanted "
+	 "share cannot exceed the debt-financing share.", None),
+	("inertia_minimum_enforced", "inertia_requirement", "system_inertia_mws",
+	 "The minimum inertia must sit inside the synchronous inventory the "
+	 "firm fleet carries.", None),
+	("non_spinning_reserve_inside_margin", "non_spinning_reserve_requirement",
+	 "reserve_margin_min * peak_demand_mw",
+	 "The non-spinning slice must sit inside the operating reserve the "
+	 "margin holds.", "Stoft 2002, Power System Economics, ch. 5"),
+	("resettlement_share_bound", "resettlement_population_share",
+	 "resettlement_requirements",
+	 "The displaced population share must sit inside the safeguard's "
+	 "cap.", None),
+	("saifi_ceiling_bound", "system_saifi_events_per_year", "service_quality_standards",
+	 "The system's SAIFI must sit inside the regulator's ceiling.",
+	 "IEEE Guide for Electric Power Distribution Reliability Indices (1366), "
+	 "tutorial deck"),
+	("energy_burden_affordability_bound", "energy_burden", "affordability_threshold",
+	 "The household energy burden at the shipped tariff sits inside the "
+	 "10% affordability line.", None),
+)
+
+
+def build_batch22(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, str]], list[dict[str, Any]]]:
+	"""Batch 22: the compliance register's products and thresholds."""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, str]] = []
+	rules: list[dict[str, Any]] = []
+
+	for name, unit, rng, default, prose in BATCH22_RETYPES:
+		full = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
+		full.update({
+			"unit": unit, "range": rng, "default": default, "role": "free",
+			"description": prose, "determinism": "policy",
+			"priority": "P2", "status": "existing",
+			"source": "The compliance-register coupling (batch 22)",
+			"users": ["Regulators", "Planners"],
+		})
+		nodes[name] = full
+
+	for name, unit, rng, default, category, prose in BATCH22_BASES:
+		nodes[name] = {
+			"name": name.replace("_", " ").capitalize(),
+			"description": prose,
+			"category": category, "type": "float", "unit": unit,
+			"range": rng, "default": default, "role": "free",
+			"determinism": "physical", "priority": "P1", "status": "existing",
+			"source": "The compliance-register coupling (batch 22)",
+			"users": ["Regulators", "Planners"],
+		}
+
+	for eq_id, name, lhs, rhs, prose, system, linearity, unit, rng, cite in (
+		BATCH22_EQUATIONS
+	):
+		from alea.prg.dsl import parse_side
+
+		rhs_params = sorted(parse_side(rhs).symbols)
+		equations[eq_id] = {
+			"id": eq_id, "name": name, "description": prose,
+			"system": system, "lhs": lhs, "rhs": rhs, "relation": "eq",
+			"parameters": [lhs] + rhs_params, "free_variables": [],
+			"determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": linearity,
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs,
+				"equation_id": eq_id, "relationship": "functional",
+				"strength": "hard", "description": "Enters the product.",
+			})
+		nodes[lhs] = {
+			"name": lhs.replace("_", " ").capitalize(),
+			"description": (
+				f"{lhs.replace('_', ' ')}: the compliance register's derived "
+				"quantity. "
+			) + prose,
+			"category": "Regulatory", "type": "float", "unit": unit,
+			"range": rng, "role": "derived",
+			"determinism": "policy", "priority": "P1", "status": "existing",
+			"source": "The compliance-register coupling (batch 22)",
+			"users": ["Regulators", "Planners"],
+		}
+
+	for eq_id, lhs, rhs, prose, cite in BATCH22_BOUNDS:
+		named = sorted(set(_side_symbols(lhs)) | set(_side_symbols(rhs)))
+		equations[eq_id] = {
+			"id": eq_id, "name": eq_id.replace("_", " ").capitalize(),
+			"description": prose, "system": "reserve_margin",
+			"lhs": lhs, "rhs": rhs, "relation": "leq",
+			"parameters": named, "free_variables": named,
+			"determined_variables": (),
+			"tolerance": 1.0e-06, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P2", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+	return nodes, equations, edges, rules
 
 
 if __name__ == "__main__":

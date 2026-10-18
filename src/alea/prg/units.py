@@ -132,6 +132,12 @@ def _registry() -> pint.UnitRegistry:
 		# ``sites`` against ``parcels`` is a real mismatch that this registry
 		# should be able to see.
 		"event = [event]",
+		# Reactive power: a register-gap the compliance batch exposed -- the
+		# requirement is measured in MVAr, and the registry had no spelling for
+		# it. Dimensionally apparent power, so a share of peak MW stays
+		# comparable across the walker's own dimensionality test.
+		"VAr = ampere * volt",
+		"MVAr = 1000000 * VAr",
 		"events = event",
 		"connection = [connection]",
 		"connections = connection",

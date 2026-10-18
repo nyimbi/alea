@@ -1466,10 +1466,23 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# and be looked at. Batch 20's sector-coupling layer fell in the opposite
 	# direction to the earlier batches: it coupled 45 previously-dead knobs
 	# (`graph.uncoupled()` went 694 to 649), so the register fell 670 to 619.
-	# `graph.uncoupled()` and the comprehension above agree exactly at this
-	# number, which is the assertion that carries the weight -- this one is the
-	# record of what it agreed *at*.
-	assert len(dead) == 619, len(dead)
+	# Batch 21's demand-and-finance layer coupled 18 more knobs, 16 of them
+	# previously in this dead register (`graph.uncoupled()` went 649 to 631),
+	# so the register fell 619 to 603.
+	# Batch 22's compliance layer coupled 40 more (`graph.uncoupled()` went
+	# 631 to 591), so the register fell 603 to 563. The two spellings no
+	# longer agree *exactly*: `uncoupled()` is 591 and rule-read removes 24,
+	# leaving 567, four more than the comprehension's 563. The four are the
+	# endogenous fleet/storage nodes (`firm_build_fleet_mw`,
+	# `hydrogen_storage_capacity`, `storage_capacity_mw`,
+	# `thermal_storage_capacity`), which no equation names and so sit in
+	# `uncoupled()` while `is_settable` refuses them. The containment below
+	# is what carries the weight -- dead is a subset of uncoupled-minus-rule
+	# -- and the count is the record of what it was *at*.
+	assert len(dead) == 563, len(dead)
+	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
+		dead - (set(graph.uncoupled()) - rule_read)
+	)
 	# The knob the catalog names but no shipped equation reads, named so a
 	# failure points at a node rather than a count. It was `coal_capacity`
 	# until the endogenous fleet layer made that node derived, then
@@ -1745,7 +1758,13 @@ def test_the_audit_reports_what_it_did_not_check():
 	determined variables (the graph's computed set went 153 to 182); three of
 	the new derived parameters are reachable from what a solved result supplies
 	and join ``checked``, the other twenty-six are not, and are named as not
-	carried. The partition total is what the test is really asserting -- the
+	carried. Batch 21's demand-and-finance layer added 16 more determined
+	variables (computed() went 182 to 198), none reachable from what the result
+	supplies, so all sixteen join ``skipped`` and ``checked`` is unchanged.
+	Batch 22's compliance layer added 29 more determined variables (computed()
+	went 198 to 227): nineteen reachable from what the result supplies join
+	``checked`` (67 to 86) and the other ten join ``skipped`` (131 to 141). The
+	partition total is what the test is really asserting -- the
 	two counts must sum to ``len(graph.computed())`` -- and the counts are
 	pinned beside it so a change to the register is looked at rather than
 	absorbed.
@@ -1755,8 +1774,8 @@ def test_the_audit_reports_what_it_did_not_check():
 
 	audit = audit_scenario_result(_solved())
 	assert audit.consistent
-	assert len(audit.checked) == 67, audit.checked
-	assert len(audit.skipped) == 115, audit.skipped
+	assert len(audit.checked) == 86, audit.checked
+	assert len(audit.skipped) == 141, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -1798,10 +1817,12 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	assert audit.violations == (), "a failure is not a violation of an identity"
 	assert "not run" in audit.summary(), audit.summary()
 	# The whole derived set is named as unexamined: a partial count here would
-	# understate how much of the graph went unread. 182, not 67, for the reason
-	# spelled out in `test_the_audit_reports_what_it_did_not_check` -- batch
-	# 20's sector-coupling layer took the computed set 153 to 182.
-	assert len(audit.skipped) == 182, audit.skipped
+	# understate how much of the graph went unread. 227, not 86, for the
+	# reason spelled out in `test_the_audit_reports_what_it_did_not_check` --
+	# batch 20's sector-coupling layer took the computed set 153 to 182,
+	# batch 21's demand-and-finance layer took it 182 to 198, and batch 22's
+	# compliance layer took it 198 to 227.
+	assert len(audit.skipped) == 227, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -2810,14 +2831,17 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	"""
 	text = register(graph).summary()
 	assert "not a distribution" in text
-	# 72 inputs reaching 90 derived parameters, 35 of those stochastic by their
+	# 72 inputs reaching 93 derived parameters, 35 of those stochastic by their
 	# own relation. Batch 20's sector-coupling layer moved the reach: one fewer
 	# settable stochastic input than the promotion's 73, and the equations it
-	# added brought 90 derived parameters into the closure. Pinned because the
-	# number is the finding -- the sentence exists to stop a reader taking the
-	# declarations for a distribution, and a reach that drifts unnoticed would
-	# understate it.
-	assert "72" in text and "90" in text
+	# added brought 90 derived parameters into the closure. Batch 21's
+	# demand-and-finance layer brought 3 more (90 to 93); its input count is
+	# unchanged. Batch 22's compliance layer brought 5 more (93 to 98), again
+	# with the input count unchanged at 72. Pinned because the number is the
+	# finding -- the sentence exists to stop a reader taking the declarations
+	# for a distribution, and a reach that drifts unnoticed would understate
+	# it.
+	assert "72" in text and "98" in text
 
 
 # ---------------------------------------------------------------------------
@@ -2984,6 +3008,23 @@ def test_the_flagged_equations_are_a_known_set(graph: ParameterGraph):
 	asserts, and the walker's vocabulary cannot see it -- the modelling decision
 	above, not a new arithmetic error. Pinned so the five are named rather than
 	counted.
+
+	WHY TWO MORE AT BATCH 21. The demand-and-finance layer added
+	``insurance_premium_definition`` (a bare ``USD/kW/year`` node computed from
+	a per-year rate times a share) and ``mini_grid_programme_spend_definition``
+	(a bare ``USD/year`` node computed from a per-connection cost times the
+	connections served per year) -- both in the same annual-quantity class as
+	batch 20's five, and both arithmetic the node's own unit cell asserts.
+	Pinned so the two are named rather than counted.
+
+	WHY TWO MORE AT BATCH 22. The compliance layer added
+	``forecast_error_band_definition`` (``TWh/year`` from a dimensionless
+	methodology share times a bare ``TWh`` demand) and
+	``renewable_generation_target_definition`` (``TWh/year`` from a
+	dimensionless target share times a bare ``TWh`` generation) -- the same
+	annual-quantity class again, and again the declaration is coarse while the
+	arithmetic is what the node's unit cell asserts. Pinned so the two are
+	named rather than counted.
 	"""
 	from alea.prg.units import check_graph
 
@@ -3004,10 +3045,14 @@ def test_the_flagged_equations_are_a_known_set(graph: ParameterGraph):
 		"consumer_surplus_definition",
 		"emissions_definition",
 		"equity_irr_definition",
+		"forecast_error_band_definition",
 		"hydrogen_water_definition",
+		"insurance_premium_definition",
 		"line_outage_hours_per_year_definition",
 		"load_factor_definition",
+		"mini_grid_programme_spend_definition",
 		"premature_deaths_definition",
+		"renewable_generation_target_definition",
 		"rocof_definition",
 		"steel_hydrogen_demand_tonnes_definition",
 		"tariff_cost_recovery",
@@ -3465,16 +3510,20 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	such equation in the shipped graph, and the count was wrong about it until
 	it was moved onto `strength_of`.
 
-	WHY 203 AND NOT 165. Batch 20's sector-coupling layer added 38 equations
+	WHY 258 AND NOT 219. Batch 20's sector-coupling layer added 38 equations
 	whose edges declare `hard` (or are uncited, where `strength_of` defaults
 	them to `hard`); the `soft` pair and the one `informational` equation are
-	unchanged, so the tier register gained only hard members.
+	unchanged, so the tier register gained only hard members. Batch 21's
+	demand-and-finance layer added 16 more equations the same way -- all hard,
+	`soft` and `informational` again unchanged -- taking the sum to the 222
+	equations the batch bakes. Batch 22's compliance layer added 39 more, all
+	hard, taking the sum to the 261 equations the batch bakes.
 	"""
 	counts = graph.strength_counts()
 	assert counts, "no strength was counted"
 	assert sum(counts.values()) == len(graph.equations)
 	assert set(counts) <= {"hard", "soft", "informational"}
-	assert counts == {"hard": 203, "informational": 1, "soft": 2}, counts
+	assert counts == {"hard": 258, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -3746,9 +3795,17 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# them carry None rather than a pointer no register row resolves (the
 	# four registered works their forms keep -- Short, Stoft, NREL ATB, IEEE
 	# 1366 -- are the eight non-definition citations), taking the register
-	# 92 to 100; a further change is a change to the register's coverage and
+	# 92 to 100. Batch 21's demand-and-finance layer added four citations to
+	# its equations -- five compound growth factors and the heat-pump annuity,
+	# each citing "Short, Packey & Holt (1995), NREL/TP-462-5173" -- taking
+	# the register 100 to 104. Batch 22's compliance layer added eight more:
+	# two NREL ATB 2025 rows (the climate-proofing and local-content capex
+	# definitions), four Stoft 2002 rows (the demand-charge revenue, largest-
+	# loss response, non-spinning reserve and reserve-margin requirement) and
+	# two IEEE 1366 rows (the SAIDI and SAIFI ceilings), taking the register
+	# 104 to 112; a further change is a change to the register's coverage and
 	# fails here.
-	assert len(declared) == 100, f"the citation register moved: {sorted(declared)}"
+	assert len(declared) == 112, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -3982,12 +4039,14 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 				f"numeric {numeric!r}"
 			)
 			compared += 1
-	assert compared == 182, (
-		f"expected 182 determined variables in the shipped library, compared "
+	assert compared == 227, (
+		f"expected 227 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "
-		f"promoted, and every equation batch 20's sector-coupling layer added "
-		f"is affine in the variable it solves for -- which is the claim the "
+		f"promoted; batch 20's sector-coupling layer raised it to 182, "
+		f"batch 21's demand-and-finance layer raised it to 198, and batch 22's "
+		f"compliance layer raised it to 227 -- every equation each batch added "
+		f"is affine in the variable it solves for, which is the claim the "
 		f"`exact is not None` above makes, at the wider coverage"
 	)
 

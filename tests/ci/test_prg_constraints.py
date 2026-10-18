@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: MIT
 """The equation-to-constraint half of the translation layer.
 
-WHAT THESE TESTS ARE FOR. Of the library's 38 equations, six are inequalities
-and two of those bind. The number is the finding, in both directions: a test
+WHAT THESE TESTS ARE FOR. Of the library's 261 equations, 34 are
+constraint-shaped and 21 of those bind (the batch-22 ``leq`` thresholds took
+it from 24/16). The number is the finding, in both directions: a test
 that only checked the two work would let a third appear unnoticed, and a test
 that only checked the register would never learn whether the two constraints
 actually move an optimiser. So the register is asserted as literals, and the
@@ -136,9 +137,9 @@ def _solve(
 def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	graph: ParameterGraph,
 ):
-	"""Twenty-four of the library's 206 equations can constrain a solve.
+	"""Thirty-four of the library's 261 equations can constrain a solve.
 
-	The denominator is the finding: 182 equations are identities, and folding
+	The denominator is the finding: 227 equations are identities, and folding
 	them into the register would under-report what a solve is actually
 	bound by. Pinned as a literal so a new inequality has to change this line
 	to land. The counts moved 15/153/168 -> 24/182/206 when batch 20 landed:
@@ -148,15 +149,21 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	``steel_route_bound``, ``urban_heat_supply_bound``,
 	``v2g_subset_bound``) and two post-solve checks
 	(``carbon_finance_bound``, ``debt_mix_bound``) over derived finance
-	and carbon-revenue shares."""
+	and carbon-revenue shares. Batch 21 re-baked the graph to 222 equations:
+	sixteen new equations, all identities. Batch 22 added 29 product
+	identities and 10 ``leq`` thresholds, five of which bind
+	(``cooking_clean_target_bound``, ``fpic_consent_bound``,
+	``largest_loss_response_bound``, ``non_spinning_reserve_inside_margin``,
+	``resettlement_share_bound``) and five of which are post-solve checks
+	over derived results, so 24/198/222 -> 34/227/261."""
 	cov = coverage(graph)
-	assert cov["constraint_shaped"] == 24
-	assert cov["identities"] == 182
-	assert cov["total"] == 206
+	assert cov["constraint_shaped"] == 34
+	assert cov["identities"] == 227
+	assert cov["total"] == 261
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
-	"""The sixteen equations whose every term the network can supply.
+	"""The twenty-one equations whose every term the network can supply.
 
 	Six joined the original two when the generated batches were promoted --
 	``reserve_margin_with_firm_vre`` is the firm-VRE variant of the original,
@@ -167,22 +174,30 @@ def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
 	``powertrain_stock_bound``, ``retraining_schedule_bound``,
 	``steel_route_bound``, ``urban_heat_supply_bound``, ``v2g_subset_bound``),
 	each over transport, steel, heat, V2G, retraining and finance shares the
-	batch declares. Each is added to a solve by ``add_constraints`` generically,
-	so the pin is the register of what constrains the build, spelled out,
-	rather than a count.
+	batch declares. Five more joined with batch 22's ``leq`` thresholds
+	(``cooking_clean_target_bound``, ``fpic_consent_bound``,
+	``largest_loss_response_bound``, ``non_spinning_reserve_inside_margin``,
+	``resettlement_share_bound``). Each is added to a solve by
+	``add_constraints`` generically, so the pin is the register of what
+	constrains the build, spelled out, rather than a count.
 	"""
 	assert bound_routes(graph) == (
 		"blended_finance_bound",
 		"carbon_budget_constraint",
+		"cooking_clean_target_bound",
 		"cost_of_equity_capped",
 		"demand_shares_bound",
+		"fpic_consent_bound",
 		"fuel_ccs_adoption_bound",
 		"green_bond_bound",
 		"industrial_electrification_bound",
+		"largest_loss_response_bound",
 		"local_employment_targets_bound",
+		"non_spinning_reserve_inside_margin",
 		"powertrain_stock_bound",
 		"reserve_margin",
 		"reserve_margin_with_firm_vre",
+		"resettlement_share_bound",
 		"retention_and_deductible_bound",
 		"retraining_schedule_bound",
 		"steel_route_bound",

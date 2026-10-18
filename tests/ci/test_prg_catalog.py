@@ -322,15 +322,30 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 	outage and degradation batches landed them as defined -- while the
 	catalog still marks them ``to_build`` (``integrate`` for
 	``capacity_price``, ``cbam_price``, ``steel_production``), taking the
-	register to 23 disagreements, each one the register doing its job on a
-	catalog the generator has outpaced. Pinned beside
-	``equity_return_target`` with the reason, so the next landed batch moves
-	this test rather than passing silently.
+	register to 23 disagreements. Batch 21 then promoted seven more as
+	``existing`` -- the deployment and cost nodes
+	``mini_grid_deployment`` (integrate) and ``demand_response_cost``,
+	``ets_cap_reduction_rate``, ``grid_extension_rate``,
+	``life_extension_cost``, ``shs_cost``, ``solar_home_system_deployment``
+	-- taking the register to 30 disagreements, each one the register doing
+	its job on a catalog the generator has outpaced. Batch 22 then landed the
+	compliance register: thirty-five standards, requirements and methodologies
+	(``additionality_test`` through ``service_quality_standards``) defined as
+	``existing`` while the catalog still marks them ``to_build``, taking the
+	register to 65 disagreements. Pinned beside ``equity_return_target`` with
+	the reason, so the next landed batch moves this test rather than passing
+	silently.
 	"""
 	joins = {join.parameter: join for join in status_join(graph=graph)}
 	assert len(joins) == 787, len(joins)
 	disagreeing = {name: join for name, join in joins.items() if not join.agrees}
 	assert set(disagreeing) == {
+		"additionality_test",
+		"adms_requirements",
+		"affordability_threshold",
+		"air_quality_standards",
+		"baseline_methodology",
+		"black_start_requirement",
 		"blended_finance_share",
 		"bond_share",
 		"capacity_price",
@@ -338,20 +353,56 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 		"cbam_price",
 		"cement_production",
 		"chemicals_ammonia_production",
+		"clean_cooking_target",
+		"clearing_house_requirements",
+		"climate_proofing_requirements",
+		"collateral_requirements",
 		"commercial_bank_share",
 		"construction_period",
+		"consumer_protection_standards",
+		"cost_allocation_methodology",
 		"cost_of_debt",
+		"credit_support_requirements",
 		"cross_border_trading",
+		"cybersecurity_requirements",
+		"data_privacy_requirements",
+		"data_sovereignty_requirements",
+		"demand_forecast_methodology",
 		"demand_growth_rate",
+		"demand_response_cost",
 		"dfi_share",
+		"environmental_flow_requirements",
 		"equity_return_target",
+		"ets_cap_reduction_rate",
+		"fpic_requirements",
+		"frequency_response_requirement",
+		"gender_action_plan",
+		"gis_requirements",
 		"green_bond_share",
+		"grid_extension_rate",
+		"grid_reliability_target",
+		"ifc_performance_standards",
+		"inertia_requirement",
+		"interoperability_standards",
+		"labour_standards",
+		"life_extension_cost",
 		"line_outage_duration",
 		"line_outage_probability",
 		"maintenance_duration",
+		"margin_requirements",
+		"mini_grid_deployment",
 		"net_zero_year",
+		"non_spinning_reserve_requirement",
+		"reactive_power_requirement",
+		"reporting_requirements",
+		"reserve_margin_requirement",
+		"resettlement_requirements",
 		"retraining_duration",
+		"scada_ems_requirements",
+		"service_quality_standards",
+		"shs_cost",
 		"solar_degradation",
+		"solar_home_system_deployment",
 		"steel_production",
 		"wind_degradation",
 	}, sorted(disagreeing)
@@ -373,12 +424,14 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 		assert node.status == "deprecated", node.status
 		assert node.deprecated_by in graph.nodes, node.deprecated_by
 
-	# The other 764 are the control: a join that reported every node as
+	# The other 722 are the control: a join that reported every node as
 	# disagreeing would pass the assertion above and mean nothing. The
 	# expansion took the agreeing count to 786, the promotion left it at 784
-	# for the two deprecations above, and batch 20 took it to 764 for the
-	# twenty promotions the set above names.
-	assert sum(1 for join in joins.values() if join.agrees) == 764
+	# for the two deprecations above, batch 20 took it to 764 for its twenty
+	# promotions, batch 21 took it to 757 for the seven more the set above
+	# names, and batch 22 took it to 722 for the thirty-five compliance
+	# register nodes it landed as ``existing``.
+	assert sum(1 for join in joins.values() if join.agrees) == 722
 
 
 def test_a_node_the_catalog_does_not_name_is_absent_rather_than_guessed(
@@ -421,10 +474,17 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 		"resettlement_costs",
 	}
 	# Pinned to the shipped graph's own list, alphabetical as catalog_report
-	# emits it: the two deprecations, equity_return_target, and the twenty
-	# parameters batch 20 promoted to ``existing`` while the catalog still
-	# says to_build or integrate.
+	# emits it: the two deprecations, equity_return_target, the twenty
+	# parameters batch 20 promoted to ``existing``, the seven batch 21
+	# promoted, and the thirty-five compliance register nodes batch 22 landed
+	# as ``existing``, all while the catalog still says to_build or integrate.
 	assert report["status_disagreements"] == [
+		"additionality_test: the graph says existing and the catalog says to_build",
+		"adms_requirements: the graph says existing and the catalog says to_build",
+		"affordability_threshold: the graph says existing and the catalog says to_build",
+		"air_quality_standards: the graph says existing and the catalog says to_build",
+		"baseline_methodology: the graph says existing and the catalog says to_build",
+		"black_start_requirement: the graph says existing and the catalog says to_build",
 		"blended_finance_share: the graph says existing and the catalog says to_build",
 		"bond_share: the graph says existing and the catalog says to_build",
 		"capacity_price: the graph says existing and the catalog says integrate",
@@ -432,20 +492,56 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 		"cbam_price: the graph says existing and the catalog says integrate",
 		"cement_production: the graph says existing and the catalog says to_build",
 		"chemicals_ammonia_production: the graph says existing and the catalog says to_build",
+		"clean_cooking_target: the graph says existing and the catalog says to_build",
+		"clearing_house_requirements: the graph says existing and the catalog says to_build",
+		"climate_proofing_requirements: the graph says existing and the catalog says to_build",
+		"collateral_requirements: the graph says existing and the catalog says to_build",
 		"commercial_bank_share: the graph says existing and the catalog says to_build",
 		"construction_period: the graph says existing and the catalog says to_build",
+		"consumer_protection_standards: the graph says existing and the catalog says to_build",
+		"cost_allocation_methodology: the graph says existing and the catalog says to_build",
 		"cost_of_debt: the graph says existing and the catalog says to_build",
+		"credit_support_requirements: the graph says existing and the catalog says to_build",
 		"cross_border_trading: the graph says deprecated and the catalog says existing",
+		"cybersecurity_requirements: the graph says existing and the catalog says to_build",
+		"data_privacy_requirements: the graph says existing and the catalog says to_build",
+		"data_sovereignty_requirements: the graph says existing and the catalog says to_build",
+		"demand_forecast_methodology: the graph says existing and the catalog says to_build",
 		"demand_growth_rate: the graph says deprecated and the catalog says to_build",
+		"demand_response_cost: the graph says existing and the catalog says to_build",
 		"dfi_share: the graph says existing and the catalog says to_build",
+		"environmental_flow_requirements: the graph says existing and the catalog says to_build",
 		"equity_return_target: the graph says to_build and the catalog says integrate",
+		"ets_cap_reduction_rate: the graph says existing and the catalog says to_build",
+		"fpic_requirements: the graph says existing and the catalog says to_build",
+		"frequency_response_requirement: the graph says existing and the catalog says to_build",
+		"gender_action_plan: the graph says existing and the catalog says to_build",
+		"gis_requirements: the graph says existing and the catalog says to_build",
 		"green_bond_share: the graph says existing and the catalog says to_build",
+		"grid_extension_rate: the graph says existing and the catalog says to_build",
+		"grid_reliability_target: the graph says existing and the catalog says to_build",
+		"ifc_performance_standards: the graph says existing and the catalog says to_build",
+		"inertia_requirement: the graph says existing and the catalog says to_build",
+		"interoperability_standards: the graph says existing and the catalog says to_build",
+		"labour_standards: the graph says existing and the catalog says to_build",
+		"life_extension_cost: the graph says existing and the catalog says to_build",
 		"line_outage_duration: the graph says existing and the catalog says to_build",
 		"line_outage_probability: the graph says existing and the catalog says to_build",
 		"maintenance_duration: the graph says existing and the catalog says to_build",
+		"margin_requirements: the graph says existing and the catalog says to_build",
+		"mini_grid_deployment: the graph says existing and the catalog says integrate",
 		"net_zero_year: the graph says existing and the catalog says to_build",
+		"non_spinning_reserve_requirement: the graph says existing and the catalog says to_build",
+		"reactive_power_requirement: the graph says existing and the catalog says to_build",
+		"reporting_requirements: the graph says existing and the catalog says to_build",
+		"reserve_margin_requirement: the graph says existing and the catalog says to_build",
+		"resettlement_requirements: the graph says existing and the catalog says to_build",
 		"retraining_duration: the graph says existing and the catalog says to_build",
+		"scada_ems_requirements: the graph says existing and the catalog says to_build",
+		"service_quality_standards: the graph says existing and the catalog says to_build",
+		"shs_cost: the graph says existing and the catalog says to_build",
 		"solar_degradation: the graph says existing and the catalog says to_build",
+		"solar_home_system_deployment: the graph says existing and the catalog says to_build",
 		"steel_production: the graph says existing and the catalog says integrate",
 		"wind_degradation: the graph says existing and the catalog says to_build",
 	]
