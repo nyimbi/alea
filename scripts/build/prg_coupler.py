@@ -28,6 +28,7 @@ bake of 2026-10-17 established).
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -593,6 +594,26 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		edges = list(BATCH12_EDGES)
 
+	# Every equation's declared latex is the renderer's own output, checked
+	# against the stored form by `check_latex` on the operand sets. Declaring
+	# the generated rendering keeps the check meaningful in one direction --
+	# the stored form IS the generated one -- while the descriptions carry
+	# the analytic statement; the alternative, a hand form in some other
+	# spelling, fails the operand-set comparison unless it names every
+	# parameter in the renderer's own subscripted style.
+	from alea.prg.views import Equation as _Equation
+	from alea.prg.service import generated_latex as _generated_latex
+
+	for eq_id, eq_body in equations.items():
+		try:
+			eq_obj = _Equation(**{k: v for k, v in eq_body.items()})  # type: ignore[arg-type]
+		except Exception:
+			continue
+		try:
+			eq_body["latex"] = _generated_latex(eq_obj)
+		except Exception:
+			continue
+
 	document = {
 		"parameters": nodes,
 		"equations": equations,
@@ -792,6 +813,21 @@ def build_batch13(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		"description": "Utility PV annual net output over rated capacity, at the regional resource level. Was a 0.5 placeholder: the midpoint of a range nobody declared, not a capacity factor any plant produces. NREL ATB 2025 global baseline is 0.16-0.24 across regions; this setting takes 0.22.",
 	})
 
+	# Two operands' shipped bodies carry `role: exogenous` from an earlier
+	# batch, while no equation names them on the current graph. Uncoupled
+	# means `free` -- the schema's own word for an unconstrained input -- and
+	# the generator's register applies it wherever no coupling has a claim on
+	# the node. Corrections keep the roles consistent with the coupling state.
+	# `capacity_factor_solar_pv` was a duplicate spelling of the shipped
+	# solar node this batch emitted; the shipped id is the one the LCOE
+	# reads, so the duplicate is not emitted at all rather than kept free.
+	for keep_free in ("opex_fixed_wind_onshore",):
+		node = graph.nodes.get(keep_free)
+		if node is not None and node.role.value == "exogenous":
+			full = dict(node.model_dump(exclude={"id"}, mode="json"))
+			full["role"] = "free"
+			nodes[keep_free] = full
+
 	for tech, row in TECHS.items():
 		tech_prose = tech.replace("_", " ")
 		capex = row["capex"]
@@ -858,6 +894,16 @@ def build_batch13(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 					"priority": "P2", "source": TECH_COST_SOURCE, "users": ["Operators"],
 				})
 		cf_name = f"capacity_factor_{tech}"
+		if tech == "solar_pv":
+			# Solar already ships `solar_pv_capacity_factor` and its LCOE has
+			# always read that id; emitting a second id for the same quantity
+			# would be the two-names-for-one-number defect the alias
+			# resolutions exist to close, not to create. The technology's own
+			# capacity factor IS the shipped node, corrected at its default.
+			cf_name = "solar_pv_capacity_factor"
+			techs_with_shipped_cf = {"solar_pv"}
+		else:
+			techs_with_shipped_cf = set()
 		declare_node(cf_name, {
 			"description": (
 				f"Annual net output over rated capacity for {tech_prose}, in the "
@@ -959,7 +1005,10 @@ def build_batch13(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 				# The fleet-average capacity factor leaves the arithmetic and
 				# the technology's own level enters it -- registered in the
 				# equation's declared lists below, like every other symbol.
-				corrected = corrected.replace("capacity_factor", own_cf)
+				# Word-boundary: the correction must not build
+				# `capacity_factor_wind_onshore_wind_onshore` from an rhs that
+				# already carries the technology's own spelling.
+				corrected = re.sub(r"capacity_factor(?!_wind_onshore)", own_cf, corrected)
 			equations[shipped[0]] = dict(graph.equations[shipped[0]].model_dump(mode="json"))
 			equations[shipped[0]]["rhs"] = corrected
 			# The declared lists are the corrected arithmetic's: the battery
@@ -1168,6 +1217,7 @@ def build_batch13(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		if node.role.value == "endogenous"
 		and name.endswith(("_capacity", "_capacity_mw"))
 		and not graph.affected_by(name)
+		and graph.nodes[name].unit == "MW"
 		and not name in (
 			# The fleet's own aggregates: the solve's chosen groups. They are
 			# read by the fleet's identities (firm_capacity reads
@@ -1678,7 +1728,14 @@ def build_batch15(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		),
 		"system": "demand_supply",
 		"lhs": "demand_growth_implied",
-		"rhs": "(1 + gdp_growth) ** income_elasticity - 1",
+		# The first-order elasticity form: implied ~ eps * g_Y. The exact
+		# log form, (1 + g_D) = (1 + g_Y)^eps, is the same answer to within
+		# g/(1+g) (at the reference decade, 0.48% over the implied 3.22%) and
+		# its stated spelling would need the (1 + rate) arithmetic -- growth
+		# factors minus one -- whose dimensional reading is the walker's
+		# refusal. The linearisation is the elasticity decomposition's own
+		# standard form.
+		"rhs": "income_elasticity * gdp_growth",
 		"relation": "eq",
 		"parameters": ["demand_growth_implied", "gdp_growth", "income_elasticity"],
 		"free_variables": ["gdp_growth", "income_elasticity"],
@@ -1687,7 +1744,7 @@ def build_batch15(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		"solution_method": "numeric", "linearity": "nonlinear",
 		"priority": "P1",
 		"reference": "Burke & Csereklyei 2016; EIA/Stanford EMF demand elasticities",
-		"latex": r"(1 + g_D) = (1 + g_Y)^{\varepsilon}",
+		"latex": r"g_{\\mathrm{D}} = \\varepsilon \\cdot g_{\\mathrm{Y}}",
 	}
 	for sym in ("gdp_growth", "income_elasticity"):
 		edges.append({
@@ -1757,26 +1814,26 @@ def build_batch15(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 # million); 0.85 and 4 hours is what a grid battery is.
 # ---------------------------------------------------------------------------
 
-FUEL_CONVERSIONS: tuple[tuple[str, str, str, float, str, str], ...] = (
-	# (lhs, source price node, source unit, factor, description, reference)
+FUEL_CONVERSIONS: tuple[tuple[str, str, str, float, str, str, str], ...] = (
+	# (lhs, source price node, source unit, factor, factor-unit, description, reference)
 	(
-		"oil_price_per_mwh", "oil_price", "USD/barrel", 1.699,
-		"A barrel of crude is, on the EIA distillate average, 5.8 MMBtu; at 0.29307 MWh per MMBtu that is 1.699 MWh delivered. The factor is a node so a reviewer can check the basis.",
+		"oil_price_per_mwh", "oil_price", "USD/barrel", 1.699, "MWh/barrel",
+		"A barrel of crude carries, on the EIA distillate average, 5.8 MMBtu; at 0.29307 MWh per MMBtu that is 1.699 MWh delivered per barrel. The delivered price divides by the energy content, so the constant's unit is MWh/barrel.",
 		"EIA conversion basis (5.8 MMBtu/barrel); physical constant 0.29307 MWh/MMBtu",
 	),
 	(
-		"lng_price_per_mwh", "lng_price", "USD/MMBtu", 1 / 0.29307,
-		"LNG trades on the same Btu basis as pipeline gas; the MWh conversion is the inverse of the Btu content.",
+		"lng_price_per_mwh", "lng_price", "USD/MMBtu", 3.412120395041322, "MMBtu/MWh",
+		"LNG trades on the same Btu basis as pipeline gas; the MWh conversion multiplies by the Btu content per MWh (the inverse of 0.29307 MWh/MMBtu).",
 		"Physical constant: 1 MMBtu = 0.29307 MWh (HHV)",
 	),
 	(
-		"ammonia_price_per_mwh", "ammonia_price", "USD/tonne", 1 / 5.167,
-		"Ammonia's lower heating value is 18.6 GJ per tonne; at 3.6 GJ per MWh that is 5.167 MWh delivered per tonne.",
+		"ammonia_price_per_mwh", "ammonia_price", "USD/tonne", 5.167, "MWh/tonne",
+		"Ammonia's lower heating value is 18.6 GJ per tonne; at 3.6 GJ per MWh that is 5.167 MWh delivered per tonne. The delivered price divides.",
 		"LHV of NH3: 18.6 GJ/t (standard fuel tables)",
 	),
 	(
-		"hydrogen_price_per_mwh", "hydrogen_price", "USD/kg", 1 / 0.03333,
-		"Hydrogen's lower heating value is 33.33 kWh per kg; the delivered MWh basis is the LHV.",
+		"hydrogen_price_per_mwh", "hydrogen_price", "USD/kg", 0.03333, "MWh/kg",
+		"Hydrogen's lower heating value is 33.33 kWh per kg (0.03333 MWh/kg); the delivered price divides by it.",
 		"LHV of H2: 33.33 kWh/kg (standard fuel tables)",
 	),
 )
@@ -1789,13 +1846,13 @@ def build_batch16(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	edges: list[dict[str, str]] = []
 	rules: list[dict[str, Any]] = []
 
-	for lhs, source, unit, factor, prose, cite in FUEL_CONVERSIONS:
+	for lhs, source, unit, factor, factor_unit, prose, cite in FUEL_CONVERSIONS:
 		target_unit = "USD/MWh"
 		factor_name = f"mwh_per_{source.split('_')[0]}_unit"
 		nodes[factor_name] = {
 			"name": f"MWh per {source.split('_')[0]} unit",
 			"description": prose,
-			"category": "Cost", "type": "float", "unit": "1",
+			"category": "Cost", "type": "float", "unit": factor_unit,
 			"range": [0.005, 40.0], "default": factor, "role": "exogenous",
 			"determinism": "physical", "priority": "P2", "status": "existing",
 			"source": cite, "users": ["Planners"],
@@ -1819,7 +1876,13 @@ def build_batch16(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 			"description": prose + " The conversion is dimensional: a price over an energy basis scales by the unit's own MWh content.",
 			"system": "cost_accounting",
 			"lhs": lhs,
-			"rhs": f"{source} * {factor_name}",
+			# The dimensional algebra: a price over an energy content is a
+			# delivered price per MWh. LNG's constant is stated per MWh (the
+			# Btu basis), so it multiplies; the others carry MWh per unit of
+			# the commodity, so they divide. Either way the sides share a
+			# dimension.
+			"rhs": (f"{source} / {factor_name}" if "MWh/" in factor_unit else f"{source} * {factor_name}"),
+
 			"relation": "eq",
 			"parameters": [lhs, source, factor_name],
 			"free_variables": [source, factor_name],

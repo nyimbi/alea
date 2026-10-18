@@ -840,71 +840,61 @@ def test_a_corrected_equation_disposes_of_its_own_stale_edges():
 	a corrected equation's stale edges and reports them, so the disappearance
 	is counted rather than silent.
 
-	Canaried both ways: the disposal must fire on the exact defect class it
-	exists for (a battery variable-O&M edge left in an equation that no longer
-	names the battery), and it must NOT fire on an intact coupling.
+	Canaried two ways: the disposal must fire on the exact shape, and it must
+	not touch an equation whose correction was prose-only. The historical
+	solar correction is baked now, so the probe corrects
+	`tariff_cost_recovery` on a tree where it is intact.
 	"""
 	import tempfile
 
-	equation = load_graph().equations["lcoe_solar_definition"]
+	graph = load_graph()
+	equation = graph.equations["tariff_cost_recovery"]
 	shipped_rhs = equation.rhs
-	assert "opex_variable_battery" in shipped_rhs, "the probe's target is gone"
-	corrected_rhs = shipped_rhs.replace(" + opex_variable_battery", " + opex_variable_solar")
-	assert corrected_rhs != shipped_rhs, "the mutation did not apply"
-
+	assert "marginal_cost_usd_per_mwh" in shipped_rhs
+	probe_name = "fuel_tariff_component"
+	probe_node = dict(
+		graph.nodes["opex_fixed_coal"].model_dump(exclude={"id"}, mode="json")
+	)
+	probe_node.update({
+		"name": "Fuel tariff component", "unit": "USD/MWh",
+		"range": [0.0, 200.0], "default": 20.0,
+		"description": "A probe node the corrected equation names.",
+	})
+	corrected_rhs = shipped_rhs.replace(" + marginal_cost_usd_per_mwh", f" + {probe_name}")
+	assert corrected_rhs != shipped_rhs
 	corrected = equation.model_dump(mode="json")
 	corrected["rhs"] = corrected_rhs
-	# The declared lists follow the corrected arithmetic: a declared
-	# parameter the arithmetic never names is the loader's own refusal, and
-	# a correction that changed the symbols owes the lists the same change.
 	corrected["parameters"] = [
-		n for n in equation.parameters if n != "opex_variable_battery"
-	] + ["opex_variable_solar"]
+		n for n in equation.parameters if n != "marginal_cost_usd_per_mwh"
+	] + [probe_name]
 	corrected["free_variables"] = [
-		n for n in equation.free_variables if n != "opex_variable_battery"
-	] + ["opex_variable_solar"]
-
-	intact = load_graph().equations["tariff_cost_recovery"].model_dump(mode="json")
+		n for n in equation.free_variables if n != "marginal_cost_usd_per_mwh"
+	] + [probe_name]
+	intact = dict(graph.equations["crf_definition"].model_dump(mode="json"))
+	intact["description"] = "probe prose only"
 
 	with tempfile.TemporaryDirectory() as tmp:
-		# Both corrections in one fragment: the stale-disposing one and an
-		# intact one, so a disposal that fires on every corrected equation is
-		# visible in the same run.
-		# The corrected equation names the technology's own variable O&M, so
-		# the probe's fragment declares it; closure is the gate that catches
-		# a symbol no fragment shipped, and the probe rides the same gate.
-		solar_node = load_graph().nodes["opex_fixed_solar"].model_dump(
-			exclude={"id"}, mode="json"
-		)
-		# wait: the probe needs the *variable* node; pull fixed and mutate
-		solar_node["unit"] = "USD/MWh"
-		solar_node["range"] = [0.0, 20.0]
-		solar_node["default"] = 0.5
-		dropped_names = []
 		fragment = {
 			"equations": {
-				"lcoe_solar_definition": corrected,
+				"tariff_cost_recovery": corrected,
+				"crf_definition": intact,
 			},
-			"parameters": {"opex_variable_solar": dict(solar_node, name="Solar variable O&M", default=0.5)},
+			"parameters": {probe_name: probe_node},
 			"relationships": [],
 			"cross_validation": [],
 		}
 		(Path(tmp) / "param_stale_probe.yaml").write_text(
 			yaml.safe_dump(fragment, sort_keys=False)
 		)
-		graph, report = load_ingested(tmp)
+		merged, report = load_ingested(tmp)
 
 	stale = [d for d in report.dropped if d[0] == "<stale-edge>"]
-	assert (
-		d[2] == "opex_variable_battery -> lcoe_solar_usd_per_mwh"
-		for d in stale
-		if d[1] == "lcoe_solar_definition"
-	), stale
-	assert not any(d[1] == "tariff_cost_recovery" for d in stale) or not [
-		d for d in stale if d[1] == "tariff_cost_recovery"
-	], "an intact equation lost an edge to the disposal"
+	found = [d for d in stale if d[1] == "tariff_cost_recovery"]
+	assert found and "marginal_cost_usd_per_mwh" in found[0][2], stale
+	assert not [d for d in stale if d[1] == "crf_definition"]
 	assert not any(
-		x.source == "opex_variable_battery"
-		and x.target == "lcoe_solar_usd_per_mwh"
-		for x in graph.edges
-	), "the stale edge survived the correction"
+		x.source == "marginal_cost_usd_per_mwh"
+		and x.equation_id == "tariff_cost_recovery"
+		for x in merged.edges
+	)
+

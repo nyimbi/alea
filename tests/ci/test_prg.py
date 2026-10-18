@@ -1456,12 +1456,12 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# the comprehension above agree exactly at this number, which is the
 	# assertion that carries the weight -- this one is the record of what it
 	# agreed *at*.
-	assert len(dead) == 784, len(dead)
+	assert len(dead) == 713, len(dead)
 	# The knob the catalog names but no shipped equation reads, named so a
 	# failure points at a node rather than a count. It was `coal_capacity`
-	# until the endogenous fleet layer made that node derived -- at which
-	# point it left this register, because a node the graph computes is not a
-	# knob a user is left holding.
+	# until the endogenous fleet layer made that node derived, then
+	# `ac_voltage_limit` from the batch-12 coupling. The count's own story is
+	# the coupling build: batches 12-16 took it from 784 to here.
 	assert "ac_voltage_limit" in dead
 
 
@@ -1744,8 +1744,8 @@ def test_the_audit_reports_what_it_did_not_check():
 
 	audit = audit_scenario_result(_solved())
 	assert audit.consistent
-	assert len(audit.checked) == 40, audit.checked
-	assert len(audit.skipped) == 35, audit.skipped
+	assert len(audit.checked) == 59, audit.checked
+	assert len(audit.skipped) == 82, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -1787,9 +1787,9 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	assert audit.violations == (), "a failure is not a violation of an identity"
 	assert "not run" in audit.summary(), audit.summary()
 	# The whole derived set is named as unexamined: a partial count here would
-	# understate how much of the graph went unread. 75, not 33, for the reason
+	# understate how much of the graph went unread. 141, not 75, for the reason
 	# spelled out in `test_the_audit_reports_what_it_did_not_check`.
-	assert len(audit.skipped) == 75, audit.skipped
+	assert len(audit.skipped) == 141, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -2672,10 +2672,10 @@ def test_the_uncertainty_register_reads_the_declarations(graph: ParameterGraph):
 	# rather than the derivation, because the pin is the assertion: deriving
 	# the count from the register would pass on a graph that declared nothing
 	# uncertain, which is the silence this module exists to break.
-	assert len(reg.inputs) == 84, reg.inputs
-	assert len(reg.derived_stochastic) == 24, reg.derived_stochastic
+	assert len(reg.inputs) == 73, reg.inputs
+	assert len(reg.derived_stochastic) == 35, reg.derived_stochastic
 	assert len(reg.stochastic_edges) == 1, reg.stochastic_edges
-	# 108 nodes are declared stochastic in total: 84 settable, 24 derived.
+	# 108 nodes are declared stochastic in total: 73 settable, 35 derived.
 	assert len(reg.inputs) + len(reg.derived_stochastic) == 108
 	assert len(reg.inputs) + len(reg.derived_stochastic) == sum(
 		1 for node in graph.nodes.values() if str(node.determinism) == "stochastic"
@@ -2798,7 +2798,7 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	# the number is the finding -- the sentence exists to stop a reader taking
 	# the declarations for a distribution, and a reach that drifts unnoticed
 	# would understate it.
-	assert "84" in text and "53" in text
+	assert "73" in text and "84" in text
 
 
 # ---------------------------------------------------------------------------
@@ -2949,23 +2949,21 @@ def test_the_flagged_equations_are_a_known_set(graph: ParameterGraph):
 
 	report = check_graph(graph)
 	flagged = {check.equation_id for check in report.inconsistent}
+	# The annuity blessing (the walker accepts a (1 + rate) base to a
+	# [time]-cancelled or dimensionless exponent at the rate's own period)
+	# cleared the ten (1 + rate) equations of the older pin and left the
+	# twelve the classes below name. The per-technology crf/LCOE equations
+	# the coupling batches added check clean under the same blessing, which
+	# is the blessing earning its keep.
 	assert flagged == {
 		"benefit_sharing_from_revenue_definition",
-		"carbon_price_escalated_definition",
 		"coal_price_per_mwh_definition",
 		"consumer_surplus_definition",
-		"crf_definition",
-		"debt_service_definition",
 		"emissions_definition",
-		"energy_demand",
 		"equity_irr_definition",
-		"fuel_cost_escalated_coal_definition",
-		"fuel_cost_escalated_gas_definition",
-		"fuel_price_escalated_definition",
 		"hydrogen_water_definition",
 		"llcr_definition",
 		"load_factor_definition",
-		"ppa_indexed_price_definition",
 		"premature_deaths_definition",
 		"rocof_definition",
 		"tariff_cost_recovery",
@@ -3427,7 +3425,7 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	assert counts, "no strength was counted"
 	assert sum(counts.values()) == len(graph.equations)
 	assert set(counts) <= {"hard", "soft", "informational"}
-	assert counts == {"hard": 84, "informational": 1, "soft": 2}, counts
+	assert counts == {"hard": 153, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -3692,7 +3690,12 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# no citations this test would pass vacuously and the reader would be
 	# untested. Nine is the shipped count and a change to it should be looked
 	# at, not absorbed.
-	assert len(declared) == 9, f"the citation register moved: {sorted(declared)}"
+	# The shipped count was nine; the coupling batches' equations each carry
+	# the work their form comes from, which is the register the build was
+	# for -- a researcher retrieves the equation through the reference. 80,
+	# measured on the graph the batches baked; a further change is a change
+	# to the register's coverage and fails here.
+	assert len(declared) == 80, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -3722,7 +3725,10 @@ def test_a_citation_reaches_the_api_and_the_cli(graph: ParameterGraph):
 	assert "WHO AirQ+" in result.output, result.output
 	# And the equations without one print no citation line, so the absence is
 	# absence rather than a blank column.
-	ppaless = runner.invoke(app, ["prg", "equations", "--system", "employment"])
+	# `employment` carries references now (the multipliers), so the
+	# no-citation half points at `energy_balance`, whose equations are the
+	# kernel's own identities and cite nothing external.
+	ppaless = runner.invoke(app, ["prg", "equations", "--system", "energy_balance"])
 	assert ppaless.exit_code == 0, ppaless.output
 	assert "ref:" not in ppaless.output, ppaless.output
 
@@ -3923,8 +3929,8 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 				f"numeric {numeric!r}"
 			)
 			compared += 1
-	assert compared == 75, (
-		f"expected 75 determined variables in the shipped library, compared "
+	assert compared == 141, (
+		f"expected 141 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 33 before the generated batches were "
 		f"promoted, and every one of the 42 new equations is affine in the "

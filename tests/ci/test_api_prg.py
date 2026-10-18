@@ -417,7 +417,7 @@ def test_the_summary_serves_the_endogenous_layer(
 	"""
 	body = prg_client.get("/api/v1/prg/summary").json()
 	assert body["endogenous"] == len(body["endogenous_parameters"])
-	assert body["endogenous"] == 18, body["endogenous_parameters"]
+	assert body["endogenous"] == 19, body["endogenous_parameters"]
 	# The fleet nodes, by name: a count a client cannot act on is half a
 	# register, and these are the names a scenario's result is read back into.
 	assert "thermal_capacity_mw" in body["endogenous_parameters"]
@@ -451,9 +451,9 @@ def test_the_summary_serves_the_endogenous_layer(
 		len(endo_listed),
 		body["parameters"],
 	)
-	# 827 of 979, up from 781 of 869: the fragments added free nodes and the
-	# promotion coupled some into equations' input sets.
-	assert len(free) == 827, len(free)
+	# 803 of 1075: the coupling batches converted free knobs into derived
+	# quantities and named many of the rest as equation inputs.
+	assert len(free) == 803, len(free)
 
 
 # ---------------------------------------------------------------------------

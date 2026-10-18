@@ -250,6 +250,35 @@ def unit_of(expression: Expr, graph: ParameterGraph) -> Unit | None:
 			product = product * unit
 		return product
 	if isinstance(expression, Pow):
+		# The annuity convention: `(1 + rate) ** life`. Strict dimensional
+		# algebra refuses the base -- 1 + 1/[time] -- but the expression the
+		# field writes is dimensionally well-posed, because the exponent's
+		# content is rate x time, which IS dimensionless: compounding a
+		# per-year rate over a number of years builds a growth factor, and
+		# every annuity in the library (crf, the escalation compounds, the
+		# elasticity's implication) is this form. The walker accepts it when
+		# the base is a bare sum of a constant and a single rate whose
+		# dimensionality times a [time] exponent cancels, and declines to
+		# judge anything else -- a blessing scoped to the convention, not a
+		# hole in the algebra.
+		addend = expression.base if isinstance(expression.base, Add) else None
+		if addend is not None and len(addend.terms) == 2:
+			consts = [t for t in addend.terms if isinstance(t, Const)]
+			rates = [t for t in addend.terms if not isinstance(t, Const)]
+			if len(consts) == 1 and len(rates) == 1:
+				rate_unit = unit_of(rates[0], graph)
+				exponent_unit = unit_of(expression.exponent, graph)
+				if rate_unit is not None and exponent_unit is not None:
+					annualised = rate_unit**-1  # the rate's period
+					if exponent_unit.dimensionality == annualised.dimensionality:
+						# A [time] exponent cancels the rate: the result is a
+						# growth FACTOR (an annuity term), dimensionless.
+						return ureg.dimensionless
+					if exponent_unit.dimensionality == ureg.dimensionless.dimensionality:
+						# A dimensionless exponent (an elasticity) leaves the
+						# base's own period in the result: (1 + g_Y)^eps is a
+						# growth *rate* in the rate's own per-year terms.
+						return rate_unit
 		base = unit_of(expression.base, graph)
 		if base is None:
 			return None

@@ -112,13 +112,13 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	"""
 	cov = coverage(graph)
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 886, cov
+	assert cov["total"] == 915, cov
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
 	}
-	# The eighteen that left the denominator, named where they went.
-	assert len(cov["endogenous"]) == 18, cov["endogenous"]
+	# The nineteen that left the denominator, named where they went.
+	assert len(cov["endogenous"]) == 19, cov["endogenous"]
 	assert not (set(cov["endogenous"]) & set(cov["untranslated"]))
 
 
@@ -172,7 +172,7 @@ def test_the_untranslated_register_is_not_empty_and_says_why(
 	network can be perturbed by.
 	"""
 	missing = untranslated(graph)
-	assert len(missing) == 883, missing
+	assert len(missing) == 912, missing
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact

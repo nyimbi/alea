@@ -1940,6 +1940,16 @@ def _merge_fragments(
 	for register in ("parameters", "equations"):
 		for key, body in document[register].items():
 			shipped_bodies[(register, key)] = body
+	for register in ("cross_validation", "relationships"):
+		for item in document[register]:
+			# Same dedupe as the registers above: a re-shipped identical rule
+			# or edge is redundant, not a second record of one coupling -- the
+			# first bake appended fragment relationships onto a document that
+			# already carried them, and the graph then held two records of
+			# every coupling (569 edges over the same 382 claims).
+			shipped_bodies[
+				(register, str(item.get("id") or f"{item.get('source')}->{item.get('target')}"))
+			] = item
 
 	per_file: dict[str, dict[str, int]] = {}
 	refused: list[tuple[str, str, str]] = []
@@ -2007,6 +2017,27 @@ def _merge_fragments(
 					else:
 						redundant.append((str(key), path.name))
 					continue
+				shipped_item = shipped_bodies.get((register, str(key)))
+				if shipped_item is not None:
+					# A rule or edge re-shipped identically is redundant; one
+					# that differs is a correction, which replaces the shipped
+					# entry of the same key and is counted. Without this both
+					# bakes would append, and the document would carry two
+					# records of one coupling.
+					if shipped_item == item:
+						redundant.append((str(key), path.name))
+						continue
+					corrected.append((register, str(key), path.name))
+					if register == "cross_validation":
+						document[register] = [
+							r for r in document[register] if str(r.get("id")) != str(key)
+						]
+					else:
+						document[register] = [
+							r
+							for r in document[register]
+							if str(r.get("id") or f"{r.get('source')}->{r.get('target')}") != str(key)
+						]
 				seen[(register, str(key))] = (item, path.name)
 				document[register].append(dict(item))
 				counts[register] = counts.get(register, 0) + 1
