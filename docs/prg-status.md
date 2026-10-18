@@ -1780,6 +1780,79 @@ once it is only a coupled milestone — so a coupled milestone needs its own
 preserved body (role `exogenous`, its default restored), not a name heuristics'
 pass.
 
+**Batches 21 and 22, and the current state (2026-10-18, commit 3c89cf2).**
+Batch 21 coupled 18 (649 → 631). Its spend products are the ones whose bases
+exist — `biomass_variable_cost_usd_per_mwh` (fuel plus non-fuel O&M),
+`vre_connection_spend_usd`, the heat-pump annuity at the shipped `crf`,
+`hydrogen_export_revenue_usd_per_year`, `insurance_premium_usd_per_kw_year`,
+`life_extension_fraction_of_new_build`, and the three programme spends
+(`mini_grid`, `shs`, `demand_response`) — and its rate arithmetic is the
+half-lives (ln 2 over the annual retirement / cap-reduction / connection rate)
+plus the three compound growth factors, `(1 + r) ** horizon_years`.
+`uranium_fuel_cost_usd_per_mwh` reads a named `uranium_burnup_lb_per_mwh`
+constant rather than a folded number, the way `hydrogen_per_t_steel_kg` does.
+
+Batch 22 coupled 40 (631 → 591) and is the one worth reading, because the
+compliance register is not a family of formulas. A `_requirements` node is a
+*share of a base* or a *ceiling a shipped quantity must sit under*, so it
+couples three ways and the class of each node decides which:
+
+- **29 register-share products.** `collateral_requirements` times the revenue
+  requirement; `scada_ems_requirements` times total capacity;
+  `clearing_house_requirements` times the settled carbon value. The share is
+  the dial, the base is what the graph already carries, and the product is the
+  quantity a report can name.
+- **10 `leq` thresholds** at the document's own defaults: SAIDI 96 ≤ 120,
+  SAIFI 12 ≤ 15, largest credible loss 1000 ≤ 1200 MW of primary response,
+  inertia 500 ≤ 36 000 MW·s, non-spinning reserve inside the margin,
+  clean-cooking target above the LPG penetration already reached, FPIC
+  consent share, IFC covenant share, resettlement share, and the energy-burden
+  ceiling. These are the constraint register's own growth: `bound_routes` went
+  16 → 21 and five of the ten bind a solve.
+- **One ratio, not a bound.** The WHO annual PM2.5 guideline is *exceeded* by
+  the ambient mean the graph carries (35 / 5 = 7). Writing that as a `leq`
+  would make the shipped defaults a conflict, and the conflict is the finding —
+  so the honest statement is the ratio `pm25_exceedance_ratio`, computed rather
+  than shipped as a violated inequality. This is the register's own lesson
+  applied forward: a bound that cannot hold at the document's defaults is not a
+  bound, it is a measurement.
+
+Eight extensive bases arrive with the register — `population_total`,
+`distribution_feeders_total`, `pm25_annual_mean_ug_per_m3`,
+`project_pipeline_count`, `scada_telemetry_sites`,
+`river_mean_annual_flow_m3_per_s`, `distribution_network_km`,
+`audit_accounts_per_year` — each with a default derived from a quantity the
+graph already holds (population back-solved from the residential demand share
+and per-household consumption; the feeders and telemetry sites from the system's
+own MW at a stated per-unit density), and none with a citation invented for it.
+`MVAr` joined the unit registry as `ampere * volt` and a million of it, so
+`reactive_power_requirement` has a spelling the walker can decide rather than a
+unit it silently skips.
+
+State after batch 22: **1168 parameters, 261 equations, 547 edges, 54 rules,
+591 uncoupled** (694 at batch 20 → 649 → 631 → 591). Generator `--check`
+idempotent, `propagate` clean over all 1168 values, the five prg test files
+green at 279 tests. The suite's moved literals are all re-derived from the
+graph's own registers rather than adjusted to fit: dead knobs 603 → 563, audit
+checked/skipped 67/131 → 86/141, computed 198 → 227, citation doors 104 → 112,
+constraint-shaped 24/198/222 → 34/227/261, translate coverage 914 → 922,
+catalog disagreements 30 → 65 (the 35 retyped register nodes now differ from
+their catalog rows by construction — the retype *is* the disagreement, and it
+is now visible rather than silent).
+
+**What the remaining 591 are.** They are not one class, and the worklist says
+so. The compliance family is down to three (`gis_requirements` is a share of
+network assets in GIS with no base yet; the regulation up/down requirements
+need the reserve product they are a slice of). The policy flags are 25, of
+which 20 remain: they are gates, not quantities — `ets_enabled` switches a
+carbon stream on, `unit_commitment` switches a dispatch mode — and the honest
+coupling for a gate is a *conditional* the library does not have yet, not a
+product. The genuinely qualitative remainder — capability-maturity scores,
+protocol names, land-tenure classes, governance indices — is the graph's
+declared free space, and `uncoupled()` will retain them by the register's own
+contract. Stating that is the point: the register closing to zero is not the
+goal, the register *naming every node's class* is.
+
 ## Evaluation of the design docs against the code (2026-10-17)
 
 **`docs/how_prg_works.md` (read-only; a teaching narrative, not read as spec).**

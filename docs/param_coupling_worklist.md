@@ -1,62 +1,61 @@
 # Coupling worklist
 
-Every node still in `uncoupled()` (649 of 1114, as of the batch 20 bake on 2026-10-18) and the family class its coupling belongs to. Batches 12-20 coupled 144 nodes (793 -> 649): the financial core and fleet, the duplicate-pair aliases, sector demand, fuel conversions, rate aliases, the instrument and sector-coupling layers, and (batch 20) the share family's products and the time-index family's arithmetic. The classes name the method each coupling gets; nothing escapes the register.
+Every node still in `uncoupled()` (591 of 1168, as of the batch 22 bake on 2026-10-18) and the family class its coupling belongs to. Batches 12-22 coupled 203 nodes (793 -> 591): the financial core and fleet, the duplicate-pair aliases, sector demand, fuel conversions, rate aliases, the instrument and sector-coupling layers, the share family's products and the time-index arithmetic (batch 20), the cost and rate families (batch 21), and the compliance register (batch 22). The classes name the method each coupling gets; nothing escapes the register.
 
-## unassigned (527)
+## compliance register (3)
 
-`ac_voltage_limit`, `accelerated_depreciation`, `accelerated_depreciation_factor`, `accumulation_risk`, `adaptation_benefits`, `adaptation_costs`, `adaptation_measures`, `adaptive_capacity`, `affordability_threshold`, `agricultural_irrigation_load`, `agricultural_machinery`, `airport_electrification`, `ami_infrastructure`, `archaeological_sites`, `archaeological_sites_density`, `arrears_management`, `article_6_2_parameters`, `article_6_4_parameters`, `article_6_credits`, `asset_age_distribution`, `asset_management_maturity`, `asset_management_systems`, `assignment_rights`, `auction_frequency`, `auction_mechanism`, `auction_price_cap`, `auction_volume`, `aviation_fuel_demand`, `balance_of_payments`, `baseline_emissions`, `battery_storage_adoption`, `bid_ask_spread`, `bill_shock_protection`, `billing_systems`, `biodiversity_impact`, `biodiversity_intactness_before`, `biodiversity_intactness_index`, `biogas_capacity`, `biomass_sustainability_limit`, `black_start_capability` ... and 487 more
+Batch 22 coupled 43 of the 46. What is left is a missing base or a missing product, not a deferral:
 
-## compliance register (46)
+- `gis_requirements` -- a share of network assets in the GIS; needs an asset-count base (the graph carries km, not asset records).
+- `regulation_down_requirement`, `regulation_up_requirement` -- each is a slice of the operating reserve, so each waits on a `regulation_reserve` product against a reserve base in MW.
 
-`additionality_test`, `adms_requirements`, `air_quality_standards`, `baseline_methodology`, `black_start_requirement`, `clean_cooking_target`, `clearing_house_requirements`, `climate_proofing_requirements`, `collateral_requirements`, `consumer_protection_standards`, `cost_allocation_methodology`, `credit_support_requirements`, `cybersecurity_requirements`, `data_privacy_requirements`, `data_sovereignty_requirements`, `demand_forecast_methodology`, `electrification_rate_target`, `environmental_flow_requirements`, `fpic_requirements`, `frequency_response_requirement`, `gender_action_plan`, `gis_requirements`, `grid_reliability_target`, `ifc_performance_standards`, `inertia_requirement`, `interoperability_standards`, `labour_standards`, `local_content_requirements`, `margin_requirements`, `non_spinning_reserve_requirement`, `reactive_power_requirement`, `regulation_down_requirement`, `regulation_up_requirement`, `regulatory_audit_requirements`, `renewable_target`, `reporting_requirements`, `reserve_margin_requirement`, `resettlement_requirements`, `scada_ems_requirements`, `service_quality_standards` ... and 6 more
+## policy flag (bool) (20)
 
-## policy flag (bool) (25)
+`ancillary_services_market`, `balancing_market`, `contract_for_difference`, `cross_border_trade_allowed`, `cross_border_trading`, `day_ahead_market`, `dg_placement_enabled`, `ets_enabled`, `intraday_market`, `life_extension_possible`, `outage_coordination`, `phase_shifting_enabled`, `real_time_market`, `security_constrained_dispatch`, `smart_metering_rollout`, `storage_dispatch_enabled`, `topology_switching_enabled`, `transmission_expansion_allowed`, `unit_commitment`, `voltage_optimisation_enabled`
 
-`ancillary_services_market`, `balancing_market`, `capacity_market`, `carbon_border_adjustment`, `contract_for_difference`, `cross_border_trade_allowed`, `cross_border_trading`, `day_ahead_market`, `dg_placement_enabled`, `ets_enabled`, `intraday_market`, `life_extension_possible`, `n_1_criterion`, `n_2_criterion`, `outage_coordination`, `phase_shifting_enabled`, `ppa_guarantees`, `real_time_market`, `security_constrained_dispatch`, `smart_metering_rollout`, `storage_dispatch_enabled`, `topology_switching_enabled`, `transmission_expansion_allowed`, `unit_commitment`, `voltage_optimisation_enabled`
+These are **gates, not quantities**. A gate's honest coupling is a conditional -- "if the market exists this revenue stream is live, otherwise zero" -- and the library carries `Sum`, `Mul` and `Pow`, not a piecewise form. So the class splits: a gate with a revenue base the graph already carries couples as a product by the gate itself (`capacity_market` times the capacity price, `contract_for_difference` times a CfD premium), and a gate that selects a *dispatch mode* the parameter graph does not model (`unit_commitment`, `security_constrained_dispatch`, `topology_switching_enabled`, `dg_placement_enabled`, `storage_dispatch_enabled`, `phase_shifting_enabled`) is a scene switch: it configures the run and no equation should pretend otherwise. Recording that distinction is the coupling for the second kind.
 
-## share family -- remaining (1)
+## rate family (2)
 
-`public_transport_share` -- deferred from batch 20: it is a share of passenger-kilometres and the graph carries no passenger-km base, so its product waits for the base-node batch (a `passenger_kilometres_per_year` base with a referenced default is the shape the steel/cement/hydrogen bases took in batch 19).
+`energy_poverty_rate`, `regulated_tariff_rate` -- both are shares whose base is not yet a node. `energy_poverty_rate` needs a `households_total` extensive base; `regulated_tariff_rate` is the cost-recovery ratio `total_revenue_usd_per_year / allowed_revenue_requirement`, which needs the two quantities in one unit (USD/year against USD million/year) before the ratio means anything.
 
-## time-index family (0) -- coupled in batch 20
+## cost family (9)
 
-Coupled as its own arithmetic: policy-clock lead times (the peak/net-zero/carbon-tax/renewable-target year differences), the growth window and its compound factor, the schedules against durations (retraining within construction), the storage power-energy cost split (`capex_battery * battery_duration` per kW; `capex_phs / phs_duration` per kWh), the vintage capacity factors (the factor today compounded by the degradation rate to the vintage year), and the reliability frequency-times-duration products. `public_transport_share` stays above for the base-node batch.
+`capex_transmission`, `currency_hedge_cost`, `hydrogen_pipeline_cost`, `hydrogen_storage_cost`, `right_of_way_cost`, `distribution_capex_per_connection`, `capex_distribution`, `capex_interconnector`, `land_acquisition_cost_per_hectare`
 
-## share family -- products done (17 of 18), public_transport deferred
+Each is a **unit rate whose product needs an extensive base** the graph does not carry: MW-km of route (transmission, hydrogen pipeline, interconnector), MWh of storage (hydrogen), km of route (right of way), connections per year (distribution), hectares acquired (land). The base-node batch adds the bases; the rates then become products against them. `currency_hedge_cost` is the odd one -- its base is a currency exposure, not a physical quantity -- and needs its own treatment rather than a borrowed product.
 
-Batch 19 covered the six with activity bases (ammonia export, cement CCUS, industrial CCUS, interruptible load, community fund, steel H2-DRI); batch 20 covered the remaining eleven through the overlap-aware mix bounds and the products with bases that exist. `public_transport_share` is deferred to the base-node batch above.
+## unassigned (557)
 
-`public_transport_share` (the one deferral, waiting on its passenger-km base)
+The remainder, and it is not one class. It splits by what the node *is*:
 
-## cost family (16)
+- **Products waiting on a base** -- the extensive-base family above, plus the shares whose denominators are quantities the graph does not model (`import_dependency`, `remittance_dependency`, `balance_of_payments`).
+- **Qualitative and organisational** -- capability-maturity scores, protocol and standard names, land-tenure classes, governance and risk indices, dispute-resolution fora. Their admissible set is a choice, not a measurement. They are the graph's declared free space and `uncoupled()` retains them by the register's own contract; the coupling for this class is a documented declaration, not an equation.
+- **Scene switches and scenario controls** -- `market_model`, `market_structure`, `scenario_tag`, `scenario_owner`, `ssp_pathway`, `representative_days`, `temporal_aggregation` and the like. These configure the run; the engine reads them and no equation should.
 
-`biomass_feedstock_cost`, `capacity_price`, `cbam_price`, `currency_hedge_cost`, `demand_response_cost`, `grid_connection_cost`, `heat_pump_cost`, `hydrogen_export_price`, `hydrogen_pipeline_cost`, `hydrogen_storage_cost`, `insurance_loss_share_of_cost`, `life_extension_cost`, `mini_grid_cost`, `right_of_way_cost`, `shs_cost`, `uranium_price`
+The full list with descriptions is below.
 
-## rate family (12)
+## Every uncoupled node, with its description
+Note on the placeholder signature: `unit=None def=500000.0` marks a node the catalog carries with no unit and the placeholder default the expansion gave every row. It is the placeholder register, not a value -- the unit is what a coupling needs first, and the default is what a node without one ships.
 
-`battery_learning_rate`, `coal_retirement_rate`, `demand_growth_rate`, `electrolyser_learning_rate`, `energy_poverty_rate`, `ets_cap_reduction_rate`, `grid_extension_rate`, `industrialisation_rate`, `population_growth_rate`, `regulated_tariff_rate`, `solar_pv_learning_rate`, `urbanisation_rate`
 
-## policy flag (categorical) (2)
-
-`market_model`, `market_structure`
-
-## Unassigned, with descriptions
+All 591, generated from the loaded graph so the list cannot drift from it. The family headings above name the method each node's coupling takes; this section is the inventory.
 
 - `ac_voltage_limit` unit=None def=500000.0 -- Maximum AC voltage
 - `accelerated_depreciation` unit=None def=500000.0 -- Accelerated depreciation
-- `accelerated_depreciation_factor` unit='1' def=1.0 -- The multiple of straight-line depreciation the tax code permits. Bounded above b
-- `accumulation_risk` unit='1' def=500000.0 -- FIRM-SPECIFIC. The value is the total exposure the insurer has to a single event
+- `accelerated_depreciation_factor` unit='1' def=1.0 -- The multiple of straight-line depreciation the tax code permits. Bounded above by the fastest schedule any jurisdiction allows.
+- `accumulation_risk` unit='1' def=500000.0 -- FIRM-SPECIFIC. The value is the total exposure the insurer has to a single event, and depends on the firm's own book. Not corrected; a fabricated range would silently reject a firm's correct figure. The default is retained as the graph's declared unknown.
 - `adaptation_benefits` unit=None def=500000.0 -- Adaptation benefits
 - `adaptation_costs` unit=None def=500000.0 -- Adaptation costs
 - `adaptation_measures` unit=None def=500000.0 -- Adaptation measures
-- `adaptive_capacity` unit='1' def=0.5 -- Composite index of institutional, financial and technical capacity to adapt, nor
-- `affordability_threshold` unit=None def=500000.0 -- Affordability limit
+- `adaptive_capacity` unit='1' def=0.5 -- Composite index of institutional, financial and technical capacity to adapt, normalised to [0, 1]. Range is the index's construction.
 - `agricultural_irrigation_load` unit=None def=500000.0 -- Irrigation pumping load
 - `agricultural_machinery` unit='1' def=0.05 -- Share of agricultural machinery that is electric. A share.
 - `airport_electrification` unit='1' def=0.1 -- Share of airport ground operations that are electric. A share.
 - `ami_infrastructure` unit=None def=500000.0 -- AMI infrastructure
+- `ancillary_services_market` unit='1' def=0.0 -- Whether an ancillary services market is modelled. A boolean.
 - `archaeological_sites` unit=None def=500000.0 -- Archaeology
-- `archaeological_sites_density` unit='sites/100km2' def=1.0 -- Number of documented archaeological sites per hundred square kilometres in the s
+- `archaeological_sites_density` unit='sites/100km2' def=1.0 -- Number of documented archaeological sites per hundred square kilometres in the study area.
 - `arrears_management` unit=None def=500000.0 -- Arrears management
 - `article_6_2_parameters` unit=None def=500000.0 -- Article 6.2
 - `article_6_4_parameters` unit=None def=500000.0 -- Article 6.4
@@ -71,30 +70,32 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `auction_volume` unit=None def=500000.0 -- Annual auction volume
 - `aviation_fuel_demand` unit=None def=500000.0 -- Aviation fuel demand
 - `balance_of_payments` unit=None def=500000.0 -- Balance of payments
+- `balancing_market` unit='1' def=1.0 -- Whether a balancing market is modelled. A boolean.
 - `baseline_emissions` unit=None def=500000.0 -- Baseline emissions
-- `battery_storage_adoption` unit='1' def=0.05 -- Share of households with a battery. A share; same reset of the placeholder defau
+- `battery_learning_rate` unit='1' def=0.15 -- Cost reduction per doubling of cumulative battery deployment. Bounded at 0.4, above which the parameter would imply a technology that becomes free.
+- `battery_storage_adoption` unit='1' def=0.05 -- Share of households with a battery. A share; same reset of the placeholder default.
 - `bid_ask_spread` unit=None def=500000.0 -- Bid-ask spread
 - `bill_shock_protection` unit=None def=500000.0 -- Bill shock protection
 - `billing_systems` unit=None def=500000.0 -- Billing
 - `biodiversity_impact` unit=None def=500000.0 -- Biodiversity
-- `biodiversity_intactness_before` unit='1' def=0.7 -- The Biodiversity Intactness Index at the project site before development. Normal
-- `biodiversity_intactness_index` unit='1' def=0.7 -- Biodiversity Intactness Index, normalised to [0, 1] where 1 is intact and 0 is d
+- `biodiversity_intactness_before` unit='1' def=0.7 -- The Biodiversity Intactness Index at the project site before development. Normalised to [0, 1].
+- `biodiversity_intactness_index` unit='1' def=0.7 -- Biodiversity Intactness Index, normalised to [0, 1] where 1 is intact and 0 is devoid of its original species. Range is the index's construction.
 - `biogas_capacity` unit=None def=500000.0 -- Biogas capacity
 - `biomass_sustainability_limit` unit=None def=500000.0 -- Maximum sustainable biomass
 - `black_start_capability` unit=None def=500000.0 -- Black start units available
 - `buffer_pool_contribution` unit=None def=500000.0 -- Buffer pool
 - `buffer_zones` unit=None def=500000.0 -- Buffer zones
-- `business_interruption` unit='1' def=500000.0 -- FIRM-SPECIFIC. The scope of cover, waiting period and indemnity period vary by p
+- `business_interruption` unit='1' def=500000.0 -- FIRM-SPECIFIC. The scope of cover, waiting period and indemnity period vary by policy. Not corrected.
 - `business_interruption_insurance` unit=None def=500000.0 -- Business interruption insurance
-- `capex_distribution` unit='USD/kW' def=400.0 -- Installed cost of distribution network per kilowatt of served load. Unit is USD/
-- `capex_gas_ccgt` unit='USD/kW' def=1100.0 -- Overnight installed cost of combined-cycle gas turbine. Range spans single-shaft
-- `capex_gas_ocgt` unit='USD/kW' def=650.0 -- Overnight installed cost of open-cycle gas turbine. Lower capex and lower effici
-- `capex_gravity_storage` unit='USD/kWh' def=800.0 -- Installed cost of gravity-based energy storage. The technology is deployed at sm
-- `capex_interconnector` unit='USD/MW-km' def=700.0 -- Installed cost of a cross-border interconnector per megawatt-kilometre. Range sp
-- `capex_marine_otec` unit='USD/kW' def=12000.0 -- Installed cost of ocean thermal energy conversion. No commercial OTEC plant exis
-- `capex_marine_tidal` unit='USD/kW' def=7000.0 -- Installed cost of tidal stream and tidal range. The range is wide because tidal 
-- `capex_transmission` unit='USD/MW-km' def=400.0 -- Installed cost of transmission per megawatt of capacity per kilometre of route. 
-- `capital_gains_tax` unit='1' def=0.2 -- Tax rate on realised capital gains. A share; the range spans the sample's jurisd
+- `capex_distribution` unit='USD/kW' def=400.0 -- Installed cost of distribution network per kilowatt of served load. Unit is USD/kW, not USD/connection, because the sample reports both and the kW is the comparable basis.
+- `capex_gas_ccgt` unit='USD/kW' def=1100.0 -- Overnight installed cost of combined-cycle gas turbine. Range spans single-shaft at the low end to multi-shaft with district heating at the high end.
+- `capex_gas_ocgt` unit='USD/kW' def=650.0 -- Overnight installed cost of open-cycle gas turbine. Lower capex and lower efficiency than the CCGT; that trade is why both live in the graph.
+- `capex_gravity_storage` unit='USD/kWh' def=800.0 -- Installed cost of gravity-based energy storage. The technology is deployed at small scale; the range is inferred from the pilot installations, not from a cost curve.
+- `capex_interconnector` unit='USD/MW-km' def=700.0 -- Installed cost of a cross-border interconnector per megawatt-kilometre. Range spans overhead AC at the low end to submarine HVDC at the high end; the difference between the two is a factor of five and that is why the parameter has a range rather than a value.
+- `capex_marine_otec` unit='USD/kW' def=12000.0 -- Installed cost of ocean thermal energy conversion. No commercial OTEC plant exists; the range is derived from the pilot projects and the thermodynamic cycle's own scaling, and the parameter is a speculative number that should be treated as such.
+- `capex_marine_tidal` unit='USD/kW' def=7000.0 -- Installed cost of tidal stream and tidal range. The range is wide because tidal range with civil works is not the same technology as a tidal stream turbine; the graph does not distinguish them and the parameter therefore admits both.
+- `capex_transmission` unit='USD/MW-km' def=400.0 -- Installed cost of transmission per megawatt of capacity per kilometre of route. Unit is MW-km, not km, because cost scales with both. Range spans 220 kV overhead at the low end to 765 kV with substations at the high end.
+- `capital_gains_tax` unit='1' def=0.2 -- Tax rate on realised capital gains. A share; the range spans the sample's jurisdictions.
 - `carbon_budget` unit=None def=500000.0 -- Remaining carbon budget
 - `carbon_credit_insurance` unit=None def=500000.0 -- Insurance
 - `carbon_credit_prices` unit=None def=500000.0 -- Credit prices
@@ -103,20 +104,18 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `carbon_credit_vintage` unit=None def=500000.0 -- Vintage
 - `carbon_credit_volumes` unit=None def=500000.0 -- Credit volumes
 - `carbon_price_risk` unit=None def=500000.0 -- Carbon price risk premium
-- `carbon_tax_coverage` unit='1' def=0.5 -- Share of emissions the carbon tax applies to. A share; the shipped default of 50
+- `carbon_tax_coverage` unit='1' def=0.5 -- Share of emissions the carbon tax applies to. A share; the shipped default of 500000 made every scenario that did not override it collect a tax five hundred thousand times larger than intended.
 - `carbon_tax_interaction` unit=None def=500000.0 -- Carbon tax vs. other taxes
 - `cash_sweep` unit=None def=500000.0 -- Cash sweep
 - `cat_bond_parameters` unit=None def=500000.0 -- Cat bonds
-- `cat_bond_spread` unit='basis_points' def=800.0 -- The coupon a catastrophe bond pays above the risk-free rate, in basis points. Ra
-- `catastrophe_modelling` unit='1' def=500000.0 -- FIRM-SPECIFIC. The output of a cat model applied to a specific book. Not correct
+- `cat_bond_spread` unit='basis_points' def=800.0 -- The coupon a catastrophe bond pays above the risk-free rate, in basis points. Range spans the best-rated tranches at the low end to the riskiest at the high end. The unit is basis points; 100 bp is 1 percent.
+- `catastrophe_modelling` unit='1' def=500000.0 -- FIRM-SPECIFIC. The output of a cat model applied to a specific book. Not corrected; this is a model output, not a parameter, and a future batch should either remove the node or replace it with a cat-model reference id.
 - `cdm_methodologies` unit=None def=500000.0 -- CDM
-- `cement_production` unit=None def=500000.0 -- Cement production
 - `change_of_control` unit=None def=500000.0 -- Change of control
-- `chemicals_ammonia_production` unit=None def=500000.0 -- Ammonia production
 - `child_labour_prohibition` unit=None def=500000.0 -- Child labour
 - `circuit_breakers` unit=None def=500000.0 -- Circuit breakers
 - `civil_unrest_risk` unit=None def=500000.0 -- Civil unrest
-- `claims_history` unit='1' def=500000.0 -- FIRM-SPECIFIC. The firm's own loss history, not a market statistic. Not correcte
+- `claims_history` unit='1' def=500000.0 -- FIRM-SPECIFIC. The firm's own loss history, not a market statistic. Not corrected.
 - `climate_risk_disclosure` unit=None def=500000.0 -- TCFD
 - `climate_sensitivity` unit=None def=500000.0 -- Climate sensitivity
 - `clustering_method` unit=None def=500000.0 -- Clustering method
@@ -136,7 +135,7 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `community_transition_funding` unit=None def=500000.0 -- Transition funding
 - `compensation_mechanisms` unit=None def=500000.0 -- Compensation
 - `compensation_rates` unit=None def=500000.0 -- Compensation
-- `compensation_share_of_market` unit='1' def=1.5 -- The multiple of market value the compensation package pays. A share of a share; 
+- `compensation_share_of_market` unit='1' def=1.5 -- The multiple of market value the compensation package pays. A share of a share; the sample's practice varies from exact market value to a multiplier where livelihoods are lost. The upper bound is the multiplier, not a fraction.
 - `complaint_handling` unit=None def=500000.0 -- Complaint handling
 - `compressed_air_capacity` unit=None def=500000.0 -- Compressed air storage
 - `concession_terms` unit=None def=500000.0 -- Concession terms
@@ -147,30 +146,33 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `consumer_education` unit=None def=500000.0 -- Consumer education
 - `consumer_price_index_link` unit=None def=500000.0 -- CPI link
 - `contingency` unit=None def=500000.0 -- Contingency on capex
-- `cooking_lpg_penetration` unit='1' def=0.2 -- Share of households cooking with LPG. A share; same reset of the placeholder def
+- `contract_for_difference` unit='1' def=0.0 -- Whether a CfD mechanism is modelled. A boolean.
 - `cooling_water_demand` unit=None def=500000.0 -- Cooling water demand
 - `corresponding_adjustment` unit=None def=500000.0 -- CA
 - `corsia_parameters` unit=None def=500000.0 -- CORSIA
 - `cost_pass_through_mechanism` unit=None def=500000.0 -- Pass-through rules
 - `counterparty_risk` unit=None def=500000.0 -- Counterparty risk
 - `country_risk_rating` unit=None def=500000.0 -- Country risk rating
-- `crew_availability` unit='1' def=0.85 -- Share of hours a maintenance crew is available to the fleet. A share; the shippe
+- `crew_availability` unit='1' def=0.85 -- Share of hours a maintenance crew is available to the fleet. A share; the shipped [0, 1e6] admitted a crew 500,000 times overstaffed.
 - `critical_mineral_dependencies` unit=None def=500000.0 -- Critical minerals
 - `cross_border_permitting_time` unit=None def=500000.0 -- Cross-border permitting
 - `cross_border_tension` unit=None def=500000.0 -- Cross-border tension
+- `cross_border_trade_allowed` unit='1' def=1.0 -- Whether cross-border trade is permitted. A boolean.
+- `cross_border_trading` unit='1' def=1.0 -- DEPRECATED. Duplicate of `cross_border_trade_allowed`. The shipped node was typed float; the canonical is boolean.
 - `cross_default` unit=None def=500000.0 -- Cross-default
-- `cross_subsidy_level` unit='1' def=0.1 -- Share of one tariff class's revenue that subsidises another. A share; the shippe
+- `cross_subsidy_level` unit='1' def=0.1 -- Share of one tariff class's revenue that subsidises another. A share; the shipped default of 500000 would have moved 50,000,000% of revenue.
 - `cross_subsidy_transparency` unit=None def=500000.0 -- Cross-subsidy
 - `csp_storage_hours` unit='hours' def=24.0 -- CSP thermal storage
 - `cultural_heritage_impact` unit=None def=500000.0 -- Cultural heritage
-- `cultural_heritage_impact_score` unit='1' def=0.2 -- A composite score of the project's impact on cultural heritage, normalised to [0
-- `cultural_heritage_sites_density` unit='sites/100km2' def=2.0 -- Number of documented cultural heritage sites per hundred square kilometres in th
+- `cultural_heritage_impact_score` unit='1' def=0.2 -- A composite score of the project's impact on cultural heritage, normalised to [0, 1]. Higher is greater impact.
+- `cultural_heritage_sites_density` unit='sites/100km2' def=2.0 -- Number of documented cultural heritage sites per hundred square kilometres in the study area.
 - `cumulative_impact_assessment` unit=None def=500000.0 -- CIA
+- `currency_hedge_cost` unit=None def=500000.0 -- Currency hedge cost
 - `currency_risk_premium` unit=None def=500000.0 -- Currency risk premium
 - `current_account_balance` unit=None def=500000.0 -- Current account balance
 - `custom_gis_boundary` unit=None def=500000.0 -- Custom GIS boundary
 - `customer_information_systems` unit=None def=500000.0 -- CIS
-- `customs_duty` unit='1' def=0.1 -- Customs duty as a share of imported goods value. Overlaps with import duty; the 
+- `customs_duty` unit='1' def=0.1 -- Customs duty as a share of imported goods value. Overlaps with import duty; the graph carries both and the next batch should nominate one as canonical.
 - `cvar_alpha` unit=None def=500000.0 -- CVaR tail level
 - `cvar_omega` unit=None def=500000.0 -- Risk-aversion weight
 - `cyber_incident_response` unit=None def=500000.0 -- Incident response
@@ -178,14 +180,15 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `cyber_threat_level` unit=None def=500000.0 -- Cyber threat
 - `data_backup_recovery` unit=None def=500000.0 -- Backup & recovery
 - `data_centre_demand` unit=None def=500000.0 -- New data centre load
-- `debt_equity_ratio` unit='1' def=2.33 -- Debt divided by equity, as a ratio (not a share). Bounded above at 3.0, the ceil
+- `day_ahead_market` unit='1' def=1.0 -- Whether a day-ahead market is modelled. A boolean.
 - `debt_management` unit=None def=500000.0 -- Debt management
-- `debt_service_coverage_ratio` unit='1' def=1.3 -- Debt service coverage floor a lender will accept. Bounded at the low end by 1.0,
+- `debt_service_coverage_ratio` unit='1' def=1.3 -- Debt service coverage floor a lender will accept. Bounded at the low end by 1.0, which is the boundary below which a loan defaults in expectation.
 - `debt_sustainability` unit=None def=500000.0 -- Debt sustainability
-- `deductible_levels` unit='1' def=500000.0 -- FIRM-SPECIFIC. The deductible schedule is a property of a specific policy book. 
+- `deductible_levels` unit='1' def=500000.0 -- FIRM-SPECIFIC. The deductible schedule is a property of a specific policy book. Not corrected; the market-level statistic is `deductible_share`, which is declared in Part A.
 - `default_events` unit=None def=500000.0 -- Events of default
 - `degradation_model` unit=None def=500000.0 -- Degradation
 - `demand_growth_profile` unit=None def=500000.0 -- Shape of growth curve
+- `demand_growth_rate` unit='1/year' def=0.04 -- DEPRECATED. Duplicate of `demand_growth`. The shipped node declared unit "1" and range [0, 1] and a placeholder default; the canonical id carries the correct unit `1/year` and the correct range. A scenario that reads the deprecated id would silently get a growth rate on the wrong scale.
 - `demand_response_capacity` unit=None def=500000.0 -- Demand response capacity
 - `demand_response_potential` unit=None def=500000.0 -- Share of demand that is flexible
 - `depreciation_schedule_accelerated` unit=None def=500000.0 -- Accelerated depreciation
@@ -195,29 +198,31 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `desalination_capacity` unit=None def=500000.0 -- Desalination capacity
 - `desalination_demand` unit=None def=500000.0 -- Desalination electricity demand
 - `desalination_energy` unit=None def=500000.0 -- Desalination energy intensity
-- `digital_divide_metrics` unit='1' def=0.5 -- A composite index of connectivity, price and skill, normalised to [0, 1]. The sh
+- `dg_placement_enabled` unit='1' def=1.0 -- Corrected from float to bool.
+- `digital_divide_metrics` unit='1' def=0.5 -- A composite index of connectivity, price and skill, normalised to [0, 1]. The shipped [0, 1e6] admitted values the index's own construction cannot produce. The range is set by the index's normalisation, not by observation.
 - `direct_agreement` unit=None def=500000.0 -- Direct agreement
 - `disconnection_protection` unit=None def=500000.0 -- Disconnection protection
 - `dispatch_interval` unit=None def=500000.0 -- Dispatch interval
 - `dispute_resolution_mechanism` unit=None def=500000.0 -- Dispute resolution
-- `distribution_capex_per_connection` unit='USD/connection' def=600.0 -- Installed cost of the distribution network per new connection. The unit is USD p
+- `distribution_capex_per_connection` unit='USD/connection' def=600.0 -- Installed cost of the distribution network per new connection. The unit is USD per connection; the shipped [0, 1e6] admitted a value of a million per connection, which is a country's entire grid budget for one house.
 - `distribution_conditions` unit=None def=500000.0 -- Distribution conditions
 - `distribution_detail` unit=None def=500000.0 -- Distribution detail
 - `distribution_loss_factor` unit='1' def=0.5 -- Distribution losses
+- `distribution_network_km` unit='km' def=45000.0 -- Distribution circuit-km: a 10 GW single-country network at about 4-5 km per MW.
 - `distribution_wheeling_charges` unit=None def=500000.0 -- Distribution wheeling charge
 - `double_tax_treaty` unit=None def=500000.0 -- Treaty network
 - `drought_frequency` unit=None def=500000.0 -- Drought frequency multiplier
 - `drought_risk` unit=None def=500000.0 -- Drought risk
 - `drought_severity` unit=None def=500000.0 -- Drought severity multiplier
 - `early_retirement_packages` unit=None def=500000.0 -- Early retirement
-- `ecosystem_services_index` unit='1' def=0.7 -- Composite index of ecosystem service provision, normalised to [0, 1]. Range is t
-- `efficiency_benchmarking` unit='1' def=0.85 -- A composite of the utility's efficiency against the frontier or against a peer g
+- `ecosystem_services_index` unit='1' def=0.7 -- Composite index of ecosystem service provision, normalised to [0, 1]. Range is the index's construction.
+- `efficiency_benchmarking` unit='1' def=0.85 -- A composite of the utility's efficiency against the frontier or against a peer group, normalised to [0, 1]. A share-shaped index.
 - `efficient_frontier` unit=None def=500000.0 -- Efficient frontier
-- `electric_vehicle_adoption` unit='1' def=0.5 -- EV share of vehicle stock
 - `electricity_subsidies` unit=None def=500000.0 -- Consumer electricity subsidies
 - `electrification_timeline` unit=None def=500000.0 -- Year to reach target
 - `electrolyser_capacity` unit=None def=500000.0 -- Electrolyser capacity
 - `electrolyser_efficiency` unit=None def=500000.0 -- Electrolyser efficiency
+- `electrolyser_learning_rate` unit='1' def=0.12 -- Cost reduction per doubling of cumulative electrolyser deployment.
 - `emergency_preparedness` unit=None def=500000.0 -- Emergency prep
 - `emergency_shelter_load` unit=None def=500000.0 -- Emergency shelter load
 - `employment_factor_biomass` unit=None def=500000.0 -- Jobs/MW biomass
@@ -229,42 +234,43 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `employment_factor_transmission` unit=None def=500000.0 -- Jobs/km transmission
 - `employment_factor_wind` unit=None def=500000.0 -- Jobs/MW wind
 - `energy_poverty_gap` unit=None def=500000.0 -- Poverty gap
-- `energy_security_index` unit='1' def=0.5 -- Composite index of import dependency, fuel diversity and infrastructure adequacy
+- `energy_poverty_rate` unit='1' def=0.5 -- Share of households whose energy burden exceeds the affordability limit. A share, bounded in [0, 1].
+- `energy_security_index` unit='1' def=0.5 -- Composite index of import dependency, fuel diversity and infrastructure adequacy, normalised to [0, 1]. Range is the index's construction, not a policy range.
 - `environmental_representations` unit=None def=500000.0 -- Environmental reps
 - `equator_principles` unit=None def=500000.0 -- Equator Principles
 - `ets_cap` unit=None def=500000.0 -- ETS emissions cap
+- `ets_enabled` unit='1' def=0.0 -- Whether the jurisdiction operates an emissions trading system. A boolean, not a float; the shipped declaration admitted an ETS that was 500,000 times enabled.
 - `ev_adoption_timeline` unit=None def=500000.0 -- Year to reach EV share
 - `ev_battery_size` unit=None def=500000.0 -- Average EV battery size
 - `ev_efficiency` unit=None def=500000.0 -- EV efficiency
-- `ev_share_new_sales` unit='1' def=0.2 -- Fraction of new vehicle sales that are electric in the horizon year. A share of 
+- `ev_share_new_sales` unit='1' def=0.2 -- Fraction of new vehicle sales that are electric in the horizon year. A share of a flow, not a stock; the shipped range admitted values 500,000 times the maximum.
 - `exchange_rate_usd_local` unit=None def=500000.0 -- Exchange rate (USD/local)
 - `exchange_rate_volatility` unit=None def=500000.0 -- Exchange rate volatility
 - `excise_duty_fuel` unit='1' def=0.2 -- Excise duty on fuel, as a share of the retail price. A share.
 - `export_competitiveness` unit=None def=500000.0 -- Export competitiveness
 - `export_duty` unit='1' def=0.0 -- Export duty rate on exported energy or energy carriers. A share.
-- `exposure_index` unit='1' def=0.5 -- Composite index of a system's exposure to climate hazards, normalised to [0, 1].
+- `exposure_index` unit='1' def=0.5 -- Composite index of a system's exposure to climate hazards, normalised to [0, 1]. Range is the index's construction.
 - `external_debt` unit=None def=500000.0 -- External debt
 - `extreme_weather_events` unit=None def=500000.0 -- Extreme weather frequency
 - `failure_history` unit=None def=500000.0 -- Failure history
-- `failure_rate_curve` unit='1' def=1.0 -- A scalar index of the failure-rate curve's shape — 0 for a flat exponential, 1 f
+- `failure_rate_curve` unit='1' def=1.0 -- A scalar index of the failure-rate curve's shape — 0 for a flat exponential, 1 for a bathtub, 2 for wear-out dominated. Not the curve itself, which is a function and cannot be a scalar; this is the shape selector that a Weibull fit reduces to.
 - `feed_in_tariff` unit=None def=500000.0 -- Feed-in tariff rate
 - `financial_transmission_rights` unit=None def=500000.0 -- FTR model
-- `firm_build_fleet_mw` unit='MW' def=10000.0 -- Sum of the optimiser's per-technology builds. Not a decision the graph computes 
+- `firm_build_fleet_mw` unit='MW' def=10000.0 -- Sum of the optimiser's per-technology builds. Not a decision the graph computes in propagation -- the technologies' variables are the LP's -- but the identity every build set must satisfy is declared here, and the reserve margins read the firm part of it.
 - `fishing_community_load` unit=None def=500000.0 -- Coastal fishing load
 - `fishing_vessel_fuel` unit=None def=500000.0 -- Fishing vessel fuel
 - `fit_capacity_cap` unit=None def=500000.0 -- FiT capacity cap
 - `flood_risk` unit=None def=500000.0 -- Flood risk
 - `flywheel_capacity` unit=None def=500000.0 -- Flywheel storage
 - `force_majeure_insurance` unit=None def=500000.0 -- Force majeure insurance
-- `forced_outage_rate_coal` unit='1' def=0.1 -- Fraction of hours the coal fleet is unavailable due to forced outage. A share; t
+- `forced_outage_rate_coal` unit='1' def=0.1 -- Fraction of hours the coal fleet is unavailable due to forced outage. A share; the shipped [0, 1e6] admitted a value 500,000 times the maximum.
 - `foreign_direct_investment` unit=None def=500000.0 -- Foreign direct investment
 - `foreign_exchange_reserves` unit=None def=500000.0 -- Foreign exchange reserves
 - `foresight` unit=None def=500000.0 -- Foresight type
 - `fossil_fuel_subsidies` unit=None def=500000.0 -- Fossil fuel subsidies
-- `fpic_compliance_score` unit='1' def=0.7 -- A compliance score for Free, Prior and Informed Consent, normalised to [0, 1]. H
 - `free_trade_zone_benefits` unit=None def=500000.0 -- FTZ benefits
 - `freight_electrification` unit='1' def=0.05 -- Share of freight tonne-kilometres moved by electric drivetrain. A share.
-- `fuel_cost_hydrogen` unit='USD/MWh' def=120.0 -- Delivered hydrogen cost per megawatt-hour of thermal energy. Converted from USD 
+- `fuel_cost_hydrogen` unit='USD/MWh' def=120.0 -- Delivered hydrogen cost per megawatt-hour of thermal energy. Converted from USD per kg at 33.3 kWh/kg LHV; the conversion is an admission, not a fact — a different calorific value would change the number.
 - `fuel_price_scenario` unit=None def=500000.0 -- Fuel price scenario
 - `fuel_price_volatility` unit=None def=500000.0 -- Fuel price volatility
 - `fusion_capacity` unit=None def=500000.0 -- Fusion capacity
@@ -273,76 +279,77 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `gate_closure` unit=None def=500000.0 -- Gate closure
 - `gdp_per_capita_growth` unit=None def=500000.0 -- GDP per capita growth
 - `gender_impact` unit=None def=500000.0 -- Gender dimensions
-- `geopolitical_risk_index` unit='1' def=0.5 -- Composite index of political, security and diplomatic risk, normalised to [0, 1]
+- `geopolitical_risk_index` unit='1' def=0.5 -- Composite index of political, security and diplomatic risk, normalised to [0, 1]. Higher is riskier. Range is the index's construction.
 - `geothermal_drilling_success` unit=None def=500000.0 -- Drilling success rate
+- `gis_requirements` unit='1' def=0.6 -- The share of network assets in the GIS.
 - `glacial_lake_outburst` unit=None def=500000.0 -- GLOF
 - `gold_standard_methodologies` unit=None def=500000.0 -- Gold Standard
 - `gravity_storage_capacity` unit=None def=500000.0 -- Gravity storage
 - `grid_reliability_saifi` unit=None def=500000.0 -- Reliability target (SAIFI)
-- `grievance_redress_effectiveness` unit='1' def=0.75 -- Share of grievances resolved to the complainant's satisfaction, per the project'
+- `grievance_redress_effectiveness` unit='1' def=0.75 -- Share of grievances resolved to the complainant's satisfaction, per the project's own GRM. A share.
 - `grievance_redress_mechanism` unit=None def=500000.0 -- GRM
 - `habitat_loss` unit=None def=500000.0 -- Habitat loss
 - `habitat_loss_hectares` unit='hectares' def=500.0 -- Hectares of natural habitat lost to the project.
 - `health_impact_dalys` unit='DALY/year' def=50000000.0 -- DALYs
 - `health_impact_morbidity` unit=None def=500000.0 -- Illness cases
 - `health_impact_mortality` unit=None def=500000.0 -- Premature deaths
-- `heat_pump_adoption` unit='1' def=0.05 -- Share of households with a heat pump. A share; shipped with [0, 1] but the defau
 - `heat_pump_cop` unit=None def=500000.0 -- Heat pump COP
 - `heat_stress` unit=None def=500000.0 -- Heat stress
 - `heatwave_frequency` unit=None def=500000.0 -- Heatwave frequency
 - `human_review` unit=None def=500000.0 -- Human review
-- `hybrid_revenue_price_cap` unit='1' def=0.5 -- In a hybrid revenue-price cap, the weight on the price cap. A share; the revenue
+- `hybrid_revenue_price_cap` unit='1' def=0.5 -- In a hybrid revenue-price cap, the weight on the price cap. A share; the revenue cap gets the complement.
 - `hydro_capacity_factor` unit='1' def=0.5 -- Hydro capacity factor
 - `hydro_drought_multiplier` unit='1' def=0.5 -- Drought impact multiplier
 - `hydro_new_build` unit=None def=500000.0 -- New hydro capacity
 - `hydro_reservoir_level` unit=None def=500000.0 -- Initial reservoir level
 - `hydrogen_demand_domestic` unit=None def=500000.0 -- Domestic hydrogen demand
 - `hydrogen_export_port` unit=None def=500000.0 -- Export port
-- `hydrogen_export_volume` unit=None def=500000.0 -- Hydrogen export volume
 - `hydrogen_fuel_cell_capacity` unit=None def=500000.0 -- Hydrogen fuel cell capacity
 - `hydrogen_pipeline_capacity` unit=None def=500000.0 -- Pipeline capacity
+- `hydrogen_pipeline_cost` unit='USD/MW-km' def=120.0 -- Installed cost of a hydrogen pipeline per megawatt-kilometre of capacity. The range spans repurposed natural-gas pipeline at the low end to new-build high-pressure hydrogen pipeline at the high end.
 - `hydrogen_production_demand` unit=None def=500000.0 -- Electricity for hydrogen production
-- `hydrogen_storage_capacity` unit='MWh' def=0.0 -- Installed hydrogen storage capacity, chosen by the optimiser. Same role correcti
+- `hydrogen_storage_capacity` unit='MWh' def=0.0 -- Installed hydrogen storage capacity, chosen by the optimiser. Same role correction.
+- `hydrogen_storage_cost` unit='USD/kWh' def=15.0 -- Installed cost of hydrogen storage. The unit is USD per kWh of energy capacity; the range spans above-ground at the low end to salt cavern at the high end (the cavern is not expensive per unit but the exploration is).
 - `hydrogen_storage_type` unit=None def=500000.0 -- Storage type
 - `ilo_conventions` unit=None def=500000.0 -- ILO conventions
 - `import_dependency` unit=None def=500000.0 -- Import dependency
-- `import_duty_equipment` unit='1' def=0.1 -- Import duty rate on project equipment. A share of the landed value; bounded abov
+- `import_duty_equipment` unit='1' def=0.1 -- Import duty rate on project equipment. A share of the landed value; bounded above by the tariff schedules the sample contains.
 - `import_duty_exemption` unit=None def=500000.0 -- Import duty exemption
 - `indigenous_peoples_rights` unit=None def=500000.0 -- FPIC
 - `industrial_heat_demand` unit=None def=500000.0 -- Industrial heat demand
 - `insider_trading_rules` unit=None def=500000.0 -- Insider trading
-- `insurance_premiums` unit='1' def=500000.0 -- FIRM-SPECIFIC. The absolute premium depends on the asset value and the firm's ra
+- `insurance_premiums` unit='1' def=500000.0 -- FIRM-SPECIFIC. The absolute premium depends on the asset value and the firm's rate. The share-of-asset version is `premium_share_of_asset`, declared in Part A. Not corrected.
 - `interannual_variability` unit=None def=500000.0 -- Interannual variability
-- `interconnector_capacity` unit=None def=500000.0 -- Interconnector capacity
 - `interest_rate_debt` unit=None def=500000.0 -- Interest rate on debt
-- `internet_penetration` unit='1' def=0.5 -- Share of the population with internet access. Shipped correctly as [0, 1]; the e
+- `internet_penetration` unit='1' def=0.5 -- Share of the population with internet access. Shipped correctly as [0, 1]; the entry is retained here only because a subsequent batch should reconcile the shipped shares into a single naming convention (`_penetration` vs `_coverage` vs `_share` vs `_adoption`), and this is the register where that reconciliation lands.
+- `intraday_market` unit='1' def=0.0 -- Whether an intraday market is modelled. A boolean.
 - `investment_periods` unit=None def=500000.0 -- Investment periods
-- `irrigation_coverage` unit='1' def=0.15 -- Share of arable land under irrigation. A share; the shipped range admitted a val
+- `irrigation_coverage` unit='1' def=0.15 -- Share of arable land under irrigation. A share; the shipped range admitted a value 500,000 times the maximum.
 - `irrigation_pumping_demand` unit=None def=500000.0 -- Irrigation pumping demand
 - `islanding_capability` unit=None def=500000.0 -- Islanding capability
 - `iso_55000_compliance` unit=None def=500000.0 -- ISO 55000
 - `just_transition_fund` unit=None def=500000.0 -- JT fund
-- `land_acquisition_cost_per_hectare` unit='USD/hectare' def=5000.0 -- Purchase or lease cost of land per hectare, in USD. The high end is peri-urban a
+- `land_acquisition_cost_per_hectare` unit='USD/hectare' def=5000.0 -- Purchase or lease cost of land per hectare, in USD. The high end is peri-urban arable land in a market with strong tenure; the low end is communal land under customary tenure. The graph carries no country dimension, so the range spans the sample.
 - `land_acquisition_costs` unit=None def=500000.0 -- Land costs
 - `land_aggregation` unit=None def=500000.0 -- Land aggregation
-- `land_aggregation_fragmentation` unit='parcels/km2' def=20.0 -- The number of distinct parcels the project must assemble per unit of area, expre
+- `land_aggregation_fragmentation` unit='parcels/km2' def=20.0 -- The number of distinct parcels the project must assemble per unit of area, expressed as parcels per square kilometre. Higher means more negotiation. The shipped node has no unit and no range; this is the parameter's own physical definition.
 - `land_availability` unit=None def=500000.0 -- Land availability
-- `land_availability_fraction` unit='1' def=0.5 -- Share of the study area that is technically and legally available for the projec
+- `land_availability_fraction` unit='1' def=0.5 -- Share of the study area that is technically and legally available for the project. A share; complements the protected-area constraint the graph already carries.
 - `land_rights` unit=None def=500000.0 -- Land rights
 - `land_tenure` unit=None def=500000.0 -- Land tenure
 - `land_use_change` unit=None def=500000.0 -- Land use change
-- `land_use_conflict_index` unit='1' def=0.3 -- A composite index of competing land uses in the project's vicinity, normalised t
+- `land_use_conflict_index` unit='1' def=0.3 -- A composite index of competing land uses in the project's vicinity, normalised to [0, 1]. Higher is more contested.
 - `land_use_conflicts` unit=None def=500000.0 -- Land use conflicts
 - `land_use_planning` unit=None def=500000.0 -- Land use planning
 - `landfill_gas_capacity` unit=None def=500000.0 -- Landfill gas capacity
 - `landslide_risk` unit=None def=500000.0 -- Landslide risk
 - `leakage_parameters` unit=None def=500000.0 -- Leakage
-- `liability_exposure` unit='1' def=500000.0 -- FIRM-SPECIFIC. The scope of liability is a property of the firm's book. Not corr
+- `liability_exposure` unit='1' def=500000.0 -- FIRM-SPECIFIC. The scope of liability is a property of the firm's book. Not corrected.
 - `licence_conditions` unit=None def=500000.0 -- Licence conditions
 - `licence_fees` unit='USD/MW/year' def=500.0 -- Annual licence fee per megawatt of licensed capacity, in USD per MW-year.
+- `life_extension_possible` unit='1' def=0.0 -- Whether the model may extend an ageing plant's life. A boolean.
 - `lifeline_threshold` unit=None def=500000.0 -- Lifeline threshold
 - `line_outage_end` unit=None def=500000.0 -- When the outage ends
-- `line_outage_probability` unit=None def=500000.0 -- Probability of outage
 - `line_outage_start` unit=None def=500000.0 -- When the outage begins
 - `line_upgrade_budget` unit=None def=500000.0 -- Line upgrade budget
 - `load_factor_override` unit=None def=500000.0 -- Override default load factor
@@ -350,10 +357,9 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `loan_life_coverage_ratio` unit='1' def=1.4 -- Loan life coverage floor. Same shape as the DSCR floor.
 - `local_content_employment` unit=None def=500000.0 -- Local employment
 - `local_employment_targets` unit=None def=500000.0 -- Local employment
-- `loss_factor_cross_border` unit='1' def=0.03 -- Share of cross-border flow lost in transit. A share; the shipped range admitted 
+- `loss_factor_cross_border` unit='1' def=0.03 -- Share of cross-border flow lost in transit. A share; the shipped range admitted a loss of 500,000 times the flow.
 - `loss_reduction_investment` unit=None def=500000.0 -- Investment in loss reduction
 - `lpg_subsidies` unit=None def=500000.0 -- LPG subsidy
-- `maintenance_frequency` unit='events/year' def=2.0 -- Planned maintenance events per year, per unit or per asset class. The high end i
 - `maintenance_history` unit=None def=500000.0 -- Maintenance history
 - `maintenance_schedule` unit=None def=500000.0 -- Planned maintenance timing
 - `maintenance_schedule_optimisation` unit=None def=500000.0 -- Optimise maintenance timing
@@ -363,20 +369,21 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `marine_wave_capacity` unit=None def=500000.0 -- Installed wave capacity
 - `maritime_security` unit=None def=500000.0 -- Maritime security
 - `market_abuse_prevention` unit=None def=500000.0 -- Market abuse
-- `market_concentration` unit='1' def=2500.0 -- HHI of generator market shares. Same scale as supply-chain concentration, same r
+- `market_concentration` unit='1' def=2500.0 -- HHI of generator market shares. Same scale as supply-chain concentration, same reasoning.
 - `market_coupling` unit=None def=500000.0 -- Market coupling
 - `market_liquidity` unit=None def=500000.0 -- Liquidity
+- `market_model` unit=None def='regulated' -- Which market model the simulation assumes. A categorical with four documented values.
+- `market_structure` unit=None def='single_buyer' -- Which market structure the model assumes. A categorical with four documented values, not a float. The shipped declaration admitted a value of 500,000 which corresponds to no structure.
 - `material_adverse_change` unit=None def=500000.0 -- MAC clause
 - `mercury_emissions` unit=None def=500000.0 -- Mercury
 - `microgrid_deployment` unit=None def=500000.0 -- Microgrid deployment
 - `microinsurance` unit='1' def=500000.0 -- FIRM-SPECIFIC. The share-of-income version is declared in Part A. Not corrected.
-- `microinsurance_premium_share_of_income` unit='1' def=0.01 -- Annual premium as a fraction of household income for a microinsurance policy. A 
+- `microinsurance_premium_share_of_income` unit='1' def=0.01 -- Annual premium as a fraction of household income for a microinsurance policy. A share; the sample's ceiling is the affordability threshold the graph already carries.
 - `military_energy_demand` unit=None def=500000.0 -- Military energy demand
 - `min_down_time_coal` unit=None def=500000.0 -- Coal minimum down time
 - `min_stable_level_coal` unit=None def=500000.0 -- Coal minimum stable level
 - `min_stable_level_gas` unit=None def=500000.0 -- Gas minimum stable level
 - `min_up_time_coal` unit=None def=500000.0 -- Coal minimum up time
-- `mini_grid_deployment` unit=None def=500000.0 -- Mini-grid capacity added
 - `mini_grid_subsidies` unit=None def=500000.0 -- Mini-grid capital subsidy
 - `mining_demand_growth` unit=None def=500000.0 -- Additional mining load growth
 - `mining_electrification` unit='1' def=0.1 -- Fraction of mining energy demand met by electricity. A share.
@@ -396,14 +403,15 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `number_of_retailers` unit=None def=500000.0 -- Number of retailers
 - `occupational_health_safety` unit=None def=500000.0 -- OHS
 - `official_development_assistance` unit=None def=500000.0 -- Official development assistance
-- `opex_fixed_wind_onshore` unit='USD/kW/year' def=30.0 -- Fixed operations and maintenance for wind onshore: the per-kilowatt annual cost 
-- `opex_variable_electrolyser` unit='USD/MWh' def=1.0 -- Variable O&M of electrolysis per megawatt-hour of hydrogen produced. Excludes el
-- `outage_cause_distribution` unit='1' def=0.35 -- Share of interruption events attributable to weather. The graph carries one scal
+- `opex_fixed_wind_onshore` unit='USD/kW/year' def=30.0 -- Fixed operations and maintenance for wind onshore: the per-kilowatt annual cost of staff, inspection and scheduled overhaul, paid whether or not the plant runs.
+- `opex_variable_electrolyser` unit='USD/MWh' def=1.0 -- Variable O&M of electrolysis per megawatt-hour of hydrogen produced. Excludes electricity, which is the dominant cost and enters as an input to the Link.
+- `outage_cause_distribution` unit='1' def=0.35 -- Share of interruption events attributable to weather. The graph carries one scalar and the sample contains four cause classes; this is the weather share, and a future batch should split it into weather, equipment, human and other.
+- `outage_coordination` unit='1' def=1.0 -- Corrected from float to bool. Whether planned outages are coordinated across the fleet; a scenario either models the coordination or does not.
 - `outage_management_systems` unit=None def=500000.0 -- OMS
 - `parameter_overrides` unit=None def=500000.0 -- Parameter overrides
-- `parametric_insurance` unit='1' def=500000.0 -- FIRM-SPECIFIC. The share-of-loss version and the trigger threshold are declared 
-- `parametric_insurance_coverage` unit='1' def=0.5 -- Share of the loss a parametric instrument covers when its trigger fires. A share
-- `parametric_trigger_threshold` unit='1' def=0.9 -- The physical hazard level at which a parametric policy pays out, expressed as a 
+- `parametric_insurance` unit='1' def=500000.0 -- FIRM-SPECIFIC. The share-of-loss version and the trigger threshold are declared in Part A. Not corrected.
+- `parametric_insurance_coverage` unit='1' def=0.5 -- Share of the loss a parametric instrument covers when its trigger fires. A share.
+- `parametric_trigger_threshold` unit='1' def=0.9 -- The physical hazard level at which a parametric policy pays out, expressed as a share of the policy's notional hazard. A share; the range spans the mean trigger at the low end to the 1-in-100-year at the high end.
 - `parent_company_guarantee` unit=None def=500000.0 -- PCG
 - `payment_plans` unit=None def=500000.0 -- Payment plans
 - `payment_security_required` unit=None def=500000.0 -- Payment security
@@ -411,7 +419,8 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `pension_security` unit=None def=500000.0 -- Pension security
 - `performance_bond` unit='1' def=0.05 -- Bond posted as a share of capex. A share.
 - `permanence_parameters` unit=None def=500000.0 -- Permanence
-- `physical_risk_score` unit='1' def=0.4 -- A composite score of the asset's physical climate risk, normalised to [0, 1]. Hi
+- `phase_shifting_enabled` unit='1' def=0.0 -- Corrected from float to bool.
+- `physical_risk_score` unit='1' def=0.4 -- A composite score of the asset's physical climate risk, normalised to [0, 1]. Higher is riskier. The shipped declaration admitted a value 500,000 times the maximum.
 - `planning_reserve_margin` unit=None def=500000.0 -- Planning reserve margin
 - `plant_retirement_age` unit=None def=500000.0 -- Retirement age by technology
 - `pm10_emissions` unit=None def=500000.0 -- PM10 emissions
@@ -432,31 +441,36 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `ppa_termination_payments` unit=None def=500000.0 -- Termination payments
 - `precipitation_multiplier` unit='1' def=0.5 -- Precipitation multiplier
 - `predictive_maintenance_adoption` unit='1' def=0.5 -- Predictive maintenance adoption
-- `premium_share_of_asset` unit='1' def=0.008 -- Annual premium as a fraction of the insured asset's value. A share; the range sp
+- `premium_share_of_asset` unit='1' def=0.008 -- Annual premium as a fraction of the insured asset's value. A share; the range spans utility-scale generation at the low end to distributed assets at the high end.
 - `prepayment_metering` unit=None def=500000.0 -- Prepayment
-- `price_cap` unit='1' def=1.0 -- The maximum average tariff the utility may charge, as a share of the cost-recove
+- `price_cap` unit='1' def=1.0 -- The maximum average tariff the utility may charge, as a share of the cost-recovery tariff. A share above 1.0 is a cap above cost.
 - `price_limits` unit=None def=500000.0 -- Price limits
 - `pricing_mechanism` unit=None def=500000.0 -- Pricing mechanism
 - `probability_weight` unit=None def=500000.0 -- Scenario probability
 - `project_irr_hurdle` unit=None def=500000.0 -- Project IRR hurdle
 - `protected_areas` unit=None def=500000.0 -- Protected areas
+- `public_transport_share` unit='1' def=0.3 -- Share of passenger-kilometres on public transport. Shipped correctly as [0, 1].
 - `pyrolysis_capacity` unit=None def=500000.0 -- Pyrolysis capacity
 - `rab_roll_forward` unit=None def=500000.0 -- RAB roll-forward
-- `railway_electrification` unit='1' def=0.2 -- Share of the rail network that is electrified. A share; the shipped range admitt
+- `railway_electrification` unit='1' def=0.2 -- Share of the rail network that is electrified. A share; the shipped range admitted a value 500,000 times the maximum.
 - `ramp_rate_coal` unit=None def=500000.0 -- Coal ramp rate
 - `ramp_rate_gas` unit=None def=500000.0 -- Gas ramp rate
 - `rare_earth_dependencies` unit=None def=500000.0 -- Rare earths
 - `re_target_carrier` unit=None def=500000.0 -- Which renewables count
+- `real_time_market` unit='1' def=0.0 -- Whether a real-time market is modelled. A boolean.
 - `redeployment_options` unit=None def=500000.0 -- Redeployment
 - `refinancing_terms` unit=None def=500000.0 -- Refinancing
+- `regulated_tariff_rate` unit='1' def=0.5 -- Regulated tariff
+- `regulation_down_requirement` unit=None def=500000.0 -- Regulation down
 - `regulation_reserve` unit=None def=500000.0 -- Regulation reserve
+- `regulation_up_requirement` unit=None def=500000.0 -- Regulation up
 - `regulatory_accounts` unit=None def=500000.0 -- Regulatory accounts
-- `regulatory_asset_valuation_method` unit='1' def=0.0 -- Which valuation method the regulator uses — 0 for historical cost, 1 for indexed
-- `regulatory_lag` unit='years' def=1.0 -- Years between cost incurrence and its recovery in tariff. Bounded below at zero 
-- `regulatory_period_length` unit='years' def=5.0 -- Years between tariff reviews. Bounded below at 1 (annual review) and above at 10
-- `reinsurance_parameters` unit='1' def=500000.0 -- FIRM-SPECIFIC. The market-level statistic is `retention_share`, declared in Part
+- `regulatory_asset_valuation_method` unit='1' def=0.0 -- Which valuation method the regulator uses — 0 for historical cost, 1 for indexed historical, 2 for current-cost. A categorical value smuggled into a float; the type correction in Part D is the substantive fix, and this range is a stopgap that keeps the value meaningful until that fix lands.
+- `regulatory_lag` unit='years' def=1.0 -- Years between cost incurrence and its recovery in tariff. Bounded below at zero and above at the period length. A lag of 0 is contemporaneous recovery; the sample's central value is 1.
+- `regulatory_period_length` unit='years' def=5.0 -- Years between tariff reviews. Bounded below at 1 (annual review) and above at 10 (long-term concession). Four to five is the mode in the sample.
+- `reinsurance_parameters` unit='1' def=500000.0 -- FIRM-SPECIFIC. The market-level statistic is `retention_share`, declared in Part A. Not corrected.
 - `reliability_centred_maintenance` unit=None def=500000.0 -- RCM
-- `remedy_periods` unit='days' def=60.0 -- Days a defaulting party has to cure before the lender may step in. Bounded below
+- `remedy_periods` unit='days' def=60.0 -- Days a defaulting party has to cure before the lender may step in. Bounded below at one day and above at one year.
 - `remittance_dependency` unit=None def=500000.0 -- Remittance dependency
 - `remittance_flows` unit=None def=500000.0 -- Remittance flows
 - `renewable_curtailment_limit` unit=None def=500000.0 -- Maximum curtailment
@@ -468,17 +482,18 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `resettlement_costs` unit=None def=500000.0 -- Resettlement costs
 - `resilience_investment` unit=None def=500000.0 -- Resilience investment
 - `resilience_metrics` unit=None def=500000.0 -- Resilience metrics
-- `resilience_score` unit='1' def=0.5 -- Composite score of a system's resilience to shocks, normalised to [0, 1]. Range 
+- `resilience_score` unit='1' def=0.5 -- Composite score of a system's resilience to shocks, normalised to [0, 1]. Range is the index's construction.
 - `retail_competition` unit=None def=500000.0 -- Retail competition
 - `retraining_costs` unit=None def=500000.0 -- Retraining cost
-- `ring_fencing_rules` unit='1' def=0.5 -- Share of the regulator's ring-fencing provisions that are legally binding rather
+- `right_of_way_cost` unit=None def=500000.0 -- Right-of-way cost
+- `ring_fencing_rules` unit='1' def=0.5 -- Share of the regulator's ring-fencing provisions that are legally binding rather than best-practice. A share.
 - `risk_based_maintenance` unit=None def=500000.0 -- RBM
-- `risk_of_maladaptation` unit='1' def=0.2 -- Probability that an adaptation measure makes the outcome worse, normalised to [0
+- `risk_of_maladaptation` unit='1' def=0.2 -- Probability that an adaptation measure makes the outcome worse, normalised to [0, 1]. Range is the index's construction.
 - `risk_transfer_mechanisms` unit=None def=500000.0 -- Risk transfer
 - `rolling_horizon_window` unit=None def=500000.0 -- Rolling horizon window
-- `rooftop_solar_adoption` unit='1' def=0.1 -- Share of suitable rooftops with PV. A share; same reset of the placeholder defau
+- `rooftop_solar_adoption` unit='1' def=0.1 -- Share of suitable rooftops with PV. A share; same reset of the placeholder default.
 - `sacred_sites` unit=None def=500000.0 -- Sacred sites
-- `sacred_sites_density` unit='sites/100km2' def=1.0 -- Number of documented sacred sites per hundred square kilometres in the study are
+- `sacred_sites_density` unit='sites/100km2' def=1.0 -- Number of documented sacred sites per hundred square kilometres in the study area. Distinct from cultural heritage because sacred sites often have no legal register.
 - `salinity_gradient_capacity` unit=None def=500000.0 -- Salinity gradient capacity
 - `sanctions_exposure` unit=None def=500000.0 -- Sanctions
 - `scenario_description` unit=None def=500000.0 -- Scenario description
@@ -487,8 +502,8 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `scenario_template` unit=None def=500000.0 -- Scenario template
 - `scenario_visibility` unit=None def=500000.0 -- Scenario visibility
 - `sea_level_rise` unit=None def=500000.0 -- SLR
+- `security_constrained_dispatch` unit='1' def=1.0 -- Whether the dispatch is constrained by network limits. A boolean.
 - `security_package` unit=None def=500000.0 -- Security package
-- `service_quality_penalty` unit='1' def=0.02 -- Share of allowed revenue forfeited when service quality misses the target. A sha
 - `service_quality_reward` unit='1' def=0.01 -- Share of allowed revenue added when service quality exceeds the target. A share.
 - `settlement_risk` unit=None def=500000.0 -- Settlement risk
 - `shipping_fuel_demand` unit=None def=500000.0 -- Shipping fuel demand
@@ -496,22 +511,23 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `signal_extraction` unit=None def=500000.0 -- Signal extraction
 - `signal_scoring` unit=None def=500000.0 -- Signal scoring
 - `skills_gap_assessment` unit=None def=500000.0 -- Skills gap
+- `skills_requirements` unit=None def=500000.0 -- Skills by technology
 - `small_modular_reactor_capacity` unit=None def=500000.0 -- SMR capacity
 - `smart_metering_penetration` unit='1' def=0.5 -- Smart meter coverage
+- `smart_metering_rollout` unit='1' def=1.0 -- Corrected from float to bool. The shipped node is a rollout — a programme that is either on or off — not the penetration share; the share is `smart_metering_penetration`.
 - `snapshot_weightings` unit=None def=500000.0 -- Snapshot weightings
 - `social_protection_parameters` unit=None def=500000.0 -- Social protection
 - `social_representations` unit=None def=500000.0 -- Social reps
 - `social_tariff` unit=None def=500000.0 -- Social tariff
 - `soil_contamination` unit=None def=500000.0 -- Soil contamination
-- `soil_contamination_index` unit='1' def=0.1 -- A composite soil contamination index, normalised to [0, 1]. Higher is more conta
-- `solar_degradation` unit=None def=500000.0 -- Solar degradation
-- `solar_home_system_deployment` unit=None def=500000.0 -- SHS units added
+- `soil_contamination_index` unit='1' def=0.1 -- A composite soil contamination index, normalised to [0, 1]. Higher is more contaminated. The shipped graph declares the parameter with the placeholder; this corrects it to the index's own scale.
 - `solar_irradiance_multiplier` unit='1' def=0.5 -- Solar irradiance multiplier
 - `solar_pv_land_constraint` unit=None def=500000.0 -- Land available for solar
+- `solar_pv_learning_rate` unit='1' def=0.2 -- Cost reduction per doubling of cumulative solar deployment. Same bound as the battery rate.
 - `solar_pv_max_build` unit=None def=500000.0 -- Maximum annual solar build
 - `solar_thermal_capacity` unit=None def=500000.0 -- Solar thermal capacity
-- `solvency_capital` unit='1' def=500000.0 -- FIRM-SPECIFIC. The absolute number depends on the firm's book. The ratio version
-- `solvency_capital_ratio` unit='1' def=1.6 -- Eligible own funds as a share of the required solvency capital. The prudential f
+- `solvency_capital` unit='1' def=500000.0 -- FIRM-SPECIFIC. The absolute number depends on the firm's book. The ratio version is `solvency_capital_ratio`, declared in Part A. Not corrected.
+- `solvency_capital_ratio` unit='1' def=1.6 -- Eligible own funds as a share of the required solvency capital. The prudential floor is 1.0; markets target 1.5–2.0. The shipped graph carries no such parameter and this one is declared because the solvency test is the insurance equivalent of the DSCR floor.
 - `sovereign_risk_premium` unit=None def=500000.0 -- Sovereign risk premium
 - `sox_emissions` unit=None def=500000.0 -- SOx emissions
 - `spare_capacity` unit=None def=500000.0 -- Spare capacity
@@ -521,22 +537,24 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `spatial_clustering` unit=None def=500000.0 -- Spatial clustering
 - `spatial_resolution` unit=None def=500000.0 -- Spatial resolution
 - `spinning_reserve` unit=None def=500000.0 -- Spinning reserve requirement
+- `spinning_reserve_requirement` unit=None def=500000.0 -- Spinning reserve
 - `ssp_pathway` unit=None def=500000.0 -- Shared Socioeconomic Pathway
+- `stakeholder_engagement_plan` unit=None def=500000.0 -- SEP
 - `stamp_duty` unit='1' def=0.02 -- Stamp duty on property transfer, as a share of the transaction value. A share.
 - `startup_cost_coal` unit=None def=500000.0 -- Coal start-up cost
 - `startup_cost_gas` unit=None def=500000.0 -- Gas start-up cost
-- `steel_production` unit=None def=500000.0 -- Steel production
 - `step_in_rights` unit=None def=500000.0 -- Step-in rights
 - `stochastic_scenarios` unit=None def=500000.0 -- Stochastic scenarios
-- `storage_capacity_mw` unit='MW' def=800.0 -- Battery, pumped hydro and thermal storage, at their power rating. Not a Generato
+- `storage_capacity_mw` unit='MW' def=800.0 -- Battery, pumped hydro and thermal storage, at their power rating. Not a Generator in the network, so it counts toward neither firm nor VRE capacity -- the reserve margin is a nameplate adequacy criterion and counting a battery's rating as firm is a modelling choice this graph does not make. 
+- `storage_dispatch_enabled` unit='1' def=1.0 -- Corrected from float to bool.
 - `storage_duration_curve` unit=None def=500000.0 -- Storage energy-to-power ratio
 - `storm_surge` unit=None def=500000.0 -- Storm surge
 - `strategic_bidding` unit=None def=500000.0 -- Strategic bidding
 - `strategic_reserves` unit=None def=500000.0 -- Strategic reserves
-- `supply_chain_concentration` unit='1' def=2500.0 -- Herfindahl-Hirschman Index of supplier concentration, bounded in [0, 10000]. The
+- `supply_chain_concentration` unit='1' def=2500.0 -- Herfindahl-Hirschman Index of supplier concentration, bounded in [0, 10000]. The shipped [0, 1e6] admitted values a hundred times the index's maximum, which is why a monopoly supplier would have registered as a diversified market.
 - `synthetic_fuel_share_aviation` unit='1' def=0.05 -- Share of aviation fuel that is synthetic. A share.
 - `synthetic_fuel_share_shipping` unit='1' def=0.05 -- Share of shipping fuel that is green. A share.
-- `tariff_rebalancing` unit='1/year' def=0.2 -- Annual rate at which a tariff class is rebalanced toward cost. Bounded above at 
+- `tariff_rebalancing` unit='1/year' def=0.2 -- Annual rate at which a tariff class is rebalanced toward cost. Bounded above at 1.0, which is immediate rebalancing.
 - `tariff_structure` unit=None def=500000.0 -- Tariff design
 - `tariff_transparency` unit=None def=500000.0 -- Tariff transparency
 - `tax_holiday_conditions` unit=None def=500000.0 -- Conditions for holiday
@@ -544,17 +562,19 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `tax_incentives` unit=None def=500000.0 -- Tax incentives for renewables
 - `technology_risk_premium` unit=None def=500000.0 -- Technology risk premium
 - `temperature_increase` unit=None def=500000.0 -- Temperature increase
+- `temperature_target` unit=None def=500000.0 -- Temperature target
 - `temporal_aggregation` unit=None def=500000.0 -- Temporal aggregation
 - `temporal_clustering` unit=None def=500000.0 -- Temporal clustering
 - `temporal_resolution` unit=None def=500000.0 -- Temporal resolution
 - `temporary_camp_load` unit=None def=500000.0 -- Refugee camp load
 - `terrorism_risk` unit=None def=500000.0 -- Terrorism risk
-- `thermal_storage_capacity` unit='MWh' def=0.0 -- Installed thermal storage capacity, chosen by the optimiser. Same role correctio
-- `thin_capitalisation_limit` unit='1' def=1.5 -- The debt-to-equity ceiling above which interest deductibility is limited. A rati
+- `thermal_storage_capacity` unit='MWh' def=0.0 -- Installed thermal storage capacity, chosen by the optimiser. Same role correction.
+- `thin_capitalisation_limit` unit='1' def=1.5 -- The debt-to-equity ceiling above which interest deductibility is limited. A ratio; the sample's jurisdictions range from 1.5:1 to 4:1.
 - `thin_capitalisation_rules` unit=None def=500000.0 -- Thin cap rules
 - `tidal_range_capacity` unit=None def=500000.0 -- Tidal range capacity
 - `time_horizon` unit='years' def=25.0 -- Time horizon
-- `time_of_use_tariff_adoption` unit='1' def=0.1 -- Share of customers on a ToU tariff. A share; same reset of the placeholder defau
+- `time_of_use_tariff_adoption` unit='1' def=0.1 -- Share of customers on a ToU tariff. A share; same reset of the placeholder default.
+- `topology_switching_enabled` unit='1' def=1.0 -- Corrected from float to bool. The parameter is on or off; the shipped [0, 1e6] admitted a value 500,000 times the maximum.
 - `tourism_load` unit=None def=500000.0 -- Tourism seasonal load
 - `trade_agreement` unit=None def=500000.0 -- Trade agreement type
 - `trade_flow_parameters` unit=None def=500000.0 -- Trade flows
@@ -564,22 +584,26 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `transboundary_water_constraint` unit=None def=500000.0 -- Transboundary water limit
 - `transfer_pricing_rules` unit=None def=500000.0 -- Transfer pricing
 - `transmission_capacity_factor` unit='1' def=0.5 -- Transmission utilisation
-- `transmission_cost_multiplier` unit='1' def=1.0 -- Scaling factor applied to a reference transmission cost. Not a share — a multipl
+- `transmission_cost_multiplier` unit='1' def=1.0 -- Scaling factor applied to a reference transmission cost. Not a share — a multiplier above 1.0 is admissible (harder terrain, higher labour costs) and one below 1.0 is admissible (competitive tender). Shipped as a share, which refused every scenario with above-reference costs.
 - `transmission_detail` unit=None def=500000.0 -- Transmission detail
+- `transmission_expansion_allowed` unit='1' def=1.0 -- Whether the expansion model may build transmission. A boolean.
 - `transmission_lead_time` unit=None def=500000.0 -- Transmission construction time
 - `transmission_loss_factor` unit='1' def=0.5 -- Average transmission loss
+- `transmission_loss_reduction_target` unit=None def=500000.0 -- Loss reduction target
 - `transport_logistics` unit=None def=500000.0 -- Transport logistics
 - `tsam_segments` unit=None def=500000.0 -- TSAM segments
 - `unbundling_status` unit=None def=500000.0 -- Utility unbundling
 - `undrip_compliance` unit=None def=500000.0 -- UNDRIP
 - `union_agreements` unit=None def=500000.0 -- Union agreements
-- `v2g_adoption` unit='1' def=0.5 -- V2G-capable EV share
+- `unit_commitment` unit='1' def=1.0 -- Whether the dispatch model enforces unit commitment. A boolean.
 - `value_of_lost_load` unit=None def=500000.0 -- Value of lost load
 - `vcs_methodologies` unit=None def=500000.0 -- VCS
 - `virtual_bidding` unit=None def=500000.0 -- Virtual bidding
 - `voc_emissions` unit=None def=500000.0 -- VOC emissions
+- `voltage_optimisation_enabled` unit='1' def=1.0 -- Corrected from float to bool.
+- `voltage_support_requirement` unit=None def=500000.0 -- Voltage support
 - `voluntary_carbon_market` unit=None def=500000.0 -- VCM participation
-- `vulnerability_index` unit='1' def=0.5 -- Composite index of exposure, sensitivity and adaptive capacity, normalised to [0
+- `vulnerability_index` unit='1' def=0.5 -- Composite index of exposure, sensitivity and adaptive capacity, normalised to [0, 1]. Higher is more vulnerable. Range is the index's construction.
 - `vulnerable_customer_protection` unit=None def=500000.0 -- Vulnerable customers
 - `wage_levels_by_sector` unit=None def=500000.0 -- Wage levels
 - `waste_to_energy_capacity` unit=None def=500000.0 -- Waste-to-energy capacity
@@ -589,23 +613,22 @@ Batch 19 covered the six with activity bases (ammonia export, cement CCUS, indus
 - `water_pumping_load` unit=None def=500000.0 -- Water utility pumping
 - `water_quality_impact` unit=None def=500000.0 -- Water quality
 - `water_quality_index` unit='1' def=0.6 -- A composite water quality index, normalised to [0, 1]. Higher is cleaner.
-- `water_stress_index` unit='1' def=0.4 -- Ratio of water withdrawal to renewable freshwater supply, expressed as a share. 
+- `water_stress_index` unit='1' def=0.4 -- Ratio of water withdrawal to renewable freshwater supply, expressed as a share. Higher is more stressed. Range is the index's construction.
 - `wave_energy_converter_type` unit=None def=500000.0 -- Wave energy converter type
-- `weather_derivatives` unit='1' def=500000.0 -- FIRM-SPECIFIC. The notional of a weather derivative depends on the exposure it h
+- `weather_derivatives` unit='1' def=500000.0 -- FIRM-SPECIFIC. The notional of a weather derivative depends on the exposure it hedges. Not corrected.
 - `wheeling_charge_cross_border` unit=None def=500000.0 -- Cross-border wheeling charge
 - `wheeling_charges` unit=None def=500000.0 -- Transmission wheeling charge
 - `wildfire_risk` unit=None def=500000.0 -- Wildfire risk
 - `willingness_to_pay` unit=None def=500000.0 -- WTP
-- `wind_degradation` unit=None def=500000.0 -- Wind degradation
 - `wind_offshore_platform` unit=None def=500000.0 -- Platform type
 - `wind_speed_multiplier` unit='1' def=0.5 -- Wind speed multiplier
-- `withholding_tax_dividends` unit='1' def=0.1 -- Withholding tax rate on dividends. Bounded by the sample's double-tax treaties, 
+- `withholding_tax_dividends` unit='1' def=0.1 -- Withholding tax rate on dividends. Bounded by the sample's double-tax treaties, which cap the rate for treaty partners.
 - `withholding_tax_interest` unit='1' def=0.1 -- Withholding tax rate on interest. Same shape as dividend WHT.
 - `women_employment_targets` unit=None def=500000.0 -- Women employment
 - `work_management_systems` unit=None def=500000.0 -- WMS
 - `worker_grievance_mechanism` unit=None def=500000.0 -- Grievance mechanism
-- `working_capital_allowance` unit='1' def=0.05 -- The regulator's allowance for working capital, expressed as a share of revenue. 
+- `working_capital_allowance` unit='1' def=0.05 -- The regulator's allowance for working capital, expressed as a share of revenue. A share.
 - `workshop_capacity` unit=None def=500000.0 -- Workshop capacity
 - `world_bank_esf` unit=None def=500000.0 -- World Bank ESF
-- `x_factor` unit='1' def=0.02 -- The regulatory efficiency factor. Bounded to the range regulators actually set; 
+- `x_factor` unit='1' def=0.02 -- The regulatory efficiency factor. Bounded to the range regulators actually set; a value near 1 would require a utility to become free.
 - `youth_employment_targets` unit=None def=500000.0 -- Youth employment
