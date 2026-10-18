@@ -8,10 +8,11 @@ regional power pools — and delivers those forecasts through channels that reac
 everyone from a national utility control room to a feature phone in rural
 Malawi.
 
-It is the successor to a South-Africa-only subscription report model (COMPASS,
-Meridian Economics), widened in three directions at once: **scope** (55
-countries, not one), **time** (long-run planning *and* day-ahead operations),
-and **audience** (an open platform, not a closed report).
+It is an open platform rather than a closed subscription report, widened along
+three directions at once: **scope** (55 countries, every regional power pool),
+**time** (long-run planning *and* day-ahead operations), and **audience**
+(banks, utilities, regulators, researchers, and citizens — not one report
+audience).
 
 ---
 
@@ -53,7 +54,7 @@ summary`, `alea registry export` and `make test` each reproduce a row.
 | Tests | 1,394 collected, run by `make test` |
 | CLI | 17 command groups |
 | Registry | 55 countries, 23 technologies |
-| Parameter graph | 87 parameters, 38 equations, 84 edges, 16 systems, 1 feedback loop |
+| Parameter graph | 1,075 parameters, 163 equations, 54 cross-validation rules, 10 constraint routes, 2 feedback loops |
 
 `make check` is the gate — Rust, workflow, lint, types, tests, canaries,
 determinism — and CI calls the same runner rather than reimplementing it.
@@ -99,9 +100,9 @@ through SSP5-8.5.
 
 ### Who uses it
 
-Alea serves the same archetypes as COMPASS — banks, investors, developers,
-traders, large power users, policymakers — across every African market, and adds
-national utilities, regulators, researchers, and continental institutions. The
+Alea serves banks, investors, developers, traders, large power users, and
+policymakers across every African market, and adds national utilities,
+regulators, researchers, and continental institutions. The
 strategy specification extends this to twenty archetypes including city
 governments, journalists, healthcare facilities, insurers, and carbon markets,
 with free access for citizens, researchers, and NGOs.
@@ -194,7 +195,7 @@ graph TD
         API[REST API] --> AD[Adapters<br/>dashboard · WhatsApp · USSD · SMS]
     end
 
-    PRG[Parameter Graph<br/>87 params · 38 equations] -.validates.-> WI
+    PRG[Parameter Graph<br/>1,075 params · 163 equations] -.validates.-> WI
     PRG -.validates.-> PC
     MI -.feeds downward.-> PC
     MI -.feeds downward.-> PRED
@@ -373,20 +374,25 @@ name it does not carry is a name it cannot check.
 
 ## The parameter graph
 
-The 87 parameters are not independent knobs. They are coupled by physical laws,
-accounting identities, engineering limits, economic behaviour, and feedback, and
-a scenario that sets two coupled parameters independently is a scenario that
-solves and returns a contradiction.
+The parameters are not independent knobs. They are coupled by physical laws,
+accounting identities, engineering limits, economic behaviour, policy
+instruments, and feedback, and a scenario that sets two coupled parameters
+independently is a scenario that solves and returns a contradiction.
 
 The Parameter Relationship Graph (PRG) is the structure that knows the
-couplings:
+couplings. It is served from `config/prg.yaml`, which the generator in
+`scripts/build/prg_from_catalog.py` builds from the catalog (`docs/params.md`)
+and the coupling batches preserve:
 
 | | |
 |---|---|
-| Parameters | 87 — 52 exogenous, 32 derived, 3 endogenous |
-| Equations | 38, across 16 systems — all 16 modelled |
-| Edges | 84 |
-| Feedback loops | 1 (3 loop variables), solved by Tarjan SCC detection + damped Gauss–Seidel |
+| Parameters | 1,075 — 800 free, 111 exogenous, 148 derived, 19 endogenous (the optimiser's fleet) |
+| Equations | 163, across 17 systems — every one dimensionally decidable (144 consistent; the 12 flagged are recorded, not passed silently) |
+| Edges | 384, every one a declared relationship citing the equation that governs it |
+| Cross-validation rules | 54; all quiet at the default scenario, each able to fire on a scenario that violates it |
+| Constraint routes | 10 inequalities bind the LP solve; 5 further inequality-shaped equations are post-solve checks |
+| Feedback loops | 2 (5 loop variables), solved by Tarjan SCC detection + damped Gauss–Seidel; the incremental propagation equals a full walk exactly |
+| Uncoupled register | 717 nodes still carry no equation, each named with its coupling class in `docs/param_coupling_worklist.md` — the coupling batches (12+) are closing it |
 
 ```sh
 uv run alea prg summary       # the graph's shape
@@ -397,6 +403,76 @@ uv run alea prg sensitivity   # which parameters move the answer
 uv run alea prg constraints   # the inequalities the optimiser can carry
 uv run alea prg units         # the dimensional check
 uv run alea prg audit         # a stored scenario against the identities
+```
+
+### How the PRG is built and served
+
+Every parameter in `config/prg.yaml` is either arithmetic the engine evaluates,
+an input the equations read, an inequality the optimiser carries, or a rule the
+cross-validation reads — the coupling batches (12+) are closing the last
+register, and each coupling carries its reference, its LaTeX rendering and its
+archived source.
+
+```mermaid
+flowchart LR
+    subgraph SOURCES["Where the graph comes from"]
+        CAT["docs/params.md<br/>the parameter catalog<br/>(787 rows)"] --> GEN
+        SPEC["docs/alea_prg.md §13<br/>the spec's equation ids"] --> GEN
+        GEN["scripts/build/<br/>prg_from_catalog.py<br/>--check keeps it idempotent"] --> YAML[("config/prg.yaml<br/>1078 params · 163 eqs ·<br/>384 edges · 54 rules")]
+        BATCH["Coupling scripts<br/>prg_coupler.py<br/>(families → fragments,<br/>gates, bake)"] --> YAML
+    end
+
+    subgraph ENGINE["The engine (alea.prg)"]
+        YAML --> LOAD["load_graph()<br/>parse-cached"]
+        LOAD --> PG["ParameterGraph"]
+        PG --> PROP["Propagate<br/>topological two-phase<br/>+ incremental (9x)"]
+        PG --> LOOP["Feedback solver<br/>Tarjan SCC + damped<br/>Gauss–Seidel (2 loops)"]
+        PG --> CHECK["Consistency · conflicts<br/>cross-validation · range<br/>· unit walker (Pint)"]
+        PG --> SENS["Sensitivity<br/>exact forward-mode"]
+    end
+
+    subgraph DOORS["How a caller reaches it"]
+        API2["REST /api/v1/prg/*<br/>(SDK mirrors it)"] --> PG
+        CLI2["alea prg *"] --> LOAD
+    end
+
+    subgraph SOLVE["The constrained solve"]
+        PG --> TRANS["translate.py<br/>parameter → engine knob"]
+        TRANS --> WP["whatif solve_from_prg"]
+        PG --> CONS["constraints.py<br/>10 inequalities → linopy"]
+        CONS --> WP
+        WP --> PYPSA["PyPSA network<br/>+ HiGHS"]
+        PYPSA --> AUDIT["audit.py<br/>the solved result against<br/>the graph's identities"]
+        AUDIT --> CHECK2["conflict report + corrections<br/>+ the uncertainty register"]
+    end
+```
+
+### The scenario path
+
+And the one sequence everything above exists for — pulling one parameter:
+
+```mermaid
+sequenceDiagram
+    participant U as Caller (API / SDK / CLI)
+    participant G as ParameterGraph
+    participant T as translate.py
+    participant P as PyPSA solve
+    participant A as audit.py
+
+    U->>G: set carbon_price_usd_per_tco2 = 150
+    G->>G: refusal gates (range, categorical levels,<br/>derived settable, deprecated reach)
+    G->>G: propagate (or propagate_incremental)
+    G->>G: consistency + cross-validation + conflicts
+    alt inadmissible
+        G-->>U: the conflicts, ranked, with corrections<br/>(each a move, with its elasticity, in range)
+    else admissible
+        G->>T: the three translated routes
+        G->>P: + the 10 inequalities (linopy)
+        P->>P: HiGHS solves
+        P->>A: the solved result
+        A->>A: the identities the inputs reach (62 checked)
+        A-->>U: the scenario, audited; what the<br/>result's inputs could not reach is named
+    end
 ```
 
 Three things about the graph are easy to get wrong, and each has bitten this
@@ -410,27 +486,30 @@ tree:
 - **A strict run refuses a parameter that reaches no knob; a loose one drops it
   and prints what it dropped.** A dropped parameter is a scenario that solves,
   returns a plausible number, and answers a different question.
-- **Not every inequality is bindable.** The reserve margin and the carbon
-  budget are added to the optimiser; the rest are checked, not enforced.
+- **Not every inequality is bindable.** Ten routes are added to the optimiser
+  (the reserve margins, the carbon budget, the sector-demand bound, the
+  employment/CCS/electrification and retention bounds, and the two regulatory
+  allowed-return caps); the rest are checked, not enforced.
 - **`derived` counts two different things in two different frames.** The graph
-  declares 33 derived parameters, and `alea prg summary` prints `derived=33`:
-  `computed()` is the determiner map plus the loop variables, so the three loop
+  declares 148 derived parameters and `alea prg summary` prints `derived=148`:
+  `computed()` is the determiner map plus the loop variables, so the loop
   variables are counted here even though the topological *order* excludes them
-  — a sequence has no place for a feedback loop. The two agreed only after the
-  summary was changed to count `computed()` rather than `order`; before that it
-  stated 29 against its own 88-parameter payload, and a client could not
-  reconcile the two.
+  — a sequence has no place for a feedback loop. The summary counts `computed()`
+  rather than `order`, which is what keeps those two reconcilable.
 
-**The translation is 0.4% complete, and the graph says so.** `alea prg summary`
-reports that 3 of the 833 settable parameters reach a what-if knob, and that 7
-engine knobs — `battery_cost_multiplier`, `coal_eaf`, `drought_multiplier`,
+**The translation is thin, and the graph says so.** `alea prg summary` reports
+that 3 of the 911 settable parameters reach a what-if knob, and that 7 engine
+knobs — `battery_cost_multiplier`, `coal_eaf`, `drought_multiplier`,
 `hydrogen_export_twh_per_year`, `outages`, `renewable_multiplier`,
 `ssp_pathway` — are named by no parameter, so a scenario pulling one cannot be
 audited against the graph. Both numbers are printed by the command rather than
 left for a reader to derive, because a scenario stated in a name that reaches no
 knob is exactly the defect this project keeps having to fix. The numerator has
-not moved since the catalog join: the expansion added 781 settable knobs, and
-the engine can be driven from none of them.
+not moved: the catalog join's expansion of settable knobs was never the engine's
+vocabulary, and the coupling batches couple in the *graph*, whose reach into the
+solve is the constraint layer (10 inequalities) and the four scalars the
+inequalities read — `dscr_min`, `reserve_margin_min`, `capacity_factor`,
+`carbon_budget_mtco2`, `horizon_years`.
 
 Widening the seam was measured and refused. The auditable core is 52 settable
 parameters — those an equation names — and it did not grow either, so **3 of 52
@@ -813,7 +892,7 @@ specification disagree, the specification wins.
 | `spec/data2.md`, `spec/data1.md` | Earlier revisions of the same inventory |
 | `spec/data-completeness.md` | Per-country completeness tiers and mitigation |
 | `spec/base4-intf.md` | Interface specification — REST, SDKs, channels, governance |
-| `spec/users.md` | How Alea differs from COMPASS |
+| `spec/users.md` | The user archetypes, and how the open platform differs from a subscription report |
 | `spec/analytics.md`, `spec/competition-eval.md`, `spec/best1.md`, `spec/best1-renew.md` | Supporting analysis |
 | `spec/spec.md` → `spec3.md` | Superseded specification versions |
 
