@@ -2132,7 +2132,7 @@ def build_batch16(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 # that reaches a deprecated node, which is the refusal doing its job: the
 # migrated-from id serves no equation. The other spellings carry no
 # replacement yet, so they resolve by equality.
-RATE_ALIASES: tuple[tuple[str, str], ...] = (
+RATE_ALIASES: tuple[tuple[str, str, str], ...] = (
 	("gdp_growth_rate", "gdp_growth", "Macro"),
 	("carbon_tax_rate", "carbon_price_usd_per_tco2", "Carbon"),
 	("carbon_price", "carbon_price_usd_per_tco2", "Carbon"),
