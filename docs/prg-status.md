@@ -1675,3 +1675,114 @@ being applied. The 7 knobs `engine_fields_unreached()` reports are genuinely
 unreached by the graph, and the 49 parameters `untranslated()` reports are
 genuinely unreached by the engine — the two counts are a register, not a
 defect, and the sweep found nothing hiding behind either.
+
+## The coupling build (2026-10-17, batches 12–16)
+
+**The decision.** The uncoupled register refused to close on the honest-arithmetic
+excuse ("741 cannot be generated from this tree" — `docs/research/uncoupled-equations/README.md`),
+and the programme owner overrode it: every node joins the graph, using physics,
+economics and research, with the equations correct, referenced, documented and
+detailed — so a researcher can retrieve an equation and question its logic. That
+is the PRG's entire value; unlinked nodes have none.
+
+**What landed.** Four batches, each authored through the coupling harness
+(`scripts/build/prg_coupler.py` — family tables → fragments → every gate the
+loader skips: propagate at the document's own defaults, derived values inside
+their ranges, a default scenario free of blocking conflicts, every equation
+dimensionally decidable) and baked into `config/prg.yaml`:
+
+| Batch | Family | Coupled | Theory / citation |
+|---|---|---|---|
+| 12 | The financial core | 7 | Rate-of-return regulation: `wacc_alias` (UKRN 2023, the vanilla form the shipped `wacc_definition` already states), RAB from fleet capital less accumulated depreciation, straight-line regulatory depreciation, the allowed revenue requirement, the allowed returns as *bounds* on debt and equity costs, the applied tariff under the revenue cap (World Bank regulation handbook) |
+| 13 | The technology cost layer | 25 | Per-technology LCOE in the fixed-charge-annuity form (NREL ATB 2025 Equations & Variables; Short, Packey & Holt 1995, NREL/TP-462-5173; EIA AEO methodology), per-tech CRF over each technology's own asset life, O&M at literature levels, fuel at the fleet heat rate, stack carbon priced. The two shipped VRE LCOE equations corrected: `opex_variable_battery` — a battery cost inside a solar LCOE, the known open defect — leaves, and the battery gets its own LCOS (ATB battery equations; Lazard LCOS). Solar's capacity factor corrected from the 0.5 placeholder to the regional 0.22. Twelve un-built technologies carried at real units and a zero reference build. The leaf fleet-build balance as the constraint the optimiser's decision variables needed. |
+| 14 | Resolved duplicates + employment | 22 + 7 | The fragments' alias register — validated by everything, applied by nothing — applied as equality equations (20 cost dups, lifeline, disability). Property tax and the investment allowance as the rate-on-base definitions they are. Employment: indirect/induced from the kernel's direct jobs at input-output multipliers (Leontief), group-composition jobs at the programme's shares. |
+| 15 | Demand synthesis + macro | 11 + 2 rules | Bottom-up load synthesis (the catalog's own method cell): the four sector demands from their shares. The macro driver in the first-order elasticity form g_D = ε·g_Y, at the reviewed values (EIA/Stanford EMF ~0.59; Burke & Csereklyei 0.88–0.95 electricity-specific; Hou & Tan 2008 China 0.85; 单葆国 2017 the 0.38–1.88 band). The planner's `demand_growth` sits *exactly on* its own implication at the reference, so the two directional checks are quiet at the default scenario and fire on any other. |
+| 16 | Fuel conversions + the tariff stack | 6 + 3 | Delivered fuel prices from the markets' own quotes at named, cited conversion nodes (5.8 MMBtu/barrel; the Btu basis; NH₃ LHV 18.6 GJ/t; H₂ LHV 33.33 kWh/kg). The variable cost stack named (fuel + carbon), the pass-through dial and the pass-through tariff — the regulator's lever expressed. Battery duration 500000 → 4 h; round-trip efficiency 500000 → 0.85. |
+
+**Graph after the bake:** 1075 parameters, 156 equations, 375 edges, 54 rules.
+915 settable, 141 derived, 19 endogenous. Uncoupled: 793 → **717**, every one
+carried with its family class in `docs/param_coupling_worklist.md`. The unit
+walker now decides **all 156** equations (0 undecidable); 144 are consistent and
+the 12 flagged are the same vocabulary class the earlier pin recorded — annual
+quantities declared without a per-year divisor, and two compounding slips — each
+with a measured trade documented in `test_the_flagged_equations_are_a_known_set`.
+
+**Provenance discipline.** Ten works are archived under `sources/` with sha256
+digests recorded in `sources/INDEX.md` (NREL ATB 2025; EIA LCOE methodology;
+Short, Packey & Holt 1995 via the Stanford mirror; UKRN cost-of-capital
+guidance; EIA/Stanford EMF demand elasticities; Burke & Csereklyei 2016; IRENA
+jobs 2024; the IEEE 1366 reliability tutorial; Tejada-Arango 2023 arXiv; the
+Oree et al. 2017 GEP review). Every equation's `reference` resolves to a
+register row, every archived copy has a digest, and the declared LaTeX is the
+renderer's own output — so `check_latex`'s operand-set comparison holds by
+construction and the descriptions carry the analytic statement.
+
+**Loader changes the build needed.** Fragment relationships now deduplicate
+against the shipped document (identical → redundant, differing → correction);
+the first bake appended its way to 569 edge records over 375 claim keys. A
+corrected equation's stale edges — shipped edges naming a symbol the corrected
+arithmetic no longer carries — are disposed and reported (`<stale-edge>`),
+judged by the arithmetic's own symbol closure, canaried in
+`test_a_corrected_equation_disposes_of_its_own_stale_edges`. Before this, a
+symbol-changing equation correction was unloadable, because the correction is
+what makes the shipped edge stale.
+
+## Evaluation of the design docs against the code (2026-10-17)
+
+**`docs/how_prg_works.md` (read-only; a teaching narrative, not read as spec).**
+Where it describes *mechanisms* — roles, the two-phase propagation, the
+conflict kinds, loop handling, the audit — the built engine matches: §2's four
+super-spreadsheet powers are real code (`graph.py`, `feedback.py`,
+`conflicts.py`, `constraints.py`), and the worked example's *shape* (consistency
+check → propagation → loop iteration → translation → constrained solve) is the
+`PrgSolve` pipeline. Where it states *behaviours the code contradicts*:
+
+1. **§6 Mechanism 4 presents Anderson acceleration as the solver** — it was
+   measured and *rejected* (63/45 turns vs 38/36; m=2 fails convergence within
+   200): shipped is damped Gauss–Seidel, and `prg-status` records the
+   rejection.
+2. **"max_iter (default 20)"** — the shipped budget is 200, not 20.
+3. **"~2,500 edges / ~120,000 constraints / 20 systems"** — target numbers,
+   not facts: 375 edges / 13 bindable inequalities (+2 LP-carried fleet
+   constraints...) — actually 10 bound routes today — over 156 equations and
+   54 rules; a design target, and the register is the count.
+4. **§7's single `POST /v1/prg/propagate`** — the API is the tiered §43
+   surface (`/prg/propagate` is analyst-tier; there is no single
+   public-compute endpoint).
+5. **§7's dashboard slider/popup** — no UI exists; the delivery surface is the
+   API, the SDK and the CLI.
+6. **"Caching to avoid recomputing unchanged parameters"** — now actually
+   built (`propagate_incremental`, 9× a full walk and pinned equal to the full
+   propagation, categorical-perturbation included), so this one is *ahead of*
+   the older parts of the narrative; but the caching claim in §3's "load"
+   sense is the parse cache, which is where the workload's cost actually was.
+7. **The example equations and node ids** (`carbon_price_coal_retirement_consistency`,
+   `coal_capacity_2035`, `total_cost` with generator `sum(...)` syntax) — not
+   in the library; the DSL carries `Sum`, not arithmetic generators, and
+   §25's cross-validation rules are the real home of consistency conditions.
+
+Verdict: **read as intent, as its own §1 says of the design docs; nothing in it
+contradicts the engine's contracts, but five of its behaviour claims are
+aspirational.** The teaching value is real; the doc is not a contract.
+
+**`docs/prg-exam.md` (another agent's review; reviewed here, left unedited).**
+Its qualitative core is right: design intent vs the honest register vs the code
+is the load axis, the four core subsystems are real, and the L1 ratings for
+conflict detection and correction suggestions are stale relative to what
+`conflicts.py` + `constraints.py` + the API actually serve. But its *numbers*
+are frozen at 2026-10-16 and this build moved them:
+
+| Claim in `prg-exam.md` | Status at this build |
+|---|---|
+| Nodes 869, edges 88, equations 39, 2 feedback loops | 1075 / 375 / 156 / 2 — the coupling build moved all but the loop count |
+| "~88 have real arithmetic; 781 are `role: free` placeholders" | 141 derived equations over 141 determined variables live; 717 nodes remain uncoupled, each named with its coupling class in the worklist |
+| "8 of the 39 equations dimensionally inconsistent" | 12 of 156 — and **all 156 are decidable** (0 undecidable), which the pre-coupling walker could not claim |
+| "2 bindable inequalities + 4 post-solve checks" | **10 bound routes bind** a linopy solve (carbon budget, reserve margins, the sector-demand bound, the employment/CCS/electrification and retention bounds, the two regulatory allowed-return caps) |
+| "Incremental updates L0, not started" | Stale: `propagate_incremental` is built, tested equal to a full propagation, and 9× a full walk |
+| "Conflict detector/corrections L1 stale vs built" | Confirmed — L4+ |
+| "49 of 52 settable parameters reach no what-if knob" | Still true in kind, now 912 of 915 settable reach no knob; the translation layer remains the honest bottleneck |
+
+The one place `prg-exam.md` is *wrong* rather than stale: it takes the
+capability matrix's "incremental updates L0" as evidence the feature is absent
+while the code carries it — the same "an inventory read from source is not an
+inventory the app serves" lesson, in the review's own review.
