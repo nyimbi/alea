@@ -2912,6 +2912,32 @@ def test_the_unit_checker_passes_a_dimensionally_correct_identity(
 	assert check.decidable and check.consistent, check.summary()
 
 
+def test_a_product_under_a_bar_binds_under_it():
+	"""``USD/MW-km`` is a currency per megawatt-kilometre, not per megawatt.
+
+	The hyphen is a product, and Pint parses left to right, so the repaired
+	string ``USD/MW*km`` is ``USD*km/MW`` -- a currency times a square
+	kilometre per megawatt. That is a *decidable* reading, which is what makes
+	it dangerous: the walker blesses any product formed against it, and the
+	error surfaces only as a cost that is three orders of magnitude wrong.
+
+	Pinned against the two spellings that must agree, so a future normaliser
+	that loses the parentheses fails here rather than in a capex figure.
+	"""
+	from alea.prg.units import _parse_unit, ureg
+
+	hyphen = _parse_unit("USD/MW-km")
+	explicit = _parse_unit("USD/(MW*km)")
+	per_slash = _parse_unit("USD/MW/km")
+	assert hyphen.dimensionality == explicit.dimensionality
+	assert hyphen.dimensionality == per_slash.dimensionality
+	# The misparse, stated as a difference rather than described: a kilometre
+	# in the numerator is a different dimension, and the two must not agree.
+	assert hyphen.dimensionality != (ureg.USD * ureg.kilometer / ureg.megawatt).dimensionality
+	# The hyphen is still a product where it is not under a bar.
+	assert _parse_unit("MW-km").dimensionality == (ureg.megawatt * ureg.kilometer).dimensionality
+
+
 def test_the_unit_checker_decides_the_graph_without_giving_up(
 	graph: ParameterGraph,
 ):

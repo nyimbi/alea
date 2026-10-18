@@ -195,7 +195,12 @@ def _parse_unit(text: str) -> Unit:
 	* ``USD/MW-km`` is a currency per megawatt-kilometre. Pint reads the hyphen
 	  as subtraction and raises ``TypeError`` on two unit helpers, which is a
 	  crash rather than an undecidable -- the worst of the three outcomes. A
-	  hyphen between two unit symbols is a product in every unit notation.
+	  hyphen between two unit symbols is a product in every unit notation. The
+	  product then has to be *parenthesised*: Pint's parser is left-to-right,
+	  so the repaired ``USD/MW*km`` reads as ``USD*km/MW`` -- a currency times
+	  a square kilometre per megawatt, which is not a dimensional failure the
+	  walker would report and so would silently bless every product formed
+	  against it. A run of ``*``-joined symbols under a bar binds under it.
 	* ``USD million`` and ``sites/100km2`` put a space and a numeric factor
 	  where Pint wants an operator. The space becomes ``*``; the numeric factor
 	  in a denominator is a scale, and since it divides, folding it into the
@@ -213,6 +218,7 @@ def _parse_unit(text: str) -> Unit:
 	text = re.sub(r"(?<=[a-z])2(?![0-9*.])", "**2", text)
 	text = re.sub(r"/\s*\d+(?:\.\d+)?(?=[A-Za-z])", "/", text)
 	text = re.sub(r"(?<=[A-Za-z0-9*\]])\s*-\s*(?=[A-Za-z])", "*", text)
+	text = re.sub(r"/([A-Za-z][A-Za-z0-9*]*(?:\*[A-Za-z0-9*]+)+)", r"/(\1)", text)
 	text = re.sub(r"(?<=[A-Za-z0-9\]])\s+(?=[A-Za-z])", "*", text)
 	return ureg.parse_units(text.replace(".", "*"))
 
