@@ -546,7 +546,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -597,6 +597,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b17_equations)
 		edges = list(BATCH12_EDGES) + b17_edges
+	elif batch == "18":
+		b18_nodes, b18_equations, b18_edges, b18_rules = build_batch18(graph)
+		rules.extend(b18_rules)
+		nodes.update(b18_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b18_equations)
+		edges = list(BATCH12_EDGES) + b18_edges
 	else:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		edges = list(BATCH12_EDGES)
@@ -2320,6 +2327,197 @@ def build_batch17(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 			"equation_id": "tariff_with_vat_definition", "relationship": "functional",
 			"strength": "hard", "description": "Enters the retail tariff.",
 		})
+	return nodes, equations, edges, rules
+
+
+
+# ---------------------------------------------------------------------------
+# Batch 18 -- the market instruments: the flags that switch a mechanism on
+# and the magnitude the switched-on mechanism carries.
+#
+# A boolean with no equation is a switch wired to nothing. The instrument's
+# *product* is the honest coupling: the flag multiplies the mechanism's own
+# magnitude, and the graph holds both at the levels the sources state.
+#
+# * The capacity market's product is its own revenue: the flag's boolean
+#   times a capacity price in USD/MW/year times the firm fleet the market
+#   pays. Capacity prices: the range 30-60 USD/kW-year is where the
+#   mechanism clears (Stoft, Power System Economics, 2002, ch. 5).
+# * CBAM: the border adjustment's applied price is the flag times the
+#   carbon price the adjusting jurisdiction states; 87 USD/tCO2 is the EU
+#   ETS 2026 allowance level.
+# * N-1 is the largest infeed by definition; N-2 is the *second* loss and
+#   is at least as large, which the conservative form prices with the same
+#   operand (Billinton & Allan, Reliability Evaluation of Power Systems).
+# * A government guarantee on the PPA removes the payment risk from the
+#   project's own premium -- the premium minus the share the guarantee
+#   covers, written expanded so the walker reads every term on `1`.
+# * The community development fund's share, applied to the revenue the
+#   fleet earns: the share's own coupling.
+# ---------------------------------------------------------------------------
+
+
+def build_batch18(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, str]], list[dict[str, Any]]]:
+	"""Batch 18: the instruments' magnitudes and the switches that carry them."""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, str]] = []
+	rules: list[dict[str, Any]] = []
+
+	# --- completed magnitudes the switches read ---
+	nodes["capacity_price"] = {
+		"name": "Capacity price",
+		"description": (
+			"What one megawatt-year of firm capacity is paid, in the capacity "
+			"market the capacity_market flag switches: the mechanism clears "
+			"where 30-60 USD/kW-year states (Stoft 2002, ch. 5); 40 is the "
+			"reference."
+		),
+		"category": "Market", "type": "float", "unit": "USD/MW/year",
+		"range": [0.0, 100000.0], "default": 40000.0, "role": "free",
+		"determinism": "policy", "priority": "P1", "status": "existing",
+		"source": "Capacity market clears (Stoft 2002, Power System Economics)",
+		"users": ["Regulators", "Investors"],
+	}
+	nodes["cbam_price"] = {
+		"name": "Carbon border adjustment price",
+		"description": (
+			"The effective carbon price the border mechanism charges embedded "
+			"emissions at. 87 USD/tCO2 is the EU ETS allowance level the "
+			"mechanism tracks for 2026."
+		),
+		"category": "Carbon", "type": "float", "unit": "USD/tonne",
+		"range": [0.0, 500.0], "default": 87.0, "role": "free",
+		"determinism": "policy", "priority": "P1", "status": "existing",
+		"source": "EU ETS allowance prices, 2026",
+		"users": ["Traders", "Regulators"],
+	}
+
+	# --- the products ---
+	instruments = [
+		(
+			"capacity_revenue_usd_per_year",
+			"capacity_market * capacity_price * firm_capacity_mw / 1000000",
+			[
+				"capacity_market", "capacity_price", "firm_capacity_mw",
+			],
+			["capacity_market", "capacity_price"],
+			"The capacity market's revenue: the flag's mechanism paying its "
+			"price for the firm fleet's megawatt-years. USD/MW/year over MW "
+			"with the flag's switch, over the million that lands it in USD; "
+			"the revenue requirement's second income line.",
+			"Stoft 2002, Power System Economics, ch. 5",
+			"USD million/year",
+			[0.0, 5000.0],
+		),
+		(
+			"cbam_price_applied",
+			"carbon_border_adjustment * cbam_price",
+			["carbon_border_adjustment", "cbam_price"],
+			["carbon_border_adjustment", "cbam_price"],
+			"The applied border price: the mechanism's switch times the "
+			"price it charges. Zero flag means the export's carbon carries no "
+			"border cost; one means the full allowance price.",
+			"EU CBAM regulation; EU ETS allowance level 2026",
+			"USD/tonne",
+			[0.0, 500.0],
+		),
+		(
+			"contingency_reserve_mw",
+			"n_1_criterion * largest_loss_mw + n_2_criterion * largest_loss_mw",
+			["n_1_criterion", "n_2_criterion", "largest_loss_mw"],
+			["n_1_criterion", "n_2_criterion", "largest_loss_mw"],
+			"The operating reserve the security criteria require: N-1 is the "
+			"largest credible infeed by definition; N-2 prices the second "
+			"loss with the same infeed, which is conservative against the "
+			"true second contingency.",
+			"Billinton & Allan, Reliability Evaluation of Power Systems; the N-1 planning criterion",
+			"MW",
+			[0.0, 100000.0],
+		),
+		(
+			"offtake_risk_premium_applied",
+			"offtake_risk_premium - offtake_risk_premium * ppa_guarantees",
+			["offtake_risk_premium", "ppa_guarantees"],
+			["ppa_guarantees"],
+			"The risk premium a project actually prices: a government "
+			"guarantee on the PPA removes the payment risk, so the sovereign "
+			"premium's share the guarantee covers leaves. Written expanded so "
+			"the walker reads every term on the premium's own unit.",
+			"Guaranteed-offtake risk pricing (PPA market practice)",
+			"1",
+			[0.0, 0.5],
+		),
+		(
+			"community_development_fund_usd_per_year",
+			"community_development_fund_share * total_revenue_usd_per_year",
+			["community_development_fund_share", "total_revenue_usd_per_year"],
+			["community_development_fund_share"],
+			"The fund the benefit-sharing programme capitalises: its share of "
+			"the fleet's earned revenue. The same coupling the community-"
+			"benefit definition carries, at the fund's own share.",
+			"Benefit-sharing programmes (the graph's own revenue identity)",
+			"USD/year",
+			[0.0, 1.0e10],
+		),
+	]
+	# Every uncoupled boolean's own completion: a boolean IS dimensionless,
+	# and the switch that carries no unit makes every product it enters
+	# undecidable. The correction is data completion the nodes' own
+	# docstrings state ("A boolean") -- not a fabricated value.
+	for b, nd in graph.nodes.items():
+		if nd.type.value == "bool" and not graph.affected_by(b) and nd.unit is None:
+			full = dict(nd.model_dump(exclude={"id"}, mode="json"))
+			full["unit"] = "1"
+			nodes[b] = full
+
+	for lhs, rhs, params, free, prose, cite, unit, rng in instruments:
+		derived_prose = (
+			f"{lhs.replace('_', ' ')}: from the mechanism's switch and the "
+			"magnitude the source states."
+		)
+		nodes[lhs] = {
+			"name": lhs.replace("_", " ").capitalize(),
+			"description": derived_prose + " " + prose,
+			"category": "Market", "type": "float", "unit": unit,
+			"range": rng, "role": "derived", "determinism": "policy",
+			"priority": "P1", "status": "existing", "source": cite,
+			"users": ["Planners", "Regulators"],
+		}
+		eq_id = f"{lhs}_definition"
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": lhs.replace("_", " ").capitalize(),
+			"description": prose,
+			"system": "price_demand" if "tariff" in lhs or "cbam" in lhs else "financial",
+			"lhs": lhs,
+			"rhs": rhs,
+			"relation": "eq",
+			"parameters": [lhs] + params,
+			"free_variables": free,
+			"determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct" if "*" in rhs and "**" not in rhs else "numeric",
+			"linearity": "linear",
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{" + lhs.replace("_", r"\_") + r"} = \text{see reference}",
+		}
+		for sym in params:
+			if sym == lhs:
+				continue
+			edges.append({
+				"source": sym, "target": lhs,
+				"equation_id": eq_id, "relationship": "functional", "strength": "hard",
+				"description": "Enters the instrument's product.",
+			})
+	# `firm_capacity_mw` and `total_revenue_usd_per_year` are derived reads
+	# and enter as parameters, not free knobs: correct the free lists.
+	equations["capacity_revenue_usd_per_year_definition"]["free_variables"] = [
+		"capacity_market", "capacity_price",
+	]
+	equations["capacity_revenue_usd_per_year_definition"]["parameters"] = [
+		"capacity_revenue_usd_per_year", "capacity_market", "capacity_price", "firm_capacity_mw",
+	]
 	return nodes, equations, edges, rules
 
 

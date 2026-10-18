@@ -514,7 +514,7 @@ parameters:
     category: Policy
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 0.0
     initial: null
@@ -1179,7 +1179,7 @@ parameters:
     category: Operational
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 1.0
     initial: null
@@ -2021,7 +2021,7 @@ parameters:
     category: Policy
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 0.0
     initial: null
@@ -2037,20 +2037,54 @@ parameters:
     deprecated_by: null
   capacity_price:
     name: Capacity price
-    description: Capacity market clearing price
-    category: Policy
+    description: 'What one megawatt-year of firm capacity is paid, in the capacity market the capacity_market
+      flag switches: the mechanism clears where 30-60 USD/kW-year states (Stoft 2002, ch. 5); 40 is the
+      reference.'
+    category: Market
+    subcategory: null
     type: float
+    unit: USD/MW/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 100000.0
+    default: 40000.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: integrate
+    determinism: policy
+    categories: []
+    source: Capacity market clears (Stoft 2002, Power System Economics)
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    - Investors
+    priority: P1
+    status: existing
+    deprecated_by: null
+  capacity_revenue_usd_per_year:
+    name: Capacity revenue usd per year
+    description: 'capacity revenue usd per year: from the mechanism''s switch and the magnitude the source
+      states. The capacity market''s revenue: the flag''s mechanism paying its price for the firm fleet''s
+      megawatt-years. USD/MW/year over MW with the flag''s switch, over the million that lands it in USD;
+      the revenue requirement''s second income line.'
+    category: Market
+    subcategory: null
+    type: float
+    unit: USD million/year
+    range:
+    - 0.0
+    - 5000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: Stoft 2002, Power System Economics, ch. 5
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   capex_battery:
     name: Battery capital cost
     description: Installed cost of grid-scale battery storage, in USD per kWh of energy capacity. The
@@ -3009,7 +3043,7 @@ parameters:
     category: Policy
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 0.0
     initial: null
@@ -3515,21 +3549,53 @@ parameters:
     status: to_build
     deprecated_by: null
   cbam_price:
-    name: Cbam price
-    description: CBAM certificate price
-    category: Policy
+    name: Carbon border adjustment price
+    description: The effective carbon price the border mechanism charges embedded emissions at. 87 USD/tCO2
+      is the EU ETS allowance level the mechanism tracks for 2026.
+    category: Carbon
+    subcategory: null
     type: float
+    unit: USD/tonne
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500.0
+    default: 87.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: integrate
+    determinism: policy
+    categories: []
+    source: EU ETS allowance prices, 2026
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Traders
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
+  cbam_price_applied:
+    name: Cbam price applied
+    description: 'cbam price applied: from the mechanism''s switch and the magnitude the source states.
+      The applied border price: the mechanism''s switch times the price it charges. Zero flag means the
+      export''s carbon carries no border cost; one means the full allowance price.'
+    category: Market
+    subcategory: null
+    type: float
+    unit: USD/tonne
+    range:
+    - 0.0
+    - 500.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: EU CBAM regulation; EU ETS allowance level 2026
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   cdm_methodologies:
     name: Cdm methodologies
     description: CDM
@@ -4298,6 +4364,30 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  community_development_fund_usd_per_year:
+    name: Community development fund usd per year
+    description: 'community development fund usd per year: from the mechanism''s switch and the magnitude
+      the source states. The fund the benefit-sharing programme capitalises: its share of the fleet''s
+      earned revenue. The same coupling the community-benefit definition carries, at the fund''s own share.'
+    category: Market
+    subcategory: null
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 10000000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: Benefit-sharing programmes (the graph's own revenue identity)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   community_development_funds:
     name: Community development funds
     description: Community funds
@@ -4711,6 +4801,30 @@ parameters:
     users:
     - Developers
     source: docs/params.md
+  contingency_reserve_mw:
+    name: Contingency reserve mw
+    description: 'contingency reserve mw: from the mechanism''s switch and the magnitude the source states.
+      The operating reserve the security criteria require: N-1 is the largest credible infeed by definition;
+      N-2 prices the second loss with the same infeed, which is conservative against the true second contingency.'
+    category: Market
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 100000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: Billinton & Allan, Reliability Evaluation of Power Systems; the N-1 planning criterion
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   contract_enforceability:
     name: Contract enforceability index
     description: Composite index of contract enforcement and dispute resolution, normalised to [0, 1].
@@ -4740,7 +4854,7 @@ parameters:
     category: Policy
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 0.0
     initial: null
@@ -5384,7 +5498,7 @@ parameters:
     category: Transmission & Grid
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 1.0
     initial: null
@@ -5405,7 +5519,7 @@ parameters:
     category: Market Design
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range:
     - 0.0
     - 1.0
@@ -5923,7 +6037,7 @@ parameters:
     category: Operational
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 1.0
     initial: null
@@ -6536,7 +6650,7 @@ parameters:
     category: Loss Mitigation
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 1.0
     initial: null
@@ -7832,7 +7946,7 @@ parameters:
     category: Policy
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 0.0
     initial: null
@@ -11103,7 +11217,7 @@ parameters:
     category: Operational
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 0.0
     initial: null
@@ -12030,7 +12144,7 @@ parameters:
     category: Supply-Side
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 0.0
     initial: null
@@ -13456,7 +13570,7 @@ parameters:
     category: Operational
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 1.0
     initial: null
@@ -13476,7 +13590,7 @@ parameters:
     category: Operational
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 0.0
     initial: null
@@ -13800,6 +13914,31 @@ parameters:
     users: []
     priority: P2
     status: to_build
+    deprecated_by: null
+  offtake_risk_premium_applied:
+    name: Offtake risk premium applied
+    description: 'offtake risk premium applied: from the mechanism''s switch and the magnitude the source
+      states. The risk premium a project actually prices: a government guarantee on the PPA removes the
+      payment risk, so the sovereign premium''s share the guarantee covers leaves. Written expanded so
+      the walker reads every term on the premium''s own unit.'
+    category: Market
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 0.5
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: Guaranteed-offtake risk pricing (PPA market practice)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
     deprecated_by: null
   oil_capacity:
     name: Oil capacity
@@ -14517,7 +14656,7 @@ parameters:
     category: Operational
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 1.0
     initial: null
@@ -14851,7 +14990,7 @@ parameters:
     category: Loss Mitigation
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 0.0
     initial: null
@@ -15367,7 +15506,7 @@ parameters:
     category: Policy
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 0.0
     initial: null
@@ -15979,7 +16118,7 @@ parameters:
     category: Operational
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 0.0
     initial: null
@@ -17369,7 +17508,7 @@ parameters:
     category: Operational
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 1.0
     initial: null
@@ -17673,7 +17812,7 @@ parameters:
     category: Digital
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 1.0
     initial: null
@@ -18409,7 +18548,7 @@ parameters:
     category: Loss Mitigation
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 1.0
     initial: null
@@ -19171,7 +19310,7 @@ parameters:
     category: Loss Mitigation
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 1.0
     initial: null
@@ -19461,7 +19600,7 @@ parameters:
     category: Transmission & Grid
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 1.0
     initial: null
@@ -19631,7 +19770,7 @@ parameters:
     category: Operational
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 1.0
     initial: null
@@ -19863,7 +20002,7 @@ parameters:
     category: Loss Mitigation
     subcategory: null
     type: bool
-    unit: null
+    unit: '1'
     range: null
     default: 1.0
     initial: null
@@ -21169,6 +21308,33 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  capacity_revenue_usd_per_year_definition:
+    name: Capacity revenue usd per year
+    description: 'The capacity market''s revenue: the flag''s mechanism paying its price for the firm
+      fleet''s megawatt-years. USD/MW/year over MW with the flag''s switch, over the million that lands
+      it in USD; the revenue requirement''s second income line.'
+    system: financial
+    lhs: capacity_revenue_usd_per_year
+    rhs: capacity_market * capacity_price * firm_capacity_mw / 1000000
+    relation: eq
+    parameters:
+    - capacity_revenue_usd_per_year
+    - capacity_market
+    - capacity_price
+    - firm_capacity_mw
+    free_variables:
+    - capacity_market
+    - capacity_price
+    determined_variables:
+    - capacity_revenue_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    reference: Stoft 2002, Power System Economics, ch. 5
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{capacity}_{revenue\_usd\_per\_year} = \frac{\mathrm{capacity}_{market} \mathrm{capacity}_{price}
+      \mathrm{firm}_{capacity\_mw}}{1000000}
   capture_price_equation:
     name: Capture price under cannibalisation
     description: 'The price a renewable unit receives falls as its own share rises. This is `params-prg1.md`
@@ -21379,6 +21545,30 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{carbon}_{tax\_rate} = \mathrm{carbon}_{price\_usd\_per\_tco2}
+  cbam_price_applied_definition:
+    name: Cbam price applied
+    description: 'The applied border price: the mechanism''s switch times the price it charges. Zero flag
+      means the export''s carbon carries no border cost; one means the full allowance price.'
+    system: price_demand
+    lhs: cbam_price_applied
+    rhs: carbon_border_adjustment * cbam_price
+    relation: eq
+    parameters:
+    - cbam_price_applied
+    - carbon_border_adjustment
+    - cbam_price
+    free_variables:
+    - carbon_border_adjustment
+    - cbam_price
+    determined_variables:
+    - cbam_price_applied
+    tolerance: 1.0e-09
+    unit_check: true
+    reference: EU CBAM regulation; EU ETS allowance level 2026
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{cbam}_{price\_applied} = \mathrm{carbon}_{border\_adjustment} \mathrm{cbam}_{price}
   cfads_definition:
     name: Cash available for debt service
     description: 'Tariff less marginal cost, over the energy one kilowatt sells in a year. A stated simplification:
@@ -21473,6 +21663,30 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{commercial}_{demand\_twh} = \mathrm{commercial}_{demand\_share} \mathrm{base}_{demand\_twh}
+  community_development_fund_usd_per_year_definition:
+    name: Community development fund usd per year
+    description: 'The fund the benefit-sharing programme capitalises: its share of the fleet''s earned
+      revenue. The same coupling the community-benefit definition carries, at the fund''s own share.'
+    system: financial
+    lhs: community_development_fund_usd_per_year
+    rhs: community_development_fund_share * total_revenue_usd_per_year
+    relation: eq
+    parameters:
+    - community_development_fund_usd_per_year
+    - community_development_fund_share
+    - total_revenue_usd_per_year
+    free_variables:
+    - community_development_fund_share
+    determined_variables:
+    - community_development_fund_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    reference: Benefit-sharing programmes (the graph's own revenue identity)
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{community}_{development\_fund\_usd\_per\_year} = \mathrm{community}_{development\_fund\_share}
+      \mathrm{total}_{revenue\_usd\_per\_year}
   composite_governance_index_definition:
     name: Composite governance index
     description: 'The unweighted average of the five governance indicators. Dimensional check: the sum
@@ -21559,6 +21773,34 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  contingency_reserve_mw_definition:
+    name: Contingency reserve mw
+    description: 'The operating reserve the security criteria require: N-1 is the largest credible infeed
+      by definition; N-2 prices the second loss with the same infeed, which is conservative against the
+      true second contingency.'
+    system: financial
+    lhs: contingency_reserve_mw
+    rhs: n_1_criterion * largest_loss_mw + n_2_criterion * largest_loss_mw
+    relation: eq
+    parameters:
+    - contingency_reserve_mw
+    - n_1_criterion
+    - n_2_criterion
+    - largest_loss_mw
+    free_variables:
+    - n_1_criterion
+    - n_2_criterion
+    - largest_loss_mw
+    determined_variables:
+    - contingency_reserve_mw
+    tolerance: 1.0e-09
+    unit_check: true
+    reference: Billinton & Allan, Reliability Evaluation of Power Systems; the N-1 planning criterion
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{contingency}_{reserve\_mw} = \mathrm{n}_{1\_criterion} \mathrm{largest}_{loss\_mw}
+      + \mathrm{n}_{2\_criterion} \mathrm{largest}_{loss\_mw}
   cooling_water_definition:
     name: Cooling water demand
     description: Water the thermal fleet withdraws, per megawatt-hour generated.
@@ -23918,6 +24160,31 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  offtake_risk_premium_applied_definition:
+    name: Offtake risk premium applied
+    description: 'The risk premium a project actually prices: a government guarantee on the PPA removes
+      the payment risk, so the sovereign premium''s share the guarantee covers leaves. Written expanded
+      so the walker reads every term on the premium''s own unit.'
+    system: financial
+    lhs: offtake_risk_premium_applied
+    rhs: offtake_risk_premium - offtake_risk_premium * ppa_guarantees
+    relation: eq
+    parameters:
+    - offtake_risk_premium_applied
+    - offtake_risk_premium
+    - ppa_guarantees
+    free_variables:
+    - ppa_guarantees
+    determined_variables:
+    - offtake_risk_premium_applied
+    tolerance: 1.0e-09
+    unit_check: true
+    reference: Guaranteed-offtake risk pricing (PPA market practice)
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{offtake}_{risk\_premium\_applied} = \mathrm{offtake}_{risk\_premium} - \mathrm{offtake}_{risk\_premium}
+      \mathrm{ppa}_{guarantees}
   oil_eaf_definition:
     name: Oil availability from its outage rates
     description: The oil fleet's energy availability, over the same two outage rates as coal. Oil and
@@ -28327,6 +28594,87 @@ relationships:
   description: The storage allowance widens the fleet ceiling for energy-shifting builds.
   reference: null
   priority: P1
+- source: gdp_growth
+  target: gdp_growth_rate
+  equation_id: gdp_growth_rate_alias
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The canonical rate; the duplicate derives.
+  reference: null
+  priority: P1
+- source: carbon_price_usd_per_tco2
+  target: carbon_tax_rate
+  equation_id: carbon_tax_rate_alias
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The canonical rate; the duplicate derives.
+  reference: null
+  priority: P1
+- source: carbon_price_usd_per_tco2
+  target: carbon_price
+  equation_id: carbon_price_alias
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The canonical rate; the duplicate derives.
+  reference: null
+  priority: P1
+- source: tax_rate
+  target: corporate_income_tax_rate
+  equation_id: corporate_income_tax_rate_alias
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The canonical rate; the duplicate derives.
+  reference: null
+  priority: P1
+- source: interest_rate
+  target: cost_of_debt
+  equation_id: cost_of_debt_priced
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the debt pricing.
+  reference: null
+  priority: P1
+- source: debt_spread
+  target: cost_of_debt
+  equation_id: cost_of_debt_priced
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the debt pricing.
+  reference: null
+  priority: P1
+- source: inflation_rate
+  target: real_discount_rate
+  equation_id: real_discount_rate_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Deflates the nominal blend.
+  reference: null
+  priority: P1
+- source: applied_tariff_usd_per_mwh
+  target: tariff_vat_inclusive_usd_per_mwh
+  equation_id: tariff_with_vat_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the retail tariff.
+  reference: null
+  priority: P1
+- source: vat_rate
+  target: tariff_vat_inclusive_usd_per_mwh
+  equation_id: tariff_with_vat_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the retail tariff.
+  reference: null
+  priority: P1
 - source: discount_rate
   target: weighted_average_cost_of_capital
   equation_id: wacc_alias
@@ -28445,85 +28793,112 @@ relationships:
   description: The cap scales the recovery level; below 1 it withholds part of it.
   reference: null
   priority: P1
-- source: gdp_growth
-  target: gdp_growth_rate
-  equation_id: gdp_growth_rate_alias
-  relationship: equality
-  direction: forward
-  strength: hard
-  description: The canonical rate; the duplicate derives.
-  reference: null
-  priority: P1
-- source: carbon_price_usd_per_tco2
-  target: carbon_tax_rate
-  equation_id: carbon_tax_rate_alias
-  relationship: equality
-  direction: forward
-  strength: hard
-  description: The canonical rate; the duplicate derives.
-  reference: null
-  priority: P1
-- source: carbon_price_usd_per_tco2
-  target: carbon_price
-  equation_id: carbon_price_alias
-  relationship: equality
-  direction: forward
-  strength: hard
-  description: The canonical rate; the duplicate derives.
-  reference: null
-  priority: P1
-- source: tax_rate
-  target: corporate_income_tax_rate
-  equation_id: corporate_income_tax_rate_alias
-  relationship: equality
-  direction: forward
-  strength: hard
-  description: The canonical rate; the duplicate derives.
-  reference: null
-  priority: P1
-- source: interest_rate
-  target: cost_of_debt
-  equation_id: cost_of_debt_priced
+- source: capacity_market
+  target: capacity_revenue_usd_per_year
+  equation_id: capacity_revenue_usd_per_year_definition
   relationship: functional
   direction: forward
   strength: hard
-  description: Enters the debt pricing.
+  description: Enters the instrument's product.
   reference: null
   priority: P1
-- source: debt_spread
-  target: cost_of_debt
-  equation_id: cost_of_debt_priced
+- source: capacity_price
+  target: capacity_revenue_usd_per_year
+  equation_id: capacity_revenue_usd_per_year_definition
   relationship: functional
   direction: forward
   strength: hard
-  description: Enters the debt pricing.
+  description: Enters the instrument's product.
   reference: null
   priority: P1
-- source: inflation_rate
-  target: real_discount_rate
-  equation_id: real_discount_rate_definition
+- source: firm_capacity_mw
+  target: capacity_revenue_usd_per_year
+  equation_id: capacity_revenue_usd_per_year_definition
   relationship: functional
   direction: forward
   strength: hard
-  description: Deflates the nominal blend.
+  description: Enters the instrument's product.
   reference: null
   priority: P1
-- source: applied_tariff_usd_per_mwh
-  target: tariff_vat_inclusive_usd_per_mwh
-  equation_id: tariff_with_vat_definition
+- source: carbon_border_adjustment
+  target: cbam_price_applied
+  equation_id: cbam_price_applied_definition
   relationship: functional
   direction: forward
   strength: hard
-  description: Enters the retail tariff.
+  description: Enters the instrument's product.
   reference: null
   priority: P1
-- source: vat_rate
-  target: tariff_vat_inclusive_usd_per_mwh
-  equation_id: tariff_with_vat_definition
+- source: cbam_price
+  target: cbam_price_applied
+  equation_id: cbam_price_applied_definition
   relationship: functional
   direction: forward
   strength: hard
-  description: Enters the retail tariff.
+  description: Enters the instrument's product.
+  reference: null
+  priority: P1
+- source: n_1_criterion
+  target: contingency_reserve_mw
+  equation_id: contingency_reserve_mw_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the instrument's product.
+  reference: null
+  priority: P1
+- source: n_2_criterion
+  target: contingency_reserve_mw
+  equation_id: contingency_reserve_mw_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the instrument's product.
+  reference: null
+  priority: P1
+- source: largest_loss_mw
+  target: contingency_reserve_mw
+  equation_id: contingency_reserve_mw_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the instrument's product.
+  reference: null
+  priority: P1
+- source: offtake_risk_premium
+  target: offtake_risk_premium_applied
+  equation_id: offtake_risk_premium_applied_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the instrument's product.
+  reference: null
+  priority: P1
+- source: ppa_guarantees
+  target: offtake_risk_premium_applied
+  equation_id: offtake_risk_premium_applied_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the instrument's product.
+  reference: null
+  priority: P1
+- source: community_development_fund_share
+  target: community_development_fund_usd_per_year
+  equation_id: community_development_fund_usd_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the instrument's product.
+  reference: null
+  priority: P1
+- source: total_revenue_usd_per_year
+  target: community_development_fund_usd_per_year
+  equation_id: community_development_fund_usd_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the instrument's product.
   reference: null
   priority: P1
 cross_validation:

@@ -712,6 +712,27 @@ class ParameterGraph:
 		"""
 		return tuple(self._by_target.get(parameter, ()))
 
+	def rules_reading(self, parameter: str) -> tuple[str, ...]:
+		"""The cross-validation rules whose condition reads this parameter.
+
+		A rule is a fourth coupling, and not a fifth kind of the same thing
+		`affects` and `constrains` already separate: it does not move a
+		value and it does not bound the LP, it gates whether a scenario is
+		*admissible* -- the regulator's lever's lever. A knob a rule reads is
+		a knob the graph applies, and the uncoupled register would call a
+		parameter whose only consumer is the admissibility check "floating",
+		which is wrong in exactly the way counting only equations would be
+		wrong the other way.
+
+		Read from the parsed rules; the registry is built at load, so this is
+		a scan of a small tuple, not a re-parse.
+		"""
+		return tuple(
+			rule.id
+			for rule in self._rules
+			if parameter in rule.parameters
+		)
+
 	def constrains(self, parameter: str) -> tuple[str, ...]:
 		"""The inequalities this parameter bounds, by equation id.
 
