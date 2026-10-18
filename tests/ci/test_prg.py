@@ -1456,7 +1456,7 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# the comprehension above agree exactly at this number, which is the
 	# assertion that carries the weight -- this one is the record of what it
 	# agreed *at*.
-	assert len(dead) == 713, len(dead)
+	assert len(dead) == 706, len(dead)
 	# The knob the catalog names but no shipped equation reads, named so a
 	# failure points at a node rather than a count. It was `coal_capacity`
 	# until the endogenous fleet layer made that node derived, then
@@ -1744,8 +1744,8 @@ def test_the_audit_reports_what_it_did_not_check():
 
 	audit = audit_scenario_result(_solved())
 	assert audit.consistent
-	assert len(audit.checked) == 59, audit.checked
-	assert len(audit.skipped) == 82, audit.skipped
+	assert len(audit.checked) == 62, audit.checked
+	assert len(audit.skipped) == 86, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -1789,7 +1789,7 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# The whole derived set is named as unexamined: a partial count here would
 	# understate how much of the graph went unread. 141, not 75, for the reason
 	# spelled out in `test_the_audit_reports_what_it_did_not_check`.
-	assert len(audit.skipped) == 141, audit.skipped
+	assert len(audit.skipped) == 148, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -2962,7 +2962,6 @@ def test_the_flagged_equations_are_a_known_set(graph: ParameterGraph):
 		"emissions_definition",
 		"equity_irr_definition",
 		"hydrogen_water_definition",
-		"llcr_definition",
 		"load_factor_definition",
 		"premature_deaths_definition",
 		"rocof_definition",
@@ -3425,7 +3424,7 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	assert counts, "no strength was counted"
 	assert sum(counts.values()) == len(graph.equations)
 	assert set(counts) <= {"hard", "soft", "informational"}
-	assert counts == {"hard": 153, "informational": 1, "soft": 2}, counts
+	assert counts == {"hard": 160, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -3695,7 +3694,7 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# for -- a researcher retrieves the equation through the reference. 80,
 	# measured on the graph the batches baked; a further change is a change
 	# to the register's coverage and fails here.
-	assert len(declared) == 80, f"the citation register moved: {sorted(declared)}"
+	assert len(declared) == 87, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -3929,8 +3928,8 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 				f"numeric {numeric!r}"
 			)
 			compared += 1
-	assert compared == 141, (
-		f"expected 141 determined variables in the shipped library, compared "
+	assert compared == 148, (
+		f"expected 148 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 33 before the generated batches were "
 		f"promoted, and every one of the 42 new equations is affine in the "

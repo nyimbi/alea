@@ -226,9 +226,28 @@ def _summary_out(graph: Any) -> PrgSummaryOut:
 		engine_translation=EngineTranslationOut(**engine),
 		constraints=_constraints_out(report["constraints"]),
 		units=UnitReportOut(
-			consistent=[_check_out(c) for c in units.consistent],
-			inconsistent=[_check_out(c) for c in units.inconsistent],
-			undecidable=[_check_out(c) for c in units.undecidable],
+			# The three verdict lists exclude the declared exemptions: an
+			# exempt equation's walk still runs, but its verdict is the
+			# declaration's own reclassification, so counting it in both a
+			# list and the exempt register would double-count it and the
+			# payload's partition (consistent + inconsistent + undecidable +
+			# exempt = equations) would not close. The summary string keeps
+			# the walk's own counts; the lists are the payload's partition.
+			consistent=[
+				_check_out(c)
+				for c in units.consistent
+				if c.equation_id not in units.exempt
+			],
+			inconsistent=[
+				_check_out(c)
+				for c in units.inconsistent
+				if c.equation_id not in units.exempt
+			],
+			undecidable=[
+				_check_out(c)
+				for c in units.undecidable
+				if c.equation_id not in units.exempt
+			],
 			exempt=list(units.exempt),
 			summary=units.summary(),
 		),

@@ -127,6 +127,18 @@ UNITS: tuple[tuple[str, str], ...] = (
 	# The four placeholder-only rows whose alias equations need a unit.
 	(r"^disability_inclusion$", "1"),
 	(r"^lifeline_tariff$", "USD/MWh"),
+	# The carbon price's duplicate spellings: the catalog carries the same
+	# quantity as `carbon_price` and `carbon_tax_rate`, and the kernel's
+	# `carbon_price_usd_per_tco2` is the canonical -- the alias equations
+	# need the unit on the duplicates' own rows to be decidable.
+	(r"^carbon_price$", "USD/tonne"),
+	(r"^carbon_tax_rate$", "USD/tonne"),
+	(r"^gdp_growth_rate$", "1/year"),
+	(r"^corporate_income_tax_rate$", "1"),
+	(r"^real_discount_rate$", "1/year"),
+	(r"^debt_spread$", "1/year"),
+	(r"^tariff_vat_inclusive_usd_per_mwh$", "USD/MWh"),
+	(r"^vat_rate$", "1"),
 	(r"^investment_allowance$", "USD/kW"),
 	(r"^property_tax$", "USD million"),
 	(r"^battery_round_trip_efficiency$", "1"),

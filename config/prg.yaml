@@ -3218,11 +3218,11 @@ parameters:
     description: Carbon price
     category: Cost
     type: float
+    unit: USD/tonne
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
-    role: free
+    role: derived
     determinism: policy
     priority: P1
     status: existing
@@ -3396,8 +3396,9 @@ parameters:
     source: docs/params.md
   carbon_tax_rate:
     name: Carbon tax rate
-    description: Carbon tax, in USD per tonne of CO2. Shipped with unit "1" and range [0, 1], which is
-      a category error — a tax rate is per-tonne, and the admissible set is the sample's tax schedules.
+    description: Carbon tax rate -- the catalog carries the same rate under the spellings `carbon_tax_rate`
+      and `carbon_price_usd_per_tco2`, corrected to one value and resolved by an equality, so the graph
+      answers the question one way and either id reads a consistent number.
     category: Policy
     subcategory: null
     type: float
@@ -3405,9 +3406,8 @@ parameters:
     range:
     - 0.0
     - 500.0
-    default: 0.0
     initial: null
-    role: free
+    role: derived
     determinism: policy
     categories: []
     source: docs/params.md#4.1
@@ -4835,8 +4835,9 @@ parameters:
     deprecated_by: null
   corporate_income_tax_rate:
     name: Corporate income tax rate
-    description: The statutory corporate income tax rate. Range spans the lowest and highest statutory
-      rates the sample's jurisdictions have adopted; the sample's modal rate is 0.25 to 0.30.
+    description: Corporate income tax rate -- the catalog carries the same rate under the spellings `corporate_income_tax_rate`
+      and `tax_rate`, corrected to one value and resolved by an equality, so the graph answers the question
+      one way and either id reads a consistent number.
     category: Tax & Fiscal
     subcategory: null
     type: float
@@ -4844,9 +4845,8 @@ parameters:
     range:
     - 0.0
     - 0.6
-    default: 0.3
     initial: null
-    role: free
+    role: derived
     determinism: policy
     categories: []
     source: World Bank Doing Business, Paying Taxes
@@ -4929,7 +4929,8 @@ parameters:
     source: docs/params.md
   cost_of_debt:
     name: Cost of debt
-    description: Interest rate on the project's debt.
+    description: 'The utility''s borrowing rate: the policy rate plus its own credit spread, derived rather
+      than declared, so a scenario moving the policy rate moves the fleet''s debt service with it.'
     category: Financial
     subcategory: null
     type: float
@@ -4937,16 +4938,16 @@ parameters:
     range:
     - 0.0
     - 0.5
-    default: 0.09
     initial: null
-    role: exogenous
+    role: derived
     determinism: policy
     categories: []
-    source: null
+    source: Credit-spread decomposition (BIS)
     source_url: null
-    users: []
+    users:
+    - Investors
     priority: P1
-    status: to_build
+    status: existing
     deprecated_by: null
   cost_of_equity:
     name: Cost of equity
@@ -6038,6 +6039,30 @@ parameters:
     users: []
     priority: P2
     status: to_build
+    deprecated_by: null
+  debt_spread:
+    name: Debt spread over the policy rate
+    description: 'What the utility''s own credit costs above the policy rate: the borrower-specific premium.
+      200 basis points over the reference policy rate is investment-grade utility debt in the region.'
+    category: Financial
+    subcategory: null
+    type: float
+    unit: 1/year
+    range:
+    - 0.0
+    - 0.15
+    default: 0.02
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: Credit-spread decomposition (BIS; standard debt pricing)
+    source_url: null
+    users:
+    - Investors
+    - Regulators
+    priority: P1
+    status: existing
     deprecated_by: null
   debt_sustainability:
     name: Debt sustainability
@@ -9222,8 +9247,9 @@ parameters:
     deprecated_by: null
   gdp_growth_rate:
     name: GDP growth rate
-    description: Annual real GDP growth. Bounded to reject a value that would compound to a nonsense economy
-      over a 30-year horizon.
+    description: GDP growth rate -- the catalog carries the same rate under the spellings `gdp_growth_rate`
+      and `gdp_growth`, corrected to one value and resolved by an equality, so the graph answers the question
+      one way and either id reads a consistent number.
     category: Macroeconomic
     subcategory: null
     type: float
@@ -9231,9 +9257,8 @@ parameters:
     range:
     - -0.1
     - 0.15
-    default: 0.04
     initial: null
-    role: free
+    role: derived
     determinism: fixed
     categories: []
     source: docs/params.md#9.1
@@ -15926,6 +15951,28 @@ parameters:
     users:
     - Utilities
     source: docs/params.md
+  real_discount_rate:
+    name: Real discount rate
+    description: 'The nominal blend deflated: (1 + r_n) = (1 + r_r)(1 + pi), restated as r_r = (r_n -
+      pi)/(1 + pi) -- the Fisher equation. The rate the accounts'' real terms are struck at.'
+    category: Financial
+    subcategory: null
+    type: float
+    unit: 1/year
+    range:
+    - 0.0
+    - 0.5
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: The Fisher equation
+    source_url: null
+    users:
+    - Investors
+    priority: P1
+    status: existing
+    deprecated_by: null
   real_time_market:
     name: Real-time market active
     description: Whether a real-time market is modelled. A boolean.
@@ -18696,6 +18743,28 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
+  tariff_vat_inclusive_usd_per_mwh:
+    name: VAT-inclusive tariff
+    description: 'What the customer pays: the applied tariff plus the value-added tax on it. The retail
+      tariff''s own composition, written as the expanded sum so the sides share USD/MWh.'
+    category: Market
+    subcategory: null
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 6000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: VAT applied to electricity tariffs (the jurisdiction's tax code)
+    source_url: null
+    users:
+    - Planners
+    priority: P1
+    status: existing
+    deprecated_by: null
   tax_holiday_conditions:
     name: Tax holiday conditions
     description: Conditions for holiday
@@ -21215,6 +21284,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  carbon_price_alias:
+    name: Carbon price is Carbon price
+    description: Two ids for one rate, resolved in the graph's own idiom; the equality holds at every
+      value set, which is what makes the resolution a coupling rather than a correction.
+    system: carbon_trajectory
+    lhs: carbon_price
+    rhs: carbon_price_usd_per_tco2
+    relation: eq
+    parameters:
+    - carbon_price
+    - carbon_price_usd_per_tco2
+    free_variables:
+    - carbon_price_usd_per_tco2
+    determined_variables:
+    - carbon_price
+    tolerance: 1.0e-09
+    unit_check: true
+    reference: The catalog's own duplicate rows, resolved
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{carbon}_{price} = \mathrm{carbon}_{price\_usd\_per\_tco2}
   carbon_price_escalated_definition:
     name: Escalated carbon price
     description: 'The base-year carbon price compounded to the horizon. Dimensional check: USD/tonne times
@@ -21266,6 +21357,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  carbon_tax_rate_alias:
+    name: Carbon tax rate is Carbon price
+    description: Two ids for one rate, resolved in the graph's own idiom; the equality holds at every
+      value set, which is what makes the resolution a coupling rather than a correction.
+    system: carbon_trajectory
+    lhs: carbon_tax_rate
+    rhs: carbon_price_usd_per_tco2
+    relation: eq
+    parameters:
+    - carbon_tax_rate
+    - carbon_price_usd_per_tco2
+    free_variables:
+    - carbon_price_usd_per_tco2
+    determined_variables:
+    - carbon_tax_rate
+    tolerance: 1.0e-09
+    unit_check: true
+    reference: The catalog's own duplicate rows, resolved
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{carbon}_{tax\_rate} = \mathrm{carbon}_{price\_usd\_per\_tco2}
   cfads_definition:
     name: Cash available for debt service
     description: 'Tariff less marginal cost, over the energy one kilowatt sells in a year. A stated simplification:
@@ -21467,6 +21580,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  corporate_income_tax_rate_alias:
+    name: Corporate income tax rate is Tax rate
+    description: Two ids for one rate, resolved in the graph's own idiom; the equality holds at every
+      value set, which is what makes the resolution a coupling rather than a correction.
+    system: financial
+    lhs: corporate_income_tax_rate
+    rhs: tax_rate
+    relation: eq
+    parameters:
+    - corporate_income_tax_rate
+    - tax_rate
+    free_variables:
+    - tax_rate
+    determined_variables:
+    - corporate_income_tax_rate
+    tolerance: 1.0e-09
+    unit_check: true
+    reference: The catalog's own duplicate rows, resolved
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{corporate}_{income\_tax\_rate} = \mathrm{tax}_{rate}
   cost_of_debt_capped:
     name: Debt cost within the allowed return
     description: 'The regulator''s debt allowance binds the commercial cost of debt the scenario may assume:
@@ -21490,6 +21625,31 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{cost}_{of\_debt} \leq \mathrm{allowed}_{return\_on\_debt}
+  cost_of_debt_priced:
+    name: Cost of debt from the spread
+    description: 'The spread decomposition: the policy rate plus the borrower''s premium. The shipped
+      0.09 is exactly 0.07 over 0.02, so the reference scenario''s blend is unchanged; what changes is
+      that a scenario can now move the policy rate and the debt cost follows.'
+    system: financial
+    lhs: cost_of_debt
+    rhs: interest_rate + debt_spread
+    relation: eq
+    parameters:
+    - cost_of_debt
+    - interest_rate
+    - debt_spread
+    free_variables:
+    - interest_rate
+    - debt_spread
+    determined_variables:
+    - cost_of_debt
+    tolerance: 1.0e-09
+    unit_check: true
+    reference: Credit-spread decomposition (BIS)
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{cost}_{of\_debt} = \mathrm{interest}_{rate} + \mathrm{debt}_{spread}
   cost_of_equity_capped:
     name: Equity cost within the allowed return
     description: 'The equity-return allowance binds the cost of equity: the CAPM-estimated return a project
@@ -22589,6 +22749,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{gasification}_{cost} = \mathrm{capex}_{gasification}
+  gdp_growth_rate_alias:
+    name: GDP growth rate is GDP growth rate
+    description: Two ids for one rate, resolved in the graph's own idiom; the equality holds at every
+      value set, which is what makes the resolution a coupling rather than a correction.
+    system: demand_supply
+    lhs: gdp_growth_rate
+    rhs: gdp_growth
+    relation: eq
+    parameters:
+    - gdp_growth_rate
+    - gdp_growth
+    free_variables:
+    - gdp_growth
+    determined_variables:
+    - gdp_growth_rate
+    tolerance: 1.0e-09
+    unit_check: true
+    reference: The catalog's own duplicate rows, resolved
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{gdp}_{growth\_rate} = \mathrm{gdp}_{growth}
   gearing_ratio_definition:
     name: Gearing from the debt fraction
     description: Debt over equity, where equity is the complement of the debt fraction. The singularity
@@ -23985,6 +24167,31 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{pyrolysis}_{cost} = \mathrm{capex}_{pyrolysis}
+  real_discount_rate_definition:
+    name: Fisher bridge
+    description: 'r_real = (r_nominal - inflation) / (1 + inflation): the nominal blend deflated by the
+      inflation the scenario carries. The (1 + pi) denominator is the compound-growth form; the walker
+      reads it as the growth factor it is, so the sides share 1/year.'
+    system: financial
+    lhs: real_discount_rate
+    rhs: (discount_rate - inflation_rate) / (1 + inflation_rate)
+    relation: eq
+    parameters:
+    - real_discount_rate
+    - discount_rate
+    - inflation_rate
+    free_variables:
+    - inflation_rate
+    determined_variables:
+    - real_discount_rate
+    tolerance: 1.0e-09
+    unit_check: true
+    reference: The Fisher equation
+    priority: P1
+    solution_method: numeric
+    linearity: nonlinear
+    latex: \mathrm{real}_{discount\_rate} = \frac{\mathrm{discount}_{rate} - \mathrm{inflation}_{rate}}{\mathrm{inflation}_{rate}
+      + 1}
   regulatory_asset_base_definition:
     name: Regulated asset base from the fleet
     description: Gross fleet capital less what the books have written down. The gross capital is the capacity-weighted
@@ -24407,6 +24614,32 @@ equations:
     solution_method: iterative
     linearity: nonlinear
     latex: null
+  tariff_with_vat_definition:
+    name: VAT-inclusive tariff
+    description: 'The applied tariff plus the VAT it carries: p + p*vat, expanded from p*(1 + vat) so
+      the walker reads every term on USD/MWh. The affordability and burden identities read the *retail*
+      number.'
+    system: price_demand
+    lhs: tariff_vat_inclusive_usd_per_mwh
+    rhs: applied_tariff_usd_per_mwh + applied_tariff_usd_per_mwh * vat_rate
+    relation: eq
+    parameters:
+    - tariff_vat_inclusive_usd_per_mwh
+    - applied_tariff_usd_per_mwh
+    - vat_rate
+    free_variables:
+    - applied_tariff_usd_per_mwh
+    - vat_rate
+    determined_variables:
+    - tariff_vat_inclusive_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    reference: VAT applied to electricity tariffs
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{tariff}_{vat\_inclusive\_usd\_per\_mwh} = \mathrm{applied}_{tariff\_usd\_per\_mwh}
+      + \mathrm{applied}_{tariff\_usd\_per\_mwh} \mathrm{vat}_{rate}
   tidal_range_cost_alias:
     name: Tidal range capital cost is Tidal range capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `tidal_range_cost`
@@ -27111,124 +27344,6 @@ relationships:
   reference: null
   priority: P1
 - source: discount_rate
-  target: weighted_average_cost_of_capital
-  equation_id: wacc_alias
-  relationship: equality
-  direction: forward
-  strength: hard
-  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
-    computes.'
-  reference: null
-  priority: P1
-- source: capex_usd_per_kw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: Gross fleet capital enters the base the allowed return is earned on.
-  reference: null
-  priority: P1
-- source: total_capacity_mw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: The fleet's size sets the scale of the capital in the accounts.
-  reference: null
-  priority: P1
-- source: accumulated_depreciation_fraction
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: What the books have written down between gross capital and the base.
-  reference: null
-  priority: P1
-- source: regulatory_asset_base
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: equality
-  direction: forward
-  strength: hard
-  description: Straight-line write-down of the base over the regulatory asset life.
-  reference: null
-  priority: P1
-- source: depreciation_life_by_asset
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: A longer regulatory life spreads the base thinner over the years.
-  reference: null
-  priority: P1
-- source: regulatory_depreciation
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: Depreciation is the first term of the revenue requirement.
-  reference: null
-  priority: P1
-- source: regulatory_asset_base
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: The return is earned on the base, not on gross capital.
-  reference: null
-  priority: P1
-- source: discount_rate
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: The return rate is the blend the financial block computes.
-  reference: null
-  priority: P1
-- source: allowed_return_on_debt
-  target: cost_of_debt
-  equation_id: cost_of_debt_capped
-  relationship: constraint
-  direction: forward
-  strength: hard
-  description: The allowance binds the debt rate a scenario may carry.
-  reference: null
-  priority: P1
-- source: allowed_return_on_equity
-  target: cost_of_equity
-  equation_id: cost_of_equity_capped
-  relationship: constraint
-  direction: forward
-  strength: hard
-  description: The allowance binds the equity return a valuation may assume.
-  reference: null
-  priority: P1
-- source: regulated_tariff_usd_per_mwh
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: equality
-  direction: forward
-  strength: hard
-  description: The applied tariff is the recovery level in the absence of a cap.
-  reference: null
-  priority: P1
-- source: revenue_cap
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: The cap scales the recovery level; below 1 it withholds part of it.
-  reference: null
-  priority: P1
-- source: discount_rate
   target: crf_solar_pv
   equation_id: crf_solar_pv_definition
   relationship: functional
@@ -28210,6 +28325,205 @@ relationships:
   direction: forward
   strength: hard
   description: The storage allowance widens the fleet ceiling for energy-shifting builds.
+  reference: null
+  priority: P1
+- source: discount_rate
+  target: weighted_average_cost_of_capital
+  equation_id: wacc_alias
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
+    computes.'
+  reference: null
+  priority: P1
+- source: capex_usd_per_kw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gross fleet capital enters the base the allowed return is earned on.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The fleet's size sets the scale of the capital in the accounts.
+  reference: null
+  priority: P1
+- source: accumulated_depreciation_fraction
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: What the books have written down between gross capital and the base.
+  reference: null
+  priority: P1
+- source: regulatory_asset_base
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: Straight-line write-down of the base over the regulatory asset life.
+  reference: null
+  priority: P1
+- source: depreciation_life_by_asset
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: A longer regulatory life spreads the base thinner over the years.
+  reference: null
+  priority: P1
+- source: regulatory_depreciation
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Depreciation is the first term of the revenue requirement.
+  reference: null
+  priority: P1
+- source: regulatory_asset_base
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The return is earned on the base, not on gross capital.
+  reference: null
+  priority: P1
+- source: discount_rate
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The return rate is the blend the financial block computes.
+  reference: null
+  priority: P1
+- source: allowed_return_on_debt
+  target: cost_of_debt
+  equation_id: cost_of_debt_capped
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: The allowance binds the debt rate a scenario may carry.
+  reference: null
+  priority: P1
+- source: allowed_return_on_equity
+  target: cost_of_equity
+  equation_id: cost_of_equity_capped
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: The allowance binds the equity return a valuation may assume.
+  reference: null
+  priority: P1
+- source: regulated_tariff_usd_per_mwh
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The applied tariff is the recovery level in the absence of a cap.
+  reference: null
+  priority: P1
+- source: revenue_cap
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The cap scales the recovery level; below 1 it withholds part of it.
+  reference: null
+  priority: P1
+- source: gdp_growth
+  target: gdp_growth_rate
+  equation_id: gdp_growth_rate_alias
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The canonical rate; the duplicate derives.
+  reference: null
+  priority: P1
+- source: carbon_price_usd_per_tco2
+  target: carbon_tax_rate
+  equation_id: carbon_tax_rate_alias
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The canonical rate; the duplicate derives.
+  reference: null
+  priority: P1
+- source: carbon_price_usd_per_tco2
+  target: carbon_price
+  equation_id: carbon_price_alias
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The canonical rate; the duplicate derives.
+  reference: null
+  priority: P1
+- source: tax_rate
+  target: corporate_income_tax_rate
+  equation_id: corporate_income_tax_rate_alias
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The canonical rate; the duplicate derives.
+  reference: null
+  priority: P1
+- source: interest_rate
+  target: cost_of_debt
+  equation_id: cost_of_debt_priced
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the debt pricing.
+  reference: null
+  priority: P1
+- source: debt_spread
+  target: cost_of_debt
+  equation_id: cost_of_debt_priced
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the debt pricing.
+  reference: null
+  priority: P1
+- source: inflation_rate
+  target: real_discount_rate
+  equation_id: real_discount_rate_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Deflates the nominal blend.
+  reference: null
+  priority: P1
+- source: applied_tariff_usd_per_mwh
+  target: tariff_vat_inclusive_usd_per_mwh
+  equation_id: tariff_with_vat_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the retail tariff.
+  reference: null
+  priority: P1
+- source: vat_rate
+  target: tariff_vat_inclusive_usd_per_mwh
+  equation_id: tariff_with_vat_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the retail tariff.
   reference: null
   priority: P1
 cross_validation:

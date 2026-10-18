@@ -1,10 +1,10 @@
 # Coupling worklist
 
-Every node still in `uncoupled()` (718 of 1076, as of the batch 12-16 bake + regeneration on 2026-10-17) and the family class its coupling belongs to. Batches 12-16 coupled 75 nodes (793 -> 718): the financial core, the technology LCOE layer, the resolved duplicates, the employment chain, and the demand synthesis. The remaining classes name the *method* each coupling gets; nothing escapes the register.
+Every node still in `uncoupled()` (710 of 1078, as of the batch 12-17 bake on 2026-10-17) and the family class its coupling belongs to. Batches 12-17 coupled 83 nodes (793 -> 710). The classes name the method each coupling gets; nothing escapes the register.
 
-## unassigned (568)
+## unassigned (567)
 
-`ac_voltage_limit`, `accelerated_depreciation`, `accelerated_depreciation_factor`, `accumulation_risk`, `adaptation_benefits`, `adaptation_costs`, `adaptation_measures`, `adaptive_capacity`, `affordability_threshold`, `agricultural_irrigation_load`, `agricultural_machinery`, `airport_electrification`, `ami_infrastructure`, `archaeological_sites`, `archaeological_sites_density`, `arrears_management`, `article_6_2_parameters`, `article_6_4_parameters`, `article_6_credits`, `asset_age_distribution`, `asset_management_maturity`, `asset_management_systems`, `assignment_rights`, `auction_frequency`, `auction_mechanism`, `auction_price_cap`, `auction_volume`, `aviation_fuel_demand`, `balance_of_payments`, `baseline_emissions`, `battery_storage_adoption`, `bid_ask_spread`, `bill_shock_protection`, `billing_systems`, `biodiversity_impact`, `biodiversity_intactness_before`, `biodiversity_intactness_index`, `biogas_capacity`, `biomass_sustainability_limit`, `black_start_capability` ... and 528 more
+`ac_voltage_limit`, `accelerated_depreciation`, `accelerated_depreciation_factor`, `accumulation_risk`, `adaptation_benefits`, `adaptation_costs`, `adaptation_measures`, `adaptive_capacity`, `affordability_threshold`, `agricultural_irrigation_load`, `agricultural_machinery`, `airport_electrification`, `ami_infrastructure`, `archaeological_sites`, `archaeological_sites_density`, `arrears_management`, `article_6_2_parameters`, `article_6_4_parameters`, `article_6_credits`, `asset_age_distribution`, `asset_management_maturity`, `asset_management_systems`, `assignment_rights`, `auction_frequency`, `auction_mechanism`, `auction_price_cap`, `auction_volume`, `aviation_fuel_demand`, `balance_of_payments`, `baseline_emissions`, `battery_storage_adoption`, `bid_ask_spread`, `bill_shock_protection`, `billing_systems`, `biodiversity_impact`, `biodiversity_intactness_before`, `biodiversity_intactness_index`, `biogas_capacity`, `biomass_sustainability_limit`, `black_start_capability` ... and 527 more
 
 ## compliance register (46)
 
@@ -18,17 +18,17 @@ Every node still in `uncoupled()` (718 of 1076, as of the batch 12-16 bake + reg
 
 `battery_duration`, `carbon_tax_start_year`, `concession_duration`, `construction_period`, `demand_growth_end_year`, `demand_growth_start_year`, `emissions_peak_year`, `financing_close_deadline`, `fit_duration`, `hydro_inflow_year`, `licence_duration`, `line_outage_duration`, `loss_carryback_years`, `loss_carryforward_years`, `maintenance_duration`, `net_zero_year`, `phs_duration`, `renewable_target_year`, `retraining_duration`, `settlement_period`, `solar_cf_year`, `tax_holiday_duration`, `thermal_storage_duration`, `wind_cf_year`
 
-## rate family (18)
-
-`battery_learning_rate`, `carbon_tax_rate`, `coal_retirement_rate`, `corporate_income_tax_rate`, `demand_growth_rate`, `electrolyser_learning_rate`, `energy_poverty_rate`, `ets_cap_reduction_rate`, `gdp_growth_rate`, `grid_extension_rate`, `industrialisation_rate`, `inflation_rate`, `interest_rate`, `population_growth_rate`, `regulated_tariff_rate`, `solar_pv_learning_rate`, `urbanisation_rate`, `vat_rate`
-
 ## share family (18)
 
 `ammonia_export_share`, `blended_finance_share`, `bond_share`, `carbon_finance_share`, `cement_ccus_share`, `chemicals_green_ammonia_share`, `commercial_bank_share`, `community_development_fund_share`, `dfi_share`, `district_heating_share`, `green_bond_share`, `hvdc_share`, `hydrogen_vehicle_share`, `industrial_ccus_share`, `interruptible_load_share`, `public_transport_share`, `steel_h2_dri_share`, `steel_scrap_eaf_share`
 
-## cost family (17)
+## cost family (16)
 
-`biomass_feedstock_cost`, `capacity_price`, `carbon_price`, `cbam_price`, `currency_hedge_cost`, `demand_response_cost`, `grid_connection_cost`, `heat_pump_cost`, `hydrogen_export_price`, `hydrogen_pipeline_cost`, `hydrogen_storage_cost`, `insurance_loss_share_of_cost`, `life_extension_cost`, `mini_grid_cost`, `right_of_way_cost`, `shs_cost`, `uranium_price`
+`biomass_feedstock_cost`, `capacity_price`, `cbam_price`, `currency_hedge_cost`, `demand_response_cost`, `grid_connection_cost`, `heat_pump_cost`, `hydrogen_export_price`, `hydrogen_pipeline_cost`, `hydrogen_storage_cost`, `insurance_loss_share_of_cost`, `life_extension_cost`, `mini_grid_cost`, `right_of_way_cost`, `shs_cost`, `uranium_price`
+
+## rate family (12)
+
+`battery_learning_rate`, `coal_retirement_rate`, `demand_growth_rate`, `electrolyser_learning_rate`, `energy_poverty_rate`, `ets_cap_reduction_rate`, `grid_extension_rate`, `industrialisation_rate`, `population_growth_rate`, `regulated_tariff_rate`, `solar_pv_learning_rate`, `urbanisation_rate`
 
 ## policy flag (categorical) (2)
 
@@ -80,7 +80,6 @@ Every node still in `uncoupled()` (718 of 1076, as of the batch 12-16 bake + reg
 - `buffer_zones` unit=None def=500000.0 -- Buffer zones
 - `business_interruption` unit='1' def=500000.0 -- FIRM-SPECIFIC. The scope of cover, waiting period and indemnity period vary by p
 - `business_interruption_insurance` unit=None def=500000.0 -- Business interruption insurance
-- `capacity_factor_solar_pv` unit='1' def=0.22 -- Annual net output over rated capacity for solar pv, in the single-country settin
 - `capex_distribution` unit='USD/kW' def=400.0 -- Installed cost of distribution network per kilowatt of served load. Unit is USD/
 - `capex_gas_ccgt` unit='USD/kW' def=1100.0 -- Overnight installed cost of combined-cycle gas turbine. Range spans single-shaft
 - `capex_gas_ocgt` unit='USD/kW' def=650.0 -- Overnight installed cost of open-cycle gas turbine. Lower capex and lower effici

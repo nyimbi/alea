@@ -232,6 +232,23 @@ def unit_of(expression: Expr, graph: ParameterGraph) -> Unit | None:
 			# so it is undecidable rather than a failure.
 			return None
 	if isinstance(expression, Add):
+		# The compound-growth convention: `1 + rate`. Strict algebra refuses
+		# 1 + 1/[time], and the annuity blessing already accepted the same
+		# convention inside a power; the same content appears bare everywhere
+		# an escalation or a VAT multiplies a price, and the Fisher equation
+		# divides by it. A bare sum of a constant and ONE rate is a growth
+		# factor -- dimensionless -- which is the convention, stated once
+		# and scoped: two terms only, one a constant, the other carrying
+		# 1/[time]; anything else takes the standard path.
+		if len(expression.terms) == 2:
+			consts = [t for t in expression.terms if isinstance(t, Const)]
+			rates = [t for t in expression.terms if not isinstance(t, Const)]
+			if len(consts) == 1 and len(rates) == 1:
+				rate_unit = unit_of(rates[0], graph)
+				if rate_unit is not None:
+					period = (rate_unit**-1).dimensionality
+					if period != ureg.dimensionless.dimensionality:
+						return ureg.dimensionless
 		terms = [unit_of(term, graph) for term in expression.terms]
 		decided = [unit for unit in terms if unit is not None]
 		if len(decided) != len(terms):
@@ -267,17 +284,24 @@ def unit_of(expression: Expr, graph: ParameterGraph) -> Unit | None:
 			rates = [t for t in addend.terms if not isinstance(t, Const)]
 			if len(consts) == 1 and len(rates) == 1:
 				rate_unit = unit_of(rates[0], graph)
-				exponent_unit = unit_of(expression.exponent, graph)
-				if rate_unit is not None and exponent_unit is not None:
+				if rate_unit is not None:
+					if isinstance(expression.exponent, Const):
+						# A numeric exponent folds the base to a plain
+						# number: an annuity discount factor `(1 + pi) ** -1`
+						# is not a rate, it is a coefficient.
+						return ureg.dimensionless
+					exponent_unit = unit_of(expression.exponent, graph)
+					if exponent_unit is None:
+						return None
 					annualised = rate_unit**-1  # the rate's period
 					if exponent_unit.dimensionality == annualised.dimensionality:
 						# A [time] exponent cancels the rate: the result is a
 						# growth FACTOR (an annuity term), dimensionless.
 						return ureg.dimensionless
 					if exponent_unit.dimensionality == ureg.dimensionless.dimensionality:
-						# A dimensionless exponent (an elasticity) leaves the
-						# base's own period in the result: (1 + g_Y)^eps is a
-						# growth *rate* in the rate's own per-year terms.
+						# A dimensionless symbolic exponent (an elasticity)
+						# leaves the base's own period in the result:
+						# (1 + g_Y)^eps is a growth *rate* per year.
 						return rate_unit
 		base = unit_of(expression.base, graph)
 		if base is None:

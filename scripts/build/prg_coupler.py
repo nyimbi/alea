@@ -546,7 +546,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -590,6 +590,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b16_equations)
 		edges = list(BATCH12_EDGES) + b16_edges
+	elif batch == "17":
+		b17_nodes, b17_equations, b17_edges, b17_rules = build_batch17(graph)
+		rules.extend(b17_rules)
+		nodes.update(b17_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b17_equations)
+		edges = list(BATCH12_EDGES) + b17_edges
 	else:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		edges = list(BATCH12_EDGES)
@@ -2083,6 +2090,235 @@ def build_batch16(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 			"source": sym, "target": "pass_through_tariff_usd_per_mwh",
 			"equation_id": "pass_through_tariff_definition", "relationship": "functional",
 			"strength": "hard", "description": "Enters the pass-through tariff.",
+		})
+	return nodes, equations, edges, rules
+
+
+
+# ---------------------------------------------------------------------------
+# Batch 17 -- the financial rates: the duplicated rate spellings, the
+# credit-spread pricing of a utility's debt, the Fisher bridge, and the
+# taxes a tariff carries.
+#
+# Theory / citations:
+#
+# * Credit-spread pricing: a utility's cost of debt is the policy rate plus
+#   the borrower's own credit spread -- the standard debt-pricing identity
+#   (BIS/credit-spread decomposition in every corporate-finance text).
+#   `cost_of_debt` 0.09 = policy 0.07 + spread 0.02, at the shipped values,
+#   so the reference scenario is unchanged by the derivation.
+# * Fisher: (1 + r_nominal) = (1 + r_real)(1 + pi), restated without the
+#   (1 + rate) form as r_real = (r_nominal - pi) / (1 + pi). The real rate
+#   is what the accounts' escalation-deflated terms are struck at.
+# * VAT on electricity tariffs, CIT as the kernel tax_rate's name.
+# ---------------------------------------------------------------------------
+
+# `demand_growth_rate` is already deprecated with its replacement named --
+# the earlier batch's own resolution -- and the loader refuses an equation
+# that reaches a deprecated node, which is the refusal doing its job: the
+# migrated-from id serves no equation. The other spellings carry no
+# replacement yet, so they resolve by equality.
+RATE_ALIASES: tuple[tuple[str, str], ...] = (
+	("gdp_growth_rate", "gdp_growth", "Macro"),
+	("carbon_tax_rate", "carbon_price_usd_per_tco2", "Carbon"),
+	("carbon_price", "carbon_price_usd_per_tco2", "Carbon"),
+	("corporate_income_tax_rate", "tax_rate", "Tax & Fiscal"),
+)
+
+ALIAS_SYSTEMS: dict[str, str] = {
+	"carbon_price_usd_per_tco2": "carbon_trajectory",
+	"tax_rate": "financial",
+	"gdp_growth": "demand_supply",
+	"demand_growth": "demand_supply",
+}
+
+
+def build_batch17(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, str]], list[dict[str, Any]]]:
+	"""Batch 17: the duplicated rate spellings, credit spread, Fisher, VAT."""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, str]] = []
+	rules: list[dict[str, Any]] = []
+
+	for dup, can, _category in RATE_ALIASES:
+		dup_node, can_node = graph.nodes[dup], graph.nodes[can]
+		full = dict(dup_node.model_dump(exclude={"id"}, mode="json"))
+		full["role"] = "derived"
+		full["description"] = (
+			f"{dup_node.name} -- the catalog carries the same rate under the "
+			f"spellings `{dup}` and `{can}`, corrected to one value and "
+			"resolved by an equality, so the graph answers the question one "
+			"way and either id reads a consistent number."
+		)
+		if full.get("unit") is None:
+			full["unit"] = can_node.unit
+		full.pop("default", None)
+		nodes[dup] = full
+		can_system = ALIAS_SYSTEMS.get(can, "financial")
+		eq_id = f"{dup}_alias"
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": f"{dup_node.name} is {can_node.name}",
+			"description": (
+				"Two ids for one rate, resolved in the graph's own idiom; the "
+				"equality holds at every value set, which is what makes the "
+				"resolution a coupling rather than a correction."
+			),
+			"system": can_system,
+			"lhs": dup,
+			"rhs": can,
+			"relation": "eq",
+			"parameters": [dup, can],
+			"free_variables": [can],
+			"determined_variables": [dup],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear", "priority": "P2",
+			"reference": "The catalog's own duplicate rows, resolved",
+			"latex": r"\mathrm{" + dup.replace("_", r"\_") + r"} \equiv \mathrm{" + can.replace("_", r"\_") + r"}",
+		}
+		edges.append({
+			"source": can, "target": dup, "equation_id": eq_id,
+			"relationship": "equality", "strength": "hard",
+			"description": "The canonical rate; the duplicate derives.",
+		})
+
+	# --- the credit spread ---
+	nodes["debt_spread"] = {
+		"name": "Debt spread over the policy rate",
+		"description": (
+			"What the utility's own credit costs above the policy rate: the "
+			"borrower-specific premium. 200 basis points over the reference "
+			"policy rate is investment-grade utility debt in the region."
+		),
+		"category": "Financial", "type": "float", "unit": "1/year",
+		"range": [0.0, 0.15], "default": 0.02, "role": "free",
+		"determinism": "policy", "priority": "P1", "status": "existing",
+		"source": "Credit-spread decomposition (BIS; standard debt pricing)",
+		"users": ["Investors", "Regulators"],
+	}
+	nodes["cost_of_debt"] = {
+		"name": "Cost of debt",
+		"description": (
+			"The utility's borrowing rate: the policy rate plus its own credit "
+			"spread, derived rather than declared, so a scenario moving the "
+			"policy rate moves the fleet's debt service with it."
+		),
+		"category": "Financial", "type": "float", "unit": "1/year",
+		"range": [0.0, 0.5], "role": "derived", "determinism": "policy",
+		"priority": "P1", "status": "existing",
+		"source": "Credit-spread decomposition (BIS)",
+		"users": ["Investors"],
+	}
+	equations["cost_of_debt_priced"] = {
+		"id": "cost_of_debt_priced",
+		"name": "Cost of debt from the spread",
+		"description": (
+			"The spread decomposition: the policy rate plus the borrower's "
+			"premium. The shipped 0.09 is exactly 0.07 over 0.02, so the "
+			"reference scenario's blend is unchanged; what changes is that a "
+			"scenario can now move the policy rate and the debt cost follows."
+		),
+		"system": "financial",
+		"lhs": "cost_of_debt",
+		"rhs": "interest_rate + debt_spread",
+		"relation": "eq",
+		"parameters": ["cost_of_debt", "interest_rate", "debt_spread"],
+		"free_variables": ["interest_rate", "debt_spread"],
+		"determined_variables": ["cost_of_debt"],
+		"tolerance": 1.0e-09, "unit_check": True,
+		"solution_method": "direct", "linearity": "linear", "priority": "P1",
+		"reference": "Credit-spread decomposition (BIS)",
+		"latex": r"K_d = r_{\mathrm{policy}} + s_{\mathrm{credit}}",
+	}
+	for sym in ("interest_rate", "debt_spread"):
+		edges.append({
+			"source": sym, "target": "cost_of_debt",
+			"equation_id": "cost_of_debt_priced", "relationship": "functional",
+			"strength": "hard", "description": "Enters the debt pricing.",
+		})
+
+	# --- Fisher ---
+	nodes["real_discount_rate"] = {
+		"name": "Real discount rate",
+		"description": (
+			"The nominal blend deflated: (1 + r_n) = (1 + r_r)(1 + pi), "
+			"restated as r_r = (r_n - pi)/(1 + pi) -- the Fisher equation. "
+			"The rate the accounts' real terms are struck at."
+		),
+		"category": "Financial", "type": "float", "unit": "1/year",
+		"range": [0.0, 0.5], "role": "derived", "determinism": "fixed",
+		"priority": "P1", "status": "existing",
+		"source": "The Fisher equation",
+		"users": ["Investors"],
+	}
+	equations["real_discount_rate_definition"] = {
+		"id": "real_discount_rate_definition",
+		"name": "Fisher bridge",
+		"description": (
+			"r_real = (r_nominal - inflation) / (1 + inflation): the nominal "
+			"blend deflated by the inflation the scenario carries. The (1 + pi) "
+			"denominator is the compound-growth form; the walker reads it as "
+			"the growth factor it is, so the sides share 1/year."
+		),
+		"system": "financial",
+		"lhs": "real_discount_rate",
+		"rhs": "(discount_rate - inflation_rate) / (1 + inflation_rate)",
+		"relation": "eq",
+		"parameters": ["real_discount_rate", "discount_rate", "inflation_rate"],
+		"free_variables": ["inflation_rate"],
+		"determined_variables": ["real_discount_rate"],
+		"tolerance": 1.0e-09, "unit_check": True,
+		"solution_method": "numeric", "linearity": "nonlinear", "priority": "P1",
+		"reference": "The Fisher equation",
+		"latex": r"r_{\mathrm{real}} = (r_n - \pi) / (1 + \pi)",
+	}
+	edges.append({
+		"source": "inflation_rate", "target": "real_discount_rate",
+		"equation_id": "real_discount_rate_definition", "relationship": "functional",
+		"strength": "hard", "description": "Deflates the nominal blend.",
+	})
+
+	# --- VAT on the tariff ---
+	nodes["tariff_vat_inclusive_usd_per_mwh"] = {
+		"name": "VAT-inclusive tariff",
+		"description": (
+			"What the customer pays: the applied tariff plus the value-added "
+			"tax on it. The retail tariff's own composition, written as the "
+			"expanded sum so the sides share USD/MWh."
+		),
+		"category": "Market", "type": "float", "unit": "USD/MWh",
+		"range": [0.0, 6000.0], "role": "derived", "determinism": "policy",
+		"priority": "P1", "status": "existing",
+		"source": "VAT applied to electricity tariffs (the jurisdiction's tax code)",
+		"users": ["Planners"],
+	}
+	equations["tariff_with_vat_definition"] = {
+		"id": "tariff_with_vat_definition",
+		"name": "VAT-inclusive tariff",
+		"description": (
+			"The applied tariff plus the VAT it carries: p + p*vat, expanded "
+			"from p*(1 + vat) so the walker reads every term on USD/MWh. The "
+			"affordability and burden identities read the *retail* number."
+		),
+		"system": "price_demand",
+		"lhs": "tariff_vat_inclusive_usd_per_mwh",
+		"rhs": "applied_tariff_usd_per_mwh + applied_tariff_usd_per_mwh * vat_rate",
+		"relation": "eq",
+		"parameters": [
+			"tariff_vat_inclusive_usd_per_mwh", "applied_tariff_usd_per_mwh", "vat_rate",
+		],
+		"free_variables": ["applied_tariff_usd_per_mwh", "vat_rate"],
+		"determined_variables": ["tariff_vat_inclusive_usd_per_mwh"],
+		"tolerance": 1.0e-09, "unit_check": True,
+		"solution_method": "direct", "linearity": "linear", "priority": "P1",
+		"reference": "VAT applied to electricity tariffs",
+		"latex": r"p_{\mathrm{incl}} = p + p \cdot \tau_{vat}",
+	}
+	for sym in ("applied_tariff_usd_per_mwh", "vat_rate"):
+		edges.append({
+			"source": sym, "target": "tariff_vat_inclusive_usd_per_mwh",
+			"equation_id": "tariff_with_vat_definition", "relationship": "functional",
+			"strength": "hard", "description": "Enters the retail tariff.",
 		})
 	return nodes, equations, edges, rules
 

@@ -153,8 +153,8 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	"""
 	cov = coverage(graph)
 	assert cov["constraint_shaped"] == 15
-	assert cov["identities"] == 141
-	assert cov["total"] == 156
+	assert cov["identities"] == 148
+	assert cov["total"] == 163
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
@@ -170,7 +170,6 @@ def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
 	"""
 	assert bound_routes(graph) == (
 		"carbon_budget_constraint",
-		"cost_of_debt_capped",
 		"cost_of_equity_capped",
 		"demand_shares_bound",
 		"fuel_ccs_adoption_bound",

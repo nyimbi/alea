@@ -71,6 +71,10 @@ citing or a row added and never wired.
 | standard_fiscal | Rate-based levy and allowance definitions | | | | | n/a | Rate-based levy and allowance definitions (standard fiscal accounting) |
 | composition_shares | Composition-target shares in employment planning | | | | | n/a | Composition-target shares (planning policy) |
 | marginal_cost_split | The shipped marginal-cost definition, restated as its variable part | | | | | n/a | The shipped marginal-cost definition, split |
+| catalog_duplicate_resolutions | The catalog's own duplicate rows, resolved by equality (the coupling batches' alias equations) | | | | | n/a | The catalog's own duplicate rows, resolved |
+| bis_credit_spread | Credit-spread decomposition: borrower rate = policy rate + borrower premium | | | | | n/a | Credit-spread decomposition (BIS) |
+| fisher_equation | The Fisher equation: nominal = (1 + real)(1 + inflation) | | | | | n/a | The Fisher equation |
+| vat_tariffs | VAT applied to electricity tariffs | | | | | n/a | VAT applied to electricity tariffs |
 | fiscal_definitions | Rate-based levy, allowance and composition-share definitions | | | | | n/a | Rate-based levy and allowance definitions (standard fiscal accounting); Composition-target shares (planning policy) |
 | pass_through_pricing | Pass-through pricing rules in utility tariff design | | | | | n/a | Pass-through pricing |
 | irena_jobs_2024 | Renewable energy and jobs: Annual review 2024 | IRENA / ILO | 2024 | https://www.irena.org/Publications/2024/Oct/Renewable-energy-and-jobs-Annual-review-2024 | IRENA terms (free) | sources/archive/irena_jobs_2024.pdf | Leontief input-output employment multipliers; IRENA employment factors |

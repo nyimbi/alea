@@ -122,9 +122,24 @@ def test_the_summary_route_serves_the_registers(
 	assert body["engine_translation"]["engine_unreached"]
 	assert body["units"]["summary"]
 	assert body["uncertainty"]["summary"]
-	assert len(body["units"]["consistent"]) + len(body["units"]["inconsistent"]) + len(
-		body["units"]["undecidable"]
-	) == body["equations"]
+	# The partition's honest arithmetic: a *declared exemption* is neither a
+	# consistent nor an inconsistent verdict -- that is the register's whole
+	# point -- so an exempt equation whose own walk could not decide it is
+	# outside the three lists, and the count the equality needs is the three
+	# lists plus the exempt-and-undecidable remainder. Four equations declare
+	# the exemption; the ones whose walk decided them stayed in their lists.
+	# The payload's own partition, which is how it is built: the three
+	# verdict lists exclude the declared exemptions, so the four sets close
+	# over the equations exactly. An exemption is neither a pass nor a
+	# finding -- that is the register's whole point -- and it is named, which
+	# is what lets a reader tell the two apart.
+	assert (
+		len(body["units"]["consistent"])
+		+ len(body["units"]["inconsistent"])
+		+ len(body["units"]["undecidable"])
+		+ len(body["units"]["exempt"])
+		== body["equations"]
+	)
 
 
 def test_the_summary_serves_the_constraint_register(
@@ -451,9 +466,9 @@ def test_the_summary_serves_the_endogenous_layer(
 		len(endo_listed),
 		body["parameters"],
 	)
-	# 803 of 1075: the coupling batches converted free knobs into derived
+	# 800 of 1078: the coupling batches converted free knobs into derived
 	# quantities and named many of the rest as equation inputs.
-	assert len(free) == 803, len(free)
+	assert len(free) == 800, len(free)
 
 
 # ---------------------------------------------------------------------------
