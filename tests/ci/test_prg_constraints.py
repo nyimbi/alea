@@ -153,8 +153,8 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	"""
 	cov = coverage(graph)
 	assert cov["constraint_shaped"] == 15
-	assert cov["identities"] == 148
-	assert cov["total"] == 163
+	assert cov["identities"] == 153
+	assert cov["total"] == 168
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):

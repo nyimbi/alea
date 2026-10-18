@@ -75,6 +75,10 @@ citing or a row added and never wired.
 | bis_credit_spread | Credit-spread decomposition: borrower rate = policy rate + borrower premium | | | | | n/a | Credit-spread decomposition (BIS) |
 | fisher_equation | The Fisher equation: nominal = (1 + real)(1 + inflation) | | | | | n/a | The Fisher equation |
 | vat_tariffs | VAT applied to electricity tariffs | | | | | n/a | VAT applied to electricity tariffs |
+| stoft_2002 | Power System Economics: Designing Markets for Electricity | Steven Stoft | 2002 | | Proprietary (textbook) | | Stoft 2002, Power System Economics, ch. 5 |
+| cbam_regulation | EU Carbon Border Adjustment Mechanism; EU ETS allowance levels | European Commission | 2026 | | EU terms | | EU CBAM regulation; EU ETS allowance level 2026 |
+| benefit_sharing_shares | Benefit-sharing programme shares, applied through the graph's own revenue identity | | | | | n/a | Benefit-sharing programmes (the graph's own revenue identity) |
+| guarantee_risk_pricing | Guaranteed-offtake risk pricing in PPA markets | | | | | n/a | Guaranteed-offtake risk pricing (PPA market practice) |
 | fiscal_definitions | Rate-based levy, allowance and composition-share definitions | | | | | n/a | Rate-based levy and allowance definitions (standard fiscal accounting); Composition-target shares (planning policy) |
 | pass_through_pricing | Pass-through pricing rules in utility tariff design | | | | | n/a | Pass-through pricing |
 | irena_jobs_2024 | Renewable energy and jobs: Annual review 2024 | IRENA / ILO | 2024 | https://www.irena.org/Publications/2024/Oct/Renewable-energy-and-jobs-Annual-review-2024 | IRENA terms (free) | sources/archive/irena_jobs_2024.pdf | Leontief input-output employment multipliers; IRENA employment factors |

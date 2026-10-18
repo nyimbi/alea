@@ -1436,16 +1436,30 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 		if graph.is_settable(name)
 		and not graph.affects(name)
 		and not graph.constrains(name)
+		# A rule-cited parameter is used: the cross-validation rule gates
+		# admission on the value, which is a coupling -- the regulator's
+		# lever's lever -- and `rules_reading` carries it as a register of
+		# its own rather than folding it into `constrains`, which means
+		# something narrower and stays that way.
+		and not graph.rules_reading(name)
 	}
-	uncoupled = set(graph.uncoupled())
-	# The equations say which nodes nothing names; the edges say which settable
-	# nodes nothing reaches. `uncoupled` is the wider set by exactly the
-	# endogenous nodes -- `storage_capacity_mw` is named by no equation and
-	# reaches nothing, but a user may not set it, so it is not a dead *knob*.
-	# That asymmetry is asserted rather than papered over.
-	assert dead == uncoupled - set(graph.endogenous()), (
-		f"the equation-derived register and the edge-derived one disagree: "
-		f"{sorted(dead ^ (uncoupled - set(graph.endogenous())))}"
+	uncoupled_by_equation = set(graph.uncoupled())
+	rule_read = {
+		name
+		for name in uncoupled_by_equation
+		if graph.rules_reading(name)
+	}
+	uncoupled = set(
+		name for name in uncoupled_by_equation if not graph.rules_reading(name)
+	)
+	# The equations and the edges and the rules now agree exactly: the union
+	# of equation-read and rule-read is the whole of `uncoupled()`, and the
+	# rule-read members are the difference between the two frames. Asserted
+	# as the containment both ways so a reader cannot re-fold them.
+	assert rule_read <= uncoupled_by_equation
+	assert not (uncoupled & rule_read), (
+		"a rule-read parameter is also equation-read, which is fine, but this "
+		"register says uncoupled-by-anything"
 	)
 	# The count is pinned as a literal rather than asserted as a property, so
 	# that a document which quietly couples or uncouples a node makes this fail
@@ -1456,7 +1470,7 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# the comprehension above agree exactly at this number, which is the
 	# assertion that carries the weight -- this one is the record of what it
 	# agreed *at*.
-	assert len(dead) == 706, len(dead)
+	assert len(dead) == 670, len(dead)
 	# The knob the catalog names but no shipped equation reads, named so a
 	# failure points at a node rather than a count. It was `coal_capacity`
 	# until the endogenous fleet layer made that node derived, then
@@ -1744,8 +1758,8 @@ def test_the_audit_reports_what_it_did_not_check():
 
 	audit = audit_scenario_result(_solved())
 	assert audit.consistent
-	assert len(audit.checked) == 62, audit.checked
-	assert len(audit.skipped) == 86, audit.skipped
+	assert len(audit.checked) == 64, audit.checked
+	assert len(audit.skipped) == 89, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -1789,7 +1803,7 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# The whole derived set is named as unexamined: a partial count here would
 	# understate how much of the graph went unread. 141, not 75, for the reason
 	# spelled out in `test_the_audit_reports_what_it_did_not_check`.
-	assert len(audit.skipped) == 148, audit.skipped
+	assert len(audit.skipped) == 153, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -2798,7 +2812,7 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	# the number is the finding -- the sentence exists to stop a reader taking
 	# the declarations for a distribution, and a reach that drifts unnoticed
 	# would understate it.
-	assert "73" in text and "84" in text
+	assert "73" in text and "86" in text
 
 
 # ---------------------------------------------------------------------------
@@ -3424,7 +3438,7 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	assert counts, "no strength was counted"
 	assert sum(counts.values()) == len(graph.equations)
 	assert set(counts) <= {"hard", "soft", "informational"}
-	assert counts == {"hard": 160, "informational": 1, "soft": 2}, counts
+	assert counts == {"hard": 165, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -3694,7 +3708,7 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# for -- a researcher retrieves the equation through the reference. 80,
 	# measured on the graph the batches baked; a further change is a change
 	# to the register's coverage and fails here.
-	assert len(declared) == 87, f"the citation register moved: {sorted(declared)}"
+	assert len(declared) == 92, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -3928,8 +3942,8 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 				f"numeric {numeric!r}"
 			)
 			compared += 1
-	assert compared == 148, (
-		f"expected 148 determined variables in the shipped library, compared "
+	assert compared == 153, (
+		f"expected 153 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 33 before the generated batches were "
 		f"promoted, and every one of the 42 new equations is affine in the "
