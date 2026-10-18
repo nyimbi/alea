@@ -1840,7 +1840,60 @@ catalog disagreements 30 → 65 (the 35 retyped register nodes now differ from
 their catalog rows by construction — the retype *is* the disagreement, and it
 is now visible rather than silent).
 
-**What the remaining 591 are.** They are not one class, and the worklist says
+**Batch 23 — the extensive bases (2026-10-18).** Batches 21 and 22 left a
+residue that looked like a list of unrelated knobs and was one thing: unit
+rates whose product needs a physical extent the graph did not carry. A
+transmission cost in USD per MW-km is not a cost until something states the
+MW-km. So the batch is the bases — fifteen of them, each a settable quantity
+with a default — and the sixteen products fall out of them:
+
+- **Three Wright learning curves.** `capex * (cum/ref) ** (log(1 - rate) /
+  log(2))` for solar PV, batteries and electrolysers, each against its own
+  technology-specific installed/reference pair. The graph already carried a
+  generic `cumulative_capacity_mw` pair and three learning rates with no base
+  of their own; the technology pairs are what the rates were waiting for.
+- **Seven route and capex products.** Transmission, interconnector, hydrogen
+  pipeline and right-of-way costs as rate × extent; distribution capex per
+  connection and against peak demand; the regulated asset value it rolls into;
+  land acquisition at cost per hectare.
+- **Six household, land, transport and tariff products.** Households from
+  population and household size; energy-poor households and the depth of
+  their gap; public-transport passenger-km; electrolysis electricity demand
+  (energy × units / efficiency); and the regulated tariff ratio.
+
+Two nodes were retyped rather than added: `right_of_way_cost` (USD/km) and
+`energy_poverty_gap` (MWh/year) were 500000.0 placeholders with `unit: null`,
+and are now defined quantities. `electrolyser_efficiency` (dimensionless 0.65)
+and `hydrogen_pipeline_capacity` (MW) were placeholders too and are now
+parameters — the efficiency retype is what made
+`electrolysis_electricity_demand_mwh_per_year` decidable rather than
+undecidable.
+
+One unit-parsing defect was found and fixed before the products were authored
+against it. `USD/MW-km` repaired the hyphen to `*` and Pint parsed left to
+right, reading it as `USD * kilometer / megawatt` — USD·km²/MW, a *decidable*
+wrong reading the walker blesses. The fix parenthesises a `*`-joined product
+under a bar, so `USD/MW-km`, `USD/(MW*km)` and `USD/MW/km` are one unit and
+`MW-km` not under a bar is still a product. Only one of the graph's 71 unit
+strings changed and no equation verdict moved.
+
+A household-size inconsistency is recorded in the node prose rather than
+papered over: the graph's own residential demand implies 5.7 persons per
+household against the 4.5 demographic figure, so the demographic number is the
+base and the gap stays visible in the product it forms.
+
+State after batch 23: **1197 parameters, 277 equations, 605 edges, 54 rules,
+575 uncoupled** (694 at batch 20 → 649 → 631 → 591 → 575). Generator
+`--check` idempotent, `propagate` clean over all 1197 values at the document's
+defaults with no range excursion, the unit walker consistent on 256 of 277
+equations with the same 20 flagged and 0 undecidable. The moved literals are
+re-derived from the graph's registers: dead knobs 563 → 552, audit
+checked/skipped 86/141 → 88/155, computed 227 → 243, citation doors 112 → 115
+(the three Wright definitions), constraint-shaped 34/227/261 → 34/243/277
+(no new inequality — the batch is all identities), translate coverage 922 →
+935, catalog disagreements 65 → 67 (the two retypes).
+
+**What the remaining 575 are.** They are not one class, and the worklist says
 so. The compliance family is down to three (`gis_requirements` is a share of
 network assets in GIS with no base yet; the regulation up/down requirements
 need the reserve product they are a slice of). The policy flags are 25, of

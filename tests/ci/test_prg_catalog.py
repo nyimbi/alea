@@ -332,9 +332,11 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 	compliance register: thirty-five standards, requirements and methodologies
 	(``additionality_test`` through ``service_quality_standards``) defined as
 	``existing`` while the catalog still marks them ``to_build``, taking the
-	register to 65 disagreements. Pinned beside ``equity_return_target`` with
-	the reason, so the next landed batch moves this test rather than passing
-	silently.
+	register to 65 disagreements. Batch 23 then retyped two ``to_build``
+	placeholders into defined parameters -- ``right_of_way_cost`` (USD/km) and
+	``energy_poverty_gap`` (MWh/year) -- taking the register to 67. Pinned
+	beside ``equity_return_target`` with the reason, so the next landed batch
+	moves this test rather than passing silently.
 	"""
 	joins = {join.parameter: join for join in status_join(graph=graph)}
 	assert len(joins) == 787, len(joins)
@@ -371,6 +373,7 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 		"demand_growth_rate",
 		"demand_response_cost",
 		"dfi_share",
+		"energy_poverty_gap",
 		"environmental_flow_requirements",
 		"equity_return_target",
 		"ets_cap_reduction_rate",
@@ -398,6 +401,7 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 		"reserve_margin_requirement",
 		"resettlement_requirements",
 		"retraining_duration",
+		"right_of_way_cost",
 		"scada_ems_requirements",
 		"service_quality_standards",
 		"shs_cost",
@@ -424,14 +428,15 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 		assert node.status == "deprecated", node.status
 		assert node.deprecated_by in graph.nodes, node.deprecated_by
 
-	# The other 722 are the control: a join that reported every node as
+	# The other 720 are the control: a join that reported every node as
 	# disagreeing would pass the assertion above and mean nothing. The
 	# expansion took the agreeing count to 786, the promotion left it at 784
 	# for the two deprecations above, batch 20 took it to 764 for its twenty
 	# promotions, batch 21 took it to 757 for the seven more the set above
-	# names, and batch 22 took it to 722 for the thirty-five compliance
-	# register nodes it landed as ``existing``.
-	assert sum(1 for join in joins.values() if join.agrees) == 722
+	# names, batch 22 took it to 722 for the thirty-five compliance register
+	# nodes it landed as ``existing``, and batch 23 took it to 720 for the two
+	# retypes.
+	assert sum(1 for join in joins.values() if join.agrees) == 720
 
 
 def test_a_node_the_catalog_does_not_name_is_absent_rather_than_guessed(
@@ -476,8 +481,9 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 	# Pinned to the shipped graph's own list, alphabetical as catalog_report
 	# emits it: the two deprecations, equity_return_target, the twenty
 	# parameters batch 20 promoted to ``existing``, the seven batch 21
-	# promoted, and the thirty-five compliance register nodes batch 22 landed
-	# as ``existing``, all while the catalog still says to_build or integrate.
+	# promoted, the thirty-five compliance register nodes batch 22 landed
+	# as ``existing``, and the two batch 23 retyped, all while the catalog
+	# still says to_build or integrate.
 	assert report["status_disagreements"] == [
 		"additionality_test: the graph says existing and the catalog says to_build",
 		"adms_requirements: the graph says existing and the catalog says to_build",
@@ -510,6 +516,7 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 		"demand_growth_rate: the graph says deprecated and the catalog says to_build",
 		"demand_response_cost: the graph says existing and the catalog says to_build",
 		"dfi_share: the graph says existing and the catalog says to_build",
+		"energy_poverty_gap: the graph says existing and the catalog says to_build",
 		"environmental_flow_requirements: the graph says existing and the catalog says to_build",
 		"equity_return_target: the graph says to_build and the catalog says integrate",
 		"ets_cap_reduction_rate: the graph says existing and the catalog says to_build",
@@ -537,6 +544,7 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 		"reserve_margin_requirement: the graph says existing and the catalog says to_build",
 		"resettlement_requirements: the graph says existing and the catalog says to_build",
 		"retraining_duration: the graph says existing and the catalog says to_build",
+		"right_of_way_cost: the graph says existing and the catalog says to_build",
 		"scada_ems_requirements: the graph says existing and the catalog says to_build",
 		"service_quality_standards: the graph says existing and the catalog says to_build",
 		"shs_cost: the graph says existing and the catalog says to_build",

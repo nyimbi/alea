@@ -155,11 +155,13 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	(``cooking_clean_target_bound``, ``fpic_consent_bound``,
 	``largest_loss_response_bound``, ``non_spinning_reserve_inside_margin``,
 	``resettlement_share_bound``) and five of which are post-solve checks
-	over derived results, so 24/198/222 -> 34/227/261."""
+	over derived results, so 24/198/222 -> 34/227/261. Batch 23's
+	extensive-base layer added sixteen product identities and no inequality,
+	so 34/227/261 -> 34/243/277."""
 	cov = coverage(graph)
 	assert cov["constraint_shaped"] == 34
-	assert cov["identities"] == 227
-	assert cov["total"] == 261
+	assert cov["identities"] == 243
+	assert cov["total"] == 277
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):

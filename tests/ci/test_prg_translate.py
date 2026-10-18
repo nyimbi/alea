@@ -91,7 +91,7 @@ def _network(*, gas_cost: float = 40.0) -> pypsa.Network:
 def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	graph: ParameterGraph,
 ):
-	"""Three of nine hundred and twenty-two, asserted rather than derived.
+	"""Three of nine hundred and thirty-five, asserted rather than derived.
 
 	Deriving the expected count from ``TRANSLATIONS`` would make this vacuous:
 	it would pass on a layer that translated everything and on one that
@@ -121,6 +121,20 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	denominator grew by eight -- the same one-sided growth the earlier batches
 	showed.
 
+	922 -> 935 when batch 23 (the extensive bases) added fifteen settable
+	knobs and made two existing ones derived. The fifteen:
+	``persons_per_household``, ``transmission_line_length_km``,
+	``interconnector_route_km``, ``hydrogen_pipeline_length_km``,
+	``connections_per_year``, ``passenger_kilometres_per_year``,
+	``land_area_hectares``, ``energy_poverty_line_mwh_per_household``,
+	``energy_poor_consumption_mwh_per_year`` and the six cumulative
+	installation/reference nodes (three pairs: solar PV, battery,
+	electrolyser). The two that left the denominator are
+	``energy_poverty_gap`` and ``regulated_tariff_rate``, both retyped to
+	``derived`` with an equation that computes them. All fifteen landed
+	untranslated, so the numerator stayed at three while the denominator grew
+	by thirteen.
+
 	The eighteen the engine cannot carry are still outside the denominator:
 	they are chosen by the optimiser, so ``is_settable`` is False for them.
 	They are not missing from the register -- ``endogenous`` carries them, and
@@ -128,7 +142,7 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	"""
 	cov = coverage(graph)
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 922, cov  # 914 -> 922: batch 22 added eight settable base nodes (compliance register)
+	assert cov["total"] == 935, cov  # 922 -> 935: batch 23's extensive bases (fifteen in, two out)
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -188,7 +202,7 @@ def test_the_untranslated_register_is_not_empty_and_says_why(
 	network can be perturbed by.
 	"""
 	missing = untranslated(graph)
-	assert len(missing) == 919, missing  # 911 -> 919: batch 22's eight settable base nodes landed untranslated
+	assert len(missing) == 932, missing  # 919 -> 932: batch 23's fifteen settable bases landed untranslated, two left as derived
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact

@@ -546,7 +546,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -618,6 +618,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b22_equations)
 		edges = list(BATCH12_EDGES) + b22_edges
+	elif batch == "23":
+		b23_nodes, b23_equations, b23_edges, b23_rules = build_batch23(graph)
+		rules.extend(b23_rules)
+		nodes.update(b23_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b23_equations)
+		edges = list(BATCH12_EDGES) + b23_edges
 	elif batch == "21":
 		b21_nodes, b21_equations, b21_edges, b21_rules = build_batch21(graph)
 		rules.extend(b21_rules)
@@ -4413,6 +4420,376 @@ BATCH22_BOUNDS: tuple[tuple[str, str, str, str, str | None], ...] = (
 	 "The household energy burden at the shipped tariff sits inside the "
 	 "10% affordability line.", None),
 )
+
+
+# ---------------------------------------------------------------------------
+# Batch 23 -- the extensive bases, and the products they unblock.
+#
+# WHY THIS BATCH IS A BATCH. Batches 21 and 22 left a residue that looked like
+# a list of unrelated knobs and is one thing: unit rates whose product needs a
+# physical extent the graph does not carry. A transmission cost in USD per
+# MW-km is not a cost until something states the MW-km. The bases are the
+# batch; the products fall out of them.
+#
+# The bases, and where each number comes from:
+#
+# * `persons_per_household` = 4.5 -- the sub-Saharan African mean household
+#   size (UN World Population Prospects household-size series). It is
+#   back-solved against the graph's own residential demand so the two agree:
+#   `residential_demand_twh` is 11.83 TWh at `household_consumption_mwh_per_year`
+#   = 1.5 MWh/year, which is 7.89 M households; at a 45 M population that is
+#   5.7 persons per household, not 4.5. The 4.5 is the demographic figure and
+#   the 5.7 is what the shipped consumption implies, and the gap is a finding
+#   about `household_consumption_mwh_per_year` rather than a choice to paper
+#   over -- so the demographic number is the base and the inconsistency stays
+#   visible in the product it forms.
+# * `transmission_line_length_km` = 12000 -- a 10 GW single-country system
+#   at roughly 1.2 km of high-voltage route per MW of peak demand, which is
+#   the World Bank's African transmission-density band.
+# * `interconnector_route_km` = 350 -- one cross-border link of a few hundred
+#   kilometres, the length of the region's existing tie lines.
+# * `hydrogen_pipeline_length_km` = 250 -- a trunk line from a production hub
+#   to a port or industrial cluster.
+# * `connections_per_year` = 250000 -- the annual new-connection programme of
+#   a country at ~60% access electrifying toward 90%.
+# * `passenger_kilometres_per_year` = 3.0e10 -- 45 M people at ~700 km of
+#   motorised travel per person per year, which is the low-income band of the
+#   ITF's per-capita travel series.
+# * `land_area_hectares` = 5000 -- the project's own land take, at the scale
+#   the 500 ha of habitat loss sits inside.
+# * `energy_poverty_line_mwh_per_household` = 1.0 and
+#   `energy_poor_consumption_mwh_per_year` = 0.35 -- the IEA/World Bank
+#   multi-tier-framework boundary between Tier 2 and Tier 3 access, against
+#   the consumption an energy-poor household actually draws.
+# * the three cumulative-deployment bases: the shipped
+#   `cumulative_capacity_mw` / `_reference_mw` pair is the generic learning
+#   curve, and the three technology-specific learning rates had no base of
+#   their own. Each is the technology's installed stock against the stock its
+#   capex figure is quoted at.
+#
+# The products, and the class each one is:
+#
+# * Learning curves. `capex * (cum/ref) ** (log(1 - rate)/log(2))` is Wright's
+#   law, the form the shipped `learning_curve` equation already carries; the
+#   three technology rates now enter three technology-specific instances of it
+#   rather than the one generic curve, because a solar rate applied to a
+#   battery stock is a category error. Reference: Wright (1936) as archived.
+# * Route costs. `capex_per_mw_km * km * MW` -- the extent times the capacity
+#   times the rate, which is what the USD/MW-km unit means. The unit walker
+#   now reads that unit correctly (the bar-binding fix in `units.py`); before
+#   it, the same product was dimensionally USD.km^2.
+# * Extent costs. Right-of-way per route-km, land acquisition per hectare,
+#   distribution capex per connection.
+# * Shares against a base. Energy poverty is a rate against `households_total`;
+#   public transport is a share of passenger-kilometres.
+# * `regulated_tariff_rate` is not a base but a ratio whose two sides were in
+#   different units (USD/year against USD million/year). It is stated against
+#   the two tariffs the graph already carries rather than against revenue and
+#   the allowed requirement, because those are on different bases -- the
+#   revenue is what the fleet earns at the PPA price, the requirement is what
+#   the regulator allows -- and their ratio is a finding about the tariff
+#   design, not a tariff. `regulated_tariff_usd_per_mwh` over
+#   `reference_tariff_usd_per_mwh` is the cost-recovery index the rate names.
+# ---------------------------------------------------------------------------
+
+#: (name, unit, range, default, category, prose)
+BATCH23_BASES: tuple[tuple[str, str, list[float], float, str, str], ...] = (
+	("persons_per_household", "person", [1.0, 10.0], 4.5, "Demographics",
+	 "Mean household size. The sub-Saharan African mean is 4.5; the graph's "
+	 "own residential demand implies 5.7 at the shipped per-household "
+	 "consumption, and the gap is a finding about that consumption rather "
+	 "than a reason to move this figure."),
+	("transmission_line_length_km", "km", [0.0, 200000.0], 12000.0, "Transmission",
+	 "High-voltage route-km: a 10 GW system at about 1.2 km of route per MW "
+	 "of peak demand, the density band African systems sit in."),
+	("interconnector_route_km", "km", [0.0, 20000.0], 350.0, "Transmission",
+	 "Route length of the cross-border link the interconnector capacity "
+	 "names: a few hundred kilometres, the scale of the region's tie lines."),
+	("hydrogen_pipeline_length_km", "km", [0.0, 20000.0], 250.0, "Transmission",
+	 "Hydrogen trunk-line route-km from the production hub to the port or "
+	 "industrial cluster it serves."),
+	("connections_per_year", "connection/year", [0.0, 5000000.0], 250000.0,
+	 "Grid",
+	 "New distribution connections the programme makes per year: a country "
+	 "electrifying from ~60% toward 90% access."),
+	("passenger_kilometres_per_year", "person*km/year", [0.0, 1.0e12],
+	 3.0e10, "Demand",
+	 "Motorised passenger-kilometres travelled per year: 45 M people at "
+	 "about 700 km each, the low-income band of the ITF series."),
+	("land_area_hectares", "hectare", [0.0, 500000.0], 5000.0, "Land",
+	 "The project's own land take. The 500 ha of habitat loss sits inside "
+	 "it, which is the fraction the two nodes state between them."),
+	("energy_poverty_line_mwh_per_household", "MWh/year", [0.0, 10.0], 1.0,
+	 "Affordability",
+	 "The multi-tier-framework Tier 2/3 boundary in annual consumption per "
+	 "household: the level below which a household is counted as "
+	 "energy-poor."),
+	("energy_poor_consumption_mwh_per_year", "MWh/year", [0.0, 10.0], 0.35,
+	 "Affordability",
+	 "The consumption an energy-poor household actually draws, against the "
+	 "Tier 2/3 line above; the gap between the two is the shortfall the "
+	 "poverty-gap product measures."),
+	("cumulative_solar_pv_installed_mw", "MW", [0.0, 1.0e8], 60000.0,
+	 "Generation",
+	 "Cumulative solar PV ever installed, the stock the learning curve "
+	 "reads: the country's own 10 GW fleet plus the regional stock its "
+	 "module prices are set by."),
+	("cumulative_solar_pv_reference_mw", "MW", [1.0, 1.0e8], 50000.0,
+	 "Generation",
+	 "The cumulative stock at which the shipped solar capex figure is "
+	 "quoted, so the learning curve's ratio starts near 1."),
+	("cumulative_battery_installed_mwh", "MWh", [0.0, 1.0e9], 200000.0,
+	 "Storage",
+	 "Cumulative battery energy ever installed, the stock the battery "
+	 "learning curve reads."),
+	("cumulative_battery_reference_mwh", "MWh", [1.0, 1.0e9], 150000.0,
+	 "Storage",
+	 "The cumulative battery stock at which the shipped battery capex is "
+	 "quoted."),
+	("cumulative_electrolyser_installed_mw", "MW", [0.0, 1.0e7], 3000.0,
+	 "Sector Coupling",
+	 "Cumulative electrolyser capacity ever installed, the stock the "
+	 "electrolyser learning curve reads."),
+	("cumulative_electrolyser_reference_mw", "MW", [1.0, 1.0e7], 2500.0,
+	 "Sector Coupling",
+	 "The cumulative electrolyser stock at which the shipped electrolyser "
+	 "capex is quoted."),
+)
+
+#: Nodes this batch retypes out of the placeholder register.
+#: (name, unit, range, default, role, determinism, prose)
+BATCH23_RETYPES: tuple[tuple[str, str, list[float], float, str, str, str], ...] = (
+	("right_of_way_cost", "USD/km", [0.0, 5000000.0], 120000.0, "free",
+	 "physical",
+	 "Compensation and easement cost per kilometre of route. The unit was "
+	 "the placeholder's None; USD/km is what a right-of-way payment is, and "
+	 "120,000 USD/km is the scale a transmission easement in the region "
+	 "carries."),
+	("electrolyser_efficiency", "1", [0.0, 1.0], 0.65, "free", "physical",
+	 "Electrolyser efficiency on the LHV basis: 65% is the current PEM and "
+	 "alkaline band, and it is the divisor that turns hydrogen output into "
+	 "the electricity the plant draws."),
+	("energy_poverty_gap", "MWh/year", [0.0, 1.0e9], 3250000.0, "free",
+	 "physical",
+	 "The annual consumption shortfall of the energy-poor households: the "
+	 "household count times the gap between the Tier 2/3 line and the "
+	 "consumption those households actually draw."),
+	("hydrogen_pipeline_capacity", "MW", [0.0, 100000.0], 2000.0, "free",
+	 "physical",
+	 "Capacity the hydrogen trunk line carries, in the MW of hydrogen "
+	 "energy throughput the MW-km rate is quoted against."),
+)
+
+#: (id, name, lhs, rhs, prose, system, linearity, unit, range, reference)
+BATCH23_EQUATIONS: tuple[
+	tuple[str, str, str, str, str, str, str, str, list[float], str | None], ...
+] = (
+	("capex_solar_pv_learning_definition",
+	 "The solar PV capex at the cumulative stock",
+	 "capex_solar_pv_learning_usd_per_kw",
+	 "capex_solar_pv * (cumulative_solar_pv_installed_mw / cumulative_solar_pv_reference_mw) ** (log(1 - solar_pv_learning_rate) / log(2))",
+	 "Wright's law applied to the solar stock: the shipped capex scaled by "
+	 "the cumulative-deployment ratio raised to the learning exponent, where "
+	 "a 20% rate halves cost per doubling of the stock. The shipped generic "
+	 "`learning_curve` carries the same form against one generic stock; this "
+	 "is the technology-specific instance, because a solar rate applied to a "
+	 "battery stock is a category error.",
+	 "learning", "nonlinear", "USD/kW", [0.0, 5000.0], "Wright's law"),
+	("capex_battery_learning_definition",
+	 "The battery capex at the cumulative stock",
+	 "capex_battery_learning_usd_per_kwh",
+	 "capex_battery * (cumulative_battery_installed_mwh / cumulative_battery_reference_mwh) ** (log(1 - battery_learning_rate) / log(2))",
+	 "Wright's law on the battery stock: the shipped energy capex scaled by "
+	 "the cumulative MWh ratio raised to the 15% learning exponent.",
+	 "learning", "nonlinear", "USD/kWh", [0.0, 2000.0], "Wright's law"),
+	("capex_hydrogen_electrolyser_learning_definition",
+	 "The electrolyser capex at the cumulative stock",
+	 "capex_hydrogen_electrolyser_learning_usd_per_kw",
+	 "capex_hydrogen_electrolyser * (cumulative_electrolyser_installed_mw / cumulative_electrolyser_reference_mw) ** (log(1 - electrolyser_learning_rate) / log(2))",
+	 "Wright's law on the electrolyser stock: the shipped USD/kW scaled by "
+	 "the cumulative MW ratio raised to the 12% learning exponent.",
+	 "learning", "nonlinear", "USD/kW", [0.0, 5000.0], "Wright's law"),
+	("transmission_investment_definition",
+	 "The transmission investment",
+	 "transmission_investment_usd",
+	 "capex_transmission * transmission_line_length_km * total_capacity_mw",
+	 "The line's installed cost: the USD per MW-km rate times the route-km "
+	 "times the MW the route carries. The unit is a product of three "
+	 "quantities, and the product is the cost the rate means.",
+	 "cost_accounting", "linear", "USD", [0.0, 1.0e12], None),
+	("interconnector_investment_definition",
+	 "The interconnector investment",
+	 "interconnector_investment_usd",
+	 "capex_interconnector * interconnector_route_km * interconnector_capacity",
+	 "The cross-border link's installed cost: the USD per MW-km rate times "
+	 "the route length times the link's capacity. The rate spans overhead AC "
+	 "to submarine HVDC, which is why it has a range rather than a value.",
+	 "cost_accounting", "linear", "USD", [0.0, 1.0e12], None),
+	("hydrogen_pipeline_investment_definition",
+	 "The hydrogen pipeline investment",
+	 "hydrogen_pipeline_investment_usd",
+	 "hydrogen_pipeline_cost * hydrogen_pipeline_length_km * hydrogen_pipeline_capacity",
+	 "The trunk line's installed cost: the USD per MW-km rate times the "
+	 "route-km times the capacity the line carries.",
+	 "cost_accounting", "linear", "USD", [0.0, 1.0e12], None),
+	("right_of_way_cost_definition",
+	 "The right-of-way compensation",
+	 "right_of_way_cost_usd",
+	 "right_of_way_cost * (transmission_line_length_km + interconnector_route_km + hydrogen_pipeline_length_km)",
+	 "The easement payments across every route the plan builds: the USD per "
+	 "route-km rate times the total kilometres of transmission, "
+	 "interconnector and hydrogen pipeline.",
+	 "cost_accounting", "linear", "USD", [0.0, 1.0e12], None),
+	("distribution_expansion_capex_definition",
+	 "The distribution expansion capex",
+	 "distribution_expansion_capex_usd_per_year",
+	 "distribution_capex_per_connection * connections_per_year",
+	 "The annual distribution spend the connection programme carries: the "
+	 "USD per connection times the connections made per year.",
+	 "cost_accounting", "linear", "USD/year", [0.0, 1.0e11], None),
+	("distribution_asset_value_definition",
+	 "The distribution asset value",
+	 "distribution_asset_value_usd",
+	 "capex_distribution * peak_demand_mw * 1000.0",
+	 "The distribution network's replacement value: the USD per kW of "
+	 "system capacity times the peak demand in kW. The 1000 is the MW-to-kW "
+	 "conversion, which the USD/kW unit states.",
+	 "cost_accounting", "linear", "USD", [0.0, 1.0e12], None),
+	("land_acquisition_cost_definition",
+	 "The land acquisition cost",
+	 "land_acquisition_cost_usd",
+	 "land_acquisition_cost_per_hectare * land_area_hectares",
+	 "The project's land bill: the USD per hectare times the hectares "
+	 "acquired, at the purchase-or-lease rate the IFC land-acquisition "
+	 "practice sets.",
+	 "cost_accounting", "linear", "USD", [0.0, 1.0e11], None),
+	("households_total_definition",
+	 "The household count",
+	 "households_total",
+	 "population_total / persons_per_household",
+	 "The country's households: the population divided by the mean "
+	 "household size. The extensive base every per-household quantity in "
+	 "the graph needs and none of them had.",
+	 "affordability", "linear", "1", [0.0, 1.0e8], None),
+	("energy_poor_households_definition",
+	 "The energy-poor household count",
+	 "energy_poor_households",
+	 "energy_poverty_rate * households_total",
+	 "Households whose energy burden exceeds the affordability line: the "
+	 "rate times the household count.",
+	 "affordability", "linear", "1", [0.0, 1.0e8], None),
+	("energy_poverty_gap_definition",
+	 "The energy-poverty consumption gap",
+	 "energy_poverty_gap",
+	 "energy_poor_households * (energy_poverty_line_mwh_per_household - energy_poor_consumption_mwh_per_year)",
+	 "The annual consumption shortfall: the energy-poor households times the "
+	 "distance between the Tier 2/3 access line and what they actually "
+	 "draw. A gap in MWh/year, not a currency, because the shortfall is "
+	 "energy and the price it would cost to close is a separate question.",
+	 "affordability", "linear", "MWh/year", [0.0, 1.0e9], None),
+	("public_transport_passenger_km_definition",
+	 "Public transport passenger-kilometres",
+	 "public_transport_passenger_km_per_year",
+	 "public_transport_share * passenger_kilometres_per_year",
+	 "The passenger-kilometres carried on public transport: the share of "
+	 "total travel the mode split states, times the total. The base the "
+	 "batch-20 share product was deferred for.",
+	 "demand_supply", "linear", "person*km/year", [0.0, 1.0e12], None),
+	("electrolysis_electricity_demand_definition",
+	 "The electricity electrolysis draws",
+	 "electrolysis_electricity_demand_mwh_per_year",
+	 "hydrogen_production_kt_per_year * 1000000 * mwh_per_hydrogen_unit / electrolyser_efficiency",
+	 "The electricity the hydrogen programme draws: the annual output in "
+	 "kilograms times hydrogen's LHV in MWh per kg, divided by the "
+	 "electrolyser's efficiency. The 1e6 converts kilotonnes to kilograms.",
+	 "water_energy", "linear", "MWh/year", [0.0, 1.0e10], None),
+	("regulated_tariff_rate_definition",
+	 "The regulated tariff's cost-recovery index",
+	 "regulated_tariff_rate",
+	 "regulated_tariff_usd_per_mwh / reference_tariff_usd_per_mwh",
+	 "The regulated tariff as a fraction of the reference tariff: the "
+	 "cost-recovery index the rate names. Stated against the two tariffs "
+	 "rather than against revenue and the allowed requirement, because "
+	 "those sit on different bases -- what the fleet earns at the PPA price "
+	 "against what the regulator allows -- and their ratio is a finding "
+	 "about tariff design, not a tariff.",
+	 "price_demand", "linear", "1", [0.0, 10.0], None),
+)
+
+
+def build_batch23(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, str]], list[dict[str, Any]]]:
+	"""Batch 23: the extensive bases and the products they unblock."""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, str]] = []
+	rules: list[dict[str, Any]] = []
+
+	for name, unit, rng, default, category, prose in BATCH23_BASES:
+		assert name not in graph.nodes, f"{name} already exists; a base is new"
+		nodes[name] = {
+			"name": name.replace("_", " ").capitalize(),
+			"description": prose,
+			"category": category, "type": "float", "unit": unit,
+			"range": rng, "default": default, "role": "free",
+			"determinism": "physical", "priority": "P1", "status": "existing",
+			"source": "The extensive-base coupling (batch 23)",
+			"users": ["Planners", "Regulators"],
+		}
+
+	for name, unit, rng, default, role, determinism, prose in BATCH23_RETYPES:
+		full = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
+		full.update({
+			"unit": unit, "range": rng, "default": default, "role": role,
+			"description": prose, "determinism": determinism,
+			"priority": "P1", "status": "existing",
+			"source": "The extensive-base coupling (batch 23)",
+			"users": ["Planners", "Regulators"],
+		})
+		nodes[name] = full
+
+	for eq_id, name, lhs, rhs, prose, system, linearity, unit, rng, cite in (
+		BATCH23_EQUATIONS
+	):
+		from alea.prg.dsl import parse_side
+
+		rhs_params = sorted(parse_side(rhs).symbols)
+		# A node the batch retypes is not re-declared by the product: its
+		# body already carries the unit the equation computes into.
+		if lhs not in nodes:
+			nodes[lhs] = {
+				"name": lhs.replace("_", " ").capitalize(),
+				"description": (
+					f"{lhs.replace('_', ' ')}: the extensive-base coupling's "
+					"derived quantity. "
+				) + prose,
+				"category": "Cost", "type": "float", "unit": unit,
+				"range": rng, "role": "derived",
+				"determinism": "physical", "priority": "P1",
+				"status": "existing",
+				"source": "The extensive-base coupling (batch 23)",
+				"users": ["Planners", "Regulators"],
+			}
+		else:
+			nodes[lhs]["role"] = "derived"
+			nodes[lhs].pop("default", None)
+			nodes[lhs]["description"] = prose
+		equations[eq_id] = {
+			"id": eq_id, "name": name, "description": prose,
+			"system": system, "lhs": lhs, "rhs": rhs, "relation": "eq",
+			"parameters": [lhs] + rhs_params, "free_variables": [],
+			"determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": linearity,
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs,
+				"equation_id": eq_id, "relationship": "functional",
+				"strength": "hard", "description": "Enters the product.",
+			})
+	return nodes, equations, edges, rules
 
 
 def build_batch22(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, str]], list[dict[str, Any]]]:

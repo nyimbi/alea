@@ -2282,6 +2282,25 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  capex_battery_learning_usd_per_kwh:
+    name: Capex battery learning usd per kwh
+    description: 'capex battery learning usd per kwh: the extensive-base coupling''s derived quantity.
+      Wright''s law on the battery stock: the shipped energy capex scaled by the cumulative MWh ratio
+      raised to the 15% learning exponent.'
+    category: Cost
+    type: float
+    unit: USD/kWh
+    range:
+    - 0.0
+    - 2000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   capex_battery_power_usd_per_kw:
     name: Capex battery power usd per kw
     description: 'capex battery power usd per kw: the coupling''s derived quantity, so a scenario''s dial
@@ -2672,6 +2691,25 @@ parameters:
     priority: P2
     status: existing
     deprecated_by: null
+  capex_hydrogen_electrolyser_learning_usd_per_kw:
+    name: Capex hydrogen electrolyser learning usd per kw
+    description: 'capex hydrogen electrolyser learning usd per kw: the extensive-base coupling''s derived
+      quantity. Wright''s law on the electrolyser stock: the shipped USD/kW scaled by the cumulative MW
+      ratio raised to the 12% learning exponent.'
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 0.0
+    - 5000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   capex_hydrogen_fuel_cell:
     name: Hydrogen fuel cell capital cost
     description: Installed cost of a stationary hydrogen fuel cell per kilowatt of electrical output.
@@ -2999,6 +3037,27 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  capex_solar_pv_learning_usd_per_kw:
+    name: Capex solar pv learning usd per kw
+    description: 'capex solar pv learning usd per kw: the extensive-base coupling''s derived quantity.
+      Wright''s law applied to the solar stock: the shipped capex scaled by the cumulative-deployment
+      ratio raised to the learning exponent, where a 20% rate halves cost per doubling of the stock. The
+      shipped generic `learning_curve` carries the same form against one generic stock; this is the technology-specific
+      instance, because a solar rate applied to a battery stock is a category error.'
+    category: Cost
+    type: float
+    unit: USD/kW
+    range:
+    - 0.0
+    - 5000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   capex_tidal_range:
     name: Tidal range capital cost
     description: Installed cost of tidal range (barrage or lagoon) generation. The civil works dominate;
@@ -5055,6 +5114,25 @@ parameters:
     users:
     - Utilities
     source: docs/params.md
+  connections_per_year:
+    name: Connections per year
+    description: 'New distribution connections the programme makes per year: a country electrifying from
+      ~60% toward 90% access.'
+    category: Grid
+    type: float
+    unit: connection/year
+    range:
+    - 0.0
+    - 5000000.0
+    default: 250000.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   conservation_easements:
     name: Conservation easements
     description: Easements
@@ -6225,6 +6303,42 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  cumulative_battery_installed_mwh:
+    name: Cumulative battery installed mwh
+    description: Cumulative battery energy ever installed, the stock the battery learning curve reads.
+    category: Storage
+    type: float
+    unit: MWh
+    range:
+    - 0.0
+    - 1000000000.0
+    default: 200000.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
+  cumulative_battery_reference_mwh:
+    name: Cumulative battery reference mwh
+    description: The cumulative battery stock at which the shipped battery capex is quoted.
+    category: Storage
+    type: float
+    unit: MWh
+    range:
+    - 1.0
+    - 1000000000.0
+    default: 150000.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   cumulative_capacity_mw:
     name: Cumulative capacity
     description: Capacity ever installed, which is what the learning curve is a function of.
@@ -6267,6 +6381,43 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  cumulative_electrolyser_installed_mw:
+    name: Cumulative electrolyser installed mw
+    description: Cumulative electrolyser capacity ever installed, the stock the electrolyser learning
+      curve reads.
+    category: Sector Coupling
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 10000000.0
+    default: 3000.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
+  cumulative_electrolyser_reference_mw:
+    name: Cumulative electrolyser reference mw
+    description: The cumulative electrolyser stock at which the shipped electrolyser capex is quoted.
+    category: Sector Coupling
+    type: float
+    unit: MW
+    range:
+    - 1.0
+    - 10000000.0
+    default: 2500.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   cumulative_impact_assessment:
     name: Cumulative impact assessment
     description: CIA
@@ -6283,6 +6434,44 @@ parameters:
     users:
     - DFIs
     source: docs/params.md
+  cumulative_solar_pv_installed_mw:
+    name: Cumulative solar pv installed mw
+    description: 'Cumulative solar PV ever installed, the stock the learning curve reads: the country''s
+      own 10 GW fleet plus the regional stock its module prices are set by.'
+    category: Generation
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 100000000.0
+    default: 60000.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
+  cumulative_solar_pv_reference_mw:
+    name: Cumulative solar pv reference mw
+    description: The cumulative stock at which the shipped solar capex figure is quoted, so the learning
+      curve's ratio starts near 1.
+    category: Generation
+    type: float
+    unit: MW
+    range:
+    - 1.0
+    - 100000000.0
+    default: 50000.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   currency_hedge_cost:
     name: Currency hedge cost
     description: Currency hedge cost
@@ -7571,6 +7760,25 @@ parameters:
     users:
     - Regulators
     source: docs/params.md
+  distribution_asset_value_usd:
+    name: Distribution asset value usd
+    description: 'distribution asset value usd: the extensive-base coupling''s derived quantity. The distribution
+      network''s replacement value: the USD per kW of system capacity times the peak demand in kW. The
+      1000 is the MW-to-kW conversion, which the USD/kW unit states.'
+    category: Cost
+    type: float
+    unit: USD
+    range:
+    - 0.0
+    - 1000000000000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   distribution_capex_per_connection:
     name: Distribution cost per connection
     description: Installed cost of the distribution network per new connection. The unit is USD per connection;
@@ -7627,6 +7835,25 @@ parameters:
     users:
     - Utilities
     source: docs/params.md
+  distribution_expansion_capex_usd_per_year:
+    name: Distribution expansion capex usd per year
+    description: 'distribution expansion capex usd per year: the extensive-base coupling''s derived quantity.
+      The annual distribution spend the connection programme carries: the USD per connection times the
+      connections made per year.'
+    category: Cost
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 100000000000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   distribution_feeders_total:
     name: Distribution feeders total
     description: 'Primary distribution feeders: a 10 GW system at 30-50 MW per feeder implies 200-500.'
@@ -8012,20 +8239,28 @@ parameters:
     deprecated_by: null
   electrolyser_efficiency:
     name: Electrolyser efficiency
-    description: Electrolyser efficiency
+    description: 'Electrolyser efficiency on the LHV basis: 65% is the current PEM and alkaline band,
+      and it is the divisor that turns hydrogen output into the electricity the plant draws.'
     category: Sector
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.65
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: existing
+    determinism: physical
+    categories: []
+    source: The extensive-base coupling (batch 23)
+    source_url: null
     users:
-    - Industry
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   electrolyser_learning_rate:
     name: Electrolyser learning rate
     description: Cost reduction per doubling of cumulative electrolyser deployment.
@@ -8048,6 +8283,25 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  electrolysis_electricity_demand_mwh_per_year:
+    name: Electrolysis electricity demand mwh per year
+    description: 'electrolysis electricity demand mwh per year: the extensive-base coupling''s derived
+      quantity. The electricity the hydrogen programme draws: the annual output in kilograms times hydrogen''s
+      LHV in MWh per kg, divided by the electrolyser''s efficiency. The 1e6 converts kilotonnes to kilograms.'
+    category: Cost
+    type: float
+    unit: MWh/year
+    range:
+    - 0.0
+    - 10000000000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   emergency_preparedness:
     name: Emergency preparedness
     description: Emergency prep
@@ -8471,22 +8725,86 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
-  energy_poverty_gap:
-    name: Energy poverty gap
-    description: Poverty gap
-    category: Consumer
+  energy_poor_consumption_mwh_per_year:
+    name: Energy poor consumption mwh per year
+    description: The consumption an energy-poor household actually draws, against the Tier 2/3 line above;
+      the gap between the two is the shortfall the poverty-gap product measures.
+    category: Affordability
     type: float
+    unit: MWh/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 10.0
+    default: 0.35
     role: free
-    determinism: fixed
+    determinism: physical
     priority: P1
-    status: to_build
+    status: existing
+    source: The extensive-base coupling (batch 23)
     users:
-    - NGOs
-    source: docs/params.md
+    - Planners
+    - Regulators
+  energy_poor_households:
+    name: Energy poor households
+    description: 'energy poor households: the extensive-base coupling''s derived quantity. Households
+      whose energy burden exceeds the affordability line: the rate times the household count.'
+    category: Cost
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 100000000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
+  energy_poverty_gap:
+    name: Energy poverty gap
+    description: 'The annual consumption shortfall: the energy-poor households times the distance between
+      the Tier 2/3 access line and what they actually draw. A gap in MWh/year, not a currency, because
+      the shortfall is energy and the price it would cost to close is a separate question.'
+    category: Consumer
+    subcategory: null
+    type: float
+    unit: MWh/year
+    range:
+    - 0.0
+    - 1000000000.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The extensive-base coupling (batch 23)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
+  energy_poverty_line_mwh_per_household:
+    name: Energy poverty line mwh per household
+    description: 'The multi-tier-framework Tier 2/3 boundary in annual consumption per household: the
+      level below which a household is counted as energy-poor.'
+    category: Affordability
+    type: float
+    unit: MWh/year
+    range:
+    - 0.0
+    - 10.0
+    default: 1.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   energy_poverty_rate:
     name: Energy poverty rate
     description: Share of households whose energy burden exceeds the affordability limit. A share, bounded
@@ -11039,6 +11357,25 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
+  households_total:
+    name: Households total
+    description: 'households total: the extensive-base coupling''s derived quantity. The country''s households:
+      the population divided by the mean household size. The extensive base every per-household quantity
+      in the graph needs and none of them had.'
+    category: Cost
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 100000000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   human_review:
     name: Human review
     description: Human review
@@ -11402,20 +11739,28 @@ parameters:
     deprecated_by: null
   hydrogen_pipeline_capacity:
     name: Hydrogen pipeline capacity
-    description: Pipeline capacity
+    description: Capacity the hydrogen trunk line carries, in the MW of hydrogen energy throughput the
+      MW-km rate is quoted against.
     category: Sector
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 100000.0
+    default: 2000.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: existing
+    determinism: physical
+    categories: []
+    source: The extensive-base coupling (batch 23)
+    source_url: null
     users:
-    - Industry
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   hydrogen_pipeline_cost:
     name: Hydrogen pipeline capital cost
     description: Installed cost of a hydrogen pipeline per megawatt-kilometre of capacity. The range spans
@@ -11440,6 +11785,44 @@ parameters:
     priority: P2
     status: existing
     deprecated_by: null
+  hydrogen_pipeline_investment_usd:
+    name: Hydrogen pipeline investment usd
+    description: 'hydrogen pipeline investment usd: the extensive-base coupling''s derived quantity. The
+      trunk line''s installed cost: the USD per MW-km rate times the route-km times the capacity the line
+      carries.'
+    category: Cost
+    type: float
+    unit: USD
+    range:
+    - 0.0
+    - 1000000000000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
+  hydrogen_pipeline_length_km:
+    name: Hydrogen pipeline length km
+    description: Hydrogen trunk-line route-km from the production hub to the port or industrial cluster
+      it serves.
+    category: Transmission
+    type: float
+    unit: km
+    range:
+    - 0.0
+    - 20000.0
+    default: 250.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   hydrogen_price:
     name: Hydrogen price
     description: Delivered hydrogen price, per kilogram. The delivered fuel cost per MWh is a separate
@@ -12331,6 +12714,45 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  interconnector_investment_usd:
+    name: Interconnector investment usd
+    description: 'interconnector investment usd: the extensive-base coupling''s derived quantity. The
+      cross-border link''s installed cost: the USD per MW-km rate times the route length times the link''s
+      capacity. The rate spans overhead AC to submarine HVDC, which is why it has a range rather than
+      a value.'
+    category: Cost
+    type: float
+    unit: USD
+    range:
+    - 0.0
+    - 1000000000000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
+  interconnector_route_km:
+    name: Interconnector route km
+    description: 'Route length of the cross-border link the interconnector capacity names: a few hundred
+      kilometres, the scale of the region''s tie lines.'
+    category: Transmission
+    type: float
+    unit: km
+    range:
+    - 0.0
+    - 20000.0
+    default: 350.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   interest_rate:
     name: Central bank policy rate
     description: Policy rate, bounded to reject a nominal rate below deflation or above the levels seen
@@ -12668,6 +13090,25 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
+  land_acquisition_cost_usd:
+    name: Land acquisition cost usd
+    description: 'land acquisition cost usd: the extensive-base coupling''s derived quantity. The project''s
+      land bill: the USD per hectare times the hectares acquired, at the purchase-or-lease rate the IFC
+      land-acquisition practice sets.'
+    category: Cost
+    type: float
+    unit: USD
+    range:
+    - 0.0
+    - 100000000000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   land_acquisition_costs:
     name: Land acquisition costs
     description: Land costs
@@ -12724,6 +13165,25 @@ parameters:
     priority: P2
     status: integrate
     deprecated_by: null
+  land_area_hectares:
+    name: Land area hectares
+    description: The project's own land take. The 500 ha of habitat loss sits inside it, which is the
+      fraction the two nodes state between them.
+    category: Land
+    type: float
+    unit: hectare
+    range:
+    - 0.0
+    - 500000.0
+    default: 5000.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   land_availability:
     name: Land availability
     description: Land availability
@@ -16261,6 +16721,25 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  passenger_kilometres_per_year:
+    name: Passenger kilometres per year
+    description: 'Motorised passenger-kilometres travelled per year: 45 M people at about 700 km each,
+      the low-income band of the ITF series.'
+    category: Demand
+    type: float
+    unit: person*km/year
+    range:
+    - 0.0
+    - 1000000000000.0
+    default: 30000000000.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   payment_plans:
     name: Payment plans
     description: Payment plans
@@ -16385,6 +16864,26 @@ parameters:
     users:
     - Carbon
     source: docs/params.md
+  persons_per_household:
+    name: Persons per household
+    description: Mean household size. The sub-Saharan African mean is 4.5; the graph's own residential
+      demand implies 5.7 at the shipped per-household consumption, and the gap is a finding about that
+      consumption rather than a reason to move this figure.
+    category: Demographics
+    type: float
+    unit: person
+    range:
+    - 1.0
+    - 10.0
+    default: 4.5
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   phase_shifting_enabled:
     name: Phase shifting enabled
     description: Corrected from float to bool.
@@ -17451,6 +17950,25 @@ parameters:
     users:
     - Developers
     source: docs/params.md
+  public_transport_passenger_km_per_year:
+    name: Public transport passenger km per year
+    description: 'public transport passenger km per year: the extensive-base coupling''s derived quantity.
+      The passenger-kilometres carried on public transport: the share of total travel the mode split states,
+      times the total. The base the batch-20 share product was deferred for.'
+    category: Cost
+    type: float
+    unit: person*km/year
+    range:
+    - 0.0
+    - 1000000000000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   public_transport_share:
     name: Public transport modal share
     description: Share of passenger-kilometres on public transport. Shipped correctly as [0, 1].
@@ -17754,21 +18272,25 @@ parameters:
     source: docs/params.md
   regulated_tariff_rate:
     name: Regulated tariff rate
-    description: Regulated tariff
-    category: Policy
+    description: 'regulated tariff rate: the extensive-base coupling''s derived quantity. The regulated
+      tariff as a fraction of the reference tariff: the cost-recovery index the rate names. Stated against
+      the two tariffs rather than against revenue and the allowed requirement, because those sit on different
+      bases -- what the fleet earns at the PPA price against what the regulator allows -- and their ratio
+      is a finding about tariff design, not a tariff.'
+    category: Cost
     type: float
     unit: '1'
     range:
     - 0.0
-    - 1.0
-    default: 0.5
-    role: free
-    determinism: policy
+    - 10.0
+    role: derived
+    determinism: physical
     priority: P1
     status: existing
+    source: The extensive-base coupling (batch 23)
     users:
+    - Planners
     - Regulators
-    source: docs/params.md
   regulated_tariff_usd_per_mwh:
     name: Cost-recovery tariff
     description: 'The tariff that recovers what serving the load costs: the annualised fixed charge spread
@@ -18754,20 +19276,48 @@ parameters:
     deprecated_by: null
   right_of_way_cost:
     name: Right of way cost
-    description: Right-of-way cost
+    description: Compensation and easement cost per kilometre of route. The unit was the placeholder's
+      None; USD/km is what a right-of-way payment is, and 120,000 USD/km is the scale a transmission easement
+      in the region carries.
     category: Grid
+    subcategory: null
     type: float
+    unit: USD/km
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 5000000.0
+    default: 120000.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: physical
+    categories: []
+    source: The extensive-base coupling (batch 23)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
+  right_of_way_cost_usd:
+    name: Right of way cost usd
+    description: 'right of way cost usd: the extensive-base coupling''s derived quantity. The easement
+      payments across every route the plan builds: the USD per route-km rate times the total kilometres
+      of transmission, interconnector and hydrogen pipeline.'
+    category: Cost
+    type: float
+    unit: USD
+    range:
+    - 0.0
+    - 1000000000000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   ring_fencing_rules:
     name: Ring-fencing strength
     description: Share of the regulator's ring-fencing provisions that are legally binding rather than
@@ -21551,6 +22101,25 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  transmission_investment_usd:
+    name: Transmission investment usd
+    description: 'transmission investment usd: the extensive-base coupling''s derived quantity. The line''s
+      installed cost: the USD per MW-km rate times the route-km times the MW the route carries. The unit
+      is a product of three quantities, and the product is the cost the rate means.'
+    category: Cost
+    type: float
+    unit: USD
+    range:
+    - 0.0
+    - 1000000000000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   transmission_lead_time:
     name: Transmission lead time
     description: Transmission construction time
@@ -21567,6 +22136,25 @@ parameters:
     users:
     - Planners
     source: docs/params.md
+  transmission_line_length_km:
+    name: Transmission line length km
+    description: 'High-voltage route-km: a 10 GW system at about 1.2 km of route per MW of peak demand,
+      the density band African systems sit in.'
+    category: Transmission
+    type: float
+    unit: km
+    range:
+    - 0.0
+    - 200000.0
+    default: 12000.0
+    role: free
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The extensive-base coupling (batch 23)
+    users:
+    - Planners
+    - Regulators
   transmission_loss_factor:
     name: Transmission loss factor
     description: Average transmission loss
@@ -23564,6 +24152,32 @@ equations:
     linearity: linear
     latex: \mathrm{capacity}_{revenue\_usd\_per\_year} = \frac{\mathrm{capacity}_{market} \mathrm{capacity}_{price}
       \mathrm{firm}_{capacity\_mw}}{1000000}
+  capex_battery_learning_definition:
+    name: The battery capex at the cumulative stock
+    description: 'Wright''s law on the battery stock: the shipped energy capex scaled by the cumulative
+      MWh ratio raised to the 15% learning exponent.'
+    system: learning
+    lhs: capex_battery_learning_usd_per_kwh
+    rhs: capex_battery * (cumulative_battery_installed_mwh / cumulative_battery_reference_mwh) ** (log(1
+      - battery_learning_rate) / log(2))
+    relation: eq
+    parameters:
+    - capex_battery_learning_usd_per_kwh
+    - battery_learning_rate
+    - capex_battery
+    - cumulative_battery_installed_mwh
+    - cumulative_battery_reference_mwh
+    free_variables: []
+    determined_variables:
+    - capex_battery_learning_usd_per_kwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P1
+    reference: Wright's law
+    latex: \mathrm{capex}_{battery\_learning\_usd\_per\_kwh} = \mathrm{capex}_{battery} {\left(\frac{\mathrm{cumulative}_{battery\_installed\_mwh}}{\mathrm{cumulative}_{battery\_reference\_mwh}}\right)}^{\frac{\ln\left(1
+      - \mathrm{battery}_{learning\_rate}\right)}{0.693147}}
   capex_battery_power_usd_per_kw_definition:
     name: The battery store's cost per kW
     description: 'The battery''s energy store expressed per kW of power rating: the per-energy cost times
@@ -23586,6 +24200,61 @@ equations:
     priority: P1
     reference: NREL ATB 2025 Equations & Variables
     latex: \mathrm{capex}_{battery\_power\_usd\_per\_kw} = \mathrm{capex}_{battery} \mathrm{battery}_{duration}
+  capex_hydrogen_electrolyser_learning_definition:
+    name: The electrolyser capex at the cumulative stock
+    description: 'Wright''s law on the electrolyser stock: the shipped USD/kW scaled by the cumulative
+      MW ratio raised to the 12% learning exponent.'
+    system: learning
+    lhs: capex_hydrogen_electrolyser_learning_usd_per_kw
+    rhs: capex_hydrogen_electrolyser * (cumulative_electrolyser_installed_mw / cumulative_electrolyser_reference_mw)
+      ** (log(1 - electrolyser_learning_rate) / log(2))
+    relation: eq
+    parameters:
+    - capex_hydrogen_electrolyser_learning_usd_per_kw
+    - capex_hydrogen_electrolyser
+    - cumulative_electrolyser_installed_mw
+    - cumulative_electrolyser_reference_mw
+    - electrolyser_learning_rate
+    free_variables: []
+    determined_variables:
+    - capex_hydrogen_electrolyser_learning_usd_per_kw
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P1
+    reference: Wright's law
+    latex: \mathrm{capex}_{hydrogen\_electrolyser\_learning\_usd\_per\_kw} = \mathrm{capex}_{hydrogen\_electrolyser}
+      {\left(\frac{\mathrm{cumulative}_{electrolyser\_installed\_mw}}{\mathrm{cumulative}_{electrolyser\_reference\_mw}}\right)}^{\frac{\ln\left(1
+      - \mathrm{electrolyser}_{learning\_rate}\right)}{0.693147}}
+  capex_solar_pv_learning_definition:
+    name: The solar PV capex at the cumulative stock
+    description: 'Wright''s law applied to the solar stock: the shipped capex scaled by the cumulative-deployment
+      ratio raised to the learning exponent, where a 20% rate halves cost per doubling of the stock. The
+      shipped generic `learning_curve` carries the same form against one generic stock; this is the technology-specific
+      instance, because a solar rate applied to a battery stock is a category error.'
+    system: learning
+    lhs: capex_solar_pv_learning_usd_per_kw
+    rhs: capex_solar_pv * (cumulative_solar_pv_installed_mw / cumulative_solar_pv_reference_mw) ** (log(1
+      - solar_pv_learning_rate) / log(2))
+    relation: eq
+    parameters:
+    - capex_solar_pv_learning_usd_per_kw
+    - capex_solar_pv
+    - cumulative_solar_pv_installed_mw
+    - cumulative_solar_pv_reference_mw
+    - solar_pv_learning_rate
+    free_variables: []
+    determined_variables:
+    - capex_solar_pv_learning_usd_per_kw
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P1
+    reference: Wright's law
+    latex: \mathrm{capex}_{solar\_pv\_learning\_usd\_per\_kw} = \mathrm{capex}_{solar\_pv} {\left(\frac{\mathrm{cumulative}_{solar\_pv\_installed\_mw}}{\mathrm{cumulative}_{solar\_pv\_reference\_mw}}\right)}^{\frac{\ln\left(1
+      - \mathrm{solar}_{pv\_learning\_rate}\right)}{0.693147}}
   capture_price_equation:
     name: Capture price under cannibalisation
     description: 'The price a renewable unit receives falls as its own share rises. This is `params-prg1.md`
@@ -25136,6 +25805,51 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{disability}_{inclusion} = \mathrm{disability}_{inclusion\_share}
+  distribution_asset_value_definition:
+    name: The distribution asset value
+    description: 'The distribution network''s replacement value: the USD per kW of system capacity times
+      the peak demand in kW. The 1000 is the MW-to-kW conversion, which the USD/kW unit states.'
+    system: cost_accounting
+    lhs: distribution_asset_value_usd
+    rhs: capex_distribution * peak_demand_mw * 1000.0
+    relation: eq
+    parameters:
+    - distribution_asset_value_usd
+    - capex_distribution
+    - peak_demand_mw
+    free_variables: []
+    determined_variables:
+    - distribution_asset_value_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{distribution}_{asset\_value\_usd} = 1000 \mathrm{capex}_{distribution} \mathrm{peak}_{demand\_mw}
+  distribution_expansion_capex_definition:
+    name: The distribution expansion capex
+    description: 'The annual distribution spend the connection programme carries: the USD per connection
+      times the connections made per year.'
+    system: cost_accounting
+    lhs: distribution_expansion_capex_usd_per_year
+    rhs: distribution_capex_per_connection * connections_per_year
+    relation: eq
+    parameters:
+    - distribution_expansion_capex_usd_per_year
+    - connections_per_year
+    - distribution_capex_per_connection
+    free_variables: []
+    determined_variables:
+    - distribution_expansion_capex_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{distribution}_{expansion\_capex\_usd\_per\_year} = \mathrm{distribution}_{capex\_per\_connection}
+      \mathrm{connections}_{per\_year}
   dscr_definition:
     name: Debt service coverage ratio
     description: Cash available against the debt service the gearing implies.
@@ -25224,6 +25938,30 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{electrolyser}_{cost} = \mathrm{capex}_{hydrogen\_electrolyser}
+  electrolysis_electricity_demand_definition:
+    name: The electricity electrolysis draws
+    description: 'The electricity the hydrogen programme draws: the annual output in kilograms times hydrogen''s
+      LHV in MWh per kg, divided by the electrolyser''s efficiency. The 1e6 converts kilotonnes to kilograms.'
+    system: water_energy
+    lhs: electrolysis_electricity_demand_mwh_per_year
+    rhs: hydrogen_production_kt_per_year * 1000000 * mwh_per_hydrogen_unit / electrolyser_efficiency
+    relation: eq
+    parameters:
+    - electrolysis_electricity_demand_mwh_per_year
+    - electrolyser_efficiency
+    - hydrogen_production_kt_per_year
+    - mwh_per_hydrogen_unit
+    free_variables: []
+    determined_variables:
+    - electrolysis_electricity_demand_mwh_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{electrolysis}_{electricity\_demand\_mwh\_per\_year} = \frac{1000000 \mathrm{hydrogen}_{production\_kt\_per\_year}
+      \mathrm{mwh}_{per\_hydrogen\_unit}}{\mathrm{electrolyser}_{efficiency}}
   emissions_definition:
     name: Annual emissions
     description: Generation times an emission factor. One terawatt-hour is one million megawatt-hours,
@@ -25340,6 +26078,53 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  energy_poor_households_definition:
+    name: The energy-poor household count
+    description: 'Households whose energy burden exceeds the affordability line: the rate times the household
+      count.'
+    system: affordability
+    lhs: energy_poor_households
+    rhs: energy_poverty_rate * households_total
+    relation: eq
+    parameters:
+    - energy_poor_households
+    - energy_poverty_rate
+    - households_total
+    free_variables: []
+    determined_variables:
+    - energy_poor_households
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{energy}_{poor\_households} = \mathrm{energy}_{poverty\_rate} \mathrm{households}_{total}
+  energy_poverty_gap_definition:
+    name: The energy-poverty consumption gap
+    description: 'The annual consumption shortfall: the energy-poor households times the distance between
+      the Tier 2/3 access line and what they actually draw. A gap in MWh/year, not a currency, because
+      the shortfall is energy and the price it would cost to close is a separate question.'
+    system: affordability
+    lhs: energy_poverty_gap
+    rhs: energy_poor_households * (energy_poverty_line_mwh_per_household - energy_poor_consumption_mwh_per_year)
+    relation: eq
+    parameters:
+    - energy_poverty_gap
+    - energy_poor_consumption_mwh_per_year
+    - energy_poor_households
+    - energy_poverty_line_mwh_per_household
+    free_variables: []
+    determined_variables:
+    - energy_poverty_gap
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{energy}_{poverty\_gap} = \mathrm{energy}_{poor\_households} \left(\mathrm{energy}_{poverty\_line\_mwh\_per\_household}
+      - \mathrm{energy}_{poor\_consumption\_mwh\_per\_year}\right)
   environmental_flow_definition:
     name: The environmental flow
     description: 'The flow the basins must carry for habitat: the fair-habitat share of the rivers'' mean
@@ -26116,6 +26901,28 @@ equations:
     priority: P1
     reference: Short, Packey & Holt (1995), NREL/TP-462-5173
     latex: \mathrm{heat}_{pump\_annualised\_cost\_usd\_per\_kw\_year} = \mathrm{heat}_{pump\_cost} \mathrm{crf}
+  households_total_definition:
+    name: The household count
+    description: 'The country''s households: the population divided by the mean household size. The extensive
+      base every per-household quantity in the graph needs and none of them had.'
+    system: affordability
+    lhs: households_total
+    rhs: population_total / persons_per_household
+    relation: eq
+    parameters:
+    - households_total
+    - persons_per_household
+    - population_total
+    free_variables: []
+    determined_variables:
+    - households_total
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{households}_{total} = \frac{\mathrm{population}_{total}}{\mathrm{persons}_{per\_household}}
   hvdc_capacity_definition:
     name: Cross-border capacity in HVDC
     description: 'The interconnector''s MW rating that carries HVDC: the technology''s share times the
@@ -26207,6 +27014,30 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{hydrogen}_{fuel\_cell\_cost} = \mathrm{capex}_{hydrogen\_fuel\_cell}
+  hydrogen_pipeline_investment_definition:
+    name: The hydrogen pipeline investment
+    description: 'The trunk line''s installed cost: the USD per MW-km rate times the route-km times the
+      capacity the line carries.'
+    system: cost_accounting
+    lhs: hydrogen_pipeline_investment_usd
+    rhs: hydrogen_pipeline_cost * hydrogen_pipeline_length_km * hydrogen_pipeline_capacity
+    relation: eq
+    parameters:
+    - hydrogen_pipeline_investment_usd
+    - hydrogen_pipeline_capacity
+    - hydrogen_pipeline_cost
+    - hydrogen_pipeline_length_km
+    free_variables: []
+    determined_variables:
+    - hydrogen_pipeline_investment_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{hydrogen}_{pipeline\_investment\_usd} = \mathrm{hydrogen}_{pipeline\_cost} \mathrm{hydrogen}_{pipeline\_length\_km}
+      \mathrm{hydrogen}_{pipeline\_capacity}
   hydrogen_price_per_mwh_definition:
     name: hydrogen price per mwh (computed)
     description: 'Hydrogen''s lower heating value is 33.33 kWh per kg (0.03333 MWh/kg); the delivered
@@ -26542,6 +27373,31 @@ equations:
     reference: null
     latex: \mathrm{insurance}_{premium\_usd\_per\_kw\_year} = \mathrm{insurance}_{loss\_share\_of\_cost}
       \mathrm{capex}_{usd\_per\_kw}
+  interconnector_investment_definition:
+    name: The interconnector investment
+    description: 'The cross-border link''s installed cost: the USD per MW-km rate times the route length
+      times the link''s capacity. The rate spans overhead AC to submarine HVDC, which is why it has a
+      range rather than a value.'
+    system: cost_accounting
+    lhs: interconnector_investment_usd
+    rhs: capex_interconnector * interconnector_route_km * interconnector_capacity
+    relation: eq
+    parameters:
+    - interconnector_investment_usd
+    - capex_interconnector
+    - interconnector_capacity
+    - interconnector_route_km
+    free_variables: []
+    determined_variables:
+    - interconnector_investment_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{interconnector}_{investment\_usd} = \mathrm{capex}_{interconnector} \mathrm{interconnector}_{route\_km}
+      \mathrm{interconnector}_{capacity}
   interruptible_load_mw_definition:
     name: Interruptible load mw
     description: 'The load the utility may curtail on contract: its share of peak demand, which is the
@@ -26589,6 +27445,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{investment}_{allowance} = \mathrm{investment}_{allowance\_rate} \mathrm{capex}_{usd\_per\_kw}
+  land_acquisition_cost_definition:
+    name: The land acquisition cost
+    description: 'The project''s land bill: the USD per hectare times the hectares acquired, at the purchase-or-lease
+      rate the IFC land-acquisition practice sets.'
+    system: cost_accounting
+    lhs: land_acquisition_cost_usd
+    rhs: land_acquisition_cost_per_hectare * land_area_hectares
+    relation: eq
+    parameters:
+    - land_acquisition_cost_usd
+    - land_acquisition_cost_per_hectare
+    - land_area_hectares
+    free_variables: []
+    determined_variables:
+    - land_acquisition_cost_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{land}_{acquisition\_cost\_usd} = \mathrm{land}_{acquisition\_cost\_per\_hectare} \mathrm{land}_{area\_hectares}
   landfill_gas_cost_alias:
     name: Landfill gas plant capital cost is Landfill gas plant capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `landfill_gas_cost`
@@ -27921,6 +28799,29 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{property}_{tax} = \mathrm{property}_{tax\_rate} \mathrm{regulatory}_{asset\_base}
+  public_transport_passenger_km_definition:
+    name: Public transport passenger-kilometres
+    description: 'The passenger-kilometres carried on public transport: the share of total travel the
+      mode split states, times the total. The base the batch-20 share product was deferred for.'
+    system: demand_supply
+    lhs: public_transport_passenger_km_per_year
+    rhs: public_transport_share * passenger_kilometres_per_year
+    relation: eq
+    parameters:
+    - public_transport_passenger_km_per_year
+    - passenger_kilometres_per_year
+    - public_transport_share
+    free_variables: []
+    determined_variables:
+    - public_transport_passenger_km_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{public}_{transport\_passenger\_km\_per\_year} = \mathrm{public}_{transport\_share}
+      \mathrm{passenger}_{kilometres\_per\_year}
   pyrolysis_cost_alias:
     name: Pyrolysis plant capital cost is Pyrolysis plant capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `pyrolysis_cost`
@@ -27992,6 +28893,30 @@ equations:
     linearity: nonlinear
     latex: \mathrm{real}_{discount\_rate} = \frac{\mathrm{discount}_{rate} - \mathrm{inflation}_{rate}}{\mathrm{inflation}_{rate}
       + 1}
+  regulated_tariff_rate_definition:
+    name: The regulated tariff's cost-recovery index
+    description: 'The regulated tariff as a fraction of the reference tariff: the cost-recovery index
+      the rate names. Stated against the two tariffs rather than against revenue and the allowed requirement,
+      because those sit on different bases -- what the fleet earns at the PPA price against what the regulator
+      allows -- and their ratio is a finding about tariff design, not a tariff.'
+    system: price_demand
+    lhs: regulated_tariff_rate
+    rhs: regulated_tariff_usd_per_mwh / reference_tariff_usd_per_mwh
+    relation: eq
+    parameters:
+    - regulated_tariff_rate
+    - reference_tariff_usd_per_mwh
+    - regulated_tariff_usd_per_mwh
+    free_variables: []
+    determined_variables:
+    - regulated_tariff_rate
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{regulated}_{tariff\_rate} = \frac{\mathrm{regulated}_{tariff\_usd\_per\_mwh}}{\mathrm{reference}_{tariff\_usd\_per\_mwh}}
   regulatory_asset_base_definition:
     name: Regulated asset base from the fleet
     description: Gross fleet capital less what the books have written down. The gross capital is the capacity-weighted
@@ -28347,6 +29272,31 @@ equations:
     priority: P2
     reference: null
     latex: \mathrm{retraining}_{duration} \leq \mathrm{construction}_{period}
+  right_of_way_cost_definition:
+    name: The right-of-way compensation
+    description: 'The easement payments across every route the plan builds: the USD per route-km rate
+      times the total kilometres of transmission, interconnector and hydrogen pipeline.'
+    system: cost_accounting
+    lhs: right_of_way_cost_usd
+    rhs: right_of_way_cost * (transmission_line_length_km + interconnector_route_km + hydrogen_pipeline_length_km)
+    relation: eq
+    parameters:
+    - right_of_way_cost_usd
+    - hydrogen_pipeline_length_km
+    - interconnector_route_km
+    - right_of_way_cost
+    - transmission_line_length_km
+    free_variables: []
+    determined_variables:
+    - right_of_way_cost_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{right}_{of\_way\_cost\_usd} = \mathrm{right}_{of\_way\_cost} \left(\mathrm{transmission}_{line\_length\_km}
+      + \mathrm{interconnector}_{route\_km} + \mathrm{hydrogen}_{pipeline\_length\_km}\right)
   rocof_definition:
     name: Rate of change of frequency
     description: 'The swing equation''s first instant: the largest credible loss divided by twice the
@@ -28915,6 +29865,30 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  transmission_investment_definition:
+    name: The transmission investment
+    description: 'The line''s installed cost: the USD per MW-km rate times the route-km times the MW the
+      route carries. The unit is a product of three quantities, and the product is the cost the rate means.'
+    system: cost_accounting
+    lhs: transmission_investment_usd
+    rhs: capex_transmission * transmission_line_length_km * total_capacity_mw
+    relation: eq
+    parameters:
+    - transmission_investment_usd
+    - capex_transmission
+    - total_capacity_mw
+    - transmission_line_length_km
+    free_variables: []
+    determined_variables:
+    - transmission_investment_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{transmission}_{investment\_usd} = \mathrm{capex}_{transmission} \mathrm{transmission}_{line\_length\_km}
+      \mathrm{total}_{capacity\_mw}
   unserved_definition:
     name: Expected unserved energy
     description: Demand times the fraction the system is expected to fail to serve.
@@ -34365,6 +35339,529 @@ relationships:
 - source: service_quality_penalty
   target: service_quality_penalty_usd_per_year
   equation_id: service_quality_penalty_exposure_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: discount_rate
+  target: weighted_average_cost_of_capital
+  equation_id: wacc_alias
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
+    computes.'
+  reference: null
+  priority: P1
+- source: capex_usd_per_kw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gross fleet capital enters the base the allowed return is earned on.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The fleet's size sets the scale of the capital in the accounts.
+  reference: null
+  priority: P1
+- source: accumulated_depreciation_fraction
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: What the books have written down between gross capital and the base.
+  reference: null
+  priority: P1
+- source: regulatory_asset_base
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: Straight-line write-down of the base over the regulatory asset life.
+  reference: null
+  priority: P1
+- source: depreciation_life_by_asset
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: A longer regulatory life spreads the base thinner over the years.
+  reference: null
+  priority: P1
+- source: regulatory_depreciation
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Depreciation is the first term of the revenue requirement.
+  reference: null
+  priority: P1
+- source: regulatory_asset_base
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The return is earned on the base, not on gross capital.
+  reference: null
+  priority: P1
+- source: discount_rate
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The return rate is the blend the financial block computes.
+  reference: null
+  priority: P1
+- source: allowed_return_on_debt
+  target: cost_of_debt
+  equation_id: cost_of_debt_capped
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: The allowance binds the debt rate a scenario may carry.
+  reference: null
+  priority: P1
+- source: allowed_return_on_equity
+  target: cost_of_equity
+  equation_id: cost_of_equity_capped
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: The allowance binds the equity return a valuation may assume.
+  reference: null
+  priority: P1
+- source: regulated_tariff_usd_per_mwh
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: equality
+  direction: forward
+  strength: hard
+  description: The applied tariff is the recovery level in the absence of a cap.
+  reference: null
+  priority: P1
+- source: revenue_cap
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The cap scales the recovery level; below 1 it withholds part of it.
+  reference: null
+  priority: P1
+- source: capex_solar_pv
+  target: capex_solar_pv_learning_usd_per_kw
+  equation_id: capex_solar_pv_learning_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: cumulative_solar_pv_installed_mw
+  target: capex_solar_pv_learning_usd_per_kw
+  equation_id: capex_solar_pv_learning_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: cumulative_solar_pv_reference_mw
+  target: capex_solar_pv_learning_usd_per_kw
+  equation_id: capex_solar_pv_learning_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: solar_pv_learning_rate
+  target: capex_solar_pv_learning_usd_per_kw
+  equation_id: capex_solar_pv_learning_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: battery_learning_rate
+  target: capex_battery_learning_usd_per_kwh
+  equation_id: capex_battery_learning_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: capex_battery
+  target: capex_battery_learning_usd_per_kwh
+  equation_id: capex_battery_learning_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: cumulative_battery_installed_mwh
+  target: capex_battery_learning_usd_per_kwh
+  equation_id: capex_battery_learning_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: cumulative_battery_reference_mwh
+  target: capex_battery_learning_usd_per_kwh
+  equation_id: capex_battery_learning_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: capex_hydrogen_electrolyser
+  target: capex_hydrogen_electrolyser_learning_usd_per_kw
+  equation_id: capex_hydrogen_electrolyser_learning_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: cumulative_electrolyser_installed_mw
+  target: capex_hydrogen_electrolyser_learning_usd_per_kw
+  equation_id: capex_hydrogen_electrolyser_learning_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: cumulative_electrolyser_reference_mw
+  target: capex_hydrogen_electrolyser_learning_usd_per_kw
+  equation_id: capex_hydrogen_electrolyser_learning_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: electrolyser_learning_rate
+  target: capex_hydrogen_electrolyser_learning_usd_per_kw
+  equation_id: capex_hydrogen_electrolyser_learning_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: capex_transmission
+  target: transmission_investment_usd
+  equation_id: transmission_investment_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: transmission_investment_usd
+  equation_id: transmission_investment_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: transmission_line_length_km
+  target: transmission_investment_usd
+  equation_id: transmission_investment_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: capex_interconnector
+  target: interconnector_investment_usd
+  equation_id: interconnector_investment_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: interconnector_capacity
+  target: interconnector_investment_usd
+  equation_id: interconnector_investment_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: interconnector_route_km
+  target: interconnector_investment_usd
+  equation_id: interconnector_investment_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: hydrogen_pipeline_capacity
+  target: hydrogen_pipeline_investment_usd
+  equation_id: hydrogen_pipeline_investment_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: hydrogen_pipeline_cost
+  target: hydrogen_pipeline_investment_usd
+  equation_id: hydrogen_pipeline_investment_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: hydrogen_pipeline_length_km
+  target: hydrogen_pipeline_investment_usd
+  equation_id: hydrogen_pipeline_investment_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: hydrogen_pipeline_length_km
+  target: right_of_way_cost_usd
+  equation_id: right_of_way_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: interconnector_route_km
+  target: right_of_way_cost_usd
+  equation_id: right_of_way_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: right_of_way_cost
+  target: right_of_way_cost_usd
+  equation_id: right_of_way_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: transmission_line_length_km
+  target: right_of_way_cost_usd
+  equation_id: right_of_way_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: connections_per_year
+  target: distribution_expansion_capex_usd_per_year
+  equation_id: distribution_expansion_capex_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: distribution_capex_per_connection
+  target: distribution_expansion_capex_usd_per_year
+  equation_id: distribution_expansion_capex_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: capex_distribution
+  target: distribution_asset_value_usd
+  equation_id: distribution_asset_value_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: peak_demand_mw
+  target: distribution_asset_value_usd
+  equation_id: distribution_asset_value_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: land_acquisition_cost_per_hectare
+  target: land_acquisition_cost_usd
+  equation_id: land_acquisition_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: land_area_hectares
+  target: land_acquisition_cost_usd
+  equation_id: land_acquisition_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: persons_per_household
+  target: households_total
+  equation_id: households_total_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: population_total
+  target: households_total
+  equation_id: households_total_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: energy_poverty_rate
+  target: energy_poor_households
+  equation_id: energy_poor_households_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: households_total
+  target: energy_poor_households
+  equation_id: energy_poor_households_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: energy_poor_consumption_mwh_per_year
+  target: energy_poverty_gap
+  equation_id: energy_poverty_gap_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: energy_poor_households
+  target: energy_poverty_gap
+  equation_id: energy_poverty_gap_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: energy_poverty_line_mwh_per_household
+  target: energy_poverty_gap
+  equation_id: energy_poverty_gap_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: passenger_kilometres_per_year
+  target: public_transport_passenger_km_per_year
+  equation_id: public_transport_passenger_km_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: public_transport_share
+  target: public_transport_passenger_km_per_year
+  equation_id: public_transport_passenger_km_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: electrolyser_efficiency
+  target: electrolysis_electricity_demand_mwh_per_year
+  equation_id: electrolysis_electricity_demand_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: hydrogen_production_kt_per_year
+  target: electrolysis_electricity_demand_mwh_per_year
+  equation_id: electrolysis_electricity_demand_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: mwh_per_hydrogen_unit
+  target: electrolysis_electricity_demand_mwh_per_year
+  equation_id: electrolysis_electricity_demand_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: reference_tariff_usd_per_mwh
+  target: regulated_tariff_rate
+  equation_id: regulated_tariff_rate_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product.
+  reference: null
+  priority: P1
+- source: regulated_tariff_usd_per_mwh
+  target: regulated_tariff_rate
+  equation_id: regulated_tariff_rate_definition
   relationship: functional
   direction: forward
   strength: hard

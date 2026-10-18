@@ -1,6 +1,8 @@
 # Coupling worklist
 
-Every node still in `uncoupled()` (591 of 1168, as of the batch 22 bake on 2026-10-18) and the family class its coupling belongs to. Batches 12-22 coupled 203 nodes (793 -> 591): the financial core and fleet, the duplicate-pair aliases, sector demand, fuel conversions, rate aliases, the instrument and sector-coupling layers, the share family's products and the time-index arithmetic (batch 20), the cost and rate families (batch 21), and the compliance register (batch 22). The classes name the method each coupling gets; nothing escapes the register.
+Every node still in `uncoupled()` (575 of 1197, as of the batch 23 bake on 2026-10-18) and the family class its coupling belongs to. Batches 12-23 coupled 219 nodes (793 -> 575): the financial core and fleet, the duplicate-pair aliases, sector demand, fuel conversions, rate aliases, the instrument and sector-coupling layers, the share family's products and the time-index arithmetic (batch 20), the cost and rate families (batch 21), the compliance register (batch 22), and the extensive bases with the products they unblock (batch 23). The classes name the method each coupling gets; nothing escapes the register.
+
+
 
 ## compliance register (3)
 
@@ -15,17 +17,33 @@ Batch 22 coupled 43 of the 46. What is left is a missing base or a missing produ
 
 These are **gates, not quantities**. A gate's honest coupling is a conditional -- "if the market exists this revenue stream is live, otherwise zero" -- and the library carries `Sum`, `Mul` and `Pow`, not a piecewise form. So the class splits: a gate with a revenue base the graph already carries couples as a product by the gate itself (`capacity_market` times the capacity price, `contract_for_difference` times a CfD premium), and a gate that selects a *dispatch mode* the parameter graph does not model (`unit_commitment`, `security_constrained_dispatch`, `topology_switching_enabled`, `dg_placement_enabled`, `storage_dispatch_enabled`, `phase_shifting_enabled`) is a scene switch: it configures the run and no equation should pretend otherwise. Recording that distinction is the coupling for the second kind.
 
-## rate family (2)
+## rate family (0)
 
-`energy_poverty_rate`, `regulated_tariff_rate` -- both are shares whose base is not yet a node. `energy_poverty_rate` needs a `households_total` extensive base; `regulated_tariff_rate` is the cost-recovery ratio `total_revenue_usd_per_year / allowed_revenue_requirement`, which needs the two quantities in one unit (USD/year against USD million/year) before the ratio means anything.
+Cleared by batch 23. `energy_poverty_rate` is now `energy_poor_households /
+households_total` against the household base the batch added, and
+`regulated_tariff_rate` is the cost-recovery ratio
+`regulated_tariff_usd_per_mwh / reference_tariff_usd_per_mwh` -- the two
+revenue quantities the first form wanted are in different units (USD/year
+against USD million/year), so the ratio is taken at the tariff rather than at
+the revenue, where both sides are USD/MWh.
 
-## cost family (9)
+## cost family (2)
 
-`capex_transmission`, `currency_hedge_cost`, `hydrogen_pipeline_cost`, `hydrogen_storage_cost`, `right_of_way_cost`, `distribution_capex_per_connection`, `capex_distribution`, `capex_interconnector`, `land_acquisition_cost_per_hectare`
+Batch 23 coupled seven of the nine, each against the extent it was waiting for:
+`capex_transmission`, `capex_interconnector`, `hydrogen_pipeline_cost` and
+`right_of_way_cost` against route km, `distribution_capex_per_connection`
+against new connections, `capex_distribution` against peak demand and
+`land_acquisition_cost_per_hectare` against hectares. Two remain:
 
-Each is a **unit rate whose product needs an extensive base** the graph does not carry: MW-km of route (transmission, hydrogen pipeline, interconnector), MWh of storage (hydrogen), km of route (right of way), connections per year (distribution), hectares acquired (land). The base-node batch adds the bases; the rates then become products against them. `currency_hedge_cost` is the odd one -- its base is a currency exposure, not a physical quantity -- and needs its own treatment rather than a borrowed product.
+- `hydrogen_storage_cost` -- the rate is USD/kWh of storage capacity, and the
+  graph carries `hydrogen_storage_capacity` in MW without a duration. It needs
+  a `hydrogen_storage_duration_hours` base (the energy/power split) before the
+  product means anything.
+- `currency_hedge_cost` -- the odd one. Its base is a currency exposure, not a
+  physical quantity, and the graph carries no exposure node. A borrowed product
+  would be a fabricated coupling, so it stays declared.
 
-## unassigned (557)
+## unassigned (550)
 
 The remainder, and it is not one class. It splits by what the node *is*:
 
@@ -39,7 +57,7 @@ The full list with descriptions is below.
 Note on the placeholder signature: `unit=None def=500000.0` marks a node the catalog carries with no unit and the placeholder default the expansion gave every row. It is the placeholder register, not a value -- the unit is what a coupling needs first, and the default is what a node without one ships.
 
 
-All 591, generated from the loaded graph so the list cannot drift from it. The family headings above name the method each node's coupling takes; this section is the inventory.
+All 575, generated from the loaded graph so the list cannot drift from it. The family headings above name the method each node's coupling takes; this section is the inventory.
 
 - `ac_voltage_limit` unit=None def=500000.0 -- Maximum AC voltage
 - `accelerated_depreciation` unit=None def=500000.0 -- Accelerated depreciation
@@ -72,7 +90,6 @@ All 591, generated from the loaded graph so the list cannot drift from it. The f
 - `balance_of_payments` unit=None def=500000.0 -- Balance of payments
 - `balancing_market` unit='1' def=1.0 -- Whether a balancing market is modelled. A boolean.
 - `baseline_emissions` unit=None def=500000.0 -- Baseline emissions
-- `battery_learning_rate` unit='1' def=0.15 -- Cost reduction per doubling of cumulative battery deployment. Bounded at 0.4, above which the parameter would imply a technology that becomes free.
 - `battery_storage_adoption` unit='1' def=0.05 -- Share of households with a battery. A share; same reset of the placeholder default.
 - `bid_ask_spread` unit=None def=500000.0 -- Bid-ask spread
 - `bill_shock_protection` unit=None def=500000.0 -- Bill shock protection
@@ -87,14 +104,11 @@ All 591, generated from the loaded graph so the list cannot drift from it. The f
 - `buffer_zones` unit=None def=500000.0 -- Buffer zones
 - `business_interruption` unit='1' def=500000.0 -- FIRM-SPECIFIC. The scope of cover, waiting period and indemnity period vary by policy. Not corrected.
 - `business_interruption_insurance` unit=None def=500000.0 -- Business interruption insurance
-- `capex_distribution` unit='USD/kW' def=400.0 -- Installed cost of distribution network per kilowatt of served load. Unit is USD/kW, not USD/connection, because the sample reports both and the kW is the comparable basis.
 - `capex_gas_ccgt` unit='USD/kW' def=1100.0 -- Overnight installed cost of combined-cycle gas turbine. Range spans single-shaft at the low end to multi-shaft with district heating at the high end.
 - `capex_gas_ocgt` unit='USD/kW' def=650.0 -- Overnight installed cost of open-cycle gas turbine. Lower capex and lower efficiency than the CCGT; that trade is why both live in the graph.
 - `capex_gravity_storage` unit='USD/kWh' def=800.0 -- Installed cost of gravity-based energy storage. The technology is deployed at small scale; the range is inferred from the pilot installations, not from a cost curve.
-- `capex_interconnector` unit='USD/MW-km' def=700.0 -- Installed cost of a cross-border interconnector per megawatt-kilometre. Range spans overhead AC at the low end to submarine HVDC at the high end; the difference between the two is a factor of five and that is why the parameter has a range rather than a value.
 - `capex_marine_otec` unit='USD/kW' def=12000.0 -- Installed cost of ocean thermal energy conversion. No commercial OTEC plant exists; the range is derived from the pilot projects and the thermodynamic cycle's own scaling, and the parameter is a speculative number that should be treated as such.
 - `capex_marine_tidal` unit='USD/kW' def=7000.0 -- Installed cost of tidal stream and tidal range. The range is wide because tidal range with civil works is not the same technology as a tidal stream turbine; the graph does not distinguish them and the parameter therefore admits both.
-- `capex_transmission` unit='USD/MW-km' def=400.0 -- Installed cost of transmission per megawatt of capacity per kilometre of route. Unit is MW-km, not km, because cost scales with both. Range spans 220 kV overhead at the low end to 765 kV with substations at the high end.
 - `capital_gains_tax` unit='1' def=0.2 -- Tax rate on realised capital gains. A share; the range spans the sample's jurisdictions.
 - `carbon_budget` unit=None def=500000.0 -- Remaining carbon budget
 - `carbon_credit_insurance` unit=None def=500000.0 -- Insurance
@@ -204,7 +218,6 @@ All 591, generated from the loaded graph so the list cannot drift from it. The f
 - `disconnection_protection` unit=None def=500000.0 -- Disconnection protection
 - `dispatch_interval` unit=None def=500000.0 -- Dispatch interval
 - `dispute_resolution_mechanism` unit=None def=500000.0 -- Dispute resolution
-- `distribution_capex_per_connection` unit='USD/connection' def=600.0 -- Installed cost of the distribution network per new connection. The unit is USD per connection; the shipped [0, 1e6] admitted a value of a million per connection, which is a country's entire grid budget for one house.
 - `distribution_conditions` unit=None def=500000.0 -- Distribution conditions
 - `distribution_detail` unit=None def=500000.0 -- Distribution detail
 - `distribution_loss_factor` unit='1' def=0.5 -- Distribution losses
@@ -221,8 +234,6 @@ All 591, generated from the loaded graph so the list cannot drift from it. The f
 - `electricity_subsidies` unit=None def=500000.0 -- Consumer electricity subsidies
 - `electrification_timeline` unit=None def=500000.0 -- Year to reach target
 - `electrolyser_capacity` unit=None def=500000.0 -- Electrolyser capacity
-- `electrolyser_efficiency` unit=None def=500000.0 -- Electrolyser efficiency
-- `electrolyser_learning_rate` unit='1' def=0.12 -- Cost reduction per doubling of cumulative electrolyser deployment.
 - `emergency_preparedness` unit=None def=500000.0 -- Emergency prep
 - `emergency_shelter_load` unit=None def=500000.0 -- Emergency shelter load
 - `employment_factor_biomass` unit=None def=500000.0 -- Jobs/MW biomass
@@ -233,8 +244,6 @@ All 591, generated from the loaded graph so the list cannot drift from it. The f
 - `employment_factor_solar` unit=None def=500000.0 -- Jobs/MW solar
 - `employment_factor_transmission` unit=None def=500000.0 -- Jobs/km transmission
 - `employment_factor_wind` unit=None def=500000.0 -- Jobs/MW wind
-- `energy_poverty_gap` unit=None def=500000.0 -- Poverty gap
-- `energy_poverty_rate` unit='1' def=0.5 -- Share of households whose energy burden exceeds the affordability limit. A share, bounded in [0, 1].
 - `energy_security_index` unit='1' def=0.5 -- Composite index of import dependency, fuel diversity and infrastructure adequacy, normalised to [0, 1]. Range is the index's construction, not a policy range.
 - `environmental_representations` unit=None def=500000.0 -- Environmental reps
 - `equator_principles` unit=None def=500000.0 -- Equator Principles
@@ -305,8 +314,6 @@ All 591, generated from the loaded graph so the list cannot drift from it. The f
 - `hydrogen_demand_domestic` unit=None def=500000.0 -- Domestic hydrogen demand
 - `hydrogen_export_port` unit=None def=500000.0 -- Export port
 - `hydrogen_fuel_cell_capacity` unit=None def=500000.0 -- Hydrogen fuel cell capacity
-- `hydrogen_pipeline_capacity` unit=None def=500000.0 -- Pipeline capacity
-- `hydrogen_pipeline_cost` unit='USD/MW-km' def=120.0 -- Installed cost of a hydrogen pipeline per megawatt-kilometre of capacity. The range spans repurposed natural-gas pipeline at the low end to new-build high-pressure hydrogen pipeline at the high end.
 - `hydrogen_production_demand` unit=None def=500000.0 -- Electricity for hydrogen production
 - `hydrogen_storage_capacity` unit='MWh' def=0.0 -- Installed hydrogen storage capacity, chosen by the optimiser. Same role correction.
 - `hydrogen_storage_cost` unit='USD/kWh' def=15.0 -- Installed cost of hydrogen storage. The unit is USD per kWh of energy capacity; the range spans above-ground at the low end to salt cavern at the high end (the cavern is not expensive per unit but the exploration is).
@@ -329,7 +336,6 @@ All 591, generated from the loaded graph so the list cannot drift from it. The f
 - `islanding_capability` unit=None def=500000.0 -- Islanding capability
 - `iso_55000_compliance` unit=None def=500000.0 -- ISO 55000
 - `just_transition_fund` unit=None def=500000.0 -- JT fund
-- `land_acquisition_cost_per_hectare` unit='USD/hectare' def=5000.0 -- Purchase or lease cost of land per hectare, in USD. The high end is peri-urban arable land in a market with strong tenure; the low end is communal land under customary tenure. The graph carries no country dimension, so the range spans the sample.
 - `land_acquisition_costs` unit=None def=500000.0 -- Land costs
 - `land_aggregation` unit=None def=500000.0 -- Land aggregation
 - `land_aggregation_fragmentation` unit='parcels/km2' def=20.0 -- The number of distinct parcels the project must assemble per unit of area, expressed as parcels per square kilometre. Higher means more negotiation. The shipped node has no unit and no range; this is the parameter's own physical definition.
@@ -449,7 +455,6 @@ All 591, generated from the loaded graph so the list cannot drift from it. The f
 - `probability_weight` unit=None def=500000.0 -- Scenario probability
 - `project_irr_hurdle` unit=None def=500000.0 -- Project IRR hurdle
 - `protected_areas` unit=None def=500000.0 -- Protected areas
-- `public_transport_share` unit='1' def=0.3 -- Share of passenger-kilometres on public transport. Shipped correctly as [0, 1].
 - `pyrolysis_capacity` unit=None def=500000.0 -- Pyrolysis capacity
 - `rab_roll_forward` unit=None def=500000.0 -- RAB roll-forward
 - `railway_electrification` unit='1' def=0.2 -- Share of the rail network that is electrified. A share; the shipped range admitted a value 500,000 times the maximum.
@@ -460,7 +465,6 @@ All 591, generated from the loaded graph so the list cannot drift from it. The f
 - `real_time_market` unit='1' def=0.0 -- Whether a real-time market is modelled. A boolean.
 - `redeployment_options` unit=None def=500000.0 -- Redeployment
 - `refinancing_terms` unit=None def=500000.0 -- Refinancing
-- `regulated_tariff_rate` unit='1' def=0.5 -- Regulated tariff
 - `regulation_down_requirement` unit=None def=500000.0 -- Regulation down
 - `regulation_reserve` unit=None def=500000.0 -- Regulation reserve
 - `regulation_up_requirement` unit=None def=500000.0 -- Regulation up
@@ -485,7 +489,6 @@ All 591, generated from the loaded graph so the list cannot drift from it. The f
 - `resilience_score` unit='1' def=0.5 -- Composite score of a system's resilience to shocks, normalised to [0, 1]. Range is the index's construction.
 - `retail_competition` unit=None def=500000.0 -- Retail competition
 - `retraining_costs` unit=None def=500000.0 -- Retraining cost
-- `right_of_way_cost` unit=None def=500000.0 -- Right-of-way cost
 - `ring_fencing_rules` unit='1' def=0.5 -- Share of the regulator's ring-fencing provisions that are legally binding rather than best-practice. A share.
 - `risk_based_maintenance` unit=None def=500000.0 -- RBM
 - `risk_of_maladaptation` unit='1' def=0.2 -- Probability that an adaptation measure makes the outcome worse, normalised to [0, 1]. Range is the index's construction.
@@ -523,7 +526,6 @@ All 591, generated from the loaded graph so the list cannot drift from it. The f
 - `soil_contamination_index` unit='1' def=0.1 -- A composite soil contamination index, normalised to [0, 1]. Higher is more contaminated. The shipped graph declares the parameter with the placeholder; this corrects it to the index's own scale.
 - `solar_irradiance_multiplier` unit='1' def=0.5 -- Solar irradiance multiplier
 - `solar_pv_land_constraint` unit=None def=500000.0 -- Land available for solar
-- `solar_pv_learning_rate` unit='1' def=0.2 -- Cost reduction per doubling of cumulative solar deployment. Same bound as the battery rate.
 - `solar_pv_max_build` unit=None def=500000.0 -- Maximum annual solar build
 - `solar_thermal_capacity` unit=None def=500000.0 -- Solar thermal capacity
 - `solvency_capital` unit='1' def=500000.0 -- FIRM-SPECIFIC. The absolute number depends on the firm's book. The ratio version is `solvency_capital_ratio`, declared in Part A. Not corrected.
@@ -545,7 +547,7 @@ All 591, generated from the loaded graph so the list cannot drift from it. The f
 - `startup_cost_gas` unit=None def=500000.0 -- Gas start-up cost
 - `step_in_rights` unit=None def=500000.0 -- Step-in rights
 - `stochastic_scenarios` unit=None def=500000.0 -- Stochastic scenarios
-- `storage_capacity_mw` unit='MW' def=800.0 -- Battery, pumped hydro and thermal storage, at their power rating. Not a Generator in the network, so it counts toward neither firm nor VRE capacity -- the reserve margin is a nameplate adequacy criterion and counting a battery's rating as firm is a modelling choice this graph does not make. 
+- `storage_capacity_mw` unit='MW' def=800.0 -- Battery, pumped hydro and thermal storage, at their power rating. Not a Generator in the network, so it counts toward neither firm nor VRE capacity -- the reserve margin is a nameplate adequacy criterion and counting a battery's rating as firm is a modelling choice this graph does not make.
 - `storage_dispatch_enabled` unit='1' def=1.0 -- Corrected from float to bool.
 - `storage_duration_curve` unit=None def=500000.0 -- Storage energy-to-power ratio
 - `storm_surge` unit=None def=500000.0 -- Storm surge
