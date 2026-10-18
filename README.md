@@ -386,13 +386,13 @@ and the coupling batches preserve:
 
 | | |
 |---|---|
-| Parameters | 1,075 — 800 free, 111 exogenous, 148 derived, 19 endogenous (the optimiser's fleet) |
-| Equations | 163, across 17 systems — every one dimensionally decidable (144 consistent; the 12 flagged are recorded, not passed silently) |
-| Edges | 384, every one a declared relationship citing the equation that governs it |
+| Parameters | 1,083 — 800 free, 111 exogenous, 153 derived, 19 endogenous (the optimiser's fleet) |
+| Equations | 168, across 18 systems — every one dimensionally decidable (157 consistent; the 11 flagged are recorded, not passed silently) |
+| Edges | 396, every one a declared relationship citing the equation that governs it |
 | Cross-validation rules | 54; all quiet at the default scenario, each able to fire on a scenario that violates it |
 | Constraint routes | 10 inequalities bind the LP solve; 5 further inequality-shaped equations are post-solve checks |
 | Feedback loops | 2 (5 loop variables), solved by Tarjan SCC detection + damped Gauss–Seidel; the incremental propagation equals a full walk exactly |
-| Uncoupled register | 717 nodes still carry no equation, each named with its coupling class in `docs/param_coupling_worklist.md` — the coupling batches (12+) are closing it |
+| Uncoupled register | 702 nodes still carry no equation, each named with its coupling class in `docs/param_coupling_worklist.md` — the coupling batches (12+) are closing it |
 
 ```sh
 uv run alea prg summary       # the graph's shape

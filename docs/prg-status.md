@@ -1698,9 +1698,18 @@ dimensionally decidable) and baked into `config/prg.yaml`:
 | 14 | Resolved duplicates + employment | 22 + 7 | The fragments' alias register — validated by everything, applied by nothing — applied as equality equations (20 cost dups, lifeline, disability). Property tax and the investment allowance as the rate-on-base definitions they are. Employment: indirect/induced from the kernel's direct jobs at input-output multipliers (Leontief), group-composition jobs at the programme's shares. |
 | 15 | Demand synthesis + macro | 11 + 2 rules | Bottom-up load synthesis (the catalog's own method cell): the four sector demands from their shares. The macro driver in the first-order elasticity form g_D = ε·g_Y, at the reviewed values (EIA/Stanford EMF ~0.59; Burke & Csereklyei 0.88–0.95 electricity-specific; Hou & Tan 2008 China 0.85; 单葆国 2017 the 0.38–1.88 band). The planner's `demand_growth` sits *exactly on* its own implication at the reference, so the two directional checks are quiet at the default scenario and fire on any other. |
 | 16 | Fuel conversions + the tariff stack | 6 + 3 | Delivered fuel prices from the markets' own quotes at named, cited conversion nodes (5.8 MMBtu/barrel; the Btu basis; NH₃ LHV 18.6 GJ/t; H₂ LHV 33.33 kWh/kg). The variable cost stack named (fuel + carbon), the pass-through dial and the pass-through tariff — the regulator's lever expressed. Battery duration 500000 → 4 h; round-trip efficiency 500000 → 0.85. |
+| 17 | The financial rates | 7 | The duplicated rate spellings resolved by equality (the catalog's carbon-price ids, the CIT, the growth rates); `demand_growth_rate` left deprecated-with-replacement -- the loader's own mechanism for a migrated id. The credit-spread decomposition (BIS): `cost_of_debt = interest_rate + debt_spread` at the shipped 0.09 unchanged; the Fisher equation gives the real rate; VAT reaches the retail tariff. |
+| 18 | The market instruments | 8 | The capacity market's revenue at its own price (USD/MW-year, cited to Stoft 2002); CBAM's applied price (EU ETS 2026 level); N-1/N-2 contingency reserve from the largest infeed (Billinton & Allan); the PPA guarantee releasing the sovereign risk premium; the community fund's share applied; and every uncoupled boolean's unit completed (`1`), which is data completion the nodes' own docstrings state. |
 
-**Graph after the bake:** 1075 parameters, 156 equations, 375 edges, 54 rules.
-915 settable, 141 derived, 19 endogenous. Uncoupled: 793 → **717**, every one
+**Graph after the bake (batches 12–17):** 1078 parameters, 163 equations,
+384 edges, 54 rules; then batch 18 (the market instruments: the capacity
+market's revenue, the CBAM's applied price, the N-1/N-2 contingency
+reserve, the PPA guarantee's risk release, the community fund) landed
+1083 parameters, 168 equations, 396 edges, **702 uncoupled**. 800 free,
+111 exogenous, 153 derived, 19 endogenous. The rule-cited parameters are
+counted as consumed by the register (rules_reading, its own coupling
+class), which is what `test_every_settable_parameter...` asserts.
+Earlier state below for the record: 1075/156/375; 793 → **717**, every one
 carried with its family class in `docs/param_coupling_worklist.md`. The unit
 walker now decides **all 156** equations (0 undecidable); 144 are consistent and
 the 12 flagged are the same vocabulary class the earlier pin recorded — annual
