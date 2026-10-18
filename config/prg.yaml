@@ -440,8 +440,8 @@ parameters:
     source: docs/params.md
   ammonia_export_share:
     name: Ammonia export share
-    description: Share of hydrogen exported as ammonia rather than as hydrogen or a derivative. Shipped
-      correctly as [0, 1]; retained here for consistency of the register.
+    description: 'Ammonia export share: Share of hydrogen exported as ammonia ra The share''s own coupling:
+      the product below derives from it.'
     category: Sector Coupling
     subcategory: null
     type: float
@@ -460,6 +460,30 @@ parameters:
     - Industry
     priority: P3
     status: to_build
+    deprecated_by: null
+  ammonia_export_volume_tonnes:
+    name: Ammonia export volume tonnes
+    description: 'ammonia export volume tonnes: the sector-mix share''s product, derived, so a scenario''s
+      mix dial has a quantity the reports can name.'
+    category: Demand-Side
+    subcategory: null
+    type: float
+    unit: tonnes
+    range:
+    - 0.0
+    - 10000000.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The sector-coupling identities (cite on the equation)
+    source_url: null
+    users:
+    - Planners
+    - Industrial users
+    - Traders
+    priority: P1
+    status: existing
     deprecated_by: null
   ammonia_price:
     name: Ammonia price
@@ -3622,7 +3646,7 @@ parameters:
     - 0.0
     - 1.0
     default: 0.5
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P2
     status: integrate
@@ -3631,20 +3655,27 @@ parameters:
     source: docs/params.md
   cement_production:
     name: Cement production
-    description: Cement production
+    description: Million tonnes of cement per year, the region's clinker-and-blend mix; eight is the reference
+      decade's demand.
     category: Sector
+    subcategory: null
     type: float
+    unit: million tonnes/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500.0
+    default: 8.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: physical
+    categories: []
+    source: Sector statistics (UNIDO/USGS cement and steel annual reviews)
+    source_url: null
     users:
     - Industry
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   cfads_usd_per_kw_year:
     name: Cash available for debt service
     description: 'Tariff less marginal cost, over the energy one kilowatt sells in a year. A stated simplification:
@@ -3885,6 +3916,54 @@ parameters:
     users:
     - All
     source: docs/params.md
+  co2_captured_cement_tonnes:
+    name: Co2 captured cement tonnes
+    description: 'co2 captured cement tonnes: the sector-mix share''s product, derived, so a scenario''s
+      mix dial has a quantity the reports can name.'
+    category: Industry
+    subcategory: null
+    type: float
+    unit: tonnes
+    range:
+    - 0.0
+    - 100000000.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The sector-coupling identities (cite on the equation)
+    source_url: null
+    users:
+    - Planners
+    - Industrial users
+    - Traders
+    priority: P1
+    status: existing
+    deprecated_by: null
+  co2_captured_industry_tonnes:
+    name: Co2 captured industry tonnes
+    description: 'co2 captured industry tonnes: the sector-mix share''s product, derived, so a scenario''s
+      mix dial has a quantity the reports can name.'
+    category: Industry
+    subcategory: null
+    type: float
+    unit: tonnes
+    range:
+    - 0.0
+    - 1000000000.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The sector-coupling identities (cite on the equation)
+    source_url: null
+    users:
+    - Planners
+    - Industrial users
+    - Traders
+    priority: P1
+    status: existing
+    deprecated_by: null
   co_emissions:
     name: Co emissions
     description: CO emissions
@@ -10250,20 +10329,28 @@ parameters:
     source: docs/params.md
   hydrogen_export_volume:
     name: Hydrogen export volume
-    description: Hydrogen export volume
+    description: 'Hydrogen energy the export terminals load per year: 20,000 MWh (about 600 tonnes at
+      the gas''s LHV) is an early-terminal scale the shipping schedule can carry; the range is the export
+      hub''s own.'
     category: Sector
+    subcategory: null
     type: float
+    unit: MWh/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 2000000.0
+    default: 20000.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: existing
+    determinism: physical
+    categories: []
+    source: Sector statistics (UNIDO/USGS cement and steel annual reviews)
+    source_url: null
     users:
     - Industry
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   hydrogen_fuel_cell_capacity:
     name: Hydrogen fuel cell capacity
     description: Hydrogen fuel cell capacity
@@ -10302,6 +10389,29 @@ parameters:
     - Industry
     priority: P2
     status: to_build
+    deprecated_by: null
+  hydrogen_per_t_steel_kg:
+    name: Hydrogen intensity of DRI steel
+    description: 'Kilograms of hydrogen per tonne of direct-reduced iron: the process''s own demand, demonstrated
+      in the 50-60 kg/t band (HYBRIT). A named node, not a folded figure.'
+    category: Industry
+    subcategory: null
+    type: float
+    unit: kg/tonne
+    range:
+    - 30.0
+    - 80.0
+    default: 55.0
+    initial: null
+    role: free
+    determinism: physical
+    categories: []
+    source: HYBRIT (SSAB/LKAB/Vattenfall) demonstration data
+    source_url: null
+    users:
+    - Industrial users
+    priority: P1
+    status: existing
     deprecated_by: null
   hydrogen_pipeline_capacity:
     name: Hydrogen pipeline capacity
@@ -10426,6 +10536,29 @@ parameters:
     users: []
     priority: P2
     status: to_build
+    deprecated_by: null
+  hydrogen_share_of_ammonia:
+    name: Hydrogen share of ammonia by mass
+    description: 'Tonnes of hydrogen per tonne of ammonia: 17.75% by mass from the molecular weight, which
+      the LHV basis (18.6 GJ/t NH3 against 33.33 kWh/kg H2) states independently.'
+    category: Industry
+    subcategory: null
+    type: float
+    unit: tonne/tonne
+    range:
+    - 0.15
+    - 0.18
+    default: 0.1775
+    initial: null
+    role: exogenous
+    determinism: physical
+    categories: []
+    source: Stoichiometry of NH3; the LHV basis of the fuel tables
+    source_url: null
+    users:
+    - Industrial users
+    priority: P2
+    status: existing
     deprecated_by: null
   hydrogen_storage_capacity:
     name: Hydrogen storage capacity
@@ -10805,9 +10938,8 @@ parameters:
     deprecated_by: null
   industrial_ccus_share:
     name: Industrial CCUS adoption share
-    description: Share of industrial emissions captured. A share; the shipped graph declared [0, 1] with
-      default 0.5, which is a viable default but the range check already admitted it, so the correction
-      is to the default only.
+    description: 'Industrial CCUS adoption share: Share of industrial emissions captured.  The share''s
+      own coupling: the product below derives from it.'
     category: Sector Coupling
     subcategory: null
     type: float
@@ -11194,6 +11326,30 @@ parameters:
     users:
     - Utilities
     source: docs/params.md
+  interruptible_load_mw:
+    name: Interruptible load mw
+    description: 'interruptible load mw: the sector-mix share''s product, derived, so a scenario''s mix
+      dial has a quantity the reports can name.'
+    category: Demand-Side
+    subcategory: null
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 100000.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The sector-coupling identities (cite on the equation)
+    source_url: null
+    users:
+    - Planners
+    - Industrial users
+    - Traders
+    priority: P1
+    status: existing
+    deprecated_by: null
   interruptible_load_share:
     name: Interruptible load share
     description: Share of load that can be curtailed
@@ -11204,7 +11360,7 @@ parameters:
     - 0.0
     - 1.0
     default: 0.5
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P2
     status: existing
@@ -18444,29 +18600,60 @@ parameters:
     - 0.0
     - 1.0
     default: 0.5
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P2
     status: to_build
     users:
     - Industry
     source: docs/params.md
-  steel_production:
-    name: Steel production
-    description: Steel production
-    category: Sector
+  steel_hydrogen_demand_tonnes:
+    name: Steel hydrogen demand tonnes
+    description: 'steel hydrogen demand tonnes: the sector-mix share''s product, derived, so a scenario''s
+      mix dial has a quantity the reports can name.'
+    category: Industry
+    subcategory: null
     type: float
+    unit: tonnes
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 10000000.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The sector-coupling identities (cite on the equation)
+    source_url: null
+    users:
+    - Planners
+    - Industrial users
+    - Traders
+    priority: P1
+    status: existing
+    deprecated_by: null
+  steel_production:
+    name: Steel production
+    description: Million tonnes of crude steel the economy makes per year; two is roughly Kenya-plus-its-neighbours'
+      output today and the range carries the industrialising decade.
+    category: Sector
+    subcategory: null
+    type: float
+    unit: million tonnes/year
+    range:
+    - 0.0
+    - 200.0
+    default: 2.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: integrate
+    determinism: physical
+    categories: []
+    source: Sector statistics (UNIDO/USGS cement and steel annual reviews)
+    source_url: null
     users:
     - Industry
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   steel_scrap_eaf_share:
     name: Steel scrap eaf share
     description: Scrap-EAF share of steel
@@ -21066,6 +21253,30 @@ equations:
     linearity: linear
     latex: \mathrm{allowed}_{revenue\_requirement} = \mathrm{regulatory}_{depreciation} + \mathrm{regulatory}_{asset\_base}
       \mathrm{discount}_{rate}
+  ammonia_export_volume_tonnes_definition:
+    name: Ammonia export volume tonnes
+    description: 'Ammonia the export programme ships: the export energy times the share that goes as ammonia,
+      times the hydrogen mass the ammonia carries, at the unit conversions MWh-to-MJ and tonne.'
+    system: financial
+    lhs: ammonia_export_volume_tonnes
+    rhs: hydrogen_export_volume * ammonia_export_share * hydrogen_share_of_ammonia * 1000 * 0.05
+    relation: eq
+    parameters:
+    - ammonia_export_volume_tonnes
+    - hydrogen_export_volume
+    - ammonia_export_share
+    - hydrogen_share_of_ammonia
+    free_variables: []
+    determined_variables:
+    - ammonia_export_volume_tonnes
+    tolerance: 1.0e-09
+    unit_check: true
+    reference: The export terminal's own product mix; the fuel tables' LHV basis
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{ammonia}_{export\_volume\_tonnes} = 50 \mathrm{hydrogen}_{export\_volume} \mathrm{ammonia}_{export\_share}
+      \mathrm{hydrogen}_{share\_of\_ammonia}
   ammonia_price_per_mwh_definition:
     name: ammonia price per mwh (computed)
     description: 'Ammonia''s lower heating value is 18.6 GJ per tonne; at 3.6 GJ per MWh that is 5.167
@@ -21594,6 +21805,52 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  co2_captured_cement_tonnes_definition:
+    name: Co2 captured cement tonnes
+    description: 'CO2 the cement programme captures: the sector''s tonnes times the cement put through
+      CCUS times the capture intensity per tonne (process emissions dominate at ~0.8 t/t clinker; blended
+      cements lower it).'
+    system: financial
+    lhs: co2_captured_cement_tonnes
+    rhs: cement_production * cement_ccus_share * 0.8 * 1000000
+    relation: eq
+    parameters:
+    - co2_captured_cement_tonnes
+    - cement_production
+    - cement_ccus_share
+    free_variables: []
+    determined_variables:
+    - co2_captured_cement_tonnes
+    tolerance: 1.0e-09
+    unit_check: true
+    reference: IPCC cement process emissions; the clinker factor
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{co2}_{captured\_cement\_tonnes} = 800000 \mathrm{cement}_{production} \mathrm{cement}_{ccus\_share}
+  co2_captured_industry_tonnes_definition:
+    name: Co2 captured industry tonnes
+    description: CO2 the industrial CCUS programme captures, as a share of the fleet's own emissions the
+      emissions identity computes.
+    system: financial
+    lhs: co2_captured_industry_tonnes
+    rhs: industrial_ccus_share * emissions_mtco2_per_year * 1000000
+    relation: eq
+    parameters:
+    - co2_captured_industry_tonnes
+    - industrial_ccus_share
+    - emissions_mtco2_per_year
+    free_variables:
+    - industrial_ccus_share
+    determined_variables:
+    - co2_captured_industry_tonnes
+    tolerance: 1.0e-09
+    unit_check: true
+    reference: The emissions accounting the emissions system derives
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{co2}_{captured\_industry\_tonnes} = 1000000 \mathrm{industrial}_{ccus\_share} \mathrm{emissions}_{mtco2\_per\_year}
   coal_eaf_definition:
     name: Coal availability from its outage rates
     description: 'The energy availability factor: the share of rated energy the fleet can deliver, which
@@ -23313,6 +23570,29 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{combined}_{ratio} = \mathrm{loss}_{ratio} + \mathrm{expense}_{ratio}
+  interruptible_load_mw_definition:
+    name: Interruptible load mw
+    description: 'The load the utility may curtail on contract: its share of peak demand, which is the
+      demand-response product the interruptible contracts define.'
+    system: price_demand
+    lhs: interruptible_load_mw
+    rhs: interruptible_load_share * peak_demand_mw
+    relation: eq
+    parameters:
+    - interruptible_load_mw
+    - interruptible_load_share
+    - peak_demand_mw
+    free_variables:
+    - interruptible_load_share
+    determined_variables:
+    - interruptible_load_mw
+    tolerance: 1.0e-09
+    unit_check: true
+    reference: Demand-response programme design (the interruptible contract's own definition)
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{interruptible}_{load\_mw} = \mathrm{interruptible}_{load\_share} \mathrm{peak}_{demand\_mw}
   investment_allowance_definition:
     name: Investment allowance (computed)
     description: 'The rate times its base: property tax is the annual charge on the regulated asset base;
@@ -24854,6 +25134,30 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{solar}_{pv\_cost} = \mathrm{capex}_{solar\_pv}
+  steel_hydrogen_demand_tonnes_definition:
+    name: Steel hydrogen demand tonnes
+    description: 'Hydrogen the H2-DRI steel route consumes: the sector''s tonnes times the mix share times
+      the process''s own hydrogen intensity, at the unit conversion million-tonnes to tonnes.'
+    system: financial
+    lhs: steel_hydrogen_demand_tonnes
+    rhs: steel_production * steel_h2_dri_share * hydrogen_per_t_steel_kg * 1000
+    relation: eq
+    parameters:
+    - steel_hydrogen_demand_tonnes
+    - steel_production
+    - steel_h2_dri_share
+    - hydrogen_per_t_steel_kg
+    free_variables: []
+    determined_variables:
+    - steel_hydrogen_demand_tonnes
+    tolerance: 1.0e-09
+    unit_check: true
+    reference: HYBRIT; the sector-coupling hydrogen-demand identity
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{steel}_{hydrogen\_demand\_tonnes} = 1000 \mathrm{steel}_{production} \mathrm{steel}_{h2\_dri\_share}
+      \mathrm{hydrogen}_{per\_t\_steel\_kg}
   tariff_cost_recovery:
     name: Cost-recovery tariff
     description: 'What serving the load costs, per unit sold: the annualised fixed charge spread over
@@ -28675,6 +28979,114 @@ relationships:
   description: Enters the retail tariff.
   reference: null
   priority: P1
+- source: capacity_market
+  target: capacity_revenue_usd_per_year
+  equation_id: capacity_revenue_usd_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the instrument's product.
+  reference: null
+  priority: P1
+- source: capacity_price
+  target: capacity_revenue_usd_per_year
+  equation_id: capacity_revenue_usd_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the instrument's product.
+  reference: null
+  priority: P1
+- source: firm_capacity_mw
+  target: capacity_revenue_usd_per_year
+  equation_id: capacity_revenue_usd_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the instrument's product.
+  reference: null
+  priority: P1
+- source: carbon_border_adjustment
+  target: cbam_price_applied
+  equation_id: cbam_price_applied_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the instrument's product.
+  reference: null
+  priority: P1
+- source: cbam_price
+  target: cbam_price_applied
+  equation_id: cbam_price_applied_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the instrument's product.
+  reference: null
+  priority: P1
+- source: n_1_criterion
+  target: contingency_reserve_mw
+  equation_id: contingency_reserve_mw_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the instrument's product.
+  reference: null
+  priority: P1
+- source: n_2_criterion
+  target: contingency_reserve_mw
+  equation_id: contingency_reserve_mw_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the instrument's product.
+  reference: null
+  priority: P1
+- source: largest_loss_mw
+  target: contingency_reserve_mw
+  equation_id: contingency_reserve_mw_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the instrument's product.
+  reference: null
+  priority: P1
+- source: offtake_risk_premium
+  target: offtake_risk_premium_applied
+  equation_id: offtake_risk_premium_applied_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the instrument's product.
+  reference: null
+  priority: P1
+- source: ppa_guarantees
+  target: offtake_risk_premium_applied
+  equation_id: offtake_risk_premium_applied_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the instrument's product.
+  reference: null
+  priority: P1
+- source: community_development_fund_share
+  target: community_development_fund_usd_per_year
+  equation_id: community_development_fund_usd_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the instrument's product.
+  reference: null
+  priority: P1
+- source: total_revenue_usd_per_year
+  target: community_development_fund_usd_per_year
+  equation_id: community_development_fund_usd_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the instrument's product.
+  reference: null
+  priority: P1
 - source: discount_rate
   target: weighted_average_cost_of_capital
   equation_id: wacc_alias
@@ -28793,112 +29205,112 @@ relationships:
   description: The cap scales the recovery level; below 1 it withholds part of it.
   reference: null
   priority: P1
-- source: capacity_market
-  target: capacity_revenue_usd_per_year
-  equation_id: capacity_revenue_usd_per_year_definition
+- source: steel_production
+  target: steel_hydrogen_demand_tonnes
+  equation_id: steel_hydrogen_demand_tonnes_definition
   relationship: functional
   direction: forward
   strength: hard
-  description: Enters the instrument's product.
+  description: Enters the sector product.
   reference: null
   priority: P1
-- source: capacity_price
-  target: capacity_revenue_usd_per_year
-  equation_id: capacity_revenue_usd_per_year_definition
+- source: steel_h2_dri_share
+  target: steel_hydrogen_demand_tonnes
+  equation_id: steel_hydrogen_demand_tonnes_definition
   relationship: functional
   direction: forward
   strength: hard
-  description: Enters the instrument's product.
+  description: Enters the sector product.
   reference: null
   priority: P1
-- source: firm_capacity_mw
-  target: capacity_revenue_usd_per_year
-  equation_id: capacity_revenue_usd_per_year_definition
+- source: hydrogen_per_t_steel_kg
+  target: steel_hydrogen_demand_tonnes
+  equation_id: steel_hydrogen_demand_tonnes_definition
   relationship: functional
   direction: forward
   strength: hard
-  description: Enters the instrument's product.
+  description: Enters the sector product.
   reference: null
   priority: P1
-- source: carbon_border_adjustment
-  target: cbam_price_applied
-  equation_id: cbam_price_applied_definition
+- source: hydrogen_export_volume
+  target: ammonia_export_volume_tonnes
+  equation_id: ammonia_export_volume_tonnes_definition
   relationship: functional
   direction: forward
   strength: hard
-  description: Enters the instrument's product.
+  description: Enters the sector product.
   reference: null
   priority: P1
-- source: cbam_price
-  target: cbam_price_applied
-  equation_id: cbam_price_applied_definition
+- source: ammonia_export_share
+  target: ammonia_export_volume_tonnes
+  equation_id: ammonia_export_volume_tonnes_definition
   relationship: functional
   direction: forward
   strength: hard
-  description: Enters the instrument's product.
+  description: Enters the sector product.
   reference: null
   priority: P1
-- source: n_1_criterion
-  target: contingency_reserve_mw
-  equation_id: contingency_reserve_mw_definition
+- source: hydrogen_share_of_ammonia
+  target: ammonia_export_volume_tonnes
+  equation_id: ammonia_export_volume_tonnes_definition
   relationship: functional
   direction: forward
   strength: hard
-  description: Enters the instrument's product.
+  description: Enters the sector product.
   reference: null
   priority: P1
-- source: n_2_criterion
-  target: contingency_reserve_mw
-  equation_id: contingency_reserve_mw_definition
+- source: cement_production
+  target: co2_captured_cement_tonnes
+  equation_id: co2_captured_cement_tonnes_definition
   relationship: functional
   direction: forward
   strength: hard
-  description: Enters the instrument's product.
+  description: Enters the sector product.
   reference: null
   priority: P1
-- source: largest_loss_mw
-  target: contingency_reserve_mw
-  equation_id: contingency_reserve_mw_definition
+- source: cement_ccus_share
+  target: co2_captured_cement_tonnes
+  equation_id: co2_captured_cement_tonnes_definition
   relationship: functional
   direction: forward
   strength: hard
-  description: Enters the instrument's product.
+  description: Enters the sector product.
   reference: null
   priority: P1
-- source: offtake_risk_premium
-  target: offtake_risk_premium_applied
-  equation_id: offtake_risk_premium_applied_definition
+- source: industrial_ccus_share
+  target: co2_captured_industry_tonnes
+  equation_id: co2_captured_industry_tonnes_definition
   relationship: functional
   direction: forward
   strength: hard
-  description: Enters the instrument's product.
+  description: Enters the sector product.
   reference: null
   priority: P1
-- source: ppa_guarantees
-  target: offtake_risk_premium_applied
-  equation_id: offtake_risk_premium_applied_definition
+- source: emissions_mtco2_per_year
+  target: co2_captured_industry_tonnes
+  equation_id: co2_captured_industry_tonnes_definition
   relationship: functional
   direction: forward
   strength: hard
-  description: Enters the instrument's product.
+  description: Enters the sector product.
   reference: null
   priority: P1
-- source: community_development_fund_share
-  target: community_development_fund_usd_per_year
-  equation_id: community_development_fund_usd_per_year_definition
+- source: interruptible_load_share
+  target: interruptible_load_mw
+  equation_id: interruptible_load_mw_definition
   relationship: functional
   direction: forward
   strength: hard
-  description: Enters the instrument's product.
+  description: Enters the sector product.
   reference: null
   priority: P1
-- source: total_revenue_usd_per_year
-  target: community_development_fund_usd_per_year
-  equation_id: community_development_fund_usd_per_year_definition
+- source: peak_demand_mw
+  target: interruptible_load_mw
+  equation_id: interruptible_load_mw_definition
   relationship: functional
   direction: forward
   strength: hard
-  description: Enters the instrument's product.
+  description: Enters the sector product.
   reference: null
   priority: P1
 cross_validation:

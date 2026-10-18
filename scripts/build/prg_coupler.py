@@ -546,7 +546,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -604,6 +604,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b18_equations)
 		edges = list(BATCH12_EDGES) + b18_edges
+	elif batch == "19":
+		b19_nodes, b19_equations, b19_edges, b19_rules = build_batch19(graph)
+		rules.extend(b19_rules)
+		nodes.update(b19_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b19_equations)
+		edges = list(BATCH12_EDGES) + b19_edges
 	else:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		edges = list(BATCH12_EDGES)
@@ -2518,6 +2525,225 @@ def build_batch18(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	equations["capacity_revenue_usd_per_year_definition"]["parameters"] = [
 		"capacity_revenue_usd_per_year", "capacity_market", "capacity_price", "firm_capacity_mw",
 	]
+	return nodes, equations, edges, rules
+
+
+
+# ---------------------------------------------------------------------------
+# Batch 19 -- the sector-coupling layer: the technology-mix shares of the
+# industry and transport sectors, and the activity each share multiplies.
+#
+# A technology-mix share of a sector (H2-DRI steel, green ammonia, CCUS on
+# cement) is a share of the sector's own annual output -- and the shipped
+# nodes carried 0.5 placeholders against activity nodes carrying none at
+# all. The layer: each sector's activity completed at the unit and regional
+# level its meaning states (steel and cement tonnages, hydrogen export in
+# MWh), and the mix share's product derived from it.
+#
+# Constants: hydrogen at 33.33 kWh/kg LHV and 55.6 kg per MWh... stated per
+# use: 1 MWh of hydrogen is 30 kg at the LHV; a DRI process takes ~55 kg
+# H2 per tonne of steel (HYBRIT's demonstrated range 50-60 kg/t); green
+# ammonia is hydrogen by mass at 5.22 MWh/t at the LHV of 18.6 GJ/t, so a
+# tonne of ammonia carries 0.192 t of hydrogen (17.75% by mass); cement
+# CCUS captures ~0.8 tCO2 per tonne of clinker-made cement and an EU-scale
+# retrofit programme's captured share is the dial. The constants are named
+# nodes, not folded figures, on the same principle the delivered fuel
+# prices used: a researcher checks the basis.
+# ---------------------------------------------------------------------------
+
+
+def build_batch19(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, str]], list[dict[str, Any]]]:
+	"""Batch 19: sector activity bases and the technology-mix shares' products."""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, str]] = []
+	rules: list[dict[str, Any]] = []
+
+	# --- sector activity bases, completed ---
+	sector_bases = {
+		"steel_production": (
+			"million tonnes/year", [0.0, 200.0], 2.0,
+			"Million tonnes of crude steel the economy makes per year; two is "
+			"roughly Kenya-plus-its-neighbours' output today and the range "
+			"carries the industrialising decade.",
+		),
+		"cement_production": (
+			"million tonnes/year", [0.0, 500.0], 8.0,
+			"Million tonnes of cement per year, the region's clinker-and-blend "
+			"mix; eight is the reference decade's demand.",
+		),
+		"hydrogen_export_volume": (
+			"MWh/year", [0.0, 2000000.0], 20000.0,
+			"Hydrogen energy the export terminals load per year: 20,000 MWh "
+			"(about 600 tonnes at the gas's LHV) is an early-terminal scale "
+			"the shipping schedule can carry; the range is the export hub's "
+			"own.",
+		),
+	}
+	for name, (unit, rng, default, prose) in sector_bases.items():
+		full = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
+		full.update({
+			"unit": unit, "range": rng, "default": default, "role": "free",
+			"description": prose, "determinism": "physical",
+			"source": "Sector statistics (UNIDO/USGS cement and steel annual reviews)",
+			"priority": "P1", "status": "existing",
+		})
+		nodes[name] = full
+
+	# --- named process constants ---
+	nodes["hydrogen_per_t_steel_kg"] = {
+		"name": "Hydrogen intensity of DRI steel",
+		"description": (
+			"Kilograms of hydrogen per tonne of direct-reduced iron: the "
+			"process's own demand, demonstrated in the 50-60 kg/t band "
+			"(HYBRIT). A named node, not a folded figure."
+		),
+		"category": "Industry", "type": "float", "unit": "kg/tonne",
+		"range": [30.0, 80.0], "default": 55.0, "role": "free",
+		"determinism": "physical", "priority": "P1", "status": "existing",
+		"source": "HYBRIT (SSAB/LKAB/Vattenfall) demonstration data",
+		"users": ["Industrial users"],
+	}
+	nodes["hydrogen_share_of_ammonia"] = {
+		"name": "Hydrogen share of ammonia by mass",
+		"description": (
+			"Tonnes of hydrogen per tonne of ammonia: 17.75% by mass from the "
+			"molecular weight, which the LHV basis (18.6 GJ/t NH3 against "
+			"33.33 kWh/kg H2) states independently."
+		),
+		"category": "Industry", "type": "float", "unit": "tonne/tonne",
+		"range": [0.15, 0.18], "default": 0.1775, "role": "exogenous",
+		"determinism": "physical", "priority": "P2", "status": "existing",
+		"source": "Stoichiometry of NH3; the LHV basis of the fuel tables",
+		"users": ["Industrial users"],
+	}
+
+	# --- the mix-share products ---
+	products = [
+		(
+			"steel_h2_dri_share",
+			"steel_hydrogen_demand_tonnes = steel_production * steel_h2_dri_share * hydrogen_per_t_steel_kg * 1000",
+			"Hydrogen the H2-DRI steel route consumes: the sector's tonnes times "
+			"the mix share times the process's own hydrogen intensity, at the "
+			"unit conversion million-tonnes to tonnes.",
+			"HYBRIT; the sector-coupling hydrogen-demand identity",
+		),
+		(
+			"ammonia_export_share",
+			"ammonia_export_volume_tonnes = hydrogen_export_volume * ammonia_export_share * hydrogen_share_of_ammonia * 1000 * 0.05",
+			"Ammonia the export programme ships: the export energy times the "
+			"share that goes as ammonia, times the hydrogen mass the ammonia "
+			"carries, at the unit conversions MWh-to-MJ and tonne.",
+			"The export terminal's own product mix; the fuel tables' LHV basis",
+		),
+		(
+			"cement_ccus_share",
+			"co2_captured_cement_tonnes = cement_production * cement_ccus_share * 0.8 * 1000000",
+			"CO2 the cement programme captures: the sector's tonnes times the "
+			"cement put through CCUS times the capture intensity per tonne "
+			"(process emissions dominate at ~0.8 t/t clinker; blended cements "
+			"lower it).",
+			"IPCC cement process emissions; the clinker factor",
+		),
+		(
+			"industrial_ccus_share",
+			"co2_captured_industry_tonnes = industrial_ccus_share * emissions_mtco2_per_year * 1000000",
+			"CO2 the industrial CCUS programme captures, as a share of the "
+			"fleet's own emissions the emissions identity computes.",
+			"The emissions accounting the emissions system derives",
+		),
+		(
+			"interruptible_load_share",
+			"interruptible_load_mw = interruptible_load_share * peak_demand_mw",
+			"The load the utility may curtail on contract: its share of peak "
+			"demand, which is the demand-response product the interruptible "
+			"contracts define.",
+			"Demand-response programme design (the interruptible contract's own definition)",
+		),
+	]
+	for share, product, prose, cite in products:
+		target = product.split(" =")[0]
+		share_node = graph.nodes[share]
+		nodes[share] = dict(share_node.model_dump(exclude={"id"}, mode="json"))
+		nodes[share].update({
+			"description": (
+				f"{graph.nodes[share].name}: {graph.nodes[share].description[:40]}"
+			) + " The share's own coupling: the product below derives from it.",
+		})
+		eq_id = f"{target}_definition"
+		sys = "price_demand" if "load" in target else "financial"
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": target.replace("_", " ").capitalize(),
+			"description": prose,
+			"system": sys,
+			"lhs": target,
+			"rhs": product.split(" = ", 1)[1],
+			"relation": "eq",
+			"parameters": [target],
+			"free_variables": [],
+			"determined_variables": [target],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+	# The parameters/free lists for the four above, written explicitly:
+	# the share is free, the constant nodes are free or exogenous, and the
+	# derived reads (emissions) enter as parameters.
+	# The product targets, declared: unit, range, role, and an edge per
+	# parameter, in the loop above the explicit lists are rebuilt from.
+	target_facts = {
+		"steel_hydrogen_demand_tonnes": ("tonnes", [0.0, 1.0e7]),
+		"ammonia_export_volume_tonnes": ("tonnes", [0.0, 1.0e7]),
+		"co2_captured_cement_tonnes": ("tonnes", [0.0, 1.0e8]),
+		"co2_captured_industry_tonnes": ("tonnes", [0.0, 1.0e9]),
+		"interruptible_load_mw": ("MW", [0.0, 100000.0]),
+	}
+	for target, (unit, rng) in target_facts.items():
+		nodes[target] = {
+			"name": target.replace("_", " ").capitalize(),
+			"description": (
+				f"{target.replace('_', ' ')}: the sector-mix share's product, "
+				"derived, so a scenario's mix dial has a quantity the reports "
+				"can name."
+			),
+			"category": "Industry" if "steel" in target or "cement" in target or "co2" in target else "Demand-Side",
+			"type": "float", "unit": unit, "range": rng, "role": "derived",
+			"determinism": "physical", "priority": "P1", "status": "existing",
+			"source": "The sector-coupling identities (cite on the equation)",
+			"users": ["Planners", "Industrial users", "Traders"],
+		}
+	explicit = {
+		"steel_hydrogen_demand_tonnes": (
+			["steel_production", "steel_h2_dri_share", "hydrogen_per_t_steel_kg"], [],
+		),
+		"ammonia_export_volume_tonnes": (
+			["hydrogen_export_volume", "ammonia_export_share", "hydrogen_share_of_ammonia"], [],
+		),
+		"co2_captured_cement_tonnes": (
+			["cement_production", "cement_ccus_share"], [],
+		),
+		"co2_captured_industry_tonnes": (
+			["industrial_ccus_share", "emissions_mtco2_per_year"], ["industrial_ccus_share"],
+		),
+		"interruptible_load_mw": (
+			["interruptible_load_share", "peak_demand_mw"], ["interruptible_load_share"],
+		),
+	}
+	for target, (params, free) in explicit.items():
+		eq_id = f"{target}_definition"
+		equations[eq_id]["parameters"] = [target] + params
+		equations[eq_id]["free_variables"] = free
+		determined = [target]
+		equations[eq_id]["determined_variables"] = determined
+	for target, (params, _free) in explicit.items():
+		for sym in params:
+			edges.append({
+				"source": sym, "target": target,
+				"equation_id": f"{target}_definition", "relationship": "functional",
+				"strength": "hard", "description": "Enters the sector product.",
+			})
 	return nodes, equations, edges, rules
 
 
