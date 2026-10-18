@@ -1,8 +1,21 @@
 # Coupling worklist
 
-Every node still in `uncoupled()` (575 of 1197, as of the batch 23 bake on 2026-10-18) and the family class its coupling belongs to. Batches 12-23 coupled 219 nodes (793 -> 575): the financial core and fleet, the duplicate-pair aliases, sector demand, fuel conversions, rate aliases, the instrument and sector-coupling layers, the share family's products and the time-index arithmetic (batch 20), the cost and rate families (batch 21), the compliance register (batch 22), and the extensive bases with the products they unblock (batch 23). The classes name the method each coupling gets; nothing escapes the register.
+Every node still in `uncoupled()` (532 of 1231, as of the batch 24 bake on 2026-10-18) and the family class its coupling belongs to. Batches 12-24 coupled 261 nodes (793 -> 532): the financial core and fleet, the duplicate-pair aliases, sector demand, fuel conversions, rate aliases, the instrument and sector-coupling layers, the share family's products and the time-index arithmetic (batch 20), the cost and rate families (batch 21), the compliance register (batch 22), the extensive bases with the products they unblock (batch 23), and the carbon-market, subsidy and employment families with the annual-quantity repair that unblocked them (batch 24). The classes name the method each coupling gets; nothing escapes the register.
 
 
+
+## Batch 24's tail, and what is left
+
+Batch 24 coupled 43 nodes and left the same 532 uncoupled set the batch-23
+bake carried less that 43 — it added no node to `uncoupled()`, because every
+one of its 34 new parameters is the lhs of an equation. The remainder is
+unchanged in kind from the batch-23 description and the per-family sections
+below still name each node's class: 44 Supply, 32 EnvSoc, 27 Contract, 24
+Sector, 23 Macro, 21 Demand, 21 JustTrans, 19 Insurance & Catastrophe, 18
+Outage, 16 Adapt, 16 Digital, 16 Land, and the long tail. The next families
+the research packs rank are the gate family (the 20 policy flags, which need
+a *conditional* the library does not have) and the qualitative tail (the
+declared free space `uncoupled()` retains by the register's own contract).
 
 ## compliance register (3)
 

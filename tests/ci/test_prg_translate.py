@@ -135,6 +135,15 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	untranslated, so the numerator stayed at three while the denominator grew
 	by thirteen.
 
+	935 -> 926 when batch 24 retyped nine nodes from ``free`` to ``derived``
+	and created no settable knob: ``carbon_tax_coverage``, ``social_tariff``,
+	``ets_cap``, ``auction_volume``, ``carbon_credit_volumes``,
+	``article_6_credits``, ``carbon_budget``, ``price_cap`` and
+	``market_concentration`` each gained an equation that computes them, so
+	the denominator fell by nine and the numerator stayed at three. Every one
+	of batch 24's seventy-six remaining new parameters arrived derived, which
+	is why the denominator moved down rather than up.
+
 	The eighteen the engine cannot carry are still outside the denominator:
 	they are chosen by the optimiser, so ``is_settable`` is False for them.
 	They are not missing from the register -- ``endogenous`` carries them, and
@@ -142,7 +151,7 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	"""
 	cov = coverage(graph)
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 935, cov  # 922 -> 935: batch 23's extensive bases (fifteen in, two out)
+	assert cov["total"] == 926, cov  # 935 -> 926: batch 24 derived nine former free knobs
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -202,7 +211,7 @@ def test_the_untranslated_register_is_not_empty_and_says_why(
 	network can be perturbed by.
 	"""
 	missing = untranslated(graph)
-	assert len(missing) == 932, missing  # 919 -> 932: batch 23's fifteen settable bases landed untranslated, two left as derived
+	assert len(missing) == 923, missing  # 932 -> 923: batch 24 derived nine former free knobs, none translated
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact

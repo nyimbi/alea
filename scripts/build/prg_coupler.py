@@ -546,7 +546,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -625,6 +625,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b23_equations)
 		edges = list(BATCH12_EDGES) + b23_edges
+	elif batch == "24":
+		b24_nodes, b24_equations, b24_edges, b24_rules = build_batch24(graph)
+		rules.extend(b24_rules)
+		nodes.update(b24_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b24_equations)
+		edges = list(BATCH12_EDGES) + b24_edges
 	elif batch == "21":
 		b21_nodes, b21_equations, b21_edges, b21_rules = build_batch21(graph)
 		rules.extend(b21_rules)
@@ -4717,6 +4724,641 @@ BATCH23_EQUATIONS: tuple[
 )
 
 
+# ---------------------------------------------------------------------------
+# Batch 24 -- the carbon and market families, and the annual-quantity retype
+# that makes their products decidable.
+#
+# WHY THE RETYPE COMES FIRST. Fifteen nodes in the graph are annual
+# quantities declared as if they were instantaneous stocks: `demand_twh` is
+# "Final demand in the horizon year" and carries `TWh`, `generation_twh` is
+# "Energy generated at the busbar" and carries `TWh`, `cooling_water_demand_m3`
+# is a year's cooling water and carries `m3`. A rate times a stock is not a
+# spend, so every product against them -- the wheeling charges, the feed-in
+# tariff, the subsidy spends, the carbon identity itself -- read as
+# `USD * TWh / MWh` or as a dimensionless ratio that is not a ratio. Measured
+# on a rebuilt graph: retyping these fifteen fixes nine inconsistent equations
+# and breaks none. They are the precondition for this batch, not a side
+# effect of it.
+#
+# WHY THE CARBON FAMILY IS WORTH A BATCH. The ETS chain was declared and
+# never computed: `ets_cap`, `auction_volume`, `carbon_credit_volumes`,
+# `article_6_credits` and `carbon_budget` all sat at the catalog's 500000.0
+# placeholder with no unit. Each is now an identity against a quantity the
+# graph already derives. Two of them are *duplicates by meaning* rather than
+# by name -- `carbon_budget` is `carbon_budget_mtco2` and `price_cap` is
+# `revenue_cap` -- and the catalog's own duplicate-resolution convention is an
+# equality, so the placeholder becomes derived and the reviewed id survives.
+#
+# WHY THE GATE IS A RULE AND NOT AN EQUATION. `ets_enabled` is a switch, and
+# `carbon_revenue_definition` reads no switch: at the shipped defaults the
+# jurisdiction has no ETS and the graph still accrues 650,578,257 USD/year of
+# carbon revenue, because the identity multiplies by `carbon_price_coverage`
+# (0.5) and never asks whether a market exists. The repair is not to multiply
+# the revenue by the flag -- an ETS and a carbon tax are alternative
+# instruments over the same base, and `max(ets_enabled, carbon_tax_enabled)`
+# would need a `carbon_tax_enabled` node the graph does not carry, while a
+# product would double-count the covered share the revenue identity already
+# applies. The honest statement is a cross-validation rule: revenue accruing
+# with no instrument enabled is a scenario the reviewer should refuse.
+#
+# WHY THE MARKET FAMILY IS SHARES AGAINST BASES. `wheeling_charges`,
+# `feed_in_tariff`, `bid_ask_spread` and their kin were declared with no unit
+# and no consumer; each is a *rate per MWh* applied to the annual volume the
+# graph already computes, which is the pass-through tariff structure African
+# regulators actually publish. `market_liquidity` is the one that is not a
+# rate: it is churn, a multiple of demand, and its product is the traded
+# volume the bid-ask spread then prices.
+# ---------------------------------------------------------------------------
+
+#: (name, unit, range, default, category, determinism, prose)
+BATCH24_RETYPES: tuple[tuple[str, str, list[float], float, str, str, str], ...] = (
+	# --- the annual-quantity repair (fifteen, measured) ---
+	("demand_twh", "TWh/year", [1.0, 20000.0], 46.5, "Demand", "stochastic",
+	 "Final demand in the horizon year, after growth is compounded. A flow: "
+	 "the TWh consumed *in* the year, so the unit is per-year and a rate "
+	 "times it is a spend. The shipped `TWh` made every product against it "
+	 "read as an energy stock and left the revenue products undecidable."),
+	("base_demand_twh", "TWh/year", [1.0, 10000.0], 33.8, "Demand", "stochastic",
+	 "Base-year demand before growth is compounded. A flow, like "
+	 "`demand_twh`."),
+	("generation_twh", "TWh/year", [0.0, 30000.0], 52.0, "Demand", "physical",
+	 "Energy generated at the busbar in the year, which is what clears the "
+	 "balance. A flow."),
+	("net_imports_twh", "TWh/year", [-1000.0, 1000.0], 0.0, "Demand", "policy",
+	 "Imports less exports over the year. A net flow, signed."),
+	("equilibrium_demand_twh", "TWh/year", [0.0, 20000.0], 46.5, "Demand",
+	 "stochastic",
+	 "The demand the price equilibrium settles at. A flow."),
+	("agricultural_demand_twh", "TWh/year", [0.0, 20000.0], 0.7, "Demand",
+	 "physical", "Agricultural electricity demand in the year. A flow."),
+	("commercial_demand_twh", "TWh/year", [0.0, 20000.0], 9.3, "Demand",
+	 "physical", "Commercial electricity demand in the year. A flow."),
+	("industrial_demand_twh", "TWh/year", [0.0, 20000.0], 17.0, "Demand",
+	 "physical", "Industrial electricity demand in the year. A flow."),
+	("residential_demand_twh", "TWh/year", [0.0, 20000.0], 19.5, "Demand",
+	 "physical", "Residential electricity demand in the year. A flow."),
+	("cooling_water_demand_m3", "m3/year", [0.0, 1.0e11], 2.0e8, "Water",
+	 "physical",
+	 "Cooling water withdrawn in the year. A flow; the shipped `m3` made the "
+	 "water balance a stock against a stock and hid the withdrawal rate."),
+	("hydrogen_water_demand_m3", "m3/year", [0.0, 1.0e11], 1.5e7, "Water",
+	 "physical", "Water the electrolyser draws in the year. A flow."),
+	("total_water_demand_m3", "m3/year", [0.0, 1.0e11], 2.3e8, "Water",
+	 "physical", "Total water withdrawn in the year. A flow."),
+	("water_availability_m3", "m3/year", [0.0, 1.0e11], 2.0e8, "Water",
+	 "physical",
+	 "Water available to the project in the year. A flow, and the one the "
+	 "withdrawal is compared against: a stock compared to a flow is the "
+	 "comparison the shipped units made."),
+	("unserved_energy_gwh", "GWh/year", [0.0, 1.0e5], 1200.0, "Reliability",
+	 "stochastic", "Energy demanded and not served in the year. A flow."),
+	("reliability_cost_usd", "USD/year", [0.0, 1.0e12], 4.0e7, "Reliability",
+	 "stochastic",
+	 "The cost of the unserved energy, valued at the value of lost load. A "
+	 "spend in the year."),
+	# --- the carbon and market shares that were declared with no unit ---
+	("corresponding_adjustment", "1", [0.0, 1.0], 0.8, "Carbon", "policy",
+	 "Share of a transferred mitigation outcome carrying a corresponding "
+	 "adjustment under Article 6.2 of the Paris Agreement. A share, and the "
+	 "unit is what makes the Article-6 volume decidable."),
+	("leakage_parameters", "1", [0.0, 1.0], 0.1, "Carbon", "policy",
+	 "Share of the covered emissions that relocate rather than abate: the "
+	 "carbon-leakage rate a CBAM-style adjustment exists to price. A share."),
+	("position_limits", "1", [0.0, 1.0], 0.25, "MktOps", "policy",
+	 "Share of the cap one participant may hold. A share of the cap, not an "
+	 "absolute volume, so the limit moves with the cap it limits."),
+	("netting_agreements", "1", [0.0, 1.0], 0.9, "MktOps", "policy",
+	 "Share of posted collateral covered by a netting agreement. A share; "
+	 "what remains is the exposure the agreement does not net."),
+	("carbon_credit_retirement", "1", [0.0, 1.0], 0.05, "Carbon", "policy",
+	 "Share of issued credit volume retired against a compliance obligation. "
+	 "A share of the issued volume."),
+	("permanence_parameters", "1", [0.0, 1.0], 0.1, "Carbon", "policy",
+	 "Reversal allowance on the credit book: the share of issued volume held "
+	 "back against non-permanence. A share, and its complement is the buffer "
+	 "a registry actually retains."),
+	("carbon_credit_insurance", "1", [0.0, 1.0], 0.02, "Carbon", "policy",
+	 "Premium on insuring the credit book, as a share of its value. A share "
+	 "of the value, which is what makes the premium a spend."),
+	("settlement_risk", "1", [0.0, 1.0], 0.01, "MktOps", "policy",
+	 "Share of the settled value exposed to counterparty settlement failure. "
+	 "A share of the value at risk."),
+	("carbon_tax_interaction", "1", [0.0, 1.0], 0.15, "Tax", "policy",
+	 "Share of carbon revenue offset by lower other taxes: the tax "
+	 "interaction a revenue-neutral reform carries. A share of the revenue."),
+	("mini_grid_subsidies", "1", [0.0, 1.0], 0.4, "Policy", "policy",
+	 "Share of the mini-grid programme's spend covered by subsidy. A share "
+	 "of the spend the graph already derives."),
+	("shs_subsidies", "1", [0.0, 1.0], 0.3, "Policy", "policy",
+	 "Share of the solar-home-system programme's spend covered by subsidy. A "
+	 "share of the spend the graph already derives."),
+	("voluntary_carbon_market", "1", [0.0, 1.0], 0.0, "Policy", "policy",
+	 "Share of the credit volume sold into the voluntary market rather than "
+	 "against a compliance obligation. A participation share; zero at the "
+	 "shipped default because the programme is compliance-led."),
+	("price_limits", "1", [0.0, 5.0], 0.2, "MktOps", "policy",
+	 "Half-width of the market's price band around marginal cost, as a "
+	 "fraction of it. A share, and the band's two arms are "
+	 "`(1 ± price_limits) * marginal_cost`."),
+	("carbon_price_risk", "1", [0.0, 1.0], 0.15, "Macro", "policy",
+	 "Risk premium on the escalated carbon price, as a share of it. A share, "
+	 "so the risk-adjusted price is `(1 + carbon_price_risk)` times the "
+	 "escalated one."),
+	("market_liquidity", "1", [0.0, 100.0], 1.0, "MktOps", "policy",
+	 "Market churn: the traded volume as a multiple of demand. Dimensionless "
+	 "because it is a multiple, and its product is the traded volume the "
+	 "spread and the clearing costs are quoted against."),
+	# --- the two rate families: USD per MWh applied to an annual volume ---
+	("bid_ask_spread", "USD/MWh", [0.0, 100.0], 1.5, "MktOps", "policy",
+	 "The bid-ask spread on the traded volume, in USD per MWh traded. A rate; "
+	 "the shipped unit was None and the spread is a price, not a share."),
+	("wheeling_charges", "USD/MWh", [0.0, 100.0], 4.0, "Policy", "policy",
+	 "Transmission wheeling charge per MWh of demand: the use-of-system "
+	 "tariff a regulator publishes. A rate against the annual demand."),
+	("distribution_wheeling_charges", "USD/MWh", [0.0, 100.0], 6.0, "Policy",
+	 "policy",
+	 "Distribution wheeling charge per MWh of demand. A rate; the "
+	 "distribution use-of-system tariff."),
+	("feed_in_tariff", "USD/MWh", [0.0, 500.0], 80.0, "Policy", "policy",
+	 "The feed-in tariff paid per MWh of renewable generation: a purchase "
+	 "obligation price, not a share. A rate against the renewable volume."),
+	("electricity_subsidies", "USD/MWh", [0.0, 500.0], 20.0, "Policy", "policy",
+	 "Consumer subsidy per MWh of demand: the gap between the tariff and the "
+	 "cost it is meant to recover, paid by the budget. A rate."),
+	("renewable_subsidies", "USD/MWh", [0.0, 500.0], 25.0, "Policy", "policy",
+	 "Renewable subsidy per MWh of renewable generation, distinct from the "
+	 "feed-in tariff because it is a budget transfer rather than a purchase "
+	 "obligation. A rate."),
+	("fossil_fuel_subsidies", "USD/MWh", [0.0, 500.0], 15.0, "Policy", "policy",
+	 "Fossil-fuel subsidy per MWh of non-renewable generation. A rate "
+	 "against the fossil volume, which is generation less renewables."),
+	("wheeling_charge_cross_border", "USD/MWh", [0.0, 100.0], 8.0, "Grid",
+	 "policy",
+	 "Cross-border wheeling charge per MWh of net import. A rate against the "
+	 "signed net flow, which is why the product takes its absolute value."),
+	("carbon_credit_prices", "USD/tonne", [0.0, 500.0], 8.0, "Carbon", "policy",
+	 "Price of one tonne of credit on the market the programme sells into: "
+	 "the voluntary-market clearing price, distinct from the compliance "
+	 "price `carbon_price_usd_per_tco2`. A price per tonne."),
+	# --- the duplicates the catalog resolves by equality ---
+	("local_employment_targets", "1", [0.0, 1.0], 0.3, "Land", "policy",
+	 "Target share of project employment to be filled from the host "
+	 "community. A share of the workforce, so the attainment ratio against "
+	 "it is a ratio and not a division by the catalog's 500000.0 "
+	 "placeholder."),
+	("women_employment_targets", "1", [0.0, 1.0], 0.15, "JustTrans", "policy",
+	 "Target share of project employment to be filled by women. A share."),
+	("youth_employment_targets", "1", [0.0, 1.0], 0.25, "JustTrans", "policy",
+	 "Target share of project employment to be filled by people under 35. A "
+	 "share."),
+	("carbon_tax_coverage", "1", [0.0, 1.0], 0.5, "Policy", "policy",
+	 "Share of emissions the carbon tax applies to. Already a share; this "
+	 "batch makes it an identity on `carbon_price_coverage`, the two being "
+	 "one covered share under two instrument names, which is the catalog's "
+	 "own duplicate-resolution convention."),
+	("social_tariff", "USD/MWh", [0.0, 500.0], 30.0, "Consumer", "policy",
+	 "The social tariff a below-threshold household pays. Already a price "
+	 "with no unit; this batch declares the unit and the identity on the "
+	 "lifeline tariff the graph already carries, which is the same quantity "
+	 "under the catalog's second spelling."),
+)
+
+#: The bases this batch needs: one, and it is the traded volume's own churn
+#: base. Everything else is a product against a quantity already carried.
+BATCH24_BASES: tuple[tuple[str, str, list[float], float, str, str], ...] = ()
+
+#: (id, name, lhs, rhs, prose, system, linearity, unit, range, reference)
+BATCH24_EQUATIONS: tuple[
+	tuple[str, str, str, str, str, str, str, str, list[float], str | None], ...
+] = (
+	# --- the ETS and Article 6 chain ---
+	("ets_cap_definition",
+	 "The ETS cap, annualised",
+	 "ets_cap",
+	 "carbon_price_coverage * carbon_budget_mtco2 / horizon_years",
+	 "The covered share of the remaining carbon budget, divided by the "
+	 "horizon it is to be spent over: the annual cap a budget implies. At "
+	 "the shipped defaults 0.5 * 500 / 10 = 25 MtCO2/year against emissions "
+	 "of 26.02, so the cap binds while the whole budget (260.2 against 500) "
+	 "does not -- the annualisation is what makes a budget bite.",
+	 "carbon_trajectory", "linear", "MtCO2/year", [0.0, 10000.0],
+	 "EU CBAM regulation"),
+	("auction_volume_definition",
+	 "The annual auction volume",
+	 "auction_volume",
+	 "ets_cap",
+	 "Every allowance is auctioned, because the graph carries no "
+	 "free-allocation share and inventing one would be a policy assumption "
+	 "with no dial behind it. The auction volume is therefore the cap; when "
+	 "a free-allocation dial arrives, this is the line that gains its "
+	 "complement.",
+	 "carbon_trajectory", "linear", "MtCO2/year", [0.0, 10000.0],
+	 "EU CBAM regulation"),
+	("carbon_credit_volumes_definition",
+	 "The credit volume issued",
+	 "carbon_credit_volumes",
+	 "additional_abatement_mtco2",
+	 "Credit volume is the abatement that clears the additionality screen, "
+	 "which the shipped `additional_abatement_definition` already computes "
+	 "as the tested share of the annualised budget. Issuing credits for "
+	 "anything the screen refused would be crediting a reduction that did "
+	 "not happen.",
+	 "carbon_trajectory", "linear", "MtCO2/year", [0.0, 1000.0], None),
+	("article_6_credits_definition",
+	 "The Article 6.2 transferred volume",
+	 "article_6_credits",
+	 "corresponding_adjustment * carbon_credit_volumes",
+	 "The volume transferred bilaterally under Article 6.2, which is the "
+	 "share carrying a corresponding adjustment: the host country deducts "
+	 "it from its own accounting and the buyer adds it to theirs. Without "
+	 "the adjustment the transfer is a double count, which is the defect "
+	 "Article 6.4's own machinery exists to prevent.",
+	 "carbon_trajectory", "linear", "MtCO2/year", [0.0, 1000.0],
+	 "EU CBAM regulation"),
+	("carbon_budget_identity",
+	 "The remaining carbon budget",
+	 "carbon_budget",
+	 "carbon_budget_mtco2",
+	 "Two ids for one quantity: the catalog carries `carbon_budget` and the "
+	 "constraint register carries `carbon_budget_mtco2`, and they are the "
+	 "same budget. Resolved by equality rather than by deleting a reviewed "
+	 "id, which is the convention every catalog duplicate in this graph "
+	 "follows.",
+	 "carbon_trajectory", "linear", "MtCO2", [0.0, 100000.0],
+	 "The catalog's own duplicate rows, resolved"),
+	# --- the carbon-market products ---
+	("leakage_emissions_definition",
+	 "The emissions that relocate",
+	 "leakage_mtco2_per_year",
+	 "leakage_parameters * emissions_mtco2_per_year",
+	 "The share of covered emissions that moves production rather than "
+	 "abating it: the quantity a border adjustment is calibrated against. "
+	 "Leakage is not abatement that failed, it is abatement that left, and "
+	 "pricing it at the domestic carbon price is what CBAM does.",
+	 "emissions", "linear", "MtCO2/year", [0.0, 1000.0],
+	 "EU CBAM regulation"),
+	("position_limit_definition",
+	 "The volume one participant may hold",
+	 "position_limit_mtco2",
+	 "position_limits * ets_cap",
+	 "A position limit as a share of the cap, not an absolute tonnage: the "
+	 "limit a market regulator sets scales with the market it limits. The "
+	 "product is the volume, which is what a compliance check compares a "
+	 "participant's holding against.",
+	 "carbon_trajectory", "linear", "MtCO2/year", [0.0, 10000.0],
+	 "EU CBAM regulation"),
+	("carbon_credit_value_definition",
+	 "The value of the credit book",
+	 "carbon_credit_value_usd_per_year",
+	 "carbon_credit_prices * carbon_credit_volumes * 1000000",
+	 "Volume times price, with the 1e6 carrying MtCO2 to tonnes. The price "
+	 "is the voluntary-market clearing price, not the compliance price: a "
+	 "credit sold into the voluntary market is not an allowance, and "
+	 "valuing it at the ETS price would import a market the book does not "
+	 "trade in.",
+	 "capture_price", "linear", "USD/year", [0.0, 1.0e11], None),
+	("carbon_credit_insurance_premium_definition",
+	 "The insurance premium on the credit book",
+	 "carbon_credit_insurance_cost_usd_per_year",
+	 "carbon_credit_insurance * carbon_credit_value_usd_per_year",
+	 "The premium as a share of the book's value. Insurance against "
+	 "non-delivery is what lets a buyer bank a credit before it vests, so "
+	 "the premium is a cost of the timing and not of the tonne.",
+	 "capture_price", "linear", "USD/year", [0.0, 1.0e11], None),
+	("settlement_risk_exposure_definition",
+	 "The settlement exposure",
+	 "settlement_risk_exposure_usd_per_year",
+	 "settlement_risk * carbon_credit_value_usd_per_year",
+	 "The share of the settled value exposed to counterparty failure. A "
+	 "share of value rather than of volume, because what a default costs is "
+	 "the price already agreed, not the tonnes.",
+	 "capture_price", "linear", "USD/year", [0.0, 1.0e11], None),
+	("carbon_credit_retirement_definition",
+	 "The retired credit volume",
+	 "carbon_credit_retired_volume",
+	 "carbon_credit_retirement * carbon_credit_volumes",
+	 "The share of issued volume surrendered against a compliance "
+	 "obligation. Retirement is what makes a credit count once and only "
+	 "once; the volume that is not retired remains available to be sold "
+	 "again, which is the double-counting the registry prevents.",
+	 "carbon_trajectory", "linear", "MtCO2/year", [0.0, 1000.0], None),
+	("carbon_credit_reversal_allowance_definition",
+	 "The reversal allowance on the credit book",
+	 "carbon_credit_reversal_allowance",
+	 "(1 - permanence_parameters) * carbon_credit_volumes",
+	 "The complement of the permanence share: the buffer a registry retains "
+	 "against the credit being reversed by fire, disease or land-use "
+	 "change. A forest credit that burns has to be replaced from the "
+	 "buffer, and the buffer is sized by the reversal risk the permanence "
+	 "share names.",
+	 "carbon_trajectory", "linear", "MtCO2/year", [0.0, 1000.0], None),
+	("voluntary_market_volume_definition",
+	 "The volume sold into the voluntary market",
+	 "voluntary_market_volume_mtco2",
+	 "voluntary_carbon_market * carbon_credit_volumes",
+	 "The share of the issued volume sold to voluntary buyers rather than "
+	 "against a compliance obligation. Zero at the shipped default, because "
+	 "a compliance-led programme sells nothing voluntarily, and the zero is "
+	 "a statement rather than a missing value.",
+	 "carbon_trajectory", "linear", "MtCO2/year", [0.0, 1000.0], None),
+	# --- the market-ops products ---
+	("market_traded_volume_definition",
+	 "The traded volume",
+	 "market_traded_volume_twh",
+	 "market_liquidity * demand_twh",
+	 "Churn times demand: a market where each MWh changes hands once trades "
+	 "its demand, and one at a multiple of three trades it three times. The "
+	 "volume is what the spread and the clearing fee are charged against, "
+	 "so it is the base every market-ops cost shares.",
+	 "price_demand", "linear", "TWh/year", [0.0, 1.0e6], None),
+	("time_of_use_demand_definition",
+	 "The demand on a time-of-use tariff",
+	 "time_of_use_demand_twh",
+	 "time_of_use_tariff_adoption * demand_twh",
+	 "The share of demand on a time-of-use tariff. The product is the "
+	 "volume the tariff reshapes, which is the quantity a load-shift "
+	 "assessment needs and the share alone does not give.",
+	 "price_demand", "linear", "TWh/year", [0.0, 1.0e6], None),
+	("bid_ask_cost_definition",
+	 "The cost of the bid-ask spread",
+	 "bid_ask_cost_usd_per_year",
+	 "bid_ask_spread * market_traded_volume_twh * 1000000",
+	 "The spread paid on every MWh traded, with the 1e6 carrying TWh to "
+	 "MWh. It is a transaction cost of the market's design, not of the "
+	 "plant's operation: a thin market charges its participants for the "
+	 "liquidity it does not have.",
+	 "price_demand", "linear", "USD/year", [0.0, 1.0e11], None),
+	("price_band_upper_definition",
+	 "The upper price band",
+	 "price_band_upper_usd_per_mwh",
+	 "(1 + price_limits) * marginal_cost_usd_per_mwh",
+	 "The offer cap a market sets above short-run marginal cost. The band "
+	 "exists so a scarce hour cannot clear at a price that is a transfer "
+	 "rather than a signal; Stoft's treatment of the offer cap is the "
+	 "reason the band is stated around marginal cost and not around an "
+	 "administered number.",
+	 "price_demand", "linear", "USD/MWh", [0.0, 10000.0],
+	 "Stoft 2002, Power System Economics, ch. 5"),
+	("price_band_lower_definition",
+	 "The lower price band",
+	 "price_band_lower_usd_per_mwh",
+	 "(1 - price_limits) * marginal_cost_usd_per_mwh",
+	 "The floor a market sets below marginal cost: the price a must-run "
+	 "unit is paid when it would otherwise have to bid negative to stay "
+	 "on. The two arms are the same band, and stating both is what makes "
+	 "the band a band rather than a cap.",
+	 "price_demand", "linear", "USD/MWh", [-10000.0, 10000.0],
+	 "Stoft 2002, Power System Economics, ch. 5"),
+	("risk_adjusted_carbon_price_definition",
+	 "The risk-adjusted carbon price",
+	 "risk_adjusted_carbon_price_usd_per_tco2",
+	 "(1 + carbon_price_risk) * carbon_price_escalated_usd_per_tco2",
+	 "The escalated carbon price grossed up by the risk premium a project "
+	 "financier demands for a price that is a policy variable. The premium "
+	 "is what turns a forecast into a bankable number, and it is the "
+	 "carbon-price analogue of the equity risk premium.",
+	 "carbon_trajectory", "linear", "USD/tonne", [0.0, 10000.0], None),
+	# --- the tariff and subsidy products ---
+	("wheeling_charge_cost_definition",
+	 "The transmission wheeling charge",
+	 "wheeling_charges_usd_per_year",
+	 "wheeling_charges * demand_twh * 1000000",
+	 "The use-of-system charge on every MWh of demand, with the 1e6 "
+	 "carrying TWh to MWh. It is a pass-through: the network's cost "
+	 "recovered from the energy that uses it, which is the tariff design "
+	 "the region's regulators publish.",
+	 "cost_accounting", "linear", "USD/year", [0.0, 1.0e11],
+	 "Pass-through pricing"),
+	("distribution_wheeling_cost_definition",
+	 "The distribution wheeling charge",
+	 "distribution_wheeling_usd_per_year",
+	 "distribution_wheeling_charges * demand_twh * 1000000",
+	 "The distribution use-of-system charge, recovered on the same base as "
+	 "the transmission one. The two are separate tariffs because the two "
+	 "networks have separate regulated asset bases.",
+	 "cost_accounting", "linear", "USD/year", [0.0, 1.0e11],
+	 "Pass-through pricing"),
+	("cross_border_wheeling_cost_definition",
+	 "The cross-border wheeling charge",
+	 "cross_border_wheeling_usd_per_year",
+	 "wheeling_charge_cross_border * net_imports_twh * 1000000",
+	 "The charge on the cross-border flow, at the same rate in both "
+	 "directions: an importing year pays and an exporting year is credited, "
+	 "which is what a symmetric wheeling schedule does to the *net* flow. "
+	 "The right base is gross bilateral flow, and the graph carries net "
+	 "imports only -- so the signed product is the best the balance "
+	 "supports, and its sign is the direction of the transfer rather than a "
+	 "defect. It is deliberately not written as `abs(net_imports_twh)`: the "
+	 "sensitivity table differentiates every equation and refuses a "
+	 "non-differentiable function rather than dropping the term, so an "
+	 "absolute value here would make the whole gradient table uncomputable.",
+	 "cost_accounting", "linear", "USD/year", [-1.0e11, 1.0e11],
+	 "Pass-through pricing"),
+	("feed_in_tariff_cost_definition",
+	 "The feed-in tariff obligation",
+	 "feed_in_tariff_cost_usd_per_year",
+	 "feed_in_tariff * renewable_generation_twh * 1000000",
+	 "The purchase obligation at the feed-in tariff, over the renewable "
+	 "volume the balance already computes. The obligation is a cost of the "
+	 "programme and not of the plant: the utility buys at the tariff and "
+	 "sells at the regulated price, and the difference is what the "
+	 "levy covers.",
+	 "cost_accounting", "linear", "USD/year", [0.0, 1.0e11],
+	 "Pass-through pricing"),
+	("electricity_subsidy_cost_definition",
+	 "The consumer electricity subsidy",
+	 "electricity_subsidy_spend_usd_per_year",
+	 "electricity_subsidies * demand_twh * 1000000",
+	 "The per-MWh subsidy the budget pays so the tariff can sit below cost. "
+	 "Stated against demand because the subsidy follows the consumption, "
+	 "not the connection.",
+	 "cost_accounting", "linear", "USD/year", [0.0, 1.0e11], None),
+	("renewable_subsidy_cost_definition",
+	 "The renewable generation subsidy",
+	 "renewable_subsidy_spend_usd_per_year",
+	 "renewable_subsidies * renewable_generation_twh * 1000000",
+	 "A budget transfer per MWh of renewable generation, distinct from the "
+	 "feed-in tariff: the FIT is a purchase obligation on the utility, "
+	 "this is a transfer from the treasury, and a scenario can carry either "
+	 "without the other.",
+	 "cost_accounting", "linear", "USD/year", [0.0, 1.0e11], None),
+	("fossil_fuel_subsidy_cost_definition",
+	 "The fossil-fuel subsidy",
+	 "fossil_fuel_subsidy_spend_usd_per_year",
+	 "fossil_fuel_subsidies * (generation_twh - renewable_generation_twh) * 1000000",
+	 "The per-MWh subsidy on the non-renewable volume, which is generation "
+	 "less renewables. The difference is the graph's own decomposition: "
+	 "there is no separate fossil generation node, and inventing one would "
+	 "be a second spelling of a quantity the balance already carries.",
+	 "cost_accounting", "linear", "USD/year", [0.0, 1.0e11], None),
+	("carbon_tax_offset_definition",
+	 "The carbon revenue offset in other taxes",
+	 "carbon_tax_offset_usd_per_year",
+	 "carbon_tax_interaction * carbon_revenue_usd_per_year",
+	 "The share of carbon revenue returned as a cut in other taxes: the "
+	 "revenue-neutral reform's own arithmetic. Gross carbon revenue less "
+	 "this offset is the net fiscal effect, which is the number a finance "
+	 "ministry actually argues about.",
+	 "financial", "linear", "USD/year", [0.0, 1.0e11],
+	 "Rate-based levy and allowance definitions (standard fiscal accounting)"),
+	("cross_subsidy_transfer_definition",
+	 "The cross-subsidy between tariff classes",
+	 "cross_subsidy_usd_per_year",
+	 "cross_subsidy_level * total_revenue_usd_per_year",
+	 "The revenue moved from one tariff class to another, as a share of "
+	 "total revenue. It is a transfer inside the tariff and not a subsidy "
+	 "from the budget: the classes pay the same total and the structure "
+	 "decides who pays what.",
+	 "affordability", "linear", "USD/year", [0.0, 1.0e11],
+	 "Benefit-sharing programmes (the graph's own revenue identity)"),
+	("tariff_rebalancing_transfer_definition",
+	 "The revenue rebalanced over the horizon",
+	 "tariff_rebalancing_usd_per_year",
+	 "(1 - exp(-tariff_rebalancing * horizon_years)) * total_revenue_usd_per_year",
+	 "A tariff class rebalanced toward cost at an annual rate compounds: "
+	 "after n years the share of the base that has moved is 1 - exp(-r n), "
+	 "the continuous-time form of the same decay the half-life equations "
+	 "use. At the shipped 0.2/year over ten years it is 0.893 of the base, "
+	 "and the closed form is what makes a ten-year glide path one number.",
+	 "affordability", "nonlinear", "USD/year", [0.0, 1.0e11],
+	 "World Bank Regulation of Utilities handbook, revenue caps"),
+	("hybrid_capped_tariff_definition",
+	 "The hybrid revenue-price cap's tariff",
+	 "hybrid_capped_tariff_usd_per_mwh",
+	 "hybrid_revenue_price_cap * price_cap * regulated_tariff_usd_per_mwh + (1 - hybrid_revenue_price_cap) * applied_tariff_usd_per_mwh",
+	 "A hybrid cap binds a weighted average of a price cap and a revenue "
+	 "cap, with the weight the regulator's own dial. The two arms are the "
+	 "two tariffs the graph already carries, and the weight is what lets a "
+	 "regulator trade the utility's volume risk against its price risk.",
+	 "affordability", "linear", "USD/MWh", [0.0, 10000.0],
+	 "World Bank Regulation of Utilities handbook, revenue caps"),
+	("price_cap_identity",
+	 "The average-tariff price cap",
+	 "price_cap",
+	 "revenue_cap",
+	 "In a single-part tariff the cap on average price and the cap on "
+	 "revenue are the same number: a revenue cap of 1.0 is a price cap of "
+	 "1.0 because the volume is the same on both sides. The identity is the "
+	 "catalog's duplicate resolution, and it is what "
+	 "`applied_tariff_definition` already reads.",
+	 "affordability", "linear", "1", [0.0, 10.0],
+	 "The catalog's own duplicate rows, resolved"),
+	("carbon_tax_coverage_identity",
+	 "The carbon tax's covered share",
+	 "carbon_tax_coverage",
+	 "carbon_price_coverage",
+	 "One covered share under two instrument names. The graph prices "
+	 "emissions once, through `carbon_price_coverage`, and a tax rate "
+	 "applied to a different share would be a second instrument the "
+	 "revenue identity does not read.",
+	 "emissions", "linear", "1", [0.0, 1.0],
+	 "The catalog's own duplicate rows, resolved"),
+	("social_tariff_identity",
+	 "The social tariff",
+	 "social_tariff",
+	 "lifeline_tariff_usd_per_mwh",
+	 "Two ids for the below-threshold tariff: the catalog's `social_tariff` "
+	 "and the graph's `lifeline_tariff_usd_per_mwh`, which the shipped "
+	 "`lifeline_tariff_alias` already equates to `lifeline_tariff`. The "
+	 "identity makes the catalog id derived rather than a second price "
+	 "nothing sets.",
+	 "affordability", "linear", "USD/MWh", [0.0, 500.0],
+	 "The catalog's own duplicate rows, resolved"),
+	("market_concentration_definition",
+	 "The market's Herfindahl-Hirschman index",
+	 "market_concentration",
+	 "10000 * (1 - fuel_diversity_index)",
+	 "The HHI over the fleet's own fuel shares, on the 0-10000 scale the "
+	 "competition authorities use. The fleet's diversity index is already "
+	 "one minus the HHI over its capacities, so the product is the HHI the "
+	 "index complements -- and the shipped default of 2500 is not the fleet "
+	 "the graph ships, which is the finding the identity surfaces.",
+	 "price_demand", "linear", "1", [0.0, 10000.0],
+	 "Stoft 2002, Power System Economics, ch. 5"),
+	# --- the programme and regulatory products ---
+	("mini_grid_subsidy_definition",
+	 "The mini-grid programme subsidy",
+	 "mini_grid_subsidy_usd_per_year",
+	 "mini_grid_subsidies * mini_grid_programme_spend_usd_per_year",
+	 "The share of the programme's spend covered by subsidy. The spend is "
+	 "already derived (a per-connection cost times the connections served), "
+	 "so the product is the fiscal exposure the programme carries rather "
+	 "than the tariff it charges.",
+	 "financial", "linear", "USD/year", [0.0, 1.0e11], None),
+	("shs_subsidy_definition",
+	 "The solar-home-system programme subsidy",
+	 "shs_subsidy_usd_per_year",
+	 "shs_subsidies * shs_programme_spend_usd_per_year",
+	 "The share of the SHS programme's spend covered by subsidy, on the "
+	 "same construction as the mini-grid product and against a different "
+	 "programme.",
+	 "financial", "linear", "USD/year", [0.0, 1.0e11], None),
+	("netting_shortfall_definition",
+	 "The collateral left un-netted",
+	 "netting_shortfall_usd_per_year",
+	 "(1 - netting_agreements) * collateral_posted_usd_per_year",
+	 "The complement of the netting share: collateral posted that a netting "
+	 "agreement does not cover, and therefore exposure a counterparty's "
+	 "default reaches. The complement is the point -- a netting agreement "
+	 "covering 90% leaves 10% of the posted collateral at risk.",
+	 "financial", "linear", "USD million/year", [0.0, 1.0e6], None),
+	("x_factor_revenue_reduction_definition",
+	 "The RPI-X revenue reduction",
+	 "x_factor_revenue_reduction",
+	 "(1 - x_factor) * allowed_revenue_requirement",
+	 "The RPI-X productivity offset: the allowed requirement less the "
+	 "annual efficiency the regulator assumes the utility can find. The "
+	 "reduction is a share of the requirement and not of the cost, which is "
+	 "why the formula is a multiplication and not a subtraction of an "
+	 "absolute.",
+	 "financial", "linear", "USD million/year", [0.0, 1.0e6],
+	 "World Bank Regulation of Utilities handbook, revenue caps"),
+	("working_capital_allowance_definition",
+	 "The working-capital allowance",
+	 "working_capital_allowance_usd",
+	 "working_capital_allowance * allowed_revenue_requirement",
+	 "The regulator's allowance for the working capital a utility funds "
+	 "between paying its suppliers and collecting its bills, as a share of "
+	 "the revenue requirement. It is a permitted recovery, not a cost the "
+	 "utility incurs.",
+	 "financial", "linear", "USD million/year", [0.0, 1.0e6],
+	 "World Bank Regulation of Utilities handbook, revenue caps"),
+	("service_quality_reward_definition",
+	 "The service-quality reward",
+	 "service_quality_reward_usd",
+	 "service_quality_reward * allowed_revenue_requirement",
+	 "The reward for beating a quality target, as a share of the revenue "
+	 "requirement. A reward rather than a penalty because the requirement "
+	 "is the base the regulator can actually move; the symmetric penalty "
+	 "lives on the same share with the opposite sign.",
+	 "financial", "linear", "USD million/year", [0.0, 1.0e6],
+	 "World Bank Regulation of Utilities handbook, revenue caps"),
+	("employment_attainment_local_definition",
+	 "The local-employment attainment ratio",
+	 "employment_attainment_local",
+	 "local_employment_share / local_employment_targets",
+	 "The share achieved over the share targeted. Both sides are shares of "
+	 "the same workforce, so the ratio is the attainment index a monitoring "
+	 "report quotes -- and a target left at the catalog's 500000.0 "
+	 "placeholder reads as an attainment of essentially zero, which is the "
+	 "placeholder surfacing rather than a performance finding.",
+	 "employment", "linear", "1", [0.0, 10.0], None),
+	("employment_attainment_women_definition",
+	 "The women's-employment attainment ratio",
+	 "employment_attainment_women",
+	 "women_employment_share / women_employment_targets",
+	 "Achieved over targeted female share of the workforce. The ratio is "
+	 "the index the programme's own reporting uses.",
+	 "employment", "linear", "1", [0.0, 10.0], None),
+	("employment_attainment_youth_definition",
+	 "The youth-employment attainment ratio",
+	 "employment_attainment_youth",
+	 "youth_employment_share / youth_employment_targets",
+	 "Achieved over targeted youth share of the workforce.",
+	 "employment", "linear", "1", [0.0, 10.0], None),
+)
+
+
 def build_batch23(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, str]], list[dict[str, Any]]]:
 	"""Batch 23: the extensive bases and the products they unblock."""
 	nodes: dict[str, Any] = {}
@@ -4789,6 +5431,115 @@ def build_batch23(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 				"equation_id": eq_id, "relationship": "functional",
 				"strength": "hard", "description": "Enters the product.",
 			})
+	return nodes, equations, edges, rules
+
+
+def build_batch24(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, str]], list[dict[str, Any]]]:
+	"""Batch 24: the carbon and market families, and the annual-quantity repair."""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, str]] = []
+	rules: list[dict[str, Any]] = []
+
+	for name, unit, rng, default, category, determinism, prose in BATCH24_RETYPES:
+		shipped = graph.nodes[name]
+		full = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		# The retype repairs the *unit*, not the role. A node an equation
+		# computes stays derived (and keeps the `initial` its feedback loop
+		# starts from); a node a scenario sets keeps the role it had, and the
+		# table's default replaces the catalog placeholder it shipped with.
+		full.update({
+			"unit": unit, "range": rng, "description": prose,
+			"determinism": determinism,
+			"priority": "P1", "status": "existing",
+			"source": "The carbon-market coupling (batch 24)",
+			"users": ["Regulators", "Policymakers", "Carbon"],
+		})
+		if shipped.role.value != "derived":
+			full["default"] = default
+		nodes[name] = full
+
+	for name, unit, rng, default, category, prose in BATCH24_BASES:
+		assert name not in graph.nodes, f"{name} already exists; a base is new"
+		nodes[name] = {
+			"name": name.replace("_", " ").capitalize(),
+			"description": prose,
+			"category": category, "type": "float", "unit": unit,
+			"range": rng, "default": default, "role": "free",
+			"determinism": "physical", "priority": "P1", "status": "existing",
+			"source": "The carbon-market coupling (batch 24)",
+			"users": ["Regulators", "Policymakers"],
+		}
+
+	for eq_id, name, lhs, rhs, prose, system, linearity, unit, rng, cite in (
+		BATCH24_EQUATIONS
+	):
+		from alea.prg.dsl import parse_side
+
+		rhs_params = sorted(parse_side(rhs).symbols)
+		# A node this batch retypes keeps the category the catalog gave it and
+		# gains the unit the equation computes into; a node the batch creates
+		# takes the equation's own unit and a category from the family.
+		if lhs in nodes:
+			nodes[lhs]["role"] = "derived"
+			nodes[lhs].pop("default", None)
+			nodes[lhs]["description"] = prose
+		else:
+			prior = graph.nodes.get(lhs)
+			category = prior.category if prior is not None else "Carbon"
+			users = list(prior.users) if prior is not None else ["Regulators"]
+			nodes[lhs] = {
+				"name": (prior.name if prior is not None
+					else lhs.replace("_", " ").capitalize()),
+				"description": prose,
+				"category": category, "type": "float", "unit": unit,
+				"range": rng, "role": "derived",
+				"determinism": "policy", "priority": "P1", "status": "existing",
+				"source": "The carbon-market coupling (batch 24)",
+				"users": users,
+			}
+		equations[eq_id] = {
+			"id": eq_id, "name": name, "description": prose,
+			"system": system, "lhs": lhs, "rhs": rhs, "relation": "eq",
+			"parameters": [lhs] + rhs_params, "free_variables": [],
+			"determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": linearity,
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs,
+				"equation_id": eq_id, "relationship": "functional",
+				"strength": "hard", "description": "Enters the product.",
+			})
+
+	# The instrument gate. `carbon_revenue_definition` reads no switch, so at
+	# the shipped defaults the graph accrues 650,578,257 USD/year of carbon
+	# revenue with `ets_enabled = 0.0`: a jurisdiction with no emissions
+	# trading system collecting the revenue of one. The revenue is not
+	# multiplied by the flag -- an ETS and a carbon tax are alternative
+	# instruments over the same base, and the covered share the identity
+	# already applies is the only share either instrument owns -- so the
+	# defect is stated where a reviewer will meet it, as a rule.
+	rules.append({
+		"id": "carbon_revenue_without_an_instrument",
+		"condition": "ets_enabled < 0.5 and carbon_price_coverage > 0.0",
+		"severity": "warning",
+		"message": (
+			"Carbon revenue accrues while no emissions trading system is "
+			"enabled. The revenue identity prices the covered share of "
+			"emissions and reads no instrument switch, so a scenario that "
+			"switches the ETS off still books the revenue it would have "
+			"raised. Either enable the instrument or set carbon_price_coverage "
+			"to zero, and say which in the plan."
+		),
+		"suggestion": (
+			"Enable ets_enabled, or set carbon_price_coverage to 0.0, or name "
+			"the carbon tax that collects the revenue instead"
+		),
+	})
 	return nodes, equations, edges, rules
 
 

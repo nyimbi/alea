@@ -1479,10 +1479,15 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# `uncoupled()` while `is_settable` refuses them. Batch 23's extensive-base
 	# layer coupled 16 more (`graph.uncoupled()` went 591 to 575): eleven of
 	# them were in this register, so it fell 563 to 552, and rule-read removed
-	# 19 of the 575. The containment below is what carries the weight -- dead
-	# is a subset of uncoupled-minus-rule -- and the count is the record of
-	# what it was *at*.
-	assert len(dead) == 552, len(dead)
+	# 19 of the 575. Batch 24's carbon-market layer coupled 43
+	# (`graph.uncoupled()` went 575 to 532): forty of them were in this
+	# register, so it fell 552 to 512, and one more left it the other way --
+	# `ets_enabled`, which this batch gave a reader by making it the subject
+	# of `carbon_revenue_without_an_instrument`, so the register is 509 and
+	# rule-read holds 19 of the 532. The containment below is what carries the
+	# weight -- dead is a subset of uncoupled-minus-rule -- and the count is
+	# the record of what it was *at*.
+	assert len(dead) == 509, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
@@ -1771,18 +1776,22 @@ def test_the_audit_reports_what_it_did_not_check():
 	two reachable from what the result supplies -- ``transmission_investment_usd``
 	and ``regulated_tariff_rate`` -- join ``checked`` (86 to 88), and the other
 	fourteen, the route, learning-curve and household products, join ``skipped``
-	(141 to 155). The partition total is what the test is really asserting --
-	the two counts must sum to ``len(graph.computed())`` -- and the counts are
-	pinned beside it so a change to the register is looked at rather than
-	absorbed.
+	(141 to 155). Batch 24's carbon-market layer added 43 more (computed() went
+	243 to 286), and twenty-one of them are reachable from what the result
+	supplies -- the spend and tariff products, which read demand, generation
+	and revenue, all of which the result carries -- so ``checked`` goes 88 to
+	109 and ``skipped`` 155 to 177. The partition total is what the test is
+	really asserting -- the two counts must sum to
+	``len(graph.computed())`` -- and the counts are pinned beside it so a
+	change to the register is looked at rather than absorbed.
 	"""
 	from alea.prg.audit import audit_scenario_result
 	from alea.prg.graph import load_graph
 
 	audit = audit_scenario_result(_solved())
 	assert audit.consistent
-	assert len(audit.checked) == 88, audit.checked
-	assert len(audit.skipped) == 155, audit.skipped
+	assert len(audit.checked) == 109, audit.checked
+	assert len(audit.skipped) == 177, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -1828,9 +1837,10 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# reason spelled out in `test_the_audit_reports_what_it_did_not_check` --
 	# batch 20's sector-coupling layer took the computed set 153 to 182,
 	# batch 21's demand-and-finance layer took it 182 to 198, batch 22's
-	# compliance layer took it 198 to 227, and batch 23's extensive-base layer
-	# took it 227 to 243.
-	assert len(audit.skipped) == 243, audit.skipped
+	# compliance layer took it 198 to 227, batch 23's extensive-base layer
+	# took it 227 to 243, and batch 24's carbon-market layer took it 243 to
+	# 286.
+	assert len(audit.skipped) == 286, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -2851,7 +2861,7 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	# again unchanged at 72. Pinned because the number is the finding -- the
 	# sentence exists to stop a reader taking the declarations for a
 	# distribution, and a reach that drifts unnoticed would understate it.
-	assert "72" in text and "103" in text
+	assert "72" in text and "119" in text
 
 
 # ---------------------------------------------------------------------------
@@ -2886,7 +2896,9 @@ def test_the_unit_checker_flags_a_power_against_an_energy(graph: ParameterGraph)
 	"""
 	from alea.prg.units import check_equation
 
-	check = check_equation(_canary_equation("largest_loss_mw", "generation_twh"), graph)
+	check = check_equation(
+		_canary_equation("largest_loss_mw", "cumulative_battery_installed_mwh"), graph
+	)
 	assert check.decidable, "the checker gave up on MW = TWh"
 	assert not check.consistent, "the checker called MW = TWh consistent"
 
@@ -2896,7 +2908,10 @@ def test_the_unit_checker_flags_an_inhomogeneous_sum(graph: ParameterGraph):
 	from alea.prg.units import check_equation
 
 	check = check_equation(
-		_canary_equation("largest_loss_mw", "largest_loss_mw + generation_twh"), graph
+		_canary_equation(
+			"largest_loss_mw", "largest_loss_mw + cumulative_battery_installed_mwh"
+		),
+		graph,
 	)
 	assert check.decidable, "the checker gave up on MW + TWh"
 	assert not check.consistent, "the checker called MW + TWh consistent"
@@ -2993,19 +3008,26 @@ def test_the_unit_report_separates_inconsistent_from_undecidable(
 def test_the_flagged_equations_are_a_known_set(graph: ParameterGraph):
 	"""The inconsistent set is pinned, so a new one is a failing test.
 
-	Twenty equations are flagged today, and they are four kinds rather than
-	one. Ten are the ``(1 + rate)`` convention: a rate node declared as
-	``1/year`` so that ``1 + rate`` adds a dimensionless constant to a
-	frequency. Five are annual quantities declared without a per-year divisor
-	(``generation_twh`` is ``TWh`` and the equation's own description says
-	"MWh/year"). Two are compounding slips where a factor was dropped or added
-	-- ``premature_deaths_definition`` carries a ``pm25_kt_per_year`` against a
-	``1/kt`` risk coefficient, and ``rocof_definition`` divides MW by MW·s to
-	get a per-second rate the node declares as Hz/s. The rest are single
-	declarations that disagree with their own equation's stated dimensional
-	check. This test does not bless them; it makes the set move only when
-	someone means it to, because a count that drifts unnoticed is how a
-	dimensional defect ships.
+	Eleven equations are flagged today, and they are three kinds rather than
+	one. Six are annual quantities declared without a per-year divisor: a bare
+	``tonnes`` or ``USD/kW/year`` node computed from a per-year rate
+	(``ammonia_export_volume_tonnes_definition``,
+	``co2_captured_cement_tonnes_definition``,
+	``co2_captured_industry_tonnes_definition``,
+	``steel_hydrogen_demand_tonnes_definition``,
+	``insurance_premium_definition``,
+	``mini_grid_programme_spend_definition``). Two are compounding slips where
+	a factor was dropped or added -- ``premature_deaths_definition`` carries a
+	``pm25_kt_per_year`` against a ``1/kt`` risk coefficient, and
+	``rocof_definition`` divides MW by MW·s to get a per-second rate the node
+	declares as Hz/s. Three are single declarations that disagree with their
+	own equation's stated dimensional check (``coal_price_per_mwh_definition``
+	declares USD/MWh for a per-tonne fuel price over a heat rate,
+	``equity_irr_definition`` declares a dimensionless IRR for a per-year
+	compounding factor, ``line_outage_hours_per_year_definition`` declares a
+	dimensionless quantity for a per-event rate). This test does not bless
+	them; it makes the set move only when someone means it to, because a
+	count that drifts unnoticed is how a dimensional defect ships.
 
 	WHY THE PROMOTION GREW THE SET FROM EIGHT TO TWENTY AND WHY NONE OF THE
 	TWELVE WERE FIXED HERE. The generated batches added forty-two equations,
@@ -3061,6 +3083,21 @@ def test_the_flagged_equations_are_a_known_set(graph: ParameterGraph):
 	annual-quantity class again, and again the declaration is coarse while the
 	arithmetic is what the node's unit cell asserts. Pinned so the two are
 	named rather than counted.
+
+	WHY NINE LEFT AT BATCH 24, AND WHAT THAT MEASURES. The annual-quantity
+	repair retyped fifteen nodes to per-year units (``TWh`` to ``TWh/year``,
+	``m3`` to ``m3/year``, ``GWh`` to ``GWh/year``, ``USD`` to ``USD/year``),
+	and the prediction this docstring carried since the promotion -- "declaring
+	the five ``TWh`` nodes as ``TWh/year`` clears this equation and opens five
+	others" -- was wrong in one direction: the retype cleared nine and opened
+	none. ``benefit_sharing_from_revenue_definition``,
+	``consumer_surplus_definition``, ``emissions_definition``,
+	``forecast_error_band_definition``, ``hydrogen_water_definition``,
+	``load_factor_definition``, ``renewable_generation_target_definition``,
+	``tariff_cost_recovery`` and ``total_revenue_definition`` all read a node
+	this batch retyped, and each is now dimensionally decidable and consistent.
+	The open side of the prediction was an inference from one candidate
+	declaration, not a measurement; the measurement is this set.
 	"""
 	from alea.prg.units import check_graph
 
@@ -3074,25 +3111,16 @@ def test_the_flagged_equations_are_a_known_set(graph: ParameterGraph):
 	# is the blessing earning its keep.
 	assert flagged == {
 		"ammonia_export_volume_tonnes_definition",
-		"benefit_sharing_from_revenue_definition",
 		"co2_captured_cement_tonnes_definition",
 		"co2_captured_industry_tonnes_definition",
 		"coal_price_per_mwh_definition",
-		"consumer_surplus_definition",
-		"emissions_definition",
 		"equity_irr_definition",
-		"forecast_error_band_definition",
-		"hydrogen_water_definition",
 		"insurance_premium_definition",
 		"line_outage_hours_per_year_definition",
-		"load_factor_definition",
 		"mini_grid_programme_spend_definition",
 		"premature_deaths_definition",
-		"renewable_generation_target_definition",
 		"rocof_definition",
 		"steel_hydrogen_demand_tonnes_definition",
-		"tariff_cost_recovery",
-		"total_revenue_definition",
 	}, sorted(flagged)
 
 
@@ -3286,7 +3314,19 @@ def test_the_declared_cross_validation_rules_hold_at_every_default(
 	"""
 	report = graph.cross_validate(graph.propagate(dict(defaults)).values)
 	assert report.rules, "the graph declares no rules, so this test proves nothing"
-	assert not report.violations, [str(f) for f in report.violations]
+	# One rule fires at the defaults, and it is not a threshold nobody can
+	# meet: it is the register reporting a *real* inconsistency in the default
+	# scenario. `carbon_revenue_without_an_instrument` reads `ets_enabled` and
+	# `carbon_price_coverage`, and at the shipped defaults the ETS is off
+	# (0.0) while the covered share is half (0.5) -- so the revenue identity
+	# books ~650 M USD/year of carbon revenue with no instrument collecting
+	# it. Making the rule quiet would mean either moving a default to hide
+	# the defect or deleting the check; naming it keeps both visible, and a
+	# second rule firing here still fails the test.
+	live = {"carbon_revenue_without_an_instrument"}
+	assert {f.rule.id for f in report.violations} == live, [
+		str(f) for f in report.violations
+	]
 	assert not report.blocks
 
 
@@ -3561,7 +3601,7 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	assert counts, "no strength was counted"
 	assert sum(counts.values()) == len(graph.equations)
 	assert set(counts) <= {"hard", "soft", "informational"}
-	assert counts == {"hard": 274, "informational": 1, "soft": 2}, counts
+	assert counts == {"hard": 317, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -3844,9 +3884,22 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# 104 to 112. Batch 23's extensive-base layer added three more: the
 	# Wright's-law learning definitions for solar PV, batteries and
 	# electrolysers, taking the register 112 to 115; the other thirteen
-	# equations the batch adds are the products' own forms and carry None. A
-	# further change is a change to the register's coverage and fails here.
-	assert len(declared) == 115, f"the citation register moved: {sorted(declared)}"
+	# equations the batch adds are the products' own forms and carry None.
+	# Batch 24's carbon-market, subsidy and employment layer added twenty-
+	# three: five EU CBAM rows (the ETS cap, auction volume, Article 6.2
+	# credits, leakage and the position limit), five World Bank revenue-cap
+	# rows (the X-factor, hybrid cap, service-quality reward, working-capital
+	# allowance and tariff rebalancing), four catalog duplicate rows (the
+	# carbon budget, tax coverage, price cap and social-tariff identities),
+	# four pass-through rows (the cross-border and distribution wheeling, the
+	# wheeling charge and the feed-in tariff), three Stoft rows (the price
+	# band and market concentration), one standard-fiscal row (the carbon-tax
+	# offset) and one benefit-sharing row (the cross-subsidy transfer), taking
+	# the register 115 to 138. The batch's fifty equations declare twenty
+	# None (the definitions' own forms) and seven citations batch 23 had
+	# already registered; the rest are the twenty-three above. A further
+	# change is a change to the register's coverage and fails here.
+	assert len(declared) == 138, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -4080,15 +4133,16 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 				f"numeric {numeric!r}"
 			)
 			compared += 1
-	assert compared == 243, (
-		f"expected 243 determined variables in the shipped library, compared "
+	assert compared == 286, (
+		f"expected 286 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "
 		f"promoted; batch 20's sector-coupling layer raised it to 182, "
 		f"batch 21's demand-and-finance layer raised it to 198, batch 22's "
-		f"compliance layer raised it to 227, and batch 23's extensive-base "
-		f"layer raised it to 243 -- every equation each batch added is affine "
-		f"in the variable it solves for, which is the claim the "
+		f"compliance layer raised it to 227, batch 23's extensive-base "
+		f"layer raised it to 243, and batch 24's carbon-market layer raised "
+		f"it to 286 -- every equation each batch added is affine in the "
+		f"variable it solves for, which is the claim the "
 		f"`exact is not None` above makes, at the wider coverage"
 	)
 

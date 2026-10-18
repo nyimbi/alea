@@ -157,11 +157,14 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	``resettlement_share_bound``) and five of which are post-solve checks
 	over derived results, so 24/198/222 -> 34/227/261. Batch 23's
 	extensive-base layer added sixteen product identities and no inequality,
-	so 34/227/261 -> 34/243/277."""
+	so 34/227/261 -> 34/243/277. Batch 24's carbon-market layer added
+	forty-three identities -- the carbon caps and volumes, the market shares
+	against their bases, the subsidy and wheeling spends, the employment
+	attainment ratios -- and no inequality, so 34/243/277 -> 34/286/320."""
 	cov = coverage(graph)
 	assert cov["constraint_shaped"] == 34
-	assert cov["identities"] == 243
-	assert cov["total"] == 277
+	assert cov["identities"] == 286
+	assert cov["total"] == 320
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):

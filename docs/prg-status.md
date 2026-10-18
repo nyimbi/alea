@@ -1882,16 +1882,80 @@ papered over: the graph's own residential demand implies 5.7 persons per
 household against the 4.5 demographic figure, so the demographic number is the
 base and the gap stays visible in the product it forms.
 
-State after batch 23: **1197 parameters, 277 equations, 605 edges, 54 rules,
-575 uncoupled** (694 at batch 20 → 649 → 631 → 591 → 575). Generator
-`--check` idempotent, `propagate` clean over all 1197 values at the document's
-defaults with no range excursion, the unit walker consistent on 256 of 277
-equations with the same 20 flagged and 0 undecidable. The moved literals are
-re-derived from the graph's registers: dead knobs 563 → 552, audit
-checked/skipped 86/141 → 88/155, computed 227 → 243, citation doors 112 → 115
-(the three Wright definitions), constraint-shaped 34/227/261 → 34/243/277
-(no new inequality — the batch is all identities), translate coverage 922 →
-935, catalog disagreements 65 → 67 (the two retypes).
+**Batch 24 — the carbon and market families, and the annual-quantity repair.**
+Thirty-four new parameters and 42 retyped, 50 equations, 97 edges, one rule. Three things
+landed together because they are one measurement:
+
+* **The annual-quantity repair.** Fifteen nodes were declared as stocks where
+  they are flows — `demand_twh`, `generation_twh` and the four sector demands
+  as bare `TWh`; the water balance as bare `m3`; unserved energy as `GWh`; the
+  reliability cost as `USD`. Every revenue and spend product against them was
+  dimensionally undecidable, so no rate-times-quantity equation could be
+  authored at all. Retyping them to `TWh/year`, `m3/year`, `GWh/year`,
+  `USD/year` cleared nine flagged equations and opened none — the prediction
+  the flagged-set docstring had carried since the promotion ("clears this
+  equation and opens five others") was wrong in one direction and is corrected
+  there with the measurement.
+* **The carbon-market layer.** The ETS cap at the covered share of the budget
+  (`ets_cap = carbon_price_coverage * carbon_budget_mtco2 / horizon_years`),
+  the auction volume, the Article 6.2 chain from the corresponding adjustment
+  through the transferred volume to the credit value, credit retirement and
+  the reversal allowance at the permanence shortfall, leakage as the share of
+  covered emissions that relocates, the position limit against the cap, the
+  insurance premium and settlement exposure against the credit value, the
+  hybrid revenue cap and the price band around the marginal cost. The
+  `ets_enabled` gate could not be an equation — there is no
+  `carbon_tax_enabled` node, the rule grammar has no `max`, and multiplying
+  by the flag would double-count the covered share — so it is a cross-
+  validation rule, `carbon_revenue_without_an_instrument`, which fires at the
+  defaults exactly once and names the ~650 M USD/year the revenue identity
+  accrues with the instrument off.
+* **The market, subsidy and employment families.** Shares against the bases
+  batch 23 landed: market-traded volume and time-of-use demand against demand,
+  the bid-ask, wheeling, distribution and cross-border wheeling spends against
+  it, the feed-in, electricity, renewable and fossil subsidy spends against
+  generation, the carbon-tax offset against revenue, the cross-subsidy and
+  tariff-rebalancing transfers, mini-grid and SHS subsidy spends against their
+  programme spends, netting shortfall against posted collateral, the X-factor
+  revenue reduction and working-capital allowance against the allowed revenue,
+  and the three employment attainment ratios against their targets.
+
+Two rules already in the register changed their verdict at the defaults, and
+one test's canary had to be re-pointed. The canary that proves the dimensional
+checker can tell a power from an energy used `generation_twh` as its energy
+side; that node is now `TWh/year`, which is a power, so the canary would have
+compared a power to a power and passed for the wrong reason. It now uses
+`cumulative_battery_installed_mwh`, a stock the repair did not touch. The
+rules: `carbon_revenue_without_an_instrument` fires at the shipped defaults
+(the ETS is off, the covered share is half), so the "every rule is satisfiable"
+canary now names that one finding instead of asserting a clean report -- a rule
+that fired on *every* scenario would still fail it.
+
+One equation was reformulated during the run: the cross-border wheeling charge
+was written `wheeling_charge_cross_border * abs(net_imports_twh) * 1000000`,
+and `sensitivity._partials` refuses to differentiate `abs` — deliberately,
+because a solver handed a non-differentiable term oscillates at the kink.
+Since `net_imports_twh` defaults to 0.0, the derivative is undefined at the
+default under any `abs` form, so the equation states the signed product and
+the description carries the reason: the graph holds a *net* balance, and the
+sign is the direction of the transfer, not a defect.
+
+State after batch 24: **1231 parameters, 320 equations, 676 edges, 55 rules,
+532 uncoupled** (694 at batch 20 → 649 → 631 → 591 → 575 → 532). Generator
+`--check` idempotent, `propagate` clean over all 1231 values at the document's
+defaults with no range excursion, `gradients` clean over the whole graph, the
+unit walker consistent on 308 of 320 equations with **11 flagged** (the 20 of
+batch 23 less the nine the repair cleared) and 0 undecidable. The moved
+literals are re-derived from the graph's registers: dead knobs 552 → 509,
+audit checked/skipped 88/155 → 109/177, computed 243 → 286, constraint-shaped
+34/243/277 → 34/286/320 (no new inequality — the batch is all identities),
+affine coverage 243 → 286, edge strength hard 274 → 317, citation doors
+115 → 138 (twenty-three new references, every spelling resolving to a
+`sources/INDEX.md` row),
+translate coverage 935 → 926 (nine former free knobs became derived, none
+settable), uncertainty inputs unchanged at 72 (the retype preserves a node's
+determinism; the units moved, the uncertainty did not), catalog disagreements
+67 → 100 (the thirty-three definitions).
 
 **What the remaining 575 are.** They are not one class, and the worklist says
 so. The compliance family is down to three (`gis_requirements` is a share of

@@ -310,25 +310,24 @@ parameters:
     deprecated_by: null
   agricultural_demand_twh:
     name: agricultural demand
-    description: 'Sector demand at the bottom-up synthesis the catalog states: the sector''s share of
-      the fleet-served demand, over the total. The share is a policy and settlement dial; the demand is
-      what the sector''s own metering would report.'
+    description: Agricultural electricity demand in the year. A flow.
     category: Demand-Side
     subcategory: null
     type: float
-    unit: TWh
+    unit: TWh/year
     range:
     - 0.0
     - 20000.0
     initial: null
     role: derived
-    determinism: fixed
+    determinism: physical
     categories: []
-    source: Bottom-up load synthesis (the catalog's own method cell)
+    source: The carbon-market coupling (batch 24)
     source_url: null
     users:
-    - Planners
-    - Utilities
+    - Regulators
+    - Policymakers
+    - Carbon
     priority: P1
     status: existing
     deprecated_by: null
@@ -794,20 +793,23 @@ parameters:
     source: docs/params.md
   article_6_credits:
     name: Article 6 credits
-    description: Paris Agreement Article 6 credits
+    description: 'The volume transferred bilaterally under Article 6.2, which is the share carrying a
+      corresponding adjustment: the host country deducts it from its own accounting and the buyer adds
+      it to theirs. Without the adjustment the transfer is a double count, which is the defect Article
+      6.4''s own machinery exists to prevent.'
     category: Policy
     type: float
+    unit: MtCO2/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    - 1000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
     users:
     - Policymakers
-    source: docs/params.md
   asset_age_distribution:
     name: Asset age distribution
     description: Age distribution
@@ -1219,20 +1221,22 @@ parameters:
     source: docs/params.md
   auction_volume:
     name: Auction volume
-    description: Annual auction volume
+    description: Every allowance is auctioned, because the graph carries no free-allocation share and
+      inventing one would be a policy assumption with no dial behind it. The auction volume is therefore
+      the cap; when a free-allocation dial arrives, this is the line that gains its complement.
     category: Policy
     type: float
+    unit: MtCO2/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
+    - 10000.0
+    role: derived
+    determinism: policy
     priority: P1
-    status: to_build
+    status: existing
+    source: The carbon-market coupling (batch 24)
     users:
     - Regulators
-    source: docs/params.md
   audit_accounts_per_year:
     name: Audit accounts per year
     description: Accounts in the regulator's annual audit sample across the licensed fleet.
@@ -1305,11 +1309,11 @@ parameters:
     deprecated_by: null
   base_demand_twh:
     name: Base-year demand
-    description: Final demand in the base year, from which growth is compounded.
+    description: Base-year demand before growth is compounded. A flow, like `demand_twh`.
     category: Demand
     subcategory: null
     type: float
-    unit: TWh
+    unit: TWh/year
     range:
     - 1.0
     - 10000.0
@@ -1318,11 +1322,14 @@ parameters:
     role: exogenous
     determinism: stochastic
     categories: []
-    source: null
+    source: The carbon-market coupling (batch 24)
     source_url: null
-    users: []
+    users:
+    - Regulators
+    - Policymakers
+    - Carbon
     priority: P1
-    status: to_build
+    status: existing
     deprecated_by: null
   baseline_emissions:
     name: Baseline emissions
@@ -1531,22 +1538,49 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
-  bid_ask_spread:
-    name: Bid ask spread
-    description: Bid-ask spread
-    category: MktOps
+  bid_ask_cost_usd_per_year:
+    name: Bid ask cost usd per year
+    description: 'The spread paid on every MWh traded, with the 1e6 carrying TWh to MWh. It is a transaction
+      cost of the market''s design, not of the plant''s operation: a thin market charges its participants
+      for the liquidity it does not have.'
+    category: Carbon
     type: float
+    unit: USD/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 100000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
     users:
-    - Traders
-    source: docs/params.md
+    - Regulators
+  bid_ask_spread:
+    name: Bid ask spread
+    description: The bid-ask spread on the traded volume, in USD per MWh traded. A rate; the shipped unit
+      was None and the spread is a price, not a share.
+    category: MktOps
+    subcategory: null
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 100.0
+    default: 1.5
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
+    users:
+    - Regulators
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
   bill_shock_protection:
     name: Bill shock protection
     description: Bill shock protection
@@ -3311,20 +3345,22 @@ parameters:
     deprecated_by: null
   carbon_budget:
     name: Carbon budget
-    description: Remaining carbon budget
+    description: 'Two ids for one quantity: the catalog carries `carbon_budget` and the constraint register
+      carries `carbon_budget_mtco2`, and they are the same budget. Resolved by equality rather than by
+      deleting a reviewed id, which is the convention every catalog duplicate in this graph follows.'
     category: Climate
     type: float
+    unit: MtCO2
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 100000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
     users:
     - Policymakers
-    source: docs/params.md
   carbon_budget_mtco2:
     name: Carbon budget
     description: The cumulative emissions the horizon is allowed.
@@ -3388,36 +3424,71 @@ parameters:
     deprecated_by: null
   carbon_credit_insurance:
     name: Carbon credit insurance
-    description: Insurance
+    description: Premium on insuring the credit book, as a share of its value. A share of the value, which
+      is what makes the premium a spend.
     category: Carbon
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.02
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
+    - Regulators
+    - Policymakers
     - Carbon
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
+  carbon_credit_insurance_cost_usd_per_year:
+    name: Carbon credit insurance cost usd per year
+    description: The premium as a share of the book's value. Insurance against non-delivery is what lets
+      a buyer bank a credit before it vests, so the premium is a cost of the timing and not of the tonne.
+    category: Carbon
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 100000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   carbon_credit_prices:
     name: Carbon credit prices
-    description: Credit prices
+    description: 'Price of one tonne of credit on the market the programme sells into: the voluntary-market
+      clearing price, distinct from the compliance price `carbon_price_usd_per_tco2`. A price per tonne.'
     category: Carbon
+    subcategory: null
     type: float
+    unit: USD/tonne
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500.0
+    default: 8.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
+    - Regulators
+    - Policymakers
     - Carbon
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   carbon_credit_rating:
     name: Carbon credit rating
     description: Rating
@@ -3434,22 +3505,85 @@ parameters:
     users:
     - Carbon
     source: docs/params.md
-  carbon_credit_retirement:
-    name: Carbon credit retirement
-    description: Retirement
+  carbon_credit_retired_volume:
+    name: Carbon credit retired volume
+    description: The share of issued volume surrendered against a compliance obligation. Retirement is
+      what makes a credit count once and only once; the volume that is not retired remains available to
+      be sold again, which is the double-counting the registry prevents.
     category: Carbon
     type: float
+    unit: MtCO2/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 1000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
     users:
+    - Regulators
+  carbon_credit_retirement:
+    name: Carbon credit retirement
+    description: Share of issued credit volume retired against a compliance obligation. A share of the
+      issued volume.
+    category: Carbon
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.05
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
+    users:
+    - Regulators
+    - Policymakers
     - Carbon
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
+  carbon_credit_reversal_allowance:
+    name: Carbon credit reversal allowance
+    description: 'The complement of the permanence share: the buffer a registry retains against the credit
+      being reversed by fire, disease or land-use change. A forest credit that burns has to be replaced
+      from the buffer, and the buffer is sized by the reversal risk the permanence share names.'
+    category: Carbon
+    type: float
+    unit: MtCO2/year
+    range:
+    - 0.0
+    - 1000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
+  carbon_credit_value_usd_per_year:
+    name: Carbon credit value usd per year
+    description: 'Volume times price, with the 1e6 carrying MtCO2 to tonnes. The price is the voluntary-market
+      clearing price, not the compliance price: a credit sold into the voluntary market is not an allowance,
+      and valuing it at the ETS price would import a market the book does not trade in.'
+    category: Carbon
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 100000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   carbon_credit_vintage:
     name: Carbon credit vintage
     description: Vintage
@@ -3468,20 +3602,22 @@ parameters:
     source: docs/params.md
   carbon_credit_volumes:
     name: Carbon credit volumes
-    description: Credit volumes
+    description: Credit volume is the abatement that clears the additionality screen, which the shipped
+      `additional_abatement_definition` already computes as the tested share of the annualised budget.
+      Issuing credits for anything the screen refused would be crediting a reduction that did not happen.
     category: Carbon
     type: float
+    unit: MtCO2/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
+    - 1000.0
+    role: derived
+    determinism: policy
     priority: P1
-    status: to_build
+    status: existing
+    source: The carbon-market coupling (batch 24)
     users:
     - Carbon
-    source: docs/params.md
   carbon_finance_share:
     name: Carbon finance share
     description: The share of the project's financing backed by carbon credit sales. Bounded by the carbon
@@ -3591,20 +3727,29 @@ parameters:
     deprecated_by: null
   carbon_price_risk:
     name: Carbon price risk
-    description: Carbon price risk premium
+    description: Risk premium on the escalated carbon price, as a share of it. A share, so the risk-adjusted
+      price is `(1 + carbon_price_risk)` times the escalated one.
     category: Macro
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.15
+    initial: null
     role: free
     determinism: policy
-    priority: P2
-    status: to_build
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
-    - Investors
-    source: docs/params.md
+    - Regulators
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
   carbon_price_usd_per_tco2:
     name: Carbon price
     description: Price per tonne of CO2 applied to covered emissions.
@@ -3668,9 +3813,9 @@ parameters:
     deprecated_by: null
   carbon_tax_coverage:
     name: Carbon tax coverage
-    description: Share of emissions the carbon tax applies to. A share; the shipped default of 500000
-      made every scenario that did not override it collect a tax five hundred thousand times larger than
-      intended.
+    description: One covered share under two instrument names. The graph prices emissions once, through
+      `carbon_price_coverage`, and a tax rate applied to a different share would be a second instrument
+      the revenue identity does not read.
     category: Policy
     subcategory: null
     type: float
@@ -3678,34 +3823,62 @@ parameters:
     range:
     - 0.0
     - 1.0
-    default: 0.5
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
+    users:
+    - Regulators
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
+  carbon_tax_interaction:
+    name: Carbon tax interaction
+    description: 'Share of carbon revenue offset by lower other taxes: the tax interaction a revenue-neutral
+      reform carries. A share of the revenue.'
+    category: Tax
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.15
     initial: null
     role: free
     determinism: policy
     categories: []
-    source: docs/params.md#4.3
+    source: The carbon-market coupling (batch 24)
     source_url: null
     users:
+    - Regulators
     - Policymakers
-    priority: P2
-    status: to_build
+    - Carbon
+    priority: P1
+    status: existing
     deprecated_by: null
-  carbon_tax_interaction:
-    name: Carbon tax interaction
-    description: Carbon tax vs. other taxes
-    category: Tax
+  carbon_tax_offset_usd_per_year:
+    name: Carbon tax offset usd per year
+    description: 'The share of carbon revenue returned as a cut in other taxes: the revenue-neutral reform''s
+      own arithmetic. Gross carbon revenue less this offset is the net fiscal effect, which is the number
+      a finance ministry actually argues about.'
+    category: Carbon
     type: float
+    unit: USD/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 100000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
     users:
-    - Policymakers
-    source: docs/params.md
+    - Regulators
   carbon_tax_rate:
     name: Carbon tax rate
     description: Carbon tax rate -- the catalog carries the same rate under the spellings `carbon_tax_rate`
@@ -4714,25 +4887,24 @@ parameters:
     deprecated_by: null
   commercial_demand_twh:
     name: commercial demand
-    description: 'Sector demand at the bottom-up synthesis the catalog states: the sector''s share of
-      the fleet-served demand, over the total. The share is a policy and settlement dial; the demand is
-      what the sector''s own metering would report.'
+    description: Commercial electricity demand in the year. A flow.
     category: Demand-Side
     subcategory: null
     type: float
-    unit: TWh
+    unit: TWh/year
     range:
     - 0.0
     - 20000.0
     initial: null
     role: derived
-    determinism: fixed
+    determinism: physical
     categories: []
-    source: Bottom-up load synthesis (the catalog's own method cell)
+    source: The carbon-market coupling (batch 24)
     source_url: null
     users:
-    - Planners
-    - Utilities
+    - Regulators
+    - Policymakers
+    - Carbon
     priority: P1
     status: existing
     deprecated_by: null
@@ -5470,11 +5642,12 @@ parameters:
     source: docs/params.md
   cooling_water_demand_m3:
     name: Cooling water demand
-    description: Water the thermal fleet withdraws over the year.
+    description: Cooling water withdrawn in the year. A flow; the shipped `m3` made the water balance
+      a stock against a stock and hid the withdrawal rate.
     category: Water
     subcategory: null
     type: float
-    unit: m3
+    unit: m3/year
     range:
     - 0.0
     - 100000000000.0
@@ -5482,11 +5655,14 @@ parameters:
     role: derived
     determinism: physical
     categories: []
-    source: null
+    source: The carbon-market coupling (batch 24)
     source_url: null
-    users: []
-    priority: P2
-    status: to_build
+    users:
+    - Regulators
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
     deprecated_by: null
   cooling_water_m3_per_mwh:
     name: Cooling water intensity
@@ -5534,20 +5710,29 @@ parameters:
     deprecated_by: null
   corresponding_adjustment:
     name: Corresponding adjustment
-    description: CA
+    description: Share of a transferred mitigation outcome carrying a corresponding adjustment under Article
+      6.2 of the Paris Agreement. A share, and the unit is what makes the Article-6 volume decidable.
     category: Carbon
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.8
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
+    - Regulators
+    - Policymakers
     - Carbon
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   corruption_perception:
     name: Corruption perception index
     description: Composite index of perceived public-sector corruption, normalised to [0, 1]. Higher is
@@ -6147,6 +6332,28 @@ parameters:
     priority: P3
     status: deprecated
     deprecated_by: cross_border_trade_allowed
+  cross_border_wheeling_usd_per_year:
+    name: Cross border wheeling usd per year
+    description: 'The charge on the cross-border flow, at the same rate in both directions: an importing
+      year pays and an exporting year is credited, which is what a symmetric wheeling schedule does to
+      the *net* flow. The right base is gross bilateral flow, and the graph carries net imports only --
+      so the signed product is the best the balance supports, and its sign is the direction of the transfer
+      rather than a defect. It is deliberately not written as `abs(net_imports_twh)`: the sensitivity
+      table differentiates every equation and refuses a non-differentiable function rather than dropping
+      the term, so an absolute value here would make the whole gradient table uncomputable.'
+    category: Carbon
+    type: float
+    unit: USD/year
+    range:
+    - -100000000000.0
+    - 100000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   cross_default:
     name: Cross default
     description: Cross-default
@@ -6202,6 +6409,24 @@ parameters:
     users:
     - Regulators
     source: docs/params.md
+  cross_subsidy_usd_per_year:
+    name: Cross subsidy usd per year
+    description: 'The revenue moved from one tariff class to another, as a share of total revenue. It
+      is a transfer inside the tariff and not a subsidy from the budget: the classes pay the same total
+      and the structure decides who pays what.'
+    category: Carbon
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 100000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   csp_capacity:
     name: CSP capacity
     description: Installed CSP capacity, chosen by the optimiser. Same role correction.
@@ -7367,11 +7592,13 @@ parameters:
     - Financial analysts
   demand_twh:
     name: Demand
-    description: Final demand in the horizon year, after growth is compounded.
+    description: 'Final demand in the horizon year, after growth is compounded. A flow: the TWh consumed
+      *in* the year, so the unit is per-year and a rate times it is a spend. The shipped `TWh` made every
+      product against it read as an energy stock and left the revenue products undecidable.'
     category: Demand
     subcategory: null
     type: float
-    unit: TWh
+    unit: TWh/year
     range:
     - 1.0
     - 20000.0
@@ -7379,11 +7606,14 @@ parameters:
     role: derived
     determinism: stochastic
     categories: []
-    source: null
+    source: The carbon-market coupling (batch 24)
     source_url: null
-    users: []
+    users:
+    - Regulators
+    - Policymakers
+    - Carbon
     priority: P1
-    status: to_build
+    status: existing
     deprecated_by: null
   depreciation_life_by_asset:
     name: Depreciation life by asset
@@ -7909,20 +8139,46 @@ parameters:
     - Planners
   distribution_wheeling_charges:
     name: Distribution wheeling charges
-    description: Distribution wheeling charge
+    description: Distribution wheeling charge per MWh of demand. A rate; the distribution use-of-system
+      tariff.
     category: Policy
+    subcategory: null
     type: float
+    unit: USD/MWh
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 100.0
+    default: 6.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: existing
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
+  distribution_wheeling_usd_per_year:
+    name: Distribution wheeling usd per year
+    description: The distribution use-of-system charge, recovered on the same base as the transmission
+      one. The two are separate tariffs because the two networks have separate regulated asset bases.
+    category: Carbon
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 100000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   district_heating_share:
     name: District heating share
     description: Share of urban heat demand met by district heating. Shipped correctly as [0, 1].
@@ -8127,20 +8383,46 @@ parameters:
     source: docs/params.md
   electricity_subsidies:
     name: Electricity subsidies
-    description: Consumer electricity subsidies
+    description: 'Consumer subsidy per MWh of demand: the gap between the tariff and the cost it is meant
+      to recover, paid by the budget. A rate.'
     category: Policy
+    subcategory: null
     type: float
+    unit: USD/MWh
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500.0
+    default: 20.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
+    - Regulators
     - Policymakers
-    source: docs/params.md
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
+  electricity_subsidy_spend_usd_per_year:
+    name: Electricity subsidy spend usd per year
+    description: The per-MWh subsidy the budget pays so the tariff can sit below cost. Stated against
+      demand because the subsidy follows the consumption, not the connection.
+    category: Carbon
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 100000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   electrification_rate_target:
     name: Electrification rate target
     description: Target share of the population with electricity access. A share; the shipped range admitted
@@ -8553,6 +8835,58 @@ parameters:
     users:
     - Policymakers
     source: docs/params.md
+  employment_attainment_local:
+    name: Employment attainment local
+    description: The share achieved over the share targeted. Both sides are shares of the same workforce,
+      so the ratio is the attainment index a monitoring report quotes -- and a target left at the catalog's
+      500000.0 placeholder reads as an attainment of essentially zero, which is the placeholder surfacing
+      rather than a performance finding.
+    category: Carbon
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 10.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
+  employment_attainment_women:
+    name: Employment attainment women
+    description: Achieved over targeted female share of the workforce. The ratio is the index the programme's
+      own reporting uses.
+    category: Carbon
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 10.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
+  employment_attainment_youth:
+    name: Employment attainment youth
+    description: Achieved over targeted youth share of the workforce.
+    category: Carbon
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 10.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   employment_factor_biomass:
     name: Employment factor biomass
     description: Jobs/MW biomass
@@ -8927,16 +9261,11 @@ parameters:
     source: docs/params.md
   equilibrium_demand_twh:
     name: Equilibrium demand
-    description: 'Demand after the tariff moves, which is what the balance must serve. A loop variable
-      and not a derivation: the tariff is set to recover the cost of serving this demand, so demand and
-      tariff determine each other and the pair is a fixed point. `initial` is where the iteration starts,
-      not a value that stands in for the equation.
-
-      '
+    description: The demand the price equilibrium settles at. A flow.
     category: Demand
     subcategory: null
     type: float
-    unit: TWh
+    unit: TWh/year
     range:
     - 0.0
     - 20000.0
@@ -8944,11 +9273,14 @@ parameters:
     role: derived
     determinism: stochastic
     categories: []
-    source: null
+    source: The carbon-market coupling (batch 24)
     source_url: null
-    users: []
-    priority: P2
-    status: to_build
+    users:
+    - Regulators
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
     deprecated_by: null
   equity_irr_estimate:
     name: Equity IRR
@@ -9017,20 +9349,23 @@ parameters:
     deprecated_by: null
   ets_cap:
     name: Ets cap
-    description: ETS emissions cap
+    description: 'The covered share of the remaining carbon budget, divided by the horizon it is to be
+      spent over: the annual cap a budget implies. At the shipped defaults 0.5 * 500 / 10 = 25 MtCO2/year
+      against emissions of 26.02, so the cap binds while the whole budget (260.2 against 500) does not
+      -- the annualisation is what makes a budget bite.'
     category: Policy
     type: float
+    unit: MtCO2/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 10000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
     users:
     - Policymakers
-    source: docs/params.md
   ets_cap_half_life_years:
     name: Ets cap half life years
     description: 'ets cap half life years: the coupling''s derived quantity, so a scenario''s dial has
@@ -9421,20 +9756,47 @@ parameters:
     deprecated_by: null
   feed_in_tariff:
     name: Feed in tariff
-    description: Feed-in tariff rate
+    description: 'The feed-in tariff paid per MWh of renewable generation: a purchase obligation price,
+      not a share. A rate against the renewable volume.'
     category: Policy
+    subcategory: null
     type: float
+    unit: USD/MWh
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500.0
+    default: 80.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
+  feed_in_tariff_cost_usd_per_year:
+    name: Feed in tariff cost usd per year
+    description: 'The purchase obligation at the feed-in tariff, over the renewable volume the balance
+      already computes. The obligation is a cost of the programme and not of the plant: the utility buys
+      at the tariff and sells at the regulated price, and the difference is what the levy covers.'
+    category: Carbon
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 100000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   financial_transmission_rights:
     name: Financial transmission rights
     description: FTR model
@@ -9855,20 +10217,47 @@ parameters:
     source: docs/params.md
   fossil_fuel_subsidies:
     name: Fossil fuel subsidies
-    description: Fossil fuel subsidies
+    description: Fossil-fuel subsidy per MWh of non-renewable generation. A rate against the fossil volume,
+      which is generation less renewables.
     category: Policy
+    subcategory: null
     type: float
+    unit: USD/MWh
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500.0
+    default: 15.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
+    - Regulators
     - Policymakers
-    source: docs/params.md
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
+  fossil_fuel_subsidy_spend_usd_per_year:
+    name: Fossil fuel subsidy spend usd per year
+    description: 'The per-MWh subsidy on the non-renewable volume, which is generation less renewables.
+      The difference is the graph''s own decomposition: there is no separate fossil generation node, and
+      inventing one would be a second spelling of a quantity the balance already carries.'
+    category: Carbon
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 100000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   fpic_compliance_score:
     name: FPIC compliance score
     description: A compliance score for Free, Prior and Informed Consent, normalised to [0, 1]. Higher
@@ -10695,11 +11084,11 @@ parameters:
     source: docs/params.md
   generation_twh:
     name: Generation
-    description: Energy generated at the busbar, which is what clears the balance.
+    description: Energy generated at the busbar in the year, which is what clears the balance. A flow.
     category: Demand
     subcategory: null
     type: float
-    unit: TWh
+    unit: TWh/year
     range:
     - 0.0
     - 30000.0
@@ -10707,11 +11096,14 @@ parameters:
     role: derived
     determinism: physical
     categories: []
-    source: null
+    source: The carbon-market coupling (batch 24)
     source_url: null
-    users: []
+    users:
+    - Regulators
+    - Policymakers
+    - Carbon
     priority: P1
-    status: to_build
+    status: existing
     deprecated_by: null
   geopolitical_risk_index:
     name: Geopolitical risk index
@@ -11428,6 +11820,24 @@ parameters:
     users:
     - Planners
     source: docs/params.md
+  hybrid_capped_tariff_usd_per_mwh:
+    name: Hybrid capped tariff usd per mwh
+    description: A hybrid cap binds a weighted average of a price cap and a revenue cap, with the weight
+      the regulator's own dial. The two arms are the two tariffs the graph already carries, and the weight
+      is what lets a regulator trade the utility's volume risk against its price risk.
+    category: Carbon
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 10000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   hybrid_revenue_price_cap:
     name: Hybrid cap weight
     description: In a hybrid revenue-price cap, the weight on the price cap. A share; the revenue cap
@@ -12016,11 +12426,11 @@ parameters:
     deprecated_by: null
   hydrogen_water_demand_m3:
     name: Hydrogen water demand
-    description: Water the hydrogen programme consumes over the year.
+    description: Water the electrolyser draws in the year. A flow.
     category: Water
     subcategory: null
     type: float
-    unit: m3
+    unit: m3/year
     range:
     - 0.0
     - 100000000000.0
@@ -12028,11 +12438,14 @@ parameters:
     role: derived
     determinism: physical
     categories: []
-    source: null
+    source: The carbon-market coupling (batch 24)
     source_url: null
-    users: []
-    priority: P2
-    status: to_build
+    users:
+    - Regulators
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
     deprecated_by: null
   hydrogen_water_m3_per_kg:
     name: Water intensity of hydrogen
@@ -12397,25 +12810,24 @@ parameters:
     deprecated_by: null
   industrial_demand_twh:
     name: industrial demand
-    description: 'Sector demand at the bottom-up synthesis the catalog states: the sector''s share of
-      the fleet-served demand, over the total. The share is a policy and settlement dial; the demand is
-      what the sector''s own metering would report.'
+    description: Industrial electricity demand in the year. A flow.
     category: Demand-Side
     subcategory: null
     type: float
-    unit: TWh
+    unit: TWh/year
     range:
     - 0.0
     - 20000.0
     initial: null
     role: derived
-    determinism: fixed
+    determinism: physical
     categories: []
-    source: Bottom-up load synthesis (the catalog's own method cell)
+    source: The carbon-market coupling (batch 24)
     source_url: null
     users:
-    - Planners
-    - Utilities
+    - Regulators
+    - Policymakers
+    - Carbon
     priority: P1
     status: existing
     deprecated_by: null
@@ -13718,22 +14130,49 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
-  leakage_parameters:
-    name: Leakage parameters
-    description: Leakage
+  leakage_mtco2_per_year:
+    name: Leakage mtco2 per year
+    description: 'The share of covered emissions that moves production rather than abating it: the quantity
+      a border adjustment is calibrated against. Leakage is not abatement that failed, it is abatement
+      that left, and pricing it at the domestic carbon price is what CBAM does.'
     category: Carbon
     type: float
+    unit: MtCO2/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 1000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
     users:
+    - Regulators
+  leakage_parameters:
+    name: Leakage parameters
+    description: 'Share of the covered emissions that relocate rather than abate: the carbon-leakage rate
+      a CBAM-style adjustment exists to price. A share.'
+    category: Carbon
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.1
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
+    users:
+    - Regulators
+    - Policymakers
     - Carbon
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   learning_rate:
     name: Learning rate
     description: Cost reduction per doubling of cumulative deployment.
@@ -14322,20 +14761,30 @@ parameters:
     deprecated_by: null
   local_employment_targets:
     name: Local employment targets
-    description: Local employment
+    description: Target share of project employment to be filled from the host community. A share of the
+      workforce, so the attainment ratio against it is a ratio and not a division by the catalog's 500000.0
+      placeholder.
     category: Land
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.3
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Regulators
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
   local_jobs:
     name: Local jobs
     description: Direct employment multiplied by the local content share. What a build programme's local-content
@@ -14808,26 +15257,23 @@ parameters:
     source: docs/params.md
   market_concentration:
     name: Market concentration
-    description: HHI of generator market shares. Same scale as supply-chain concentration, same reasoning.
+    description: The HHI over the fleet's own fuel shares, on the 0-10000 scale the competition authorities
+      use. The fleet's diversity index is already one minus the HHI over its capacities, so the product
+      is the HHI the index complements -- and the shipped default of 2500 is not the fleet the graph ships,
+      which is the finding the identity surfaces.
     category: Market Design
-    subcategory: null
     type: float
     unit: '1'
     range:
     - 0.0
     - 10000.0
-    default: 2500.0
-    initial: null
-    role: free
-    determinism: fixed
-    categories: []
-    source: HHI as defined in the Horizontal Merger Guidelines
-    source_url: null
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
     users:
     - Regulators
-    priority: P2
-    status: to_build
-    deprecated_by: null
   market_coupling:
     name: Market coupling
     description: Market coupling
@@ -14846,20 +15292,29 @@ parameters:
     source: docs/params.md
   market_liquidity:
     name: Market liquidity
-    description: Liquidity
+    description: 'Market churn: the traded volume as a multiple of demand. Dimensionless because it is
+      a multiple, and its product is the traded volume the spread and the clearing costs are quoted against.'
     category: MktOps
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 100.0
+    default: 1.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
-    - Traders
-    source: docs/params.md
+    - Regulators
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
   market_model:
     name: Market model
     description: Which market model the simulation assumes. A categorical with four documented values.
@@ -14909,6 +15364,24 @@ parameters:
     priority: P1
     status: integrate
     deprecated_by: null
+  market_traded_volume_twh:
+    name: Market traded volume twh
+    description: 'Churn times demand: a market where each MWh changes hands once trades its demand, and
+      one at a multiple of three trades it three times. The volume is what the spread and the clearing
+      fee are charged against, so it is the base every market-ops cost shares.'
+    category: Carbon
+    type: float
+    unit: TWh/year
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   material_adverse_change:
     name: Material adverse change
     description: MAC clause
@@ -15201,20 +15674,47 @@ parameters:
     - Financial analysts
   mini_grid_subsidies:
     name: Mini grid subsidies
-    description: Mini-grid capital subsidy
+    description: Share of the mini-grid programme's spend covered by subsidy. A share of the spend the
+      graph already derives.
     category: Policy
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.4
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
+    - Regulators
     - Policymakers
-    source: docs/params.md
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
+  mini_grid_subsidy_usd_per_year:
+    name: Mini grid subsidy usd per year
+    description: The share of the programme's spend covered by subsidy. The spend is already derived (a
+      per-connection cost times the connections served), so the product is the fiscal exposure the programme
+      carries rather than the tariff it charges.
+    category: Carbon
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 100000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   mining_demand_growth:
     name: Mining demand growth
     description: Additional mining load growth
@@ -15474,11 +15974,11 @@ parameters:
     source: docs/params.md
   net_imports_twh:
     name: Net imports
-    description: Imports less exports over the year, which the balance is struck net of.
+    description: Imports less exports over the year. A net flow, signed.
     category: Demand
     subcategory: null
     type: float
-    unit: TWh
+    unit: TWh/year
     range:
     - -1000.0
     - 1000.0
@@ -15487,11 +15987,14 @@ parameters:
     role: exogenous
     determinism: policy
     categories: []
-    source: null
+    source: The carbon-market coupling (batch 24)
     source_url: null
-    users: []
-    priority: P2
-    status: to_build
+    users:
+    - Regulators
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
     deprecated_by: null
   net_zero_year:
     name: Net zero year
@@ -15513,20 +16016,47 @@ parameters:
       equations
   netting_agreements:
     name: Netting agreements
-    description: Netting
+    description: Share of posted collateral covered by a netting agreement. A share; what remains is the
+      exposure the agreement does not net.
     category: MktOps
+    subcategory: null
     type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.9
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
+    users:
+    - Regulators
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
+  netting_shortfall_usd_per_year:
+    name: Netting shortfall usd per year
+    description: 'The complement of the netting share: collateral posted that a netting agreement does
+      not cover, and therefore exposure a counterparty''s default reaches. The complement is the point
+      -- a netting agreement covering 90% leaves 10% of the posted collateral at risk.'
+    category: Carbon
+    type: float
+    unit: USD million/year
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
     users:
-    - Banks
-    source: docs/params.md
+    - Regulators
   new_entrants:
     name: New entrants
     description: Market entry
@@ -16850,20 +17380,29 @@ parameters:
     deprecated_by: null
   permanence_parameters:
     name: Permanence parameters
-    description: Permanence
+    description: 'Reversal allowance on the credit book: the share of issued volume held back against
+      non-permanence. A share, and its complement is the buffer a registry actually retains.'
     category: Carbon
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.1
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
+    - Regulators
+    - Policymakers
     - Carbon
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   persons_per_household:
     name: Persons per household
     description: Mean household size. The sub-Saharan African mean is 4.5; the graph's own residential
@@ -17325,22 +17864,49 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
-  position_limits:
-    name: Position limits
-    description: Position limits
-    category: MktOps
+  position_limit_mtco2:
+    name: Position limit mtco2
+    description: 'A position limit as a share of the cap, not an absolute tonnage: the limit a market
+      regulator sets scales with the market it limits. The product is the volume, which is what a compliance
+      check compares a participant''s holding against.'
+    category: Carbon
     type: float
+    unit: MtCO2/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 10000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
     users:
     - Regulators
-    source: docs/params.md
+  position_limits:
+    name: Position limits
+    description: Share of the cap one participant may hold. A share of the cap, not an absolute volume,
+      so the limit moves with the cap it limits.
+    category: MktOps
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.25
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
+    users:
+    - Regulators
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
   post_harvest_processing_load:
     name: Post harvest processing load
     description: Post-harvest processing load
@@ -17744,29 +18310,61 @@ parameters:
     users:
     - Utilities
     source: docs/params.md
+  price_band_lower_usd_per_mwh:
+    name: Price band lower usd per mwh
+    description: 'The floor a market sets below marginal cost: the price a must-run unit is paid when
+      it would otherwise have to bid negative to stay on. The two arms are the same band, and stating
+      both is what makes the band a band rather than a cap.'
+    category: Carbon
+    type: float
+    unit: USD/MWh
+    range:
+    - -10000.0
+    - 10000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
+  price_band_upper_usd_per_mwh:
+    name: Price band upper usd per mwh
+    description: The offer cap a market sets above short-run marginal cost. The band exists so a scarce
+      hour cannot clear at a price that is a transfer rather than a signal; Stoft's treatment of the offer
+      cap is the reason the band is stated around marginal cost and not around an administered number.
+    category: Carbon
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 10000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   price_cap:
     name: Price cap
-    description: The maximum average tariff the utility may charge, as a share of the cost-recovery tariff.
-      A share above 1.0 is a cap above cost.
+    description: 'In a single-part tariff the cap on average price and the cap on revenue are the same
+      number: a revenue cap of 1.0 is a price cap of 1.0 because the volume is the same on both sides.
+      The identity is the catalog''s duplicate resolution, and it is what `applied_tariff_definition`
+      already reads.'
     category: Regulatory Finance
-    subcategory: null
     type: float
     unit: '1'
     range:
-    - 0.5
-    - 2.0
-    default: 1.0
-    initial: null
-    role: free
+    - 0.0
+    - 10.0
+    role: derived
     determinism: policy
-    categories: []
-    source: World Bank Regulation of Utilities handbook
-    source_url: null
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
     users:
     - Regulators
-    priority: P1
-    status: to_build
-    deprecated_by: null
   price_elasticity:
     name: Demand price elasticity
     description: 'Proportional change in demand per proportional change in price. Negative for a normal
@@ -17793,20 +18391,29 @@ parameters:
     deprecated_by: null
   price_limits:
     name: Price limits
-    description: Price limits
+    description: Half-width of the market's price band around marginal cost, as a fraction of it. A share,
+      and the band's two arms are `(1 ± price_limits) * marginal_cost`.
     category: MktOps
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 5.0
+    default: 0.2
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
   pricing_mechanism:
     name: Pricing mechanism
     description: Pricing mechanism
@@ -18585,11 +19192,11 @@ parameters:
     source: docs/params.md
   reliability_cost_usd:
     name: Reliability cost
-    description: The value of the energy the system fails to serve.
+    description: The cost of the unserved energy, valued at the value of lost load. A spend in the year.
     category: Reliability
     subcategory: null
     type: float
-    unit: USD
+    unit: USD/year
     range:
     - 0.0
     - 1000000000000.0
@@ -18597,11 +19204,14 @@ parameters:
     role: derived
     determinism: stochastic
     categories: []
-    source: null
+    source: The carbon-market coupling (batch 24)
     source_url: null
-    users: []
-    priority: P2
-    status: to_build
+    users:
+    - Regulators
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
     deprecated_by: null
   remaining_useful_life:
     name: Remaining useful life
@@ -18733,20 +19343,47 @@ parameters:
     source: docs/params.md
   renewable_subsidies:
     name: Renewable subsidies
-    description: Renewable energy subsidies
+    description: Renewable subsidy per MWh of renewable generation, distinct from the feed-in tariff because
+      it is a budget transfer rather than a purchase obligation. A rate.
     category: Policy
+    subcategory: null
     type: float
+    unit: USD/MWh
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500.0
+    default: 25.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
+    - Regulators
     - Policymakers
-    source: docs/params.md
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
+  renewable_subsidy_spend_usd_per_year:
+    name: Renewable subsidy spend usd per year
+    description: 'A budget transfer per MWh of renewable generation, distinct from the feed-in tariff:
+      the FIT is a purchase obligation on the utility, this is a transfer from the treasury, and a scenario
+      can carry either without the other.'
+    category: Carbon
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 100000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   renewable_target:
     name: Renewable target
     description: Share of generation that must be renewable in the target year. A share; the shipped range
@@ -19094,25 +19731,24 @@ parameters:
     deprecated_by: null
   residential_demand_twh:
     name: residential demand
-    description: 'Sector demand at the bottom-up synthesis the catalog states: the sector''s share of
-      the fleet-served demand, over the total. The share is a policy and settlement dial; the demand is
-      what the sector''s own metering would report.'
+    description: Residential electricity demand in the year. A flow.
     category: Demand-Side
     subcategory: null
     type: float
-    unit: TWh
+    unit: TWh/year
     range:
     - 0.0
     - 20000.0
     initial: null
     role: derived
-    determinism: fixed
+    determinism: physical
     categories: []
-    source: Bottom-up load synthesis (the catalog's own method cell)
+    source: The carbon-market coupling (batch 24)
     source_url: null
     users:
-    - Planners
-    - Utilities
+    - Regulators
+    - Policymakers
+    - Carbon
     priority: P1
     status: existing
     deprecated_by: null
@@ -19341,6 +19977,24 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  risk_adjusted_carbon_price_usd_per_tco2:
+    name: Risk adjusted carbon price usd per tco2
+    description: The escalated carbon price grossed up by the risk premium a project financier demands
+      for a price that is a policy variable. The premium is what turns a forecast into a bankable number,
+      and it is the carbon-price analogue of the equity risk premium.
+    category: Carbon
+    type: float
+    unit: USD/tonne
+    range:
+    - 0.0
+    - 10000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   risk_based_maintenance:
     name: Risk based maintenance
     description: RBM
@@ -19865,6 +20519,24 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  service_quality_reward_usd:
+    name: Service quality reward usd
+    description: The reward for beating a quality target, as a share of the revenue requirement. A reward
+      rather than a penalty because the requirement is the base the regulator can actually move; the symmetric
+      penalty lives on the same share with the opposite sign.
+    category: Carbon
+    type: float
+    unit: USD million/year
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   service_quality_standards:
     name: Service quality standards
     description: The SAIFI ceiling; the shipped baseline sits below it.
@@ -19933,20 +20605,46 @@ parameters:
     deprecated_by: null
   settlement_risk:
     name: Settlement risk
-    description: Settlement risk
+    description: Share of the settled value exposed to counterparty settlement failure. A share of the
+      value at risk.
     category: MktOps
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.01
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
-    - Banks
-    source: docs/params.md
+    - Regulators
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
+  settlement_risk_exposure_usd_per_year:
+    name: Settlement risk exposure usd per year
+    description: The share of the settled value exposed to counterparty failure. A share of value rather
+      than of volume, because what a default costs is the price already agreed, not the tonnes.
+    category: Carbon
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 100000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   shipping_fuel_demand:
     name: Shipping fuel demand
     description: Shipping fuel demand
@@ -20008,20 +20706,46 @@ parameters:
     - Financial analysts
   shs_subsidies:
     name: Shs subsidies
-    description: Solar home system subsidy
+    description: Share of the solar-home-system programme's spend covered by subsidy. A share of the spend
+      the graph already derives.
     category: Policy
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.3
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
+    - Regulators
     - Policymakers
-    source: docs/params.md
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
+  shs_subsidy_usd_per_year:
+    name: Shs subsidy usd per year
+    description: The share of the SHS programme's spend covered by subsidy, on the same construction as
+      the mini-grid product and against a different programme.
+    category: Carbon
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 100000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   signal_extraction:
     name: Signal extraction
     description: Signal extraction
@@ -20213,20 +20937,29 @@ parameters:
     source: docs/params.md
   social_tariff:
     name: Social tariff
-    description: Social tariff
+    description: 'Two ids for the below-threshold tariff: the catalog''s `social_tariff` and the graph''s
+      `lifeline_tariff_usd_per_mwh`, which the shipped `lifeline_tariff_alias` already equates to `lifeline_tariff`.
+      The identity makes the catalog id derived rather than a second price nothing sets.'
     category: Consumer
+    subcategory: null
     type: float
+    unit: USD/MWh
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 500.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
   soil_contamination:
     name: Soil contamination
     description: Soil contamination
@@ -21251,6 +21984,25 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  tariff_rebalancing_usd_per_year:
+    name: Tariff rebalancing usd per year
+    description: 'A tariff class rebalanced toward cost at an annual rate compounds: after n years the
+      share of the base that has moved is 1 - exp(-r n), the continuous-time form of the same decay the
+      half-life equations use. At the shipped 0.2/year over ten years it is 0.893 of the base, and the
+      closed form is what makes a ten-year glide path one number.'
+    category: Carbon
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 100000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   tariff_structure:
     name: Tariff structure
     description: Tariff design
@@ -21749,6 +22501,23 @@ parameters:
     users:
     - All
     source: docs/params.md
+  time_of_use_demand_twh:
+    name: Time of use demand twh
+    description: The share of demand on a time-of-use tariff. The product is the volume the tariff reshapes,
+      which is the quantity a load-shift assessment needs and the share alone does not give.
+    category: Carbon
+    type: float
+    unit: TWh/year
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   time_of_use_tariff_adoption:
     name: Time-of-use tariff adoption
     description: Share of customers on a ToU tariff. A share; same reset of the placeholder default.
@@ -21877,12 +22646,11 @@ parameters:
     deprecated_by: null
   total_water_demand_m3:
     name: Total water demand
-    description: Cooling and hydrogen demand together, against the catchment. The left-hand side of the
-      availability constraint.
+    description: Total water withdrawn in the year. A flow.
     category: Water
     subcategory: null
     type: float
-    unit: m3
+    unit: m3/year
     range:
     - 0.0
     - 100000000000.0
@@ -21890,11 +22658,14 @@ parameters:
     role: derived
     determinism: physical
     categories: []
-    source: null
+    source: The carbon-market coupling (batch 24)
     source_url: null
-    users: []
-    priority: P2
-    status: to_build
+    users:
+    - Regulators
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
     deprecated_by: null
   tourism_load:
     name: Tourism load
@@ -22311,11 +23082,11 @@ parameters:
     deprecated_by: null
   unserved_energy_gwh:
     name: Unserved energy
-    description: Expected energy not served over the year.
+    description: Energy demanded and not served in the year. A flow.
     category: Reliability
     subcategory: null
     type: float
-    unit: GWh
+    unit: GWh/year
     range:
     - 0.0
     - 100000.0
@@ -22323,11 +23094,14 @@ parameters:
     role: derived
     determinism: stochastic
     categories: []
-    source: null
+    source: The carbon-market coupling (batch 24)
     source_url: null
-    users: []
-    priority: P2
-    status: to_build
+    users:
+    - Regulators
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
     deprecated_by: null
   uranium_burnup_lb_per_mwh:
     name: Uranium burnup per MWh
@@ -22616,20 +23390,47 @@ parameters:
     source: docs/params.md
   voluntary_carbon_market:
     name: Voluntary carbon market
-    description: VCM participation
+    description: Share of the credit volume sold into the voluntary market rather than against a compliance
+      obligation. A participation share; zero at the shipped default because the programme is compliance-led.
     category: Policy
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
+    - Regulators
+    - Policymakers
     - Carbon
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
+  voluntary_market_volume_mtco2:
+    name: Voluntary market volume mtco2
+    description: The share of the issued volume sold to voluntary buyers rather than against a compliance
+      obligation. Zero at the shipped default, because a compliance-led programme sells nothing voluntarily,
+      and the zero is a statement rather than a missing value.
+    category: Carbon
+    type: float
+    unit: MtCO2/year
+    range:
+    - 0.0
+    - 1000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   vre_capacity_mw:
     name: Renewable capacity
     description: Renewable nameplate capacity at the loop's fixed point.
@@ -22864,11 +23665,12 @@ parameters:
     source: docs/params.md
   water_availability_m3:
     name: Water availability
-    description: Water the catchment makes available to the energy sector over the year.
+    description: 'Water available to the project in the year. A flow, and the one the withdrawal is compared
+      against: a stock compared to a flow is the comparison the shipped units made.'
     category: Water
     subcategory: null
     type: float
-    unit: m3
+    unit: m3/year
     range:
     - 0.0
     - 100000000000.0
@@ -22877,11 +23679,14 @@ parameters:
     role: exogenous
     determinism: physical
     categories: []
-    source: null
+    source: The carbon-market coupling (batch 24)
     source_url: null
-    users: []
-    priority: P2
-    status: to_build
+    users:
+    - Regulators
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
     deprecated_by: null
   water_pollution_load:
     name: Water pollution load
@@ -23056,36 +23861,72 @@ parameters:
     source: docs/params.md
   wheeling_charge_cross_border:
     name: Wheeling charge cross border
-    description: Cross-border wheeling charge
+    description: Cross-border wheeling charge per MWh of net import. A rate against the signed net flow,
+      which is why the product takes its absolute value.
     category: Grid
+    subcategory: null
     type: float
+    unit: USD/MWh
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 100.0
+    default: 8.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: existing
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
   wheeling_charges:
     name: Wheeling charges
-    description: Transmission wheeling charge
+    description: 'Transmission wheeling charge per MWh of demand: the use-of-system tariff a regulator
+      publishes. A rate against the annual demand.'
     category: Policy
+    subcategory: null
     type: float
+    unit: USD/MWh
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 100.0
+    default: 4.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: existing
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    - Policymakers
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
+  wheeling_charges_usd_per_year:
+    name: Wheeling charges usd per year
+    description: 'The use-of-system charge on every MWh of demand, with the 1e6 carrying TWh to MWh. It
+      is a pass-through: the network''s cost recovered from the energy that uses it, which is the tariff
+      design the region''s regulators publish.'
+    category: Carbon
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 100000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   wholesale_cost_pass_through:
     name: Wholesale pass-through
     description: 'The share of the recovery tariff that is the variable stack: fuel, carbon and losses,
@@ -23395,20 +24236,28 @@ parameters:
     deprecated_by: null
   women_employment_targets:
     name: Women employment targets
-    description: Women employment
+    description: Target share of project employment to be filled by women. A share.
     category: JustTrans
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.15
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
+    - Regulators
     - Policymakers
-    source: docs/params.md
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
   women_jobs:
     name: Women jobs
     description: Jobs in women group, at the composition share the employment programme targets. Derived
@@ -23485,6 +24334,24 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  working_capital_allowance_usd:
+    name: Working capital allowance usd
+    description: The regulator's allowance for the working capital a utility funds between paying its
+      suppliers and collecting its bills, as a share of the revenue requirement. It is a permitted recovery,
+      not a cost the utility incurs.
+    category: Carbon
+    type: float
+    unit: USD million/year
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   workshop_capacity:
     name: Workshop capacity
     description: Workshop capacity
@@ -23540,6 +24407,24 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
+  x_factor_revenue_reduction:
+    name: X factor revenue reduction
+    description: 'The RPI-X productivity offset: the allowed requirement less the annual efficiency the
+      regulator assumes the utility can find. The reduction is a share of the requirement and not of the
+      cost, which is why the formula is a multiplication and not a subtraction of an absolute.'
+    category: Carbon
+    type: float
+    unit: USD million/year
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The carbon-market coupling (batch 24)
+    users:
+    - Regulators
   years_from_carbon_tax_to_net_zero:
     name: Years from carbon tax to net zero
     description: 'years from carbon tax to net zero: the coupling''s derived quantity, so a scenario''s
@@ -23641,20 +24526,28 @@ parameters:
     deprecated_by: null
   youth_employment_targets:
     name: Youth employment targets
-    description: Youth employment
+    description: Target share of project employment to be filled by people under 35. A share.
     category: JustTrans
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.25
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The carbon-market coupling (batch 24)
+    source_url: null
     users:
+    - Regulators
     - Policymakers
-    source: docs/params.md
+    - Carbon
+    priority: P1
+    status: existing
+    deprecated_by: null
   youth_jobs:
     name: Youth jobs
     description: Jobs in youth group, at the composition share the employment programme targets. Derived
@@ -23934,6 +24827,52 @@ equations:
     priority: P1
     reference: World Bank Regulation of Utilities handbook, revenue caps
     latex: \mathrm{applied}_{tariff\_usd\_per\_mwh} = \mathrm{regulated}_{tariff\_usd\_per\_mwh} \mathrm{revenue}_{cap}
+  article_6_credits_definition:
+    name: The Article 6.2 transferred volume
+    description: 'The volume transferred bilaterally under Article 6.2, which is the share carrying a
+      corresponding adjustment: the host country deducts it from its own accounting and the buyer adds
+      it to theirs. Without the adjustment the transfer is a double count, which is the defect Article
+      6.4''s own machinery exists to prevent.'
+    system: carbon_trajectory
+    lhs: article_6_credits
+    rhs: corresponding_adjustment * carbon_credit_volumes
+    relation: eq
+    parameters:
+    - article_6_credits
+    - carbon_credit_volumes
+    - corresponding_adjustment
+    free_variables: []
+    determined_variables:
+    - article_6_credits
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EU CBAM regulation
+    latex: \mathrm{article}_{6\_credits} = \mathrm{corresponding}_{adjustment} \mathrm{carbon}_{credit\_volumes}
+  auction_volume_definition:
+    name: The annual auction volume
+    description: Every allowance is auctioned, because the graph carries no free-allocation share and
+      inventing one would be a policy assumption with no dial behind it. The auction volume is therefore
+      the cap; when a free-allocation dial arrives, this is the line that gains its complement.
+    system: carbon_trajectory
+    lhs: auction_volume
+    rhs: ets_cap
+    relation: eq
+    parameters:
+    - auction_volume
+    - ets_cap
+    free_variables: []
+    determined_variables:
+    - auction_volume
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EU CBAM regulation
+    latex: \mathrm{auction}_{volume} = \mathrm{ets}_{cap}
   availability_definition:
     name: Availability from MTBF and MTTR
     description: 'The steady-state UNAVAILABILITY: the fraction of time the asset is down, which is what
@@ -24011,6 +24950,29 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  bid_ask_cost_definition:
+    name: The cost of the bid-ask spread
+    description: 'The spread paid on every MWh traded, with the 1e6 carrying TWh to MWh. It is a transaction
+      cost of the market''s design, not of the plant''s operation: a thin market charges its participants
+      for the liquidity it does not have.'
+    system: price_demand
+    lhs: bid_ask_cost_usd_per_year
+    rhs: bid_ask_spread * market_traded_volume_twh * 1000000
+    relation: eq
+    parameters:
+    - bid_ask_cost_usd_per_year
+    - bid_ask_spread
+    - market_traded_volume_twh
+    free_variables: []
+    determined_variables:
+    - bid_ask_cost_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{bid}_{ask\_cost\_usd\_per\_year} = 1000000 \mathrm{bid}_{ask\_spread} \mathrm{market}_{traded\_volume\_twh}
   biogas_cost_alias:
     name: Biogas plant capital cost is Biogas plant capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `biogas_cost`
@@ -24327,6 +25289,28 @@ equations:
     solution_method: numeric
     linearity: linear
     latex: null
+  carbon_budget_identity:
+    name: The remaining carbon budget
+    description: 'Two ids for one quantity: the catalog carries `carbon_budget` and the constraint register
+      carries `carbon_budget_mtco2`, and they are the same budget. Resolved by equality rather than by
+      deleting a reviewed id, which is the convention every catalog duplicate in this graph follows.'
+    system: carbon_trajectory
+    lhs: carbon_budget
+    rhs: carbon_budget_mtco2
+    relation: eq
+    parameters:
+    - carbon_budget
+    - carbon_budget_mtco2
+    free_variables: []
+    determined_variables:
+    - carbon_budget
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{carbon}_{budget} = \mathrm{carbon}_{budget\_mtco2}
   carbon_budget_ratio_definition:
     name: Budget ratio
     description: Emissions over the horizon against the budget. Above one, the trajectory misses.
@@ -24370,6 +25354,122 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  carbon_credit_insurance_premium_definition:
+    name: The insurance premium on the credit book
+    description: The premium as a share of the book's value. Insurance against non-delivery is what lets
+      a buyer bank a credit before it vests, so the premium is a cost of the timing and not of the tonne.
+    system: capture_price
+    lhs: carbon_credit_insurance_cost_usd_per_year
+    rhs: carbon_credit_insurance * carbon_credit_value_usd_per_year
+    relation: eq
+    parameters:
+    - carbon_credit_insurance_cost_usd_per_year
+    - carbon_credit_insurance
+    - carbon_credit_value_usd_per_year
+    free_variables: []
+    determined_variables:
+    - carbon_credit_insurance_cost_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{carbon}_{credit\_insurance\_cost\_usd\_per\_year} = \mathrm{carbon}_{credit\_insurance}
+      \mathrm{carbon}_{credit\_value\_usd\_per\_year}
+  carbon_credit_retirement_definition:
+    name: The retired credit volume
+    description: The share of issued volume surrendered against a compliance obligation. Retirement is
+      what makes a credit count once and only once; the volume that is not retired remains available to
+      be sold again, which is the double-counting the registry prevents.
+    system: carbon_trajectory
+    lhs: carbon_credit_retired_volume
+    rhs: carbon_credit_retirement * carbon_credit_volumes
+    relation: eq
+    parameters:
+    - carbon_credit_retired_volume
+    - carbon_credit_retirement
+    - carbon_credit_volumes
+    free_variables: []
+    determined_variables:
+    - carbon_credit_retired_volume
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{carbon}_{credit\_retired\_volume} = \mathrm{carbon}_{credit\_retirement} \mathrm{carbon}_{credit\_volumes}
+  carbon_credit_reversal_allowance_definition:
+    name: The reversal allowance on the credit book
+    description: 'The complement of the permanence share: the buffer a registry retains against the credit
+      being reversed by fire, disease or land-use change. A forest credit that burns has to be replaced
+      from the buffer, and the buffer is sized by the reversal risk the permanence share names.'
+    system: carbon_trajectory
+    lhs: carbon_credit_reversal_allowance
+    rhs: (1 - permanence_parameters) * carbon_credit_volumes
+    relation: eq
+    parameters:
+    - carbon_credit_reversal_allowance
+    - carbon_credit_volumes
+    - permanence_parameters
+    free_variables: []
+    determined_variables:
+    - carbon_credit_reversal_allowance
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{carbon}_{credit\_reversal\_allowance} = \left(1 - \mathrm{permanence}_{parameters}\right)
+      \mathrm{carbon}_{credit\_volumes}
+  carbon_credit_value_definition:
+    name: The value of the credit book
+    description: 'Volume times price, with the 1e6 carrying MtCO2 to tonnes. The price is the voluntary-market
+      clearing price, not the compliance price: a credit sold into the voluntary market is not an allowance,
+      and valuing it at the ETS price would import a market the book does not trade in.'
+    system: capture_price
+    lhs: carbon_credit_value_usd_per_year
+    rhs: carbon_credit_prices * carbon_credit_volumes * 1000000
+    relation: eq
+    parameters:
+    - carbon_credit_value_usd_per_year
+    - carbon_credit_prices
+    - carbon_credit_volumes
+    free_variables: []
+    determined_variables:
+    - carbon_credit_value_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{carbon}_{credit\_value\_usd\_per\_year} = 1000000 \mathrm{carbon}_{credit\_prices}
+      \mathrm{carbon}_{credit\_volumes}
+  carbon_credit_volumes_definition:
+    name: The credit volume issued
+    description: Credit volume is the abatement that clears the additionality screen, which the shipped
+      `additional_abatement_definition` already computes as the tested share of the annualised budget.
+      Issuing credits for anything the screen refused would be crediting a reduction that did not happen.
+    system: carbon_trajectory
+    lhs: carbon_credit_volumes
+    rhs: additional_abatement_mtco2
+    relation: eq
+    parameters:
+    - carbon_credit_volumes
+    - additional_abatement_mtco2
+    free_variables: []
+    determined_variables:
+    - carbon_credit_volumes
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{carbon}_{credit\_volumes} = \mathrm{additional}_{abatement\_mtco2}
   carbon_finance_bound:
     name: Carbon finance bound
     description: 'Financing backed by carbon credit sales cannot exceed the carbon revenue stream it is
@@ -24486,6 +25586,51 @@ equations:
     priority: P1
     reference: Stoft 2002, Power System Economics, ch. 5
     latex: \mathrm{carbon}_{revenue\_share\_of\_revenue} = \frac{\mathrm{carbon}_{revenue\_usd\_per\_year}}{\mathrm{total}_{revenue\_usd\_per\_year}}
+  carbon_tax_coverage_identity:
+    name: The carbon tax's covered share
+    description: One covered share under two instrument names. The graph prices emissions once, through
+      `carbon_price_coverage`, and a tax rate applied to a different share would be a second instrument
+      the revenue identity does not read.
+    system: emissions
+    lhs: carbon_tax_coverage
+    rhs: carbon_price_coverage
+    relation: eq
+    parameters:
+    - carbon_tax_coverage
+    - carbon_price_coverage
+    free_variables: []
+    determined_variables:
+    - carbon_tax_coverage
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{carbon}_{tax\_coverage} = \mathrm{carbon}_{price\_coverage}
+  carbon_tax_offset_definition:
+    name: The carbon revenue offset in other taxes
+    description: 'The share of carbon revenue returned as a cut in other taxes: the revenue-neutral reform''s
+      own arithmetic. Gross carbon revenue less this offset is the net fiscal effect, which is the number
+      a finance ministry actually argues about.'
+    system: financial
+    lhs: carbon_tax_offset_usd_per_year
+    rhs: carbon_tax_interaction * carbon_revenue_usd_per_year
+    relation: eq
+    parameters:
+    - carbon_tax_offset_usd_per_year
+    - carbon_revenue_usd_per_year
+    - carbon_tax_interaction
+    free_variables: []
+    determined_variables:
+    - carbon_tax_offset_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+    latex: \mathrm{carbon}_{tax\_offset\_usd\_per\_year} = \mathrm{carbon}_{tax\_interaction} \mathrm{carbon}_{revenue\_usd\_per\_year}
   carbon_tax_rate_alias:
     name: Carbon tax rate is Carbon price
     description: Two ids for one rate, resolved in the graph's own idiom; the equality holds at every
@@ -25488,6 +26633,57 @@ equations:
     linearity: nonlinear
     latex: \mathrm{crf}_{wind\_onshore} = \frac{\mathrm{discount}_{rate} {\left(1 + \mathrm{discount}_{rate}\right)}^{\mathrm{asset}_{life\_wind\_onshore}}}{{\left(\mathrm{discount}_{rate}
       + 1\right)}^{\mathrm{asset}_{life\_wind\_onshore}} - 1}
+  cross_border_wheeling_cost_definition:
+    name: The cross-border wheeling charge
+    description: 'The charge on the cross-border flow, at the same rate in both directions: an importing
+      year pays and an exporting year is credited, which is what a symmetric wheeling schedule does to
+      the *net* flow. The right base is gross bilateral flow, and the graph carries net imports only --
+      so the signed product is the best the balance supports, and its sign is the direction of the transfer
+      rather than a defect. It is deliberately not written as `abs(net_imports_twh)`: the sensitivity
+      table differentiates every equation and refuses a non-differentiable function rather than dropping
+      the term, so an absolute value here would make the whole gradient table uncomputable.'
+    system: cost_accounting
+    lhs: cross_border_wheeling_usd_per_year
+    rhs: wheeling_charge_cross_border * net_imports_twh * 1000000
+    relation: eq
+    parameters:
+    - cross_border_wheeling_usd_per_year
+    - net_imports_twh
+    - wheeling_charge_cross_border
+    free_variables: []
+    determined_variables:
+    - cross_border_wheeling_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Pass-through pricing
+    latex: \mathrm{cross}_{border\_wheeling\_usd\_per\_year} = 1000000 \mathrm{wheeling}_{charge\_cross\_border}
+      \mathrm{net}_{imports\_twh}
+  cross_subsidy_transfer_definition:
+    name: The cross-subsidy between tariff classes
+    description: 'The revenue moved from one tariff class to another, as a share of total revenue. It
+      is a transfer inside the tariff and not a subsidy from the budget: the classes pay the same total
+      and the structure decides who pays what.'
+    system: affordability
+    lhs: cross_subsidy_usd_per_year
+    rhs: cross_subsidy_level * total_revenue_usd_per_year
+    relation: eq
+    parameters:
+    - cross_subsidy_usd_per_year
+    - cross_subsidy_level
+    - total_revenue_usd_per_year
+    free_variables: []
+    determined_variables:
+    - cross_subsidy_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Benefit-sharing programmes (the graph's own revenue identity)
+    latex: \mathrm{cross}_{subsidy\_usd\_per\_year} = \mathrm{cross}_{subsidy\_level} \mathrm{total}_{revenue\_usd\_per\_year}
   cybersecurity_spend_definition:
     name: Cybersecurity spend
     description: 'The control-system security spend: the mandated share of the revenue requirement.'
@@ -25850,6 +27046,29 @@ equations:
     reference: null
     latex: \mathrm{distribution}_{expansion\_capex\_usd\_per\_year} = \mathrm{distribution}_{capex\_per\_connection}
       \mathrm{connections}_{per\_year}
+  distribution_wheeling_cost_definition:
+    name: The distribution wheeling charge
+    description: The distribution use-of-system charge, recovered on the same base as the transmission
+      one. The two are separate tariffs because the two networks have separate regulated asset bases.
+    system: cost_accounting
+    lhs: distribution_wheeling_usd_per_year
+    rhs: distribution_wheeling_charges * demand_twh * 1000000
+    relation: eq
+    parameters:
+    - distribution_wheeling_usd_per_year
+    - demand_twh
+    - distribution_wheeling_charges
+    free_variables: []
+    determined_variables:
+    - distribution_wheeling_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Pass-through pricing
+    latex: \mathrm{distribution}_{wheeling\_usd\_per\_year} = 1000000 \mathrm{distribution}_{wheeling\_charges}
+      \mathrm{demand}_{twh}
   dscr_definition:
     name: Debt service coverage ratio
     description: Cash available against the debt service the gearing implies.
@@ -25893,6 +27112,29 @@ equations:
     solution_method: numeric
     linearity: linear
     latex: null
+  electricity_subsidy_cost_definition:
+    name: The consumer electricity subsidy
+    description: The per-MWh subsidy the budget pays so the tariff can sit below cost. Stated against
+      demand because the subsidy follows the consumption, not the connection.
+    system: cost_accounting
+    lhs: electricity_subsidy_spend_usd_per_year
+    rhs: electricity_subsidies * demand_twh * 1000000
+    relation: eq
+    parameters:
+    - electricity_subsidy_spend_usd_per_year
+    - demand_twh
+    - electricity_subsidies
+    free_variables: []
+    determined_variables:
+    - electricity_subsidy_spend_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{electricity}_{subsidy\_spend\_usd\_per\_year} = 1000000 \mathrm{electricity}_{subsidies}
+      \mathrm{demand}_{twh}
   electrified_population_definition:
     name: Electrified population
     description: 'The population the access target names: the target share times the country''s population.'
@@ -25984,6 +27226,73 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  employment_attainment_local_definition:
+    name: The local-employment attainment ratio
+    description: The share achieved over the share targeted. Both sides are shares of the same workforce,
+      so the ratio is the attainment index a monitoring report quotes -- and a target left at the catalog's
+      500000.0 placeholder reads as an attainment of essentially zero, which is the placeholder surfacing
+      rather than a performance finding.
+    system: employment
+    lhs: employment_attainment_local
+    rhs: local_employment_share / local_employment_targets
+    relation: eq
+    parameters:
+    - employment_attainment_local
+    - local_employment_share
+    - local_employment_targets
+    free_variables: []
+    determined_variables:
+    - employment_attainment_local
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{employment}_{attainment\_local} = \frac{\mathrm{local}_{employment\_share}}{\mathrm{local}_{employment\_targets}}
+  employment_attainment_women_definition:
+    name: The women's-employment attainment ratio
+    description: Achieved over targeted female share of the workforce. The ratio is the index the programme's
+      own reporting uses.
+    system: employment
+    lhs: employment_attainment_women
+    rhs: women_employment_share / women_employment_targets
+    relation: eq
+    parameters:
+    - employment_attainment_women
+    - women_employment_share
+    - women_employment_targets
+    free_variables: []
+    determined_variables:
+    - employment_attainment_women
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{employment}_{attainment\_women} = \frac{\mathrm{women}_{employment\_share}}{\mathrm{women}_{employment\_targets}}
+  employment_attainment_youth_definition:
+    name: The youth-employment attainment ratio
+    description: Achieved over targeted youth share of the workforce.
+    system: employment
+    lhs: employment_attainment_youth
+    rhs: youth_employment_share / youth_employment_targets
+    relation: eq
+    parameters:
+    - employment_attainment_youth
+    - youth_employment_share
+    - youth_employment_targets
+    free_variables: []
+    determined_variables:
+    - employment_attainment_youth
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{employment}_{attainment\_youth} = \frac{\mathrm{youth}_{employment\_share}}{\mathrm{youth}_{employment\_targets}}
   energy_balance:
     name: Energy balance
     description: 'What is generated, less what the wires lose, plus what is imported, is what is served.
@@ -26225,6 +27534,31 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{equity}_{share} = 1 - \mathrm{debt}_{fraction}
+  ets_cap_definition:
+    name: The ETS cap, annualised
+    description: 'The covered share of the remaining carbon budget, divided by the horizon it is to be
+      spent over: the annual cap a budget implies. At the shipped defaults 0.5 * 500 / 10 = 25 MtCO2/year
+      against emissions of 26.02, so the cap binds while the whole budget (260.2 against 500) does not
+      -- the annualisation is what makes a budget bite.'
+    system: carbon_trajectory
+    lhs: ets_cap
+    rhs: carbon_price_coverage * carbon_budget_mtco2 / horizon_years
+    relation: eq
+    parameters:
+    - ets_cap
+    - carbon_budget_mtco2
+    - carbon_price_coverage
+    - horizon_years
+    free_variables: []
+    determined_variables:
+    - ets_cap
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EU CBAM regulation
+    latex: \mathrm{ets}_{cap} = \frac{\mathrm{carbon}_{price\_coverage} \mathrm{carbon}_{budget\_mtco2}}{\mathrm{horizon}_{years}}
   ets_cap_half_life_definition:
     name: The ETS cap's half-life
     description: 'Years for the ETS cap to halve at its annual reduction rate: ln 2 over the rate, the
@@ -26246,6 +27580,29 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{ets}_{cap\_half\_life\_years} = \frac{\ln\left(2\right)}{\mathrm{ets}_{cap\_reduction\_rate}}
+  feed_in_tariff_cost_definition:
+    name: The feed-in tariff obligation
+    description: 'The purchase obligation at the feed-in tariff, over the renewable volume the balance
+      already computes. The obligation is a cost of the programme and not of the plant: the utility buys
+      at the tariff and sells at the regulated price, and the difference is what the levy covers.'
+    system: cost_accounting
+    lhs: feed_in_tariff_cost_usd_per_year
+    rhs: feed_in_tariff * renewable_generation_twh * 1000000
+    relation: eq
+    parameters:
+    - feed_in_tariff_cost_usd_per_year
+    - feed_in_tariff
+    - renewable_generation_twh
+    free_variables: []
+    determined_variables:
+    - feed_in_tariff_cost_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Pass-through pricing
+    latex: \mathrm{feed}_{in\_tariff\_cost\_usd\_per\_year} = 1000000 \mathrm{feed}_{in\_tariff} \mathrm{renewable}_{generation\_twh}
   financing_close_share_of_licence_definition:
     name: The financing-close deadline's share of the licence
     description: 'The fraction of the licence term the financing-close deadline spans: months over the
@@ -26426,6 +27783,31 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{forecast}_{error\_band\_twh} = \mathrm{demand}_{forecast\_methodology} \mathrm{demand}_{twh}
+  fossil_fuel_subsidy_cost_definition:
+    name: The fossil-fuel subsidy
+    description: 'The per-MWh subsidy on the non-renewable volume, which is generation less renewables.
+      The difference is the graph''s own decomposition: there is no separate fossil generation node, and
+      inventing one would be a second spelling of a quantity the balance already carries.'
+    system: cost_accounting
+    lhs: fossil_fuel_subsidy_spend_usd_per_year
+    rhs: fossil_fuel_subsidies * (generation_twh - renewable_generation_twh) * 1000000
+    relation: eq
+    parameters:
+    - fossil_fuel_subsidy_spend_usd_per_year
+    - fossil_fuel_subsidies
+    - generation_twh
+    - renewable_generation_twh
+    free_variables: []
+    determined_variables:
+    - fossil_fuel_subsidy_spend_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{fossil}_{fuel\_subsidy\_spend\_usd\_per\_year} = 1000000 \mathrm{fossil}_{fuel\_subsidies}
+      \left(\mathrm{generation}_{twh} - \mathrm{renewable}_{generation\_twh}\right)
   fpic_consent_bound:
     name: Fpic consent bound
     description: The documented-consent floor cannot exceed the audited consent score.
@@ -26945,6 +28327,34 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{hvdc}_{interconnector\_capacity\_mw} = \mathrm{hvdc}_{share} \mathrm{interconnector}_{capacity}
+  hybrid_capped_tariff_definition:
+    name: The hybrid revenue-price cap's tariff
+    description: A hybrid cap binds a weighted average of a price cap and a revenue cap, with the weight
+      the regulator's own dial. The two arms are the two tariffs the graph already carries, and the weight
+      is what lets a regulator trade the utility's volume risk against its price risk.
+    system: affordability
+    lhs: hybrid_capped_tariff_usd_per_mwh
+    rhs: hybrid_revenue_price_cap * price_cap * regulated_tariff_usd_per_mwh + (1 - hybrid_revenue_price_cap)
+      * applied_tariff_usd_per_mwh
+    relation: eq
+    parameters:
+    - hybrid_capped_tariff_usd_per_mwh
+    - applied_tariff_usd_per_mwh
+    - hybrid_revenue_price_cap
+    - price_cap
+    - regulated_tariff_usd_per_mwh
+    free_variables: []
+    determined_variables:
+    - hybrid_capped_tariff_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: World Bank Regulation of Utilities handbook, revenue caps
+    latex: \mathrm{hybrid}_{capped\_tariff\_usd\_per\_mwh} = \mathrm{hybrid}_{revenue\_price\_cap} \mathrm{price}_{cap}
+      \mathrm{regulated}_{tariff\_usd\_per\_mwh} + \left(1 - \mathrm{hybrid}_{revenue\_price\_cap}\right)
+      \mathrm{applied}_{tariff\_usd\_per\_mwh}
   hydro_inflow_vintage_offset_definition:
     name: The inflow record's vintage offset
     description: How much the hydro inflow record's design year leads or trails the PV data's vintage.
@@ -28029,6 +29439,29 @@ equations:
     linearity: linear
     latex: \mathrm{lcoe}_{wind\_offshore\_usd\_per\_mwh} = \frac{1000 \left(\mathrm{capex}_{wind\_offshore}
       \mathrm{crf}_{wind\_offshore} + \mathrm{opex}_{fixed\_wind\_offshore}\right)}{8760 \mathrm{capacity}_{factor\_wind\_offshore}}
+  leakage_emissions_definition:
+    name: The emissions that relocate
+    description: 'The share of covered emissions that moves production rather than abating it: the quantity
+      a border adjustment is calibrated against. Leakage is not abatement that failed, it is abatement
+      that left, and pricing it at the domestic carbon price is what CBAM does.'
+    system: emissions
+    lhs: leakage_mtco2_per_year
+    rhs: leakage_parameters * emissions_mtco2_per_year
+    relation: eq
+    parameters:
+    - leakage_mtco2_per_year
+    - emissions_mtco2_per_year
+    - leakage_parameters
+    free_variables: []
+    determined_variables:
+    - leakage_mtco2_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EU CBAM regulation
+    latex: \mathrm{leakage}_{mtco2\_per\_year} = \mathrm{leakage}_{parameters} \mathrm{emissions}_{mtco2\_per\_year}
   learning_curve:
     name: Learning curve
     description: 'Cost falls with cumulative deployment at a stated learning rate, as a power law in the
@@ -28399,6 +29832,52 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  market_concentration_definition:
+    name: The market's Herfindahl-Hirschman index
+    description: The HHI over the fleet's own fuel shares, on the 0-10000 scale the competition authorities
+      use. The fleet's diversity index is already one minus the HHI over its capacities, so the product
+      is the HHI the index complements -- and the shipped default of 2500 is not the fleet the graph ships,
+      which is the finding the identity surfaces.
+    system: price_demand
+    lhs: market_concentration
+    rhs: 10000 * (1 - fuel_diversity_index)
+    relation: eq
+    parameters:
+    - market_concentration
+    - fuel_diversity_index
+    free_variables: []
+    determined_variables:
+    - market_concentration
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Stoft 2002, Power System Economics, ch. 5
+    latex: \mathrm{market}_{concentration} = 10000 \left(1 - \mathrm{fuel}_{diversity\_index}\right)
+  market_traded_volume_definition:
+    name: The traded volume
+    description: 'Churn times demand: a market where each MWh changes hands once trades its demand, and
+      one at a multiple of three trades it three times. The volume is what the spread and the clearing
+      fee are charged against, so it is the base every market-ops cost shares.'
+    system: price_demand
+    lhs: market_traded_volume_twh
+    rhs: market_liquidity * demand_twh
+    relation: eq
+    parameters:
+    - market_traded_volume_twh
+    - demand_twh
+    - market_liquidity
+    free_variables: []
+    determined_variables:
+    - market_traded_volume_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{market}_{traded\_volume\_twh} = \mathrm{market}_{liquidity} \mathrm{demand}_{twh}
   mini_grid_programme_spend_definition:
     name: The mini-grid programme's spend
     description: 'The mini-grid programme''s spend per year: the per-connection installed cost times the
@@ -28421,6 +29900,53 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{mini}_{grid\_programme\_spend\_usd\_per\_year} = \mathrm{mini}_{grid\_cost} \mathrm{mini}_{grid\_deployment}
+  mini_grid_subsidy_definition:
+    name: The mini-grid programme subsidy
+    description: The share of the programme's spend covered by subsidy. The spend is already derived (a
+      per-connection cost times the connections served), so the product is the fiscal exposure the programme
+      carries rather than the tariff it charges.
+    system: financial
+    lhs: mini_grid_subsidy_usd_per_year
+    rhs: mini_grid_subsidies * mini_grid_programme_spend_usd_per_year
+    relation: eq
+    parameters:
+    - mini_grid_subsidy_usd_per_year
+    - mini_grid_programme_spend_usd_per_year
+    - mini_grid_subsidies
+    free_variables: []
+    determined_variables:
+    - mini_grid_subsidy_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{mini}_{grid\_subsidy\_usd\_per\_year} = \mathrm{mini}_{grid\_subsidies} \mathrm{mini}_{grid\_programme\_spend\_usd\_per\_year}
+  netting_shortfall_definition:
+    name: The collateral left un-netted
+    description: 'The complement of the netting share: collateral posted that a netting agreement does
+      not cover, and therefore exposure a counterparty''s default reaches. The complement is the point
+      -- a netting agreement covering 90% leaves 10% of the posted collateral at risk.'
+    system: financial
+    lhs: netting_shortfall_usd_per_year
+    rhs: (1 - netting_agreements) * collateral_posted_usd_per_year
+    relation: eq
+    parameters:
+    - netting_shortfall_usd_per_year
+    - collateral_posted_usd_per_year
+    - netting_agreements
+    free_variables: []
+    determined_variables:
+    - netting_shortfall_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{netting}_{shortfall\_usd\_per\_year} = \left(1 - \mathrm{netting}_{agreements}\right)
+      \mathrm{collateral}_{posted\_usd\_per\_year}
   non_spinning_reserve_inside_margin:
     name: Non spinning reserve inside margin
     description: The non-spinning slice must sit inside the operating reserve the margin holds.
@@ -28653,6 +30179,29 @@ equations:
     priority: P1
     reference: Short, Packey & Holt (1995), NREL/TP-462-5173
     latex: \mathrm{population}_{growth\_factor} = {\left(1 + \mathrm{population}_{growth\_rate}\right)}^{\mathrm{horizon}_{years}}
+  position_limit_definition:
+    name: The volume one participant may hold
+    description: 'A position limit as a share of the cap, not an absolute tonnage: the limit a market
+      regulator sets scales with the market it limits. The product is the volume, which is what a compliance
+      check compares a participant''s holding against.'
+    system: carbon_trajectory
+    lhs: position_limit_mtco2
+    rhs: position_limits * ets_cap
+    relation: eq
+    parameters:
+    - position_limit_mtco2
+    - ets_cap
+    - position_limits
+    free_variables: []
+    determined_variables:
+    - position_limit_mtco2
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EU CBAM regulation
+    latex: \mathrm{position}_{limit\_mtco2} = \mathrm{position}_{limits} \mathrm{ets}_{cap}
   powertrain_stock_bound:
     name: Powertrain stock bound
     description: 'Fuel-cell and battery vehicles are disjoint powertrains of the same vehicle stock: together
@@ -28775,6 +30324,75 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  price_band_lower_definition:
+    name: The lower price band
+    description: 'The floor a market sets below marginal cost: the price a must-run unit is paid when
+      it would otherwise have to bid negative to stay on. The two arms are the same band, and stating
+      both is what makes the band a band rather than a cap.'
+    system: price_demand
+    lhs: price_band_lower_usd_per_mwh
+    rhs: (1 - price_limits) * marginal_cost_usd_per_mwh
+    relation: eq
+    parameters:
+    - price_band_lower_usd_per_mwh
+    - marginal_cost_usd_per_mwh
+    - price_limits
+    free_variables: []
+    determined_variables:
+    - price_band_lower_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Stoft 2002, Power System Economics, ch. 5
+    latex: \mathrm{price}_{band\_lower\_usd\_per\_mwh} = \left(1 - \mathrm{price}_{limits}\right) \mathrm{marginal}_{cost\_usd\_per\_mwh}
+  price_band_upper_definition:
+    name: The upper price band
+    description: The offer cap a market sets above short-run marginal cost. The band exists so a scarce
+      hour cannot clear at a price that is a transfer rather than a signal; Stoft's treatment of the offer
+      cap is the reason the band is stated around marginal cost and not around an administered number.
+    system: price_demand
+    lhs: price_band_upper_usd_per_mwh
+    rhs: (1 + price_limits) * marginal_cost_usd_per_mwh
+    relation: eq
+    parameters:
+    - price_band_upper_usd_per_mwh
+    - marginal_cost_usd_per_mwh
+    - price_limits
+    free_variables: []
+    determined_variables:
+    - price_band_upper_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Stoft 2002, Power System Economics, ch. 5
+    latex: \mathrm{price}_{band\_upper\_usd\_per\_mwh} = \left(1 + \mathrm{price}_{limits}\right) \mathrm{marginal}_{cost\_usd\_per\_mwh}
+  price_cap_identity:
+    name: The average-tariff price cap
+    description: 'In a single-part tariff the cap on average price and the cap on revenue are the same
+      number: a revenue cap of 1.0 is a price cap of 1.0 because the volume is the same on both sides.
+      The identity is the catalog''s duplicate resolution, and it is what `applied_tariff_definition`
+      already reads.'
+    system: affordability
+    lhs: price_cap
+    rhs: revenue_cap
+    relation: eq
+    parameters:
+    - price_cap
+    - revenue_cap
+    free_variables: []
+    determined_variables:
+    - price_cap
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{price}_{cap} = \mathrm{revenue}_{cap}
   property_tax_definition:
     name: Property tax (computed)
     description: 'The rate times its base: property tax is the annual charge on the regulated asset base;
@@ -29040,6 +30658,30 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{renewable}_{generation\_twh} = \mathrm{renewable}_{target} \mathrm{generation}_{twh}
+  renewable_subsidy_cost_definition:
+    name: The renewable generation subsidy
+    description: 'A budget transfer per MWh of renewable generation, distinct from the feed-in tariff:
+      the FIT is a purchase obligation on the utility, this is a transfer from the treasury, and a scenario
+      can carry either without the other.'
+    system: cost_accounting
+    lhs: renewable_subsidy_spend_usd_per_year
+    rhs: renewable_subsidies * renewable_generation_twh * 1000000
+    relation: eq
+    parameters:
+    - renewable_subsidy_spend_usd_per_year
+    - renewable_generation_twh
+    - renewable_subsidies
+    free_variables: []
+    determined_variables:
+    - renewable_subsidy_spend_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{renewable}_{subsidy\_spend\_usd\_per\_year} = 1000000 \mathrm{renewable}_{subsidies}
+      \mathrm{renewable}_{generation\_twh}
   reporting_compliance_definition:
     name: Reporting systems' spend
     description: 'The quarterly-filing systems'' spend: the mandated share of the revenue requirement.'
@@ -29297,6 +30939,30 @@ equations:
     reference: null
     latex: \mathrm{right}_{of\_way\_cost\_usd} = \mathrm{right}_{of\_way\_cost} \left(\mathrm{transmission}_{line\_length\_km}
       + \mathrm{interconnector}_{route\_km} + \mathrm{hydrogen}_{pipeline\_length\_km}\right)
+  risk_adjusted_carbon_price_definition:
+    name: The risk-adjusted carbon price
+    description: The escalated carbon price grossed up by the risk premium a project financier demands
+      for a price that is a policy variable. The premium is what turns a forecast into a bankable number,
+      and it is the carbon-price analogue of the equity risk premium.
+    system: carbon_trajectory
+    lhs: risk_adjusted_carbon_price_usd_per_tco2
+    rhs: (1 + carbon_price_risk) * carbon_price_escalated_usd_per_tco2
+    relation: eq
+    parameters:
+    - risk_adjusted_carbon_price_usd_per_tco2
+    - carbon_price_escalated_usd_per_tco2
+    - carbon_price_risk
+    free_variables: []
+    determined_variables:
+    - risk_adjusted_carbon_price_usd_per_tco2
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{risk}_{adjusted\_carbon\_price\_usd\_per\_tco2} = \left(1 + \mathrm{carbon}_{price\_risk}\right)
+      \mathrm{carbon}_{price\_escalated\_usd\_per\_tco2}
   rocof_definition:
     name: Rate of change of frequency
     description: 'The swing equation''s first instant: the largest credible loss divided by twice the
@@ -29473,6 +31139,29 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{service}_{quality\_penalty\_usd\_per\_year} = \mathrm{service}_{quality\_penalty} \mathrm{allowed}_{revenue\_requirement}
+  service_quality_reward_definition:
+    name: The service-quality reward
+    description: The reward for beating a quality target, as a share of the revenue requirement. A reward
+      rather than a penalty because the requirement is the base the regulator can actually move; the symmetric
+      penalty lives on the same share with the opposite sign.
+    system: financial
+    lhs: service_quality_reward_usd
+    rhs: service_quality_reward * allowed_revenue_requirement
+    relation: eq
+    parameters:
+    - service_quality_reward_usd
+    - allowed_revenue_requirement
+    - service_quality_reward
+    free_variables: []
+    determined_variables:
+    - service_quality_reward_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: World Bank Regulation of Utilities handbook, revenue caps
+    latex: \mathrm{service}_{quality\_reward\_usd} = \mathrm{service}_{quality\_reward} \mathrm{allowed}_{revenue\_requirement}
   settlement_intervals_per_hour_definition:
     name: How many settlement periods an hour carries
     description: 'How many settlement periods an hour carries: the interval''s inverse, which is what
@@ -29494,6 +31183,28 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{settlement}_{intervals\_per\_hour} = {\mathrm{settlement}_{period}}^{-1}
+  settlement_risk_exposure_definition:
+    name: The settlement exposure
+    description: The share of the settled value exposed to counterparty failure. A share of value rather
+      than of volume, because what a default costs is the price already agreed, not the tonnes.
+    system: capture_price
+    lhs: settlement_risk_exposure_usd_per_year
+    rhs: settlement_risk * carbon_credit_value_usd_per_year
+    relation: eq
+    parameters:
+    - settlement_risk_exposure_usd_per_year
+    - carbon_credit_value_usd_per_year
+    - settlement_risk
+    free_variables: []
+    determined_variables:
+    - settlement_risk_exposure_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{settlement}_{risk\_exposure\_usd\_per\_year} = \mathrm{settlement}_{risk} \mathrm{carbon}_{credit\_value\_usd\_per\_year}
   shs_programme_spend_definition:
     name: The solar-home-system programme's spend
     description: 'The programme''s spend per year: the delivered per-unit cost times the units delivered
@@ -29516,6 +31227,28 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{shs}_{programme\_spend\_usd\_per\_year} = \mathrm{shs}_{cost} \mathrm{solar}_{home\_system\_deployment}
+  shs_subsidy_definition:
+    name: The solar-home-system programme subsidy
+    description: The share of the SHS programme's spend covered by subsidy, on the same construction as
+      the mini-grid product and against a different programme.
+    system: financial
+    lhs: shs_subsidy_usd_per_year
+    rhs: shs_subsidies * shs_programme_spend_usd_per_year
+    relation: eq
+    parameters:
+    - shs_subsidy_usd_per_year
+    - shs_programme_spend_usd_per_year
+    - shs_subsidies
+    free_variables: []
+    determined_variables:
+    - shs_subsidy_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{shs}_{subsidy\_usd\_per\_year} = \mathrm{shs}_{subsidies} \mathrm{shs}_{programme\_spend\_usd\_per\_year}
   small_modular_reactor_cost_alias:
     name: SMR capital cost is Small modular reactor capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `small_modular_reactor_cost`
@@ -29540,6 +31273,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{small}_{modular\_reactor\_cost} = \mathrm{capex}_{smr}
+  social_tariff_identity:
+    name: The social tariff
+    description: 'Two ids for the below-threshold tariff: the catalog''s `social_tariff` and the graph''s
+      `lifeline_tariff_usd_per_mwh`, which the shipped `lifeline_tariff_alias` already equates to `lifeline_tariff`.
+      The identity makes the catalog id derived rather than a second price nothing sets.'
+    system: affordability
+    lhs: social_tariff
+    rhs: lifeline_tariff_usd_per_mwh
+    relation: eq
+    parameters:
+    - social_tariff
+    - lifeline_tariff_usd_per_mwh
+    free_variables: []
+    determined_variables:
+    - social_tariff
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{social}_{tariff} = \mathrm{lifeline}_{tariff\_usd\_per\_mwh}
   solar_pv_capacity_factor_at_vintage_definition:
     name: The PV capacity factor at the dataset's vintage year
     description: 'The PV capacity factor AT the vintage year the dataset quotes: the factor today compounded
@@ -29681,6 +31436,32 @@ equations:
     solution_method: iterative
     linearity: nonlinear
     latex: null
+  tariff_rebalancing_transfer_definition:
+    name: The revenue rebalanced over the horizon
+    description: 'A tariff class rebalanced toward cost at an annual rate compounds: after n years the
+      share of the base that has moved is 1 - exp(-r n), the continuous-time form of the same decay the
+      half-life equations use. At the shipped 0.2/year over ten years it is 0.893 of the base, and the
+      closed form is what makes a ten-year glide path one number.'
+    system: affordability
+    lhs: tariff_rebalancing_usd_per_year
+    rhs: (1 - exp(-tariff_rebalancing * horizon_years)) * total_revenue_usd_per_year
+    relation: eq
+    parameters:
+    - tariff_rebalancing_usd_per_year
+    - horizon_years
+    - tariff_rebalancing
+    - total_revenue_usd_per_year
+    free_variables: []
+    determined_variables:
+    - tariff_rebalancing_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: nonlinear
+    priority: P1
+    reference: World Bank Regulation of Utilities handbook, revenue caps
+    latex: \mathrm{tariff}_{rebalancing\_usd\_per\_year} = \left(1 - e^{-\mathrm{tariff}_{rebalancing}
+      \mathrm{horizon}_{years}}\right) \mathrm{total}_{revenue\_usd\_per\_year}
   tariff_with_vat_definition:
     name: VAT-inclusive tariff
     description: 'The applied tariff plus the VAT it carries: p + p*vat, expanded from p*(1 + vat) so
@@ -29775,6 +31556,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{tidal}_{range\_cost} = \mathrm{capex}_{tidal\_range}
+  time_of_use_demand_definition:
+    name: The demand on a time-of-use tariff
+    description: The share of demand on a time-of-use tariff. The product is the volume the tariff reshapes,
+      which is the quantity a load-shift assessment needs and the share alone does not give.
+    system: price_demand
+    lhs: time_of_use_demand_twh
+    rhs: time_of_use_tariff_adoption * demand_twh
+    relation: eq
+    parameters:
+    - time_of_use_demand_twh
+    - demand_twh
+    - time_of_use_tariff_adoption
+    free_variables: []
+    determined_variables:
+    - time_of_use_demand_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{time}_{of\_use\_demand\_twh} = \mathrm{time}_{of\_use\_tariff\_adoption} \mathrm{demand}_{twh}
   total_jobs_definition:
     name: Total jobs
     description: Direct employment plus what the supply chain and the wage bill support.
@@ -30017,6 +31820,29 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{variable}_{stack\_usd\_per\_mwh} = \mathrm{fuel}_{price\_usd\_per\_mwh} + \mathrm{carbon}_{cost\_usd\_per\_mwh}
+  voluntary_market_volume_definition:
+    name: The volume sold into the voluntary market
+    description: The share of the issued volume sold to voluntary buyers rather than against a compliance
+      obligation. Zero at the shipped default, because a compliance-led programme sells nothing voluntarily,
+      and the zero is a statement rather than a missing value.
+    system: carbon_trajectory
+    lhs: voluntary_market_volume_mtco2
+    rhs: voluntary_carbon_market * carbon_credit_volumes
+    relation: eq
+    parameters:
+    - voluntary_market_volume_mtco2
+    - carbon_credit_volumes
+    - voluntary_carbon_market
+    free_variables: []
+    determined_variables:
+    - voluntary_market_volume_mtco2
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{voluntary}_{market\_volume\_mtco2} = \mathrm{voluntary}_{carbon\_market} \mathrm{carbon}_{credit\_volumes}
   vre_build:
     name: Renewable build response
     description: 'Investors build in proportion to the capture price''s ratio to the alternative''s cost.
@@ -30207,6 +32033,29 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{wave}_{energy\_converter\_cost} = \mathrm{capex}_{marine\_wave}
+  wheeling_charge_cost_definition:
+    name: The transmission wheeling charge
+    description: 'The use-of-system charge on every MWh of demand, with the 1e6 carrying TWh to MWh. It
+      is a pass-through: the network''s cost recovered from the energy that uses it, which is the tariff
+      design the region''s regulators publish.'
+    system: cost_accounting
+    lhs: wheeling_charges_usd_per_year
+    rhs: wheeling_charges * demand_twh * 1000000
+    relation: eq
+    parameters:
+    - wheeling_charges_usd_per_year
+    - demand_twh
+    - wheeling_charges
+    free_variables: []
+    determined_variables:
+    - wheeling_charges_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Pass-through pricing
+    latex: \mathrm{wheeling}_{charges\_usd\_per\_year} = 1000000 \mathrm{wheeling}_{charges} \mathrm{demand}_{twh}
   wind_capacity_factor_at_vintage_definition:
     name: The onshore-wind capacity factor at its vintage year
     description: 'The onshore-wind capacity factor AT its dataset''s vintage year: the factor compounded
@@ -30303,6 +32152,52 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{women}_{jobs} = \mathrm{direct}_{jobs} \mathrm{women}_{employment\_share}
+  working_capital_allowance_definition:
+    name: The working-capital allowance
+    description: The regulator's allowance for the working capital a utility funds between paying its
+      suppliers and collecting its bills, as a share of the revenue requirement. It is a permitted recovery,
+      not a cost the utility incurs.
+    system: financial
+    lhs: working_capital_allowance_usd
+    rhs: working_capital_allowance * allowed_revenue_requirement
+    relation: eq
+    parameters:
+    - working_capital_allowance_usd
+    - allowed_revenue_requirement
+    - working_capital_allowance
+    free_variables: []
+    determined_variables:
+    - working_capital_allowance_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: World Bank Regulation of Utilities handbook, revenue caps
+    latex: \mathrm{working}_{capital\_allowance\_usd} = \mathrm{working}_{capital\_allowance} \mathrm{allowed}_{revenue\_requirement}
+  x_factor_revenue_reduction_definition:
+    name: The RPI-X revenue reduction
+    description: 'The RPI-X productivity offset: the allowed requirement less the annual efficiency the
+      regulator assumes the utility can find. The reduction is a share of the requirement and not of the
+      cost, which is why the formula is a multiplication and not a subtraction of an absolute.'
+    system: financial
+    lhs: x_factor_revenue_reduction
+    rhs: (1 - x_factor) * allowed_revenue_requirement
+    relation: eq
+    parameters:
+    - x_factor_revenue_reduction
+    - allowed_revenue_requirement
+    - x_factor
+    free_variables: []
+    determined_variables:
+    - x_factor_revenue_reduction
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: World Bank Regulation of Utilities handbook, revenue caps
+    latex: \mathrm{x}_{factor\_revenue\_reduction} = \left(1 - \mathrm{x}_{factor}\right) \mathrm{allowed}_{revenue\_requirement}
   years_from_carbon_tax_to_net_zero_definition:
     name: Years the carbon tax runs to net zero
     description: 'Years between the carbon tax''s start and the net-zero year: the pricing''s own running
@@ -33868,124 +35763,6 @@ relationships:
   description: Enters the instrument's product.
   reference: null
   priority: P1
-- source: discount_rate
-  target: weighted_average_cost_of_capital
-  equation_id: wacc_alias
-  relationship: equality
-  direction: forward
-  strength: hard
-  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
-    computes.'
-  reference: null
-  priority: P1
-- source: capex_usd_per_kw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: Gross fleet capital enters the base the allowed return is earned on.
-  reference: null
-  priority: P1
-- source: total_capacity_mw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: The fleet's size sets the scale of the capital in the accounts.
-  reference: null
-  priority: P1
-- source: accumulated_depreciation_fraction
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: What the books have written down between gross capital and the base.
-  reference: null
-  priority: P1
-- source: regulatory_asset_base
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: equality
-  direction: forward
-  strength: hard
-  description: Straight-line write-down of the base over the regulatory asset life.
-  reference: null
-  priority: P1
-- source: depreciation_life_by_asset
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: A longer regulatory life spreads the base thinner over the years.
-  reference: null
-  priority: P1
-- source: regulatory_depreciation
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: Depreciation is the first term of the revenue requirement.
-  reference: null
-  priority: P1
-- source: regulatory_asset_base
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: The return is earned on the base, not on gross capital.
-  reference: null
-  priority: P1
-- source: discount_rate
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: The return rate is the blend the financial block computes.
-  reference: null
-  priority: P1
-- source: allowed_return_on_debt
-  target: cost_of_debt
-  equation_id: cost_of_debt_capped
-  relationship: constraint
-  direction: forward
-  strength: hard
-  description: The allowance binds the debt rate a scenario may carry.
-  reference: null
-  priority: P1
-- source: allowed_return_on_equity
-  target: cost_of_equity
-  equation_id: cost_of_equity_capped
-  relationship: constraint
-  direction: forward
-  strength: hard
-  description: The allowance binds the equity return a valuation may assume.
-  reference: null
-  priority: P1
-- source: regulated_tariff_usd_per_mwh
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: equality
-  direction: forward
-  strength: hard
-  description: The applied tariff is the recovery level in the absence of a cap.
-  reference: null
-  priority: P1
-- source: revenue_cap
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: The cap scales the recovery level; below 1 it withholds part of it.
-  reference: null
-  priority: P1
 - source: steel_production
   target: steel_hydrogen_demand_tonnes
   equation_id: steel_hydrogen_demand_tonnes_definition
@@ -35345,124 +37122,6 @@ relationships:
   description: Enters the product.
   reference: null
   priority: P1
-- source: discount_rate
-  target: weighted_average_cost_of_capital
-  equation_id: wacc_alias
-  relationship: equality
-  direction: forward
-  strength: hard
-  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
-    computes.'
-  reference: null
-  priority: P1
-- source: capex_usd_per_kw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: Gross fleet capital enters the base the allowed return is earned on.
-  reference: null
-  priority: P1
-- source: total_capacity_mw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: The fleet's size sets the scale of the capital in the accounts.
-  reference: null
-  priority: P1
-- source: accumulated_depreciation_fraction
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: What the books have written down between gross capital and the base.
-  reference: null
-  priority: P1
-- source: regulatory_asset_base
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: equality
-  direction: forward
-  strength: hard
-  description: Straight-line write-down of the base over the regulatory asset life.
-  reference: null
-  priority: P1
-- source: depreciation_life_by_asset
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: A longer regulatory life spreads the base thinner over the years.
-  reference: null
-  priority: P1
-- source: regulatory_depreciation
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: Depreciation is the first term of the revenue requirement.
-  reference: null
-  priority: P1
-- source: regulatory_asset_base
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: The return is earned on the base, not on gross capital.
-  reference: null
-  priority: P1
-- source: discount_rate
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: The return rate is the blend the financial block computes.
-  reference: null
-  priority: P1
-- source: allowed_return_on_debt
-  target: cost_of_debt
-  equation_id: cost_of_debt_capped
-  relationship: constraint
-  direction: forward
-  strength: hard
-  description: The allowance binds the debt rate a scenario may carry.
-  reference: null
-  priority: P1
-- source: allowed_return_on_equity
-  target: cost_of_equity
-  equation_id: cost_of_equity_capped
-  relationship: constraint
-  direction: forward
-  strength: hard
-  description: The allowance binds the equity return a valuation may assume.
-  reference: null
-  priority: P1
-- source: regulated_tariff_usd_per_mwh
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: equality
-  direction: forward
-  strength: hard
-  description: The applied tariff is the recovery level in the absence of a cap.
-  reference: null
-  priority: P1
-- source: revenue_cap
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: The cap scales the recovery level; below 1 it withholds part of it.
-  reference: null
-  priority: P1
 - source: capex_solar_pv
   target: capex_solar_pv_learning_usd_per_kw
   equation_id: capex_solar_pv_learning_definition
@@ -35868,6 +37527,576 @@ relationships:
   description: Enters the product.
   reference: null
   priority: P1
+- source: discount_rate
+  target: weighted_average_cost_of_capital
+  equation_id: wacc_alias
+  relationship: equality
+  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
+    computes.'
+- source: capex_usd_per_kw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: Gross fleet capital enters the base the allowed return is earned on.
+- source: total_capacity_mw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: The fleet's size sets the scale of the capital in the accounts.
+- source: accumulated_depreciation_fraction
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: What the books have written down between gross capital and the base.
+- source: regulatory_asset_base
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: equality
+  description: Straight-line write-down of the base over the regulatory asset life.
+- source: depreciation_life_by_asset
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: functional
+  description: A longer regulatory life spreads the base thinner over the years.
+- source: regulatory_depreciation
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: Depreciation is the first term of the revenue requirement.
+- source: regulatory_asset_base
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return is earned on the base, not on gross capital.
+- source: discount_rate
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return rate is the blend the financial block computes.
+- source: allowed_return_on_debt
+  target: cost_of_debt
+  equation_id: cost_of_debt_capped
+  relationship: constraint
+  description: The allowance binds the debt rate a scenario may carry.
+- source: allowed_return_on_equity
+  target: cost_of_equity
+  equation_id: cost_of_equity_capped
+  relationship: constraint
+  description: The allowance binds the equity return a valuation may assume.
+- source: regulated_tariff_usd_per_mwh
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: equality
+  description: The applied tariff is the recovery level in the absence of a cap.
+- source: revenue_cap
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: functional
+  description: The cap scales the recovery level; below 1 it withholds part of it.
+- source: carbon_budget_mtco2
+  target: ets_cap
+  equation_id: ets_cap_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: carbon_price_coverage
+  target: ets_cap
+  equation_id: ets_cap_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: horizon_years
+  target: ets_cap
+  equation_id: ets_cap_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: ets_cap
+  target: auction_volume
+  equation_id: auction_volume_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: additional_abatement_mtco2
+  target: carbon_credit_volumes
+  equation_id: carbon_credit_volumes_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: carbon_credit_volumes
+  target: article_6_credits
+  equation_id: article_6_credits_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: corresponding_adjustment
+  target: article_6_credits
+  equation_id: article_6_credits_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: carbon_budget_mtco2
+  target: carbon_budget
+  equation_id: carbon_budget_identity
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: emissions_mtco2_per_year
+  target: leakage_mtco2_per_year
+  equation_id: leakage_emissions_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: leakage_parameters
+  target: leakage_mtco2_per_year
+  equation_id: leakage_emissions_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: ets_cap
+  target: position_limit_mtco2
+  equation_id: position_limit_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: position_limits
+  target: position_limit_mtco2
+  equation_id: position_limit_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: carbon_credit_prices
+  target: carbon_credit_value_usd_per_year
+  equation_id: carbon_credit_value_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: carbon_credit_volumes
+  target: carbon_credit_value_usd_per_year
+  equation_id: carbon_credit_value_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: carbon_credit_insurance
+  target: carbon_credit_insurance_cost_usd_per_year
+  equation_id: carbon_credit_insurance_premium_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: carbon_credit_value_usd_per_year
+  target: carbon_credit_insurance_cost_usd_per_year
+  equation_id: carbon_credit_insurance_premium_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: carbon_credit_value_usd_per_year
+  target: settlement_risk_exposure_usd_per_year
+  equation_id: settlement_risk_exposure_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: settlement_risk
+  target: settlement_risk_exposure_usd_per_year
+  equation_id: settlement_risk_exposure_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: carbon_credit_retirement
+  target: carbon_credit_retired_volume
+  equation_id: carbon_credit_retirement_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: carbon_credit_volumes
+  target: carbon_credit_retired_volume
+  equation_id: carbon_credit_retirement_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: carbon_credit_volumes
+  target: carbon_credit_reversal_allowance
+  equation_id: carbon_credit_reversal_allowance_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: permanence_parameters
+  target: carbon_credit_reversal_allowance
+  equation_id: carbon_credit_reversal_allowance_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: carbon_credit_volumes
+  target: voluntary_market_volume_mtco2
+  equation_id: voluntary_market_volume_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: voluntary_carbon_market
+  target: voluntary_market_volume_mtco2
+  equation_id: voluntary_market_volume_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: demand_twh
+  target: market_traded_volume_twh
+  equation_id: market_traded_volume_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: market_liquidity
+  target: market_traded_volume_twh
+  equation_id: market_traded_volume_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: demand_twh
+  target: time_of_use_demand_twh
+  equation_id: time_of_use_demand_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: time_of_use_tariff_adoption
+  target: time_of_use_demand_twh
+  equation_id: time_of_use_demand_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: bid_ask_spread
+  target: bid_ask_cost_usd_per_year
+  equation_id: bid_ask_cost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: market_traded_volume_twh
+  target: bid_ask_cost_usd_per_year
+  equation_id: bid_ask_cost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: marginal_cost_usd_per_mwh
+  target: price_band_upper_usd_per_mwh
+  equation_id: price_band_upper_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: price_limits
+  target: price_band_upper_usd_per_mwh
+  equation_id: price_band_upper_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: marginal_cost_usd_per_mwh
+  target: price_band_lower_usd_per_mwh
+  equation_id: price_band_lower_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: price_limits
+  target: price_band_lower_usd_per_mwh
+  equation_id: price_band_lower_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: carbon_price_escalated_usd_per_tco2
+  target: risk_adjusted_carbon_price_usd_per_tco2
+  equation_id: risk_adjusted_carbon_price_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: carbon_price_risk
+  target: risk_adjusted_carbon_price_usd_per_tco2
+  equation_id: risk_adjusted_carbon_price_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: demand_twh
+  target: wheeling_charges_usd_per_year
+  equation_id: wheeling_charge_cost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: wheeling_charges
+  target: wheeling_charges_usd_per_year
+  equation_id: wheeling_charge_cost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: demand_twh
+  target: distribution_wheeling_usd_per_year
+  equation_id: distribution_wheeling_cost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: distribution_wheeling_charges
+  target: distribution_wheeling_usd_per_year
+  equation_id: distribution_wheeling_cost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: net_imports_twh
+  target: cross_border_wheeling_usd_per_year
+  equation_id: cross_border_wheeling_cost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: wheeling_charge_cross_border
+  target: cross_border_wheeling_usd_per_year
+  equation_id: cross_border_wheeling_cost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: feed_in_tariff
+  target: feed_in_tariff_cost_usd_per_year
+  equation_id: feed_in_tariff_cost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: renewable_generation_twh
+  target: feed_in_tariff_cost_usd_per_year
+  equation_id: feed_in_tariff_cost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: demand_twh
+  target: electricity_subsidy_spend_usd_per_year
+  equation_id: electricity_subsidy_cost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: electricity_subsidies
+  target: electricity_subsidy_spend_usd_per_year
+  equation_id: electricity_subsidy_cost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: renewable_generation_twh
+  target: renewable_subsidy_spend_usd_per_year
+  equation_id: renewable_subsidy_cost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: renewable_subsidies
+  target: renewable_subsidy_spend_usd_per_year
+  equation_id: renewable_subsidy_cost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: fossil_fuel_subsidies
+  target: fossil_fuel_subsidy_spend_usd_per_year
+  equation_id: fossil_fuel_subsidy_cost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: generation_twh
+  target: fossil_fuel_subsidy_spend_usd_per_year
+  equation_id: fossil_fuel_subsidy_cost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: renewable_generation_twh
+  target: fossil_fuel_subsidy_spend_usd_per_year
+  equation_id: fossil_fuel_subsidy_cost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: carbon_revenue_usd_per_year
+  target: carbon_tax_offset_usd_per_year
+  equation_id: carbon_tax_offset_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: carbon_tax_interaction
+  target: carbon_tax_offset_usd_per_year
+  equation_id: carbon_tax_offset_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: cross_subsidy_level
+  target: cross_subsidy_usd_per_year
+  equation_id: cross_subsidy_transfer_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: total_revenue_usd_per_year
+  target: cross_subsidy_usd_per_year
+  equation_id: cross_subsidy_transfer_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: horizon_years
+  target: tariff_rebalancing_usd_per_year
+  equation_id: tariff_rebalancing_transfer_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: tariff_rebalancing
+  target: tariff_rebalancing_usd_per_year
+  equation_id: tariff_rebalancing_transfer_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: total_revenue_usd_per_year
+  target: tariff_rebalancing_usd_per_year
+  equation_id: tariff_rebalancing_transfer_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: applied_tariff_usd_per_mwh
+  target: hybrid_capped_tariff_usd_per_mwh
+  equation_id: hybrid_capped_tariff_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: hybrid_revenue_price_cap
+  target: hybrid_capped_tariff_usd_per_mwh
+  equation_id: hybrid_capped_tariff_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: price_cap
+  target: hybrid_capped_tariff_usd_per_mwh
+  equation_id: hybrid_capped_tariff_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: regulated_tariff_usd_per_mwh
+  target: hybrid_capped_tariff_usd_per_mwh
+  equation_id: hybrid_capped_tariff_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: revenue_cap
+  target: price_cap
+  equation_id: price_cap_identity
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: carbon_price_coverage
+  target: carbon_tax_coverage
+  equation_id: carbon_tax_coverage_identity
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: lifeline_tariff_usd_per_mwh
+  target: social_tariff
+  equation_id: social_tariff_identity
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: fuel_diversity_index
+  target: market_concentration
+  equation_id: market_concentration_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: mini_grid_programme_spend_usd_per_year
+  target: mini_grid_subsidy_usd_per_year
+  equation_id: mini_grid_subsidy_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: mini_grid_subsidies
+  target: mini_grid_subsidy_usd_per_year
+  equation_id: mini_grid_subsidy_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: shs_programme_spend_usd_per_year
+  target: shs_subsidy_usd_per_year
+  equation_id: shs_subsidy_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: shs_subsidies
+  target: shs_subsidy_usd_per_year
+  equation_id: shs_subsidy_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: collateral_posted_usd_per_year
+  target: netting_shortfall_usd_per_year
+  equation_id: netting_shortfall_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: netting_agreements
+  target: netting_shortfall_usd_per_year
+  equation_id: netting_shortfall_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: allowed_revenue_requirement
+  target: x_factor_revenue_reduction
+  equation_id: x_factor_revenue_reduction_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: x_factor
+  target: x_factor_revenue_reduction
+  equation_id: x_factor_revenue_reduction_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: allowed_revenue_requirement
+  target: working_capital_allowance_usd
+  equation_id: working_capital_allowance_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: working_capital_allowance
+  target: working_capital_allowance_usd
+  equation_id: working_capital_allowance_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: allowed_revenue_requirement
+  target: service_quality_reward_usd
+  equation_id: service_quality_reward_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: service_quality_reward
+  target: service_quality_reward_usd
+  equation_id: service_quality_reward_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: local_employment_share
+  target: employment_attainment_local
+  equation_id: employment_attainment_local_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: local_employment_targets
+  target: employment_attainment_local
+  equation_id: employment_attainment_local_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: women_employment_share
+  target: employment_attainment_women
+  equation_id: employment_attainment_women_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: women_employment_targets
+  target: employment_attainment_women
+  equation_id: employment_attainment_women_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: youth_employment_share
+  target: employment_attainment_youth
+  equation_id: employment_attainment_youth_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+- source: youth_employment_targets
+  target: employment_attainment_youth
+  equation_id: employment_attainment_youth_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
 cross_validation:
 - id: carbon_price_budget_alignment
   condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0
@@ -36208,3 +38437,12 @@ cross_validation:
     that carries an efficiency or structural story the scenario should also state.
   suggestion: Carry the efficiency or structural story in the plan, or align demand_growth with the macro
     driver
+- id: carbon_revenue_without_an_instrument
+  condition: ets_enabled < 0.5 and carbon_price_coverage > 0.0
+  severity: warning
+  message: Carbon revenue accrues while no emissions trading system is enabled. The revenue identity prices
+    the covered share of emissions and reads no instrument switch, so a scenario that switches the ETS
+    off still books the revenue it would have raised. Either enable the instrument or set carbon_price_coverage
+    to zero, and say which in the plan.
+  suggestion: Enable ets_enabled, or set carbon_price_coverage to 0.0, or name the carbon tax that collects
+    the revenue instead
