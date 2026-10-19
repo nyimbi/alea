@@ -1970,6 +1970,94 @@ declared free space, and `uncoupled()` will retain them by the register's own
 contract. Stating that is the point: the register closing to zero is not the
 goal, the register *naming every node's class* is.
 
+**Batch 25 — the gate family.** Thirteen equations, nine retyped nodes, 48
+edges, no rule. Thirteen switches with a quantity behind them, and the
+distinction that made the batch: the research packs split the flags into
+GATE-PRODUCT, where a switch multiplies a base the graph already carries, and
+GATE-SCENE / GATE-SCENE-SWITCH, where a switch selects which model runs. Only
+the first kind couples. No arithmetic expresses a branch, and a product written
+for a scene switch would be a number pretending to be a branch. Batch 25
+coupled thirteen of the packs' fifteen GATE-PRODUCT switches; the other two,
+`carbon_credit_insurance` and `voluntary_carbon_market`, were already coupled.
+The 44 scene switches remain declared.
+
+The products: the gated carbon volume (`ets_enabled * ets_cap`), three
+insurance covers against gross revenue, political-risk cover, the parent
+guarantee and the sanctions exposure against capex (the guarantee against the
+debt share of it), the free-trade-zone benefit and the import duty against
+equipment spend, permitted imports against net imports, coordinated maintenance
+hours against planned maintenance, the smart-metered population, and the
+permitted transmission spend against `line_upgrade_budget`.
+
+Nine nodes were retyped rather than added. Eight insurance and fiscal flags
+shipped unit-less at the catalog's 500000.0 placeholder and are now
+dimensionless shares in [0,1]; `line_upgrade_budget` is USD at 5e7. The
+placeholder was not cosmetic: `import_duty_exemption` at 500000 makes the
+`(1 - x)` factor in the duty product -499999, which is why the retype precedes
+the equation rather than following it. All thirteen were dimensionally
+pre-checked before authoring, 0 bad of 13.
+
+State after batch 25: **1244 parameters, 333 equations, 711 edges, 55 rules,
+516 uncoupled** (694 at batch 20 → 649 → 631 → 591 → 575 → 532 → 516).
+Generator `--check` idempotent, `propagate` clean over all 1244 values with no
+range excursion, `gradients` clean over the whole graph. Unit walker 321 of 333
+consistent with **11 flagged**, 0 undecidable, 4 exempt; constraint-shaped
+34/299/333 (no new inequality); translate coverage 926 total and 923
+untranslated, unchanged because the batch added no settable node; catalog
+disagreements 100 → 109 (agree 687 → 678); dead knobs 509 → 495; audit
+checked/skipped 109/177 → 117/182; edge strength hard 317 → 330; citation
+doors 138 → 139 (only `gated_carbon_volume_definition` cites; the other twelve
+carry None); affine coverage 286 → 299; uncertainty inputs unchanged at 72,
+reaching 119 → 122 derived parameters.
+
+**Batch 26 — the adequacy and reserve family.** Eleven equations, 16 nodes
+written, 30 edges, no rule. Eleven catalog nodes that carried a formula and
+were held as placeholders, retyped and given their equations, plus five new
+nodes. Six products: spinning reserve as a share of peak demand, the regulation
+up and down requirements at their own shares, voltage support as a share of
+reactive capability, spare capacity as the capacity above peak, and the
+post-programme transmission loss at the reduction target. Five aliases to nodes
+that already do the work: `spinning_reserve_requirement` to `spinning_reserve`,
+`non_spinning_reserve` to `non_spinning_reserve_requirement`,
+`planning_reserve_margin` to `reserve_margin_min`, `reserve_margin` to
+`reserve_margin_actual`, and `grid_reliability_saifi` to
+`service_quality_standards`.
+
+Four new bases — `spinning_reserve_share` (0.05), `regulation_up_share` (0.01),
+`regulation_down_share` (0.01) and `voltage_support_share` (0.10), all
+dimensionless in [0,1]. `transmission_loss_reduction_target` was retyped from
+unit-less 500000.0 to a share at 0.1, for the same reason as batch 25's
+exemptions: the equation multiplies by `(1 - x)`, and at 500000 that factor is
+-499999.
+
+Every one of the eleven shipped at `unit=None, default=500000.0`. Spinning
+reserve at 500000 MW is 500 GW of reserve on an 8.5 GW peak. At defaults the
+products are 425 MW spinning, 85 MW regulation up and down, 280.5 MVAr voltage
+support, 1,500 MW spare capacity, a 0.15 planning margin, a 0.170 operating
+margin, a SAIFI target of 15 events/year and a post-target loss of 0.45.
+
+The batch also surfaced a generator drift: `transmission_loss_factor` was
+`free` in the shipped document while the generator infers `exogenous` from the
+name. Regenerating `prg.yaml` fixed it at the same default. It is the second
+time a hand-edited role has drifted from the inference: `net_zero_year` was
+preserved `exogenous` at batch 20's regen against the derived-by-name
+heuristic, which reads it as computed when it is a milestone. The rule that
+follows is that a role is regenerated rather than typed.
+
+State after batch 26: **1249 parameters, 344 equations, 728 edges, 55 rules,
+504 uncoupled** (694 at batch 20 → 649 → 631 → 591 → 575 → 532 → 516 → 504).
+Generator `--check` idempotent, `propagate` clean over all 1249 values with no
+range excursion, `gradients` clean over the whole graph. Unit walker 332 of 344
+consistent with **11 flagged**, 0 undecidable, 4 exempt; constraint-shaped
+34/310/344 (no new inequality); translate coverage 926 → 920 total and
+923 → 917 untranslated (ten reserve nodes left the settable set, four shares
+entered it, net six); catalog disagreements 109 → 120 (agree 678 → 667); dead
+knobs 495 → 483; audit checked/skipped 117/182 → 119/191; edge strength hard
+330 → 341; citation doors 139 → 149 (ten of the eleven equations cite;
+`transmission_loss_target_definition` carries None); affine coverage
+299 → 310; uncertainty inputs unchanged at 72, reaching 122 → 123 derived
+parameters.
+
 ## Evaluation of the design docs against the code (2026-10-17)
 
 **`docs/how_prg_works.md` (read-only; a teaching narrative, not read as spec).**

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 """The equation-to-constraint half of the translation layer.
 
-WHAT THESE TESTS ARE FOR. Of the library's 261 equations, 34 are
+WHAT THESE TESTS ARE FOR. Of the library's 344 equations, 34 are
 constraint-shaped and 21 of those bind (the batch-22 ``leq`` thresholds took
 it from 24/16). The number is the finding, in both directions: a test
 that only checked the two work would let a third appear unnoticed, and a test
@@ -137,9 +137,9 @@ def _solve(
 def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	graph: ParameterGraph,
 ):
-	"""Thirty-four of the library's 261 equations can constrain a solve.
+	"""Thirty-four of the library's 344 equations can constrain a solve.
 
-	The denominator is the finding: 227 equations are identities, and folding
+	The denominator is the finding: 310 equations are identities, and folding
 	them into the register would under-report what a solve is actually
 	bound by. Pinned as a literal so a new inequality has to change this line
 	to land. The counts moved 15/153/168 -> 24/182/206 when batch 20 landed:
@@ -160,11 +160,21 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	so 34/227/261 -> 34/243/277. Batch 24's carbon-market layer added
 	forty-three identities -- the carbon caps and volumes, the market shares
 	against their bases, the subsidy and wheeling spends, the employment
-	attainment ratios -- and no inequality, so 34/243/277 -> 34/286/320."""
+	attainment ratios -- and no inequality, so 34/243/277 -> 34/286/320.
+	Batch 25's gate-family coupling added thirteen more identities -- the
+	insurance covers, the trade and sanctions costs, the permitted imports
+	and transmission spend, the maintenance hours, the smart-metered
+	population and the gated carbon volume -- and no inequality, so
+	34/286/320 -> 34/299/333. Batch 26's adequacy-and-reserve layer added
+	eleven more identities -- the reserve and regulation definitions, the
+	spinning, non-spinning and planning-margin aliases, the SAIFI target
+	alias, the voltage-support requirement, and the spare-capacity and
+	transmission-loss-target definitions -- and no inequality, so
+	34/299/333 -> 34/310/344."""
 	cov = coverage(graph)
 	assert cov["constraint_shaped"] == 34
-	assert cov["identities"] == 286
-	assert cov["total"] == 320
+	assert cov["identities"] == 310
+	assert cov["total"] == 344
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):

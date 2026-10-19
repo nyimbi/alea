@@ -1483,11 +1483,25 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# (`graph.uncoupled()` went 575 to 532): forty of them were in this
 	# register, so it fell 552 to 512, and one more left it the other way --
 	# `ets_enabled`, which this batch gave a reader by making it the subject
-	# of `carbon_revenue_without_an_instrument`, so the register is 509 and
-	# rule-read holds 19 of the 532. The containment below is what carries the
-	# weight -- dead is a subset of uncoupled-minus-rule -- and the count is
-	# the record of what it was *at*.
-	assert len(dead) == 509, len(dead)
+	# of `carbon_revenue_without_an_instrument`. Batch 25's gate-family
+	# coupling took `graph.uncoupled()` 532 to 516: fourteen of the sixteen
+	# were in this register, so it fell 509 to 495, and two more left
+	# rule-read the other way -- `ets_enabled` and `import_duty_equipment`,
+	# which batch 25's equations now read -- so rule-read holds 17 of the
+	# 516. Batch 26's adequacy-and-reserve layer took `graph.uncoupled()`
+	# 516 to 504: ten settable placeholders it made derived
+	# (`grid_reliability_saifi`, `non_spinning_reserve`,
+	# `planning_reserve_margin`, `regulation_down_requirement`,
+	# `regulation_up_requirement`, `reserve_margin`, `spare_capacity`,
+	# `spinning_reserve`, `spinning_reserve_requirement`,
+	# `voltage_support_requirement`) and two -- `transmission_loss_factor`
+	# and `transmission_loss_reduction_target` -- that stay settable but are
+	# now read by `transmission_loss_target_definition`. All twelve were in
+	# this register, so it fell 495 to 483, and rule-read still holds 17 of
+	# the 504. The containment below is what carries the weight -- dead is a
+	# subset of uncoupled-minus-rule -- and the count is the record of what
+	# it was *at*.
+	assert len(dead) == 483, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
@@ -1780,18 +1794,34 @@ def test_the_audit_reports_what_it_did_not_check():
 	243 to 286), and twenty-one of them are reachable from what the result
 	supplies -- the spend and tariff products, which read demand, generation
 	and revenue, all of which the result carries -- so ``checked`` goes 88 to
-	109 and ``skipped`` 155 to 177. The partition total is what the test is
-	really asserting -- the two counts must sum to
-	``len(graph.computed())`` -- and the counts are pinned beside it so a
-	change to the register is looked at rather than absorbed.
+	109 and ``skipped`` 155 to 177. Batch 25's gate-family coupling added 13
+	more (computed() went 286 to 299): the eight cover and duty products --
+	business-interruption, cyber, force-majeure and political-risk cover,
+	the free-trade-zone benefit, the import duty, the parent guarantee and
+	the sanctions exposure -- read gross revenue or equipment spend, which
+	the result carries, so ``checked`` goes 109 to 117; the other five, the
+	coordinated maintenance hours, the gated carbon volume, the permitted
+	imports and transmission spend, and the smart-metered population, join
+	``skipped`` (177 to 182). Batch 26's adequacy-and-reserve layer added 11
+	more (computed() went 299 to 310): two reachable from what the result
+	supplies -- ``spare_capacity`` reads ``total_capacity_mw`` directly, and
+	``reserve_margin`` reads ``reserve_margin_actual``, which the supplied
+	thermal capacity reaches through ``firm_capacity_mw`` -- join ``checked``
+	(117 to 119), and the other nine, the reserve and regulation
+	requirements, the planning margin, the SAIFI target, the voltage-support
+	requirement and the transmission loss after target, join ``skipped``
+	(182 to 191). The partition total is what the test is really asserting --
+	the two counts must sum to ``len(graph.computed())`` -- and the counts
+	are pinned beside it so a change to the register is looked at rather than
+	absorbed.
 	"""
 	from alea.prg.audit import audit_scenario_result
 	from alea.prg.graph import load_graph
 
 	audit = audit_scenario_result(_solved())
 	assert audit.consistent
-	assert len(audit.checked) == 109, audit.checked
-	assert len(audit.skipped) == 177, audit.skipped
+	assert len(audit.checked) == 119, audit.checked
+	assert len(audit.skipped) == 191, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -1838,9 +1868,10 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# batch 20's sector-coupling layer took the computed set 153 to 182,
 	# batch 21's demand-and-finance layer took it 182 to 198, batch 22's
 	# compliance layer took it 198 to 227, batch 23's extensive-base layer
-	# took it 227 to 243, and batch 24's carbon-market layer took it 243 to
-	# 286.
-	assert len(audit.skipped) == 286, audit.skipped
+	# took it 227 to 243, batch 24's carbon-market layer took it 243 to 286,
+	# batch 25's gate-family coupling took it 286 to 299, and batch 26's
+	# adequacy-and-reserve layer took it 299 to 310.
+	assert len(audit.skipped) == 310, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -2849,7 +2880,7 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	"""
 	text = register(graph).summary()
 	assert "not a distribution" in text
-	# 72 inputs reaching 103 derived parameters, 35 of those stochastic by their
+	# 72 inputs reaching 122 derived parameters, 35 of those stochastic by their
 	# own relation. Batch 20's sector-coupling layer moved the reach: one fewer
 	# settable stochastic input than the promotion's 73, and the equations it
 	# added brought 90 derived parameters into the closure. Batch 21's
@@ -2858,10 +2889,20 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	# with the input count unchanged at 72. Batch 23's extensive-base layer
 	# brought 5 more (98 to 103): the route, learning, household, land and
 	# transport products all hang off settable bases, and the input count is
-	# again unchanged at 72. Pinned because the number is the finding -- the
-	# sentence exists to stop a reader taking the declarations for a
-	# distribution, and a reach that drifts unnoticed would understate it.
-	assert "72" in text and "119" in text
+	# again unchanged at 72. Batch 24's carbon-market layer brought 16 more
+	# (103 to 119). Batch 25's gate-family coupling brought 3 more (119 to
+	# 122): the business-interruption, cyber and force-majeure cover products,
+	# each a settable share times gross revenue, and the input count is again
+	# unchanged at 72. Batch 26's adequacy-and-reserve layer brought one more
+	# (122 to 123): `reserve_margin` is now an alias of
+	# `reserve_margin_actual`, and `fuel_price_usd_per_mwh` already reached
+	# that node through `marginal_cost_usd_per_mwh` and `vre_capacity_mw`, so
+	# an uncertain input that already existed now closes on one more derived
+	# parameter, and the input count is again unchanged at 72. Pinned because
+	# the number is the finding -- the sentence exists to stop a reader taking
+	# the declarations for a distribution, and a reach that drifts unnoticed
+	# would understate it.
+	assert "72" in text and "123" in text
 
 
 # ---------------------------------------------------------------------------
@@ -3098,6 +3139,25 @@ def test_the_flagged_equations_are_a_known_set(graph: ParameterGraph):
 	this batch retyped, and each is now dimensionally decidable and consistent.
 	The open side of the prediction was an inference from one candidate
 	declaration, not a measurement; the measurement is this set.
+
+	WHY BATCH 25 ADDED NONE. Each of the gate-family coupling's thirteen
+	equations multiplies a dimensionless share or switch by a quantity that
+	already carries the declared unit -- a cover share against
+	``total_revenue_usd_per_year``, a rollout switch against the planned hours
+	or the permitted volume -- so the product inherits that unit and the walker
+	divides it cleanly. Nothing in the batch declares a bare annual quantity,
+	which is the class every flag here belongs to, so the set stands at eleven.
+
+	WHY BATCH 26 ADDED NONE. Each of the adequacy-and-reserve layer's eleven
+	equations multiplies a dimensionless share by a quantity that already
+	carries the declared unit -- a reserve share against ``peak_demand_mw``,
+	the voltage-support share against ``reactive_capability_mvar`` -- or
+	aliases one node to another of the same unit, and
+	``transmission_loss_target_definition`` scales ``transmission_loss_factor``
+	by ``(1 - transmission_loss_reduction_target)``, which the batch retyped
+	from a unit-less 500000.0 to a share at 0.1. Every product and every
+	alias therefore inherits a declared unit the walker divides cleanly, and
+	none declares a bare annual quantity, so the set stands at eleven again.
 	"""
 	from alea.prg.units import check_graph
 
@@ -3595,13 +3655,22 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	equations the batch bakes. Batch 23's extensive-base layer added 16 more,
 	all hard -- three Wright-curve learning definitions, seven route and capex
 	products, and six household, land, transport and tariff products -- taking
-	the sum to the 277 equations the batch bakes.
+	the sum to the 277 equations the batch bakes. Batch 24 added 43 the same
+	way, all hard. Batch 25's gate-family coupling added 13 more, all hard:
+	the eight cover, duty, guarantee and permitted-quantity definitions, the
+	smart-metered population and the gated carbon volume, taking the sum to
+	the 333 equations the batch bakes. Batch 26's adequacy-and-reserve layer
+	added 11 more, all hard: the reserve and regulation definitions, the
+	spinning, non-spinning and planning-margin aliases, the SAIFI target
+	alias, the voltage-support requirement, and the spare-capacity and
+	transmission-loss-target definitions, taking the sum to the 344 equations
+	the batch bakes.
 	"""
 	counts = graph.strength_counts()
 	assert counts, "no strength was counted"
 	assert sum(counts.values()) == len(graph.equations)
 	assert set(counts) <= {"hard", "soft", "informational"}
-	assert counts == {"hard": 317, "informational": 1, "soft": 2}, counts
+	assert counts == {"hard": 341, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -3897,16 +3966,32 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# offset) and one benefit-sharing row (the cross-subsidy transfer), taking
 	# the register 115 to 138. The batch's fifty equations declare twenty
 	# None (the definitions' own forms) and seven citations batch 23 had
-	# already registered; the rest are the twenty-three above. A further
-	# change is a change to the register's coverage and fails here.
-	assert len(declared) == 138, f"the citation register moved: {sorted(declared)}"
+	# already registered; the rest are the twenty-three above. Batch 25's
+	# gate-family coupling added one more: the gated carbon volume cites the
+	# EU CBAM regulation, taking the register 138 to 139; the other twelve
+	# equations the batch adds are the cover, duty and permitted-quantity
+	# definitions' own forms and carry None. Batch 26's adequacy-and-reserve
+	# layer added eleven equations, ten of which cite a work already in the
+	# register -- the Stoft 2002 chapter for the operating-margin alias and
+	# the regulation up and down definitions, the N-1 planning criterion for
+	# the spinning-reserve, spare-capacity and planning-margin definitions,
+	# IEEE 1366 for the SAIFI target and the voltage-support requirement, and
+	# the catalog's own duplicate rows for the two requirement aliases -- so
+	# the count of distinct works stays at 44 while the register goes 139 to
+	# 149. The eleventh, `transmission_loss_target_definition`, carries None:
+	# it briefly carried an NREL ATB row, and that was wrong -- a policy
+	# target's arithmetic, `factor * (1 - share)`, is an identity rather than
+	# an external result. The batch therefore adds no citation, and the
+	# register moves by the ten that reuse existing works. A further change
+	# is a change to the register's coverage and fails here.
+	assert len(declared) == 149, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
 		"the report dropped or altered a citation the graph declares; the field "
 		"is read again, which is the thing that was not true before"
 	)
-	# The other thirty carry `None` and not an empty string: "no external
+	# The other 195 carry `None` and not an empty string: "no external
 	# source" and "a source that rendered blank" are different findings.
 	blank = [row.equation_id for row in rows if row.reference == ""]
 	assert not blank, f"a citation rendered as an empty string rather than None: {blank}"
@@ -4133,15 +4218,17 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 				f"numeric {numeric!r}"
 			)
 			compared += 1
-	assert compared == 286, (
-		f"expected 286 determined variables in the shipped library, compared "
+	assert compared == 310, (
+		f"expected 310 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "
 		f"promoted; batch 20's sector-coupling layer raised it to 182, "
 		f"batch 21's demand-and-finance layer raised it to 198, batch 22's "
 		f"compliance layer raised it to 227, batch 23's extensive-base "
-		f"layer raised it to 243, and batch 24's carbon-market layer raised "
-		f"it to 286 -- every equation each batch added is affine in the "
+		f"layer raised it to 243, batch 24's carbon-market layer raised "
+		f"it to 286, batch 25's gate-family coupling raised it to 299, and "
+		f"batch 26's adequacy-and-reserve layer raised it to 310 -- "
+		f"every equation each batch added is affine in the "
 		f"variable it solves for, which is the claim the "
 		f"`exact is not None` above makes, at the wider coverage"
 	)

@@ -144,6 +144,26 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	of batch 24's seventy-six remaining new parameters arrived derived, which
 	is why the denominator moved down rather than up.
 
+	926 -> 926 when batch 25 landed. It created no settable knob and derived
+	none: the nine placeholders it retyped (the insurance, trade, sanctions
+	and upgrade-budget nodes) stayed ``free``, gaining a unit, a range and a
+	real default rather than an equation, and all thirteen of its new
+	parameters arrived derived. So the denominator and the numerator are both
+	unchanged, and the register's gap is the same 923 it was.
+
+	926 -> 920 when batch 26 landed. The adequacy-and-reserve layer made ten
+	placeholders derived -- ``grid_reliability_saifi``, ``non_spinning_reserve``,
+	``planning_reserve_margin``, ``regulation_down_requirement``,
+	``regulation_up_requirement``, ``reserve_margin``, ``spare_capacity``,
+	``spinning_reserve``, ``spinning_reserve_requirement`` and
+	``voltage_support_requirement`` -- each gaining an equation that computes
+	it, and created four new settable knobs (the ``spinning_reserve_share``,
+	``regulation_up_share``, ``regulation_down_share`` and
+	``voltage_support_share`` dimensionless shares). Ten left the denominator
+	and four entered it, a net six, and all four landed untranslated like
+	their 913 siblings, so the numerator stayed at three. The register's gap
+	fell 923 to 917, by the same net six.
+
 	The eighteen the engine cannot carry are still outside the denominator:
 	they are chosen by the optimiser, so ``is_settable`` is False for them.
 	They are not missing from the register -- ``endogenous`` carries them, and
@@ -151,7 +171,7 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	"""
 	cov = coverage(graph)
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 926, cov  # 935 -> 926: batch 24 derived nine former free knobs
+	assert cov["total"] == 920, cov
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -209,9 +229,14 @@ def test_the_untranslated_register_is_not_empty_and_says_why(
 	An empty register would mean the two sets coincide, which they do not: the
 	graph states what the accounts require and the engine states what a PyPSA
 	network can be perturbed by.
+
+	The literal is the denominator's partner, so the reason it moved is the
+	one above: batch 26 made ten reserve placeholders derived and created
+	four untranslated shares, a net six, taking the register 923 to 917. The
+	numerator stayed at three, so the gap and the denominator fell together.
 	"""
 	missing = untranslated(graph)
-	assert len(missing) == 923, missing  # 932 -> 923: batch 24 derived nine former free knobs, none translated
+	assert len(missing) == 917, missing
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact

@@ -1953,22 +1953,50 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
-  business_interruption_insurance:
-    name: Business interruption insurance
-    description: Business interruption insurance
-    category: Macro
+  business_interruption_cover_usd_per_year:
+    name: The business-interruption cover
+    description: 'The revenue indemnified: the cover share times gross revenue. A switch at zero returns
+      zero, which is the gated quantity rather than a scenario branch.'
+    category: Policy
     type: float
+    unit: USD/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 1000000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The gate-family coupling (batch 25)
     users:
-    - Investors
-    source: docs/params.md
+    - Regulators
+    - Planners
+  business_interruption_insurance:
+    name: Business interruption insurance
+    description: 'Share of gross revenue indemnified by business-interruption cover. A share: the shipped
+      node carried the catalog placeholder and no unit, which made every product against revenue read
+      as 500000 x USD/year.'
+    category: Macro
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.01
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The gate-family coupling (batch 25)
+    source_url: null
+    users:
+    - Regulators
+    - Policymakers
+    - Planners
+    priority: P1
+    status: existing
+    deprecated_by: null
   capacity_factor:
     name: Capacity factor
     description: Annual energy divided by rated output times 8760 hours.
@@ -5685,6 +5713,25 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  coordinated_maintenance_hours_per_year:
+    name: The coordinated maintenance hours
+    description: 'The maintenance hours run under coordination: the switch times the planned hours. Coordination
+      does not change how much maintenance the fleet needs, only whether the outages are scheduled jointly,
+      so the base is unchanged and the gate selects which hours are coordinated.'
+    category: Policy
+    type: float
+    unit: hours/year
+    range:
+    - 0.0
+    - 8760.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The gate-family coupling (batch 25)
+    users:
+    - Regulators
+    - Planners
   corporate_income_tax_rate:
     name: Corporate income tax rate
     description: Corporate income tax rate -- the catalog carries the same rate under the spellings `corporate_income_tax_rate`
@@ -6832,6 +6879,23 @@ parameters:
     users:
     - All
     source: docs/params.md
+  cyber_cover_usd_per_year:
+    name: The cyber-loss cover
+    description: 'The revenue indemnified against cyber loss: the cover share times gross revenue.'
+    category: Policy
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 1000000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The gate-family coupling (batch 25)
+    users:
+    - Regulators
+    - Planners
   cyber_incident_response:
     name: Cyber incident response
     description: Incident response
@@ -6850,20 +6914,28 @@ parameters:
     source: docs/params.md
   cyber_insurance:
     name: Cyber insurance
-    description: Cyber insurance
+    description: Share of gross revenue indemnified against cyber loss. A share.
     category: Digital
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.002
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The gate-family coupling (batch 25)
+    source_url: null
     users:
-    - Insurance
-    source: docs/params.md
+    - Regulators
+    - Policymakers
+    - Planners
+    priority: P1
+    status: existing
+    deprecated_by: null
   cyber_threat_level:
     name: Cyber threat level
     description: Cyber threat
@@ -10070,22 +10142,47 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
-  force_majeure_insurance:
-    name: Force majeure insurance
-    description: Force majeure insurance
-    category: Macro
+  force_majeure_cover_usd_per_year:
+    name: The force-majeure cover
+    description: 'The revenue indemnified against force-majeure events: the cover share times gross revenue.'
+    category: Policy
     type: float
+    unit: USD/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 1000000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The gate-family coupling (batch 25)
     users:
-    - Investors
-    source: docs/params.md
+    - Regulators
+    - Planners
+  force_majeure_insurance:
+    name: Force majeure insurance
+    description: Share of gross revenue indemnified against force-majeure events. A share.
+    category: Macro
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.004
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The gate-family coupling (batch 25)
+    source_url: null
+    users:
+    - Regulators
+    - Policymakers
+    - Planners
+    priority: P1
+    status: existing
+    deprecated_by: null
   forced_outage_rate:
     name: Forced outage rate
     description: Forced outage rate multiplier
@@ -10306,22 +10403,50 @@ parameters:
     priority: P2
     status: existing
     deprecated_by: null
-  free_trade_zone_benefits:
-    name: Free trade zone benefits
-    description: FTZ benefits
-    category: Tax
+  free_trade_zone_benefit_usd:
+    name: The free-trade-zone benefit
+    description: 'The duty forgone: the zone''s share of the equipment duty, which is the duty rate on
+      the fleet''s capital. The `1000` is kW per MW, so the capital term is USD -- the fleet''s own unit
+      arithmetic, not a fitted factor.'
+    category: Policy
     type: float
+    unit: USD
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    - 10000000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The gate-family coupling (batch 25)
     users:
-    - Developers
-    source: docs/params.md
+    - Regulators
+    - Planners
+  free_trade_zone_benefits:
+    name: Free trade zone benefits
+    description: Share of the equipment duty forgone under free-trade-zone status. A share of the duty
+      the equipment would otherwise bear.
+    category: Tax
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The gate-family coupling (batch 25)
+    source_url: null
+    users:
+    - Regulators
+    - Policymakers
+    - Planners
+    priority: P1
+    status: existing
+    deprecated_by: null
   freight_electrification:
     name: Freight electrification share
     description: Share of freight tonne-kilometres moved by electric drivetrain. A share.
@@ -10932,6 +11057,27 @@ parameters:
     users:
     - Traders
     source: docs/params.md
+  gated_carbon_volume_mtco2:
+    name: The gated carbon volume
+    description: 'The capped volume the emissions trading system actually applies, which is the cap times
+      the instrument switch. It is the quantity the revenue identity cannot read: `carbon_revenue_definition`
+      prices the covered share of emissions and takes no switch, so the revenue accrues whether or not
+      the instrument exists. Stating the gated volume beside it makes the gap a difference between two
+      derived nodes rather than a rule''s prose.'
+    category: Policy
+    type: float
+    unit: MtCO2/year
+    range:
+    - 0.0
+    - 10000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The gate-family coupling (batch 25)
+    users:
+    - Regulators
+    - Planners
   gdp_growth:
     name: GDP growth rate
     description: Annual real GDP growth the scenario carries. Bounded to refuse a value that would compound
@@ -11371,20 +11517,22 @@ parameters:
     deprecated_by: null
   grid_reliability_saifi:
     name: Grid reliability saifi
-    description: Reliability target (SAIFI)
+    description: The catalog's 'Reliability target (SAIFI)' is the service-quality standard in interruptions
+      per year, which the graph carries as `service_quality_standards` and already binds with `saifi_ceiling_bound`.
+      A target is not a second measurement of the fleet's performance.
     category: Grid
     type: float
+    unit: events/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: policy
+    - 200.0
+    role: derived
+    determinism: fixed
     priority: P1
-    status: to_build
+    status: existing
+    source: The adequacy and reserve coupling (batch 26)
     users:
     - Regulators
-    source: docs/params.md
   grid_reliability_target:
     name: Grid reliability target
     description: The SAIDI ceiling the regulator sets, per the reliability indices' own definition; the
@@ -12524,6 +12672,25 @@ parameters:
     users:
     - Policymakers
     source: docs/params.md
+  import_duty_cost_usd:
+    name: The import duty paid
+    description: 'The duty the project actually pays: the unexempted share of the equipment duty on the
+      fleet''s capital. Written as `(1 - x)` because the node is the share *exempted* -- the opposite
+      spelling evaluates to a negative duty at any exemption near one.'
+    category: Policy
+    type: float
+    unit: USD
+    range:
+    - 0.0
+    - 10000000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The gate-family coupling (batch 25)
+    users:
+    - Regulators
+    - Planners
   import_duty_equipment:
     name: Import duty on equipment
     description: Import duty rate on project equipment. A share of the landed value; bounded above by
@@ -12549,20 +12716,29 @@ parameters:
     deprecated_by: null
   import_duty_exemption:
     name: Import duty exemption
-    description: Import duty exemption
+    description: 'Share of the equipment duty exempted. A share, and the reason the product is written
+      as `(1 - x)`: what the project pays is the unexempted part.'
     category: Policy
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The gate-family coupling (batch 25)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Regulators
+    - Policymakers
+    - Planners
+    priority: P1
+    status: existing
+    deprecated_by: null
   in_country_telemetry_sites:
     name: In country telemetry sites
     description: 'in country telemetry sites: the compliance register''s derived quantity. The operational
@@ -14496,20 +14672,29 @@ parameters:
     source: docs/params.md
   line_upgrade_budget:
     name: Line upgrade budget
-    description: Line upgrade budget
+    description: The capital budget available for line upgrades. A spend, and the base the transmission-expansion
+      gate permits; the shipped node carried the catalog placeholder and no unit.
     category: Outage
+    subcategory: null
     type: float
+    unit: USD
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 10000000000.0
+    default: 50000000.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The gate-family coupling (batch 25)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Regulators
+    - Policymakers
+    - Planners
+    priority: P1
+    status: existing
+    deprecated_by: null
   llcr_estimate:
     name: Loan life coverage ratio
     description: The present value of cash available over the loan's life, against the debt outstanding.
@@ -16097,20 +16282,23 @@ parameters:
     deprecated_by: null
   non_spinning_reserve:
     name: Non spinning reserve
-    description: Non-spinning reserve
+    description: The same duplicate pair for the non-spinning reserve. The requirement itself is a free
+      node with a real default and a real range, and `non_spinning_reserve_inside_margin` already bounds
+      it inside the operating reserve; this equality makes the second id read the same quantity instead
+      of a placeholder.
     category: Outage
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 20000.0
+    role: derived
     determinism: fixed
     priority: P1
-    status: to_build
+    status: existing
+    source: The adequacy and reserve coupling (batch 26)
     users:
     - Utilities
-    source: docs/params.md
   non_spinning_reserve_requirement:
     name: Non spinning reserve requirement
     description: The non-spinning slice of the operating reserve, inside the margin the reserve requirement
@@ -17215,20 +17403,47 @@ parameters:
     deprecated_by: null
   parent_company_guarantee:
     name: Parent company guarantee
-    description: PCG
+    description: Share of the debt tranche carrying a parent-company guarantee. A share, and the guarantee's
+      value is that share of the debt it supports.
     category: Contract
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The gate-family coupling (batch 25)
+    source_url: null
     users:
-    - Investors
-    source: docs/params.md
+    - Regulators
+    - Policymakers
+    - Planners
+    priority: P1
+    status: existing
+    deprecated_by: null
+  parent_company_guarantee_usd:
+    name: The guaranteed debt
+    description: 'The debt tranche carrying the guarantee: the guaranteed share of the debt-financed part
+      of the fleet''s capital.'
+    category: Policy
+    type: float
+    unit: USD
+    range:
+    - 0.0
+    - 10000000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The gate-family coupling (batch 25)
+    users:
+    - Regulators
+    - Planners
   pass_through_tariff_usd_per_mwh:
     name: Tariff with pass-through
     description: 'The cost-recovery level plus the variable stack carried at the pass-through share. The
@@ -17403,6 +17618,45 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  permitted_imports_twh:
+    name: The permitted imports
+    description: 'The cross-border flow the trade regime permits: the switch times the net balance. At
+      the shipped defaults the balance is zero, so the gate is live and the base is empty -- which is
+      the honest reading, and the reason this product carries no information until a scenario sets the
+      balance.'
+    category: Policy
+    type: float
+    unit: TWh/year
+    range:
+    - -1000.0
+    - 1000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The gate-family coupling (batch 25)
+    users:
+    - Regulators
+    - Planners
+  permitted_transmission_spend_usd:
+    name: The permitted transmission spend
+    description: 'The upgrade spend the regime permits: the expansion switch times the available budget.
+      A permitted spend of zero is a live constraint, not an absent one -- it is what a build scenario
+      must respect.'
+    category: Policy
+    type: float
+    unit: USD
+    range:
+    - 0.0
+    - 10000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The gate-family coupling (batch 25)
+    users:
+    - Regulators
+    - Planners
   persons_per_household:
     name: Persons per household
     description: Mean household size. The sub-Saharan African mean is 4.5; the graph's own residential
@@ -17597,20 +17851,22 @@ parameters:
     deprecated_by: null
   planning_reserve_margin:
     name: Planning reserve margin
-    description: Planning reserve margin
+    description: 'The planning reserve margin is the requirement `reserve_margin_min` carries: the same
+      0.15, under the catalog''s second id. The graph''s reserve-margin constraints already read `reserve_margin_min`,
+      so the alias points at the node that does the work rather than at a new one.'
     category: Cost
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 2.0
+    role: derived
     determinism: fixed
     priority: P1
-    status: to_build
+    status: existing
+    source: The adequacy and reserve coupling (batch 26)
     users:
     - Planners
-    source: docs/params.md
   plant_retirement_age:
     name: Plant retirement age
     description: Retirement age by technology
@@ -17742,22 +17998,48 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
-  political_risk_insurance:
-    name: Political risk insurance
-    description: Political risk insurance
-    category: Macro
+  political_risk_cover_usd:
+    name: The political-risk cover
+    description: 'The asset value insured against political events: the insured share of the fleet''s
+      capital.'
+    category: Policy
     type: float
+    unit: USD
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 10000000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The gate-family coupling (batch 25)
     users:
-    - Investors
-    source: docs/params.md
+    - Regulators
+    - Planners
+  political_risk_insurance:
+    name: Political risk insurance
+    description: Share of the asset value insured against political events. A share.
+    category: Macro
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The gate-family coupling (batch 25)
+    source_url: null
+    users:
+    - Regulators
+    - Policymakers
+    - Planners
+    priority: P1
+    status: existing
+    deprecated_by: null
   political_stability:
     name: Political stability index
     description: Composite index of government stability and absence of violence, normalised to [0, 1].
@@ -18925,20 +19207,47 @@ parameters:
     deprecated_by: null
   regulation_down_requirement:
     name: Regulation down requirement
-    description: Regulation down
+    description: 'Downward regulation in MW: the share of peak demand held to reduce output. Separate
+      from the upward requirement because the fleet''s downward capability is a different constraint.'
     category: Operational
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: policy
-    priority: P2
-    status: to_build
+    - 20000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The adequacy and reserve coupling (batch 26)
     users:
     - Utilities
-    source: docs/params.md
+  regulation_down_share:
+    name: Regulation down share
+    description: 'Downward regulation reserve as a share of peak demand. The symmetric counterpart of
+      upward regulation: capacity able to reduce output on instruction. It is a separate parameter because
+      the two are procured separately and a fleet''s downward capability is not its upward one -- a must-run
+      unit can regulate down and not up.'
+    category: Operational
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 0.5
+    default: 0.01
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The adequacy and reserve coupling (batch 26)
+    source_url: null
+    users:
+    - Regulators
+    - Planners
+    priority: P1
+    status: existing
+    deprecated_by: null
   regulation_reserve:
     name: Regulation reserve
     description: Regulation reserve
@@ -18957,20 +19266,48 @@ parameters:
     source: docs/params.md
   regulation_up_requirement:
     name: Regulation up requirement
-    description: Regulation up
+    description: 'Upward regulation in MW: the share of peak demand held for continuous imbalance correction.
+      Regulation and contingency reserve are different products with different response times, and the
+      catalog''s ''Reserve types -- similar forms'' note is the claim that the form is shared, not the
+      parameter.'
     category: Operational
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: policy
-    priority: P2
-    status: to_build
+    - 20000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The adequacy and reserve coupling (batch 26)
     users:
     - Utilities
-    source: docs/params.md
+  regulation_up_share:
+    name: Regulation up share
+    description: Upward regulation reserve as a share of peak demand. Regulation reserve covers the continuous
+      second-to-second imbalance between scheduled and actual output, so it is far smaller than contingency
+      reserve -- the shares differ by an order of magnitude for that reason, not by convention.
+    category: Operational
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 0.5
+    default: 0.01
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The adequacy and reserve coupling (batch 26)
+    source_url: null
+    users:
+    - Regulators
+    - Planners
+    priority: P1
+    status: existing
+    deprecated_by: null
   regulatory_accounts:
     name: Regulatory accounts
     description: Regulatory accounts
@@ -19500,20 +19837,22 @@ parameters:
     source: docs/params.md
   reserve_margin:
     name: Reserve margin
-    description: Operating reserve margin
+    description: The catalog's 'Operating reserve margin' is the margin the built fleet actually delivers,
+      which `reserve_margin_actual` already computes as (firm plus firm VRE, less peak) over peak. Naming
+      the alias is what stops the placeholder from being read as a second, independent margin.
     category: Outage
     type: float
+    unit: '1'
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - -1.0
+    - 2.0
+    role: derived
     determinism: fixed
     priority: P1
-    status: to_build
+    status: existing
+    source: The adequacy and reserve coupling (batch 26)
     users:
     - Utilities
-    source: docs/params.md
   reserve_margin_actual:
     name: Actual reserve margin
     description: The reserve margin the built fleet actually delivers, distinct from the requirement.
@@ -20249,22 +20588,48 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
-  sanctions_exposure:
-    name: Sanctions exposure
-    description: Sanctions
-    category: Geopol
+  sanctions_exposed_value_usd:
+    name: The sanctions-exposed value
+    description: 'The asset value exposed to sanctions: the exposed share of the fleet''s capital.'
+    category: Policy
     type: float
+    unit: USD
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 10000000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The gate-family coupling (batch 25)
     users:
-    - Investors
-    source: docs/params.md
+    - Regulators
+    - Planners
+  sanctions_exposure:
+    name: Sanctions exposure
+    description: 'Share of the asset value exposed to sanctions. A share, and it is the exposure rather
+      than a probability: the graph carries no sanction frequency it could multiply.'
+    category: Geopol
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The gate-family coupling (batch 25)
+    source_url: null
+    users:
+    - Regulators
+    - Policymakers
+    - Planners
+    priority: P1
+    status: existing
+    deprecated_by: null
   scada_ems_requirements:
     name: Scada ems requirements
     description: The share of connected capacity under SCADA/EMS telemetry.
@@ -20849,6 +21214,25 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  smart_metered_population:
+    name: The smart-metered population
+    description: 'The population reached by the metering programme: the rollout switch times the penetration
+      rate times the electrified population. Two gates multiply the same base, and both are switches the
+      scenario sets.'
+    category: Policy
+    type: float
+    unit: people
+    range:
+    - 0.0
+    - 1000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The gate-family coupling (batch 25)
+    users:
+    - Regulators
+    - Planners
   smart_metering_penetration:
     name: Smart metering penetration
     description: Smart meter coverage
@@ -20859,7 +21243,7 @@ parameters:
     - 0.0
     - 1.0
     default: 0.5
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P2
     status: to_build
@@ -21321,20 +21705,22 @@ parameters:
     source: docs/params.md
   spare_capacity:
     name: Spare capacity
-    description: Spare capacity
+    description: 'Installed capacity less peak demand: the headroom the fleet carries. The catalog names
+      this node''s formula as a bare symbol, which is the absence of a formula; the headroom is the only
+      reading of the name that the graph''s own capacity and demand nodes can support.'
     category: Operational
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 100000.0
+    role: derived
     determinism: fixed
-    priority: P2
-    status: to_build
+    priority: P1
+    status: existing
+    source: The adequacy and reserve coupling (batch 26)
     users:
     - Utilities
-    source: docs/params.md
   spare_parts_availability:
     name: Spare parts availability
     description: Share of required spares available at the time they are needed. A share.
@@ -21423,36 +21809,67 @@ parameters:
     source: docs/params.md
   spinning_reserve:
     name: Spinning reserve
-    description: Spinning reserve requirement
+    description: 'Spinning reserve in MW: the grid code''s share of peak demand. This is the catalog''s
+      own formula (SR = alpha D_peak) with alpha as a node rather than a constant folded into the arithmetic,
+      so a scenario can move the grid code without rewriting the equation.'
     category: Outage
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 20000.0
+    role: derived
     determinism: fixed
     priority: P1
-    status: to_build
+    status: existing
+    source: The adequacy and reserve coupling (batch 26)
     users:
     - Utilities
-    source: docs/params.md
   spinning_reserve_requirement:
     name: Spinning reserve requirement
-    description: Spinning reserve
+    description: The catalog carries both `spinning_reserve` (category 8, Outage) and `spinning_reserve_requirement`
+      (category 11, Operational) with the same formula and the same name. They are one quantity under
+      two ids, so the equality states the duplicate rather than letting two 500000.0 placeholders drift
+      apart.
     category: Operational
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 20000.0
+    role: derived
     determinism: fixed
     priority: P1
-    status: to_build
+    status: existing
+    source: The adequacy and reserve coupling (batch 26)
     users:
     - Utilities
-    source: docs/params.md
+  spinning_reserve_share:
+    name: Spinning reserve share
+    description: 'Spinning reserve as a share of peak demand. The grid-code figure: a system operator
+      carries spinning reserve sized to the largest credible loss, which is conventionally quoted as a
+      percentage of peak load. Typical operating practice is 3-7%; the upper bound of the range is the
+      share at which the reserve alone would exceed a tenth of the fleet.'
+    category: Operational
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 0.5
+    default: 0.05
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The adequacy and reserve coupling (batch 26)
+    source_url: null
+    users:
+    - Regulators
+    - Planners
+    priority: P1
+    status: existing
+    deprecated_by: null
   ssp_pathway:
     name: Ssp pathway
     description: Shared Socioeconomic Pathway
@@ -22926,6 +23343,25 @@ parameters:
     users:
     - Planners
     - Regulators
+  transmission_loss_after_target:
+    name: Transmission loss after target
+    description: 'The loss factor the target leaves: the base loss reduced by the reduction target. The
+      catalog defines the target as a fractional reduction ((base - target) / base), which is the same
+      statement solved for the target, and writing it this way makes the target''s dimension dimensionless
+      rather than a loss level the graph has no node for.'
+    category: Operational
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The adequacy and reserve coupling (batch 26)
+    users:
+    - Planners
   transmission_loss_factor:
     name: Transmission loss factor
     description: Average transmission loss
@@ -22936,7 +23372,7 @@ parameters:
     - 0.0
     - 1.0
     default: 0.5
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P1
     status: existing
@@ -22966,20 +23402,29 @@ parameters:
     deprecated_by: null
   transmission_loss_reduction_target:
     name: Transmission loss reduction target
-    description: Loss reduction target
+    description: 'The fractional reduction in transmission losses the target aims for. A share, not a
+      loss level: the catalog''s own formula divides the difference by the base loss, which makes the
+      target a ratio. The shipped node carried the catalog placeholder and no unit.'
     category: Outage
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.1
+    initial: null
     role: free
     determinism: policy
-    priority: P2
-    status: to_build
+    categories: []
+    source: The adequacy and reserve coupling (batch 26)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Regulators
+    - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
   transport_logistics:
     name: Transport logistics
     description: Transport logistics
@@ -23374,20 +23819,48 @@ parameters:
     deprecated_by: null
   voltage_support_requirement:
     name: Voltage support requirement
-    description: Voltage support
+    description: 'Reactive reserve in MVAr: the share of the fleet''s reactive capability held for voltage
+      support. The catalog''s formula for this node is a voltage inequality, which is the constraint the
+      reserve serves rather than a definition of the reserve; the reserve itself is a quantity of MVAr,
+      and the graph already carries the capability it is a share of.'
     category: Operational
     type: float
+    unit: MVAr
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 100000.0
+    role: derived
     determinism: fixed
-    priority: P2
-    status: to_build
+    priority: P1
+    status: existing
+    source: The adequacy and reserve coupling (batch 26)
     users:
     - Utilities
-    source: docs/params.md
+  voltage_support_share:
+    name: Voltage support share
+    description: 'Reactive reserve as a share of the fleet''s reactive capability. The voltage-support
+      requirement is reactive power held in reserve, so the base it multiplies is MVAr and not MW: the
+      graph''s own reactive capability, which is the power factor''s share of peak demand.'
+    category: Operational
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.1
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The adequacy and reserve coupling (batch 26)
+    source_url: null
+    users:
+    - Regulators
+    - Planners
+    priority: P1
+    status: existing
+    deprecated_by: null
   voluntary_carbon_market:
     name: Voluntary carbon market
     description: Share of the credit volume sold into the voluntary market rather than against a compliance
@@ -25062,6 +25535,29 @@ equations:
     priority: P2
     reference: null
     latex: \mathrm{blended}_{finance\_share} \leq \mathrm{dfi}_{share} + \mathrm{commercial}_{bank\_share}
+  business_interruption_cover_definition:
+    name: The business-interruption cover
+    description: 'The revenue indemnified: the cover share times gross revenue. A switch at zero returns
+      zero, which is the gated quantity rather than a scenario branch.'
+    system: financial
+    lhs: business_interruption_cover_usd_per_year
+    rhs: business_interruption_insurance * total_revenue_usd_per_year
+    relation: eq
+    parameters:
+    - business_interruption_cover_usd_per_year
+    - business_interruption_insurance
+    - total_revenue_usd_per_year
+    free_variables: []
+    determined_variables:
+    - business_interruption_cover_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{business}_{interruption\_cover\_usd\_per\_year} = \mathrm{business}_{interruption\_insurance}
+      \mathrm{total}_{revenue\_usd\_per\_year}
   capacity_credit_definition:
     name: VRE capacity credit
     description: 'The firm contribution a renewable fleet makes to the reserve margin. Approximated as
@@ -26177,6 +26673,29 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  coordinated_maintenance_definition:
+    name: The coordinated maintenance hours
+    description: 'The maintenance hours run under coordination: the switch times the planned hours. Coordination
+      does not change how much maintenance the fleet needs, only whether the outages are scheduled jointly,
+      so the base is unchanged and the gate selects which hours are coordinated.'
+    system: financial
+    lhs: coordinated_maintenance_hours_per_year
+    rhs: outage_coordination * planned_maintenance_hours_per_year
+    relation: eq
+    parameters:
+    - coordinated_maintenance_hours_per_year
+    - outage_coordination
+    - planned_maintenance_hours_per_year
+    free_variables: []
+    determined_variables:
+    - coordinated_maintenance_hours_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{coordinated}_{maintenance\_hours\_per\_year} = \mathrm{outage}_{coordination} \mathrm{planned}_{maintenance\_hours\_per\_year}
   corporate_income_tax_rate_alias:
     name: Corporate income tax rate is Tax rate
     description: Two ids for one rate, resolved in the graph's own idiom; the equality holds at every
@@ -26684,6 +27203,27 @@ equations:
     priority: P1
     reference: Benefit-sharing programmes (the graph's own revenue identity)
     latex: \mathrm{cross}_{subsidy\_usd\_per\_year} = \mathrm{cross}_{subsidy\_level} \mathrm{total}_{revenue\_usd\_per\_year}
+  cyber_cover_definition:
+    name: The cyber-loss cover
+    description: 'The revenue indemnified against cyber loss: the cover share times gross revenue.'
+    system: financial
+    lhs: cyber_cover_usd_per_year
+    rhs: cyber_insurance * total_revenue_usd_per_year
+    relation: eq
+    parameters:
+    - cyber_cover_usd_per_year
+    - cyber_insurance
+    - total_revenue_usd_per_year
+    free_variables: []
+    determined_variables:
+    - cyber_cover_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{cyber}_{cover\_usd\_per\_year} = \mathrm{cyber}_{insurance} \mathrm{total}_{revenue\_usd\_per\_year}
   cybersecurity_spend_definition:
     name: Cybersecurity spend
     description: 'The control-system security spend: the mandated share of the revenue requirement.'
@@ -27761,6 +28301,27 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{flywheel}_{cost} = \mathrm{capex}_{flywheel}
+  force_majeure_cover_definition:
+    name: The force-majeure cover
+    description: 'The revenue indemnified against force-majeure events: the cover share times gross revenue.'
+    system: financial
+    lhs: force_majeure_cover_usd_per_year
+    rhs: force_majeure_insurance * total_revenue_usd_per_year
+    relation: eq
+    parameters:
+    - force_majeure_cover_usd_per_year
+    - force_majeure_insurance
+    - total_revenue_usd_per_year
+    free_variables: []
+    determined_variables:
+    - force_majeure_cover_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{force}_{majeure\_cover\_usd\_per\_year} = \mathrm{force}_{majeure\_insurance} \mathrm{total}_{revenue\_usd\_per\_year}
   forecast_error_band_definition:
     name: The forecast error band
     description: 'The energy the adequacy plan must absorb on top of the forecast: the allowed MAPE times
@@ -27827,6 +28388,32 @@ equations:
     priority: P2
     reference: null
     latex: \mathrm{fpic}_{requirements} \leq \mathrm{fpic}_{compliance\_score}
+  free_trade_zone_benefit_definition:
+    name: The free-trade-zone benefit
+    description: 'The duty forgone: the zone''s share of the equipment duty, which is the duty rate on
+      the fleet''s capital. The `1000` is kW per MW, so the capital term is USD -- the fleet''s own unit
+      arithmetic, not a fitted factor.'
+    system: financial
+    lhs: free_trade_zone_benefit_usd
+    rhs: free_trade_zone_benefits * import_duty_equipment * capex_usd_per_kw * total_capacity_mw * 1000
+    relation: eq
+    parameters:
+    - free_trade_zone_benefit_usd
+    - capex_usd_per_kw
+    - free_trade_zone_benefits
+    - import_duty_equipment
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - free_trade_zone_benefit_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{free}_{trade\_zone\_benefit\_usd} = 1000 \mathrm{free}_{trade\_zone\_benefits} \mathrm{import}_{duty\_equipment}
+      \mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}
   frequency_nadir_definition:
     name: Frequency nadir
     description: 'The frequency after the response time, at the constant initial slope. Dimensional check:
@@ -28086,6 +28673,31 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{gasification}_{cost} = \mathrm{capex}_{gasification}
+  gated_carbon_volume_definition:
+    name: The gated carbon volume
+    description: 'The capped volume the emissions trading system actually applies, which is the cap times
+      the instrument switch. It is the quantity the revenue identity cannot read: `carbon_revenue_definition`
+      prices the covered share of emissions and takes no switch, so the revenue accrues whether or not
+      the instrument exists. Stating the gated volume beside it makes the gap a difference between two
+      derived nodes rather than a rule''s prose.'
+    system: financial
+    lhs: gated_carbon_volume_mtco2
+    rhs: ets_enabled * ets_cap
+    relation: eq
+    parameters:
+    - gated_carbon_volume_mtco2
+    - ets_cap
+    - ets_enabled
+    free_variables: []
+    determined_variables:
+    - gated_carbon_volume_mtco2
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EU CBAM regulation
+    latex: \mathrm{gated}_{carbon\_volume\_mtco2} = \mathrm{ets}_{enabled} \mathrm{ets}_{cap}
   gdp_growth_rate_alias:
     name: GDP growth rate is GDP growth rate
     description: Two ids for one rate, resolved in the graph's own idiom; the equality holds at every
@@ -28514,6 +29126,33 @@ equations:
     priority: P2
     reference: null
     latex: \mathrm{ifc}_{performance\_standards} \leq \mathrm{debt}_{financing\_share}
+  import_duty_cost_definition:
+    name: The import duty paid
+    description: 'The duty the project actually pays: the unexempted share of the equipment duty on the
+      fleet''s capital. Written as `(1 - x)` because the node is the share *exempted* -- the opposite
+      spelling evaluates to a negative duty at any exemption near one.'
+    system: financial
+    lhs: import_duty_cost_usd
+    rhs: (1 - import_duty_exemption) * import_duty_equipment * capex_usd_per_kw * total_capacity_mw *
+      1000
+    relation: eq
+    parameters:
+    - import_duty_cost_usd
+    - capex_usd_per_kw
+    - import_duty_equipment
+    - import_duty_exemption
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - import_duty_cost_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{import}_{duty\_cost\_usd} = 1000 \left(1 - \mathrm{import}_{duty\_exemption}\right)
+      \mathrm{import}_{duty\_equipment} \mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}
   in_country_telemetry_sites_definition:
     name: Telemetry sites hosted in-country
     description: 'The operational sites whose data must be hosted in-country: the share times the system''s
@@ -29947,6 +30586,29 @@ equations:
     reference: null
     latex: \mathrm{netting}_{shortfall\_usd\_per\_year} = \left(1 - \mathrm{netting}_{agreements}\right)
       \mathrm{collateral}_{posted\_usd\_per\_year}
+  non_spinning_reserve_alias:
+    name: The non-spinning reserve alias
+    description: The same duplicate pair for the non-spinning reserve. The requirement itself is a free
+      node with a real default and a real range, and `non_spinning_reserve_inside_margin` already bounds
+      it inside the operating reserve; this equality makes the second id read the same quantity instead
+      of a placeholder.
+    system: reserve_margin
+    lhs: non_spinning_reserve
+    rhs: non_spinning_reserve_requirement
+    relation: eq
+    parameters:
+    - non_spinning_reserve
+    - non_spinning_reserve_requirement
+    free_variables: []
+    determined_variables:
+    - non_spinning_reserve
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{non}_{spinning\_reserve} = \mathrm{non}_{spinning\_reserve\_requirement}
   non_spinning_reserve_inside_margin:
     name: Non spinning reserve inside margin
     description: The non-spinning slice must sit inside the operating reserve the margin holds.
@@ -30040,6 +30702,53 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{oil}_{price\_per\_mwh} = \frac{\mathrm{oil}_{price}}{\mathrm{mwh}_{per\_oil\_unit}}
+  operating_reserve_margin_alias:
+    name: The operating reserve margin
+    description: The catalog's 'Operating reserve margin' is the margin the built fleet actually delivers,
+      which `reserve_margin_actual` already computes as (firm plus firm VRE, less peak) over peak. Naming
+      the alias is what stops the placeholder from being read as a second, independent margin.
+    system: reserve_margin
+    lhs: reserve_margin
+    rhs: reserve_margin_actual
+    relation: eq
+    parameters:
+    - reserve_margin
+    - reserve_margin_actual
+    free_variables: []
+    determined_variables:
+    - reserve_margin
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Stoft 2002, Power System Economics, ch. 5
+    latex: \mathrm{reserve}_{margin} = \mathrm{reserve}_{margin\_actual}
+  parent_company_guarantee_definition:
+    name: The guaranteed debt
+    description: 'The debt tranche carrying the guarantee: the guaranteed share of the debt-financed part
+      of the fleet''s capital.'
+    system: financial
+    lhs: parent_company_guarantee_usd
+    rhs: parent_company_guarantee * debt_fraction * capex_usd_per_kw * total_capacity_mw * 1000
+    relation: eq
+    parameters:
+    - parent_company_guarantee_usd
+    - capex_usd_per_kw
+    - debt_fraction
+    - parent_company_guarantee
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - parent_company_guarantee_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{parent}_{company\_guarantee\_usd} = 1000 \mathrm{parent}_{company\_guarantee} \mathrm{debt}_{fraction}
+      \mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}
   pass_through_tariff_definition:
     name: Tariff with pass-through
     description: 'The cost-recovery level plus the variable stack carried at the pass-through share the
@@ -30067,6 +30776,54 @@ equations:
     linearity: linear
     latex: \mathrm{pass}_{through\_tariff\_usd\_per\_mwh} = \mathrm{applied}_{tariff\_usd\_per\_mwh} +
       \mathrm{wholesale}_{cost\_pass\_through} \mathrm{variable}_{stack\_usd\_per\_mwh}
+  permitted_imports_definition:
+    name: The permitted imports
+    description: 'The cross-border flow the trade regime permits: the switch times the net balance. At
+      the shipped defaults the balance is zero, so the gate is live and the base is empty -- which is
+      the honest reading, and the reason this product carries no information until a scenario sets the
+      balance.'
+    system: financial
+    lhs: permitted_imports_twh
+    rhs: cross_border_trade_allowed * net_imports_twh
+    relation: eq
+    parameters:
+    - permitted_imports_twh
+    - cross_border_trade_allowed
+    - net_imports_twh
+    free_variables: []
+    determined_variables:
+    - permitted_imports_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{permitted}_{imports\_twh} = \mathrm{cross}_{border\_trade\_allowed} \mathrm{net}_{imports\_twh}
+  permitted_transmission_spend_definition:
+    name: The permitted transmission spend
+    description: 'The upgrade spend the regime permits: the expansion switch times the available budget.
+      A permitted spend of zero is a live constraint, not an absent one -- it is what a build scenario
+      must respect.'
+    system: financial
+    lhs: permitted_transmission_spend_usd
+    rhs: transmission_expansion_allowed * line_upgrade_budget
+    relation: eq
+    parameters:
+    - permitted_transmission_spend_usd
+    - line_upgrade_budget
+    - transmission_expansion_allowed
+    free_variables: []
+    determined_variables:
+    - permitted_transmission_spend_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{permitted}_{transmission\_spend\_usd} = \mathrm{transmission}_{expansion\_allowed}
+      \mathrm{line}_{upgrade\_budget}
   phs_cost_alias:
     name: Pumped hydro capital cost (legacy) is PHS capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `phs_cost`
@@ -30136,6 +30893,28 @@ equations:
     priority: P1
     reference: IEEE Guide for Electric Power Distribution Reliability Indices (1366), tutorial deck
     latex: \mathrm{planned}_{maintenance\_hours\_per\_year} = \mathrm{maintenance}_{frequency} \mathrm{maintenance}_{duration}
+  planning_reserve_margin_alias:
+    name: The planning reserve margin
+    description: 'The planning reserve margin is the requirement `reserve_margin_min` carries: the same
+      0.15, under the catalog''s second id. The graph''s reserve-margin constraints already read `reserve_margin_min`,
+      so the alias points at the node that does the work rather than at a new one.'
+    system: reserve_margin
+    lhs: planning_reserve_margin
+    rhs: reserve_margin_min
+    relation: eq
+    parameters:
+    - planning_reserve_margin
+    - reserve_margin_min
+    free_variables: []
+    determined_variables:
+    - planning_reserve_margin
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Standard N-1 planning criterion; cf. ENTSO-E adequacy studies
+    latex: \mathrm{planning}_{reserve\_margin} = \mathrm{reserve}_{margin\_min}
   pm25_exceedance_definition:
     name: The PM2.5 exceedance ratio
     description: 'How many times the ambient mean exceeds the WHO-guideline limit: the finding computed
@@ -30158,6 +30937,30 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{pm25}_{exceedance\_ratio} = \frac{\mathrm{pm25}_{annual\_mean\_ug\_per\_m3}}{\mathrm{air}_{quality\_standards}}
+  political_risk_cover_definition:
+    name: The political-risk cover
+    description: 'The asset value insured against political events: the insured share of the fleet''s
+      capital.'
+    system: financial
+    lhs: political_risk_cover_usd
+    rhs: political_risk_insurance * capex_usd_per_kw * total_capacity_mw * 1000
+    relation: eq
+    parameters:
+    - political_risk_cover_usd
+    - capex_usd_per_kw
+    - political_risk_insurance
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - political_risk_cover_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{political}_{risk\_cover\_usd} = 1000 \mathrm{political}_{risk\_insurance} \mathrm{capex}_{usd\_per\_kw}
+      \mathrm{total}_{capacity\_mw}
   population_growth_factor_definition:
     name: The population growth factor over the horizon
     description: 'The factor population compounds by over the horizon: (1+r) to the horizon''s years.'
@@ -30535,6 +31338,52 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{regulated}_{tariff\_rate} = \frac{\mathrm{regulated}_{tariff\_usd\_per\_mwh}}{\mathrm{reference}_{tariff\_usd\_per\_mwh}}
+  regulation_down_definition:
+    name: The downward regulation requirement
+    description: 'Downward regulation in MW: the share of peak demand held to reduce output. Separate
+      from the upward requirement because the fleet''s downward capability is a different constraint.'
+    system: reserve_margin
+    lhs: regulation_down_requirement
+    rhs: regulation_down_share * peak_demand_mw
+    relation: eq
+    parameters:
+    - regulation_down_requirement
+    - peak_demand_mw
+    - regulation_down_share
+    free_variables: []
+    determined_variables:
+    - regulation_down_requirement
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Stoft 2002, Power System Economics, ch. 5
+    latex: \mathrm{regulation}_{down\_requirement} = \mathrm{regulation}_{down\_share} \mathrm{peak}_{demand\_mw}
+  regulation_up_definition:
+    name: The upward regulation requirement
+    description: 'Upward regulation in MW: the share of peak demand held for continuous imbalance correction.
+      Regulation and contingency reserve are different products with different response times, and the
+      catalog''s ''Reserve types -- similar forms'' note is the claim that the form is shared, not the
+      parameter.'
+    system: reserve_margin
+    lhs: regulation_up_requirement
+    rhs: regulation_up_share * peak_demand_mw
+    relation: eq
+    parameters:
+    - regulation_up_requirement
+    - peak_demand_mw
+    - regulation_up_share
+    free_variables: []
+    determined_variables:
+    - regulation_up_requirement
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Stoft 2002, Power System Economics, ch. 5
+    latex: \mathrm{regulation}_{up\_requirement} = \mathrm{regulation}_{up\_share} \mathrm{peak}_{demand\_mw}
   regulatory_asset_base_definition:
     name: Regulated asset base from the fleet
     description: Gross fleet capital less what the books have written down. The gross capital is the capacity-weighted
@@ -30610,6 +31459,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  reliability_target_alias:
+    name: The reliability target
+    description: The catalog's 'Reliability target (SAIFI)' is the service-quality standard in interruptions
+      per year, which the graph carries as `service_quality_standards` and already binds with `saifi_ceiling_bound`.
+      A target is not a second measurement of the fleet's performance.
+    system: reliability
+    lhs: grid_reliability_saifi
+    rhs: service_quality_standards
+    relation: eq
+    parameters:
+    - grid_reliability_saifi
+    - service_quality_standards
+    free_variables: []
+    determined_variables:
+    - grid_reliability_saifi
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: IEEE Guide for Electric Power Distribution Reliability Indices (1366), tutorial deck
+    latex: \mathrm{grid}_{reliability\_saifi} = \mathrm{service}_{quality\_standards}
   remaining_life_from_condition_definition:
     name: Remaining useful life from condition
     description: 'A linear approximation of the remaining life: an asset that is end-of-life has zero
@@ -31096,6 +31967,29 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{salinity}_{gradient\_cost} = \mathrm{capex}_{salinity\_gradient}
+  sanctions_exposed_value_definition:
+    name: The sanctions-exposed value
+    description: 'The asset value exposed to sanctions: the exposed share of the fleet''s capital.'
+    system: financial
+    lhs: sanctions_exposed_value_usd
+    rhs: sanctions_exposure * capex_usd_per_kw * total_capacity_mw * 1000
+    relation: eq
+    parameters:
+    - sanctions_exposed_value_usd
+    - capex_usd_per_kw
+    - sanctions_exposure
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - sanctions_exposed_value_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{sanctions}_{exposed\_value\_usd} = 1000 \mathrm{sanctions}_{exposure} \mathrm{capex}_{usd\_per\_kw}
+      \mathrm{total}_{capacity\_mw}
   scada_telemetered_capacity_definition:
     name: Capacity under SCADA telemetry
     description: 'The connected capacity under telemetry: the share of the fleet.'
@@ -31273,6 +32167,31 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{small}_{modular\_reactor\_cost} = \mathrm{capex}_{smr}
+  smart_metered_population_definition:
+    name: The smart-metered population
+    description: 'The population reached by the metering programme: the rollout switch times the penetration
+      rate times the electrified population. Two gates multiply the same base, and both are switches the
+      scenario sets.'
+    system: financial
+    lhs: smart_metered_population
+    rhs: smart_metering_rollout * smart_metering_penetration * electrified_population
+    relation: eq
+    parameters:
+    - smart_metered_population
+    - electrified_population
+    - smart_metering_penetration
+    - smart_metering_rollout
+    free_variables: []
+    determined_variables:
+    - smart_metered_population
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{smart}_{metered\_population} = \mathrm{smart}_{metering\_rollout} \mathrm{smart}_{metering\_penetration}
+      \mathrm{electrified}_{population}
   social_tariff_identity:
     name: The social tariff
     description: 'Two ids for the below-threshold tariff: the catalog''s `social_tariff` and the graph''s
@@ -31343,6 +32262,75 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{solar}_{pv\_cost} = \mathrm{capex}_{solar\_pv}
+  spare_capacity_definition:
+    name: The spare capacity
+    description: 'Installed capacity less peak demand: the headroom the fleet carries. The catalog names
+      this node''s formula as a bare symbol, which is the absence of a formula; the headroom is the only
+      reading of the name that the graph''s own capacity and demand nodes can support.'
+    system: reserve_margin
+    lhs: spare_capacity
+    rhs: total_capacity_mw - peak_demand_mw
+    relation: eq
+    parameters:
+    - spare_capacity
+    - peak_demand_mw
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - spare_capacity
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Standard N-1 planning criterion; cf. ENTSO-E adequacy studies
+    latex: \mathrm{spare}_{capacity} = \mathrm{total}_{capacity\_mw} - \mathrm{peak}_{demand\_mw}
+  spinning_reserve_definition:
+    name: The spinning reserve requirement
+    description: 'Spinning reserve in MW: the grid code''s share of peak demand. This is the catalog''s
+      own formula (SR = alpha D_peak) with alpha as a node rather than a constant folded into the arithmetic,
+      so a scenario can move the grid code without rewriting the equation.'
+    system: reserve_margin
+    lhs: spinning_reserve
+    rhs: spinning_reserve_share * peak_demand_mw
+    relation: eq
+    parameters:
+    - spinning_reserve
+    - peak_demand_mw
+    - spinning_reserve_share
+    free_variables: []
+    determined_variables:
+    - spinning_reserve
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Standard N-1 planning criterion; cf. ENTSO-E adequacy studies
+    latex: \mathrm{spinning}_{reserve} = \mathrm{spinning}_{reserve\_share} \mathrm{peak}_{demand\_mw}
+  spinning_reserve_requirement_alias:
+    name: The spinning reserve alias
+    description: The catalog carries both `spinning_reserve` (category 8, Outage) and `spinning_reserve_requirement`
+      (category 11, Operational) with the same formula and the same name. They are one quantity under
+      two ids, so the equality states the duplicate rather than letting two 500000.0 placeholders drift
+      apart.
+    system: reserve_margin
+    lhs: spinning_reserve_requirement
+    rhs: spinning_reserve
+    relation: eq
+    parameters:
+    - spinning_reserve_requirement
+    - spinning_reserve
+    free_variables: []
+    determined_variables:
+    - spinning_reserve_requirement
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{spinning}_{reserve\_requirement} = \mathrm{spinning}_{reserve}
   steel_eaf_route_definition:
     name: Crude steel the scrap-EAF route makes
     description: 'Crude steel the scrap-EAF route makes: the mix share times the sector''s own output,
@@ -31692,6 +32680,31 @@ equations:
     reference: null
     latex: \mathrm{transmission}_{investment\_usd} = \mathrm{capex}_{transmission} \mathrm{transmission}_{line\_length\_km}
       \mathrm{total}_{capacity\_mw}
+  transmission_loss_target_definition:
+    name: The loss after the target
+    description: 'The loss factor the target leaves: the base loss reduced by the reduction target. The
+      catalog defines the target as a fractional reduction ((base - target) / base), which is the same
+      statement solved for the target, and writing it this way makes the target''s dimension dimensionless
+      rather than a loss level the graph has no node for.'
+    system: energy_balance
+    lhs: transmission_loss_after_target
+    rhs: transmission_loss_factor * (1 - transmission_loss_reduction_target)
+    relation: eq
+    parameters:
+    - transmission_loss_after_target
+    - transmission_loss_factor
+    - transmission_loss_reduction_target
+    free_variables: []
+    determined_variables:
+    - transmission_loss_after_target
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{transmission}_{loss\_after\_target} = \mathrm{transmission}_{loss\_factor} \left(1
+      - \mathrm{transmission}_{loss\_reduction\_target}\right)
   unserved_definition:
     name: Expected unserved energy
     description: Demand times the fraction the system is expected to fail to serve.
@@ -31820,6 +32833,30 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{variable}_{stack\_usd\_per\_mwh} = \mathrm{fuel}_{price\_usd\_per\_mwh} + \mathrm{carbon}_{cost\_usd\_per\_mwh}
+  voltage_support_definition:
+    name: The voltage support requirement
+    description: 'Reactive reserve in MVAr: the share of the fleet''s reactive capability held for voltage
+      support. The catalog''s formula for this node is a voltage inequality, which is the constraint the
+      reserve serves rather than a definition of the reserve; the reserve itself is a quantity of MVAr,
+      and the graph already carries the capability it is a share of.'
+    system: reliability
+    lhs: voltage_support_requirement
+    rhs: voltage_support_share * reactive_capability_mvar
+    relation: eq
+    parameters:
+    - voltage_support_requirement
+    - reactive_capability_mvar
+    - voltage_support_share
+    free_variables: []
+    determined_variables:
+    - voltage_support_requirement
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: IEEE Guide for Electric Power Distribution Reliability Indices (1366), tutorial deck
+    latex: \mathrm{voltage}_{support\_requirement} = \mathrm{voltage}_{support\_share} \mathrm{reactive}_{capability\_mvar}
   voluntary_market_volume_definition:
     name: The volume sold into the voluntary market
     description: The share of the issued volume sold to voluntary buyers rather than against a compliance
@@ -37527,72 +38564,6 @@ relationships:
   description: Enters the product.
   reference: null
   priority: P1
-- source: discount_rate
-  target: weighted_average_cost_of_capital
-  equation_id: wacc_alias
-  relationship: equality
-  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
-    computes.'
-- source: capex_usd_per_kw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: Gross fleet capital enters the base the allowed return is earned on.
-- source: total_capacity_mw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: The fleet's size sets the scale of the capital in the accounts.
-- source: accumulated_depreciation_fraction
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: What the books have written down between gross capital and the base.
-- source: regulatory_asset_base
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: equality
-  description: Straight-line write-down of the base over the regulatory asset life.
-- source: depreciation_life_by_asset
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: functional
-  description: A longer regulatory life spreads the base thinner over the years.
-- source: regulatory_depreciation
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: Depreciation is the first term of the revenue requirement.
-- source: regulatory_asset_base
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: The return is earned on the base, not on gross capital.
-- source: discount_rate
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: The return rate is the blend the financial block computes.
-- source: allowed_return_on_debt
-  target: cost_of_debt
-  equation_id: cost_of_debt_capped
-  relationship: constraint
-  description: The allowance binds the debt rate a scenario may carry.
-- source: allowed_return_on_equity
-  target: cost_of_equity
-  equation_id: cost_of_equity_capped
-  relationship: constraint
-  description: The allowance binds the equity return a valuation may assume.
-- source: regulated_tariff_usd_per_mwh
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: equality
-  description: The applied tariff is the recovery level in the absence of a cap.
-- source: revenue_cap
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: functional
-  description: The cap scales the recovery level; below 1 it withholds part of it.
 - source: carbon_budget_mtco2
   target: ets_cap
   equation_id: ets_cap_definition
@@ -38097,6 +39068,540 @@ relationships:
   relationship: functional
   strength: hard
   description: Enters the product.
+- source: ets_cap
+  target: gated_carbon_volume_mtco2
+  equation_id: gated_carbon_volume_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: EU CBAM regulation
+  priority: P1
+- source: ets_enabled
+  target: gated_carbon_volume_mtco2
+  equation_id: gated_carbon_volume_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: EU CBAM regulation
+  priority: P1
+- source: business_interruption_insurance
+  target: business_interruption_cover_usd_per_year
+  equation_id: business_interruption_cover_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: total_revenue_usd_per_year
+  target: business_interruption_cover_usd_per_year
+  equation_id: business_interruption_cover_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: cyber_insurance
+  target: cyber_cover_usd_per_year
+  equation_id: cyber_cover_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: total_revenue_usd_per_year
+  target: cyber_cover_usd_per_year
+  equation_id: cyber_cover_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: force_majeure_insurance
+  target: force_majeure_cover_usd_per_year
+  equation_id: force_majeure_cover_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: total_revenue_usd_per_year
+  target: force_majeure_cover_usd_per_year
+  equation_id: force_majeure_cover_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: capex_usd_per_kw
+  target: free_trade_zone_benefit_usd
+  equation_id: free_trade_zone_benefit_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: free_trade_zone_benefits
+  target: free_trade_zone_benefit_usd
+  equation_id: free_trade_zone_benefit_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: import_duty_equipment
+  target: free_trade_zone_benefit_usd
+  equation_id: free_trade_zone_benefit_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: free_trade_zone_benefit_usd
+  equation_id: free_trade_zone_benefit_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: capex_usd_per_kw
+  target: import_duty_cost_usd
+  equation_id: import_duty_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: import_duty_equipment
+  target: import_duty_cost_usd
+  equation_id: import_duty_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: import_duty_exemption
+  target: import_duty_cost_usd
+  equation_id: import_duty_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: import_duty_cost_usd
+  equation_id: import_duty_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: capex_usd_per_kw
+  target: parent_company_guarantee_usd
+  equation_id: parent_company_guarantee_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: debt_fraction
+  target: parent_company_guarantee_usd
+  equation_id: parent_company_guarantee_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: parent_company_guarantee
+  target: parent_company_guarantee_usd
+  equation_id: parent_company_guarantee_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: parent_company_guarantee_usd
+  equation_id: parent_company_guarantee_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: capex_usd_per_kw
+  target: political_risk_cover_usd
+  equation_id: political_risk_cover_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: political_risk_insurance
+  target: political_risk_cover_usd
+  equation_id: political_risk_cover_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: political_risk_cover_usd
+  equation_id: political_risk_cover_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: capex_usd_per_kw
+  target: sanctions_exposed_value_usd
+  equation_id: sanctions_exposed_value_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: sanctions_exposure
+  target: sanctions_exposed_value_usd
+  equation_id: sanctions_exposed_value_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: sanctions_exposed_value_usd
+  equation_id: sanctions_exposed_value_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: cross_border_trade_allowed
+  target: permitted_imports_twh
+  equation_id: permitted_imports_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: net_imports_twh
+  target: permitted_imports_twh
+  equation_id: permitted_imports_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: outage_coordination
+  target: coordinated_maintenance_hours_per_year
+  equation_id: coordinated_maintenance_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: planned_maintenance_hours_per_year
+  target: coordinated_maintenance_hours_per_year
+  equation_id: coordinated_maintenance_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: electrified_population
+  target: smart_metered_population
+  equation_id: smart_metered_population_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: smart_metering_penetration
+  target: smart_metered_population
+  equation_id: smart_metered_population_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: smart_metering_rollout
+  target: smart_metered_population
+  equation_id: smart_metered_population_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: line_upgrade_budget
+  target: permitted_transmission_spend_usd
+  equation_id: permitted_transmission_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: transmission_expansion_allowed
+  target: permitted_transmission_spend_usd
+  equation_id: permitted_transmission_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gates the base.
+  reference: null
+  priority: P1
+- source: discount_rate
+  target: weighted_average_cost_of_capital
+  equation_id: wacc_alias
+  relationship: equality
+  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
+    computes.'
+- source: capex_usd_per_kw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: Gross fleet capital enters the base the allowed return is earned on.
+- source: total_capacity_mw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: The fleet's size sets the scale of the capital in the accounts.
+- source: accumulated_depreciation_fraction
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: What the books have written down between gross capital and the base.
+- source: regulatory_asset_base
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: equality
+  description: Straight-line write-down of the base over the regulatory asset life.
+- source: depreciation_life_by_asset
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: functional
+  description: A longer regulatory life spreads the base thinner over the years.
+- source: regulatory_depreciation
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: Depreciation is the first term of the revenue requirement.
+- source: regulatory_asset_base
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return is earned on the base, not on gross capital.
+- source: discount_rate
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return rate is the blend the financial block computes.
+- source: allowed_return_on_debt
+  target: cost_of_debt
+  equation_id: cost_of_debt_capped
+  relationship: constraint
+  description: The allowance binds the debt rate a scenario may carry.
+- source: allowed_return_on_equity
+  target: cost_of_equity
+  equation_id: cost_of_equity_capped
+  relationship: constraint
+  description: The allowance binds the equity return a valuation may assume.
+- source: regulated_tariff_usd_per_mwh
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: equality
+  description: The applied tariff is the recovery level in the absence of a cap.
+- source: revenue_cap
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: functional
+  description: The cap scales the recovery level; below 1 it withholds part of it.
+- source: peak_demand_mw
+  target: spinning_reserve
+  equation_id: spinning_reserve_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Determines the reserve or its alias.
+  reference: Standard N-1 planning criterion; cf. ENTSO-E adequacy studies
+  priority: P1
+- source: spinning_reserve_share
+  target: spinning_reserve
+  equation_id: spinning_reserve_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Determines the reserve or its alias.
+  reference: Standard N-1 planning criterion; cf. ENTSO-E adequacy studies
+  priority: P1
+- source: spinning_reserve
+  target: spinning_reserve_requirement
+  equation_id: spinning_reserve_requirement_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Determines the reserve or its alias.
+  reference: The catalog's own duplicate rows, resolved
+  priority: P1
+- source: non_spinning_reserve_requirement
+  target: non_spinning_reserve
+  equation_id: non_spinning_reserve_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Determines the reserve or its alias.
+  reference: The catalog's own duplicate rows, resolved
+  priority: P1
+- source: peak_demand_mw
+  target: regulation_up_requirement
+  equation_id: regulation_up_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Determines the reserve or its alias.
+  reference: Stoft 2002, Power System Economics, ch. 5
+  priority: P1
+- source: regulation_up_share
+  target: regulation_up_requirement
+  equation_id: regulation_up_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Determines the reserve or its alias.
+  reference: Stoft 2002, Power System Economics, ch. 5
+  priority: P1
+- source: peak_demand_mw
+  target: regulation_down_requirement
+  equation_id: regulation_down_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Determines the reserve or its alias.
+  reference: Stoft 2002, Power System Economics, ch. 5
+  priority: P1
+- source: regulation_down_share
+  target: regulation_down_requirement
+  equation_id: regulation_down_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Determines the reserve or its alias.
+  reference: Stoft 2002, Power System Economics, ch. 5
+  priority: P1
+- source: reactive_capability_mvar
+  target: voltage_support_requirement
+  equation_id: voltage_support_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Determines the reserve or its alias.
+  reference: IEEE Guide for Electric Power Distribution Reliability Indices (1366), tutorial deck
+  priority: P1
+- source: voltage_support_share
+  target: voltage_support_requirement
+  equation_id: voltage_support_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Determines the reserve or its alias.
+  reference: IEEE Guide for Electric Power Distribution Reliability Indices (1366), tutorial deck
+  priority: P1
+- source: peak_demand_mw
+  target: spare_capacity
+  equation_id: spare_capacity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Determines the reserve or its alias.
+  reference: Standard N-1 planning criterion; cf. ENTSO-E adequacy studies
+  priority: P1
+- source: total_capacity_mw
+  target: spare_capacity
+  equation_id: spare_capacity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Determines the reserve or its alias.
+  reference: Standard N-1 planning criterion; cf. ENTSO-E adequacy studies
+  priority: P1
+- source: reserve_margin_min
+  target: planning_reserve_margin
+  equation_id: planning_reserve_margin_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Determines the reserve or its alias.
+  reference: Standard N-1 planning criterion; cf. ENTSO-E adequacy studies
+  priority: P1
+- source: reserve_margin_actual
+  target: reserve_margin
+  equation_id: operating_reserve_margin_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Determines the reserve or its alias.
+  reference: Stoft 2002, Power System Economics, ch. 5
+  priority: P1
+- source: service_quality_standards
+  target: grid_reliability_saifi
+  equation_id: reliability_target_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Determines the reserve or its alias.
+  reference: IEEE Guide for Electric Power Distribution Reliability Indices (1366), tutorial deck
+  priority: P1
+- source: transmission_loss_factor
+  target: transmission_loss_after_target
+  equation_id: transmission_loss_target_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Determines the reserve or its alias.
+  reference: null
+  priority: P1
+- source: transmission_loss_reduction_target
+  target: transmission_loss_after_target
+  equation_id: transmission_loss_target_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Determines the reserve or its alias.
+  reference: null
+  priority: P1
 cross_validation:
 - id: carbon_price_budget_alignment
   condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0

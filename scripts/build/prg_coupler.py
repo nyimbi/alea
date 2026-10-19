@@ -546,7 +546,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -625,6 +625,20 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b23_equations)
 		edges = list(BATCH12_EDGES) + b23_edges
+	elif batch == "26":
+		b26_nodes, b26_equations, b26_edges, b26_rules = build_batch26(graph)
+		rules.extend(b26_rules)
+		nodes.update(b26_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b26_equations)
+		edges = list(BATCH12_EDGES) + b26_edges
+	elif batch == "25":
+		b25_nodes, b25_equations, b25_edges, b25_rules = build_batch25(graph)
+		rules.extend(b25_rules)
+		nodes.update(b25_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b25_equations)
+		edges = list(BATCH12_EDGES) + b25_edges
 	elif batch == "24":
 		b24_nodes, b24_equations, b24_edges, b24_rules = build_batch24(graph)
 		rules.extend(b24_rules)
@@ -5541,6 +5555,471 @@ def build_batch24(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		),
 	})
 	return nodes, equations, edges, rules
+
+
+# ---------------------------------------------------------------------------
+# Batch 25 -- the gate family: thirteen switches with a quantity on the other
+# side of them.
+#
+# The research packs split the remaining policy flags into two classes, and the
+# split is the whole design. A *gate-product* is a switch multiplying a base
+# the graph already carries: the product is the gated quantity, it is zero when
+# the switch is off, and it is a real number when the switch is on. A
+# *scene-switch* (``market_coupling``, ``pricing_mechanism``,
+# ``condition_based_maintenance``, the hazard projections) selects which model
+# runs; no arithmetic expresses it, and writing one would be a number pretending
+# to be a branch. Only the first class is coupled here.
+#
+# Two of the thirteen needed their declaration repaired first. The eight
+# ``GATE-PRODUCT`` insurance and fiscal flags shipped as ``float`` knobs with no
+# unit and the catalog's 500000.0 placeholder, so a share of a revenue base
+# evaluated to 500000 x 6.3e9 -- and ``import_duty_exemption`` had to be written
+# as ``(1 - x)`` for the duty *paid*, which at the placeholder evaluates to
+# -49,999.9. A share of something is dimensionless; the placeholder is not a
+# value, and retyping it to a ``1`` in ``[0, 1]`` is what makes the product mean
+# what its name says.
+#
+# The theory is the standard one and needs no citation beyond the textbook
+# statement: a switch times a base is the gated quantity. The bases are the
+# graph's own -- ``total_revenue_usd_per_year``, ``capex_usd_per_kw`` x
+# ``total_capacity_mw`` x 1000 (kW per MW), ``net_imports_twh``,
+# ``planned_maintenance_hours_per_year``, ``electrified_population`` -- so each
+# equation states a relationship a reader can check against the base's own
+# definition rather than a number invented here.
+#
+# ``transmission_expansion_allowed`` needed ``line_upgrade_budget`` retyped from
+# a unit-less 500000.0 placeholder to USD, because a permitted spend whose
+# budget has no unit is undecidable rather than zero.
+#
+# All thirteen were checked dimensionally before authoring (0 bad of 13): the
+# derived lhs was built from the base node's body with the unit the equation
+# states, and ``unit_of`` was asked for the rhs's dimension.
+# ---------------------------------------------------------------------------
+
+#: (name, unit, range, default, category, prose) -- the eight placeholder
+#: shares, retyped to the dimensionless share each name describes.
+BATCH25_RETYPES: tuple[tuple[str, str, list[float], float, str, str], ...] = (
+	("business_interruption_insurance", "1", [0.0, 1.0], 0.01, "Macro",
+	 "Share of gross revenue indemnified by business-interruption cover. A "
+	 "share: the shipped node carried the catalog placeholder and no unit, "
+	 "which made every product against revenue read as 500000 x USD/year."),
+	("cyber_insurance", "1", [0.0, 1.0], 0.002, "Digital",
+	 "Share of gross revenue indemnified against cyber loss. A share."),
+	("force_majeure_insurance", "1", [0.0, 1.0], 0.004, "Macro",
+	 "Share of gross revenue indemnified against force-majeure events. A "
+	 "share."),
+	("free_trade_zone_benefits", "1", [0.0, 1.0], 0.0, "Tax",
+	 "Share of the equipment duty forgone under free-trade-zone status. A "
+	 "share of the duty the equipment would otherwise bear."),
+	("import_duty_exemption", "1", [0.0, 1.0], 0.0, "Policy",
+	 "Share of the equipment duty exempted. A share, and the reason the "
+	 "product is written as `(1 - x)`: what the project pays is the "
+	 "unexempted part."),
+	("parent_company_guarantee", "1", [0.0, 1.0], 0.0, "Contract",
+	 "Share of the debt tranche carrying a parent-company guarantee. A "
+	 "share, and the guarantee's value is that share of the debt it "
+	 "supports."),
+	("political_risk_insurance", "1", [0.0, 1.0], 0.0, "Macro",
+	 "Share of the asset value insured against political events. A share."),
+	("sanctions_exposure", "1", [0.0, 1.0], 0.0, "Geopol",
+	 "Share of the asset value exposed to sanctions. A share, and it is the "
+	 "exposure rather than a probability: the graph carries no sanction "
+	 "frequency it could multiply."),
+	("line_upgrade_budget", "USD", [0.0, 1.0e10], 5.0e7, "Transmission & Grid",
+	 "The capital budget available for line upgrades. A spend, and the base "
+	 "the transmission-expansion gate permits; the shipped node carried the "
+	 "catalog placeholder and no unit."),
+)
+
+#: (equation id, name, lhs, rhs, prose, unit, range, reference)
+BATCH25_EQUATIONS: tuple[
+	tuple[str, str, str, str, str, str, list[float], str | None], ...
+] = (
+	("gated_carbon_volume_definition", "The gated carbon volume",
+	 "gated_carbon_volume_mtco2", "ets_enabled * ets_cap",
+	 "The capped volume the emissions trading system actually applies, which "
+	 "is the cap times the instrument switch. It is the quantity the revenue "
+	 "identity cannot read: `carbon_revenue_definition` prices the covered "
+	 "share of emissions and takes no switch, so the revenue accrues whether "
+	 "or not the instrument exists. Stating the gated volume beside it makes "
+	 "the gap a difference between two derived nodes rather than a rule's "
+	 "prose.",
+	 "MtCO2/year", [0.0, 10000.0], "EU CBAM regulation"),
+	("business_interruption_cover_definition", "The business-interruption cover",
+	 "business_interruption_cover_usd_per_year",
+	 "business_interruption_insurance * total_revenue_usd_per_year",
+	 "The revenue indemnified: the cover share times gross revenue. A switch "
+	 "at zero returns zero, which is the gated quantity rather than a "
+	 "scenario branch.",
+	 "USD/year", [0.0, 1.0e12], None),
+	("cyber_cover_definition", "The cyber-loss cover",
+	 "cyber_cover_usd_per_year",
+	 "cyber_insurance * total_revenue_usd_per_year",
+	 "The revenue indemnified against cyber loss: the cover share times gross "
+	 "revenue.", "USD/year", [0.0, 1.0e12], None),
+	("force_majeure_cover_definition", "The force-majeure cover",
+	 "force_majeure_cover_usd_per_year",
+	 "force_majeure_insurance * total_revenue_usd_per_year",
+	 "The revenue indemnified against force-majeure events: the cover share "
+	 "times gross revenue.", "USD/year", [0.0, 1.0e12], None),
+	("free_trade_zone_benefit_definition", "The free-trade-zone benefit",
+	 "free_trade_zone_benefit_usd",
+	 "free_trade_zone_benefits * import_duty_equipment * capex_usd_per_kw * total_capacity_mw * 1000",
+	 "The duty forgone: the zone's share of the equipment duty, which is the "
+	 "duty rate on the fleet's capital. The `1000` is kW per MW, so the "
+	 "capital term is USD -- the fleet's own unit arithmetic, not a fitted "
+	 "factor.",
+	 "USD", [0.0, 1.0e13], None),
+	("import_duty_cost_definition", "The import duty paid",
+	 "import_duty_cost_usd",
+	 "(1 - import_duty_exemption) * import_duty_equipment * capex_usd_per_kw * total_capacity_mw * 1000",
+	 "The duty the project actually pays: the unexempted share of the "
+	 "equipment duty on the fleet's capital. Written as `(1 - x)` because the "
+	 "node is the share *exempted* -- the opposite spelling evaluates to a "
+	 "negative duty at any exemption near one.",
+	 "USD", [0.0, 1.0e13], None),
+	("parent_company_guarantee_definition", "The guaranteed debt",
+	 "parent_company_guarantee_usd",
+	 "parent_company_guarantee * debt_fraction * capex_usd_per_kw * total_capacity_mw * 1000",
+	 "The debt tranche carrying the guarantee: the guaranteed share of the "
+	 "debt-financed part of the fleet's capital.",
+	 "USD", [0.0, 1.0e13], None),
+	("political_risk_cover_definition", "The political-risk cover",
+	 "political_risk_cover_usd",
+	 "political_risk_insurance * capex_usd_per_kw * total_capacity_mw * 1000",
+	 "The asset value insured against political events: the insured share of "
+	 "the fleet's capital.", "USD", [0.0, 1.0e13], None),
+	("sanctions_exposed_value_definition", "The sanctions-exposed value",
+	 "sanctions_exposed_value_usd",
+	 "sanctions_exposure * capex_usd_per_kw * total_capacity_mw * 1000",
+	 "The asset value exposed to sanctions: the exposed share of the fleet's "
+	 "capital.", "USD", [0.0, 1.0e13], None),
+	("permitted_imports_definition", "The permitted imports",
+	 "permitted_imports_twh", "cross_border_trade_allowed * net_imports_twh",
+	 "The cross-border flow the trade regime permits: the switch times the "
+	 "net balance. At the shipped defaults the balance is zero, so the gate "
+	 "is live and the base is empty -- which is the honest reading, and the "
+	 "reason this product carries no information until a scenario sets the "
+	 "balance.",
+	 "TWh/year", [-1000.0, 1000.0], None),
+	("coordinated_maintenance_definition", "The coordinated maintenance hours",
+	 "coordinated_maintenance_hours_per_year",
+	 "outage_coordination * planned_maintenance_hours_per_year",
+	 "The maintenance hours run under coordination: the switch times the "
+	 "planned hours. Coordination does not change how much maintenance the "
+	 "fleet needs, only whether the outages are scheduled jointly, so the "
+	 "base is unchanged and the gate selects which hours are coordinated.",
+	 "hours/year", [0.0, 8760.0], None),
+	("smart_metered_population_definition", "The smart-metered population",
+	 "smart_metered_population",
+	 "smart_metering_rollout * smart_metering_penetration * electrified_population",
+	 "The population reached by the metering programme: the rollout switch "
+	 "times the penetration rate times the electrified population. Two gates "
+	 "multiply the same base, and both are switches the scenario sets.",
+	 "people", [0.0, 1.0e9], None),
+	("permitted_transmission_spend_definition", "The permitted transmission spend",
+	 "permitted_transmission_spend_usd",
+	 "transmission_expansion_allowed * line_upgrade_budget",
+	 "The upgrade spend the regime permits: the expansion switch times the "
+	 "available budget. A permitted spend of zero is a live constraint, not "
+	 "an absent one -- it is what a build scenario must respect.",
+	 "USD", [0.0, 1.0e10], None),
+)
+
+
+def build_batch25(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, str]], list[dict[str, Any]]]:
+	"""Batch 25: the gate products -- switches with a quantity behind them."""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+
+	for name, unit, rng, default, category, prose in BATCH25_RETYPES:
+		shipped = graph.nodes[name]
+		full = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		full.update({
+			"unit": unit, "range": rng, "default": default,
+			"description": prose, "determinism": "policy",
+			"priority": "P1", "status": "existing",
+			"source": "The gate-family coupling (batch 25)",
+			"users": ["Regulators", "Policymakers", "Planners"],
+		})
+		nodes[name] = full
+
+	for eq_id, name, lhs, rhs, prose, unit, rng, cite in BATCH25_EQUATIONS:
+		from alea.prg.dsl import parse_side
+
+		rhs_params = sorted(parse_side(rhs).symbols)
+		prior = graph.nodes.get(lhs)
+		category = prior.category if prior is not None else "Policy"
+		nodes[lhs] = {
+			"name": name,
+			"description": prose,
+			"category": category, "type": "float", "unit": unit,
+			"range": rng, "role": "derived",
+			"determinism": "policy", "priority": "P1", "status": "existing",
+			"source": "The gate-family coupling (batch 25)",
+			"users": ["Regulators", "Planners"],
+		}
+		equations[eq_id] = {
+			"id": eq_id, "name": name, "description": prose,
+			"system": "financial", "lhs": lhs, "rhs": rhs,
+			"relation": "eq", "parameters": [lhs] + rhs_params,
+			"free_variables": [], "determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs,
+				"equation_id": eq_id, "relationship": "functional",
+				"direction": "forward", "strength": "hard",
+				"description": "Gates the base.",
+				"reference": cite, "priority": "P1",
+			})
+	return nodes, equations, edges, []
+
+
+#: (name, unit, range, default, category, prose) -- the four shares the reserve
+#: family needed and the graph did not carry. A grid code states each reserve
+#: requirement as a share of peak demand, so the share IS the free parameter and
+#: the MW figure is its product. Before this batch the MW figures were themselves
+#: the free knobs, at the catalog's 500000.0 placeholder, which made every one of
+#: them 500 GW of reserve.
+BATCH26_BASES: tuple[tuple[str, str, list[float], float, str, str], ...] = (
+	("spinning_reserve_share", "1", [0.0, 0.5], 0.05, "Operational",
+	 "Spinning reserve as a share of peak demand. The grid-code figure: a "
+	 "system operator carries spinning reserve sized to the largest credible "
+	 "loss, which is conventionally quoted as a percentage of peak load. "
+	 "Typical operating practice is 3-7%; the upper bound of the range is the "
+	 "share at which the reserve alone would exceed a tenth of the fleet."),
+	("regulation_up_share", "1", [0.0, 0.5], 0.01, "Operational",
+	 "Upward regulation reserve as a share of peak demand. Regulation reserve "
+	 "covers the continuous second-to-second imbalance between scheduled and "
+	 "actual output, so it is far smaller than contingency reserve -- the "
+	 "shares differ by an order of magnitude for that reason, not by "
+	 "convention."),
+	("regulation_down_share", "1", [0.0, 0.5], 0.01, "Operational",
+	 "Downward regulation reserve as a share of peak demand. The symmetric "
+	 "counterpart of upward regulation: capacity able to reduce output on "
+	 "instruction. It is a separate parameter because the two are procured "
+	 "separately and a fleet's downward capability is not its upward one -- "
+	 "a must-run unit can regulate down and not up."),
+	("voltage_support_share", "1", [0.0, 1.0], 0.10, "Operational",
+	 "Reactive reserve as a share of the fleet's reactive capability. The "
+	 "voltage-support requirement is reactive power held in reserve, so the "
+	 "base it multiplies is MVAr and not MW: the graph's own reactive "
+	 "capability, which is the power factor's share of peak demand."),
+)
+
+#: (equation id, name, lhs, rhs, prose, system, unit, range, reference)
+BATCH26_EQUATIONS: tuple[
+	tuple[str, str, str, str, str, str, str, list[float], str], ...
+] = (
+	("spinning_reserve_definition", "The spinning reserve requirement",
+	 "spinning_reserve", "spinning_reserve_share * peak_demand_mw",
+	 "Spinning reserve in MW: the grid code's share of peak demand. This is "
+	 "the catalog's own formula (SR = alpha D_peak) with alpha as a node "
+	 "rather than a constant folded into the arithmetic, so a scenario can "
+	 "move the grid code without rewriting the equation.",
+	 "reserve_margin", "MW", [0.0, 20000.0],
+	 "Standard N-1 planning criterion; cf. ENTSO-E adequacy studies"),
+	("spinning_reserve_requirement_alias", "The spinning reserve alias",
+	 "spinning_reserve_requirement", "spinning_reserve",
+	 "The catalog carries both `spinning_reserve` (category 8, Outage) and "
+	 "`spinning_reserve_requirement` (category 11, Operational) with the same "
+	 "formula and the same name. They are one quantity under two ids, so the "
+	 "equality states the duplicate rather than letting two 500000.0 "
+	 "placeholders drift apart.",
+	 "reserve_margin", "MW", [0.0, 20000.0],
+	 "The catalog's own duplicate rows, resolved"),
+	("non_spinning_reserve_alias", "The non-spinning reserve alias",
+	 "non_spinning_reserve", "non_spinning_reserve_requirement",
+	 "The same duplicate pair for the non-spinning reserve. The requirement "
+	 "itself is a free node with a real default and a real range, and "
+	 "`non_spinning_reserve_inside_margin` already bounds it inside the "
+	 "operating reserve; this equality makes the second id read the same "
+	 "quantity instead of a placeholder.",
+	 "reserve_margin", "MW", [0.0, 20000.0],
+	 "The catalog's own duplicate rows, resolved"),
+	("regulation_up_definition", "The upward regulation requirement",
+	 "regulation_up_requirement", "regulation_up_share * peak_demand_mw",
+	 "Upward regulation in MW: the share of peak demand held for continuous "
+	 "imbalance correction. Regulation and contingency reserve are different "
+	 "products with different response times, and the catalog's 'Reserve "
+	 "types -- similar forms' note is the claim that the form is shared, not "
+	 "the parameter.",
+	 "reserve_margin", "MW", [0.0, 20000.0],
+	 "Stoft 2002, Power System Economics, ch. 5"),
+	("regulation_down_definition", "The downward regulation requirement",
+	 "regulation_down_requirement", "regulation_down_share * peak_demand_mw",
+	 "Downward regulation in MW: the share of peak demand held to reduce "
+	 "output. Separate from the upward requirement because the fleet's "
+	 "downward capability is a different constraint.",
+	 "reserve_margin", "MW", [0.0, 20000.0],
+	 "Stoft 2002, Power System Economics, ch. 5"),
+	("voltage_support_definition", "The voltage support requirement",
+	 "voltage_support_requirement",
+	 "voltage_support_share * reactive_capability_mvar",
+	 "Reactive reserve in MVAr: the share of the fleet's reactive capability "
+	 "held for voltage support. The catalog's formula for this node is a "
+	 "voltage inequality, which is the constraint the reserve serves rather "
+	 "than a definition of the reserve; the reserve itself is a quantity of "
+	 "MVAr, and the graph already carries the capability it is a share of.",
+	 "reliability", "MVAr", [0.0, 100000.0],
+	 "IEEE Guide for Electric Power Distribution Reliability Indices (1366), tutorial deck"),
+	("spare_capacity_definition", "The spare capacity",
+	 "spare_capacity", "total_capacity_mw - peak_demand_mw",
+	 "Installed capacity less peak demand: the headroom the fleet carries. "
+	 "The catalog names this node's formula as a bare symbol, which is the "
+	 "absence of a formula; the headroom is the only reading of the name that "
+	 "the graph's own capacity and demand nodes can support.",
+	 "reserve_margin", "MW", [0.0, 100000.0],
+	 "Standard N-1 planning criterion; cf. ENTSO-E adequacy studies"),
+	("planning_reserve_margin_alias", "The planning reserve margin",
+	 "planning_reserve_margin", "reserve_margin_min",
+	 "The planning reserve margin is the requirement `reserve_margin_min` "
+	 "carries: the same 0.15, under the catalog's second id. The graph's "
+	 "reserve-margin constraints already read `reserve_margin_min`, so the "
+	 "alias points at the node that does the work rather than at a new one.",
+	 "reserve_margin", "1", [0.0, 2.0],
+	 "Standard N-1 planning criterion; cf. ENTSO-E adequacy studies"),
+	("operating_reserve_margin_alias", "The operating reserve margin",
+	 "reserve_margin", "reserve_margin_actual",
+	 "The catalog's 'Operating reserve margin' is the margin the built fleet "
+	 "actually delivers, which `reserve_margin_actual` already computes as "
+	 "(firm plus firm VRE, less peak) over peak. Naming the alias is what "
+	 "stops the placeholder from being read as a second, independent margin.",
+	 "reserve_margin", "1", [-1.0, 2.0],
+	 "Stoft 2002, Power System Economics, ch. 5"),
+	("reliability_target_alias", "The reliability target",
+	 "grid_reliability_saifi", "service_quality_standards",
+	 "The catalog's 'Reliability target (SAIFI)' is the service-quality "
+	 "standard in interruptions per year, which the graph carries as "
+	 "`service_quality_standards` and already binds with `saifi_ceiling_bound`. "
+	 "A target is not a second measurement of the fleet's performance.",
+	 "reliability", "events/year", [0.0, 200.0],
+	 "IEEE Guide for Electric Power Distribution Reliability Indices (1366), tutorial deck"),
+	("transmission_loss_target_definition", "The loss after the target",
+	 "transmission_loss_after_target",
+	 "transmission_loss_factor * (1 - transmission_loss_reduction_target)",
+	 "The loss factor the target leaves: the base loss reduced by the "
+	 "reduction target. The catalog defines the target as a fractional "
+	 "reduction ((base - target) / base), which is the same statement solved "
+	 "for the target, and writing it this way makes the target's dimension "
+	 "dimensionless rather than a loss level the graph has no node for.",
+	 "energy_balance", "1", [0.0, 1.0], None),
+)
+
+
+def build_batch26(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, str]], list[dict[str, Any]]]:
+	"""Batch 26: the adequacy and reserve family.
+
+	Eleven nodes the catalog declares with a formula and the graph held as
+	placeholders. They divide into two kinds and the division is the batch's
+	content. Seven are *definitions* the catalog states outright -- spinning
+	and non-spinning reserve as a share of peak demand, regulation up and down
+	the same way, voltage support as a share of reactive capability, spare
+	capacity as headroom, and the loss level a reduction target leaves. Four
+	are *aliases*: the catalog carries the same quantity under two ids with two
+	names, and the equality is the honest coupling because there is only one
+	number.
+
+	Every one of the eleven shipped with unit=None and default=500000.0. That
+	placeholder is not a neutral absence: `spinning_reserve` at 500000 MW is
+	500 GW of reserve on an 8.5 GW peak, and a scenario reading it would
+	conclude the fleet is drowning in capacity. The retype to MW with a share
+	behind it is most of the value.
+	"""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+
+	for name, unit, rng, default, category, prose in BATCH26_BASES:
+		# A base is new to the *pre-batch* graph, but the emit path reads the
+		# already-baked document, so a re-emit after a bake finds it present.
+		# Reading the shipped body and overriding the fields this batch owns
+		# keeps the two runs byte-identical, which is what makes re-emitting a
+		# correction safe.
+		shipped = graph.nodes.get(name)
+		full = (
+			dict(shipped.model_dump(exclude={"id"}, mode="json"))
+			if shipped is not None else {"name": name.replace("_", " ").capitalize()}
+		)
+		full.update({
+			"description": prose,
+			"category": category, "type": "float", "unit": unit,
+			"range": rng, "default": default, "role": "free",
+			"determinism": "policy", "priority": "P1", "status": "existing",
+			"source": "The adequacy and reserve coupling (batch 26)",
+			"users": ["Regulators", "Planners"],
+		})
+		nodes[name] = full
+
+	# The reduction target is a fractional reduction, and the shipped node had
+	# no unit and the placeholder. Retyped here because the equation below
+	# multiplies by (1 - x): at 500000.0 that product is -499999, a loss factor
+	# of minus half a million.
+	retype = graph.nodes["transmission_loss_reduction_target"]
+	full = dict(retype.model_dump(exclude={"id"}, mode="json"))
+	full.update({
+		"unit": "1", "range": [0.0, 1.0], "default": 0.1, "role": "free",
+		"description": (
+			"The fractional reduction in transmission losses the target aims "
+			"for. A share, not a loss level: the catalog's own formula divides "
+			"the difference by the base loss, which makes the target a ratio. "
+			"The shipped node carried the catalog placeholder and no unit."
+		),
+		"determinism": "policy", "priority": "P2", "status": "existing",
+		"source": "The adequacy and reserve coupling (batch 26)",
+		"users": ["Regulators", "Planners"],
+	})
+	nodes["transmission_loss_reduction_target"] = full
+
+	for eq_id, name, lhs, rhs, prose, system, unit, rng, cite in BATCH26_EQUATIONS:
+		from alea.prg.dsl import parse_side
+
+		rhs_params = sorted(parse_side(rhs).symbols)
+		if lhs in nodes:
+			nodes[lhs]["role"] = "derived"
+			nodes[lhs].pop("default", None)
+			nodes[lhs]["unit"] = unit
+			nodes[lhs]["range"] = rng
+			nodes[lhs]["description"] = prose
+		else:
+			prior = graph.nodes.get(lhs)
+			category = prior.category if prior is not None else "Operational"
+			users = list(prior.users) if prior is not None else ["Planners"]
+			nodes[lhs] = {
+				"name": (prior.name if prior is not None
+					else lhs.replace("_", " ").capitalize()),
+				"description": prose,
+				"category": category, "type": "float", "unit": unit,
+				"range": rng, "role": "derived",
+				"determinism": "fixed", "priority": "P1", "status": "existing",
+				"source": "The adequacy and reserve coupling (batch 26)",
+				"users": users,
+			}
+		equations[eq_id] = {
+			"id": eq_id, "name": name, "description": prose,
+			"system": system, "lhs": lhs, "rhs": rhs,
+			"relation": "eq", "parameters": [lhs] + rhs_params,
+			"free_variables": [], "determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs,
+				"equation_id": eq_id, "relationship": "functional",
+				"direction": "forward", "strength": "hard",
+				"description": "Determines the reserve or its alias.",
+				"reference": cite, "priority": "P1",
+			})
+	return nodes, equations, edges, []
 
 
 def build_batch22(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, str]], list[dict[str, Any]]]:
