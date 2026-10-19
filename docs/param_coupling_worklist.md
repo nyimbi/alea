@@ -1,30 +1,41 @@
 # Coupling worklist
 
-Every node still in `uncoupled()` (504 of 1249, as of the batch 26 bake on 2026-10-19) and the family class its coupling belongs to. Batches 12-26 coupled 289 nodes (793 -> 504): the financial core and fleet, the duplicate-pair aliases, sector demand, fuel conversions, rate aliases, the instrument and sector-coupling layers, the share family's products and the time-index arithmetic (batch 20), the cost and rate families (batch 21), the compliance register (batch 22), the extensive bases with the products they unblock (batch 23), the carbon-market, subsidy and employment families with the annual-quantity repair that unblocked them (batch 24), the gate family (batch 25), and the adequacy and reserve family (batch 26). The classes name the method each coupling gets; nothing escapes the register.
+Every node still in `uncoupled()` (488 of 1261, as of the batch 27 bake on
+2026-10-19) and the family class its coupling belongs to. Batches 12-27
+coupled 305 nodes (793 -> 488): the financial core and fleet, the
+duplicate-pair aliases, sector demand, fuel conversions, rate aliases, the
+instrument and sector-coupling layers, the share family's products and the
+time-index arithmetic (batch 20), the cost and rate families (batch 21), the
+compliance register (batch 22), the extensive bases with the products they
+unblock (batch 23), the carbon-market, subsidy and employment families with the
+annual-quantity repair that unblocked them (batch 24), the gate family (batch
+25), the adequacy and reserve family (batch 26), and the finance family -- the
+two risk premiums, the insurance bases and their products, the transaction
+cost, the ring-fence, the RAB roll-forward and the LLCR covenant (batch 27).
+The classes name the method each coupling gets; nothing escapes the register.
 
+## Batch 27's tail, and what is left
 
-
-## Batch 26's tail, and what is left
-
-Batches 25 and 26 coupled 28 nodes between them (532 -> 516 -> 504) and added
-none to `uncoupled()`. Batch 25 took the GATE-PRODUCT half of the gate family:
-thirteen switches that multiply a base the graph already carries. That half is
-closed. The other 44 scene switches are the SCENE-SWITCH, GATE-SCENE and
-GATE-SCENE-SWITCH rows the packs classify: a switch that selects which model
-runs has no arithmetic coupling, and a product written for one would be a
-number pretending to be a branch. Batch 26 closed the adequacy and reserve
-family outright, six products and five aliases against bases the graph carries.
+Batch 27 coupled sixteen nodes (504 -> 488) and added none to `uncoupled()`.
+Four were aliases the catalog carries twice (`interest_rate_debt`,
+`debt_service_coverage_ratio`, `maladaptation_risk`, `insurance_premiums`), and
+twelve were products and charges the finance family supplies a base for: the
+transaction cost against revenue, the sovereign and technology risk charges
+against the debt- and equity-financed capital, the microinsurance premium and
+the population it covers, the ring-fenced asset value, the solvency capital,
+the RAB roll-forward, the project hurdle, and the two risk premiums and the
+coverage share that drive them.
 
 What remains, by the packs' own classification of the current `uncoupled()`
-set: 115 PRODUCT, of which 57 still sit at the `unit=None def=500000.0`
-placeholder; 98 BASE-NEEDED; 121 QUALITATIVE; 26 THRESHOLD; 44 scene switches;
-and 103 that appear in no pack at all. The classes are read off the packs'
+set: 104 PRODUCT, of which 50 still sit at the `unit=None def=500000.0`
+placeholder; 96 BASE-NEEDED; 120 QUALITATIVE; 25 THRESHOLD; 44 scene switches;
+and 102 that appear in no pack at all. The classes are read off the packs'
 first class column, so a node the packs list twice is counted once, under the
 class they gave it first; three nodes are both scene switches and qualitative,
-which is why the six counts sum to 507 against a set of 504.
+which is why the six counts sum to 491 against a set of 488.
 
 The PRODUCT remainder is the next authoring batch, and its size is the point:
-57 nodes with a formula proposed and a placeholder where a unit should be. The
+50 nodes with a formula proposed and a placeholder where a unit should be. The
 THRESHOLD and BASE-NEEDED remainders are the two that need something built
 first: a bound needs an lhs whose value at defaults is not 500000, and a base
 needs a quantity the graph does not carry. The QUALITATIVE remainder is the
@@ -72,7 +83,7 @@ against new connections, `capex_distribution` against peak demand and
   physical quantity, and the graph carries no exposure node. A borrowed product
   would be a fabricated coupling, so it stays declared.
 
-## unassigned (486)
+## unassigned (470)
 
 The remainder, and it is not one class. It splits by what the node *is*:
 
@@ -86,7 +97,7 @@ The full list with descriptions is below.
 Note on the placeholder signature: `unit=None def=500000.0` marks a node the catalog carries with no unit and the placeholder default the expansion gave every row. It is the placeholder register, not a value -- the unit is what a coupling needs first, and the default is what a node without one ships.
 
 
-All 504, generated from the loaded graph so the list cannot drift from it. The family headings above name the method each node's coupling takes; this section is the inventory.
+All 488, generated from the loaded graph so the list cannot drift from it. The family headings above name the method each node's coupling takes; this section is the inventory.
 
 - `ac_voltage_limit` unit=None def=500000.0 -- Maximum AC voltage
 - `accelerated_depreciation` unit=None def=500000.0 -- Accelerated depreciation
@@ -196,7 +207,6 @@ All 504, generated from the loaded graph so the list cannot drift from it. The f
 - `cultural_heritage_sites_density` unit='sites/100km2' def=2.0 -- Number of documented cultural heritage sites per hundred square kilometres in the study area.
 - `cumulative_impact_assessment` unit=None def=500000.0 -- CIA
 - `currency_hedge_cost` unit=None def=500000.0 -- Currency hedge cost
-- `currency_risk_premium` unit=None def=500000.0 -- Currency risk premium
 - `current_account_balance` unit=None def=500000.0 -- Current account balance
 - `custom_gis_boundary` unit=None def=500000.0 -- Custom GIS boundary
 - `customer_information_systems` unit=None def=500000.0 -- CIS
@@ -209,7 +219,6 @@ All 504, generated from the loaded graph so the list cannot drift from it. The f
 - `data_centre_demand` unit=None def=500000.0 -- New data centre load
 - `day_ahead_market` unit='1' def=1.0 -- Whether a day-ahead market is modelled. A boolean.
 - `debt_management` unit=None def=500000.0 -- Debt management
-- `debt_service_coverage_ratio` unit='1' def=1.3 -- Debt service coverage floor a lender will accept. Bounded at the low end by 1.0, which is the boundary below which a loan defaults in expectation.
 - `debt_sustainability` unit=None def=500000.0 -- Debt sustainability
 - `deductible_levels` unit='1' def=500000.0 -- FIRM-SPECIFIC. The deductible schedule is a property of a specific policy book. Not corrected; the market-level statistic is `deductible_share`, which is declared in Part A.
 - `default_events` unit=None def=500000.0 -- Events of default
@@ -326,9 +335,7 @@ All 504, generated from the loaded graph so the list cannot drift from it. The f
 - `indigenous_peoples_rights` unit=None def=500000.0 -- FPIC
 - `industrial_heat_demand` unit=None def=500000.0 -- Industrial heat demand
 - `insider_trading_rules` unit=None def=500000.0 -- Insider trading
-- `insurance_premiums` unit='1' def=500000.0 -- FIRM-SPECIFIC. The absolute premium depends on the asset value and the firm's rate. The share-of-asset version is `premium_share_of_asset`, declared in Part A. Not corrected.
 - `interannual_variability` unit=None def=500000.0 -- Interannual variability
-- `interest_rate_debt` unit=None def=500000.0 -- Interest rate on debt
 - `internet_penetration` unit='1' def=0.5 -- Share of the population with internet access. Shipped correctly as [0, 1]; the entry is retained here only because a subsequent batch should reconcile the shipped shares into a single naming convention (`_penetration` vs `_coverage` vs `_share` vs `_adoption`), and this is the register where that reconciliation lands.
 - `intraday_market` unit='1' def=0.0 -- Whether an intraday market is modelled. A boolean.
 - `investment_periods` unit=None def=500000.0 -- Investment periods
@@ -359,7 +366,6 @@ All 504, generated from the loaded graph so the list cannot drift from it. The f
 - `line_outage_start` unit=None def=500000.0 -- When the outage begins
 - `load_factor_override` unit=None def=500000.0 -- Override default load factor
 - `load_shifting_capability` unit=None def=500000.0 -- Hours of load shifting possible
-- `loan_life_coverage_ratio` unit='1' def=1.4 -- Loan life coverage floor. Same shape as the DSCR floor.
 - `local_content_employment` unit=None def=500000.0 -- Local employment
 - `loss_factor_cross_border` unit='1' def=0.03 -- Share of cross-border flow lost in transit. A share; the shipped range admitted a loss of 500,000 times the flow.
 - `loss_reduction_investment` unit=None def=500000.0 -- Investment in loss reduction
@@ -367,7 +373,6 @@ All 504, generated from the loaded graph so the list cannot drift from it. The f
 - `maintenance_history` unit=None def=500000.0 -- Maintenance history
 - `maintenance_schedule` unit=None def=500000.0 -- Planned maintenance timing
 - `maintenance_schedule_optimisation` unit=None def=500000.0 -- Optimise maintenance timing
-- `maladaptation_risk` unit=None def=500000.0 -- Maladaptation
 - `marine_otec_capacity` unit=None def=500000.0 -- Installed OTEC capacity
 - `marine_tidal_capacity` unit=None def=500000.0 -- Installed tidal capacity
 - `marine_wave_capacity` unit=None def=500000.0 -- Installed wave capacity
@@ -379,8 +384,6 @@ All 504, generated from the loaded graph so the list cannot drift from it. The f
 - `material_adverse_change` unit=None def=500000.0 -- MAC clause
 - `mercury_emissions` unit=None def=500000.0 -- Mercury
 - `microgrid_deployment` unit=None def=500000.0 -- Microgrid deployment
-- `microinsurance` unit='1' def=500000.0 -- FIRM-SPECIFIC. The share-of-income version is declared in Part A. Not corrected.
-- `microinsurance_premium_share_of_income` unit='1' def=0.01 -- Annual premium as a fraction of household income for a microinsurance policy. A share; the sample's ceiling is the affordability threshold the graph already carries.
 - `military_energy_demand` unit=None def=500000.0 -- Military energy demand
 - `min_down_time_coal` unit=None def=500000.0 -- Coal minimum down time
 - `min_stable_level_coal` unit=None def=500000.0 -- Coal minimum stable level
@@ -438,10 +441,8 @@ All 504, generated from the loaded graph so the list cannot drift from it. The f
 - `prepayment_metering` unit=None def=500000.0 -- Prepayment
 - `pricing_mechanism` unit=None def=500000.0 -- Pricing mechanism
 - `probability_weight` unit=None def=500000.0 -- Scenario probability
-- `project_irr_hurdle` unit=None def=500000.0 -- Project IRR hurdle
 - `protected_areas` unit=None def=500000.0 -- Protected areas
 - `pyrolysis_capacity` unit=None def=500000.0 -- Pyrolysis capacity
-- `rab_roll_forward` unit=None def=500000.0 -- RAB roll-forward
 - `railway_electrification` unit='1' def=0.2 -- Share of the rail network that is electrified. A share; the shipped range admitted a value 500,000 times the maximum.
 - `ramp_rate_coal` unit=None def=500000.0 -- Coal ramp rate
 - `ramp_rate_gas` unit=None def=500000.0 -- Gas ramp rate
@@ -470,9 +471,7 @@ All 504, generated from the loaded graph so the list cannot drift from it. The f
 - `resilience_score` unit='1' def=0.5 -- Composite score of a system's resilience to shocks, normalised to [0, 1]. Range is the index's construction.
 - `retail_competition` unit=None def=500000.0 -- Retail competition
 - `retraining_costs` unit=None def=500000.0 -- Retraining cost
-- `ring_fencing_rules` unit='1' def=0.5 -- Share of the regulator's ring-fencing provisions that are legally binding rather than best-practice. A share.
 - `risk_based_maintenance` unit=None def=500000.0 -- RBM
-- `risk_of_maladaptation` unit='1' def=0.2 -- Probability that an adaptation measure makes the outcome worse, normalised to [0, 1]. Range is the index's construction.
 - `risk_transfer_mechanisms` unit=None def=500000.0 -- Risk transfer
 - `rolling_horizon_window` unit=None def=500000.0 -- Rolling horizon window
 - `rooftop_solar_adoption` unit='1' def=0.1 -- Share of suitable rooftops with PV. A share; same reset of the placeholder default.
@@ -502,9 +501,7 @@ All 504, generated from the loaded graph so the list cannot drift from it. The f
 - `solar_pv_land_constraint` unit=None def=500000.0 -- Land available for solar
 - `solar_pv_max_build` unit=None def=500000.0 -- Maximum annual solar build
 - `solar_thermal_capacity` unit=None def=500000.0 -- Solar thermal capacity
-- `solvency_capital` unit='1' def=500000.0 -- FIRM-SPECIFIC. The absolute number depends on the firm's book. The ratio version is `solvency_capital_ratio`, declared in Part A. Not corrected.
 - `solvency_capital_ratio` unit='1' def=1.6 -- Eligible own funds as a share of the required solvency capital. The prudential floor is 1.0; markets target 1.5–2.0. The shipped graph carries no such parameter and this one is declared because the solvency test is the insurance equivalent of the DSCR floor.
-- `sovereign_risk_premium` unit=None def=500000.0 -- Sovereign risk premium
 - `sox_emissions` unit=None def=500000.0 -- SOx emissions
 - `spare_parts_availability` unit='1' def=0.8 -- Share of required spares available at the time they are needed. A share.
 - `spare_parts_inventory` unit=None def=500000.0 -- Spare parts
@@ -519,7 +516,6 @@ All 504, generated from the loaded graph so the list cannot drift from it. The f
 - `step_in_rights` unit=None def=500000.0 -- Step-in rights
 - `stochastic_scenarios` unit=None def=500000.0 -- Stochastic scenarios
 - `storage_capacity_mw` unit='MW' def=800.0 -- Battery, pumped hydro and thermal storage, at their power rating. Not a Generator in the network, so it counts toward neither firm nor VRE capacity -- the reserve margin is a nameplate adequacy criterion and counting a battery's rating as firm is a modelling choice this graph does not make.
-
 - `storage_dispatch_enabled` unit='1' def=1.0 -- Corrected from float to bool.
 - `storage_duration_curve` unit=None def=500000.0 -- Storage energy-to-power ratio
 - `storm_surge` unit=None def=500000.0 -- Storm surge
@@ -533,7 +529,6 @@ All 504, generated from the loaded graph so the list cannot drift from it. The f
 - `tax_holiday_conditions` unit=None def=500000.0 -- Conditions for holiday
 - `tax_incentive_zones` unit=None def=500000.0 -- Special economic zones
 - `tax_incentives` unit=None def=500000.0 -- Tax incentives for renewables
-- `technology_risk_premium` unit=None def=500000.0 -- Technology risk premium
 - `temperature_increase` unit=None def=500000.0 -- Temperature increase
 - `temperature_target` unit=None def=500000.0 -- Temperature target
 - `temporal_aggregation` unit=None def=500000.0 -- Temporal aggregation
@@ -552,7 +547,6 @@ All 504, generated from the loaded graph so the list cannot drift from it. The f
 - `trade_flow_parameters` unit=None def=500000.0 -- Trade flows
 - `trade_repository` unit=None def=500000.0 -- Trade repository
 - `traditional_land_use` unit=None def=500000.0 -- Traditional use
-- `transaction_costs` unit=None def=500000.0 -- Transaction costs
 - `transboundary_water_constraint` unit=None def=500000.0 -- Transboundary water limit
 - `transfer_pricing_rules` unit=None def=500000.0 -- Transfer pricing
 - `transmission_capacity_factor` unit='1' def=0.5 -- Transmission utilisation

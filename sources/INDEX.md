@@ -87,6 +87,7 @@ citing or a row added and never wired.
 | shan_baoguo_2017 | 经济转型时期电力弹性系数应用 (Electricity elasticity coefficient in the transition period) | 单葆国 et al., 中国电力 | 2017 | https://www.electricpower.com.cn/CN/volumn/volumn_1202.shtml | Proprietary (CNKI) | | 单葆国 2017 |
 | tejada_2023 | Multi-year Investment Modelling in Energy Systems | Tejada-Arango, JRC | 2023 | https://arxiv.org/abs/2307.16842 | arXiv (open) | sources/archive/tejada_multiyear_investment_2023.html | Tejada-Arango (2023), arXiv:2307.16842 |
 | gep_review_2017 | Generation expansion planning optimisation with renewable energy integration: a review | Oree, Sayed Hassen & Fleming | 2017 | https://eprints.whiterose.ac.uk/id/eprint/111487/1/Generation%20expansion%20planning%20optimisation%20with%20renewable%20energy%20integration%20a%20review-1.pdf | Author accepted MS | sources/archive/whiterose_gep_review_2017.pdf | Oree et al. (2017), RSER 69:790-803 |
+| damodaran_ctryprem_2026 | Country Default Spreads and Risk Premiums (table last updated 2026-01-05) | Aswath Damodaran, NYU Stern | 2026 | https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/ctryprem.html | Author terms (free) | sources/archive/damodaran_ctryprem_2026-01.html | Damodaran (2026), Country Default Spreads and Risk Premiums |
 
 ## Digests of the archived copies
 
@@ -108,6 +109,7 @@ the row evidence rather than a pointer.
 | sources/archive/tejada_multiyear_investment_2023.html | d94fefb0630a98f09f8082af4e893faa4551ff1ef580bcc55a9d9ebe0e6b991b |
 | sources/archive/whiterose_gep_review_2017.pdf | 6af91da2cc10681dc2e58301546d4026005edf4e4df7b3a43bc57e6c5c70b036 |
 | sources/archive/irena_costs_2022_summary.pdf | b04c0d5234e2d2bfeb38960e76b6409741f3e478cd7a71a772d924b8e70ced0e |
+| sources/archive/damodaran_ctryprem_2026-01.html | ea30d57fc0858072c520930e2e5b8a5e5affdce81f7f2e1f9054efab79959dbc |
 
 ## Why five rows are `n/a`
 

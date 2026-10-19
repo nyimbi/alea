@@ -1,4 +1,24 @@
 parameters:
+  aal_usd_million:
+    name: Aal usd million
+    description: 'The annual average loss: the expected loss over a year from the frequency-severity convolution.
+      CLIMADA''s `aai_agg` output; the base every premium is priced against and every solvency requirement
+      is measured net of.'
+    category: Insurance & Catastrophe
+    type: float
+    unit: USD million
+    range:
+    - 0.0
+    - 500000.0
+    default: 50.0
+    role: free
+    determinism: stochastic
+    priority: P1
+    status: existing
+    source: The finance coupling (batch 27)
+    users:
+    - Financiers
+    - Insurers
   ac_voltage_limit:
     name: Ac voltage limit
     description: Maximum AC voltage
@@ -3281,6 +3301,26 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  capital_loading:
+    name: Capital loading
+    description: 'The capital loading: the share of the premium that remunerates the capital held against
+      the tail. It is a return on solvency capital expressed as a fraction of expected loss, which is
+      why it sits beside `solvency_capital` rather than inside it.'
+    category: Insurance & Catastrophe
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.15
+    role: free
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The finance coupling (batch 27)
+    users:
+    - Financiers
+    - Insurers
   capture_price_ratio:
     name: Capture price ratio
     description: 'The capture price as a fraction of marginal cost. One means a renewable unit is paid
@@ -6762,20 +6802,31 @@ parameters:
     source: docs/params.md
   currency_risk_premium:
     name: Currency risk premium
-    description: Currency risk premium
-    category: Grid
+    description: The currency risk premium added to the cost of debt. FPE section 6 applies it there rather
+      than as a separate cash-flow line, so this batch wires it into `cost_of_debt_priced`. The default
+      is Damodaran's South Africa country risk premium for the 2026-01 table (3.90% total against a 4.23%
+      mature-market ERP, giving a 2.56% spread component), which is the country the fleet's cost basis
+      is closest to. It is a policy dial a scenario moves per jurisdiction.
+    category: Investment & Finance
+    subcategory: null
     type: float
+    unit: 1/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.2
+    default: 0.0256
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The finance coupling (batch 27)
+    source_url: null
     users:
-    - Investors
-    source: docs/params.md
+    - Financiers
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   current_account_balance:
     name: Current account balance
     description: Current account balance
@@ -7211,8 +7262,8 @@ parameters:
     source: docs/params.md
   debt_service_coverage_ratio:
     name: Minimum DSCR
-    description: Debt service coverage floor a lender will accept. Bounded at the low end by 1.0, which
-      is the boundary below which a loan defaults in expectation.
+    description: 'debt service coverage ratio: the finance family''s derived quantity, computed by the
+      equality below.'
     category: Investment & Finance
     subcategory: null
     type: float
@@ -7220,17 +7271,17 @@ parameters:
     range:
     - 1.0
     - 3.0
-    default: 1.3
     initial: null
-    role: free
-    determinism: fixed
+    role: derived
+    determinism: policy
     categories: []
-    source: docs/params.md#9.22
+    source: The finance coupling (batch 27)
     source_url: null
     users:
-    - Banks
+    - Financiers
+    - Regulators
     priority: P1
-    status: integrate
+    status: existing
     deprecated_by: null
   debt_service_usd_per_kw_year:
     name: Debt service
@@ -7294,20 +7345,30 @@ parameters:
     source: docs/params.md
   debt_tenor:
     name: Debt tenor
-    description: Debt tenor
-    category: Macro
+    description: 'The debt tenor in years. The catalog placeholder was 500000.0 with no unit, and the
+      node feeds the annuity exponent in `llcr_definition`, which is why the unit walker''s annuity convention
+      cannot catch it: `(1 + cost_of_debt) ** debt_tenor` is blessed for any unit on the exponent. Fifteen
+      years is the middle of the 5-25 band the development-finance term sheet uses.'
+    category: Investment & Finance
+    subcategory: null
     type: float
+    unit: year
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: exogenous
+    - 5.0
+    - 25.0
+    default: 15.0
+    initial: null
+    role: free
     determinism: fixed
-    priority: P1
-    status: to_build
+    categories: []
+    source: The finance coupling (batch 27)
+    source_url: null
     users:
-    - Investors
-    source: docs/params.md
+    - Financiers
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   deductible_levels:
     name: Deductible levels
     description: FIRM-SPECIFIC. The deductible schedule is a property of a specific policy book. Not corrected;
@@ -9483,24 +9544,30 @@ parameters:
     deprecated_by: null
   ets_enabled:
     name: Emissions trading system enabled
-    description: Whether the jurisdiction operates an emissions trading system. A boolean, not a float;
-      the shipped declaration admitted an ETS that was 500,000 times enabled.
-    category: Policy
+    description: 'Whether the jurisdiction operates an emissions trading system. The default is 1.0 and
+      that is a repair, not a preference: batch 24 shipped the switch at 0.0 beside a `carbon_price_coverage`
+      of 0.5 and `carbon_price_usd_per_tco2` of 50, so the shipped graph booked carbon revenue while declaring
+      no instrument -- which its own `carbon_revenue_without_an_instrument` rule fires on at the defaults.
+      The graph contradicted itself at the values it shipped.'
+    category: Investment & Finance
     subcategory: null
-    type: bool
+    type: float
     unit: '1'
-    range: null
-    default: 0.0
+    range:
+    - 0.0
+    - 1.0
+    default: 1.0
     initial: null
     role: free
     determinism: policy
     categories: []
-    source: docs/params.md#4.4
+    source: The finance coupling (batch 27)
     source_url: null
     users:
-    - Policymakers
-    priority: P2
-    status: to_build
+    - Financiers
+    - Regulators
+    priority: P1
+    status: existing
     deprecated_by: null
   ev_adoption_timeline:
     name: Ev adoption timeline
@@ -9648,6 +9715,25 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  expense_loading:
+    name: Expense loading
+    description: 'The expense loading: the share of the premium that covers underwriting cost rather than
+      expected loss. Ten percent is the middle of the range a specialty property book reports.'
+    category: Insurance & Catastrophe
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.1
+    role: free
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The finance coupling (batch 27)
+    users:
+    - Financiers
+    - Insurers
   expense_ratio:
     name: Expense ratio
     description: 'Underwriting expenses as a share of premiums earned. The second term of the combined
@@ -13220,6 +13306,24 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  insurance_premium_usd_million:
+    name: Insurance premium usd million
+    description: 'insurance premium usd million: the finance family''s derived quantity, computed by the
+      equality below.'
+    category: Investment & Finance
+    type: float
+    unit: USD million
+    range:
+    - 0.0
+    - 500000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The finance coupling (batch 27)
+    users:
+    - Financiers
+    - Regulators
   insurance_premium_usd_per_kw_year:
     name: Insurance premium usd per kw year
     description: 'insurance premium usd per kw year: the coupling''s derived quantity, so a scenario''s
@@ -13241,26 +13345,27 @@ parameters:
     - Financial analysts
   insurance_premiums:
     name: Insurance premiums (absolute)
-    description: FIRM-SPECIFIC. The absolute premium depends on the asset value and the firm's rate. The
-      share-of-asset version is `premium_share_of_asset`, declared in Part A. Not corrected.
-    category: Insurance & Catastrophe
+    description: The insurance premium the project pays, in currency. The shipped node carried unit 1
+      and the placeholder. It is derived here from the frequency-severity chain rather than set, so the
+      premium moves with the loss model.
+    category: Investment & Finance
     subcategory: null
     type: float
-    unit: '1'
+    unit: USD million
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500000.0
     initial: null
-    role: free
-    determinism: fixed
+    role: derived
+    determinism: policy
     categories: []
-    source: Firm's rate card
+    source: The finance coupling (batch 27)
     source_url: null
     users:
-    - Insurance
-    priority: P2
-    status: to_build
+    - Financiers
+    - Regulators
+    priority: P1
+    status: existing
     deprecated_by: null
   interannual_variability:
     name: Interannual variability
@@ -13366,20 +13471,27 @@ parameters:
     deprecated_by: null
   interest_rate_debt:
     name: Interest rate debt
-    description: Interest rate on debt
-    category: Macro
+    description: 'interest rate debt: the finance family''s derived quantity, computed by the equality
+      below.'
+    category: Investment & Finance
+    subcategory: null
     type: float
+    unit: 1/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    - 0.5
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The finance coupling (batch 27)
+    source_url: null
     users:
-    - Investors
-    source: docs/params.md
+    - Financiers
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   internet_penetration:
     name: Internet penetration
     description: Share of the population with internet access. Shipped correctly as [0, 1]; the entry
@@ -15283,20 +15395,27 @@ parameters:
     source: docs/params.md
   maladaptation_risk:
     name: Maladaptation risk
-    description: Maladaptation
-    category: Adapt
+    description: 'maladaptation risk: the finance family''s derived quantity, computed by the equality
+      below.'
+    category: Investment & Finance
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 1.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The finance coupling (batch 27)
+    source_url: null
     users:
-    - DFIs
-    source: docs/params.md
+    - Financiers
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   margin_posted_usd_per_year:
     name: Margin posted usd per year
     description: 'margin posted usd per year: the compliance register''s derived quantity. The trading
@@ -15666,25 +15785,28 @@ parameters:
     source: docs/params.md
   microinsurance:
     name: Microinsurance (absolute)
-    description: FIRM-SPECIFIC. The share-of-income version is declared in Part A. Not corrected.
-    category: Insurance & Catastrophe
+    description: 'The share of the electrified population covered by microinsurance. A share, not a count:
+      the shipped node carried the 500000.0 placeholder with unit 1, so it read as half a million times
+      a population.'
+    category: Investment & Finance
     subcategory: null
     type: float
     unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.5
     initial: null
     role: free
-    determinism: fixed
+    determinism: stochastic
     categories: []
-    source: Firm's product design
+    source: The finance coupling (batch 27)
     source_url: null
     users:
-    - Insurance
-    priority: P2
-    status: to_build
+    - Financiers
+    - Regulators
+    priority: P1
+    status: existing
     deprecated_by: null
   microinsurance_premium_share_of_income:
     name: Microinsurance premium as a share of household income
@@ -15710,6 +15832,42 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  microinsurance_premium_usd_per_year:
+    name: Microinsurance premium usd per year
+    description: 'microinsurance premium usd per year: the finance family''s derived quantity, computed
+      by the equality below.'
+    category: Investment & Finance
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The finance coupling (batch 27)
+    users:
+    - Financiers
+    - Regulators
+  microinsured_population:
+    name: Microinsured population
+    description: 'microinsured population: the finance family''s derived quantity, computed by the equality
+      below.'
+    category: Investment & Finance
+    type: float
+    unit: people
+    range:
+    - 0.0
+    - 1000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The finance coupling (batch 27)
+    users:
+    - Financiers
+    - Regulators
   military_energy_demand:
     name: Military energy demand
     description: Military energy demand
@@ -17998,6 +18156,26 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  pml_99_5_usd_million:
+    name: Pml 99 5 usd million
+    description: 'The probable maximum loss at the 99.5th percentile: the loss exceeded once in two hundred
+      years. The tail a solvency regime capitalises against, and the difference from the AAL is the capital
+      it demands.'
+    category: Insurance & Catastrophe
+    type: float
+    unit: USD million
+    range:
+    - 0.0
+    - 500000.0
+    default: 500.0
+    role: free
+    determinism: stochastic
+    priority: P1
+    status: existing
+    source: The finance coupling (batch 27)
+    users:
+    - Financiers
+    - Insurers
   political_risk_cover_usd:
     name: The political-risk cover
     description: 'The asset value insured against political events: the insured share of the fleet''s
@@ -18728,6 +18906,25 @@ parameters:
     users:
     - All
     source: docs/params.md
+  profit_margin:
+    name: Profit margin
+    description: The underwriting margin the insurer adds on top of expected loss, expenses, and capital
+      cost. The fourth term of the FRM's premium identity.
+    category: Insurance & Catastrophe
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.05
+    role: free
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The finance coupling (batch 27)
+    users:
+    - Financiers
+    - Insurers
   project_gearing_dscr:
     name: Debt service coverage ratio
     description: 'Cash available against the debt service a lender requires. Negative when the tariff
@@ -18753,20 +18950,27 @@ parameters:
     deprecated_by: null
   project_irr_hurdle:
     name: Project irr hurdle
-    description: Project IRR hurdle
-    category: Macro
+    description: 'project irr hurdle: the finance family''s derived quantity, computed by the equality
+      below.'
+    category: Investment & Finance
+    subcategory: null
     type: float
+    unit: 1/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P1
-    status: integrate
+    - 1.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The finance coupling (batch 27)
+    source_url: null
     users:
-    - Investors
-    source: docs/params.md
+    - Financiers
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   project_pipeline_count:
     name: Project pipeline count
     description: Crediting projects in the country's annual pipeline, across the programmes.
@@ -18921,20 +19125,29 @@ parameters:
     deprecated_by: null
   rab_roll_forward:
     name: Rab roll forward
-    description: RAB roll-forward
-    category: RegFin
+    description: 'The regulatory asset base''s annual movement: the capital charge the roll-forward books,
+      which is the allowed depreciation on the asset base net of what has already been recovered. A flow,
+      not a stock -- the shipped node carried no unit and the placeholder, and writing it as a stock would
+      make it indistinguishable from `regulatory_asset_base`.'
+    category: Investment & Finance
+    subcategory: null
     type: float
+    unit: USD million/year
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    - -500000.0
+    - 500000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The finance coupling (batch 27)
+    source_url: null
     users:
+    - Financiers
     - Regulators
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   railway_electrification:
     name: Railway electrification share
     description: Share of the rail network that is electrified. A share; the shipped range admitted a
@@ -20293,6 +20506,24 @@ parameters:
     users:
     - Planners
     - Regulators
+  ring_fenced_asset_value_usd_million:
+    name: Ring fenced asset value usd million
+    description: 'ring fenced asset value usd million: the finance family''s derived quantity, computed
+      by the equality below.'
+    category: Investment & Finance
+    type: float
+    unit: USD million
+    range:
+    - 0.0
+    - 500000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The finance coupling (batch 27)
+    users:
+    - Financiers
+    - Regulators
   ring_fencing_rules:
     name: Ring-fencing strength
     description: Share of the regulator's ring-fencing provisions that are legally binding rather than
@@ -21626,26 +21857,29 @@ parameters:
     source: docs/params.md
   solvency_capital:
     name: Solvency capital (absolute)
-    description: FIRM-SPECIFIC. The absolute number depends on the firm's book. The ratio version is `solvency_capital_ratio`,
-      declared in Part A. Not corrected.
-    category: Insurance & Catastrophe
+    description: 'Solvency capital: the capital an insurer must hold against the 99.5th-percentile loss
+      net of expected loss. FRM section 6.3 states it as `pml_99_5 - aal`. The shipped node carried unit
+      1 and the 500000.0 placeholder -- a capital requirement with no currency, which no balance sheet
+      can read. The range is signed because the difference is: an expected loss above the tail is an inconsistent
+      loss model, and a signed range lets the arithmetic say so instead of clamping it.'
+    category: Investment & Finance
     subcategory: null
     type: float
-    unit: '1'
+    unit: USD million
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    - -500000.0
+    - 500000.0
     initial: null
-    role: free
-    determinism: fixed
+    role: derived
+    determinism: stochastic
     categories: []
-    source: Firm's own funds
+    source: The finance coupling (batch 27)
     source_url: null
     users:
-    - Insurance
-    priority: P2
-    status: to_build
+    - Financiers
+    - Regulators
+    priority: P1
+    status: existing
     deprecated_by: null
   solvency_capital_ratio:
     name: Solvency capital ratio
@@ -21671,22 +21905,51 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
-  sovereign_risk_premium:
-    name: Sovereign risk premium
-    description: Sovereign risk premium
-    category: Macro
+  sovereign_risk_charge_usd_per_year:
+    name: Sovereign risk charge usd per year
+    description: 'sovereign risk charge usd per year: the finance family''s derived quantity, computed
+      by the equality below.'
+    category: Investment & Finance
     type: float
+    unit: USD/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
+    - 1000000000000.0
+    role: derived
+    determinism: policy
     priority: P1
-    status: to_build
+    status: existing
+    source: The finance coupling (batch 27)
     users:
-    - Investors
-    source: docs/params.md
+    - Financiers
+    - Regulators
+  sovereign_risk_premium:
+    name: Sovereign risk premium
+    description: 'The sovereign risk premium in the debt rate. Set equal to `debt_spread` by the equality
+      below, because the credit-spread decomposition the graph already carries (`interest_rate + debt_spread`)
+      is the borrower premium, and for a sovereign-guaranteed project the borrower and the sovereign are
+      the same credit. Damodaran (2026) is the source for the default: South Africa''s 3.90% total spread
+      over a 4.23% mature-market equity risk premium.'
+    category: Investment & Finance
+    subcategory: null
+    type: float
+    unit: 1/year
+    range:
+    - 0.0
+    - 0.2
+    default: 0.0256
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The finance coupling (batch 27)
+    source_url: null
+    users:
+    - Financiers
+    - Insurers
+    priority: P1
+    status: existing
+    deprecated_by: null
   sox_emissions:
     name: Sox emissions
     description: SOx emissions
@@ -22606,22 +22869,51 @@ parameters:
     users:
     - Planners
     - Financial analysts
-  technology_risk_premium:
-    name: Technology risk premium
-    description: Technology risk premium
-    category: Macro
+  technology_risk_charge_usd_per_year:
+    name: Technology risk charge usd per year
+    description: 'technology risk charge usd per year: the finance family''s derived quantity, computed
+      by the equality below.'
+    category: Investment & Finance
     type: float
+    unit: USD/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 1000000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The finance coupling (batch 27)
     users:
-    - Investors
-    source: docs/params.md
+    - Financiers
+    - Regulators
+  technology_risk_premium:
+    name: Technology risk premium
+    description: 'The technology risk premium a financier charges on an unproven asset. Applied to the
+      equity tranche: the lender takes the sovereign and currency exposure, the sponsor takes the construction
+      and technology exposure, and the two premiums price different risks on different tranches. Three
+      percent is the upper-middle of the 0-10% band the project-finance literature quotes for first-of-a-kind
+      generation.'
+    category: Investment & Finance
+    subcategory: null
+    type: float
+    unit: 1/year
+    range:
+    - 0.0
+    - 0.1
+    default: 0.03
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The finance coupling (batch 27)
+    source_url: null
+    users:
+    - Financiers
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   temperature_increase:
     name: Temperature increase
     description: Temperature increase
@@ -23164,22 +23456,50 @@ parameters:
     users:
     - Developers
     source: docs/params.md
-  transaction_costs:
-    name: Transaction costs
-    description: Transaction costs
-    category: MktOps
+  transaction_cost_usd_per_year:
+    name: Transaction cost usd per year
+    description: 'transaction cost usd per year: the finance family''s derived quantity, computed by the
+      equality below.'
+    category: Investment & Finance
     type: float
+    unit: USD/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 1000000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The finance coupling (batch 27)
     users:
-    - Traders
-    source: docs/params.md
+    - Financiers
+    - Regulators
+  transaction_costs:
+    name: Transaction costs
+    description: Transaction costs as a share of revenue. The catalog carried the node with no unit and
+      the 500000.0 placeholder, so a scenario reading it as a share would price transaction costs at fifty
+      million times revenue. Two percent of gross revenue is the order the development-finance literature
+      uses for the all-in cost of arranging, legal, and disbursing a project loan.
+    category: Investment & Finance
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 0.1
+    default: 0.02
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The finance coupling (batch 27)
+    source_url: null
+    users:
+    - Financiers
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   transboundary_water_constraint:
     name: Transboundary water constraint
     description: Transboundary water limit
@@ -26742,29 +27062,29 @@ equations:
     latex: \mathrm{cost}_{of\_debt} \leq \mathrm{allowed}_{return\_on\_debt}
   cost_of_debt_priced:
     name: Cost of debt from the spread
-    description: 'The spread decomposition: the policy rate plus the borrower''s premium. The shipped
-      0.09 is exactly 0.07 over 0.02, so the reference scenario''s blend is unchanged; what changes is
-      that a scenario can now move the policy rate and the debt cost follows.'
+    description: 'The debt rate a scenario may carry: the policy rate plus the borrower spread plus the
+      currency risk premium. FPE section 6 applies the currency premium to the cost of debt rather than
+      as a separate cash-flow line, because a foreign-currency lender prices the FX exposure into the
+      rate it charges.'
     system: financial
     lhs: cost_of_debt
-    rhs: interest_rate + debt_spread
+    rhs: interest_rate + debt_spread + currency_risk_premium
     relation: eq
     parameters:
     - cost_of_debt
     - interest_rate
     - debt_spread
-    free_variables:
-    - interest_rate
-    - debt_spread
+    - currency_risk_premium
+    free_variables: []
     determined_variables:
     - cost_of_debt
     tolerance: 1.0e-09
     unit_check: true
-    reference: Credit-spread decomposition (BIS)
-    priority: P1
     solution_method: direct
     linearity: linear
-    latex: \mathrm{cost}_{of\_debt} = \mathrm{interest}_{rate} + \mathrm{debt}_{spread}
+    priority: P1
+    reference: Credit-spread decomposition (BIS)
+    latex: \mathrm{cost}_{of\_debt} = \mathrm{interest}_{rate} + \mathrm{debt}_{spread} + \mathrm{currency}_{risk\_premium}
   cost_of_equity_capped:
     name: Equity cost within the allowed return
     description: 'The equity-return allowance binds the cost of equity: the CAPM-estimated return a project
@@ -27331,6 +27651,27 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{bond}_{share} + \mathrm{dfi}_{share} + \mathrm{commercial}_{bank\_share} \leq \mathrm{debt}_{financing\_share}
+  debt_service_coverage_ratio_alias:
+    name: The DSCR floor
+    description: The coverage ratio a lender requires, under the catalog's two ids. `dscr_min` is the
+      node the covenant reads; this is the same floor under the name the catalog also carries.
+    system: financial
+    lhs: debt_service_coverage_ratio
+    rhs: dscr_min
+    relation: eq
+    parameters:
+    - debt_service_coverage_ratio
+    - dscr_min
+    free_variables: []
+    determined_variables:
+    - debt_service_coverage_ratio
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{debt}_{service\_coverage\_ratio} = \mathrm{dscr}_{min}
   debt_service_definition:
     name: Debt service
     description: The annuity a lender is repaid per kilowatt of debt-financed capex.
@@ -29422,6 +29763,54 @@ equations:
     reference: null
     latex: \mathrm{insurance}_{premium\_usd\_per\_kw\_year} = \mathrm{insurance}_{loss\_share\_of\_cost}
       \mathrm{capex}_{usd\_per\_kw}
+  insurance_premium_pricing_definition:
+    name: The insurance premium
+    description: 'The premium the insurer charges: the annual average loss grossed up by the expense,
+      capital, and profit loadings. FRM section 6.2 states exactly this identity. The premium is priced
+      off the expected loss and not off the asset value, which is why `premium_share_of_asset` is a different
+      product rather than a second spelling of this one.'
+    system: financial
+    lhs: insurance_premium_usd_million
+    rhs: aal_usd_million * (1 + expense_loading + capital_loading + profit_margin)
+    relation: eq
+    parameters:
+    - insurance_premium_usd_million
+    - aal_usd_million
+    - capital_loading
+    - expense_loading
+    - profit_margin
+    free_variables: []
+    determined_variables:
+    - insurance_premium_usd_million
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{insurance}_{premium\_usd\_million} = \mathrm{aal}_{usd\_million} \left(1 + \mathrm{expense}_{loading}
+      + \mathrm{capital}_{loading} + \mathrm{profit}_{margin}\right)
+  insurance_premiums_alias:
+    name: The insurance premium paid
+    description: The premium the project pays, under the catalog's currency-denominated id. The equality
+      makes the pricing chain's output the quantity the balance sheet reads.
+    system: financial
+    lhs: insurance_premiums
+    rhs: insurance_premium_usd_million
+    relation: eq
+    parameters:
+    - insurance_premiums
+    - insurance_premium_usd_million
+    free_variables: []
+    determined_variables:
+    - insurance_premiums
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{insurance}_{premiums} = \mathrm{insurance}_{premium\_usd\_million}
   interconnector_investment_definition:
     name: The interconnector investment
     description: 'The cross-border link''s installed cost: the USD per MW-km rate times the route length
@@ -29447,6 +29836,27 @@ equations:
     reference: null
     latex: \mathrm{interconnector}_{investment\_usd} = \mathrm{capex}_{interconnector} \mathrm{interconnector}_{route\_km}
       \mathrm{interconnector}_{capacity}
+  interest_rate_debt_alias:
+    name: The debt interest rate
+    description: 'The catalog carries the debt rate twice, as `interest_rate_debt` and as `cost_of_debt`,
+      and there is one number. The equality is the coupling: a scenario that sets either sets both.'
+    system: financial
+    lhs: interest_rate_debt
+    rhs: cost_of_debt
+    relation: eq
+    parameters:
+    - interest_rate_debt
+    - cost_of_debt
+    free_variables: []
+    determined_variables:
+    - interest_rate_debt
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{interest}_{rate\_debt} = \mathrm{cost}_{of\_debt}
   interruptible_load_mw_definition:
     name: Interruptible load mw
     description: 'The load the utility may curtail on contract: its share of peak demand, which is the
@@ -30227,6 +30637,29 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  llcr_floor_bound:
+    name: Llcr floor bound
+    description: 'The loan-life coverage ratio is a covenant, not a reported figure: a lender requires
+      the present value of cash available for debt service over the loan life to cover the outstanding
+      debt by a stated margin. Stating it as a bound makes the requirement a constraint the conflict gate
+      reads, which is what turns `llcr_estimate` from a number into a test. Its edge carries the tier,
+      so a scenario that softens the covenant stops the gate blocking on it.'
+    system: financial
+    lhs: llcr_estimate
+    rhs: loan_life_coverage_ratio
+    relation: geq
+    parameters: &id011
+    - llcr_estimate
+    - loan_life_coverage_ratio
+    free_variables: *id011
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{llcr}_{estimate} \geq \mathrm{loan}_{life\_coverage\_ratio}
   lng_price_per_mwh_definition:
     name: lng price per mwh (computed)
     description: 'LNG trades on the same Btu basis as pipeline gas; the MWh conversion multiplies by the
@@ -30425,6 +30858,27 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  maladaptation_risk_alias:
+    name: The maladaptation risk
+    description: The risk that an adaptation investment makes the position worse, under the catalog's
+      two ids. One quantity, so one equality.
+    system: financial
+    lhs: maladaptation_risk
+    rhs: risk_of_maladaptation
+    relation: eq
+    parameters:
+    - maladaptation_risk
+    - risk_of_maladaptation
+    free_variables: []
+    determined_variables:
+    - maladaptation_risk
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{maladaptation}_{risk} = \mathrm{risk}_{of\_maladaptation}
   margin_posted_definition:
     name: Margin posted on the carbon position
     description: 'The trading position''s initial margin: the required share of the position''s annual
@@ -30517,6 +30971,53 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{market}_{traded\_volume\_twh} = \mathrm{market}_{liquidity} \mathrm{demand}_{twh}
+  microinsurance_premium_definition:
+    name: The microinsurance premium
+    description: 'The premium a covered household pays: the share of income the product is priced at,
+      times household income. Priced off income rather than off asset value because the product is an
+      income-protection cover, not a property one.'
+    system: financial
+    lhs: microinsurance_premium_usd_per_year
+    rhs: microinsurance_premium_share_of_income * household_income_usd_per_year
+    relation: eq
+    parameters:
+    - microinsurance_premium_usd_per_year
+    - household_income_usd_per_year
+    - microinsurance_premium_share_of_income
+    free_variables: []
+    determined_variables:
+    - microinsurance_premium_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{microinsurance}_{premium\_usd\_per\_year} = \mathrm{microinsurance}_{premium\_share\_of\_income}
+      \mathrm{household}_{income\_usd\_per\_year}
+  microinsured_population_definition:
+    name: The microinsured population
+    description: 'The population the microinsurance product reaches: the coverage share times the electrified
+      population. The base is the electrified population and not the total, because the product is sold
+      with the connection.'
+    system: financial
+    lhs: microinsured_population
+    rhs: microinsurance * electrified_population
+    relation: eq
+    parameters:
+    - microinsured_population
+    - electrified_population
+    - microinsurance
+    free_variables: []
+    determined_variables:
+    - microinsured_population
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{microinsured}_{population} = \mathrm{microinsurance} \mathrm{electrified}_{population}
   mini_grid_programme_spend_definition:
     name: The mini-grid programme's spend
     description: 'The mini-grid programme''s spend per year: the per-connection installed cost times the
@@ -30616,11 +31117,11 @@ equations:
     lhs: non_spinning_reserve_requirement
     rhs: reserve_margin_min * peak_demand_mw
     relation: leq
-    parameters: &id011
+    parameters: &id012
     - non_spinning_reserve_requirement
     - peak_demand_mw
     - reserve_margin_min
-    free_variables: *id011
+    free_variables: *id012
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -31013,10 +31514,10 @@ equations:
     lhs: hydrogen_vehicle_share + electric_vehicle_adoption
     rhs: '1.0'
     relation: leq
-    parameters: &id012
+    parameters: &id013
     - electric_vehicle_adoption
     - hydrogen_vehicle_share
-    free_variables: *id012
+    free_variables: *id013
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -31196,6 +31697,30 @@ equations:
     priority: P1
     reference: The catalog's own duplicate rows, resolved
     latex: \mathrm{price}_{cap} = \mathrm{revenue}_{cap}
+  project_irr_hurdle_definition:
+    name: The equity IRR hurdle
+    description: 'The return the equity tranche requires: the project discount rate grossed up by the
+      premium equity demands over the blended cost of capital. The gross-up is the standard equity-hurdle
+      construction -- the WACC is what the asset must earn, and the equity return target is the margin
+      above it that makes the equity worth holding.'
+    system: financial
+    lhs: project_irr_hurdle
+    rhs: discount_rate * (1 + equity_return_target)
+    relation: eq
+    parameters:
+    - project_irr_hurdle
+    - discount_rate
+    - equity_return_target
+    free_variables: []
+    determined_variables:
+    - project_irr_hurdle
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Short, Packey & Holt (1995), NREL/TP-462-5173
+    latex: \mathrm{project}_{irr\_hurdle} = \mathrm{discount}_{rate} \left(1 + \mathrm{equity}_{return\_target}\right)
   property_tax_definition:
     name: Property tax (computed)
     description: 'The rate times its base: property tax is the annual charge on the regulated asset base;
@@ -31267,6 +31792,33 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{pyrolysis}_{cost} = \mathrm{capex}_{pyrolysis}
+  rab_roll_forward_definition:
+    name: The regulatory asset base roll-forward
+    description: 'The annual movement in the regulatory asset base: the depreciation the regulator allows
+      on the fleet''s capital, net of the depreciation already booked. Both sides are flows in USD million
+      per year, which is what makes the roll-forward an addition to the base rather than a replacement
+      of it.'
+    system: financial
+    lhs: rab_roll_forward
+    rhs: capex_usd_per_kw * total_capacity_mw / 1000 / asset_life - regulatory_depreciation
+    relation: eq
+    parameters:
+    - rab_roll_forward
+    - asset_life
+    - capex_usd_per_kw
+    - regulatory_depreciation
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - rab_roll_forward
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{rab}_{roll\_forward} = \frac{\mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}}{1000
+      \mathrm{asset}_{life}} - \mathrm{regulatory}_{depreciation}
   reactive_capability_definition:
     name: Reactive capability at peak
     description: 'The reactive capability the system must hold at peak: the per-MW requirement (tan-phi
@@ -31707,10 +32259,10 @@ equations:
     lhs: resettlement_population_share
     rhs: resettlement_requirements
     relation: leq
-    parameters: &id013
+    parameters: &id014
     - resettlement_population_share
     - resettlement_requirements
-    free_variables: *id013
+    free_variables: *id014
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -31773,10 +32325,10 @@ equations:
     lhs: retraining_duration
     rhs: construction_period
     relation: leq
-    parameters: &id014
+    parameters: &id015
     - construction_period
     - retraining_duration
-    free_variables: *id014
+    free_variables: *id015
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -31810,6 +32362,29 @@ equations:
     reference: null
     latex: \mathrm{right}_{of\_way\_cost\_usd} = \mathrm{right}_{of\_way\_cost} \left(\mathrm{transmission}_{line\_length\_km}
       + \mathrm{interconnector}_{route\_km} + \mathrm{hydrogen}_{pipeline\_length\_km}\right)
+  ring_fenced_asset_definition:
+    name: The ring-fenced asset value
+    description: 'The part of the regulatory asset base the ring-fence protects from the utility''s other
+      creditors: the ring-fencing share times the base. A regulator''s ring-fence is what makes the asset
+      bankable, so the quantity it protects is the asset base and not the revenue.'
+    system: financial
+    lhs: ring_fenced_asset_value_usd_million
+    rhs: ring_fencing_rules * regulatory_asset_base
+    relation: eq
+    parameters:
+    - ring_fenced_asset_value_usd_million
+    - regulatory_asset_base
+    - ring_fencing_rules
+    free_variables: []
+    determined_variables:
+    - ring_fenced_asset_value_usd_million
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{ring}_{fenced\_asset\_value\_usd\_million} = \mathrm{ring}_{fencing\_rules} \mathrm{regulatory}_{asset\_base}
   risk_adjusted_carbon_price_definition:
     name: The risk-adjusted carbon price
     description: The escalated carbon price grossed up by the risk premium a project financier demands
@@ -31866,10 +32441,10 @@ equations:
     lhs: system_saidi_hours_per_year
     rhs: grid_reliability_target
     relation: leq
-    parameters: &id015
+    parameters: &id016
     - grid_reliability_target
     - system_saidi_hours_per_year
-    free_variables: *id015
+    free_variables: *id016
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -31909,10 +32484,10 @@ equations:
     lhs: system_saifi_events_per_year
     rhs: service_quality_standards
     relation: leq
-    parameters: &id016
+    parameters: &id017
     - service_quality_standards
     - system_saifi_events_per_year
-    free_variables: *id016
+    free_variables: *id017
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -32262,6 +32837,55 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{solar}_{pv\_cost} = \mathrm{capex}_{solar\_pv}
+  solvency_capital_definition:
+    name: The solvency capital
+    description: 'Solvency capital: the tail loss net of expected loss. FRM section 6.3 states it exactly
+      so. It is the capital the insurer must hold to survive the 99.5th-percentile event, and the AAL
+      is subtracted because the premium already funds the expected loss.'
+    system: financial
+    lhs: solvency_capital
+    rhs: pml_99_5_usd_million - aal_usd_million
+    relation: eq
+    parameters:
+    - solvency_capital
+    - aal_usd_million
+    - pml_99_5_usd_million
+    free_variables: []
+    determined_variables:
+    - solvency_capital
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{solvency}_{capital} = \mathrm{pml}_{99\_5\_usd\_million} - \mathrm{aal}_{usd\_million}
+  sovereign_risk_charge_definition:
+    name: The sovereign risk charge
+    description: 'The annual cost of the sovereign premium on the debt tranche: the premium times the
+      debt-financed capital. It is the *charge* and not the rate, so a scenario can read what the sovereign
+      exposure costs the project in currency per year. The `1000` is kW per MW.'
+    system: financial
+    lhs: sovereign_risk_charge_usd_per_year
+    rhs: sovereign_risk_premium * debt_fraction * capex_usd_per_kw * total_capacity_mw * 1000
+    relation: eq
+    parameters:
+    - sovereign_risk_charge_usd_per_year
+    - capex_usd_per_kw
+    - debt_fraction
+    - sovereign_risk_premium
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - sovereign_risk_charge_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Damodaran (2026), Country Default Spreads and Risk Premiums
+    latex: \mathrm{sovereign}_{risk\_charge\_usd\_per\_year} = 1000 \mathrm{sovereign}_{risk\_premium}
+      \mathrm{debt}_{fraction} \mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}
   spare_capacity_definition:
     name: The spare capacity
     description: 'Installed capacity less peak demand: the headroom the fleet carries. The catalog names
@@ -32385,10 +33009,10 @@ equations:
     lhs: steel_scrap_eaf_share + steel_h2_dri_share
     rhs: '1.0'
     relation: leq
-    parameters: &id017
+    parameters: &id018
     - steel_h2_dri_share
     - steel_scrap_eaf_share
-    free_variables: *id017
+    free_variables: *id018
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -32498,6 +33122,33 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{taxed}_{fraction\_of\_concession} = 1 - \frac{\mathrm{tax}_{holiday\_duration}}{\mathrm{concession}_{duration}}
+  technology_risk_charge_definition:
+    name: The technology risk charge
+    description: 'The annual cost of the technology premium on the equity tranche: the premium times the
+      equity-financed capital. The `(1 - debt_fraction)` is what puts it on the equity tranche and not
+      the debt one -- the lender does not carry technology risk, so charging it on the whole capital would
+      double-count it against the debt rate.'
+    system: financial
+    lhs: technology_risk_charge_usd_per_year
+    rhs: technology_risk_premium * (1 - debt_fraction) * capex_usd_per_kw * total_capacity_mw * 1000
+    relation: eq
+    parameters:
+    - technology_risk_charge_usd_per_year
+    - capex_usd_per_kw
+    - debt_fraction
+    - technology_risk_premium
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - technology_risk_charge_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{technology}_{risk\_charge\_usd\_per\_year} = 1000 \mathrm{technology}_{risk\_premium}
+      \left(1 - \mathrm{debt}_{fraction}\right) \mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}
   thermal_phs_duration_ratio_definition:
     name: The thermal store's duration against pumped hydro's
     description: 'The thermal store''s duration relative to pumped hydro''s: the long-duration comparison
@@ -32656,6 +33307,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  transaction_cost_definition:
+    name: The transaction cost
+    description: 'Transaction costs as a share of gross revenue: arranging, legal, and disbursement. Charged
+      on revenue rather than on capital because the cost recurs with the revenue it is incurred to collect.'
+    system: financial
+    lhs: transaction_cost_usd_per_year
+    rhs: transaction_costs * total_revenue_usd_per_year
+    relation: eq
+    parameters:
+    - transaction_cost_usd_per_year
+    - total_revenue_usd_per_year
+    - transaction_costs
+    free_variables: []
+    determined_variables:
+    - transaction_cost_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{transaction}_{cost\_usd\_per\_year} = \mathrm{transaction}_{costs} \mathrm{total}_{revenue\_usd\_per\_year}
   transmission_investment_definition:
     name: The transmission investment
     description: 'The line''s installed cost: the USD per MW-km rate times the route-km times the MW the
@@ -32756,10 +33429,10 @@ equations:
     lhs: district_heating_share + heat_pump_adoption
     rhs: '1.0'
     relation: leq
-    parameters: &id018
+    parameters: &id019
     - district_heating_share
     - heat_pump_adoption
-    free_variables: *id018
+    free_variables: *id019
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -32798,10 +33471,10 @@ equations:
     lhs: v2g_adoption
     rhs: electric_vehicle_adoption
     relation: leq
-    parameters: &id019
+    parameters: &id020
     - electric_vehicle_adoption
     - v2g_adoption
-    free_variables: *id019
+    free_variables: *id020
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -39383,72 +40056,6 @@ relationships:
   description: Gates the base.
   reference: null
   priority: P1
-- source: discount_rate
-  target: weighted_average_cost_of_capital
-  equation_id: wacc_alias
-  relationship: equality
-  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
-    computes.'
-- source: capex_usd_per_kw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: Gross fleet capital enters the base the allowed return is earned on.
-- source: total_capacity_mw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: The fleet's size sets the scale of the capital in the accounts.
-- source: accumulated_depreciation_fraction
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: What the books have written down between gross capital and the base.
-- source: regulatory_asset_base
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: equality
-  description: Straight-line write-down of the base over the regulatory asset life.
-- source: depreciation_life_by_asset
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: functional
-  description: A longer regulatory life spreads the base thinner over the years.
-- source: regulatory_depreciation
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: Depreciation is the first term of the revenue requirement.
-- source: regulatory_asset_base
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: The return is earned on the base, not on gross capital.
-- source: discount_rate
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: The return rate is the blend the financial block computes.
-- source: allowed_return_on_debt
-  target: cost_of_debt
-  equation_id: cost_of_debt_capped
-  relationship: constraint
-  description: The allowance binds the debt rate a scenario may carry.
-- source: allowed_return_on_equity
-  target: cost_of_equity
-  equation_id: cost_of_equity_capped
-  relationship: constraint
-  description: The allowance binds the equity return a valuation may assume.
-- source: regulated_tariff_usd_per_mwh
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: equality
-  description: The applied tariff is the recovery level in the absence of a cap.
-- source: revenue_cap
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: functional
-  description: The cap scales the recovery level; below 1 it withholds part of it.
 - source: peak_demand_mw
   target: spinning_reserve
   equation_id: spinning_reserve_definition
@@ -39602,6 +40209,378 @@ relationships:
   description: Determines the reserve or its alias.
   reference: null
   priority: P1
+- source: discount_rate
+  target: weighted_average_cost_of_capital
+  equation_id: wacc_alias
+  relationship: equality
+  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
+    computes.'
+- source: capex_usd_per_kw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: Gross fleet capital enters the base the allowed return is earned on.
+- source: total_capacity_mw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: The fleet's size sets the scale of the capital in the accounts.
+- source: accumulated_depreciation_fraction
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: What the books have written down between gross capital and the base.
+- source: regulatory_asset_base
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: equality
+  description: Straight-line write-down of the base over the regulatory asset life.
+- source: depreciation_life_by_asset
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: functional
+  description: A longer regulatory life spreads the base thinner over the years.
+- source: regulatory_depreciation
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: Depreciation is the first term of the revenue requirement.
+- source: regulatory_asset_base
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return is earned on the base, not on gross capital.
+- source: discount_rate
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return rate is the blend the financial block computes.
+- source: allowed_return_on_debt
+  target: cost_of_debt
+  equation_id: cost_of_debt_capped
+  relationship: constraint
+  description: The allowance binds the debt rate a scenario may carry.
+- source: allowed_return_on_equity
+  target: cost_of_equity
+  equation_id: cost_of_equity_capped
+  relationship: constraint
+  description: The allowance binds the equity return a valuation may assume.
+- source: regulated_tariff_usd_per_mwh
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: equality
+  description: The applied tariff is the recovery level in the absence of a cap.
+- source: revenue_cap
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: functional
+  description: The cap scales the recovery level; below 1 it withholds part of it.
+- source: cost_of_debt
+  target: interest_rate_debt
+  equation_id: interest_rate_debt_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: dscr_min
+  target: debt_service_coverage_ratio
+  equation_id: debt_service_coverage_ratio_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: risk_of_maladaptation
+  target: maladaptation_risk
+  equation_id: maladaptation_risk_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: discount_rate
+  target: project_irr_hurdle
+  equation_id: project_irr_hurdle_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: Short, Packey & Holt (1995), NREL/TP-462-5173
+  priority: P1
+- source: equity_return_target
+  target: project_irr_hurdle
+  equation_id: project_irr_hurdle_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: Short, Packey & Holt (1995), NREL/TP-462-5173
+  priority: P1
+- source: household_income_usd_per_year
+  target: microinsurance_premium_usd_per_year
+  equation_id: microinsurance_premium_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: microinsurance_premium_share_of_income
+  target: microinsurance_premium_usd_per_year
+  equation_id: microinsurance_premium_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: electrified_population
+  target: microinsured_population
+  equation_id: microinsured_population_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: microinsurance
+  target: microinsured_population
+  equation_id: microinsured_population_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: regulatory_asset_base
+  target: ring_fenced_asset_value_usd_million
+  equation_id: ring_fenced_asset_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: ring_fencing_rules
+  target: ring_fenced_asset_value_usd_million
+  equation_id: ring_fenced_asset_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: total_revenue_usd_per_year
+  target: transaction_cost_usd_per_year
+  equation_id: transaction_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: transaction_costs
+  target: transaction_cost_usd_per_year
+  equation_id: transaction_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: capex_usd_per_kw
+  target: sovereign_risk_charge_usd_per_year
+  equation_id: sovereign_risk_charge_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: Damodaran (2026), Country Default Spreads and Risk Premiums
+  priority: P1
+- source: debt_fraction
+  target: sovereign_risk_charge_usd_per_year
+  equation_id: sovereign_risk_charge_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: Damodaran (2026), Country Default Spreads and Risk Premiums
+  priority: P1
+- source: sovereign_risk_premium
+  target: sovereign_risk_charge_usd_per_year
+  equation_id: sovereign_risk_charge_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: Damodaran (2026), Country Default Spreads and Risk Premiums
+  priority: P1
+- source: total_capacity_mw
+  target: sovereign_risk_charge_usd_per_year
+  equation_id: sovereign_risk_charge_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: Damodaran (2026), Country Default Spreads and Risk Premiums
+  priority: P1
+- source: capex_usd_per_kw
+  target: technology_risk_charge_usd_per_year
+  equation_id: technology_risk_charge_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: debt_fraction
+  target: technology_risk_charge_usd_per_year
+  equation_id: technology_risk_charge_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: technology_risk_premium
+  target: technology_risk_charge_usd_per_year
+  equation_id: technology_risk_charge_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: technology_risk_charge_usd_per_year
+  equation_id: technology_risk_charge_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: aal_usd_million
+  target: insurance_premium_usd_million
+  equation_id: insurance_premium_pricing_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: capital_loading
+  target: insurance_premium_usd_million
+  equation_id: insurance_premium_pricing_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: expense_loading
+  target: insurance_premium_usd_million
+  equation_id: insurance_premium_pricing_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: profit_margin
+  target: insurance_premium_usd_million
+  equation_id: insurance_premium_pricing_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: insurance_premium_usd_million
+  target: insurance_premiums
+  equation_id: insurance_premiums_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: aal_usd_million
+  target: solvency_capital
+  equation_id: solvency_capital_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: pml_99_5_usd_million
+  target: solvency_capital
+  equation_id: solvency_capital_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: asset_life
+  target: rab_roll_forward
+  equation_id: rab_roll_forward_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: capex_usd_per_kw
+  target: rab_roll_forward
+  equation_id: rab_roll_forward_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: regulatory_depreciation
+  target: rab_roll_forward
+  equation_id: rab_roll_forward_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: rab_roll_forward
+  equation_id: rab_roll_forward_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the finance identity.
+  reference: null
+  priority: P1
+- source: currency_risk_premium
+  target: cost_of_debt
+  equation_id: cost_of_debt_priced
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The FX premium enters the debt rate.
+  reference: null
+  priority: P1
+- source: loan_life_coverage_ratio
+  target: llcr_estimate
+  equation_id: llcr_floor_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: The coverage a lender requires. A project can clear the physics and fail this.
+  reference: null
+  priority: P2
 cross_validation:
 - id: carbon_price_budget_alignment
   condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0

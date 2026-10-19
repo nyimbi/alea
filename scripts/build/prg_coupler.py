@@ -546,7 +546,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -625,6 +625,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b23_equations)
 		edges = list(BATCH12_EDGES) + b23_edges
+	elif batch == "27":
+		b27_nodes, b27_equations, b27_edges, b27_rules = build_batch27(graph)
+		rules.extend(b27_rules)
+		nodes.update(b27_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b27_equations)
+		edges = list(BATCH12_EDGES) + b27_edges
 	elif batch == "26":
 		b26_nodes, b26_equations, b26_edges, b26_rules = build_batch26(graph)
 		rules.extend(b26_rules)
@@ -6020,6 +6027,430 @@ def build_batch26(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 				"reference": cite, "priority": "P1",
 			})
 	return nodes, equations, edges, []
+
+
+BATCH27_RETYPES: tuple[tuple[str, str, list[float], float, str, str, str], ...] = (
+	("transaction_costs", "1", [0.0, 0.1], 0.02, "policy", "free",
+	 "Transaction costs as a share of revenue. The catalog carried the node "
+	 "with no unit and the 500000.0 placeholder, so a scenario reading it as "
+	 "a share would price transaction costs at fifty million times revenue. "
+	 "Two percent of gross revenue is the order the development-finance "
+	 "literature uses for the all-in cost of arranging, legal, and "
+	 "disbursing a project loan."),
+	("debt_tenor", "year", [5.0, 25.0], 15.0, "fixed", "free",
+	 "The debt tenor in years. The catalog placeholder was 500000.0 with no "
+	 "unit, and the node feeds the annuity exponent in `llcr_definition`, "
+	 "which is why the unit walker's annuity convention cannot catch it: "
+	 "`(1 + cost_of_debt) ** debt_tenor` is blessed for any unit on the "
+	 "exponent. Fifteen years is the middle of the 5-25 band the "
+	 "development-finance term sheet uses."),
+	("currency_risk_premium", "1/year", [0.0, 0.2], 0.0256, "policy", "free",
+	 "The currency risk premium added to the cost of debt. FPE section 6 "
+	 "applies it there rather than as a separate cash-flow line, so this "
+	 "batch wires it into `cost_of_debt_priced`. The default is Damodaran's "
+	 "South Africa country risk premium for the 2026-01 table (3.90% total "
+	 "against a 4.23% mature-market ERP, giving a 2.56% spread component), "
+	 "which is the country the fleet's cost basis is closest to. It is a "
+	 "policy dial a scenario moves per jurisdiction."),
+	("technology_risk_premium", "1/year", [0.0, 0.1], 0.03, "policy", "free",
+	 "The technology risk premium a financier charges on an unproven asset. "
+	 "Applied to the equity tranche: the lender takes the sovereign and "
+	 "currency exposure, the sponsor takes the construction and technology "
+	 "exposure, and the two premiums price different risks on different "
+	 "tranches. Three percent is the upper-middle of the 0-10% band the "
+	 "project-finance literature quotes for first-of-a-kind generation."),
+	("microinsurance", "1", [0.0, 1.0], 0.5, "stochastic", "free",
+	 "The share of the electrified population covered by microinsurance. A "
+	 "share, not a count: the shipped node carried the 500000.0 placeholder "
+	 "with unit 1, so it read as half a million times a population."),
+	("solvency_capital", "USD million", [-500000.0, 500000.0], None, "stochastic", "derived",
+	 "Solvency capital: the capital an insurer must hold against the "
+	 "99.5th-percentile loss net of expected loss. FRM section 6.3 states it "
+	 "as `pml_99_5 - aal`. The shipped node carried unit 1 and the 500000.0 "
+	 "placeholder -- a capital requirement with no currency, which no "
+	 "balance sheet can read. The range is signed because the difference is: "
+	 "an expected loss above the tail is an inconsistent loss model, and a "
+	 "signed range lets the arithmetic say so instead of clamping it."),
+	("insurance_premiums", "USD million", [0.0, 500000.0], None, "policy", "derived",
+	 "The insurance premium the project pays, in currency. The shipped node "
+	 "carried unit 1 and the placeholder. It is derived here from the "
+	 "frequency-severity chain rather than set, so the premium moves with "
+	 "the loss model."),
+	("rab_roll_forward", "USD million/year", [-500000.0, 500000.0], None, "policy", "derived",
+	 "The regulatory asset base's annual movement: the capital charge the "
+	 "roll-forward books, which is the allowed depreciation on the asset "
+	 "base net of what has already been recovered. A flow, not a stock -- "
+	 "the shipped node carried no unit and the placeholder, and writing it "
+	 "as a stock would make it indistinguishable from "
+	 "`regulatory_asset_base`."),
+	("ets_enabled", "1", [0.0, 1.0], 1.0, "policy", "free",
+	 "Whether the jurisdiction operates an emissions trading system. The "
+	 "default is 1.0 and that is a repair, not a preference: batch 24 "
+	 "shipped the switch at 0.0 beside a `carbon_price_coverage` of 0.5 and "
+	 "`carbon_price_usd_per_tco2` of 50, so the shipped graph booked carbon "
+	 "revenue while declaring no instrument -- which its own "
+	 "`carbon_revenue_without_an_instrument` rule fires on at the defaults. "
+	 "The graph contradicted itself at the values it shipped."),
+)
+
+#: (name, unit, range, default, category, prose)
+BATCH27_BASES: tuple[tuple[str, str, list[float], float, str, str], ...] = (
+	("aal_usd_million", "USD million", [0.0, 500000.0], 50.0, "Insurance & Catastrophe",
+	 "The annual average loss: the expected loss over a year from the "
+	 "frequency-severity convolution. CLIMADA's `aai_agg` output; the base "
+	 "every premium is priced against and every solvency requirement is "
+	 "measured net of."),
+	("pml_99_5_usd_million", "USD million", [0.0, 500000.0], 500.0, "Insurance & Catastrophe",
+	 "The probable maximum loss at the 99.5th percentile: the loss exceeded "
+	 "once in two hundred years. The tail a solvency regime capitalises "
+	 "against, and the difference from the AAL is the capital it demands."),
+	("expense_loading", "1", [0.0, 1.0], 0.10, "Insurance & Catastrophe",
+	 "The expense loading: the share of the premium that covers underwriting "
+	 "cost rather than expected loss. Ten percent is the middle of the "
+	 "range a specialty property book reports."),
+	("capital_loading", "1", [0.0, 1.0], 0.15, "Insurance & Catastrophe",
+	 "The capital loading: the share of the premium that remunerates the "
+	 "capital held against the tail. It is a return on solvency capital "
+	 "expressed as a fraction of expected loss, which is why it sits beside "
+	 "`solvency_capital` rather than inside it."),
+	("profit_margin", "1", [0.0, 1.0], 0.05, "Insurance & Catastrophe",
+	 "The underwriting margin the insurer adds on top of expected loss, "
+	 "expenses, and capital cost. The fourth term of the FRM's premium "
+	 "identity."),
+	("sovereign_risk_premium", "1/year", [0.0, 0.2], 0.0256, "Investment & Finance",
+	 "The sovereign risk premium in the debt rate. Set equal to "
+	 "`debt_spread` by the equality below, because the credit-spread "
+	 "decomposition the graph already carries (`interest_rate + "
+	 "debt_spread`) is the borrower premium, and for a sovereign-guaranteed "
+	 "project the borrower and the sovereign are the same credit. Damodaran "
+	 "(2026) is the source for the default: South Africa's 3.90% total "
+	 "spread over a 4.23% mature-market equity risk premium."),
+)
+
+#: (equation id, name, lhs, rhs, prose, system, unit, range, reference)
+BATCH27_EQUATIONS: tuple[
+	tuple[str, str, str, str, str, str, str, list[float], str | None], ...
+] = (
+	("interest_rate_debt_alias", "The debt interest rate",
+	 "interest_rate_debt", "cost_of_debt",
+	 "The catalog carries the debt rate twice, as `interest_rate_debt` and "
+	 "as `cost_of_debt`, and there is one number. The equality is the "
+	 "coupling: a scenario that sets either sets both.",
+	 "financial", "1/year", [0.0, 0.5], None),
+	("debt_service_coverage_ratio_alias", "The DSCR floor",
+	 "debt_service_coverage_ratio", "dscr_min",
+	 "The coverage ratio a lender requires, under the catalog's two ids. "
+	 "`dscr_min` is the node the covenant reads; this is the same floor "
+	 "under the name the catalog also carries.",
+	 "financial", "1", [1.0, 3.0], None),
+	("maladaptation_risk_alias", "The maladaptation risk",
+	 "maladaptation_risk", "risk_of_maladaptation",
+	 "The risk that an adaptation investment makes the position worse, "
+	 "under the catalog's two ids. One quantity, so one equality.",
+	 "financial", "1", [0.0, 1.0], None),
+	("project_irr_hurdle_definition", "The equity IRR hurdle",
+	 "project_irr_hurdle", "discount_rate * (1 + equity_return_target)",
+	 "The return the equity tranche requires: the project discount rate "
+	 "grossed up by the premium equity demands over the blended cost of "
+	 "capital. The gross-up is the standard equity-hurdle construction -- "
+	 "the WACC is what the asset must earn, and the equity return target is "
+	 "the margin above it that makes the equity worth holding.",
+	 "financial", "1/year", [0.0, 1.0], "Short, Packey & Holt (1995), NREL/TP-462-5173"),
+	("microinsurance_premium_definition", "The microinsurance premium",
+	 "microinsurance_premium_usd_per_year",
+	 "microinsurance_premium_share_of_income * household_income_usd_per_year",
+	 "The premium a covered household pays: the share of income the product "
+	 "is priced at, times household income. Priced off income rather than "
+	 "off asset value because the product is an income-protection cover, "
+	 "not a property one.",
+	 "financial", "USD/year", [0.0, 1.0e6], None),
+	("microinsured_population_definition", "The microinsured population",
+	 "microinsured_population", "microinsurance * electrified_population",
+	 "The population the microinsurance product reaches: the coverage share "
+	 "times the electrified population. The base is the electrified "
+	 "population and not the total, because the product is sold with the "
+	 "connection.",
+	 "financial", "people", [0.0, 1.0e9], None),
+	("ring_fenced_asset_definition", "The ring-fenced asset value",
+	 "ring_fenced_asset_value_usd_million",
+	 "ring_fencing_rules * regulatory_asset_base",
+	 "The part of the regulatory asset base the ring-fence protects from "
+	 "the utility's other creditors: the ring-fencing share times the base. "
+	 "A regulator's ring-fence is what makes the asset bankable, so the "
+	 "quantity it protects is the asset base and not the revenue.",
+	 "financial", "USD million", [0.0, 500000.0], None),
+	("transaction_cost_definition", "The transaction cost",
+	 "transaction_cost_usd_per_year",
+	 "transaction_costs * total_revenue_usd_per_year",
+	 "Transaction costs as a share of gross revenue: arranging, legal, and "
+	 "disbursement. Charged on revenue rather than on capital because the "
+	 "cost recurs with the revenue it is incurred to collect.",
+	 "financial", "USD/year", [0.0, 1.0e12], None),
+	("sovereign_risk_charge_definition", "The sovereign risk charge",
+	 "sovereign_risk_charge_usd_per_year",
+	 "sovereign_risk_premium * debt_fraction * capex_usd_per_kw * total_capacity_mw * 1000",
+	 "The annual cost of the sovereign premium on the debt tranche: the "
+	 "premium times the debt-financed capital. It is the *charge* and not "
+	 "the rate, so a scenario can read what the sovereign exposure costs "
+	 "the project in currency per year. The `1000` is kW per MW.",
+	 "financial", "USD/year", [0.0, 1.0e12], "Damodaran (2026), Country Default Spreads and Risk Premiums"),
+	("technology_risk_charge_definition", "The technology risk charge",
+	 "technology_risk_charge_usd_per_year",
+	 "technology_risk_premium * (1 - debt_fraction) * capex_usd_per_kw * total_capacity_mw * 1000",
+	 "The annual cost of the technology premium on the equity tranche: the "
+	 "premium times the equity-financed capital. The `(1 - debt_fraction)` "
+	 "is what puts it on the equity tranche and not the debt one -- the "
+	 "lender does not carry technology risk, so charging it on the whole "
+	 "capital would double-count it against the debt rate.",
+	 "financial", "USD/year", [0.0, 1.0e12], None),
+	("insurance_premium_pricing_definition", "The insurance premium",
+	 "insurance_premium_usd_million",
+	 "aal_usd_million * (1 + expense_loading + capital_loading + profit_margin)",
+	 "The premium the insurer charges: the annual average loss grossed up by "
+	 "the expense, capital, and profit loadings. FRM section 6.2 states "
+	 "exactly this identity. The premium is priced off the expected loss "
+	 "and not off the asset value, which is why `premium_share_of_asset` is "
+	 "a different product rather than a second spelling of this one.",
+	 "financial", "USD million", [0.0, 500000.0], None),
+	("insurance_premiums_alias", "The insurance premium paid",
+	 "insurance_premiums", "insurance_premium_usd_million",
+	 "The premium the project pays, under the catalog's currency-denominated "
+	 "id. The equality makes the pricing chain's output the quantity the "
+	 "balance sheet reads.",
+	 "financial", "USD million", [0.0, 500000.0], None),
+	("solvency_capital_definition", "The solvency capital",
+	 "solvency_capital", "pml_99_5_usd_million - aal_usd_million",
+	 "Solvency capital: the tail loss net of expected loss. FRM section 6.3 "
+	 "states it exactly so. It is the capital the insurer must hold to "
+	 "survive the 99.5th-percentile event, and the AAL is subtracted "
+	 "because the premium already funds the expected loss.",
+	 "financial", "USD million", [-500000.0, 500000.0], None),
+	("rab_roll_forward_definition", "The regulatory asset base roll-forward",
+	 "rab_roll_forward",
+	 "capex_usd_per_kw * total_capacity_mw / 1000 / asset_life - regulatory_depreciation",
+	 "The annual movement in the regulatory asset base: the depreciation "
+	 "the regulator allows on the fleet's capital, net of the depreciation "
+	 "already booked. Both sides are flows in USD million per year, which is "
+	 "what makes the roll-forward an addition to the base rather than a "
+	 "replacement of it.",
+	 "financial", "USD million/year", [-500000.0, 500000.0], None),
+)
+
+#: (equation id, lhs, rhs, prose, reference)
+BATCH27_BOUNDS: tuple[tuple[str, str, str, str, str | None], ...] = (
+	("llcr_floor_bound", "llcr_estimate", "loan_life_coverage_ratio",
+	 "The loan-life coverage ratio is a covenant, not a reported figure: a "
+	 "lender requires the present value of cash available for debt service "
+	 "over the loan life to cover the outstanding debt by a stated margin. "
+	 "Stating it as a bound makes the requirement a constraint the "
+	 "conflict gate reads, which is what turns `llcr_estimate` from a "
+	 "number into a test. Its edge carries the tier, so a scenario that "
+	 "softens the covenant stops the gate blocking on it.",
+	 None),
+)
+
+
+def build_batch27(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, str]], list[dict[str, Any]]]:
+	"""Batch 27: the finance family.
+
+	Three groups, and the division is the batch's content.
+
+	Four *aliases*: the catalog carries `interest_rate_debt`/`cost_of_debt`,
+	`debt_service_coverage_ratio`/`dscr_min`, and
+	`maladaptation_risk`/`risk_of_maladaptation` as pairs, and each pair is
+	one number. The equality is the honest coupling, and the `derived` role is
+	what stops a scenario setting a node an equation overrules.
+
+	Six *products*: a share times the base it applies to. The microinsurance
+	premium and the population it reaches, the ring-fenced asset, the
+	transaction cost, and the two risk charges. The risk charges are split
+	across tranches on purpose -- sovereign on the debt, technology on the
+	equity -- because the premiums price different risks and charging both on
+	the whole capital would double-count them.
+
+	The *insurance chain* is the FRM's own three functions, shipped as
+	identities: the premium as `aal * (1 + loadings)`, solvency capital as
+	`pml - aal`, and the RAB roll-forward as a flow. The graph already
+	carried `combined_ratio` and `loss_ratio` but none of the actuarial
+	inputs those ratios are ratios *of*, so the ratios had nothing to divide.
+
+	Two repairs ride along because the batch touches the nodes. The
+	`currency_risk_premium` is wired into `cost_of_debt_priced` as FPE
+	section 6 says it should be, rather than left as an unread node. And
+	`ets_enabled` moves from 0.0 to 1.0: batch 24 shipped the switch off
+	beside a live carbon price and a half coverage, so the graph booked
+	carbon revenue while declaring no instrument and its own
+	`carbon_revenue_without_an_instrument` rule fired at the defaults. The
+	shipped graph contradicted itself at the values it shipped.
+
+	The LLCR covenant is a *bound with an edge*. The other bounds in the
+	graph carry no edge, so the conflict gate reads them at full strength
+	and the tier mechanism cannot soften them; a covenant a lender can
+	renegotiate should be softenable, and the edge is what makes it so.
+	"""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	for name, unit, rng, default, determinism, role, prose in BATCH27_RETYPES:
+		# The emit path reads the already-baked document, so a re-emit after a
+		# bake finds the node present. Reading the shipped body and overriding
+		# the fields this batch owns keeps the two runs identical.
+		shipped = graph.nodes.get(name)
+		full = (
+			dict(shipped.model_dump(exclude={"id"}, mode="json"))
+			if shipped is not None else {"name": name.replace("_", " ").capitalize()}
+		)
+		full.update({
+			"description": prose, "category": "Investment & Finance",
+			"type": "float", "unit": unit, "range": rng, "role": role,
+			"determinism": determinism, "priority": "P1", "status": "existing",
+			"source": "The finance coupling (batch 27)",
+			"users": ["Financiers", "Regulators"],
+		})
+		if role == "derived":
+			full.pop("default", None)
+		else:
+			full["default"] = default
+		nodes[name] = full
+
+	for name, unit, rng, default, category, prose in BATCH27_BASES:
+		shipped = graph.nodes.get(name)
+		full = (
+			dict(shipped.model_dump(exclude={"id"}, mode="json"))
+			if shipped is not None else {"name": name.replace("_", " ").capitalize()}
+		)
+		full.update({
+			"description": prose, "category": category, "type": "float",
+			"unit": unit, "range": rng, "default": default, "role": "free",
+			"determinism": "stochastic" if "aal" in name or "pml" in name else "policy",
+			"priority": "P1", "status": "existing",
+			"source": "The finance coupling (batch 27)",
+			"users": ["Financiers", "Insurers"],
+		})
+		nodes[name] = full
+
+	derived_units = {
+		"interest_rate_debt": ("1/year", [0.0, 0.5]),
+		"debt_service_coverage_ratio": ("1", [1.0, 3.0]),
+		"maladaptation_risk": ("1", [0.0, 1.0]),
+		"project_irr_hurdle": ("1/year", [0.0, 1.0]),
+		"microinsurance_premium_usd_per_year": ("USD/year", [0.0, 1.0e6]),
+		"microinsured_population": ("people", [0.0, 1.0e9]),
+		"ring_fenced_asset_value_usd_million": ("USD million", [0.0, 500000.0]),
+		"transaction_cost_usd_per_year": ("USD/year", [0.0, 1.0e12]),
+		"sovereign_risk_charge_usd_per_year": ("USD/year", [0.0, 1.0e12]),
+		"technology_risk_charge_usd_per_year": ("USD/year", [0.0, 1.0e12]),
+		"insurance_premium_usd_million": ("USD million", [0.0, 500000.0]),
+	}
+	for name, (unit, rng) in derived_units.items():
+		shipped = graph.nodes.get(name)
+		full = (
+			dict(shipped.model_dump(exclude={"id"}, mode="json"))
+			if shipped is not None else {"name": name.replace("_", " ").capitalize()}
+		)
+		full.update({
+			"description": (
+				f"{name.replace('_', ' ')}: the finance family's derived "
+				"quantity, computed by the equality below."
+			),
+			"category": "Investment & Finance", "type": "float",
+			"unit": unit, "range": rng, "role": "derived",
+			"determinism": "policy", "priority": "P1", "status": "existing",
+			"source": "The finance coupling (batch 27)",
+			"users": ["Financiers", "Regulators"],
+		})
+		full.pop("default", None)
+		nodes[name] = full
+
+	for eq_id, name, lhs, rhs, prose, system, unit, rng, cite in BATCH27_EQUATIONS:
+		from alea.prg.dsl import parse_side
+
+		rhs_params = sorted(parse_side(rhs).symbols)
+		equations[eq_id] = {
+			"id": eq_id, "name": name, "description": prose,
+			"system": system, "lhs": lhs, "rhs": rhs, "relation": "eq",
+			"parameters": [lhs] + rhs_params, "free_variables": [],
+			"determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		if lhs in nodes:
+			nodes[lhs]["unit"] = unit
+			nodes[lhs]["range"] = rng
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs, "equation_id": eq_id,
+				"relationship": "functional", "direction": "forward",
+				"strength": "hard",
+				"description": "Enters the finance identity.",
+				"reference": cite, "priority": "P1",
+			})
+
+	# FPE section 6 applies the currency premium to the cost of debt, not as a
+	# separate cash-flow line. The shipped `cost_of_debt_priced` reads
+	# `interest_rate + debt_spread`; this adds the third term.
+	for eq_id, eid in (("cost_of_debt_priced", "currency_risk_premium"),):
+		shipped = graph.equations.get(eq_id)
+		if shipped is not None:
+			equations[eq_id] = {
+				"id": eq_id, "name": shipped.name,
+				"description": (
+					"The debt rate a scenario may carry: the policy rate plus "
+					"the borrower spread plus the currency risk premium. FPE "
+					"section 6 applies the currency premium to the cost of debt "
+					"rather than as a separate cash-flow line, because a "
+					"foreign-currency lender prices the FX exposure into the "
+					"rate it charges."
+				),
+				"system": shipped.system,
+				"lhs": "cost_of_debt",
+				"rhs": "interest_rate + debt_spread + currency_risk_premium",
+				"relation": "eq",
+				"parameters": ["cost_of_debt", "interest_rate", "debt_spread", eid],
+				"free_variables": [], "determined_variables": ["cost_of_debt"],
+				"tolerance": 1.0e-09, "unit_check": True,
+				"solution_method": "direct", "linearity": "linear",
+				"priority": "P1", "reference": shipped.reference,
+				"latex": r"\mathrm{see\ equation}",
+			}
+			edges.append({
+				"source": eid, "target": "cost_of_debt",
+				"equation_id": eq_id, "relationship": "functional",
+				"direction": "forward", "strength": "hard",
+				"description": "The FX premium enters the debt rate.",
+				"reference": None, "priority": "P1",
+			})
+
+	for eq_id, lhs, rhs, prose, cite in BATCH27_BOUNDS:
+		named = sorted(set(_side_symbols(lhs)) | set(_side_symbols(rhs)))
+		equations[eq_id] = {
+			"id": eq_id, "name": eq_id.replace("_", " ").capitalize(),
+			"description": prose, "system": "financial",
+			"lhs": lhs, "rhs": rhs, "relation": "geq",
+			"parameters": named, "free_variables": named,
+			"determined_variables": (),
+			"tolerance": 1.0e-06, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P2", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		# A bound with an edge: the tier mechanism reads the edge, so a
+		# scenario can soften a covenant it can renegotiate.
+		edges.append({
+			"source": rhs, "target": lhs, "equation_id": eq_id,
+			"relationship": "constraint", "direction": "forward",
+			"strength": "hard",
+			"description": (
+				"The coverage a lender requires. A project can clear the "
+				"physics and fail this."
+			),
+			"reference": cite, "priority": "P2",
+		})
+	return nodes, equations, edges, rules
 
 
 def build_batch22(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, str]], list[dict[str, Any]]]:

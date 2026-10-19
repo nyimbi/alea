@@ -170,11 +170,16 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	spinning, non-spinning and planning-margin aliases, the SAIFI target
 	alias, the voltage-support requirement, and the spare-capacity and
 	transmission-loss-target definitions -- and no inequality, so
-	34/299/333 -> 34/310/344."""
+	34/299/333 -> 34/310/344. Batch 27's finance family added fourteen
+	identities -- the four aliases, the project hurdle, the two microinsurance
+	products, the ring-fenced asset, the transaction cost, the two risk
+	charges, the premium pricing and its alias, the solvency capital, and the
+	RAB roll-forward -- and one inequality, the LLCR covenant, so
+	34/310/344 -> 35/324/359."""
 	cov = coverage(graph)
-	assert cov["constraint_shaped"] == 34
-	assert cov["identities"] == 310
-	assert cov["total"] == 344
+	assert cov["constraint_shaped"] == 35
+	assert cov["identities"] == 324
+	assert cov["total"] == 359
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):

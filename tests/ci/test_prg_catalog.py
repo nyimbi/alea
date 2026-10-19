@@ -407,10 +407,13 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 		"cost_of_debt",
 		"credit_support_requirements",
 		"cross_border_trading",
+		"currency_risk_premium",
 		"cyber_insurance",
 		"cybersecurity_requirements",
 		"data_privacy_requirements",
 		"data_sovereignty_requirements",
+		"debt_service_coverage_ratio",
+		"debt_tenor",
 		"demand_forecast_methodology",
 		"demand_growth_rate",
 		"demand_response_cost",
@@ -421,6 +424,7 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 		"equity_return_target",
 		"ets_cap",
 		"ets_cap_reduction_rate",
+		"ets_enabled",
 		"feed_in_tariff",
 		"force_majeure_insurance",
 		"fossil_fuel_subsidies",
@@ -436,6 +440,8 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 		"ifc_performance_standards",
 		"import_duty_exemption",
 		"inertia_requirement",
+		"insurance_premiums",
+		"interest_rate_debt",
 		"interoperability_standards",
 		"labour_standards",
 		"leakage_parameters",
@@ -445,9 +451,11 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 		"line_upgrade_budget",
 		"local_employment_targets",
 		"maintenance_duration",
+		"maladaptation_risk",
 		"margin_requirements",
 		"market_concentration",
 		"market_liquidity",
+		"microinsurance",
 		"mini_grid_deployment",
 		"mini_grid_subsidies",
 		"net_zero_year",
@@ -461,6 +469,8 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 		"position_limits",
 		"price_cap",
 		"price_limits",
+		"project_irr_hurdle",
+		"rab_roll_forward",
 		"reactive_power_requirement",
 		"regulation_down_requirement",
 		"regulation_up_requirement",
@@ -480,10 +490,14 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 		"social_tariff",
 		"solar_degradation",
 		"solar_home_system_deployment",
+		"solvency_capital",
+		"sovereign_risk_premium",
 		"spare_capacity",
 		"spinning_reserve",
 		"spinning_reserve_requirement",
 		"steel_production",
+		"technology_risk_premium",
+		"transaction_costs",
 		"transmission_loss_reduction_target",
 		"voltage_support_requirement",
 		"voluntary_carbon_market",
@@ -518,9 +532,10 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 	# nodes it landed as ``existing``, batch 23 took it to 720 for the two
 	# retypes, batch 24 took it to 687 for the thirty-three carbon-market,
 	# subsidy, employment-target and market-operation definitions above,
-	# batch 25 took it to 678 for the nine gate-family definitions above, and
-	# batch 26 took it to 667 for the eleven adequacy-and-reserve nodes above.
-	assert sum(1 for join in joins.values() if join.agrees) == 667
+	# batch 25 took it to 678 for the nine gate-family definitions above,
+	# batch 26 took it to 667 for the eleven adequacy-and-reserve nodes above,
+	# and batch 27 took it to 653 for the fourteen finance-family nodes above.
+	assert sum(1 for join in joins.values() if join.agrees) == 653
 
 
 def test_a_node_the_catalog_does_not_name_is_absent_rather_than_guessed(
@@ -569,9 +584,10 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 	# as ``existing``, the two batch 23 retyped, the thirty-three batch
 	# 24 defined (carbon-market, subsidy, employment-target and
 	# market-operation), the nine batch 25 defined (insurance, trade,
-	# sanctions and upgrade budget), and the eleven batch 26 defined (the
-	# adequacy-and-reserve family), all while the catalog still says
-	# to_build or integrate.
+	# sanctions and upgrade budget), the eleven batch 26 defined (the
+	# adequacy-and-reserve family), and the fourteen batch 27 defined or
+	# retyped (the finance family, the insurance pricing chain, and the ETS
+	# switch), all while the catalog still says to_build or integrate.
 	assert report["status_disagreements"] == [
 		'additionality_test: the graph says existing and the catalog says to_build',
 		'adms_requirements: the graph says existing and the catalog says to_build',
@@ -610,10 +626,13 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 		'cost_of_debt: the graph says existing and the catalog says to_build',
 		'credit_support_requirements: the graph says existing and the catalog says to_build',
 		'cross_border_trading: the graph says deprecated and the catalog says existing',
+		'currency_risk_premium: the graph says existing and the catalog says to_build',
 		'cyber_insurance: the graph says existing and the catalog says to_build',
 		'cybersecurity_requirements: the graph says existing and the catalog says to_build',
 		'data_privacy_requirements: the graph says existing and the catalog says to_build',
 		'data_sovereignty_requirements: the graph says existing and the catalog says to_build',
+		'debt_service_coverage_ratio: the graph says existing and the catalog says integrate',
+		'debt_tenor: the graph says existing and the catalog says to_build',
 		'demand_forecast_methodology: the graph says existing and the catalog says to_build',
 		'demand_growth_rate: the graph says deprecated and the catalog says to_build',
 		'demand_response_cost: the graph says existing and the catalog says to_build',
@@ -624,6 +643,7 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 		'equity_return_target: the graph says to_build and the catalog says integrate',
 		'ets_cap: the graph says existing and the catalog says to_build',
 		'ets_cap_reduction_rate: the graph says existing and the catalog says to_build',
+		'ets_enabled: the graph says existing and the catalog says to_build',
 		'feed_in_tariff: the graph says existing and the catalog says to_build',
 		'force_majeure_insurance: the graph says existing and the catalog says to_build',
 		'fossil_fuel_subsidies: the graph says existing and the catalog says to_build',
@@ -639,6 +659,8 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 		'ifc_performance_standards: the graph says existing and the catalog says to_build',
 		'import_duty_exemption: the graph says existing and the catalog says to_build',
 		'inertia_requirement: the graph says existing and the catalog says to_build',
+		'insurance_premiums: the graph says existing and the catalog says to_build',
+		'interest_rate_debt: the graph says existing and the catalog says to_build',
 		'interoperability_standards: the graph says existing and the catalog says to_build',
 		'labour_standards: the graph says existing and the catalog says to_build',
 		'leakage_parameters: the graph says existing and the catalog says to_build',
@@ -648,9 +670,11 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 		'line_upgrade_budget: the graph says existing and the catalog says to_build',
 		'local_employment_targets: the graph says existing and the catalog says to_build',
 		'maintenance_duration: the graph says existing and the catalog says to_build',
+		'maladaptation_risk: the graph says existing and the catalog says to_build',
 		'margin_requirements: the graph says existing and the catalog says to_build',
 		'market_concentration: the graph says existing and the catalog says to_build',
 		'market_liquidity: the graph says existing and the catalog says to_build',
+		'microinsurance: the graph says existing and the catalog says to_build',
 		'mini_grid_deployment: the graph says existing and the catalog says integrate',
 		'mini_grid_subsidies: the graph says existing and the catalog says to_build',
 		'net_zero_year: the graph says existing and the catalog says to_build',
@@ -664,6 +688,8 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 		'position_limits: the graph says existing and the catalog says to_build',
 		'price_cap: the graph says existing and the catalog says to_build',
 		'price_limits: the graph says existing and the catalog says to_build',
+		'project_irr_hurdle: the graph says existing and the catalog says integrate',
+		'rab_roll_forward: the graph says existing and the catalog says to_build',
 		'reactive_power_requirement: the graph says existing and the catalog says to_build',
 		'regulation_down_requirement: the graph says existing and the catalog says to_build',
 		'regulation_up_requirement: the graph says existing and the catalog says to_build',
@@ -683,10 +709,14 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 		'social_tariff: the graph says existing and the catalog says to_build',
 		'solar_degradation: the graph says existing and the catalog says to_build',
 		'solar_home_system_deployment: the graph says existing and the catalog says to_build',
+		'solvency_capital: the graph says existing and the catalog says to_build',
+		'sovereign_risk_premium: the graph says existing and the catalog says to_build',
 		'spare_capacity: the graph says existing and the catalog says to_build',
 		'spinning_reserve: the graph says existing and the catalog says to_build',
 		'spinning_reserve_requirement: the graph says existing and the catalog says to_build',
 		'steel_production: the graph says existing and the catalog says integrate',
+		'technology_risk_premium: the graph says existing and the catalog says to_build',
+		'transaction_costs: the graph says existing and the catalog says to_build',
 		'transmission_loss_reduction_target: the graph says existing and the catalog says to_build',
 		'voltage_support_requirement: the graph says existing and the catalog says to_build',
 		'voluntary_carbon_market: the graph says existing and the catalog says to_build',

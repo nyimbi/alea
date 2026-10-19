@@ -1501,7 +1501,7 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# the 504. The containment below is what carries the weight -- dead is a
 	# subset of uncoupled-minus-rule -- and the count is the record of what
 	# it was *at*.
-	assert len(dead) == 483, len(dead)
+	assert len(dead) == 467, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
@@ -1820,8 +1820,8 @@ def test_the_audit_reports_what_it_did_not_check():
 
 	audit = audit_scenario_result(_solved())
 	assert audit.consistent
-	assert len(audit.checked) == 119, audit.checked
-	assert len(audit.skipped) == 191, audit.skipped
+	assert len(audit.checked) == 124, audit.checked
+	assert len(audit.skipped) == 200, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -1871,7 +1871,7 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# took it 227 to 243, batch 24's carbon-market layer took it 243 to 286,
 	# batch 25's gate-family coupling took it 286 to 299, and batch 26's
 	# adequacy-and-reserve layer took it 299 to 310.
-	assert len(audit.skipped) == 310, audit.skipped
+	assert len(audit.skipped) == 324, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -2761,11 +2761,15 @@ def test_the_uncertainty_register_reads_the_declarations(graph: ParameterGraph):
 	# assertion: deriving the count from the register would pass on a graph
 	# that declared nothing uncertain, which is the silence this module exists
 	# to break.
-	assert len(reg.inputs) == 72, reg.inputs
-	assert len(reg.derived_stochastic) == 35, reg.derived_stochastic
+	assert len(reg.inputs) == 75, reg.inputs
+	assert len(reg.derived_stochastic) == 36, reg.derived_stochastic
 	assert len(reg.stochastic_edges) == 1, reg.stochastic_edges
-	# 107 nodes are declared stochastic in total: 72 settable, 35 derived.
-	assert len(reg.inputs) + len(reg.derived_stochastic) == 107
+	# 111 nodes are declared stochastic in total: 75 settable, 36 derived.
+	# Batch 27's finance family moved both: three of its bases are declared
+	# stochastic (`aal_usd_million`, `pml_99_5_usd_million`, `microinsurance`)
+	# and one derived parameter entered the closure, `solvency_capital`,
+	# which reads the two insurance bases.
+	assert len(reg.inputs) + len(reg.derived_stochastic) == 111
 	assert len(reg.inputs) + len(reg.derived_stochastic) == sum(
 		1 for node in graph.nodes.values() if str(node.determinism) == "stochastic"
 	), "the register and the declarations disagree"
@@ -2880,7 +2884,7 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	"""
 	text = register(graph).summary()
 	assert "not a distribution" in text
-	# 72 inputs reaching 122 derived parameters, 35 of those stochastic by their
+	# 75 inputs reaching 129 derived parameters, 36 of those stochastic by their
 	# own relation. Batch 20's sector-coupling layer moved the reach: one fewer
 	# settable stochastic input than the promotion's 73, and the equations it
 	# added brought 90 derived parameters into the closure. Batch 21's
@@ -2898,11 +2902,18 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	# `reserve_margin_actual`, and `fuel_price_usd_per_mwh` already reached
 	# that node through `marginal_cost_usd_per_mwh` and `vre_capacity_mw`, so
 	# an uncertain input that already existed now closes on one more derived
-	# parameter, and the input count is again unchanged at 72. Pinned because
+	# parameter, and the input count is again unchanged at 72. Batch 27's
+	# finance family moved both counts: three new stochastic inputs
+	# (`aal_usd_million`, `pml_99_5_usd_million`, `microinsurance`) took the
+	# register 72 to 75, and six derived parameters entered the closure
+	# (`solvency_capital`, `insurance_premium_usd_million`,
+	# `insurance_premiums`, `microinsurance_premium_usd_per_year`,
+	# `microinsured_population`, `transaction_cost_usd_per_year`), taking the
+	# reach 123 to 129. Pinned because
 	# the number is the finding -- the sentence exists to stop a reader taking
 	# the declarations for a distribution, and a reach that drifts unnoticed
 	# would understate it.
-	assert "72" in text and "123" in text
+	assert "75" in text and "129" in text
 
 
 # ---------------------------------------------------------------------------
@@ -3374,16 +3385,17 @@ def test_the_declared_cross_validation_rules_hold_at_every_default(
 	"""
 	report = graph.cross_validate(graph.propagate(dict(defaults)).values)
 	assert report.rules, "the graph declares no rules, so this test proves nothing"
-	# One rule fires at the defaults, and it is not a threshold nobody can
-	# meet: it is the register reporting a *real* inconsistency in the default
-	# scenario. `carbon_revenue_without_an_instrument` reads `ets_enabled` and
-	# `carbon_price_coverage`, and at the shipped defaults the ETS is off
-	# (0.0) while the covered share is half (0.5) -- so the revenue identity
-	# books ~650 M USD/year of carbon revenue with no instrument collecting
-	# it. Making the rule quiet would mean either moving a default to hide
-	# the defect or deleting the check; naming it keeps both visible, and a
-	# second rule firing here still fails the test.
-	live = {"carbon_revenue_without_an_instrument"}
+	# No rule fires at the defaults, and that is a fact about the defaults
+	# rather than about the rules. `carbon_revenue_without_an_instrument`
+	# reads `ets_enabled` and `carbon_price_coverage`, and batch 24 shipped
+	# the ETS off (0.0) beside a covered share of half -- so the revenue
+	# identity booked ~650 M USD/year of carbon revenue with no instrument
+	# collecting it, and the rule fired on every clean scenario. Batch 27 set
+	# `ets_enabled` to 1.0, which is the repair the rule was asking for: the
+	# instrument exists, so the revenue has a collector. A second rule firing
+	# here still fails the test, and `test_every_declared_rule_can_fire`
+	# keeps the quiet rule proven able to fire rather than deleted.
+	live: set[str] = set()
 	assert {f.rule.id for f in report.violations} == live, [
 		str(f) for f in report.violations
 	]
@@ -3664,13 +3676,17 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	spinning, non-spinning and planning-margin aliases, the SAIFI target
 	alias, the voltage-support requirement, and the spare-capacity and
 	transmission-loss-target definitions, taking the sum to the 344 equations
-	the batch bakes.
+	the batch bakes. Batch 27's finance family added 14 identities and one
+	inequality, all hard: the four aliases, the project hurdle, the two
+	microinsurance products, the ring-fenced asset, the transaction cost, the
+	two risk charges, the premium pricing and its alias, the solvency capital,
+	the RAB roll-forward, and the LLCR covenant, taking the sum to 359.
 	"""
 	counts = graph.strength_counts()
 	assert counts, "no strength was counted"
 	assert sum(counts.values()) == len(graph.equations)
 	assert set(counts) <= {"hard", "soft", "informational"}
-	assert counts == {"hard": 341, "informational": 1, "soft": 2}, counts
+	assert counts == {"hard": 356, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -3797,24 +3813,31 @@ def test_the_summary_serves_the_strength_register(graph: ParameterGraph):
 def test_the_conflict_gate_reads_the_tier_and_a_softened_edge_stops_blocking():
 	"""The CLI exit code follows the declared strength, not the residual.
 
-	`prg conflicts --set carbon_price_usd_per_tco2=150` fails `dscr_requirement`
-	and exits 1. The same scenario with that equation's edge declared
-	`informational` must exit 0 while still *printing* the finding -- a gate
-	that ignored the tier would exit 1 either way, and this is the canary that
-	tells the two apart.
+	`prg conflicts --set carbon_price_usd_per_tco2=90` fails
+	`llcr_floor_bound` and exits 1. The same scenario with that equation's edge
+	declared `informational` must exit 0 while still *printing* the finding --
+	a gate that ignored the tier would exit 1 either way, and this is the canary
+	that tells the two apart.
 
-	WHY THE CARBON PRICE IS 150 AND NOT 200. The canary's claim is "softening
-	*this* edge flips the gate", and that claim needs the softened edge to be
-	the *only* thing blocking -- otherwise the exit code stays 1 for a reason
-	the canary is not about, and it would fail while the tier mechanism works
-	perfectly. At 200 a second, unrelated blocker fires: the fleet's cash
-	available for debt service goes negative, so `llcr_estimate` derives to
-	-0.20 against a declared floor of 0 and reports an out-of-range conflict of
-	its own. That is the graph working -- a carbon price that bankrupts the
-	project *should* say so -- but it makes 200 a scenario with two blockers
-	and a canary with one. The premise is asserted below rather than assumed,
-	so a future equation that starts blocking at 150 fails this test on the
-	premise instead of on the mechanism.
+	WHY THE TARGET IS THE LLCR COVENANT AND NOT `dscr_requirement`. Batch 27
+	made the loan-life coverage ratio a bound with an edge, and it binds
+	*before* the DSCR covenant across the whole carbon-price sweep: at 90 the
+	LLCR is 1.2728 against a 1.4 floor while the DSCR is still 1.4763 against
+	1.3. So there is no carbon price at which `dscr_requirement` blocks alone,
+	and a canary pinned to it would fail on its premise rather than on the
+	mechanism. The LLCR bound is also the better subject: it is the one bound in
+	the graph whose edge carries the tier, which is exactly the property under
+	test.
+
+	WHY 90 AND NOT 150. The canary's claim is "softening *this* edge flips the
+	gate", and that claim needs the softened edge to be the *only* thing
+	blocking -- otherwise the exit code stays 1 for a reason the canary is not
+	about. At 110 and above the DSCR covenant fires beside it, and at 200 the
+	fleet's cash available for debt service goes negative, so `llcr_estimate`
+	derives negative and reports an out-of-range conflict of its own. Both are
+	the graph working; neither is a scenario with one blocker. The premise is
+	asserted below rather than assumed, so a future equation that starts
+	blocking at 90 fails this test on the premise instead of on the mechanism.
 	"""
 	from typer.testing import CliRunner
 
@@ -3822,8 +3845,8 @@ def test_the_conflict_gate_reads_the_tier_and_a_softened_edge_stops_blocking():
 	from alea.prg import load_graph
 	from alea.prg.conflicts import detect_conflicts
 
-	target = "dscr_requirement"
-	carbon_price = "150"
+	target = "llcr_floor_bound"
+	carbon_price = "90"
 
 	# The premise: the softened edge is the only blocker at this scenario.
 	graph = load_graph()
@@ -3984,7 +4007,7 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# an external result. The batch therefore adds no citation, and the
 	# register moves by the ten that reuse existing works. A further change
 	# is a change to the register's coverage and fails here.
-	assert len(declared) == 149, f"the citation register moved: {sorted(declared)}"
+	assert len(declared) == 151, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -4218,7 +4241,7 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 				f"numeric {numeric!r}"
 			)
 			compared += 1
-	assert compared == 310, (
+	assert compared == 324, (
 		f"expected 310 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "

@@ -164,6 +164,18 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	their 913 siblings, so the numerator stayed at three. The register's gap
 	fell 923 to 917, by the same net six.
 
+	918 and 915 when batch 27 landed. The finance family made nine
+	placeholders derived (``debt_service_coverage_ratio``,
+	``insurance_premiums``, ``interest_rate_debt``, ``maladaptation_risk``,
+	``project_irr_hurdle``, ``rab_roll_forward``, ``solvency_capital``,
+	``transaction_costs`` and the three risk premiums) and created ten new
+	settable knobs (``aal_usd_million``, ``pml_99_5_usd_million``,
+	``expense_loading``, ``capital_loading``, ``profit_margin``,
+	``sovereign_risk_premium``, ``debt_tenor`` and the three retyped
+	shares). Nine left the denominator and ten entered it, a net one, so the
+	denominator fell 920 to 918 -- and the numerator stayed at three, so the
+	register's gap fell 917 to 915.
+
 	The eighteen the engine cannot carry are still outside the denominator:
 	they are chosen by the optimiser, so ``is_settable`` is False for them.
 	They are not missing from the register -- ``endogenous`` carries them, and
@@ -171,7 +183,7 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	"""
 	cov = coverage(graph)
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 920, cov
+	assert cov["total"] == 918, cov
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -232,11 +244,13 @@ def test_the_untranslated_register_is_not_empty_and_says_why(
 
 	The literal is the denominator's partner, so the reason it moved is the
 	one above: batch 26 made ten reserve placeholders derived and created
-	four untranslated shares, a net six, taking the register 923 to 917. The
-	numerator stayed at three, so the gap and the denominator fell together.
+	four untranslated shares, a net six, taking the register 923 to 917. Batch
+	27 then made nine finance placeholders derived and added ten settable
+	knobs, a net one, taking it 917 to 915. The numerator stayed at three, so
+	the gap and the denominator fell together.
 	"""
 	missing = untranslated(graph)
-	assert len(missing) == 917, missing
+	assert len(missing) == 915, missing
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact

@@ -2058,6 +2058,94 @@ knobs 495 → 483; audit checked/skipped 117/182 → 119/191; edge strength hard
 299 → 310; uncertainty inputs unchanged at 72, reaching 122 → 123 derived
 parameters.
 
+**Batch 27 -- the finance family.** Fourteen equations, 21 nodes written, 34
+edges, no rule. The batch reads `docs/FPE.md` (the financial pricing engine),
+`docs/FRM-spec.md` (the financial risk module) and `docs/FRM-ingest-spec.md`
+(the ingest contract), and ships what those three specify against bases the
+graph already carries.
+
+Four aliases where the catalog carries one quantity under two ids:
+`interest_rate_debt` to `cost_of_debt`, `debt_service_coverage_ratio` to
+`dscr_min`, `maladaptation_risk` to `risk_of_maladaptation`, and
+`insurance_premiums` to `insurance_premium_usd_million`. The first matters
+because `cost_of_debt` is what `wacc_definition` reads, so a scenario that sets
+the catalog's own spelling now reaches the cost of capital.
+
+Six products. The transaction cost is the arranging share times gross revenue
+(129.7 M USD/year at defaults). The sovereign and technology risk charges split
+the capital by tranche: the sovereign premium on the debt-financed part, the
+technology premium on the equity-financed part, each `premium * share *
+capex * capacity * 1000`. The microinsurance premium is the income share times
+household income, and the microinsured population is the coverage share times
+the electrified population. The ring-fenced asset value is the ring-fence share
+times the regulatory asset base.
+
+Three FRM identities shipped as the spec states them. The premium is the
+annual average loss grossed up by the expense, capital and profit loadings
+(50 M USD AAL at a 1.30 total loading = 65 M USD). Solvency capital is the
+99.5th-percentile loss less the expected one (500 − 50 = 450 M USD), which is
+the tail the insurer must hold rather than the premium it charges. The RAB
+roll-forward is written as a flow on both sides -- the annual depreciation
+charge less the regulatory depreciation -- because `regulatory_depreciation` is
+USD million/year and adding it to a stock is the unit error the walker caught.
+
+`project_irr_hurdle` is `discount_rate * (1 + equity_return_target)`: the
+blended cost the asset must earn, grossed up by the margin equity demands over
+it.
+
+One inequality, and the only bound in the graph whose edge carries a tier:
+`llcr_floor_bound` holds the loan-life coverage ratio at or above the covenant
+floor, P2, hard, with a `constraint` edge from `loan_life_coverage_ratio` to
+`llcr_estimate`. At defaults the estimate is 1.78 against a floor of 1.40, so
+it holds; across the carbon-price sweep it binds before the DSCR covenant does,
+which is why the conflict canary is now pointed at it.
+
+Six new bases: `aal_usd_million` (50), `pml_99_5_usd_million` (500),
+`expense_loading` (0.10), `capital_loading` (0.15), `profit_margin` (0.05) and
+`sovereign_risk_premium` (0.0256/year). Nine nodes were retyped from the
+catalog's placeholder: `transaction_costs` to a 0.02 share, `debt_tenor` to 15
+years, `currency_risk_premium` to 0.0256/year, `technology_risk_premium` to
+0.03/year, `microinsurance` to a 0.5 coverage share, and the three derived
+outputs to their units.
+
+The batch also repairs a defect it inherited. `cost_of_debt_priced` now charges
+`interest_rate + debt_spread + currency_risk_premium`, which is FPE §6's
+decomposition and puts the sovereign spread where the literature puts it rather
+than in a separate charge node that would double-count. `cost_of_debt` lands at
+0.1156, inside `allowed_return_on_debt`'s 0.12. And `ets_enabled` is now 1.0:
+batch 24 shipped the ETS off beside a covered share of half, so the revenue
+identity booked carbon revenue with no instrument collecting it and
+`carbon_revenue_without_an_instrument` fired on every clean scenario. Turning
+the instrument on is the repair the rule was asking for; the rule stays and
+`test_every_declared_rule_can_fire` keeps it proven able to fire.
+
+Two nodes were considered and rejected. A separate
+`currency_risk_charge_usd_per_year` would double-count the premium once it sits
+in `cost_of_debt`. `solvency_capital_ratio` computed as `solvency_capital /
+aal_usd_million` is 9.0, a coverage multiple rather than a ratio, so it stays
+out rather than shipping a misnamed quantity.
+
+`Damodaran (2026), Country Default Spreads and Risk Premiums` enters the
+register as the source for the country spread: South Africa's Ba2 rating gives
+a 2.56% default spread on a 4.23% mature-market ERP, and that spread is the
+`currency_risk_premium` default. The copy is archived at
+`sources/archive/damodaran_ctryprem_2026-01.html` with its digest in
+`sources/INDEX.md`.
+
+State after batch 27: **1261 parameters, 359 equations, 762 edges, 55 rules,
+488 uncoupled** (694 at batch 20 → 649 → 631 → 591 → 575 → 532 → 516 → 504 →
+488). Generator `--check` idempotent, `propagate` clean over all 1261 values
+with no range excursion, `gradients` clean over the whole graph. Unit walker
+348 of 359 consistent with **11 flagged**, 0 undecidable, 4 exempt;
+constraint-shaped 35/324/359 (one new inequality, the LLCR covenant); translate
+coverage 920 → 918 total and 917 → 915 untranslated (nine placeholders made
+derived, ten new settable knobs, net one fewer); catalog disagreements
+120 → 134 (agree 667 → 653); dead knobs 483 → 467; audit checked/skipped
+119/191 → 124/200; edge strength hard 341 → 356; citation doors 149 → 151
+(both risk charges cite Damodaran; the eleven identities carry None); affine
+coverage 310 → 324; uncertainty inputs 72 → 75, reaching 123 → 129 derived
+parameters.
+
 ## Evaluation of the design docs against the code (2026-10-17)
 
 **`docs/how_prg_works.md` (read-only; a teaching narrative, not read as spec).**
