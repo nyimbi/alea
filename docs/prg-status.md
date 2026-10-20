@@ -2248,6 +2248,24 @@ the aliases cite the duplicate-row register, and the investment period cites
 Tejada-Arango); affine coverage 324 → 382; uncertainty inputs 75 → 76, reaching
 129 → 143 derived parameters.
 
+**A bake that dropped an authored default.** `mean_time_between_failures` ships
+`default: 50000.0` in `docs/param_batch4.md` and `500000.0` in `config/prg.yaml`.
+The 500000.0 is the catalog join's placeholder (`e76d4bd`), and the bake at
+`b0fe572` carried it through in place of the fragment's value — so the node
+whose own description calls 500000 hours "a value that would imply a unit
+running for 114 years between failures, which for most equipment classes is a
+claim no asset register supports" shipped with exactly that value. It sits at
+the top of its own range, and `availability_definition` turns it into a forced
+outage rate of 4.8e-5, three orders below any published equipment class. The
+default is restored to the fragment's 50000.0; the rate becomes 4.8e-4. The
+generator's `--check` stays idempotent, so the field is the document's, not the
+generator's — which is why nothing regenerated it and nothing compared the two.
+
+This is the class the "declared is not produced" register counts, in the one
+direction it had not been read: not a field nothing populates, but a field
+populated from the wrong source and never diffed against the one that authored
+it.
+
 ## Evaluation of the design docs against the code (2026-10-17)
 
 **`docs/how_prg_works.md` (read-only; a teaching narrative, not read as spec).**
