@@ -546,7 +546,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -632,6 +632,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b28_equations)
 		edges = list(BATCH12_EDGES) + b28_edges
+	elif batch == "29":
+		b29_nodes, b29_equations, b29_edges, b29_rules = build_batch29(graph)
+		rules.extend(b29_rules)
+		nodes.update(b29_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b29_equations)
+		edges = list(BATCH12_EDGES) + b29_edges
 	elif batch == "27":
 		b27_nodes, b27_equations, b27_edges, b27_rules = build_batch27(graph)
 		rules.extend(b27_rules)
@@ -7431,6 +7438,572 @@ def build_batch28(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		nodes[name] = full
 
 	for eq_id, name, lhs, rhs, prose, system, cite in BATCH28_EQUATIONS:
+		rhs_params = sorted(parse_side(rhs).symbols)
+		equations[eq_id] = {
+			"id": eq_id, "name": name, "description": prose,
+			"system": system, "lhs": lhs, "rhs": rhs, "relation": "eq",
+			"parameters": [lhs] + rhs_params, "free_variables": [],
+			"determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		assert lhs in nodes, f"{eq_id}: {lhs!r} has no node body in this batch"
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs, "equation_id": eq_id,
+				"relationship": "functional", "direction": "forward",
+				"strength": "hard",
+				"description": "Enters the product identity.",
+				"reference": cite, "priority": "P1",
+			})
+	return nodes, equations, edges, rules
+
+
+#: (name, unit, range, default, determinism, prose) -- the demand-side bases
+#: and intensities that shipped unitless at the 500000.0 placeholder. Each is
+#: a scenario input with a published range; the default is the middle of the
+#: band the node's own prose names, not a measurement.
+BATCH29_RETYPES: tuple[tuple[str, str, list[float], float, str, str], ...] = (
+	("desalination_capacity", "m3/year", [0.0, 2.0e9], 5.0e7, "fixed",
+	 "Desalination capacity as an annual water volume, which is how the "
+	 "catalog states it (Mm3/year). Retyped from None: a capacity that "
+	 "multiplies an intensity in kWh/m3 has to be a volume, and a nameplate "
+	 "in MW would make the product an energy per unit of power. The 50 "
+	 "Mm3/year default is a large coastal plant, about 137,000 m3/day; the "
+	 "2 km3/year ceiling is the catalog's own 0-2000 Mm3/year bound and "
+	 "four times the world's largest plant."),
+	("desalination_energy", "kWh/m3", [2.0, 10.0], 4.0, "fixed",
+	 "Specific energy consumption of the desalination process, in kWh per "
+	 "cubic metre of product water. Reverse osmosis sits at 2-6 kWh/m3 with "
+	 "energy recovery and thermal processes at 10-25, so the band is the RO "
+	 "range's top meeting the thermal range's bottom; the default 4 is a "
+	 "brackish-to-seawater RO plant and is the catalog's own what-if value. "
+	 "Retyped from None."),
+	("aviation_fuel_demand", "MWh/year", [0.0, 2.0e7], 3.0e6, "fixed",
+	 "Aviation fuel loaded in the year, on a lower-heating-value energy "
+	 "basis. Retyped from None: the SAF share multiplies it, and a share of "
+	 "a unitless number is a unitless number. 3 TWh is about 250 kt of jet "
+	 "fuel, a domestic-and-regional volume rather than a hub's throughput; "
+	 "the 20 TWh ceiling is seven times that, enough for a decade of growth "
+	 "on a single-country market."),
+	("shipping_fuel_demand", "MWh/year", [0.0, 2.0e7], 2.0e6, "fixed",
+	 "Marine bunker fuel loaded in the year, on an LHV energy basis. "
+	 "Retyped from None for the same reason as aviation: the green-fuel "
+	 "share needs a dimensioned base. 2 TWh is about 170 kt of heavy fuel "
+	 "oil; the ceiling is ten times the shipped value and the top of a "
+	 "single-country bunker market."),
+	("transport_logistics", "tonne*km/year", [0.0, 1.0e12], 45.0e9, "fixed",
+	 "Freight tonne-kilometres moved in the year: the base the batch-20 "
+	 "freight share was deferred for. Retyped from None to tonne*km/year. "
+	 "45 bn tonne-km at 45 M people is about 1,000 tonne-km per person, the "
+	 "low end of the middle-income band; the 1e12 ceiling is twenty times "
+	 "that and above any single country's freight task."),
+	("heat_pump_cop", "1", [2.0, 6.0], 3.5, "fixed",
+	 "Coefficient of performance: heat delivered per unit of electricity. "
+	 "Retyped from None to dimensionless with the catalog's own default. "
+	 "Below 2 a heat pump is a resistive heater with extra steps, and 6 is "
+	 "the top of the ground-source range at mild ambient. Held as a "
+	 "constant rather than a temperature curve because the graph's "
+	 "temperature_increase is itself a placeholder with no unit, and a "
+	 "curve over a placeholder is a curve over nothing."),
+	("industrial_heat_demand", "TWh/year", [0.0, 200.0], 20.0, "fixed",
+	 "Industrial process heat in the year, on a thermal basis. Retyped from "
+	 "None to the catalog's own TWh/year. The 20 TWh default is a scenario "
+	 "assumption -- about 1.7 times the graph's industrial electricity "
+	 "demand -- and it is an assumption, not a measurement: the "
+	 "heat-to-electricity ratio of an industrial base is a survey result "
+	 "this repository does not hold. The ceiling narrows the catalog's "
+	 "0-500 to 200 TWh, several times the graph's whole electricity demand."),
+	("irrigation_pumping_demand", "TWh/year", [0.0, 20.0], 0.5, "fixed",
+	 "The electricity irrigation pumping draws in the year. Retyped from "
+	 "None to the catalog's own TWh/year; the 0.5 TWh default is 15% of the "
+	 "graph's agricultural demand, which is the fraction the sector's own "
+	 "pumping is usually taken to be -- stated as a scenario input, not "
+	 "derived. The 20 TWh ceiling is 43% of the whole system's demand at "
+	 "defaults, which is already an implausibly irrigation-heavy economy."),
+	("currency_hedge_cost", "1/year", [0.0, 0.2], 0.03, "policy",
+	 "The annual cost of hedging currency exposure, as a share of the "
+	 "notional hedged: the forward premium plus the dealer spread. A rate, "
+	 "so the charge is rate times notional and the notional is built from "
+	 "the debt the project actually carries. Retyped from None."),
+	("lpg_subsidies", "USD/kg", [0.0, 5.0], 0.5, "policy",
+	 "The subsidy per kilogram of LPG, in currency. A per-unit rate, "
+	 "matching the three electricity subsidy siblings, which are all "
+	 "USD/MWh, so the spend is rate times volume across the whole subsidy "
+	 "family. Retyped from None; the 5 USD/kg ceiling is the full retail "
+	 "price of a cylinder."),
+)
+
+#: (name, unit, range, default, category, prose) -- the free bases the
+#: products above multiply against. A base is a level the graph did not
+#: carry; each defaults to zero or to the order the node's prose names.
+BATCH29_BASES: tuple[tuple[str, str, list[float], float, str, str], ...] = (
+	("railway_route_km", "km", [0.0, 5.0e4], 2000.0, "Transport",
+	 "The route length of the national rail network, in kilometres: the "
+	 "base the railway electrification share was waiting for. 2,000 "
+	 "route-km is a single-country network of the size the graph's other "
+	 "bases assume (45,000 distribution circuit-km, 12,000 "
+	 "transmission-km). Free with a default, following the extensive-bases "
+	 "idiom the supply batches use."),
+	("protected_area_fraction", "1", [0.0, 1.0], 0.0, "Environmental",
+	 "The share of the project footprint that falls inside a protected "
+	 "area. Default 0 because no protected-area layer is in the graph: a "
+	 "default of 0.17 would claim a sixth of every project sits inside a "
+	 "designation, which is a fabricated measurement. The range admits any "
+	 "measured overlap."),
+	("remittance_income_share", "1", [0.0, 0.5], 0.05, "Macro",
+	 "The share of household income arriving as remittance transfers. 5% "
+	 "is the order remittance-receiving economies show; the range admits "
+	 "up to half, the ceiling for a household that is mostly "
+	 "transfer-funded."),
+	("strategic_reserve_days", "day", [0.0, 365.0], 90.0, "Energy Security",
+	 "The strategic stock cover the policy declares, in days. 90 days is "
+	 "the IEA emergency-stockholding convention; the range runs to a full "
+	 "year so a policy that declares more is expressible rather than "
+	 "clipped."),
+	("foreign_currency_debt_share", "1", [0.0, 1.0], 0.6, "Finance",
+	 "The share of the debt stock denominated in foreign currency: the "
+	 "notional that needs hedging. 60% is the order for an emerging-market "
+	 "project financed in hard currency."),
+	("lpg_use_kg_per_household_year", "kg/year", [0.0, 1000.0], 150.0,
+	 "Households",
+	 "LPG burnt by a household that uses it: roughly a 12.5 kg cylinder "
+	 "every five weeks. A mass balance, not a measurement."),
+	("weather_derivative_notional_share", "1", [0.0, 1.0], 0.1, "Finance",
+	 "The share of revenue hedged with weather derivatives. A policy "
+	 "dial, defaulted at a tenth of revenue."),
+)
+
+#: (name, unit, range, determinism, category, prose) -- nodes an equation in
+#: this batch determines. No default: the equation is the value, and a
+#: default is a number that stands in whenever the equation is not run.
+BATCH29_DERIVED: tuple[tuple[str, str, list[float], str, str, str], ...] = (
+	("archaeological_sites", "sites", [0.0, 1500.0], "stochastic",
+	 "Environmental",
+	 "Expected count of recorded archaeological sites inside the project "
+	 "footprint: the measured site density per 100 km2 times the land take "
+	 "converted to the density's own denominator. Retyped from None to a "
+	 "count; a fractional value is the expectation, not a count of objects, "
+	 "which is what a survey budget needs. The 1,500 ceiling is the image "
+	 "of the density's 30 per 100 km2 over a 500,000 ha land take."),
+	("sacred_sites", "sites", [0.0, 1000.0], "stochastic", "Environmental",
+	 "Expected count of sacred and culturally significant sites inside the "
+	 "project footprint. Same construction as archaeological_sites on the "
+	 "sacred-site density layer, so a siting decision can compare the two "
+	 "exposures directly. The two layers are separate measurements and stay "
+	 "separable rather than being summed into one heritage count."),
+	("protected_areas", "hectare", [0.0, 500000.0], "policy",
+	 "Environmental",
+	 "Hectares of the project footprint falling inside a protected area: "
+	 "the overlap share times the land take. An area rather than a count, "
+	 "because what a designation constrains is the ground you may disturb, "
+	 "not the number of sites. Retyped from None to hectare."),
+	("parametric_insurance", "USD million", [0.0, 500000.0], "policy",
+	 "Finance",
+	 "The loss a parametric instrument pays out in an average year: the "
+	 "share of the loss its trigger covers times the expected annual loss. "
+	 "Priced against aal_usd_million, the base the finance batches already "
+	 "ship, so the payout and the premium that covers it sit on one base. "
+	 "Retyped from the dimensionless placeholder."),
+	("remittance_flows", "USD/year", [0.0, 5.0e13], "stochastic", "Macro",
+	 "Remittances received per year: the share of household income "
+	 "arriving as transfers, times household income, times the number of "
+	 "households. Measured against the household income base rather than "
+	 "GDP, because remittances are a household transfer and the household "
+	 "base is the one the graph carries. Retyped from None."),
+	("strategic_reserves", "TWh", [0.0, 20000.0], "policy",
+	 "Energy Security",
+	 "The strategic stock held, as a volume of energy: the days of cover "
+	 "the policy declares, times annual demand, over the days in a year. "
+	 "Days of total demand, not days of net imports: the IEA convention is "
+	 "import cover, and net_imports_twh is signed and zero at defaults, so "
+	 "an import-based stock would need an abs the DSL cannot "
+	 "differentiate. Retyped from None to TWh."),
+	("weather_derivatives", "USD/year", [0.0, 1.0e12], "policy", "Finance",
+	 "The notional of the weather hedge carried, in currency per year: the "
+	 "share of revenue the firm hedges, times revenue. A notional against "
+	 "revenue rather than a weather-sensitive revenue base, because the "
+	 "revenue the derivative protects is the revenue the firm actually "
+	 "books. Retyped from the dimensionless placeholder."),
+	("desalination_demand", "MWh/year", [0.0, 2.0e7], "fixed", "Water",
+	 "The electricity a desalination programme draws: the annual water "
+	 "volume times the specific energy of the process. The intensity node "
+	 "carries the process choice and this node carries the scale. 200,000 "
+	 "MWh/year at the 50 Mm3 and 4 kWh/m3 defaults; the 20 TWh ceiling is "
+	 "the 2 km3 capacity ceiling at the top of the intensity band."),
+	("agricultural_irrigation_load", "MW", [0.0, 5000.0], "fixed",
+	 "Agriculture",
+	 "The average power irrigation pumping draws: the annual pumping "
+	 "energy converted to MWh and divided by the year's hours. An average "
+	 "and not a peak -- a load that runs in daylight and in season has a "
+	 "peak well above it, and the graph carries one annual energy figure. "
+	 "57.1 MW at the 0.5 TWh default; the 5 GW ceiling is four times that "
+	 "and still under a tenth of the system's peak."),
+	("hydrogen_export_port", "MW", [0.0, 1000.0], "fixed", "Transport",
+	 "The export terminal's average throughput in megawatts: the annual "
+	 "hydrogen energy the terminal loads, spread over the year. A port is "
+	 "not a nameplate -- the berth count and the storage inventory are the "
+	 "other two readings and the graph carries neither. 2.28 MW at the "
+	 "20,000 MWh/year default."),
+	("temporary_camp_load", "MW", [0.0, 500.0], "fixed", "Households",
+	 "The power a resettlement camp draws: the displaced population, "
+	 "divided by household size to get households, times the consumption "
+	 "an energy-poor household actually draws, spread over the year. 0.89 "
+	 "MW at defaults -- 100,000 displaced people in 22,222 households."),
+	("household_batteries", "1", [0.0, 1.0e8], "fixed", "Households",
+	 "Household battery systems installed: the adoption share times the "
+	 "household count. A count a report can name -- 500,000 at defaults -- "
+	 "rather than a share of nothing, which is what the adoption node was "
+	 "before this equation."),
+	("electrified_route_km", "km", [0.0, 5.0e4], "fixed", "Transport",
+	 "Electrified route-kilometres: the electrification share times the "
+	 "rail network's route length. 400 km at defaults. The share was inert "
+	 "because the base it is a share of did not exist."),
+	("freight_electric_tonne_km", "tonne*km/year", [0.0, 1.0e12], "fixed",
+	 "Transport",
+	 "Freight tonne-kilometres moved electrically: the freight "
+	 "electrification share times total tonne-km. 2.25 bn tonne-km at "
+	 "defaults, against a 45 bn total."),
+	("synthetic_aviation_fuel_mwh", "MWh/year", [0.0, 2.0e7], "fixed",
+	 "Transport",
+	 "Synthetic aviation fuel loaded in the year: the SAF share times "
+	 "aviation fuel demand. 150,000 MWh at defaults. The share needed a "
+	 "dimensioned base and the base now exists."),
+	("synthetic_shipping_fuel_mwh", "MWh/year", [0.0, 2.0e7], "fixed",
+	 "Transport",
+	 "Synthetic marine fuel loaded in the year: the green-fuel share times "
+	 "bunker demand. 100,000 MWh at defaults."),
+	("heat_pump_electricity_saving_mwh_per_year", "MWh/year", [0.0, 1.0e8],
+	 "fixed", "Households",
+	 "The electricity heat pumps displace: the adoption share times the "
+	 "household count times household consumption times (1 - 1/COP). The "
+	 "bracket is the fraction of resistive heat's electricity a heat pump "
+	 "does not draw, so the product is a saving and not a load. 535,714 "
+	 "MWh/year at defaults. It is the only reading of the COP node that "
+	 "turns it into arithmetic."),
+	("electrified_industrial_heat_twh", "TWh/year", [0.0, 200.0], "fixed",
+	 "Industry",
+	 "Electrified industrial process heat: the electrification share times "
+	 "total process heat demand. 2.0 TWh at defaults, against 20 TWh of "
+	 "thermal demand."),
+	("currency_hedge_cost_usd_per_year", "USD/year", [0.0, 1.0e12],
+	 "policy", "Finance",
+	 "The annual charge for hedging currency exposure: the hedge rate "
+	 "times the foreign-currency share of the debt stock times the debt "
+	 "tranche. 1.512e8 USD/year at defaults. The 1000 is kW per MW, the "
+	 "graph's own convention, and the shape follows the two risk charges "
+	 "the finance batches already ship."),
+	("lpg_subsidy_spend_usd_per_year", "USD/year", [0.0, 5.0e11], "policy",
+	 "Finance",
+	 "The annual LPG subsidy bill: the per-kilogram subsidy times the "
+	 "share of households cooking with LPG times the household count times "
+	 "the per-household burn. 1.5e8 USD/year at defaults -- 0.5 USD/kg over "
+	 "2 M LPG-using households burning 150 kg each. A rate-based levy with "
+	 "the sign flipped, which is the same identity the withholding-tax "
+	 "products use."),
+)
+
+#: (equation id, name, lhs, rhs, prose, system, reference)
+BATCH29_EQUATIONS: tuple[
+	tuple[str, str, str, str, str, str, str | None], ...
+] = (
+	# --- demand-side sector loads ---------------------------------------
+	("desalination_demand_definition", "The desalination load",
+	 "desalination_demand", "desalination_capacity * desalination_energy / 1000",
+	 "The electricity a desalination programme draws: the annual water "
+	 "volume times the specific energy of the process. The intensity node "
+	 "carries the process choice and this node carries the scale. The "
+	 "1000 is MWh per GWh-equivalent division -- kWh/m3 times m3/year is "
+	 "kWh/year, and the node is declared in MWh/year. At 50 Mm3/year and "
+	 "4 kWh/m3 it is 200,000 MWh/year.",
+	 "water_energy", "Bottom-up load synthesis (catalog method cell)"),
+	("agricultural_irrigation_load_definition", "The irrigation load",
+	 "agricultural_irrigation_load",
+	 "irrigation_pumping_demand * 1000000 / 8760",
+	 "The average power irrigation pumping draws: the annual pumping "
+	 "energy in TWh converted to MWh and divided by the year's 8,760 "
+	 "hours. It is an average and not a peak -- a load that runs in "
+	 "daylight and in season has a peak well above this number, and the "
+	 "graph carries one annual energy figure for it, so the average is "
+	 "the honest reading. At the shipped 0.5 TWh/year it is 57.1 MW.",
+	 "demand_supply", None),
+	("temporary_camp_load_definition", "The resettlement camp load",
+	 "temporary_camp_load",
+	 "exposed_population * resettlement_population_share * "
+	 "energy_poor_consumption_mwh_per_year / persons_per_household / 8760",
+	 "The power a resettlement camp draws: the displaced population, "
+	 "divided by household size to get households, times the consumption "
+	 "an energy-poor household actually draws, spread over the year. The "
+	 "per-household figure is the graph's energy-poor draw and not the "
+	 "mean, because a camp household is by construction at the bottom of "
+	 "the distribution; the mean would overstate the load fourfold. At "
+	 "defaults: 5 M exposed x 2% = 100,000 people, 22,222 households, "
+	 "0.89 MW.",
+	 "demand_supply", None),
+	("hydrogen_export_port_definition", "The export terminal's throughput",
+	 "hydrogen_export_port", "hydrogen_export_volume / 8760",
+	 "The port's average throughput in megawatts: the annual hydrogen "
+	 "energy the terminal loads, spread over the year. A port is not a "
+	 "nameplate -- the berth count and the storage inventory are the "
+	 "other two readings, and the graph carries neither -- so the average "
+	 "flow is what the export volume determines. At 20,000 MWh/year it is "
+	 "2.28 MW.",
+	 "demand_supply", None),
+	# --- the share products ---------------------------------------------
+	("household_batteries_definition", "Household batteries",
+	 "household_batteries",
+	 "battery_storage_adoption * households_total",
+	 "Household battery systems installed: the adoption share times the "
+	 "household count the graph derives from population and household "
+	 "size. 0.05 gives 500,000 household batteries at defaults.",
+	 "demand_supply", None),
+	("electrified_route_km_definition", "Electrified route-kilometres",
+	 "electrified_route_km", "railway_electrification * railway_route_km",
+	 "Electrified route-kilometres: the rail electrification share times "
+	 "the network's route length. The share was a dial with no base; this "
+	 "is the product it was waiting for. 400 km at defaults.",
+	 "demand_supply", None),
+	("freight_electric_tonne_km_definition",
+	 "Electric freight tonne-kilometres", "freight_electric_tonne_km",
+	 "freight_electrification * transport_logistics",
+	 "Freight tonne-kilometres moved electrically: the freight "
+	 "electrification share times total tonne-km. 2.25 bn of 45 bn at "
+	 "defaults.",
+	 "demand_supply", None),
+	("synthetic_aviation_fuel_mwh_definition", "Synthetic aviation fuel",
+	 "synthetic_aviation_fuel_mwh",
+	 "synthetic_fuel_share_aviation * aviation_fuel_demand",
+	 "Synthetic aviation fuel loaded in the year: the SAF share times "
+	 "aviation fuel demand. 150,000 MWh at defaults, 5% of a 3 TWh "
+	 "market.",
+	 "demand_supply", None),
+	("synthetic_shipping_fuel_mwh_definition", "Synthetic marine fuel",
+	 "synthetic_shipping_fuel_mwh",
+	 "synthetic_fuel_share_shipping * shipping_fuel_demand",
+	 "Synthetic marine fuel loaded in the year: the green-fuel share "
+	 "times bunker demand. 100,000 MWh at defaults, 5% of a 2 TWh "
+	 "market.",
+	 "demand_supply", None),
+	("heat_pump_electricity_saving_definition",
+	 "Heat pump electricity saving",
+	 "heat_pump_electricity_saving_mwh_per_year",
+	 "heat_pump_adoption * households_total * "
+	 "household_consumption_mwh_per_year * (1 - 1 / heat_pump_cop)",
+	 "The electricity heat pumps displace. The bracket (1 - 1/COP) is the "
+	 "fraction of resistive heat's electricity a heat pump does not draw: "
+	 "at a COP of 3.5 the pump delivers the same heat for 28.6% of the "
+	 "resistive input, so 71.4% is saved. The product is a saving and not "
+	 "a load, which is why it is subtracted rather than added in any "
+	 "balance that reads it. 535,714 MWh/year at defaults.",
+	 "demand_supply", None),
+	("electrified_industrial_heat_twh_definition",
+	 "Electrified industrial heat", "electrified_industrial_heat_twh",
+	 "industrial_heat_electrification * industrial_heat_demand",
+	 "Electrified industrial process heat: the electrification share "
+	 "times total process heat demand. 2.0 TWh of 20 TWh at defaults. "
+	 "The heat demand is on a thermal basis and the product is the "
+	 "electricity that replaces it, so no efficiency enters here -- a "
+	 "heat pump's COP would, and the graph carries no industrial COP.",
+	 "demand_supply", None),
+	# --- the macro-fiscal register --------------------------------------
+	("archaeological_sites_definition", "Archaeological sites",
+	 "archaeological_sites",
+	 "archaeological_sites_density * land_area_hectares / 10000",
+	 "Expected count of recorded archaeological sites inside the project "
+	 "footprint: the measured site density per 100 km2 times the land "
+	 "take converted to the density's own denominator. The 10000 is "
+	 "exact, not a fudge: one hectare is 0.01 km2, so hectares divided by "
+	 "10,000 is hectares expressed in units of 100 km2. A fractional "
+	 "value is the expectation, not a count of objects.",
+	 "financial", None),
+	("sacred_sites_definition", "Sacred sites", "sacred_sites",
+	 "sacred_sites_density * land_area_hectares / 10000",
+	 "Expected count of sacred and culturally significant sites inside "
+	 "the project footprint. Same construction as archaeological_sites on "
+	 "the sacred-site density layer, so a siting decision can compare the "
+	 "two exposures directly.",
+	 "financial", None),
+	("protected_areas_definition", "Protected areas", "protected_areas",
+	 "protected_area_fraction * land_area_hectares",
+	 "Hectares of the project footprint falling inside a protected area: "
+	 "the overlap share times the land take. An area rather than a count, "
+	 "because what a designation constrains is the ground you may "
+	 "disturb.",
+	 "financial", None),
+	("parametric_insurance_definition", "Parametric insurance payout",
+	 "parametric_insurance",
+	 "parametric_insurance_coverage * aal_usd_million",
+	 "The loss a parametric instrument pays out in an average year: the "
+	 "share of the loss its trigger covers times the expected annual "
+	 "loss. Priced against aal_usd_million, the base the finance batches "
+	 "already ship, so the payout and the premium that covers it sit on "
+	 "one base.",
+	 "financial", None),
+	("remittance_flows_definition", "Remittance flows", "remittance_flows",
+	 "remittance_income_share * household_income_usd_per_year * "
+	 "households_total",
+	 "Remittances received per year: the share of household income "
+	 "arriving as transfers, times household income, times the number of "
+	 "households. Measured against the household income base rather than "
+	 "GDP, because remittances are a household transfer and the household "
+	 "base is the one the graph carries.",
+	 "financial", None),
+	("strategic_reserves_definition", "Strategic reserves",
+	 "strategic_reserves", "strategic_reserve_days * demand_twh / 365",
+	 "The strategic stock held, as a volume of energy: the days of cover "
+	 "the policy declares, times annual demand, over the days in a year. "
+	 "Days of total demand, not of net imports: the IEA convention is "
+	 "import cover, and an import-based stock would need an abs over a "
+	 "signed flow the DSL cannot differentiate.",
+	 "energy_balance", None),
+	("weather_derivatives_definition", "Weather derivative notional",
+	 "weather_derivatives",
+	 "weather_derivative_notional_share * total_revenue_usd_per_year",
+	 "The notional of the weather hedge carried, in currency per year: "
+	 "the share of revenue the firm hedges, times revenue. A notional "
+	 "against revenue rather than a weather-sensitive revenue base, "
+	 "because the revenue the derivative protects is the revenue the firm "
+	 "actually books.",
+	 "financial", None),
+	("currency_hedge_cost_usd_per_year_definition",
+	 "The currency hedge charge", "currency_hedge_cost_usd_per_year",
+	 "currency_hedge_cost * foreign_currency_debt_share * debt_fraction * "
+	 "capex_usd_per_kw * total_capacity_mw * 1000",
+	 "The annual charge for hedging currency exposure: the hedge rate "
+	 "times the foreign-currency share of the debt stock times the debt "
+	 "tranche. The 1000 is kW per MW, the graph's own convention for "
+	 "turning a per-kilowatt capital cost into the fleet's total, and the "
+	 "shape follows sovereign_risk_charge_usd_per_year and "
+	 "technology_risk_charge_usd_per_year deliberately. 1.512e8 USD/year "
+	 "at defaults.",
+	 "financial", None),
+	("lpg_subsidy_spend_usd_per_year_definition",
+	 "The LPG subsidy bill", "lpg_subsidy_spend_usd_per_year",
+	 "lpg_subsidies * cooking_lpg_penetration * households_total * "
+	 "lpg_use_kg_per_household_year",
+	 "The annual LPG subsidy bill: the per-kilogram subsidy times the "
+	 "share of households cooking with LPG times the household count "
+	 "times the per-household burn. A rate-based levy with the sign "
+	 "flipped, which is the same identity the withholding-tax products "
+	 "use. 1.5e8 USD/year at defaults.",
+	 "financial",
+	 "Rate-based levy and allowance definitions (standard fiscal accounting)"),
+)
+
+
+def build_batch29(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Batch 29: the demand-side and macro-fiscal coupling.
+
+	Thirty-five nodes from two research packs, and the packs' own finding is
+	the batch's shape: the demand family closes on bases the graph already
+	carries, and the macro block does not close at all without a GDP level
+	that nothing in the graph can produce.
+
+	*The demand family* is the sector loads the catalog sketched as
+	``unit: None default: 500000.0`` and the electrification shares that were
+	inert because the energy they were a share of did not exist. Four become
+	equation targets -- the desalination load, the irrigation load, the
+	resettlement camp load and the export terminal's throughput. Eight become
+	operands of the seven share products, and one of those products is the
+	only arithmetic reading of the heat-pump COP: ``(1 - 1/COP)`` is the
+	fraction of resistive heat's electricity a heat pump does not draw, so the
+	node becomes a saving rather than a load.
+
+	Eighteen demand nodes defer, and each defer is a stated missing base
+	rather than a modelling choice. The pack refuses to invent an intensity:
+	a kWh per hectare, per tonne of crop, per cubic metre pumped or per
+	tonne-km hauled would close one node and leave a coefficient nobody can
+	check. Those are the eighteen.
+
+	*The macro-fiscal register* closes nine of its twenty. Seven are
+	derived: the heritage site counts, the protected-area overlap, the
+	parametric payout, remittance flows, the strategic stock, the weather
+	derivative notional and the currency hedge charge. Two more become
+	operands -- the parametric coverage share and the LPG subsidy rate.
+	Ten defer, and seven of the ten defer on the same two absent levels: a
+	GDP figure and an import bill in currency. That is the pack's headline
+	finding and it is a fact about the graph, not a choice.
+
+	One macro node is deferred for a reason worth recording. The pack found
+	that ``remittance_dependency`` is computable today as remittances over
+	household income, and refused it: the name denotes a share of GDP in the
+	literature, and shipping the household ratio under this name would put
+	a true number behind a false label. A computable answer that answers a
+	different question is worse than a defer, because it reads as closed.
+
+	The signed-range lesson from batch 28 applies once here and is why
+	``strategic_reserves`` is built on demand rather than on net imports:
+	net imports are signed and zero at defaults, so an import-based stock
+	would need an ``abs`` the DSL cannot differentiate. The IEA convention
+	is import cover; this batch states the demand basis in the prose rather
+	than shipping a formula the sensitivity pass would refuse.
+
+	No rule ships. Every deferral in this batch is a missing operand, and a
+	cross-validation rule over an absent quantity is a rule that cannot fire.
+	"""
+	from alea.prg.dsl import parse_side
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	for name, unit, rng, default, determinism, prose in BATCH29_RETYPES:
+		# The emit path reads the already-baked document, so a re-emit after a
+		# bake finds the node present. Reading the shipped body and overriding
+		# the fields this batch owns keeps the two runs identical.
+		shipped = graph.nodes.get(name)
+		full: dict[str, Any] = (
+			dict(shipped.model_dump(exclude={"id"}, mode="json"))
+			if shipped is not None else {"name": name.replace("_", " ").capitalize()}
+		)
+		full.update({
+			"description": prose, "type": "float", "unit": unit,
+			"range": rng, "role": "free", "determinism": determinism,
+			"priority": "P1",
+			"status": _kept_status(shipped),
+			"source": "The demand and macro coupling (batch 29)",
+			"users": ["Planners", "Regulators"],
+		})
+		full["default"] = default
+		nodes[name] = full
+
+	for name, unit, rng, default, category, prose in BATCH29_BASES:
+		shipped = graph.nodes.get(name)
+		full: dict[str, Any] = (
+			dict(shipped.model_dump(exclude={"id"}, mode="json"))
+			if shipped is not None else {"name": name.replace("_", " ").capitalize()}
+		)
+		full.update({
+			"description": prose, "category": category, "type": "float",
+			"unit": unit, "range": rng, "default": default, "role": "free",
+			"determinism": "policy", "priority": "P1",
+			"status": _kept_status(shipped),
+			"source": "The demand and macro coupling (batch 29)",
+			"users": ["Planners", "Regulators"],
+		})
+		nodes[name] = full
+
+	for name, unit, rng, determinism, category, prose in BATCH29_DERIVED:
+		shipped = graph.nodes.get(name)
+		full: dict[str, Any] = (
+			dict(shipped.model_dump(exclude={"id"}, mode="json"))
+			if shipped is not None else {"name": name.replace("_", " ").capitalize()}
+		)
+		full.update({
+			"description": prose, "category": category, "type": "float",
+			"unit": unit, "range": rng, "role": "derived",
+			"determinism": determinism, "priority": "P1",
+			"status": _kept_status(shipped),
+			"source": "The demand and macro coupling (batch 29)",
+			"users": ["Planners", "Regulators"],
+		})
+		full.pop("default", None)
+		nodes[name] = full
+
+	for eq_id, name, lhs, rhs, prose, system, cite in BATCH29_EQUATIONS:
 		rhs_params = sorted(parse_side(rhs).symbols)
 		equations[eq_id] = {
 			"id": eq_id, "name": name, "description": prose,

@@ -353,20 +353,29 @@ parameters:
     deprecated_by: null
   agricultural_irrigation_load:
     name: Agricultural irrigation load
-    description: Irrigation pumping load
-    category: Demand
+    description: 'The average power irrigation pumping draws: the annual pumping energy converted to MWh
+      and divided by the year''s hours. An average and not a peak -- a load that runs in daylight and
+      in season has a peak well above it, and the graph carries one annual energy figure. 57.1 MW at the
+      0.5 TWh default; the 5 GW ceiling is four times that and still under a tenth of the system''s peak.'
+    category: Agriculture
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 5000.0
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The demand and macro coupling (batch 29)
+    source_url: null
     users:
-    - Agriculture
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   agricultural_machinery:
     name: Agricultural machinery electrification share
     description: Share of agricultural machinery that is electric. A share.
@@ -726,20 +735,30 @@ parameters:
     deprecated_by: null
   archaeological_sites:
     name: Archaeological sites
-    description: Archaeology
-    category: Land
+    description: 'Expected count of recorded archaeological sites inside the project footprint: the measured
+      site density per 100 km2 times the land take converted to the density''s own denominator. Retyped
+      from None to a count; a fractional value is the expectation, not a count of objects, which is what
+      a survey budget needs. The 1,500 ceiling is the image of the density''s 30 per 100 km2 over a 500,000
+      ha land take.'
+    category: Environmental
+    subcategory: null
     type: float
+    unit: sites
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: integrate
+    - 1500.0
+    initial: null
+    role: derived
+    determinism: stochastic
+    categories: []
+    source: The demand and macro coupling (batch 29)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: integrate
+    deprecated_by: null
   archaeological_sites_density:
     name: Archaeological sites density
     description: Number of documented archaeological sites per hundred square kilometres in the study
@@ -1277,20 +1296,30 @@ parameters:
     - Planners
   aviation_fuel_demand:
     name: Aviation fuel demand
-    description: Aviation fuel demand
+    description: 'Aviation fuel loaded in the year, on a lower-heating-value energy basis. Retyped from
+      None: the SAF share multiplies it, and a share of a unitless number is a unitless number. 3 TWh
+      is about 250 kt of jet fuel, a domestic-and-regional volume rather than a hub''s throughput; the
+      20 TWh ceiling is seven times that, enough for a decade of growth on a single-country market.'
     category: Sector
+    subcategory: null
     type: float
+    unit: MWh/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 20000000.0
+    default: 3000000.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The demand and macro coupling (batch 29)
+    source_url: null
     users:
-    - Aviation
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   balance_of_payments:
     name: Balance of payments
     description: Balance of payments
@@ -7108,20 +7137,49 @@ parameters:
     - Regulators
   currency_hedge_cost:
     name: Currency hedge cost
-    description: Currency hedge cost
+    description: 'The annual cost of hedging currency exposure, as a share of the notional hedged: the
+      forward premium plus the dealer spread. A rate, so the charge is rate times notional and the notional
+      is built from the debt the project actually carries. Retyped from None.'
     category: Macro
+    subcategory: null
     type: float
+    unit: 1/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.2
+    default: 0.03
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The demand and macro coupling (batch 29)
+    source_url: null
     users:
-    - Investors
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  currency_hedge_cost_usd_per_year:
+    name: Currency hedge cost usd per year
+    description: 'The annual charge for hedging currency exposure: the hedge rate times the foreign-currency
+      share of the debt stock times the debt tranche. 1.512e8 USD/year at defaults. The 1000 is kW per
+      MW, the graph''s own convention, and the shape follows the two risk charges the finance batches
+      already ship.'
+    category: Finance
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 1000000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The demand and macro coupling (batch 29)
+    users:
+    - Planners
+    - Regulators
   currency_risk_premium:
     name: Currency risk premium
     description: The currency risk premium added to the cost of debt. FPE section 6 applies it there rather
@@ -8160,53 +8218,82 @@ parameters:
     source: docs/params.md
   desalination_capacity:
     name: Desalination capacity
-    description: Desalination capacity
+    description: 'Desalination capacity as an annual water volume, which is how the catalog states it
+      (Mm3/year). Retyped from None: a capacity that multiplies an intensity in kWh/m3 has to be a volume,
+      and a nameplate in MW would make the product an energy per unit of power. The 50 Mm3/year default
+      is a large coastal plant, about 137,000 m3/day; the 2 km3/year ceiling is the catalog''s own 0-2000
+      Mm3/year bound and four times the world''s largest plant.'
     category: Sector
+    subcategory: null
     type: float
+    unit: m3/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 2000000000.0
+    default: 50000000.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The demand and macro coupling (batch 29)
+    source_url: null
     users:
-    - Water
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   desalination_demand:
     name: Desalination demand
-    description: Desalination electricity demand
-    category: Demand
+    description: 'The electricity a desalination programme draws: the annual water volume times the specific
+      energy of the process. The intensity node carries the process choice and this node carries the scale.
+      200,000 MWh/year at the 50 Mm3 and 4 kWh/m3 defaults; the 20 TWh ceiling is the 2 km3 capacity ceiling
+      at the top of the intensity band.'
+    category: Water
+    subcategory: null
     type: float
+    unit: MWh/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 20000000.0
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The demand and macro coupling (batch 29)
+    source_url: null
     users:
-    - Water
-    - Cities
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   desalination_energy:
     name: Desalination energy
-    description: Desalination energy intensity
+    description: Specific energy consumption of the desalination process, in kWh per cubic metre of product
+      water. Reverse osmosis sits at 2-6 kWh/m3 with energy recovery and thermal processes at 10-25, so
+      the band is the RO range's top meeting the thermal range's bottom; the default 4 is a brackish-to-seawater
+      RO plant and is the catalog's own what-if value. Retyped from None.
     category: Sector
+    subcategory: null
     type: float
+    unit: kWh/m3
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 2.0
+    - 10.0
+    default: 4.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The demand and macro coupling (batch 29)
+    source_url: null
     users:
-    - Water
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   dfi_share:
     name: Dfi share
     description: The DFI facilities' supply of the project's debt financing. Default aligned so the three
@@ -8979,6 +9066,24 @@ parameters:
     users:
     - Policymakers
     source: docs/params.md
+  electrified_industrial_heat_twh:
+    name: Electrified industrial heat twh
+    description: 'Electrified industrial process heat: the electrification share times total process heat
+      demand. 2.0 TWh at defaults, against 20 TWh of thermal demand.'
+    category: Industry
+    type: float
+    unit: TWh/year
+    range:
+    - 0.0
+    - 200.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The demand and macro coupling (batch 29)
+    users:
+    - Planners
+    - Regulators
   electrified_population:
     name: Electrified population
     description: 'electrified population: the compliance register''s derived quantity. The population
@@ -8997,6 +9102,24 @@ parameters:
     users:
     - Regulators
     - Planners
+  electrified_route_km:
+    name: Electrified route km
+    description: 'Electrified route-kilometres: the electrification share times the rail network''s route
+      length. 400 km at defaults. The share was inert because the base it is a share of did not exist.'
+    category: Transport
+    type: float
+    unit: km
+    range:
+    - 0.0
+    - 50000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The demand and macro coupling (batch 29)
+    users:
+    - Planners
+    - Regulators
   electrolyser_capacity:
     name: Electrolyser capacity
     description: Electrolyser capacity
@@ -10790,6 +10913,25 @@ parameters:
     users:
     - Regulators
     - Planners
+  foreign_currency_debt_share:
+    name: Foreign currency debt share
+    description: 'The share of the debt stock denominated in foreign currency: the notional that needs
+      hedging. 60% is the order for an emerging-market project financed in hard currency.'
+    category: Finance
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.6
+    role: free
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The demand and macro coupling (batch 29)
+    users:
+    - Planners
+    - Regulators
   foreign_direct_investment:
     name: Foreign direct investment
     description: Foreign direct investment
@@ -10973,6 +11115,24 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  freight_electric_tonne_km:
+    name: Freight electric tonne km
+    description: 'Freight tonne-kilometres moved electrically: the freight electrification share times
+      total tonne-km. 2.25 bn tonne-km at defaults, against a 45 bn total.'
+    category: Transport
+    type: float
+    unit: tonne*km/year
+    range:
+    - 0.0
+    - 1000000000000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The demand and macro coupling (batch 29)
+    users:
+    - Planners
+    - Regulators
   freight_electrification:
     name: Freight electrification share
     description: Share of freight tonne-kilometres moved by electric drivetrain. A share.
@@ -12362,20 +12522,31 @@ parameters:
     - Financial analysts
   heat_pump_cop:
     name: Heat pump cop
-    description: Heat pump COP
+    description: 'Coefficient of performance: heat delivered per unit of electricity. Retyped from None
+      to dimensionless with the catalog''s own default. Below 2 a heat pump is a resistive heater with
+      extra steps, and 6 is the top of the ground-source range at mild ambient. Held as a constant rather
+      than a temperature curve because the graph''s temperature_increase is itself a placeholder with
+      no unit, and a curve over a placeholder is a curve over nothing.'
     category: Sector
+    subcategory: null
     type: float
+    unit: '1'
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 2.0
+    - 6.0
+    default: 3.5
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The demand and macro coupling (batch 29)
+    source_url: null
     users:
-    - Households
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   heat_pump_cost:
     name: Heat pump capital cost
     description: Installed cost of a heat pump per kilowatt of thermal capacity. The range depends on
@@ -12399,6 +12570,26 @@ parameters:
     priority: P2
     status: existing
     deprecated_by: null
+  heat_pump_electricity_saving_mwh_per_year:
+    name: Heat pump electricity saving mwh per year
+    description: 'The electricity heat pumps displace: the adoption share times the household count times
+      household consumption times (1 - 1/COP). The bracket is the fraction of resistive heat''s electricity
+      a heat pump does not draw, so the product is a saving and not a load. 535,714 MWh/year at defaults.
+      It is the only reading of the COP node that turns it into arithmetic.'
+    category: Households
+    type: float
+    unit: MWh/year
+    range:
+    - 0.0
+    - 100000000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The demand and macro coupling (batch 29)
+    users:
+    - Planners
+    - Regulators
   heat_stress:
     name: Heat stress
     description: Heat stress
@@ -12452,6 +12643,25 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  household_batteries:
+    name: Household batteries
+    description: 'Household battery systems installed: the adoption share times the household count. A
+      count a report can name -- 500,000 at defaults -- rather than a share of nothing, which is what
+      the adoption node was before this equation.'
+    category: Households
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 100000000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The demand and macro coupling (batch 29)
+    users:
+    - Planners
+    - Regulators
   household_consumption_mwh_per_year:
     name: Household consumption
     description: Mean annual household electricity consumption.
@@ -12749,20 +12959,29 @@ parameters:
     source: docs/params.md
   hydrogen_export_port:
     name: Hydrogen export port
-    description: Export port
-    category: Sector
+    description: 'The export terminal''s average throughput in megawatts: the annual hydrogen energy the
+      terminal loads, spread over the year. A port is not a nameplate -- the berth count and the storage
+      inventory are the other two readings and the graph carries neither. 2.28 MW at the 20,000 MWh/year
+      default.'
+    category: Transport
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 1000.0
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The demand and macro coupling (batch 29)
+    source_url: null
     users:
-    - Industry
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   hydrogen_export_price:
     name: Hydrogen export price
     description: 'The price green hydrogen realises at the export terminal: 100 USD/MWh is about 3.3 USD/kg
@@ -13663,20 +13882,31 @@ parameters:
     - Financial analysts
   industrial_heat_demand:
     name: Industrial heat demand
-    description: Industrial heat demand
+    description: 'Industrial process heat in the year, on a thermal basis. Retyped from None to the catalog''s
+      own TWh/year. The 20 TWh default is a scenario assumption -- about 1.7 times the graph''s industrial
+      electricity demand -- and it is an assumption, not a measurement: the heat-to-electricity ratio
+      of an industrial base is a survey result this repository does not hold. The ceiling narrows the
+      catalog''s 0-500 to 200 TWh, several times the graph''s whole electricity demand.'
     category: Sector
+    subcategory: null
     type: float
+    unit: TWh/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 200.0
+    default: 20.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: existing
+    categories: []
+    source: The demand and macro coupling (batch 29)
+    source_url: null
     users:
-    - Industry
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   industrial_heat_electrification:
     name: Industrial heat electrification share
     description: Fraction of industrial heat demand met by electricity. A share.
@@ -14239,20 +14469,31 @@ parameters:
     deprecated_by: null
   irrigation_pumping_demand:
     name: Irrigation pumping demand
-    description: Irrigation pumping demand
+    description: The electricity irrigation pumping draws in the year. Retyped from None to the catalog's
+      own TWh/year; the 0.5 TWh default is 15% of the graph's agricultural demand, which is the fraction
+      the sector's own pumping is usually taken to be -- stated as a scenario input, not derived. The
+      20 TWh ceiling is 43% of the whole system's demand at defaults, which is already an implausibly
+      irrigation-heavy economy.
     category: Sector
+    subcategory: null
     type: float
+    unit: TWh/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 20.0
+    default: 0.5
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The demand and macro coupling (batch 29)
+    source_url: null
     users:
-    - Agriculture
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   islanding_capability:
     name: Islanding capability
     description: The share of primary feeders able to island with local generation. A share of the 500
@@ -15976,20 +16217,68 @@ parameters:
     source: docs/params.md
   lpg_subsidies:
     name: Lpg subsidies
-    description: LPG subsidy
+    description: The subsidy per kilogram of LPG, in currency. A per-unit rate, matching the three electricity
+      subsidy siblings, which are all USD/MWh, so the spend is rate times volume across the whole subsidy
+      family. Retyped from None; the 5 USD/kg ceiling is the full retail price of a cylinder.
     category: Policy
+    subcategory: null
     type: float
+    unit: USD/kg
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 5.0
+    default: 0.5
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The demand and macro coupling (batch 29)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lpg_subsidy_spend_usd_per_year:
+    name: Lpg subsidy spend usd per year
+    description: 'The annual LPG subsidy bill: the per-kilogram subsidy times the share of households
+      cooking with LPG times the household count times the per-household burn. 6.0e7 USD/year at defaults.
+      A rate-based levy with the sign flipped, which is the same identity the withholding-tax products
+      use.'
+    category: Finance
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 500000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The demand and macro coupling (batch 29)
+    users:
+    - Planners
+    - Regulators
+  lpg_use_kg_per_household_year:
+    name: Lpg use kg per household year
+    description: 'LPG burnt by a household that uses it: roughly a 12.5 kg cylinder every five weeks.
+      A mass balance, not a measurement.'
+    category: Households
+    type: float
+    unit: kg/year
+    range:
+    - 0.0
+    - 1000.0
+    default: 150.0
+    role: free
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The demand and macro coupling (batch 29)
+    users:
+    - Planners
+    - Regulators
   maintenance_duration:
     name: Maintenance duration
     description: 'Mean hours per planned maintenance event: routine servicing at the low end, a major
@@ -18212,25 +18501,27 @@ parameters:
     source: docs/params.md
   parametric_insurance:
     name: Parametric insurance (absolute)
-    description: FIRM-SPECIFIC. The share-of-loss version and the trigger threshold are declared in Part
-      A. Not corrected.
-    category: Insurance & Catastrophe
+    description: 'The loss a parametric instrument pays out in an average year: the share of the loss
+      its trigger covers times the expected annual loss. Priced against aal_usd_million, the base the
+      finance batches already ship, so the payout and the premium that covers it sit on one base. Retyped
+      from the dimensionless placeholder.'
+    category: Finance
     subcategory: null
     type: float
-    unit: '1'
+    unit: USD million
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500000.0
     initial: null
-    role: free
-    determinism: fixed
+    role: derived
+    determinism: policy
     categories: []
-    source: Firm's product design
+    source: The demand and macro coupling (batch 29)
     source_url: null
     users:
-    - Insurance
-    priority: P2
+    - Planners
+    - Regulators
+    priority: P1
     status: to_build
     deprecated_by: null
   parametric_insurance_coverage:
@@ -19816,22 +20107,50 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
-  protected_areas:
-    name: Protected areas
-    description: Protected areas
-    category: Land
+  protected_area_fraction:
+    name: Protected area fraction
+    description: 'The share of the project footprint that falls inside a protected area. Default 0 because
+      no protected-area layer is in the graph: a default of 0.17 would claim a sixth of every project
+      sits inside a designation, which is a fabricated measurement. The range admits any measured overlap.'
+    category: Environmental
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.0
     role: free
-    determinism: fixed
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The demand and macro coupling (batch 29)
+    users:
+    - Planners
+    - Regulators
+  protected_areas:
+    name: Protected areas
+    description: 'Hectares of the project footprint falling inside a protected area: the overlap share
+      times the land take. An area rather than a count, because what a designation constrains is the ground
+      you may disturb, not the number of sites. Retyped from None to hectare.'
+    category: Environmental
+    subcategory: null
+    type: float
+    unit: hectare
+    range:
+    - 0.0
+    - 500000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The demand and macro coupling (batch 29)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: integrate
-    users:
-    - Developers
-    source: docs/params.md
+    deprecated_by: null
   public_transport_passenger_km_per_year:
     name: Public transport passenger km per year
     description: 'public transport passenger km per year: the extensive-base coupling''s derived quantity.
@@ -19960,6 +20279,27 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  railway_route_km:
+    name: Railway route km
+    description: 'The route length of the national rail network, in kilometres: the base the railway electrification
+      share was waiting for. 2,000 route-km is a single-country network of the size the graph''s other
+      bases assume (45,000 distribution circuit-km, 12,000 transmission-km). Free with a default, following
+      the extensive-bases idiom the supply batches use.'
+    category: Transport
+    type: float
+    unit: km
+    range:
+    - 0.0
+    - 50000.0
+    default: 2000.0
+    role: free
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The demand and macro coupling (batch 29)
+    users:
+    - Planners
+    - Regulators
   ramp_rate_coal:
     name: Ramp rate coal
     description: Coal ramp rate
@@ -20647,20 +20987,48 @@ parameters:
     source: docs/params.md
   remittance_flows:
     name: Remittance flows
-    description: Remittance flows
+    description: 'Remittances received per year: the share of household income arriving as transfers,
+      times household income, times the number of households. Measured against the household income base
+      rather than GDP, because remittances are a household transfer and the household base is the one
+      the graph carries. Retyped from None.'
     category: Macro
+    subcategory: null
     type: float
+    unit: USD/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 50000000000000.0
+    initial: null
+    role: derived
+    determinism: stochastic
+    categories: []
+    source: The demand and macro coupling (batch 29)
+    source_url: null
     users:
-    - Households
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  remittance_income_share:
+    name: Remittance income share
+    description: The share of household income arriving as remittance transfers. 5% is the order remittance-receiving
+      economies show; the range admits up to half, the ceiling for a household that is mostly transfer-funded.
+    category: Macro
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 0.5
+    default: 0.05
+    role: free
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The demand and macro coupling (batch 29)
+    users:
+    - Planners
+    - Regulators
   renewable_curtailment_limit:
     name: Renewable curtailment limit
     description: Maximum curtailment
@@ -21604,20 +21972,29 @@ parameters:
     deprecated_by: null
   sacred_sites:
     name: Sacred sites
-    description: Sacred sites
-    category: Land
+    description: Expected count of sacred and culturally significant sites inside the project footprint.
+      Same construction as archaeological_sites on the sacred-site density layer, so a siting decision
+      can compare the two exposures directly. The two layers are separate measurements and stay separable
+      rather than being summed into one heritage count.
+    category: Environmental
+    subcategory: null
     type: float
+    unit: sites
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: integrate
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: stochastic
+    categories: []
+    source: The demand and macro coupling (batch 29)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: integrate
+    deprecated_by: null
   sacred_sites_density:
     name: Sacred sites density
     description: Number of documented sacred sites per hundred square kilometres in the study area. Distinct
@@ -22104,20 +22481,30 @@ parameters:
     - Regulators
   shipping_fuel_demand:
     name: Shipping fuel demand
-    description: Shipping fuel demand
+    description: 'Marine bunker fuel loaded in the year, on an LHV energy basis. Retyped from None for
+      the same reason as aviation: the green-fuel share needs a dimensioned base. 2 TWh is about 170 kt
+      of heavy fuel oil; the ceiling is ten times the shipped value and the top of a single-country bunker
+      market.'
     category: Sector
+    subcategory: null
     type: float
+    unit: MWh/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 20000000.0
+    default: 2000000.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The demand and macro coupling (batch 29)
+    source_url: null
     users:
-    - Shipping
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   shs_cost:
     name: Solar home system cost
     description: Delivered cost per solar home system to the customer. The unit reads as the per-system
@@ -23450,22 +23837,51 @@ parameters:
     users:
     - Traders
     source: docs/params.md
-  strategic_reserves:
-    name: Strategic reserves
-    description: Strategic reserves
-    category: Geopol
+  strategic_reserve_days:
+    name: Strategic reserve days
+    description: The strategic stock cover the policy declares, in days. 90 days is the IEA emergency-stockholding
+      convention; the range runs to a full year so a policy that declares more is expressible rather than
+      clipped.
+    category: Energy Security
     type: float
+    unit: day
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 365.0
+    default: 90.0
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The demand and macro coupling (batch 29)
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+  strategic_reserves:
+    name: Strategic reserves
+    description: 'The strategic stock held, as a volume of energy: the days of cover the policy declares,
+      times annual demand, over the days in a year. Days of total demand, not days of net imports: the
+      IEA convention is import cover, and net_imports_twh is signed and zero at defaults, so an import-based
+      stock would need an abs the DSL cannot differentiate. Retyped from None to TWh.'
+    category: Energy Security
+    subcategory: null
+    type: float
+    unit: TWh
+    range:
+    - 0.0
+    - 20000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The demand and macro coupling (batch 29)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   supply_chain_concentration:
     name: Supply chain concentration
     description: Herfindahl-Hirschman Index of supplier concentration, bounded in [0, 10000]. The shipped
@@ -23490,6 +23906,24 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
+  synthetic_aviation_fuel_mwh:
+    name: Synthetic aviation fuel mwh
+    description: 'Synthetic aviation fuel loaded in the year: the SAF share times aviation fuel demand.
+      150,000 MWh at defaults. The share needed a dimensioned base and the base now exists.'
+    category: Transport
+    type: float
+    unit: MWh/year
+    range:
+    - 0.0
+    - 20000000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The demand and macro coupling (batch 29)
+    users:
+    - Planners
+    - Regulators
   synthetic_fuel_share_aviation:
     name: SAF share in aviation
     description: Share of aviation fuel that is synthetic. A share.
@@ -23534,6 +23968,24 @@ parameters:
     priority: P2
     status: existing
     deprecated_by: null
+  synthetic_shipping_fuel_mwh:
+    name: Synthetic shipping fuel mwh
+    description: 'Synthetic marine fuel loaded in the year: the green-fuel share times bunker demand.
+      100,000 MWh at defaults.'
+    category: Transport
+    type: float
+    unit: MWh/year
+    range:
+    - 0.0
+    - 20000000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The demand and macro coupling (batch 29)
+    users:
+    - Planners
+    - Regulators
   system_inertia_mws:
     name: System inertia
     description: 'Kinetic energy stored in online synchronous machines at nominal frequency. Corrected
@@ -24006,20 +24458,28 @@ parameters:
     source: docs/params.md
   temporary_camp_load:
     name: Temporary camp load
-    description: Refugee camp load
-    category: Demand
+    description: 'The power a resettlement camp draws: the displaced population, divided by household
+      size to get households, times the consumption an energy-poor household actually draws, spread over
+      the year. 0.89 MW at defaults -- 100,000 displaced people in 22,222 households.'
+    category: Households
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 500.0
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The demand and macro coupling (batch 29)
+    source_url: null
     users:
-    - Humanitarian
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   terrorism_risk:
     name: Terrorism risk
     description: Terrorism risk
@@ -24757,20 +25217,30 @@ parameters:
     deprecated_by: null
   transport_logistics:
     name: Transport logistics
-    description: Transport logistics
+    description: 'Freight tonne-kilometres moved in the year: the base the batch-20 freight share was
+      deferred for. Retyped from None to tonne*km/year. 45 bn tonne-km at 45 M people is about 1,000 tonne-km
+      per person, the low end of the middle-income band; the 1e12 ceiling is twenty times that and above
+      any single country''s freight task.'
     category: Asset
+    subcategory: null
     type: float
+    unit: tonne*km/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1000000000000.0
+    default: 45000000000.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The demand and macro coupling (batch 29)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   tsam_segment_hours:
     name: Tsam segment hours
     description: 'The length of one time-slice segment: a day divided by the segment count. Twenty-four
@@ -25761,27 +26231,48 @@ parameters:
     users:
     - Developers
     source: docs/params.md
-  weather_derivatives:
-    name: Weather derivatives notional
-    description: FIRM-SPECIFIC. The notional of a weather derivative depends on the exposure it hedges.
-      Not corrected.
-    category: Insurance & Catastrophe
-    subcategory: null
+  weather_derivative_notional_share:
+    name: Weather derivative notional share
+    description: The share of revenue hedged with weather derivatives. A policy dial, defaulted at a tenth
+      of revenue.
+    category: Finance
     type: float
     unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    initial: null
+    - 1.0
+    default: 0.1
     role: free
-    determinism: fixed
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The demand and macro coupling (batch 29)
+    users:
+    - Planners
+    - Regulators
+  weather_derivatives:
+    name: Weather derivatives notional
+    description: 'The notional of the weather hedge carried, in currency per year: the share of revenue
+      the firm hedges, times revenue. A notional against revenue rather than a weather-sensitive revenue
+      base, because the revenue the derivative protects is the revenue the firm actually books. Retyped
+      from the dimensionless placeholder.'
+    category: Finance
+    subcategory: null
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 1000000000000.0
+    initial: null
+    role: derived
+    determinism: policy
     categories: []
-    source: Firm's hedge register
+    source: The demand and macro coupling (batch 29)
     source_url: null
     users:
-    - Insurance
-    priority: P3
+    - Planners
+    - Regulators
+    priority: P1
     status: to_build
     deprecated_by: null
   weighted_average_cost_of_capital:
@@ -26651,6 +27142,29 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{agricultural}_{demand\_twh} = \mathrm{agricultural}_{demand\_share} \mathrm{base}_{demand\_twh}
+  agricultural_irrigation_load_definition:
+    name: The irrigation load
+    description: 'The average power irrigation pumping draws: the annual pumping energy in TWh converted
+      to MWh and divided by the year''s 8,760 hours. It is an average and not a peak -- a load that runs
+      in daylight and in season has a peak well above this number, and the graph carries one annual energy
+      figure for it, so the average is the honest reading. At the shipped 0.5 TWh/year it is 57.1 MW.'
+    system: demand_supply
+    lhs: agricultural_irrigation_load
+    rhs: irrigation_pumping_demand * 1000000 / 8760
+    relation: eq
+    parameters:
+    - agricultural_irrigation_load
+    - irrigation_pumping_demand
+    free_variables: []
+    determined_variables:
+    - agricultural_irrigation_load
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{agricultural}_{irrigation\_load} = \frac{1000000 \mathrm{irrigation}_{pumping\_demand}}{8760}
   allowed_revenue_requirement_definition:
     name: Allowed revenue requirement
     description: Depreciation plus the allowed return on the base, with that return taken as the blend
@@ -26819,6 +27333,30 @@ equations:
     priority: P1
     reference: World Bank Regulation of Utilities handbook, revenue caps
     latex: \mathrm{applied}_{tariff\_usd\_per\_mwh} = \mathrm{regulated}_{tariff\_usd\_per\_mwh} \mathrm{revenue}_{cap}
+  archaeological_sites_definition:
+    name: Archaeological sites
+    description: 'Expected count of recorded archaeological sites inside the project footprint: the measured
+      site density per 100 km2 times the land take converted to the density''s own denominator. The 10000
+      is exact, not a fudge: one hectare is 0.01 km2, so hectares divided by 10,000 is hectares expressed
+      in units of 100 km2. A fractional value is the expectation, not a count of objects.'
+    system: financial
+    lhs: archaeological_sites
+    rhs: archaeological_sites_density * land_area_hectares / 10000
+    relation: eq
+    parameters:
+    - archaeological_sites
+    - archaeological_sites_density
+    - land_area_hectares
+    free_variables: []
+    determined_variables:
+    - archaeological_sites
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{archaeological}_{sites} = \frac{\mathrm{archaeological}_{sites\_density} \mathrm{land}_{area\_hectares}}{10000}
   article_6_credits_definition:
     name: The Article 6.2 transferred volume
     description: 'The volume transferred bilaterally under Article 6.2, which is the share carrying a
@@ -29066,6 +29604,35 @@ equations:
     priority: P1
     reference: The catalog's own duplicate rows, resolved
     latex: \mathrm{cultural}_{heritage\_impact} = \mathrm{cultural}_{heritage\_impact\_score}
+  currency_hedge_cost_usd_per_year_definition:
+    name: The currency hedge charge
+    description: 'The annual charge for hedging currency exposure: the hedge rate times the foreign-currency
+      share of the debt stock times the debt tranche. The 1000 is kW per MW, the graph''s own convention
+      for turning a per-kilowatt capital cost into the fleet''s total, and the shape follows sovereign_risk_charge_usd_per_year
+      and technology_risk_charge_usd_per_year deliberately. 1.512e8 USD/year at defaults.'
+    system: financial
+    lhs: currency_hedge_cost_usd_per_year
+    rhs: currency_hedge_cost * foreign_currency_debt_share * debt_fraction * capex_usd_per_kw * total_capacity_mw
+      * 1000
+    relation: eq
+    parameters:
+    - currency_hedge_cost_usd_per_year
+    - capex_usd_per_kw
+    - currency_hedge_cost
+    - debt_fraction
+    - foreign_currency_debt_share
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - currency_hedge_cost_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{currency}_{hedge\_cost\_usd\_per\_year} = 1000 \mathrm{currency}_{hedge\_cost} \mathrm{foreign}_{currency\_debt\_share}
+      \mathrm{debt}_{fraction} \mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}
   customs_duty_alias:
     name: The customs duty rate
     description: 'The catalog carries the equipment duty twice, as `customs_duty` and as `import_duty_equipment`,
@@ -29425,6 +29992,30 @@ equations:
     linearity: linear
     latex: \mathrm{residential}_{demand\_share} + \mathrm{commercial}_{demand\_share} + \mathrm{industrial}_{demand\_share}
       + \mathrm{agricultural}_{demand\_share} \leq 1
+  desalination_demand_definition:
+    name: The desalination load
+    description: 'The electricity a desalination programme draws: the annual water volume times the specific
+      energy of the process. The intensity node carries the process choice and this node carries the scale.
+      The 1000 is MWh per GWh-equivalent division -- kWh/m3 times m3/year is kWh/year, and the node is
+      declared in MWh/year. At 50 Mm3/year and 4 kWh/m3 it is 200,000 MWh/year.'
+    system: water_energy
+    lhs: desalination_demand
+    rhs: desalination_capacity * desalination_energy / 1000
+    relation: eq
+    parameters:
+    - desalination_demand
+    - desalination_capacity
+    - desalination_energy
+    free_variables: []
+    determined_variables:
+    - desalination_demand
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Bottom-up load synthesis (catalog method cell)
+    latex: \mathrm{desalination}_{demand} = \frac{\mathrm{desalination}_{capacity} \mathrm{desalination}_{energy}}{1000}
   direct_jobs_definition:
     name: Direct jobs
     description: Construction and O&M jobs the installed fleet supports.
@@ -29649,6 +30240,31 @@ equations:
     reference: null
     latex: \mathrm{electricity}_{subsidy\_spend\_usd\_per\_year} = 1000000 \mathrm{electricity}_{subsidies}
       \mathrm{demand}_{twh}
+  electrified_industrial_heat_twh_definition:
+    name: Electrified industrial heat
+    description: 'Electrified industrial process heat: the electrification share times total process heat
+      demand. 2.0 TWh of 20 TWh at defaults. The heat demand is on a thermal basis and the product is
+      the electricity that replaces it, so no efficiency enters here -- a heat pump''s COP would, and
+      the graph carries no industrial COP.'
+    system: demand_supply
+    lhs: electrified_industrial_heat_twh
+    rhs: industrial_heat_electrification * industrial_heat_demand
+    relation: eq
+    parameters:
+    - electrified_industrial_heat_twh
+    - industrial_heat_demand
+    - industrial_heat_electrification
+    free_variables: []
+    determined_variables:
+    - electrified_industrial_heat_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{electrified}_{industrial\_heat\_twh} = \mathrm{industrial}_{heat\_electrification}
+      \mathrm{industrial}_{heat\_demand}
   electrified_population_definition:
     name: Electrified population
     description: 'The population the access target names: the target share times the country''s population.'
@@ -29670,6 +30286,28 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{electrified}_{population} = \mathrm{electrification}_{rate\_target} \mathrm{population}_{total}
+  electrified_route_km_definition:
+    name: Electrified route-kilometres
+    description: 'Electrified route-kilometres: the rail electrification share times the network''s route
+      length. The share was a dial with no base; this is the product it was waiting for. 400 km at defaults.'
+    system: demand_supply
+    lhs: electrified_route_km
+    rhs: railway_electrification * railway_route_km
+    relation: eq
+    parameters:
+    - electrified_route_km
+    - railway_electrification
+    - railway_route_km
+    free_variables: []
+    determined_variables:
+    - electrified_route_km
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{electrified}_{route\_km} = \mathrm{railway}_{electrification} \mathrm{railway}_{route\_km}
   electrolyser_cost_alias:
     name: Electrolyser capital cost (legacy) is Electrolyser capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `electrolyser_cost`
@@ -30433,6 +31071,28 @@ equations:
     reference: null
     latex: \mathrm{free}_{trade\_zone\_benefit\_usd} = 1000 \mathrm{free}_{trade\_zone\_benefits} \mathrm{import}_{duty\_equipment}
       \mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}
+  freight_electric_tonne_km_definition:
+    name: Electric freight tonne-kilometres
+    description: 'Freight tonne-kilometres moved electrically: the freight electrification share times
+      total tonne-km. 2.25 bn of 45 bn at defaults.'
+    system: demand_supply
+    lhs: freight_electric_tonne_km
+    rhs: freight_electrification * transport_logistics
+    relation: eq
+    parameters:
+    - freight_electric_tonne_km
+    - freight_electrification
+    - transport_logistics
+    free_variables: []
+    determined_variables:
+    - freight_electric_tonne_km
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{freight}_{electric\_tonne\_km} = \mathrm{freight}_{electrification} \mathrm{transport}_{logistics}
   frequency_nadir_definition:
     name: Frequency nadir
     description: 'The frequency after the response time, at the constant initial slope. Dimensional check:
@@ -30983,6 +31643,55 @@ equations:
     priority: P1
     reference: Short, Packey & Holt (1995), NREL/TP-462-5173
     latex: \mathrm{heat}_{pump\_annualised\_cost\_usd\_per\_kw\_year} = \mathrm{heat}_{pump\_cost} \mathrm{crf}
+  heat_pump_electricity_saving_definition:
+    name: Heat pump electricity saving
+    description: 'The electricity heat pumps displace. The bracket (1 - 1/COP) is the fraction of resistive
+      heat''s electricity a heat pump does not draw: at a COP of 3.5 the pump delivers the same heat for
+      28.6% of the resistive input, so 71.4% is saved. The product is a saving and not a load, which is
+      why it is subtracted rather than added in any balance that reads it. 535,714 MWh/year at defaults.'
+    system: demand_supply
+    lhs: heat_pump_electricity_saving_mwh_per_year
+    rhs: heat_pump_adoption * households_total * household_consumption_mwh_per_year * (1 - 1 / heat_pump_cop)
+    relation: eq
+    parameters:
+    - heat_pump_electricity_saving_mwh_per_year
+    - heat_pump_adoption
+    - heat_pump_cop
+    - household_consumption_mwh_per_year
+    - households_total
+    free_variables: []
+    determined_variables:
+    - heat_pump_electricity_saving_mwh_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{heat}_{pump\_electricity\_saving\_mwh\_per\_year} = \mathrm{heat}_{pump\_adoption}
+      \mathrm{households}_{total} \mathrm{household}_{consumption\_mwh\_per\_year} \left(1 - {\mathrm{heat}_{pump\_cop}}^{-1}\right)
+  household_batteries_definition:
+    name: Household batteries
+    description: 'Household battery systems installed: the adoption share times the household count the
+      graph derives from population and household size. 0.05 gives 500,000 household batteries at defaults.'
+    system: demand_supply
+    lhs: household_batteries
+    rhs: battery_storage_adoption * households_total
+    relation: eq
+    parameters:
+    - household_batteries
+    - battery_storage_adoption
+    - households_total
+    free_variables: []
+    determined_variables:
+    - household_batteries
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{household}_{batteries} = \mathrm{battery}_{storage\_adoption} \mathrm{households}_{total}
   households_total_definition:
     name: The household count
     description: 'The country''s households: the population divided by the mean household size. The extensive
@@ -31078,6 +31787,29 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{hydro}_{inflow\_vintage\_offset\_years} = \mathrm{hydro}_{inflow\_year} - \mathrm{solar}_{cf\_year}
+  hydrogen_export_port_definition:
+    name: The export terminal's throughput
+    description: 'The port''s average throughput in megawatts: the annual hydrogen energy the terminal
+      loads, spread over the year. A port is not a nameplate -- the berth count and the storage inventory
+      are the other two readings, and the graph carries neither -- so the average flow is what the export
+      volume determines. At 20,000 MWh/year it is 2.28 MW.'
+    system: demand_supply
+    lhs: hydrogen_export_port
+    rhs: hydrogen_export_volume / 8760
+    relation: eq
+    parameters:
+    - hydrogen_export_port
+    - hydrogen_export_volume
+    free_variables: []
+    determined_variables:
+    - hydrogen_export_port
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{hydrogen}_{export\_port} = \frac{\mathrm{hydrogen}_{export\_volume}}{8760}
   hydrogen_export_revenue_definition:
     name: The export programme's revenue
     description: 'The export programme''s revenue: the terminal price per MWh times the energy the terminals
@@ -32853,6 +33585,33 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  lpg_subsidy_spend_usd_per_year_definition:
+    name: The LPG subsidy bill
+    description: 'The annual LPG subsidy bill: the per-kilogram subsidy times the share of households
+      cooking with LPG times the household count times the per-household burn. A rate-based levy with
+      the sign flipped, which is the same identity the withholding-tax products use. 6.0e7 USD/year at
+      defaults.'
+    system: financial
+    lhs: lpg_subsidy_spend_usd_per_year
+    rhs: lpg_subsidies * cooking_lpg_penetration * households_total * lpg_use_kg_per_household_year
+    relation: eq
+    parameters:
+    - lpg_subsidy_spend_usd_per_year
+    - cooking_lpg_penetration
+    - households_total
+    - lpg_subsidies
+    - lpg_use_kg_per_household_year
+    free_variables: []
+    determined_variables:
+    - lpg_subsidy_spend_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+    latex: \mathrm{lpg}_{subsidy\_spend\_usd\_per\_year} = \mathrm{lpg}_{subsidies} \mathrm{cooking}_{lpg\_penetration}
+      \mathrm{households}_{total} \mathrm{lpg}_{use\_kg\_per\_household\_year}
   maladaptation_risk_alias:
     name: The maladaptation risk
     description: The risk that an adaptation investment makes the position worse, under the catalog's
@@ -33243,6 +34002,29 @@ equations:
     priority: P1
     reference: Stoft 2002, Power System Economics, ch. 5
     latex: \mathrm{reserve}_{margin} = \mathrm{reserve}_{margin\_actual}
+  parametric_insurance_definition:
+    name: Parametric insurance payout
+    description: 'The loss a parametric instrument pays out in an average year: the share of the loss
+      its trigger covers times the expected annual loss. Priced against aal_usd_million, the base the
+      finance batches already ship, so the payout and the premium that covers it sit on one base.'
+    system: financial
+    lhs: parametric_insurance
+    rhs: parametric_insurance_coverage * aal_usd_million
+    relation: eq
+    parameters:
+    - parametric_insurance
+    - aal_usd_million
+    - parametric_insurance_coverage
+    free_variables: []
+    determined_variables:
+    - parametric_insurance
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{parametric}_{insurance} = \mathrm{parametric}_{insurance\_coverage} \mathrm{aal}_{usd\_million}
   parent_company_guarantee_definition:
     name: The guaranteed debt
     description: 'The debt tranche carrying the guarantee: the guaranteed share of the debt-financed part
@@ -33855,6 +34637,29 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{property}_{tax} = \mathrm{property}_{tax\_rate} \mathrm{regulatory}_{asset\_base}
+  protected_areas_definition:
+    name: Protected areas
+    description: 'Hectares of the project footprint falling inside a protected area: the overlap share
+      times the land take. An area rather than a count, because what a designation constrains is the ground
+      you may disturb.'
+    system: financial
+    lhs: protected_areas
+    rhs: protected_area_fraction * land_area_hectares
+    relation: eq
+    parameters:
+    - protected_areas
+    - land_area_hectares
+    - protected_area_fraction
+    free_variables: []
+    determined_variables:
+    - protected_areas
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{protected}_{areas} = \mathrm{protected}_{area\_fraction} \mathrm{land}_{area\_hectares}
   public_transport_passenger_km_definition:
     name: Public transport passenger-kilometres
     description: 'The passenger-kilometres carried on public transport: the share of total travel the
@@ -34215,6 +35020,32 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  remittance_flows_definition:
+    name: Remittance flows
+    description: 'Remittances received per year: the share of household income arriving as transfers,
+      times household income, times the number of households. Measured against the household income base
+      rather than GDP, because remittances are a household transfer and the household base is the one
+      the graph carries.'
+    system: financial
+    lhs: remittance_flows
+    rhs: remittance_income_share * household_income_usd_per_year * households_total
+    relation: eq
+    parameters:
+    - remittance_flows
+    - household_income_usd_per_year
+    - households_total
+    - remittance_income_share
+    free_variables: []
+    determined_variables:
+    - remittance_flows
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{remittance}_{flows} = \mathrm{remittance}_{income\_share} \mathrm{household}_{income\_usd\_per\_year}
+      \mathrm{households}_{total}
   renewable_generation_target_definition:
     name: The renewable target's energy face value
     description: 'The renewable target in energy terms: the share of the generation the balance computes.
@@ -34634,6 +35465,29 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  sacred_sites_definition:
+    name: Sacred sites
+    description: Expected count of sacred and culturally significant sites inside the project footprint.
+      Same construction as archaeological_sites on the sacred-site density layer, so a siting decision
+      can compare the two exposures directly.
+    system: financial
+    lhs: sacred_sites
+    rhs: sacred_sites_density * land_area_hectares / 10000
+    relation: eq
+    parameters:
+    - sacred_sites
+    - land_area_hectares
+    - sacred_sites_density
+    free_variables: []
+    determined_variables:
+    - sacred_sites
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{sacred}_{sites} = \frac{\mathrm{sacred}_{sites\_density} \mathrm{land}_{area\_hectares}}{10000}
   saidi_ceiling_bound:
     name: Saidi ceiling bound
     description: The system's SAIDI must sit inside the regulator's ceiling.
@@ -35331,6 +36185,74 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{steel}_{scrap\_eaf\_share} + \mathrm{steel}_{h2\_dri\_share} \leq 1
+  strategic_reserves_definition:
+    name: Strategic reserves
+    description: 'The strategic stock held, as a volume of energy: the days of cover the policy declares,
+      times annual demand, over the days in a year. Days of total demand, not of net imports: the IEA
+      convention is import cover, and an import-based stock would need an abs over a signed flow the DSL
+      cannot differentiate.'
+    system: energy_balance
+    lhs: strategic_reserves
+    rhs: strategic_reserve_days * demand_twh / 365
+    relation: eq
+    parameters:
+    - strategic_reserves
+    - demand_twh
+    - strategic_reserve_days
+    free_variables: []
+    determined_variables:
+    - strategic_reserves
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{strategic}_{reserves} = \frac{\mathrm{strategic}_{reserve\_days} \mathrm{demand}_{twh}}{365}
+  synthetic_aviation_fuel_mwh_definition:
+    name: Synthetic aviation fuel
+    description: 'Synthetic aviation fuel loaded in the year: the SAF share times aviation fuel demand.
+      150,000 MWh at defaults, 5% of a 3 TWh market.'
+    system: demand_supply
+    lhs: synthetic_aviation_fuel_mwh
+    rhs: synthetic_fuel_share_aviation * aviation_fuel_demand
+    relation: eq
+    parameters:
+    - synthetic_aviation_fuel_mwh
+    - aviation_fuel_demand
+    - synthetic_fuel_share_aviation
+    free_variables: []
+    determined_variables:
+    - synthetic_aviation_fuel_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{synthetic}_{aviation\_fuel\_mwh} = \mathrm{synthetic}_{fuel\_share\_aviation} \mathrm{aviation}_{fuel\_demand}
+  synthetic_shipping_fuel_mwh_definition:
+    name: Synthetic marine fuel
+    description: 'Synthetic marine fuel loaded in the year: the green-fuel share times bunker demand.
+      100,000 MWh at defaults, 5% of a 2 TWh market.'
+    system: demand_supply
+    lhs: synthetic_shipping_fuel_mwh
+    rhs: synthetic_fuel_share_shipping * shipping_fuel_demand
+    relation: eq
+    parameters:
+    - synthetic_shipping_fuel_mwh
+    - shipping_fuel_demand
+    - synthetic_fuel_share_shipping
+    free_variables: []
+    determined_variables:
+    - synthetic_shipping_fuel_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{synthetic}_{shipping\_fuel\_mwh} = \mathrm{synthetic}_{fuel\_share\_shipping} \mathrm{shipping}_{fuel\_demand}
   tariff_cost_recovery:
     name: Cost-recovery tariff
     description: 'What serving the load costs, per unit sold: the annualised fixed charge spread over
@@ -35480,6 +36402,35 @@ equations:
     reference: null
     latex: \mathrm{technology}_{risk\_charge\_usd\_per\_year} = 1000 \mathrm{technology}_{risk\_premium}
       \left(1 - \mathrm{debt}_{fraction}\right) \mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}
+  temporary_camp_load_definition:
+    name: The resettlement camp load
+    description: 'The power a resettlement camp draws: the displaced population, divided by household
+      size to get households, times the consumption an energy-poor household actually draws, spread over
+      the year. The per-household figure is the graph''s energy-poor draw and not the mean, because a
+      camp household is by construction at the bottom of the distribution; the mean would overstate the
+      load fourfold. At defaults: 5 M exposed x 2% = 100,000 people, 22,222 households, 0.89 MW.'
+    system: demand_supply
+    lhs: temporary_camp_load
+    rhs: exposed_population * resettlement_population_share * energy_poor_consumption_mwh_per_year / persons_per_household
+      / 8760
+    relation: eq
+    parameters:
+    - temporary_camp_load
+    - energy_poor_consumption_mwh_per_year
+    - exposed_population
+    - persons_per_household
+    - resettlement_population_share
+    free_variables: []
+    determined_variables:
+    - temporary_camp_load
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{temporary}_{camp\_load} = \frac{\mathrm{exposed}_{population} \mathrm{resettlement}_{population\_share}
+      \mathrm{energy}_{poor\_consumption\_mwh\_per\_year}}{8760 \mathrm{persons}_{per\_household}}
   thermal_phs_duration_ratio_definition:
     name: The thermal store's duration against pumped hydro's
     description: 'The thermal store''s duration relative to pumped hydro''s: the long-duration comparison
@@ -36209,6 +37160,29 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{wave}_{energy\_converter\_cost} = \mathrm{capex}_{marine\_wave}
+  weather_derivatives_definition:
+    name: Weather derivative notional
+    description: 'The notional of the weather hedge carried, in currency per year: the share of revenue
+      the firm hedges, times revenue. A notional against revenue rather than a weather-sensitive revenue
+      base, because the revenue the derivative protects is the revenue the firm actually books.'
+    system: financial
+    lhs: weather_derivatives
+    rhs: weather_derivative_notional_share * total_revenue_usd_per_year
+    relation: eq
+    parameters:
+    - weather_derivatives
+    - total_revenue_usd_per_year
+    - weather_derivative_notional_share
+    free_variables: []
+    determined_variables:
+    - weather_derivatives
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{weather}_{derivatives} = \mathrm{weather}_{derivative\_notional\_share} \mathrm{total}_{revenue\_usd\_per\_year}
   wheeling_charge_cost_definition:
     name: The transmission wheeling charge
     description: 'The use-of-system charge on every MWh of demand, with the 1e6 carrying TWh to MWh. It
@@ -43036,72 +44010,6 @@ relationships:
   description: The coverage a lender requires. A project can clear the physics and fail this.
   reference: null
   priority: P2
-- source: discount_rate
-  target: weighted_average_cost_of_capital
-  equation_id: wacc_alias
-  relationship: equality
-  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
-    computes.'
-- source: capex_usd_per_kw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: Gross fleet capital enters the base the allowed return is earned on.
-- source: total_capacity_mw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: The fleet's size sets the scale of the capital in the accounts.
-- source: accumulated_depreciation_fraction
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: What the books have written down between gross capital and the base.
-- source: regulatory_asset_base
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: equality
-  description: Straight-line write-down of the base over the regulatory asset life.
-- source: depreciation_life_by_asset
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: functional
-  description: A longer regulatory life spreads the base thinner over the years.
-- source: regulatory_depreciation
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: Depreciation is the first term of the revenue requirement.
-- source: regulatory_asset_base
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: The return is earned on the base, not on gross capital.
-- source: discount_rate
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: The return rate is the blend the financial block computes.
-- source: allowed_return_on_debt
-  target: cost_of_debt
-  equation_id: cost_of_debt_capped
-  relationship: constraint
-  description: The allowance binds the debt rate a scenario may carry.
-- source: allowed_return_on_equity
-  target: cost_of_equity
-  equation_id: cost_of_equity_capped
-  relationship: constraint
-  description: The allowance binds the equity return a valuation may assume.
-- source: regulated_tariff_usd_per_mwh
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: equality
-  description: The applied tariff is the recovery level in the absence of a cap.
-- source: revenue_cap
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: functional
-  description: The cap scales the recovery level; below 1 it withholds part of it.
 - source: import_duty_equipment
   target: customs_duty
   equation_id: customs_duty_alias
@@ -44082,6 +44990,504 @@ relationships:
   strength: hard
   description: Enters the product identity.
   reference: The catalog's own duplicate rows, resolved
+  priority: P1
+- source: discount_rate
+  target: weighted_average_cost_of_capital
+  equation_id: wacc_alias
+  relationship: equality
+  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
+    computes.'
+- source: capex_usd_per_kw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: Gross fleet capital enters the base the allowed return is earned on.
+- source: total_capacity_mw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: The fleet's size sets the scale of the capital in the accounts.
+- source: accumulated_depreciation_fraction
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: What the books have written down between gross capital and the base.
+- source: regulatory_asset_base
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: equality
+  description: Straight-line write-down of the base over the regulatory asset life.
+- source: depreciation_life_by_asset
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: functional
+  description: A longer regulatory life spreads the base thinner over the years.
+- source: regulatory_depreciation
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: Depreciation is the first term of the revenue requirement.
+- source: regulatory_asset_base
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return is earned on the base, not on gross capital.
+- source: discount_rate
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return rate is the blend the financial block computes.
+- source: allowed_return_on_debt
+  target: cost_of_debt
+  equation_id: cost_of_debt_capped
+  relationship: constraint
+  description: The allowance binds the debt rate a scenario may carry.
+- source: allowed_return_on_equity
+  target: cost_of_equity
+  equation_id: cost_of_equity_capped
+  relationship: constraint
+  description: The allowance binds the equity return a valuation may assume.
+- source: regulated_tariff_usd_per_mwh
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: equality
+  description: The applied tariff is the recovery level in the absence of a cap.
+- source: revenue_cap
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: functional
+  description: The cap scales the recovery level; below 1 it withholds part of it.
+- source: desalination_capacity
+  target: desalination_demand
+  equation_id: desalination_demand_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Bottom-up load synthesis (catalog method cell)
+  priority: P1
+- source: desalination_energy
+  target: desalination_demand
+  equation_id: desalination_demand_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Bottom-up load synthesis (catalog method cell)
+  priority: P1
+- source: irrigation_pumping_demand
+  target: agricultural_irrigation_load
+  equation_id: agricultural_irrigation_load_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: energy_poor_consumption_mwh_per_year
+  target: temporary_camp_load
+  equation_id: temporary_camp_load_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: exposed_population
+  target: temporary_camp_load
+  equation_id: temporary_camp_load_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: persons_per_household
+  target: temporary_camp_load
+  equation_id: temporary_camp_load_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: resettlement_population_share
+  target: temporary_camp_load
+  equation_id: temporary_camp_load_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: hydrogen_export_volume
+  target: hydrogen_export_port
+  equation_id: hydrogen_export_port_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: battery_storage_adoption
+  target: household_batteries
+  equation_id: household_batteries_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: households_total
+  target: household_batteries
+  equation_id: household_batteries_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: railway_electrification
+  target: electrified_route_km
+  equation_id: electrified_route_km_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: railway_route_km
+  target: electrified_route_km
+  equation_id: electrified_route_km_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: freight_electrification
+  target: freight_electric_tonne_km
+  equation_id: freight_electric_tonne_km_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: transport_logistics
+  target: freight_electric_tonne_km
+  equation_id: freight_electric_tonne_km_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: aviation_fuel_demand
+  target: synthetic_aviation_fuel_mwh
+  equation_id: synthetic_aviation_fuel_mwh_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: synthetic_fuel_share_aviation
+  target: synthetic_aviation_fuel_mwh
+  equation_id: synthetic_aviation_fuel_mwh_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: shipping_fuel_demand
+  target: synthetic_shipping_fuel_mwh
+  equation_id: synthetic_shipping_fuel_mwh_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: synthetic_fuel_share_shipping
+  target: synthetic_shipping_fuel_mwh
+  equation_id: synthetic_shipping_fuel_mwh_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: heat_pump_adoption
+  target: heat_pump_electricity_saving_mwh_per_year
+  equation_id: heat_pump_electricity_saving_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: heat_pump_cop
+  target: heat_pump_electricity_saving_mwh_per_year
+  equation_id: heat_pump_electricity_saving_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: household_consumption_mwh_per_year
+  target: heat_pump_electricity_saving_mwh_per_year
+  equation_id: heat_pump_electricity_saving_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: households_total
+  target: heat_pump_electricity_saving_mwh_per_year
+  equation_id: heat_pump_electricity_saving_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: industrial_heat_demand
+  target: electrified_industrial_heat_twh
+  equation_id: electrified_industrial_heat_twh_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: industrial_heat_electrification
+  target: electrified_industrial_heat_twh
+  equation_id: electrified_industrial_heat_twh_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: archaeological_sites_density
+  target: archaeological_sites
+  equation_id: archaeological_sites_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: land_area_hectares
+  target: archaeological_sites
+  equation_id: archaeological_sites_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: land_area_hectares
+  target: sacred_sites
+  equation_id: sacred_sites_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: sacred_sites_density
+  target: sacred_sites
+  equation_id: sacred_sites_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: land_area_hectares
+  target: protected_areas
+  equation_id: protected_areas_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: protected_area_fraction
+  target: protected_areas
+  equation_id: protected_areas_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: aal_usd_million
+  target: parametric_insurance
+  equation_id: parametric_insurance_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: parametric_insurance_coverage
+  target: parametric_insurance
+  equation_id: parametric_insurance_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: household_income_usd_per_year
+  target: remittance_flows
+  equation_id: remittance_flows_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: households_total
+  target: remittance_flows
+  equation_id: remittance_flows_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: remittance_income_share
+  target: remittance_flows
+  equation_id: remittance_flows_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: demand_twh
+  target: strategic_reserves
+  equation_id: strategic_reserves_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: strategic_reserve_days
+  target: strategic_reserves
+  equation_id: strategic_reserves_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: total_revenue_usd_per_year
+  target: weather_derivatives
+  equation_id: weather_derivatives_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: weather_derivative_notional_share
+  target: weather_derivatives
+  equation_id: weather_derivatives_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: capex_usd_per_kw
+  target: currency_hedge_cost_usd_per_year
+  equation_id: currency_hedge_cost_usd_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: currency_hedge_cost
+  target: currency_hedge_cost_usd_per_year
+  equation_id: currency_hedge_cost_usd_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: debt_fraction
+  target: currency_hedge_cost_usd_per_year
+  equation_id: currency_hedge_cost_usd_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: foreign_currency_debt_share
+  target: currency_hedge_cost_usd_per_year
+  equation_id: currency_hedge_cost_usd_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: currency_hedge_cost_usd_per_year
+  equation_id: currency_hedge_cost_usd_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: cooking_lpg_penetration
+  target: lpg_subsidy_spend_usd_per_year
+  equation_id: lpg_subsidy_spend_usd_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+  priority: P1
+- source: households_total
+  target: lpg_subsidy_spend_usd_per_year
+  equation_id: lpg_subsidy_spend_usd_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+  priority: P1
+- source: lpg_subsidies
+  target: lpg_subsidy_spend_usd_per_year
+  equation_id: lpg_subsidy_spend_usd_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+  priority: P1
+- source: lpg_use_kg_per_household_year
+  target: lpg_subsidy_spend_usd_per_year
+  equation_id: lpg_subsidy_spend_usd_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Rate-based levy and allowance definitions (standard fiscal accounting)
   priority: P1
 cross_validation:
 - id: carbon_price_budget_alignment

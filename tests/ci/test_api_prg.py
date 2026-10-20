@@ -466,11 +466,14 @@ def test_the_summary_serves_the_endogenous_layer(
 		len(endo_listed),
 		body["parameters"],
 	)
-	# 763 of 1296: the coupling batches converted free knobs into derived
+	# 759 of 1312: the coupling batches converted free knobs into derived
 	# quantities and named many of the rest as equation inputs. Batch 28's
 	# product layer took this count 800 to 763 -- twenty-three placeholders
 	# became derived and the rest of the batch's nodes were already free.
-	assert len(free) == 763, len(free)
+	# Batch 29 took it to 759: seven macro nodes flipped from free to derived
+	# when the equations that determine them shipped, and four more free bases
+	# arrived with the demand products.
+	assert len(free) == 759, len(free)
 
 
 # ---------------------------------------------------------------------------

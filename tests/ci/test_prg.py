@@ -1510,7 +1510,11 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# on -- it was uncoupled by the equation register and live by the rule
 	# register, which is exactly the disagreement the two spellings exist to
 	# expose, and `geothermal_effective_capex_definition` closes it.
-	assert len(dead) == 402, len(dead)
+	# Batch 29 took `uncoupled()` 422 to 393: forty nodes became coupled, of
+	# which twenty-nine were dead knobs. The other eleven were the new bases
+	# and derived charges, which arrive already coupled by their own
+	# equations and were never in this register to leave it. 402 to 373.
+	assert len(dead) == 373, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
@@ -1825,8 +1829,14 @@ def test_the_audit_reports_what_it_did_not_check():
 	workforce, the asset value and the environmental indices -- join
 	``checked`` (124 to 155), and the other eleven, the insurance products
 	and the programme spends whose bases the result does not carry, join
-	``skipped`` (200 to 227). The partition total is what the test is really
-	asserting --
+	``skipped`` (200 to 227). Batch 29 added 20 determined variables
+	(computed() went 382 to 402): three reachable from what the result
+	supplies -- ``remittance_flows`` reads household income and the household
+	count, ``lpg_subsidy_spend_usd_per_year`` reads the same household count,
+	and ``weather_derivatives`` reads total revenue -- join ``checked`` (155
+	to 158), and the other seventeen, whose bases the result does not carry,
+	join ``skipped`` (227 to 244). The partition total is what the test is
+	really asserting --
 	the two counts must sum to ``len(graph.computed())`` -- and the counts
 	are pinned beside it so a change to the register is looked at rather than
 	absorbed.
@@ -1836,8 +1846,8 @@ def test_the_audit_reports_what_it_did_not_check():
 
 	audit = audit_scenario_result(_solved())
 	assert audit.consistent
-	assert len(audit.checked) == 155, audit.checked
-	assert len(audit.skipped) == 227, audit.skipped
+	assert len(audit.checked) == 158, audit.checked
+	assert len(audit.skipped) == 244, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -1886,9 +1896,12 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# compliance layer took it 198 to 227, batch 23's extensive-base layer
 	# took it 227 to 243, batch 24's carbon-market layer took it 243 to 286,
 	# batch 25's gate-family coupling took it 286 to 299, batch 26's
-	# adequacy-and-reserve layer took it 299 to 310, and batch 28's product
-	# layer took it 310 to 382.
-	assert len(audit.skipped) == 382, audit.skipped
+	# adequacy-and-reserve layer took it 299 to 310, batch 28's product
+	# layer took it 310 to 382, and batch 29's demand-and-macro layer took
+	# it 382 to 402. The whole computed set is skipped here because the
+	# loop failed, so this is `len(computed())`, not the skipped half of a
+	# partition that ran.
+	assert len(audit.skipped) == 402, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -2779,9 +2792,9 @@ def test_the_uncertainty_register_reads_the_declarations(graph: ParameterGraph):
 	# that declared nothing uncertain, which is the silence this module exists
 	# to break.
 	assert len(reg.inputs) == 76, reg.inputs
-	assert len(reg.derived_stochastic) == 39, reg.derived_stochastic
+	assert len(reg.derived_stochastic) == 42, reg.derived_stochastic
 	assert len(reg.stochastic_edges) == 1, reg.stochastic_edges
-	# 115 nodes are declared stochastic in total: 76 settable, 39 derived.
+	# 118 nodes are declared stochastic in total: 76 settable, 42 derived.
 	# Batch 27's finance family moved both: three of its bases are declared
 	# stochastic (`aal_usd_million`, `pml_99_5_usd_million`, `microinsurance`)
 	# and one derived parameter entered the closure, `solvency_capital`,
@@ -2789,8 +2802,13 @@ def test_the_uncertainty_register_reads_the_declarations(graph: ParameterGraph):
 	# both again: two bases it retyped are declared stochastic
 	# (`fuel_price_volatility`, `geothermal_drilling_success`) and one
 	# derived parameter entered the closure, `claims_history`, which reads
-	# the loss ratio and the premium.
-	assert len(reg.inputs) + len(reg.derived_stochastic) == 115
+	# the loss ratio and the premium. Batch 29's demand-and-macro layer
+	# moved only the derived side, and by three: `archaeological_sites`,
+	# `sacred_sites` and `remittance_flows` inherit the stochasticity of
+	# the density and share bases they read, while the four demand
+	# products that also entered the computed set read fixed process
+	# parameters and stay deterministic. 39 to 42.
+	assert len(reg.inputs) + len(reg.derived_stochastic) == 118
 	assert len(reg.inputs) + len(reg.derived_stochastic) == sum(
 		1 for node in graph.nodes.values() if str(node.determinism) == "stochastic"
 	), "the register and the declarations disagree"
@@ -2940,7 +2958,7 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	# the number is the finding -- the sentence exists to stop a reader taking
 	# the declarations for a distribution, and a reach that drifts unnoticed
 	# would understate it.
-	assert "76" in text and "143" in text
+	assert "76" in text and "149" in text
 
 
 # ---------------------------------------------------------------------------
@@ -3712,13 +3730,18 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	products and the customs-duty alias, the three insurance products, the
 	capital and cash products, the eight temporal and operational scalars,
 	the seven programme spends, the ten employment and transition products
-	and the seventeen aliases, taking the sum to 417.
+	and the seventeen aliases, taking the sum to 417. Batch 29's demand and
+	macro coupling added 20 identities, all hard: the four demand-side sector
+	loads, the seven share products (households, rail, freight, the two
+	synthetic fuels, heat-pump saving and industrial heat), the seven
+	heritage-and-fiscal definitions and the two charges the macro pack's
+	dials price, taking the sum to 437.
 	"""
 	counts = graph.strength_counts()
 	assert counts, "no strength was counted"
 	assert sum(counts.values()) == len(graph.equations)
 	assert set(counts) <= {"hard", "soft", "informational"}
-	assert counts == {"hard": 414, "informational": 1, "soft": 2}, counts
+	assert counts == {"hard": 434, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -4037,16 +4060,25 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# it briefly carried an NREL ATB row, and that was wrong -- a policy
 	# target's arithmetic, `factor * (1 - share)`, is an identity rather than
 	# an external result. The batch therefore adds no citation, and the
-	# register moves by the ten that reuse existing works. A further change
-	# is a change to the register's coverage and fails here.
-	assert len(declared) == 183, f"the citation register moved: {sorted(declared)}"
+	# register moves by the ten that reuse existing works. Batch 29's
+	# demand-and-macro layer added twenty equations and two citations:
+	# `desalination_demand` takes the catalog's own bottom-up load-synthesis
+	# method cell, and `lpg_subsidy_spend_usd_per_year` takes the
+	# standard-fiscal row the batch-22 withholding-tax products already
+	# registered, so the count of distinct works stays at 47 while the
+	# register goes 183 to 185. The other eighteen carry None: the share
+	# products, the heritage and exposure definitions, the currency hedge
+	# and the four demand loads are definitions of their own operands rather
+	# than statements of an external result. A further change is a change to
+	# the register's coverage and fails here.
+	assert len(declared) == 185, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
 		"the report dropped or altered a citation the graph declares; the field "
 		"is read again, which is the thing that was not true before"
 	)
-	# The other 195 carry `None` and not an empty string: "no external
+	# The other 252 carry `None` and not an empty string: "no external
 	# source" and "a source that rendered blank" are different findings.
 	blank = [row.equation_id for row in rows if row.reference == ""]
 	assert not blank, f"a citation rendered as an empty string rather than None: {blank}"
@@ -4278,17 +4310,19 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 				f"numeric {numeric!r}"
 			)
 			compared += 1
-	assert compared == 382, (
-		f"expected 310 determined variables in the shipped library, compared "
+	assert compared == 402, (
+		f"expected 402 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "
 		f"promoted; batch 20's sector-coupling layer raised it to 182, "
 		f"batch 21's demand-and-finance layer raised it to 198, batch 22's "
 		f"compliance layer raised it to 227, batch 23's extensive-base "
 		f"layer raised it to 243, batch 24's carbon-market layer raised "
-		f"it to 286, batch 25's gate-family coupling raised it to 299, and "
-		f"batch 26's adequacy-and-reserve layer raised it to 310 -- "
-		f"every equation each batch added is affine in the "
+		f"it to 286, batch 25's gate-family coupling raised it to 299, "
+		f"batch 26's adequacy-and-reserve layer raised it to 310, and batch "
+		f"28's product layer raised it to 382 and batch 29's "
+		f"demand-and-macro layer raised it to 402 -- every equation each "
+		f"batch added is affine in the "
 		f"variable it solves for, which is the claim the "
 		f"`exact is not None` above makes, at the wider coverage"
 	)

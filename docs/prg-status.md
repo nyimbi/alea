@@ -2266,6 +2266,62 @@ direction it had not been read: not a field nothing populates, but a field
 populated from the wrong source and never diffed against the one that authored
 it.
 
+**Batch 29 -- the demand and macro coupling.** Twenty equations, 40 nodes
+coupled, no rule. The batch is authored from two research packs
+(`docs/research/coupling-packs/demand-sector.md` and `macro-fiscal.md`), and
+the two packs disagree about what a coupling build can do, which is the
+batch's content.
+
+*The demand family closes; the macro block does not.* Twenty-one demand nodes
+close: four become equation targets (the desalination load, the irrigation
+load, the resettlement camp load, the export terminal's throughput), eight
+become operands of seven share products, and eight new bases and charges come
+into being with them. Nine macro nodes close the same way. Ten macro nodes
+defer, and seven of the ten defer on the same two absent levels — a GDP figure
+and an import bill in currency. That is not a modelling choice: no formula in
+the slice can produce either, so the macro block cannot close until those
+bases are declared.
+
+*The pack that refused a computable answer.* `remittance_dependency` is
+computable today as remittances over household income, and the pack deferred
+it anyway. The name denotes a share of GDP in the literature; the household
+ratio would be a true number behind a false label, and a node that reads as
+closed is worse than one that reads as deferred. This is the one defer in the
+batch whose reason is definitional rather than a missing operand, and it is
+recorded as such.
+
+*The signed-range lesson, applied once.* `strategic_reserves` is built on days
+of total demand rather than days of net imports, which is the IEA convention.
+Net imports are signed and zero at defaults, so an import-based stock needs an
+`abs` the DSL cannot differentiate — batch 28 found the same wall from the
+other side and widened a range instead. Here the identity is rebuilt rather
+than the range, and the prose states the basis.
+
+*The finding inside the equations.* `heat_pump_cop` was a device parameter
+with nothing to do. It now enters as `(1 - 1/COP)`, the fraction of resistive
+heat's electricity a heat pump does not draw, so the node determines a saving
+rather than a load. That is the only reading of a COP that produces
+arithmetic, and it makes 535,714 MWh/year of displaced electricity at the
+shipped 5% adoption.
+
+*The prose figure that was wrong.* The pack predicted an LPG subsidy bill of
+6.0e7 USD/year; the equation computes 1.5e8 — 0.5 USD/kg over 2 M LPG-using
+households burning 150 kg each. The pack's own operand set gives the second
+number, so the predicted figure was arithmetic done at the wrong household
+count. The shipped prose carries the computed value. Numbers written into prose
+before the run are guesses wearing measurements' clothes, and this one was
+caught by the run rather than by review.
+
+**Deferred by name.** Eighteen demand nodes defer, each on a stated missing
+base: arable hectares, freight tonne-km, crop tonnes, tourist-nights, camp
+population, shelter occupancy, installation counts, mining energy, effluent
+volume, cold-storage volume, construction energy, airport and port operations
+energy, machinery energy. The pack lists the eight specific-energy intensities
+that would unblock seven of them and names where to look; none is archived, and
+the pack says the equation should not ship until the work is on disk. Inventing
+a kWh per hectare would close one node and leave a coefficient nobody can
+check.
+
 ## Evaluation of the design docs against the code (2026-10-17)
 
 **`docs/how_prg_works.md` (read-only; a teaching narrative, not read as spec).**
