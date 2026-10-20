@@ -466,9 +466,11 @@ def test_the_summary_serves_the_endogenous_layer(
 		len(endo_listed),
 		body["parameters"],
 	)
-	# 800 of 1078: the coupling batches converted free knobs into derived
-	# quantities and named many of the rest as equation inputs.
-	assert len(free) == 800, len(free)
+	# 763 of 1296: the coupling batches converted free knobs into derived
+	# quantities and named many of the rest as equation inputs. Batch 28's
+	# product layer took this count 800 to 763 -- twenty-three placeholders
+	# became derived and the rest of the batch's nodes were already free.
+	assert len(free) == 763, len(free)
 
 
 # ---------------------------------------------------------------------------
@@ -595,7 +597,10 @@ def test_one_parameter_route_serves_it_and_404s_an_unknown_one(
 	assert response.status_code == 200, response.text
 	body = response.json()
 	assert body["parameter_id"] == "equilibrium_demand_twh"
-	assert body["unit"] == "TWh"
+	# A demand is a flow, and the unit says so: the node was `TWh` until batch
+	# 24 restated the demand family per year, and this pin outlived the change
+	# because nothing between then and batch 28 read the route's unit field.
+	assert body["unit"] == "TWh/year"
 	assert body["role"] == "derived"
 	# A loop variable is derived and carries an `initial` rather than a
 	# `default`: it is where the iteration starts, not a value standing in for

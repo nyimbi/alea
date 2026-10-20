@@ -2146,6 +2146,108 @@ derived, ten new settable knobs, net one fewer); catalog disagreements
 coverage 310 → 324; uncertainty inputs 72 → 75, reaching 123 → 129 derived
 parameters.
 
+**Batch 28 -- the product remainder.** Fifty-eight equations, 66 nodes coupled,
+no rule. The catalog's PRODUCT class is a row with a formula and, in
+fifty-four cases, `unit: None` beside the 500000.0 placeholder where a share or
+a rate should be. The formula is right and the node it multiplies cannot be
+read, so the row is a claim with no arithmetic. This batch supplies the unit,
+replaces the placeholder, and ships the identity.
+
+**The fiscal register.** Five rates that were declared and multiplied by
+nothing, plus one alias. The stamp duty and the performance bond are charged on
+capital (`rate * capex * capacity * 1000`), the export duty on export revenue,
+the dividend withholding on the distributable residual
+(`cfads - debt_service`), and the interest withholding on the debt tranche times
+its rate. That last is the finding: the shipped row multiplied a withholding
+rate by capital and never by the interest, so it was a tax with nothing to tax.
+At defaults it now yields 97.1 M USD/year against a dividend withholding of
+110.8 M. `customs_duty` is the catalog's second id for `import_duty_equipment`
+and ships as the equality.
+
+The two residual-based products carry signed ranges, `-1e12` to `1e12`, and the
+reason is the base rather than the products. Both multiply a rate by
+`cfads - debt_service`, which is negative whenever a project's debt service
+exceeds its cash flow -- the case a DSCR covenant exists to report. A lower
+bound of zero filed that shortfall as a derived excursion, so an unfinanceable
+scenario raised two range violations ahead of the `dscr_requirement` violation
+that is the actual finding, and the check route's first violation stopped
+naming the covenant. The DSL has no differentiable `max`, so the clamp the
+earlier prose described ("nothing to sweep") could not be expressed and the
+range was the only place the claim lived; the range now says what the
+arithmetic does. `cfads_usd_per_kw_year` and `project_gearing_dscr` already
+ship signed ranges for the same reason.
+
+**The insurance register.** Incurred claims (`loss_ratio * premium`), the
+deductible (`share * asset value`), and the ceded premium (`(1 -
+retention_share) * premium`). Batch 27 shipped the pricing chain; these are the
+three quantities a policyholder reads off it. 42 M USD of claims against an
+18 M USD ceded premium at defaults.
+
+**Temporal and operational scalars.** The investment period length
+(`time_horizon / investment_periods`), the time-slice segment (`24 /
+tsam_segments`), the dispatch cadence (`1 / dispatch_interval`), the shiftable
+energy, the fishing community's annual energy, the islanding feeder count, the
+fuel price band's upper edge, and the geothermal capex per productive kilowatt.
+Two deserve naming. The geothermal node divides by a success probability, so its
+range starts at 0.05 and not 0 -- a zero success rate is an infinite cost per
+productive well, which is the arithmetic refusing the question rather than
+answering it; at 75% success the 4,000 USD/kW nominal becomes 5,333 USD per
+productive kilowatt. And the fuel band ships the upper edge only: the lower edge
+is its mirror, and a mirror is not a measurement.
+
+**Programme spend against allowed revenue.** Seven consumer-protection and
+community programmes, each a share of the revenue cap, in the unit the cap is
+in. The graph already had this idiom once, in `consumer_protection_spend_definition`.
+
+**Employment and transition.** Ten shares against the direct workforce and two
+transition instruments. The counts matter more than the shares because a
+compliance finding is a count of positions: 43,000 screened against child
+labour, 34,400 pension-covered, 3,870 unfilled skilled posts. The wage bill is
+860 M USD/year, about 13% of gross revenue. The two transition instruments sit
+on deliberately different bases -- the levy on gross revenue, the funding on the
+community development fund -- so they do not tax the same revenue twice.
+
+**Seventeen aliases.** Rows the catalog carries twice or three times, each made
+the same number by an equality. One is a correction rather than a duplicate: the
+catalog prices the land bill over the habitat-loss subset of the site, which
+would price 500 of the 5,000 hectares and call it the bill, so the alias points
+at the graph's own `land_acquisition_cost_usd` over the whole take.
+
+Two rows were considered and rejected. `storage_duration_curve` is an LP ratio
+whose denominator is endogenous, so an equality would be an equation over a
+variable the optimiser chooses. `line_outage_start`/`_end` are timestamps, and
+`docs/prg-status.md:980-991` already records that pypsa ignores dynamic
+`lines_t.active` -- an equation there would couple a knob to a field nothing
+reads. And `cross_border_trading` cannot be an alias at all: the graph refuses
+any edge into a deprecated node, because `_deprecated_reach` is the contract
+that a node with a replacement is not read. The two catalog rows disagree about
+whether it is live; the graph's answer is the one that counts.
+
+One equation was rewritten during the batch. `import_dependency` was first
+written as `abs(net_imports_twh) / demand_twh`; the sensitivity kernel
+differentiates every equation in the graph and the DSL has no derivative rule
+for `abs`, correctly, because it is non-differentiable at zero. The signed ratio
+`net_imports_twh / demand_twh` is the honest form anyway: a negative value is an
+export position, not a dependency, and taking the absolute value would report a
+large net exporter and a large net importer as equally dependent. Its range
+widened from [0, 1] to [-1, 1] to admit that.
+
+State after batch 28: **1296 parameters, 417 equations, 871 edges, 55 rules,
+422 uncoupled** (694 at batch 20 → 649 → 631 → 591 → 575 → 532 → 516 → 504 →
+488 → 422). Generator `--check` idempotent, `propagate` clean over all 1296
+values with no range excursion, `gradients` clean over the whole graph. Unit
+walker 406 of 417 consistent with **11 flagged**, 0 undecidable, 4 exempt;
+constraint-shaped 35/382/417 (no new inequality); translate coverage 918 → 895
+total and 915 → 892 untranslated (23 placeholders made derived, so they leave
+the settable set the coverage measures; the three translated nodes unchanged);
+catalog disagreements 134 → 134 (agree 653 → 653);
+dead knobs 467 → 402; audit checked/skipped 124/200 → 155/227; edge strength
+hard 356 → 414; citation doors 151 → 183 (the programme spends cite the World
+Bank revenue-cap handbook, the employment products cite IRENA's job factors,
+the aliases cite the duplicate-row register, and the investment period cites
+Tejada-Arango); affine coverage 324 → 382; uncertainty inputs 75 → 76, reaching
+129 → 143 derived parameters.
+
 ## Evaluation of the design docs against the code (2026-10-17)
 
 **`docs/how_prg_works.md` (read-only; a teaching narrative, not read as spec).**

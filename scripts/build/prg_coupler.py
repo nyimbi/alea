@@ -546,7 +546,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -625,6 +625,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b23_equations)
 		edges = list(BATCH12_EDGES) + b23_edges
+	elif batch == "28":
+		b28_nodes, b28_equations, b28_edges, b28_rules = build_batch28(graph)
+		rules.extend(b28_rules)
+		nodes.update(b28_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b28_equations)
+		edges = list(BATCH12_EDGES) + b28_edges
 	elif batch == "27":
 		b27_nodes, b27_equations, b27_edges, b27_rules = build_batch27(graph)
 		rules.extend(b27_rules)
@@ -6450,6 +6457,1000 @@ def build_batch27(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 			),
 			"reference": cite, "priority": "P2",
 		})
+	return nodes, equations, edges, rules
+
+
+def _kept_status(shipped: Any) -> str:
+	"""A retype is not a lifecycle change, so the status stays what shipped.
+
+	``to_build`` stays ``to_build`` -- the node still has no measurement, only
+	a declared unit and a formula. ``deprecated`` stays ``deprecated`` and
+	keeps its ``deprecated_by`` pointer, which the model refuses to accept
+	beside ``existing``: a live node naming a replacement is two fields
+	disagreeing about whether it is live. A node this batch creates is
+	``existing``, because the equation is what brings it into being.
+	"""
+	return shipped.status if shipped is not None else "existing"
+
+
+#: (name, unit, range, default, determinism, prose) -- the free bases the
+#: products multiply against. Each shipped with unit None or 1 and the
+#: 500000.0 placeholder, so the arithmetic the catalog states could not run.
+BATCH28_RETYPES: tuple[tuple[str, str, list[float], float, str, str], ...] = (
+	("contingency", "1", [0.0, 0.3], 0.10, "policy",
+	 "The contingency allowance as a share of capex: the cover a project "
+	 "carries for scope growth between financial close and completion. Ten "
+	 "percent is the middle of the 5-15% band a lump-sum EPC contract's "
+	 "owner's contingency sits in; the shipped 500000.0 was a placeholder "
+	 "that made the allowance 6e12 USD."),
+	("cash_sweep", "1", [0.0, 1.0], 0.5, "policy",
+	 "The share of distributable cash swept to debt service. A sweep is a "
+	 "lender's covenant, not a physical fact, so it is a policy dial: 100% "
+	 "is a full cash sweep, 0% leaves the cash with the sponsor. Half is "
+	 "the common sculpted-debt arrangement."),
+	("investment_periods", "1", [1.0, 20.0], 5.0, "fixed",
+	 "How many investment periods the horizon is cut into. A count, so the "
+	 "unit is 1 and the range is integral in practice; five periods over a "
+	 "twenty-five-year horizon is the standard multi-year capacity "
+	 "expansion formulation (Tejada-Arango 2023)."),
+	("tsam_segments", "1/day", [1.0, 96.0], 24.0, "fixed",
+	 "Time-slice segments per day in the aggregated dispatch model. "
+	 "Twenty-four hourly segments is the un-aggregated case; the unit is a "
+	 "count per day so the segment length it implies is hours."),
+	("dispatch_interval", "hour", [0.05, 24.0], 0.5, "fixed",
+	 "The settlement and dispatch cadence: how many hours one dispatch "
+	 "interval spans. Half-hourly is the European settlement default and "
+	 "the finest cadence most balancing authorities settle at."),
+	("load_shifting_capability", "hours", [0.0, 24.0], 2.0, "policy",
+	 "How many hours the interruptible load can be shifted for. A duration, "
+	 "not an energy: the shipped placeholder made it 500000 hours, which is "
+	 "fifty-seven years of shifting from one demand block."),
+	("fishing_community_load", "MW", [0.0, 30000.0], 5.0, "fixed",
+	 "The load a fishing community draws: a small coastal settlement's "
+	 "demand, in megawatts. The catalog carried it unitless with the "
+	 "placeholder, so the conversion to annual energy it states divided a "
+	 "placeholder by a million."),
+	("islanding_capability", "1", [0.0, 1.0], 0.10, "policy",
+	 "The share of primary feeders able to island with local generation. A "
+	 "share of the 500 shipped feeders, so ten percent is fifty feeders; "
+	 "the placeholder read as half a million times the feeder count."),
+	("fuel_price_volatility", "1", [0.0, 1.0], 0.25, "stochastic",
+	 "The fuel price's one-sigma excursion as a share of the base price. A "
+	 "quarter is the width the risk cases use for a delivered gas price; "
+	 "the band's upper edge is what a stress case reads."),
+	("geothermal_drilling_success", "1", [0.05, 1.0], 0.75, "stochastic",
+	 "The probability a drilled geothermal well is productive. The lower "
+	 "bound is 5% and not 0 because the effective capex divides by it: a "
+	 "zero success rate is an infinite cost per productive well, which is "
+	 "the arithmetic saying no well is worth drilling rather than a cost."),
+	("child_labour_prohibition", "1", [0.0, 1.0], 1.0, "policy",
+	 "The share of the workforce screened against child labour. One is the "
+	 "I LO core-convention standard a project covenant requires; a partial "
+	 "screen is the finding, not the default."),
+	("early_retirement_packages", "1", [0.0, 1.0], 0.02, "policy",
+	 "The share of the workforce offered early retirement as a transition "
+	 "instrument. Two percent is a targeted package rather than a general "
+	 "reduction."),
+	("pension_security", "1", [0.0, 1.0], 0.80, "policy",
+	 "The share of the workforce covered by a pension. Coverage, not "
+	 "adequacy: the graph carries no benefit-level quantity, and a share is "
+	 "what a labour-standard audit reports."),
+	("redeployment_options", "1", [0.0, 1.0], 0.10, "policy",
+	 "The share of the workforce with a redeployment option into the "
+	 "replacement activity. The instrument a just-transition plan counts, "
+	 "and the count is what makes the plan checkable."),
+	("social_protection_parameters", "1", [0.0, 1.0], 0.50, "policy",
+	 "The share of the workforce under social protection (unemployment "
+	 "insurance, health cover, injury compensation). Half is a middle-"
+	 "income coverage rate."),
+	("union_agreements", "1", [0.0, 1.0], 0.30, "policy",
+	 "The share of the workforce covered by a collective agreement. A "
+	 "coverage share, which is what an ILO labour-statistics table reports, "
+	 "not a headcount."),
+	("skills_requirements", "1", [0.0, 1.0], 0.30, "policy",
+	 "The share of jobs that need a certified skill. Thirty percent is the "
+	 "craft share of a construction-and-O&M workforce."),
+	("skills_gap_assessment", "1", [0.0, 1.0], 0.30, "policy",
+	 "The share of the skilled requirement the local labour market cannot "
+	 "fill. Applied on top of `skills_requirements`, so the gap is a share "
+	 "of a share and never exceeds the skilled requirement."),
+	("retraining_costs", "USD/job", [0.0, 100000.0], 2000.0, "policy",
+	 "Retraining cost per job. The catalog carried the node unitless with "
+	 "the placeholder, so the spend it multiplies by the workforce was "
+	 "500000 USD per job. Two thousand is the order a short vocational "
+	 "conversion costs per worker."),
+	("wage_levels_by_sector", "USD/job/year", [0.0, 1000000.0], 20000.0,
+	 "fixed",
+	 "The average wage per job per year. A rate, so the wage bill is the "
+	 "workforce times it; the shipped node had no unit and the placeholder, "
+	 "which priced the workforce at half a million dollars a head."),
+	("community_health_safety", "1", [0.0, 0.05], 0.002, "policy",
+	 "Community health-and-safety programme spend as a share of allowed "
+	 "revenue. The same idiom the graph's own `consumer_protection_standards` "
+	 "uses, so the programme cost is read against the revenue that funds it."),
+	("complaint_handling", "1", [0.0, 0.05], 0.002, "policy",
+	 "The complaint-handling programme's cost as a share of allowed "
+	 "revenue."),
+	("consumer_education", "1", [0.0, 0.05], 0.001, "policy",
+	 "Consumer-education spend as a share of allowed revenue."),
+	("cross_subsidy_transparency", "1", [0.0, 0.05], 0.0005, "policy",
+	 "The cost of disclosing the cross-subsidy, as a share of allowed "
+	 "revenue. Cheaper than the transfers it makes visible, which is the "
+	 "point of publishing it."),
+	("occupational_health_safety", "1", [0.0, 0.05], 0.005, "policy",
+	 "Occupational health-and-safety spend as a share of allowed revenue. "
+	 "The workforce-facing programme, distinct from the community-facing "
+	 "one above."),
+	("tariff_transparency", "1", [0.0, 0.05], 0.001, "policy",
+	 "Tariff-publication and consultation cost as a share of allowed "
+	 "revenue."),
+	("vulnerable_customer_protection", "1", [0.0, 0.05], 0.002, "policy",
+	 "The protection programme's cost as a share of allowed revenue: the "
+	 "administration of lifeline eligibility and disconnection safeguards."),
+	("community_transition_funding", "1", [0.0, 1.0], 0.10, "policy",
+	 "The share of the community development fund earmarked for transition "
+	 "support. Ten percent of an existing fund rather than a new levy, "
+	 "because the graph already carries the fund."),
+	("just_transition_fund", "1", [0.0, 0.05], 0.005, "policy",
+	 "The just-transition levy as a share of gross revenue. Half a percent "
+	 "is the order a transition surcharge sits at on a retail tariff."),
+	("coal_community_dependencies", "1", [0.0, 1.0], 0.05, "fixed",
+	 "The share of the exposed population whose livelihood depends on the "
+	 "coal activity being retired. Five percent of the dispersion-range "
+	 "population is the order a single-plant dependency reaches in a "
+	 "district-scale economy."),
+)
+
+#: (name, unit, range, determinism, category, prose) -- every lhs of this
+#: batch's identities. A node listed here is derived and carries no default.
+BATCH28_DERIVED: tuple[tuple[str, str, list[float], str, str, str], ...] = (
+	("customs_duty", "1", [0.0, 1.0], "fixed", "Tax & Fiscal",
+	 "The customs duty rate, as a share of imported equipment value. The "
+	 "catalog carries it as a second row for `import_duty_equipment`; the "
+	 "equality is the whole content, and it is what stops a scenario "
+	 "changing one rate and leaving the other at its old value."),
+	("stamp_duty_usd", "USD", [0.0, 1.0e10], "policy", "Tax & Fiscal",
+	 "The stamp duty on the property transfer: the rate times the asset "
+	 "value. A transfer tax is charged once on the capital, not annually on "
+	 "the revenue."),
+	("performance_bond_usd", "USD", [0.0, 1.0e10], "policy",
+	 "Contract & Legal",
+	 "The performance bond a sponsor posts: a share of capex held against "
+	 "non-completion. Capital, not a flow, because the bond is released "
+	 "rather than spent."),
+	("export_duty_usd_per_year", "USD/year", [0.0, 1.0e12], "policy",
+	 "Tax & Fiscal",
+	 "The export duty on the energy carrier sold abroad: the rate times "
+	 "export revenue. Zero at the shipped rate of zero, which is a finding "
+	 "about the fiscal regime rather than a missing number."),
+	("withholding_tax_dividends_usd_per_year", "USD/year", [-1.0e12, 1.0e12],
+	 "policy", "Tax & Fiscal",
+	 "Withholding tax on distributed cash: the rate times the cash "
+	 "available for debt service net of the debt service itself. Charged on "
+	 "the distributable residual, which is what a dividend withholding tax "
+	 "is levied on, so the range is signed: the base is that residual, and "
+	 "a project whose service exceeds its cash flow distributes nothing and "
+	 "the product is negative. The negative is the shortfall the DSCR "
+	 "covenant reports, and a tax cannot be computed on a base the graph "
+	 "refuses to form."),
+	("withholding_tax_interest_usd_per_year", "USD/year", [0.0, 1.0e12],
+	 "policy", "Tax & Fiscal",
+	 "Withholding tax on interest paid: the rate times the debt tranche "
+	 "times its rate. The tax base is the interest, so the debt rate enters "
+	 "the product -- which is why the shipped equation was a rate with no "
+	 "rate in it."),
+	("claims_history", "USD/year", [0.0, 1.0e12], "stochastic",
+	 "Insurance & Catastrophe",
+	 "Incurred claims: the loss ratio applied to the premium. The shipped "
+	 "node carried unit 1 and the placeholder, so an insurance loss was "
+	 "dimensionless; the retype makes the loss ratio the ratio it is."),
+	("deductible_levels", "USD", [0.0, 1.0e10], "policy",
+	 "Insurance & Catastrophe",
+	 "The deductible the project carries: the deductible share times the "
+	 "asset value. A stock, because the deductible is a threshold on a "
+	 "single event rather than an annual amount."),
+	("reinsurance_parameters", "USD/year", [0.0, 1.0e10], "policy",
+	 "Insurance & Catastrophe",
+	 "The premium ceded to the reinsurer: the ceded share, `1 - "
+	 "retention_share`, times the premium. Ceded and not retained, because "
+	 "the node names the reinsurance and the retention share is the part "
+	 "kept."),
+	("contingency_allowance_usd", "USD", [0.0, 1.0e10], "policy", "Macro",
+	 "The contingency allowance: the share times the capital cost. A "
+	 "capital item, released or spent at completion, not an annual cost."),
+	("cash_swept_usd_per_year", "USD/year", [-1.0e12, 1.0e12], "policy",
+	 "Contract",
+	 "The cash swept to debt service: the sweep share times the "
+	 "distributable cash. Distributable is cash available for debt service "
+	 "net of the service itself, so the sweep is applied to the residual "
+	 "and the node is negative exactly when the service exceeds the cash. "
+	 "The range is signed for the same reason `cfads_usd_per_kw_year` is: "
+	 "the base is a difference of two quantities, and a lower bound of "
+	 "zero would file the shortfall as a derived excursion rather than "
+	 "leave it to the DSCR covenant that exists to report it."),
+	("investment_period_length_years", "years", [0.5, 50.0], "fixed",
+	 "Temporal",
+	 "How long one investment period is: the horizon divided by the period "
+	 "count. A discretisation, so it moves with both and neither is a "
+	 "physical constant."),
+	("tsam_segment_hours", "hours", [0.25, 24.0], "fixed", "Temporal",
+	 "The length of one time-slice segment: a day divided by the segment "
+	 "count. Twenty-four segments give hourly slices, which is the "
+	 "un-aggregated case the segment count exists to depart from."),
+	("dispatch_intervals_per_hour", "1/hour", [0.0, 48.0], "fixed",
+	 "Operational",
+	 "How many dispatch intervals one hour holds: the reciprocal of the "
+	 "interval length. A cadence, so a shorter interval is a larger "
+	 "number."),
+	("load_shifting_energy_mwh", "MWh", [0.0, 1.0e6], "policy",
+	 "Demand-Side",
+	 "The energy the interruptible load can move: the shifting duration "
+	 "times the interruptible capacity. Energy and not power, because the "
+	 "capability is how long the block can stay off."),
+	("fishing_community_load_twh", "TWh/year", [0.0, 100.0], "fixed",
+	 "Demand",
+	 "The fishing community's annual energy: its load in megawatts "
+	 "converted at the graph's own 8760 hours and 1e6 MWh per TWh. The "
+	 "conversion the catalog states, with the unit that makes it "
+	 "dimensional."),
+	("islanding_capable_feeders", "1", [0.0, 1.0e4], "policy",
+	 "Reliability",
+	 "The feeders able to island: the capability share times the primary "
+	 "feeder count. A count of feeders, and the feeder node is itself "
+	 "unitless -- the graph's own `adms_controlled_feeders` reads it the "
+	 "same way."),
+	("fuel_price_upper_usd_per_mwh", "USD/MWh", [0.0, 1.0e4], "stochastic",
+	 "Costs",
+	 "The upper edge of the fuel price band: the base price grossed up by "
+	 "the volatility. The band's lower edge is the same product with the "
+	 "sign reversed; this node is the stress case."),
+	("geothermal_effective_capex_usd_per_kw", "USD/kW", [0.0, 1.0e6],
+	 "stochastic", "Supply",
+	 "The capex per productive kilowatt: the drilling cost divided by the "
+	 "success rate. A dry hole is paid for and produces nothing, so the "
+	 "cost of a *successful* well is the nominal capex grossed up by the "
+	 "inverse success probability."),
+	("import_dependency", "1", [-1.0, 1.0], "physical", "Geopol",
+	 "Imports as a share of demand: net imports over total demand, in "
+	 "absolute value because the net flow is signed and a large export "
+	 "position is not a dependency. The shipped node was the placeholder."),
+	("community_health_safety_spend_usd_per_year", "USD million/year",
+	 [0.0, 1.0e3], "policy", "EnvSoc",
+	 "Community health-and-safety programme spend: the programme share "
+	 "times allowed revenue. In the unit allowed revenue is in, so the "
+	 "share reads as a fraction of the revenue cap."),
+	("complaint_handling_spend_usd_per_year", "USD million/year",
+	 [0.0, 1.0e3], "policy", "Consumer",
+	 "Complaint-handling programme spend: the share times allowed revenue."),
+	("consumer_education_spend_usd_per_year", "USD million/year",
+	 [0.0, 1.0e3], "policy", "Consumer",
+	 "Consumer-education spend: the share times allowed revenue."),
+	("cross_subsidy_transparency_spend_usd_per_year", "USD million/year",
+	 [0.0, 1.0e3], "policy", "Consumer",
+	 "The cost of publishing the cross-subsidy: the share times allowed "
+	 "revenue."),
+	("occupational_health_safety_spend_usd_per_year", "USD million/year",
+	 [0.0, 1.0e3], "policy", "EnvSoc",
+	 "Occupational health-and-safety spend: the share times allowed "
+	 "revenue."),
+	("tariff_transparency_spend_usd_per_year", "USD million/year",
+	 [0.0, 1.0e3], "policy", "Consumer",
+	 "Tariff transparency spend: the share times allowed revenue."),
+	("vulnerable_customer_protection_spend_usd_per_year", "USD million/year",
+	 [0.0, 1.0e3], "policy", "Consumer",
+	 "Vulnerable-customer protection spend: the share times allowed "
+	 "revenue."),
+	("just_transition_fund_usd_per_year", "USD/year", [0.0, 1.0e12],
+	 "policy", "JustTrans",
+	 "The just-transition levy: the share times gross revenue. Charged on "
+	 "revenue rather than on the community fund because it is a levy the "
+	 "tariff funds, not an allocation of an existing programme."),
+	("community_transition_funding_usd_per_year", "USD/year",
+	 [0.0, 1.0e12], "policy", "JustTrans",
+	 "The transition share of the community development fund: an "
+	 "allocation inside a fund the graph already computes, which is why "
+	 "its base is that fund and not revenue."),
+	("coal_dependent_population", "people", [0.0, 1.0e9], "policy",
+	 "JustTrans",
+	 "The people whose livelihood depends on the coal activity: the "
+	 "dependency share times the exposed population. The exposed "
+	 "population is the dispersion-range population, so the count is the "
+	 "coal district's dependency and not a national one."),
+	("child_labour_screened_jobs", "jobs", [0.0, 1.0e8], "policy",
+	 "JustTrans",
+	 "The jobs screened against child labour: the screening share times the "
+	 "direct workforce. A count of screened positions, so a scenario reads "
+	 "how many jobs a partial screen leaves unexamined."),
+	("early_retirement_jobs", "jobs", [0.0, 1.0e8], "policy", "JustTrans",
+	 "The jobs offered early retirement: the share times the direct "
+	 "workforce."),
+	("pension_covered_jobs", "jobs", [0.0, 1.0e8], "policy", "JustTrans",
+	 "The jobs covered by a pension: the coverage share times the direct "
+	 "workforce."),
+	("redeployed_jobs", "jobs", [0.0, 1.0e8], "policy", "JustTrans",
+	 "The jobs with a redeployment option: the share times the direct "
+	 "workforce. The count a just-transition plan is judged on."),
+	("socially_protected_jobs", "jobs", [0.0, 1.0e8], "policy", "JustTrans",
+	 "The jobs under social protection: the coverage share times the direct "
+	 "workforce."),
+	("unionised_jobs", "jobs", [0.0, 1.0e8], "policy", "JustTrans",
+	 "The jobs covered by a collective agreement: the coverage share times "
+	 "the direct workforce."),
+	("skills_requirements_jobs", "jobs", [0.0, 1.0e8], "policy", "JustTrans",
+	 "The jobs needing a certified skill: the share times the direct "
+	 "workforce."),
+	("skills_gap_jobs", "jobs", [0.0, 1.0e8], "policy", "JustTrans",
+	 "The skilled jobs the local market cannot fill: the gap share times "
+	 "the skilled requirement. A share of a share, so the gap cannot exceed "
+	 "the requirement it is a gap in."),
+	("retraining_spend_usd", "USD", [0.0, 1.0e12], "policy", "JustTrans",
+	 "The retraining bill: cost per job times the direct workforce. Charged "
+	 "against the whole workforce rather than the gap, because the catalog's "
+	 "form does -- and that is the conservative reading of a programme that "
+	 "reaches everyone."),
+	("wage_bill_usd_per_year", "USD/year", [0.0, 1.0e13], "fixed",
+	 "JustTrans",
+	 "The annual wage bill: the average wage times the direct workforce. "
+	 "The quantity that makes a jobs claim a claim about income."),
+	("community_benefit_sharing", "1", [0.0, 0.05], "fixed",
+	 "Land Use & Community",
+	 "The benefit-sharing share, under the catalog's second id. The "
+	 "canonical node `community_benefit_share_of_revenue` is what the "
+	 "revenue identity reads; the equality makes this the same number."),
+	("community_development_funds", "1", [0.0, 0.03], "fixed",
+	 "Land Use & Community",
+	 "The community development fund share, under the catalog's second id. "
+	 "`community_development_fund_share` is the node the fund's currency "
+	 "amount is computed from."),
+	("local_content_employment", "1", [0.0, 0.9], "fixed",
+	 "JustTrans",
+	 "The local employment share, under the catalog's second id. "
+	 "`local_employment_share` is the canonical node, and `local_jobs` "
+	 "already computes the count from it."),
+	("indigenous_peoples_rights", "1", [0.0, 1.0], "fixed", "EnvSoc",
+	 "Free, prior and informed consent, under the catalog's rights id. The "
+	 "graph carries one FPIC score, `fpic_compliance_score`; a second "
+	 "spelling of it is the coupling."),
+	("undrip_compliance", "1", [0.0, 1.0], "fixed", "EnvSoc",
+	 "UNDRIP compliance, measured by the same FPIC score. The declaration "
+	 "has no separate index in the graph, and inventing one would be a "
+	 "number with no observation behind it."),
+	("biodiversity_impact", "1", [0.0, 1.0], "physical", "EnvSoc",
+	 "The biodiversity loss: the intactness index before the project less "
+	 "the index after. A loss, so it is zero when the two agree -- which is "
+	 "what the shipped defaults say, and the honest reading of a graph that "
+	 "has not been given a post-project survey."),
+	("soil_contamination", "1", [0.0, 1.0], "physical", "EnvSoc",
+	 "The soil contamination index, under the catalog's second id. One "
+	 "index, so one equality."),
+	("water_quality_impact", "1", [0.0, 1.0], "physical", "Sector",
+	 "The water quality impact: one less the quality index. An index of 1 "
+	 "is pristine water and an impact of 0; the complement is what a "
+	 "scenario reads as the damage."),
+	("cultural_heritage_impact", "1", [0.0, 1.0], "physical", "EnvSoc",
+	 "The cultural heritage impact, under the catalog's second id: the "
+	 "heritage impact score itself."),
+	("land_use_conflicts", "1", [0.0, 1.0], "physical", "Land",
+	 "The land use conflict index, under the catalog's second id."),
+	("habitat_loss", "hectares", [0.0, 1.0e6], "physical", "EnvSoc",
+	 "The habitat lost, in hectares: the extensive node "
+	 "`habitat_loss_hectares` under the catalog's second id."),
+	("land_use_change", "hectares", [0.0, 1.0e6], "physical", "EnvSoc",
+	 "The land converted, in hectares: the same physical quantity as "
+	 "habitat loss under the catalog's third name. Two ids and one survey, "
+	 "so the equality is the coupling rather than a second measurement."),
+	("pm25_emissions", "kt/year", [0.0, 1.0e4], "physical", "EnvSoc",
+	 "Primary particulate emissions, in kilotonnes per year: the shipped "
+	 "emission-rate node under the catalog's second id."),
+	("cooling_water_demand", "m3/year", [0.0, 1.0e12], "physical", "Sector",
+	 "Cooling water withdrawn, in cubic metres per year: the shipped "
+	 "extensive node under the catalog's second id."),
+	("resettlement_costs", "USD", [0.0, 1.0e12], "policy",
+	 "Land Use & Community",
+	 "The resettlement programme's cost, under the catalog's second id. "
+	 "`resettlement_costs_total_usd` is the node the population, share and "
+	 "per-person cost multiply into."),
+	("land_acquisition_costs", "USD", [0.0, 1.0e11], "policy", "Land",
+	 "The project's land bill, under the catalog's second id. The graph "
+	 "computes it over `land_area_hectares`, the project's whole take; the "
+	 "catalog's own row multiplies the same per-hectare cost by the "
+	 "habitat-loss subset, which would price 500 of the 5,000 hectares and "
+	 "call it the bill. The equality to `land_acquisition_cost_usd` is the "
+	 "honest coupling and the subset form is the trap it avoids."),
+	("plant_retirement_age", "years", [0.0, 100.0], "policy", "Supply",
+	 "The age at which a plant retires: the asset life the graph already "
+	 "carries. `remaining_useful_life` reads this node, so the equality is "
+	 "what puts a retirement age behind the remaining-life arithmetic."),
+	("load_factor_override", "1", [0.0, 1.0], "fixed", "Demand",
+	 "A scenario's load factor, overriding the derived one. The equality "
+	 "makes it the same number as `load_factor`; the node exists so a "
+	 "scenario can name the override, and the coupling stops it drifting "
+	 "from the load the graph computes."),
+)
+
+#: (equation id, name, lhs, rhs, prose, system, reference)
+BATCH28_EQUATIONS: tuple[
+	tuple[str, str, str, str, str, str, str | None], ...
+] = (
+	# --- the fiscal register's products ---------------------------------
+	("customs_duty_alias", "The customs duty rate",
+	 "customs_duty", "import_duty_equipment",
+	 "The catalog carries the equipment duty twice, as `customs_duty` and "
+	 "as `import_duty_equipment`, at the same 10%. One rate, so one "
+	 "equality: the import-duty cost identity already reads "
+	 "`import_duty_equipment`, and this makes the second spelling the same "
+	 "number rather than a second dial.",
+	 "cost_accounting", "The catalog's own duplicate rows, resolved"),
+	("stamp_duty_cost_definition", "The stamp duty",
+	 "stamp_duty_usd", "stamp_duty * capex_usd_per_kw * total_capacity_mw * 1000",
+	 "Stamp duty on the property transfer: the rate times the asset value. "
+	 "The `1000` is kW per MW, the graph's own convention for turning a "
+	 "per-kilowatt capital cost into the fleet's total.",
+	 "cost_accounting",
+	 "Rate-based levy and allowance definitions (standard fiscal accounting)"),
+	("performance_bond_cost_definition", "The performance bond",
+	 "performance_bond_usd",
+	 "performance_bond * capex_usd_per_kw * total_capacity_mw * 1000",
+	 "The performance bond posted against non-completion: a share of capex. "
+	 "It is capital tied up rather than spent, which is why the node is a "
+	 "stock and the quantity is the asset value it is a share of.",
+	 "cost_accounting", None),
+	("export_duty_cost_definition", "The export duty",
+	 "export_duty_usd_per_year",
+	 "export_duty * hydrogen_export_revenue_usd_per_year",
+	 "The duty on the energy carrier sold abroad: the rate times export "
+	 "revenue. Zero at the shipped rate, which is a statement about the "
+	 "fiscal regime -- the instrument exists and its rate is zero -- and "
+	 "not a missing input.",
+	 "cost_accounting",
+	 "Rate-based levy and allowance definitions (standard fiscal accounting)"),
+	("withholding_tax_dividends_cost_definition",
+	 "The dividend withholding tax",
+	 "withholding_tax_dividends_usd_per_year",
+	 "withholding_tax_dividends * (cfads_usd_per_kw_year - "
+	 "debt_service_usd_per_kw_year) * total_capacity_mw * 1000",
+	 "Withholding tax on distributed cash: the rate times cash available "
+	 "for debt service net of debt service. The base is the distributable "
+	 "residual, so a project whose debt service exceeds its cash flow has "
+	 "nothing to distribute and pays nothing.",
+	 "cost_accounting",
+	 "Rate-based levy and allowance definitions (standard fiscal accounting)"),
+	("withholding_tax_interest_cost_definition",
+	 "The interest withholding tax",
+	 "withholding_tax_interest_usd_per_year",
+	 "withholding_tax_interest * debt_fraction * capex_usd_per_kw * "
+	 "cost_of_debt * total_capacity_mw * 1000",
+	 "Withholding tax on interest paid: the rate times the debt tranche "
+	 "times the debt rate. The tax base is interest, so the debt rate has "
+	 "to appear -- a withholding rate multiplied by capital alone is a "
+	 "rate with nothing to tax.",
+	 "cost_accounting",
+	 "Rate-based levy and allowance definitions (standard fiscal accounting)"),
+	# --- the insurance register's products -------------------------------
+	("claims_history_definition", "Incurred claims",
+	 "claims_history",
+	 "loss_ratio * insurance_premium_usd_per_kw_year * total_capacity_mw * 1000",
+	 "Incurred claims: the loss ratio applied to the premium. The premium "
+	 "is per kilowatt, so the fleet's premium is that times capacity times "
+	 "1000 kW per MW, and the loss ratio is the share of it paid out.",
+	 "financial", None),
+	("deductible_levels_definition", "The deductible",
+	 "deductible_levels",
+	 "deductible_share * capex_usd_per_kw * total_capacity_mw * 1000",
+	 "The deductible the project carries: the deductible share times the "
+	 "asset value. The shipped equation for this product had unit 1 on the "
+	 "result, which made an insurance threshold dimensionless.",
+	 "financial", None),
+	("reinsurance_ceded_definition", "The ceded premium",
+	 "reinsurance_parameters",
+	 "(1 - retention_share) * insurance_premium_usd_per_kw_year * "
+	 "total_capacity_mw * 1000",
+	 "The premium ceded to the reinsurer: the ceded share, one less the "
+	 "retention share, times the premium. Ceded and not retained -- the "
+	 "node names the reinsurance, and the retention share is the part the "
+	 "primary insurer keeps.",
+	 "financial", None),
+	# --- the capital and cash products -----------------------------------
+	("contingency_allowance_definition", "The contingency allowance",
+	 "contingency_allowance_usd",
+	 "contingency * capex_usd_per_kw * total_capacity_mw * 1000.0",
+	 "The contingency allowance: the share times the capital cost. The "
+	 "catalog's formula, with the shipped placeholder replaced by a share "
+	 "-- at ten percent the allowance is 1.2 billion USD against a 12 "
+	 "billion USD fleet, which is the order an owner's contingency is.",
+	 "financial", None),
+	("cash_sweep_definition", "The cash swept to debt service",
+	 "cash_swept_usd_per_year",
+	 "cash_sweep * (cfads_usd_per_kw_year - debt_service_usd_per_kw_year) "
+	 "* total_capacity_mw * 1000",
+	 "The cash swept to debt service: the sweep share times distributable "
+	 "cash. Distributable is cash available for debt service net of the "
+	 "service, so the sweep is applied to the residual and not to gross "
+	 "cash flow.",
+	 "financial", None),
+	# --- temporal and operational scalars --------------------------------
+	("investment_period_length_definition", "The investment period length",
+	 "investment_period_length_years", "time_horizon / investment_periods",
+	 "One investment period's length: the horizon divided by the period "
+	 "count. A discretisation rather than a physical quantity, so it moves "
+	 "when either input moves and is not a dial a scenario should set "
+	 "directly.",
+	 "energy_balance", "Tejada-Arango (2023), arXiv:2307.16842"),
+	("tsam_segment_hours_definition", "The segment length",
+	 "tsam_segment_hours", "24 / tsam_segments",
+	 "The length of one time-slice segment: a day divided by the segment "
+	 "count. The `24` is hours per day, which is why the segment count is "
+	 "declared per day; at 24 segments the slice is hourly.",
+	 "energy_balance", None),
+	("dispatch_interval_definition", "The dispatch cadence",
+	 "dispatch_intervals_per_hour", "1 / dispatch_interval",
+	 "Dispatch intervals per hour: the reciprocal of the interval length. "
+	 "A cadence, so a half-hour settlement gives two intervals an hour. "
+	 "The reciprocal is the form the dispatch model reads, which is why "
+	 "the node is declared in hours and the identity inverts it.",
+	 "energy_balance", None),
+	("load_shifting_energy_definition", "The shiftable energy",
+	 "load_shifting_energy_mwh",
+	 "load_shifting_capability * interruptible_load_mw",
+	 "The energy the interruptible load can move: the shifting duration "
+	 "times the interruptible capacity. Power times time is energy, which "
+	 "is what a flexibility product is sold in.",
+	 "demand_supply", None),
+	("fishing_community_load_definition", "The fishing community's energy",
+	 "fishing_community_load_twh",
+	 "fishing_community_load * 8760 / 1000000",
+	 "The fishing community's annual energy: its load in megawatts times "
+	 "the hours in a year, divided by the megawatt-hours in a terawatt-"
+	 "hour. The catalog's own conversion, made decidable by the unit.",
+	 "demand_supply", None),
+	("islanding_capable_feeders_definition", "The islanding-capable feeders",
+	 "islanding_capable_feeders",
+	 "islanding_capability * distribution_feeders_total",
+	 "The feeders able to island: the capability share times the primary "
+	 "feeder count. The graph's own `adms_controlled_feeders` reads the "
+	 "same feeder node the same way, so a feeder count stays unitless "
+	 "across both.",
+	 "reliability", None),
+	("fuel_price_band_definition", "The fuel price band's upper edge",
+	 "fuel_price_upper_usd_per_mwh",
+	 "fuel_price_usd_per_mwh * (1 + fuel_price_volatility)",
+	 "The upper edge of the fuel price band: the base price grossed up by "
+	 "the volatility share. The `1 +` is a growth factor, the same "
+	 "convention every escalation in the library uses; the lower edge is "
+	 "the same product with the sign reversed and is not shipped as a "
+	 "separate node because it is a mirror rather than a measurement.",
+	 "cost_accounting", None),
+	("geothermal_effective_capex_definition",
+	 "The geothermal capex per productive kilowatt",
+	 "geothermal_effective_capex_usd_per_kw",
+	 "capex_geothermal / geothermal_drilling_success",
+	 "Capex per productive kilowatt: the nominal drilling cost divided by "
+	 "the success probability. A dry hole is paid for and yields nothing, "
+	 "so the cost of a successful well is the nominal cost times one over "
+	 "the success rate -- at 75% success and 4,000 USD/kW, 5,333 USD per "
+	 "productive kilowatt.",
+	 "cost_accounting", None),
+	("import_dependency_definition", "The import dependency",
+	 "import_dependency", "net_imports_twh / demand_twh",
+	 "Net imports as a share of demand, signed. The sign is the "
+	 "information: a positive value is a dependency and a negative one is "
+	 "an export position, which is the same ratio read the other way and "
+	 "not a different quantity. The range admits negatives for that "
+	 "reason. The catalog's form takes the absolute value, which would "
+	 "report a large net exporter and a large net importer as equally "
+	 "dependent -- and `abs` has no derivative rule in the DSL, correctly, "
+	 "because it is non-differentiable at zero and the sensitivity kernel "
+	 "differentiates every equation in the graph.",
+	 "demand_supply", None),
+	# --- programme spend against allowed revenue -------------------------
+	("community_health_safety_spend_definition",
+	 "Community health and safety spend",
+	 "community_health_safety_spend_usd_per_year",
+	 "community_health_safety * allowed_revenue_requirement",
+	 "Community health-and-safety spend: the programme share times allowed "
+	 "revenue. The graph's own `consumer_protection_spend_definition` is "
+	 "this form, and the base is allowed revenue rather than gross revenue "
+	 "because a regulated programme is funded out of the revenue cap.",
+	 "cost_accounting", "World Bank Regulation of Utilities handbook, revenue caps"),
+	("complaint_handling_spend_definition", "Complaint-handling spend",
+	 "complaint_handling_spend_usd_per_year",
+	 "complaint_handling * allowed_revenue_requirement",
+	 "Complaint-handling spend: the share times allowed revenue.",
+	 "cost_accounting", "World Bank Regulation of Utilities handbook, revenue caps"),
+	("consumer_education_spend_definition", "Consumer education spend",
+	 "consumer_education_spend_usd_per_year",
+	 "consumer_education * allowed_revenue_requirement",
+	 "Consumer-education spend: the share times allowed revenue.",
+	 "cost_accounting", "World Bank Regulation of Utilities handbook, revenue caps"),
+	("cross_subsidy_transparency_spend_definition",
+	 "Cross-subsidy disclosure spend",
+	 "cross_subsidy_transparency_spend_usd_per_year",
+	 "cross_subsidy_transparency * allowed_revenue_requirement",
+	 "The cost of disclosing the cross-subsidy: the share times allowed "
+	 "revenue. The transfer it makes visible is already a node; this is "
+	 "what it costs to publish.",
+	 "cost_accounting", "World Bank Regulation of Utilities handbook, revenue caps"),
+	("occupational_health_safety_spend_definition",
+	 "Occupational health and safety spend",
+	 "occupational_health_safety_spend_usd_per_year",
+	 "occupational_health_safety * allowed_revenue_requirement",
+	 "Occupational health-and-safety spend: the share times allowed "
+	 "revenue. The workforce-facing programme, distinct from the "
+	 "community-facing one.",
+	 "cost_accounting", "World Bank Regulation of Utilities handbook, revenue caps"),
+	("tariff_transparency_spend_definition", "Tariff transparency spend",
+	 "tariff_transparency_spend_usd_per_year",
+	 "tariff_transparency * allowed_revenue_requirement",
+	 "Tariff-publication and consultation spend: the share times allowed "
+	 "revenue.",
+	 "cost_accounting", "World Bank Regulation of Utilities handbook, revenue caps"),
+	("vulnerable_customer_protection_spend_definition",
+	 "Vulnerable-customer protection spend",
+	 "vulnerable_customer_protection_spend_usd_per_year",
+	 "vulnerable_customer_protection * allowed_revenue_requirement",
+	 "Vulnerable-customer protection spend: the share times allowed "
+	 "revenue. The programme administers lifeline eligibility and "
+	 "disconnection safeguards; the transfers themselves are the "
+	 "affordability system's.",
+	 "cost_accounting", "World Bank Regulation of Utilities handbook, revenue caps"),
+	# --- just transition ------------------------------------------------
+	("just_transition_fund_definition", "The just-transition levy",
+	 "just_transition_fund_usd_per_year",
+	 "just_transition_fund * total_revenue_usd_per_year",
+	 "The just-transition levy: the share times gross revenue. A levy the "
+	 "tariff funds, which is why its base is gross revenue and not the "
+	 "community development fund -- that fund is a separate allocation "
+	 "with its own share.",
+	 "employment", "Benefit-sharing programmes (the graph's own revenue identity)"),
+	("community_transition_funding_definition",
+	 "The transition share of the community fund",
+	 "community_transition_funding_usd_per_year",
+	 "community_transition_funding * community_development_fund_usd_per_year",
+	 "The transition share of the community development fund: an "
+	 "allocation inside a fund the graph already computes. Its base is "
+	 "that fund rather than revenue, so the two transition instruments do "
+	 "not double-count the same tariff revenue.",
+	 "employment", "Benefit-sharing programmes (the graph's own revenue identity)"),
+	("coal_dependent_population_definition", "The coal-dependent population",
+	 "coal_dependent_population",
+	 "coal_community_dependencies * exposed_population",
+	 "The people whose livelihood depends on the coal activity being "
+	 "retired: the dependency share times the exposed population. The "
+	 "exposed population is the dispersion-range population, so this is "
+	 "the coal district's dependency rather than a national one -- and "
+	 "the count is what a transition plan's compensation is sized on.",
+	 "employment", None),
+	# --- employment shares ----------------------------------------------
+	("child_labour_screening_definition", "The screened jobs",
+	 "child_labour_screened_jobs", "child_labour_prohibition * direct_jobs",
+	 "Jobs screened against child labour: the screening share times the "
+	 "direct workforce. The count matters because a partial screen is the "
+	 "compliance finding, and a share alone hides how many positions it "
+	 "leaves unexamined.",
+	 "employment", "IRENA employment factors"),
+	("early_retirement_definition", "The early-retirement jobs",
+	 "early_retirement_jobs", "early_retirement_packages * direct_jobs",
+	 "Jobs offered early retirement: the share times the direct "
+	 "workforce. The instrument a just-transition plan counts, and the "
+	 "count is what makes the plan checkable.",
+	 "employment", None),
+	("pension_coverage_definition", "The pension-covered jobs",
+	 "pension_covered_jobs", "pension_security * direct_jobs",
+	 "Jobs covered by a pension: the coverage share times the direct "
+	 "workforce. Coverage, not adequacy -- the graph carries no "
+	 "benefit-level quantity, and a share is what a labour-standard audit "
+	 "reports.",
+	 "employment", None),
+	("redeployment_definition", "The redeployed jobs",
+	 "redeployed_jobs", "redeployment_options * direct_jobs",
+	 "Jobs with a redeployment option: the share times the direct "
+	 "workforce.",
+	 "employment", None),
+	("social_protection_definition", "The socially protected jobs",
+	 "socially_protected_jobs", "social_protection_parameters * direct_jobs",
+	 "Jobs under social protection: the coverage share times the direct "
+	 "workforce.",
+	 "employment", None),
+	("union_coverage_definition", "The unionised jobs",
+	 "unionised_jobs", "union_agreements * direct_jobs",
+	 "Jobs covered by a collective agreement: the coverage share times the "
+	 "direct workforce. A coverage share is what a labour-statistics "
+	 "table reports, which is why the node is a share and the count is "
+	 "derived.",
+	 "employment", None),
+	("skills_requirements_definition", "The skilled jobs",
+	 "skills_requirements_jobs", "skills_requirements * direct_jobs",
+	 "Jobs needing a certified skill: the share times the direct "
+	 "workforce.",
+	 "employment", None),
+	("skills_gap_definition", "The unfilled skilled jobs",
+	 "skills_gap_jobs",
+	 "skills_gap_assessment * skills_requirements * direct_jobs",
+	 "The skilled jobs the local labour market cannot fill: the gap share "
+	 "times the skilled requirement. A share of a share, so the gap cannot "
+	 "exceed the requirement it is a gap in -- which the shipped form, "
+	 "with both shares as placeholders, could not express.",
+	 "employment", None),
+	("retraining_spend_definition", "The retraining bill",
+	 "retraining_spend_usd", "retraining_costs * direct_jobs",
+	 "The retraining bill: cost per job times the direct workforce. "
+	 "Charged against the whole workforce rather than the gap, because "
+	 "the catalog's form does -- the conservative reading of a programme "
+	 "that reaches everyone.",
+	 "employment", None),
+	("wage_bill_definition", "The wage bill",
+	 "wage_bill_usd_per_year", "wage_levels_by_sector * direct_jobs",
+	 "The annual wage bill: the average wage per job times the direct "
+	 "workforce. The quantity that turns a jobs claim into a claim about "
+	 "income -- at 20,000 USD a job the 43,000-job fleet pays 860 million "
+	 "USD a year, about 13% of gross revenue.",
+	 "employment", None),
+	# --- the environmental and social registers' aliases -----------------
+	("community_benefit_sharing_alias", "The benefit-sharing share",
+	 "community_benefit_sharing", "community_benefit_share_of_revenue",
+	 "The benefit-sharing share under the catalog's second id. The "
+	 "revenue identity `benefit_sharing_from_revenue_definition` reads "
+	 "`community_benefit_share_of_revenue`; this equality makes the two "
+	 "names one number.",
+	 "employment", "The catalog's own duplicate rows, resolved"),
+	("community_development_funds_alias", "The community fund share",
+	 "community_development_funds", "community_development_fund_share",
+	 "The community development fund share under the catalog's second id. "
+	 "The fund's currency amount is computed from "
+	 "`community_development_fund_share`, so this is the same share.",
+	 "financial", "The catalog's own duplicate rows, resolved"),
+	("local_content_employment_alias", "The local employment share",
+	 "local_content_employment", "local_employment_share",
+	 "The local employment share under the catalog's second id. "
+	 "`local_jobs` already computes the count from "
+	 "`local_employment_share`; a second share node would let a scenario "
+	 "move the share and leave the count behind.",
+	 "employment", "The catalog's own duplicate rows, resolved"),
+	("indigenous_peoples_rights_alias", "The FPIC score",
+	 "indigenous_peoples_rights", "fpic_compliance_score",
+	 "Free, prior and informed consent under the catalog's rights id. The "
+	 "graph carries one FPIC score, and `fpic_consent_bound` reads it; "
+	 "this equality is what makes the second id the same score.",
+	 "employment", "The catalog's own duplicate rows, resolved"),
+	("undrip_compliance_alias", "The UNDRIP compliance score",
+	 "undrip_compliance", "fpic_compliance_score",
+	 "UNDRIP compliance measured by the same FPIC score. The declaration "
+	 "has no separate index in the graph, and inventing one would be a "
+	 "number with no observation behind it -- so the equality states the "
+	 "identification rather than implying a second measurement.",
+	 "employment", "The catalog's own duplicate rows, resolved"),
+	("biodiversity_impact_definition", "The biodiversity loss",
+	 "biodiversity_impact",
+	 "biodiversity_intactness_before - biodiversity_intactness_index",
+	 "The biodiversity loss: intactness before the project less intactness "
+	 "after. A loss, so it is zero when the two agree -- which is what the "
+	 "shipped defaults say, and the honest reading of a graph that has not "
+	 "been given a post-project survey.",
+	 "employment", None),
+	("soil_contamination_alias", "The soil contamination index",
+	 "soil_contamination", "soil_contamination_index",
+	 "The soil contamination index under the catalog's second id. One "
+	 "index, so one equality.",
+	 "health", "The catalog's own duplicate rows, resolved"),
+	("water_quality_impact_definition", "The water quality impact",
+	 "water_quality_impact", "1.0 - water_quality_index",
+	 "The water quality impact: one less the quality index. An index of 1 "
+	 "is pristine water and an impact of 0, so the complement is what a "
+	 "scenario reads as the damage -- and the `1.0` is the top of the "
+	 "index's own scale, not a fitted constant.",
+	 "water_energy", None),
+	("cultural_heritage_impact_alias", "The cultural heritage impact",
+	 "cultural_heritage_impact", "cultural_heritage_impact_score",
+	 "The cultural heritage impact under the catalog's second id: the "
+	 "heritage impact score itself.",
+	 "employment", "The catalog's own duplicate rows, resolved"),
+	("land_use_conflicts_alias", "The land use conflict index",
+	 "land_use_conflicts", "land_use_conflict_index",
+	 "The land use conflict index under the catalog's second id.",
+	 "employment", "The catalog's own duplicate rows, resolved"),
+	("habitat_loss_alias", "The habitat lost",
+	 "habitat_loss", "habitat_loss_hectares",
+	 "The habitat lost, in hectares: the extensive node under the "
+	 "catalog's second id. A second id for one survey is a second id, not "
+	 "a second measurement.",
+	 "employment", "The catalog's own duplicate rows, resolved"),
+	("land_use_change_alias", "The land converted",
+	 "land_use_change", "habitat_loss_hectares",
+	 "The land converted, in hectares: the same physical quantity as "
+	 "habitat loss under the catalog's third name. The equality is the "
+	 "identification, and it is what stops a scenario reporting habitat "
+	 "loss and land use change as two different numbers for one site.",
+	 "employment", "The catalog's own duplicate rows, resolved"),
+	("pm25_emissions_alias", "The particulate emissions",
+	 "pm25_emissions", "pm25_kt_per_year",
+	 "Primary particulate emissions, in kilotonnes per year: the shipped "
+	 "emission-rate node under the catalog's second id. The health system "
+	 "reads the rate, so the equality is what puts the alias on the same "
+	 "emissions.",
+	 "health", "The catalog's own duplicate rows, resolved"),
+	("cooling_water_demand_alias", "The cooling water withdrawn",
+	 "cooling_water_demand", "cooling_water_demand_m3",
+	 "Cooling water withdrawn, in cubic metres per year: the shipped "
+	 "extensive node under the catalog's second id. The water-energy "
+	 "system computes the volume from generation and an intensity, and "
+	 "this is that volume under its second name.",
+	 "water_energy", "The catalog's own duplicate rows, resolved"),
+	("resettlement_costs_alias", "The resettlement cost",
+	 "resettlement_costs", "resettlement_costs_total_usd",
+	 "The resettlement programme's cost under the catalog's second id. The "
+	 "total is population times share times per-person cost; this is the "
+	 "same total under its second name.",
+	 "employment", "The catalog's own duplicate rows, resolved"),
+	("land_acquisition_costs_alias", "The land bill",
+	 "land_acquisition_costs", "land_acquisition_cost_usd",
+	 "The project's land bill under the catalog's second id. The graph "
+	 "computes it over `land_area_hectares`, the project's whole take; the "
+	 "catalog's own row multiplies the same per-hectare cost by the "
+	 "habitat-loss subset, which would price 500 of the 5,000 hectares "
+	 "and call it the bill. The equality is the honest coupling, and the "
+	 "subset form is the trap it avoids.",
+	 "cost_accounting", "The catalog's own duplicate rows, resolved"),
+	("plant_retirement_age_alias", "The retirement age",
+	 "plant_retirement_age", "asset_life",
+	 "The age at which a plant retires: the asset life the graph already "
+	 "carries. `remaining_useful_life` reads this node, so the equality is "
+	 "what puts a retirement age behind the remaining-life arithmetic "
+	 "instead of leaving it a number nothing consumes.",
+	 "reliability", "The catalog's own duplicate rows, resolved"),
+	("load_factor_override_alias", "The load factor override",
+	 "load_factor_override", "load_factor",
+	 "A scenario's load factor, overriding the derived one. The equality "
+	 "makes it the same number as `load_factor`; the node exists so a "
+	 "scenario can name the override, and the coupling stops it drifting "
+	 "from the load the graph computes.",
+	 "energy_balance", "The catalog's own duplicate rows, resolved"),
+)
+
+
+def build_batch28(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Batch 28: the product remainder -- 59 nodes, and what holds them.
+
+	The catalog's PRODUCT class is a row with a formula and, in fifty-four
+	cases, a unit of ``None`` and the 500000.0 placeholder where a share or a
+	rate should be. The formula is right and the node it multiplies against
+	cannot be read, so the whole row is a claim with no arithmetic. This
+	batch replaces the placeholder, declares the unit, and ships the identity
+	the catalog states.
+
+	Five groups, and the division is the batch's content.
+
+	The *fiscal register*: five rates that were declared and multiplied by
+	nothing -- the stamp duty, the performance bond, the export duty and the
+	two withholding taxes -- plus the customs duty, which is the catalog's
+	second id for the import duty and so an equality. Each product carries
+	the base its own tax law names: the bond and the stamp duty on capital,
+	the export duty on export revenue, the dividend withholding on the
+	distributable residual, and the interest withholding on the debt
+	tranche times its rate. That last one is the finding: the shipped row
+	multiplied a withholding rate by capital and never by the interest, so
+	it was a tax with nothing to tax.
+
+	The *insurance register*: the incurred claims, the deductible and the
+	ceded premium. The premium per kilowatt is the graph's own, so each
+	product is that premium (or the asset value) times the share the
+	insurance policy sets. Batch 27 shipped the pricing chain; these are the
+	three quantities a policyholder reads off it.
+
+	The *temporal and operational scalars*: the investment period length,
+	the time-slice segment, the dispatch cadence, the shiftable energy, the
+	fishing community's annual energy, the islanding feeder count, the fuel
+	price band and the geothermal capex per productive kilowatt. Each is a
+	discretisation or a conversion, and each was a placeholder. Two are
+	worth naming: the geothermal one divides by a success probability, so
+	its range starts at 0.05 rather than 0 -- a zero success rate is an
+	infinite cost per productive well, which is the arithmetic refusing the
+	question rather than answering it; and the fuel band is the upper edge
+	only, because the lower edge is its mirror and a mirror is not a
+	measurement.
+
+	The *programme spend* against allowed revenue: seven consumer-protection
+	and community programmes, each a share of the revenue cap. The graph
+	already had this idiom once, in `consumer_protection_spend_definition`,
+	and these are the programmes the catalog names beside it.
+
+	The *employment and transition* layer: ten shares against the direct
+	workforce and two transition instruments. The counts matter more than
+	the shares because a compliance finding is a count of positions, and a
+	share alone hides how many jobs a partial screen leaves unexamined. The
+	two transition instruments are deliberately on different bases -- the
+	levy on gross revenue, the funding on the community development fund --
+	so they do not tax the same revenue twice.
+
+	Finally the *alias register*: seventeen rows the catalog carries twice
+	or three times. Each equality makes the second spelling the same
+	number, and the ones that matter are the ones where a second spelling
+	would let a scenario move a share and leave the count computed from the
+	old one behind. One alias is a correction rather than a duplicate: the
+	catalog prices the land bill over the habitat-loss subset of the site
+	rather than the whole take, and the equality to the graph's own
+	`land_acquisition_cost_usd` is what stops 500 of 5,000 hectares being
+	reported as the project's land bill.
+
+	One row is deliberately *not* here. `cross_border_trading` is the
+	catalog's deprecated id for `cross_border_trade_allowed`, and the graph
+	refuses any edge into a deprecated node -- `_deprecated_reach` is the
+	contract that a node with a replacement is not read, and an alias edge
+	is exactly the read it forbids. The two rows disagree about whether the
+	node is live; the graph's answer is the one that counts, so the id stays
+	deprecated and uncoupled. The same holds for `demand_growth_rate`.
+
+	The systems are the library's, and the library has no environment
+	system. The physical-health indices ride `health` and the social-licence
+	ones ride `employment`, which is the system the library's own docstring
+	calls "a claim about people". A reviewer who disagrees with that
+	assignment has a one-word edit to make; a node with no system at all
+	would have failed the load.
+	"""
+	from alea.prg.dsl import parse_side
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	for name, unit, rng, default, determinism, prose in BATCH28_RETYPES:
+		# The emit path reads the already-baked document, so a re-emit after a
+		# bake finds the node present. Reading the shipped body and overriding
+		# the fields this batch owns keeps the two runs identical.
+		shipped = graph.nodes.get(name)
+		full: dict[str, Any] = (
+			dict(shipped.model_dump(exclude={"id"}, mode="json"))
+			if shipped is not None else {"name": name.replace("_", " ").capitalize()}
+		)
+		full.update({
+			"description": prose, "type": "float", "unit": unit,
+			"range": rng, "role": "free", "determinism": determinism,
+			"priority": "P1",
+			"status": _kept_status(shipped),
+			"source": "The product coupling (batch 28)",
+			"users": ["Planners", "Regulators"],
+		})
+		full["default"] = default
+		nodes[name] = full
+
+	for name, unit, rng, determinism, category, prose in BATCH28_DERIVED:
+		shipped = graph.nodes.get(name)
+		full: dict[str, Any] = (
+			dict(shipped.model_dump(exclude={"id"}, mode="json"))
+			if shipped is not None else {"name": name.replace("_", " ").capitalize()}
+		)
+		full.update({
+			"description": prose, "category": category, "type": "float",
+			"unit": unit, "range": rng, "role": "derived",
+			"determinism": determinism, "priority": "P1",
+			"status": _kept_status(shipped),
+			"source": "The product coupling (batch 28)",
+			"users": ["Planners", "Regulators"],
+		})
+		full.pop("default", None)
+		nodes[name] = full
+
+	for eq_id, name, lhs, rhs, prose, system, cite in BATCH28_EQUATIONS:
+		rhs_params = sorted(parse_side(rhs).symbols)
+		equations[eq_id] = {
+			"id": eq_id, "name": name, "description": prose,
+			"system": system, "lhs": lhs, "rhs": rhs, "relation": "eq",
+			"parameters": [lhs] + rhs_params, "free_variables": [],
+			"determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		assert lhs in nodes, f"{eq_id}: {lhs!r} has no node body in this batch"
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs, "equation_id": eq_id,
+				"relationship": "functional", "direction": "forward",
+				"strength": "hard",
+				"description": "Enters the product identity.",
+				"reference": cite, "priority": "P1",
+			})
 	return nodes, equations, edges, rules
 
 

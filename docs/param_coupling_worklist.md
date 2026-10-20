@@ -1,47 +1,78 @@
 # Coupling worklist
 
-Every node still in `uncoupled()` (488 of 1261, as of the batch 27 bake on
-2026-10-19) and the family class its coupling belongs to. Batches 12-27
-coupled 305 nodes (793 -> 488): the financial core and fleet, the
+Every node still in `uncoupled()` (422 of 1296, as of the batch 28 bake on
+2026-10-19) and the family class its coupling belongs to. Batches 12-28
+coupled 371 nodes (793 -> 422): the financial core and fleet, the
 duplicate-pair aliases, sector demand, fuel conversions, rate aliases, the
 instrument and sector-coupling layers, the share family's products and the
 time-index arithmetic (batch 20), the cost and rate families (batch 21), the
 compliance register (batch 22), the extensive bases with the products they
 unblock (batch 23), the carbon-market, subsidy and employment families with the
 annual-quantity repair that unblocked them (batch 24), the gate family (batch
-25), the adequacy and reserve family (batch 26), and the finance family -- the
-two risk premiums, the insurance bases and their products, the transaction
-cost, the ring-fence, the RAB roll-forward and the LLCR covenant (batch 27).
-The classes name the method each coupling gets; nothing escapes the register.
+25), the adequacy and reserve family (batch 26), the finance family (batch 27),
+and the product remainder -- the fiscal, insurance, temporal, programme-spend,
+employment and alias registers (batch 28). The classes name the method each
+coupling gets; nothing escapes the register.
 
-## Batch 27's tail, and what is left
+## Batch 28's tail, and what is left
 
-Batch 27 coupled sixteen nodes (504 -> 488) and added none to `uncoupled()`.
-Four were aliases the catalog carries twice (`interest_rate_debt`,
-`debt_service_coverage_ratio`, `maladaptation_risk`, `insurance_premiums`), and
-twelve were products and charges the finance family supplies a base for: the
-transaction cost against revenue, the sovereign and technology risk charges
-against the debt- and equity-financed capital, the microinsurance premium and
-the population it covers, the ring-fenced asset value, the solvency capital,
-the RAB roll-forward, the project hurdle, and the two risk premiums and the
-coverage share that drive them.
+Batch 28 coupled 66 nodes (488 -> 422) and added none to `uncoupled()`. Sixty-six
+is a larger number than the batch's fifty-eight equations because an alias
+couples two nodes with one identity. Twenty-three nodes it authored became
+derived; forty-three were settable bases read for the first time.
 
 What remains, by the packs' own classification of the current `uncoupled()`
-set: 104 PRODUCT, of which 50 still sit at the `unit=None def=500000.0`
-placeholder; 96 BASE-NEEDED; 120 QUALITATIVE; 25 THRESHOLD; 44 scene switches;
-and 102 that appear in no pack at all. The classes are read off the packs'
-first class column, so a node the packs list twice is counted once, under the
-class they gave it first; three nodes are both scene switches and qualitative,
-which is why the six counts sum to 491 against a set of 488.
+set: 42 PRODUCT, of which only 5 still sit at the `unit=None def=500000.0`
+placeholder; 95 BASE-NEEDED; 117 QUALITATIVE; 25 THRESHOLD; 41 scene switches
+(27 scene switches plus 11 GATE-SCENE-SWITCH and 3 GATE-SCENE); and 102 that
+appear in no pack at all. The classes are read off the packs' first class
+column, so a node the packs list twice is counted once, under the class they
+gave it first; the counts sum to 320 against a classified set of 480 because
+the packs predate the batches and the 160 nodes they list that are now coupled
+are not counted.
 
-The PRODUCT remainder is the next authoring batch, and its size is the point:
-50 nodes with a formula proposed and a placeholder where a unit should be. The
-THRESHOLD and BASE-NEEDED remainders are the two that need something built
+The PRODUCT remainder has shrunk to a residue and is no longer one family. What
+is left divides into four groups, and only the first is arithmetic the graph can
+do today:
+
+- **Five placeholders** -- `demand_response_capacity`,
+  `demand_response_potential`, `line_outage_start`, `line_outage_end` and
+  `storage_duration_curve`. The two demand-response nodes are a capability and
+  a potential with no base in the graph to multiply against; the outage
+  timestamps are timestamps, and `docs/prg-status.md` records that pypsa
+  ignores dynamic `lines_t.active`, so an equation there would couple a knob
+  to a field nothing reads; the storage curve is an LP ratio whose denominator
+  the optimiser chooses.
+- **Technology-specific capex and opex** -- `capex_gas_ccgt`, `capex_gas_ocgt`,
+  `fuel_cost_hydrogen`, `opex_fixed_wind_onshore`, `csp_storage_hours`. These
+  are *bases*, not products, and they already carry a unit and a real value.
+  They sit in `uncoupled()` because no equation names them; the coupling is for
+  the fleet-build arithmetic to read them, which is the BASE-NEEDED work.
+- **Indices and multipliers with no consumer** -- `vulnerability_index`,
+  `water_stress_index`, `internet_penetration`, `mobile_coverage`,
+  `crew_availability`, `spare_parts_availability`,
+  `predictive_maintenance_adoption`, `hydro_drought_multiplier`,
+  `precipitation_multiplier`, `solar_irradiance_multiplier`,
+  `wind_speed_multiplier`, `peak_demand_multiplier`,
+  `transmission_capacity_factor`, `transmission_cost_multiplier`,
+  `distribution_loss_factor`, `land_availability_fraction`,
+  `hydro_capacity_factor`, `forced_outage_rate_coal`,
+  `outage_cause_distribution`, `thin_capitalisation_limit`. Each needs a
+  product that reads it; the products are what is missing, not the values.
+- **Densities and site counts** -- `archaeological_sites_density`,
+  `cultural_heritage_sites_density`, `sacred_sites_density`,
+  `land_aggregation_fragmentation`, `distribution_network_km`,
+  `representative_days`, `licence_fees`, `cat_bond_spread`,
+  `synthetic_fuel_share_aviation`, `synthetic_fuel_share_shipping`,
+  `grievance_redress_effectiveness`.
+
+The THRESHOLD and BASE-NEEDED remainders are the two that need something built
 first: a bound needs an lhs whose value at defaults is not 500000, and a base
 needs a quantity the graph does not carry. The QUALITATIVE remainder is the
 graph's declared free space and `uncoupled()` retains it by the register's own
-contract. The next families the research packs rank are the PRODUCT remainder
-and the temporal and investment arithmetic.
+contract. The next family the research packs rank is BASE-NEEDED, which is
+larger than the PRODUCT remainder and is where the multipliers and indices
+above get their consumers.
 
 ## compliance register (1)
 

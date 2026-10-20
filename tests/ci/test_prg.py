@@ -1501,7 +1501,16 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# the 504. The containment below is what carries the weight -- dead is a
 	# subset of uncoupled-minus-rule -- and the count is the record of what
 	# it was *at*.
-	assert len(dead) == 467, len(dead)
+	# Batch 28's product layer took `graph.uncoupled()` 488 to 422: it made
+	# 44 placeholders derived and read 22 more as settable inputs, so the
+	# register falls by 66. Sixty-five of the 66 were dead knobs, which is
+	# why this count moves by almost the whole of the batch: 467 to 402. The
+	# one that was not dead is `geothermal_drilling_success`, which the
+	# cross-validation rule `geothermal_cost_below_drilling` already gates
+	# on -- it was uncoupled by the equation register and live by the rule
+	# register, which is exactly the disagreement the two spellings exist to
+	# expose, and `geothermal_effective_capex_definition` closes it.
+	assert len(dead) == 402, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
@@ -1810,7 +1819,14 @@ def test_the_audit_reports_what_it_did_not_check():
 	(117 to 119), and the other nine, the reserve and regulation
 	requirements, the planning margin, the SAIFI target, the voltage-support
 	requirement and the transmission loss after target, join ``skipped``
-	(182 to 191). The partition total is what the test is really asserting --
+	(182 to 191). Batch 28's product layer added 72 determined variables
+	(computed() went 310 to 382): sixty-one reachable from what the result
+	supplies -- the revenue cap, gross revenue, capacity, the direct
+	workforce, the asset value and the environmental indices -- join
+	``checked`` (124 to 155), and the other eleven, the insurance products
+	and the programme spends whose bases the result does not carry, join
+	``skipped`` (200 to 227). The partition total is what the test is really
+	asserting --
 	the two counts must sum to ``len(graph.computed())`` -- and the counts
 	are pinned beside it so a change to the register is looked at rather than
 	absorbed.
@@ -1820,8 +1836,8 @@ def test_the_audit_reports_what_it_did_not_check():
 
 	audit = audit_scenario_result(_solved())
 	assert audit.consistent
-	assert len(audit.checked) == 124, audit.checked
-	assert len(audit.skipped) == 200, audit.skipped
+	assert len(audit.checked) == 155, audit.checked
+	assert len(audit.skipped) == 227, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -1869,9 +1885,10 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# batch 21's demand-and-finance layer took it 182 to 198, batch 22's
 	# compliance layer took it 198 to 227, batch 23's extensive-base layer
 	# took it 227 to 243, batch 24's carbon-market layer took it 243 to 286,
-	# batch 25's gate-family coupling took it 286 to 299, and batch 26's
-	# adequacy-and-reserve layer took it 299 to 310.
-	assert len(audit.skipped) == 324, audit.skipped
+	# batch 25's gate-family coupling took it 286 to 299, batch 26's
+	# adequacy-and-reserve layer took it 299 to 310, and batch 28's product
+	# layer took it 310 to 382.
+	assert len(audit.skipped) == 382, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -2761,15 +2778,19 @@ def test_the_uncertainty_register_reads_the_declarations(graph: ParameterGraph):
 	# assertion: deriving the count from the register would pass on a graph
 	# that declared nothing uncertain, which is the silence this module exists
 	# to break.
-	assert len(reg.inputs) == 75, reg.inputs
-	assert len(reg.derived_stochastic) == 36, reg.derived_stochastic
+	assert len(reg.inputs) == 76, reg.inputs
+	assert len(reg.derived_stochastic) == 39, reg.derived_stochastic
 	assert len(reg.stochastic_edges) == 1, reg.stochastic_edges
-	# 111 nodes are declared stochastic in total: 75 settable, 36 derived.
+	# 115 nodes are declared stochastic in total: 76 settable, 39 derived.
 	# Batch 27's finance family moved both: three of its bases are declared
 	# stochastic (`aal_usd_million`, `pml_99_5_usd_million`, `microinsurance`)
 	# and one derived parameter entered the closure, `solvency_capital`,
-	# which reads the two insurance bases.
-	assert len(reg.inputs) + len(reg.derived_stochastic) == 111
+	# which reads the two insurance bases. Batch 28's product layer moved
+	# both again: two bases it retyped are declared stochastic
+	# (`fuel_price_volatility`, `geothermal_drilling_success`) and one
+	# derived parameter entered the closure, `claims_history`, which reads
+	# the loss ratio and the premium.
+	assert len(reg.inputs) + len(reg.derived_stochastic) == 115
 	assert len(reg.inputs) + len(reg.derived_stochastic) == sum(
 		1 for node in graph.nodes.values() if str(node.determinism) == "stochastic"
 	), "the register and the declarations disagree"
@@ -2909,11 +2930,17 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	# (`solvency_capital`, `insurance_premium_usd_million`,
 	# `insurance_premiums`, `microinsurance_premium_usd_per_year`,
 	# `microinsured_population`, `transaction_cost_usd_per_year`), taking the
-	# reach 123 to 129. Pinned because
+	# reach 123 to 129. Batch 28's product layer moved both counts again:
+	# two stochastic inputs (`fuel_price_volatility`,
+	# `geothermal_drilling_success`) took the register 75 to 76, and
+	# fourteen derived parameters entered the closure -- the eight
+	# employment counts, the two transition instruments, the contingency
+	# allowance, the cash sweep, the ceded premium and the effective
+	# geothermal capex -- taking the reach 129 to 143. Pinned because
 	# the number is the finding -- the sentence exists to stop a reader taking
 	# the declarations for a distribution, and a reach that drifts unnoticed
 	# would understate it.
-	assert "75" in text and "129" in text
+	assert "76" in text and "143" in text
 
 
 # ---------------------------------------------------------------------------
@@ -3681,12 +3708,17 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	microinsurance products, the ring-fenced asset, the transaction cost, the
 	two risk charges, the premium pricing and its alias, the solvency capital,
 	the RAB roll-forward, and the LLCR covenant, taking the sum to 359.
+	Batch 28's product layer added 58 identities, all hard: the five fiscal
+	products and the customs-duty alias, the three insurance products, the
+	capital and cash products, the eight temporal and operational scalars,
+	the seven programme spends, the ten employment and transition products
+	and the seventeen aliases, taking the sum to 417.
 	"""
 	counts = graph.strength_counts()
 	assert counts, "no strength was counted"
 	assert sum(counts.values()) == len(graph.equations)
 	assert set(counts) <= {"hard", "soft", "informational"}
-	assert counts == {"hard": 356, "informational": 1, "soft": 2}, counts
+	assert counts == {"hard": 414, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -4007,7 +4039,7 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# an external result. The batch therefore adds no citation, and the
 	# register moves by the ten that reuse existing works. A further change
 	# is a change to the register's coverage and fails here.
-	assert len(declared) == 151, f"the citation register moved: {sorted(declared)}"
+	assert len(declared) == 183, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -4038,9 +4070,14 @@ def test_a_citation_reaches_the_api_and_the_cli(graph: ParameterGraph):
 	# And the equations without one print no citation line, so the absence is
 	# absence rather than a blank column.
 	# `employment` carries references now (the multipliers), so the
-	# no-citation half points at `energy_balance`, whose equations are the
-	# kernel's own identities and cite nothing external.
-	ppaless = runner.invoke(app, ["prg", "equations", "--system", "energy_balance"])
+	# no-citation half pointed at `energy_balance`, whose equations are the
+	# kernel's own identities and cited nothing external. Batch 28's product
+	# layer changed that: the investment-period length cites Tejada-Arango
+	# for the multi-period formulation, and the load-factor override cites
+	# the catalog's duplicate-row register. So the half points at
+	# `capture_price`, whose seven equations are the strike-and-capture
+	# arithmetic and cite nothing.
+	ppaless = runner.invoke(app, ["prg", "equations", "--system", "capture_price"])
 	assert ppaless.exit_code == 0, ppaless.output
 	assert "ref:" not in ppaless.output, ppaless.output
 
@@ -4241,7 +4278,7 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 				f"numeric {numeric!r}"
 			)
 			compared += 1
-	assert compared == 324, (
+	assert compared == 382, (
 		f"expected 310 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "

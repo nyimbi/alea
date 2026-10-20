@@ -1635,20 +1635,28 @@ parameters:
     source: docs/params.md
   biodiversity_impact:
     name: Biodiversity impact
-    description: Biodiversity
+    description: 'The biodiversity loss: the intactness index before the project less the index after.
+      A loss, so it is zero when the two agree -- which is what the shipped defaults say, and the honest
+      reading of a graph that has not been given a post-project survey.'
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 1.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - DFIs
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   biodiversity_intactness_before:
     name: Biodiversity intactness before
     description: The Biodiversity Intactness Index at the project site before development. Normalised
@@ -3989,20 +3997,56 @@ parameters:
     source: docs/params.md
   cash_sweep:
     name: Cash sweep
-    description: Cash sweep
+    description: 'The share of distributable cash swept to debt service. A sweep is a lender''s covenant,
+      not a physical fact, so it is a policy dial: 100% is a full cash sweep, 0% leaves the cash with
+      the sponsor. Half is the common sculpted-debt arrangement.'
     category: Contract
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.5
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Banks
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  cash_swept_usd_per_year:
+    name: Cash swept usd per year
+    description: 'The cash swept to debt service: the sweep share times the distributable cash. Distributable
+      is cash available for debt service net of the service itself, so the sweep is applied to the residual
+      and the node is negative exactly when the service exceeds the cash. The range is signed for the
+      same reason `cfads_usd_per_kw_year` is: the base is a difference of two quantities, and a lower
+      bound of zero would file the shortfall as a derived excursion rather than leave it to the DSCR covenant
+      that exists to report it.'
+    category: Contract
+    subcategory: null
+    type: float
+    unit: USD/year
+    range:
+    - -1000000000000.0
+    - 1000000000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   cat_bond_parameters:
     name: Cat bond parameters
     description: Cat bonds
@@ -4274,20 +4318,51 @@ parameters:
     - Financial analysts
   child_labour_prohibition:
     name: Child labour prohibition
-    description: Child labour
+    description: The share of the workforce screened against child labour. One is the I LO core-convention
+      standard a project covenant requires; a partial screen is the finding, not the default.
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 1.0
+    initial: null
     role: free
-    determinism: fixed
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: to_build
+    deprecated_by: null
+  child_labour_screened_jobs:
+    name: Child labour screened jobs
+    description: 'The jobs screened against child labour: the screening share times the direct workforce.
+      A count of screened positions, so a scenario reads how many jobs a partial screen leaves unexamined.'
+    category: JustTrans
+    subcategory: null
+    type: float
+    unit: jobs
+    range:
+    - 0.0
+    - 100000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - DFIs
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   circuit_breakers:
     name: Circuit breakers
     description: Circuit breakers
@@ -4322,24 +4397,26 @@ parameters:
     source: docs/params.md
   claims_history:
     name: Claims history
-    description: FIRM-SPECIFIC. The firm's own loss history, not a market statistic. Not corrected.
+    description: 'Incurred claims: the loss ratio applied to the premium. The shipped node carried unit
+      1 and the placeholder, so an insurance loss was dimensionless; the retype makes the loss ratio the
+      ratio it is.'
     category: Insurance & Catastrophe
     subcategory: null
     type: float
-    unit: '1'
+    unit: USD/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1000000000000.0
     initial: null
-    role: free
-    determinism: fixed
+    role: derived
+    determinism: stochastic
     categories: []
-    source: Firm's own claims records
+    source: The product coupling (batch 28)
     source_url: null
     users:
-    - Insurance
-    priority: P2
+    - Planners
+    - Regulators
+    priority: P1
     status: to_build
     deprecated_by: null
   clean_cooking_target:
@@ -4605,20 +4682,53 @@ parameters:
     source: docs/params.md
   coal_community_dependencies:
     name: Coal community dependencies
-    description: Coal community reliance
+    description: The share of the exposed population whose livelihood depends on the coal activity being
+      retired. Five percent of the dispersion-range population is the order a single-plant dependency
+      reaches in a district-scale economy.
     category: JustTrans
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.05
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: integrate
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: integrate
+    deprecated_by: null
+  coal_dependent_population:
+    name: Coal dependent population
+    description: 'The people whose livelihood depends on the coal activity: the dependency share times
+      the exposed population. The exposed population is the dispersion-range population, so the count
+      is the coal district''s dependency and not a national one.'
+    category: JustTrans
+    subcategory: null
+    type: float
+    unit: people
+    range:
+    - 0.0
+    - 1000000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   coal_eaf:
     name: Coal energy availability factor
     description: Share of rated energy the coal fleet can deliver. Determined by the forced and planned
@@ -5017,20 +5127,27 @@ parameters:
     deprecated_by: null
   community_benefit_sharing:
     name: Community benefit sharing
-    description: Benefit sharing
-    category: Land
+    description: The benefit-sharing share, under the catalog's second id. The canonical node `community_benefit_share_of_revenue`
+      is what the revenue identity reads; the equality makes this the same number.
+    category: Land Use & Community
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 0.05
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   community_benefit_usd_per_year:
     name: Community benefit transfer
     description: The revenue transferred to the host community over the year. Declared here so the equation
@@ -5101,52 +5218,122 @@ parameters:
     deprecated_by: null
   community_development_funds:
     name: Community development funds
-    description: Community funds
-    category: Land
+    description: The community development fund share, under the catalog's second id. `community_development_fund_share`
+      is the node the fund's currency amount is computed from.
+    category: Land Use & Community
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 0.03
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   community_health_safety:
     name: Community health safety
-    description: Community H&S
+    description: Community health-and-safety programme spend as a share of allowed revenue. The same idiom
+      the graph's own `consumer_protection_standards` uses, so the programme cost is read against the
+      revenue that funds it.
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.05
+    default: 0.002
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - DFIs
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  community_health_safety_spend_usd_per_year:
+    name: Community health safety spend usd per year
+    description: 'Community health-and-safety programme spend: the programme share times allowed revenue.
+      In the unit allowed revenue is in, so the share reads as a fraction of the revenue cap.'
+    category: EnvSoc
+    subcategory: null
+    type: float
+    unit: USD million/year
+    range:
+    - 0.0
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   community_transition_funding:
     name: Community transition funding
-    description: Transition funding
+    description: The share of the community development fund earmarked for transition support. Ten percent
+      of an existing fund rather than a new levy, because the graph already carries the fund.
     category: JustTrans
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.1
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  community_transition_funding_usd_per_year:
+    name: Community transition funding usd per year
+    description: 'The transition share of the community development fund: an allocation inside a fund
+      the graph already computes, which is why its base is that fund and not revenue.'
+    category: JustTrans
+    subcategory: null
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 1000000000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   compensation_mechanisms:
     name: Compensation mechanisms
     description: Compensation
@@ -5205,20 +5392,49 @@ parameters:
     deprecated_by: null
   complaint_handling:
     name: Complaint handling
-    description: Complaint handling
+    description: The complaint-handling programme's cost as a share of allowed revenue.
     category: Consumer
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.05
+    default: 0.002
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
+    - Planners
     - Regulators
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  complaint_handling_spend_usd_per_year:
+    name: Complaint handling spend usd per year
+    description: 'Complaint-handling programme spend: the share times allowed revenue.'
+    category: Consumer
+    subcategory: null
+    type: float
+    unit: USD million/year
+    range:
+    - 0.0
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   compliant_contract_jobs:
     name: Compliant contract jobs
     description: 'compliant contract jobs: the compliance register''s derived quantity. The construction-phase
@@ -5493,20 +5709,49 @@ parameters:
     - Financial analysts
   consumer_education:
     name: Consumer education
-    description: Consumer education
+    description: Consumer-education spend as a share of allowed revenue.
     category: Consumer
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.05
+    default: 0.001
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
+    - Planners
     - Regulators
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  consumer_education_spend_usd_per_year:
+    name: Consumer education spend usd per year
+    description: 'Consumer-education spend: the share times allowed revenue.'
+    category: Consumer
+    subcategory: null
+    type: float
+    unit: USD million/year
+    range:
+    - 0.0
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   consumer_price_index_link:
     name: Consumer price index link
     description: CPI link
@@ -5589,20 +5834,53 @@ parameters:
     deprecated_by: null
   contingency:
     name: Contingency
-    description: Contingency on capex
+    description: 'The contingency allowance as a share of capex: the cover a project carries for scope
+      growth between financial close and completion. Ten percent is the middle of the 5-15% band a lump-sum
+      EPC contract''s owner''s contingency sits in; the shipped 500000.0 was a placeholder that made the
+      allowance 6e12 USD.'
     category: Macro
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.3
+    default: 0.1
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  contingency_allowance_usd:
+    name: Contingency allowance usd
+    description: 'The contingency allowance: the share times the capital cost. A capital item, released
+      or spent at completion, not an annual cost.'
+    category: Macro
+    subcategory: null
+    type: float
+    unit: USD
+    range:
+    - 0.0
+    - 10000000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   contingency_reserve_mw:
     name: Contingency reserve mw
     description: 'contingency reserve mw: from the mechanism''s switch and the magnitude the source states.
@@ -5694,20 +5972,27 @@ parameters:
     deprecated_by: null
   cooling_water_demand:
     name: Cooling water demand
-    description: Cooling water demand
+    description: 'Cooling water withdrawn, in cubic metres per year: the shipped extensive node under
+      the catalog''s second id.'
     category: Sector
+    subcategory: null
     type: float
+    unit: m3/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 1000000000000.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   cooling_water_demand_m3:
     name: Cooling water demand
     description: Cooling water withdrawn in the year. A flow; the shipped `m3` made the water balance
@@ -6482,20 +6767,50 @@ parameters:
     deprecated_by: null
   cross_subsidy_transparency:
     name: Cross subsidy transparency
-    description: Cross-subsidy
+    description: The cost of disclosing the cross-subsidy, as a share of allowed revenue. Cheaper than
+      the transfers it makes visible, which is the point of publishing it.
     category: Consumer
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.05
+    default: 0.0005
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
+    - Planners
     - Regulators
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  cross_subsidy_transparency_spend_usd_per_year:
+    name: Cross subsidy transparency spend usd per year
+    description: 'The cost of publishing the cross-subsidy: the share times allowed revenue.'
+    category: Consumer
+    subcategory: null
+    type: float
+    unit: USD million/year
+    range:
+    - 0.0
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   cross_subsidy_usd_per_year:
     name: Cross subsidy usd per year
     description: 'The revenue moved from one tariff class to another, as a share of total revenue. It
@@ -6555,20 +6870,27 @@ parameters:
     source: docs/params.md
   cultural_heritage_impact:
     name: Cultural heritage impact
-    description: Cultural heritage
+    description: 'The cultural heritage impact, under the catalog''s second id: the heritage impact score
+      itself.'
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 1.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - DFIs
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   cultural_heritage_impact_score:
     name: Cultural heritage impact score
     description: A composite score of the project's impact on cultural heritage, normalised to [0, 1].
@@ -6877,25 +7199,26 @@ parameters:
     source: docs/params.md
   customs_duty:
     name: Customs duty
-    description: Customs duty as a share of imported goods value. Overlaps with import duty; the graph
-      carries both and the next batch should nominate one as canonical.
+    description: The customs duty rate, as a share of imported equipment value. The catalog carries it
+      as a second row for `import_duty_equipment`; the equality is the whole content, and it is what stops
+      a scenario changing one rate and leaving the other at its old value.
     category: Tax & Fiscal
     subcategory: null
     type: float
     unit: '1'
     range:
     - 0.0
-    - 0.5
-    default: 0.1
+    - 1.0
     initial: null
-    role: free
-    determinism: policy
+    role: derived
+    determinism: fixed
     categories: []
-    source: Jurisdiction's tariff schedule
+    source: The product coupling (batch 28)
     source_url: null
     users:
-    - Developers
-    priority: P2
+    - Planners
+    - Regulators
+    priority: P1
     status: to_build
     deprecated_by: null
   cvar_alpha:
@@ -7371,25 +7694,25 @@ parameters:
     deprecated_by: null
   deductible_levels:
     name: Deductible levels
-    description: FIRM-SPECIFIC. The deductible schedule is a property of a specific policy book. Not corrected;
-      the market-level statistic is `deductible_share`, which is declared in Part A.
+    description: 'The deductible the project carries: the deductible share times the asset value. A stock,
+      because the deductible is a threshold on a single event rather than an annual amount.'
     category: Insurance & Catastrophe
     subcategory: null
     type: float
-    unit: '1'
+    unit: USD
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 10000000000.0
     initial: null
-    role: free
-    determinism: fixed
+    role: derived
+    determinism: policy
     categories: []
-    source: Firm's policy schedule
+    source: The product coupling (batch 28)
     source_url: null
     users:
-    - Insurance
-    priority: P2
+    - Planners
+    - Regulators
+    priority: P1
     status: to_build
     deprecated_by: null
   deductible_share:
@@ -8069,20 +8392,51 @@ parameters:
     deprecated_by: null
   dispatch_interval:
     name: Dispatch interval
-    description: Dispatch interval
+    description: 'The settlement and dispatch cadence: how many hours one dispatch interval spans. Half-hourly
+      is the European settlement default and the finest cadence most balancing authorities settle at.'
     category: Operational
+    subcategory: null
     type: float
+    unit: hour
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.05
+    - 24.0
+    default: 0.5
+    initial: null
     role: free
     determinism: fixed
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: existing
+    deprecated_by: null
+  dispatch_intervals_per_hour:
+    name: Dispatch intervals per hour
+    description: 'How many dispatch intervals one hour holds: the reciprocal of the interval length. A
+      cadence, so a shorter interval is a larger number.'
+    category: Operational
+    subcategory: null
+    type: float
+    unit: 1/hour
+    range:
+    - 0.0
+    - 48.0
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   dispatchable_re_capacity_mw:
     name: Dispatchable renewable capacity
     description: 'Hydro, geothermal and OTEC: renewable, and the operator chooses the output. Counted
@@ -8419,22 +8773,52 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
-  early_retirement_packages:
-    name: Early retirement packages
-    description: Early retirement
+  early_retirement_jobs:
+    name: Early retirement jobs
+    description: 'The jobs offered early retirement: the share times the direct workforce.'
     category: JustTrans
+    subcategory: null
     type: float
+    unit: jobs
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 100000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
+  early_retirement_packages:
+    name: Early retirement packages
+    description: The share of the workforce offered early retirement as a transition instrument. Two percent
+      is a targeted package rather than a general reduction.
+    category: JustTrans
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.02
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   ecosystem_services_index:
     name: Ecosystem services index
     description: Composite index of ecosystem service provision, normalised to [0, 1]. Range is the index's
@@ -9796,6 +10180,29 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  export_duty_usd_per_year:
+    name: Export duty usd per year
+    description: 'The export duty on the energy carrier sold abroad: the rate times export revenue. Zero
+      at the shipped rate of zero, which is a finding about the fiscal regime rather than a missing number.'
+    category: Tax & Fiscal
+    subcategory: null
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 1000000000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   exposed_population:
     name: Exposed population
     description: People within the dispersion range of the emitting fleet.
@@ -10064,20 +10471,53 @@ parameters:
     deprecated_by: null
   fishing_community_load:
     name: Fishing community load
-    description: Coastal fishing load
+    description: 'The load a fishing community draws: a small coastal settlement''s demand, in megawatts.
+      The catalog carried it unitless with the placeholder, so the conversion to annual energy it states
+      divided a placeholder by a million.'
     category: Demand
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 30000.0
+    default: 5.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Fisheries
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  fishing_community_load_twh:
+    name: Fishing community load twh
+    description: 'The fishing community''s annual energy: its load in megawatts converted at the graph''s
+      own 8760 hours and 1e6 MWh per TWh. The conversion the catalog states, with the unit that makes
+      it dimensional.'
+    category: Demand
+    subcategory: null
+    type: float
+    unit: TWh/year
+    range:
+    - 0.0
+    - 100.0
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   fishing_vessel_fuel:
     name: Fishing vessel fuel
     description: Fishing vessel fuel
@@ -10889,6 +11329,29 @@ parameters:
     users:
     - All
     source: docs/params.md
+  fuel_price_upper_usd_per_mwh:
+    name: Fuel price upper usd per mwh
+    description: 'The upper edge of the fuel price band: the base price grossed up by the volatility.
+      The band''s lower edge is the same product with the sign reversed; this node is the stress case.'
+    category: Costs
+    subcategory: null
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 10000.0
+    initial: null
+    role: derived
+    determinism: stochastic
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   fuel_price_usd_per_mwh:
     name: Fuel price
     description: Delivered fuel cost per megawatt-hour of thermal output.
@@ -10912,20 +11375,28 @@ parameters:
     deprecated_by: null
   fuel_price_volatility:
     name: Fuel price volatility
-    description: Fuel price volatility
+    description: The fuel price's one-sigma excursion as a share of the base price. A quarter is the width
+      the risk cases use for a delivered gas price; the band's upper edge is what a stress case reads.
     category: Cost
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.25
+    initial: null
     role: free
     determinism: stochastic
-    priority: P2
-    status: to_build
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - All
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   fusion_capacity:
     name: Fusion capacity
     description: Fusion capacity
@@ -11407,20 +11878,53 @@ parameters:
     deprecated_by: null
   geothermal_drilling_success:
     name: Geothermal drilling success
-    description: Drilling success rate
+    description: 'The probability a drilled geothermal well is productive. The lower bound is 5% and not
+      0 because the effective capex divides by it: a zero success rate is an infinite cost per productive
+      well, which is the arithmetic saying no well is worth drilling rather than a cost.'
     category: Supply
+    subcategory: null
     type: float
+    unit: '1'
+    range:
+    - 0.05
+    - 1.0
+    default: 0.75
+    initial: null
+    role: free
+    determinism: stochastic
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: integrate
+    deprecated_by: null
+  geothermal_effective_capex_usd_per_kw:
+    name: Geothermal effective capex usd per kw
+    description: 'The capex per productive kilowatt: the drilling cost divided by the success rate. A
+      dry hole is paid for and produces nothing, so the cost of a *successful* well is the nominal capex
+      grossed up by the inverse success probability.'
+    category: Supply
+    subcategory: null
+    type: float
+    unit: USD/kW
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: integrate
+    initial: null
+    role: derived
+    determinism: stochastic
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   gis_requirements:
     name: Gis requirements
     description: The share of network assets in the GIS.
@@ -11684,20 +12188,27 @@ parameters:
     source: docs/params.md
   habitat_loss:
     name: Habitat loss
-    description: Habitat loss
+    description: 'The habitat lost, in hectares: the extensive node `habitat_loss_hectares` under the
+      catalog''s second id.'
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: hectares
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: integrate
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - DFIs
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: integrate
+    deprecated_by: null
   habitat_loss_hectares:
     name: Habitat loss
     description: Hectares of natural habitat lost to the project.
@@ -12744,20 +13255,28 @@ parameters:
     source: docs/params.md
   import_dependency:
     name: Import dependency
-    description: Import dependency
+    description: 'Imports as a share of demand: net imports over total demand, in absolute value because
+      the net flow is signed and a large export position is not a dependency. The shipped node was the
+      placeholder.'
     category: Geopol
+    subcategory: null
     type: float
+    unit: '1'
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
+    - -1.0
+    - 1.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: to_build
-    users:
-    - Policymakers
-    source: docs/params.md
+    deprecated_by: null
   import_duty_cost_usd:
     name: The import duty paid
     description: 'The duty the project actually pays: the unexempted share of the equipment duty on the
@@ -12890,20 +13409,27 @@ parameters:
     - Planners
   indigenous_peoples_rights:
     name: Indigenous peoples rights
-    description: FPIC
+    description: Free, prior and informed consent, under the catalog's rights id. The graph carries one
+      FPIC score, `fpic_compliance_score`; a second spelling of it is the coupling.
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 1.0
+    initial: null
+    role: derived
     determinism: fixed
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: to_build
-    users:
-    - DFIs
-    source: docs/params.md
+    deprecated_by: null
   indirect_employment_multiplier:
     name: Indirect employment multiplier
     description: 'Supply-chain multiplier on the direct jobs: purchases, haulage, feeds and services the
@@ -13640,22 +14166,54 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
-  investment_periods:
-    name: Investment periods
-    description: Investment periods
+  investment_period_length_years:
+    name: Investment period length years
+    description: 'How long one investment period is: the horizon divided by the period count. A discretisation,
+      so it moves with both and neither is a physical constant.'
     category: Temporal
+    subcategory: null
     type: float
+    unit: years
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 0.5
+    - 50.0
+    initial: null
+    role: derived
     determinism: fixed
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: existing
+    deprecated_by: null
+  investment_periods:
+    name: Investment periods
+    description: How many investment periods the horizon is cut into. A count, so the unit is 1 and the
+      range is integral in practice; five periods over a twenty-five-year horizon is the standard multi-year
+      capacity expansion formulation (Tejada-Arango 2023).
+    category: Temporal
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 1.0
+    - 20.0
+    default: 5.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - All
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   irrigation_coverage:
     name: Irrigation coverage
     description: Share of arable land under irrigation. A share; the shipped range admitted a value 500,000
@@ -13697,20 +14255,53 @@ parameters:
     source: docs/params.md
   islanding_capability:
     name: Islanding capability
-    description: Islanding capability
+    description: The share of primary feeders able to island with local generation. A share of the 500
+      shipped feeders, so ten percent is fifty feeders; the placeholder read as half a million times the
+      feeder count.
     category: Outage
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.1
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  islanding_capable_feeders:
+    name: Islanding capable feeders
+    description: 'The feeders able to island: the capability share times the primary feeder count. A count
+      of feeders, and the feeder node is itself unitless -- the graph''s own `adms_controlled_feeders`
+      reads it the same way.'
+    category: Reliability
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 10000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   iso_55000_compliance:
     name: Iso 55000 compliance
     description: ISO 55000
@@ -13729,20 +14320,51 @@ parameters:
     source: docs/params.md
   just_transition_fund:
     name: Just transition fund
-    description: JT fund
+    description: The just-transition levy as a share of gross revenue. Half a percent is the order a transition
+      surcharge sits at on a retail tariff.
     category: JustTrans
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.05
+    default: 0.005
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  just_transition_fund_usd_per_year:
+    name: Just transition fund usd per year
+    description: 'The just-transition levy: the share times gross revenue. Charged on revenue rather than
+      on the community fund because it is a levy the tariff funds, not an allocation of an existing programme.'
+    category: JustTrans
+    subcategory: null
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 1000000000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   labour_standards:
     name: Labour standards
     description: The share of construction-phase jobs carrying standard contracts.
@@ -13811,20 +14433,29 @@ parameters:
     - Regulators
   land_acquisition_costs:
     name: Land acquisition costs
-    description: Land costs
+    description: The project's land bill, under the catalog's second id. The graph computes it over `land_area_hectares`,
+      the project's whole take; the catalog's own row multiplies the same per-hectare cost by the habitat-loss
+      subset, which would price 500 of the 5,000 hectares and call it the bill. The equality to `land_acquisition_cost_usd`
+      is the honest coupling and the subset form is the trap it avoids.
     category: Land
+    subcategory: null
     type: float
+    unit: USD
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
+    - 100000000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: to_build
-    users:
-    - Developers
-    source: docs/params.md
+    deprecated_by: null
   land_aggregation:
     name: Land aggregation
     description: Land aggregation
@@ -13957,20 +14588,28 @@ parameters:
     source: docs/params.md
   land_use_change:
     name: Land use change
-    description: Land use change
+    description: 'The land converted, in hectares: the same physical quantity as habitat loss under the
+      catalog''s third name. Two ids and one survey, so the equality is the coupling rather than a second
+      measurement.'
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: hectares
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: integrate
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - DFIs
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: integrate
+    deprecated_by: null
   land_use_conflict_index:
     name: Land use conflict index
     description: A composite index of competing land uses in the project's vicinity, normalised to [0,
@@ -13996,20 +14635,26 @@ parameters:
     deprecated_by: null
   land_use_conflicts:
     name: Land use conflicts
-    description: Land use conflicts
+    description: The land use conflict index, under the catalog's second id.
     category: Land
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
+    - 1.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: integrate
-    users:
-    - Developers
-    source: docs/params.md
+    deprecated_by: null
   land_use_planning:
     name: Land use planning
     description: Land use planning
@@ -14899,36 +15544,76 @@ parameters:
     deprecated_by: null
   load_factor_override:
     name: Load factor override
-    description: Override default load factor
+    description: A scenario's load factor, overriding the derived one. The equality makes it the same
+      number as `load_factor`; the node exists so a scenario can name the override, and the coupling stops
+      it drifting from the load the graph computes.
     category: Demand
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 1.0
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   load_shifting_capability:
     name: Load shifting capability
-    description: Hours of load shifting possible
+    description: 'How many hours the interruptible load can be shifted for. A duration, not an energy:
+      the shipped placeholder made it 500000 hours, which is fifty-seven years of shifting from one demand
+      block.'
     category: Demand
+    subcategory: null
     type: float
+    unit: hours
+    range:
+    - 0.0
+    - 24.0
+    default: 2.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  load_shifting_energy_mwh:
+    name: Load shifting energy mwh
+    description: 'The energy the interruptible load can move: the shifting duration times the interruptible
+      capacity. Energy and not power, because the capability is how long the block can stay off.'
+    category: Demand-Side
+    subcategory: null
+    type: float
+    unit: MWh
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   loan_life_coverage_ratio:
     name: Minimum LLCR
     description: Loan life coverage floor. Same shape as the DSCR floor.
@@ -14972,20 +15657,27 @@ parameters:
     - Planners
   local_content_employment:
     name: Local content employment
-    description: Local employment
+    description: The local employment share, under the catalog's second id. `local_employment_share` is
+      the canonical node, and `local_jobs` already computes the count from it.
     category: JustTrans
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 0.9
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   local_content_requirement:
     name: Local content requirement
     description: Share of project inputs that must be sourced locally. A share; the shipped default of
@@ -16601,20 +17293,50 @@ parameters:
     source: docs/params.md
   occupational_health_safety:
     name: Occupational health safety
-    description: OHS
+    description: Occupational health-and-safety spend as a share of allowed revenue. The workforce-facing
+      programme, distinct from the community-facing one above.
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.05
+    default: 0.005
+    initial: null
     role: free
-    determinism: fixed
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: to_build
+    deprecated_by: null
+  occupational_health_safety_spend_usd_per_year:
+    name: Occupational health safety spend usd per year
+    description: 'Occupational health-and-safety spend: the share times allowed revenue.'
+    category: EnvSoc
+    subcategory: null
+    type: float
+    unit: USD million/year
+    range:
+    - 0.0
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - DFIs
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   official_development_assistance:
     name: Official development assistance
     description: Official development assistance
@@ -17713,22 +18435,52 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
-  pension_security:
-    name: Pension security
-    description: Pension security
+  pension_covered_jobs:
+    name: Pension covered jobs
+    description: 'The jobs covered by a pension: the coverage share times the direct workforce.'
     category: JustTrans
+    subcategory: null
     type: float
+    unit: jobs
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 100000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
+  pension_security:
+    name: Pension security
+    description: 'The share of the workforce covered by a pension. Coverage, not adequacy: the graph carries
+      no benefit-level quantity, and a share is what a labour-standard audit reports.'
+    category: JustTrans
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.8
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   performance_bond:
     name: Performance bond
     description: Bond posted as a share of capex. A share.
@@ -17750,6 +18502,29 @@ parameters:
     - Developers
     priority: P2
     status: to_build
+    deprecated_by: null
+  performance_bond_usd:
+    name: Performance bond usd
+    description: 'The performance bond a sponsor posts: a share of capex held against non-completion.
+      Capital, not a flow, because the bond is released rather than spent.'
+    category: Contract & Legal
+    subcategory: null
+    type: float
+    unit: USD
+    range:
+    - 0.0
+    - 10000000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
     deprecated_by: null
   permanence_parameters:
     name: Permanence parameters
@@ -18027,20 +18802,27 @@ parameters:
     - Planners
   plant_retirement_age:
     name: Plant retirement age
-    description: Retirement age by technology
+    description: 'The age at which a plant retires: the asset life the graph already carries. `remaining_useful_life`
+      reads this node, so the equality is what puts a retirement age behind the remaining-life arithmetic.'
     category: Supply
+    subcategory: null
     type: float
+    unit: years
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 100.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   pm10_emissions:
     name: Pm10 emissions
     description: PM10 emissions
@@ -18078,20 +18860,27 @@ parameters:
     - Planners
   pm25_emissions:
     name: Pm25 emissions
-    description: PM2.5 emissions
+    description: 'Primary particulate emissions, in kilotonnes per year: the shipped emission-rate node
+      under the catalog''s second id.'
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: kt/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
+    - 10000.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: integrate
-    users:
-    - DFIs
-    source: docs/params.md
+    deprecated_by: null
   pm25_exceedance_ratio:
     name: Pm25 exceedance ratio
     description: 'pm25 exceedance ratio: the compliance register''s derived quantity. How many times the
@@ -19319,22 +20108,53 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
-  redeployment_options:
-    name: Redeployment options
-    description: Redeployment
+  redeployed_jobs:
+    name: Redeployed jobs
+    description: 'The jobs with a redeployment option: the share times the direct workforce. The count
+      a just-transition plan is judged on.'
     category: JustTrans
+    subcategory: null
     type: float
+    unit: jobs
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 100000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
+  redeployment_options:
+    name: Redeployment options
+    description: The share of the workforce with a redeployment option into the replacement activity.
+      The instrument a just-transition plan counts, and the count is what makes the plan checkable.
+    category: JustTrans
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.1
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   reference_tariff_usd_per_mwh:
     name: Reference tariff
     description: The tariff at which the reference demand was observed.
@@ -19703,25 +20523,26 @@ parameters:
     deprecated_by: null
   reinsurance_parameters:
     name: Reinsurance parameters (absolute)
-    description: FIRM-SPECIFIC. The market-level statistic is `retention_share`, declared in Part A. Not
-      corrected.
+    description: 'The premium ceded to the reinsurer: the ceded share, `1 - retention_share`, times the
+      premium. Ceded and not retained, because the node names the reinsurance and the retention share
+      is the part kept.'
     category: Insurance & Catastrophe
     subcategory: null
     type: float
-    unit: '1'
+    unit: USD/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 10000000000.0
     initial: null
-    role: free
-    determinism: fixed
+    role: derived
+    determinism: policy
     categories: []
-    source: Firm's treaty schedule
+    source: The product coupling (batch 28)
     source_url: null
     users:
-    - Insurance
-    priority: P2
+    - Planners
+    - Regulators
+    priority: P1
     status: to_build
     deprecated_by: null
   reliability_centred_maintenance:
@@ -20179,20 +21000,27 @@ parameters:
     deprecated_by: null
   resettlement_costs:
     name: Resettlement costs
-    description: Resettlement costs
-    category: EnvSoc
+    description: The resettlement programme's cost, under the catalog's second id. `resettlement_costs_total_usd`
+      is the node the population, share and per-person cost multiply into.
+    category: Land Use & Community
+    subcategory: null
     type: float
+    unit: USD
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
+    - 1000000000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: to_build
-    users:
-    - DFIs
-    source: docs/params.md
+    deprecated_by: null
   resettlement_costs_total_usd:
     name: Total resettlement cost
     description: The total cost of the resettlement programme. Declared here so the equation has a name.
@@ -20401,20 +21229,29 @@ parameters:
     deprecated_by: null
   retraining_costs:
     name: Retraining costs
-    description: Retraining cost
+    description: Retraining cost per job. The catalog carried the node unitless with the placeholder,
+      so the spend it multiplies by the workforce was 500000 USD per job. Two thousand is the order a
+      short vocational conversion costs per worker.
     category: JustTrans
+    subcategory: null
     type: float
+    unit: USD/job
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 100000.0
+    default: 2000.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   retraining_duration:
     name: Retraining duration
     description: 'Months of retraining a displaced or in-plant worker takes: a year is the programme the
@@ -20436,6 +21273,30 @@ parameters:
     users:
     - Planners
     - Financial analysts
+    priority: P1
+    status: existing
+    deprecated_by: null
+  retraining_spend_usd:
+    name: Retraining spend usd
+    description: 'The retraining bill: cost per job times the direct workforce. Charged against the whole
+      workforce rather than the gap, because the catalog''s form does -- and that is the conservative
+      reading of a programme that reaches everyone.'
+    category: JustTrans
+    subcategory: null
+    type: float
+    unit: USD
+    range:
+    - 0.0
+    - 1000000000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: existing
     deprecated_by: null
@@ -21376,36 +22237,97 @@ parameters:
     source: docs/params.md
   skills_gap_assessment:
     name: Skills gap assessment
-    description: Skills gap
+    description: The share of the skilled requirement the local labour market cannot fill. Applied on
+      top of `skills_requirements`, so the gap is a share of a share and never exceeds the skilled requirement.
     category: JustTrans
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.3
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  skills_gap_jobs:
+    name: Skills gap jobs
+    description: 'The skilled jobs the local market cannot fill: the gap share times the skilled requirement.
+      A share of a share, so the gap cannot exceed the requirement it is a gap in.'
+    category: JustTrans
+    subcategory: null
+    type: float
+    unit: jobs
+    range:
+    - 0.0
+    - 100000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   skills_requirements:
     name: Skills requirements
-    description: Skills by technology
+    description: The share of jobs that need a certified skill. Thirty percent is the craft share of a
+      construction-and-O&M workforce.
     category: JustTrans
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.3
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  skills_requirements_jobs:
+    name: Skills requirements jobs
+    description: 'The jobs needing a certified skill: the share times the direct workforce.'
+    category: JustTrans
+    subcategory: null
+    type: float
+    unit: jobs
+    range:
+    - 0.0
+    - 100000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   small_modular_reactor_capacity:
     name: Small modular reactor capacity
     description: SMR capacity
@@ -21520,20 +22442,28 @@ parameters:
     source: docs/params.md
   social_protection_parameters:
     name: Social protection parameters
-    description: Social protection
+    description: The share of the workforce under social protection (unemployment insurance, health cover,
+      injury compensation). Half is a middle-income coverage rate.
     category: JustTrans
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.5
+    initial: null
     role: free
     determinism: policy
-    priority: P2
-    status: to_build
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   social_representations:
     name: Social representations
     description: Social reps
@@ -21575,22 +22505,50 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
-  soil_contamination:
-    name: Soil contamination
-    description: Soil contamination
-    category: EnvSoc
+  socially_protected_jobs:
+    name: Socially protected jobs
+    description: 'The jobs under social protection: the coverage share times the direct workforce.'
+    category: JustTrans
+    subcategory: null
     type: float
+    unit: jobs
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    - 100000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - DFIs
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
+  soil_contamination:
+    name: Soil contamination
+    description: The soil contamination index, under the catalog's second id. One index, so one equality.
+    category: EnvSoc
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   soil_contamination_index:
     name: Soil contamination index
     description: A composite soil contamination index, normalised to [0, 1]. Higher is more contaminated.
@@ -22187,6 +23145,29 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  stamp_duty_usd:
+    name: Stamp duty usd
+    description: 'The stamp duty on the property transfer: the rate times the asset value. A transfer
+      tax is charged once on the capital, not annually on the revenue.'
+    category: Tax & Fiscal
+    subcategory: null
+    type: float
+    unit: USD
+    range:
+    - 0.0
+    - 10000000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   startup_cost_coal:
     name: Startup cost coal
     description: Coal start-up cost
@@ -22701,20 +23682,49 @@ parameters:
     source: docs/params.md
   tariff_transparency:
     name: Tariff transparency
-    description: Tariff transparency
+    description: Tariff-publication and consultation cost as a share of allowed revenue.
     category: Consumer
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.05
+    default: 0.001
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
+    - Planners
     - Regulators
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  tariff_transparency_spend_usd_per_year:
+    name: Tariff transparency spend usd per year
+    description: 'Tariff transparency spend: the share times allowed revenue.'
+    category: Consumer
+    subcategory: null
+    type: float
+    unit: USD million/year
+    range:
+    - 0.0
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   tariff_usd_per_mwh:
     name: Retail tariff
     description: What a customer pays per megawatt-hour, including network and retail costs.
@@ -23203,7 +24213,7 @@ parameters:
     - 0.0
     - 100.0
     default: 25.0
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P1
     status: existing
@@ -23761,22 +24771,54 @@ parameters:
     users:
     - Utilities
     source: docs/params.md
-  tsam_segments:
-    name: Tsam segments
-    description: TSAM segments
+  tsam_segment_hours:
+    name: Tsam segment hours
+    description: 'The length of one time-slice segment: a day divided by the segment count. Twenty-four
+      segments give hourly slices, which is the un-aggregated case the segment count exists to depart
+      from.'
     category: Temporal
+    subcategory: null
     type: float
+    unit: hours
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 0.25
+    - 24.0
+    initial: null
+    role: derived
     determinism: fixed
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: existing
+    deprecated_by: null
+  tsam_segments:
+    name: Tsam segments
+    description: Time-slice segments per day in the aggregated dispatch model. Twenty-four hourly segments
+      is the un-aggregated case; the unit is a count per day so the segment length it implies is hours.
+    category: Temporal
+    subcategory: null
+    type: float
+    unit: 1/day
+    range:
+    - 1.0
+    - 96.0
+    default: 24.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - All
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   unbundling_status:
     name: Unbundling status
     description: Utility unbundling
@@ -23795,36 +24837,73 @@ parameters:
     source: docs/params.md
   undrip_compliance:
     name: Undrip compliance
-    description: UNDRIP
+    description: UNDRIP compliance, measured by the same FPIC score. The declaration has no separate index
+      in the graph, and inventing one would be a number with no observation behind it.
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 1.0
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - DFIs
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   union_agreements:
     name: Union agreements
-    description: Union agreements
+    description: The share of the workforce covered by a collective agreement. A coverage share, which
+      is what an ILO labour-statistics table reports, not a headcount.
     category: JustTrans
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.3
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Unions
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  unionised_jobs:
+    name: Unionised jobs
+    description: 'The jobs covered by a collective agreement: the coverage share times the direct workforce.'
+    category: JustTrans
+    subcategory: null
+    type: float
+    unit: jobs
+    range:
+    - 0.0
+    - 100000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   unit_commitment:
     name: Unit commitment enforced
     description: Whether the dispatch model enforces unit commitment. A boolean.
@@ -24355,36 +25434,98 @@ parameters:
     deprecated_by: null
   vulnerable_customer_protection:
     name: Vulnerable customer protection
-    description: Vulnerable customers
+    description: 'The protection programme''s cost as a share of allowed revenue: the administration of
+      lifeline eligibility and disconnection safeguards.'
     category: Consumer
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.05
+    default: 0.002
+    initial: null
     role: free
-    determinism: fixed
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: to_build
+    deprecated_by: null
+  vulnerable_customer_protection_spend_usd_per_year:
+    name: Vulnerable customer protection spend usd per year
+    description: 'Vulnerable-customer protection spend: the share times allowed revenue.'
+    category: Consumer
+    subcategory: null
+    type: float
+    unit: USD million/year
+    range:
+    - 0.0
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
+    - Planners
     - Regulators
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
+  wage_bill_usd_per_year:
+    name: Wage bill usd per year
+    description: 'The annual wage bill: the average wage times the direct workforce. The quantity that
+      makes a jobs claim a claim about income.'
+    category: JustTrans
+    subcategory: null
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 10000000000000.0
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   wage_levels_by_sector:
     name: Wage levels by sector
-    description: Wage levels
+    description: The average wage per job per year. A rate, so the wage bill is the workforce times it;
+      the shipped node had no unit and the placeholder, which priced the workforce at half a million dollars
+      a head.
     category: JustTrans
+    subcategory: null
     type: float
+    unit: USD/job/year
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 20000.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   waste_to_energy_capacity:
     name: Waste to energy capacity
     description: Waste-to-energy capacity
@@ -24515,20 +25656,27 @@ parameters:
     source: docs/params.md
   water_quality_impact:
     name: Water quality impact
-    description: Water quality
-    category: EnvSoc
+    description: 'The water quality impact: one less the quality index. An index of 1 is pristine water
+      and an impact of 0; the complement is what a scenario reads as the damage.'
+    category: Sector
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 1.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
-    - DFIs
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   water_quality_index:
     name: Water quality index
     description: A composite water quality index, normalised to [0, 1]. Higher is cleaner.
@@ -24982,6 +26130,33 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
+  withholding_tax_dividends_usd_per_year:
+    name: Withholding tax dividends usd per year
+    description: 'Withholding tax on distributed cash: the rate times the cash available for debt service
+      net of the debt service itself. Charged on the distributable residual, which is what a dividend
+      withholding tax is levied on, so the range is signed: the base is that residual, and a project whose
+      service exceeds its cash flow distributes nothing and the product is negative. The negative is the
+      shortfall the DSCR covenant reports, and a tax cannot be computed on a base the graph refuses to
+      form.'
+    category: Tax & Fiscal
+    subcategory: null
+    type: float
+    unit: USD/year
+    range:
+    - -1000000000000.0
+    - 1000000000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   withholding_tax_interest:
     name: Interest withholding tax
     description: Withholding tax rate on interest. Same shape as dividend WHT.
@@ -25003,6 +26178,30 @@ parameters:
     - Investors
     priority: P1
     status: to_build
+    deprecated_by: null
+  withholding_tax_interest_usd_per_year:
+    name: Withholding tax interest usd per year
+    description: 'Withholding tax on interest paid: the rate times the debt tranche times its rate. The
+      tax base is the interest, so the debt rate enters the product -- which is why the shipped equation
+      was a rate with no rate in it.'
+    category: Tax & Fiscal
+    subcategory: null
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 1000000000000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
     deprecated_by: null
   women_employment_share:
     name: Women employment target
@@ -25766,6 +26965,29 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{bid}_{ask\_cost\_usd\_per\_year} = 1000000 \mathrm{bid}_{ask\_spread} \mathrm{market}_{traded\_volume\_twh}
+  biodiversity_impact_definition:
+    name: The biodiversity loss
+    description: 'The biodiversity loss: intactness before the project less intactness after. A loss,
+      so it is zero when the two agree -- which is what the shipped defaults say, and the honest reading
+      of a graph that has not been given a post-project survey.'
+    system: employment
+    lhs: biodiversity_impact
+    rhs: biodiversity_intactness_before - biodiversity_intactness_index
+    relation: eq
+    parameters:
+    - biodiversity_impact
+    - biodiversity_intactness_before
+    - biodiversity_intactness_index
+    free_variables: []
+    determined_variables:
+    - biodiversity_impact
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{biodiversity}_{impact} = \mathrm{biodiversity}_{intactness\_before} - \mathrm{biodiversity}_{intactness\_index}
   biogas_cost_alias:
     name: Biogas plant capital cost is Biogas plant capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `biogas_cost`
@@ -26469,6 +27691,32 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{carbon}_{tax\_rate} = \mathrm{carbon}_{price\_usd\_per\_tco2}
+  cash_sweep_definition:
+    name: The cash swept to debt service
+    description: 'The cash swept to debt service: the sweep share times distributable cash. Distributable
+      is cash available for debt service net of the service, so the sweep is applied to the residual and
+      not to gross cash flow.'
+    system: financial
+    lhs: cash_swept_usd_per_year
+    rhs: cash_sweep * (cfads_usd_per_kw_year - debt_service_usd_per_kw_year) * total_capacity_mw * 1000
+    relation: eq
+    parameters:
+    - cash_swept_usd_per_year
+    - cash_sweep
+    - cfads_usd_per_kw_year
+    - debt_service_usd_per_kw_year
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - cash_swept_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{cash}_{swept\_usd\_per\_year} = 1000 \mathrm{cash}_{sweep} \left(\mathrm{cfads}_{usd\_per\_kw\_year}
+      - \mathrm{debt}_{service\_usd\_per\_kw\_year}\right) \mathrm{total}_{capacity\_mw}
   cbam_price_applied_definition:
     name: Cbam price applied
     description: 'The applied border price: the mechanism''s switch times the price it charges. Zero flag
@@ -26541,6 +27789,54 @@ equations:
     reference: null
     latex: \mathrm{chemicals}_{green\_ammonia\_tonnes\_per\_year} = \mathrm{chemicals}_{green\_ammonia\_share}
       \mathrm{chemicals}_{ammonia\_production}
+  child_labour_screening_definition:
+    name: The screened jobs
+    description: 'Jobs screened against child labour: the screening share times the direct workforce.
+      The count matters because a partial screen is the compliance finding, and a share alone hides how
+      many positions it leaves unexamined.'
+    system: employment
+    lhs: child_labour_screened_jobs
+    rhs: child_labour_prohibition * direct_jobs
+    relation: eq
+    parameters:
+    - child_labour_screened_jobs
+    - child_labour_prohibition
+    - direct_jobs
+    free_variables: []
+    determined_variables:
+    - child_labour_screened_jobs
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: IRENA employment factors
+    latex: \mathrm{child}_{labour\_screened\_jobs} = \mathrm{child}_{labour\_prohibition} \mathrm{direct}_{jobs}
+  claims_history_definition:
+    name: Incurred claims
+    description: 'Incurred claims: the loss ratio applied to the premium. The premium is per kilowatt,
+      so the fleet''s premium is that times capacity times 1000 kW per MW, and the loss ratio is the share
+      of it paid out.'
+    system: financial
+    lhs: claims_history
+    rhs: loss_ratio * insurance_premium_usd_per_kw_year * total_capacity_mw * 1000
+    relation: eq
+    parameters:
+    - claims_history
+    - insurance_premium_usd_per_kw_year
+    - loss_ratio
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - claims_history
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{claims}_{history} = 1000 \mathrm{loss}_{ratio} \mathrm{insurance}_{premium\_usd\_per\_kw\_year}
+      \mathrm{total}_{capacity\_mw}
   clearing_house_default_fund_definition:
     name: The clearing house's default fund
     description: 'The default fund the clearing house collects: the share of the settled carbon-trade
@@ -26634,6 +27930,30 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{co2}_{captured\_industry\_tonnes} = 1000000 \mathrm{industrial}_{ccus\_share} \mathrm{emissions}_{mtco2\_per\_year}
+  coal_dependent_population_definition:
+    name: The coal-dependent population
+    description: 'The people whose livelihood depends on the coal activity being retired: the dependency
+      share times the exposed population. The exposed population is the dispersion-range population, so
+      this is the coal district''s dependency rather than a national one -- and the count is what a transition
+      plan''s compensation is sized on.'
+    system: employment
+    lhs: coal_dependent_population
+    rhs: coal_community_dependencies * exposed_population
+    relation: eq
+    parameters:
+    - coal_dependent_population
+    - coal_community_dependencies
+    - exposed_population
+    free_variables: []
+    determined_variables:
+    - coal_dependent_population
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{coal}_{dependent\_population} = \mathrm{coal}_{community\_dependencies} \mathrm{exposed}_{population}
   coal_eaf_definition:
     name: Coal availability from its outage rates
     description: 'The energy availability factor: the share of rated energy the fleet can deliver, which
@@ -26746,6 +28066,27 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{commercial}_{demand\_twh} = \mathrm{commercial}_{demand\_share} \mathrm{base}_{demand\_twh}
+  community_benefit_sharing_alias:
+    name: The benefit-sharing share
+    description: The benefit-sharing share under the catalog's second id. The revenue identity `benefit_sharing_from_revenue_definition`
+      reads `community_benefit_share_of_revenue`; this equality makes the two names one number.
+    system: employment
+    lhs: community_benefit_sharing
+    rhs: community_benefit_share_of_revenue
+    relation: eq
+    parameters:
+    - community_benefit_sharing
+    - community_benefit_share_of_revenue
+    free_variables: []
+    determined_variables:
+    - community_benefit_sharing
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{community}_{benefit\_sharing} = \mathrm{community}_{benefit\_share\_of\_revenue}
   community_development_fund_usd_per_year_definition:
     name: Community development fund usd per year
     description: 'The fund the benefit-sharing programme capitalises: its share of the fleet''s earned
@@ -26770,6 +28111,96 @@ equations:
     linearity: linear
     latex: \mathrm{community}_{development\_fund\_usd\_per\_year} = \mathrm{community}_{development\_fund\_share}
       \mathrm{total}_{revenue\_usd\_per\_year}
+  community_development_funds_alias:
+    name: The community fund share
+    description: The community development fund share under the catalog's second id. The fund's currency
+      amount is computed from `community_development_fund_share`, so this is the same share.
+    system: financial
+    lhs: community_development_funds
+    rhs: community_development_fund_share
+    relation: eq
+    parameters:
+    - community_development_funds
+    - community_development_fund_share
+    free_variables: []
+    determined_variables:
+    - community_development_funds
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{community}_{development\_funds} = \mathrm{community}_{development\_fund\_share}
+  community_health_safety_spend_definition:
+    name: Community health and safety spend
+    description: 'Community health-and-safety spend: the programme share times allowed revenue. The graph''s
+      own `consumer_protection_spend_definition` is this form, and the base is allowed revenue rather
+      than gross revenue because a regulated programme is funded out of the revenue cap.'
+    system: cost_accounting
+    lhs: community_health_safety_spend_usd_per_year
+    rhs: community_health_safety * allowed_revenue_requirement
+    relation: eq
+    parameters:
+    - community_health_safety_spend_usd_per_year
+    - allowed_revenue_requirement
+    - community_health_safety
+    free_variables: []
+    determined_variables:
+    - community_health_safety_spend_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: World Bank Regulation of Utilities handbook, revenue caps
+    latex: \mathrm{community}_{health\_safety\_spend\_usd\_per\_year} = \mathrm{community}_{health\_safety}
+      \mathrm{allowed}_{revenue\_requirement}
+  community_transition_funding_definition:
+    name: The transition share of the community fund
+    description: 'The transition share of the community development fund: an allocation inside a fund
+      the graph already computes. Its base is that fund rather than revenue, so the two transition instruments
+      do not double-count the same tariff revenue.'
+    system: employment
+    lhs: community_transition_funding_usd_per_year
+    rhs: community_transition_funding * community_development_fund_usd_per_year
+    relation: eq
+    parameters:
+    - community_transition_funding_usd_per_year
+    - community_development_fund_usd_per_year
+    - community_transition_funding
+    free_variables: []
+    determined_variables:
+    - community_transition_funding_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Benefit-sharing programmes (the graph's own revenue identity)
+    latex: \mathrm{community}_{transition\_funding\_usd\_per\_year} = \mathrm{community}_{transition\_funding}
+      \mathrm{community}_{development\_fund\_usd\_per\_year}
+  complaint_handling_spend_definition:
+    name: Complaint-handling spend
+    description: 'Complaint-handling spend: the share times allowed revenue.'
+    system: cost_accounting
+    lhs: complaint_handling_spend_usd_per_year
+    rhs: complaint_handling * allowed_revenue_requirement
+    relation: eq
+    parameters:
+    - complaint_handling_spend_usd_per_year
+    - allowed_revenue_requirement
+    - complaint_handling
+    free_variables: []
+    determined_variables:
+    - complaint_handling_spend_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: World Bank Regulation of Utilities handbook, revenue caps
+    latex: \mathrm{complaint}_{handling\_spend\_usd\_per\_year} = \mathrm{complaint}_{handling} \mathrm{allowed}_{revenue\_requirement}
   compliant_contract_jobs_definition:
     name: Jobs under standard contracts
     description: 'The construction-phase jobs carrying standard contracts: the share of the jobs the build''s
@@ -26872,6 +28303,27 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{construction}_{share\_of\_concession} = \frac{\mathrm{construction}_{period}}{12 \mathrm{concession}_{duration}}
+  consumer_education_spend_definition:
+    name: Consumer education spend
+    description: 'Consumer-education spend: the share times allowed revenue.'
+    system: cost_accounting
+    lhs: consumer_education_spend_usd_per_year
+    rhs: consumer_education * allowed_revenue_requirement
+    relation: eq
+    parameters:
+    - consumer_education_spend_usd_per_year
+    - allowed_revenue_requirement
+    - consumer_education
+    free_variables: []
+    determined_variables:
+    - consumer_education_spend_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: World Bank Regulation of Utilities handbook, revenue caps
+    latex: \mathrm{consumer}_{education\_spend\_usd\_per\_year} = \mathrm{consumer}_{education} \mathrm{allowed}_{revenue\_requirement}
   consumer_protection_spend_definition:
     name: Consumer-protection spend
     description: 'The metering-accuracy and dispute-resolution systems'' spend: the mandated share of
@@ -26925,6 +28377,31 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  contingency_allowance_definition:
+    name: The contingency allowance
+    description: 'The contingency allowance: the share times the capital cost. The catalog''s formula,
+      with the shipped placeholder replaced by a share -- at ten percent the allowance is 1.2 billion
+      USD against a 12 billion USD fleet, which is the order an owner''s contingency is.'
+    system: financial
+    lhs: contingency_allowance_usd
+    rhs: contingency * capex_usd_per_kw * total_capacity_mw * 1000.0
+    relation: eq
+    parameters:
+    - contingency_allowance_usd
+    - capex_usd_per_kw
+    - contingency
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - contingency_allowance_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{contingency}_{allowance\_usd} = 1000 \mathrm{contingency} \mathrm{capex}_{usd\_per\_kw}
+      \mathrm{total}_{capacity\_mw}
   contingency_reserve_mw_definition:
     name: Contingency reserve mw
     description: 'The operating reserve the security criteria require: N-1 is the largest credible infeed
@@ -26993,6 +28470,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  cooling_water_demand_alias:
+    name: The cooling water withdrawn
+    description: 'Cooling water withdrawn, in cubic metres per year: the shipped extensive node under
+      the catalog''s second id. The water-energy system computes the volume from generation and an intensity,
+      and this is that volume under its second name.'
+    system: water_energy
+    lhs: cooling_water_demand
+    rhs: cooling_water_demand_m3
+    relation: eq
+    parameters:
+    - cooling_water_demand
+    - cooling_water_demand_m3
+    free_variables: []
+    determined_variables:
+    - cooling_water_demand
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{cooling}_{water\_demand} = \mathrm{cooling}_{water\_demand\_m3}
   coordinated_maintenance_definition:
     name: The coordinated maintenance hours
     description: 'The maintenance hours run under coordination: the switch times the planned hours. Coordination
@@ -27523,6 +29022,72 @@ equations:
     priority: P1
     reference: Benefit-sharing programmes (the graph's own revenue identity)
     latex: \mathrm{cross}_{subsidy\_usd\_per\_year} = \mathrm{cross}_{subsidy\_level} \mathrm{total}_{revenue\_usd\_per\_year}
+  cross_subsidy_transparency_spend_definition:
+    name: Cross-subsidy disclosure spend
+    description: 'The cost of disclosing the cross-subsidy: the share times allowed revenue. The transfer
+      it makes visible is already a node; this is what it costs to publish.'
+    system: cost_accounting
+    lhs: cross_subsidy_transparency_spend_usd_per_year
+    rhs: cross_subsidy_transparency * allowed_revenue_requirement
+    relation: eq
+    parameters:
+    - cross_subsidy_transparency_spend_usd_per_year
+    - allowed_revenue_requirement
+    - cross_subsidy_transparency
+    free_variables: []
+    determined_variables:
+    - cross_subsidy_transparency_spend_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: World Bank Regulation of Utilities handbook, revenue caps
+    latex: \mathrm{cross}_{subsidy\_transparency\_spend\_usd\_per\_year} = \mathrm{cross}_{subsidy\_transparency}
+      \mathrm{allowed}_{revenue\_requirement}
+  cultural_heritage_impact_alias:
+    name: The cultural heritage impact
+    description: 'The cultural heritage impact under the catalog''s second id: the heritage impact score
+      itself.'
+    system: employment
+    lhs: cultural_heritage_impact
+    rhs: cultural_heritage_impact_score
+    relation: eq
+    parameters:
+    - cultural_heritage_impact
+    - cultural_heritage_impact_score
+    free_variables: []
+    determined_variables:
+    - cultural_heritage_impact
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{cultural}_{heritage\_impact} = \mathrm{cultural}_{heritage\_impact\_score}
+  customs_duty_alias:
+    name: The customs duty rate
+    description: 'The catalog carries the equipment duty twice, as `customs_duty` and as `import_duty_equipment`,
+      at the same 10%. One rate, so one equality: the import-duty cost identity already reads `import_duty_equipment`,
+      and this makes the second spelling the same number rather than a second dial.'
+    system: cost_accounting
+    lhs: customs_duty
+    rhs: import_duty_equipment
+    relation: eq
+    parameters:
+    - customs_duty
+    - import_duty_equipment
+    free_variables: []
+    determined_variables:
+    - customs_duty
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{customs}_{duty} = \mathrm{import}_{duty\_equipment}
   cyber_cover_definition:
     name: The cyber-loss cover
     description: 'The revenue indemnified against cyber loss: the cover share times gross revenue.'
@@ -27696,6 +29261,30 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  deductible_levels_definition:
+    name: The deductible
+    description: 'The deductible the project carries: the deductible share times the asset value. The
+      shipped equation for this product had unit 1 on the result, which made an insurance threshold dimensionless.'
+    system: financial
+    lhs: deductible_levels
+    rhs: deductible_share * capex_usd_per_kw * total_capacity_mw * 1000
+    relation: eq
+    parameters:
+    - deductible_levels
+    - capex_usd_per_kw
+    - deductible_share
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - deductible_levels
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{deductible}_{levels} = 1000 \mathrm{deductible}_{share} \mathrm{capex}_{usd\_per\_kw}
+      \mathrm{total}_{capacity\_mw}
   demand_charge_revenue_definition:
     name: Demand-charge component of revenue
     description: 'The fixed cost recovered through demand and customer charges: the allocable share of
@@ -27882,6 +29471,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{disability}_{inclusion} = \mathrm{disability}_{inclusion\_share}
+  dispatch_interval_definition:
+    name: The dispatch cadence
+    description: 'Dispatch intervals per hour: the reciprocal of the interval length. A cadence, so a
+      half-hour settlement gives two intervals an hour. The reciprocal is the form the dispatch model
+      reads, which is why the node is declared in hours and the identity inverts it.'
+    system: energy_balance
+    lhs: dispatch_intervals_per_hour
+    rhs: 1 / dispatch_interval
+    relation: eq
+    parameters:
+    - dispatch_intervals_per_hour
+    - dispatch_interval
+    free_variables: []
+    determined_variables:
+    - dispatch_intervals_per_hour
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{dispatch}_{intervals\_per\_hour} = {\mathrm{dispatch}_{interval}}^{-1}
   distribution_asset_value_definition:
     name: The distribution asset value
     description: 'The distribution network''s replacement value: the USD per kW of system capacity times
@@ -27993,6 +29604,28 @@ equations:
     solution_method: numeric
     linearity: linear
     latex: null
+  early_retirement_definition:
+    name: The early-retirement jobs
+    description: 'Jobs offered early retirement: the share times the direct workforce. The instrument
+      a just-transition plan counts, and the count is what makes the plan checkable.'
+    system: employment
+    lhs: early_retirement_jobs
+    rhs: early_retirement_packages * direct_jobs
+    relation: eq
+    parameters:
+    - early_retirement_jobs
+    - direct_jobs
+    - early_retirement_packages
+    free_variables: []
+    determined_variables:
+    - early_retirement_jobs
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{early}_{retirement\_jobs} = \mathrm{early}_{retirement\_packages} \mathrm{direct}_{jobs}
   electricity_subsidy_cost_definition:
     name: The consumer electricity subsidy
     description: The per-MWh subsidy the budget pays so the tariff can sit below cost. Stated against
@@ -28461,6 +30094,29 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{ets}_{cap\_half\_life\_years} = \frac{\ln\left(2\right)}{\mathrm{ets}_{cap\_reduction\_rate}}
+  export_duty_cost_definition:
+    name: The export duty
+    description: 'The duty on the energy carrier sold abroad: the rate times export revenue. Zero at the
+      shipped rate, which is a statement about the fiscal regime -- the instrument exists and its rate
+      is zero -- and not a missing input.'
+    system: cost_accounting
+    lhs: export_duty_usd_per_year
+    rhs: export_duty * hydrogen_export_revenue_usd_per_year
+    relation: eq
+    parameters:
+    - export_duty_usd_per_year
+    - export_duty
+    - hydrogen_export_revenue_usd_per_year
+    free_variables: []
+    determined_variables:
+    - export_duty_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+    latex: \mathrm{export}_{duty\_usd\_per\_year} = \mathrm{export}_{duty} \mathrm{hydrogen}_{export\_revenue\_usd\_per\_year}
   feed_in_tariff_cost_definition:
     name: The feed-in tariff obligation
     description: 'The purchase obligation at the feed-in tariff, over the renewable volume the balance
@@ -28532,6 +30188,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  fishing_community_load_definition:
+    name: The fishing community's energy
+    description: 'The fishing community''s annual energy: its load in megawatts times the hours in a year,
+      divided by the megawatt-hours in a terawatt-hour. The catalog''s own conversion, made decidable
+      by the unit.'
+    system: demand_supply
+    lhs: fishing_community_load_twh
+    rhs: fishing_community_load * 8760 / 1000000
+    relation: eq
+    parameters:
+    - fishing_community_load_twh
+    - fishing_community_load
+    free_variables: []
+    determined_variables:
+    - fishing_community_load_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{fishing}_{community\_load\_twh} = \frac{8760 \mathrm{fishing}_{community\_load}}{1000000}
   fit_annuity_factor_definition:
     name: The annuity factor over the FiT term
     description: 'The present-value annuity factor over the FiT contract term, at the real discount rate
@@ -28896,6 +30574,31 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  fuel_price_band_definition:
+    name: The fuel price band's upper edge
+    description: 'The upper edge of the fuel price band: the base price grossed up by the volatility share.
+      The `1 +` is a growth factor, the same convention every escalation in the library uses; the lower
+      edge is the same product with the sign reversed and is not shipped as a separate node because it
+      is a mirror rather than a measurement.'
+    system: cost_accounting
+    lhs: fuel_price_upper_usd_per_mwh
+    rhs: fuel_price_usd_per_mwh * (1 + fuel_price_volatility)
+    relation: eq
+    parameters:
+    - fuel_price_upper_usd_per_mwh
+    - fuel_price_usd_per_mwh
+    - fuel_price_volatility
+    free_variables: []
+    determined_variables:
+    - fuel_price_upper_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{fuel}_{price\_upper\_usd\_per\_mwh} = \mathrm{fuel}_{price\_usd\_per\_mwh} \left(1
+      + \mathrm{fuel}_{price\_volatility}\right)
   fuel_price_escalated_definition:
     name: Escalated fuel price
     description: 'The delivered fuel cost compounded to the horizon. Dimensional check: USD/MWh times
@@ -29127,6 +30830,29 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{geothermal}_{cost} = \mathrm{capex}_{geothermal}
+  geothermal_effective_capex_definition:
+    name: The geothermal capex per productive kilowatt
+    description: 'Capex per productive kilowatt: the nominal drilling cost divided by the success probability.
+      A dry hole is paid for and yields nothing, so the cost of a successful well is the nominal cost
+      times one over the success rate -- at 75% success and 4,000 USD/kW, 5,333 USD per productive kilowatt.'
+    system: cost_accounting
+    lhs: geothermal_effective_capex_usd_per_kw
+    rhs: capex_geothermal / geothermal_drilling_success
+    relation: eq
+    parameters:
+    - geothermal_effective_capex_usd_per_kw
+    - capex_geothermal
+    - geothermal_drilling_success
+    free_variables: []
+    determined_variables:
+    - geothermal_effective_capex_usd_per_kw
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{geothermal}_{effective\_capex\_usd\_per\_kw} = \frac{\mathrm{capex}_{geothermal}}{\mathrm{geothermal}_{drilling\_success}}
   green_bond_bound:
     name: Green bond bound
     description: Green bonds are a subset of bond issuance -- the same tranche funded under a use-of-proceeds
@@ -29189,6 +30915,27 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{grid}_{extension\_completion\_years} = \frac{\ln\left(2\right)}{\mathrm{grid}_{extension\_rate}}
+  habitat_loss_alias:
+    name: The habitat lost
+    description: 'The habitat lost, in hectares: the extensive node under the catalog''s second id. A
+      second id for one survey is a second id, not a second measurement.'
+    system: employment
+    lhs: habitat_loss
+    rhs: habitat_loss_hectares
+    relation: eq
+    parameters:
+    - habitat_loss
+    - habitat_loss_hectares
+    free_variables: []
+    determined_variables:
+    - habitat_loss
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{habitat}_{loss} = \mathrm{habitat}_{loss\_hectares}
   health_cost_definition:
     name: Health cost
     description: 'The DALY burden priced at the value of a statistical life year. Dimensional check: DALY/year
@@ -29467,6 +31214,32 @@ equations:
     priority: P2
     reference: null
     latex: \mathrm{ifc}_{performance\_standards} \leq \mathrm{debt}_{financing\_share}
+  import_dependency_definition:
+    name: The import dependency
+    description: 'Net imports as a share of demand, signed. The sign is the information: a positive value
+      is a dependency and a negative one is an export position, which is the same ratio read the other
+      way and not a different quantity. The range admits negatives for that reason. The catalog''s form
+      takes the absolute value, which would report a large net exporter and a large net importer as equally
+      dependent -- and `abs` has no derivative rule in the DSL, correctly, because it is non-differentiable
+      at zero and the sensitivity kernel differentiates every equation in the graph.'
+    system: demand_supply
+    lhs: import_dependency
+    rhs: net_imports_twh / demand_twh
+    relation: eq
+    parameters:
+    - import_dependency
+    - demand_twh
+    - net_imports_twh
+    free_variables: []
+    determined_variables:
+    - import_dependency
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{import}_{dependency} = \frac{\mathrm{net}_{imports\_twh}}{\mathrm{demand}_{twh}}
   import_duty_cost_definition:
     name: The import duty paid
     description: 'The duty the project actually pays: the unexempted share of the equipment duty on the
@@ -29538,6 +31311,28 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{independently}_{verified\_accounts} = \mathrm{regulatory}_{audit\_requirements} \mathrm{audit}_{accounts\_per\_year}
+  indigenous_peoples_rights_alias:
+    name: The FPIC score
+    description: Free, prior and informed consent under the catalog's rights id. The graph carries one
+      FPIC score, and `fpic_consent_bound` reads it; this equality is what makes the second id the same
+      score.
+    system: employment
+    lhs: indigenous_peoples_rights
+    rhs: fpic_compliance_score
+    relation: eq
+    parameters:
+    - indigenous_peoples_rights
+    - fpic_compliance_score
+    free_variables: []
+    determined_variables:
+    - indigenous_peoples_rights
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{indigenous}_{peoples\_rights} = \mathrm{fpic}_{compliance\_score}
   indirect_jobs_derivation:
     name: Indirect jobs (derived)
     description: 'The multiplier form of the input-output employment method: direct jobs computed by the
@@ -29904,6 +31699,75 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{investment}_{allowance} = \mathrm{investment}_{allowance\_rate} \mathrm{capex}_{usd\_per\_kw}
+  investment_period_length_definition:
+    name: The investment period length
+    description: 'One investment period''s length: the horizon divided by the period count. A discretisation
+      rather than a physical quantity, so it moves when either input moves and is not a dial a scenario
+      should set directly.'
+    system: energy_balance
+    lhs: investment_period_length_years
+    rhs: time_horizon / investment_periods
+    relation: eq
+    parameters:
+    - investment_period_length_years
+    - investment_periods
+    - time_horizon
+    free_variables: []
+    determined_variables:
+    - investment_period_length_years
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Tejada-Arango (2023), arXiv:2307.16842
+    latex: \mathrm{investment}_{period\_length\_years} = \frac{\mathrm{time}_{horizon}}{\mathrm{investment}_{periods}}
+  islanding_capable_feeders_definition:
+    name: The islanding-capable feeders
+    description: 'The feeders able to island: the capability share times the primary feeder count. The
+      graph''s own `adms_controlled_feeders` reads the same feeder node the same way, so a feeder count
+      stays unitless across both.'
+    system: reliability
+    lhs: islanding_capable_feeders
+    rhs: islanding_capability * distribution_feeders_total
+    relation: eq
+    parameters:
+    - islanding_capable_feeders
+    - distribution_feeders_total
+    - islanding_capability
+    free_variables: []
+    determined_variables:
+    - islanding_capable_feeders
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{islanding}_{capable\_feeders} = \mathrm{islanding}_{capability} \mathrm{distribution}_{feeders\_total}
+  just_transition_fund_definition:
+    name: The just-transition levy
+    description: 'The just-transition levy: the share times gross revenue. A levy the tariff funds, which
+      is why its base is gross revenue and not the community development fund -- that fund is a separate
+      allocation with its own share.'
+    system: employment
+    lhs: just_transition_fund_usd_per_year
+    rhs: just_transition_fund * total_revenue_usd_per_year
+    relation: eq
+    parameters:
+    - just_transition_fund_usd_per_year
+    - just_transition_fund
+    - total_revenue_usd_per_year
+    free_variables: []
+    determined_variables:
+    - just_transition_fund_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Benefit-sharing programmes (the graph's own revenue identity)
+    latex: \mathrm{just}_{transition\_fund\_usd\_per\_year} = \mathrm{just}_{transition\_fund} \mathrm{total}_{revenue\_usd\_per\_year}
   land_acquisition_cost_definition:
     name: The land acquisition cost
     description: 'The project''s land bill: the USD per hectare times the hectares acquired, at the purchase-or-lease
@@ -29926,6 +31790,71 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{land}_{acquisition\_cost\_usd} = \mathrm{land}_{acquisition\_cost\_per\_hectare} \mathrm{land}_{area\_hectares}
+  land_acquisition_costs_alias:
+    name: The land bill
+    description: The project's land bill under the catalog's second id. The graph computes it over `land_area_hectares`,
+      the project's whole take; the catalog's own row multiplies the same per-hectare cost by the habitat-loss
+      subset, which would price 500 of the 5,000 hectares and call it the bill. The equality is the honest
+      coupling, and the subset form is the trap it avoids.
+    system: cost_accounting
+    lhs: land_acquisition_costs
+    rhs: land_acquisition_cost_usd
+    relation: eq
+    parameters:
+    - land_acquisition_costs
+    - land_acquisition_cost_usd
+    free_variables: []
+    determined_variables:
+    - land_acquisition_costs
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{land}_{acquisition\_costs} = \mathrm{land}_{acquisition\_cost\_usd}
+  land_use_change_alias:
+    name: The land converted
+    description: 'The land converted, in hectares: the same physical quantity as habitat loss under the
+      catalog''s third name. The equality is the identification, and it is what stops a scenario reporting
+      habitat loss and land use change as two different numbers for one site.'
+    system: employment
+    lhs: land_use_change
+    rhs: habitat_loss_hectares
+    relation: eq
+    parameters:
+    - land_use_change
+    - habitat_loss_hectares
+    free_variables: []
+    determined_variables:
+    - land_use_change
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{land}_{use\_change} = \mathrm{habitat}_{loss\_hectares}
+  land_use_conflicts_alias:
+    name: The land use conflict index
+    description: The land use conflict index under the catalog's second id.
+    system: employment
+    lhs: land_use_conflicts
+    rhs: land_use_conflict_index
+    relation: eq
+    parameters:
+    - land_use_conflicts
+    - land_use_conflict_index
+    free_variables: []
+    determined_variables:
+    - land_use_conflicts
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{land}_{use\_conflicts} = \mathrm{land}_{use\_conflict\_index}
   landfill_gas_cost_alias:
     name: Landfill gas plant capital cost is Landfill gas plant capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `landfill_gas_cost`
@@ -30708,6 +32637,50 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  load_factor_override_alias:
+    name: The load factor override
+    description: A scenario's load factor, overriding the derived one. The equality makes it the same
+      number as `load_factor`; the node exists so a scenario can name the override, and the coupling stops
+      it drifting from the load the graph computes.
+    system: energy_balance
+    lhs: load_factor_override
+    rhs: load_factor
+    relation: eq
+    parameters:
+    - load_factor_override
+    - load_factor
+    free_variables: []
+    determined_variables:
+    - load_factor_override
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{load}_{factor\_override} = \mathrm{load}_{factor}
+  load_shifting_energy_definition:
+    name: The shiftable energy
+    description: 'The energy the interruptible load can move: the shifting duration times the interruptible
+      capacity. Power times time is energy, which is what a flexibility product is sold in.'
+    system: demand_supply
+    lhs: load_shifting_energy_mwh
+    rhs: load_shifting_capability * interruptible_load_mw
+    relation: eq
+    parameters:
+    - load_shifting_energy_mwh
+    - interruptible_load_mw
+    - load_shifting_capability
+    free_variables: []
+    determined_variables:
+    - load_shifting_energy_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{load}_{shifting\_energy\_mwh} = \mathrm{load}_{shifting\_capability} \mathrm{interruptible}_{load\_mw}
   local_content_capex_definition:
     name: Capex sourced in-country
     description: 'The fleet''s capex that must be sourced in-country: the content share times the total,
@@ -30732,6 +32705,28 @@ equations:
     reference: NREL ATB 2025 Equations & Variables
     latex: \mathrm{local}_{content\_capex\_mm\_usd} = \frac{1000 \mathrm{local}_{content\_requirements}
       \mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}}{1000000}
+  local_content_employment_alias:
+    name: The local employment share
+    description: The local employment share under the catalog's second id. `local_jobs` already computes
+      the count from `local_employment_share`; a second share node would let a scenario move the share
+      and leave the count behind.
+    system: employment
+    lhs: local_content_employment
+    rhs: local_employment_share
+    relation: eq
+    parameters:
+    - local_content_employment
+    - local_employment_share
+    free_variables: []
+    determined_variables:
+    - local_content_employment
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{local}_{content\_employment} = \mathrm{local}_{employment\_share}
   local_employment_targets_bound:
     name: Local, women and youth employment shares are bounded together
     description: 'The three employment shares are overlapping measures over one workforce: a woman employed
@@ -31130,6 +33125,29 @@ equations:
     priority: P2
     reference: Stoft 2002, Power System Economics, ch. 5
     latex: \mathrm{non}_{spinning\_reserve\_requirement} \leq \mathrm{reserve}_{margin\_min} \mathrm{peak}_{demand\_mw}
+  occupational_health_safety_spend_definition:
+    name: Occupational health and safety spend
+    description: 'Occupational health-and-safety spend: the share times allowed revenue. The workforce-facing
+      programme, distinct from the community-facing one.'
+    system: cost_accounting
+    lhs: occupational_health_safety_spend_usd_per_year
+    rhs: occupational_health_safety * allowed_revenue_requirement
+    relation: eq
+    parameters:
+    - occupational_health_safety_spend_usd_per_year
+    - allowed_revenue_requirement
+    - occupational_health_safety
+    free_variables: []
+    determined_variables:
+    - occupational_health_safety_spend_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: World Bank Regulation of Utilities handbook, revenue caps
+    latex: \mathrm{occupational}_{health\_safety\_spend\_usd\_per\_year} = \mathrm{occupational}_{health\_safety}
+      \mathrm{allowed}_{revenue\_requirement}
   offtake_risk_premium_applied_definition:
     name: Offtake risk premium applied
     description: 'The risk premium a project actually prices: a government guarantee on the PPA removes
@@ -31277,6 +33295,54 @@ equations:
     linearity: linear
     latex: \mathrm{pass}_{through\_tariff\_usd\_per\_mwh} = \mathrm{applied}_{tariff\_usd\_per\_mwh} +
       \mathrm{wholesale}_{cost\_pass\_through} \mathrm{variable}_{stack\_usd\_per\_mwh}
+  pension_coverage_definition:
+    name: The pension-covered jobs
+    description: 'Jobs covered by a pension: the coverage share times the direct workforce. Coverage,
+      not adequacy -- the graph carries no benefit-level quantity, and a share is what a labour-standard
+      audit reports.'
+    system: employment
+    lhs: pension_covered_jobs
+    rhs: pension_security * direct_jobs
+    relation: eq
+    parameters:
+    - pension_covered_jobs
+    - direct_jobs
+    - pension_security
+    free_variables: []
+    determined_variables:
+    - pension_covered_jobs
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{pension}_{covered\_jobs} = \mathrm{pension}_{security} \mathrm{direct}_{jobs}
+  performance_bond_cost_definition:
+    name: The performance bond
+    description: 'The performance bond posted against non-completion: a share of capex. It is capital
+      tied up rather than spent, which is why the node is a stock and the quantity is the asset value
+      it is a share of.'
+    system: cost_accounting
+    lhs: performance_bond_usd
+    rhs: performance_bond * capex_usd_per_kw * total_capacity_mw * 1000
+    relation: eq
+    parameters:
+    - performance_bond_usd
+    - capex_usd_per_kw
+    - performance_bond
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - performance_bond_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{performance}_{bond\_usd} = 1000 \mathrm{performance}_{bond} \mathrm{capex}_{usd\_per\_kw}
+      \mathrm{total}_{capacity\_mw}
   permitted_imports_definition:
     name: The permitted imports
     description: 'The cross-border flow the trade regime permits: the switch times the net balance. At
@@ -31416,6 +33482,50 @@ equations:
     priority: P1
     reference: Standard N-1 planning criterion; cf. ENTSO-E adequacy studies
     latex: \mathrm{planning}_{reserve\_margin} = \mathrm{reserve}_{margin\_min}
+  plant_retirement_age_alias:
+    name: The retirement age
+    description: 'The age at which a plant retires: the asset life the graph already carries. `remaining_useful_life`
+      reads this node, so the equality is what puts a retirement age behind the remaining-life arithmetic
+      instead of leaving it a number nothing consumes.'
+    system: reliability
+    lhs: plant_retirement_age
+    rhs: asset_life
+    relation: eq
+    parameters:
+    - plant_retirement_age
+    - asset_life
+    free_variables: []
+    determined_variables:
+    - plant_retirement_age
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{plant}_{retirement\_age} = \mathrm{asset}_{life}
+  pm25_emissions_alias:
+    name: The particulate emissions
+    description: 'Primary particulate emissions, in kilotonnes per year: the shipped emission-rate node
+      under the catalog''s second id. The health system reads the rate, so the equality is what puts the
+      alias on the same emissions.'
+    system: health
+    lhs: pm25_emissions
+    rhs: pm25_kt_per_year
+    relation: eq
+    parameters:
+    - pm25_emissions
+    - pm25_kt_per_year
+    free_variables: []
+    determined_variables:
+    - pm25_emissions
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{pm25}_{emissions} = \mathrm{pm25}_{kt\_per\_year}
   pm25_exceedance_definition:
     name: The PM2.5 exceedance ratio
     description: 'How many times the ambient mean exceeds the WHO-guideline limit: the finding computed
@@ -31866,6 +33976,27 @@ equations:
     linearity: nonlinear
     latex: \mathrm{real}_{discount\_rate} = \frac{\mathrm{discount}_{rate} - \mathrm{inflation}_{rate}}{\mathrm{inflation}_{rate}
       + 1}
+  redeployment_definition:
+    name: The redeployed jobs
+    description: 'Jobs with a redeployment option: the share times the direct workforce.'
+    system: employment
+    lhs: redeployed_jobs
+    rhs: redeployment_options * direct_jobs
+    relation: eq
+    parameters:
+    - redeployed_jobs
+    - direct_jobs
+    - redeployment_options
+    free_variables: []
+    determined_variables:
+    - redeployed_jobs
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{redeployed}_{jobs} = \mathrm{redeployment}_{options} \mathrm{direct}_{jobs}
   regulated_tariff_rate_definition:
     name: The regulated tariff's cost-recovery index
     description: 'The regulated tariff as a fraction of the reference tariff: the cost-recovery index
@@ -31987,6 +34118,31 @@ equations:
     priority: P1
     reference: Ofwat PR24 Appendix 11, allowed return on capital
     latex: \mathrm{regulatory}_{depreciation} = \frac{\mathrm{regulatory}_{asset\_base}}{\mathrm{depreciation}_{life\_by\_asset}}
+  reinsurance_ceded_definition:
+    name: The ceded premium
+    description: 'The premium ceded to the reinsurer: the ceded share, one less the retention share, times
+      the premium. Ceded and not retained -- the node names the reinsurance, and the retention share is
+      the part the primary insurer keeps.'
+    system: financial
+    lhs: reinsurance_parameters
+    rhs: (1 - retention_share) * insurance_premium_usd_per_kw_year * total_capacity_mw * 1000
+    relation: eq
+    parameters:
+    - reinsurance_parameters
+    - insurance_premium_usd_per_kw_year
+    - retention_share
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - reinsurance_parameters
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{reinsurance}_{parameters} = 1000 \left(1 - \mathrm{retention}_{share}\right) \mathrm{insurance}_{premium\_usd\_per\_kw\_year}
+      \mathrm{total}_{capacity\_mw}
   reliability_cost_definition:
     name: Reliability cost
     description: 'The value of the energy the system fails to serve. A reliability standard is a purchase,
@@ -32252,6 +34408,27 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  resettlement_costs_alias:
+    name: The resettlement cost
+    description: The resettlement programme's cost under the catalog's second id. The total is population
+      times share times per-person cost; this is the same total under its second name.
+    system: employment
+    lhs: resettlement_costs
+    rhs: resettlement_costs_total_usd
+    relation: eq
+    parameters:
+    - resettlement_costs
+    - resettlement_costs_total_usd
+    free_variables: []
+    determined_variables:
+    - resettlement_costs
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{resettlement}_{costs} = \mathrm{resettlement}_{costs\_total\_usd}
   resettlement_share_bound:
     name: Resettlement share bound
     description: The displaced population share must sit inside the safeguard's cap.
@@ -32337,6 +34514,29 @@ equations:
     priority: P2
     reference: null
     latex: \mathrm{retraining}_{duration} \leq \mathrm{construction}_{period}
+  retraining_spend_definition:
+    name: The retraining bill
+    description: 'The retraining bill: cost per job times the direct workforce. Charged against the whole
+      workforce rather than the gap, because the catalog''s form does -- the conservative reading of a
+      programme that reaches everyone.'
+    system: employment
+    lhs: retraining_spend_usd
+    rhs: retraining_costs * direct_jobs
+    relation: eq
+    parameters:
+    - retraining_spend_usd
+    - direct_jobs
+    - retraining_costs
+    free_variables: []
+    determined_variables:
+    - retraining_spend_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{retraining}_{spend\_usd} = \mathrm{retraining}_{costs} \mathrm{direct}_{jobs}
   right_of_way_cost_definition:
     name: The right-of-way compensation
     description: 'The easement payments across every route the plan builds: the USD per route-km rate
@@ -32718,6 +34918,52 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{shs}_{subsidy\_usd\_per\_year} = \mathrm{shs}_{subsidies} \mathrm{shs}_{programme\_spend\_usd\_per\_year}
+  skills_gap_definition:
+    name: The unfilled skilled jobs
+    description: 'The skilled jobs the local labour market cannot fill: the gap share times the skilled
+      requirement. A share of a share, so the gap cannot exceed the requirement it is a gap in -- which
+      the shipped form, with both shares as placeholders, could not express.'
+    system: employment
+    lhs: skills_gap_jobs
+    rhs: skills_gap_assessment * skills_requirements * direct_jobs
+    relation: eq
+    parameters:
+    - skills_gap_jobs
+    - direct_jobs
+    - skills_gap_assessment
+    - skills_requirements
+    free_variables: []
+    determined_variables:
+    - skills_gap_jobs
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{skills}_{gap\_jobs} = \mathrm{skills}_{gap\_assessment} \mathrm{skills}_{requirements}
+      \mathrm{direct}_{jobs}
+  skills_requirements_definition:
+    name: The skilled jobs
+    description: 'Jobs needing a certified skill: the share times the direct workforce.'
+    system: employment
+    lhs: skills_requirements_jobs
+    rhs: skills_requirements * direct_jobs
+    relation: eq
+    parameters:
+    - skills_requirements_jobs
+    - direct_jobs
+    - skills_requirements
+    free_variables: []
+    determined_variables:
+    - skills_requirements_jobs
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{skills}_{requirements\_jobs} = \mathrm{skills}_{requirements} \mathrm{direct}_{jobs}
   small_modular_reactor_cost_alias:
     name: SMR capital cost is Small modular reactor capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `small_modular_reactor_cost`
@@ -32767,6 +35013,27 @@ equations:
     reference: null
     latex: \mathrm{smart}_{metered\_population} = \mathrm{smart}_{metering\_rollout} \mathrm{smart}_{metering\_penetration}
       \mathrm{electrified}_{population}
+  social_protection_definition:
+    name: The socially protected jobs
+    description: 'Jobs under social protection: the coverage share times the direct workforce.'
+    system: employment
+    lhs: socially_protected_jobs
+    rhs: social_protection_parameters * direct_jobs
+    relation: eq
+    parameters:
+    - socially_protected_jobs
+    - direct_jobs
+    - social_protection_parameters
+    free_variables: []
+    determined_variables:
+    - socially_protected_jobs
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{socially}_{protected\_jobs} = \mathrm{social}_{protection\_parameters} \mathrm{direct}_{jobs}
   social_tariff_identity:
     name: The social tariff
     description: 'Two ids for the below-threshold tariff: the catalog''s `social_tariff` and the graph''s
@@ -32789,6 +35056,26 @@ equations:
     priority: P1
     reference: The catalog's own duplicate rows, resolved
     latex: \mathrm{social}_{tariff} = \mathrm{lifeline}_{tariff\_usd\_per\_mwh}
+  soil_contamination_alias:
+    name: The soil contamination index
+    description: The soil contamination index under the catalog's second id. One index, so one equality.
+    system: health
+    lhs: soil_contamination
+    rhs: soil_contamination_index
+    relation: eq
+    parameters:
+    - soil_contamination
+    - soil_contamination_index
+    free_variables: []
+    determined_variables:
+    - soil_contamination
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{soil}_{contamination} = \mathrm{soil}_{contamination\_index}
   solar_pv_capacity_factor_at_vintage_definition:
     name: The PV capacity factor at the dataset's vintage year
     description: 'The PV capacity factor AT the vintage year the dataset quotes: the factor today compounded
@@ -32955,6 +35242,29 @@ equations:
     priority: P1
     reference: The catalog's own duplicate rows, resolved
     latex: \mathrm{spinning}_{reserve\_requirement} = \mathrm{spinning}_{reserve}
+  stamp_duty_cost_definition:
+    name: The stamp duty
+    description: 'Stamp duty on the property transfer: the rate times the asset value. The `1000` is kW
+      per MW, the graph''s own convention for turning a per-kilowatt capital cost into the fleet''s total.'
+    system: cost_accounting
+    lhs: stamp_duty_usd
+    rhs: stamp_duty * capex_usd_per_kw * total_capacity_mw * 1000
+    relation: eq
+    parameters:
+    - stamp_duty_usd
+    - capex_usd_per_kw
+    - stamp_duty
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - stamp_duty_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+    latex: \mathrm{stamp}_{duty\_usd} = 1000 \mathrm{stamp}_{duty} \mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}
   steel_eaf_route_definition:
     name: Crude steel the scrap-EAF route makes
     description: 'Crude steel the scrap-EAF route makes: the mix share times the sector''s own output,
@@ -33074,6 +35384,27 @@ equations:
     reference: World Bank Regulation of Utilities handbook, revenue caps
     latex: \mathrm{tariff}_{rebalancing\_usd\_per\_year} = \left(1 - e^{-\mathrm{tariff}_{rebalancing}
       \mathrm{horizon}_{years}}\right) \mathrm{total}_{revenue\_usd\_per\_year}
+  tariff_transparency_spend_definition:
+    name: Tariff transparency spend
+    description: 'Tariff-publication and consultation spend: the share times allowed revenue.'
+    system: cost_accounting
+    lhs: tariff_transparency_spend_usd_per_year
+    rhs: tariff_transparency * allowed_revenue_requirement
+    relation: eq
+    parameters:
+    - tariff_transparency_spend_usd_per_year
+    - allowed_revenue_requirement
+    - tariff_transparency
+    free_variables: []
+    determined_variables:
+    - tariff_transparency_spend_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: World Bank Regulation of Utilities handbook, revenue caps
+    latex: \mathrm{tariff}_{transparency\_spend\_usd\_per\_year} = \mathrm{tariff}_{transparency} \mathrm{allowed}_{revenue\_requirement}
   tariff_with_vat_definition:
     name: VAT-inclusive tariff
     description: 'The applied tariff plus the VAT it carries: p + p*vat, expanded from p*(1 + vat) so
@@ -33378,6 +35709,72 @@ equations:
     reference: null
     latex: \mathrm{transmission}_{loss\_after\_target} = \mathrm{transmission}_{loss\_factor} \left(1
       - \mathrm{transmission}_{loss\_reduction\_target}\right)
+  tsam_segment_hours_definition:
+    name: The segment length
+    description: 'The length of one time-slice segment: a day divided by the segment count. The `24` is
+      hours per day, which is why the segment count is declared per day; at 24 segments the slice is hourly.'
+    system: energy_balance
+    lhs: tsam_segment_hours
+    rhs: 24 / tsam_segments
+    relation: eq
+    parameters:
+    - tsam_segment_hours
+    - tsam_segments
+    free_variables: []
+    determined_variables:
+    - tsam_segment_hours
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{tsam}_{segment\_hours} = \frac{24}{\mathrm{tsam}_{segments}}
+  undrip_compliance_alias:
+    name: The UNDRIP compliance score
+    description: UNDRIP compliance measured by the same FPIC score. The declaration has no separate index
+      in the graph, and inventing one would be a number with no observation behind it -- so the equality
+      states the identification rather than implying a second measurement.
+    system: employment
+    lhs: undrip_compliance
+    rhs: fpic_compliance_score
+    relation: eq
+    parameters:
+    - undrip_compliance
+    - fpic_compliance_score
+    free_variables: []
+    determined_variables:
+    - undrip_compliance
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: The catalog's own duplicate rows, resolved
+    latex: \mathrm{undrip}_{compliance} = \mathrm{fpic}_{compliance\_score}
+  union_coverage_definition:
+    name: The unionised jobs
+    description: 'Jobs covered by a collective agreement: the coverage share times the direct workforce.
+      A coverage share is what a labour-statistics table reports, which is why the node is a share and
+      the count is derived.'
+    system: employment
+    lhs: unionised_jobs
+    rhs: union_agreements * direct_jobs
+    relation: eq
+    parameters:
+    - unionised_jobs
+    - direct_jobs
+    - union_agreements
+    free_variables: []
+    determined_variables:
+    - unionised_jobs
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{unionised}_{jobs} = \mathrm{union}_{agreements} \mathrm{direct}_{jobs}
   unserved_definition:
     name: Expected unserved energy
     description: Demand times the fraction the system is expected to fail to serve.
@@ -33622,6 +36019,30 @@ equations:
     solution_method: iterative
     linearity: linear
     latex: null
+  vulnerable_customer_protection_spend_definition:
+    name: Vulnerable-customer protection spend
+    description: 'Vulnerable-customer protection spend: the share times allowed revenue. The programme
+      administers lifeline eligibility and disconnection safeguards; the transfers themselves are the
+      affordability system''s.'
+    system: cost_accounting
+    lhs: vulnerable_customer_protection_spend_usd_per_year
+    rhs: vulnerable_customer_protection * allowed_revenue_requirement
+    relation: eq
+    parameters:
+    - vulnerable_customer_protection_spend_usd_per_year
+    - allowed_revenue_requirement
+    - vulnerable_customer_protection
+    free_variables: []
+    determined_variables:
+    - vulnerable_customer_protection_spend_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: World Bank Regulation of Utilities handbook, revenue caps
+    latex: \mathrm{vulnerable}_{customer\_protection\_spend\_usd\_per\_year} = \mathrm{vulnerable}_{customer\_protection}
+      \mathrm{allowed}_{revenue\_requirement}
   wacc_alias:
     name: WACC is the discount rate
     description: The catalog's WACC row and the financial block's discount rate are one quantity, so the
@@ -33672,6 +36093,29 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  wage_bill_definition:
+    name: The wage bill
+    description: 'The annual wage bill: the average wage per job times the direct workforce. The quantity
+      that turns a jobs claim into a claim about income -- at 20,000 USD a job the 43,000-job fleet pays
+      860 million USD a year, about 13% of gross revenue.'
+    system: employment
+    lhs: wage_bill_usd_per_year
+    rhs: wage_levels_by_sector * direct_jobs
+    relation: eq
+    parameters:
+    - wage_bill_usd_per_year
+    - direct_jobs
+    - wage_levels_by_sector
+    free_variables: []
+    determined_variables:
+    - wage_bill_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{wage}_{bill\_usd\_per\_year} = \mathrm{wage}_{levels\_by\_sector} \mathrm{direct}_{jobs}
   waste_to_energy_cost_alias:
     name: Waste-to-energy plant capital cost is Waste-to-energy plant capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `waste_to_energy_cost`
@@ -33719,6 +36163,28 @@ equations:
     solution_method: numeric
     linearity: linear
     latex: null
+  water_quality_impact_definition:
+    name: The water quality impact
+    description: 'The water quality impact: one less the quality index. An index of 1 is pristine water
+      and an impact of 0, so the complement is what a scenario reads as the damage -- and the `1.0` is
+      the top of the index''s own scale, not a fitted constant.'
+    system: water_energy
+    lhs: water_quality_impact
+    rhs: 1.0 - water_quality_index
+    relation: eq
+    parameters:
+    - water_quality_impact
+    - water_quality_index
+    free_variables: []
+    determined_variables:
+    - water_quality_impact
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{water}_{quality\_impact} = 1 - \mathrm{water}_{quality\_index}
   wave_energy_converter_cost_alias:
     name: Wave energy converter cost is Wave energy capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `wave_energy_converter_cost`
@@ -33838,6 +36304,61 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{wind}_{onshore\_cost} = \mathrm{capex}_{wind\_onshore}
+  withholding_tax_dividends_cost_definition:
+    name: The dividend withholding tax
+    description: 'Withholding tax on distributed cash: the rate times cash available for debt service
+      net of debt service. The base is the distributable residual, so a project whose debt service exceeds
+      its cash flow has nothing to distribute and pays nothing.'
+    system: cost_accounting
+    lhs: withholding_tax_dividends_usd_per_year
+    rhs: withholding_tax_dividends * (cfads_usd_per_kw_year - debt_service_usd_per_kw_year) * total_capacity_mw
+      * 1000
+    relation: eq
+    parameters:
+    - withholding_tax_dividends_usd_per_year
+    - cfads_usd_per_kw_year
+    - debt_service_usd_per_kw_year
+    - total_capacity_mw
+    - withholding_tax_dividends
+    free_variables: []
+    determined_variables:
+    - withholding_tax_dividends_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+    latex: \mathrm{withholding}_{tax\_dividends\_usd\_per\_year} = 1000 \mathrm{withholding}_{tax\_dividends}
+      \left(\mathrm{cfads}_{usd\_per\_kw\_year} - \mathrm{debt}_{service\_usd\_per\_kw\_year}\right) \mathrm{total}_{capacity\_mw}
+  withholding_tax_interest_cost_definition:
+    name: The interest withholding tax
+    description: 'Withholding tax on interest paid: the rate times the debt tranche times the debt rate.
+      The tax base is interest, so the debt rate has to appear -- a withholding rate multiplied by capital
+      alone is a rate with nothing to tax.'
+    system: cost_accounting
+    lhs: withholding_tax_interest_usd_per_year
+    rhs: withholding_tax_interest * debt_fraction * capex_usd_per_kw * cost_of_debt * total_capacity_mw
+      * 1000
+    relation: eq
+    parameters:
+    - withholding_tax_interest_usd_per_year
+    - capex_usd_per_kw
+    - cost_of_debt
+    - debt_fraction
+    - total_capacity_mw
+    - withholding_tax_interest
+    free_variables: []
+    determined_variables:
+    - withholding_tax_interest_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+    latex: \mathrm{withholding}_{tax\_interest\_usd\_per\_year} = 1000 \mathrm{withholding}_{tax\_interest}
+      \mathrm{debt}_{fraction} \mathrm{capex}_{usd\_per\_kw} \mathrm{cost}_{of\_debt} \mathrm{total}_{capacity\_mw}
   women_jobs_definition:
     name: Women employment target applied
     description: 'The composition share applied to the direct jobs: jobs by group equal the share times
@@ -40209,72 +42730,6 @@ relationships:
   description: Determines the reserve or its alias.
   reference: null
   priority: P1
-- source: discount_rate
-  target: weighted_average_cost_of_capital
-  equation_id: wacc_alias
-  relationship: equality
-  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
-    computes.'
-- source: capex_usd_per_kw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: Gross fleet capital enters the base the allowed return is earned on.
-- source: total_capacity_mw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: The fleet's size sets the scale of the capital in the accounts.
-- source: accumulated_depreciation_fraction
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: What the books have written down between gross capital and the base.
-- source: regulatory_asset_base
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: equality
-  description: Straight-line write-down of the base over the regulatory asset life.
-- source: depreciation_life_by_asset
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: functional
-  description: A longer regulatory life spreads the base thinner over the years.
-- source: regulatory_depreciation
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: Depreciation is the first term of the revenue requirement.
-- source: regulatory_asset_base
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: The return is earned on the base, not on gross capital.
-- source: discount_rate
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: The return rate is the blend the financial block computes.
-- source: allowed_return_on_debt
-  target: cost_of_debt
-  equation_id: cost_of_debt_capped
-  relationship: constraint
-  description: The allowance binds the debt rate a scenario may carry.
-- source: allowed_return_on_equity
-  target: cost_of_equity
-  equation_id: cost_of_equity_capped
-  relationship: constraint
-  description: The allowance binds the equity return a valuation may assume.
-- source: regulated_tariff_usd_per_mwh
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: equality
-  description: The applied tariff is the recovery level in the absence of a cap.
-- source: revenue_cap
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: functional
-  description: The cap scales the recovery level; below 1 it withholds part of it.
 - source: cost_of_debt
   target: interest_rate_debt
   equation_id: interest_rate_debt_alias
@@ -40581,6 +43036,1053 @@ relationships:
   description: The coverage a lender requires. A project can clear the physics and fail this.
   reference: null
   priority: P2
+- source: discount_rate
+  target: weighted_average_cost_of_capital
+  equation_id: wacc_alias
+  relationship: equality
+  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
+    computes.'
+- source: capex_usd_per_kw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: Gross fleet capital enters the base the allowed return is earned on.
+- source: total_capacity_mw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: The fleet's size sets the scale of the capital in the accounts.
+- source: accumulated_depreciation_fraction
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: What the books have written down between gross capital and the base.
+- source: regulatory_asset_base
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: equality
+  description: Straight-line write-down of the base over the regulatory asset life.
+- source: depreciation_life_by_asset
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: functional
+  description: A longer regulatory life spreads the base thinner over the years.
+- source: regulatory_depreciation
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: Depreciation is the first term of the revenue requirement.
+- source: regulatory_asset_base
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return is earned on the base, not on gross capital.
+- source: discount_rate
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return rate is the blend the financial block computes.
+- source: allowed_return_on_debt
+  target: cost_of_debt
+  equation_id: cost_of_debt_capped
+  relationship: constraint
+  description: The allowance binds the debt rate a scenario may carry.
+- source: allowed_return_on_equity
+  target: cost_of_equity
+  equation_id: cost_of_equity_capped
+  relationship: constraint
+  description: The allowance binds the equity return a valuation may assume.
+- source: regulated_tariff_usd_per_mwh
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: equality
+  description: The applied tariff is the recovery level in the absence of a cap.
+- source: revenue_cap
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: functional
+  description: The cap scales the recovery level; below 1 it withholds part of it.
+- source: import_duty_equipment
+  target: customs_duty
+  equation_id: customs_duty_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: The catalog's own duplicate rows, resolved
+  priority: P1
+- source: capex_usd_per_kw
+  target: stamp_duty_usd
+  equation_id: stamp_duty_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+  priority: P1
+- source: stamp_duty
+  target: stamp_duty_usd
+  equation_id: stamp_duty_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+  priority: P1
+- source: total_capacity_mw
+  target: stamp_duty_usd
+  equation_id: stamp_duty_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+  priority: P1
+- source: capex_usd_per_kw
+  target: performance_bond_usd
+  equation_id: performance_bond_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: performance_bond
+  target: performance_bond_usd
+  equation_id: performance_bond_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: performance_bond_usd
+  equation_id: performance_bond_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: export_duty
+  target: export_duty_usd_per_year
+  equation_id: export_duty_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+  priority: P1
+- source: hydrogen_export_revenue_usd_per_year
+  target: export_duty_usd_per_year
+  equation_id: export_duty_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+  priority: P1
+- source: cfads_usd_per_kw_year
+  target: withholding_tax_dividends_usd_per_year
+  equation_id: withholding_tax_dividends_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+  priority: P1
+- source: debt_service_usd_per_kw_year
+  target: withholding_tax_dividends_usd_per_year
+  equation_id: withholding_tax_dividends_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+  priority: P1
+- source: total_capacity_mw
+  target: withholding_tax_dividends_usd_per_year
+  equation_id: withholding_tax_dividends_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+  priority: P1
+- source: withholding_tax_dividends
+  target: withholding_tax_dividends_usd_per_year
+  equation_id: withholding_tax_dividends_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+  priority: P1
+- source: capex_usd_per_kw
+  target: withholding_tax_interest_usd_per_year
+  equation_id: withholding_tax_interest_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+  priority: P1
+- source: cost_of_debt
+  target: withholding_tax_interest_usd_per_year
+  equation_id: withholding_tax_interest_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+  priority: P1
+- source: debt_fraction
+  target: withholding_tax_interest_usd_per_year
+  equation_id: withholding_tax_interest_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+  priority: P1
+- source: total_capacity_mw
+  target: withholding_tax_interest_usd_per_year
+  equation_id: withholding_tax_interest_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+  priority: P1
+- source: withholding_tax_interest
+  target: withholding_tax_interest_usd_per_year
+  equation_id: withholding_tax_interest_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Rate-based levy and allowance definitions (standard fiscal accounting)
+  priority: P1
+- source: insurance_premium_usd_per_kw_year
+  target: claims_history
+  equation_id: claims_history_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: loss_ratio
+  target: claims_history
+  equation_id: claims_history_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: claims_history
+  equation_id: claims_history_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: capex_usd_per_kw
+  target: deductible_levels
+  equation_id: deductible_levels_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: deductible_share
+  target: deductible_levels
+  equation_id: deductible_levels_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: deductible_levels
+  equation_id: deductible_levels_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: insurance_premium_usd_per_kw_year
+  target: reinsurance_parameters
+  equation_id: reinsurance_ceded_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: retention_share
+  target: reinsurance_parameters
+  equation_id: reinsurance_ceded_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: reinsurance_parameters
+  equation_id: reinsurance_ceded_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: capex_usd_per_kw
+  target: contingency_allowance_usd
+  equation_id: contingency_allowance_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: contingency
+  target: contingency_allowance_usd
+  equation_id: contingency_allowance_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: contingency_allowance_usd
+  equation_id: contingency_allowance_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: cash_sweep
+  target: cash_swept_usd_per_year
+  equation_id: cash_sweep_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: cfads_usd_per_kw_year
+  target: cash_swept_usd_per_year
+  equation_id: cash_sweep_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: debt_service_usd_per_kw_year
+  target: cash_swept_usd_per_year
+  equation_id: cash_sweep_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: cash_swept_usd_per_year
+  equation_id: cash_sweep_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: investment_periods
+  target: investment_period_length_years
+  equation_id: investment_period_length_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Tejada-Arango (2023), arXiv:2307.16842
+  priority: P1
+- source: time_horizon
+  target: investment_period_length_years
+  equation_id: investment_period_length_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Tejada-Arango (2023), arXiv:2307.16842
+  priority: P1
+- source: tsam_segments
+  target: tsam_segment_hours
+  equation_id: tsam_segment_hours_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: dispatch_interval
+  target: dispatch_intervals_per_hour
+  equation_id: dispatch_interval_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: interruptible_load_mw
+  target: load_shifting_energy_mwh
+  equation_id: load_shifting_energy_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: load_shifting_capability
+  target: load_shifting_energy_mwh
+  equation_id: load_shifting_energy_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: fishing_community_load
+  target: fishing_community_load_twh
+  equation_id: fishing_community_load_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: distribution_feeders_total
+  target: islanding_capable_feeders
+  equation_id: islanding_capable_feeders_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: islanding_capability
+  target: islanding_capable_feeders
+  equation_id: islanding_capable_feeders_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: fuel_price_usd_per_mwh
+  target: fuel_price_upper_usd_per_mwh
+  equation_id: fuel_price_band_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: fuel_price_volatility
+  target: fuel_price_upper_usd_per_mwh
+  equation_id: fuel_price_band_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: capex_geothermal
+  target: geothermal_effective_capex_usd_per_kw
+  equation_id: geothermal_effective_capex_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: geothermal_drilling_success
+  target: geothermal_effective_capex_usd_per_kw
+  equation_id: geothermal_effective_capex_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: demand_twh
+  target: import_dependency
+  equation_id: import_dependency_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: net_imports_twh
+  target: import_dependency
+  equation_id: import_dependency_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: allowed_revenue_requirement
+  target: community_health_safety_spend_usd_per_year
+  equation_id: community_health_safety_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: World Bank Regulation of Utilities handbook, revenue caps
+  priority: P1
+- source: community_health_safety
+  target: community_health_safety_spend_usd_per_year
+  equation_id: community_health_safety_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: World Bank Regulation of Utilities handbook, revenue caps
+  priority: P1
+- source: allowed_revenue_requirement
+  target: complaint_handling_spend_usd_per_year
+  equation_id: complaint_handling_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: World Bank Regulation of Utilities handbook, revenue caps
+  priority: P1
+- source: complaint_handling
+  target: complaint_handling_spend_usd_per_year
+  equation_id: complaint_handling_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: World Bank Regulation of Utilities handbook, revenue caps
+  priority: P1
+- source: allowed_revenue_requirement
+  target: consumer_education_spend_usd_per_year
+  equation_id: consumer_education_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: World Bank Regulation of Utilities handbook, revenue caps
+  priority: P1
+- source: consumer_education
+  target: consumer_education_spend_usd_per_year
+  equation_id: consumer_education_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: World Bank Regulation of Utilities handbook, revenue caps
+  priority: P1
+- source: allowed_revenue_requirement
+  target: cross_subsidy_transparency_spend_usd_per_year
+  equation_id: cross_subsidy_transparency_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: World Bank Regulation of Utilities handbook, revenue caps
+  priority: P1
+- source: cross_subsidy_transparency
+  target: cross_subsidy_transparency_spend_usd_per_year
+  equation_id: cross_subsidy_transparency_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: World Bank Regulation of Utilities handbook, revenue caps
+  priority: P1
+- source: allowed_revenue_requirement
+  target: occupational_health_safety_spend_usd_per_year
+  equation_id: occupational_health_safety_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: World Bank Regulation of Utilities handbook, revenue caps
+  priority: P1
+- source: occupational_health_safety
+  target: occupational_health_safety_spend_usd_per_year
+  equation_id: occupational_health_safety_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: World Bank Regulation of Utilities handbook, revenue caps
+  priority: P1
+- source: allowed_revenue_requirement
+  target: tariff_transparency_spend_usd_per_year
+  equation_id: tariff_transparency_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: World Bank Regulation of Utilities handbook, revenue caps
+  priority: P1
+- source: tariff_transparency
+  target: tariff_transparency_spend_usd_per_year
+  equation_id: tariff_transparency_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: World Bank Regulation of Utilities handbook, revenue caps
+  priority: P1
+- source: allowed_revenue_requirement
+  target: vulnerable_customer_protection_spend_usd_per_year
+  equation_id: vulnerable_customer_protection_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: World Bank Regulation of Utilities handbook, revenue caps
+  priority: P1
+- source: vulnerable_customer_protection
+  target: vulnerable_customer_protection_spend_usd_per_year
+  equation_id: vulnerable_customer_protection_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: World Bank Regulation of Utilities handbook, revenue caps
+  priority: P1
+- source: just_transition_fund
+  target: just_transition_fund_usd_per_year
+  equation_id: just_transition_fund_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Benefit-sharing programmes (the graph's own revenue identity)
+  priority: P1
+- source: total_revenue_usd_per_year
+  target: just_transition_fund_usd_per_year
+  equation_id: just_transition_fund_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Benefit-sharing programmes (the graph's own revenue identity)
+  priority: P1
+- source: community_development_fund_usd_per_year
+  target: community_transition_funding_usd_per_year
+  equation_id: community_transition_funding_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Benefit-sharing programmes (the graph's own revenue identity)
+  priority: P1
+- source: community_transition_funding
+  target: community_transition_funding_usd_per_year
+  equation_id: community_transition_funding_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Benefit-sharing programmes (the graph's own revenue identity)
+  priority: P1
+- source: coal_community_dependencies
+  target: coal_dependent_population
+  equation_id: coal_dependent_population_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: exposed_population
+  target: coal_dependent_population
+  equation_id: coal_dependent_population_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: child_labour_prohibition
+  target: child_labour_screened_jobs
+  equation_id: child_labour_screening_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IRENA employment factors
+  priority: P1
+- source: direct_jobs
+  target: child_labour_screened_jobs
+  equation_id: child_labour_screening_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IRENA employment factors
+  priority: P1
+- source: direct_jobs
+  target: early_retirement_jobs
+  equation_id: early_retirement_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: early_retirement_packages
+  target: early_retirement_jobs
+  equation_id: early_retirement_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: direct_jobs
+  target: pension_covered_jobs
+  equation_id: pension_coverage_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: pension_security
+  target: pension_covered_jobs
+  equation_id: pension_coverage_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: direct_jobs
+  target: redeployed_jobs
+  equation_id: redeployment_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: redeployment_options
+  target: redeployed_jobs
+  equation_id: redeployment_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: direct_jobs
+  target: socially_protected_jobs
+  equation_id: social_protection_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: social_protection_parameters
+  target: socially_protected_jobs
+  equation_id: social_protection_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: direct_jobs
+  target: unionised_jobs
+  equation_id: union_coverage_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: union_agreements
+  target: unionised_jobs
+  equation_id: union_coverage_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: direct_jobs
+  target: skills_requirements_jobs
+  equation_id: skills_requirements_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: skills_requirements
+  target: skills_requirements_jobs
+  equation_id: skills_requirements_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: direct_jobs
+  target: skills_gap_jobs
+  equation_id: skills_gap_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: skills_gap_assessment
+  target: skills_gap_jobs
+  equation_id: skills_gap_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: skills_requirements
+  target: skills_gap_jobs
+  equation_id: skills_gap_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: direct_jobs
+  target: retraining_spend_usd
+  equation_id: retraining_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: retraining_costs
+  target: retraining_spend_usd
+  equation_id: retraining_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: direct_jobs
+  target: wage_bill_usd_per_year
+  equation_id: wage_bill_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: wage_levels_by_sector
+  target: wage_bill_usd_per_year
+  equation_id: wage_bill_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: community_benefit_share_of_revenue
+  target: community_benefit_sharing
+  equation_id: community_benefit_sharing_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: The catalog's own duplicate rows, resolved
+  priority: P1
+- source: community_development_fund_share
+  target: community_development_funds
+  equation_id: community_development_funds_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: The catalog's own duplicate rows, resolved
+  priority: P1
+- source: local_employment_share
+  target: local_content_employment
+  equation_id: local_content_employment_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: The catalog's own duplicate rows, resolved
+  priority: P1
+- source: fpic_compliance_score
+  target: indigenous_peoples_rights
+  equation_id: indigenous_peoples_rights_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: The catalog's own duplicate rows, resolved
+  priority: P1
+- source: fpic_compliance_score
+  target: undrip_compliance
+  equation_id: undrip_compliance_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: The catalog's own duplicate rows, resolved
+  priority: P1
+- source: biodiversity_intactness_before
+  target: biodiversity_impact
+  equation_id: biodiversity_impact_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: biodiversity_intactness_index
+  target: biodiversity_impact
+  equation_id: biodiversity_impact_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: soil_contamination_index
+  target: soil_contamination
+  equation_id: soil_contamination_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: The catalog's own duplicate rows, resolved
+  priority: P1
+- source: water_quality_index
+  target: water_quality_impact
+  equation_id: water_quality_impact_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: cultural_heritage_impact_score
+  target: cultural_heritage_impact
+  equation_id: cultural_heritage_impact_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: The catalog's own duplicate rows, resolved
+  priority: P1
+- source: land_use_conflict_index
+  target: land_use_conflicts
+  equation_id: land_use_conflicts_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: The catalog's own duplicate rows, resolved
+  priority: P1
+- source: habitat_loss_hectares
+  target: habitat_loss
+  equation_id: habitat_loss_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: The catalog's own duplicate rows, resolved
+  priority: P1
+- source: habitat_loss_hectares
+  target: land_use_change
+  equation_id: land_use_change_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: The catalog's own duplicate rows, resolved
+  priority: P1
+- source: pm25_kt_per_year
+  target: pm25_emissions
+  equation_id: pm25_emissions_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: The catalog's own duplicate rows, resolved
+  priority: P1
+- source: cooling_water_demand_m3
+  target: cooling_water_demand
+  equation_id: cooling_water_demand_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: The catalog's own duplicate rows, resolved
+  priority: P1
+- source: resettlement_costs_total_usd
+  target: resettlement_costs
+  equation_id: resettlement_costs_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: The catalog's own duplicate rows, resolved
+  priority: P1
+- source: land_acquisition_cost_usd
+  target: land_acquisition_costs
+  equation_id: land_acquisition_costs_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: The catalog's own duplicate rows, resolved
+  priority: P1
+- source: asset_life
+  target: plant_retirement_age
+  equation_id: plant_retirement_age_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: The catalog's own duplicate rows, resolved
+  priority: P1
+- source: load_factor
+  target: load_factor_override
+  equation_id: load_factor_override_alias
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: The catalog's own duplicate rows, resolved
+  priority: P1
 cross_validation:
 - id: carbon_price_budget_alignment
   condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0
