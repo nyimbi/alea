@@ -1,0 +1,1732 @@
+Mid-term Adequacy Forecast 2019
+
+Table of Contents
+Glossary ........................................................................................................................................ 3
+Definitions ....................................................................................................................................................3
+Abbreviations ...............................................................................................................................................5
+1
+
+2
+
+3
+
+MAF methodology .................................................................................................................. 6
+1.1
+
+Time horizon and time resolution.....................................................................................................6
+
+1.2
+
+Geographical scope ..........................................................................................................................7
+
+1.3
+
+Probabilistic market modelling methodology...................................................................................8
+
+1.4
+
+Monte-Carlo assessment.................................................................................................................10
+
+Measuring adequacy levels .................................................................................................. 14
+2.1
+
+Adequacy indices ...........................................................................................................................14
+
+2.2
+
+Convergence ...................................................................................................................................15
+
+2.3
+
+Reliability indices in practice .........................................................................................................16
+
+2.4
+
+Missing capacity: A useful adequacy index ...................................................................................17
+
+Comprehensive datasets for building the MAF model........................................................... 18
+3.1
+
+Pan-European Market Modelling Data Base (PEMMDB) .............................................................18
+
+3.2
+
+Demand time series – temperature dependency of demand ...........................................................19
+
+3.3
+
+Climate data - Pan-European Climate Database (PECD) ...............................................................19
+
+3.4
+
+Network data ..................................................................................................................................20
+NTC model .............................................................................................................................20
+Flow-Based model ..................................................................................................................20
+
+3.5
+
+Thermal generation.........................................................................................................................21
+Maintenance profiles ..............................................................................................................21
+Reserves..................................................................................................................................21
+
+4
+
+5
+
+3.6
+
+Demand Side Response (DSR) .......................................................................................................22
+
+3.7
+
+Other relevant parameters...............................................................................................................22
+
+Improvements over the previous MAF .................................................................................. 23
+4.1
+
+Data and methodology....................................................................................................................23
+
+4.2
+
+Specific data collection and model assumptions ............................................................................24
+
+4.3
+
+Demand forecasting ........................................................................................................................24
+
+4.4
+
+Methodology and limitations ..........................................................................................................25
+
+4.5
+
+Flow-Based innovations and methodology ....................................................................................26
+
+Future evolution of the Pan-European Adequacy Assessment ............................................. 31
+5.1
+
+“Clean Energy for all Europeans” legislative package ...................................................................31
+
+5.2
+
+Implementation and gap analysis with the current MAF methodology .........................................31
+
+2
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+Glossary
+
+Definitions
+Base-Case Scenario – A scenario considering projected demand and supply forecasts, including best
+estimates on likelihood of retirement, mothballing, new-build of generation assets and measures to reach
+energy efficiency, and considering the state of the grid in line with the Ten-Year Network Development Plan
+and most recent national development plans.
+Energy Not Served (ENS) [MWh] – Energy Not Served is defined as the unsupplied energy during a
+single Monte Carlo year due to the demand exceeding the available generating capacity and the electricity
+that can be imported into a market node.
+Capacity Mechanism (CM) – An administrative measure used to ensure the achievement of the desired
+level of security of supply by remunerating resources for their availability and not including measures relating
+to ancillary services.
+Demand-Side Response (DSR) – The change in electricity load on the part of final customers from
+their normal or current consumption patterns in response to market signals, including time-variable electricity
+prices or incentive payments, or in response to the acceptance of the final customer's bid, alone or in
+aggregate.
+Expected Energy Not Served (EENS) [MWh] – The mathematical average of the annual demand that
+is not served from market-based resources over the total number of Monte Carlo sample years. The annual
+Energy Not Served is defined as the unsupplied energy during a single Monte Carlo year due to the demand
+exceeding the available generating capacity and the electricity that can be imported into a market node.
+Explicitly modelled systems – Electrical systems which are an integral part of the European power
+system and for which System Operations Guideline (SO GL) article 81 or article 106 is applicable. These
+systems shall be modelled by considering each element of the probabilistic model set in this methodology.
+Flow-Based (FB) approach/model – A capacity calculation method in which energy exchanges
+between bidding zones are limited by power transfer distribution factors and available margins on a critical
+network element.
+Flow-Based Market Coupling (FBMC) – A mechanism to couple different electricity markets,
+increasing the overall economic efficiency, while taking into account the available transmission capacity
+between different bidding zones using the FB approach/model.
+Forced Outage (also unplanned outage) – State of an asset when it is not available in the power
+system and the outage was not planned.
+Frequency Containment Reserves (FCR) – The active power reserves available to contain the system
+frequency after the occurrence of an imbalance.
+Frequency Restoration Reserves (FRR) – The active power reserves available to restore the system
+frequency to the nominal frequency and, for a synchronous area consisting of more than one load-frequency
+control area, to the restore power balance to the scheduled value.
+Loss of Load Duration (LLD) [h] – The annual Loss of Load Duration is defined as the number of
+hours per Monte Carlo year during which the demand exceeds the available generating capacity and the
+electricity that can be imported into the market node.
+
+3
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+Loss of Load Expectation (LOLE) [h] – The mathematical average of annual Loss of Load Durations,
+i.e., the duration for which demand cannot be covered by market-based resources over the total number of
+Monte Carlo simulations performed.
+Market-based measures – Any supply or demand measures available in the system complying with
+market rules and commercial agreements.
+Net Transfer Capacity (NTC) approach/model – A capacity calculation method based on the principle
+of assessing and defining ex-ante a maximum energy exchange between adjacent bidding zones.
+Non-explicitly modelled systems – Electric systems which do not provide data for adequacy assessment
+but are tightly interconnected with any member of ENTSO-E or any other electric system for which SO GL
+article 81 or article 106 is applicable. The contribution of those systems to the Pan-European adequacy
+assessment is considered using assumptions provided by the responsible TSOs.
+Planned outage – State of an asset when it is not available in the power system and the outage was
+planned. These outages include maintenance, mothballing and any other non-availabilities known in advance.
+Reserve capacity – The frequency containment reserves, frequency restoration reserves or replacement
+reserves that need to be available to the transmission system operator.
+Strategic reserve – A capacity mechanism in which resources are only dispatched in case day-ahead
+and intraday markets have failed to clear, transmission system operators have exhausted their balancing
+resources used to establish an equilibrium between demand and supply, and imbalances in the market during
+periods when the reserves were dispatched are settled at the value of lost load.
+Target year – A specific year that is covered by the adequacy assessment.
+Unit Commitment and Economic Dispatch (UCED) – A mathematical optimisation problem which
+determines the commitment schedule of generation units and their level of generation in order to meet demand
+for every time step of the modelling horizon. The objective of the problem is to minimize operational cost
+while satisfying the operational constraints of the power system.
+Unplanned Outage – See Forced Outage.
+Value of Lost Load (VoLL) [€/MWh] – An estimation of the maximum electricity price that customers
+are willing to pay to avoid an outage.
+
+4
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+Abbreviations
+
+CCGT
+CGMES
+CHP
+CWE
+DSR
+EENS
+ENS
+EV
+FB
+FBMC
+FOR
+HP
+HVAC
+HVDC
+IEA
+LOLE
+LOLP
+MAF
+MC
+MILP
+NGC
+NRA
+NTC
+OCGT
+OPF
+PD
+PECD
+PEMMDB
+PLEF
+PTDF
+PV
+RAM
+minRAM
+TYNDP
+
+Combined Cycle Gas Turbine
+Common Grid Model Exchange Specification
+Combined Heat and Power
+Central Western Europe
+Demand-Side Response
+Expected Energy Not Served
+Energy Not Served
+Electric Vehicle
+Flow-Based
+Flow-Based Market Coupling
+Forced Outage Rate
+Heat Pump
+High-Voltage Alternating Current
+High-Voltage Direct Current
+International Energy Agency
+Loss of Load Expectation
+Loss of Load Probability
+Mid-Term Adequacy Forecast
+Monte Carlo
+Mixed Integer Linear Programming
+Net Generating Capacity
+National Regulatory Authority
+Net Transfer Capacity
+Open-Cycle Gas Turbine
+Optimal Power Flow
+Probability Density
+Pan-European Climate Database
+Pan-European Market Modelling Database
+Pentalateral Energy Forum (including AT, BE, CH, DE, FR, LU, NL)
+Power Transfer Distribution Factor
+Photovoltaics
+Remaining Available Margin
+Minimum Remaining Available Margin
+Ten-Year Network Development Plan
+
+5
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+1 MAF methodology
+Adequacy studies aim to evaluate a power system’s available resources and projected electric demands in
+order to identify potential risks of supply and demand mismatches in developed scenarios. In an
+interconnected power system, such as the European system, this scope should be extended by considering the
+supply and demand balance under a defined network infrastructure, which can have a considerable impact on
+adequacy results. In this context, the focus of a Pan-European Mid-Term Adequacy Forecast (MAF), as
+presented in the current report by ENTSO-E, assesses the adequacy of supply to meet demand in the midterm time horizon while considering the interconnections among different power systems across the European
+perimeter, as illustrated in Figure 1 below.
+
+Figure 1: The interconnected European power system perimeter modelled in MAF 2019 (Burshtyn Island is also explicitly
+modelled in MAF)
+
+1.1 Time horizon and time resolution
+A mid-term assessment of adequacy focuses on a single year to multiple years ahead in order to assist
+stakeholders in making well-informed investment decisions and to highlight potential risks of supply
+shortages. It considers techno-economic trends as well as policy decisions, e.g., for a massive phase-out of
+certain generating technologies. In MAF 2019, the focus has been set on target years 2021 and 2025. Year
+2021 offers an insight into what adequacy will look like in the near future with reliable data describing the
+system’s expected state. Furthermore, increasing environmental awareness and safety concerns have led
+Member States to take measures to reduce CO2 levels and motivated some countries reducing the use of
+nuclear power. These decisions led to ambitious plans to decommission power plants that are characterized
+by high emission rates, e.g., coal and lignite, as well as significant nuclear capacity in a number of countries,
+such as Belgium and Germany. These developments require an assessment of system adequacies, i.e., the
+“day after”. Thus, the second target year assessed in MAF 2019 is the year 2025.
+
+6
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+The resolution of the simulations for both target years is hourly, meaning that all data in the form of time
+series (e.g., RES generation, demand profiles and so forth) should be collected or calculated in an hourly
+fashion to serve as input for the Unit Commitment and Economic Dispatch (UCED) model.
+
+1.2 Geographical scope
+The geographical scope of the MAF study consists of the Pan-European perimeter as well as neighbouring
+zones that are interconnected with the European power system. Furthermore, all zones are modelled in the
+same way in MAF but can belong to two different categories, namely, the explicitly and non-explicitly
+modelled zones. Explicitly modelled zones are represented by market nodes that consider full information
+using the finest resolution of input data, i.e., information regarding generation and demand. Non-explicitly
+modelled zones are market nodes for which detailed information about the power system is not available to
+ENTSO-E, meaning that only expected hourly exchanges between these market nodes and corresponding
+nodes are considered.
+The MAF model is built by considering only interconnections between market nodes, while the grid topology
+within the zones is not taken into account. However, for cases that are considered to be relevant to the
+outcomes of the analysis, countries have been divided into more than one zone, with each zone represented
+individually by a market node. Table 1 presents both the explicitly and non-explicitly modelled zones in MAF
+2019, while the explicitly modelled zones are illustrated further in Figure 1.
+Table 1: Explicitly and non-explicitly modelled zones
+Explicitly modelled
+zones
+
+Zone Code
+
+Albania
+Austria
+Belgium
+Bosnia and
+Herzegovina
+Bulgaria
+Cyprus
+Czech Republic
+Germany
+Germany KF
+Denmark East
+Denmark KF
+Denmark West
+Estonia
+Spain
+Finland
+France
+United Kingdom
+Greece
+Greece Crete
+Croatia
+Hungary
+Ireland
+Italy Central North
+Italy Central South
+Italy North
+
+AL00
+AT00
+BE00
+BA00
+BG00
+CY00
+CZ00
+DE00
+DEKF
+DKE1
+DKKF
+DKW1
+EE00
+ES00
+FI00
+FR00
+UK00
+GR00
+GR03
+HR00
+HU00
+IE00
+ITCN
+ITCS
+ITN1
+
+Non-explicitly
+modelled
+zones
+-
+
+Explicitly modelled zones
+
+Zone Code
+
+-
+
+Italy South
+Italy Sardinia
+Italy Sicily
+Lithuania
+
+ITS1
+ITSA
+ITSI
+LT00
+
+Non-explicitly
+modelled
+zones
+Belarus
+
+Morocco
+Russia
+-
+
+Luxembourg
+Latvia
+Montenegro
+North Macedonia
+Malta
+Northern Ireland
+Netherlands
+Norway Mid
+Norway North
+Norway South
+Poland
+Romania
+Serbia
+Sweden
+Sweden
+Sweden
+Sweden
+Slovenia
+Slovak Republic
+Republic of Turkey
+Burshtyn Island (Ukraine)
+
+LUG1
+LV00
+ME00
+MK00
+MT00
+UKNI
+NL00
+NOM1
+NON1
+NOS1
+PL00
+RO00
+RS00
+SE01
+SE02
+SE03
+SE04
+SI00
+SK00
+TR00
+UA01
+
+Russia
+-
+
+7
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+1.3 Probabilistic market modelling methodology
+Power systems are characterized by considerable uncertainties affecting their optimal operation. In unbundled
+power systems with ambitious climate targets, uncertainty is present through:
+-
+
+-
+
+-
+
+Renewable energy sources: the level of solar, wind and hydro generation depends significantly on
+weather and climate conditions. This climate-dependent variation of generation should be considered
+in a probabilistic manner by an adequacy study.
+Demand variability: a part of the demand level in the power system is linked to weather variability.
+For example, demand levels are dependent on temperature variations due to electrical heating and
+cooling devices.
+Thermal generation and interconnection outages: the availability of full net generating capacities
+(NGCs) is not guaranteed continuously in power system operations. Forced outages can be expected
+throughout the operation of the power system and are not predictable by definition.
+
+For the above-mentioned reasons, the MAF uses a probabilistic market modelling framework that
+incorporates the aforementioned uncertainties. The methodology for MAF 2019 uses the approach presented
+in MAF 2018 as a starting point while complementing it with significant improvements. In particular, MAF
+2019 has been improved with regard to MAF 2018 with respect to data granularity and a larger number of
+historical climate years for hydro modelling.
+A simplified overview of the MAF methodology is displayed in Figure 2. The three pillars of an adequacy
+assessment are available generation, demand and network infrastructure. Within each of these pillars,
+several assumptions must be introduced to reflect the main characteristics of the variables. These assumptions
+include, but are not limited to, the following important features:
+•
+
+Availability of generation and demand levels. The first step in an adequacy assessment of this scale
+is to obtain reliable expectations of the available generation capacity and demand levels in the target
+years. In the current study, the dataset consists of best estimates provided by the TSOs within the
+modelled perimeter. The retrieved best estimates include deterministic forecasts of available
+generation capacity and include unavailabilities due to planned maintenance and expected demand
+levels.
+
+•
+
+Uncertainty with respect to climatic conditions. To adequately assess adequacy under various
+climate conditions, ENTSO-E has built an extensive climate database consisting of 𝑁 = 35 climate
+years. More specifically, one can identify the following main categories of uncertain variables:
+o Uncertainty on the generation side is reflected through the consideration of different wind,
+solar and hydro generation outputs for N different scenarios, each being linked with a climate
+year.
+o On the demand side, uncertainty introduced through climate variables is considered through
+a demand forecast, which considers temperature, irradiance and other climate variables that
+affect demand for each of the N climate years.
+
+•
+
+Uncertainty with respect to random incidents. As commonly observed in power system
+operations, there is an unavoidable risk of unpredictable outage incidents, which can have an
+important impact on system adequacy. Thus, these events should be considered when evaluating
+system adequacy in such a way that their random nature is reflected in the outcomes. Randomness in
+the outage incidents (either related to generation units or transmission lines) is considered through a
+
+8
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+probabilistic Monte-Carlo (MC) approach, where, for each simulation, a random outage pattern will
+be imposed on a network and/or generation element.
+•
+
+Demand side response, storage, electric vehicles, heat pumps. In modern, unbundled power
+systems, evaluating the adequacy also involves the contribution of elasticity of demand with respect
+to prices. Furthermore, the effect of storage facilities (including their market-driven operation),
+electric vehicles and heat-pumps, along with their corresponding impacts on demand profiles, are
+considered.
+
+Figure 2: Overview of the methodological approach
+
+The MAF model is a representation of the Pan-European power system and, as are all models, it is built based
+on a set of assumptions. The main assumptions of the MAF 2019 model are listed below:
+1) Perfect market competition. In order to assess adequacy levels in the target years, an Economic
+Dispatch and Unit Commitment (EDUC) model is solved for each hour of the target years while
+considering available generation and demand. Generation offers that partially define the economic
+dispatch are considered to be equal to the generating costs of each unit without strategic
+bidding/offering. Thus, we assume perfect competition in the market.
+2) Elasticity of demand. Only the part of the demand which is explicitly defined as a Demand-Side
+Response (DSR), followed by an activation price, is considered to be elastic. The remaining share of
+energy demand is regarded as being inelastic to price.
+3) Focus on day-ahead and intraday markets. Adequacy is evaluated in MAF from a dayahead/intraday market perspective. More specifically, resources that might be available to TSOs to
+help them cope with loss of load events close to real-time are not considered as available capacity in
+MAF. For example, operational reserves other than Replacement Reserves (RR) do not contribute to
+adequacy. It is worth noting that operational reserves are dimensioned to cover the unexpected
+imbalances resulting from second-by-second random variations in generation and load and to face a
+range of contingencies under the assumption that the system is balanced, on average. On the contrary,
+lack of adequacy, the primary focus of MAF, should reflect the expectation that the system is not
+balanced structurally, at least in some hours and/or even days. Furthermore, some of the capacity
+
+9
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+considered in the scenarios might rely on considerations of existing or planned market-wide capacity
+mechanisms. Finally, out-of-the-market measures, such as strategic reserves, are not considered in
+MAF.
+4) Perfect foresight of RES, hydro storage and demand. Even though dependency on RES generation
+and demand as a result of climate is considered through the climate years, forecast errors from dayahead to the real-time are not considered; thus, perfect foresight is assumed for the RES generation,
+hydro storage optimisation and demand.
+
+1.4 Monte-Carlo assessment
+The main feature of the MAF probabilistic methodology is the use of MC sampling to represent combinations
+of different climate conditions and random outages. Generation assets and lines are subject to failures that
+cannot be predicted beforehand and which may have significant impact on adequacy. In order to account for
+these random incidents, an MC approach is used.
+MC simulations are built by combining climate-dependent variables and random outages, as visualised in
+Figure 3. First, climate years from 1982 to 2016 are selected one-by-one. Each climate year consists of
+temperature-dependent demand (accounting for temperature dependency) time series, time series for wind
+and solar load factors and hydro inflow time series, among others. Each set of climate conditions is further
+associated with a relatively large number of MC random outage realisations, i.e., randomly assigning forced
+outage patterns to thermal generating units and interconnections (high-voltage, direct current (HVDC) and
+some high-voltage alternating current (HVAC)).
+
+Figure 3: Monte Carlo simulation principles
+
+The tools used for MAF calculate marginal prices as part of the outcome of a system cost-minimisation
+problem, also known as a Unit Commitment and Economic Dispatch (UCED) problem. This problem is often
+formulated as a large-scale Mixed Integer Linear Programming (MILP) problem. The program attempts to
+find the least-cost solution while respecting all operational constraints such as minimum up/down time,
+transfer capacity limits and so on. In order to avoid infeasible solutions, the constraints are very often
+modelled as ‘soft’ constraints, i.e., constraints that can potentially be violated at the expense of a high penalty
+in terms of cost. Nowadays, most optimisation solvers are capable of solving large-scale MILP problems
+within acceptable computation times. However, the extensive number of MC simulations performed makes
+the computation a time-intensive and challenging task.
+In the MAF study, the size of the problem is significant, including as it does thousands of variables and
+constraints and hourly resolutions for performing the economic dispatches. Furthermore, there are different
+
+10
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+stages to the modelling process, starting with how hydro, UCED and maintenance schedules are optimised
+(Figure 4):
+(a) Maintenance schedules are optimised separately and fed into the model as explicit periods in which
+specified plants are unavailable for dispatch. Maintenance optimisation is built by a single tool and
+based on constraints collected by the TSOs.
+(b) Hydro storage targets are optimised separately ex-ante for the UCED model at a weekly or monthly
+resolution, but this is tool-specific. This pre-optimisation phase delivers a time series of available
+energy from hydro resources for each optimisation step while respecting the initial weekly/monthly
+target.
+(c) UCED optimisation is then performed on smaller time steps (e.g., one day), determining which units
+are on or off and their level of dispatch in each hour.
+
+Figure 4: Diagram illustrating the MAF process explained above.
+
+11
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+Nowadays, the network modelling approach for pan-European or regional market studies is based on Net
+Transfer Capacity (NTC) market coupling, meaning that the network constraints between the market nodes
+are modelled not as physical limits but as commercial exchange limits at the border. This approach is followed
+in the current study as well while assuming a single value for the NTC for each interconnection throughout
+each modelled target year.
+The EU Internal Energy Market target model is based on Flow-Based Market Coupling (FBMC). In this
+model, network constraints are modelled more accurately than in zonal models. The FBMC incorporates
+aspects which aim to model real physical limits on all network nodes while still performing market clearing
+in each zonal market area; hence, clearing at a single market price across each market region. FBMC
+calculates relevant parameters for the so-called selected Critical Network Elements and Contingencies
+(CNECs) via complete network models. The list of CNECs therefore considers the relevant network elements
+which limit commercial exchanges within the FB market coupling scheme. Most electricity market modelling
+tools nowadays can perform FBMC, even though such tools have not been thoroughly tested for large-scale
+applications. The use of FBMC in future MAF reports for the entire geographical region is currently being
+evaluated within ENTSO-E and is mandated as the target approach by the “Clean Energy for all Europeans”
+legislative package. In this version of the MAF, in addition to the common NTC approach for the Base-Case
+scenarios, an additional FB study was conducted, focusing on year 2021 and only on the Central Western
+Europe (CWE) area.
+As in previous MAF versions, several market modelling tools used across European TSOs have been
+considered during the MAF 2019 assessment. A few tools are already used a high-resolution database that
+includes the unit-by-unit thermal generation fleet. The outcomes of this analysis could be compared to those
+produced by tools that use the previous database. A comparison of results between the different tools ensures
+the quality and robustness of inputs, calculations and outcomes. Meanwhile, it should be noted that a full
+alignment of results among different tools is not possible due to differences in the intrinsic optimisation logic
+of the UCEDs used by the different tools. Different features of tools are also exploited in the simulations to
+understand the sensitivity of the results to the different optimisation objectives. The aim of using different
+tools and comparing their outputs is to obtain consolidated and reliable results while understanding their
+sensitivity to the assumptions and modelling choices made. The process is illustrated in Figure 5.
+Data collection based on the finest granularity was used for each thermal generation unit in the system within
+the Pan-European Market Modelling Database (PEMMDB) 3.0. Furthermore, the data for thermal generating
+units from PEMMDB 3.0 was aggregated into the granularity and categories used in previous MAF studies
+while making the required assumptions and simplifications according to the standards of PEMMDB 2.1.
+The comparison of results was performed in the following four-step process:
+1. Unit-by-unit PEMMDB 3.0 is used by two out of the five tools to construct the MAF models, while
+the remaining three tools use the PEMMDB 2.1 database.
+2. Each tool’s model outputs are aggregated.
+3. Aggregated output data is visualised in comparative charts.
+4. Discussions and analyses within the MAF market study group. Specification of actions regarding
+model or input data improvement.
+
+12
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+Figure 5: Use of multiple models and tools (principle). The market modelling tools used in the MAF 2019 simulations were
+ANTARES1, BID32, GRARE3, PLEXOS4 and POWRSYM5.
+
+The current MAF probabilistic methodology is considered to be a reference within the Pan-European
+perimeter. However, the methodology followed in each MAF report up to the present should be understood
+as an ‘implementation release’ of ENTSO-E’s target methodology, which is, in itself, subject to constant
+evolution and further improvements. Note that the methodology used in future editions of the Pan-European
+resource adequacy assessment will evolve in line with the implementation of the “Clean Energy for all
+Europeans” legislative package. Consequently, subsequent MAF studies will follow the new Resource
+Adequacy methodology, once it has been approved by the European Agency for the Cooperation of Energy
+Regulators (ACER), and will be released under the revised heading “European Resource Adequacy Report”
+(ERAA).
+
+Figure 6: Monte Carlo approach for assessing resource adequacy in a nutshell
+
+1
+
+https://antares-simulator.org/
+https://www.poyry.com/BID3
+3
+https://www.cesi.it/news_ideas/ideas/Pages/System-Adequacy-and-Market-Modelling.aspx
+4
+https://energyexemplar.com/solutions/plexos/
+5
+http://www.powrsym.com/index.htm
+2
+
+13
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+For each hour of simulation, a reliability indicator, the Energy Not Served (ENS), is calculated, thus
+indicating if an adequacy problem is present (Figure 6). The following interpretations are then made:
+ENS = 0, suggesting there is no adequacy problem, or,
+ENS ≠ 0, indicating an adequacy problem.
+For each area of interest, the intervals with non-zero ENS values are counted and stored. The total number of
+hours with non-zero ENS values is divided by the total number of simulations to estimate the probability that
+adequacy issues will occur. This allows the construction of a so-called Probability Distribution (PD) function
+and the Loss of Load Expectation (LOLE) to be derived, i.e., the expected number of hours with adequacy
+issues within a certain area during a year. It is important to recall that our analysis must not be understood as
+a forecast of actual scarcity situations. The actual realisation of scarcity events in a particular hour in the
+future will – of course – depend upon the actual realisation of all the variables impacting a power system and
+could be very different from the analysed situations. Meanwhile, the analysis provides a sound indication of
+the range of possible realisations.
+
+2 Measuring adequacy levels
+2.1 Adequacy indices
+System adequacy refers to the existence of sufficient resources to meet consumers’ demands and the operating
+requirements of the power system. The so-called adequacy indices are used as metrics. These indices can be
+quantified as deterministic indicators (capacity margins) or as probabilistic indicators, according to the
+methodologies used for the adequacy assessments.
+With respect to the definitions and scope of the indices used in adequacy studies, three main functional zones
+of power systems are involved in the adequacy evaluation:
+•
+•
+•
+
+Generation adequacy level (or hierarchical level I), which considers the total system generation,
+including the effects of transmission constraints in the form of NTCs.
+Transmission adequacy level (or hierarchical level II), which includes both the generation and
+transmission facilities in an adequacy evaluation.
+Overall hierarchical adequacy level (or hierarchical level III), which involves all three functional
+zones, from the generating points to the individual consumer load points, typically connected at the
+distribution level.
+
+Traditionally, the adequacy indices can have different designations, depending on the hierarchical levels
+involved in the adequacy study. In MAF 2019, the focus is on hierarchical level I, i.e., the generation
+adequacy level.
+In probabilistic adequacy studies, adequacy indices are expressed as expected values of random variables.
+Typical random variables include unserved energy or the number of hours with unserved energy. The
+expected values of the aforementioned random variables are not deterministic parameters but rather the Monte
+Carlo probabilistic averages of the variables.
+In MAF 2019, adequacy levels are assessed in terms of the following indices:
+•
+
+Expected Energy Not Served (EENS) [MWh/year or GWh/year] - the expected energy not supplied per
+year by the generating system due to the demand exceeding the available generating and import capacity. In
+reliability studies, it is common to see Energy Not Served (ENS) examined as an expectation over a number
+of MC simulations. To this end, EENS is a metric that measures the expected security of supply and is
+described mathematically in Eq. (1):
+
+14
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+1
+
+𝐸𝐸𝑁𝑆 = 𝑁 ∑𝑗∈𝑆 𝐸𝑁𝑆𝑗 ,
+
+(1)
+
+where ENSj is the energy not supplied in the system state j (j ϵ S) associated with a loss of load event in the
+jth-Monte Carlo simulation, and N is the number of MC simulations.
+•
+
+Loss of Load Expectation6 (LOLE) [h/year] - the average number of hours per year in which the available
+generation plus imported electricity cannot meet demand in an area or region. LOLE is defined
+mathematically by Eq. (2):
+1
+
+𝐿𝑂𝐿𝐸 = 𝑁 ∑𝑗∈𝑆 𝐿𝐿𝐷𝑗 ,
+
+(2)
+
+where, LLDj is the loss of load duration of the system state j (j ϵ S) associated with the loss of load event in
+the jth MC simulation, and N is the number of MC simulations. It should be noted that the LLD of the jth MC
+simulation can only be reported as an integer number of hours due to the hourly resolution of the simulation.
+Thus, it does not indicate the severity of the deficiency or the duration of the loss of load within that hour.
+
+2.2 Convergence
+In MAF 2019, the MC method comprises a repeated random sampling process in which a random outage
+pattern is drawn for every single simulation and adequacy indices are evaluated in the long-run for a large
+number of draws. This process creates a fluctuating convergence process for which the number of samples is
+negatively correlated with the convergence error.
+The convergence of the MC assessment can be assessed via the coefficient of variation (𝛼) of the 𝐸𝐸𝑁𝑆
+adequacy metric, which is defined by Eq. (3) below:
+𝛼=
+
+√Var[𝐸𝐸𝑁𝑆])
+𝐸𝐸𝑁𝑆
+
+,
+
+(3)
+
+where 𝐸𝐸𝑁𝑆 is the expectation estimate of 𝐸𝑁𝑆 over 𝑁 samples, and Var[𝐸𝐸𝑁𝑆] is the variance of the
+Var[𝐸𝑁𝑆]
+expectation estimate, i.e., Var[𝐸𝐸𝑁𝑆] =
+.
+𝑁
+Notably, some inputs and parameters can have a significant impact on the numerical results of these indices
+and their convergences, such as:
+-
+
+Hydro power modelling;
+NTCs;
+the use/ absence of extreme, yet realistic, historical climatic years (e.g., year 1985);
+outages and their modelling, including both maintenance and forced outages7.
+
+In Figure 7, we present an example of the coefficient of variation from a single tool, showing how the model
+converges after a number of MC simulations. For this particular example, when observing the trend in the
+coefficient of variation, one can expect that a further increase in the number of scenarios will not bring
+significant improvements in convergence; therefore, no more MC simulations are attempted. In MAF, no
+explicit stopping criteria is set for the MC simulations. However, the evolution of the coefficient of variation,
+in combination with computational time, is observed in order to determine the number of MC samples needed
+for each tool.
+6
+
+When reported for a single MC simulation as the sum of all the hourly contributions with ENS, this quantity refers to
+the number of hours (events) within one year for which ENS occurs/is observed and this quantity should be referred to
+as a Loss of Load Event. The quantity calculated in Eq. (2) refers to the average over the whole ensemble of Events and
+therefore provides the statistical measure of the expectation of the number of hours with ENS over that ensemble.
+7
+To understand the impact of forced outages, which are random by definition, it is important for all the tools to use one
+commonly agreed upon maintenance schedule. This maintenance schedule should respect the different constraints
+specific to the thermal plants in different countries, as provided by TSOs. For more information about the maintenance
+schedule, see Section 3.5.1.
+
+15
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+%
+
+Coefficient of Variation
+
+20
+10
+0
+0
+
+200
+
+400
+
+600
+
+800
+
+1000
+
+1200
+
+Simulated Monte Carlo years
+Figure 7: The convergence of the coefficient of variation for an increasing number of MC samples
+
+2.3 Reliability indices in practice
+With respect to the various reliability indices introduced in the previous section, Table 2 presents a
+comprehensive overview of the different metrics that EU Member States apply to assess their national
+generation adequacy.
+Table 2: Metrics used within EU Member States to assess generation adequacy at the national level in 2019
+
+As is evident, the most relevant index is LOLE (h/year), which is also the main indicator used in this report.
+Target reliability levels in terms of LOLE are typically in the range of 3-8 h/year. It should be noted that
+setting such reliability targets is a sensitive issue which needs to consider economic and technical aspects.
+For instance, these targets could be determined by means of counterbalancing the value of lost load (VoLL)
+against the costs related to maintaining a reliable generation capacity.
+Beyond Europe, it is worth mentioning that AEMO’s mid-term adequacy assessment for Australia sets an
+EENS threshold of 0.002% of the annual demand rather than using the LOLE threshold used in Europe.8
+8
+
+http://www.aemo.com.au/Electricity/National-Electricity-Market-NEM/Planning-and-forecasting/Energy-AdequacyAssessment-Projection
+
+16
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+2.4 Missing capacity: A useful adequacy index
+As introduced early in the report, MAF 2019 focuses on LOLE and EENS in order to describe the European
+system’s adequacy situation in the target years 2021 and 2025. According to Subsection 2.3, the most
+common indices for probabilistically assessing adequacy are, primarily, LOLE and, secondarily, EENS.
+However, LOLE and EENS do not always address the needs of all MAF stakeholders. In fact, when it comes
+to evaluating the need for new capacity mechanisms, a single question quickly arises: How much capacity is
+needed in order to reach one zone’s reliability target? The question would be simple to answer if MAF was
+focusing on isolated zones. However, the reality is more complex, as summarised by the following questions:
+1) Extending the question to an interconnected system like the European system, what are the optimal
+locations for this additional capacity?
+2) How much of the missing generation capacity could be replaced by interconnection capacity?
+The aforementioned extension of the scope of this pan-European adequacy assessment are in line with the
+objectives of the Clean Energy Package, thus motivating ENTSO-E to explore the validity of a new adequacy
+indicator, i.e., “Missing Capacity”.
+Missing Capacity is defined as an indicator that quantifies the extra capacity (generation or interconnection)
+that a region would need in a given future scenario to fulfil its adequacy targets. Defining the Missing
+Capacity of a system is challenged by the source of the capacity and area of assessment. The capacity required
+should be defined as a firm and technology-neutral capacity: the purpose of such an indicator should not be
+seen as a signal for investment in specific technologies. Regarding the assessment area, the Missing Capacity
+can be evaluated either in a single area (i.e., considering an isolated region) or multi-area.
+When evaluating the Missing Capacity of a single area, only the reliability target of the country under study
+is considered. Therefore, the required capacity to reach the target in that country is calculated without
+assessing the adequacy levels of neighbouring regions. On the contrary, when the perimeter of study is
+expanded to a multi-area level, the Missing Capacity is defined as the required capacity to reach the reliability
+target in each of the investigated countries. In this case, an area formed by several neighbouring countries
+should be assessed and the reliability targets computed separately. Thus, the Missing Capacity is the capacity
+that fulfils each target simultaneously. Both in single and multi-area assessments, the Missing Capacity can
+be computed as a local or shared-generation capacity, a transmission capacity or any combination thereof.
+Despite providing meaningful information for resource adequacy evaluation, the definition and evaluation of
+Missing Capacity are not straightforward, as they rely on boundaries and assumptions. The interconnected
+nature of power systems is one of the main challenges in the definition of Missing Capacity. Interconnections
+add complexity in interpreting the Missing Capacity, its impact on neighbouring regions and formulating a
+mathematical problem concerning it. Furthermore, the influence of flexible resources, such as hydro and its
+intertemporal constraints, e.g., reservoir levels, brings additional challenges in designing a robust
+methodology.
+Within the framework of MAF, ENTSO-E is exploring and researching different approaches for evaluating
+the Missing Capacity, including:
+1) A single-area approach with local generation: evaluation of the Missing Capacity while considering
+a single region and local generation capacity expansion. The reliability shortage of the assessed
+region is solved while considering only national resources.
+2) Multi-area approach with generation expansion: calculation of the Missing Capacity in order to fulfil
+the reliability targets of two or more neighbouring regions. In this case, the extra capacity is shared
+among areas, and the adequacy standard is reached via imports/exports as well as local capacity.
+
+17
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+3) Single-area approach, generation/interconnection capacity expansion: assessment of the Missing
+Capacity for a single region, considering expansion options, capacity and interconnections.
+At the time of the publication of MAF 2019, investigations into this innovative concept were not sufficiently
+mature for publication. However, it is ENTSO-E’s intent to communicate a more detailed description of the
+methodologies in the future, supported by results obtained with the main adequacy models.
+
+3 Comprehensive datasets for building the MAF model
+3.1 Pan-European Market Modelling Data Base (PEMMDB)
+All models built for MAF use the same source of data input, i.e., the Pan-European Market Modelling Data
+Base (PEMMDB. The PEMMDB has improved significantly since its creation in 2017. However, this year,
+a milestone was reached in the evolution of the PEMMDB, namely, populating the database with unit-byunit granularity for thermal generation.
+The main improvements in the latest PEMMDB used for MAF 2019 are listed below:
+•
+•
+•
+
+Increased granularity in the thermal generation data, i.e. the unit-by-unit resolution of all information
+concerning the generation fleet in the modelled perimeter;
+Improved representation of hydro power via climate-year dependency, which is consistent with
+PECD data for wind and solar generation;
+More information regarding the main variables affecting the demand profiles, including electric
+vehicle penetration, heat pump penetration, new technologies, battery storage (including priceresponsive batteries) and more.
+
+Naturally, moving from a database with aggregated generation data to a unit-by-unit database is a major step
+forward, which has been followed by significant modelling challenges. Higher granularity comes with
+increased complexity in building representative models satisfying all input data, leads to huge models which
+are difficult to solve from a computational power/intensity perspective and leads to models which are more
+susceptible to errors and infeasibilities. Examples for major challenges faced during the modelling process
+follow:
+• Data inconsistencies in hydro data, resulting from the various hydro-related constraints which could
+prove contradictory in some situations, such as situations concerning inflows, weekly reservoir
+targets and maximum and minimum generation.
+• The parallelisation of optimisation problems was essential to cope with the increased computational
+time, which increased the hardware requirements compared to the previous MAF.
+• The number of objects (generators, fuel types and storages) in one of the five modelling tools used
+increased by a factor of five, and the number of constraints by a factor of ten. In particular, the
+increased number of constraints, related mainly to hydro modelling, resulted in a larger and more
+complex optimisation problem.
+MAF 2019 serves as a hybrid assessment with respect to data granularity. Two different cases were assessed
+for each scenario in MAF 2019: two tools were used to build models based on the unit-by-unit data, while at
+the same time and in order to cope with the aforementioned challenges, MAF was built by three tools
+based on past MAF granularity, also used in TYNDP, where generation data was aggregated by technology
+type.
+
+18
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+3.2 Demand time series – temperature dependency of demand
+A common tool for the construction of hourly load profiles for all zones (with some exceptions) was used in
+MAF 2019 and allowed electrical demand forecasting to be performed easily starting with data analyses of
+historical time series for electrical load, temperature, climate variables and more. Its overarching goal was to
+introduce an advanced demand modelling tool, thus leading eventually to a stronger harmonization of demand
+forecasting activities and the comparability of the demand forecasts provided by ENTSO-E members.
+The methodology incorporates the decomposition of time series into basic functions using Singular Value
+Decomposition (SVD), which reduces the computational burden and the volume of data required to populate
+the forecast model.
+In a second phase, the tool adjusts the forecasted load time series using bottom-up scenarios provided by the
+TSOs that reflect the future evolution of the market (e.g., penetration of heat pumps, electric vehicles and
+batteries). The forecast model considers a diverse set of data sources (e.g., historical load profiles, temperature
+time series, plus data on the projected penetration of heat pumps, electric vehicles and batteries) and can
+provide multi-year demand forecasts at an hourly resolution. The whole process is visualised in Figure 8.
+
+Figure 8: The embedding of demand forecasting into European resource adequacy assessment
+
+More information regarding the methodology for the calculation of demand time series is provided in the
+report “Demand forecasting methodology”9.
+
+3.3 Climate data - Pan-European Climate Database (PECD)
+The Pan-European Climate Database (PECD) is a database developed by ENTSO-E which consists of reanalysed hourly weather data and load factors for variable generation (namely, wind and solar). PECD
+datasets are prepared by external experts using industry best practices, thus ensuring a representative
+estimation of demand, variable generation and other climate-dependent variables.
+In 2019, the PECD was extended to include hydro generation data. Based on re-analysis data concerning
+hydro inflows, a standardised central methodology has been designed to map historical inflows of generation
+9
+
+Demand methodology document: link
+
+19
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+data and build a model to project hydro generation, including hydro run-of-river, hydro reservoirs and pump
+storage. More information about the methodology and relevant assumptions are included in the corresponding
+“Hydro Power Modelling” document10.
+
+3.4 Network data
+NTC model
+Assumptions on NTCs for the 2021 and 2025 scenarios are based on TSO expertise for bottom-up data
+collection. The transfer capacity between borders/ bidding zones, agreed upon between the respective TSOs,
+will be available within the dataset published together with the present report.
+TSOs were also asked to propose values for simultaneous importable / exportable capacities – meaning
+the maximum possible flow at the same time through all NTC corridors respecting the N-1 and operational
+security of these countries. In adequacy simulations, such constraints should be considered since they might
+be imposed at some borders (e.g., in the Flow-Based market coupling area) for reasons linked to internal grid
+stability and operational constraints. In the MAF, forced outages (e.g., unexpected failure of a line resulting
+in unavailability) are considered for all High-Voltage Direct Current (HVDC) interconnections.
+Flow-Based model
+Although an implementation of FBMC is already in place in some parts of the ENTSO-E zone, i.e., CWE, it
+is not considered in the MAF 2019 main results. The FBMC is only considered as an additional sensitivity
+analysis since: (1) most ENTSO-E areas are still using the NTC approach, and (2) a common Flow-Based
+approach is yet to be agreed upon by the ENTSO-E membership which would be applicable to the whole
+European perimeter and could feasibly be implemented in every tool used in the MAF.
+A sensitivity analysis applying a Flow-Based approach to the MAF model for the target year 2021 was
+performed. The relevant input data was:
+• Relevant Power Transfer Distribution Factors (PTDFs) derived from historical grid models covering
+the FB area under consideration. In the future evolution of the FB approach, grid models from the
+Ten-Year Network Development Plan (TYNDP) reference grid will be used by incorporating the
+relevant grid modifications applicable to the different target time horizons used in the assessment.
+• Power Transfer Distribution Factors (PTDFs) were defined for each of the different Critical Network
+Elements and Contingencies (CNECs) within the grid model under consideration. The PTDFs take
+into account each of the relevant variables representing each market zone’s net position, potentially
+relevant HVDC flows, Phase Shifting Transformer (PST) settings and other degrees of freedom that
+are given to the market under FBMC.
+• Network constraints are defined further through the Remaining Available Margin (RAM) of each
+CNEC. The 20% minRAM rule was applied to the RAM calculation, as it is currently operational in
+the CWE FBMC.
+• The capacity calculation should ensure the N-1 criterion is met at all times. The calculations of the
+PTDF and RAM thus account for the N-1 principle.
+A detailed description of how the FB is implemented in MAF 2019 and the relevant methodology is presented
+in Section 0.
+
+10
+
+Hydro methodology document: link
+
+20
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+3.5 Thermal generation
+Maintenance profiles
+Thermal generation units are subject to periods of planned maintenance, which is unavoidable for optimal
+operation. In principle, the maintenance of such units is scheduled to take place in periods when adequacy is
+secured. Thus, maintenance planning is optimised with respect to expected demand and takes into
+consideration the various requirements and specificities of each power plant. All relevant information needed
+to schedule the maintenance of the thermal generation fleet in MAF is included in the PEMMDB. This
+information includes the number of days per year of maintenance, the ratio of maintenance between the winter
+and summer periods and the maximum number of units in maintenance simultaneously to avoid risks.
+In order to ensure sufficient alignment between market modelling tools using the same input data, a single
+maintenance planning profile was prepared and imposed for the tools using either PEMMDB 2.1 or
+PEMMDB 3.0. More specifically, a single optimisation run was performed based on the aforementioned
+constraints and the demand profiles for each of the two input datasets prior to the UCED calculation. The
+optimisation determines which units will be unavailable and for which period of the year. A moderate climate
+year was selected as a model basis for MAF 2019. The maintenance schedule was optimised given this
+demand profile by selecting low-demand times for planned maintenance.
+Ideally, maintenance schedules should not be influenced by an extreme climate year but rather be developed
+in a manner consistent with average demand profiles. Instead of using a moderate year to comply with the
+above-mentioned requirements, another option would be to stochastically optimize maintenance based on a
+random selection of all climate years available. This option will be explored in future resource adequacy
+assessments.
+In any case, it is also important to make sure that the optimised maintenance schedules are coherent, to the
+extent possible, with the forecasts published by the owners of relevant assets via the official transparency
+channels of the Regulation on Wholesale Energy Market Integrity and Transparency (REMIT) regarding their
+expected unavailability within the short-term period of three years ahead.
+Reserves
+Balancing reserves, or ancillary services, is fundamental to a power system. As foreseen in the Electricity
+Balancing Guideline, each TSO shall contract/procure ancillary services to ensure a secure, reliable and
+efficient electricity grid. These are agreements with certain producers and consumers to increase or decrease
+the production or demand at certain sites. The aim is to have sufficient resources to compensate for the
+imbalance that could be caused by the forced outage of a production unit or demand/renewable forecasting
+errors.
+We distinguish between different categories of balancing reserves in MAF 2019:
+1.
+2.
+
+3.
+
+Frequency Containment Reserves (FCRs) are active power reserves (automatically activated)
+available to maintain system frequency after the occurrence of an unbalance;
+Automatic Frequency Restoration Reserves (aFRRs) stabilise the frequency (bring it to its normal
+range) and ensure the availability of the FCRs. They also maintain the balance of power imports
+and exports in a control area;
+Manual Frequency Restoration Reserves (mFRRs) guarantee the availability of the aFRRs. They
+are activated manually (e.g., by ramping up/down generators) and are used mostly when there is a
+major disruption in the grid operation (e.g., failure of a generator).
+
+21
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+4.
+
+Replacement Reserves (RRs) are active power reserves that restore and guarantee the availability of
+the FRRs.
+
+The market simulations are not real-time and have a resolution of one hour. Balancing reserves are assigned
+to deal with the hazards that can occur within this time step and are not considered in large-scale adequacy.
+Thus, FCR and FRR are removed from the available generation capacity. Operational reserves are aimed at
+maintaining the frequency at the nominal value. Hence, reserves are dimensioned to cover the unexpected
+imbalances resulting from second-by-second random variations of generation and load and to face a range of
+contingencies under the assumption that the system is balanced, on average. On the contrary, a lack of
+adequacy reflects the expectation that the system is not structurally balanced, at least in some hours and/or
+days, e.g., during peak loads or low renewable in-feed periods. In this case, reserves would be used to cover
+partially for inadequacies, but they would not be available for their actual purpose, resulting in severe
+violations of the frequency quality criteria set forth in legislation covering reserves.
+From a modelling perspective, taking the reserves into account can be implemented in two ways: reducing
+the respective thermal generation capacity or increasing the demand by the hourly reserve capacity. For
+practical reasons, the reserves were taken into account by adding them to consumption rather than applying
+a thermal capacity reduction, making it easier to implement the market models. However, doing so has the
+disadvantage of distorting the reported energy balance since ‘virtual consumption’ has been added. Notably,
+in some countries, reserves are provided by hydroelectrical generation. In these cases, the maximum possible
+hydro generation is reduced by the reserved volume. Furthermore, in special cases (e.g., where a TSO has
+agreements with large electricity users regarding demand reduction when needed or dedicated back-up power
+plants) the reserve specifications were coordinated directly with the data correspondent of the responsible
+TSO. On the other hand, RRs are considered in the MAF adequacy calculations, i.e., RRs are available to
+meet demand.
+
+3.6 Demand Side Response (DSR)
+The DSR is modelled in a simplified way as a generator that participates in the market. Each DSR unit is
+characterized by an offer quantity and an offer price and can therefore be dispatched as part of the merit order
+curve. Additionally, the number of hours the units can operate per day can be limited.
+Prices, quantities and operation constraints are delivered by the TSOs and can consist of multiple bands in
+cases in which a price differentiation is requested. For most countries, DSR units have relatively high prices,
+which ensures that they are the last dispatchable services before ENS occurs. However, in some countries,
+DSR units can be dispatched before the price-setting generator. Finally, the dispatch price of a DSR unit was
+set lower than each country’s Value of Lost Load.
+
+3.7 Other relevant parameters
+To allow for a more accurate reflection of the diversity of generation technologies and to better capture
+operational practices, basic parameters, such as the NGC, number of units and other additional technical
+parameters, have been considered in the data collection process. Some of these parameters represent boundary
+conditions or thresholds that the modelling tools should comply with during the simulations.
+Unavailability of the power system elements was considered in the simulations in two ways: i) via forced
+outages, and ii) via planned outages. In the MAF, availability was considered for thermal power plants that
+were active in the market and HVDC lines.
+ Planned outages refer to maintenance and are defined as the number of days on an annual basis that
+a given unit (blocks of-) is expected to be offline due to maintenance. Further restrictions regarding
+
+22
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+the minimum percentage of the outages which can occur in each season of the year were specified
+by the TSOs with a focus on winter and summer. The maximum number of simultaneously offline
+thermal units allowed within each month of the year was specified by the TSOs as well. Within these
+restrictions, an optimised maintenance schedule was prepared, as described in Section 3.5.1.
+ Forced outages are represented by the parameter Forced Outage Rate (FOR), which defines the
+annual rate of forced outage occurrences for thermal power plants or grid elements. Forced outages
+are simulated by random occurrences of outages within the probabilistic MC scheme while respecting
+the defined annual rate. Simulated random forced outages are useful for assessing the impact of the
+availability of base-load thermal generation and its relationship with the available flexible thermal
+and hydro generation, renewable generation and imports.
+Minimum stable generation in MW is a parameter defining the unit’s technical minimum power output.
+The simulations do not allow the unit to run under this limit. It is defined as a percentage of the unit’s nominal
+capacity.
+Minimum Up Time defines the minimum number of hours a unit must stay in operation before it can be
+idled.
+Minimum Down Time defines the minimum number of hours a unit must remain idle before it can be
+restarted.
+These parameters guarantee the optimal operation of units, i.e., they prevent simulated units from
+experiencing unrealistic outage patterns.
+
+4 Improvements over the previous MAF
+4.1 Data and methodology
+ENTSO-E is seeking constantly to enhance the quality of its methodologies. This year’s edition of the MAF
+includes several advancements with respect to the previous edition, which are further explained below:
+Improved data granularity and temporal coverage
+•
+
+Pan-European Market Modelling Data Base Version 3.0 (PEMMDB 3.0) – In its most recent version,
+the database contains information on the generation capacity fleet (Net Transfer Capacities, RESbased and fossil fuel-based generation capacities and their predicted evolution over time,
+maintenance and mothballing predictions, reserve requirements, and DSR potentials). As a main
+improvement, information on thermal generators is now available on a unit-by-unit basis. The
+commissioning and decommissioning of power plants is indicated by exact dates in the database,
+better representing the evolution of generation capacity throughout the year. Planned and unplanned
+outages are considered in the model on a unit-by-unit basis, providing information regarding available
+generation capacity and clearly differentiating the unavailable capacity.
+
+Improved hydro modelling
+•
+
+For this MAF, a new hydro database was implemented, increasing the number of climatic scenarios
+covered from three in the previous MAF to the same 35 Climatic Years used in PECD for wind and
+solar. The source of climatic data used to derive inflows and hydropower conditions is the same as
+for PECD, ensuring climatic coherence between these renewable energy sources. New methods for
+
+23
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+the aggregation of hydro plants and technologies were also applied to better represent real
+hydropower operation behaviour in the market models.
+Further improvements and actualised modelling assumptions are detailed below.
+
+4.2 Specific data collection and model assumptions
+In order to align the methodologies between the different tools that have been used in the MAF 2019 process,
+a modelling guideline was developed and applied. Its central points are listed in the following paragraph,
+including assumptions from previous MAF studies as well as the necessary adjustments to deal with the more
+granular input data from the Pan-European Market Modelling Database 3.0 (PEMMDB 3.0).
+Thermal generation
+The power plant fleet consists only of units that are flagged as “available to the market” by the respective
+TSO, meaning that out-of-the-market capacities, such as strategic or grid reserves, are not considered in the
+optimisation problem. Maintenance profiles are optimised based on a single mild weather year. The
+optimisation can include further constraints, such as winter ratios for maintenance, according to a TSO’s best
+knowledge. If no data is provided by the TSO(s), default values from ENTSO-E’s data collection are applied.
+This database also contains values for outage parameters, such as Forced Outage Rates or Mean Repair Times.
+The unit-by-unit data collection also contains accurate ramp rates and start-up/shut-down times for each unit.
+However, in the 2019 MAF edition, these parameters were neglected since the model complexity would have
+increased significantly, whereas the adequacy results would have remained largely unaffected.
+Hydro modelling
+The granularity of hydro data collection improved significantly compared to previous MAF studies. First,
+hydro data was collected for each climate year rather than for only “dry”, “normal” and “wet” conditions, as
+in the previous MAF editions. For each climate year, weekly reservoir trajectories were collected and used
+in the model in order to form a realistic shape for the reservoir level. Also, the initial volume at the beginning
+of the year and the end volume at the end of the year were specified. By doing so, sudden changes in the
+reservoir volume from year to year could be avoided. PSP units are modelled with an efficiency of 75% per
+pump-turbine cycle.
+Network representation
+Limitations on electricity exchanges between countries are modelled using simplified bilateral NTC values.
+These NTCs limit the trade balance between market zones without taking into account actual physical power
+flows. Additionally, in some border simultaneous, import and export limitations are modelled to account for
+specific grid requirements. Power exchanges on interconnecting lines to non-EU countries are considered to
+be fixed, exogenously-given exchanges. Forced outages of network elements are taken into account within
+the current geographical granularity of the assessment. For HVAC and HVDC tie lines, the outage of specific
+network elements is already considered in the NTC values (N-1 contingencies). These N-1 values reflect the
+fact that the network operation will remain within safe operational standards even in the event of outages of
+network elements. Furthermore in the assessment, it is possible to model these random outages for selected
+HVDC and HVAC tie lines explicitly. For this purpose, a default value of 6% is assumed to account for these
+outages. For some borders, TSOs have delivered FOR values differing from the default values, which were
+then used instead.
+
+4.3 Demand forecasting
+Recently, ENTSO-E has procured a new model used for the creation of hourly load profiles for all European
+countries. This load projection model can handle a diverse set of data sources (historical load profiles,
+temperature time series, heat pumps, electric vehicles and so forth) and provide multi-year demand forecasts
+
+24
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+with hourly resolution. Compared to the modelling approach used for the previous MAF editions, the
+utilization of the new demand forecasting model brings several advantages (what follows is a non-exhaustive
+list):
+•
+•
+•
+•
+
+Multiple historical climate and load time series are used to derive projected load profiles for
+each market node. In the previous methodology, only one reference year was used during the
+forecasting process;
+Automatic identification of different climate variables needed for the model calibration process
+(temperature, irradiance, wind speed, and so on);
+Better treatment of historical profiles used in the load projection process (correction of holiday
+periods, exceptional events and so forth);
+The load projection is decomposed into temperature-dependent and temperature-independent
+components. In this manner, final load profiles are adjusted by taking into account the additional
+consumption from heat pumps and electric vehicle charging. Hence, the load profiles also
+incorporate the interdependencies of historical temperatures during each climate year and
+historical load patterns.
+
+4.4 Methodology and limitations
+The current MAF methodology relies on an advanced probabilistic market modelling approach. Yet, like
+every modelling approach, it has its inherent limitations, which are presented briefly below:
+•
+
+Perfect foresight and flexibility are assumed. Wind, solar and demand forecasting errors are not
+considered explicitly in day-ahead/intraday forecasts. Furthermore, it is considered that these errors,
+if any, are dealt with by the dimensioned operational reserves, which is why the reserves are
+subtracted from the available capacity in day-ahead/intraday forecasts used in the assessment. In
+other words, the MAF approach assumes: i) a perfect day-ahead/intraday forecast; ii) forecasting
+errors from day-ahead/intraday forecasts to real time are dealt with by operational reserves.
+Furthermore, perfect foresight regarding the future (next week, month) variables affecting optimal
+hydro dispatch is assumed in the model, while s not necessarily being the case in operational reality.
+
+•
+
+An energy-only market is considered in MAF simulations. The MAF model considers neither
+capacity nor the balancing market explicitly; both are important topics perhaps deserving of further
+investigation in the future.
+
+•
+
+Perfect competition is considered in the MAF simulations by assuming that no strategic behaviours
+are present in the market and all market agents behave competitively and in a fully rational manner,
+revealing their true short-term marginal costs to the market.
+
+•
+
+Uncertainty of decommissioning dates for thermal units. Compared to the previous MAF edition,
+MAF 2019 is built on a more granular Pan-European database via a unit-by-unit representation of
+thermal generation assets, reflecting more accurately the commissioning and decommissioning dates
+(official country data or expected at the time of report preparation). However, the MAF model still
+does not incorporate an economic viability check of the generation fleet in the target years. Such an
+improvement is a future target for the Pan-European Resource Adequacy Assessment (ERAA).
+
+25
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+•
+
+Internal grid limitations within a bidding zone are not considered in the Base-Case approach.
+However, they have been further investigated in a Flow-Based study conducted as a sensitivity
+analysis, as explained further in Section 0. This topic needs further development and needs to also
+consider possible evolutions of the European market. The future ERAA to be developed by ENTSOE pursuant to article 23 of EU Regulation 2019/943 will need to be based on methodology which
+inter-alia provides for the use of a market model using the Flow-Based approach, where applicable.
+
+4.5 Flow-Based innovations and methodology
+One important simplification in the simulations is in the representation of the network. In the Base-Case
+simulations, the impedance of the network is not considered explicitly and is only taken into account in the
+values of the transmission constraints imposed as constant NTC between zones.
+In MAF 2019, a more detailed representation of the network is attempted under the framework of a sensitivity
+analysis that incorporates an FB approach. The FB approach implemented for the year 2021 follows the
+implementation of FBMC for the Central Western Europe (CWE) area. In this approach, representative
+historical FB domains, including the effect of grid reinforcements up until 2019, are implemented for CWE
+countries (BE, FR, DE, NL, AT) as the basis for the modelling of cross-border capacity. The different types
+of FB domains used represent several situations with different levels of congestion across the grid. Their
+implementation in the model is further correlated to the expected climate and consumption conditions of each
+day of the simulations, which are the main drivers for congestion across the grid. A similar methodology was
+implemented at the regional level by the PLEF 2017 study11. An important methodological improvement
+compared to the PLEF study is the implementation of the so-called minimum remaining available margin
+(minRAM), equal to 20% of the maximum allowed power flow on each Critical Network Element and
+Contingency (CNEC)12.
+The implementation of an FBMC approach in the adequacy simulations used in MAF 2019 is a significant
+step towards more realistic modelling of the operational planning in practice nowadays. Contrary to the
+constant NTC values defined for long-term planning and used in the Base-Case simulations here,
+representative historical FB domains are chosen as a basis and linked to expected climate and consumption
+conditions for each day in 2018 and 2019 for which historical records were available at the time of the
+assessment. This approach is a simple, yet realistic representation of what is observed in everyday practice
+in the region. As this approach requires more detailed modelling and realistic inputs, at the moment, it is only
+possible to do create a model for the near future since the FB approach relies on practical data from
+2018/2019. Evolutions in both the methodology and the grid modelling and data are currently under
+consideration for subsequent MAF reports, hopefully making it possible to conduct such a FB approach for
+a longer time horizon of, e.g., five years ahead.
+This step towards a more realistic modelling of operational planning in practice also means that the simulation
+results could better reflect the tight situations observed in practice, leading to more realistic adequacy
+assessment for the region. Due to the aforementioned reasons, the FB and NTC approaches used for the same
+time horizon 2021 lead to different outcomes. Implementation of the FB approach should be the goal,
+whenever possible, in order to reflect what is experienced in operational practice.
+
+11
+
+Pentalateral Energy Forum (2018): Generation Adequacy Assessment;
+http://www.benelux.int/files/1615/1749/6861/2018-01-31_-_2nd_PLEF_GAA_report.pdf
+12
+JAO; http://www.jao.eu/news/messageboard/view?parameters=%7B%22NewsId%22%3A%22bbb7dbda-a15d454c-9225-a8c8012bb828%22%7D
+
+26
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+How does the Flow-Based method work in reality?
+The Flow-Based method allows modellers to take properly into account interactions between market
+outcomes and the transmission grid. For instance, at moments when, e.g., both France and Belgium are in a
+structural shortage, the imports to Belgium can be reduced significantly if large flows are running through
+Belgium towards France. Using the Flow-Based method in an assessment makes it possible to calculate the
+likelihood and the impact of reduced imports on adequacy as a result of market conditions in neighbouring
+countries.
+Figure 9 below shows the flows between four fictitious zones when 100 MW is sent from zone A to zone D.
+The resulting flows follow the path of least impedance, which can result in certain connections between zones
+not participating in this energy exchange (in this case, zones B and C).
+
+Figure 9: Commercial exchanges between two countries can generate physical flows through other borders.
+
+The Flow-Based method implemented in the day-ahead market coupling uses Power Transfer Distribution
+Factors (PTDF) that make it possible to model the real flows on the lines based on commercial exchanges
+between countries. PTDF division factors estimate the physical flow that can be expected on the different
+grid lines as a function of the commercial exchanges settled on the market between countries. The example
+in
+Figure 9 above shows that energy flows are distributed unevenly over the different paths between the different
+zones when there is a commercial exchange of 100 MW between zones A and C. The PTDF factors of this
+example determine that:
+o
+
+75 MW of the injection from A goes to B, and 25 MW of the injection from A goes to C.
+
+o
+
+65 MW of the injection from B goes to C, and 10 MW of the injection from B goes to D.
+
+o
+
+Finally, the total injection coming into C is 25 MW + 65 MW = 90 MW, which then goes to D.
+
+27
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+Since the commercial exchange of 100 MW is between A and D in the case above, i.e., exchange (AD), the
+PTDF for each interconnector is referred to as PTDF(A D).
+
+Commercial
+Exchange
+(A to D)
+
+Grid Element
+1
+
+Grid Element
+2
+
+Grid Element
+3
+
+Grid Element
+4
+
+Grid Element
+5
+
+PTDF(A D)
+
+25%
+
+75%
+
+65%
+
+90%
+
+10%
+
+A matrix of exchanges vs. lines can be therefore defined (only A D numbers shown for simplicity)
+Grid Element
+1
+
+Grid Element
+2
+
+Grid Element
+3
+
+Grid Element
+4
+
+Grid Element
+5
+
+PTDF(A B)
+
+-
+
+-
+
+-
+
+-
+
+-
+
+PTDF(A C)
+
+-
+
+-
+
+-
+
+-
+
+-
+
+PTDF(A D)
+
+25%
+
+75%
+
+65%
+
+90%
+
+10%
+
+PTDF(B  C)
+
+-
+
+-
+
+-
+
+-
+
+-
+
+PTDF(B D)
+
+-
+
+-
+
+-
+
+-
+
+-
+
+PTDF(C D)
+
+-
+
+-
+
+-
+
+-
+
+-
+
+PTDF
+
+For each hour of the year, the impact of energy exchanges on each critical line or ‘branch’ is calculated while
+taking the N-1 criterion into account. A critical branch is a physical element of the grid which has reached its
+maximum transmission capacity and therefore constrains the total flow of the system around it. In typical
+situations, energy exchanges are subject to many constraints. These constraints form a domain of possible
+maximum energy exchanges between the countries within the FB area, i.e., the Flow-Based domain.
+Looking at the system in
+Figure 9 and, for example, the possible commercial exchanges A B and A C, the basic equation defining
+the condition for each of the interconnections in the system above to be defined as a critical branch is given
+by Eq. (4) :
+
+
+
+𝑃𝑇𝐷𝐹𝐴−𝐵,𝑙 ⋅ 𝑃𝐴−𝐵 + 𝑃𝑇𝐷𝐹𝐴−𝐶,𝑙 ⋅ 𝑃𝐴−𝐶 ≤ 𝑅𝐴𝑀𝑙 ∀ 𝑙,
+
+(4)
+
+where 𝑅𝐴𝑀𝑙 is the Remaining Available Margin (RAM) of each line l.
+The constraint introduced by each critical branch, i.e., CNEC, can be drawn as a line on the plane defined by
+the relevant exchanges between any two areas of the system under consideration. Figure 10 shows an example
+of the plane for the power exchange A B vs. the power exchange A C. The set of all CNECs relevant for
+exchange A B vs. exchange A C defines a polygon, the so-called FB domain, as depicted schematically
+in Figure 10 below. The coloured squares in the figure correspond to the Available Transfer Capacity (ATC)
+domains, which provide ATC with taking into consideration long-term nominated power flows and transfer
+capacities in conventional NTC schemes.
+
+28
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+Figure 10: Example of a Flow-Based domain (see CWE Flow-Based13 )
+
+These Flow-Based domains are typically constructed based on CNECs while taking into account: i) the
+impact of an outage or contingency on a Critical Network Element (CNE), ii) a flow reliability margin (FRM)
+on each CNEC and possibly ‘remedial actions’ that can be taken after an outage to unload part of the CNECs.
+These actions make it possible to maximise exchanges thanks to changes in the topology of the grid or the
+use of phase-shifting transformers. The various remedial actions that are used to form these domains are
+typically coordinated and approved by the other TSOs in the context of RSCs.
+The domain used is viable if all network elements are available in the CWE zone. Faulty elements will have
+an impact on the domain and possible exchanges between countries.
+Different assumptions are made for these Flow-Based domains, such as the expected renewable production,
+consumption, energy exchanges, location of generation, outage of units and lines and so forth.
+For every hour, there might be a different Flow-Based domain because:
+•
+
+the topology of the grid can change;
+
+•
+
+outages or maintenance of grid elements can be scheduled or occur unexpectedly;
+
+•
+
+the location of available production units can vary significantly from hour to hour.
+
+The Flow-Based domain is calculated two days before real-time operation and is used to define the limits of
+energy exchange between countries for the day-ahead market.
+
+13
+
+http://www.elia.be/nl/producten-en-diensten/cross-border-mechanismen/transmissiecapaciteit-op-de-grenzen/Flow-Based-marktkoppeling-centrw-europa
+
+29
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+How is the Flow-Based method implemented in this assessment?
+Step 1 - Selection of ‘typical’ days
+A statistical analysis of the geometrical shapes of available Flow-Based domains is performed on historical
+records of domains from the FB CWE operational tool. Historical days are clustered in families defined by
+the size of their 24-hourly domains. Typically ‘large’, ‘medium’ and ‘small’ families of domains are
+clustered. Each typical day consists of 24 domains (one for each hour):
+•
+
+•
+
+•
+•
+
+Small domains correspond to situations with a highly congested network and therefore small values
+for the maximum power exchanges possible between the different market areas considered by the
+given domain (related to the small volume inside the domain).
+Large domains correspond to situations with a less congested network and therefore relatively higher
+values of maximum possible power exchanges between the market nodes considered by the given
+domain (larger volume).
+A typical day is the historical day within a given family or cluster of domains which provides the
+best representation of all the other days in the cluster.
+Since FB domains are hourly, this typical day is selected by comparing its domain in every hour to
+the other days’ equivalent domains (at the same hour).
+
+Step 2 - Correlation between each ‘typical’ day and specific climatic combinations
+Four typical days for winter and four typical days for the inter season are found as a result of the clustering
+(three weekdays and one weekend day). A probability matrix is then calculated as a function of daily energy
+ranges (high/medium/low) of wind production and load. This calculation provides the correlation of each
+typical day (24 hourly domains) to given climatic combinations.
+Step 3 - Assignment of FB domains to hourly market simulations
+The typical days for winter in Step 1 are used as proxies for the relevant domains expected during the
+simulations and are assigned to hourly simulations by the correlations found in Step 2 (Figure 11). Each
+hourly simulation of the interconnected power system presents different expected climatic, generation and
+demand situations during the assessment. This kind of systematic approach makes it possible to link specific
+combinations of expected climate conditions, e.g., high/low wind in-feed in one area, high low temperature
+and demand in the same or nearby areas, with representative domains for these conditions.
+
+Figure 11: Step-wise implementation of FB domains
+
+30
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+5 Future evolution of the Pan-European Adequacy Assessment
+5.1 “Clean Energy for all Europeans” legislative package
+The “Clean Energy for all Europeans” legislative package (“CEP”) extends the scope of the ENTSO-E MAF
+and develops it further into the new ERAA. The CEP requirements for the ERAA include the development
+of five new methodologies within six to twelve months after the CEP’s effective date. The future European
+adequacy assessment will see a major extension of its scope compared to the current MAF. It will need to
+cover new requirements such as yearly granularity for a ten-year horizon, Flow-Based calculations,
+generation viability assessments, sensitivities with and without capacity mechanisms, as well as sectorial
+integration, among others. ENTSO-E has developed a roadmap for the development and step-by-step
+implementation of the methodologies and requirements for the assessment and with respect to how the MAF
+will evolve into the ERAA.
+The Electricity Regulation 2019/943 of the CEP14 requires ENTSO-E to develop several methodologies
+related to resource adequacy, which provide a further basis for assessing adequacy at a Pan-European level
+using the same methods and tools across countries to enable comparison (Electricity Regulation Chapter IV,
+Article 23 to 26):
+1.
+
+A methodology for assessing European resource adequacy, including the definition of Expected
+Energy Not Served (EENS) and Loss of Load Expectation (LOLE) (required six months the CEP
+text enters into force);
+
+2.
+
+A methodology for the definition of the Cost of New Entry (CONE) and Reliability Standards and
+Value of Lost Load (VoLL) (required six months the CEP text enters into force);
+
+3.
+
+A methodology for calculating the maximum entry capacity for cross-border participation in capacity
+mechanisms (required twelve months after the CEP text enters into force).
+
+Each methodology and resource adequacy report will be subject to public consultation, in accordance with
+both ENTSO-E’s stakeholder engagement vision and the requirements of CEP.
+
+5.2 Implementation and gap analysis with the current MAF methodology
+The CEP brings a number of changes and updates to the methodology used for adequacy assessment, while
+the scope of the assessment is extended significantly. However, the implementation of the complete set of
+changes will take place gradually over the following years.
+The features that are mainly impacted by the CEP implementation are summarized below:
+1) Probabilistic market modelling approach (Monte Carlo): the core of the MAF methodology, i.e.,
+probabilistic market modelling simulations, is already compliant with the requirements of the CEP.
+However, future adequacy assessments will be required to present results from a single tool only. It
+will only be possible to fulfil this requirement when the alignment between tools is achieved upon
+implementation of the CEP target methodology in order that it is not relevant which tool is chosen.
+This alignment will also guarantee the highest possible level of robustness for the results.
+
+14
+
+https://eur-lex.europa.eu/legal-content/PL/TXT/?uri=CELEX:52016DC0860
+
+31
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+Mid-term Adequacy Forecast 2019
+
+2) Target years and granularity: In the current MAF, the adequacy assessment is focused on two
+target years, i.e., 2021 and 2025. According to the new regulations, the Pan-European adequacy
+assessment should be performed for each one of the 10 years ahead, which increases the number of
+simulated target years by eight.
+3) Economic viability: MAF 2019 is based on top-down scenarios for installed capacities and does not
+consider the economic viability of the fleet. Only expected or official commissioning and
+decommissioning dates of thermal generation plants are considered when building the MAF
+scenarios. The CEP requires the incorporation of an investment module, which will assess the
+economic viability of thermal units and their potential exits from the market.
+4) Capacity Mechanisms (CM): Contribution of approved, existing and planned, CMs might be
+currently considered in the installed capacity for MAF on the part of some TSOs. In the target
+methodology, a systematic comparison of both cases should be considered, i.e., cases with and
+without the consideration of the contributions of approved, existing and planned CMs to future
+assumed installed capacities.
+5) Flow-Based (FB): FBMC is tested and presented for the target year 2021 in this year’s MAF edition.
+FB implementation is one of the target features of the future adequacy assessments to be expanded
+beyond the CWE to a larger geographical perimeter whenever feasible.
+6) Sectorial Integration: Sectorial integration is not accounted for in the MAF but shall be considered
+in the future through, e.g., technologies for power-to-gas (P2G) and power-to-hydrogen (P2H)
+conversions or power conversions to other mediums (P2X).
+An overview of the gap analysis regarding the target methodology and the current status of further
+developments in the MAF methodology are shown in Figure 12 below.
+
+Figure 12: The MAF methodology gap analysis when considering the legal requirements for the Clean Energy Package
+
+32
+ENTSO-E AISBL • Avenue de Cortenbergh 100 • 1000 Brussels • Belgium • Tel + 32 2 741 09 50 • Fax + 32 2 741 09 51 • info@entsoe.eu • www. entsoe.eu
+
+

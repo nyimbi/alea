@@ -47,9 +47,9 @@ citing or a row added and never wired.
 | key | work | custodian | year | url | licence | archived | cites |
 |---|---|---|---|---|---|---|---|
 | irena_power_costs | Renewable Power Generation Costs in 2022 (Executive Summary) | IRENA | 2023 | https://www.irena.org/publications/2023/Aug/Renewable-Power-Generation-Costs-in-2022 | IRENA terms (free to distribute with attribution) | sources/archive/irena_costs_2022_summary.pdf | IRENA renewable cost statistics |
-| iea_nea_egc | Projected Costs of Generating Electricity | IEA / NEA | 2020 | https://www.iea.org/reports/projected-costs-of-generating-electricity-2020 | Proprietary (paid report) | | IEA/NEA Projected Costs of Generating Electricity; IEA/NEA, Projected Costs of Generating Electricity |
-| entsoe_adequacy | Adequacy studies and the N-1 planning criterion | ENTSO-E | 2023 | https://www.entsoe.eu/outlooks/adequacy/ | ENTSO-E terms (free to distribute with attribution) | | ENTSO-E adequacy studies; N-1 planning criterion |
-| who_airq | AirQ+: software tool for health risk assessment of air pollution | WHO | 2023 | https://www.who.int/tools/airq | CC BY-NC-SA 3.0 IGO | | WHO AirQ+ methodology |
+| iea_nea_egc | Projected Costs of Generating Electricity, 2020 Edition | IEA / NEA | 2020 | https://iea.blob.core.windows.net/assets/ae17da3d-e8a5-4163-a3ec-2e6fb0b5677d/Projected-Costs-of-Generating-Electricity-2020.pdf | Proprietary (free download; IEA withholds reproduction rights) | sources/archive/iea_nea_egc_2020.pdf | IEA/NEA Projected Costs of Generating Electricity; IEA/NEA, Projected Costs of Generating Electricity |
+| entsoe_adequacy | Mid-term Adequacy Forecast 2019: Appendix 2 -- Methodology | ENTSO-E | 2019 | https://eepublicdownloads.blob.core.windows.net/public-cdn-container/clean-documents/sdc-documents/MAF/2019/MAF%202019%20Appendix%202%20-%20Methodology.pdf | ENTSO-E terms (free to distribute with attribution) | sources/archive/entsoe_maf_2019_methodology.pdf | ENTSO-E adequacy studies; N-1 planning criterion |
+| who_airq | AirQ+: burden of disease due to air pollution manual | WHO Regional Office for Europe | 2020 | https://iris.who.int/handle/10665/337684 | CC BY-NC-SA 3.0 IGO | sources/archive/who_airq_manual.pdf | WHO AirQ+ methodology |
 | wrights_law | Wright's law: factors affecting the cost of airplanes | Journal of the Aeronautical Sciences | 1936 | https://doi.org/10.2514/8.155 | Proprietary (publisher paywall) | | Wright's law |
 | crf_annuity | Capital recovery factor (standard annuity formula) | | | | | n/a | Standard annuity formula |
 | wacc_identity | Weighted average cost of capital with the interest tax shield | | | | | n/a | Standard WACC with the interest tax shield |
@@ -62,12 +62,12 @@ citing or a row added and never wired.
 | ukrn_cost_of_capital | Guidance for regulators on the methodology for setting the cost of capital | UK Regulators Network | 2023 | https://ukrn.org.uk/app/uploads/2023/03/CoC-guidance_22.03.23.pdf | UKRN terms (free) | sources/archive/ukrn_cost_of_capital_2023.pdf | UKRN cost of capital guidance (2023), §allowed returns; UKRN cost of capital guidance (2023), §overall framework; Ofwat PR24 Appendix 11, allowed return on capital |
 | eia_demand_elasticities | Review of Key International Demand Elasticities | EIA / Stanford EMF | 2017 | https://www.eia.gov/workingpapers/pdf/key_international_demand_elasticities.pdf | Public domain (US govt) | sources/archive/eia_international_demand_elasticities.pdf | EIA/Stanford EMF demand elasticities |
 | burke_csereklyei_2016 | Understanding the energy-GDP elasticity: a sectoral approach | Burke & Csereklyei, ANU CAMA | 2016 | https://crawford.anu.edu.au/sites/default/files/2025-03/45_2016_burke_csereklyei_word.pdf | Author preprint | sources/archive/burke_csereklyei_2016.pdf | Burke & Csereklyei 2016 |
-| world_bank_regulation | Regulation of Utilities handbook (revenue caps, pass-through) | World Bank | | https://elibrary.worldbank.org | World Bank terms | | World Bank Regulation of Utilities handbook, revenue caps; Pass-through pricing |
+| world_bank_regulation | Handbook for Evaluating Infrastructure Regulatory Systems | Brown, Stern & Tenenbaum, World Bank | 2006 | https://openknowledge.worldbank.org/handle/10986/7030 | World Bank copyright (free download; permission normally granted) | sources/archive/world_bank_regulating_utilities_handbook.pdf | World Bank Regulation of Utilities handbook, revenue caps; Pass-through pricing |
 | fuel_tables | Standard fuel properties: LHV of ammonia 18.6 GJ/t, hydrogen 33.33 kWh/kg, 5.8 MMBtu/barrel crude, 0.29307 MWh/MMBtu HHV | | | | | n/a | LHV of NH3: 18.6 GJ/t (standard fuel tables); LHV of H2: 33.33 kWh/kg (standard fuel tables); EIA conversion basis (5.8 MMBtu/barrel); Physical constant: 1 MMBtu = 0.29307 MWh (HHV); EIA conversion basis (5.8 MMBtu/barrel); physical constant 0.29307 MWh/MMBtu |
 | catalog_method_cells | The catalog's own method cells as coupling provenance (bottom-up synthesis, rate-of-return) | | | | | n/a | Bottom-up load synthesis (catalog method cell) |
 | fragments_alias_register | The generated fragments' alias register, applied as equality equations | | | | | n/a | The fragments' alias register (docs/param_batch7.md and successors), applied |
 | leontief_multipliers | Input-output employment multipliers (the demand-pull chain) | | | | | n/a | Leontief input-output employment multipliers |
-| lazar_lcos | Levelized Cost of Storage methodology | Lazard | | | Proprietary (free to distribute) | | Lazard LCOS |
+| lazar_lcos | Lazard's Levelized Cost of Storage Analysis -- Version 7.0 | Lazard | 2021 | https://www.lazard.com/research-insights/levelized-cost-of-energy-levelized-cost-of-storage-and-levelized-cost-of-hydrogen-2021/ | Proprietary (free download from Lazard) | sources/archive/lazard_lcos_v7.pdf | Lazard LCOS |
 | standard_fiscal | Rate-based levy and allowance definitions | | | | | n/a | Rate-based levy and allowance definitions (standard fiscal accounting) |
 | composition_shares | Composition-target shares in employment planning | | | | | n/a | Composition-target shares (planning policy) |
 | marginal_cost_split | The shipped marginal-cost definition, restated as its variable part | | | | | n/a | The shipped marginal-cost definition, split |
@@ -76,7 +76,7 @@ citing or a row added and never wired.
 | fisher_equation | The Fisher equation: nominal = (1 + real)(1 + inflation) | | | | | n/a | The Fisher equation |
 | vat_tariffs | VAT applied to electricity tariffs | | | | | n/a | VAT applied to electricity tariffs |
 | stoft_2002 | Power System Economics: Designing Markets for Electricity | Steven Stoft | 2002 | | Proprietary (textbook) | | Stoft 2002, Power System Economics, ch. 5 |
-| cbam_regulation | EU Carbon Border Adjustment Mechanism; EU ETS allowance levels | European Commission | 2026 | | EU terms | | EU CBAM regulation; EU ETS allowance level 2026 |
+| cbam_regulation | Regulation (EU) 2023/956 establishing a carbon border adjustment mechanism; EU ETS allowance levels | European Parliament and Council | 2023 | https://eur-lex.europa.eu/eli/reg/2023/956/oj | EU terms (reusable with attribution, Decision 2011/833/EU) | sources/archive/cbam_regulation_2023_956.pdf | EU CBAM regulation; EU ETS allowance level 2026 |
 | benefit_sharing_shares | Benefit-sharing programme shares, applied through the graph's own revenue identity | | | | | n/a | Benefit-sharing programmes (the graph's own revenue identity) |
 | guarantee_risk_pricing | Guaranteed-offtake risk pricing in PPA markets | | | | | n/a | Guaranteed-offtake risk pricing (PPA market practice) |
 | fiscal_definitions | Rate-based levy, allowance and composition-share definitions | | | | | n/a | Rate-based levy and allowance definitions (standard fiscal accounting); Composition-target shares (planning policy) |
@@ -110,6 +110,12 @@ the row evidence rather than a pointer.
 | sources/archive/whiterose_gep_review_2017.pdf | 6af91da2cc10681dc2e58301546d4026005edf4e4df7b3a43bc57e6c5c70b036 |
 | sources/archive/irena_costs_2022_summary.pdf | b04c0d5234e2d2bfeb38960e76b6409741f3e478cd7a71a772d924b8e70ced0e |
 | sources/archive/damodaran_ctryprem_2026-01.html | ea30d57fc0858072c520930e2e5b8a5e5affdce81f7f2e1f9054efab79959dbc |
+| sources/archive/iea_nea_egc_2020.pdf | 7471000f732fb256bb9c2ebfbaa74285ea4736e980983b10201e0fdbf71d0b7a |
+| sources/archive/entsoe_maf_2019_methodology.pdf | cadddb273133a7a419f17144354705aa5a550be0bb44f65e28878df115cb964b |
+| sources/archive/who_airq_manual.pdf | f77f77b5d39cf74da362b0c9bb56d5a70770acf0415830a68f7d7e9e77ee7d59 |
+| sources/archive/world_bank_regulating_utilities_handbook.pdf | 4f65e2264a5d6b815f5e0603b56b53bd8a66c8c7573c77cd4199e8a361d25926 |
+| sources/archive/lazard_lcos_v7.pdf | 61b0adf3ab51a30131b1b0a0dfecb0bb76df9a5e55cae8d5e416a7f0d772fd58 |
+| sources/archive/cbam_regulation_2023_956.pdf | 5cd8fa27cb441333e20a93ec9f1d86bac29d5740f76c8d82a55aa292d721d8ca |
 
 ## Why five rows are `n/a`
 
@@ -147,3 +153,25 @@ Record the path in the `archived` column and the digest in the row's note. The
 digest matters because a re-download of the same URL is not necessarily the same
 bytes, and a register that cannot tell a replaced copy from the original is a
 register that has stopped being evidence.
+
+## Unarchived works
+
+Four rows carry an empty `archived` cell. Each was checked for an open copy on
+2026-10-20 and none exists; the row is left empty rather than pointing at a file
+this repository does not hold.
+
+| key | checked | why no copy |
+|---|---|---|
+| wrights_law | 2026-10-20 | AIAA paywall. The DOI resolves only to `arc.aiaa.org/doi/pdf/10.2514/8.155`, which returns 403; Crossref lists that same URL as the sole full-text link, and OpenAlex reports `oa_status: closed` with no repository copy. The 1936 *Journal of the Aeronautical Sciences* volume is not in any open repository checked (OpenAlex, CORE, NTRS, HathiTrust). |
+| stoft_2002 | 2026-10-20 | Print-only textbook, Wiley/IEEE Press, in copyright. No publisher open copy. A third-party scan circulates at `jackkarisch.com`, but it is an unauthorised reproduction with no custodian behind it, so it is not archived here: a copy of unknown provenance is not evidence that the cited work says what the equation claims. |
+| hou_2008_china | 2026-10-20 | IEEE conference paper behind the IEEE Xplore paywall (DOI 10.1109/wicom.2008.1932). Crossref's only full-text link is `xplorestaging.ieee.org`, which returns 418; OpenAlex reports `oa_status: closed` and no repository copy. |
+| shan_baoguo_2017 | 2026-10-20 | CNKI / Wanfang subscription only. `electricpower.com.cn` (中国电力, the publishing journal) serves the volume index as an empty 200 and every article path tried returns a 404 shell; the article is not on an open repository. |
+
+A replacement citation would close `hou_2008_china` and `shan_baoguo_2017` in
+principle, since both support the same 0.85 China electricity-GDP elasticity in
+`demand_growth_implied_definition`, but the two published works already archived
+for that equation (Burke & Csereklyei 2016, EIA/Stanford EMF 2017) carry the
+same identity for other countries and neither states the China figure. Recording
+that as a substitution is a change to `config/prg.yaml`, which this register does
+not own.
+

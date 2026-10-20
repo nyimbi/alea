@@ -1,0 +1,4472 @@
+L A Z A R D ’ S L E V E L I Z E D C O S T O F S T O R A G E A N A LY S I S — V E R S I O N 7 . 0
+
+Table of Contents
+
+I
+
+INTRODUCTION
+
+1
+
+II
+
+LAZARD’S LEVELIZED COST OF STORAGE ANALYSIS V7.0
+
+3
+
+III
+
+ENERGY STORAGE VALUE SNAPSHOT ANALYSIS
+
+7
+
+IV
+
+PRELIMINARY VIEWS ON LONG-DURATION STORAGE
+
+11
+
+APPENDIX
+A
+
+Supplemental LCOS Analysis Materials
+
+14
+
+B
+
+Value Snapshot Case Studies
+
+16
+
+1
+
+Value Snapshot Case Studies—U.S.
+
+17
+
+2
+
+Value Snapshot Case Studies—International
+
+23
+
+I
+
+Introduction
+
+I
+
+INTRODUCTION
+
+Introduction
+Lazard’s Levelized Cost of Storage (“LCOS”) analysis(1) addresses the following topics:
+
+
+Introduction
+
+
+
+
+
+
+A summary of key findings from Lazard’s LCOS v7.0
+
+Lazard’s LCOS analysis
+
+
+Overview of the operational parameters of selected energy storage systems for each use case analyzed
+
+
+
+Comparative LCOS analysis for various energy storage systems on a $/kW-year and $/MWh basis
+
+Energy Storage Value Snapshot analysis
+
+
+Overview of the Value Snapshot analysis and identification of selected geographies for each use case analyzed
+
+
+
+Summary results from the Value Snapshot analysis
+
+
+
+A preliminary view of long-duration storage technologies
+
+
+
+Selected appendix materials
+
+
+Supplementary materials for Lazard’s LCOS analysis, including methodology and key assumptions employed
+
+
+
+Supporting materials for the Value Snapshot analysis, including pro forma results for the U.S. and International Value Snapshot case studies
+
+Copyright 2021 Lazard
+
+Source: Lazard and Roland Berger.
+(1)
+Lazard’s LCOS analysis is conducted with support from Enovation Analytics and Roland Berger.
+
+1
+
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+I
+
+INTRODUCTION
+
+Summary of Key Findings and Observed Trends in the Energy Storage Industry
+ Concerns regarding the availability of Lithium-ion battery modules are increasing given ongoing supply constraints
+
+
+Supply constraints in commodity markets and manufacturing activities have led end-users to more seriously consider Tier 2 and Tier 3
+suppliers
+
+
+
+Stationary storage applications are increasingly competing with EVs over module supply as automobile manufacturers continue to shift
+product offerings away from traditional gasoline- and diesel-fueled vehicles
+ Module demand from EVs is expect to increase to ~90% from ~75% of end-market demand by 2030. Stationary storage currently
+represents <5% of end market demand and is not expected to exceed 10% of the market by 2030
+
+ Pressure on legacy integrators continues to build as the industry matures
+
+
+Battery OEMs are moving downstream in an effort to capture more margin and expand market share, offering fully wrapped DC blocks, i.e.,
+storage modules, container, supporting controls, fire suppression and associated cabling
+
+
+
+Concurrently, some developers are expanding in-house engineering, procurement and construction activities
+
+
+
+Legacy integrators are moving into energy management software, with many acquiring distributed energy resource management platforms
+
+Technology
+
+ Market preference has shifted significantly towards Lithium Iron Phosphate (“LFP”) vs. Nickel Manganese Cobalt (“NMC”) chemistries
+
+
+Industry participants increasingly prefer LFP chemistries given perceived fire safety, cost and operational advantages (e.g., depth of
+discharge). The cost advantage of LFP chemistries tends to be more pronounced in shorter-duration applications
+
+ Interest in longer-duration technologies continues to grow in tandem with expectations of ever greater penetration of renewable energy
+generation
+
+
+Adoption, however, remains limited given a lack of required technology and duration-specific price signals in wholesale markets (e.g.
+capacity)
+
+ Hybrid applications are becoming more valuable and, by extension, widespread as grid operators begin adopting Estimated Load Carry
+Capability (“ELCC”) methodologies to value resources
+
+Use Cases
+
+
+
+Adoption of ELCC methodologies is driving increasing deployment of hybrid resources (e.g., storage paired with solar) to mitigate resource
+intermittency. Storage co-located with solar is expected to be most attractive in the U.S. Midwest, including in the Southwest Power Pool
+(“SPP”) region
+
+
+
+In ERCOT, for example, hybrid assets account for ~35% of storage MW in the current interconnection queue (i.e., ~29% solar, ~1% wind
+and ~5% other)
+
+ Developers are increasingly targeting markets in the Western U.S. (California), Western Europe and South America for long duration storage
+projects as these areas experience ever greater penetration of intermittent renewable energy generation in tandem with declining dispatchable
+conventional generation capacity
+
+2
+Copyright 2021 Lazard
+
+Source: LCOS surveys, Roland Berger.
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+II
+
+Lazard’s Levelized Cost of Storage Analysis v7.0
+
+II
+
+LAZARD’S LEVELIZED COST OF STORAGE ANALYSIS V7.0
+
+Energy Storage Use Cases—Overview
+
+By identifying and evaluating the most commonly deployed energy storage applications, Lazard’s LCOS analyzes the cost and value of energy
+storage use cases on the grid and behind-the-meter
+
+Behind-the-Meter
+
+In-Front-of-the-Meter
+
+1
+
+2
+
+Wholesale
+
+Transmission and
+Distribution
+
+Use Case Description
+
+Technologies Assessed
+
+ Large-scale energy storage system designed for rapid start and precise following of dispatch
+signal. Variations in system discharge duration are designed to meet varying system needs (i.e.,
+short-duration frequency regulation, longer-duration energy arbitrage(1) or capacity, etc.)
+ To better reflect current market trends, this report analyzes one-, two- and four-hour durations(2)
+
+ Lithium Iron Phosphate
+ Lithium Nickel Manganese
+Cobalt Oxide
+ Flow Battery—Vanadium
+ Flow Battery—Zinc Bromine
+
+ Energy storage system designed to defer or avoid transmission and/or distribution upgrades,
+typically placed at substations or distribution feeders controlled by utilities to provide flexible
+capacity while also maintaining grid stability
+
+ Lithium Iron Phosphate
+ Lithium Nickel Manganese
+Cobalt Oxide
+ Flow Battery—Vanadium
+ Flow Battery—Zinc Bromine
+
+3
+
+Wholesale
+(PV+Storage)
+
+ Energy storage system designed to be paired with large solar PV facilities to better align timing of
+PV generation with system demand, reduce solar curtailment and provide grid support
+
+ Lithium Iron Phosphate
+ Lithium Nickel Manganese
+Cobalt Oxide
+ Flow Battery—Vanadium
+ Flow Battery—Zinc Bromine
+
+4
+
+Commercial &
+Industrial
+(Standalone)
+
+ Energy storage system designed for behind-the-meter peak shaving and demand charge reduction
+for C&I energy users
+ Units often configured to support multiple commercial energy management strategies and
+provide optionality for the system to provide grid services to a utility or the wholesale market, as
+appropriate in a given region
+
+ Lithium Iron Phosphate
+ Lithium Nickel Manganese
+Cobalt Oxide
+ Flow Battery—Vanadium
+ Flow Battery—Zinc Bromine
+
+5
+
+Commercial &
+Industrial
+(PV+Storage)
+
+ Energy storage system designed for behind-the-meter peak shaving and demand charge reduction
+services for C&I energy users
+ Systems designed to maximize the value of the solar PV system by optimizing available revenue
+streams and subsidies
+
+ Lithium Iron Phosphate
+ Lithium Nickel Manganese
+Cobalt Oxide
+ Flow Battery—Vanadium
+ Flow Battery—Zinc Bromine
+
+6
+
+Residential
+(PV+Storage)
+
+ Energy storage system designed for behind-the-meter residential home use—provides backup
+power, power quality improvements and extends usefulness of self-generation (e.g., PV+storage)
+ Regulates the power supply and smooths the quantity of electricity sold back to the grid from
+distributed PV applications
+
+ Lithium Iron Phosphate
+ Lithium Nickel Manganese
+Cobalt Oxide
+
+Copyright 2021 Lazard
+
+Source: Industry interviews, Lazard and Roland Berger.
+Note:
+Use case numbering shown above serves as an identifier for the corresponding individual use cases discussed on subsequent pages.
+(1)
+For the purposes of this analysis, “energy arbitrage” in the context of storage systems paired with solar PV includes revenue streams associated with the sale of excess generation from
+the solar PV system, as appropriate, for a given use case.
+(2)
+The Value Snapshot analysis only evaluates the four-hour wholesale use case.
+
+3
+
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+II
+
+LAZARD’S LEVELIZED COST OF STORAGE ANALYSIS V7.0
+
+Energy Storage Use Cases—Illustrative Operational Parameters
+Lazard’s LCOS evaluates six commonly deployed use cases for energy storage by identifying illustrative operational parameters(1)
+
+
+Energy storage systems may also be configured to support combined/“stacked” use cases
+B
+
+Behind-the-Meter
+
+In-Front-of-the-Meter
+
+= “Usable Energy”(2)
+
+1
+
+Wholesale(7)
+
+x
+
+C
+
+D
+
+=
+
+x E
+
+x F
+
+=
+
+A
+
+x
+
+G
+
+C
+
+D
+
+E
+
+F
+
+G
+
+H
+
+Battery
+Degradation
+(per annum)
+
+Storage
+Duration
+(Hours)
+
+Nameplate
+Capacity
+(MWh)(4)
+
+90% DOD
+Cycles/
+Day(5)
+
+Days/
+Year(6)
+
+Annual
+MWh
+
+Project
+MWh
+
+--
+
+2.6%
+
+1
+
+100
+
+1
+
+350
+
+31,500
+
+630,000
+
+100
+
+--
+
+2.6%
+
+2
+
+200
+
+1
+
+350
+
+63,000
+
+1,260,000
+
+20
+
+100
+
+--
+
+2.6%
+
+4
+
+400
+
+1
+
+350
+
+126,000
+
+2,520,000
+
+A
+
+B
+
+Project
+Life
+(Years)
+
+Storage
+(MW)(3)
+
+Solar
+PV
+(MW)
+
+20
+
+100
+
+20
+
+2
+
+Transmission and
+Distribution(7)
+
+20
+
+10
+
+--
+
+1.5%
+
+6
+
+60
+
+1
+
+25
+
+1,350
+
+27,000
+
+3
+
+Wholesale
+(PV+Storage)(7)
+
+20
+
+50
+
+100
+
+2.6%
+
+4
+
+200
+
+1
+
+350
+
+63,000
+
+1,260,000
+
+4
+
+Commercial &
+Industrial
+(Standalone)
+
+10
+
+1
+
+--
+
+2.6%
+
+2
+
+2
+
+1
+
+250
+
+450
+
+4,500
+
+5
+
+Commercial &
+Industrial
+(PV+Storage)(7)
+
+20
+
+0.50
+
+1
+
+2.3%
+
+4
+
+2
+
+1
+
+350
+
+630
+
+12,600
+
+6
+
+Residential
+(PV+Storage)
+
+20
+
+0.006
+
+0.010
+
+1.9%
+
+4
+
+0.025
+
+1
+
+350
+
+8
+
+158
+
+Copyright 2021 Lazard
+
+=
+
+Source: Lazard and Roland Berger.
+Note: Operational parameters presented are applied to Value Snapshots and LCOS calculations. Annual and Project MWh presented are illustrative. Annual battery output in the Value Snapshot
+analysis depends on a participation optimization analysis and may vary from the representative project MWh by use case.
+(1)
+The six use cases below represent illustrative current and contemplated energy storage applications and are derived from Industry survey data.
+(2)
+Usable energy indicates energy stored and available to be dispatched from the battery.
+(3)
+Indicates power rating of system (i.e., system size).
+(4)
+Indicates total battery energy content on a single, 100% charge, or ”usable energy.” Usable energy divided by power rating (in MW) reflects hourly duration of system. This analysis reflects
+common practice in the market whereby batteries are upsized in year one to 110% of nameplate capacity (e.g., a 100 MWh battery actually begins project life with 110 MWh).
+(5)
+“DOD” denotes depth of battery discharge (i.e., the percent of the battery’s energy content that is discharged). Depth of discharge of 90% indicates that a fully charged battery discharges 90% of 4
+its energy. To preserve battery longevity, this analysis assumes that the battery never charges over 95%, or discharges below 5%, of its usable energy.
+(6)
+Indicates number of days of system operation per calendar year.
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+(7)
+Augmented to nameplate MWh capacity in year 11 of operation.
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+II
+
+LAZARD’S LEVELIZED COST OF STORAGE ANALYSIS V7.0
+
+Unsubsidized Levelized Cost of Storage Comparison—Capacity ($/kW-year)
+Lazard’s LCOS analysis evaluates storage systems on a levelized basis to derive cost metrics based on nameplate capacity
+(100 MW / 100 MWh)
+
+Behind-the-Meter
+
+In-Front-of-the-Meter
+
+1
+
+Wholesale
+
+$55
+
+(100 MW / 200 MWh)
+
+$97
+
+$101
+
+(100 MW / 400 MWh)
+
+2
+
+Transmission and
+Distribution
+
+(10 MW / 60 MWh)
+
+3
+
+Wholesale
+(PV+Storage)
+
+(50 MW / 200 MWh)
+
+4
+
+Commercial &
+Industrial
+(Standalone)
+
+(1 MW / 2 MWh)
+
+5
+
+Commercial &
+Industrial
+(PV+Storage)
+
+(0.5 MW / 2 MWh)
+
+6
+
+Residential
+(PV+Storage)
+
+(0.006 MW / 0.025 MWh)
+
+$178
+
+$181
+
+$322
+
+$240
+
+$165
+
+$451
+
+$296
+
+$221
+
+$318
+
+$378
+
+$521
+
+$545
+
+$0
+
+$100
+
+$200
+
+$300
+
+$400
+
+$500
+
+$785
+
+$600
+
+$700
+
+$800
+
+$900
+
+Levelized Cost ($/kW-year)
+
+Copyright 2021 Lazard
+
+Source: Lazard estimates.
+Note:
+Here and throughout this presentation, unless otherwise indicated, analysis assumes a capital structure consisting of 20% debt at an 8% interest rate and 80% equity at a 12% cost of
+equity. Capital costs are composed of the storage module, balance-of-system and power conversion equipment, collectively referred to as the Energy Storage System (“ESS”), solar
+equipment (where applicable) and EPC. Augmentation costs are included as part of O&M expenses in this analysis and vary across use cases due to usage profiles and lifespans.
+
+5
+
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+II
+
+LAZARD’S LEVELIZED COST OF STORAGE ANALYSIS V7.0
+
+Unsubsidized Levelized Cost of Storage Comparison—Energy ($/MWh)
+Lazard’s LCOS analysis evaluates storage systems on a levelized basis to derive cost metrics based on annual energy output
+(100 MW / 100 MWh)
+
+Behind-the-Meter
+
+In-Front-of-the-Meter
+
+1
+
+Wholesale
+
+$160
+
+(100 MW / 200 MWh)
+
+$146
+
+(100 MW / 400 MWh)
+
+2
+
+Transmission and
+Distribution(1)
+
+(10 MW / 60 MWh)
+
+3
+
+Wholesale
+(PV+Storage)
+
+(50 MW / 200 MWh)
+
+4
+
+Commercial &
+Industrial
+(Standalone)
+
+(1 MW / 2 MWh)
+
+5
+
+Commercial &
+Industrial
+(PV+Storage)
+
+(0.5 MW / 2 MWh)
+
+6
+
+Residential
+(PV+Storage)
+
+(0.006 MW / 0.025 MWh)
+
+$279
+
+$257
+
+$131
+
+$232
+
+NA(1)
+
+$85
+
+$158
+
+$442
+
+$235
+
+$643
+
+$335
+
+$416
+
+$0
+
+$100
+
+$200
+
+$300
+
+$400
+
+$621
+
+$500
+
+$600
+
+$700
+
+$800
+
+Levelized Cost ($/MWh)
+
+Copyright 2021 Lazard
+
+Source: Lazard estimates.
+(1)
+Given the operational parameters for the Transmission and Distribution use case (i.e., 25 cycles per year), certain levelized metrics are not comparable between this and other
+use cases presented in Lazard’s Levelized Cost of Storage report. The corresponding levelized cost of storage for this case would be $1,613/MWh – $3,034/MWh.
+
+6
+
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+III
+
+Energy Storage Value Snapshot Analysis
+
+III
+
+ENERGY STORAGE VALUE SNAPSHOT ANALYSIS
+
+Revenue Potential for Relevant Use Cases
+Numerous potential sources of revenue available to energy storage systems reflect the benefits provided to customers and the grid
+
+
+The scope of revenue sources is limited to those captured by existing or soon-to-be commissioned projects. Revenue sources that
+are not identifiable or without publicly available data are not analyzed
+Use Cases(1)
+
+Customer
+
+Utility
+
+Wholesale
+
+Description
+
+Wholesale
+
+Transmission
+& Distribution
+
+Wholesale
+(PV + S)
+
+Commercial
+(Standalone)
+
+Commercial
+(PV + S)
+
+Residential
+(PV + S)
+
+
+
+
+
+
+
+Demand
+Response—
+Wholesale
+
+ Manages high wholesale price or emergency conditions on the
+grid by calling on users to reduce or shift electricity demand
+
+Energy
+Arbitrage
+
+ Storage of inexpensive electricity to sell later at higher prices
+(only evaluated in the context of a wholesale market)
+
+
+
+
+
+
+
+Frequency
+Regulation
+
+ Provides immediate (four-second) power to maintain
+generation-load balance and prevent frequency fluctuations
+
+
+
+
+
+
+
+
+
+
+
+Resource
+Adequacy
+
+ Provides capacity to meet generation requirements at peak
+loading
+
+
+
+
+
+
+
+
+
+
+
+Spinning/
+Non-Spinning
+Reserves
+
+ Maintains electricity output during unexpected contingency
+events (e.g., outages) immediately (spinning reserve) or within
+a short period of time (non-spinning reserve)
+
+
+
+
+
+
+
+
+
+
+
+Distribution
+Deferral
+
+ Provides extra capacity to meet projected load growth for the
+purpose of delaying, reducing or avoiding distribution system
+investment
+
+
+
+Transmission
+Deferral
+
+ Provides extra capacity to meet projected load growth for the
+purpose of delaying, reducing or avoiding transmission system
+investment
+
+
+
+Demand
+Response—
+Utility
+
+ Allows users to reduce or shift electricity demand in response
+to high wholesale pricing or emergency conditions on the grid
+
+
+
+
+
+
+
+Bill
+Management
+
+ Allows reduction of demand charge using battery discharge
+and the daily storage of electricity for use when time-of-use
+rates are highest
+
+
+
+
+
+
+
+ Provides backup power for use by Residential and
+Commercial customers during grid outages
+
+
+
+
+
+
+
+Backup
+Power
+
+Copyright 2021 Lazard
+
+Source: Lazard and Roland Berger.
+(1)
+Represents the universe of potential revenue streams available to the various use cases. Does not necessarily represent revenue streams analyzed in the Value Snapshots.
+
+7
+
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+III
+
+ENERGY STORAGE VALUE SNAPSHOT ANALYSIS
+
+Value Snapshot Case Studies—Overview
+Lazard’s Value Snapshots analyze the financial viability of illustrative energy storage systems designed for selected use cases from a returns
+perspective
+
+
+The geographic locations, assumed installed and operating costs, and associated revenue streams reflect current energy storage
+market activity
+Use Case
+
+U.S. Location
+
+International
+Location
+
+Owner
+
+Revenue Streams
+
+1
+
+Wholesale
+
+CAISO
+(SP-15)
+
+Germany
+
+ IPP in a competitive
+wholesale market
+
+ Wholesale market settlement
+ Local capacity resource programs
+
+2
+
+Transmission
+and Distribution
+
+REC
+(Virginia)
+
+--(1)
+
+ Wires utility in a
+competitive wholesale
+market
+
+ Capital recovery in regulated rates, avoided cost to wires utility
+and avoided cost incentives
+
+3
+
+Wholesale
+(PV+Storage)
+
+ERCOT
+(South Texas)
+
+Australia
+
+ IPP in a competitive
+wholesale market
+
+ Wholesale market settlement
+
+4
+
+Commercial &
+Industrial
+(Standalone)
+
+CAISO
+(San Francisco)
+
+Canada
+
+ Customer or financier
+
+ Tariff settlement, DR participation, avoided costs to commercial
+customer, local capacity resource programs and incentives
+
+5
+
+Commercial &
+Industrial
+(PV+Storage)
+
+CAISO
+(San Francisco)
+
+Australia
+
+ Customer or financier
+
+ Tariff settlement, DR participation, avoided costs to commercial
+customer, local capacity resource programs and incentives
+
+6
+
+Residential
+(PV+Storage)
+
+HECO
+(Hawaii)
+
+Germany
+
+ Customer or financier
+
+ Tariff settlement, avoided costs to residential customer and
+incentives
+
+Copyright 2021 Lazard
+
+Source: Lazard and Roland Berger.
+Note: Actual project returns may vary due to differences in location-specific costs, revenue streams and owner/developer risk preferences.
+(1)
+Lazard’s Value Snapshot analysis intentionally excluded a Transmission and Distribution use case from its international analysis given the lack of substantive publicly available
+data for projects deployed for this use case.
+
+8
+
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+III
+
+ENERGY STORAGE VALUE SNAPSHOT ANALYSIS
+
+Value Snapshot Case Studies—Overview (cont’d)
+Lazard’s Value Snapshots analyze use cases across various global geographies
+San Francisco, California
+
+Ontario, Canada
+
+4
+
+C&I Standalone(1)
+
+C&I Standalone (Ontario
+Independent Electricity
+System Operator (“IESO”))
+Project size: 1 MW / 2 MWh
+
+Project size: 1 MW / 2 MWh
+C&I PV+Storage(1)
+
+4
+
+5
+
+Project size: 0.5 MW / 2 MWh
+1 MW PV
+
+Bavaria, Germany
+
+1
+Wholesale (European Energy Exchange
+(“EEX”) and Tennet Transmission
+System Operator (“TSO”))
+Project size: 100 MW / 400 MWh
+Residential PV+Storage(2)
+Project size: 0.006 MW / 0.025 MWh
+0.010 MW PV
+
+6
+
+Spotsylvania County, Virginia 2
+Los Angeles, California
+
+T&D Deferral (Rappahannock
+Electric Co-Op (“REC”))
+Project size: 2 MW / 8 MWh
+
+1
+
+Wholesale (California
+Independent System
+Operator (“CAISO”))
+
+Corpus Christi, Texas
+
+Project size: 100 MW / 400 MWh
+
+Honolulu, Hawaii
+
+6
+
+Residential PV+Storage(3)
+Project size: 0.006 MW /
+0.025 MWh
+0.010 MW PV
+
+Copyright 2021 Lazard
+
+Queensland, Australia
+
+3
+Wholesale PV+Storage (National
+Electricity Market (“NEM”))
+Project size: 50 MW / 200 MWh
+100 MW PV
+
+3
+
+Wholesale PV+Storage (Electric
+Reliability Council of Texas
+(“ERCOT”))
+Project size: 50 MW / 200 MWh
+100 MW PV
+
+Victoria, Australia
+
+5
+
+C&I PV+Storage(4)
+Project size: 0.5 MW / 2 MWh
+1 MW PV
+
+Source: Lazard and Roland Berger.
+Note:
+Project parameters (i.e., battery size, duration, etc.) presented above correspond to the inputs used in the LCOS analysis. For the T&D deferral use case, the parameters for the
+case study are unique to the observed project.
+(1)
+Assumes the project provides services under contract with the Pacific Gas and Electric Company (“PG&E”).
+9
+(2)
+Assumes the project provides services under contract with Stadtwerke Munich (“SWM”).
+(3)
+Assumes the project provides services under contract with the Hawaiian Electric Company (“HECO”).
+(4)
+Assumes the project provides services under contract
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+with AusNet Services.
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+III
+
+ENERGY STORAGE VALUE SNAPSHOT ANALYSIS
+
+Value Snapshot Case Studies—Summary Results(1)
+Project economics evaluated in the Value Snapshot analysis continue to evolve year-over-year as costs improve and available revenue
+streams adjust to reflect underlying market conditions
+U.S.
+
+IRR
+
+35.0%
+
+3
+
+29.1%
+
+30.0%
+25.0%
+
+International(2)
+
+1
+
+4
+
+4
+
+26.4%
+
+23.7%
+
+27.4%
+
+5
+
+5
+
+26.3%
+
+23.4%
+
+20.0%
+3
+
+15.0%
+
+9.4%
+
+8.5%
+
+10.0%
+
+12.8%
+
+6
+
+2
+
+1
+6
+
+6.5%
+
+4.5%
+
+5.0%
+0.0%
+
+Domestic (3)
+Wholesale
+(CAISO)
+
+T&D deferral(3)
+(REC)
+
+Energy Arbitrage
+Demand Response—Wholesale
+
+Copyright 2021 Lazard
+
+Wholesale (3)(4)
+C&I (3)
+(PV+Storage)
+(Standalone)
+(ERCOT)
+(CAISO)
+
+Frequency Regulation
+Demand Response—Utility
+
+C&I (3)(4)
+(PV+Storage)
+(CAISO)
+
+Residential (3)(4) Wholesale(3)
+(PV+Storage)
+(Germany)
+(Hawaii)
+
+Spinning/Non-Spinning Reserves
+Bill Management
+
+Utility-scale (3)(4)
+C&I (3)
+(PV + Storage)
+(Standalone)
+(Australia)
+(Ontario)
+
+Resource Adequacy
+Local Incentive Payments
+
+C&I (3)(4)
+(PV+Storage)
+(Australia)
+
+Residential(3)(4)
+(PV+Storage)
+(Germany)
+
+Distribution Deferral
+
+Source: Industry interviews, Enovation Analytics, Lazard and Roland Berger.
+Note:
+All figures presented in USD using the following exchange rates: USD 0.69/AUD, USD 0.75/CAD and USD 1.14/EUR.
+(1)
+Cost structure representative of the “Average Case” is used in the IRR analysis.
+(2)
+Lazard’s Value Snapshot analysis intentionally excluded a Transmission and Distribution use case from its international analysis given the lack of substantive publicly available data for
+projects deployed for this use case.
+(3)
+Revenues for Value Snapshots use cases 1 – 3 are based on wholesale prices from the 12 months prior to the onset of the COVID-19 pandemic (i.e., February 2019 – February 2020)
+in order to normalize the underlying data. Revenues for Value Snapshots use cases 4 – 6 are based on the most recent tariffs, programs and incentives available as of 1H 2021.
+(4)
+While it is common to model storage and solar separately, this analysis models both as a combined system for consistency with prior LCOS reports.
+
+10
+
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+IV
+
+Preliminary Views on Long-Duration Storage
+
+IV
+
+PRELIMINARY VIEWS ON LONG-DURATION STORAGE
+
+Selected Long Duration Storage Technologies—Overview
+A variety of long-duration energy storage technologies are in various stages of development and commercial viability
+Flow
+Typical Technologies
+
+Description
+
+Disadvantages
+
+Mechanical
+
+ Zinc Bromine
+
+ Latent Heat
+
+ Gravity Energy Storage
+
+ Vanadium
+
+ Sensible Heat
+
+ Compressed Air Energy Storage
+(“CAES”)
+
+ Energy storage systems generating
+electrical energy from chemical
+reactions, often stored in liquid
+tanks
+
+ Solutions storing thermal energy by
+heating or cooling a storage
+medium
+
+ Solutions that store energy as a
+kinetic, gravitational potential or
+compression medium
+
+ Minimal degradation from cycling
+
+ Able to leverage mature industrial
+cryogenic technology base
+
+ Mechanical is proven via
+established technologies (e.g.,
+pumped hydro)
+
+ Modular options available
+Advantages
+
+Thermal
+
+ Relatively few safety concerns
+
+ Materials are generally inexpensive
+ Power and energy capacity are
+independently scalable
+
+ Attractive economics
+ Limited safety concerns
+
+ Lower energy density and roundtrip efficiency
+
+ Lower energy density vs.
+competing technologies
+
+ Lower round-trip efficiency (e.g.,
+CAES systems)
+
+ Relatively higher O&M costs
+
+ Challenging to increase capacity in
+modular increments after
+installation
+
+ Potential for substantial physical
+footprint vs. competing
+technologies
+
+ Operating performance is sensitive
+to local climatic conditions
+
+ Generally difficult to modularize
+
+ Lacks adjacent industry to scale
+production
+ High-cost materials (e.g.,
+vanadium)
+ Limited track record at larger,
+commercial scale
+
+Source: Cleantech Group, Desk research, Lazard and Roland Berger.
+
+ Limited track record at larger scale
+
+11
+
+Copyright 2021 Lazard
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+IV
+
+PRELIMINARY VIEWS ON LONG-DURATION STORAGE
+
+Market Activity Observed in Long-Duration Storage
+As regional grids achieve higher penetration of renewable energy generation, long-duration storage is well positioned to take advantage of the
+corresponding increase in the potential for curtailed and low-price generation
+Market Context
+
+Grid Impacts of Increasing Renewable Energy Penetration
+
+
+
+Lithium-ion technology has proven to be a viable short-duration application, but it
+is rarely cost-effective past six hours given the cost structure of incremental units
+of duration
+
+Selected ISO negative pricing
+behavior, 2014 – 2020
+(% of hours <$10/MWh)
+
+
+
+Increased renewable generation enhances the value of energy arbitrage and
+reliability services, while climate adaptation drives demand for grid resilience
+
+
+
+
+
+
+Long-duration storage (i.e., >6 hours) is better suited to addressing both of
+these grid conditions
+
+1
+SPP
+
+4
+4
+
+Increasing occurrences of low or negative pricing have been observed across
+various energy markets, corresponding to rising levels of renewable penetration
+and a greater number of curtailment events
+
+
+Incremental storage, transmission capacity and further interconnection
+between regional grids can reduce curtailment levels as renewable energy
+generation continues to increase
+
+5
+MISO
+
+1
+
+0
+
+
+
+
+
+
+
+Flow: SDG&E and Sumitomo Electric have partnered to install a 2 MW / 8 MWh
+vanadium redox flow battery in California
+Thermal: Vantaa Energy intends to deploy 90 GWh of thermal storage in Finland
+in 2022
+Mechanical: Hydrostor has proposed a 200 MW / 1,600 MWh CAES project in
+New South Wales, Australia
+Other: Form Energy and Great River Energy have partnered to install a 1 MW /
+250 MWh aqueous air battery in Minnesota with a target in-service date of 2023
+
+9
+
+4
+
+10
+
+4
+
+4,499
+3,521
+
+7
+7
+
+2,987
+8
+
+5
+
+ERCOT
+
+2018
+
+23
+
+17
+
+2
+
+0
+2014
+
+19
+
+3
+
+Recent Project Activity
+
+
+11
+
+7
+
+1
+
+CAISO
+
+8,037
+
+8
+
+California regulators have stated that the state will need 1 GW of long-duration
+storage by 2026. Subsequent to this announcement, a coalition of eight
+community-choice aggregators published a request for proposals seeking 500
+MWs of long-duration storage capacity
+
+Selected ISO curtailments, 2014 –
+2020 (GWh)
+
+5
+
+2,060
+9
+10
+
+10
+
+1,031
+12
+
+426
+
+13
+
+2015
+
+15
+2016
+
+2019
+
+2020
+
+Source: Greentech Media, the California Public Utility Commission, CleanTech Group, Industry interviews, Lazard and Roland Berger.
+
+22
+20
+
+25
+2017
+
+2014 2015 2016 2017 2018 2019 2020
+CAISO
+
+ERCOT
+
+SPP
+
+MISO
+
+12
+
+Copyright 2021 Lazard
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+IV
+
+PRELIMINARY VIEWS ON LONG-DURATION STORAGE
+
+Illustrative Long-Duration Use Case(1)
+A levelized cost of storage analysis of an illustrative 100 MW / 1,000 MWh energy storage system yields potentially attractive economics
+relative to the available alternatives
+Use Case Commentary
+
+LCOS—100 MW / 1,000 MWh Battery
+
+
+
+Utility companies and corporates are focused on the potential of longduration energy storage technologies to help achieve emissions-reduction
+targets
+
+
+
+Long-duration storage developers and OEMs are targeting areas with
+curtailed renewable energy generation, such as those with abundant
+onshore or offshore wind, which are also transmission constrained
+
+
+
+The mining sector also represents an attractive opportunity where longduration storage may be a cost-effective alternative to diesel-fired
+reciprocating engines
+
+Energy ($/MWh)
+
+Low Case
+
+52
+
+7
+
+High Case
+
+Key observations on traditional battery technologies vs. long-duration
+technologies:
+
+
+
+
+
+
+Many long-duration storage technologies are large capital assets that
+are challenging to size in modular increments, whereas short-duration
+technologies can be scaled incrementally
+
+Copyright 2021 Lazard
+
+O&M
+
+Charging
+
+37
+
+46
+
+Taxes
+
+Other
+
+9
+
+46
+
+$286
+
+Capacity ($/kW-year)
+
+Short-duration storage technologies (e.g., Lithium-ion) maintain
+relatively higher exposure to expensive, volatile commodities as
+production inputs. Current long-duration technologies do not have such
+exposure and anticipate limited remediation or recycling costs
+Long-duration storage technologies typically have lower round-trip
+efficiencies than short-duration technologies have and, by extension,
+incur higher charging costs
+
+3 10 $136
+
+148
+
+Capital
+
+
+
+64
+
+$476
+
+$1,000
+
+Key Assumptions
+
+
+Standalone battery, 20-year project life
+
+
+
+1 full battery cycle, 350 cycles/day
+
+
+
+No degradation or augmentation costs
+
+
+
+Average domestic charging costs and associated escalation
+
+Source: Industry interviews, EIA, Lazard and Roland Berger.
+(1)
+Energy storage technologies assessed: flow (e.g. Vanadium and Zinc Bromine), thermal and mechanical (i.e., compressed and liquefied air energy storage). Due to the limited
+deployment of these projects to date, and corresponding lack of operating data, assumptions utilized in this analysis are preliminary.
+
+13
+
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+Appendix
+
+A
+
+Supplemental LCOS Analysis Materials
+
+A
+
+SUPPLEMENTAL LCOS ANALYSIS MATERIALS
+
+Levelized Cost of Storage Analysis—Methodology
+
+Our Levelized Cost of Storage analysis consists of creating an energy storage model representing an illustrative project for each relevant
+technology and solving for the $/MWh figure that results in a levered IRR equal to the assumed cost of equity
+Wholesale (100 MW / 200 MWh)—Low Case Sample Calculations
+Year (1)
+
+0
+
+Capacity (MW)
+
+(A)
+
+Available Capacity (MW)
+
+1
+
+2
+
+3
+
+4
+
+5
+
+Key Assumptions (5)
+
+20
+
+100
+
+100
+
+100
+
+100
+
+100
+
+100
+
+Power Rating (MW)
+
+110
+
+107
+
+104
+
+102
+
+99
+
+79
+
+Duration (Hours)
+
+69
+
+68
+
+66
+
+64
+
+62
+
+50
+
+Usable Energy (MWh)
+
+2
+
+Total Generation ('000 MWh) (2)
+
+(B)*
+
+Levelized Storage Cost ($/MWh)
+
+(C)
+
+$146
+
+$146
+
+$146
+
+$146
+
+$146
+
+$146
+
+90% Depth of Discharge Cycles/Day
+
+Total Revenues
+
+(B) x (C) = (D)*
+
+$10.1
+
+$9.9
+
+$9.6
+
+$9.4
+
+$9.1
+
+$7.3
+
+Operating Days/Year
+
+Total Charging Cost (3)
+
+(E)
+
+($3.2)
+
+($3.2)
+
+($3.1)
+
+($3.1)
+
+($3.1)
+
+($3.3)
+
+Capital Structure:
+
+Total O&M(4)
+
+(F)*
+
+(1.2)
+
+(1.2)
+
+(1.5)
+
+(1.5)
+
+(1.5)
+
+(1.7)
+
+Debt
+
+Total Operating Costs
+
+(E) + (F) = (G)
+
+($4.4)
+
+($4.4)
+
+($4.6)
+
+($4.6)
+
+($4.6)
+
+($4.9)
+
+Cost of Debt
+
+8.0%
+
+Equity
+
+80.0%
+12.0%
+
+200
+
+20.0%
+
+(D) - (G) = (H)
+
+$5.8
+
+$5.5
+
+$5.0
+
+$4.7
+
+$4.5
+
+$2.3
+
+Cost of Equity
+
+Debt Outstanding - Beginning of Period
+
+(I)
+
+$6.9
+
+$6.7
+
+$6.6
+
+$6.4
+
+$6.2
+
+$0.7
+
+Taxes
+
+Debt - Interest Expense
+
+(J)
+
+(0.6)
+
+(0.5)
+
+(0.5)
+
+(0.5)
+
+(0.5)
+
+(0.1)
+
+Combined Tax Rate
+
+Debt - Principal Payment
+
+(K)
+
+(0.2)
+
+(0.2)
+
+(0.2)
+
+(0.2)
+
+(0.2)
+
+(0.7)
+
+Contract Term / Project Life (years)
+
+Levelized Debt Service
+
+(J) + (K) = (L)
+
+(0.7)
+
+(0.7)
+
+(0.7)
+
+(0.7)
+
+(0.7)
+
+(0.7)
+
+MACRS Depreciation Schedule
+
+EBITDA
+
+(H)
+
+$5.8
+
+$5.5
+
+$5.0
+
+$4.7
+
+$4.5
+
+$2.3
+
+Depreciation (7-yr MACRS)
+
+(M)
+
+(4.9)
+
+(8.4)
+
+(6.0)
+
+(4.3)
+
+(3.1)
+
+0.0
+
+Interest Expense
+
+(J)
+
+(0.6)
+
+(0.5)
+
+(0.5)
+
+(0.5)
+
+(0.5)
+
+(0.1)
+
+Total Initial Installed Cost ($/MWh)
+
+Taxable Income
+
+(H) + (M) + (J) = (N)
+
+$0.3
+
+($3.5)
+
+($1.6)
+
+($0.1)
+
+$0.9
+
+$2.3
+
+O&M, Warranty & Augmentation
+
+Tax Benefit (Liability)
+After-Tax Net Equity Cash Flow
+IRR For Equity Investors
+Source:
+Note:
+*
+(1)
+(2)
+(3)
+(4)
+(5)
+(6)
+(7)
+
+(N) x (Tax Rate) = (O)
+(H) + (L) + (O) = (P)
+
+($0.1)
+($27.6)(7)
+
+$5.0
+
+$0.7
+$5.2
+
+$0.3
+$4.5
+
+$0.0
+$4.0
+
+($0.2)
+$3.6
+
+($0.5)
+$1.2
+
+1
+350
+
+EBITDA
+
+Cost ($/MWh)
+
+Copyright 2021 Lazard
+
+100
+
+21.0%
+20
+7 Years
+
+(6)
+
+$172
+$20
+
+Charging Cost ($/kWh)
+
+$0.042
+
+Charging Cost Escalator (%)
+
+1.87%
+
+Efficiency (%)
+
+91%
+
+12.0%
+
+Technology-dependent
+
+Lazard and Roland Berger estimates.
+Wholesale (100 MW / 200 MWh)—Low LCOS case presented for illustrative purposes only. Assumptions specific to Wholesale (100 MW / 200 MWh) Low Case.
+Levelized
+Denotes unit conversion.
+Assumes half-year convention for discounting purposes.
+Total Generation reflects (Cycles) x (Available Capacity) x (Depth of Discharge) x (Duration). Note for the purpose of this analysis, Lazard accounts for Degradation in the Available Capacity calculation.
+Charging Cost reflects (Total Generation) / [(Efficiency) x (Charging Cost) x (1 + Charging Cost Escalator)].
+O&M costs include general O&M ($1.53/kWh, plus relevant Solar PV O&M, escalating annually at 2.5%), augmentation costs (3.0% of ESS equipment) and warranty costs (0.9% of equipment, starting in year 3).
+Reflects a ”key” subset of all assumptions for methodology illustration purposes only. Does not reflect all assumptions.
+Initial Installed Cost includes Inverter cost of $38.05/kW, Module cost of $115.00/kWh, Balance of System cost of $32.46/kWh and a 3.6% engineering procurement and construction (“EPC”) cost.
+Reflects the initial investment made by the project owner.
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+14
+
+A
+
+SUPPLEMENTAL LCOS ANALYSIS MATERIALS
+
+Levelized Cost of Storage—Key Assumptions
+Wholesale (Standalone)
+
+Transmission &
+
+Utility-Scale
+
+Commercial & Industrial
+
+Commercial & Industrial
+
+Residential
+
+Distribution
+
+(PV + Storage)
+
+(Standalone)
+
+(PV + Storage)
+
+(PV + Storage)
+
+Units
+
+(100 MW / 100 MWh)
+
+(100 MW / 200 MWh)
+
+(100 MW / 400 MWh)
+
+(10 MW / 60 MWh)
+
+(50 MW / 200 MWh)
+
+(1 MW / 2 MWh)
+
+(0.5 MW / 2 MWh)
+
+(0.006 MW / 0.025 MWh)
+
+Power Rating
+
+MW
+
+100
+
+100
+
+100
+
+10
+
+50
+
+1
+
+0.5
+
+0.006
+
+Duration
+
+Hours
+
+1.0
+
+2.0
+
+4.0
+
+6.0
+
+4.0
+
+2.0
+
+4.0
+
+4.2
+
+Usable Energy
+
+MWh
+
+100
+
+200
+
+400
+
+60
+
+200
+
+2
+
+2
+
+0.025
+
+Discharge Cycles/Day
+
+#
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+1
+
+Operating Days/Year
+
+#
+
+350
+
+350
+
+350
+
+25
+
+350
+
+250
+
+350
+
+350
+
+Solar PV Capacity
+
+MW
+
+0.00
+
+0.00
+
+0.00
+
+0.00
+
+100.00
+
+0.00
+
+1.00
+
+0.010
+
+Annual Solar PV Generation
+
+MWh
+
+0
+
+0
+
+0
+
+0
+
+203,670
+
+0
+
+1,708
+
+14
+
+Project Life
+
+Years
+
+20
+
+20
+
+20
+
+20
+
+20
+
+10
+
+20
+
+20
+
+Memo: Annual Used Energy
+
+MWh
+
+31,500
+
+63,000
+
+126,000
+
+1,350
+
+63,000
+
+450
+
+630
+
+8
+
+Memo: Project Used Energy
+
+MWh
+
+630,000
+
+1,260,000
+
+2,520,000
+
+27,000
+
+1,260,000
+
+4,500
+
+12,600
+
+158
+
+Initial Capital Cost—DC
+
+$/kWh
+
+$172
+
+–
+
+$250
+
+$147
+
+–
+
+$239
+
+$147
+
+–
+
+$231
+
+$218
+
+–
+
+$305
+
+$169
+
+–
+
+$460
+
+$292
+
+–
+
+$346
+
+$303
+
+–
+
+$628
+
+$454
+
+–
+
+$780
+
+Initial Capital Cost—AC
+
+$/kW
+
+$20
+
+–
+
+$83
+
+$38
+
+–
+
+$86
+
+$25
+
+–
+
+$66
+
+$54
+
+–
+
+$76
+
+$49
+
+–
+
+$102
+
+$43
+
+–
+
+$59
+
+$49
+
+–
+
+$170
+
+$97
+
+–
+
+$154
+
+EPC Costs
+
+$
+
+$1
+
+–
+
+$5
+
+$1
+
+–
+
+$9
+
+$2
+
+–
+
+$21
+
+$1
+
+–
+
+$3
+
+$2
+
+–
+
+$10
+
+$0
+
+–
+
+$0
+
+$0
+
+–
+
+$0
+
+$0
+
+–
+
+$0
+
+Solar PV Capital Cost
+
+$/kW
+
+$0
+
+–
+
+$0
+
+$0
+
+–
+
+$0
+
+$0
+
+–
+
+$0
+
+$0
+
+–
+
+$0
+
+$775
+
+–
+
+$775
+
+$0
+
+–
+
+$0
+
+$2,125
+
+–
+
+$2,125
+
+$2,675
+
+–
+
+$2,675
+
+Total Initial Installed Cost
+
+$
+
+$20
+
+–
+
+$38
+
+$34
+
+–
+
+$66
+
+$63
+
+–
+
+$119
+
+$15
+
+–
+
+$22
+
+$118
+
+–
+
+$190
+
+$1
+
+–
+
+$1
+
+$3
+
+–
+
+$4
+
+$0
+
+–
+
+$0
+
+O&M
+
+$/kWh
+
+$1.7
+
+–
+
+$3.8
+
+$1.5
+
+–
+
+$3.8
+
+$1.5
+
+–
+
+$2.5
+
+$0.6
+
+–
+
+$1.3
+
+$1.1
+
+–
+
+$18.0
+
+$19.2
+
+–
+
+$2.7
+
+$0.4
+
+–
+
+$19.4
+
+$0.0
+
+–
+
+$0.0
+
+Extended Warranty Start
+
+Year
+
+Warranty Expense % of Capital Costs
+
+%
+
+0.90%
+
+–
+
+0.90%
+
+0.90%
+
+–
+
+0.80%
+
+0.90%
+
+–
+
+1.24%
+
+0.67%
+
+–
+
+0.90%
+
+1.00%
+
+–
+
+1.73%
+
+1.40%
+
+–
+
+1.10%
+
+0.10%
+
+–
+
+1.45%
+
+0.00%
+
+–
+
+Investment Tax Credit
+
+%
+
+Production Tax Credit
+
+$/MWh
+
+$0
+
+$0
+
+$0
+
+$0
+
+$0
+
+$0
+
+$0
+
+$0
+
+Charging Cost
+
+$/MWh
+
+$39
+
+$42
+
+$35
+
+$30
+
+$0
+
+$107
+
+$0
+
+$0
+
+%
+
+1.87%
+
+1.87%
+
+1.87%
+
+1.87%
+
+0.00%
+
+2.15%
+
+0.00%
+
+0.00%
+
+Charging Cost Escalator
+Efficiency of Storage Technology
+Levelized Cost of Storage
+
+Source:
+Note:
+
+Copyright 2021 Lazard
+
+3
+
+3
+
+0.0%
+
+3
+
+0.0%
+
+3
+
+0.0%
+
+3
+
+0.0%
+
+3
+
+0.0%
+
+3
+
+0.0%
+
+3
+
+0.0%
+
+0.00%
+
+0.0%
+
+%
+
+91%
+
+–
+
+84%
+
+91%
+
+–
+
+84%
+
+91%
+
+–
+
+84%
+
+83%
+
+–
+
+83%
+
+85%
+
+–
+
+77%
+
+78%
+
+–
+
+94%
+
+85%
+
+–
+
+78%
+
+95%
+
+–
+
+89%
+
+$/MWh
+
+$160
+
+–
+
+$279
+
+$146
+
+–
+
+$257
+
+$131
+
+–
+
+$232
+
+$1,613
+
+–
+
+$3,034
+
+$85
+
+–
+
+$158
+
+$442
+
+–
+
+$643
+
+$235
+
+–
+
+$335
+
+$416
+
+–
+
+$621
+
+Lazard and Roland Berger estimates.
+Assumed capital structure of 80% equity (with a 12% cost of equity) and 20% debt (with an 8% cost of debt). Capital cost units are the total investment divided by the storage
+equipment’s energy capacity (kWh rating) and inverter rating (kW rating). Lithium cases were modeled using 90% depth of discharge, Flow cases were modeled using 100%
+depth of discharge. Wholesale and Transmission & Distribution charging costs use the EIA’s “2020 Wholesale Price $/MWh– Wtd Avg Low” price estimate of $30.08/MWh.
+Escalation is derived from the EIA’s “AEO 2021 Energy Source–Electric Price Forecast (20-year CAGR)” and ranges from 1.87% – 2.15% by use case. Storage systems paired
+with Solar PV do not charge from the grid.
+
+15
+
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+B
+
+Value Snapshot Case Studies
+
+B
+
+VALUE SNAPSHOT CASE STUDIES
+
+Overview of Energy Storage Revenue Streams
+($/kW-year, unless otherwise noted)
+
+To show indicative revenue potential by use case and market, Lazard’s LCOS analyzes front-of-the-meter (“FTM”) and behind-the-meter
+(“BTM”) revenue streams from currently deployed energy storage systems(1)
+Revenue Streams(2)(3)
+
+Observations
+27
+19
+16
+20
+13
+
+Energy Arbitrage
+
+
+
+47
+
+
+142
+
+7
+
+64
+121
+114
+
+Frequency Regulation
+
+123
+
+72
+
+
+
+188
+424
+
+49
+
+109
+
+32
+
+102
+38
+
+16
+
+Resource Adequacy Capacity
+
+30
+26
+
+53
+
+Demand Response
+
+215
+
+69
+
+Resource adequacy (“RA”) continues to be opaque in California/CAISO
+Elsewhere, storage projects can qualify for capacity market revenues, though
+duration requirements remain a hurdle for certain markets (e.g., NY-ISO and
+PJM)
+
+
+
+NY-ISO has highly attractive potential revenue, though in practice the most
+attractive location, New York City, has limited project opportunities
+Limited opportunity for demand response revenue streams beyond Ontario
+IESO, PJM, NY-ISO and Australia
+
+
+
+112
+
+Spinning/Non-Spinning Reserves
+
+7
+9
+
+
+
+
+52
+56
+17
+19
+
+
+
+57
+
+
+187
+
+20
+23
+
+Bill Management
+
+23
+
+
+87
+346
+
+427
+
+
+
+CAISO
+
+ERCOT
+
+Source:
+Note:
+(1)
+(2)
+Copyright 2021 Lazard (3)
+
+ISO-NE
+
+MISO
+
+NYISO
+
+PJM
+
+While attractive on an opportunistic basis, frequency regulation markets lack
+depth and risk being saturated as additional resources enter the market
+PJM provides the most potential revenue, though year-over-year pricing is
+highly volatile and unpredictable
+
+
+
+
+89
+
+33
+4
+
+
+
+Revenues from energy markets have declined year-over-year across domestic
+ISOs, while international markets are generally flat
+The lack of regional interconnection of Australia’s transmission system remains
+apparent, generating arbitrage opportunities in Victoria and Queensland, i.e.,
+the most evident opportunity observed in this study
+
+Spin/Non-Spin reserve revenues have declined across domestic ISOs
+Hybrid resources in California (e.g., solar plus gas-fired generators) utilize these
+markets in addition to RA values to enhance project economics
+CAISO, ERCOT and Ontario IESO offer the highest potential revenues
+Avoidance of Australia’s NSP56 Demand Capacity & Critical Peak tariffs offers
+the highest potential bill savings for C&I customers
+Ontario IESO’s Global Adjustment Charge continues to be a highly attractive
+opportunity despite portions of the global adjustment cost being shifted from
+rate payers to taxpayers through the Non-Hydro Renewables Funding program
+Meaningful bill savings opportunities can also be found in CAISO
+
+Victoria & Queensland, Australia
+
+Ontario, Canada
+
+Bavaria, Germany
+
+Enovation Analytics, Lazard and Roland Berger estimates.
+All figures presented in USD using the following exchange rates: USD 0.69/AUD, USD 0.75/CAD and USD 1.14/EUR.
+Assumes standalone battery is deployed without co-located solar PV.
+Represents the universe of potential revenue streams available to the various use cases.
+Wholesale revenues based on wholesale prices from the 12 months prior to the onset of the COVID-19 pandemic (i.e., February 2019 – February 2020) in order to normalize the underlying data. BTM revenues are based on
+the most recent tariffs, programs and incentives available as of 1H 2021.
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+
+16
+
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+1
+
+Value Snapshot Case Studies—U.S.
+
+1
+
+1
+
+VALUE SNAPSHOT CASE STUDIES—U.S.
+
+Wholesale, CAISO (Los Angeles, California)
+
+100 MW / 400 MWh Standalone Battery
+
+
+Project IRR: 23.7%(1)
+Value Snapshot Revenues(1) ($/kW)
+
+Use Case Commentary
+
+
+Additional use case context:
+
+
+
+
+Charging costs average $34.58/MWh
+
+
+
+To generate energy arbitrage revenue, the battery typically charges during
+the day and discharges during peak load periods in the evening
+
+
+
+The project is developed to provide capacity under local RA parameters
+
+
+
+To maximize additional revenues, the battery optimally allocates itself to
+Frequency Regulation and Spin/Non-Spin based on current market pricing
+
+
+
+
+
+The project utilizes an AC-coupled battery at a node in the Los Angeles
+basin
+
+To avoid distortions from COVID-19 related impacts, wholesale prices from
+the 12 months prior to the onset of the pandemic (February 2019 – February
+2020) are used as the baseline for modeling energy prices over the forecast
+period
+
+$2,771
+181
+
+1,1
+36
+
+Resource adequacy contract pricing has increased year-on-year, with most
+market participants reporting pricing in the range of $5 – $10/kW-month
+
+
+
+Given that the California energy storage development pipeline is greater
+than the size of the CAISO regulation market, prices for frequency regulation
+are not expected to continue to increase, and may decline beyond 2025
+
+
+
+Idiosyncratic factors (e.g., Public Safety Power Shutoff events (“PSPS”),
+wildfires and heat stress) drive volatility in market conditions and support the
+need for resilience-based procurement models
+
+
+Weighted average dispatch: $8.35/MWh
+Deployed 20% of the time(2)
+63% correlated to energy price
+movements
+
+
+
+Weighted average dispatch price:
+$10.64/MWh (up), $11.86/MWh (down)
+61% (up) and 5% (down) correlated to
+energy prices
+Deployed 82% of the time(2)
+
+Frequency
+Regulation
+
+
+
+747
+
+Energy
+Arbitrage
+
+
+
+
+
+707
+
+Market observations:
+
+
+Spin/Non-Spin 
+Reserves
+
+
+
+Resource
+Adequacy
+
+Revenues
+
+
+
+
+Average dispatch price: $47.48/MWh
+(range of $0/MWh to over $1,045/MWh)
+Average charging is $41.55/MWh
+Deployed 84% of the time(2)
+$7.5/kW-month
+Operators must conform to System,
+Local, or Flexible RA requirements
+
+Levelized Cost of Storage(1) ($/MWh)
+
+LCOS
+Components
+
+51
+
+45
+
+13
+
+19
+
+3 $131
+
+O&M
+
+Taxes
+
+Increasing penetration of renewables will continue to drive curtailment
+and periods of negative energy pricing
+Capital
+
+Copyright 2021 Lazard
+
+Charging
+
+Other
+
+Source: Industry interviews, Enovation Analytics, Lazard and Roland Berger.
+Note:
+Analysis assumes the project will reach commercial operation in 2022.
+(1)
+NPV of lifetime project revenues is presented. Cost structure representative of the “Average Case” is used in the IRR analysis and shown in the LCOS summary.
+(2)
+Average amount of time deployed in given revenue stream during 2022. Sum of time deployed may exceed 100% because battery can participate in multiple revenue streams
+simultaneously.
+
+17
+
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+1
+
+2
+
+VALUE SNAPSHOT CASE STUDIES—U.S.
+
+T&D Deferral, REC (Spotsylvania County, Virginia)
+
+2 MW / 8 MWh Standalone Battery
+
+
+Project IRR: 8.5%(1)
+Value Snapshot Revenues(1)(2) ($/kW)
+
+Use Case Commentary
+
+
+Additional use case context:
+The T&D deferral Value Snapshot is based on estimates of actual cost and
+revenue data for a project developed by REC that is expected to reach
+commercial operations in 2022
+
+
+
+The storage asset allows REC to defer investments to upgrade components
+of the distribution grid that are nearing thermal limits
+
+
+
+The battery cycles an average of seven times per month, and is dispatched
+during “demand control periods” to avoid distribution system overload, as
+well as to decrease wholesale power procurement costs by reducing peak
+load
+
+
+
+
+
+Demand
+Response—
+Wholesale
+
+
+
+REC is assessed capacity charges as
+a load-serving entity in the PJM
+market, which are a function of
+coincident load during monthly and
+annual system peaks. The battery is
+dispatched to reduce coincident peak
+load. Annual savings are estimated by
+REC to be ~$211,000
+
+Distribution
+Deferral
+
+
+
+The storage asset allows REC to
+defer investments in two separate
+substation upgrades for three years
+
+832
+
+Charging costs are based on REC’s contracted wholesale energy
+procurement rate; however, battery discharge offsets these costs causing
+the effective charging costs to be the round-trip efficiency losses from cycling
+the battery
+
+Market observations:
+
+
+
+
+
+
+$960
+
+
+
+Economics continue to limit deployment of pure T&D deferral use cases,
+even in regions with “non-wires alternative” planning regimes
+Current FERC regulations generally prevent utility ownership of generation
+resources in deregulated jurisdictions, making these resources ineligible to
+participate in energy and capacity markets. As a result, few utilities are
+currently investing in storage for T&D deferral cases
+
+128
+Revenues
+
+Levelized Cost of Storage(1)(2) ($/MWh)
+
+Other use case assumptions:
+
+
+REC is using Rural Utility Service (“RUS”) financing for the project, which
+carries an annual interest rate of ~2.6%
+
+
+
+Battery installation and substation work was performed by REC personnel;
+project economics assume no additional labor costs are incurred
+
+LCOS
+Components
+
+1,066
+
+Capital
+
+Copyright 2021 Lazard
+
+43
+
+Charging
+
+251
+
+188 65 $1,613
+
+Other
+
+O&M
+
+Taxes
+
+Source: REC, EIA, Industry interviews, Lazard and Roland Berger.
+Note:
+LCOS data reflect project parameters corresponding to the illustrative T&D deferral use case as outlined on the page titled “Energy Storage Use Cases—Illustrative Operational Parameters”,
+(i.e., a standalone 10 MW / 60 MWh battery). Operational parameters used in the Value Snapshots analysis correspond to parameters unique to the project analyzed.
+18
+(1)
+NPV of lifetime project revenues is presented. Cost structure representative of the “Average Case” is used in the IRR analysis and shown in the LCOS summary.
+(2)
+Given the operational parameters for the Transmission and Distribution use case (i.e., 25 cycles per year), levelized metrics are not comparable between this and other use cases presented in
+Lazard’s Levelized Cost of Storage report.
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+1
+
+3
+
+VALUE SNAPSHOT CASE STUDIES—U.S.
+
+Wholesale PV+Storage, ERCOT (Corpus Christi, Texas)
+
+50 MW / 200 MWh Battery, paired with 100 MW of Solar PV
+
+
+Project IRR: 29.1%(1)
+Value Snapshot Revenues(1) ($/kW)
+
+Use Case Commentary
+
+
+Additional use case context:
+
+
+
+
+
+
+The project utilizes an AC-coupled battery at a node in South Texas. The
+AC-coupled system was chosen to demonstrate the advantage of higher PV
+system efficiency and avoid inverter capacity limitations
+
+
+
+1,270
+
+To avoid distortions from COVID-19 related impacts, wholesale prices from
+the 12 months prior to the onset of the pandemic (February 2019 – February
+2020) are used as the baseline for modeling energy prices over the forecast
+period
+
+1,988
+
+Frequency
+Regulation
+(“FR”)
+
+
+
+Energy
+Arbitrage
+
+
+
+
+
+
+
+
+Spin/Non-Spin
+Reserves
+
+
+
+
+ERCOT wholesale energy prices were higher than historical averages in
+2019, averaging $38/MWh for the calendar year
+
+
+
+
+
+1,435
+
+The battery charges exclusively from the coupled solar PV system for the
+first five years of operation in order to maintain eligibility for the Federal
+Solar Investment Tax Credit (“ITC”)
+
+Market observations:
+
+
+$4,693
+
+This is primarily due to the volatility caused by extreme heat waves. In
+August 2019, day-ahead pricing averaged $127/MWh. Ancillary
+services prices were also elevated during these events
+
+Weighted average dispatch price:
+$58.50 (up), $18.24 (down)/MWh
+Deployed 18% of the time(2)
+Median dispatch price: $27.22/MWh
+(range of $5 to over $2,000/MWh)
+Deployed 49% of the time(2)
+
+Weighted average dispatch price:
+$36.70/MWh
+Deployed 69% of the time(2)
+91% correlated to energy price
+movements
+
+Revenues
+
+Levelized Cost of Storage(1) ($/MWh)
+
+For comparison, annual average energy prices were $34/MWh and
+$25/MWh in 2018 and 2020, respectively
+
+Recent trends in build sizes:
+
+
+Larger energy storage systems are typically coupled with solar PV
+systems (>2 hours duration, >50 MWh) vs. on a standalone basis
+
+
+
+Smaller, 1 – 2 hour batteries are being deployed on a standalone basis,
+in part to address curtailment and negative pricing. Projects <10 MW
+are exempt from most interconnection requirements
+
+Copyright 2021 Lazard
+
+LCOS
+Components
+
+62
+
+Capital
+
+Charging
+
+13
+
+Other
+
+O&M
+
+Source: Industry interviews, Enovation Analytics, Lazard and Roland Berger.
+Note:
+Analysis assumes the project will reach commercial operation in 2022.
+(1)
+NPV of lifetime project revenues is presented. Cost structure representative of the “Average Case” is used in the IRR analysis and shown in the LCOS summary.
+(2)
+Average amount of time deployed in given revenue stream during 2021. Sum of time deployed may exceed 100% because battery can participate in multiple revenue streams
+simultaneously.
+
+7
+
+3 $85
+
+Taxes
+
+19
+
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+1
+
+4
+
+VALUE SNAPSHOT CASE STUDIES—U.S.
+
+C&I Standalone, PG&E (San Francisco, California)
+
+1 MW / 2 MWh Battery
+
+
+Project IRR: 26.4%(1)
+Value Snapshot Revenues(1) ($/kW)
+
+Use Case Commentary
+
+
+
+
+Additional use case context:
+
+
+The project utilizes a standalone AC-coupled battery and the load shape of a
+large office building in San Francisco
+
+
+
+Charging costs are an average of $102.33/MWh, reflecting the local TOU
+rate
+
+
+
+The project is developed to reduce energy load during periods of peak
+pricing, in turn reducing the end-customer’s electricity costs
+
+
+
+Additional revenues are captured through participation in Demand Response
+and local Self-Generation Incentive Program (“SGIP”) programs
+
+$1,531
+194
+
+468
+
+Market observations:
+
+
+PG&E has migrated C&I customers from the legacy E-20 tariff to the B-20
+tariff. Key differences include lower demand charges and greater disparity
+between peak and off-peak energy prices
+
+
+
+SGIP funding: as of July 2021, ~80% of funds allocated to large-scale
+projects in PG&E Step 4 (i.e., ~$40 million) remain available
+
+
+
+Developers continue to move away from bill management use cases and
+towards backup power applications given the increased focus on grid
+reliability and resiliency
+
+
+
+
+
+
+Local Incentive 
+Payments
+
+Bill
+Management
+
+
+
+PG&E’s Capacity Bidding Program
+provides monthly capacity payments
+averaging $11.10/kW-month for May
+through October
+PG&E’s SGIP incentives for
+commercial building use cases is
+$300,000/MWh
+
+The project participates in PG&E’s B20 TOU Tariff (2021 baseline)
+
+Revenues
+
+Levelized Cost of Storage(1) ($/MWh)
+
+Developers are also preparing for potentially challenged economics for
+C&I batteries when incentive programs expire
+
+C&I projects have substantially higher relative permitting and installation
+costs vs. utility-scale projects
+
+
+869
+
+Demand
+Response—
+Utility
+
+Many OEMs are developing “turnkey crate” solutions whereby a fully
+integrated storage system is delivered to the site, reducing overall EPC
+costs
+
+Copyright 2021 Lazard
+
+LCOS
+Components
+
+190
+
+Capital
+
+157
+
+Charging
+
+Other
+
+Source: Industry interviews, PG&E, Enovation Analytics, Lazard and Roland Berger.
+Note:
+Analysis assumes the project will reach commercial operation in 2022.
+(1)
+NPV of lifetime project revenues is presented. Cost structure representative of the “Average Case” is used in the IRR analysis and shown in the LCOS summary.
+
+52
+
+30 14 $442
+
+O&M
+
+Taxes
+
+20
+
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+1
+
+5
+
+VALUE SNAPSHOT CASE STUDIES—U.S.
+
+C&I PV+Storage, PG&E (San Francisco, California)
+
+0.5 MW / 2 MWh Battery, paired with 1 MW of Solar PV
+
+
+Project IRR: 23.4%(1)
+Value Snapshot Revenues(1) ($/kW)
+
+Use Case Commentary
+
+
+Additional use case context:
+
+
+
+
+The project utilizes a DC-coupled battery and the load shape of a large office
+building in San Francisco. DC coupling was chosen to demonstrate the
+advantage of relatively higher overall system efficiency, capture of solar
+clipping and simplicity of installation
+
+
+
+The battery charges exclusively from the coupled solar PV system for the
+first five years of operation in order to maintain eligibility for the ITC
+
+
+
+The project is developed to reduce energy load during periods of peak
+pricing, in turn reducing the end-customer’s electricity costs
+
+
+
+Additional revenues are captured through participation in Demand Response
+and local Self-Generation Incentive Program (“SGIP”) programs
+
+$7,839
+523
+687
+
+PG&E has migrated C&I customers from the legacy E-20 tariff to the B-20
+tariff. Key differences are a lower demand charge, but greater disparity
+between peak and off-peak energy rates
+
+
+
+SGIP funding: as of July 2021, ~80% of funds allocated to large-scale
+projects in PG&E Step 4 (i.e., ~$40 million) remain available
+
+
+
+Developers continue to move away from bill management use cases and
+towards backup power applications given the increased focus on grid
+reliability and resiliency
+
+
+PG&E’s Capacity Bidding Program
+provides monthly capacity payments
+averaging $11.10/kW-month for May
+through October
+
+Local Incentive 
+Payments
+
+PG&E’s SGIP incentives for this
+project type (commercial building
+paired with solar, receiving the ITC)
+valued at $220,000/MWh
+
+6,629
+
+Market observations:
+
+
+
+
+Demand
+Response—
+Utility
+
+Bill
+Management
+
+
+
+The system participates in PG&E’s B20 TOU Tariff (2020 baseline)
+
+Revenues
+
+Levelized Cost of Storage(1) ($/MWh)
+
+Developers are also preparing for potentially challenged economics for
+C&I batteries when incentive programs expire
+
+
+
+The value of selling excess solar generation back to the grid (i.e., net
+metering) continues to decline as abundant solar generation during hours of
+peak solar production depress energy prices
+
+
+
+California’s aggressive Zero Net Energy (“ZNE”) Plan will require all new
+commercial buildings to be ZNE by 2030 and 50% of existing commercial
+buildings to be retrofitted to comply with the ZNE Plan by 2030, supporting
+aggressive growth in this use case over the next decade
+
+Copyright 2021 Lazard
+
+LCOS
+Components
+
+182
+
+Capital
+
+Charging
+
+35
+
+Other
+
+Source: Industry interviews, PG&E, Enovation Analytics, Lazard and Roland Berger.
+Note:
+Analysis assumes the project will reach commercial operation in 2022.
+(1)
+NPV of lifetime project revenues is presented. Cost structure representative of the “Average Case” is used in the IRR analysis and shown in the LCOS summary.
+
+O&M
+
+10 8
+
+$235
+
+Taxes
+
+21
+
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+1
+
+6
+
+VALUE SNAPSHOT CASE STUDIES—U.S.
+
+Residential PV+Storage, HECO (Honolulu, Hawaii)
+
+0.006 MW / 0.025 MWh battery, paired with 0.010 MW of Solar PV
+
+
+Project IRR: 9.4%(1)
+Value Snapshot Revenues(1) ($/kW)
+
+Use Case Commentary
+
+
+
+
+Additional use case context:
+
+
+The project utilizes an AC-coupled battery and the load shape of a large
+single-family residence in Hawaii
+
+
+
+The battery charges exclusively from the coupled solar PV system for the
+first five years of operation in order to maintain eligibility for the ITC
+
+
+
+The project is developed to reduce energy load during periods of peak
+pricing, in turn reducing the end-customer’s electricity costs
+
+
+
+Battery storage trends in Hawaii:
+
+
+Historically, due to the island’s energy constraints, much of Hawaii’s
+electricity was produced using oil-fired generation resources.
+Transportation costs and underlying oil price volatility led to expensive
+and volatile electricity prices
+
+
+
+The initial Net Energy Metering (“NEM”) programs were advantageous to
+retail customers, with HECO providing bill credits at the avoided retail
+rate for electricity produced in excess of the customer’s energy load
+
+
+
+In 2015, NEM rules were changed so new tariffs reflected customer
+credits based on avoided variable generation costs for HECO, rather
+than the retail rate, significantly reducing attractiveness of standalone PV
+
+$5,718
+
+
+
+
+Bill
+Management
+
+
+
+This hybrid system qualifies for the
+ITC
+The battery is used solely to manage
+the customer’s bill by using solar PV
+generation to offset load during
+periods of peak pricing
+The system participates in HECO’s
+Schedule-R Tariff (2021 baseline)
+
+Revenues
+
+Levelized Cost of Storage(1) ($/MWh)
+
+Market observations:
+
+
+Hawaii has high electricity tariffs, favorable insolation, growing renewable
+energy penetration and an active Public Utility Commission
+
+
+
+Grid instability, weather and volcanic risks cause reliability and resilience
+issues for HECO, further incentivizing residential energy storage
+
+
+
+The state has among the most aggressive renewable energy targets,
+coupled with a supportive policy framework
+
+LCOS
+Components
+
+322
+
+Capital
+
+Copyright 2021 Lazard
+
+Charging
+
+Other
+
+Source: Industry interviews, HECO, Enovation Analytics, Lazard and Roland Berger.
+Note:
+Analysis assumes the project will reach commercial operation in 2022.
+(1)
+NPV of lifetime project revenues is presented. Cost structure representative of the “Average Case” is used in the IRR analysis and shown in the LCOS summary.
+(2)
+Lifetime O&M for this use case is included in the initial capital investment.
+
+61
+
+19 13
+
+O&M(2)
+
+Taxes
+
+$416
+
+22
+
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+2
+
+Value Snapshot Case Studies—International
+
+2
+
+VALUE SNAPSHOT CASE STUDIES—INTERNATIONAL
+
+International Value Snapshots
+1
+
+Wholesale, Germany (Bavaria)(1) ($/kW)
+
+3
+
+100 MW / 400 MWh standalone battery
+•
+
+50 MW / 200 MWh battery paired with 100 MW of Solar PV
+
+Project IRR: 6.5%(1)
+
+•
+
+
+$1,128
+
+383
+
+Frequency
+Regulation
+
+
+
+
+
+745
+
+Energy
+Arbitrage
+
+
+
+
+
+
+Revenues
+
+Copyright 2021 Lazard
+
+Wholesale PV+Storage, Australia (Queensland)(1) ($/kW)
+
+
+
+Project IRR: 12.8%(1)
+
+Average estimated realized unit prices
+for Frequency Response sub-classes,
+base period:
+
+FCR Capacity payments:
+$40.36/MW (up & down)
+
+mFRR Capacity payments:
+$25.84/MW up
+Assumes 0.2% probability to be called
+on for energy participation
+Participation based on pricing for fourhour blocks
+No participation in aFRR classes
+
+$3,544
+
+Average realized energy arbitrage
+price, base period: ~$50/MWh
+
+Range of $0/MWh – $103.62/MWh
+Median charging price, 2022:
+~$27/MWh
+Energy prices based on February
+2019 – February 2020 day-ahead
+prices (operating within the Tennet
+TSO)
+Annual escalation of 4.3%
+
+2,559
+
+
+Frequency
+Regulation
+
+326
+
+659
+
+Resource
+Adequacy
+
+
+
+
+
+Average estimated unit price, 2022:
+$154,200/MW-year
+Benchmark Reserve Capacity Price
+from Australia Energy Market Operator
+Annual escalation of -0.9%
+
+
+
+
+
+
+Energy
+Arbitrage
+
+Average estimated unit price, 2022:
+
+$24.46/MW (up & down)
+Participation in Queensland ancillary
+services (i.e., Lower & Raise, 6
+seconds, 5 minute, Regulation,
+Restart, Reactive)
+
+
+
+
+
+
+
+Median energy arbitrage price, 2022:
+~57/MWh
+
+Range of $0/MWh – $4,790/MWh
+Energy prices based on 2019 and
+2020 Queensland region
+Assumes the battery is discharged
+during the top four hours of each day
+Annual escalation of 4.7%
+
+Revenues
+
+Source: Industry interviews, IESO, AER, Energy Storage World Forum, German Association of Energy and Water Industries, Lazard and Roland Berger.
+Note:
+International and domestic use cases utilize the same capital cost assumptions. All figures presented in USD using the following exchange rates: USD 0.69/AUD, USD 0.75/CAD
+and USD 1.14/EUR. Base period is assumed to be from February 1, 2019 through January 31, 2020 to avoid distortions from the impact of the COVID-19 pandemic on wholesale
+power markets.
+(1)
+NPV of lifetime project revenues is presented. Cost structure representative of the “Average Case” is used in the IRR analysis.
+
+23
+
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+2
+
+VALUE SNAPSHOT CASE STUDIES—INTERNATIONAL
+
+International Value Snapshots (cont’d)
+4
+
+C&I Standalone, Canada (Ontario) ($/kW)
+
+1 MW / 2 MWh standalone battery
+•
+
+Project IRR: 27.4%(1)
+
+5
+
+C&I PV+Storage, Australia (Victoria) ($/kW)
+
+0.5 MW / 2 MWh battery paired with 1 MW of
+Solar PV
+•
+
+Project IRR: 26.3%(1)
+
+6
+
+Residential PV+Storage, Germany (Bavaria)
+($/kW)
+
+0.006 MW / 0.025 MWh battery paired with
+0.1 MW of Solar PV
+•
+
+Project IRR: 4.5%(1)
+
+Bill Management
+$2,307
+
+
+
+
+
+
+
+
+Revenues
+
+Copyright 2021 Lazard
+
+Participates exclusively in
+Ontario IESO’s Global
+Adjustment savings
+
+Requires exact timing and
+participation in 5 – 10
+peak load days per year
+
+Savings are generated by
+avoiding peak global
+adjustment charges
+
+Accurately predicting
+peak hours requires
+specialized analytics
+services, priced at
+$25,000 per year
+Value Snapshot methodology
+assumes participation in five
+peak load days per year
+Ontario/IESO “Class A” GAC
+The Ontario government has
+reduced total grid access
+charges by ~20% by shifting
+certain costs into the tax base
+and is planning to reduce
+total system costs moving
+forward
+
+$5,286
+
+$14,846
+Bill Management
+
+
+
+Participation in AusNet’s
+NSP56 Tariff structure
+Reduction of demand and
+energy charges are achieved
+through load shifting
+
+Local Incentive Payments
+
+
+921
+
+
+Participation in Germany’s
+home PV+storage incentive
+program offered by the
+German Development Bank
+Additional state-level
+incentive from Bavarian
+government, rolled out in
+2020
+
+Bill Management
+4,365
+
+
+
+
+
+
+
+Revenues
+
+Assumes average residential
+retail electricity price of
+~$31/MWh
+Reduction of energy charges
+through load shifting
+Residential rate is based on
+Bundesverband der Energieund Wasserwirtschaft
+(“BDEW”) pricing
+Annual escalation of 2.74%
+
+Revenue
+
+Source: Industry interviews, IESO, AER, Energy Storage World Forum, German Association of Energy and Water Industries, Lazard and Roland Berger.
+Note:
+International and domestic use cases utilize the same capital cost assumptions. All figures presented in USD using the following exchange rates: USD 0.69/AUD, USD 0.75/CAD
+and USD 1.14/EUR.
+(1)
+NPV of lifetime project revenues is presented. Cost structure representative of the “Average Case” is used in the IRR analysis.
+
+24
+
+This study has been prepared by Lazard for general informational purposes only, and it is not intended to be, and should not be construed as, financial or
+other advice. No part of this material may be copied, photocopied or duplicated in any form by any means or redistributed without the prior consent of Lazard.
+
+
