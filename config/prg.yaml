@@ -29388,12 +29388,17 @@ equations:
     latex: \mathrm{carbon}_{credit\_retired\_volume} = \mathrm{carbon}_{credit\_retirement} \mathrm{carbon}_{credit\_volumes}
   carbon_credit_reversal_allowance_definition:
     name: The reversal allowance on the credit book
-    description: 'The complement of the permanence share: the buffer a registry retains against the credit
-      being reversed by fire, disease or land-use change. A forest credit that burns has to be replaced
-      from the buffer, and the buffer is sized by the reversal risk the permanence share names.'
+    description: 'The volume the permanence share sets aside: the allowance a registry holds against the
+      credit being reversed by fire, disease or land-use change. A forest credit that burns has to be
+      replaced from this allowance, and the allowance is sized by the reversal risk the permanence share
+      names. The share is the allowance, not its complement. `permanence_parameters` describes itself
+      as ''the share of issued volume held back against non-permanence'', so its complement is the volume
+      *not* held back -- the opposite of an allowance -- and the shipped form, which multiplied the complement,
+      reported 40.5 of 45 MtCO2/year as the buffer. Batch 34 corrected it to 4.5, and `buffer_pool_contribution`
+      now agrees with the volume it names instead of contradicting it.'
     system: carbon_trajectory
     lhs: carbon_credit_reversal_allowance
-    rhs: (1 - permanence_parameters) * carbon_credit_volumes
+    rhs: permanence_parameters * carbon_credit_volumes
     relation: eq
     parameters:
     - carbon_credit_reversal_allowance
@@ -29408,8 +29413,7 @@ equations:
     linearity: linear
     priority: P1
     reference: null
-    latex: \mathrm{carbon}_{credit\_reversal\_allowance} = \left(1 - \mathrm{permanence}_{parameters}\right)
-      \mathrm{carbon}_{credit\_volumes}
+    latex: \mathrm{carbon}_{credit\_reversal\_allowance} = \mathrm{permanence}_{parameters} \mathrm{carbon}_{credit\_volumes}
   carbon_credit_value_definition:
     name: The value of the credit book
     description: 'Volume times price, with the 1e6 carrying MtCO2 to tonnes. The price is the voluntary-market
@@ -46093,18 +46097,6 @@ relationships:
   strength: hard
   description: Enters the product.
 - source: carbon_credit_volumes
-  target: carbon_credit_reversal_allowance
-  equation_id: carbon_credit_reversal_allowance_definition
-  relationship: functional
-  strength: hard
-  description: Enters the product.
-- source: permanence_parameters
-  target: carbon_credit_reversal_allowance
-  equation_id: carbon_credit_reversal_allowance_definition
-  relationship: functional
-  strength: hard
-  description: Enters the product.
-- source: carbon_credit_volumes
   target: voluntary_market_volume_mtco2
   equation_id: voluntary_market_volume_definition
   relationship: functional
@@ -49825,72 +49817,6 @@ relationships:
     physics and fail this.
   reference: null
   priority: P2
-- source: discount_rate
-  target: weighted_average_cost_of_capital
-  equation_id: wacc_alias
-  relationship: equality
-  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
-    computes.'
-- source: capex_usd_per_kw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: Gross fleet capital enters the base the allowed return is earned on.
-- source: total_capacity_mw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: The fleet's size sets the scale of the capital in the accounts.
-- source: accumulated_depreciation_fraction
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: What the books have written down between gross capital and the base.
-- source: regulatory_asset_base
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: equality
-  description: Straight-line write-down of the base over the regulatory asset life.
-- source: depreciation_life_by_asset
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: functional
-  description: A longer regulatory life spreads the base thinner over the years.
-- source: regulatory_depreciation
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: Depreciation is the first term of the revenue requirement.
-- source: regulatory_asset_base
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: The return is earned on the base, not on gross capital.
-- source: discount_rate
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: The return rate is the blend the financial block computes.
-- source: allowed_return_on_debt
-  target: cost_of_debt
-  equation_id: cost_of_debt_capped
-  relationship: constraint
-  description: The allowance binds the debt rate a scenario may carry.
-- source: allowed_return_on_equity
-  target: cost_of_equity
-  equation_id: cost_of_equity_capped
-  relationship: constraint
-  description: The allowance binds the equity return a valuation may assume.
-- source: regulated_tariff_usd_per_mwh
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: equality
-  description: The applied tariff is the recovery level in the absence of a cap.
-- source: revenue_cap
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: functional
-  description: The cap scales the recovery level; below 1 it withholds part of it.
 - source: depreciation_life_by_asset
   target: depreciation_schedule_linear
   equation_id: depreciation_schedule_linear_definition
@@ -50275,6 +50201,90 @@ relationships:
   reference: 'Least-cost generation expansion: Koltsaklis & Dagoumas (2018), Applied Energy 230:563-589;
     Oree et al. (2017), RSER 69:790-803'
   priority: P2
+- source: discount_rate
+  target: weighted_average_cost_of_capital
+  equation_id: wacc_alias
+  relationship: equality
+  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
+    computes.'
+- source: capex_usd_per_kw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: Gross fleet capital enters the base the allowed return is earned on.
+- source: total_capacity_mw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: The fleet's size sets the scale of the capital in the accounts.
+- source: accumulated_depreciation_fraction
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: What the books have written down between gross capital and the base.
+- source: regulatory_asset_base
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: equality
+  description: Straight-line write-down of the base over the regulatory asset life.
+- source: depreciation_life_by_asset
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: functional
+  description: A longer regulatory life spreads the base thinner over the years.
+- source: regulatory_depreciation
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: Depreciation is the first term of the revenue requirement.
+- source: regulatory_asset_base
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return is earned on the base, not on gross capital.
+- source: discount_rate
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return rate is the blend the financial block computes.
+- source: allowed_return_on_debt
+  target: cost_of_debt
+  equation_id: cost_of_debt_capped
+  relationship: constraint
+  description: The allowance binds the debt rate a scenario may carry.
+- source: allowed_return_on_equity
+  target: cost_of_equity
+  equation_id: cost_of_equity_capped
+  relationship: constraint
+  description: The allowance binds the equity return a valuation may assume.
+- source: regulated_tariff_usd_per_mwh
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: equality
+  description: The applied tariff is the recovery level in the absence of a cap.
+- source: revenue_cap
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: functional
+  description: The cap scales the recovery level; below 1 it withholds part of it.
+- source: carbon_credit_volumes
+  target: carbon_credit_reversal_allowance
+  equation_id: carbon_credit_reversal_allowance_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: permanence_parameters
+  target: carbon_credit_reversal_allowance
+  equation_id: carbon_credit_reversal_allowance_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
 cross_validation:
 - id: carbon_price_budget_alignment
   condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0

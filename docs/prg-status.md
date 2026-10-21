@@ -2770,6 +2770,68 @@ subject without fixing it, so a node can be coupled and computed by nothing
 at the same time. Repinning the old witness to a new node would have hidden
 that; asserting the new property states it.
 
+**Batch 34 -- the review corrections batch 33 deferred.** One equation
+corrected, and the three questions batch 33 left for a reviewer settled. This
+is not a coupling batch; it is the batch that reads its predecessor's own
+caveats and answers them.
+
+*The sign error, and why it is a defect rather than a duplicate question.*
+Batch 24 shipped `carbon_credit_reversal_allowance_definition` as
+`(1 - permanence_parameters) * carbon_credit_volumes`. Batch 33 coupled
+`buffer_pool_contribution` to `permanence_parameters` and flagged that the two
+could not both be right: if the buffer contribution is the complement of the
+permanence share, the alias is wrong by construction. They could not both be
+right, and the alias was the one that was.
+
+`permanence_parameters` describes itself as "the share of issued volume held
+back against non-permanence". Its complement is the volume *not* held back,
+which is the opposite of an allowance. The shipped form reported 40.5 of 45
+MtCO2/year as the buffer -- a 90% allowance against a 10% share. A buffer that
+holds back nine tenths of every issuance is not a permanence mechanism; it is
+the share inverted. Batch 34 corrects it to
+`permanence_parameters * carbon_credit_volumes`: 4.5 MtCO2/year, and
+`buffer_pool_contribution` now agrees with the volume it names.
+
+*The argument stops at the graph.* Registry practice -- the buffer rates
+programmes actually withhold -- would corroborate the 10% and is the obvious
+place to look next. It is not cited here because no copy of the standards that
+state it is archived in `sources/`: Verra serves the AFOLU Non-Permanence Risk
+Tool and the VCS Standard behind a 404 or a JavaScript shell, probed on
+2026-10-21, and the repository's rule is that a load-bearing citation points at
+a file it holds. The correction therefore rests on the graph's own two
+descriptions disagreeing, which is sufficient to establish a sign error and is
+the whole of what is claimed.
+
+*Why a correction and not a re-bake of batch 24.* The bake merges one equation
+body over the shipped one, so re-emitting batch 24 would do the same thing --
+but batch 24 predates twenty-odd retypes, and a re-bake would couple this fix
+to whether every one of them is still current. Measured before choosing: batch
+24's parameters, equations and edges drift from `config/prg.yaml` in **zero**
+fields today, which makes the two routes equivalent right now and the narrower
+one correct by construction. A batch that owns one equation cannot revert a
+node it never names.
+
+*The two remaining questions, settled rather than deferred.* The
+`premium_share_of_asset` resolution stands: `insurance_premium_definition`
+computes `insurance_loss_share_of_cost * capex_usd_per_kw`, so the catalog's
+0.008 was a second dial on a premium already priced, and resolving in favour of
+0.005 removes it. `firm_build_fleet_mw` is kept against the pack's deletion
+recommendation: it is endogenous and named by `firm_build_fleet_bound`, so it
+is coupled and not floating, and deleting it would remove a bound that holds
+at defaults and leave the fleet build with no ceiling. A deletion is right for
+an alias and wrong for a decision variable.
+
+*Register movement.* None. Parameters 1,344, equations 525, edges 1,075,
+uncoupled 284, computed 461 -- all unchanged, because a corrected right-hand
+side names the same two operands. The only movement is the value:
+`carbon_credit_reversal_allowance` 40.5 to 4.5 MtCO2/year.
+
+*The regression pin.* `test_the_reversal_allowance_is_the_share_and_not_its_complement`
+asserts the identity, the value, and the wrong value *against* -- a test that
+could not tell 4.5 from 40.5 would have passed on the defect. Canaried by
+reverting the equation in `config/prg.yaml` and re-running: it fails with
+`assert 40.5 == (0.1 * 45.0)`.
+
 ## Evaluation of the design docs against the code (2026-10-17)
 
 **`docs/how_prg_works.md` (read-only; a teaching narrative, not read as spec).**

@@ -996,6 +996,44 @@ def test_the_summary_reports_the_registers(graph: ParameterGraph):
 	)
 
 
+def test_the_reversal_allowance_is_the_share_and_not_its_complement(
+	graph: ParameterGraph, defaults: dict[str, float]
+):
+	"""The buffer a registry holds is the permanence share, not its complement.
+
+	Batch 24 shipped `carbon_credit_reversal_allowance_definition` as
+	``(1 - permanence_parameters) * carbon_credit_volumes``. Batch 33 coupled
+	`buffer_pool_contribution` to `permanence_parameters` and flagged that the
+	two could not both be right, leaving the question in the node's prose.
+
+	They could not. `permanence_parameters` describes itself as the share of
+	issued volume held back against non-permanence, so the complement of that
+	share is the volume *not* held back -- the opposite of an allowance. The
+	shipped form reported 90% of every issuance as the buffer, 40.5 of 45
+	MtCO2/year, against a share of 10%. Batch 34 corrected the equation and
+	this pins the correction.
+
+	WHY THE ASSERTION IS THE PRODUCT AND NOT JUST THE VALUE. A literal 4.5
+	would pass on any equation that happened to evaluate to 4.5 at defaults,
+	including one that multiplied the wrong share by a compensating constant.
+	Asserting the identity is what makes the test about the arithmetic rather
+	than about today's default; the value is asserted beside it because a
+	reader wants the number, and the wrong value is asserted *against* because
+	a test that cannot tell the two apart would have passed on the defect.
+	"""
+	values = dict(graph.propagate(defaults).values)
+	share = float(values["permanence_parameters"])
+	volumes = float(values["carbon_credit_volumes"])
+	allowance = float(values["carbon_credit_reversal_allowance"])
+	assert allowance == share * volumes
+	assert allowance == 4.5
+	assert allowance != (1 - share) * volumes
+	# The buffer contribution names the same share, which is why the two agree
+	# now and did not before: the alias was right and the equation it was
+	# supposed to be spelling was not.
+	assert float(values["buffer_pool_contribution"]) == share
+
+
 def test_the_unreached_engine_knobs_are_computed_not_transcribed(monkeypatch):
 	"""The reverse register is derived from the declared translations.
 

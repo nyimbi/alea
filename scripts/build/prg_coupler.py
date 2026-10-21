@@ -546,7 +546,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -639,6 +639,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b29_equations)
 		edges = list(BATCH12_EDGES) + b29_edges
+	elif batch == "34":
+		b34_nodes, b34_equations, b34_edges, b34_rules = build_batch34(graph)
+		rules.extend(b34_rules)
+		nodes.update(b34_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b34_equations)
+		edges = list(BATCH12_EDGES) + b34_edges
 	elif batch == "33":
 		b33_nodes, b33_equations, b33_edges, b33_rules = build_batch33(graph)
 		rules.extend(b33_rules)
@@ -5108,12 +5115,19 @@ BATCH24_EQUATIONS: tuple[
 	("carbon_credit_reversal_allowance_definition",
 	 "The reversal allowance on the credit book",
 	 "carbon_credit_reversal_allowance",
-	 "(1 - permanence_parameters) * carbon_credit_volumes",
-	 "The complement of the permanence share: the buffer a registry retains "
-	 "against the credit being reversed by fire, disease or land-use "
-	 "change. A forest credit that burns has to be replaced from the "
-	 "buffer, and the buffer is sized by the reversal risk the permanence "
-	 "share names.",
+	 "permanence_parameters * carbon_credit_volumes",
+	 "The volume the permanence share sets aside: the allowance a registry "
+	 "holds against the credit being reversed by fire, disease or land-use "
+	 "change. A forest credit that burns has to be replaced from this "
+	 "allowance, and the allowance is sized by the reversal risk the "
+	 "permanence share names. The share is the allowance, not its "
+	 "complement. `permanence_parameters` describes itself as 'the share "
+	 "of issued volume held back against non-permanence', so its "
+	 "complement is the volume *not* held back -- the opposite of an "
+	 "allowance -- and the shipped form, which multiplied the complement, "
+	 "reported 40.5 of 45 MtCO2/year as the buffer. Batch 34 corrected it "
+	 "to 4.5, and `buffer_pool_contribution` now agrees with the volume it "
+	 "names instead of contradicting it.",
 	 "carbon_trajectory", "linear", "MtCO2/year", [0.0, 1000.0], None),
 	("voluntary_market_volume_definition",
 	 "The volume sold into the voluntary market",
@@ -10519,6 +10533,120 @@ def build_batch22(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 			"priority": "P2", "reference": cite,
 			"latex": r"\mathrm{see\ equation}",
 		}
+	return nodes, equations, edges, rules
+
+
+#: (eq_id, lhs, rhs, prose, system, reference) -- corrections to shipped
+#: equations. A correction names an equation the graph already carries and
+#: replaces its body; the bake's stale-edge rule disposes the edges the old
+#: arithmetic held.
+#: The equations batch 34 re-emits. Not a second copy of their bodies: the
+#: authoring table owns each body and this batch names the ids, so a correction
+#: cannot drift from the equation it corrects. What the batch does is put the
+#: corrected body in front of the bake, whose merge replaces the shipped one.
+BATCH34_CORRECTIONS: tuple[str, ...] = (
+	"carbon_credit_reversal_allowance_definition",
+)
+
+
+def build_batch34(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""The review corrections batch 33 deferred, and the packs that follow them.
+
+	*The sign error first, because it is a defect and not a coupling.* Batch 33
+	shipped `buffer_pool_contribution = permanence_parameters` as an alias and
+	flagged the question it raised rather than answering it: if the buffer
+	contribution is the *complement* of the permanence share, the alias is wrong
+	by construction. Reading the two shipped nodes answers it against the
+	alias, and against the equation the alias was supposed to be spelling.
+
+	`permanence_parameters` describes itself as "the share of issued volume
+	held back against non-permanence", so its complement is the volume *not*
+	held back -- the opposite of an allowance. `carbon_credit_reversal_allowance_definition`
+	multiplied that complement and called the product the buffer a registry
+	retains. Both cannot hold, and the algebra says which is wrong without
+	leaving the graph: the shipped form reports 40.5 of 45 MtCO2/year held
+	back, a 90% allowance against a 10% share. A buffer that holds back nine
+	tenths of every issuance is not a permanence mechanism; it is the share
+	inverted. This batch corrects the equation to
+	`permanence_parameters * carbon_credit_volumes`, taking the allowance from
+	40.5 to 4.5 MtCO2/year and making `buffer_pool_contribution` agree with the
+	volume it names.
+
+	The argument stops there deliberately. Registry practice -- the buffer
+	rates programmes actually withhold -- would corroborate the 10%, and no
+	copy of the standards that state it is archived in `sources/`, so the
+	correction rests on the graph's own two descriptions disagreeing rather
+	than on an external figure the repository cannot produce.
+
+	*Why this is a correction and not a re-bake of batch 24.* The bake merges
+	one equation body over the shipped one, so re-emitting batch 24 would do
+	the same thing -- but batch 24 predates twenty-odd retypes, and a re-bake
+	couples this fix to whether every one of them is still current. It is not:
+	the measurement says batch 24's parameters, equations and edges drift from
+	`config/prg.yaml` in zero fields today, which makes the two routes
+	equivalent right now and the narrower one correct by construction. A batch
+	that owns one equation cannot revert a node it never names.
+
+	*The `premium_share_of_asset` resolution stands.* Batch 33 asked whether
+	resolving the catalog's duplicate premium in favour of 0.005 was intended.
+	It is: `insurance_premium_definition` computes
+	`insurance_loss_share_of_cost * capex_usd_per_kw`, so 0.008 was a second
+	dial on a premium already priced, and the alias removes it. Nothing to
+	correct.
+
+	*`firm_build_fleet_mw` is kept, and the pack's deletion recommendation is
+	recorded rather than taken.* The node is `endogenous` and `firm_build_fleet_bound`
+	names it, so it is coupled and not floating; deleting it would remove a
+	bound that holds at defaults (10,000 MW against 9,000 MW) and leave the
+	fleet build with no ceiling. A deletion is the right call for an alias and
+	the wrong one for a decision variable.
+	"""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	from alea.prg.dsl import parse_side
+
+	# The authored body, looked up rather than restated. `BATCH24_EQUATIONS` is
+	# the table that owns this equation; copying its body here would make two
+	# sources for one row, and the one a later reader edits would be whichever
+	# they happened to open.
+	authored = {row[0]: row for row in BATCH24_EQUATIONS}
+
+	for eq_id in BATCH34_CORRECTIONS:
+		shipped = graph.equations.get(eq_id)
+		assert shipped is not None, (
+			f"{eq_id} is not a shipped equation; a correction names one the "
+			"graph already carries"
+		)
+		assert eq_id in authored, (
+			f"{eq_id} is corrected by this batch but authored nowhere this "
+			"batch can read; the correction needs an authoring table"
+		)
+		_, _name, lhs, rhs, prose, system, linearity, _unit, _rng, cite = authored[eq_id]
+		rhs_params = sorted(parse_side(rhs).symbols)
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": _name,
+			"description": prose,
+			"system": system, "lhs": lhs, "rhs": rhs, "relation": "eq",
+			"parameters": [lhs] + rhs_params, "free_variables": [],
+			"determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": linearity,
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs, "equation_id": eq_id,
+				"relationship": "functional", "direction": "forward",
+				"strength": "hard",
+				"description": "Enters the product identity.",
+				"reference": cite, "priority": "P1",
+			})
+
 	return nodes, equations, edges, rules
 
 
