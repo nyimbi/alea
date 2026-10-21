@@ -55,6 +55,24 @@ ABSENT: Final[MappingProxyType[str, str]] = MappingProxyType(
 			"Closing it is a choice: drop the tier and the config key, or name the "
 			"stage that needs a non-processed intermediate."
 		),
+		**{
+			f"reports/{cadence}": (
+				f"Created on demand, not checked in. `reporting.service` resolves "
+				f"`paths.reports` (default `reports`) and calls "
+				f"`mkdir(parents=True, exist_ok=True)` on it at build time, then "
+				f"`mkdir(parents=True, exist_ok=True)` again on the per-cadence "
+				f"`output_dir` before writing `index.json` and the dated document "
+				f"-- so `reports/{cadence}` is an artefact of a run that has "
+				f"produced a {cadence} report, not a directory the repository "
+				f"holds. What closes the gap is running that build: the first "
+				f"{cadence} report writes the directory, and a checked-in empty "
+				f"one would be indistinguishable from a directory a report has "
+				f"landed in, which is the same defect `data/interim` records. The "
+				f"path is correct in §6 and this registration is the note that "
+				f"its absence is expected rather than a build task."
+			)
+			for cadence in ("daily", "weekly", "monthly", "quarterly", "annual")
+		},
 	}
 )
 """Declared paths that do not exist, and what would close each.
