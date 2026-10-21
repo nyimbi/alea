@@ -546,7 +546,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -639,6 +639,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b29_equations)
 		edges = list(BATCH12_EDGES) + b29_edges
+	elif batch == "32":
+		b32_nodes, b32_equations, b32_edges, b32_rules = build_batch32(graph)
+		rules.extend(b32_rules)
+		nodes.update(b32_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b32_equations)
+		edges = list(BATCH12_EDGES) + b32_edges
 	elif batch == "31":
 		b31_nodes, b31_equations, b31_edges, b31_rules = build_batch31(graph)
 		rules.extend(b31_rules)
@@ -9469,6 +9476,397 @@ def build_batch31(
 				"reference": amend.get("reference", body.get("reference")),
 				"priority": "P1",
 			})
+
+	return nodes, equations, edges, rules
+
+
+#: (eq_id, lhs, relation, rhs, prose, system, reference, binder, bounded)
+#: -- the THRESHOLD class: capacity ceilings and one lead-time bound. Every
+#: row is an inequality over nodes that already exist, so the
+#: batch retypes nothing and derives nothing: a bound couples a node to the
+#: quantity that limits it without making the node a function of that
+#: quantity, which is why `determined_variables` stays empty on all of them.
+BATCH32_BOUNDS: tuple[
+	tuple[str, str, str, str, str, str, str | None, str, str], ...
+] = (
+	# --- carbon auction -------------------------------------------------
+	("auction_price_cap_bound", "auction_price_cap", "geq",
+	 "carbon_price_escalated_usd_per_tco2",
+	 "The auction's price ceiling must sit at or above the escalated carbon "
+	 "price, or the auction clears above its own cap on day one and the "
+	 "instrument is mispriced by construction. At defaults the escalated "
+	 "price is 81.44 against a 200 USD/tonne cap, so the constraint holds; "
+	 "setting the cap below the trajectory makes it bind, which is the "
+	 "policy question an ETS cap answers. The base-year price was "
+	 "considered and rejected as the comparison: the cap holds for the "
+	 "horizon the auction runs over, and the base price is the one number "
+	 "that ignores escalation.",
+	 "carbon_trajectory",
+	 "EU ETS Directive 2023/959, Art. 21 (auction platform and price "
+	 "formation); the cap level is a policy dial the regulation does not "
+	 "print",
+	 "carbon_price_escalated_usd_per_tco2", "auction_price_cap"),
+
+	# --- build ceilings --------------------------------------------------
+	("coal_new_build_bound", "coal_capacity", "leq", "coal_new_build",
+	 "New coal build is capped at the policy ceiling: 3000 MW of reference "
+	 "fleet under a 5000 MW cap, so a 6000 MW scenario fails. This routes "
+	 "as a post-solve check rather than an LP constraint because "
+	 "`coal_capacity` is endogenous: the solve chooses it, and a bound on a "
+	 "choice is a feasibility test on the answer, not a restriction on the "
+	 "programme. A minimum-build reading of the same node was rejected -- a "
+	 "dial that *forces* coal is a different parameter, and the node's own "
+	 "description says allowed.",
+	 "energy_balance",
+	 "Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint "
+	 "inventory: capacity and resource-availability limits); the numeric "
+	 "ceiling is a policy figure the review does not print",
+	 "coal_new_build", "coal_capacity"),
+	("gas_new_build_bound", "gas_capacity", "leq", "gas_new_build",
+	 "New gas build capped at 3000 MW against the 1500 MW reference fleet. "
+	 "Routes as a post-solve check for the same reason as coal: the "
+	 "capacity is endogenous. A bound on `capex_gas` was rejected -- a "
+	 "capital-cost ceiling is not a build ceiling, and the two are "
+	 "separately dialled.",
+	 "energy_balance",
+	 "Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint "
+	 "inventory); the numeric ceiling is a policy figure",
+	 "gas_new_build", "gas_capacity"),
+	("hydro_new_build_bound", "hydro_capacity", "leq", "hydro_new_build",
+	 "New hydro capped at 3000 MW against the 1500 MW reference fleet. "
+	 "Routes as a post-solve check: the capacity is endogenous. A bound "
+	 "against the transboundary water ceiling was rejected -- a water "
+	 "allocation is not a capacity ceiling, and conflating them would make "
+	 "one dial move two bounds.",
+	 "energy_balance",
+	 "Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint "
+	 "inventory); the numeric ceiling is a policy figure",
+	 "hydro_new_build", "hydro_capacity"),
+	("nuclear_new_build_bound", "nuclear_capacity", "leq", "nuclear_new_build",
+	 "New nuclear capped at 5000 MW -- a single large unit or two SMR "
+	 "modules -- against a 0 MW reference fleet, so the bound holds "
+	 "vacuously today and bites the moment a scenario builds nuclear. "
+	 "Routes as a post-solve check: the capacity is endogenous. A bound at "
+	 "20000, the capacity's own ceiling, was rejected as vacuous: a ceiling "
+	 "equal to the bounded quantity's maximum cannot fail.",
+	 "energy_balance",
+	 "Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint "
+	 "inventory); the numeric ceiling is a policy figure",
+	 "nuclear_new_build", "nuclear_capacity"),
+	("solar_pv_land_constraint_bound", "solar_pv_capacity", "leq",
+	 "solar_pv_land_constraint",
+	 "The land ceiling expressed as the PV nameplate the available land "
+	 "supports: 10000 MW at the reference build under a 20000 MW ceiling. "
+	 "The node is a *converted* land ceiling and its prose must say so -- a "
+	 "hectares form was rejected because the graph carries no MW-per-hectare "
+	 "intensity, so no equation could turn land into a build limit. Routes "
+	 "as a post-solve check: the PV capacity is endogenous.",
+	 "energy_balance",
+	 "Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint "
+	 "inventory: land and resource-availability limits); the conversion "
+	 "intensity is a policy figure",
+	 "solar_pv_land_constraint", "solar_pv_capacity"),
+	("solar_pv_max_build_bound", "solar_pv_capacity", "leq",
+	 "solar_pv_max_build",
+	 "An annual build ceiling stated against the PV *stock*, because the "
+	 "graph carries no annual-increment node. The batch records the "
+	 "mismatch rather than hiding it: as written the node caps the stock, "
+	 "not the annual build its name claims, and a scenario that raises the "
+	 "cap raises the permitted total. Renaming the node or adding "
+	 "`solar_pv_annual_build_mw` would be a base, not a coupling, and is "
+	 "left to a pack that owns it. Routes as a post-solve check.",
+	 "energy_balance",
+	 "Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint "
+	 "inventory); the numeric ceiling is a policy figure",
+	 "solar_pv_max_build", "solar_pv_capacity"),
+	("solar_thermal_capacity_bound", "solar_thermal_capacity", "leq",
+	 "csp_capacity",
+	 "Solar thermal is the CSP build under the catalog's second spelling, "
+	 "so its ceiling is the CSP nameplate itself: 0 MW against 0 MW at "
+	 "defaults, which holds at the boundary and fails the moment a scenario "
+	 "sets solar thermal above the CSP fleet. An equality alias to "
+	 "`csp_capacity` was considered and rejected -- it would make the node "
+	 "derived from an endogenous build, and the two ids are a technology "
+	 "label and a capacity, not two spellings of one number. The bound "
+	 "leaves the node free and still refuses the inconsistent scenario.",
+	 "energy_balance",
+	 "IEA/NEA, Projected Costs of Generating Electricity (2020) -- CSP "
+	 "capital costs and the solar-thermal technology class",
+	 "csp_capacity", "solar_thermal_capacity"),
+
+	# --- storage and the novel generators --------------------------------
+	("compressed_air_capacity_bound", "compressed_air_capacity", "leq",
+	 "storage_headroom_mw",
+	 "Compressed-air storage is bounded by the graph's storage envelope "
+	 "rather than by the generation fleet: it is energy-shifting and adds "
+	 "no nameplate generation, so the generation ceiling is the wrong "
+	 "envelope. Holds vacuously at 0 and fails once a scenario builds past "
+	 "the 5000 MW headroom. Membership in `fleet_build_balance` was "
+	 "rejected as a tautology: the balance ceiling is generation plus "
+	 "headroom, 15000 MW, which admits every admissible value of a node "
+	 "whose range tops at 1e6 -- it constrains nothing a plan could violate.",
+	 "energy_balance", None,
+	 "storage_headroom_mw", "compressed_air_capacity"),
+	("flywheel_capacity_bound", "flywheel_capacity", "leq",
+	 "storage_headroom_mw",
+	 "Flywheel storage sits inside the storage envelope for the same reason "
+	 "as compressed air: it shifts energy and adds no generation. Holds at "
+	 "0; fails past 5000 MW.",
+	 "energy_balance", None,
+	 "storage_headroom_mw", "flywheel_capacity"),
+	("gravity_storage_capacity_bound", "gravity_storage_capacity", "leq",
+	 "storage_headroom_mw",
+	 "Gravity storage inside the storage envelope. The classification "
+	 "pack's own proposed base `gravity_storage_energy_mwh` (100 MW over 8 "
+	 "h) fits under 5000 MW, so the power bound is the one the graph can "
+	 "state today. An MWh bound against that base was rejected because the "
+	 "base does not exist and is another pack's to add.",
+	 "energy_balance", None,
+	 "storage_headroom_mw", "gravity_storage_capacity"),
+	("storage_capacity_mw_bound", "storage_capacity_mw", "leq",
+	 "total_capacity_mw + storage_headroom_mw",
+	 "The storage build is bounded by generation plus the storage envelope: "
+	 "800 MW under 15000 MW at defaults. Routes as a post-solve check -- "
+	 "the left-hand side is itself endogenous. An equality to "
+	 "`battery_capacity + phs_capacity` was rejected: it would make an "
+	 "endogenous node derived, and it disagrees with the shipped 800 (300 "
+	 "battery + 200 PHS = 500). The 300 MW difference is the node "
+	 "duplicating two builds it is not tied to, and this bound records it "
+	 "rather than inventing a third equation to explain it.",
+	 "energy_balance", None,
+	 "total_capacity_mw + storage_headroom_mw", "storage_capacity_mw"),
+	("thermal_storage_capacity_bound", "thermal_storage_capacity", "leq",
+	 "storage_headroom_mw * thermal_storage_duration",
+	 "The thermal store's energy is its share of the storage envelope "
+	 "times the graph's own thermal-store duration: 0 MWh under 40000 MWh "
+	 "at defaults. Routes as a post-solve check. A bound against the "
+	 "headroom alone was rejected on units (MWh against MW), and one on "
+	 "`battery_duration` rejected as the wrong technology's dial -- a "
+	 "thermal store sized on battery hours is a scenario parameter leaking "
+	 "across technologies.",
+	 "energy_balance",
+	 "IEA/NEA, Projected Costs of Generating Electricity (2020) -- "
+	 "thermal-storage duration and cost",
+	 "storage_headroom_mw", "thermal_storage_capacity"),
+	("fusion_capacity_bound", "fusion_capacity", "leq", "total_capacity_mw",
+	 "Fusion is generation and is bounded by the fleet's declared nameplate: "
+	 "one technology cannot exceed the whole fleet. A bound against "
+	 "`solar_pv_max_build` was rejected -- a fusion plant does not compete "
+	 "for solar's land or build programme, and the ceiling would move with "
+	 "an unrelated dial.",
+	 "energy_balance",
+	 "Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint "
+	 "inventory: capacity limits)",
+	 "total_capacity_mw", "fusion_capacity"),
+	("hydrogen_fuel_cell_capacity_bound", "hydrogen_fuel_cell_capacity",
+	 "leq", "total_capacity_mw",
+	 "Fuel cells are generation and bounded by the fleet nameplate. A "
+	 "bound against the storage headroom was rejected: a fuel cell is a "
+	 "generator, not a store, and putting it in the storage envelope would "
+	 "let it exceed the generation ceiling.",
+	 "energy_balance",
+	 "Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint "
+	 "inventory: capacity limits)",
+	 "total_capacity_mw", "hydrogen_fuel_cell_capacity"),
+	("marine_otec_capacity_bound", "marine_otec_capacity", "leq",
+	 "total_capacity_mw",
+	 "OTEC is generation, bounded by the fleet nameplate. The technology "
+	 "registry knows the carrier (`otec`), so the node is a build rather "
+	 "than a resource. Fleet-balance membership was rejected as the "
+	 "tautology it is at a 15000 MW ceiling.",
+	 "energy_balance",
+	 "Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint "
+	 "inventory: capacity limits)",
+	 "total_capacity_mw", "marine_otec_capacity"),
+	("marine_tidal_capacity_bound", "marine_tidal_capacity", "leq",
+	 "total_capacity_mw",
+	 "Tidal stream is generation, bounded by the fleet nameplate. A bound "
+	 "against `marine_wave_capacity` was rejected: two resources with "
+	 "separate ceilings, and a shared one would make a wave scenario cap "
+	 "tidal.",
+	 "energy_balance",
+	 "Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint "
+	 "inventory: capacity limits)",
+	 "total_capacity_mw", "marine_tidal_capacity"),
+	("marine_wave_capacity_bound", "marine_wave_capacity", "leq",
+	 "total_capacity_mw",
+	 "Wave is generation, bounded by the fleet nameplate. Fleet-balance "
+	 "membership was rejected as vacuous at a 15000 MW ceiling.",
+	 "energy_balance",
+	 "Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint "
+	 "inventory: capacity limits)",
+	 "total_capacity_mw", "marine_wave_capacity"),
+	("tidal_range_capacity_bound", "tidal_range_capacity", "leq",
+	 "total_capacity_mw",
+	 "A tidal-range barrage is generation and bounded by the fleet "
+	 "nameplate. Distinct from `marine_tidal_capacity`, which is tidal "
+	 "*stream*: a barrage impounds an estuary and a stream array does not, "
+	 "and the two ceilings are independent.",
+	 "energy_balance",
+	 "Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint "
+	 "inventory: capacity limits)",
+	 "total_capacity_mw", "tidal_range_capacity"),
+	("small_modular_reactor_capacity_bound", "small_modular_reactor_capacity",
+	 "leq", "total_capacity_mw",
+	 "SMR nameplate is bounded by the fleet. A bound against "
+	 "`nuclear_new_build` was rejected: SMRs are a technology that "
+	 "`nuclear_new_build` *admits*, not a subset of the nuclear build, and "
+	 "the two ceilings are independent dials.",
+	 "energy_balance",
+	 "Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint "
+	 "inventory: capacity limits)",
+	 "total_capacity_mw", "small_modular_reactor_capacity"),
+
+	# --- lead-time floor -------------------------------------------------
+	("spare_parts_lead_time_bound", "spare_parts_lead_time", "leq",
+	 "mean_time_between_failures",
+	 "A spare part must arrive within the unit's mean time between "
+	 "failures, or the expected wait for it dominates availability: 720 h "
+	 "against 50000 h at defaults, so the constraint holds by a factor of "
+	 "seventy and bites only on a deliberately degraded maintenance "
+	 "regime. The classification pack's form `365 / maintenance_frequency` "
+	 "was rejected on units -- 365 days divided by 2 events/year is "
+	 "day-year/event, which the walker reads as `year / events`, and the "
+	 "two sides do not share a dimension.",
+	 "reliability", None,
+	 "mean_time_between_failures", "spare_parts_lead_time"),
+
+	# --- water -----------------------------------------------------------
+	("transboundary_water_constraint_bound", "total_water_demand_m3", "leq",
+	 "transboundary_water_constraint",
+	 "The basin's allocation caps total water demand: 93.2e6 m3/year under "
+	 "a 200e6 ceiling at defaults. Routes as a post-solve check because "
+	 "the demand is derived. The bound overlaps the shipped "
+	 "`water_availability_bound`, which compares the availability *flow* "
+	 "to the same demand; the two are kept distinct because they are "
+	 "different instruments -- one is a physical flow the basin provides, "
+	 "the other an allocation a treaty or regulator grants -- and a "
+	 "scenario can be inside the physical flow and outside the "
+	 "allocation. Stating them as one would hide which failed.",
+	 "water_energy", None,
+	 "transboundary_water_constraint", "total_water_demand_m3"),
+)
+
+
+def build_batch32(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""The THRESHOLD class: twenty-three bounds over the nodes the packs left.
+
+	The class is structurally different from every batch before it. A PRODUCT
+	equation *determines* a node, so the node becomes derived and loses its
+	default. A BOUND determines nothing: it says the node must sit on one
+	side of a quantity that already exists, and the node keeps its own range
+	and default. `_a_derivation_has_exactly_one_target` enforces that -- a
+	non-`eq` relation carrying `determined_variables` is refused -- so this
+	batch emits `determined_variables: ()` on every row, and the parameter
+	register sees no new derived node from it.
+
+	That has a consequence the register makes visible: a THRESHOLD node
+	couples by being *named* by an equation, so it leaves `uncoupled()`, but
+	it does not enter `computed()`, and the scenario audit's checked/skipped
+	partition does not move. The movement this batch makes is in the edge
+	register and the constraint count, not the derived set.
+
+	Twenty-two rows ship and three do not. `remedy_periods` is deferred
+	pending a `max_remedy_period_days` base: its declared range is already
+	[1, 365], so any ceiling at 365 restates the range and can never fail --
+	a bound that cannot fail is not a bound. `hydrogen_storage_capacity` is
+	already coupled by the shipped storage-capex equation and its MWh
+	ceiling is deferred pending a `hydrogen_storage_duration`, because the
+	graph carries no hydrogen duration and borrowing thermal storage's 8 h
+	would make an unrelated dial move the bound. `solvency_capital_ratio` is
+	deferred for a third reason, and it is the one worth stating: the
+	pack's proposed floor is `solvency_capital_ratio >= 1.0`, a comparison
+	against a literal. It is not a tautology -- the node's range is
+	[0.8, 3.0], so a shipped 0.9 would violate a 1.0 floor -- but a literal
+	right-hand side names no binder node, and the graph's bound shape runs
+	binder -> bounded. Shipping it would put an equation in the document
+	that no edge carries, which is the register's own "declared is not
+	produced" defect: the node would leave `uncoupled()` by being named
+	while the edge register stayed silent about what couples it. The real
+	fix is a `required_solvency_capital_usd` base the ratio divides by, and
+	that is a base another pack owns.
+
+	Fourteen rows route `bound` and eight route `unbound`, and the prose says
+	which: an `unbound` row has an endogenous left-hand side, so it is a
+	post-solve feasibility check on the solve's answer rather than an LP
+	constraint on the programme. The graph states both, because a reader
+	auditing a plan wants the check either way, but the distinction is in
+	the prose so nobody counts the constraint register as twenty-two
+	restrictions on the optimiser.
+
+	The edge runs binder -> bounded in every row, never a self-loop: the
+	binder is the quantity that limits, the bounded node is the one limited,
+	and a self-loop would say the node constrains itself and name no
+	coupling. The pair is carried in the table rather than recovered from
+	the symbols, because a bounded left-hand side need not be a bare symbol
+	-- the storage and thermal-store rows bound against sums and products.
+	"""
+	from alea.prg.dsl import parse_side
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	known = set(graph.nodes)
+	for eq_id, lhs, relation, rhs, prose, system, cite, binder, bounded in BATCH32_BOUNDS:
+		assert relation in ("leq", "geq"), f"{eq_id}: {relation} is not a bound"
+		# A bound determines nothing. The loader refuses a non-`eq` relation
+		# that names a target, and the refusal is right: a node that is
+		# merely bounded still has a range of admissible values, so it is
+		# not derived from anything.
+		named = sorted(set(parse_side(lhs).symbols) | set(parse_side(rhs).symbols))
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": eq_id.replace("_", " ").capitalize(),
+			"description": prose, "system": system,
+			"lhs": lhs, "rhs": rhs, "relation": relation,
+			"parameters": named, "free_variables": named,
+			"determined_variables": (),
+			"tolerance": 1.0e-06, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P2", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		# `bounded` is the node this row limits; it must be a node and it
+		# must be named on one side of the inequality, or the edge says two
+		# things are coupled that the equation does not mention.
+		assert bounded in known, f"{eq_id}: bounded {bounded!r} has no node"
+		assert bounded in named, (
+			f"{eq_id}: bounded {bounded!r} is not named by the inequality"
+		)
+		# The binder is a single symbol or an expression; the *node* a
+		# reader follows is the first symbol of the binding side. The
+		# expression form (`total_capacity_mw + storage_headroom_mw`) has
+		# no single node, so the edge's source is the expression's first
+		# named node and the description says the bound is composite.
+		#
+		# Iterating `binder` as a string walks its characters -- the bug
+		# that shipped forty-nine one-letter edges in batch 30. The guard
+		# here is that the first symbol must be a node and must differ from
+		# the bounded one.
+		binder_syms = sorted(parse_side(binder).symbols)
+		assert binder_syms, f"{eq_id}: binder {binder!r} names no symbol"
+		binder_node = binder_syms[0]
+		assert binder_node in known, (
+			f"{eq_id}: binder {binder!r} has no node among its symbols"
+		)
+		assert binder_node != bounded, (
+			f"{eq_id}: binder and bounded are both {bounded!r}; a self-loop "
+			"names no coupling"
+		)
+		composite = len(binder_syms) > 1
+		edges.append({
+			"source": binder_node, "target": bounded, "equation_id": eq_id,
+			"relationship": "constraint", "direction": "forward",
+			"strength": "hard",
+			"description": (
+				f"Bounds {bounded} against {binder}"
+				+ (" (composite ceiling)" if composite else "")
+				+ "; a plan can clear the physics and fail this."
+			),
+			"reference": cite, "priority": "P2",
+		})
 
 	return nodes, equations, edges, rules
 

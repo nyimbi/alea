@@ -955,8 +955,15 @@ def test_the_summary_reports_the_registers(graph: ParameterGraph):
 	# meant, and it holds at any count.
 	uncoupled_roles = {graph.role(name).value for name in graph.uncoupled()}
 	assert uncoupled_roles <= {"free", "endogenous"}, uncoupled_roles
-	assert "storage_capacity_mw" in graph.uncoupled()
-	assert graph.role("storage_capacity_mw").value == "endogenous"
+	# The witness was `storage_capacity_mw` until batch 32 bounded it, which
+	# coupled it and left the register with one endogenous member instead of
+	# four. The claim the witness carries is "not every uncoupled node is
+	# free", and `firm_build_fleet_mw` is the one that still makes it: the
+	# optimiser sizes it and no equation names it. Naming the current witness
+	# rather than counting keeps a future coupling of this one a failure here
+	# instead of a silent loss of the property.
+	assert "firm_build_fleet_mw" in graph.uncoupled()
+	assert graph.role("firm_build_fleet_mw").value == "endogenous"
 	# A `free` node named by an equation is an input, not a knob, so the two
 	# sets overlap without either containing the other. Asserting the
 	# difference is non-empty is what stops a future edit from *making* the
@@ -1523,7 +1530,11 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# name a knob that was dead, and six aliases took a duplicate id out of
 	# the settable set entirely -- a derived node cannot be a dead knob
 	# because it is not a knob.
-	assert len(dead) == 318, len(dead)
+	# Batch 32 took it 318 to 298: twenty-two bounds shipped and twenty of
+	# their nodes were dead knobs. The other two, `storage_capacity_mw` and
+	# `thermal_storage_capacity`, are endogenous, so they were never in this
+	# register -- which is why the count falls by twenty and not twenty-two.
+	assert len(dead) == 298, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
@@ -3793,7 +3804,10 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# the two amended equations were already hard; the wind LCOE amendment
 	# kept its shipped soft tier, which is why the soft count does not move.
 	# 446 to 474.
-	assert counts == {"hard": 474, "informational": 1, "soft": 2}, counts
+	# Batch 32 ships twenty-two bounds, all hard: a plan that breaches a
+	# capacity ceiling or a lead-time bound is not a soft finding. The
+	# strength register counts equations, so 474 to 496.
+	assert counts == {"hard": 496, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -4126,7 +4140,17 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# Batch 31 added five: the CCGT alias, the hydrogen cost alias, the
 	# cause-attributed events, the gearing utilisation and the wind LCOE
 	# amendment's NREL ATB reference.
-	assert len(declared) == 199, f"the citation register moved: {sorted(declared)}"
+	# Batch 32 added sixteen of its twenty-two bounds. The sixteen split
+	# three ways: thirteen capacity ceilings cite Oree et al. (2017) for the
+	# GEP constraint inventory (coal, gas, hydro, nuclear, fusion, the fuel
+	# cell, the four marine technologies, SMR, the two solar build ceilings);
+	# the carbon auction cites EU ETS Directive 2023/959 and the CSP ceiling
+	# IEA/NEA EGC; and the thermal store cites IEA/NEA EGC for its duration.
+	# The six that carry None are the four storage-envelope bounds, the
+	# spare-parts lead time and the transboundary water ceiling -- each a
+	# definitional relation between two quantities the graph already carries,
+	# not a statement of an external result. 199 to 215.
+	assert len(declared) == 215, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (

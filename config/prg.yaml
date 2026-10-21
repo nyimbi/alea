@@ -28352,6 +28352,31 @@ equations:
     priority: P1
     reference: EU CBAM regulation
     latex: \mathrm{article}_{6\_credits} = \mathrm{corresponding}_{adjustment} \mathrm{carbon}_{credit\_volumes}
+  auction_price_cap_bound:
+    name: Auction price cap bound
+    description: 'The auction''s price ceiling must sit at or above the escalated carbon price, or the
+      auction clears above its own cap on day one and the instrument is mispriced by construction. At
+      defaults the escalated price is 81.44 against a 200 USD/tonne cap, so the constraint holds; setting
+      the cap below the trajectory makes it bind, which is the policy question an ETS cap answers. The
+      base-year price was considered and rejected as the comparison: the cap holds for the horizon the
+      auction runs over, and the base price is the one number that ignores escalation.'
+    system: carbon_trajectory
+    lhs: auction_price_cap
+    rhs: carbon_price_escalated_usd_per_tco2
+    relation: geq
+    parameters: &id001
+    - auction_price_cap
+    - carbon_price_escalated_usd_per_tco2
+    free_variables: *id001
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: EU ETS Directive 2023/959, Art. 21 (auction platform and price formation); the cap level
+      is a policy dial the regulation does not print
+    latex: \mathrm{auction}_{price\_cap} \geq \mathrm{carbon}_{price\_escalated\_usd\_per\_tco2}
   auction_volume_definition:
     name: The annual auction volume
     description: Every allowance is auctioned, because the graph carries no free-allocation share and
@@ -28582,10 +28607,10 @@ equations:
     lhs: biomass_capacity
     rhs: biomass_sustainability_limit
     relation: leq
-    parameters: &id001
+    parameters: &id002
     - biomass_capacity
     - biomass_sustainability_limit
-    free_variables: *id001
+    free_variables: *id002
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -28671,11 +28696,11 @@ equations:
     lhs: blended_finance_share
     rhs: dfi_share + commercial_bank_share
     relation: leq
-    parameters: &id002
+    parameters: &id003
     - blended_finance_share
     - commercial_bank_share
     - dfi_share
-    free_variables: *id002
+    free_variables: *id003
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -29146,10 +29171,10 @@ equations:
     lhs: carbon_finance_share
     rhs: carbon_revenue_share_of_revenue
     relation: leq
-    parameters: &id003
+    parameters: &id004
     - carbon_finance_share
     - carbon_revenue_share_of_revenue
-    free_variables: *id003
+    free_variables: *id004
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -29661,6 +29686,31 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{coal}_{eaf} = 1 - \mathrm{forced}_{outage\_rate} - \mathrm{planned}_{outage\_rate}
+  coal_new_build_bound:
+    name: Coal new build bound
+    description: 'New coal build is capped at the policy ceiling: 3000 MW of reference fleet under a 5000
+      MW cap, so a 6000 MW scenario fails. This routes as a post-solve check rather than an LP constraint
+      because `coal_capacity` is endogenous: the solve chooses it, and a bound on a choice is a feasibility
+      test on the answer, not a restriction on the programme. A minimum-build reading of the same node
+      was rejected -- a dial that *forces* coal is a different parameter, and the node''s own description
+      says allowed.'
+    system: energy_balance
+    lhs: coal_capacity
+    rhs: coal_new_build
+    relation: leq
+    parameters: &id005
+    - coal_capacity
+    - coal_new_build
+    free_variables: *id005
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity and
+      resource-availability limits); the numeric ceiling is a policy figure the review does not print'
+    latex: \mathrm{coal}_{capacity} \leq \mathrm{coal}_{new\_build}
   coal_price_per_mwh_definition:
     name: Coal price per MWh thermal
     description: 'Commodity coal price converted to a thermal basis. Dimensional check: USD/tonne divided
@@ -29942,6 +29992,30 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  compressed_air_capacity_bound:
+    name: Compressed air capacity bound
+    description: 'Compressed-air storage is bounded by the graph''s storage envelope rather than by the
+      generation fleet: it is energy-shifting and adds no nameplate generation, so the generation ceiling
+      is the wrong envelope. Holds vacuously at 0 and fails once a scenario builds past the 5000 MW headroom.
+      Membership in `fleet_build_balance` was rejected as a tautology: the balance ceiling is generation
+      plus headroom, 15000 MW, which admits every admissible value of a node whose range tops at 1e6 --
+      it constrains nothing a plan could violate.'
+    system: energy_balance
+    lhs: compressed_air_capacity
+    rhs: storage_headroom_mw
+    relation: leq
+    parameters: &id006
+    - compressed_air_capacity
+    - storage_headroom_mw
+    free_variables: *id006
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{compressed}_{air\_capacity} \leq \mathrm{storage}_{headroom\_mw}
   compressed_air_cost_alias:
     name: CAES capital cost is Compressed air storage capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `compressed_air_cost`
@@ -30122,10 +30196,10 @@ equations:
     lhs: cooking_lpg_penetration
     rhs: clean_cooking_target
     relation: leq
-    parameters: &id004
+    parameters: &id007
     - clean_cooking_target
     - cooking_lpg_penetration
-    free_variables: *id004
+    free_variables: *id007
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -30987,12 +31061,12 @@ equations:
     lhs: bond_share + dfi_share + commercial_bank_share
     rhs: debt_financing_share
     relation: leq
-    parameters: &id005
+    parameters: &id008
     - bond_share
     - commercial_bank_share
     - debt_financing_share
     - dfi_share
-    free_variables: *id005
+    free_variables: *id008
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -31762,10 +31836,10 @@ equations:
     lhs: energy_burden
     rhs: affordability_threshold
     relation: leq
-    parameters: &id006
+    parameters: &id009
     - affordability_threshold
     - energy_burden
-    free_variables: *id006
+    free_variables: *id009
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -32280,6 +32354,26 @@ equations:
       + \mathrm{wind}_{offshore\_capacity}\right)}{\mathrm{coal}_{capacity} + \mathrm{gas}_{capacity}
       + \mathrm{hydro}_{capacity} + \mathrm{geothermal}_{capacity} + \mathrm{biomass}_{capacity} + \mathrm{solar}_{pv\_capacity}
       + \mathrm{wind}_{onshore\_capacity} + \mathrm{wind}_{offshore\_capacity}}
+  flywheel_capacity_bound:
+    name: Flywheel capacity bound
+    description: 'Flywheel storage sits inside the storage envelope for the same reason as compressed
+      air: it shifts energy and adds no generation. Holds at 0; fails past 5000 MW.'
+    system: energy_balance
+    lhs: flywheel_capacity
+    rhs: storage_headroom_mw
+    relation: leq
+    parameters: &id010
+    - flywheel_capacity
+    - storage_headroom_mw
+    free_variables: *id010
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{flywheel}_{capacity} \leq \mathrm{storage}_{headroom\_mw}
   flywheel_cost_alias:
     name: Flywheel capital cost is Flywheel storage capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `flywheel_cost`
@@ -32379,10 +32473,10 @@ equations:
     lhs: fpic_requirements
     rhs: fpic_compliance_score
     relation: leq
-    parameters: &id007
+    parameters: &id011
     - fpic_compliance_score
     - fpic_requirements
-    free_variables: *id007
+    free_variables: *id011
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -32652,6 +32746,28 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  fusion_capacity_bound:
+    name: Fusion capacity bound
+    description: 'Fusion is generation and is bounded by the fleet''s declared nameplate: one technology
+      cannot exceed the whole fleet. A bound against `solar_pv_max_build` was rejected -- a fusion plant
+      does not compete for solar''s land or build programme, and the ceiling would move with an unrelated
+      dial.'
+    system: energy_balance
+    lhs: fusion_capacity
+    rhs: total_capacity_mw
+    relation: leq
+    parameters: &id012
+    - fusion_capacity
+    - total_capacity_mw
+    free_variables: *id012
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
+    latex: \mathrm{fusion}_{capacity} \leq \mathrm{total}_{capacity\_mw}
   fusion_cost_alias:
     name: Fusion capital cost is Fusion capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `fusion_cost`
@@ -32698,6 +32814,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{gas}_{eaf} = 1 - \mathrm{forced}_{outage\_rate\_gas} - \mathrm{planned}_{outage\_rate}
+  gas_new_build_bound:
+    name: Gas new build bound
+    description: 'New gas build capped at 3000 MW against the 1500 MW reference fleet. Routes as a post-solve
+      check for the same reason as coal: the capacity is endogenous. A bound on `capex_gas` was rejected
+      -- a capital-cost ceiling is not a build ceiling, and the two are separately dialled.'
+    system: energy_balance
+    lhs: gas_capacity
+    rhs: gas_new_build
+    relation: leq
+    parameters: &id013
+    - gas_capacity
+    - gas_new_build
+    free_variables: *id013
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory); the numeric ceiling
+      is a policy figure
+    latex: \mathrm{gas}_{capacity} \leq \mathrm{gas}_{new\_build}
   gas_price_per_mwh_definition:
     name: Gas price per MWh thermal
     description: 'Commodity gas price converted to a thermal basis. Dimensional check: USD/MMBtu times
@@ -32881,6 +33019,28 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{geothermal}_{effective\_capex\_usd\_per\_kw} = \frac{\mathrm{capex}_{geothermal}}{\mathrm{geothermal}_{drilling\_success}}
+  gravity_storage_capacity_bound:
+    name: Gravity storage capacity bound
+    description: Gravity storage inside the storage envelope. The classification pack's own proposed base
+      `gravity_storage_energy_mwh` (100 MW over 8 h) fits under 5000 MW, so the power bound is the one
+      the graph can state today. An MWh bound against that base was rejected because the base does not
+      exist and is another pack's to add.
+    system: energy_balance
+    lhs: gravity_storage_capacity
+    rhs: storage_headroom_mw
+    relation: leq
+    parameters: &id014
+    - gravity_storage_capacity
+    - storage_headroom_mw
+    free_variables: *id014
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{gravity}_{storage\_capacity} \leq \mathrm{storage}_{headroom\_mw}
   green_bond_bound:
     name: Green bond bound
     description: Green bonds are a subset of bond issuance -- the same tranche funded under a use-of-proceeds
@@ -32889,10 +33049,10 @@ equations:
     lhs: green_bond_share
     rhs: bond_share
     relation: leq
-    parameters: &id008
+    parameters: &id015
     - bond_share
     - green_bond_share
-    free_variables: *id008
+    free_variables: *id015
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -33200,6 +33360,29 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{hydro}_{inflow\_vintage\_offset\_years} = \mathrm{hydro}_{inflow\_year} - \mathrm{solar}_{cf\_year}
+  hydro_new_build_bound:
+    name: Hydro new build bound
+    description: 'New hydro capped at 3000 MW against the 1500 MW reference fleet. Routes as a post-solve
+      check: the capacity is endogenous. A bound against the transboundary water ceiling was rejected
+      -- a water allocation is not a capacity ceiling, and conflating them would make one dial move two
+      bounds.'
+    system: energy_balance
+    lhs: hydro_capacity
+    rhs: hydro_new_build
+    relation: leq
+    parameters: &id016
+    - hydro_capacity
+    - hydro_new_build
+    free_variables: *id016
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory); the numeric ceiling
+      is a policy figure
+    latex: \mathrm{hydro}_{capacity} \leq \mathrm{hydro}_{new\_build}
   hydrogen_export_port_definition:
     name: The export terminal's throughput
     description: 'The port''s average throughput in megawatts: the annual hydrogen energy the terminal
@@ -33245,6 +33428,27 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{hydrogen}_{export\_revenue\_usd\_per\_year} = \mathrm{hydrogen}_{export\_price} \mathrm{hydrogen}_{export\_volume}
+  hydrogen_fuel_cell_capacity_bound:
+    name: Hydrogen fuel cell capacity bound
+    description: 'Fuel cells are generation and bounded by the fleet nameplate. A bound against the storage
+      headroom was rejected: a fuel cell is a generator, not a store, and putting it in the storage envelope
+      would let it exceed the generation ceiling.'
+    system: energy_balance
+    lhs: hydrogen_fuel_cell_capacity
+    rhs: total_capacity_mw
+    relation: leq
+    parameters: &id017
+    - hydrogen_fuel_cell_capacity
+    - total_capacity_mw
+    free_variables: *id017
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
+    latex: \mathrm{hydrogen}_{fuel\_cell\_capacity} \leq \mathrm{total}_{capacity\_mw}
   hydrogen_fuel_cell_cost_alias:
     name: Hydrogen fuel cell capital cost is Hydrogen fuel cell capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `hydrogen_fuel_cell_cost`
@@ -33372,10 +33576,10 @@ equations:
     lhs: ifc_performance_standards
     rhs: debt_financing_share
     relation: leq
-    parameters: &id009
+    parameters: &id018
     - debt_financing_share
     - ifc_performance_standards
-    free_variables: *id009
+    free_variables: *id018
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -33651,10 +33855,10 @@ equations:
     lhs: inertia_requirement
     rhs: system_inertia_mws
     relation: leq
-    parameters: &id010
+    parameters: &id019
     - inertia_requirement
     - system_inertia_mws
-    free_variables: *id010
+    free_variables: *id019
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -34080,10 +34284,10 @@ equations:
     lhs: largest_loss_mw
     rhs: frequency_response_requirement
     relation: leq
-    parameters: &id011
+    parameters: &id020
     - frequency_response_requirement
     - largest_loss_mw
-    free_variables: *id011
+    free_variables: *id020
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -34814,10 +35018,10 @@ equations:
     lhs: llcr_estimate
     rhs: loan_life_coverage_ratio
     relation: geq
-    parameters: &id012
+    parameters: &id021
     - llcr_estimate
     - loan_life_coverage_ratio
-    free_variables: *id012
+    free_variables: *id021
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -35184,6 +35388,68 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  marine_otec_capacity_bound:
+    name: Marine otec capacity bound
+    description: OTEC is generation, bounded by the fleet nameplate. The technology registry knows the
+      carrier (`otec`), so the node is a build rather than a resource. Fleet-balance membership was rejected
+      as the tautology it is at a 15000 MW ceiling.
+    system: energy_balance
+    lhs: marine_otec_capacity
+    rhs: total_capacity_mw
+    relation: leq
+    parameters: &id022
+    - marine_otec_capacity
+    - total_capacity_mw
+    free_variables: *id022
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
+    latex: \mathrm{marine}_{otec\_capacity} \leq \mathrm{total}_{capacity\_mw}
+  marine_tidal_capacity_bound:
+    name: Marine tidal capacity bound
+    description: 'Tidal stream is generation, bounded by the fleet nameplate. A bound against `marine_wave_capacity`
+      was rejected: two resources with separate ceilings, and a shared one would make a wave scenario
+      cap tidal.'
+    system: energy_balance
+    lhs: marine_tidal_capacity
+    rhs: total_capacity_mw
+    relation: leq
+    parameters: &id023
+    - marine_tidal_capacity
+    - total_capacity_mw
+    free_variables: *id023
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
+    latex: \mathrm{marine}_{tidal\_capacity} \leq \mathrm{total}_{capacity\_mw}
+  marine_wave_capacity_bound:
+    name: Marine wave capacity bound
+    description: Wave is generation, bounded by the fleet nameplate. Fleet-balance membership was rejected
+      as vacuous at a 15000 MW ceiling.
+    system: energy_balance
+    lhs: marine_wave_capacity
+    rhs: total_capacity_mw
+    relation: leq
+    parameters: &id024
+    - marine_wave_capacity
+    - total_capacity_mw
+    free_variables: *id024
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
+    latex: \mathrm{marine}_{wave\_capacity} \leq \mathrm{total}_{capacity\_mw}
   market_concentration_definition:
     name: The market's Herfindahl-Hirschman index
     description: The HHI over the fleet's own fuel shares, on the 0-10000 scale the competition authorities
@@ -35399,11 +35665,11 @@ equations:
     lhs: non_spinning_reserve_requirement
     rhs: reserve_margin_min * peak_demand_mw
     relation: leq
-    parameters: &id013
+    parameters: &id025
     - non_spinning_reserve_requirement
     - peak_demand_mw
     - reserve_margin_min
-    free_variables: *id013
+    free_variables: *id025
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -35412,6 +35678,30 @@ equations:
     priority: P2
     reference: Stoft 2002, Power System Economics, ch. 5
     latex: \mathrm{non}_{spinning\_reserve\_requirement} \leq \mathrm{reserve}_{margin\_min} \mathrm{peak}_{demand\_mw}
+  nuclear_new_build_bound:
+    name: Nuclear new build bound
+    description: 'New nuclear capped at 5000 MW -- a single large unit or two SMR modules -- against a
+      0 MW reference fleet, so the bound holds vacuously today and bites the moment a scenario builds
+      nuclear. Routes as a post-solve check: the capacity is endogenous. A bound at 20000, the capacity''s
+      own ceiling, was rejected as vacuous: a ceiling equal to the bounded quantity''s maximum cannot
+      fail.'
+    system: energy_balance
+    lhs: nuclear_capacity
+    rhs: nuclear_new_build
+    relation: leq
+    parameters: &id026
+    - nuclear_capacity
+    - nuclear_new_build
+    free_variables: *id026
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory); the numeric ceiling
+      is a policy figure
+    latex: \mathrm{nuclear}_{capacity} \leq \mathrm{nuclear}_{new\_build}
   occupational_health_safety_spend_definition:
     name: Occupational health and safety spend
     description: 'Occupational health-and-safety spend: the share times allowed revenue. The workforce-facing
@@ -36005,10 +36295,10 @@ equations:
     lhs: hydrogen_vehicle_share + electric_vehicle_adoption
     rhs: '1.0'
     relation: leq
-    parameters: &id014
+    parameters: &id027
     - electric_vehicle_adoption
     - hydrogen_vehicle_share
-    free_variables: *id014
+    free_variables: *id027
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -36962,10 +37252,10 @@ equations:
     lhs: resettlement_population_share
     rhs: resettlement_requirements
     relation: leq
-    parameters: &id015
+    parameters: &id028
     - resettlement_population_share
     - resettlement_requirements
-    free_variables: *id015
+    free_variables: *id028
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -37028,10 +37318,10 @@ equations:
     lhs: retraining_duration
     rhs: construction_period
     relation: leq
-    parameters: &id016
+    parameters: &id029
     - construction_period
     - retraining_duration
-    free_variables: *id016
+    free_variables: *id029
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -37190,10 +37480,10 @@ equations:
     lhs: system_saidi_hours_per_year
     rhs: grid_reliability_target
     relation: leq
-    parameters: &id017
+    parameters: &id030
     - grid_reliability_target
     - system_saidi_hours_per_year
-    free_variables: *id017
+    free_variables: *id030
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -37233,10 +37523,10 @@ equations:
     lhs: system_saifi_events_per_year
     rhs: service_quality_standards
     relation: leq
-    parameters: &id018
+    parameters: &id031
     - service_quality_standards
     - system_saifi_events_per_year
-    free_variables: *id018
+    free_variables: *id031
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -37513,6 +37803,27 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{skills}_{requirements\_jobs} = \mathrm{skills}_{requirements} \mathrm{direct}_{jobs}
+  small_modular_reactor_capacity_bound:
+    name: Small modular reactor capacity bound
+    description: 'SMR nameplate is bounded by the fleet. A bound against `nuclear_new_build` was rejected:
+      SMRs are a technology that `nuclear_new_build` *admits*, not a subset of the nuclear build, and
+      the two ceilings are independent dials.'
+    system: energy_balance
+    lhs: small_modular_reactor_capacity
+    rhs: total_capacity_mw
+    relation: leq
+    parameters: &id032
+    - small_modular_reactor_capacity
+    - total_capacity_mw
+    free_variables: *id032
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
+    latex: \mathrm{small}_{modular\_reactor\_capacity} \leq \mathrm{total}_{capacity\_mw}
   small_modular_reactor_cost_alias:
     name: SMR capital cost is Small modular reactor capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `small_modular_reactor_cost`
@@ -37696,6 +38007,79 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{solar}_{pv\_cost} = \mathrm{capex}_{solar\_pv}
+  solar_pv_land_constraint_bound:
+    name: Solar pv land constraint bound
+    description: 'The land ceiling expressed as the PV nameplate the available land supports: 10000 MW
+      at the reference build under a 20000 MW ceiling. The node is a *converted* land ceiling and its
+      prose must say so -- a hectares form was rejected because the graph carries no MW-per-hectare intensity,
+      so no equation could turn land into a build limit. Routes as a post-solve check: the PV capacity
+      is endogenous.'
+    system: energy_balance
+    lhs: solar_pv_capacity
+    rhs: solar_pv_land_constraint
+    relation: leq
+    parameters: &id033
+    - solar_pv_capacity
+    - solar_pv_land_constraint
+    free_variables: *id033
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: land and resource-availability
+      limits); the conversion intensity is a policy figure'
+    latex: \mathrm{solar}_{pv\_capacity} \leq \mathrm{solar}_{pv\_land\_constraint}
+  solar_pv_max_build_bound:
+    name: Solar pv max build bound
+    description: 'An annual build ceiling stated against the PV *stock*, because the graph carries no
+      annual-increment node. The batch records the mismatch rather than hiding it: as written the node
+      caps the stock, not the annual build its name claims, and a scenario that raises the cap raises
+      the permitted total. Renaming the node or adding `solar_pv_annual_build_mw` would be a base, not
+      a coupling, and is left to a pack that owns it. Routes as a post-solve check.'
+    system: energy_balance
+    lhs: solar_pv_capacity
+    rhs: solar_pv_max_build
+    relation: leq
+    parameters: &id034
+    - solar_pv_capacity
+    - solar_pv_max_build
+    free_variables: *id034
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory); the numeric ceiling
+      is a policy figure
+    latex: \mathrm{solar}_{pv\_capacity} \leq \mathrm{solar}_{pv\_max\_build}
+  solar_thermal_capacity_bound:
+    name: Solar thermal capacity bound
+    description: 'Solar thermal is the CSP build under the catalog''s second spelling, so its ceiling
+      is the CSP nameplate itself: 0 MW against 0 MW at defaults, which holds at the boundary and fails
+      the moment a scenario sets solar thermal above the CSP fleet. An equality alias to `csp_capacity`
+      was considered and rejected -- it would make the node derived from an endogenous build, and the
+      two ids are a technology label and a capacity, not two spellings of one number. The bound leaves
+      the node free and still refuses the inconsistent scenario.'
+    system: energy_balance
+    lhs: solar_thermal_capacity
+    rhs: csp_capacity
+    relation: leq
+    parameters: &id035
+    - csp_capacity
+    - solar_thermal_capacity
+    free_variables: *id035
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: IEA/NEA, Projected Costs of Generating Electricity (2020) -- CSP capital costs and the
+      solar-thermal technology class
+    latex: \mathrm{solar}_{thermal\_capacity} \leq \mathrm{csp}_{capacity}
   solvency_capital_definition:
     name: The solvency capital
     description: 'Solvency capital: the tail loss net of expected loss. FRM section 6.3 states it exactly
@@ -37817,6 +38201,29 @@ equations:
     reference: null
     latex: \mathrm{spare}_{parts\_deferred\_hours\_per\_year} = \left(1 - \mathrm{spare}_{parts\_availability}\right)
       \mathrm{planned}_{maintenance\_hours\_per\_year}
+  spare_parts_lead_time_bound:
+    name: Spare parts lead time bound
+    description: 'A spare part must arrive within the unit''s mean time between failures, or the expected
+      wait for it dominates availability: 720 h against 50000 h at defaults, so the constraint holds by
+      a factor of seventy and bites only on a deliberately degraded maintenance regime. The classification
+      pack''s form `365 / maintenance_frequency` was rejected on units -- 365 days divided by 2 events/year
+      is day-year/event, which the walker reads as `year / events`, and the two sides do not share a dimension.'
+    system: reliability
+    lhs: spare_parts_lead_time
+    rhs: mean_time_between_failures
+    relation: leq
+    parameters: &id036
+    - mean_time_between_failures
+    - spare_parts_lead_time
+    free_variables: *id036
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{spare}_{parts\_lead\_time} \leq \mathrm{mean}_{time\_between\_failures}
   spinning_reserve_definition:
     name: The spinning reserve requirement
     description: 'Spinning reserve in MW: the grid code''s share of peak demand. This is the catalog''s
@@ -37940,10 +38347,10 @@ equations:
     lhs: steel_scrap_eaf_share + steel_h2_dri_share
     rhs: '1.0'
     relation: leq
-    parameters: &id019
+    parameters: &id037
     - steel_h2_dri_share
     - steel_scrap_eaf_share
-    free_variables: *id019
+    free_variables: *id037
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -37952,6 +38359,31 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{steel}_{scrap\_eaf\_share} + \mathrm{steel}_{h2\_dri\_share} \leq 1
+  storage_capacity_mw_bound:
+    name: Storage capacity mw bound
+    description: 'The storage build is bounded by generation plus the storage envelope: 800 MW under 15000
+      MW at defaults. Routes as a post-solve check -- the left-hand side is itself endogenous. An equality
+      to `battery_capacity + phs_capacity` was rejected: it would make an endogenous node derived, and
+      it disagrees with the shipped 800 (300 battery + 200 PHS = 500). The 300 MW difference is the node
+      duplicating two builds it is not tied to, and this bound records it rather than inventing a third
+      equation to explain it.'
+    system: energy_balance
+    lhs: storage_capacity_mw
+    rhs: total_capacity_mw + storage_headroom_mw
+    relation: leq
+    parameters: &id038
+    - storage_capacity_mw
+    - storage_headroom_mw
+    - total_capacity_mw
+    free_variables: *id038
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{storage}_{capacity\_mw} \leq \mathrm{total}_{capacity\_mw} + \mathrm{storage}_{headroom\_mw}
   strategic_reserves_definition:
     name: Strategic reserves
     description: 'The strategic stock held, as a volume of energy: the days of cover the policy declares,
@@ -38220,6 +38652,31 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{thermal}_{phs\_duration\_ratio} = \frac{\mathrm{thermal}_{storage\_duration}}{\mathrm{phs}_{duration}}
+  thermal_storage_capacity_bound:
+    name: Thermal storage capacity bound
+    description: 'The thermal store''s energy is its share of the storage envelope times the graph''s
+      own thermal-store duration: 0 MWh under 40000 MWh at defaults. Routes as a post-solve check. A bound
+      against the headroom alone was rejected on units (MWh against MW), and one on `battery_duration`
+      rejected as the wrong technology''s dial -- a thermal store sized on battery hours is a scenario
+      parameter leaking across technologies.'
+    system: energy_balance
+    lhs: thermal_storage_capacity
+    rhs: storage_headroom_mw * thermal_storage_duration
+    relation: leq
+    parameters: &id039
+    - storage_headroom_mw
+    - thermal_storage_capacity
+    - thermal_storage_duration
+    free_variables: *id039
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: IEA/NEA, Projected Costs of Generating Electricity (2020) -- thermal-storage duration and
+      cost
+    latex: \mathrm{thermal}_{storage\_capacity} \leq \mathrm{storage}_{headroom\_mw} \mathrm{thermal}_{storage\_duration}
   thin_capitalisation_utilisation_definition:
     name: Gearing against the ceiling
     description: 'The gearing expressed against the thin-capitalisation ceiling: debt to equity over the
@@ -38246,6 +38703,27 @@ equations:
     reference: OECD, Limiting Base Erosion Involving Interest Deductions and Other Financial Payments,
       Action 4 (2015)
     latex: \mathrm{thin}_{capitalisation\_utilisation} = \frac{\mathrm{debt}_{equity\_ratio}}{\mathrm{thin}_{capitalisation\_limit}}
+  tidal_range_capacity_bound:
+    name: Tidal range capacity bound
+    description: 'A tidal-range barrage is generation and bounded by the fleet nameplate. Distinct from
+      `marine_tidal_capacity`, which is tidal *stream*: a barrage impounds an estuary and a stream array
+      does not, and the two ceilings are independent.'
+    system: energy_balance
+    lhs: tidal_range_capacity
+    rhs: total_capacity_mw
+    relation: leq
+    parameters: &id040
+    - tidal_range_capacity
+    - total_capacity_mw
+    free_variables: *id040
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
+    latex: \mathrm{tidal}_{range\_capacity} \leq \mathrm{total}_{capacity\_mw}
   tidal_range_cost_alias:
     name: Tidal range capital cost is Tidal range capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `tidal_range_cost`
@@ -38404,6 +38882,30 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{transaction}_{cost\_usd\_per\_year} = \mathrm{transaction}_{costs} \mathrm{total}_{revenue\_usd\_per\_year}
+  transboundary_water_constraint_bound:
+    name: Transboundary water constraint bound
+    description: 'The basin''s allocation caps total water demand: 93.2e6 m3/year under a 200e6 ceiling
+      at defaults. Routes as a post-solve check because the demand is derived. The bound overlaps the
+      shipped `water_availability_bound`, which compares the availability *flow* to the same demand; the
+      two are kept distinct because they are different instruments -- one is a physical flow the basin
+      provides, the other an allocation a treaty or regulator grants -- and a scenario can be inside the
+      physical flow and outside the allocation. Stating them as one would hide which failed.'
+    system: water_energy
+    lhs: total_water_demand_m3
+    rhs: transboundary_water_constraint
+    relation: leq
+    parameters: &id041
+    - total_water_demand_m3
+    - transboundary_water_constraint
+    free_variables: *id041
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{total}_{water\_demand\_m3} \leq \mathrm{transboundary}_{water\_constraint}
   transmission_investment_definition:
     name: The transmission investment
     description: The transmission investment, with the terrain and tender multiplier applied. The shipped
@@ -38650,10 +39152,10 @@ equations:
     lhs: district_heating_share + heat_pump_adoption
     rhs: '1.0'
     relation: leq
-    parameters: &id020
+    parameters: &id042
     - district_heating_share
     - heat_pump_adoption
-    free_variables: *id020
+    free_variables: *id042
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -38692,10 +39194,10 @@ equations:
     lhs: v2g_adoption
     rhs: electric_vehicle_adoption
     relation: leq
-    parameters: &id021
+    parameters: &id043
     - electric_vehicle_adoption
     - v2g_adoption
-    free_variables: *id021
+    free_variables: *id043
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -39000,11 +39502,11 @@ equations:
     lhs: water_availability * water_availability_m3
     rhs: total_water_demand_m3
     relation: geq
-    parameters: &id022
+    parameters: &id044
     - total_water_demand_m3
     - water_availability
     - water_availability_m3
-    free_variables: *id022
+    free_variables: *id044
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -47671,72 +48173,6 @@ relationships:
   description: The availability multiplier scales the flow the demand is tested against.
   reference: null
   priority: P2
-- source: discount_rate
-  target: weighted_average_cost_of_capital
-  equation_id: wacc_alias
-  relationship: equality
-  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
-    computes.'
-- source: capex_usd_per_kw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: Gross fleet capital enters the base the allowed return is earned on.
-- source: total_capacity_mw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: The fleet's size sets the scale of the capital in the accounts.
-- source: accumulated_depreciation_fraction
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: What the books have written down between gross capital and the base.
-- source: regulatory_asset_base
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: equality
-  description: Straight-line write-down of the base over the regulatory asset life.
-- source: depreciation_life_by_asset
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: functional
-  description: A longer regulatory life spreads the base thinner over the years.
-- source: regulatory_depreciation
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: Depreciation is the first term of the revenue requirement.
-- source: regulatory_asset_base
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: The return is earned on the base, not on gross capital.
-- source: discount_rate
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: The return rate is the blend the financial block computes.
-- source: allowed_return_on_debt
-  target: cost_of_debt
-  equation_id: cost_of_debt_capped
-  relationship: constraint
-  description: The allowance binds the debt rate a scenario may carry.
-- source: allowed_return_on_equity
-  target: cost_of_equity
-  equation_id: cost_of_equity_capped
-  relationship: constraint
-  description: The allowance binds the equity return a valuation may assume.
-- source: regulated_tariff_usd_per_mwh
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: equality
-  description: The applied tariff is the recovery level in the absence of a cap.
-- source: revenue_cap
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: functional
-  description: The cap scales the recovery level; below 1 it withholds part of it.
 - source: capex_gas
   target: capex_gas_ccgt
   equation_id: capex_gas_ccgt_definition
@@ -48297,6 +48733,298 @@ relationships:
   description: Enters the amended identity.
   reference: null
   priority: P1
+- source: discount_rate
+  target: weighted_average_cost_of_capital
+  equation_id: wacc_alias
+  relationship: equality
+  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
+    computes.'
+- source: capex_usd_per_kw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: Gross fleet capital enters the base the allowed return is earned on.
+- source: total_capacity_mw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: The fleet's size sets the scale of the capital in the accounts.
+- source: accumulated_depreciation_fraction
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: What the books have written down between gross capital and the base.
+- source: regulatory_asset_base
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: equality
+  description: Straight-line write-down of the base over the regulatory asset life.
+- source: depreciation_life_by_asset
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: functional
+  description: A longer regulatory life spreads the base thinner over the years.
+- source: regulatory_depreciation
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: Depreciation is the first term of the revenue requirement.
+- source: regulatory_asset_base
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return is earned on the base, not on gross capital.
+- source: discount_rate
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return rate is the blend the financial block computes.
+- source: allowed_return_on_debt
+  target: cost_of_debt
+  equation_id: cost_of_debt_capped
+  relationship: constraint
+  description: The allowance binds the debt rate a scenario may carry.
+- source: allowed_return_on_equity
+  target: cost_of_equity
+  equation_id: cost_of_equity_capped
+  relationship: constraint
+  description: The allowance binds the equity return a valuation may assume.
+- source: regulated_tariff_usd_per_mwh
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: equality
+  description: The applied tariff is the recovery level in the absence of a cap.
+- source: revenue_cap
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: functional
+  description: The cap scales the recovery level; below 1 it withholds part of it.
+- source: carbon_price_escalated_usd_per_tco2
+  target: auction_price_cap
+  equation_id: auction_price_cap_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds auction_price_cap against carbon_price_escalated_usd_per_tco2; a plan can clear
+    the physics and fail this.
+  reference: EU ETS Directive 2023/959, Art. 21 (auction platform and price formation); the cap level
+    is a policy dial the regulation does not print
+  priority: P2
+- source: coal_new_build
+  target: coal_capacity
+  equation_id: coal_new_build_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds coal_capacity against coal_new_build; a plan can clear the physics and fail this.
+  reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity and resource-availability
+    limits); the numeric ceiling is a policy figure the review does not print'
+  priority: P2
+- source: gas_new_build
+  target: gas_capacity
+  equation_id: gas_new_build_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds gas_capacity against gas_new_build; a plan can clear the physics and fail this.
+  reference: Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory); the numeric ceiling
+    is a policy figure
+  priority: P2
+- source: hydro_new_build
+  target: hydro_capacity
+  equation_id: hydro_new_build_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds hydro_capacity against hydro_new_build; a plan can clear the physics and fail this.
+  reference: Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory); the numeric ceiling
+    is a policy figure
+  priority: P2
+- source: nuclear_new_build
+  target: nuclear_capacity
+  equation_id: nuclear_new_build_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds nuclear_capacity against nuclear_new_build; a plan can clear the physics and fail
+    this.
+  reference: Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory); the numeric ceiling
+    is a policy figure
+  priority: P2
+- source: solar_pv_land_constraint
+  target: solar_pv_capacity
+  equation_id: solar_pv_land_constraint_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds solar_pv_capacity against solar_pv_land_constraint; a plan can clear the physics
+    and fail this.
+  reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: land and resource-availability
+    limits); the conversion intensity is a policy figure'
+  priority: P2
+- source: solar_pv_max_build
+  target: solar_pv_capacity
+  equation_id: solar_pv_max_build_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds solar_pv_capacity against solar_pv_max_build; a plan can clear the physics and fail
+    this.
+  reference: Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory); the numeric ceiling
+    is a policy figure
+  priority: P2
+- source: csp_capacity
+  target: solar_thermal_capacity
+  equation_id: solar_thermal_capacity_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds solar_thermal_capacity against csp_capacity; a plan can clear the physics and fail
+    this.
+  reference: IEA/NEA, Projected Costs of Generating Electricity (2020) -- CSP capital costs and the solar-thermal
+    technology class
+  priority: P2
+- source: storage_headroom_mw
+  target: compressed_air_capacity
+  equation_id: compressed_air_capacity_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds compressed_air_capacity against storage_headroom_mw; a plan can clear the physics
+    and fail this.
+  reference: null
+  priority: P2
+- source: storage_headroom_mw
+  target: flywheel_capacity
+  equation_id: flywheel_capacity_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds flywheel_capacity against storage_headroom_mw; a plan can clear the physics and
+    fail this.
+  reference: null
+  priority: P2
+- source: storage_headroom_mw
+  target: gravity_storage_capacity
+  equation_id: gravity_storage_capacity_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds gravity_storage_capacity against storage_headroom_mw; a plan can clear the physics
+    and fail this.
+  reference: null
+  priority: P2
+- source: storage_headroom_mw
+  target: storage_capacity_mw
+  equation_id: storage_capacity_mw_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds storage_capacity_mw against total_capacity_mw + storage_headroom_mw (composite ceiling);
+    a plan can clear the physics and fail this.
+  reference: null
+  priority: P2
+- source: storage_headroom_mw
+  target: thermal_storage_capacity
+  equation_id: thermal_storage_capacity_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds thermal_storage_capacity against storage_headroom_mw; a plan can clear the physics
+    and fail this.
+  reference: IEA/NEA, Projected Costs of Generating Electricity (2020) -- thermal-storage duration and
+    cost
+  priority: P2
+- source: total_capacity_mw
+  target: fusion_capacity
+  equation_id: fusion_capacity_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds fusion_capacity against total_capacity_mw; a plan can clear the physics and fail
+    this.
+  reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
+  priority: P2
+- source: total_capacity_mw
+  target: hydrogen_fuel_cell_capacity
+  equation_id: hydrogen_fuel_cell_capacity_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds hydrogen_fuel_cell_capacity against total_capacity_mw; a plan can clear the physics
+    and fail this.
+  reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
+  priority: P2
+- source: total_capacity_mw
+  target: marine_otec_capacity
+  equation_id: marine_otec_capacity_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds marine_otec_capacity against total_capacity_mw; a plan can clear the physics and
+    fail this.
+  reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
+  priority: P2
+- source: total_capacity_mw
+  target: marine_tidal_capacity
+  equation_id: marine_tidal_capacity_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds marine_tidal_capacity against total_capacity_mw; a plan can clear the physics and
+    fail this.
+  reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
+  priority: P2
+- source: total_capacity_mw
+  target: marine_wave_capacity
+  equation_id: marine_wave_capacity_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds marine_wave_capacity against total_capacity_mw; a plan can clear the physics and
+    fail this.
+  reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
+  priority: P2
+- source: total_capacity_mw
+  target: tidal_range_capacity
+  equation_id: tidal_range_capacity_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds tidal_range_capacity against total_capacity_mw; a plan can clear the physics and
+    fail this.
+  reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
+  priority: P2
+- source: total_capacity_mw
+  target: small_modular_reactor_capacity
+  equation_id: small_modular_reactor_capacity_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds small_modular_reactor_capacity against total_capacity_mw; a plan can clear the physics
+    and fail this.
+  reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
+  priority: P2
+- source: mean_time_between_failures
+  target: spare_parts_lead_time
+  equation_id: spare_parts_lead_time_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds spare_parts_lead_time against mean_time_between_failures; a plan can clear the physics
+    and fail this.
+  reference: null
+  priority: P2
+- source: transboundary_water_constraint
+  target: total_water_demand_m3
+  equation_id: transboundary_water_constraint_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds total_water_demand_m3 against transboundary_water_constraint; a plan can clear the
+    physics and fail this.
+  reference: null
+  priority: P2
 cross_validation:
 - id: carbon_price_budget_alignment
   condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0

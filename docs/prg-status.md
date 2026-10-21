@@ -2519,6 +2519,125 @@ with a stochastic relation join the derived-stochastic count (42 to 48), and
 the reach moves 150 to 159. Dimensional walk: 466 consistent, 11 inconsistent,
 0 undecidable -- the same eleven that predate the coupling build, none added.
 
+**Batch 32 -- the THRESHOLD class.** Twenty-two bounds over twenty-two nodes,
+from the twenty-five THRESHOLD rows in
+`docs/research/coupling-packs/threshold-product-remainder.md`. Batch 31 took
+the PRODUCT class and the retypes both classes needed; this batch takes the
+inequalities.
+
+*The class is structurally different from every batch before it.* A product
+equation *determines* a node: the node becomes derived, loses its default and
+enters `computed()`. A bound determines nothing. It says the node must sit on
+one side of a quantity that already exists, and the node keeps its range and
+default. `_a_derivation_has_exactly_one_target` enforces that -- a non-`eq`
+relation carrying `determined_variables` is refused -- so every row ships
+`determined_variables: ()`. The register consequence is exact and worth
+stating: the batch moves the edge register and the constraint count, and
+`computed()` stays at 440. A THRESHOLD node couples by being *named*; it does
+not become a function of anything.
+
+*Fourteen route `bound` and eight route `unbound`, and the prose says which.*
+An `unbound` row has an endogenous left-hand side -- `coal_capacity`,
+`gas_capacity`, `hydro_capacity`, `nuclear_capacity`, `solar_pv_capacity`
+(twice, for the land and build ceilings), `storage_capacity_mw` and
+`thermal_storage_capacity` -- so it is a post-solve feasibility check on the
+solve's answer, not an LP constraint on the programme. Both are worth shipping
+and neither should be counted as a restriction on the optimiser, so each row's
+description says which it is. The split is read off the graph rather than the
+pack: the pack states a routing for eleven of its twenty-five rows, and the
+classification here follows the left-hand side's role, which is the property
+that actually decides whether the optimiser can see the constraint.
+
+*Three rows do not ship.* `remedy_periods` is deferred pending a
+`max_remedy_period_days` base: its declared range is already [1, 365], so any
+ceiling at 365 restates the range and can never fail, and a bound that cannot
+fail is not a bound. `hydrogen_storage_capacity` is already coupled by the
+shipped storage-capex equation; its MWh ceiling is deferred pending a
+`hydrogen_storage_duration`, because the graph carries no hydrogen duration
+and borrowing thermal storage's 8 h would make an unrelated dial move the
+bound. `solvency_capital_ratio` is deferred for a third reason, and it is the
+one worth stating: the pack's proposed floor is `>= 1.0`, a comparison against
+a literal. It is *not* a tautology -- the node's range is [0.8, 3.0], so a
+shipped 0.9 would violate a 1.0 floor -- but a literal right-hand side names
+no binder node, and the graph's bound shape runs binder -> bounded. Shipping
+it would put an equation in the document that no edge carries, which is the
+register's own "declared is not produced" defect: the node would leave
+`uncoupled()` by being named while the edge register stayed silent about what
+couples it. The real fix is a `required_solvency_capital_usd` base the ratio
+divides by, and that is another pack's to add.
+
+*Two findings the pack raised and the batch records rather than fixes.*
+`solar_pv_max_build` caps the PV *stock*, not the annual build its name
+claims, because the graph carries no annual-increment node; the description
+says so, and renaming the node or adding `solar_pv_annual_build_mw` is a base
+rather than a coupling. `storage_capacity_mw` duplicates two builds it is not
+tied to -- 800 MW against battery 300 plus PHS 200 -- and the bound states the
+disagreement instead of inventing a third equation to explain it.
+
+*The ceilings that would have been tautologies, and are not shipped.* Three
+of the pack's alternatives were rejected on the register's own rule that a
+constraint admitting every admissible value constrains nothing.
+`fleet_build_balance` membership is 15,000 MW of generation plus headroom,
+which admits every value of a node whose range tops at 1e6.
+`solar_pv_max_build` against a 20,000 MW ceiling equal to the capacity's own
+maximum cannot fail. `remedy_periods <= 365` restates the declared range. Each
+rejection is in the shipped equation's description, so a reader can see what
+was considered and why it was not used.
+
+*The composite ceilings carry one edge, not one per symbol.*
+`storage_capacity_mw <= total_capacity_mw + storage_headroom_mw` and
+`thermal_storage_capacity <= storage_headroom_mw * thermal_storage_duration`
+bound against expressions, and the graph's edge shape needs one binder node.
+The batch takes the expression's first symbol as the edge source and says
+"(composite ceiling)" in the description. That is a deliberate narrowing of
+the edge's meaning, not an oversight: the alternative is an edge per symbol,
+which is how batch 30 shipped forty-nine one-letter edges by iterating a
+string. The guard is an assertion that the first symbol is a node and differs
+from the bounded one, so a composite that collapsed to a self-loop fails at
+emit rather than at load.
+
+*Verified at defaults.* All forty-seven bounds in the document hold; none is
+violated. `auction_price_cap` 200 against an escalated carbon price of 81.44;
+`coal_new_build` 5000 against a 3000 MW fleet; `gas_new_build` 3000 against
+1500; `hydro_new_build` 3000 against 1500; `nuclear_new_build` 5000 against 0;
+`solar_pv_land_constraint` and `solar_pv_max_build` 20000 against a 10,000 MW
+PV build; `solar_thermal_capacity` 0 against 0 (holds at the boundary, fails
+the moment a scenario sets it above the CSP fleet); `storage_headroom_mw`
+5000 against four novel storage technologies at 0; `total_capacity_mw` 10000
+against six generators at 0; `spare_parts_lead_time` 720 h against a 50,000 h
+MTBF; `transboundary_water_constraint` 200e6 m3/year against a 93.2e6 demand;
+`storage_capacity_mw` 800 against 15,000; `thermal_storage_capacity` 0 against
+40,000 MWh.
+
+*Register movement.* Parameters 1,338 unchanged -- a bound adds no node.
+Equations 477 to 499. Edges 1,011 to 1,033: twenty-two constraint edges, one
+per bound. Uncoupled 335 to 313, and the dead register falls 318 to 298: the
+twenty-two bounds couple twenty-two nodes, but only twenty of them were dead
+knobs, because `storage_capacity_mw` and `thermal_storage_capacity` are
+endogenous and were never in that register. That is also why the endogenous
+witness in the summary test had to move: `storage_capacity_mw` was the node
+proving "not every uncoupled node is free", and the bound coupled it, leaving
+`firm_build_fleet_mw` as the one endogenous member. The strength register
+counts equations and moves 474 to 496 hard, one informational and two soft
+unchanged. The citation register moves 199 to 215: sixteen of the twenty-two
+bounds cite a work -- thirteen capacity ceilings to Oree et al. (2017), the
+carbon auction to EU ETS Directive 2023/959, the CSP ceiling and the thermal
+store to IEA/NEA EGC -- and six carry None because each is a definitional
+relation between two quantities the graph already carries. `computed()` stays
+440, the audit partition stays 164 checked and 276 skipped, the uncertainty
+register stays at 75 inputs, 48 derived-stochastic and 159 reach. Dimensional
+walk: 488 consistent, the same 11 inconsistent, 0 undecidable -- the eleven
+that predate the coupling build, none added by the bounds.
+
+*The bound that was not a tautology and still did not ship.* The summary
+test's own docstring once described `free == len(uncoupled()) - 1` as holding
+"by coincidence" on the shipped graph, because exactly one endogenous node
+was uncoupled there. Batch 32 is the change that ends the coincidence for
+good: bounding the storage node made the witness a different node rather than
+making the property false, and the test now names `firm_build_fleet_mw`
+instead of counting. A count would have gone on passing while the property it
+stood for quietly emptied out.
+
 ## Evaluation of the design docs against the code (2026-10-17)
 
 **`docs/how_prg_works.md` (read-only; a teaching narrative, not read as spec).**
