@@ -1244,20 +1244,32 @@ parameters:
     source: docs/params.md
   auction_price_cap:
     name: Auction price cap
-    description: Auction price ceiling
+    description: 'The auction''s price ceiling, in the carbon market''s own unit. Retyped from the catalog
+      placeholder (no unit, range (0, 1e6), default 500000) to the unit the auction clears in: a cap on
+      an allowance price is a price. The 2,000 USD/tonne ceiling is `carbon_price_escalated_usd_per_tco2`''s
+      own range, so a cap below the escalated price is expressible and a cap at the top of the band is
+      the no-cap case. The default 200 sits above the 81.44 USD/tonne the price reaches at defaults, which
+      is what a cap must do on day one.'
     category: Policy
+    subcategory: null
     type: float
+    unit: USD/tonne
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 2000.0
+    default: 200.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
+    - Planners
     - Regulators
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   auction_volume:
     name: Auction volume
     description: Every allowance is auctioned, because the graph carries no free-allocation share and
@@ -1294,6 +1306,26 @@ parameters:
     users:
     - Regulators
     - Planners
+  available_land_hectares:
+    name: Available land hectares
+    description: 'The share of the project''s land take that is technically and legally available for
+      construction: the availability fraction times the take. `land_area_hectares` describes itself as
+      the project''s own take, so the two nodes agree on the base and the earlier reading of this share
+      as a fraction of a separate *study area* was the mistake. 0.5 x 5,000 ha is 2,500 ha.'
+    category: Land Use & Community
+    type: float
+    unit: hectare
+    range:
+    - 0.0
+    - 500000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   aviation_fuel_demand:
     name: Aviation fuel demand
     description: 'Aviation fuel loaded in the year, on a lower-heating-value energy basis. Retyped from
@@ -2691,21 +2723,22 @@ parameters:
     deprecated_by: null
   capex_gas_ccgt:
     name: Gas CCGT capital cost
-    description: Overnight installed cost of combined-cycle gas turbine. Range spans single-shaft at the
-      low end to multi-shaft with district heating at the high end.
-    category: Cost
+    description: 'The combined-cycle gas turbine''s capital cost. The catalog carries the CCGT cost twice:
+      `capex_gas` is the 1,100 USD/kW CCGT number and this node is the same figure under a technology-specific
+      id. The alias keeps one spelling and makes the duplicate a derived node rather than a second dial
+      that could disagree.'
+    category: Technology
     subcategory: null
     type: float
     unit: USD/kW
     range:
-    - 500.0
-    - 2000.0
-    default: 1100.0
+    - 100.0
+    - 15000.0
     initial: null
-    role: free
+    role: derived
     determinism: fixed
     categories: []
-    source: IEA, Projected Costs of Generating Electricity 2020
+    source: The product remainder (batch 31)
     source_url: null
     users:
     - Planners
@@ -4116,6 +4149,27 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  cat_bond_coupon_cost_usd:
+    name: Cat bond coupon cost usd
+    description: 'The coupon a catastrophe bond pays per year: its spread over the risk-free rate, applied
+      to the debt tranche of the asset value. 800 bp on 70% of 1,200 USD/kW over 10 GW is 672 million
+      USD a year. The `0.0001` is the basis-point-to-fraction conversion, which is why the walker reads
+      the spread as a dimensionless multiplier over the currency the rest of the product carries. Determinism
+      is stochastic because the spread is.'
+    category: Insurance & Catastrophe
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 1000000000000.0
+    role: derived
+    determinism: stochastic
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   cat_bond_parameters:
     name: Cat bond parameters
     description: Cat bonds
@@ -4134,13 +4188,14 @@ parameters:
     source: docs/params.md
   cat_bond_spread:
     name: Cat bond spread
-    description: The coupon a catastrophe bond pays above the risk-free rate, in basis points. Range spans
-      the best-rated tranches at the low end to the riskiest at the high end. The unit is basis points;
-      100 bp is 1 percent.
+    description: 'The coupon a catastrophe bond pays over the risk-free rate, in basis points per annum.
+      Retyped from the bare `basis_points` to a rate: a spread is quoted per year, and the shipped unit
+      left the coupon equation''s two sides differing by a factor of time. 800 bp is 8% over the risk-free
+      rate, which is the order a cat-bond tranche pays.'
     category: Insurance & Catastrophe
     subcategory: null
     type: float
-    unit: basis_points
+    unit: basis_points/year
     range:
     - 200.0
     - 2500.0
@@ -4149,11 +4204,12 @@ parameters:
     role: free
     determinism: stochastic
     categories: []
-    source: Artemis Cat Bond Market data
+    source: The product remainder (batch 31)
     source_url: null
     users:
-    - Insurance
-    priority: P3
+    - Planners
+    - Regulators
+    priority: P1
     status: to_build
     deprecated_by: null
   catastrophe_modelling:
@@ -4853,20 +4909,31 @@ parameters:
     deprecated_by: null
   coal_new_build:
     name: Coal new build
-    description: New coal capacity allowed
+    description: New coal build allowed by policy, in megawatts. Retyped from the placeholder to `coal_capacity`'s
+      own unit and its technical ceiling of 200,000 MW, so a policy figure and the build it governs are
+      comparable. The 5,000 MW default sits above the 3,000 MW reference fleet -- a ceiling a plan can
+      reach and a 6,000 MW scenario can breach, which a ceiling equal to the build's own maximum could
+      not.
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 200000.0
+    default: 5000.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P1
-    status: existing
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   coal_price:
     name: Coal price
     description: Free-on-board thermal coal price. The graph's delivered fuel cost is a separate parameter;
@@ -5577,20 +5644,29 @@ parameters:
     deprecated_by: null
   compressed_air_capacity:
     name: Compressed air capacity
-    description: Compressed air storage
+    description: Compressed-air energy storage nameplate, in megawatts. Retyped from the placeholder to
+      a capacity and defaulted to zero, because the technology is unbuilt at the reference scenario and
+      a 500,000 MW placeholder default is not a plant.
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: physical
-    priority: P3
-    status: to_build
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   compressed_air_cost:
     name: CAES capital cost
     description: CAES capital cost -- one of two ids for the quantity `capex_caes` carries; corrected
@@ -6439,6 +6515,26 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  crew_shortfall_hours_per_year:
+    name: Crew shortfall hours per year
+    description: 'Planned maintenance hours lost to crew unavailability: the unavailable share times the
+      planned hours. 0.15 x 96 h is 14.4 h/year. The shipped graph carries the planned hours and not the
+      shortfall, so this is the quantity no node held; the available-hours spelling would restate a number
+      the graph already has.'
+    category: Operational
+    type: float
+    unit: hours/year
+    range:
+    - 0.0
+    - 8760.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   crf:
     name: Capital recovery factor
     description: The annuity factor that turns capex into an annual charge.
@@ -6961,21 +7057,28 @@ parameters:
     deprecated_by: null
   csp_storage_hours:
     name: Csp storage hours
-    description: CSP thermal storage
-    category: Supply
+    description: The hours a CSP plant's thermal store discharges at rated output. A CSP store is a thermal
+      store, so this is the graph's own `thermal_storage_duration` under the catalog's second id. The
+      shipped 24 h default is three times the graph's 8 h; the alias resolves the disagreement in favour
+      of the graph's own number rather than carrying two dials for one physical quantity.
+    category: Storage
+    subcategory: null
     type: float
     unit: hours
     range:
     - 0.0
-    - 100.0
-    default: 24.0
-    role: free
+    - 72.0
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
     - Developers
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   cultural_heritage_impact:
     name: Cultural heritage impact
     description: 'The cultural heritage impact, under the catalog''s second id: the heritage impact score
@@ -7022,6 +7125,26 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  cultural_heritage_sites:
+    name: Cultural heritage sites
+    description: 'Expected count of cultural-heritage sites inside the project footprint: the measured
+      density per 100 km2 times the land take converted to the density''s own denominator, built exactly
+      as the archaeological and sacred counts are. 2.0 per 100 km2 over 5,000 ha is 1.0 site. The 2,500
+      ceiling is the 50 per 100 km2 top of the density band over a 500,000 ha take.'
+    category: Environmental
+    type: float
+    unit: sites
+    range:
+    - 0.0
+    - 2500.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   cultural_heritage_sites_density:
     name: Cultural heritage sites density
     description: Number of documented cultural heritage sites per hundred square kilometres in the study
@@ -8109,20 +8232,28 @@ parameters:
     - Financial analysts
   demand_response_capacity:
     name: Demand response capacity
-    description: Demand response capacity
-    category: Outage
+    description: 'Enrolled demand-response capacity: the interruptible load the graph already derives
+      from the interruptible share and peak demand. 4,250 MW at defaults. The alternative -- a product
+      against `peak_demand_mw` on a new potential share -- computes the same number from the same peak
+      demand, which is `interruptible_load_mw_definition` under another name.'
+    category: Demand-Side
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 100000.0
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   demand_response_cost:
     name: Demand response cost
     description: 'The demand-response programme''s capacity payment per kilowatt of enrolled capacity,
@@ -8150,20 +8281,27 @@ parameters:
     deprecated_by: null
   demand_response_potential:
     name: Demand response potential
-    description: Share of demand that is flexible
-    category: Demand
+    description: The flexible share of demand a demand-response programme can enrol. The graph already
+      states the share as `interruptible_load_share` (0.5), and a second base at the classification pack's
+      0.15 would let two dials disagree about one physical quantity.
+    category: Demand-Side
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 1.0
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   demand_response_programme_cost_usd_per_year:
     name: Demand response programme cost usd per year
     description: 'demand response programme cost usd per year: the coupling''s derived quantity, so a
@@ -8757,21 +8895,51 @@ parameters:
     - Planners
   distribution_loss_factor:
     name: Distribution loss factor
-    description: Distribution losses
+    description: 'The share of delivered energy lost in the secondary distribution network. Narrowed from
+      [0, 1] to [0, 0.2]: a loss share above 20% is not a distribution network but a fault. The default
+      moves from 0.5 to 0.06 in the same edit, because 0.5 is not a loss rate -- at the shipped 46.54
+      TWh demand it loses 23.27 TWh, so half the energy sold disappears in the secondary network. 6% is
+      the level a single-country low-voltage network actually runs at; the 20% ceiling leaves room for
+      a stressed scenario without admitting an arithmetic error as one.'
     category: Grid
+    subcategory: null
     type: float
     unit: '1'
     range:
     - 0.0
-    - 1.0
-    default: 0.5
+    - 0.2
+    default: 0.06
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  distribution_losses_twh:
+    name: Distribution losses twh
+    description: 'Energy lost in the secondary distribution network: the loss share times delivered demand.
+      At the corrected 0.06 it is 2.79 TWh of 46.54; at the placeholder 0.5 it would have been 23.27,
+      half the energy sold. The 4,000 TWh ceiling is the loss share''s 20% top over the demand band''s
+      20,000 TWh.'
+    category: Grid
+    type: float
+    unit: TWh/year
+    range:
+    - 0.0
+    - 4000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   distribution_network_km:
     name: Distribution network km
     description: 'Distribution circuit-km: a 10 GW single-country network at about 4-5 km per MW.'
@@ -10928,20 +11096,28 @@ parameters:
     source: docs/params.md
   flywheel_capacity:
     name: Flywheel capacity
-    description: Flywheel storage
+    description: 'Flywheel storage nameplate, in megawatts, defaulted to zero for the same reason: an
+      unbuilt technology''s capacity is zero, not a placeholder.'
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   flywheel_cost:
     name: Flywheel capital cost
     description: Flywheel capital cost -- one of two ids for the quantity `capex_flywheel` carries; corrected
@@ -11511,26 +11687,26 @@ parameters:
     deprecated_by: null
   fuel_cost_hydrogen:
     name: Hydrogen fuel cost
-    description: Delivered hydrogen cost per megawatt-hour of thermal energy. Converted from USD per kg
-      at 33.3 kWh/kg LHV; the conversion is an admission, not a fact — a different calorific value would
-      change the number.
+    description: 'Delivered hydrogen cost per MWh of thermal energy: the graph''s own converted price,
+      90.01 USD/MWh, against this node''s shipped 120. The conversion is `hydrogen_price_per_mwh_definition`''s
+      and is not repeated here, because repeating the 33.33 kWh/kg constant would let the two conversions
+      drift.'
     category: Cost
     subcategory: null
     type: float
     unit: USD/MWh
     range:
-    - 50.0
-    - 400.0
-    default: 120.0
+    - 0.0
+    - 1000.0
     initial: null
-    role: free
-    determinism: stochastic
+    role: derived
+    determinism: fixed
     categories: []
-    source: IEA Global Hydrogen Review 2024, LCOH estimates
+    source: The product remainder (batch 31)
     source_url: null
     users:
     - Industry
-    priority: P2
+    priority: P1
     status: existing
     deprecated_by: null
   fuel_cost_nuclear:
@@ -11733,20 +11909,28 @@ parameters:
     deprecated_by: null
   fusion_capacity:
     name: Fusion capacity
-    description: Fusion capacity
+    description: Fusion nameplate, in megawatts, defaulted to zero. The node exists so a scenario can
+      declare a fusion programme; the reference scenario has none.
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   fusion_cost:
     name: Fusion capital cost
     description: Fusion capital cost -- one of two ids for the quantity `capex_fusion` carries; corrected
@@ -11835,20 +12019,29 @@ parameters:
     deprecated_by: null
   gas_new_build:
     name: Gas new build
-    description: New gas capacity allowed
+    description: 'New gas build allowed by policy, in megawatts. Same construction as `coal_new_build`:
+      retyped to the capacity unit and to that capacity''s own ceiling, at 3,000 MW against a 1,500 MW
+      reference fleet.'
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 200000.0
+    default: 3000.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P1
-    status: existing
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   gas_price:
     name: Gas price
     description: Wholesale natural gas price. Region-specific in reality — the sample contains no region
@@ -12323,20 +12516,27 @@ parameters:
     source: docs/params.md
   gravity_storage_capacity:
     name: Gravity storage capacity
-    description: Gravity storage
+    description: Gravity storage nameplate, in megawatts, defaulted to zero.
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   green_bond_share:
     name: Green bond share
     description: The share of the project's debt financing the bond market supplies through green-labelled
@@ -13021,21 +13221,27 @@ parameters:
     deprecated_by: null
   hydro_capacity_factor:
     name: Hydro capacity factor
-    description: Hydro capacity factor
-    category: Supply
+    description: The hydro output share. The catalog carries it under two ids and `lcoe_hydro_definition`
+      already reads `capacity_factor_hydro` (0.55); this alias makes the second spelling derived instead
+      of a dial that can disagree.
+    category: Generation
+    subcategory: null
     type: float
     unit: '1'
     range:
     - 0.0
     - 1.0
-    default: 0.5
-    role: free
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P1
-    status: existing
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
     - All
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   hydro_drought_multiplier:
     name: Hydro drought multiplier
     description: Drought impact multiplier
@@ -13046,13 +13252,32 @@ parameters:
     - 0.0
     - 1.0
     default: 0.5
-    role: free
+    role: exogenous
     determinism: stochastic
     priority: P2
     status: to_build
     users:
     - Planners
     source: docs/params.md
+  hydro_effective_capacity_factor:
+    name: Hydro effective capacity factor
+    description: 'The drought-adjusted hydro output share: the base capacity factor times the drought
+      multiplier. 0.55 x 0.5 is 0.275. Read against `capacity_factor_hydro` and not against the `hydro_capacity_factor`
+      alias, so the product does not depend on another batch''s alias.'
+    category: Generation
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: derived
+    determinism: stochastic
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   hydro_inflow_vintage_offset_years:
     name: Hydro inflow vintage offset years
     description: 'hydro inflow vintage offset years: the coupling''s derived quantity, so a scenario''s
@@ -13092,20 +13317,28 @@ parameters:
     source: docs/params.md
   hydro_new_build:
     name: Hydro new build
-    description: New hydro capacity
+    description: New hydro build allowed by policy, in megawatts. Retyped to `hydro_capacity`'s ceiling
+      of 100,000 MW, at 3,000 MW against a 1,500 MW reference fleet.
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 100000.0
+    default: 3000.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P1
-    status: existing
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   hydro_reservoir_level:
     name: Hydro reservoir level
     description: Initial reservoir level
@@ -13232,20 +13465,29 @@ parameters:
     deprecated_by: null
   hydrogen_fuel_cell_capacity:
     name: Hydrogen fuel cell capacity
-    description: Hydrogen fuel cell capacity
+    description: Hydrogen fuel-cell nameplate, in megawatts, defaulted to zero. A fuel cell is a generator
+      and not a store, which is why the bound this batch does not ship would sit against the fleet and
+      not the storage envelope.
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
-    - Transport
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   hydrogen_fuel_cell_cost:
     name: Hydrogen fuel cell capital cost
     description: Hydrogen fuel cell capital cost -- one of two ids for the quantity `capex_hydrogen_fuel_cell`
@@ -14475,6 +14717,25 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  internet_users:
+    name: Internet users
+    description: 'People with internet access: the penetration share times the population. 0.5 x 45 M
+      is 22.5 M. Measured against total population and not the electrified subset: connectivity is a population
+      share, and multiplying by the subset would condition it on an unrelated dial.'
+    category: Digital
+    type: float
+    unit: people
+    range:
+    - 0.0
+    - 200000000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   interoperability_standards:
     name: Interoperability standards
     description: The share of connected capacity meeting the interconnection standard.
@@ -15639,6 +15900,26 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
+  licence_fee_spend_usd_per_year:
+    name: Licence fee spend usd per year
+    description: 'The annual licence bill: the per-MW fee over the licensed fleet. 500 USD/MW/year over
+      10,000 MW is 5.0 M USD/year. Levied on total nameplate and not on firm capacity, because a licence
+      attaches to every megawatt registered and a firm-capacity base would exempt the VRE fleet the fee
+      is charged on.'
+    category: Regulatory
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 5000000000.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   licence_fees:
     name: Licence fees
     description: Annual licence fee per megawatt of licensed capacity, in USD per MW-year.
@@ -16683,52 +16964,73 @@ parameters:
     deprecated_by: null
   marine_otec_capacity:
     name: Marine otec capacity
-    description: Installed OTEC capacity
+    description: Ocean thermal energy conversion nameplate, in megawatts, defaulted to zero.
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: physical
-    priority: P3
-    status: to_build
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   marine_tidal_capacity:
     name: Marine tidal capacity
-    description: Installed tidal capacity
+    description: Tidal-stream nameplate, in megawatts, defaulted to zero.
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: integrate
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: integrate
+    deprecated_by: null
   marine_wave_capacity:
     name: Marine wave capacity
-    description: Installed wave capacity
+    description: Wave nameplate, in megawatts, defaulted to zero.
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: integrate
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: integrate
+    deprecated_by: null
   maritime_security:
     name: Maritime security
     description: Maritime security
@@ -17352,6 +17654,24 @@ parameters:
     priority: P2
     status: integrate
     deprecated_by: null
+  mobile_covered_population:
+    name: Mobile covered population
+    description: 'People inside mobile coverage: the coverage share times the population. 0.9 x 45 M is
+      40.5 M, on the same base as internet users and for the same reason.'
+    category: Digital
+    type: float
+    unit: people
+    range:
+    - 0.0
+    - 200000000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   mrv_parameters:
     name: Mrv parameters
     description: MRV
@@ -17755,20 +18075,30 @@ parameters:
     source: docs/params.md
   nuclear_new_build:
     name: Nuclear new build
-    description: New nuclear capacity
+    description: New nuclear build allowed by policy, in megawatts. Retyped to `nuclear_capacity`'s ceiling
+      of 20,000 MW. The 5,000 MW default is one large unit or two SMR modules, against a 0 MW reference
+      fleet -- the ceiling is the only thing that could admit a first plant, so it must be positive while
+      the build is zero.
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 20000.0
+    default: 5000.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: existing
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   number_of_generators:
     name: Number of generators
     description: Generating units in the fleet, not sites. The default is 220, the count the graph already
@@ -18675,6 +19005,26 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
+  outage_events_from_cause:
+    name: Outage events from cause
+    description: 'Interruption events attributable to a named cause: the cause share times the system
+      event rate. 0.35 x 12 events/year is 4.2 weather-caused events a year. A share of events times a
+      rate of events, which is why the SAIDI hours are not the base -- a share of events times hours is
+      neither.'
+    category: Outage
+    type: float
+    unit: events/year
+    range:
+    - 0.0
+    - 500.0
+    role: derived
+    determinism: stochastic
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   outage_frequency:
     name: Outage frequency
     description: Average interruptions per year, at the system level. The shipped [0, 1e6] admitted 500,000
@@ -18803,6 +19153,26 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  parcels_to_assemble:
+    name: Parcels to assemble
+    description: 'Land parcels that must be assembled for the project: the parcel density per km2 times
+      the land take. 20 per km2 over 5,000 ha is 1,000 parcels. The `/100` converts hectares to the density''s
+      own denominator -- one km2 is 100 ha -- which is why the walker resolves the right-hand side to
+      parcels. The 2.5 M ceiling is the 500 per km2 top of the density band over a 500,000 ha take.'
+    category: Land
+    type: float
+    unit: parcels
+    range:
+    - 0.0
+    - 2500000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   parent_company_guarantee:
     name: Parent company guarantee
     description: Share of the debt tranche carrying a parent-company guarantee. A share, and the guarantee's
@@ -18929,7 +19299,7 @@ parameters:
     - 0.0
     - 1.0
     default: 0.5
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P1
     status: existing
@@ -18957,6 +19327,26 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  peak_demand_shifted_mw:
+    name: Peak demand shifted mw
+    description: 'Peak demand under a scaling factor: one plus the multiplier, times the base peak. 1.5
+      x 8,500 MW is 12,750 MW. The `(1 + m)` form is the only one whose zero is a no-op; a bare product
+      would halve peak demand at the shipped 0.5, which is a derating and not the scaling factor the node
+      names.'
+    category: Demand
+    type: float
+    unit: MW
+    range:
+    - 1.0
+    - 2000000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   pension_covered_jobs:
     name: Pension covered jobs
     description: 'The jobs covered by a pension: the coverage share times the direct workforce.'
@@ -19988,6 +20378,26 @@ parameters:
     users:
     - Investors
     source: docs/params.md
+  precipitation_adjusted_flow_m3_per_s:
+    name: Precipitation adjusted flow m3 per s
+    description: 'The mean annual river flow under a precipitation scenario: the multiplier times the
+      base flow. 0.5 x 150 m3/s is 75 m3/s. Applied to the raw flow and not to `environmental_flow_m3_per_s`,
+      which is already derived from the flow and the requirement share -- applying it there would count
+      the scenario twice.'
+    category: Water
+    type: float
+    unit: m3/s
+    range:
+    - 0.0
+    - 2000.0
+    role: derived
+    determinism: stochastic
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   precipitation_multiplier:
     name: Precipitation multiplier
     description: Precipitation multiplier
@@ -19998,7 +20408,7 @@ parameters:
     - 0.0
     - 1.0
     default: 0.5
-    role: free
+    role: exogenous
     determinism: stochastic
     priority: P2
     status: to_build
@@ -20015,13 +20425,32 @@ parameters:
     - 0.0
     - 1.0
     default: 0.5
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P1
     status: integrate
     users:
     - Utilities
     source: docs/params.md
+  predictive_maintenance_hours_per_year:
+    name: Predictive maintenance hours per year
+    description: 'Planned maintenance hours moved into the predictive regime: the adoption share times
+      the planned hours. 0.5 x 96 h is 48 h/year. The moved hours are the quantity the node names; the
+      complement is derivable from them and is not a second node.'
+    category: Operational
+    type: float
+    unit: hours/year
+    range:
+    - 0.0
+    - 8760.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   premature_deaths_per_year:
     name: Premature deaths
     description: Deaths attributable to the fleet's PM2.5, over the year.
@@ -21462,13 +21891,34 @@ parameters:
     - 0.0
     - 100.0
     default: 50.0
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P1
     status: existing
     users:
     - All
     source: docs/params.md
+  representative_snapshots:
+    name: Representative snapshots
+    description: 'The time slices the representative-day sampling produces: the sampled days times the
+      segments per day. 50 x 24 is 1,200 snapshots. The right-hand side is dimensionless under the walker
+      because `tsam_segments` is 1/day, which is what a count should be -- the alternative `representative_days
+      * 24` carries a bare constant and `unit_of` returns `day` for it, so the checker could not see the
+      hour.'
+    category: Temporal
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 9600.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   reserve_accounts:
     name: Reserve accounts
     description: Reserve accounts
@@ -22974,20 +23424,29 @@ parameters:
     deprecated_by: null
   small_modular_reactor_capacity:
     name: Small modular reactor capacity
-    description: SMR capacity
+    description: Small modular reactor nameplate, in megawatts, defaulted to zero. Retyped to the nuclear
+      capacity ceiling rather than the generic placeholder, because an SMR is a nuclear plant and shares
+      its upper bound.
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 20000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   small_modular_reactor_cost:
     name: SMR capital cost
     description: SMR capital cost -- one of two ids for the quantity `capex_smr` carries; corrected to
@@ -23258,6 +23717,25 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  solar_effective_capacity_factor:
+    name: Solar effective capacity factor
+    description: 'The PV output share under an irradiance scenario: the base capacity factor times the
+      multiplier. 0.22 x 0.5 is 0.11. Applied to the capacity factor and not to the LCOE, because the
+      LCOE already divides by the capacity factor and the multiplier would enter twice with opposite signs.'
+    category: Generation
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: derived
+    determinism: stochastic
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   solar_home_system_deployment:
     name: Solar home system deployment
     description: Units the solar-home-system programme delivers per year. The catalog's placeholder scale
@@ -23292,7 +23770,7 @@ parameters:
     - 0.0
     - 1.0
     default: 0.5
-    role: free
+    role: exogenous
     determinism: stochastic
     priority: P2
     status: to_build
@@ -23388,20 +23866,30 @@ parameters:
     deprecated_by: null
   solar_pv_land_constraint:
     name: Solar pv land constraint
-    description: Land available for solar
+    description: 'The land ceiling expressed as the PV nameplate the available land supports, in megawatts.
+      Retyped to `solar_pv_capacity`''s own ceiling. The node is a *converted* land ceiling and not a
+      land area: the graph carries no MW-per-hectare intensity, so a ceiling in hectares could not be
+      turned into a build limit by any equation in the library.'
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500000.0
+    default: 20000.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   solar_pv_learning_rate:
     name: Solar PV learning rate
     description: Cost reduction per doubling of cumulative solar deployment. Same bound as the battery
@@ -23427,36 +23915,54 @@ parameters:
     deprecated_by: null
   solar_pv_max_build:
     name: Solar pv max build
-    description: Maximum annual solar build
+    description: The PV build ceiling, in megawatts. Retyped to the PV capacity's own ceiling. Its description
+      calls it an annual build ceiling while it is stated against the stock, because the graph carries
+      no annual-increment node; the prose here says so rather than inheriting the mislabel.
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500000.0
+    default: 20000.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   solar_thermal_capacity:
     name: Solar thermal capacity
-    description: Solar thermal capacity
+    description: 'Solar thermal nameplate, in megawatts, defaulted to zero. Retyped to `csp_capacity`''s
+      ceiling: solar thermal *is* the CSP build under the catalog''s second spelling, so it shares that
+      capacity''s upper bound without being an alias of it.'
     category: Sector
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 30000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
-    - Industry
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   solvency_capital:
     name: Solvency capital (absolute)
     description: 'Solvency capital: the capital an insurer must hold against the 99.5th-percentile loss
@@ -23628,6 +24134,24 @@ parameters:
     users:
     - Planners
     - Regulators
+  spare_parts_deferred_hours_per_year:
+    name: Spare parts deferred hours per year
+    description: 'Planned maintenance hours deferred by parts stockouts: the unavailable share of spares
+      times the planned hours. 0.2 x 96 h is 19.2 h/year.'
+    category: Operational
+    type: float
+    unit: hours/year
+    range:
+    - 0.0
+    - 8760.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   spare_parts_inventory:
     name: Spare parts inventory
     description: The value of spares held against failure. 240 is two percent of gross fleet capital (1,200
@@ -23656,20 +24180,30 @@ parameters:
     deprecated_by: null
   spare_parts_lead_time:
     name: Spare parts lead time
-    description: Lead time
+    description: 'The lead time to deliver a spare part, in hours. Retyped to `mean_time_between_failures`''s
+      own range so the two quantities are comparable: a part whose delivery takes longer than the unit''s
+      mean time between failures makes the expected wait for it dominate availability. 720 h is 30 days
+      against a 50,000 h MTBF.'
     category: Asset
+    subcategory: null
     type: float
+    unit: hours
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500.0
+    - 500000.0
+    default: 720.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   spatial_clustering:
     name: Spatial clustering
     description: Spatial clustering
@@ -24911,22 +25445,51 @@ parameters:
     users:
     - Investors
     source: docs/params.md
+  thin_capitalisation_utilisation:
+    name: Thin capitalisation utilisation
+    description: 'The gearing expressed against the thin-capitalisation ceiling: debt to equity over the
+      limit. 2.33 / 1.5 is 1.55, which says the graph''s own defaults breach the ceiling by 55%. A utilisation
+      ratio and not a bound, because the bound `limit >= debt_equity_ratio` would fail at defaults and
+      a batch that ships it ships a violating graph. The breach is the finding; the ratio reports it.'
+    category: Tax
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 3.0
+    role: derived
+    determinism: policy
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   tidal_range_capacity:
     name: Tidal range capacity
-    description: Tidal range capacity
+    description: 'Tidal-range barrage nameplate, in megawatts, defaulted to zero. Kept separate from `marine_tidal_capacity`:
+      a barrage and a tidal-stream array are different technologies with different resource bases, and
+      one ceiling over both would let a barrage scenario cap a stream project.'
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   tidal_range_cost:
     name: Tidal range capital cost
     description: Tidal range capital cost -- one of two ids for the quantity `capex_tidal_range` carries;
@@ -25259,20 +25822,30 @@ parameters:
     deprecated_by: null
   transboundary_water_constraint:
     name: Transboundary water constraint
-    description: Transboundary water limit
+    description: The basin's allocation to the project, in cubic metres a year. Retyped from the placeholder
+      to `total_water_demand_m3`'s own unit and range. The 2.0e8 default is `water_availability_m3`'s
+      default, so the two ceilings agree at the reference scenario instead of one silently binding the
+      other. A ceiling defaulted below the propagated demand would ship a graph that fails its own constraint.
     category: Sector
+    subcategory: null
     type: float
+    unit: m3/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 100000000000.0
+    default: 200000000.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The product remainder (batch 31)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   transfer_pricing_rules:
     name: Transfer pricing rules
     description: Transfer pricing
@@ -25299,7 +25872,7 @@ parameters:
     - 0.0
     - 1.0
     default: 0.5
-    role: free
+    role: exogenous
     determinism: fixed
     priority: P1
     status: existing
@@ -25531,6 +26104,25 @@ parameters:
     priority: P2
     status: existing
     deprecated_by: null
+  transmission_transfer_mw:
+    name: Transmission transfer mw
+    description: 'The power the transmission fleet actually transfers: the utilisation share times installed
+      nameplate. 0.5 x 10,000 MW is 5,000 MW. A product and not a bound: there is no transfer-limit node
+      to bound it against, and the transferred power is the quantity the flow reports need.'
+    category: Transmission & Grid
+    type: float
+    unit: MW
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   transport_logistics:
     name: Transport logistics
     description: 'Freight tonne-kilometres moved in the year: the base the batch-20 freight share was
@@ -26264,6 +26856,27 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  vulnerable_population:
+    name: Vulnerable population
+    description: 'People exposed under the composite vulnerability index: the index times the population.
+      0.5 x 45 M is 22.5 M. The index is an exposure/sensitivity/adaptive-capacity composite and is read
+      here as a share of the population, which is the one reading that makes it multiplicative; it is
+      deliberately not aliased to a complement of adaptive capacity, an identity the index literature
+      does not state.'
+    category: Social
+    type: float
+    unit: people
+    range:
+    - 0.0
+    - 200000000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   wage_bill_usd_per_year:
     name: Wage bill usd per year
     description: 'The annual wage bill: the average wage times the direct workforce. The quantity that
@@ -26506,25 +27119,28 @@ parameters:
     deprecated_by: null
   water_stress_index:
     name: Water stress index
-    description: Ratio of water withdrawal to renewable freshwater supply, expressed as a share. Higher
-      is more stressed. Range is the index's construction.
-    category: Water-Energy Nexus
+    description: 'Demand over availability: 93.25e6 m3/year over 200e6 is 0.466. The range must admit
+      above 1, because a drought scenario that consumes more than the available supply is a real state
+      and a [0, 1] band would report it as a range excursion rather than as the stress it is. Derived
+      because it is the ratio of two graph nodes; the shipped 0.4 default was not that ratio and cannot
+      survive the node becoming derived.'
+    category: Water
     subcategory: null
     type: float
     unit: '1'
     range:
     - 0.0
-    - 1.0
-    default: 0.4
+    - 5.0
     initial: null
-    role: free
-    determinism: fixed
+    role: derived
+    determinism: physical
     categories: []
-    source: WRI Aqueduct Water Risk Atlas, baseline water stress
+    source: The product remainder (batch 31)
     source_url: null
     users:
-    - Utilities
-    priority: P2
+    - Planners
+    - Regulators
+    priority: P1
     status: to_build
     deprecated_by: null
   wave_energy_converter_cost:
@@ -26810,6 +27426,26 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  wind_effective_capacity_factor:
+    name: Wind effective capacity factor
+    description: 'The onshore wind output share under a resource scenario: the base capacity factor times
+      the multiplier. 0.4 x 0.5 is 0.20. The node is a *yield* multiplier and not a speed ratio: cubing
+      it by the wind-power law would drive every scenario to zero on a [0, 1] dial, so the linear form
+      is the physics the node can carry.'
+    category: Generation
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    role: derived
+    determinism: stochastic
+    priority: P1
+    status: existing
+    source: The product remainder (batch 31)
+    users:
+    - Planners
+    - Regulators
   wind_offshore_capacity:
     name: Offshore wind capacity
     description: Installed offshore wind capacity, chosen by the optimiser. Same role correction.
@@ -26926,7 +27562,7 @@ parameters:
     - 0.0
     - 1.0
     default: 0.5
-    role: free
+    role: exogenous
     determinism: stochastic
     priority: P2
     status: to_build
@@ -27765,6 +28401,30 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  available_land_hectares_definition:
+    name: Available land
+    description: 'The land actually available for construction: the availability share times the project''s
+      land take. 0.5 x 5,000 ha is 2,500 ha. The base is the take and not a separate study area, because
+      `land_area_hectares` describes itself as the project''s own take -- which is what an availability
+      share applies to.'
+    system: financial
+    lhs: available_land_hectares
+    rhs: land_availability_fraction * land_area_hectares
+    relation: eq
+    parameters:
+    - available_land_hectares
+    - land_area_hectares
+    - land_availability_fraction
+    free_variables: []
+    determined_variables:
+    - available_land_hectares
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{available}_{land\_hectares} = \mathrm{land}_{availability\_fraction} \mathrm{land}_{area\_hectares}
   baseline_emissions_definition:
     name: The counterfactual baseline
     description: 'The emissions the fleet would have produced without the abatement this project delivers:
@@ -28147,6 +28807,28 @@ equations:
     priority: P1
     reference: NREL ATB 2025 Equations & Variables
     latex: \mathrm{capex}_{battery\_power\_usd\_per\_kw} = \mathrm{capex}_{battery} \mathrm{battery}_{duration}
+  capex_gas_ccgt_definition:
+    name: The CCGT capital cost
+    description: 'The combined-cycle gas turbine''s capital cost is the graph''s gas capital cost. An
+      alias rather than a second dial: the catalog''s two ids carry one number, and a derived node cannot
+      drift from the one it names. 1,100 USD/kW at defaults.'
+    system: cost_accounting
+    lhs: capex_gas_ccgt
+    rhs: capex_gas
+    relation: eq
+    parameters:
+    - capex_gas_ccgt
+    - capex_gas
+    free_variables: []
+    determined_variables:
+    - capex_gas_ccgt
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: IEA/NEA Projected Costs of Generating Electricity
+    latex: \mathrm{capex}_{gas\_ccgt} = \mathrm{capex}_{gas}
   capex_hydrogen_electrolyser_learning_definition:
     name: The electrolyser capex at the cumulative stock
     description: 'Wright''s law on the electrolyser stock: the shipped USD/kW scaled by the cumulative
@@ -28664,6 +29346,33 @@ equations:
     reference: null
     latex: \mathrm{cash}_{swept\_usd\_per\_year} = 1000 \mathrm{cash}_{sweep} \left(\mathrm{cfads}_{usd\_per\_kw\_year}
       - \mathrm{debt}_{service\_usd\_per\_kw\_year}\right) \mathrm{total}_{capacity\_mw}
+  cat_bond_coupon_cost_definition:
+    name: The cat-bond coupon
+    description: 'The coupon a catastrophe bond pays per year: its spread over the risk-free rate, applied
+      to the debt tranche of the asset value. 800 bp on 70% of 1,200 USD/kW over 10 GW is 672 million
+      USD a year. The `0.0001` converts basis points to a fraction and the `1000` converts USD/kW over
+      MW to USD, which is why the walker resolves the whole product to currency.'
+    system: financial
+    lhs: cat_bond_coupon_cost_usd
+    rhs: cat_bond_spread * 0.0001 * debt_fraction * capex_usd_per_kw * total_capacity_mw * 1000
+    relation: eq
+    parameters:
+    - cat_bond_coupon_cost_usd
+    - capex_usd_per_kw
+    - cat_bond_spread
+    - debt_fraction
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - cat_bond_coupon_cost_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{cat}_{bond\_coupon\_cost\_usd} = 0.1 \mathrm{cat}_{bond\_spread} \mathrm{debt}_{fraction}
+      \mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}
   cbam_price_applied_definition:
     name: Cbam price applied
     description: 'The applied border price: the mechanism''s switch times the price it charges. Zero flag
@@ -28927,17 +29636,22 @@ equations:
     latex: \mathrm{coal}_{dependent\_population} = \mathrm{coal}_{community\_dependencies} \mathrm{exposed}_{population}
   coal_eaf_definition:
     name: Coal availability from its outage rates
-    description: 'The energy availability factor: the share of rated energy the fleet can deliver, which
-      is one minus the fraction lost to forced and planned outages. Both outage rates are shares of the
-      same rated energy, so they subtract from one without a capacity weighting.'
+    description: The coal fleet's equivalent availability uses the coal fleet's own forced-outage rate,
+      not the system-wide one. The shipped form read `forced_outage_rate`, which `availability_definition`
+      derives from MTBF/MTTR as 24/50024 = 0.00048 -- a 0.05% forced-outage rate for a coal fleet, against
+      the 10% `forced_outage_rate_coal` carries. The two differ by a factor of 200. At defaults the amendment
+      gives 1 - 0.10 - 0.05 = 0.85 instead of 0.9495.
     system: reliability
     lhs: coal_eaf
-    rhs: 1 - forced_outage_rate - planned_outage_rate
+    rhs: 1 - forced_outage_rate_coal - planned_outage_rate
     relation: eq
     parameters:
-    - forced_outage_rate
+    - coal_eaf
+    - forced_outage_rate_coal
     - planned_outage_rate
-    free_variables: []
+    free_variables:
+    - forced_outage_rate_coal
+    - planned_outage_rate
     determined_variables:
     - coal_eaf
     tolerance: 1.0e-06
@@ -29620,6 +30334,30 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{crediting}_{projects\_approved} = \mathrm{baseline}_{methodology} \mathrm{project}_{pipeline\_count}
+  crew_shortfall_definition:
+    name: Crew shortfall hours
+    description: 'Planned maintenance hours lost to crew unavailability: the unavailable share times the
+      planned hours. 0.15 x 96 h is 14.4 h/year. The graph already carries the planned hours, so the available-hours
+      spelling would restate a number it has; the shortfall is the quantity it lacks.'
+    system: reliability
+    lhs: crew_shortfall_hours_per_year
+    rhs: (1 - crew_availability) * planned_maintenance_hours_per_year
+    relation: eq
+    parameters:
+    - crew_shortfall_hours_per_year
+    - crew_availability
+    - planned_maintenance_hours_per_year
+    free_variables: []
+    determined_variables:
+    - crew_shortfall_hours_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{crew}_{shortfall\_hours\_per\_year} = \left(1 - \mathrm{crew}_{availability}\right)
+      \mathrm{planned}_{maintenance\_hours\_per\_year}
   crf_biomass_definition:
     name: CRF (biomass)
     description: 'The standard annuity: a constant annual charge whose present value equals one unit of
@@ -30016,6 +30754,28 @@ equations:
     reference: World Bank Regulation of Utilities handbook, revenue caps
     latex: \mathrm{cross}_{subsidy\_transparency\_spend\_usd\_per\_year} = \mathrm{cross}_{subsidy\_transparency}
       \mathrm{allowed}_{revenue\_requirement}
+  csp_storage_hours_definition:
+    name: The CSP store's hours
+    description: 'A CSP plant''s store is a thermal store, so its hours at rated output are the graph''s
+      thermal-store duration: 8 h, against this node''s shipped 24. The alias resolves a disagreement
+      between two ids for one physical quantity in favour of the one the rest of the library reads.'
+    system: energy_balance
+    lhs: csp_storage_hours
+    rhs: thermal_storage_duration
+    relation: eq
+    parameters:
+    - csp_storage_hours
+    - thermal_storage_duration
+    free_variables: []
+    determined_variables:
+    - csp_storage_hours
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{csp}_{storage\_hours} = \mathrm{thermal}_{storage\_duration}
   cultural_heritage_impact_alias:
     name: The cultural heritage impact
     description: 'The cultural heritage impact under the catalog''s second id: the heritage impact score
@@ -30037,6 +30797,31 @@ equations:
     priority: P1
     reference: The catalog's own duplicate rows, resolved
     latex: \mathrm{cultural}_{heritage\_impact} = \mathrm{cultural}_{heritage\_impact\_score}
+  cultural_heritage_sites_definition:
+    name: Cultural heritage sites
+    description: 'Expected count of cultural-heritage sites inside the project footprint: the measured
+      density per 100 km2 times the land take converted to the density''s own denominator. The 10000 is
+      exact, not a fudge: one hectare is 0.01 km2, so hectares over 10,000 is hectares expressed in units
+      of 100 km2. 2.0 per 100 km2 over 5,000 ha is 1.0 site, and a fractional value is the expectation,
+      not a count of objects.'
+    system: financial
+    lhs: cultural_heritage_sites
+    rhs: cultural_heritage_sites_density * land_area_hectares / 10000
+    relation: eq
+    parameters:
+    - cultural_heritage_sites
+    - cultural_heritage_sites_density
+    - land_area_hectares
+    free_variables: []
+    determined_variables:
+    - cultural_heritage_sites
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{cultural}_{heritage\_sites} = \frac{\mathrm{cultural}_{heritage\_sites\_density} \mathrm{land}_{area\_hectares}}{10000}
   currency_hedge_cost_usd_per_year_definition:
     name: The currency hedge charge
     description: 'The annual charge for hedging currency exposure: the hedge rate times the foreign-currency
@@ -30377,6 +31162,49 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{demand}_{growth\_window\_years} = \mathrm{demand}_{growth\_end\_year} - \mathrm{demand}_{growth\_start\_year}
+  demand_response_capacity_definition:
+    name: Enrolled demand response
+    description: 'The enrolled flexible capacity is the interruptible load the graph already derives:
+      4,250 MW from a 0.5 interruptible share over an 8,500 MW peak. An alias, because the product form
+      would compute the same number from the same two operands under a third id.'
+    system: demand_supply
+    lhs: demand_response_capacity
+    rhs: interruptible_load_mw
+    relation: eq
+    parameters:
+    - demand_response_capacity
+    - interruptible_load_mw
+    free_variables: []
+    determined_variables:
+    - demand_response_capacity
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{demand}_{response\_capacity} = \mathrm{interruptible}_{load\_mw}
+  demand_response_potential_definition:
+    name: The demand-response share
+    description: 'The flexible share of demand a programme can enrol is the interruptible share the graph
+      already carries: 0.5. A second share base would let two dials disagree about one physical quantity.'
+    system: demand_supply
+    lhs: demand_response_potential
+    rhs: interruptible_load_share
+    relation: eq
+    parameters:
+    - demand_response_potential
+    - interruptible_load_share
+    free_variables: []
+    determined_variables:
+    - demand_response_potential
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{demand}_{response\_potential} = \mathrm{interruptible}_{load\_share}
   demand_response_programme_cost_definition:
     name: The demand-response programme's annual cost
     description: 'The programme''s annual cost: the per-kW-year payment times the curtailment capacity
@@ -30562,6 +31390,30 @@ equations:
     reference: null
     latex: \mathrm{distribution}_{expansion\_capex\_usd\_per\_year} = \mathrm{distribution}_{capex\_per\_connection}
       \mathrm{connections}_{per\_year}
+  distribution_losses_definition:
+    name: Distribution losses
+    description: 'Energy lost in the secondary distribution network: the loss share times delivered demand.
+      At the corrected 0.06 it is 2.79 TWh of 46.54; at the placeholder 0.5 it was 23.27, which is half
+      the energy sold vanishing in the secondary network. Shipping the product is what makes the default
+      visible as a number rather than as a dial nobody multiplies.'
+    system: energy_balance
+    lhs: distribution_losses_twh
+    rhs: distribution_loss_factor * demand_twh
+    relation: eq
+    parameters:
+    - distribution_losses_twh
+    - demand_twh
+    - distribution_loss_factor
+    free_variables: []
+    determined_variables:
+    - distribution_losses_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{distribution}_{losses\_twh} = \mathrm{distribution}_{loss\_factor} \mathrm{demand}_{twh}
   distribution_wheeling_cost_definition:
     name: The distribution wheeling charge
     description: The distribution use-of-system charge, recovered on the same base as the transmission
@@ -31684,6 +32536,28 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  fuel_cost_hydrogen_definition:
+    name: The delivered hydrogen cost
+    description: 'The delivered hydrogen cost per MWh of thermal energy is the graph''s own converted
+      price: 90.01 USD/MWh, against this node''s shipped 120. The conversion from a price per unit mass
+      to a price per MWh lives in `hydrogen_price_per_mwh_definition` and is not repeated.'
+    system: cost_accounting
+    lhs: fuel_cost_hydrogen
+    rhs: hydrogen_price_per_mwh
+    relation: eq
+    parameters:
+    - fuel_cost_hydrogen
+    - hydrogen_price_per_mwh
+    free_variables: []
+    determined_variables:
+    - fuel_cost_hydrogen
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: 'LHV of H2: 33.33 kWh/kg (standard fuel tables)'
+    latex: \mathrm{fuel}_{cost\_hydrogen} = \mathrm{hydrogen}_{price\_per\_mwh}
   fuel_diversity_definition:
     name: Fuel diversity index
     description: 'One minus the Herfindahl-Hirschman Index over the fleet''s fuel capacities, expressed
@@ -32258,6 +33132,51 @@ equations:
     latex: \mathrm{hybrid}_{capped\_tariff\_usd\_per\_mwh} = \mathrm{hybrid}_{revenue\_price\_cap} \mathrm{price}_{cap}
       \mathrm{regulated}_{tariff\_usd\_per\_mwh} + \left(1 - \mathrm{hybrid}_{revenue\_price\_cap}\right)
       \mathrm{applied}_{tariff\_usd\_per\_mwh}
+  hydro_capacity_factor_definition:
+    name: The hydro output share
+    description: 'The hydro output share is the capacity factor the LCOE and the generation equations
+      already read: 0.55. An alias, so the catalog''s second spelling is derived rather than a dial that
+      can disagree with the first.'
+    system: energy_balance
+    lhs: hydro_capacity_factor
+    rhs: capacity_factor_hydro
+    relation: eq
+    parameters:
+    - hydro_capacity_factor
+    - capacity_factor_hydro
+    free_variables: []
+    determined_variables:
+    - hydro_capacity_factor
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{hydro}_{capacity\_factor} = \mathrm{capacity}_{factor\_hydro}
+  hydro_effective_capacity_factor_definition:
+    name: Drought-adjusted hydro share
+    description: 'The drought-adjusted hydro output share: the base capacity factor times the drought
+      multiplier. 0.55 x 0.5 is 0.275. Read against `capacity_factor_hydro` and not the `hydro_capacity_factor`
+      alias, so the product does not depend on another batch''s alias resolving first.'
+    system: energy_balance
+    lhs: hydro_effective_capacity_factor
+    rhs: capacity_factor_hydro * hydro_drought_multiplier
+    relation: eq
+    parameters:
+    - hydro_effective_capacity_factor
+    - capacity_factor_hydro
+    - hydro_drought_multiplier
+    free_variables: []
+    determined_variables:
+    - hydro_effective_capacity_factor
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{hydro}_{effective\_capacity\_factor} = \mathrm{capacity}_{factor\_hydro} \mathrm{hydro}_{drought\_multiplier}
   hydro_inflow_vintage_offset_definition:
     name: The inflow record's vintage offset
     description: How much the hydro inflow record's design year leads or trails the PV data's vintage.
@@ -32903,6 +33822,30 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{interest}_{rate\_debt} = \mathrm{cost}_{of\_debt}
+  internet_users_definition:
+    name: Internet users
+    description: 'People with internet access: the penetration share times the population. 0.5 x 45 M
+      is 22.5 M. The base is total population and not the electrified subset: connectivity is a population
+      share, and conditioning it on electrification would make a digital dial move when an unrelated grid
+      dial moved.'
+    system: financial
+    lhs: internet_users
+    rhs: internet_penetration * population_total
+    relation: eq
+    parameters:
+    - internet_users
+    - internet_penetration
+    - population_total
+    free_variables: []
+    determined_variables:
+    - internet_users
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{internet}_{users} = \mathrm{internet}_{penetration} \mathrm{population}_{total}
   interruptible_load_mw_definition:
     name: Interruptible load mw
     description: 'The load the utility may curtail on contract: its share of peak demand, which is the
@@ -33600,36 +34543,32 @@ equations:
       + \mathrm{opex}_{fixed\_solar}\right)}{8760 \mathrm{solar}_{pv\_capacity\_factor}} + \mathrm{opex}_{variable\_solar}
   lcoe_wind_definition:
     name: Wind LCOE
-    description: 'Onshore wind levelised cost at its own capex and capacity factor. The variable O&M term
-      is small for wind; the technology''s own variable O&M, at the level the cost literature states,
-      so the solar equation''s variable term is reused as a conservative placeholder and this equation
-      is marked `unit_check: true` on the strength of that substitution being dimensional, not physical.
-      Corrected from its predecessor, which carried opex_variable_battery in a generation technology''s
-      numerator -- a battery cost inside a plant with no battery; the battery''s cost now belongs to the
-      battery''s own LCOE. Corrected from its predecessor, which carried opex_variable_battery in a generation
-      technology''s numerator -- a battery cost inside a plant with no battery; the battery''s cost now
-      belongs to the battery''s own LCOE.'
+    description: 'The levelised cost of onshore wind. The shipped form divided by `capacity_factor_wind_onshore`
+      -- it is an onshore LCOE -- but read the generic `opex_fixed_wind` (40 USD/kW/year) rather than
+      `opex_fixed_wind_onshore` (30). The amendment takes the LCOE from 66.53 to 63.67 USD/MWh at defaults.
+      Aliasing `opex_fixed_wind` to the onshore node was rejected: it would make a shipped node derived
+      and drop its default to fix an equation that is the actual defect.'
     system: cost_accounting
     lhs: lcoe_wind_usd_per_mwh
-    rhs: (annualised_capex_usd_per_kw_wind + opex_fixed_wind) * 1000 / (8760 * capacity_factor_wind_onshore)
+    rhs: (annualised_capex_usd_per_kw_wind + opex_fixed_wind_onshore) * 1000 / (8760 * capacity_factor_wind_onshore)
       + opex_variable_wind
     relation: eq
     parameters:
     - annualised_capex_usd_per_kw_wind
     - capacity_factor_wind_onshore
     - lcoe_wind_usd_per_mwh
-    - opex_fixed_wind
+    - opex_fixed_wind_onshore
     - opex_variable_wind
     free_variables:
     - annualised_capex_usd_per_kw_wind
     - capacity_factor_wind_onshore
-    - opex_fixed_wind
+    - opex_fixed_wind_onshore
     - opex_variable_wind
     determined_variables:
     - lcoe_wind_usd_per_mwh
     tolerance: 1.0e-08
     unit_check: true
-    reference: null
+    reference: NREL ATB 2025 Equations & Variables
     priority: P1
     solution_method: direct
     linearity: nonlinear
@@ -33718,6 +34657,30 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  licence_fee_spend_definition:
+    name: The licence bill
+    description: 'The annual licence bill: the per-MW fee over the licensed fleet. 500 USD/MW/year over
+      10,000 MW is 5.0 million USD/year. Levied on total nameplate, not firm capacity: a licence attaches
+      to every megawatt registered, and a firm-capacity base would exempt the VRE fleet the fee is charged
+      on.'
+    system: cost_accounting
+    lhs: licence_fee_spend_usd_per_year
+    rhs: licence_fees * total_capacity_mw
+    relation: eq
+    parameters:
+    - licence_fee_spend_usd_per_year
+    - licence_fees
+    - total_capacity_mw
+    free_variables: []
+    determined_variables:
+    - licence_fee_spend_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{licence}_{fee\_spend\_usd\_per\_year} = \mathrm{licence}_{fees} \mathrm{total}_{capacity\_mw}
   life_extension_fraction_definition:
     name: The life-extension cost against a new build
     description: 'The life-extension programme''s cost per kW against the fleet''s own per-kW new build:
@@ -34359,6 +35322,29 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{mini}_{grid\_subsidy\_usd\_per\_year} = \mathrm{mini}_{grid\_subsidies} \mathrm{mini}_{grid\_programme\_spend\_usd\_per\_year}
+  mobile_covered_population_definition:
+    name: People in mobile coverage
+    description: 'People inside mobile coverage: the coverage share times the population. 0.9 x 45 M is
+      40.5 M. Same base as internet users, so the two connectivity measures are comparable and their difference
+      is the coverage-versus-adoption gap.'
+    system: financial
+    lhs: mobile_covered_population
+    rhs: mobile_coverage * population_total
+    relation: eq
+    parameters:
+    - mobile_covered_population
+    - mobile_coverage
+    - population_total
+    free_variables: []
+    determined_variables:
+    - mobile_covered_population
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{mobile}_{covered\_population} = \mathrm{mobile}_{coverage} \mathrm{population}_{total}
   netting_shortfall_definition:
     name: The collateral left un-netted
     description: 'The complement of the netting share: collateral posted that a netting agreement does
@@ -34544,6 +35530,29 @@ equations:
     priority: P1
     reference: Stoft 2002, Power System Economics, ch. 5
     latex: \mathrm{reserve}_{margin} = \mathrm{reserve}_{margin\_actual}
+  outage_events_from_cause_definition:
+    name: Events from a named cause
+    description: 'Interruption events attributable to a named cause: the cause share times the system
+      event rate. 0.35 x 12 events/year is 4.2 weather-caused events a year. The base is the event rate
+      and not the SAIDI hours -- a share of events times hours is neither a count nor a duration.'
+    system: reliability
+    lhs: outage_events_from_cause
+    rhs: outage_cause_distribution * system_saifi_events_per_year
+    relation: eq
+    parameters:
+    - outage_events_from_cause
+    - outage_cause_distribution
+    - system_saifi_events_per_year
+    free_variables: []
+    determined_variables:
+    - outage_events_from_cause
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: IEEE Guide for Electric Power Distribution Reliability Indices (1366), tutorial deck
+    latex: \mathrm{outage}_{events\_from\_cause} = \mathrm{outage}_{cause\_distribution} \mathrm{system}_{saifi\_events\_per\_year}
   parametric_insurance_definition:
     name: Parametric insurance payout
     description: 'The loss a parametric instrument pays out in an average year: the share of the loss
@@ -34567,6 +35576,30 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{parametric}_{insurance} = \mathrm{parametric}_{insurance\_coverage} \mathrm{aal}_{usd\_million}
+  parcels_to_assemble_definition:
+    name: Parcels to assemble
+    description: 'Land parcels that must be assembled: the parcel density per km2 times the land take.
+      The `/100` is the hectare-to-km2 conversion -- one km2 is 100 ha -- so the right-hand side resolves
+      to parcels. 20 per km2 over 5,000 ha is 1,000 parcels, which is the transaction count a land assembly
+      programme has to clear.'
+    system: financial
+    lhs: parcels_to_assemble
+    rhs: land_aggregation_fragmentation * land_area_hectares / 100
+    relation: eq
+    parameters:
+    - parcels_to_assemble
+    - land_aggregation_fragmentation
+    - land_area_hectares
+    free_variables: []
+    determined_variables:
+    - parcels_to_assemble
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{parcels}_{to\_assemble} = \frac{\mathrm{land}_{aggregation\_fragmentation} \mathrm{land}_{area\_hectares}}{100}
   parent_company_guarantee_definition:
     name: The guaranteed debt
     description: 'The debt tranche carrying the guarantee: the guaranteed share of the debt-financed part
@@ -34619,6 +35652,30 @@ equations:
     linearity: linear
     latex: \mathrm{pass}_{through\_tariff\_usd\_per\_mwh} = \mathrm{applied}_{tariff\_usd\_per\_mwh} +
       \mathrm{wholesale}_{cost\_pass\_through} \mathrm{variable}_{stack\_usd\_per\_mwh}
+  peak_demand_shifted_definition:
+    name: Peak demand under a scaling factor
+    description: 'Peak demand under a scaling factor: one plus the multiplier, times the base peak. 1.5
+      x 8,500 MW is 12,750 MW. The `(1 + m)` form is the only one whose zero is a no-op; a bare product
+      at the shipped 0.5 would halve peak demand, which is a derating and not the scaling factor the node''s
+      name asserts.'
+    system: demand_supply
+    lhs: peak_demand_shifted_mw
+    rhs: (1 + peak_demand_multiplier) * peak_demand_mw
+    relation: eq
+    parameters:
+    - peak_demand_shifted_mw
+    - peak_demand_multiplier
+    - peak_demand_mw
+    free_variables: []
+    determined_variables:
+    - peak_demand_shifted_mw
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{peak}_{demand\_shifted\_mw} = \left(1 + \mathrm{peak}_{demand\_multiplier}\right) \mathrm{peak}_{demand\_mw}
   pension_coverage_definition:
     name: The pension-covered jobs
     description: 'Jobs covered by a pension: the coverage share times the direct workforce. Coverage,
@@ -35036,6 +36093,54 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  precipitation_adjusted_flow_definition:
+    name: The scenario river flow
+    description: 'The mean annual river flow under a precipitation scenario: the multiplier times the
+      base flow. 0.5 x 150 m3/s is 75 m3/s. Applied to the raw flow and not to `environmental_flow_m3_per_s`,
+      which is already derived from the flow and the requirement share -- applying the scenario there
+      would count it twice.'
+    system: water_energy
+    lhs: precipitation_adjusted_flow_m3_per_s
+    rhs: precipitation_multiplier * river_mean_annual_flow_m3_per_s
+    relation: eq
+    parameters:
+    - precipitation_adjusted_flow_m3_per_s
+    - precipitation_multiplier
+    - river_mean_annual_flow_m3_per_s
+    free_variables: []
+    determined_variables:
+    - precipitation_adjusted_flow_m3_per_s
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{precipitation}_{adjusted\_flow\_m3\_per\_s} = \mathrm{precipitation}_{multiplier} \mathrm{river}_{mean\_annual\_flow\_m3\_per\_s}
+  predictive_maintenance_hours_definition:
+    name: Predictive maintenance hours
+    description: 'Planned maintenance hours moved into the predictive regime: the adoption share times
+      the planned hours. 0.5 x 96 h is 48 h/year. The moved hours are the quantity the node names; the
+      unmoved complement is derivable from them and is not a second node.'
+    system: reliability
+    lhs: predictive_maintenance_hours_per_year
+    rhs: predictive_maintenance_adoption * planned_maintenance_hours_per_year
+    relation: eq
+    parameters:
+    - predictive_maintenance_hours_per_year
+    - planned_maintenance_hours_per_year
+    - predictive_maintenance_adoption
+    free_variables: []
+    determined_variables:
+    - predictive_maintenance_hours_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{predictive}_{maintenance\_hours\_per\_year} = \mathrm{predictive}_{maintenance\_adoption}
+      \mathrm{planned}_{maintenance\_hours\_per\_year}
   premature_deaths_definition:
     name: Premature deaths
     description: 'Exposed population times baseline mortality times the relative risk the particulate
@@ -35679,6 +36784,30 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{reporting}_{compliance\_usd\_per\_year} = \mathrm{reporting}_{requirements} \mathrm{allowed}_{revenue\_requirement}
+  representative_snapshots_definition:
+    name: Representative snapshots
+    description: 'The time slices the representative-day sampling produces: the sampled days times the
+      segments per day. 50 x 24 is 1,200 snapshots. The right-hand side is dimensionless under the walker
+      because `tsam_segments` is 1/day, which is what a count should be; the alternative `representative_days
+      * 24` carries a bare constant that `unit_of` reads as `day`, so the checker could not see the hour.'
+    system: energy_balance
+    lhs: representative_snapshots
+    rhs: representative_days * tsam_segments
+    relation: eq
+    parameters:
+    - representative_snapshots
+    - representative_days
+    - tsam_segments
+    free_variables: []
+    determined_variables:
+    - representative_snapshots
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{representative}_{snapshots} = \mathrm{representative}_{days} \mathrm{tsam}_{segments}
   reserve_margin:
     name: Reserve margin
     description: 'Firm capacity plus the renewable fleet''s contribution at its capacity factor must cover
@@ -36496,6 +37625,29 @@ equations:
     priority: P1
     reference: The catalog's own duplicate rows, resolved
     latex: \mathrm{soil}_{contamination} = \mathrm{soil}_{contamination\_index}
+  solar_effective_capacity_factor_definition:
+    name: Solar resource share
+    description: 'The PV output share under an irradiance scenario: the base capacity factor times the
+      multiplier. 0.22 x 0.5 is 0.11. Applied to the capacity factor and not to the LCOE: the LCOE already
+      divides by the capacity factor, so a multiplier there would enter twice with opposite signs.'
+    system: energy_balance
+    lhs: solar_effective_capacity_factor
+    rhs: solar_pv_capacity_factor * solar_irradiance_multiplier
+    relation: eq
+    parameters:
+    - solar_effective_capacity_factor
+    - solar_irradiance_multiplier
+    - solar_pv_capacity_factor
+    free_variables: []
+    determined_variables:
+    - solar_effective_capacity_factor
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{solar}_{effective\_capacity\_factor} = \mathrm{solar}_{pv\_capacity\_factor} \mathrm{solar}_{irradiance\_multiplier}
   solar_pv_capacity_factor_at_vintage_definition:
     name: The PV capacity factor at the dataset's vintage year
     description: 'The PV capacity factor AT the vintage year the dataset quotes: the factor today compounded
@@ -36641,6 +37793,30 @@ equations:
     reference: Standard inventory carrying-cost accounting
     latex: \mathrm{spare}_{parts\_carrying\_cost\_usd\_per\_year} = \mathrm{spare}_{parts\_inventory}
       \mathrm{discount}_{rate}
+  spare_parts_deferred_definition:
+    name: Deferred maintenance hours
+    description: 'Planned maintenance hours deferred by parts stockouts: the unavailable share of spares
+      times the planned hours. 0.2 x 96 h is 19.2 h/year. Alongside the crew shortfall it gives the two
+      independent reasons planned work does not happen, which a single availability figure would conflate.'
+    system: reliability
+    lhs: spare_parts_deferred_hours_per_year
+    rhs: (1 - spare_parts_availability) * planned_maintenance_hours_per_year
+    relation: eq
+    parameters:
+    - spare_parts_deferred_hours_per_year
+    - planned_maintenance_hours_per_year
+    - spare_parts_availability
+    free_variables: []
+    determined_variables:
+    - spare_parts_deferred_hours_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{spare}_{parts\_deferred\_hours\_per\_year} = \left(1 - \mathrm{spare}_{parts\_availability}\right)
+      \mathrm{planned}_{maintenance\_hours\_per\_year}
   spinning_reserve_definition:
     name: The spinning reserve requirement
     description: 'Spinning reserve in MW: the grid code''s share of peak demand. This is the catalog''s
@@ -37044,6 +38220,32 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{thermal}_{phs\_duration\_ratio} = \frac{\mathrm{thermal}_{storage\_duration}}{\mathrm{phs}_{duration}}
+  thin_capitalisation_utilisation_definition:
+    name: Gearing against the ceiling
+    description: 'The gearing expressed against the thin-capitalisation ceiling: debt to equity over the
+      limit. 2.33 / 1.5 is 1.55, so the graph''s own defaults breach the ceiling by 55%. A utilisation
+      ratio rather than a bound, because `thin_capitalisation_limit >= debt_equity_ratio` fails at defaults
+      and a batch shipping it would ship a violating graph. The breach is the finding; this node reports
+      it instead of failing on it.'
+    system: financial
+    lhs: thin_capitalisation_utilisation
+    rhs: debt_equity_ratio / thin_capitalisation_limit
+    relation: eq
+    parameters:
+    - thin_capitalisation_utilisation
+    - debt_equity_ratio
+    - thin_capitalisation_limit
+    free_variables: []
+    determined_variables:
+    - thin_capitalisation_utilisation
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: OECD, Limiting Base Erosion Involving Interest Deductions and Other Financial Payments,
+      Action 4 (2015)
+    latex: \mathrm{thin}_{capitalisation\_utilisation} = \frac{\mathrm{debt}_{equity\_ratio}}{\mathrm{thin}_{capitalisation\_limit}}
   tidal_range_cost_alias:
     name: Tidal range capital cost is Tidal range capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `tidal_range_cost`
@@ -37204,26 +38406,34 @@ equations:
     latex: \mathrm{transaction}_{cost\_usd\_per\_year} = \mathrm{transaction}_{costs} \mathrm{total}_{revenue\_usd\_per\_year}
   transmission_investment_definition:
     name: The transmission investment
-    description: 'The line''s installed cost: the USD per MW-km rate times the route-km times the MW the
-      route carries. The unit is a product of three quantities, and the product is the cost the rate means.'
+    description: The transmission investment, with the terrain and tender multiplier applied. The shipped
+      form did not name `transmission_cost_multiplier` at all, so the multiplier was a dial nothing multiplied.
+      It computes 48 bn USD for a 10 GW fleet at defaults, which is high because the shipped product treats
+      `capex_transmission` (USD/MW-km) as per fleet megawatt rather than per route megawatt; that defect
+      is recorded and not fixed here, because the fix needs a route-MW base the graph does not carry.
     system: cost_accounting
     lhs: transmission_investment_usd
-    rhs: capex_transmission * transmission_line_length_km * total_capacity_mw
+    rhs: transmission_cost_multiplier * capex_transmission * transmission_line_length_km * total_capacity_mw
     relation: eq
     parameters:
-    - transmission_investment_usd
     - capex_transmission
     - total_capacity_mw
+    - transmission_cost_multiplier
+    - transmission_investment_usd
     - transmission_line_length_km
-    free_variables: []
+    free_variables:
+    - capex_transmission
+    - total_capacity_mw
+    - transmission_cost_multiplier
+    - transmission_line_length_km
     determined_variables:
     - transmission_investment_usd
     tolerance: 1.0e-09
     unit_check: true
+    reference: null
+    priority: P1
     solution_method: direct
     linearity: linear
-    priority: P1
-    reference: null
     latex: \mathrm{transmission}_{investment\_usd} = \mathrm{capex}_{transmission} \mathrm{transmission}_{line\_length\_km}
       \mathrm{total}_{capacity\_mw}
   transmission_jobs_definition:
@@ -37300,6 +38510,29 @@ equations:
     reference: null
     latex: \mathrm{transmission}_{loss\_after\_target} = \mathrm{transmission}_{loss\_factor} \left(1
       - \mathrm{transmission}_{loss\_reduction\_target}\right)
+  transmission_transfer_definition:
+    name: The transferred power
+    description: 'The power the transmission fleet transfers: the utilisation share times installed nameplate.
+      0.5 x 10,000 MW is 5,000 MW. A product rather than a bound, because the graph carries no transfer-limit
+      node to bound it against and the transferred power is what the flow reports need.'
+    system: energy_balance
+    lhs: transmission_transfer_mw
+    rhs: transmission_capacity_factor * total_capacity_mw
+    relation: eq
+    parameters:
+    - transmission_transfer_mw
+    - total_capacity_mw
+    - transmission_capacity_factor
+    free_variables: []
+    determined_variables:
+    - transmission_transfer_mw
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{transmission}_{transfer\_mw} = \mathrm{transmission}_{capacity\_factor} \mathrm{total}_{capacity\_mw}
   tsam_segment_hours_definition:
     name: The segment length
     description: 'The length of one time-slice segment: a day divided by the segment count. The `24` is
@@ -37634,6 +38867,30 @@ equations:
     reference: World Bank Regulation of Utilities handbook, revenue caps
     latex: \mathrm{vulnerable}_{customer\_protection\_spend\_usd\_per\_year} = \mathrm{vulnerable}_{customer\_protection}
       \mathrm{allowed}_{revenue\_requirement}
+  vulnerable_population_definition:
+    name: Vulnerable population
+    description: 'People exposed under the composite vulnerability index: the index times the population.
+      0.5 x 45 M is 22.5 M. The index is an exposure/sensitivity/adaptive-capacity composite, and applying
+      it as a share of the population is the one reading that makes it multiplicative. It is deliberately
+      not aliased to a complement of adaptive capacity -- an identity the index literature does not state.'
+    system: health
+    lhs: vulnerable_population
+    rhs: vulnerability_index * population_total
+    relation: eq
+    parameters:
+    - vulnerable_population
+    - population_total
+    - vulnerability_index
+    free_variables: []
+    determined_variables:
+    - vulnerable_population
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{vulnerable}_{population} = \mathrm{vulnerability}_{index} \mathrm{population}_{total}
   wacc_alias:
     name: WACC is the discount rate
     description: The catalog's WACC row and the financial block's discount rate are one quantity, so the
@@ -37803,6 +39060,29 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{water}_{quality\_impact} = 1 - \mathrm{water}_{quality\_index}
+  water_stress_index_definition:
+    name: The water stress index
+    description: 'Demand over availability: 93.25e6 m3/year over 200e6 is 0.466. A ratio of two graph
+      nodes and therefore derived, which is why its shipped 0.4 default has to go: a derived node carries
+      no default, and 0.4 was not the ratio its own two inputs compute.'
+    system: water_energy
+    lhs: water_stress_index
+    rhs: total_water_demand_m3 / water_availability_m3
+    relation: eq
+    parameters:
+    - water_stress_index
+    - total_water_demand_m3
+    - water_availability_m3
+    free_variables: []
+    determined_variables:
+    - water_stress_index
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{water}_{stress\_index} = \frac{\mathrm{total}_{water\_demand\_m3}}{\mathrm{water}_{availability\_m3}}
   wave_energy_converter_cost_alias:
     name: Wave energy converter cost is Wave energy capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `wave_energy_converter_cost`
@@ -37897,6 +39177,30 @@ equations:
     reference: null
     latex: \mathrm{wind}_{capacity\_factor\_at\_vintage} = \mathrm{capacity}_{factor\_wind\_onshore} {\left(1
       - \mathrm{wind}_{degradation}\right)}^{\mathrm{wind}_{cf\_year}}
+  wind_effective_capacity_factor_definition:
+    name: Wind resource share
+    description: 'The onshore wind output share under a resource scenario: the base capacity factor times
+      the multiplier. 0.4 x 0.5 is 0.20. The node is a *yield* multiplier and not a speed ratio: the wind-power
+      law would cube it, and cubing a [0, 1] dial drives every scenario to zero. The prose carries the
+      distinction because the linear form is otherwise a physics error wearing a correct dimension.'
+    system: energy_balance
+    lhs: wind_effective_capacity_factor
+    rhs: capacity_factor_wind_onshore * wind_speed_multiplier
+    relation: eq
+    parameters:
+    - wind_effective_capacity_factor
+    - capacity_factor_wind_onshore
+    - wind_speed_multiplier
+    free_variables: []
+    determined_variables:
+    - wind_effective_capacity_factor
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{wind}_{effective\_capacity\_factor} = \mathrm{capacity}_{factor\_wind\_onshore} \mathrm{wind}_{speed\_multiplier}
   wind_offshore_cost_alias:
     name: Offshore wind capital cost (legacy) is Offshore wind capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `wind_offshore_cost`
@@ -39247,24 +40551,6 @@ relationships:
   description: The elasticity sets the shape of the demand curve.
   reference: null
   priority: P2
-- source: forced_outage_rate
-  target: coal_eaf
-  equation_id: coal_eaf_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: A higher forced-outage rate lowers the availability.
-  reference: null
-  priority: P1
-- source: planned_outage_rate
-  target: coal_eaf
-  equation_id: coal_eaf_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: Planned outage time is unavailable energy.
-  reference: null
-  priority: P1
 - source: forced_outage_rate_gas
   target: gas_eaf
   equation_id: gas_eaf_definition
@@ -40525,43 +41811,7 @@ relationships:
   description: Enters the annuity whose yearly charge carries the capital.
   reference: null
   priority: P1
-- source: annualised_capex_usd_per_kw_wind
-  target: lcoe_wind_usd_per_mwh
-  equation_id: lcoe_wind_definition
-  relationship: functional
-  direction: forward
-  strength: soft
-  description: Enters the technology's levelised cost.
-  reference: null
-  priority: P1
-- source: capacity_factor_wind_onshore
-  target: lcoe_wind_usd_per_mwh
-  equation_id: lcoe_wind_definition
-  relationship: functional
-  direction: forward
-  strength: soft
-  description: Enters the technology's levelised cost.
-  reference: null
-  priority: P1
 - source: lcoe_wind_usd_per_mwh
-  target: lcoe_wind_usd_per_mwh
-  equation_id: lcoe_wind_definition
-  relationship: functional
-  direction: forward
-  strength: soft
-  description: Enters the technology's levelised cost.
-  reference: null
-  priority: P1
-- source: opex_fixed_wind
-  target: lcoe_wind_usd_per_mwh
-  equation_id: lcoe_wind_definition
-  relationship: functional
-  direction: forward
-  strength: soft
-  description: Enters the technology's levelised cost.
-  reference: null
-  priority: P1
-- source: opex_variable_wind
   target: lcoe_wind_usd_per_mwh
   equation_id: lcoe_wind_definition
   relationship: functional
@@ -43078,33 +44328,6 @@ relationships:
 - source: electrolyser_learning_rate
   target: capex_hydrogen_electrolyser_learning_usd_per_kw
   equation_id: capex_hydrogen_electrolyser_learning_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: Enters the product.
-  reference: null
-  priority: P1
-- source: capex_transmission
-  target: transmission_investment_usd
-  equation_id: transmission_investment_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: Enters the product.
-  reference: null
-  priority: P1
-- source: total_capacity_mw
-  target: transmission_investment_usd
-  equation_id: transmission_investment_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: Enters the product.
-  reference: null
-  priority: P1
-- source: transmission_line_length_km
-  target: transmission_investment_usd
-  equation_id: transmission_investment_definition
   relationship: functional
   direction: forward
   strength: hard
@@ -46072,72 +47295,6 @@ relationships:
   description: Enters the product identity.
   reference: Rate-based levy and allowance definitions (standard fiscal accounting)
   priority: P1
-- source: discount_rate
-  target: weighted_average_cost_of_capital
-  equation_id: wacc_alias
-  relationship: equality
-  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
-    computes.'
-- source: capex_usd_per_kw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: Gross fleet capital enters the base the allowed return is earned on.
-- source: total_capacity_mw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: The fleet's size sets the scale of the capital in the accounts.
-- source: accumulated_depreciation_fraction
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: What the books have written down between gross capital and the base.
-- source: regulatory_asset_base
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: equality
-  description: Straight-line write-down of the base over the regulatory asset life.
-- source: depreciation_life_by_asset
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: functional
-  description: A longer regulatory life spreads the base thinner over the years.
-- source: regulatory_depreciation
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: Depreciation is the first term of the revenue requirement.
-- source: regulatory_asset_base
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: The return is earned on the base, not on gross capital.
-- source: discount_rate
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: The return rate is the blend the financial block computes.
-- source: allowed_return_on_debt
-  target: cost_of_debt
-  equation_id: cost_of_debt_capped
-  relationship: constraint
-  description: The allowance binds the debt rate a scenario may carry.
-- source: allowed_return_on_equity
-  target: cost_of_equity
-  equation_id: cost_of_equity_capped
-  relationship: constraint
-  description: The allowance binds the equity return a valuation may assume.
-- source: regulated_tariff_usd_per_mwh
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: equality
-  description: The applied tariff is the recovery level in the absence of a cap.
-- source: revenue_cap
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: functional
-  description: The cap scales the recovery level; below 1 it withholds part of it.
 - source: additional_abatement_mtco2
   target: baseline_emissions
   equation_id: baseline_emissions_definition
@@ -46514,6 +47671,632 @@ relationships:
   description: The availability multiplier scales the flow the demand is tested against.
   reference: null
   priority: P2
+- source: discount_rate
+  target: weighted_average_cost_of_capital
+  equation_id: wacc_alias
+  relationship: equality
+  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
+    computes.'
+- source: capex_usd_per_kw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: Gross fleet capital enters the base the allowed return is earned on.
+- source: total_capacity_mw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: The fleet's size sets the scale of the capital in the accounts.
+- source: accumulated_depreciation_fraction
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: What the books have written down between gross capital and the base.
+- source: regulatory_asset_base
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: equality
+  description: Straight-line write-down of the base over the regulatory asset life.
+- source: depreciation_life_by_asset
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: functional
+  description: A longer regulatory life spreads the base thinner over the years.
+- source: regulatory_depreciation
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: Depreciation is the first term of the revenue requirement.
+- source: regulatory_asset_base
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return is earned on the base, not on gross capital.
+- source: discount_rate
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return rate is the blend the financial block computes.
+- source: allowed_return_on_debt
+  target: cost_of_debt
+  equation_id: cost_of_debt_capped
+  relationship: constraint
+  description: The allowance binds the debt rate a scenario may carry.
+- source: allowed_return_on_equity
+  target: cost_of_equity
+  equation_id: cost_of_equity_capped
+  relationship: constraint
+  description: The allowance binds the equity return a valuation may assume.
+- source: regulated_tariff_usd_per_mwh
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: equality
+  description: The applied tariff is the recovery level in the absence of a cap.
+- source: revenue_cap
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: functional
+  description: The cap scales the recovery level; below 1 it withholds part of it.
+- source: capex_gas
+  target: capex_gas_ccgt
+  equation_id: capex_gas_ccgt_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IEA/NEA Projected Costs of Generating Electricity
+  priority: P1
+- source: thermal_storage_duration
+  target: csp_storage_hours
+  equation_id: csp_storage_hours_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: interruptible_load_mw
+  target: demand_response_capacity
+  equation_id: demand_response_capacity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: interruptible_load_share
+  target: demand_response_potential
+  equation_id: demand_response_potential_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: hydrogen_price_per_mwh
+  target: fuel_cost_hydrogen
+  equation_id: fuel_cost_hydrogen_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: 'LHV of H2: 33.33 kWh/kg (standard fuel tables)'
+  priority: P1
+- source: capacity_factor_hydro
+  target: hydro_capacity_factor
+  equation_id: hydro_capacity_factor_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: cultural_heritage_sites_density
+  target: cultural_heritage_sites
+  equation_id: cultural_heritage_sites_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: land_area_hectares
+  target: cultural_heritage_sites
+  equation_id: cultural_heritage_sites_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: land_area_hectares
+  target: available_land_hectares
+  equation_id: available_land_hectares_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: land_availability_fraction
+  target: available_land_hectares
+  equation_id: available_land_hectares_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: land_aggregation_fragmentation
+  target: parcels_to_assemble
+  equation_id: parcels_to_assemble_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: land_area_hectares
+  target: parcels_to_assemble
+  equation_id: parcels_to_assemble_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: internet_penetration
+  target: internet_users
+  equation_id: internet_users_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: population_total
+  target: internet_users
+  equation_id: internet_users_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: mobile_coverage
+  target: mobile_covered_population
+  equation_id: mobile_covered_population_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: population_total
+  target: mobile_covered_population
+  equation_id: mobile_covered_population_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: population_total
+  target: vulnerable_population
+  equation_id: vulnerable_population_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: vulnerability_index
+  target: vulnerable_population
+  equation_id: vulnerable_population_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: peak_demand_multiplier
+  target: peak_demand_shifted_mw
+  equation_id: peak_demand_shifted_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: peak_demand_mw
+  target: peak_demand_shifted_mw
+  equation_id: peak_demand_shifted_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: licence_fees
+  target: licence_fee_spend_usd_per_year
+  equation_id: licence_fee_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: licence_fee_spend_usd_per_year
+  equation_id: licence_fee_spend_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: transmission_transfer_mw
+  equation_id: transmission_transfer_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: transmission_capacity_factor
+  target: transmission_transfer_mw
+  equation_id: transmission_transfer_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: capex_usd_per_kw
+  target: cat_bond_coupon_cost_usd
+  equation_id: cat_bond_coupon_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: cat_bond_spread
+  target: cat_bond_coupon_cost_usd
+  equation_id: cat_bond_coupon_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: debt_fraction
+  target: cat_bond_coupon_cost_usd
+  equation_id: cat_bond_coupon_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: cat_bond_coupon_cost_usd
+  equation_id: cat_bond_coupon_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: debt_equity_ratio
+  target: thin_capitalisation_utilisation
+  equation_id: thin_capitalisation_utilisation_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: OECD, Limiting Base Erosion Involving Interest Deductions and Other Financial Payments, Action
+    4 (2015)
+  priority: P1
+- source: thin_capitalisation_limit
+  target: thin_capitalisation_utilisation
+  equation_id: thin_capitalisation_utilisation_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: OECD, Limiting Base Erosion Involving Interest Deductions and Other Financial Payments, Action
+    4 (2015)
+  priority: P1
+- source: crew_availability
+  target: crew_shortfall_hours_per_year
+  equation_id: crew_shortfall_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: planned_maintenance_hours_per_year
+  target: crew_shortfall_hours_per_year
+  equation_id: crew_shortfall_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: planned_maintenance_hours_per_year
+  target: spare_parts_deferred_hours_per_year
+  equation_id: spare_parts_deferred_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: spare_parts_availability
+  target: spare_parts_deferred_hours_per_year
+  equation_id: spare_parts_deferred_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: planned_maintenance_hours_per_year
+  target: predictive_maintenance_hours_per_year
+  equation_id: predictive_maintenance_hours_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: predictive_maintenance_adoption
+  target: predictive_maintenance_hours_per_year
+  equation_id: predictive_maintenance_hours_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: outage_cause_distribution
+  target: outage_events_from_cause
+  equation_id: outage_events_from_cause_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IEEE Guide for Electric Power Distribution Reliability Indices (1366), tutorial deck
+  priority: P1
+- source: system_saifi_events_per_year
+  target: outage_events_from_cause
+  equation_id: outage_events_from_cause_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IEEE Guide for Electric Power Distribution Reliability Indices (1366), tutorial deck
+  priority: P1
+- source: demand_twh
+  target: distribution_losses_twh
+  equation_id: distribution_losses_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: distribution_loss_factor
+  target: distribution_losses_twh
+  equation_id: distribution_losses_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: capacity_factor_hydro
+  target: hydro_effective_capacity_factor
+  equation_id: hydro_effective_capacity_factor_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: hydro_drought_multiplier
+  target: hydro_effective_capacity_factor
+  equation_id: hydro_effective_capacity_factor_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: capacity_factor_wind_onshore
+  target: wind_effective_capacity_factor
+  equation_id: wind_effective_capacity_factor_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: wind_speed_multiplier
+  target: wind_effective_capacity_factor
+  equation_id: wind_effective_capacity_factor_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: solar_irradiance_multiplier
+  target: solar_effective_capacity_factor
+  equation_id: solar_effective_capacity_factor_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: solar_pv_capacity_factor
+  target: solar_effective_capacity_factor
+  equation_id: solar_effective_capacity_factor_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: precipitation_multiplier
+  target: precipitation_adjusted_flow_m3_per_s
+  equation_id: precipitation_adjusted_flow_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: river_mean_annual_flow_m3_per_s
+  target: precipitation_adjusted_flow_m3_per_s
+  equation_id: precipitation_adjusted_flow_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: representative_days
+  target: representative_snapshots
+  equation_id: representative_snapshots_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: tsam_segments
+  target: representative_snapshots
+  equation_id: representative_snapshots_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: total_water_demand_m3
+  target: water_stress_index
+  equation_id: water_stress_index_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: water_availability_m3
+  target: water_stress_index
+  equation_id: water_stress_index_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: forced_outage_rate_coal
+  target: coal_eaf
+  equation_id: coal_eaf_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the amended identity.
+  reference: null
+  priority: P1
+- source: planned_outage_rate
+  target: coal_eaf
+  equation_id: coal_eaf_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the amended identity.
+  reference: null
+  priority: P1
+- source: annualised_capex_usd_per_kw_wind
+  target: lcoe_wind_usd_per_mwh
+  equation_id: lcoe_wind_definition
+  relationship: functional
+  direction: forward
+  strength: soft
+  description: Enters the amended identity.
+  reference: NREL ATB 2025 Equations & Variables
+  priority: P1
+- source: capacity_factor_wind_onshore
+  target: lcoe_wind_usd_per_mwh
+  equation_id: lcoe_wind_definition
+  relationship: functional
+  direction: forward
+  strength: soft
+  description: Enters the amended identity.
+  reference: NREL ATB 2025 Equations & Variables
+  priority: P1
+- source: opex_fixed_wind_onshore
+  target: lcoe_wind_usd_per_mwh
+  equation_id: lcoe_wind_definition
+  relationship: functional
+  direction: forward
+  strength: soft
+  description: Enters the amended identity.
+  reference: NREL ATB 2025 Equations & Variables
+  priority: P1
+- source: opex_variable_wind
+  target: lcoe_wind_usd_per_mwh
+  equation_id: lcoe_wind_definition
+  relationship: functional
+  direction: forward
+  strength: soft
+  description: Enters the amended identity.
+  reference: NREL ATB 2025 Equations & Variables
+  priority: P1
+- source: capex_transmission
+  target: transmission_investment_usd
+  equation_id: transmission_investment_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the amended identity.
+  reference: null
+  priority: P1
+- source: total_capacity_mw
+  target: transmission_investment_usd
+  equation_id: transmission_investment_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the amended identity.
+  reference: null
+  priority: P1
+- source: transmission_cost_multiplier
+  target: transmission_investment_usd
+  equation_id: transmission_investment_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the amended identity.
+  reference: null
+  priority: P1
+- source: transmission_line_length_km
+  target: transmission_investment_usd
+  equation_id: transmission_investment_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the amended identity.
+  reference: null
+  priority: P1
 cross_validation:
 - id: carbon_price_budget_alignment
   condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0

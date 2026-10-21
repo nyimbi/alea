@@ -473,7 +473,10 @@ def test_the_summary_serves_the_endogenous_layer(
 	# Batch 29 took it to 759: seven macro nodes flipped from free to derived
 	# when the equations that determine them shipped, and four more free bases
 	# arrived with the demand products.
-	assert len(free) == 754, len(free)
+	# Batch 31 took it to 739: six aliases moved a duplicate id from free to
+	# derived, and twenty-two more free bases became derived under the
+	# product equations.
+	assert len(free) == 739, len(free)
 
 
 # ---------------------------------------------------------------------------

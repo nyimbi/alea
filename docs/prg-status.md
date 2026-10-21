@@ -2412,6 +2412,113 @@ uncertainty register is unchanged in its inputs and derived-stochastic counts --
 none of the ten products is stochastic -- and its reach moves 149 to 150 on
 `baseline_emissions` alone.
 
+**Batch 31 -- the product remainder.** Thirty-four equations over fifty
+nodes, authored from
+`docs/research/coupling-packs/threshold-product-remainder.md`. The pack covers
+sixty-six: twenty-five THRESHOLD and forty-one PRODUCT. This batch takes the
+PRODUCT arithmetic and the retype both classes need. The twenty-three THRESHOLD
+bounds are batch 32, because a bound and an equality couple a node by different
+mechanisms and one batch over both would leave the edge register unable to say
+which equation coupled which node.
+
+*Six nodes were already coupled and the batch does not touch them.*
+`archaeological_sites_density`, `sacred_sites_density`,
+`synthetic_fuel_share_aviation`, `synthetic_fuel_share_shipping`,
+`distribution_network_km` and `hydrogen_storage_capacity` are named by shipped
+equations. The pack records what closed each rather than proposing a second
+equation, which is the register's own rule: a node with one consumer and a
+second proposed one is a duplicate waiting to disagree.
+
+*Three shipped equations read the wrong operand, and each amendment is a
+factor.* `coal_eaf_definition` read the *generic* `forced_outage_rate`, which
+`availability_definition` derives from MTBF/MTTR as 24/50024 = 0.00048. That
+is a 0.05% forced-outage rate for a coal fleet, against the 10%
+`forced_outage_rate_coal` carries: a factor of 200, and the shipped equation
+read the wrong one. Coal availability moves 0.9495 to 0.85.
+`lcoe_wind_definition` divides by `capacity_factor_wind_onshore` -- it is an
+onshore LCOE -- but read the generic `opex_fixed_wind` (40) rather than
+`opex_fixed_wind_onshore` (30); the LCOE moves 66.53 to 63.67 USD/MWh. The
+alternative, aliasing `opex_fixed_wind` to the onshore node, was rejected: it
+makes a shipped node derived and drops its 40 default to fix an equation that
+is the actual defect.
+`transmission_investment_definition` did not name
+`transmission_cost_multiplier` at all, so a terrain-and-tender dial was a knob
+nothing multiplied.
+
+*The defect the amendment exposed and did not fix.*
+`transmission_investment_definition` computes 48 bn USD for a 10 GW fleet,
+because it multiplies `capex_transmission` (USD/MW-km) by total *fleet* MW
+rather than route MW. The correct form needs a route-MW base the graph does
+not carry, and inventing one would put a second unverified number behind the
+first. The batch records the defect in the equation's own description rather
+than silently inheriting it or papering over it with a fabricated base.
+
+*Two default corrections ship with the couplings that expose them.*
+`distribution_loss_factor` moves 0.5 to 0.06 and its range narrows to
+[0, 0.2]. Half of all delivered energy lost is not a loss rate; at the shipped
+46.54 TWh demand the placeholder loses 23.27 TWh, which the new product
+equation prints as a number rather than leaving as a dial nobody multiplies.
+`water_stress_index` becomes derived: it is the ratio of two graph nodes and
+computes 0.466, so its shipped 0.4 could not survive being computed.
+
+*The alias rule, and where it stops.* Six duplicate ids carry one physical
+quantity under two names and their shipped defaults disagree:
+`capex_gas_ccgt` (1,100) against `capex_gas` (1,100),
+`csp_storage_hours` (24) against `thermal_storage_duration` (8),
+`fuel_cost_hydrogen` (120) against `hydrogen_price_per_mwh` (90.01),
+`hydro_capacity_factor` (0.5) against `capacity_factor_hydro` (0.55),
+`demand_response_capacity` against `interruptible_load_mw`,
+`demand_response_potential` against `interruptible_load_share`. Each becomes
+derived, so it cannot drift. The rule stops where the two ids name *different*
+quantities that merely look alike: `solar_thermal_capacity` against
+`csp_capacity` is a technology label against a capacity, so it is retyped and
+bounded in batch 32 rather than aliased.
+
+*The unit the walker caught.* `cat_bond_spread` shipped as bare
+`basis_points`, which the registry reads as dimensionless, so the coupon
+equation's right side resolved to `USD * MW / kW` against a left side of
+`USD/year` -- inconsistent by a factor of time. A spread is quoted per annum,
+and retyping it to `basis_points/year` is the fix: the equation's `0.0001`
+converts basis points to a fraction and the `/year` supplies the period. This
+is the first new inconsistency the walker caught inside a batch since the
+density-of-state work; the batch's own dimensional pass found it before the
+suite did.
+
+*The edge strength is the equation's, not the edge's.* The first emit gave
+the amended wind LCOE hard edges, and the loader refused the graph: the
+shipped edges are soft, and an equation cited at two tiers is a reader taking
+the strength from whichever edge they read first. The amendment now reads the
+shipped tier and keeps it, with an assertion that the equation does not
+already ship at two.
+
+*Verified at defaults.* `capex_gas_ccgt` 1,100; `csp_storage_hours` 8;
+`demand_response_capacity` 4,250; `demand_response_potential` 0.5;
+`fuel_cost_hydrogen` 90.01; `hydro_capacity_factor` 0.55;
+`cultural_heritage_sites` 1.0; `available_land_hectares` 2,500;
+`parcels_to_assemble` 1,000; `internet_users` 22.5 M;
+`mobile_covered_population` 40.5 M; `vulnerable_population` 22.5 M;
+`peak_demand_shifted_mw` 12,750; `licence_fee_spend_usd_per_year` 5.0 M;
+`transmission_transfer_mw` 5,000; `cat_bond_coupon_cost_usd` 672 M;
+`thin_capitalisation_utilisation` 1.553 (the graph's own gearing breaches the
+1.5 ceiling by 55%, which the ratio reports and a bound would have failed on);
+`crew_shortfall_hours_per_year` 14.4; `spare_parts_deferred_hours_per_year`
+19.2; `predictive_maintenance_hours_per_year` 48; `outage_events_from_cause`
+4.2; `distribution_losses_twh` 2.79; `hydro_effective_capacity_factor` 0.275;
+`wind_effective_capacity_factor` 0.20; `solar_effective_capacity_factor` 0.11;
+`precipitation_adjusted_flow_m3_per_s` 75; `representative_snapshots` 1,200;
+`water_stress_index` 0.466.
+
+*Register movement.* Parameters 1,317 to 1,338, equations 449 to 477, edges
+958 to 1,011, uncoupled 365 to 335 -- the batch couples thirty. The constraint
+register counts 474 hard, one informational and two soft. The derived-node
+audit moves to 164 checked and 440 skipped. The uncertainty register loses one
+input: `fuel_cost_hydrogen` became an alias carrying `determinism: fixed`, so
+a stochastic settable knob left the input register -- the intended effect of
+one dial replacing two, recorded rather than silently accepted. Six products
+with a stochastic relation join the derived-stochastic count (42 to 48), and
+the reach moves 150 to 159. Dimensional walk: 466 consistent, 11 inconsistent,
+0 undecidable -- the same eleven that predate the coupling build, none added.
+
 ## Evaluation of the design docs against the code (2026-10-17)
 
 **`docs/how_prg_works.md` (read-only; a teaching narrative, not read as spec).**

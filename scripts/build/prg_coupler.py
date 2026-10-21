@@ -546,7 +546,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -639,6 +639,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b29_equations)
 		edges = list(BATCH12_EDGES) + b29_edges
+	elif batch == "31":
+		b31_nodes, b31_equations, b31_edges, b31_rules = build_batch31(graph)
+		rules.extend(b31_rules)
+		nodes.update(b31_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b31_equations)
+		edges = list(BATCH12_EDGES) + b31_edges
 	elif batch == "30":
 		b30_nodes, b30_equations, b30_edges, b30_rules = build_batch30(graph)
 		rules.extend(b30_rules)
@@ -8639,6 +8646,830 @@ def build_batch30(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		"description": "The availability multiplier scales the flow the demand is tested against.",
 		"reference": None, "priority": "P2",
 	})
+	return nodes, equations, edges, rules
+
+
+BATCH31_RETYPES: tuple[tuple[str, str, list[float], float, str, str], ...] = (
+	("auction_price_cap", "USD/tonne", [0.0, 2000.0], 200.0, "policy",
+	 "The auction's price ceiling, in the carbon market's own unit. Retyped "
+	 "from the catalog placeholder (no unit, range (0, 1e6), default 500000) "
+	 "to the unit the auction clears in: a cap on an allowance price is a "
+	 "price. The 2,000 USD/tonne ceiling is "
+	 "`carbon_price_escalated_usd_per_tco2`'s own range, so a cap below the "
+	 "escalated price is expressible and a cap at the top of the band is the "
+	 "no-cap case. The default 200 sits above the 81.44 USD/tonne the price "
+	 "reaches at defaults, which is what a cap must do on day one."),
+	("coal_new_build", "MW", [0.0, 200000.0], 5000.0, "fixed",
+	 "New coal build allowed by policy, in megawatts. Retyped from the "
+	 "placeholder to `coal_capacity`'s own unit and its technical ceiling of "
+	 "200,000 MW, so a policy figure and the build it governs are comparable. "
+	 "The 5,000 MW default sits above the 3,000 MW reference fleet -- a "
+	 "ceiling a plan can reach and a 6,000 MW scenario can breach, which a "
+	 "ceiling equal to the build's own maximum could not."),
+	("gas_new_build", "MW", [0.0, 200000.0], 3000.0, "fixed",
+	 "New gas build allowed by policy, in megawatts. Same construction as "
+	 "`coal_new_build`: retyped to the capacity unit and to that capacity's "
+	 "own ceiling, at 3,000 MW against a 1,500 MW reference fleet."),
+	("hydro_new_build", "MW", [0.0, 100000.0], 3000.0, "fixed",
+	 "New hydro build allowed by policy, in megawatts. Retyped to "
+	 "`hydro_capacity`'s ceiling of 100,000 MW, at 3,000 MW against a 1,500 MW "
+	 "reference fleet."),
+	("nuclear_new_build", "MW", [0.0, 20000.0], 5000.0, "fixed",
+	 "New nuclear build allowed by policy, in megawatts. Retyped to "
+	 "`nuclear_capacity`'s ceiling of 20,000 MW. The 5,000 MW default is one "
+	 "large unit or two SMR modules, against a 0 MW reference fleet -- the "
+	 "ceiling is the only thing that could admit a first plant, so it must be "
+	 "positive while the build is zero."),
+	("compressed_air_capacity", "MW", [0.0, 1000000.0], 0.0, "physical",
+	 "Compressed-air energy storage nameplate, in megawatts. Retyped from the "
+	 "placeholder to a capacity and defaulted to zero, because the technology "
+	 "is unbuilt at the reference scenario and a 500,000 MW placeholder "
+	 "default is not a plant."),
+	("flywheel_capacity", "MW", [0.0, 1000000.0], 0.0, "fixed",
+	 "Flywheel storage nameplate, in megawatts, defaulted to zero for the same "
+	 "reason: an unbuilt technology's capacity is zero, not a placeholder."),
+	("gravity_storage_capacity", "MW", [0.0, 1000000.0], 0.0, "fixed",
+	 "Gravity storage nameplate, in megawatts, defaulted to zero."),
+	("fusion_capacity", "MW", [0.0, 1000000.0], 0.0, "fixed",
+	 "Fusion nameplate, in megawatts, defaulted to zero. The node exists so a "
+	 "scenario can declare a fusion programme; the reference scenario has "
+	 "none."),
+	("hydrogen_fuel_cell_capacity", "MW", [0.0, 1000000.0], 0.0, "fixed",
+	 "Hydrogen fuel-cell nameplate, in megawatts, defaulted to zero. A fuel "
+	 "cell is a generator and not a store, which is why the bound this batch "
+	 "does not ship would sit against the fleet and not the storage envelope."),
+	("marine_otec_capacity", "MW", [0.0, 1000000.0], 0.0, "physical",
+	 "Ocean thermal energy conversion nameplate, in megawatts, defaulted to "
+	 "zero."),
+	("marine_tidal_capacity", "MW", [0.0, 1000000.0], 0.0, "fixed",
+	 "Tidal-stream nameplate, in megawatts, defaulted to zero."),
+	("marine_wave_capacity", "MW", [0.0, 1000000.0], 0.0, "fixed",
+	 "Wave nameplate, in megawatts, defaulted to zero."),
+	("small_modular_reactor_capacity", "MW", [0.0, 20000.0], 0.0, "fixed",
+	 "Small modular reactor nameplate, in megawatts, defaulted to zero. "
+	 "Retyped to the nuclear capacity ceiling rather than the generic "
+	 "placeholder, because an SMR is a nuclear plant and shares its upper "
+	 "bound."),
+	("tidal_range_capacity", "MW", [0.0, 1000000.0], 0.0, "fixed",
+	 "Tidal-range barrage nameplate, in megawatts, defaulted to zero. Kept "
+	 "separate from `marine_tidal_capacity`: a barrage and a tidal-stream "
+	 "array are different technologies with different resource bases, and one "
+	 "ceiling over both would let a barrage scenario cap a stream project."),
+	("solar_pv_land_constraint", "MW", [0.0, 500000.0], 20000.0, "fixed",
+	 "The land ceiling expressed as the PV nameplate the available land "
+	 "supports, in megawatts. Retyped to `solar_pv_capacity`'s own ceiling. "
+	 "The node is a *converted* land ceiling and not a land area: the graph "
+	 "carries no MW-per-hectare intensity, so a ceiling in hectares could not "
+	 "be turned into a build limit by any equation in the library."),
+	("solar_pv_max_build", "MW", [0.0, 500000.0], 20000.0, "fixed",
+	 "The PV build ceiling, in megawatts. Retyped to the PV capacity's own "
+	 "ceiling. Its description calls it an annual build ceiling while it is "
+	 "stated against the stock, because the graph carries no annual-increment "
+	 "node; the prose here says so rather than inheriting the mislabel."),
+	("solar_thermal_capacity", "MW", [0.0, 30000.0], 0.0, "fixed",
+	 "Solar thermal nameplate, in megawatts, defaulted to zero. Retyped to "
+	 "`csp_capacity`'s ceiling: solar thermal *is* the CSP build under the "
+	 "catalog's second spelling, so it shares that capacity's upper bound "
+	 "without being an alias of it."),
+	("transboundary_water_constraint", "m3/year", [0.0, 1.0e11], 2.0e8,
+	 "fixed",
+	 "The basin's allocation to the project, in cubic metres a year. Retyped "
+	 "from the placeholder to `total_water_demand_m3`'s own unit and range. "
+	 "The 2.0e8 default is `water_availability_m3`'s default, so the two "
+	 "ceilings agree at the reference scenario instead of one silently "
+	 "binding the other. A ceiling defaulted below the propagated demand "
+	 "would ship a graph that fails its own constraint."),
+	# `cat_bond_spread` is quoted per annum -- a spread is an annual rate --
+	# and its shipped unit was the bare `basis_points`, which the walker reads
+	# as dimensionless. That made the coupon equation's right side
+	# `USD * MW / kW` against a left side of `USD/year`, so the product was
+	# inconsistent by a factor of time. Retyping the spread is the fix: the
+	# `0.0001` in the equation converts basis points to a fraction and the
+	# `/year` supplies the period the coupon is paid over.
+	("cat_bond_spread", "basis_points/year", [200.0, 2500.0], 800.0,
+	 "stochastic",
+	 "The coupon a catastrophe bond pays over the risk-free rate, in basis "
+	 "points per annum. Retyped from the bare `basis_points` to a rate: a "
+	 "spread is quoted per year, and the shipped unit left the coupon "
+	 "equation's two sides differing by a factor of time. 800 bp is 8% over "
+	 "the risk-free rate, which is the order a cat-bond tranche pays."),
+	("spare_parts_lead_time", "hours", [500.0, 500000.0], 720.0, "fixed",
+	 "The lead time to deliver a spare part, in hours. Retyped to "
+	 "`mean_time_between_failures`'s own range so the two quantities are "
+	 "comparable: a part whose delivery takes longer than the unit's mean "
+	 "time between failures makes the expected wait for it dominate "
+	 "availability. 720 h is 30 days against a 50,000 h MTBF."),
+)
+
+BATCH31_AMEND_RETYPES: tuple[tuple[str, str, list[float], float, str], ...] = (
+	("distribution_loss_factor", "1", [0.0, 0.2], 0.06, "fixed",
+	 "The share of delivered energy lost in the secondary distribution "
+	 "network. Narrowed from [0, 1] to [0, 0.2]: a loss share above 20% is not "
+	 "a distribution network but a fault. The default moves from 0.5 to 0.06 "
+	 "in the same edit, because 0.5 is not a loss rate -- at the shipped "
+	 "46.54 TWh demand it loses 23.27 TWh, so half the energy sold disappears "
+	 "in the secondary network. 6% is the level a single-country low-voltage "
+	 "network actually runs at; the 20% ceiling leaves room for a stressed "
+	 "scenario without admitting an arithmetic error as one."),
+)
+
+BATCH31_DERIVED: tuple[tuple[str, str, list[float], str, str, str], ...] = (
+	("available_land_hectares", "hectare", [0.0, 500000.0], "physical",
+	 "Land Use & Community",
+	 "The share of the project's land take that is technically and legally "
+	 "available for construction: the availability fraction times the take. "
+	 "`land_area_hectares` describes itself as the project's own take, so the "
+	 "two nodes agree on the base and the earlier reading of this share as a "
+	 "fraction of a separate *study area* was the mistake. 0.5 x 5,000 ha is "
+	 "2,500 ha."),
+	("cultural_heritage_sites", "sites", [0.0, 2500.0], "fixed",
+	 "Environmental",
+	 "Expected count of cultural-heritage sites inside the project footprint: "
+	 "the measured density per 100 km2 times the land take converted to the "
+	 "density's own denominator, built exactly as the archaeological and "
+	 "sacred counts are. 2.0 per 100 km2 over 5,000 ha is 1.0 site. The 2,500 "
+	 "ceiling is the 50 per 100 km2 top of the density band over a 500,000 ha "
+	 "take."),
+	("cat_bond_coupon_cost_usd", "USD/year", [0.0, 1.0e12], "stochastic",
+	 "Insurance & Catastrophe",
+	 "The coupon a catastrophe bond pays per year: its spread over the "
+	 "risk-free rate, applied to the debt tranche of the asset value. 800 bp "
+	 "on 70% of 1,200 USD/kW over 10 GW is 672 million USD a year. The "
+	 "`0.0001` is the basis-point-to-fraction conversion, which is why the "
+	 "walker reads the spread as a dimensionless multiplier over the currency "
+	 "the rest of the product carries. Determinism is stochastic because the "
+	 "spread is."),
+	("crew_shortfall_hours_per_year", "hours/year", [0.0, 8760.0], "fixed",
+	 "Operational",
+	 "Planned maintenance hours lost to crew unavailability: the unavailable "
+	 "share times the planned hours. 0.15 x 96 h is 14.4 h/year. The shipped "
+	 "graph carries the planned hours and not the shortfall, so this is the "
+	 "quantity no node held; the available-hours spelling would restate a "
+	 "number the graph already has."),
+	("distribution_losses_twh", "TWh/year", [0.0, 4000.0], "fixed",
+	 "Grid",
+	 "Energy lost in the secondary distribution network: the loss share times "
+	 "delivered demand. At the corrected 0.06 it is 2.79 TWh of 46.54; at the "
+	 "placeholder 0.5 it would have been 23.27, half the energy sold. The "
+	 "4,000 TWh ceiling is the loss share's 20% top over the demand band's "
+	 "20,000 TWh."),
+	("hydro_effective_capacity_factor", "1", [0.0, 1.0], "stochastic",
+	 "Generation",
+	 "The drought-adjusted hydro output share: the base capacity factor times "
+	 "the drought multiplier. 0.55 x 0.5 is 0.275. Read against "
+	 "`capacity_factor_hydro` and not against the `hydro_capacity_factor` "
+	 "alias, so the product does not depend on another batch's alias."),
+	("internet_users", "people", [0.0, 2.0e8], "fixed", "Digital",
+	 "People with internet access: the penetration share times the "
+	 "population. 0.5 x 45 M is 22.5 M. Measured against total population and "
+	 "not the electrified subset: connectivity is a population share, and "
+	 "multiplying by the subset would condition it on an unrelated dial."),
+	("mobile_covered_population", "people", [0.0, 2.0e8], "fixed",
+	 "Digital",
+	 "People inside mobile coverage: the coverage share times the population. "
+	 "0.9 x 45 M is 40.5 M, on the same base as internet users and for the "
+	 "same reason."),
+	("vulnerable_population", "people", [0.0, 2.0e8], "fixed", "Social",
+	 "People exposed under the composite vulnerability index: the index times "
+	 "the population. 0.5 x 45 M is 22.5 M. The index is an "
+	 "exposure/sensitivity/adaptive-capacity composite and is read here as a "
+	 "share of the population, which is the one reading that makes it "
+	 "multiplicative; it is deliberately not aliased to a complement of "
+	 "adaptive capacity, an identity the index literature does not state."),
+	("parcels_to_assemble", "parcels", [0.0, 2.5e6], "fixed", "Land",
+	 "Land parcels that must be assembled for the project: the parcel density "
+	 "per km2 times the land take. 20 per km2 over 5,000 ha is 1,000 parcels. "
+	 "The `/100` converts hectares to the density's own denominator -- one "
+	 "km2 is 100 ha -- which is why the walker resolves the right-hand side "
+	 "to parcels. The 2.5 M ceiling is the 500 per km2 top of the density "
+	 "band over a 500,000 ha take."),
+	("licence_fee_spend_usd_per_year", "USD/year", [0.0, 5.0e9], "policy",
+	 "Regulatory",
+	 "The annual licence bill: the per-MW fee over the licensed fleet. 500 "
+	 "USD/MW/year over 10,000 MW is 5.0 M USD/year. Levied on total nameplate "
+	 "and not on firm capacity, because a licence attaches to every megawatt "
+	 "registered and a firm-capacity base would exempt the VRE fleet the fee "
+	 "is charged on."),
+	("predictive_maintenance_hours_per_year", "hours/year", [0.0, 8760.0],
+	 "fixed", "Operational",
+	 "Planned maintenance hours moved into the predictive regime: the "
+	 "adoption share times the planned hours. 0.5 x 96 h is 48 h/year. The "
+	 "moved hours are the quantity the node names; the complement is "
+	 "derivable from them and is not a second node."),
+	("spare_parts_deferred_hours_per_year", "hours/year", [0.0, 8760.0],
+	 "fixed", "Operational",
+	 "Planned maintenance hours deferred by parts stockouts: the unavailable "
+	 "share of spares times the planned hours. 0.2 x 96 h is 19.2 h/year."),
+	("representative_snapshots", "1", [0.0, 9600.0], "fixed", "Temporal",
+	 "The time slices the representative-day sampling produces: the sampled "
+	 "days times the segments per day. 50 x 24 is 1,200 snapshots. The "
+	 "right-hand side is dimensionless under the walker because "
+	 "`tsam_segments` is 1/day, which is what a count should be -- the "
+	 "alternative `representative_days * 24` carries a bare constant and "
+	 "`unit_of` returns `day` for it, so the checker could not see the hour."),
+	("outage_events_from_cause", "events/year", [0.0, 500.0], "stochastic",
+	 "Outage",
+	 "Interruption events attributable to a named cause: the cause share "
+	 "times the system event rate. 0.35 x 12 events/year is 4.2 weather-caused "
+	 "events a year. A share of events times a rate of events, which is why "
+	 "the SAIDI hours are not the base -- a share of events times hours is "
+	 "neither."),
+	("peak_demand_shifted_mw", "MW", [1.0, 2.0e6], "fixed", "Demand",
+	 "Peak demand under a scaling factor: one plus the multiplier, times the "
+	 "base peak. 1.5 x 8,500 MW is 12,750 MW. The `(1 + m)` form is the only "
+	 "one whose zero is a no-op; a bare product would halve peak demand at "
+	 "the shipped 0.5, which is a derating and not the scaling factor the "
+	 "node names."),
+	("precipitation_adjusted_flow_m3_per_s", "m3/s", [0.0, 2000.0],
+	 "stochastic", "Water",
+	 "The mean annual river flow under a precipitation scenario: the "
+	 "multiplier times the base flow. 0.5 x 150 m3/s is 75 m3/s. Applied to "
+	 "the raw flow and not to `environmental_flow_m3_per_s`, which is already "
+	 "derived from the flow and the requirement share -- applying it there "
+	 "would count the scenario twice."),
+	("thin_capitalisation_utilisation", "1", [0.0, 3.0], "policy", "Tax",
+	 "The gearing expressed against the thin-capitalisation ceiling: debt to "
+	 "equity over the limit. 2.33 / 1.5 is 1.55, which says the graph's own "
+	 "defaults breach the ceiling by 55%. A utilisation ratio and not a bound, "
+	 "because the bound `limit >= debt_equity_ratio` would fail at defaults "
+	 "and a batch that ships it ships a violating graph. The breach is the "
+	 "finding; the ratio reports it."),
+	("transmission_transfer_mw", "MW", [0.0, 1.0e6], "fixed",
+	 "Transmission & Grid",
+	 "The power the transmission fleet actually transfers: the utilisation "
+	 "share times installed nameplate. 0.5 x 10,000 MW is 5,000 MW. A product "
+	 "and not a bound: there is no transfer-limit node to bound it against, "
+	 "and the transferred power is the quantity the flow reports need."),
+	("wind_effective_capacity_factor", "1", [0.0, 1.0], "stochastic",
+	 "Generation",
+	 "The onshore wind output share under a resource scenario: the base "
+	 "capacity factor times the multiplier. 0.4 x 0.5 is 0.20. The node is a "
+	 "*yield* multiplier and not a speed ratio: cubing it by the wind-power "
+	 "law would drive every scenario to zero on a [0, 1] dial, so the linear "
+	 "form is the physics the node can carry."),
+	("solar_effective_capacity_factor", "1", [0.0, 1.0], "stochastic",
+	 "Generation",
+	 "The PV output share under an irradiance scenario: the base capacity "
+	 "factor times the multiplier. 0.22 x 0.5 is 0.11. Applied to the "
+	 "capacity factor and not to the LCOE, because the LCOE already divides "
+	 "by the capacity factor and the multiplier would enter twice with "
+	 "opposite signs."),
+	("water_stress_index", "1", [0.0, 5.0], "physical", "Water",
+	 "Demand over availability: 93.25e6 m3/year over 200e6 is 0.466. The "
+	 "range must admit above 1, because a drought scenario that consumes "
+	 "more than the available supply is a real state and a [0, 1] band would "
+	 "report it as a range excursion rather than as the stress it is. Derived "
+	 "because it is the ratio of two graph nodes; the shipped 0.4 default was "
+	 "not that ratio and cannot survive the node becoming derived."),
+)
+
+BATCH31_ALIASES: tuple[tuple[str, str, str, str, str, str], ...] = (
+	("capex_gas_ccgt", "capex_gas", "USD/kW", "Technology",
+	 "The combined-cycle gas turbine's capital cost. The catalog carries the "
+	 "CCGT cost twice: `capex_gas` is the 1,100 USD/kW CCGT number and this "
+	 "node is the same figure under a technology-specific id. The alias keeps "
+	 "one spelling and makes the duplicate a derived node rather than a "
+	 "second dial that could disagree."),
+	("csp_storage_hours", "thermal_storage_duration", "hours", "Storage",
+	 "The hours a CSP plant's thermal store discharges at rated output. A CSP "
+	 "store is a thermal store, so this is the graph's own "
+	 "`thermal_storage_duration` under the catalog's second id. The shipped "
+	 "24 h default is three times the graph's 8 h; the alias resolves the "
+	 "disagreement in favour of the graph's own number rather than carrying "
+	 "two dials for one physical quantity."),
+	("demand_response_capacity", "interruptible_load_mw", "MW", "Demand-Side",
+	 "Enrolled demand-response capacity: the interruptible load the graph "
+	 "already derives from the interruptible share and peak demand. 4,250 MW "
+	 "at defaults. The alternative -- a product against `peak_demand_mw` on a "
+	 "new potential share -- computes the same number from the same peak "
+	 "demand, which is `interruptible_load_mw_definition` under another name."),
+	("demand_response_potential", "interruptible_load_share", "1",
+	 "Demand-Side",
+	 "The flexible share of demand a demand-response programme can enrol. The "
+	 "graph already states the share as `interruptible_load_share` (0.5), and "
+	 "a second base at the classification pack's 0.15 would let two dials "
+	 "disagree about one physical quantity."),
+	("fuel_cost_hydrogen", "hydrogen_price_per_mwh", "USD/MWh", "Cost",
+	 "Delivered hydrogen cost per MWh of thermal energy: the graph's own "
+	 "converted price, 90.01 USD/MWh, against this node's shipped 120. The "
+	 "conversion is `hydrogen_price_per_mwh_definition`'s and is not repeated "
+	 "here, because repeating the 33.33 kWh/kg constant would let the two "
+	 "conversions drift."),
+	("hydro_capacity_factor", "capacity_factor_hydro", "1", "Generation",
+	 "The hydro output share. The catalog carries it under two ids and "
+	 "`lcoe_hydro_definition` already reads `capacity_factor_hydro` (0.55); "
+	 "this alias makes the second spelling derived instead of a dial that can "
+	 "disagree."),
+)
+
+BATCH31_EQUATIONS: tuple[
+	tuple[str, str, str, str, str, str, str | None], ...
+] = (
+	# --- the alias family -----------------------------------------------
+	("capex_gas_ccgt_definition", "The CCGT capital cost",
+	 "capex_gas_ccgt", "capex_gas",
+	 "The combined-cycle gas turbine's capital cost is the graph's gas "
+	 "capital cost. An alias rather than a second dial: the catalog's two ids "
+	 "carry one number, and a derived node cannot drift from the one it "
+	 "names. 1,100 USD/kW at defaults.",
+	 "cost_accounting",
+	 "IEA/NEA Projected Costs of Generating Electricity"),
+	("csp_storage_hours_definition", "The CSP store's hours",
+	 "csp_storage_hours", "thermal_storage_duration",
+	 "A CSP plant's store is a thermal store, so its hours at rated output "
+	 "are the graph's thermal-store duration: 8 h, against this node's "
+	 "shipped 24. The alias resolves a disagreement between two ids for one "
+	 "physical quantity in favour of the one the rest of the library reads.",
+	 "energy_balance", None),
+	("demand_response_capacity_definition", "Enrolled demand response",
+	 "demand_response_capacity", "interruptible_load_mw",
+	 "The enrolled flexible capacity is the interruptible load the graph "
+	 "already derives: 4,250 MW from a 0.5 interruptible share over an 8,500 "
+	 "MW peak. An alias, because the product form would compute the same "
+	 "number from the same two operands under a third id.",
+	 "demand_supply", None),
+	("demand_response_potential_definition", "The demand-response share",
+	 "demand_response_potential", "interruptible_load_share",
+	 "The flexible share of demand a programme can enrol is the interruptible "
+	 "share the graph already carries: 0.5. A second share base would let two "
+	 "dials disagree about one physical quantity.",
+	 "demand_supply", None),
+	("fuel_cost_hydrogen_definition", "The delivered hydrogen cost",
+	 "fuel_cost_hydrogen", "hydrogen_price_per_mwh",
+	 "The delivered hydrogen cost per MWh of thermal energy is the graph's "
+	 "own converted price: 90.01 USD/MWh, against this node's shipped 120. "
+	 "The conversion from a price per unit mass to a price per MWh lives in "
+	 "`hydrogen_price_per_mwh_definition` and is not repeated.",
+	 "cost_accounting",
+	 "LHV of H2: 33.33 kWh/kg (standard fuel tables)"),
+	("hydro_capacity_factor_definition", "The hydro output share",
+	 "hydro_capacity_factor", "capacity_factor_hydro",
+	 "The hydro output share is the capacity factor the LCOE and the "
+	 "generation equations already read: 0.55. An alias, so the catalog's "
+	 "second spelling is derived rather than a dial that can disagree with "
+	 "the first.",
+	 "energy_balance", None),
+	# --- the site and land counts ---------------------------------------
+	("cultural_heritage_sites_definition", "Cultural heritage sites",
+	 "cultural_heritage_sites",
+	 "cultural_heritage_sites_density * land_area_hectares / 10000",
+	 "Expected count of cultural-heritage sites inside the project footprint: "
+	 "the measured density per 100 km2 times the land take converted to the "
+	 "density's own denominator. The 10000 is exact, not a fudge: one hectare "
+	 "is 0.01 km2, so hectares over 10,000 is hectares expressed in units of "
+	 "100 km2. 2.0 per 100 km2 over 5,000 ha is 1.0 site, and a fractional "
+	 "value is the expectation, not a count of objects.",
+	 "financial", None),
+	("available_land_hectares_definition", "Available land",
+	 "available_land_hectares",
+	 "land_availability_fraction * land_area_hectares",
+	 "The land actually available for construction: the availability share "
+	 "times the project's land take. 0.5 x 5,000 ha is 2,500 ha. The base is "
+	 "the take and not a separate study area, because `land_area_hectares` "
+	 "describes itself as the project's own take -- which is what an "
+	 "availability share applies to.",
+	 "financial", None),
+	("parcels_to_assemble_definition", "Parcels to assemble",
+	 "parcels_to_assemble",
+	 "land_aggregation_fragmentation * land_area_hectares / 100",
+	 "Land parcels that must be assembled: the parcel density per km2 times "
+	 "the land take. The `/100` is the hectare-to-km2 conversion -- one km2 "
+	 "is 100 ha -- so the right-hand side resolves to parcels. 20 per km2 "
+	 "over 5,000 ha is 1,000 parcels, which is the transaction count a land "
+	 "assembly programme has to clear.",
+	 "financial", None),
+	# --- the share products ---------------------------------------------
+	("internet_users_definition", "Internet users",
+	 "internet_users", "internet_penetration * population_total",
+	 "People with internet access: the penetration share times the "
+	 "population. 0.5 x 45 M is 22.5 M. The base is total population and not "
+	 "the electrified subset: connectivity is a population share, and "
+	 "conditioning it on electrification would make a digital dial move when "
+	 "an unrelated grid dial moved.",
+	 "financial", None),
+	("mobile_covered_population_definition", "People in mobile coverage",
+	 "mobile_covered_population", "mobile_coverage * population_total",
+	 "People inside mobile coverage: the coverage share times the population. "
+	 "0.9 x 45 M is 40.5 M. Same base as internet users, so the two "
+	 "connectivity measures are comparable and their difference is the "
+	 "coverage-versus-adoption gap.",
+	 "financial", None),
+	("vulnerable_population_definition", "Vulnerable population",
+	 "vulnerable_population", "vulnerability_index * population_total",
+	 "People exposed under the composite vulnerability index: the index times "
+	 "the population. 0.5 x 45 M is 22.5 M. The index is an "
+	 "exposure/sensitivity/adaptive-capacity composite, and applying it as a "
+	 "share of the population is the one reading that makes it "
+	 "multiplicative. It is deliberately not aliased to a complement of "
+	 "adaptive capacity -- an identity the index literature does not state.",
+	 "health", None),
+	("peak_demand_shifted_definition", "Peak demand under a scaling factor",
+	 "peak_demand_shifted_mw",
+	 "(1 + peak_demand_multiplier) * peak_demand_mw",
+	 "Peak demand under a scaling factor: one plus the multiplier, times the "
+	 "base peak. 1.5 x 8,500 MW is 12,750 MW. The `(1 + m)` form is the only "
+	 "one whose zero is a no-op; a bare product at the shipped 0.5 would "
+	 "halve peak demand, which is a derating and not the scaling factor the "
+	 "node's name asserts.",
+	 "demand_supply", None),
+	("licence_fee_spend_definition", "The licence bill",
+	 "licence_fee_spend_usd_per_year", "licence_fees * total_capacity_mw",
+	 "The annual licence bill: the per-MW fee over the licensed fleet. 500 "
+	 "USD/MW/year over 10,000 MW is 5.0 million USD/year. Levied on total "
+	 "nameplate, not firm capacity: a licence attaches to every megawatt "
+	 "registered, and a firm-capacity base would exempt the VRE fleet the fee "
+	 "is charged on.",
+	 "cost_accounting", None),
+	("transmission_transfer_definition", "The transferred power",
+	 "transmission_transfer_mw",
+	 "transmission_capacity_factor * total_capacity_mw",
+	 "The power the transmission fleet transfers: the utilisation share times "
+	 "installed nameplate. 0.5 x 10,000 MW is 5,000 MW. A product rather than "
+	 "a bound, because the graph carries no transfer-limit node to bound it "
+	 "against and the transferred power is what the flow reports need.",
+	 "energy_balance", None),
+	("cat_bond_coupon_cost_definition", "The cat-bond coupon",
+	 "cat_bond_coupon_cost_usd",
+	 "cat_bond_spread * 0.0001 * debt_fraction * capex_usd_per_kw * "
+	 "total_capacity_mw * 1000",
+	 "The coupon a catastrophe bond pays per year: its spread over the "
+	 "risk-free rate, applied to the debt tranche of the asset value. 800 bp "
+	 "on 70% of 1,200 USD/kW over 10 GW is 672 million USD a year. The "
+	 "`0.0001` converts basis points to a fraction and the `1000` converts "
+	 "USD/kW over MW to USD, which is why the walker resolves the whole "
+	 "product to currency.",
+	 "financial", None),
+	("thin_capitalisation_utilisation_definition", "Gearing against the ceiling",
+	 "thin_capitalisation_utilisation",
+	 "debt_equity_ratio / thin_capitalisation_limit",
+	 "The gearing expressed against the thin-capitalisation ceiling: debt to "
+	 "equity over the limit. 2.33 / 1.5 is 1.55, so the graph's own defaults "
+	 "breach the ceiling by 55%. A utilisation ratio rather than a bound, "
+	 "because `thin_capitalisation_limit >= debt_equity_ratio` fails at "
+	 "defaults and a batch shipping it would ship a violating graph. The "
+	 "breach is the finding; this node reports it instead of failing on it.",
+	 "financial",
+	 "OECD, Limiting Base Erosion Involving Interest Deductions and Other "
+	 "Financial Payments, Action 4 (2015)"),
+	# --- the operational shortfalls -------------------------------------
+	("crew_shortfall_definition", "Crew shortfall hours",
+	 "crew_shortfall_hours_per_year",
+	 "(1 - crew_availability) * planned_maintenance_hours_per_year",
+	 "Planned maintenance hours lost to crew unavailability: the unavailable "
+	 "share times the planned hours. 0.15 x 96 h is 14.4 h/year. The graph "
+	 "already carries the planned hours, so the available-hours spelling "
+	 "would restate a number it has; the shortfall is the quantity it lacks.",
+	 "reliability", None),
+	("spare_parts_deferred_definition", "Deferred maintenance hours",
+	 "spare_parts_deferred_hours_per_year",
+	 "(1 - spare_parts_availability) * planned_maintenance_hours_per_year",
+	 "Planned maintenance hours deferred by parts stockouts: the unavailable "
+	 "share of spares times the planned hours. 0.2 x 96 h is 19.2 h/year. "
+	 "Alongside the crew shortfall it gives the two independent reasons "
+	 "planned work does not happen, which a single availability figure would "
+	 "conflate.",
+	 "reliability", None),
+	("predictive_maintenance_hours_definition", "Predictive maintenance hours",
+	 "predictive_maintenance_hours_per_year",
+	 "predictive_maintenance_adoption * planned_maintenance_hours_per_year",
+	 "Planned maintenance hours moved into the predictive regime: the "
+	 "adoption share times the planned hours. 0.5 x 96 h is 48 h/year. The "
+	 "moved hours are the quantity the node names; the unmoved complement is "
+	 "derivable from them and is not a second node.",
+	 "reliability", None),
+	("outage_events_from_cause_definition", "Events from a named cause",
+	 "outage_events_from_cause",
+	 "outage_cause_distribution * system_saifi_events_per_year",
+	 "Interruption events attributable to a named cause: the cause share "
+	 "times the system event rate. 0.35 x 12 events/year is 4.2 weather-caused "
+	 "events a year. The base is the event rate and not the SAIDI hours -- a "
+	 "share of events times hours is neither a count nor a duration.",
+	 "reliability",
+	 "IEEE Guide for Electric Power Distribution Reliability Indices (1366), "
+	 "tutorial deck"),
+	# --- the energy products --------------------------------------------
+	("distribution_losses_definition", "Distribution losses",
+	 "distribution_losses_twh", "distribution_loss_factor * demand_twh",
+	 "Energy lost in the secondary distribution network: the loss share times "
+	 "delivered demand. At the corrected 0.06 it is 2.79 TWh of 46.54; at the "
+	 "placeholder 0.5 it was 23.27, which is half the energy sold vanishing "
+	 "in the secondary network. Shipping the product is what makes the "
+	 "default visible as a number rather than as a dial nobody multiplies.",
+	 "energy_balance", None),
+	("hydro_effective_capacity_factor_definition", "Drought-adjusted hydro share",
+	 "hydro_effective_capacity_factor",
+	 "capacity_factor_hydro * hydro_drought_multiplier",
+	 "The drought-adjusted hydro output share: the base capacity factor times "
+	 "the drought multiplier. 0.55 x 0.5 is 0.275. Read against "
+	 "`capacity_factor_hydro` and not the `hydro_capacity_factor` alias, so "
+	 "the product does not depend on another batch's alias resolving first.",
+	 "energy_balance", None),
+	("wind_effective_capacity_factor_definition", "Wind resource share",
+	 "wind_effective_capacity_factor",
+	 "capacity_factor_wind_onshore * wind_speed_multiplier",
+	 "The onshore wind output share under a resource scenario: the base "
+	 "capacity factor times the multiplier. 0.4 x 0.5 is 0.20. The node is a "
+	 "*yield* multiplier and not a speed ratio: the wind-power law would cube "
+	 "it, and cubing a [0, 1] dial drives every scenario to zero. The prose "
+	 "carries the distinction because the linear form is otherwise a physics "
+	 "error wearing a correct dimension.",
+	 "energy_balance", None),
+	("solar_effective_capacity_factor_definition", "Solar resource share",
+	 "solar_effective_capacity_factor",
+	 "solar_pv_capacity_factor * solar_irradiance_multiplier",
+	 "The PV output share under an irradiance scenario: the base capacity "
+	 "factor times the multiplier. 0.22 x 0.5 is 0.11. Applied to the "
+	 "capacity factor and not to the LCOE: the LCOE already divides by the "
+	 "capacity factor, so a multiplier there would enter twice with opposite "
+	 "signs.",
+	 "energy_balance", None),
+	("precipitation_adjusted_flow_definition", "The scenario river flow",
+	 "precipitation_adjusted_flow_m3_per_s",
+	 "precipitation_multiplier * river_mean_annual_flow_m3_per_s",
+	 "The mean annual river flow under a precipitation scenario: the "
+	 "multiplier times the base flow. 0.5 x 150 m3/s is 75 m3/s. Applied to "
+	 "the raw flow and not to `environmental_flow_m3_per_s`, which is already "
+	 "derived from the flow and the requirement share -- applying the "
+	 "scenario there would count it twice.",
+	 "water_energy", None),
+	("representative_snapshots_definition", "Representative snapshots",
+	 "representative_snapshots", "representative_days * tsam_segments",
+	 "The time slices the representative-day sampling produces: the sampled "
+	 "days times the segments per day. 50 x 24 is 1,200 snapshots. The "
+	 "right-hand side is dimensionless under the walker because "
+	 "`tsam_segments` is 1/day, which is what a count should be; the "
+	 "alternative `representative_days * 24` carries a bare constant that "
+	 "`unit_of` reads as `day`, so the checker could not see the hour.",
+	 "energy_balance", None),
+	("water_stress_index_definition", "The water stress index",
+	 "water_stress_index",
+	 "total_water_demand_m3 / water_availability_m3",
+	 "Demand over availability: 93.25e6 m3/year over 200e6 is 0.466. A ratio "
+	 "of two graph nodes and therefore derived, which is why its shipped 0.4 "
+	 "default has to go: a derived node carries no default, and 0.4 was not "
+	 "the ratio its own two inputs compute.",
+	 "water_energy", None),
+)
+
+def build_batch31(
+	graph: Any,
+) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Batch 31: the PRODUCT remainder -- retypes, products and three amendments.
+
+	Thirty-eight nodes, authored from
+	``docs/research/coupling-packs/threshold-product-remainder.md``. The pack
+	covers sixty-six: twenty-five THRESHOLD and forty-one PRODUCT. This batch
+	takes the PRODUCT arithmetic and the retype both classes need; the
+	twenty-three THRESHOLD bounds are batch 32, because a bound is a different
+	mechanism and mixing the two would leave the edge register unable to say
+	which equation coupled which node.
+
+	Six nodes are already coupled by the shipped graph
+	(``archaeological_sites_density``, ``sacred_sites_density``,
+	``synthetic_fuel_share_aviation``, ``synthetic_fuel_share_shipping``,
+	``distribution_network_km``, ``hydrogen_storage_capacity``) and this batch
+	does not propose a second equation for any of them.
+
+	Three shipped equations are amended, each because the shipped form reads
+	the wrong operand:
+
+	* ``coal_eaf_definition`` reads the *generic* ``forced_outage_rate``,
+	  which ``availability_definition`` derives from MTBF/MTTR as 24/50024 =
+	  0.00048. That is a 0.05% forced-outage rate for coal, against the 10%
+	  ``forced_outage_rate_coal`` carries -- a factor of 200, and the shipped
+	  equation reads the wrong one. The amendment takes coal availability from
+	  0.9495 to 0.85.
+	* ``lcoe_wind_definition`` is an *onshore* LCOE -- it divides by
+	  ``capacity_factor_wind_onshore`` -- but reads the generic
+	  ``opex_fixed_wind`` (40) rather than ``opex_fixed_wind_onshore`` (30).
+	  The amendment takes the LCOE from 66.53 to 63.67 USD/MWh. The
+	  alternative, aliasing ``opex_fixed_wind`` to the onshore node, would
+	  make an existing shipped node derived and drop its 40 default to fix an
+	  equation that is the actual defect.
+	* ``transmission_investment_definition`` does not name
+	  ``transmission_cost_multiplier`` at all, so the multiplier is a dial
+	  nothing multiplies. The amendment inserts it. The shipped form also
+	  multiplies ``capex_transmission`` (USD/MW-km) by total fleet MW rather
+	  than route MW, giving 48 bn USD for a 10 GW fleet; that defect is
+	  recorded here and NOT fixed, because the fix needs a route-MW base the
+	  graph does not carry and inventing one would be a second unverified
+	  number behind the first.
+
+	Two default corrections ship with the couplings that expose them.
+	``distribution_loss_factor`` moves from 0.5 to 0.06 and its range narrows
+	to [0, 0.2]: half of all delivered energy lost is not a loss rate, and the
+	product equation is what turns the placeholder into a visible 23.27 TWh.
+	``water_stress_index`` becomes derived, because it is the ratio of two
+	graph nodes (0.466) and its shipped 0.4 is not that ratio.
+
+	Aliases carry six duplicate ids onto the quantity the library already
+	reads. The rule for an alias here is that two ids name one physical
+	quantity and the shipped defaults disagree; the alias makes the second id
+	derived so it cannot drift. Where the two ids name *different* quantities
+	that merely look alike -- ``solar_thermal_capacity`` against
+	``csp_capacity``, a technology label against a capacity -- the node is
+	retyped and bounded instead, which is batch 32's work.
+
+	The twenty-three nodes that defer or are rejected are named in the pack.
+	Seven need a base this batch does not add (``hydrogen_storage_duration``,
+	``max_remedy_period_days``, ``grievances_received_per_year``,
+	``jobs_per_grievance``, ``capacity_factor_gas_ocgt``, a heat-rate term,
+	an annual-build increment), three are prior rejections re-confirmed
+	(``line_outage_start``, ``line_outage_end``, ``storage_duration_curve``),
+	and ``capex_gas_ocgt`` defers because the LCOE form has no efficiency term
+	and would price the peaker below the combined cycle.
+	"""
+	from alea.prg.dsl import parse_side
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	for name, unit, rng, default, determinism, prose in BATCH31_RETYPES:
+		shipped = graph.nodes.get(name)
+		full: dict[str, Any] = (
+			dict(shipped.model_dump(exclude={"id"}, mode="json"))
+			if shipped is not None else {"name": name.replace("_", " ").capitalize()}
+		)
+		full.update({
+			"description": prose, "type": "float", "unit": unit,
+			"range": rng, "role": "free", "determinism": determinism,
+			"priority": "P1",
+			"status": _kept_status(shipped),
+			"source": "The product remainder (batch 31)",
+			"users": ["Planners", "Regulators"],
+		})
+		full["default"] = default
+		nodes[name] = full
+
+	for name, unit, rng, default, determinism, prose in BATCH31_AMEND_RETYPES:
+		shipped = graph.nodes.get(name)
+		assert shipped is not None, f"{name} is not shipped; an amendment needs one"
+		full = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		full.update({
+			"description": prose, "unit": unit, "range": rng,
+			"determinism": determinism, "priority": "P1",
+			"status": _kept_status(shipped),
+			"source": "The product remainder (batch 31)",
+		})
+		full["default"] = default
+		nodes[name] = full
+
+	for name, unit, rng, determinism, category, prose in BATCH31_DERIVED:
+		shipped = graph.nodes.get(name)
+		full: dict[str, Any] = (
+			dict(shipped.model_dump(exclude={"id"}, mode="json"))
+			if shipped is not None else {"name": name.replace("_", " ").capitalize()}
+		)
+		full.update({
+			"description": prose, "category": category, "type": "float",
+			"unit": unit, "range": rng, "role": "derived",
+			"determinism": determinism, "priority": "P1",
+			"status": _kept_status(shipped),
+			"source": "The product remainder (batch 31)",
+			"users": ["Planners", "Regulators"],
+		})
+		full.pop("default", None)
+		nodes[name] = full
+
+	for name, driver, unit, category, prose in BATCH31_ALIASES:
+		shipped = graph.nodes.get(name)
+		assert shipped is not None, f"{name} is not shipped; an alias retypes one"
+		full = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		full.update({
+			"description": prose, "category": category, "unit": unit,
+			"role": "derived", "determinism": "fixed", "priority": "P1",
+			"status": _kept_status(shipped),
+			"source": "The product remainder (batch 31)",
+		})
+		full.pop("default", None)
+		# The alias takes its driver's range: an alias whose range is wider
+		# than its driver's is a range the driver can never produce, and the
+		# range-excursion walk would then pass on a value the graph cannot
+		# hold.
+		full["range"] = list(graph.nodes[driver].range)
+		nodes[name] = full
+
+	for eq_id, name, lhs, rhs, prose, system, cite in BATCH31_EQUATIONS:
+		rhs_params = sorted(parse_side(rhs).symbols)
+		equations[eq_id] = {
+			"id": eq_id, "name": name, "description": prose,
+			"system": system, "lhs": lhs, "rhs": rhs, "relation": "eq",
+			"parameters": [lhs] + rhs_params, "free_variables": [],
+			"determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		assert lhs in nodes, f"{eq_id}: {lhs!r} has no node body in this batch"
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs, "equation_id": eq_id,
+				"relationship": "functional", "direction": "forward",
+				"strength": "hard",
+				"description": "Enters the product identity.",
+				"reference": cite, "priority": "P1",
+			})
+
+	# --- the three amended shipped equations ----------------------------
+	# The bake merges equations by id, so writing the same id with a new body
+	# replaces the shipped form rather than adding a second equation on the
+	# same target.
+	amendments = {
+		"coal_eaf_definition": {
+			"rhs": "1 - forced_outage_rate_coal - planned_outage_rate",
+			"description": (
+				"The coal fleet's equivalent availability uses the coal "
+				"fleet's own forced-outage rate, not the system-wide one. The "
+				"shipped form read `forced_outage_rate`, which "
+				"`availability_definition` derives from MTBF/MTTR as 24/50024 "
+				"= 0.00048 -- a 0.05% forced-outage rate for a coal fleet, "
+				"against the 10% `forced_outage_rate_coal` carries. The two "
+				"differ by a factor of 200. At defaults the amendment gives "
+				"1 - 0.10 - 0.05 = 0.85 instead of 0.9495."
+			),
+		},
+		"lcoe_wind_definition": {
+			"rhs": (
+				"(annualised_capex_usd_per_kw_wind + opex_fixed_wind_onshore) "
+				"* 1000 / (8760 * capacity_factor_wind_onshore) "
+				"+ opex_variable_wind"
+			),
+			"description": (
+				"The levelised cost of onshore wind. The shipped form divided "
+				"by `capacity_factor_wind_onshore` -- it is an onshore LCOE -- "
+				"but read the generic `opex_fixed_wind` (40 USD/kW/year) "
+				"rather than `opex_fixed_wind_onshore` (30). The amendment "
+				"takes the LCOE from 66.53 to 63.67 USD/MWh at defaults. "
+				"Aliasing `opex_fixed_wind` to the onshore node was rejected: "
+				"it would make a shipped node derived and drop its default to "
+				"fix an equation that is the actual defect."
+			),
+			"reference": "NREL ATB 2025 Equations & Variables",
+		},
+		"transmission_investment_definition": {
+			"rhs": (
+				"transmission_cost_multiplier * capex_transmission "
+				"* transmission_line_length_km * total_capacity_mw"
+			),
+			"description": (
+				"The transmission investment, with the terrain and tender "
+				"multiplier applied. The shipped form did not name "
+				"`transmission_cost_multiplier` at all, so the multiplier was "
+				"a dial nothing multiplied. It computes 48 bn USD for a 10 GW "
+				"fleet at defaults, which is high because the shipped product "
+				"treats `capex_transmission` (USD/MW-km) as per fleet "
+				"megawatt rather than per route megawatt; that defect is "
+				"recorded and not fixed here, because the fix needs a "
+				"route-MW base the graph does not carry."
+			),
+		},
+	}
+	for eq_id, amend in amendments.items():
+		shipped_eq = graph.equations.get(eq_id)
+		assert shipped_eq is not None, f"{eq_id} is not shipped"
+		body = dict(shipped_eq.model_dump(exclude={"id"}, mode="json"))
+		body.update(amend)
+		named = sorted(
+			set(parse_side(body["lhs"]).symbols)
+			| set(parse_side(body["rhs"]).symbols)
+		)
+		body["parameters"] = named
+		body["free_variables"] = [
+			sym for sym in named
+			if sym != body["determined_variables"][0]
+		]
+		equations[eq_id] = body
+		# An amendment keeps the shipped edges' strength. Strength is a
+		# property of the equation, not of the edge, and the graph refuses an
+		# equation cited at two tiers. `lcoe_wind_definition` ships soft --
+		# an LCOE does not constrain a plan -- so emitting hard edges from the
+		# amendment put the same equation at both tiers and the loader
+		# refused the graph.
+		shipped_strength = {
+			getattr(edge.strength, "value", edge.strength)
+			for edge in graph.edges
+			if edge.equation_id == eq_id
+		}
+		assert len(shipped_strength) <= 1, (
+			f"{eq_id} already ships at two strengths: {shipped_strength}"
+		)
+		strength = next(iter(shipped_strength), "hard")
+		for sym in named:
+			if sym == body["determined_variables"][0]:
+				continue
+			edges.append({
+				"source": sym, "target": body["determined_variables"][0],
+				"equation_id": eq_id,
+				"relationship": "functional", "direction": "forward",
+				"strength": strength,
+				"description": "Enters the amended identity.",
+				"reference": amend.get("reference", body.get("reference")),
+				"priority": "P1",
+			})
+
 	return nodes, equations, edges, rules
 
 

@@ -1519,7 +1519,11 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# `water_availability` and `biomass_sustainability_limit` left by the
 	# bound register rather than by an equation, which is the case the
 	# `rule_read` assertion below exists to keep out of this count.
-	assert len(dead) == 346, len(dead)
+	# Batch 31 took it 346 to 318. The batch's twenty-eight products each
+	# name a knob that was dead, and six aliases took a duplicate id out of
+	# the settable set entirely -- a derived node cannot be a dead knob
+	# because it is not a knob.
+	assert len(dead) == 318, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
@@ -1856,8 +1860,16 @@ def test_the_audit_reports_what_it_did_not_check():
 	# the emissions total the solve reports -- and joins `checked` (158 to
 	# 159); the other nine read fleet capacities, employment factors or the
 	# WACC and join `skipped` (244 to 253).
-	assert len(audit.checked) == 159, audit.checked
-	assert len(audit.skipped) == 253, audit.skipped
+	# Batch 31 took the computed set 412 to 440. Five join `checked` -- the
+	# two alias equations whose drivers the result carries
+	# (`demand_response_capacity`, `demand_response_potential`), and the
+	# three products built on exogenous bases (`internet_users`,
+	# `mobile_covered_population`, `licence_fee_spend_usd_per_year`) -- and
+	# twenty-eight join `skipped`, because their bases are fleet builds,
+	# planned-maintenance hours or the debt stack, none of which the solve
+	# result carries.
+	assert len(audit.checked) == 164, audit.checked
+	assert len(audit.skipped) == 276, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -1911,8 +1923,8 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# it 382 to 402, and batch 30's supply-and-grid layer took it 402 to
 	# 412. The whole computed set is skipped here because the loop failed,
 	# so this is `len(computed())`, not the skipped half of a partition that
-	# ran.
-	assert len(audit.skipped) == 412, audit.skipped
+	# ran, and batch 31's product layer took it to 440.
+	assert len(audit.skipped) == 440, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -2802,10 +2814,20 @@ def test_the_uncertainty_register_reads_the_declarations(graph: ParameterGraph):
 	# assertion: deriving the count from the register would pass on a graph
 	# that declared nothing uncertain, which is the silence this module exists
 	# to break.
-	assert len(reg.inputs) == 76, reg.inputs
-	assert len(reg.derived_stochastic) == 42, reg.derived_stochastic
+	# Batch 31 moved both counts. The input count falls 76 to 75 because
+	# `fuel_cost_hydrogen` became an alias of `hydrogen_price_per_mwh`: the
+	# alias carries `determinism: fixed`, so a stochastic settable knob
+	# became a derived node and left the input register. That is the
+	# intended effect of an alias -- one dial, not two -- and the loss is
+	# recorded here rather than silently accepted.
+	# The derived-stochastic count rises 42 to 48 on the six products whose
+	# own relation is stochastic: the cat-bond coupon, the drought-adjusted
+	# hydro share, the cause-attributed event count, the scenario river flow,
+	# and the wind and solar resource shares.
+	assert len(reg.inputs) == 75, reg.inputs
+	assert len(reg.derived_stochastic) == 48, reg.derived_stochastic
 	assert len(reg.stochastic_edges) == 1, reg.stochastic_edges
-	# 118 nodes are declared stochastic in total: 76 settable, 42 derived.
+	# 123 nodes are declared stochastic in total: 75 settable, 48 derived.
 	# Batch 27's finance family moved both: three of its bases are declared
 	# stochastic (`aal_usd_million`, `pml_99_5_usd_million`, `microinsurance`)
 	# and one derived parameter entered the closure, `solvency_capital`,
@@ -2819,7 +2841,7 @@ def test_the_uncertainty_register_reads_the_declarations(graph: ParameterGraph):
 	# the density and share bases they read, while the four demand
 	# products that also entered the computed set read fixed process
 	# parameters and stay deterministic. 39 to 42.
-	assert len(reg.inputs) + len(reg.derived_stochastic) == 118
+	assert len(reg.inputs) + len(reg.derived_stochastic) == 123
 	assert len(reg.inputs) + len(reg.derived_stochastic) == sum(
 		1 for node in graph.nodes.values() if str(node.determinism) == "stochastic"
 	), "the register and the declarations disagree"
@@ -2975,7 +2997,11 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	# 149 to 150. The input count is unchanged -- the batch adds no new
 	# stochastic declaration -- and so is the derived-stochastic count, since
 	# the new node inherits a fixed determinism from the two nodes it sums.
-	assert "76" in text and "150" in text
+	# Batch 31 took the reach 150 to 159: nine of its derived nodes sit
+	# downstream of the demand, land or water inputs the register already
+	# follows. The input count fell by one, for the reason the derived-
+	# stochastic pin above records.
+	assert "75" in text and "159" in text
 
 
 # ---------------------------------------------------------------------------
@@ -3763,7 +3789,11 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# ceilings ship with hard constraint edges for the same reason the shipped
 	# ones do: a build that breaches a sustainability limit is not a soft
 	# finding.
-	assert counts == {"hard": 446, "informational": 1, "soft": 2}, counts
+	# Batch 31's twenty-eight products and six aliases carry hard edges, and
+	# the two amended equations were already hard; the wind LCOE amendment
+	# kept its shipped soft tier, which is why the soft count does not move.
+	# 446 to 474.
+	assert counts == {"hard": 474, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -4093,7 +4123,10 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# and the four demand loads are definitions of their own operands rather
 	# than statements of an external result. A further change is a change to
 	# the register's coverage and fails here.
-	assert len(declared) == 194, f"the citation register moved: {sorted(declared)}"
+	# Batch 31 added five: the CCGT alias, the hydrogen cost alias, the
+	# cause-attributed events, the gearing utilisation and the wind LCOE
+	# amendment's NREL ATB reference.
+	assert len(declared) == 199, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -4332,7 +4365,7 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 				f"numeric {numeric!r}"
 			)
 			compared += 1
-	assert compared == 412, (
+	assert compared == 440, (
 		f"expected 402 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "
