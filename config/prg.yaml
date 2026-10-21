@@ -1382,20 +1382,30 @@ parameters:
     deprecated_by: null
   baseline_emissions:
     name: Baseline emissions
-    description: Baseline emissions
-    category: Carbon
+    description: 'Emissions the fleet would have produced without the abatement the project delivers.
+      The identity is the FRM''s own `reductions = baseline - project - leakage`, solved for the baseline
+      with the leakage term omitted: the graph carries `additional_abatement_mtco2` (45.0 MtCO2/year at
+      defaults) and `emissions_mtco2_per_year` (25.777), giving 70.777. The omitted leakage term is stated
+      rather than invented -- no node in the graph carries a leakage mass.'
+    category: Emissions
+    subcategory: null
     type: float
+    unit: MtCO2/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
+    - 10000.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: to_build
-    users:
-    - Carbon
-    source: docs/params.md
+    deprecated_by: null
   baseline_methodology:
     name: Baseline methodology
     description: The share of the crediting pipeline applying an approved baseline methodology.
@@ -1734,20 +1744,30 @@ parameters:
     deprecated_by: null
   biogas_capacity:
     name: Biogas capacity
-    description: Biogas capacity
+    description: 'Electrical capacity of anaerobic digestion, in the band of the shipped `biomass_capacity`.
+      The default is 0.0: the fleet balance ships a build that does not include it, and a non-zero default
+      would move a balance the graph has already checked. The optimiser chooses the build; this node is
+      where the choice is recorded.'
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 30000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
     users:
-    - Agriculture
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   biogas_cost:
     name: Biogas plant capital cost
     description: Biogas plant capital cost -- one of two ids for the quantity `capex_biogas` carries;
@@ -1818,20 +1838,31 @@ parameters:
     deprecated_by: null
   biomass_sustainability_limit:
     name: Biomass sustainability limit
-    description: Maximum sustainable biomass
+    description: The sustainable biomass resource expressed as an installable capacity ceiling, in the
+      same unit as the capacity it bounds. The default 200 MW sits above the shipped 100 MW build, so
+      the ceiling holds with room; setting it below 100 makes the constraint bind, which is what a ceiling
+      is for. Expressed in MW rather than tonnes of fuel because the graph carries no heat rate and no
+      fuel-mass factor for biomass, so a mass ceiling cannot be formed from what exists.
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 30000.0
+    default: 200.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   biomass_variable_cost_usd_per_mwh:
     name: Biomass variable cost usd per mwh
     description: 'biomass variable cost usd per mwh: the coupling''s derived quantity, so a scenario''s
@@ -1853,20 +1884,29 @@ parameters:
     - Financial analysts
   black_start_capability:
     name: Black start capability
-    description: Black start units available
-    category: Outage
+    description: Units the operator must hold capable of black start. The share ships (`black_start_requirement`,
+      0.02) and the unit count is retyped in this batch; the product is 4.4 units at defaults. Distinct
+      from the shipped `black_start_capable_mw` (180 MW), which states the same obligation in capacity
+      -- the two are the two registers of one requirement, and neither is the other's alias.
+    category: Reliability
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   black_start_capable_mw:
     name: Black start capable mw
     description: 'black start capable mw: the compliance register''s derived quantity. The capacity the
@@ -4392,22 +4432,51 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
-  circuit_breakers:
-    name: Circuit breakers
-    description: Circuit breakers
-    category: MktOps
+  circuit_breaker_density_per_km:
+    name: Circuit breaker density per km
+    description: 'Feeder-head breakers per route-kilometre of distribution network: 500 over 45,000 km
+      is 0.0111/km. A density rather than a count, because the count alone cannot say whether a network
+      is densely switched; the denominator is the graph''s own `distribution_network_km`.'
+    category: Grid
     type: float
+    unit: 1/km
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 10.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The supply, emissions and grid coupling (batch 30)
     users:
+    - Planners
     - Regulators
-    source: docs/params.md
+  circuit_breakers:
+    name: Circuit breakers
+    description: 'Feeder-head circuit breakers on the distribution network. The default is one per primary
+      feeder, and `distribution_feeders_total` ships at 500. Sectionalisers and low-voltage breakers are
+      outside the count: the node states the primary-feeder bay, which is what a density against route-km
+      can be read from.'
+    category: MktOps
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 5000.0
+    default: 500.0
+    initial: null
+    role: free
+    determinism: physical
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   civil_unrest_risk:
     name: Civil unrest risk
     description: Civil unrest
@@ -6661,20 +6730,30 @@ parameters:
     source: docs/params.md
   cross_border_permitting_time:
     name: Cross border permitting time
-    description: Cross-border permitting
+    description: Years to secure the cross-border permit for a transmission line. The default 2.0 is two
+      permitting cycles; the graph's own `financing_close_deadline` (18 months) sits inside one. A permit
+      that outlasts a ten-year horizon is a refusal rather than a delay, which is why the range stops
+      there.
     category: Grid
+    subcategory: null
     type: float
+    unit: years
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 10.0
+    default: 2.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   cross_border_tension:
     name: Cross border tension
     description: Cross-border tension
@@ -9529,132 +9608,203 @@ parameters:
     - Regulators
   employment_factor_biomass:
     name: Employment factor biomass
-    description: Jobs/MW biomass
+    description: 'Jobs per installed MW of biomass capacity. 5.1 is the ratio the archived IRENA review
+      implies: 765,000 solid-biomass jobs over 149 GW of bioenergy capacity is 5.13 jobs/MW, with the
+      caveat that the numerator is biomass jobs and the denominator is all bioenergy capacity, so the
+      ratio is an upper estimate.'
     category: JustTrans
+    subcategory: null
     type: float
+    unit: jobs/MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 20.0
+    default: 5.1
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   employment_factor_coal:
     name: Employment factor coal
-    description: Jobs/MW coal
+    description: Jobs per installed MW of coal capacity. 4.3 is the graph's own construction-plus-O&M
+      intensity (`construction_jobs_per_mw` + `om_jobs_per_mw`), because the archived IRENA review covers
+      renewable technologies only and prints no coal figure. The default is an assumption and is stated
+      as one.
     category: JustTrans
+    subcategory: null
     type: float
+    unit: jobs/MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 20.0
+    default: 4.3
+    initial: null
     role: free
     determinism: fixed
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: to_build
-    users:
-    - Policymakers
-    source: docs/params.md
+    deprecated_by: null
   employment_factor_gas:
     name: Employment factor gas
-    description: Jobs/MW gas
+    description: Jobs per installed MW of gas capacity. 4.3, the graph's own intensity; the archived review
+      covers no gas. An assumption, as for coal.
     category: JustTrans
+    subcategory: null
     type: float
+    unit: jobs/MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 20.0
+    default: 4.3
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   employment_factor_geothermal:
     name: Employment factor geothermal
-    description: Jobs/MW geothermal
+    description: 'Jobs per installed MW of geothermal capacity. 4.3, the graph''s own intensity: the IRENA
+      review gives 160,000 geothermal jobs but prints no geothermal capacity in the archived text, so
+      the ratio cannot be read off it.'
     category: JustTrans
+    subcategory: null
     type: float
+    unit: jobs/MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 20.0
+    default: 4.3
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   employment_factor_hydro:
     name: Employment factor hydro
-    description: Jobs/MW hydro
+    description: 'Jobs per installed MW of hydro capacity. 1.8: 2,324,000 jobs over 1,265 GW is 1.84.
+      The lowest of the technologies in the table, which is the point -- a hydro-heavy fleet is not a
+      jobs fleet per MW.'
     category: JustTrans
+    subcategory: null
     type: float
+    unit: jobs/MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 20.0
+    default: 1.8
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   employment_factor_solar:
     name: Employment factor solar
-    description: Jobs/MW solar
+    description: 'Jobs per installed MW of solar PV capacity. 5.0: 7,107,000 jobs over 1,411 GW is 5.04.
+      The highest in the table, and it carries the manufacturing share, so it overstates an O&M-only intensity.'
     category: JustTrans
+    subcategory: null
     type: float
+    unit: jobs/MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 20.0
+    default: 5.0
+    initial: null
     role: free
     determinism: fixed
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: to_build
-    users:
-    - Policymakers
-    source: docs/params.md
+    deprecated_by: null
   employment_factor_transmission:
     name: Employment factor transmission
-    description: Jobs/km transmission
+    description: 'Jobs per route-kilometre of high-voltage line. 3.0 is a planning figure and not extracted
+      from the archive: the IRENA review covers generation, not networks, and no archived work states
+      a line-km intensity. Stated as an assumption, which is why the identity it feeds cites IRENA only
+      for the method.'
     category: JustTrans
+    subcategory: null
     type: float
+    unit: jobs/km
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 20.0
+    default: 3.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
-  employment_factor_wind:
-    name: Employment factor wind
-    description: Jobs/MW wind
-    category: JustTrans
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
+    - Planners
+    - Regulators
     priority: P1
     status: to_build
+    deprecated_by: null
+  employment_factor_wind:
+    name: Employment factor wind
+    description: 'Jobs per installed MW of wind capacity. 1.4: 1,457,000 jobs over 1,017 GW is 1.43.'
+    category: JustTrans
+    subcategory: null
+    type: float
+    unit: jobs/MW
+    range:
+    - 0.0
+    - 20.0
+    default: 1.4
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
     users:
-    - Policymakers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   energy_burden:
     name: Energy burden
     description: The share of household income spent on electricity.
@@ -10736,6 +10886,30 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
+  fleet_employment_intensity_jobs_per_mw:
+    name: Fleet employment intensity jobs per mw
+    description: 'Jobs per installed megawatt of the generating fleet, weighted by the installed capacity
+      of each technology. A weighted-average intensity and deliberately not a jobs total: `direct_jobs`
+      already ships as `total_capacity_mw * (construction_jobs_per_mw + om_jobs_per_mw)` = 43,000, and
+      the per-technology factors applied to capacity give 88,717. Two nodes measuring the same employment
+      at a factor of two would be worse than an uncoupled node, so the product here is an intensity no
+      total can be confused with. 4.169 jobs/MW at defaults. The oil fleet is outside both the numerator
+      and the denominator: the archive prints no oil employment factor, and omitting it from both keeps
+      the ratio well defined while leaving a stated 1.6% gap.'
+    category: Employment
+    type: float
+    unit: jobs/MW
+    range:
+    - 0.0
+    - 50.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The supply, emissions and grid coupling (batch 30)
+    users:
+    - Planners
+    - Regulators
   flood_risk:
     name: Flood risk
     description: Flood risk
@@ -11721,20 +11895,27 @@ parameters:
     deprecated_by: null
   gasification_capacity:
     name: Gasification capacity
-    description: Gasification capacity
+    description: Electrical capacity of biomass gasification. Default 0.0, as the two above.
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 30000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
     users:
-    - Industry
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   gasification_cost:
     name: Gasification plant capital cost
     description: Gasification plant capital cost -- one of two ids for the quantity `capex_gasification`
@@ -13326,6 +13507,27 @@ parameters:
     priority: P2
     status: existing
     deprecated_by: null
+  hydrogen_storage_capex_usd:
+    name: Hydrogen storage capex usd
+    description: 'Capital cost of the hydrogen storage the optimiser builds: the installed cost per kWh
+      times the energy capacity, with 1000 converting MWh to kWh. Zero at defaults only because the shipped
+      `hydrogen_storage_capacity` is 0 MWh -- the optimiser builds no hydrogen storage at defaults, not
+      that the node is unread. The 1000 follows the graph''s own MW-to-kW convention, which every capital
+      charge in the finance family uses.'
+    category: Financial
+    type: float
+    unit: USD
+    range:
+    - 0.0
+    - 1000000000000.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The supply, emissions and grid coupling (batch 30)
+    users:
+    - Planners
+    - Regulators
   hydrogen_storage_cost:
     name: Hydrogen storage cost
     description: Installed cost of hydrogen storage. The unit is USD per kWh of energy capacity; the range
@@ -14914,20 +15116,29 @@ parameters:
     source: docs/params.md
   landfill_gas_capacity:
     name: Landfill gas capacity
-    description: Landfill gas capacity
+    description: 'Electrical capacity of landfill-gas capture and generation. Default 0.0 for the same
+      reason as `biogas_capacity`: the shipped balance excludes it and a default would move a checked
+      constraint.'
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 30000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
     users:
-    - Cities
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   landfill_gas_cost:
     name: Landfill gas plant capital cost
     description: Landfill gas plant capital cost -- one of two ids for the quantity `capex_landfill_gas`
@@ -15554,20 +15765,30 @@ parameters:
     deprecated_by: null
   lifeline_threshold:
     name: Lifeline threshold
-    description: Lifeline threshold
-    category: Consumer
+    description: 'The consumption level below which a household qualifies for the lifeline tariff. The
+      graph already carries that level: `energy_poverty_line_mwh_per_household` is the MTF Tier 2/3 boundary
+      at 1.0 MWh/year per household, with `energy_poor_consumption_mwh_per_household` (0.35) as the draw
+      of a household below it. The threshold is the line, so this node is an alias onto it and not a second
+      estimate of the same boundary.'
+    category: Affordability
+    subcategory: null
     type: float
+    unit: MWh/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
+    - 10.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: to_build
-    users:
-    - Regulators
-    source: docs/params.md
+    deprecated_by: null
   line_outage_duration:
     name: Line outage duration
     description: 'Mean hours a line outage event spans: transmission faults with auto-reclose clear in
@@ -17550,20 +17771,30 @@ parameters:
     source: docs/params.md
   number_of_generators:
     name: Number of generators
-    description: Number of generators
+    description: Generating units in the fleet, not sites. The default is 220, the count the graph already
+      carries for `scada_telemetry_sites`, because no unit-level register exists and 220 units over an
+      18,900 MW fleet averages about 86 MW a unit -- the right order for a mixed thermal-and-hydro fleet.
+      The placeholder 500,000.0 is not a count of anything a country has.
     category: Market
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1000.0
+    default: 220.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: physical
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
     users:
+    - Planners
     - Regulators
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   number_of_retailers:
     name: Number of retailers
     description: Number of retailers
@@ -20194,20 +20425,27 @@ parameters:
     deprecated_by: null
   pyrolysis_capacity:
     name: Pyrolysis capacity
-    description: Pyrolysis capacity
+    description: Electrical capacity of pyrolysis. Default 0.0, as the three above.
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 30000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
     users:
-    - Industry
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   pyrolysis_cost:
     name: Pyrolysis plant capital cost
     description: Pyrolysis plant capital cost -- one of two ids for the quantity `capex_pyrolysis` carries;
@@ -20623,20 +20861,30 @@ parameters:
     deprecated_by: null
   regulation_reserve:
     name: Regulation reserve
-    description: Regulation reserve
-    category: Outage
+    description: 'The regulation band the system must hold, up plus down. Both halves already ship as
+      `regulation_up_requirement` and `regulation_down_requirement`, each a share of peak demand and 85.0
+      MW at defaults, so the total is 170.0 MW. The node is the sum of its two shipped parts and not a
+      third derivation of the same band: a `regulation_reserve_share` over the same peak would leave three
+      equations describing one quantity, inconsistent at every default.'
+    category: Reliability
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 3000.0
+    initial: null
+    role: derived
     determinism: policy
-    priority: P2
-    status: to_build
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   regulation_up_requirement:
     name: Regulation up requirement
     description: 'Upward regulation in MW: the share of peak demand held for continuous imbalance correction.
@@ -22020,20 +22268,29 @@ parameters:
     deprecated_by: null
   salinity_gradient_capacity:
     name: Salinity gradient capacity
-    description: Salinity gradient capacity
+    description: Electrical capacity of salinity-gradient conversion. Default 0.0; the technology is pre-commercial,
+      as `capex_salinity_gradient`'s own description says, so a non-zero default would assert a build
+      the graph has no basis for.
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 30000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   salinity_gradient_cost:
     name: Salinity gradient capital cost
     description: Salinity gradient capital cost -- one of two ids for the quantity `capex_salinity_gradient`
@@ -23351,22 +23608,52 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
-  spare_parts_inventory:
-    name: Spare parts inventory
-    description: Spare parts
-    category: Asset
+  spare_parts_carrying_cost_usd_per_year:
+    name: Spare parts carrying cost usd per year
+    description: 'The annual cost of holding spares: the inventory''s value times the discount rate, 25.1
+      USD million/year at defaults (240 x 0.1046). The rate is the graph''s own weighted average cost
+      of capital, because capital tied up in a warehouse is capital not deployed -- the same opportunity
+      cost the WACC prices everywhere else.'
+    category: Financial
     type: float
+    unit: USD million/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 200.0
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The supply, emissions and grid coupling (batch 30)
+    users:
+    - Planners
+    - Regulators
+  spare_parts_inventory:
+    name: Spare parts inventory
+    description: The value of spares held against failure. 240 is two percent of gross fleet capital (1,200
+      USD/kW x 10,000 MW = 12,000 USD million), a stated assumption rather than a measured figure. The
+      1,000 ceiling is an eight percent spares holding, which is the top of what a utility carries; the
+      placeholder 500,000.0 would be four percent of the whole fleet's capital in spare parts.
+    category: Asset
+    subcategory: null
+    type: float
+    unit: USD million
+    range:
+    - 0.0
+    - 1000.0
+    default: 240.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   spare_parts_lead_time:
     name: Spare parts lead time
     description: Lead time
@@ -25098,22 +25385,51 @@ parameters:
     users:
     - Planners
     - Regulators
-  transmission_lead_time:
-    name: Transmission lead time
-    description: Transmission construction time
-    category: Grid
+  transmission_jobs:
+    name: Transmission jobs
+    description: 'Construction and O&M jobs on the transmission network: the per-route-km intensity times
+      the line length, 36,000 at defaults. A separate stock and not an addend to `direct_jobs`: the transmission
+      build is already inside `construction_jobs_per_mw * total_capacity_mw`, and the graph carries no
+      identity that sums the two.'
+    category: Employment
     type: float
+    unit: jobs
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    role: derived
+    determinism: physical
+    priority: P1
+    status: existing
+    source: The supply, emissions and grid coupling (batch 30)
     users:
     - Planners
-    source: docs/params.md
+    - Regulators
+  transmission_lead_time:
+    name: Transmission lead time
+    description: 'Years from decision to energisation for a transmission line: the build period plus the
+      cross-border permit. `construction_period` ships in months (30), so the division by 12 is a unit
+      conversion and not a scale factor; the permit is retyped to years in this batch at 2.0. Total 4.5
+      years at defaults.'
+    category: Grid
+    subcategory: null
+    type: float
+    unit: years
+    range:
+    - 0.0
+    - 20.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   transmission_line_length_km:
     name: Transmission line length km
     description: 'High-voltage route-km: a 10 GW system at about 1.2 km of route per MW of peak demand,
@@ -25998,20 +26314,29 @@ parameters:
     deprecated_by: null
   waste_to_energy_capacity:
     name: Waste to energy capacity
-    description: Waste-to-energy capacity
+    description: Electrical capacity of municipal-waste combustion with energy recovery. Default 0.0.
+      The IRENA jobs table counts 26,000 waste-to-energy jobs but prints no capacity to divide them by,
+      so this node is an input and not a derived quantity.
     category: Supply
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 30000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
     users:
-    - Cities
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   waste_to_energy_cost:
     name: Waste-to-energy plant capital cost
     description: Waste-to-energy plant capital cost -- one of two ids for the quantity `capex_waste_to_energy`
@@ -26053,20 +26378,30 @@ parameters:
     source: docs/params.md
   water_availability:
     name: Water availability
-    description: Water availability multiplier
+    description: 'A multiplier on the water the project may withdraw: 0 is a closed source, 1 is the shipped
+      flow, 2 is a wet year. The flow itself ships as `water_availability_m3` (200e6 m3/year) and the
+      inequality that compares it to demand ships with it; this node is the scenario lever on that comparison
+      and not a second spelling of the flow.'
     category: Sector
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 2.0
+    default: 1.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: physical
+    categories: []
+    source: The supply, emissions and grid coupling (batch 30)
+    source_url: null
     users:
-    - Utilities
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   water_availability_m3:
     name: Water availability
     description: 'Water available to the project in the year. A flow, and the one the withdrawal is compared
@@ -27430,6 +27765,31 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  baseline_emissions_definition:
+    name: The counterfactual baseline
+    description: 'The emissions the fleet would have produced without the abatement this project delivers:
+      what it does emit plus what the abatement avoids. This is the FRM''s `reductions = baseline - project
+      - leakage` rearranged, with the leakage term omitted because no node in the graph carries a leakage
+      mass. The omission is stated rather than filled with a coefficient: a leakage share would be an
+      invented number and the baseline would inherit it. 70.777 MtCO2/year at defaults.'
+    system: emissions
+    lhs: baseline_emissions
+    rhs: emissions_mtco2_per_year + additional_abatement_mtco2
+    relation: eq
+    parameters:
+    - baseline_emissions
+    - additional_abatement_mtco2
+    - emissions_mtco2_per_year
+    free_variables: []
+    determined_variables:
+    - baseline_emissions
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Verra/Gold Standard avoided-emissions accounting; the graph's own abatement identity rearranged
+    latex: \mathrm{baseline}_{emissions} = \mathrm{emissions}_{mtco2\_per\_year} + \mathrm{additional}_{abatement\_mtco2}
   battery_cost_alias:
     name: Battery capital cost (legacy) is Battery capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `battery_cost`
@@ -27550,6 +27910,31 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{biogas}_{cost} = \mathrm{capex}_{biogas}
+  biomass_sustainability_bound:
+    name: Biomass sustainability bound
+    description: 'The biomass build may not exceed the sustainable resource the policy declares. Stated
+      as a bound in megawatts rather than as a fuel-mass ceiling: the mass form needs a heat rate and
+      a biomass fuel factor, neither of which the graph carries, while a capacity ceiling needs neither
+      and is what the resource assessment is usually written in. The shipped 100 MW build sits under the
+      200 MW default, so the constraint holds with room; setting the limit below 100 makes it bind, which
+      is the point of a ceiling.'
+    system: energy_balance
+    lhs: biomass_capacity
+    rhs: biomass_sustainability_limit
+    relation: leq
+    parameters: &id001
+    - biomass_capacity
+    - biomass_sustainability_limit
+    free_variables: *id001
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: IEA/NEA Projected Costs of Generating Electricity; sustainable-biomass supply as a build
+      limit
+    latex: \mathrm{biomass}_{capacity} \leq \mathrm{biomass}_{sustainability\_limit}
   biomass_variable_cost_definition:
     name: The biomass plant's variable cost incl. fuel
     description: 'Fuel plus non-fuel O&M: the variable cost the biomass plant''s own dispatch economics
@@ -27572,6 +27957,30 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{biomass}_{variable\_cost\_usd\_per\_mwh} = \mathrm{biomass}_{feedstock\_cost} + \mathrm{opex}_{variable\_biomass}
+  black_start_capability_definition:
+    name: Units capable of black start
+    description: 'Units the operator must hold capable of black start: the requirement share times the
+      fleet''s unit count, 4.4 units at defaults. The shipped `black_start_capable_mw` states the same
+      obligation in capacity; this node states it in units, which is the register a system operator''s
+      black-start plan is actually written in.'
+    system: reliability
+    lhs: black_start_capability
+    rhs: black_start_requirement * number_of_generators
+    relation: eq
+    parameters:
+    - black_start_capability
+    - black_start_requirement
+    - number_of_generators
+    free_variables: []
+    determined_variables:
+    - black_start_capability
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{black}_{start\_capability} = \mathrm{black}_{start\_requirement} \mathrm{number}_{of\_generators}
   black_start_capable_mw_definition:
     name: Black-start-capable capacity
     description: 'The capacity the operator holds in black-start-capable units: the required share of
@@ -27602,11 +28011,11 @@ equations:
     lhs: blended_finance_share
     rhs: dfi_share + commercial_bank_share
     relation: leq
-    parameters: &id001
+    parameters: &id002
     - blended_finance_share
     - commercial_bank_share
     - dfi_share
-    free_variables: *id001
+    free_variables: *id002
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -28055,10 +28464,10 @@ equations:
     lhs: carbon_finance_share
     rhs: carbon_revenue_share_of_revenue
     relation: leq
-    parameters: &id002
+    parameters: &id003
     - carbon_finance_share
     - carbon_revenue_share_of_revenue
-    free_variables: *id002
+    free_variables: *id003
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -28350,6 +28759,30 @@ equations:
     priority: P1
     reference: IRENA employment factors
     latex: \mathrm{child}_{labour\_screened\_jobs} = \mathrm{child}_{labour\_prohibition} \mathrm{direct}_{jobs}
+  circuit_breaker_density_definition:
+    name: Breaker density
+    description: 'Feeder-head circuit breakers per route-kilometre of distribution network: 0.0111/km
+      at defaults. A density rather than a count, because 500 breakers says nothing without the network
+      they sit on; the denominator is the graph''s own distribution route length, so a scenario that extends
+      the network without adding bays lowers the density and the reading says so.'
+    system: energy_balance
+    lhs: circuit_breaker_density_per_km
+    rhs: circuit_breakers / distribution_network_km
+    relation: eq
+    parameters:
+    - circuit_breaker_density_per_km
+    - circuit_breakers
+    - distribution_network_km
+    free_variables: []
+    determined_variables:
+    - circuit_breaker_density_per_km
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{circuit}_{breaker\_density\_per\_km} = \frac{\mathrm{circuit}_{breakers}}{\mathrm{distribution}_{network\_km}}
   claims_history_definition:
     name: Incurred claims
     description: 'Incurred claims: the loss ratio applied to the premium. The premium is per kilowatt,
@@ -28975,10 +29408,10 @@ equations:
     lhs: cooking_lpg_penetration
     rhs: clean_cooking_target
     relation: leq
-    parameters: &id003
+    parameters: &id004
     - clean_cooking_target
     - cooking_lpg_penetration
-    free_variables: *id003
+    free_variables: *id004
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -29769,12 +30202,12 @@ equations:
     lhs: bond_share + dfi_share + commercial_bank_share
     rhs: debt_financing_share
     relation: leq
-    parameters: &id004
+    parameters: &id005
     - bond_share
     - commercial_bank_share
     - debt_financing_share
     - dfi_share
-    free_variables: *id004
+    free_variables: *id005
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -30477,10 +30910,10 @@ equations:
     lhs: energy_burden
     rhs: affordability_threshold
     relation: leq
-    parameters: &id005
+    parameters: &id006
     - affordability_threshold
     - energy_burden
-    free_variables: *id005
+    free_variables: *id006
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -30875,27 +31308,38 @@ equations:
     description: The optimiser's per-technology builds must not exceed the fleet size the plan declares
       for them. This is a *constraint* coupling -- the equation the LP carries, not an identity the evaluator
       solves -- because the builds are decision variables with no single value until the solve settles
-      them.
+      them. Batch 30 added the six conversion-plant capacities, so a scenario that builds anaerobic digestion,
+      landfill gas, gasification, pyrolysis, waste-to-energy or salinity-gradient capacity is counted
+      against the same ceiling instead of silently exceeding it. All six are zero at defaults, so the
+      balance sums to 9,700 MW against a 15,000 MW right-hand side exactly as it did before the rewrite.
     system: reserve_margin
     lhs: battery_capacity + biomass_capacity + coal_capacity + csp_capacity + gas_capacity + geothermal_capacity
       + hydro_capacity + nuclear_capacity + oil_capacity + phs_capacity + wind_offshore_capacity + wind_onshore_capacity
+      + biogas_capacity + landfill_gas_capacity + gasification_capacity + pyrolysis_capacity + waste_to_energy_capacity
+      + salinity_gradient_capacity
     rhs: total_capacity_mw + storage_headroom_mw
     relation: leq
     parameters:
     - battery_capacity
+    - biogas_capacity
     - biomass_capacity
     - coal_capacity
     - csp_capacity
     - gas_capacity
+    - gasification_capacity
     - geothermal_capacity
     - hydro_capacity
+    - landfill_gas_capacity
     - nuclear_capacity
     - oil_capacity
     - phs_capacity
+    - pyrolysis_capacity
+    - salinity_gradient_capacity
+    - storage_headroom_mw
+    - total_capacity_mw
+    - waste_to_energy_capacity
     - wind_offshore_capacity
     - wind_onshore_capacity
-    - total_capacity_mw
-    - storage_headroom_mw
     free_variables:
     - total_capacity_mw
     - storage_headroom_mw
@@ -30934,6 +31378,56 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  fleet_employment_intensity_definition:
+    name: The fleet's employment intensity
+    description: 'Jobs per installed megawatt, capacity-weighted across the technologies the archive prices.
+      An intensity and not a total: `direct_jobs` already ships at 43,000 and the per-technology factors
+      applied to capacity give 88,717, so a jobs total built from these factors would double-count by
+      a factor of two. The oil fleet is absent from both the numerator and the denominator -- the archive
+      prints no oil factor -- which leaves a stated 1.6% gap rather than a silently averaged one. 4.169
+      jobs/MW at defaults.'
+    system: employment
+    lhs: fleet_employment_intensity_jobs_per_mw
+    rhs: (employment_factor_coal * coal_capacity + employment_factor_gas * gas_capacity + employment_factor_hydro
+      * hydro_capacity + employment_factor_geothermal * geothermal_capacity + employment_factor_biomass
+      * biomass_capacity + employment_factor_solar * solar_pv_capacity + employment_factor_wind * (wind_onshore_capacity
+      + wind_offshore_capacity)) / (coal_capacity + gas_capacity + hydro_capacity + geothermal_capacity
+      + biomass_capacity + solar_pv_capacity + wind_onshore_capacity + wind_offshore_capacity)
+    relation: eq
+    parameters:
+    - fleet_employment_intensity_jobs_per_mw
+    - biomass_capacity
+    - coal_capacity
+    - employment_factor_biomass
+    - employment_factor_coal
+    - employment_factor_gas
+    - employment_factor_geothermal
+    - employment_factor_hydro
+    - employment_factor_solar
+    - employment_factor_wind
+    - gas_capacity
+    - geothermal_capacity
+    - hydro_capacity
+    - solar_pv_capacity
+    - wind_offshore_capacity
+    - wind_onshore_capacity
+    free_variables: []
+    determined_variables:
+    - fleet_employment_intensity_jobs_per_mw
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: IRENA employment factors
+    latex: \mathrm{fleet}_{employment\_intensity\_jobs\_per\_mw} = \frac{\mathrm{employment}_{factor\_coal}
+      \mathrm{coal}_{capacity} + \mathrm{employment}_{factor\_gas} \mathrm{gas}_{capacity} + \mathrm{employment}_{factor\_hydro}
+      \mathrm{hydro}_{capacity} + \mathrm{employment}_{factor\_geothermal} \mathrm{geothermal}_{capacity}
+      + \mathrm{employment}_{factor\_biomass} \mathrm{biomass}_{capacity} + \mathrm{employment}_{factor\_solar}
+      \mathrm{solar}_{pv\_capacity} + \mathrm{employment}_{factor\_wind} \left(\mathrm{wind}_{onshore\_capacity}
+      + \mathrm{wind}_{offshore\_capacity}\right)}{\mathrm{coal}_{capacity} + \mathrm{gas}_{capacity}
+      + \mathrm{hydro}_{capacity} + \mathrm{geothermal}_{capacity} + \mathrm{biomass}_{capacity} + \mathrm{solar}_{pv\_capacity}
+      + \mathrm{wind}_{onshore\_capacity} + \mathrm{wind}_{offshore\_capacity}}
   flywheel_cost_alias:
     name: Flywheel capital cost is Flywheel storage capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `flywheel_cost`
@@ -31033,10 +31527,10 @@ equations:
     lhs: fpic_requirements
     rhs: fpic_compliance_score
     relation: leq
-    parameters: &id006
+    parameters: &id007
     - fpic_compliance_score
     - fpic_requirements
-    free_variables: *id006
+    free_variables: *id007
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -31521,10 +32015,10 @@ equations:
     lhs: green_bond_share
     rhs: bond_share
     relation: leq
-    parameters: &id007
+    parameters: &id008
     - bond_share
     - green_bond_share
-    free_variables: *id007
+    free_variables: *id008
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -31905,6 +32399,31 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{hydrogen}_{price\_per\_mwh} = \frac{\mathrm{hydrogen}_{price}}{\mathrm{mwh}_{per\_hydrogen\_unit}}
+  hydrogen_storage_capex_definition:
+    name: Hydrogen storage capital cost
+    description: 'The capital cost of the hydrogen storage built: installed cost per kWh times energy
+      capacity, with 1000 converting MWh to kWh. The product is zero at defaults because the shipped capacity
+      is zero -- the optimiser builds no hydrogen storage there -- and not because the node is unread.
+      The 1000 follows the graph''s own MW-to-kW convention, which the finance family''s capital charges
+      all use.'
+    system: financial
+    lhs: hydrogen_storage_capex_usd
+    rhs: hydrogen_storage_cost * hydrogen_storage_capacity * 1000
+    relation: eq
+    parameters:
+    - hydrogen_storage_capex_usd
+    - hydrogen_storage_capacity
+    - hydrogen_storage_cost
+    free_variables: []
+    determined_variables:
+    - hydrogen_storage_capex_usd
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Lazard LCOS; the graph's own MW-to-kW convention
+    latex: \mathrm{hydrogen}_{storage\_capex\_usd} = 1000 \mathrm{hydrogen}_{storage\_cost} \mathrm{hydrogen}_{storage\_capacity}
   hydrogen_water_definition:
     name: Hydrogen water demand
     description: Water the hydrogen programme consumes over the year.
@@ -31934,10 +32453,10 @@ equations:
     lhs: ifc_performance_standards
     rhs: debt_financing_share
     relation: leq
-    parameters: &id008
+    parameters: &id009
     - debt_financing_share
     - ifc_performance_standards
-    free_variables: *id008
+    free_variables: *id009
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -32213,10 +32732,10 @@ equations:
     lhs: inertia_requirement
     rhs: system_inertia_mws
     relation: leq
-    parameters: &id009
+    parameters: &id010
     - inertia_requirement
     - system_inertia_mws
-    free_variables: *id009
+    free_variables: *id010
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -32618,10 +33137,10 @@ equations:
     lhs: largest_loss_mw
     rhs: frequency_response_requirement
     relation: leq
-    parameters: &id010
+    parameters: &id011
     - frequency_response_requirement
     - largest_loss_mw
-    free_variables: *id010
+    free_variables: *id011
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -33245,6 +33764,29 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{lifeline}_{tariff} = \mathrm{lifeline}_{tariff\_usd\_per\_mwh}
+  lifeline_threshold_definition:
+    name: The lifeline consumption threshold
+    description: The household consumption level below which the lifeline tariff applies. The graph carries
+      exactly one such line -- the MTF Tier 2/3 boundary at 1.0 MWh/year per household -- and this node
+      is an alias onto it rather than a second estimate. Two thresholds would let a scenario move the
+      tariff's eligibility without moving the poverty measure it is supposed to track.
+    system: affordability
+    lhs: lifeline_threshold
+    rhs: energy_poverty_line_mwh_per_household
+    relation: eq
+    parameters:
+    - lifeline_threshold
+    - energy_poverty_line_mwh_per_household
+    free_variables: []
+    determined_variables:
+    - lifeline_threshold
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Multi-Tier Framework (MTF) energy access measurement
+    latex: \mathrm{lifeline}_{threshold} = \mathrm{energy}_{poverty\_line\_mwh\_per\_household}
   line_outage_hours_per_year_definition:
     name: Hours the line spends out per year
     description: 'Hours per year the line spends out: expected events times the mean event duration, the
@@ -33309,10 +33851,10 @@ equations:
     lhs: llcr_estimate
     rhs: loan_life_coverage_ratio
     relation: geq
-    parameters: &id011
+    parameters: &id012
     - llcr_estimate
     - loan_life_coverage_ratio
-    free_variables: *id011
+    free_variables: *id012
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -33871,11 +34413,11 @@ equations:
     lhs: non_spinning_reserve_requirement
     rhs: reserve_margin_min * peak_demand_mw
     relation: leq
-    parameters: &id012
+    parameters: &id013
     - non_spinning_reserve_requirement
     - peak_demand_mw
     - reserve_margin_min
-    free_variables: *id012
+    free_variables: *id013
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -34406,10 +34948,10 @@ equations:
     lhs: hydrogen_vehicle_share + electric_vehicle_adoption
     rhs: '1.0'
     relation: leq
-    parameters: &id013
+    parameters: &id014
     - electric_vehicle_adoption
     - hydrogen_vehicle_share
-    free_variables: *id013
+    free_variables: *id014
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -34848,6 +35390,30 @@ equations:
     priority: P1
     reference: Stoft 2002, Power System Economics, ch. 5
     latex: \mathrm{regulation}_{down\_requirement} = \mathrm{regulation}_{down\_share} \mathrm{peak}_{demand\_mw}
+  regulation_reserve_definition:
+    name: The regulation band
+    description: 'The total regulation reserve the system must hold: the up band plus the down band. Both
+      components ship as their own identities (`regulation_up_share * peak_demand_mw` and the down counterpart),
+      so this node is their sum and not a third share over the same peak. A third share would put three
+      equations on one quantity, and at the shipped 0.01 each the sum is 170 MW.'
+    system: reserve_margin
+    lhs: regulation_reserve
+    rhs: regulation_up_requirement + regulation_down_requirement
+    relation: eq
+    parameters:
+    - regulation_reserve
+    - regulation_down_requirement
+    - regulation_up_requirement
+    free_variables: []
+    determined_variables:
+    - regulation_reserve
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Stoft 2002, Power System Economics, ch. 5
+    latex: \mathrm{regulation}_{reserve} = \mathrm{regulation}_{up\_requirement} + \mathrm{regulation}_{down\_requirement}
   regulation_up_definition:
     name: The upward regulation requirement
     description: 'Upward regulation in MW: the share of peak demand held for continuous imbalance correction.
@@ -35267,10 +35833,10 @@ equations:
     lhs: resettlement_population_share
     rhs: resettlement_requirements
     relation: leq
-    parameters: &id014
+    parameters: &id015
     - resettlement_population_share
     - resettlement_requirements
-    free_variables: *id014
+    free_variables: *id015
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -35333,10 +35899,10 @@ equations:
     lhs: retraining_duration
     rhs: construction_period
     relation: leq
-    parameters: &id015
+    parameters: &id016
     - construction_period
     - retraining_duration
-    free_variables: *id015
+    free_variables: *id016
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -35495,10 +36061,10 @@ equations:
     lhs: system_saidi_hours_per_year
     rhs: grid_reliability_target
     relation: leq
-    parameters: &id016
+    parameters: &id017
     - grid_reliability_target
     - system_saidi_hours_per_year
-    free_variables: *id016
+    free_variables: *id017
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -35538,10 +36104,10 @@ equations:
     lhs: system_saifi_events_per_year
     rhs: service_quality_standards
     relation: leq
-    parameters: &id017
+    parameters: &id018
     - service_quality_standards
     - system_saifi_events_per_year
-    free_variables: *id017
+    free_variables: *id018
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -36050,6 +36616,31 @@ equations:
     priority: P1
     reference: Standard N-1 planning criterion; cf. ENTSO-E adequacy studies
     latex: \mathrm{spare}_{capacity} = \mathrm{total}_{capacity\_mw} - \mathrm{peak}_{demand\_mw}
+  spare_parts_carrying_cost_definition:
+    name: The cost of holding spares
+    description: 'The annual carrying cost of the spares inventory: its value times the discount rate,
+      25.1 USD million/year at defaults. The rate is the graph''s own WACC because capital held in a warehouse
+      is capital not deployed, which is the same opportunity cost every other capital charge in the finance
+      family prices.'
+    system: financial
+    lhs: spare_parts_carrying_cost_usd_per_year
+    rhs: spare_parts_inventory * discount_rate
+    relation: eq
+    parameters:
+    - spare_parts_carrying_cost_usd_per_year
+    - discount_rate
+    - spare_parts_inventory
+    free_variables: []
+    determined_variables:
+    - spare_parts_carrying_cost_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Standard inventory carrying-cost accounting
+    latex: \mathrm{spare}_{parts\_carrying\_cost\_usd\_per\_year} = \mathrm{spare}_{parts\_inventory}
+      \mathrm{discount}_{rate}
   spinning_reserve_definition:
     name: The spinning reserve requirement
     description: 'Spinning reserve in MW: the grid code''s share of peak demand. This is the catalog''s
@@ -36173,10 +36764,10 @@ equations:
     lhs: steel_scrap_eaf_share + steel_h2_dri_share
     rhs: '1.0'
     relation: leq
-    parameters: &id018
+    parameters: &id019
     - steel_h2_dri_share
     - steel_scrap_eaf_share
-    free_variables: *id018
+    free_variables: *id019
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -36635,6 +37226,55 @@ equations:
     reference: null
     latex: \mathrm{transmission}_{investment\_usd} = \mathrm{capex}_{transmission} \mathrm{transmission}_{line\_length\_km}
       \mathrm{total}_{capacity\_mw}
+  transmission_jobs_definition:
+    name: Transmission jobs
+    description: 'Construction and O&M jobs on the transmission network: the per-km intensity times the
+      route length, 36,000 at defaults. A separate stock from `direct_jobs`, which is the generation fleet''s
+      own workforce; the graph carries no identity that adds the two, and adding them would count the
+      transmission build twice.'
+    system: employment
+    lhs: transmission_jobs
+    rhs: employment_factor_transmission * transmission_line_length_km
+    relation: eq
+    parameters:
+    - transmission_jobs
+    - employment_factor_transmission
+    - transmission_line_length_km
+    free_variables: []
+    determined_variables:
+    - transmission_jobs
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: IRENA employment factors
+    latex: \mathrm{transmission}_{jobs} = \mathrm{employment}_{factor\_transmission} \mathrm{transmission}_{line\_length\_km}
+  transmission_lead_time_definition:
+    name: Transmission lead time
+    description: 'Years from decision to energisation: the build period plus the cross-border permit.
+      `construction_period` ships in months, so the 12 is a unit conversion and not a scale factor --
+      30 months is 2.5 years, and the permit adds 2.0, giving 4.5 years at defaults. The build period
+      is the fleet average the graph carries; a technology-specific period would need a base the graph
+      lacks.'
+    system: energy_balance
+    lhs: transmission_lead_time
+    rhs: construction_period / 12 + cross_border_permitting_time
+    relation: eq
+    parameters:
+    - transmission_lead_time
+    - construction_period
+    - cross_border_permitting_time
+    free_variables: []
+    determined_variables:
+    - transmission_lead_time
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: ENTSO-E adequacy studies; the graph's own construction period
+    latex: \mathrm{transmission}_{lead\_time} = \frac{\mathrm{construction}_{period}}{12} + \mathrm{cross}_{border\_permitting\_time}
   transmission_loss_target_definition:
     name: The loss after the target
     description: 'The loss factor the target leaves: the base loss reduced by the reduction target. The
@@ -36777,10 +37417,10 @@ equations:
     lhs: district_heating_share + heat_pump_adoption
     rhs: '1.0'
     relation: leq
-    parameters: &id019
+    parameters: &id020
     - district_heating_share
     - heat_pump_adoption
-    free_variables: *id019
+    free_variables: *id020
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -36819,10 +37459,10 @@ equations:
     lhs: v2g_adoption
     rhs: electric_vehicle_adoption
     relation: leq
-    parameters: &id020
+    parameters: &id021
     - electric_vehicle_adoption
     - v2g_adoption
-    free_variables: *id020
+    free_variables: *id021
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -37091,20 +37731,47 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{waste}_{to\_energy\_cost} = \mathrm{capex}_{waste\_to\_energy}
+  water_availability_bound:
+    name: Water availability bound
+    description: 'The water the project may withdraw, after the availability multiplier, must cover the
+      thermal fleet''s cooling draw and the hydrogen programme''s feed. The multiplier is the scenario
+      lever on a flow the graph already ships: at its default of 1.0 the constraint reads 200e6 >= 93.2e6
+      m3/year, and a dry year set below 0.47 makes it bind. The rewrite replaces a constraint that compared
+      the flow to its own two components with one that compares the *available* flow to demand, which
+      is the question a water-stressed siting decision actually asks.'
+    system: water_energy
+    lhs: water_availability * water_availability_m3
+    rhs: total_water_demand_m3
+    relation: geq
+    parameters: &id022
+    - total_water_demand_m3
+    - water_availability
+    - water_availability_m3
+    free_variables: *id022
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{water}_{availability} \mathrm{water}_{availability\_m3} \geq \mathrm{total}_{water\_demand\_m3}
   water_availability_constraint:
     name: Water availability
-    description: 'Cooling and hydrogen demand together against what the catchment makes available. A build
-      that clears on cost can still be one the catchment cannot supply.
-
-      '
+    description: 'The water the project may withdraw, after the availability multiplier, must cover the
+      thermal fleet''s cooling draw and the hydrogen programme''s feed. The multiplier is the scenario
+      lever on a flow the graph already ships: at its default of 1.0 the constraint reads 200e6 >= 93.2e6
+      m3/year, and a dry year set below 0.47 makes it bind. The rewrite replaces a constraint that compared
+      the flow to its own two components -- which restated the demand identity rather than testing it
+      against supply -- with one that compares the *available* flow to demand.'
     system: water_energy
-    lhs: water_availability_m3
-    rhs: cooling_water_demand_m3 + hydrogen_water_demand_m3
+    lhs: water_availability * water_availability_m3
+    rhs: total_water_demand_m3
     relation: geq
     parameters:
+    - total_water_demand_m3
+    - water_availability
     - water_availability_m3
-    - cooling_water_demand_m3
-    - hydrogen_water_demand_m3
     free_variables: []
     determined_variables: []
     tolerance: 1.0e-06
@@ -38137,24 +38804,6 @@ relationships:
   direction: forward
   strength: hard
   description: Electrolysis water intensity.
-  reference: null
-  priority: P2
-- source: cooling_water_demand_m3
-  target: water_availability_m3
-  equation_id: water_availability_constraint
-  relationship: constraint
-  direction: forward
-  strength: hard
-  description: The catchment must supply the thermal fleet.
-  reference: null
-  priority: P2
-- source: hydrogen_water_demand_m3
-  target: water_availability_m3
-  equation_id: water_availability_constraint
-  relationship: constraint
-  direction: forward
-  strength: hard
-  description: And the hydrogen programme, out of the same catchment.
   reference: null
   priority: P2
 - source: total_capacity_mw
@@ -44991,72 +45640,6 @@ relationships:
   description: Enters the product identity.
   reference: The catalog's own duplicate rows, resolved
   priority: P1
-- source: discount_rate
-  target: weighted_average_cost_of_capital
-  equation_id: wacc_alias
-  relationship: equality
-  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
-    computes.'
-- source: capex_usd_per_kw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: Gross fleet capital enters the base the allowed return is earned on.
-- source: total_capacity_mw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: The fleet's size sets the scale of the capital in the accounts.
-- source: accumulated_depreciation_fraction
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: What the books have written down between gross capital and the base.
-- source: regulatory_asset_base
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: equality
-  description: Straight-line write-down of the base over the regulatory asset life.
-- source: depreciation_life_by_asset
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: functional
-  description: A longer regulatory life spreads the base thinner over the years.
-- source: regulatory_depreciation
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: Depreciation is the first term of the revenue requirement.
-- source: regulatory_asset_base
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: The return is earned on the base, not on gross capital.
-- source: discount_rate
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: The return rate is the blend the financial block computes.
-- source: allowed_return_on_debt
-  target: cost_of_debt
-  equation_id: cost_of_debt_capped
-  relationship: constraint
-  description: The allowance binds the debt rate a scenario may carry.
-- source: allowed_return_on_equity
-  target: cost_of_equity
-  equation_id: cost_of_equity_capped
-  relationship: constraint
-  description: The allowance binds the equity return a valuation may assume.
-- source: regulated_tariff_usd_per_mwh
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: equality
-  description: The applied tariff is the recovery level in the absence of a cap.
-- source: revenue_cap
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: functional
-  description: The cap scales the recovery level; below 1 it withholds part of it.
 - source: desalination_capacity
   target: desalination_demand
   equation_id: desalination_demand_definition
@@ -45489,6 +46072,448 @@ relationships:
   description: Enters the product identity.
   reference: Rate-based levy and allowance definitions (standard fiscal accounting)
   priority: P1
+- source: discount_rate
+  target: weighted_average_cost_of_capital
+  equation_id: wacc_alias
+  relationship: equality
+  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
+    computes.'
+- source: capex_usd_per_kw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: Gross fleet capital enters the base the allowed return is earned on.
+- source: total_capacity_mw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: The fleet's size sets the scale of the capital in the accounts.
+- source: accumulated_depreciation_fraction
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: What the books have written down between gross capital and the base.
+- source: regulatory_asset_base
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: equality
+  description: Straight-line write-down of the base over the regulatory asset life.
+- source: depreciation_life_by_asset
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: functional
+  description: A longer regulatory life spreads the base thinner over the years.
+- source: regulatory_depreciation
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: Depreciation is the first term of the revenue requirement.
+- source: regulatory_asset_base
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return is earned on the base, not on gross capital.
+- source: discount_rate
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return rate is the blend the financial block computes.
+- source: allowed_return_on_debt
+  target: cost_of_debt
+  equation_id: cost_of_debt_capped
+  relationship: constraint
+  description: The allowance binds the debt rate a scenario may carry.
+- source: allowed_return_on_equity
+  target: cost_of_equity
+  equation_id: cost_of_equity_capped
+  relationship: constraint
+  description: The allowance binds the equity return a valuation may assume.
+- source: regulated_tariff_usd_per_mwh
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: equality
+  description: The applied tariff is the recovery level in the absence of a cap.
+- source: revenue_cap
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: functional
+  description: The cap scales the recovery level; below 1 it withholds part of it.
+- source: additional_abatement_mtco2
+  target: baseline_emissions
+  equation_id: baseline_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Verra/Gold Standard avoided-emissions accounting; the graph's own abatement identity rearranged
+  priority: P1
+- source: emissions_mtco2_per_year
+  target: baseline_emissions
+  equation_id: baseline_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Verra/Gold Standard avoided-emissions accounting; the graph's own abatement identity rearranged
+  priority: P1
+- source: regulation_down_requirement
+  target: regulation_reserve
+  equation_id: regulation_reserve_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Stoft 2002, Power System Economics, ch. 5
+  priority: P1
+- source: regulation_up_requirement
+  target: regulation_reserve
+  equation_id: regulation_reserve_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Stoft 2002, Power System Economics, ch. 5
+  priority: P1
+- source: black_start_requirement
+  target: black_start_capability
+  equation_id: black_start_capability_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: number_of_generators
+  target: black_start_capability
+  equation_id: black_start_capability_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: energy_poverty_line_mwh_per_household
+  target: lifeline_threshold
+  equation_id: lifeline_threshold_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Multi-Tier Framework (MTF) energy access measurement
+  priority: P1
+- source: construction_period
+  target: transmission_lead_time
+  equation_id: transmission_lead_time_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: ENTSO-E adequacy studies; the graph's own construction period
+  priority: P1
+- source: cross_border_permitting_time
+  target: transmission_lead_time
+  equation_id: transmission_lead_time_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: ENTSO-E adequacy studies; the graph's own construction period
+  priority: P1
+- source: biomass_capacity
+  target: fleet_employment_intensity_jobs_per_mw
+  equation_id: fleet_employment_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IRENA employment factors
+  priority: P1
+- source: coal_capacity
+  target: fleet_employment_intensity_jobs_per_mw
+  equation_id: fleet_employment_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IRENA employment factors
+  priority: P1
+- source: employment_factor_biomass
+  target: fleet_employment_intensity_jobs_per_mw
+  equation_id: fleet_employment_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IRENA employment factors
+  priority: P1
+- source: employment_factor_coal
+  target: fleet_employment_intensity_jobs_per_mw
+  equation_id: fleet_employment_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IRENA employment factors
+  priority: P1
+- source: employment_factor_gas
+  target: fleet_employment_intensity_jobs_per_mw
+  equation_id: fleet_employment_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IRENA employment factors
+  priority: P1
+- source: employment_factor_geothermal
+  target: fleet_employment_intensity_jobs_per_mw
+  equation_id: fleet_employment_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IRENA employment factors
+  priority: P1
+- source: employment_factor_hydro
+  target: fleet_employment_intensity_jobs_per_mw
+  equation_id: fleet_employment_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IRENA employment factors
+  priority: P1
+- source: employment_factor_solar
+  target: fleet_employment_intensity_jobs_per_mw
+  equation_id: fleet_employment_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IRENA employment factors
+  priority: P1
+- source: employment_factor_wind
+  target: fleet_employment_intensity_jobs_per_mw
+  equation_id: fleet_employment_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IRENA employment factors
+  priority: P1
+- source: gas_capacity
+  target: fleet_employment_intensity_jobs_per_mw
+  equation_id: fleet_employment_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IRENA employment factors
+  priority: P1
+- source: geothermal_capacity
+  target: fleet_employment_intensity_jobs_per_mw
+  equation_id: fleet_employment_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IRENA employment factors
+  priority: P1
+- source: hydro_capacity
+  target: fleet_employment_intensity_jobs_per_mw
+  equation_id: fleet_employment_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IRENA employment factors
+  priority: P1
+- source: solar_pv_capacity
+  target: fleet_employment_intensity_jobs_per_mw
+  equation_id: fleet_employment_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IRENA employment factors
+  priority: P1
+- source: wind_offshore_capacity
+  target: fleet_employment_intensity_jobs_per_mw
+  equation_id: fleet_employment_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IRENA employment factors
+  priority: P1
+- source: wind_onshore_capacity
+  target: fleet_employment_intensity_jobs_per_mw
+  equation_id: fleet_employment_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IRENA employment factors
+  priority: P1
+- source: employment_factor_transmission
+  target: transmission_jobs
+  equation_id: transmission_jobs_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IRENA employment factors
+  priority: P1
+- source: transmission_line_length_km
+  target: transmission_jobs
+  equation_id: transmission_jobs_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IRENA employment factors
+  priority: P1
+- source: discount_rate
+  target: spare_parts_carrying_cost_usd_per_year
+  equation_id: spare_parts_carrying_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Standard inventory carrying-cost accounting
+  priority: P1
+- source: spare_parts_inventory
+  target: spare_parts_carrying_cost_usd_per_year
+  equation_id: spare_parts_carrying_cost_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Standard inventory carrying-cost accounting
+  priority: P1
+- source: hydrogen_storage_capacity
+  target: hydrogen_storage_capex_usd
+  equation_id: hydrogen_storage_capex_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Lazard LCOS; the graph's own MW-to-kW convention
+  priority: P1
+- source: hydrogen_storage_cost
+  target: hydrogen_storage_capex_usd
+  equation_id: hydrogen_storage_capex_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Lazard LCOS; the graph's own MW-to-kW convention
+  priority: P1
+- source: circuit_breakers
+  target: circuit_breaker_density_per_km
+  equation_id: circuit_breaker_density_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: distribution_network_km
+  target: circuit_breaker_density_per_km
+  equation_id: circuit_breaker_density_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: biomass_sustainability_limit
+  target: biomass_capacity
+  equation_id: biomass_sustainability_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds biomass_capacity; a plan can clear the physics and fail this.
+  reference: IEA/NEA Projected Costs of Generating Electricity; sustainable-biomass supply as a build
+    limit
+  priority: P2
+- source: total_water_demand_m3
+  target: water_availability_m3
+  equation_id: water_availability_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds water_availability_m3; a plan can clear the physics and fail this.
+  reference: null
+  priority: P2
+- source: biogas_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: The conversion-plant build is one term the fleet size governs; the build set may not exceed
+    it plus storage headroom.
+  reference: null
+  priority: P1
+- source: landfill_gas_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: The conversion-plant build is one term the fleet size governs; the build set may not exceed
+    it plus storage headroom.
+  reference: null
+  priority: P1
+- source: gasification_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: The conversion-plant build is one term the fleet size governs; the build set may not exceed
+    it plus storage headroom.
+  reference: null
+  priority: P1
+- source: pyrolysis_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: The conversion-plant build is one term the fleet size governs; the build set may not exceed
+    it plus storage headroom.
+  reference: null
+  priority: P1
+- source: waste_to_energy_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: The conversion-plant build is one term the fleet size governs; the build set may not exceed
+    it plus storage headroom.
+  reference: null
+  priority: P1
+- source: salinity_gradient_capacity
+  target: total_capacity_mw
+  equation_id: fleet_build_balance
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: The conversion-plant build is one term the fleet size governs; the build set may not exceed
+    it plus storage headroom.
+  reference: null
+  priority: P1
+- source: water_availability
+  target: water_availability_m3
+  equation_id: water_availability_constraint
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: The availability multiplier scales the flow the demand is tested against.
+  reference: null
+  priority: P2
 cross_validation:
 - id: carbon_price_budget_alignment
   condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0

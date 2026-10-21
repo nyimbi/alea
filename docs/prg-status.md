@@ -2322,6 +2322,96 @@ the pack says the equation should not ship until the work is on disk. Inventing
 a kWh per hectare would close one node and leave a coefficient nobody can
 check.
 
+**Batch 30 -- the supply, emissions and grid layer.** Ten products and two
+ceilings over thirty nodes, authored from
+`docs/research/coupling-packs/supply-emissions-grid.md`. The pack's forty-two
+nodes split on the seam the slice itself has: the capacities and employment
+factors have bases the graph already carries, the pollutants have none. Five
+nodes derive in the pack's reading, twenty-four are read, thirteen defer. The
+batch lands close to that split -- twenty placeholder nodes are retyped, ten
+products are determined, two shipped equations are rewritten, and thirteen
+nodes defer.
+
+*The pollutants defer as one family, not thirteen times.* The catalog's own
+`param_eqn.md` writes `nox_emissions <- generation_coal, generation_gas`, and
+`generation_coal` is not a node. The graph's only activity base is
+`generation_twh`, a fleet total, and `emission_factor_*` covers CO2 alone. Seven
+pollutant masses therefore defer on the same missing base -- generation
+disaggregated by technology -- and the batch records that as one deferral with
+seven names rather than seven rows that each say the same thing. Inventing a
+per-TWh NOx factor would close seven nodes and leave a coefficient nobody can
+check against a source that does not exist.
+
+*The bound-edge bug that shipped twice before it was caught.* The first form of
+the ceiling loop read `for sym in binder`, where `binder` is one symbol name and
+not a collection, so it walked the string's characters: forty-nine one-letter
+edges and a self-loop per named symbol. A fragment carrying that validates on
+its own -- every endpoint exists, the equation holds every symbol it names --
+and the merged graph keeps it, so nothing in the chain refused a graph whose
+bound edges named no coupling at all. The count that exposed it was the edge
+total falling instead of rising when the disposal rule was applied: the two
+rewritten water edges left, and what replaced them was characters. The loop now
+emits one edge from binder to bounded, asserts both endpoints are nodes and
+asserts the pair is not a self-loop.
+
+*The ceilings ship as inequalities because the DSL cannot differentiate a
+clamp.* `min`, `max`, `abs`, `floor` and `ceil` have no derivative rule, and
+`gradients()` differentiates every equation in the library. A sustainability
+limit written as `biomass_capacity = min(biomass_capacity, limit)` would be a
+clamp the walker cannot read; written as `limit >= biomass_capacity` with the
+limit as binder and the capacity as the bounded variable, it is a bound the
+constraint register already knows how to handle, and the two new bound edges run
+binder to bounded rather than as self-loops -- a self-loop claims no coupling,
+which is the opposite of what a ceiling is for. `biomass_sustainability_limit`
+and `water_availability` are the two binders, and the `_BOUND_EDGE` map in
+`prg_coupler.py` exists because the bound equation's own symbol set contains
+both sides and cannot name the direction.
+
+*The employment double count that did not ship.* Seven employment factors at
+jobs/MW would each be a second count of the same job if the graph already
+carried a job total, and it does: `direct_jobs` is 43,000 at defaults. The batch
+therefore ships an intensity -- `fleet_employment_intensity_jobs_per_mw`,
+4.169 jobs/MW over the 9,700 MW fleet -- as a determined node the factors feed,
+rather than a competing headcount. `transmission_jobs` is the one genuine
+product (route-km times jobs/km, 36,000 at defaults) because no shipped node
+counts transmission construction jobs at all.
+
+*Two shipped equations rewritten, and the edges they orphaned.*
+`fleet_build_balance` now sums all eighteen build technologies, the six
+conversion-plant capacities among them, so a plant built by the waste or biogas
+family enters the same balance as a wind farm. The water constraint was
+rewritten from a two-operand sum to `water_availability * water_availability_m3
+>= total_water_demand_m3`, with the availability factor retyped from the
+catalog's `(0, 1e6)` placeholder to a dimensionless `[0, 2]` at default 1.0.
+Both rewrites orphan shipped edges -- the old constraint named
+`cooling_water_demand_m3` and `desalination_water_demand_m3` directly -- and the
+bake drops an edge whose equation was corrected and whose corrected arithmetic
+no longer names its source. That rule is the loader's own, and the first bake
+attempt omitted it: the fragment validated alone and the merged graph then
+refused two edges whose equation no longer held them. The bake now applies the
+loader's disposal and prints each dropped edge by name.
+
+*Verified at defaults.* `baseline_emissions` 70.78 MtCO2/year,
+`regulation_reserve` 170 MW, `black_start_capability` 4.4 units,
+`lifeline_threshold` 1.0 MWh/year, `transmission_lead_time` 4.5 years,
+`fleet_employment_intensity_jobs_per_mw` 4.169, `transmission_jobs` 36,000,
+`spare_parts_carrying_cost_usd_per_year` 25.11 USD million,
+`hydrogen_storage_capex_usd` 0.0 (no electrolyser at defaults, which is the
+honest zero), `circuit_breaker_density_per_km` 0.0111. The two ceilings hold at
+defaults: 9,700 MW of build against a 15,000 MW sustainability limit, and
+1.0 x 2.0e8 m3 of available water against 9.32e7 m3 of demand.
+
+*Register movement.* Parameters 1,312 to 1,317, equations 437 to 449, edges 919
+to 958, uncoupled 393 to 365 -- the batch couples twenty-eight, the other two of
+its thirty nodes having been named already. The constraint register counts 446
+hard, one informational and two soft. The derived-node audit moves to 159
+checked and 253 skipped: `baseline_emissions` reads the emissions total the
+solve reports, the other nine read fleet capacities, employment factors or the
+WACC and are skipped because the result does not carry their bases. The
+uncertainty register is unchanged in its inputs and derived-stochastic counts --
+none of the ten products is stochastic -- and its reach moves 149 to 150 on
+`baseline_emissions` alone.
+
 ## Evaluation of the design docs against the code (2026-10-17)
 
 **`docs/how_prg_works.md` (read-only; a teaching narrative, not read as spec).**

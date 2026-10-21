@@ -1514,7 +1514,12 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# which twenty-nine were dead knobs. The other eleven were the new bases
 	# and derived charges, which arrive already coupled by their own
 	# equations and were never in this register to leave it. 402 to 373.
-	assert len(dead) == 373, len(dead)
+	# Batch 30 took it 373 to 346: twenty-seven dead knobs left, the twenty
+	# retyped placeholder nodes and the five equation targets among them.
+	# `water_availability` and `biomass_sustainability_limit` left by the
+	# bound register rather than by an equation, which is the case the
+	# `rule_read` assertion below exists to keep out of this count.
+	assert len(dead) == 346, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
@@ -1846,8 +1851,13 @@ def test_the_audit_reports_what_it_did_not_check():
 
 	audit = audit_scenario_result(_solved())
 	assert audit.consistent
-	assert len(audit.checked) == 158, audit.checked
-	assert len(audit.skipped) == 244, audit.skipped
+	# Batch 30's ten products took the computed set 402 to 412. One is
+	# reachable from what the result supplies -- `baseline_emissions` reads
+	# the emissions total the solve reports -- and joins `checked` (158 to
+	# 159); the other nine read fleet capacities, employment factors or the
+	# WACC and join `skipped` (244 to 253).
+	assert len(audit.checked) == 159, audit.checked
+	assert len(audit.skipped) == 253, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -1898,10 +1908,11 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# batch 25's gate-family coupling took it 286 to 299, batch 26's
 	# adequacy-and-reserve layer took it 299 to 310, batch 28's product
 	# layer took it 310 to 382, and batch 29's demand-and-macro layer took
-	# it 382 to 402. The whole computed set is skipped here because the
-	# loop failed, so this is `len(computed())`, not the skipped half of a
-	# partition that ran.
-	assert len(audit.skipped) == 402, audit.skipped
+	# it 382 to 402, and batch 30's supply-and-grid layer took it 402 to
+	# 412. The whole computed set is skipped here because the loop failed,
+	# so this is `len(computed())`, not the skipped half of a partition that
+	# ran.
+	assert len(audit.skipped) == 412, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -2958,7 +2969,13 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	# the number is the finding -- the sentence exists to stop a reader taking
 	# the declarations for a distribution, and a reach that drifts unnoticed
 	# would understate it.
-	assert "76" in text and "149" in text
+	# Batch 30 moved the reach by one: `baseline_emissions` reads
+	# `emissions_mtco2_per_year`, which the uncertain demand and emission
+	# factors already reach, so it enters the closure and takes the reach
+	# 149 to 150. The input count is unchanged -- the batch adds no new
+	# stochastic declaration -- and so is the derived-stochastic count, since
+	# the new node inherits a fixed determinism from the two nodes it sums.
+	assert "76" in text and "150" in text
 
 
 # ---------------------------------------------------------------------------
@@ -3741,7 +3758,12 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	assert counts, "no strength was counted"
 	assert sum(counts.values()) == len(graph.equations)
 	assert set(counts) <= {"hard", "soft", "informational"}
-	assert counts == {"hard": 434, "informational": 1, "soft": 2}, counts
+	# Batch 30's twelve equations all carry hard edges -- the ten products and
+	# the two rewritten constraints -- taking the count 434 to 446. The two
+	# ceilings ship with hard constraint edges for the same reason the shipped
+	# ones do: a build that breaches a sustainability limit is not a soft
+	# finding.
+	assert counts == {"hard": 446, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -4071,7 +4093,7 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# and the four demand loads are definitions of their own operands rather
 	# than statements of an external result. A further change is a change to
 	# the register's coverage and fails here.
-	assert len(declared) == 185, f"the citation register moved: {sorted(declared)}"
+	assert len(declared) == 194, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -4310,7 +4332,7 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 				f"numeric {numeric!r}"
 			)
 			compared += 1
-	assert compared == 402, (
+	assert compared == 412, (
 		f"expected 402 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "
@@ -4320,9 +4342,9 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 		f"layer raised it to 243, batch 24's carbon-market layer raised "
 		f"it to 286, batch 25's gate-family coupling raised it to 299, "
 		f"batch 26's adequacy-and-reserve layer raised it to 310, and batch "
-		f"28's product layer raised it to 382 and batch 29's "
-		f"demand-and-macro layer raised it to 402 -- every equation each "
-		f"batch added is affine in the "
+		f"28's product layer raised it to 382, batch 29's demand-and-macro "
+		f"layer raised it to 402 and batch 30's supply-and-grid layer raised "
+		f"it to 412 -- every equation each batch added is affine in the "
 		f"variable it solves for, which is the claim the "
 		f"`exact is not None` above makes, at the wider coverage"
 	)

@@ -546,7 +546,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -639,6 +639,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b29_equations)
 		edges = list(BATCH12_EDGES) + b29_edges
+	elif batch == "30":
+		b30_nodes, b30_equations, b30_edges, b30_rules = build_batch30(graph)
+		rules.extend(b30_rules)
+		nodes.update(b30_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b30_equations)
+		edges = list(BATCH12_EDGES) + b30_edges
 	elif batch == "27":
 		b27_nodes, b27_equations, b27_edges, b27_rules = build_batch27(graph)
 		rules.extend(b27_rules)
@@ -8024,6 +8031,614 @@ def build_batch29(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 				"description": "Enters the product identity.",
 				"reference": cite, "priority": "P1",
 			})
+	return nodes, equations, edges, rules
+
+
+
+
+#: (name, unit, range, default, determinism, prose) -- the placeholder nodes
+#: this batch retypes to free operands with a real unit and a real default.
+BATCH30_RETYPES: tuple[tuple[str, str, list[float], float, str, str], ...] = (
+	("number_of_generators", "1", [0.0, 1000.0], 220.0, "physical",
+	 "Generating units in the fleet, not sites. The default is 220, the "
+	 "count the graph already carries for `scada_telemetry_sites`, because "
+	 "no unit-level register exists and 220 units over an 18,900 MW fleet "
+	 "averages about 86 MW a unit -- the right order for a mixed "
+	 "thermal-and-hydro fleet. The placeholder 500,000.0 is not a count of "
+	 "anything a country has."),
+	("circuit_breakers", "1", [0.0, 5000.0], 500.0, "physical",
+	 "Feeder-head circuit breakers on the distribution network. The default "
+	 "is one per primary feeder, and `distribution_feeders_total` ships at "
+	 "500. Sectionalisers and low-voltage breakers are outside the count: "
+	 "the node states the primary-feeder bay, which is what a density "
+	 "against route-km can be read from."),
+	("biomass_sustainability_limit", "MW", [0.0, 30000.0], 200.0, "policy",
+	 "The sustainable biomass resource expressed as an installable capacity "
+	 "ceiling, in the same unit as the capacity it bounds. The default 200 "
+	 "MW sits above the shipped 100 MW build, so the ceiling holds with "
+	 "room; setting it below 100 makes the constraint bind, which is what a "
+	 "ceiling is for. Expressed in MW rather than tonnes of fuel because "
+	 "the graph carries no heat rate and no fuel-mass factor for biomass, "
+	 "so a mass ceiling cannot be formed from what exists."),
+	("water_availability", "1", [0.0, 2.0], 1.0, "physical",
+	 "A multiplier on the water the project may withdraw: 0 is a closed "
+	 "source, 1 is the shipped flow, 2 is a wet year. The flow itself ships "
+	 "as `water_availability_m3` (200e6 m3/year) and the inequality that "
+	 "compares it to demand ships with it; this node is the scenario lever "
+	 "on that comparison and not a second spelling of the flow."),
+	("biogas_capacity", "MW", [0.0, 30000.0], 0.0, "fixed",
+	 "Electrical capacity of anaerobic digestion, in the band of the shipped "
+	 "`biomass_capacity`. The default is 0.0: the fleet balance ships a "
+	 "build that does not include it, and a non-zero default would move a "
+	 "balance the graph has already checked. The optimiser chooses the "
+	 "build; this node is where the choice is recorded."),
+	("landfill_gas_capacity", "MW", [0.0, 30000.0], 0.0, "fixed",
+	 "Electrical capacity of landfill-gas capture and generation. Default "
+	 "0.0 for the same reason as `biogas_capacity`: the shipped balance "
+	 "excludes it and a default would move a checked constraint."),
+	("gasification_capacity", "MW", [0.0, 30000.0], 0.0, "fixed",
+	 "Electrical capacity of biomass gasification. Default 0.0, as the two "
+	 "above."),
+	("pyrolysis_capacity", "MW", [0.0, 30000.0], 0.0, "fixed",
+	 "Electrical capacity of pyrolysis. Default 0.0, as the three above."),
+	("waste_to_energy_capacity", "MW", [0.0, 30000.0], 0.0, "fixed",
+	 "Electrical capacity of municipal-waste combustion with energy "
+	 "recovery. Default 0.0. The IRENA jobs table counts 26,000 "
+	 "waste-to-energy jobs but prints no capacity to divide them by, so "
+	 "this node is an input and not a derived quantity."),
+	("salinity_gradient_capacity", "MW", [0.0, 30000.0], 0.0, "fixed",
+	 "Electrical capacity of salinity-gradient conversion. Default 0.0; "
+	 "the technology is pre-commercial, as `capex_salinity_gradient`'s own "
+	 "description says, so a non-zero default would assert a build the "
+	 "graph has no basis for."),
+	("employment_factor_biomass", "jobs/MW", [0.0, 20.0], 5.1, "fixed",
+	 "Jobs per installed MW of biomass capacity. 5.1 is the ratio the "
+	 "archived IRENA review implies: 765,000 solid-biomass jobs over 149 GW "
+	 "of bioenergy capacity is 5.13 jobs/MW, with the caveat that the "
+	 "numerator is biomass jobs and the denominator is all bioenergy "
+	 "capacity, so the ratio is an upper estimate."),
+	("employment_factor_coal", "jobs/MW", [0.0, 20.0], 4.3, "fixed",
+	 "Jobs per installed MW of coal capacity. 4.3 is the graph's own "
+	 "construction-plus-O&M intensity (`construction_jobs_per_mw` + "
+	 "`om_jobs_per_mw`), because the archived IRENA review covers renewable "
+	 "technologies only and prints no coal figure. The default is an "
+	 "assumption and is stated as one."),
+	("employment_factor_gas", "jobs/MW", [0.0, 20.0], 4.3, "fixed",
+	 "Jobs per installed MW of gas capacity. 4.3, the graph's own intensity; "
+	 "the archived review covers no gas. An assumption, as for coal."),
+	("employment_factor_geothermal", "jobs/MW", [0.0, 20.0], 4.3, "fixed",
+	 "Jobs per installed MW of geothermal capacity. 4.3, the graph's own "
+	 "intensity: the IRENA review gives 160,000 geothermal jobs but prints "
+	 "no geothermal capacity in the archived text, so the ratio cannot be "
+	 "read off it."),
+	("employment_factor_hydro", "jobs/MW", [0.0, 20.0], 1.8, "fixed",
+	 "Jobs per installed MW of hydro capacity. 1.8: 2,324,000 jobs over "
+	 "1,265 GW is 1.84. The lowest of the technologies in the table, which "
+	 "is the point -- a hydro-heavy fleet is not a jobs fleet per MW."),
+	("employment_factor_solar", "jobs/MW", [0.0, 20.0], 5.0, "fixed",
+	 "Jobs per installed MW of solar PV capacity. 5.0: 7,107,000 jobs over "
+	 "1,411 GW is 5.04. The highest in the table, and it carries the "
+	 "manufacturing share, so it overstates an O&M-only intensity."),
+	("employment_factor_wind", "jobs/MW", [0.0, 20.0], 1.4, "fixed",
+	 "Jobs per installed MW of wind capacity. 1.4: 1,457,000 jobs over "
+	 "1,017 GW is 1.43."),
+	("employment_factor_transmission", "jobs/km", [0.0, 20.0], 3.0, "fixed",
+	 "Jobs per route-kilometre of high-voltage line. 3.0 is a planning "
+	 "figure and not extracted from the archive: the IRENA review covers "
+	 "generation, not networks, and no archived work states a line-km "
+	 "intensity. Stated as an assumption, which is why the identity it "
+	 "feeds cites IRENA only for the method."),
+	("spare_parts_inventory", "USD million", [0.0, 1000.0], 240.0, "fixed",
+	 "The value of spares held against failure. 240 is two percent of gross "
+	 "fleet capital (1,200 USD/kW x 10,000 MW = 12,000 USD million), a "
+	 "stated assumption rather than a measured figure. The 1,000 ceiling is "
+	 "an eight percent spares holding, which is the top of what a utility "
+	 "carries; the placeholder 500,000.0 would be four percent of the whole "
+	 "fleet's capital in spare parts."),
+	("cross_border_permitting_time", "years", [0.0, 10.0], 2.0, "policy",
+	 "Years to secure the cross-border permit for a transmission line. The "
+	 "default 2.0 is two permitting cycles; the graph's own "
+	 "`financing_close_deadline` (18 months) sits inside one. A permit that "
+	 "outlasts a ten-year horizon is a refusal rather than a delay, which "
+	 "is why the range stops there."),
+)
+
+
+#: (name, unit, range, determinism, category, prose) -- the five products
+#: that close a read, and the five equation targets.
+BATCH30_DERIVED: tuple[tuple[str, str, list[float], str, str, str], ...] = (
+	("baseline_emissions", "MtCO2/year", [0.0, 10000.0], "physical",
+	 "Emissions",
+	 "Emissions the fleet would have produced without the abatement the "
+	 "project delivers. The identity is the FRM's own "
+	 "`reductions = baseline - project - leakage`, solved for the baseline "
+	 "with the leakage term omitted: the graph carries "
+	 "`additional_abatement_mtco2` (45.0 MtCO2/year at defaults) and "
+	 "`emissions_mtco2_per_year` (25.777), giving 70.777. The omitted "
+	 "leakage term is stated rather than invented -- no node in the graph "
+	 "carries a leakage mass."),
+	("regulation_reserve", "MW", [0.0, 3000.0], "policy",
+	 "Reliability",
+	 "The regulation band the system must hold, up plus down. Both halves "
+	 "already ship as `regulation_up_requirement` and "
+	 "`regulation_down_requirement`, each a share of peak demand and 85.0 MW "
+	 "at defaults, so the total is 170.0 MW. The node is the sum of its two "
+	 "shipped parts and not a third derivation of the same band: a "
+	 "`regulation_reserve_share` over the same peak would leave three "
+	 "equations describing one quantity, inconsistent at every default."),
+	("black_start_capability", "1", [0.0, 1000.0], "policy",
+	 "Reliability",
+	 "Units the operator must hold capable of black start. The share ships "
+	 "(`black_start_requirement`, 0.02) and the unit count is retyped in "
+	 "this batch; the product is 4.4 units at defaults. Distinct from the "
+	 "shipped `black_start_capable_mw` (180 MW), which states the same "
+	 "obligation in capacity -- the two are the two registers of one "
+	 "requirement, and neither is the other's alias."),
+	("lifeline_threshold", "MWh/year", [0.0, 10.0], "physical",
+	 "Affordability",
+	 "The consumption level below which a household qualifies for the "
+	 "lifeline tariff. The graph already carries that level: "
+	 "`energy_poverty_line_mwh_per_household` is the MTF Tier 2/3 boundary "
+	 "at 1.0 MWh/year per household, with "
+	 "`energy_poor_consumption_mwh_per_household` (0.35) as the draw of a "
+	 "household below it. The threshold is the line, so this node is an "
+	 "alias onto it and not a second estimate of the same boundary."),
+	("transmission_lead_time", "years", [0.0, 20.0], "physical",
+	 "Grid",
+	 "Years from decision to energisation for a transmission line: the "
+	 "build period plus the cross-border permit. `construction_period` "
+	 "ships in months (30), so the division by 12 is a unit conversion and "
+	 "not a scale factor; the permit is retyped to years in this batch at "
+	 "2.0. Total 4.5 years at defaults."),
+	("fleet_employment_intensity_jobs_per_mw", "jobs/MW", [0.0, 50.0],
+	 "physical", "Employment",
+	 "Jobs per installed megawatt of the generating fleet, weighted by the "
+	 "installed capacity of each technology. A weighted-average intensity "
+	 "and deliberately not a jobs total: `direct_jobs` already ships as "
+	 "`total_capacity_mw * (construction_jobs_per_mw + om_jobs_per_mw)` = "
+	 "43,000, and the per-technology factors applied to capacity give "
+	 "88,717. Two nodes measuring the same employment at a factor of two "
+	 "would be worse than an uncoupled node, so the product here is an "
+	 "intensity no total can be confused with. 4.169 jobs/MW at defaults. "
+	 "The oil fleet is outside both the numerator and the denominator: the "
+	 "archive prints no oil employment factor, and omitting it from both "
+	 "keeps the ratio well defined while leaving a stated 1.6% gap."),
+	("transmission_jobs", "jobs", [0.0, 1000000.0], "physical",
+	 "Employment",
+	 "Construction and O&M jobs on the transmission network: the per-route-"
+	 "km intensity times the line length, 36,000 at defaults. A separate "
+	 "stock and not an addend to `direct_jobs`: the transmission build is "
+	 "already inside `construction_jobs_per_mw * total_capacity_mw`, and "
+	 "the graph carries no identity that sums the two."),
+	("spare_parts_carrying_cost_usd_per_year", "USD million/year",
+	 [0.0, 200.0], "physical", "Financial",
+	 "The annual cost of holding spares: the inventory's value times the "
+	 "discount rate, 25.1 USD million/year at defaults (240 x 0.1046). The "
+	 "rate is the graph's own weighted average cost of capital, because "
+	 "capital tied up in a warehouse is capital not deployed -- the same "
+	 "opportunity cost the WACC prices everywhere else."),
+	("hydrogen_storage_capex_usd", "USD", [0.0, 1000000000000.0],
+	 "physical", "Financial",
+	 "Capital cost of the hydrogen storage the optimiser builds: the "
+	 "installed cost per kWh times the energy capacity, with 1000 converting "
+	 "MWh to kWh. Zero at defaults only because the shipped "
+	 "`hydrogen_storage_capacity` is 0 MWh -- the optimiser builds no "
+	 "hydrogen storage at defaults, not that the node is unread. The 1000 "
+	 "follows the graph's own MW-to-kW convention, which every capital "
+	 "charge in the finance family uses."),
+	("circuit_breaker_density_per_km", "1/km", [0.0, 10.0], "physical",
+	 "Grid",
+	 "Feeder-head breakers per route-kilometre of distribution network: "
+	 "500 over 45,000 km is 0.0111/km. A density rather than a count, "
+	 "because the count alone cannot say whether a network is densely "
+	 "switched; the denominator is the graph's own `distribution_network_km`."),
+)
+
+
+#: (eq_id, name, lhs, rhs, prose, system, reference)
+BATCH30_EQUATIONS: tuple[
+	tuple[str, str, str, str, str, str, str | None], ...
+] = (
+	("baseline_emissions_definition", "The counterfactual baseline",
+	 "baseline_emissions", "emissions_mtco2_per_year + additional_abatement_mtco2",
+	 "The emissions the fleet would have produced without the abatement "
+	 "this project delivers: what it does emit plus what the abatement "
+	 "avoids. This is the FRM's `reductions = baseline - project - "
+	 "leakage` rearranged, with the leakage term omitted because no node "
+	 "in the graph carries a leakage mass. The omission is stated rather "
+	 "than filled with a coefficient: a leakage share would be an invented "
+	 "number and the baseline would inherit it. 70.777 MtCO2/year at "
+	 "defaults.",
+	 "emissions",
+	 "Verra/Gold Standard avoided-emissions accounting; the graph's own "
+	 "abatement identity rearranged"),
+	("regulation_reserve_definition", "The regulation band",
+	 "regulation_reserve",
+	 "regulation_up_requirement + regulation_down_requirement",
+	 "The total regulation reserve the system must hold: the up band plus "
+	 "the down band. Both components ship as their own identities "
+	 "(`regulation_up_share * peak_demand_mw` and the down counterpart), so "
+	 "this node is their sum and not a third share over the same peak. A "
+	 "third share would put three equations on one quantity, and at the "
+	 "shipped 0.01 each the sum is 170 MW.",
+	 "reserve_margin", "Stoft 2002, Power System Economics, ch. 5"),
+	("black_start_capability_definition", "Units capable of black start",
+	 "black_start_capability", "black_start_requirement * number_of_generators",
+	 "Units the operator must hold capable of black start: the requirement "
+	 "share times the fleet's unit count, 4.4 units at defaults. The "
+	 "shipped `black_start_capable_mw` states the same obligation in "
+	 "capacity; this node states it in units, which is the register a "
+	 "system operator's black-start plan is actually written in.",
+	 "reliability", None),
+	("lifeline_threshold_definition", "The lifeline consumption threshold",
+	 "lifeline_threshold", "energy_poverty_line_mwh_per_household",
+	 "The household consumption level below which the lifeline tariff "
+	 "applies. The graph carries exactly one such line -- the MTF Tier 2/3 "
+	 "boundary at 1.0 MWh/year per household -- and this node is an alias "
+	 "onto it rather than a second estimate. Two thresholds would let a "
+	 "scenario move the tariff's eligibility without moving the poverty "
+	 "measure it is supposed to track.",
+	 "affordability", "Multi-Tier Framework (MTF) energy access measurement"),
+	("transmission_lead_time_definition", "Transmission lead time",
+	 "transmission_lead_time",
+	 "construction_period / 12 + cross_border_permitting_time",
+	 "Years from decision to energisation: the build period plus the "
+	 "cross-border permit. `construction_period` ships in months, so the "
+	 "12 is a unit conversion and not a scale factor -- 30 months is 2.5 "
+	 "years, and the permit adds 2.0, giving 4.5 years at defaults. The "
+	 "build period is the fleet average the graph carries; a "
+	 "technology-specific period would need a base the graph lacks.",
+	 "energy_balance",
+	 "ENTSO-E adequacy studies; the graph's own construction period"),
+	("fleet_employment_intensity_definition",
+	 "The fleet's employment intensity",
+	 "fleet_employment_intensity_jobs_per_mw",
+	 "(employment_factor_coal * coal_capacity + employment_factor_gas * "
+	 "gas_capacity + employment_factor_hydro * hydro_capacity + "
+	 "employment_factor_geothermal * geothermal_capacity + "
+	 "employment_factor_biomass * biomass_capacity + "
+	 "employment_factor_solar * solar_pv_capacity + "
+	 "employment_factor_wind * (wind_onshore_capacity + "
+	 "wind_offshore_capacity)) / (coal_capacity + gas_capacity + "
+	 "hydro_capacity + geothermal_capacity + biomass_capacity + "
+	 "solar_pv_capacity + wind_onshore_capacity + wind_offshore_capacity)",
+	 "Jobs per installed megawatt, capacity-weighted across the "
+	 "technologies the archive prices. An intensity and not a total: "
+	 "`direct_jobs` already ships at 43,000 and the per-technology factors "
+	 "applied to capacity give 88,717, so a jobs total built from these "
+	 "factors would double-count by a factor of two. The oil fleet is "
+	 "absent from both the numerator and the denominator -- the archive "
+	 "prints no oil factor -- which leaves a stated 1.6% gap rather than a "
+	 "silently averaged one. 4.169 jobs/MW at defaults.",
+	 "employment", "IRENA employment factors"),
+	("transmission_jobs_definition", "Transmission jobs",
+	 "transmission_jobs",
+	 "employment_factor_transmission * transmission_line_length_km",
+	 "Construction and O&M jobs on the transmission network: the per-km "
+	 "intensity times the route length, 36,000 at defaults. A separate "
+	 "stock from `direct_jobs`, which is the generation fleet's own "
+	 "workforce; the graph carries no identity that adds the two, and "
+	 "adding them would count the transmission build twice.",
+	 "employment", "IRENA employment factors"),
+	("spare_parts_carrying_cost_definition", "The cost of holding spares",
+	 "spare_parts_carrying_cost_usd_per_year",
+	 "spare_parts_inventory * discount_rate",
+	 "The annual carrying cost of the spares inventory: its value times the "
+	 "discount rate, 25.1 USD million/year at defaults. The rate is the "
+	 "graph's own WACC because capital held in a warehouse is capital not "
+	 "deployed, which is the same opportunity cost every other capital "
+	 "charge in the finance family prices.",
+	 "financial", "Standard inventory carrying-cost accounting"),
+	("hydrogen_storage_capex_definition", "Hydrogen storage capital cost",
+	 "hydrogen_storage_capex_usd",
+	 "hydrogen_storage_cost * hydrogen_storage_capacity * 1000",
+	 "The capital cost of the hydrogen storage built: installed cost per kWh "
+	 "times energy capacity, with 1000 converting MWh to kWh. The product "
+	 "is zero at defaults because the shipped capacity is zero -- the "
+	 "optimiser builds no hydrogen storage there -- and not because the "
+	 "node is unread. The 1000 follows the graph's own MW-to-kW "
+	 "convention, which the finance family's capital charges all use.",
+	 "financial", "Lazard LCOS; the graph's own MW-to-kW convention"),
+	("circuit_breaker_density_definition", "Breaker density",
+	 "circuit_breaker_density_per_km",
+	 "circuit_breakers / distribution_network_km",
+	 "Feeder-head circuit breakers per route-kilometre of distribution "
+	 "network: 0.0111/km at defaults. A density rather than a count, "
+	 "because 500 breakers says nothing without the network they sit on; "
+	 "the denominator is the graph's own distribution route length, so a "
+	 "scenario that extends the network without adding bays lowers the "
+	 "density and the reading says so.",
+	 "energy_balance", None),
+)
+
+
+#: (eq_id, binder, bounded) -- which edge each bound carries. A bound names
+#: both sides, but an edge is a coupling claim and a self-loop claims none, so
+#: the pair is stated rather than derived.
+_BOUND_EDGE: dict[str, tuple[str, str]] = {
+	"biomass_sustainability_bound": ("biomass_sustainability_limit", "biomass_capacity"),
+	"water_availability_bound": ("total_water_demand_m3", "water_availability_m3"),
+}
+
+
+#: (eq_id, lhs, relation, rhs, prose, system, reference) -- the ceilings and
+#: floors this batch ships as inequalities rather than as equations.
+BATCH30_BOUNDS: tuple[tuple[str, str, str, str, str, str, str | None], ...] = (
+	("biomass_sustainability_bound", "biomass_capacity", "leq",
+	 "biomass_sustainability_limit",
+	 "The biomass build may not exceed the sustainable resource the policy "
+	 "declares. Stated as a bound in megawatts rather than as a fuel-mass "
+	 "ceiling: the mass form needs a heat rate and a biomass fuel factor, "
+	 "neither of which the graph carries, while a capacity ceiling needs "
+	 "neither and is what the resource assessment is usually written in. "
+	 "The shipped 100 MW build sits under the 200 MW default, so the "
+	 "constraint holds with room; setting the limit below 100 makes it "
+	 "bind, which is the point of a ceiling.",
+	 "energy_balance",
+	 "IEA/NEA Projected Costs of Generating Electricity; sustainable-biomass "
+	 "supply as a build limit"),
+	("water_availability_bound", "water_availability * water_availability_m3",
+	 "geq", "total_water_demand_m3",
+	 "The water the project may withdraw, after the availability "
+	 "multiplier, must cover the thermal fleet's cooling draw and the "
+	 "hydrogen programme's feed. The multiplier is the scenario lever on a "
+	 "flow the graph already ships: at its default of 1.0 the constraint "
+	 "reads 200e6 >= 93.2e6 m3/year, and a dry year set below 0.47 makes "
+	 "it bind. The rewrite replaces a constraint that compared the flow to "
+	 "its own two components with one that compares the *available* flow "
+	 "to demand, which is the question a water-stressed siting decision "
+	 "actually asks.",
+	 "water_energy", None),
+)
+
+
+def build_batch30(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Batch 30: the supply, emissions and grid coupling.
+
+	Forty-two nodes from one research pack, and the pack's own division is
+	the batch's shape: the *capacities* and the *employment factors* have
+	bases the graph already carries, and the *pollutants* have no base at
+	all.
+
+	Twenty nodes are retyped from the catalog's placeholder signature
+	(``unit: None``, range ``(0, 1e6)``, default ``500000.0``) to real
+	units with real defaults: the unit and breaker counts, the six
+	conversion-plant capacities, the eight employment factors, the spares
+	stock and the cross-border permit. Every one of those defaults is
+	either read off an archived work or stated as an assumption in the
+	node's own prose; the placeholder 500,000.0 is not a count, a stock or a
+	permit duration, and no scenario could have meant it.
+
+	Ten nodes become derived. Five are equation targets the pack identifies
+	-- the counterfactual baseline, the regulation band, the black-start
+	unit count, the lifeline threshold and the transmission lead time --
+	and five are products that close a read (the fleet employment
+	intensity, the transmission jobs, the spares carrying cost, the
+	hydrogen storage capex and the breaker density).
+
+	*The employment double count is the batch's hazard and its shape.* The
+	prior classification pack proposed seven ``jobs_from_<tech>`` totals;
+	applied to installed capacity they give 88,717 jobs against a shipped
+	``direct_jobs`` of 43,000, because ``direct_jobs`` is already
+	``total_capacity_mw * (construction_jobs_per_mw + om_jobs_per_mw)``.
+	Two nodes measuring one employment at a factor of two is worse than an
+	uncoupled node, so the identity shipped here is a capacity-weighted
+	*intensity* in jobs/MW -- a quantity no total can be confused with.
+	``transmission_jobs`` is the one genuine total, and it is a separate
+	stock the graph does not add to ``direct_jobs``: the transmission build
+	is already inside the per-MW factors.
+
+	Two shipped equations are rewritten rather than supplemented. The fleet
+	build balance gains the six conversion-plant capacities, so a scenario
+	that builds digestion or gasification is counted against the fleet
+	ceiling instead of silently exceeding it; at defaults all six are zero
+	and the balance does not move. The water constraint is rewritten to
+	compare the *available* flow -- after the availability multiplier -- to
+	demand, which is the question a siting decision asks; the shipped form
+	compared the unmodified flow to its own two components.
+
+	Thirteen nodes defer, and seven of them are the pollutant family, which
+	defers as one. The catalog's own edges say ``nox_emissions <-
+	generation_coal, generation_gas``, and neither is a node; the graph's
+	only activity base is ``generation_twh``, a fleet total that is
+	majority hydro, wind and solar at defaults, and ``emission_factor_*``
+	covers CO2 only. A pollutant factor times a low-carbon fleet total is
+	dimensionally clean and wrong about which plant emits. The remaining
+	six defer on a missing operand each -- a voltage base, a reservoir
+	energy, a starts count, a reserve-account share, and the effluent
+	volume the water-pollution load needs.
+
+	Two ceilings ship as inequalities rather than equations, because the
+	DSL has no derivative rule for ``abs``/``min``/``max`` and
+	``gradients()`` differentiates every equation: a clamp would raise
+	``DslError`` on the sensitivity pass. An inequality is what the DSL
+	carries and what the claim actually is.
+	"""
+	from alea.prg.dsl import parse_side
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	for name, unit, rng, default, determinism, prose in BATCH30_RETYPES:
+		# The emit path reads the already-baked document, so a re-emit after a
+		# bake finds the node present. Reading the shipped body and overriding
+		# the fields this batch owns keeps the two runs identical.
+		shipped = graph.nodes.get(name)
+		full: dict[str, Any] = (
+			dict(shipped.model_dump(exclude={"id"}, mode="json"))
+			if shipped is not None else {"name": name.replace("_", " ").capitalize()}
+		)
+		full.update({
+			"description": prose, "type": "float", "unit": unit,
+			"range": rng, "role": "free", "determinism": determinism,
+			"priority": "P1",
+			"status": _kept_status(shipped),
+			"source": "The supply, emissions and grid coupling (batch 30)",
+			"users": ["Planners", "Regulators"],
+		})
+		full["default"] = default
+		nodes[name] = full
+
+	for name, unit, rng, determinism, category, prose in BATCH30_DERIVED:
+		shipped = graph.nodes.get(name)
+		full: dict[str, Any] = (
+			dict(shipped.model_dump(exclude={"id"}, mode="json"))
+			if shipped is not None else {"name": name.replace("_", " ").capitalize()}
+		)
+		full.update({
+			"description": prose, "category": category, "type": "float",
+			"unit": unit, "range": rng, "role": "derived",
+			"determinism": determinism, "priority": "P1",
+			"status": _kept_status(shipped),
+			"source": "The supply, emissions and grid coupling (batch 30)",
+			"users": ["Planners", "Regulators"],
+		})
+		full.pop("default", None)
+		nodes[name] = full
+
+	for eq_id, name, lhs, rhs, prose, system, cite in BATCH30_EQUATIONS:
+		rhs_params = sorted(parse_side(rhs).symbols)
+		equations[eq_id] = {
+			"id": eq_id, "name": name, "description": prose,
+			"system": system, "lhs": lhs, "rhs": rhs, "relation": "eq",
+			"parameters": [lhs] + rhs_params, "free_variables": [],
+			"determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		assert lhs in nodes, f"{eq_id}: {lhs!r} has no node body in this batch"
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs, "equation_id": eq_id,
+				"relationship": "functional", "direction": "forward",
+				"strength": "hard",
+				"description": "Enters the product identity.",
+				"reference": cite, "priority": "P1",
+			})
+
+	for eq_id, lhs, relation, rhs, prose, system, cite in BATCH30_BOUNDS:
+		named = sorted(set(parse_side(lhs).symbols) | set(parse_side(rhs).symbols))
+		equations[eq_id] = {
+			"id": eq_id, "name": eq_id.replace("_", " ").capitalize(),
+			"description": prose, "system": system,
+			"lhs": lhs, "rhs": rhs, "relation": relation,
+			"parameters": named, "free_variables": named,
+			"determined_variables": (),
+			"tolerance": 1.0e-06, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P2", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		# The edge runs from the binding quantity to the bounded one, which is
+		# the shape every shipped bound uses (`cooling_water_demand_m3 ->
+		# water_availability_m3`): a self-loop would say the node constrains
+		# itself and name no coupling at all. `_BOUND_EDGE` carries the pair
+		# because a bounded lhs need not be a bare symbol -- the water bound's
+		# left side is a product, and the node a reader looks for is the flow.
+		binder, bounded = _BOUND_EDGE[eq_id]
+		# `binder` is a single symbol, not a collection. Iterating it walks
+		# its characters, which is how an earlier form of this loop shipped
+		# forty-nine one-letter edges and a self-loop per named symbol: a
+		# fragment carrying those validates on its own and the merged graph
+		# keeps them, so nothing in the chain refuses a graph whose bound
+		# edges name no coupling.
+		known = set(nodes) | set(graph.nodes)
+		assert binder in known, f"{eq_id}: binder {binder!r} is not a node"
+		assert bounded in known, f"{eq_id}: bounded {bounded!r} is not a node"
+		assert binder != bounded, f"{eq_id}: a self-loop names no coupling"
+		edges.append({
+			"source": binder, "target": bounded, "equation_id": eq_id,
+			"relationship": "constraint", "direction": "forward",
+			"strength": "hard",
+			"description": (
+				f"Bounds {bounded}; a plan can clear the physics and fail this."
+			),
+			"reference": cite, "priority": "P2",
+		})
+
+	# --- the two shipped constraints, rewritten -------------------------
+	# The bake merges equations by id, so writing the same id with a new body
+	# replaces the shipped form rather than adding a second constraint on the
+	# same quantity.
+	build_balance = graph.equations.get("fleet_build_balance")
+	assert build_balance is not None, "fleet_build_balance is not shipped"
+	body = dict(build_balance.model_dump(exclude={"id"}, mode="json"))
+	body["lhs"] = (
+		"battery_capacity + biomass_capacity + coal_capacity + csp_capacity "
+		"+ gas_capacity + geothermal_capacity + hydro_capacity "
+		"+ nuclear_capacity + oil_capacity + phs_capacity "
+		"+ wind_offshore_capacity + wind_onshore_capacity "
+		"+ biogas_capacity + landfill_gas_capacity + gasification_capacity "
+		"+ pyrolysis_capacity + waste_to_energy_capacity "
+		"+ salinity_gradient_capacity"
+	)
+	body["parameters"] = sorted(
+		set(parse_side(body["lhs"]).symbols) | set(parse_side(body["rhs"]).symbols)
+	)
+	body["description"] = (
+		"The optimiser's per-technology builds must not exceed the fleet size "
+		"the plan declares for them. This is a *constraint* coupling -- the "
+		"equation the LP carries, not an identity the evaluator solves -- "
+		"because the builds are decision variables with no single value until "
+		"the solve settles them. Batch 30 added the six conversion-plant "
+		"capacities, so a scenario that builds anaerobic digestion, landfill "
+		"gas, gasification, pyrolysis, waste-to-energy or salinity-gradient "
+		"capacity is counted against the same ceiling instead of silently "
+		"exceeding it. All six are zero at defaults, so the balance sums to "
+		"9,700 MW against a 15,000 MW right-hand side exactly as it did "
+		"before the rewrite."
+	)
+	equations["fleet_build_balance"] = body
+	for sym in (
+		"biogas_capacity", "landfill_gas_capacity", "gasification_capacity",
+		"pyrolysis_capacity", "waste_to_energy_capacity",
+		"salinity_gradient_capacity",
+	):
+		edges.append({
+			"source": sym, "target": "total_capacity_mw",
+			"equation_id": "fleet_build_balance",
+			"relationship": "constraint", "direction": "forward",
+			"strength": "hard",
+			"description": (
+				"The conversion-plant build is one term the fleet size governs; "
+				"the build set may not exceed it plus storage headroom."
+			),
+			"reference": None, "priority": "P1",
+		})
+
+	water = graph.equations.get("water_availability_constraint")
+	assert water is not None, "water_availability_constraint is not shipped"
+	wbody = dict(water.model_dump(exclude={"id"}, mode="json"))
+	wbody["lhs"] = "water_availability * water_availability_m3"
+	wbody["rhs"] = "total_water_demand_m3"
+	wbody["parameters"] = sorted(
+		set(parse_side(wbody["lhs"]).symbols) | set(parse_side(wbody["rhs"]).symbols)
+	)
+	wbody["free_variables"] = ()
+	wbody["description"] = (
+		"The water the project may withdraw, after the availability "
+		"multiplier, must cover the thermal fleet's cooling draw and the "
+		"hydrogen programme's feed. The multiplier is the scenario lever on a "
+		"flow the graph already ships: at its default of 1.0 the constraint "
+		"reads 200e6 >= 93.2e6 m3/year, and a dry year set below 0.47 makes it "
+		"bind. The rewrite replaces a constraint that compared the flow to its "
+		"own two components -- which restated the demand identity rather than "
+		"testing it against supply -- with one that compares the *available* "
+		"flow to demand."
+	)
+	equations["water_availability_constraint"] = wbody
+	edges.append({
+		"source": "water_availability", "target": "water_availability_m3",
+		"equation_id": "water_availability_constraint",
+		"relationship": "constraint", "direction": "forward",
+		"strength": "hard",
+		"description": "The availability multiplier scales the flow the demand is tested against.",
+		"reference": None, "priority": "P2",
+	})
 	return nodes, equations, edges, rules
 
 
