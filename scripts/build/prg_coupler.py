@@ -546,7 +546,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -639,6 +639,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b29_equations)
 		edges = list(BATCH12_EDGES) + b29_edges
+	elif batch == "33":
+		b33_nodes, b33_equations, b33_edges, b33_rules = build_batch33(graph)
+		rules.extend(b33_rules)
+		nodes.update(b33_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b33_equations)
+		edges = list(BATCH12_EDGES) + b33_edges
 	elif batch == "32":
 		b32_nodes, b32_equations, b32_edges, b32_rules = build_batch32(graph)
 		rules.extend(b32_rules)
@@ -9864,6 +9871,570 @@ def build_batch32(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 				f"Bounds {bounded} against {binder}"
 				+ (" (composite ceiling)" if composite else "")
 				+ "; a plan can clear the physics and fail this."
+			),
+			"reference": cite, "priority": "P2",
+		})
+
+	return nodes, equations, edges, rules
+
+
+_BATCH33_SOURCE = "The unclassified remainder (batch 33)"
+
+#: (name, unit, range, category, prose) -- the six left-hand-side ids the pack
+#: computes and no shipped node holds. Each is a product of bases the graph
+#: already carries, which is what makes it a coupling rather than a new dial.
+#: A range is the product of the operands' own extremes, or the base's ceiling.
+BATCH33_NEW_NODES: tuple[tuple[str, str, list[float], str, str], ...] = (
+	("fuel_excise_revenue_usd_per_year", "USD/year", [0.0, 4.5e12], "Tax & Fiscal",
+	 "The excise the treasury collects on fossil generation: the duty share of "
+	 "the delivered price over the non-renewable volume. 164974190.45 USD/year "
+	 "at defaults. A revenue no node held, though `fossil_fuel_subsidy_spend_usd_per_year` "
+	 "is the same arithmetic on a different share."),
+	("gis_mapped_network_km", "km", [0.0, 400000.0], "Digital",
+	 "The route length held in the GIS: the mapped share of the transmission and "
+	 "distribution networks. 34200 km at defaults. A count of asset records was "
+	 "rejected -- the graph states route km and no record count."),
+	("cross_border_losses_twh", "TWh/year", [-1000.0, 1000.0], "Transmission & Grid",
+	 "Energy lost in transit on the cross-border flow. Signed because the flow "
+	 "is signed: a net exporter loses energy on the way out. 0 TWh/year at "
+	 "defaults, because the reference case is self-sufficient."),
+	("electrolyser_variable_opex_usd_per_year", "USD/year", [0.0, 2e12], "Cost",
+	 "The electrolyser fleet's variable O&M bill, with the kilotonnes converted "
+	 "through the graph's 0.03333 MWh/kg. 1666500 USD/year at defaults. "
+	 "`opex_variable_electrolyser` is stated per MWh of hydrogen and no node "
+	 "converted it to a spend."),
+	("rooftop_solar_households", "1", [0.0, 1e8], "Demand-Side",
+	 "Households with rooftop PV. A count, because the adoption share alone says "
+	 "nothing about how many connections the distribution network carries. "
+	 "1000000 at defaults."),
+	("willingness_to_pay_usd_per_year", "USD/year", [0.0, 5e12], "Affordability",
+	 "The annual consumer valuation of the electricity households consume: the "
+	 "quantity a cost-benefit test needs and no node held. 1.5e9 USD/year at "
+	 "defaults."),
+)
+
+
+#: (name, unit, range, default, determinism, prose) -- placeholder retypes.
+#: Each node ships as `None`, [0, 1e6], 500000.0: the catalog's shape for a row
+#: with a method and no formula. A retype gives it the dimension its name and
+#: its eventual equation require.
+BATCH33_RETYPES: tuple[tuple[str, str, list[float], float, str, str], ...] = (
+	("accelerated_depreciation", "1/year", [0.01, 0.8], 0.04, "policy",
+	 "The tax code's accelerated depreciation rate: the permitted multiple of "
+	 "straight-line over the asset's depreciable life. 1.0 / 25 = 0.04/year at "
+	 "defaults, because the shipped multiple is 1.0 -- the accelerated schedule "
+	 "and the linear one coincide until a jurisdiction sets a factor above 1."),
+	("accelerated_depreciation_factor", "1", [1.0, 4.0], 1.0, "policy",
+	 "The multiple of straight-line depreciation the code permits. 1.0 is the "
+	 "linear schedule; 2.0 doubles the annual charge. The range is the band any "
+	 "jurisdiction's code allows, not a measured distribution."),
+	("buffer_pool_contribution", "1", [0.0, 1.0], 0.1, "policy",
+	 "The share of issued carbon credits a registry holds in its buffer against "
+	 "reversal. At 0.1 the pool absorbs a tenth of every issuance."),
+	("compensation_rates", "USD/hectare", [50.0, 2.5e6], 7500.0, "policy",
+	 "The compensation a project pays per hectare: the multiple of market value "
+	 "the resettlement package offers applied to the land's own acquisition "
+	 "rate. 1.5 x 5000 = 7500 USD/hectare at defaults."),
+	("consumer_price_index_link", "1/year", [-0.05, 0.5], 0.05, "fixed",
+	 "The annual indexation rate a CPI-linked tariff or contract applies. The "
+	 "node's name promises an *index* and the graph carries a *rate*; the "
+	 "coupling below makes it the rate, and this prose says so."),
+	("depreciation_schedule_accelerated", "1/year", [0.01, 0.8], 0.04, "policy",
+	 "The accelerated depreciation rate: the permitted multiple of straight-line "
+	 "divided by the depreciable life. 1.0 / 25 = 0.04/year at defaults."),
+	("depreciation_schedule_declining", "1/year", [0.03, 0.4], 0.08, "fixed",
+	 "The declining-balance rate at 200%: twice the straight-line rate over the "
+	 "asset's life, the MACRS double-declining convention. 2.0 / 25 = 0.08/year. "
+	 "The 150% convention was rejected: the source describes both and states no "
+	 "preference, and a second node for it is a dial nobody asked for."),
+	("depreciation_schedule_linear", "1/year", [0.01, 0.2], 0.04, "fixed",
+	 "The straight-line rate: the asset's cost spread evenly over its "
+	 "depreciable life. 1.0 / 25 = 0.04/year. A salvage-value term was "
+	 "rejected: the graph carries no salvage rate, and adding one to complete "
+	 "the formula would be a base this batch does not own."),
+	("gdp_per_capita_growth", "1/year", [-0.05, 0.18], 0.029411764705882353, "fixed",
+	 "Growth in output per head: (g - n) / (1 + n) from the two rates the graph "
+	 "carries. (0.05 - 0.02) / 1.02 = 0.0294/year against a 3% headline GDP "
+	 "rate and a 2% population rate. The uncorrected difference g - n "
+	 "understates the per-capita rate by the denominator at defaults."),
+	("health_impact_dalys", "DALY/year", [0.0, 1e8], 57600.0, "fixed",
+	 "Disability-adjusted life years lost to the fleet's emissions: the burden "
+	 "the shipped health chain already computes. 57600 DALY/year at defaults."),
+	("health_impact_mortality", "deaths/year", [0.0, 1e7], 4800.0, "fixed",
+	 "Deaths attributable to the fleet's PM2.5 over the year: what the shipped "
+	 "concentration-response chain already computes. 4800 deaths/year at "
+	 "defaults."),
+	("hydrogen_demand_domestic", "kt/year", [-400.0, 10000.0], 49.4, "fixed",
+	 "Hydrogen consumed at home: production less what is exported, with the "
+	 "export volume converted from MWh to kilotonnes through the graph's own "
+	 "0.03333 MWh/kg. Signed low because exports can exceed domestic "
+	 "production. 50 - 0.6 = 49.4 kt/year at defaults."),
+	("hydrogen_production_demand", "MWh/year", [0.0, 1e10], 2563846.15, "fixed",
+	 "The electricity hydrogen production draws, which the shipped electrolysis "
+	 "identity already computes from volume, energy per kilogram and "
+	 "efficiency. 2563846.15 MWh/year at defaults."),
+	("ppa_indexation", "1/year", [0.0, 0.3], 0.05, "fixed",
+	 "The annual escalation a power purchase agreement applies to its strike "
+	 "price, which is the tariff indexation rate the graph already carries. "
+	 "0.05/year at defaults."),
+	("premium_share_of_asset", "1", [0.001, 0.03], 0.005, "fixed",
+	 "The annual insurance premium as a fraction of the insured asset's value, "
+	 "which is the loss share of cost the graph already carries. 0.005 at "
+	 "defaults."),
+	("value_of_lost_load", "USD/MWh", [100.0, 100000.0], 5000.0, "fixed",
+	 "What a megawatt-hour of unserved energy costs the system, which is the "
+	 "VoLL the graph already carries and the shipped reliability-cost identity "
+	 "already prices unserved energy at. 5000 USD/MWh at defaults."),
+	("willingness_to_pay", "USD/MWh", [0.0, 1000.0], 100.0, "policy",
+	 "What a household will pay per megawatt-hour of consumption, 100 USD/MWh "
+	 "against the 1.5 MWh a household uses."),
+	("electrolyser_capacity", "MW", [0.0, 1e6], 500.0, "fixed",
+	 "Installed electrolyser nameplate. 500 MW clears the 292.68 MW floor the "
+	 "hydrogen programme's own average draw implies, with headroom to run above "
+	 "it; a plant sized to its average has no capacity to do that."),
+	("fit_capacity_cap", "MW", [0.0, 1e6], 4000.0, "policy",
+	 "The feed-in-tariff programme's capacity ceiling. 4000 MW sits above the "
+	 "2702.70 MW VRE build, so the ceiling holds with room and a 5000 MW "
+	 "scenario breaks it -- a ceiling equal to the build is the tautology the "
+	 "sibling pack rejects."),
+	("renewable_penetration_limit", "1", [0.0, 1.0], 0.5, "policy",
+	 "The instantaneous renewable penetration ceiling, as a share of demand. "
+	 "The bound below compares an *annual* share to this instantaneous limit, "
+	 "which is the weaker of the two claims; the graph carries no "
+	 "instantaneous-penetration node, so it is the strongest form the tree "
+	 "admits."),
+)
+
+
+#: (eq_id, lhs, rhs, prose, system, reference) -- products and aliases.
+BATCH33_EQUATIONS: tuple[tuple[str, str, str, str, str, str | None], ...] = (
+	# --- depreciation ----------------------------------------------------
+	("depreciation_schedule_linear_definition", "depreciation_schedule_linear",
+	 "1.0 / depreciation_life_by_asset",
+	 "The straight-line rate: one over the depreciable life. 1/25 = 0.04/year "
+	 "at defaults. The form is the definition rather than a fit; a "
+	 "salvage-value term would need a base the graph does not carry.",
+	 "financial", "Straight-line and declining-balance depreciation; cf. Short, "
+	 "Packey & Holt (1995), NREL/TP-462-5173"),
+	("depreciation_schedule_declining_definition", "depreciation_schedule_declining",
+	 "2.0 / depreciation_life_by_asset",
+	 "The 200% declining-balance rate: twice straight-line over the life. "
+	 "2/25 = 0.08/year at defaults. The 150% convention is described by the "
+	 "same source and not preferred by it; the shipped form takes the MACRS "
+	 "default and this prose says which.",
+	 "financial", "Straight-line and declining-balance depreciation; cf. Short, "
+	 "Packey & Holt (1995), NREL/TP-462-5173"),
+	("depreciation_schedule_accelerated_definition", "depreciation_schedule_accelerated",
+	 "accelerated_depreciation_factor / depreciation_life_by_asset",
+	 "The accelerated rate: the permitted multiple of straight-line over the "
+	 "life. 1.0/25 = 0.04/year at defaults, because the multiple is 1.0. The "
+	 "`factor * (1/life)` respelling was rejected as a no-op: the DSL has no "
+	 "precedence surprise here and the simpler form is the same number.",
+	 "financial", "Straight-line and declining-balance depreciation; cf. Short, "
+	 "Packey & Holt (1995), NREL/TP-462-5173"),
+	("accelerated_depreciation_definition", "accelerated_depreciation",
+	 "depreciation_schedule_accelerated",
+	 "The tax code's accelerated rate, as the schedule it names. 0.04/year at "
+	 "defaults. Deriving it from the factor and the life directly was rejected "
+	 "as a second spelling of `depreciation_schedule_accelerated`: two ids for "
+	 "one number is the defect this batch exists to remove.",
+	 "financial", None),
+
+	# --- carbon buffer and land ------------------------------------------
+	("buffer_pool_contribution_definition", "buffer_pool_contribution",
+	 "permanence_parameters",
+	 "The share of issued credits the registry buffers against reversal, which "
+	 "is the permanence share the graph already carries. 0.1 at defaults. A "
+	 "reviewer should decide whether this is a second spelling of the buffer "
+	 "`carbon_credit_reversal_allowance_definition` already computes as "
+	 "`(1 - permanence_parameters)`; if it is, the node's coupling is its "
+	 "deletion, not this alias.",
+	 "carbon_trajectory", None),
+	("compensation_rates_definition", "compensation_rates",
+	 "compensation_share_of_market * land_acquisition_cost_per_hectare",
+	 "The compensation a project pays per hectare: the multiple of market value "
+	 "the package offers applied to the land's own acquisition rate. "
+	 "1.5 x 5000 = 7500 USD/hectare at defaults. Inverting the pair -- "
+	 "deriving the multiple from the rate -- was rejected: the multiple is the "
+	 "policy dial and the rate is what the project pays.",
+	 "cost_accounting", None),
+
+	# --- indexation and macro --------------------------------------------
+	("consumer_price_index_link_definition", "consumer_price_index_link",
+	 "inflation_rate",
+	 "The annual indexation a CPI-linked tariff applies, which is the inflation "
+	 "rate the graph already carries. 0.05/year at defaults. The node's name "
+	 "promises an index and the graph carries a rate; the alias is honest only "
+	 "because this description says the link is a rate.",
+	 "financial", None),
+	("gdp_per_capita_growth_definition", "gdp_per_capita_growth",
+	 "(gdp_growth - population_growth_rate) / (1.0 + population_growth_rate)",
+	 "Growth in output per head from the two rates the graph carries: "
+	 "(0.05 - 0.02) / 1.02 = 0.0294/year at defaults. The Fisher-equation form "
+	 "`(1+g)/(1+n) - 1` was rejected on units -- it is dimensionless against a "
+	 "`1/year` left side -- and the difference form is the same algebra with "
+	 "the ones cancelled.",
+	 "financial", None),
+
+	# --- health -----------------------------------------------------------
+	("health_impact_dalys_definition", "health_impact_dalys", "dalys_per_year",
+	 "Disability-adjusted life years lost to the fleet's emissions, which the "
+	 "shipped health chain already computes. 57600 DALY/year at defaults. A "
+	 "`premature_deaths * years_of_life_lost` form was rejected: that is "
+	 "`dalys_definition` verbatim, so the equation would add a second spelling "
+	 "of one number.",
+	 "health", None),
+	("health_impact_mortality_definition", "health_impact_mortality",
+	 "premature_deaths_per_year",
+	 "Deaths attributable to the fleet's PM2.5, which the shipped "
+	 "concentration-response chain already computes. 4800 deaths/year at "
+	 "defaults. A second exposure-response form was rejected: "
+	 "`premature_deaths_definition` already carries it and cites WHO AirQ+.",
+	 "health", None),
+
+	# --- hydrogen ---------------------------------------------------------
+	("hydrogen_demand_domestic_definition", "hydrogen_demand_domestic",
+	 "hydrogen_production_kt_per_year - hydrogen_export_volume "
+	 "/ (mwh_per_hydrogen_unit * 1000000)",
+	 "Hydrogen consumed at home: production less the exported volume, converted "
+	 "from MWh to kilotonnes through the graph's own 0.03333 MWh/kg. "
+	 "50 - 0.6 = 49.4 kt/year at defaults. A `production * (1 - export_share)` "
+	 "form was rejected: no export share exists, and the conversion through "
+	 "`mwh_per_hydrogen_unit` is the identity the graph already uses in the "
+	 "other direction.",
+	 "energy_balance", None),
+	("hydrogen_production_demand_definition", "hydrogen_production_demand",
+	 "electrolysis_electricity_demand_mwh_per_year",
+	 "The electricity hydrogen production draws, which the shipped electrolysis "
+	 "identity already computes from volume, energy per kilogram and "
+	 "efficiency. 2563846.15 MWh/year at defaults. A second conversion from "
+	 "kilotonnes through `mwh_per_hydrogen_unit` alone was rejected: it omits "
+	 "`electrolyser_efficiency` (0.65) and would understate the demand by 35%, "
+	 "duplicating a shipped identity incorrectly.",
+	 "energy_balance", None),
+
+	# --- cross-border and electrolyser opex -------------------------------
+	("cross_border_losses_definition", "cross_border_losses_twh",
+	 "loss_factor_cross_border * net_imports_twh",
+	 "Energy lost in transit on the cross-border flow: the loss share applied "
+	 "to net imports. 0.03 x 0 = 0 TWh/year at defaults, because the reference "
+	 "case is self-sufficient; a 100 TWh import year loses 3 TWh. Signed "
+	 "because the flow is signed. Using demand as the base was rejected: "
+	 "losses fall on the traded flow, and charging them to energy that never "
+	 "crossed a border is the wrong bill.",
+	 "energy_balance", None),
+	("electrolyser_variable_opex_definition", "electrolyser_variable_opex_usd_per_year",
+	 "opex_variable_electrolyser * hydrogen_production_kt_per_year * 1000000 "
+	 "* mwh_per_hydrogen_unit",
+	 "The electrolyser fleet's variable O&M bill: the rate per MWh of hydrogen "
+	 "over the year's production, with kilotonnes converted through the graph's "
+	 "0.03333 MWh/kg. 1.0 x 50 kt x 1e6 kg/kt x 0.03333 MWh/kg = 1666500 "
+	 "USD/year at defaults. Charging O&M per MWh of *electricity* was "
+	 "rejected: the rate's own description states it per MWh of hydrogen, "
+	 "which is the output.",
+	 "financial", "IEA/NEA, Projected Costs of Generating Electricity (2020)"),
+
+	# --- fiscal -----------------------------------------------------------
+	("fuel_excise_revenue_definition", "fuel_excise_revenue_usd_per_year",
+	 "excise_duty_fuel * fuel_price_usd_per_mwh * (generation_twh "
+	 "- renewable_generation_twh) * 1000000",
+	 "The excise the treasury collects on fossil generation: the duty share of "
+	 "the delivered price over the non-renewable volume. "
+	 "0.2 x 40 x 20.62 TWh x 1e6 = 164974190.45 USD/year at defaults. Charging "
+	 "it on all generation was rejected -- the duty falls on fossil fuel, and "
+	 "charging renewables would make the excise a generation tax. The base-year "
+	 "price is the partner for an annual volume; the escalated price compounds "
+	 "to the horizon and would mix horizons.",
+	 "financial", None),
+
+	# --- network and rooftop ----------------------------------------------
+	("gis_mapped_network_km_definition", "gis_mapped_network_km",
+	 "gis_requirements * (transmission_line_length_km + distribution_network_km)",
+	 "The route length held in the GIS: the mapped share of the transmission "
+	 "and distribution networks. 0.6 x (12000 + 45000) = 34200 km at defaults. "
+	 "A count of asset records was rejected: the graph carries km and no "
+	 "record count, and the route-km base is what the node's own description "
+	 "implies.",
+	 "energy_balance", None),
+	("rooftop_solar_households_definition", "rooftop_solar_households",
+	 "rooftop_solar_adoption * households_total",
+	 "Households with rooftop PV: the adoption share over the household count. "
+	 "0.1 x 10000000 = 1000000 households at defaults. A capacity in MW was "
+	 "rejected -- the graph carries no kW per rooftop, and inventing one would "
+	 "be a base this batch does not own. Population as the base was rejected: "
+	 "`households_total` is the graph's own rooftop proxy, and population "
+	 "would overstate the count nearly fourfold.",
+	 "demand_supply", None),
+
+	# --- PPA and insurance ------------------------------------------------
+	("ppa_indexation_definition", "ppa_indexation", "tariff_indexation",
+	 "The annual escalation a PPA applies to its strike price, which is the "
+	 "tariff indexation rate the graph already carries. 0.05/year at "
+	 "defaults. A second index base was rejected: `ppa_indexed_price_definition` "
+	 "already reads `tariff_indexation`, so two dials would let two escalations "
+	 "move the same price.",
+	 "ppa_pricing", None),
+	("premium_share_of_asset_definition", "premium_share_of_asset",
+	 "insurance_loss_share_of_cost",
+	 "The annual premium as a fraction of the insured asset's value, which is "
+	 "the loss share the graph already carries. 0.005 at defaults, against the "
+	 "catalog's duplicate 0.008: `insurance_premium_definition` computes "
+	 "`insurance_loss_share_of_cost * capex_usd_per_kw`, so the two ids are one "
+	 "premium and the alias resolves the duplicate in favour of 0.005, which "
+	 "lowers the shipped premium by 37.5%.",
+	 "financial", None),
+
+	# --- valuation --------------------------------------------------------
+	("value_of_lost_load_definition", "value_of_lost_load", "voll_usd_per_mwh",
+	 "What a megawatt-hour of unserved energy costs the system, which is the "
+	 "VoLL the graph already carries and `reliability_cost_definition` already "
+	 "prices unserved energy at. 5000 USD/MWh at defaults. A separate "
+	 "outage-cost curve was rejected: a second value of lost load would give "
+	 "one quantity two prices.",
+	 "reliability", "ENTSO-E adequacy methodology (value of lost load, "
+	 "definition at Sec. 3.6)"),
+	("willingness_to_pay_usd_per_year_definition", "willingness_to_pay_usd_per_year",
+	 "willingness_to_pay * household_consumption_mwh_per_year * households_total",
+	 "The annual consumer valuation of the electricity households consume: "
+	 "100 USD/MWh x 1.5 MWh x 10000000 households = 1.5e9 USD/year at "
+	 "defaults. Economy-wide demand as the base was rejected: the willingness "
+	 "to pay here is the household's, and the product would value industrial "
+	 "load at a residential rate.",
+	 "affordability", "Willingness to pay as the valuation of a benefit; cf. "
+	 "Short, Packey & Holt (1995), NREL/TP-462-5173"),
+)
+
+
+#: (eq_id, lhs, relation, rhs, prose, system, reference, binder, bounded)
+BATCH33_BOUNDS: tuple[
+	tuple[str, str, str, str, str, str, str | None, str, str], ...
+] = (
+	("electrolyser_capacity_bound", "electrolyser_capacity", "geq",
+	 "electrolysis_electricity_demand_mwh_per_year / 8760",
+	 "The installed electrolyser must carry the average electricity draw its "
+	 "own hydrogen programme implies: 2563846.15 MWh/year over 8760 hours is "
+	 "292.68 MW, and the shipped 500 MW clears it. An equality was rejected -- "
+	 "a build is a decision, and deriving it would make the optimiser's "
+	 "variable a computed number; it is also wrong by construction, because a "
+	 "plant sized to its average has no capacity to run above it. Routes "
+	 "`unbound`: the right-hand side is derived, so this is a post-solve check.",
+	 "energy_balance", "IEA/NEA, Projected Costs of Generating Electricity (2020)",
+	 "electrolysis_electricity_demand_mwh_per_year", "electrolyser_capacity"),
+	("fit_capacity_bound", "fit_capacity_cap", "geq", "vre_capacity_mw",
+	 "The feed-in-tariff programme's capacity ceiling must admit the VRE the "
+	 "fleet actually builds, or the programme's own cap is violated by its own "
+	 "scenario. 2702.70 MW under 4000 at defaults. A floor that *forced* build "
+	 "was rejected: the node is a cap, and a floor would make the programme "
+	 "compel capacity rather than admit it. A cap at the placeholder 500000 was "
+	 "rejected as vacuous. Routes `bound`.",
+	 "financial", "Oree et al. (2017), RSER 69:790-803",
+	 "vre_capacity_mw", "fit_capacity_cap"),
+	("renewable_penetration_limit_bound", "renewable_penetration_limit", "geq",
+	 "vre_share",
+	 "The penetration ceiling must admit the annual VRE share the fleet "
+	 "achieves, or the limit is breached by the build the plan chose. 0.2703 "
+	 "under 0.5 at defaults. The bound compares an *annual* share to an "
+	 "*instantaneous* limit, which is the weaker of the two claims -- the graph "
+	 "carries no instantaneous-penetration node. Routes `unbound`: `vre_share` "
+	 "is derived.",
+	 "energy_balance", "Oree et al. (2017), RSER 69:790-803",
+	 "vre_share", "renewable_penetration_limit"),
+	("regulatory_lag_bound", "regulatory_period_length", "geq", "regulatory_lag",
+	 "The review period must be at least the lag between incurring a cost and "
+	 "recovering it, or a cost incurred inside one period cannot be recovered "
+	 "before the next review closes. 5 years against a 1-year lag at defaults. "
+	 "A midpoint convention (`lag = period / 2`) was rejected: the lag is a "
+	 "measured institutional fact, not a fraction of the review cycle. Routes "
+	 "`bound`.",
+	 "financial", "World Bank, Regulation of Utilities handbook (revenue caps)",
+	 "regulatory_lag", "regulatory_period_length"),
+	("firm_build_fleet_bound", "firm_build_fleet_mw", "geq", "firm_capacity_mw",
+	 "The optimiser's total build must cover the firm part of the fleet it is "
+	 "building: 10000 MW against 9000 MW at defaults. Routes `unbound` -- both "
+	 "sides are endogenous or derived, so this is a post-solve audit check "
+	 "rather than an LP constraint. A reviewer should prefer deleting this node "
+	 "to bounding it: it has zero readers, and its description's claims -- that "
+	 "it is 'the identity every build set must satisfy' and that 'the reserve "
+	 "margins read the firm part of it' -- are both false, because "
+	 "`fleet_build_balance` is the identity and `firm_capacity_definition` "
+	 "feeds the reserve margins.",
+	 "reserve_margin", "Least-cost generation expansion: Koltsaklis & Dagoumas "
+	 "(2018), Applied Energy 230:563-589; Oree et al. (2017), RSER 69:790-803",
+	 "firm_capacity_mw", "firm_build_fleet_mw"),
+)
+
+
+def build_batch33(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""The unclassified remainder: twenty-one products, six new nodes, five bounds.
+
+	This is the residue of the five classification slices -- 102 nodes no pack
+	had called. Seventy-three of them defer, and most of those deferrals are
+	structural rather than temporary: the thirty-five QUALITATIVE nodes are
+	procedures and standards with no base to multiply, the ten SCENE-SWITCH
+	nodes are run configurations the solver reads rather than quantities, and
+	`demand_growth_rate` is deprecated and should be removed rather than
+	coupled.
+
+	*Six new nodes.* The pack computes six quantities no shipped node holds,
+	and each is the product of bases the graph already carries: an excise
+	revenue, a mapped route length, a cross-border loss, an electrolyser O&M
+	bill, a rooftop count and a willingness-to-pay total. None is a base --
+	each is a function of two or three nodes that already exist, which is what
+	makes it a coupling rather than a new dial.
+
+	*Seven of the products are aliases, and two of them are marked for deletion
+	rather than coupling.* `buffer_pool_contribution` and
+	`premium_share_of_asset` are the pack's own flagged candidates: each may be
+	a second spelling of a quantity the graph already derives, in which case
+	the node's coupling is its removal. This batch ships the alias because that
+	removes the node from `uncoupled()` without inventing arithmetic, and the
+	shipped description carries the reviewer's question rather than burying it.
+	The `premium_share_of_asset` alias is also what resolves the catalog's
+	duplicate premium in favour of 0.005 against the node's own 0.008, which
+	lowers the shipped premium by 37.5% -- a decision recorded, not a
+	discovery.
+
+	*The retype `electrolyser_capacity`'s floor depends on.* The pack measured
+	the floor against the placeholder and found it fires at 0.0 with residual
+	-292.677, which is a fact about the placeholder rather than about a build.
+	The retype to `MW` with a 500 MW default is what makes the bound mean
+	something: 500 MW against the 292.68 MW average draw. The five bounds ship
+	with `determined_variables: ()` because a bound determines nothing, and the
+	node keeps its range and default.
+
+	*Three deferrals are waiting on bases no pack proposes*, and they are named
+	so the next batch does not rediscover them: `morbidity_cases_per_year`, a
+	curtailment-volume node, and the four composite-index components
+	(`institutional_capacity`, `financial_capacity`, `technical_capacity`,
+	`infrastructure_adequacy`). The three composite indices themselves --
+	`adaptive_capacity`, `resilience_score`, `energy_security_index` -- are
+	BASE-NEEDED rather than PRODUCT for that reason.
+	"""
+	from alea.prg.dsl import parse_side
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	for name, unit, rng, default, determinism, prose in BATCH33_RETYPES:
+		shipped = graph.nodes.get(name)
+		full: dict[str, Any] = (
+			dict(shipped.model_dump(exclude={"id"}, mode="json"))
+			if shipped is not None else {"name": name.replace("_", " ").capitalize()}
+		)
+		full.update({
+			"description": prose, "type": "float", "unit": unit,
+			"range": rng, "determinism": determinism, "priority": "P1",
+			"status": _kept_status(shipped),
+			"source": _BATCH33_SOURCE,
+			"users": ["Planners", "Regulators"],
+		})
+		full["default"] = default
+		nodes[name] = full
+
+	# The six new left-hand-side ids. Each is derived, so it carries no
+	# default; the pack's own range for each is the product of the operands'
+	# extremes, which is the widest a product can reach.
+	for name, unit, rng, category, prose in BATCH33_NEW_NODES:
+		# The guard is "the id is not a shipped node *this batch did not
+		# create*". After the batch is baked the graph carries these six, and a
+		# bare `not in graph.nodes` would make the emit one-shot -- a second
+		# emit, which the bake reproducibility check needs, would refuse. The
+		# discriminator is the source string this batch stamps: a node the
+		# catalog owns does not carry it.
+		existing = graph.nodes.get(name)
+		assert existing is None or existing.source == _BATCH33_SOURCE, (
+			f"{name} already ships and not from this batch; a new node needs "
+			"an id the catalog does not own"
+		)
+		nodes[name] = {
+			"name": name.replace("_", " ").capitalize(),
+			"description": prose, "category": category, "type": "float",
+			"unit": unit, "range": rng, "role": "derived",
+			"determinism": "fixed", "priority": "P1",
+			"source": _BATCH33_SOURCE,
+			"users": ["Planners", "Regulators"],
+		}
+
+	# A node a product determines must be `derived`; the retypes above set the
+	# range and unit, and this pass sets the role, because the two are separate
+	# claims and only the equation establishes the second.
+	determined = {row[1] for row in BATCH33_EQUATIONS}
+	for name in determined:
+		if name in nodes:
+			nodes[name]["role"] = "derived"
+			nodes[name].pop("default", None)
+		else:
+			shipped = graph.nodes.get(name)
+			assert shipped is not None, f"{name} is neither retyped nor shipped"
+			full = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+			full["role"] = "derived"
+			full.pop("default", None)
+			nodes[name] = full
+
+	for eq_id, lhs, rhs, prose, system, cite in BATCH33_EQUATIONS:
+		rhs_params = sorted(parse_side(rhs).symbols)
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": eq_id.replace("_", " ").capitalize(),
+			"description": prose,
+			"system": system, "lhs": lhs, "rhs": rhs, "relation": "eq",
+			"parameters": [lhs] + rhs_params, "free_variables": [],
+			"determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		known = set(nodes) | set(graph.nodes)
+		assert lhs in known, f"{eq_id}: {lhs!r} has no node body"
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs, "equation_id": eq_id,
+				"relationship": "functional", "direction": "forward",
+				"strength": "hard",
+				"description": "Enters the product identity.",
+				"reference": cite, "priority": "P1",
+			})
+
+	for eq_id, lhs, relation, rhs, prose, system, cite, binder, bounded in BATCH33_BOUNDS:
+		assert relation in ("leq", "geq"), f"{eq_id}: {relation} is not a bound"
+		named = sorted(set(parse_side(lhs).symbols) | set(parse_side(rhs).symbols))
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": eq_id.replace("_", " ").capitalize(),
+			"description": prose, "system": system,
+			"lhs": lhs, "rhs": rhs, "relation": relation,
+			"parameters": named, "free_variables": named,
+			"determined_variables": (),
+			"tolerance": 1.0e-06, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P2", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		known = set(nodes) | set(graph.nodes)
+		assert bounded in known, f"{eq_id}: bounded {bounded!r} has no node"
+		assert bounded in named, (
+			f"{eq_id}: bounded {bounded!r} is not named by the inequality"
+		)
+		binder_syms = sorted(parse_side(binder).symbols)
+		assert binder_syms, f"{eq_id}: binder {binder!r} names no symbol"
+		binder_node = binder_syms[0]
+		assert binder_node in known, (
+			f"{eq_id}: binder {binder!r} has no node among its symbols"
+		)
+		assert binder_node != bounded, (
+			f"{eq_id}: binder and bounded are both {bounded!r}; a self-loop "
+			"names no coupling"
+		)
+		edges.append({
+			"source": binder_node, "target": bounded, "equation_id": eq_id,
+			"relationship": "constraint", "direction": "forward",
+			"strength": "hard",
+			"description": (
+				f"Bounds {bounded} against {binder}; a plan can clear the "
+				"physics and fail this."
 			),
 			"reference": cite, "priority": "P2",
 		})

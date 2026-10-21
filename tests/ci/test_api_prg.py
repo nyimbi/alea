@@ -476,7 +476,12 @@ def test_the_summary_serves_the_endogenous_layer(
 	# Batch 31 took it to 739: six aliases moved a duplicate id from free to
 	# derived, and twenty-two more free bases became derived under the
 	# product equations.
-	assert len(free) == 739, len(free)
+	# Batch 33 took it to 724: fifteen of its twenty retypes became derived,
+	# and the five that stayed free are the operands and policy dials a
+	# scenario still sets -- `accelerated_depreciation_factor`,
+	# `willingness_to_pay`, `electrolyser_capacity`, `fit_capacity_cap` and
+	# `renewable_penetration_limit`.
+	assert len(free) == 724, len(free)
 
 
 # ---------------------------------------------------------------------------

@@ -955,22 +955,22 @@ def test_the_summary_reports_the_registers(graph: ParameterGraph):
 	# meant, and it holds at any count.
 	uncoupled_roles = {graph.role(name).value for name in graph.uncoupled()}
 	assert uncoupled_roles <= {"free", "endogenous"}, uncoupled_roles
-	# The witness was `storage_capacity_mw` until batch 32 bounded it, which
-	# coupled it and left the register with one endogenous member instead of
-	# four. The claim the witness carries is "not every uncoupled node is
-	# free", and `firm_build_fleet_mw` is the one that still makes it: the
-	# optimiser sizes it and no equation names it. Naming the current witness
-	# rather than counting keeps a future coupling of this one a failure here
-	# instead of a silent loss of the property.
-	assert "firm_build_fleet_mw" in graph.uncoupled()
+	# The register's endogenous membership has now gone to zero. It was four
+	# at batch 31, one after batch 32 bounded `storage_capacity_mw`, and batch
+	# 33's `firm_build_fleet_bound` named the last one, `firm_build_fleet_mw`.
+	# The earlier form asserted the register held an endogenous witness, which
+	# pinned "not every uncoupled node is free"; that claim is now false and
+	# asserting it would be asserting a property the graph does not have. The
+	# property that *does* hold, and that the register cannot express, is that
+	# a node can be endogenous and named by an equation while still being
+	# computed by nothing -- a bound names its subject without fixing it, so
+	# the node is coupled and uncomputed at once. That is the distinction the
+	# register and `computed()` draw between them, and it is what the
+	# witness below now pins.
+	assert uncoupled_roles == {"free"}, uncoupled_roles
 	assert graph.role("firm_build_fleet_mw").value == "endogenous"
-	# A `free` node named by an equation is an input, not a knob, so the two
-	# sets overlap without either containing the other. Asserting the
-	# difference is non-empty is what stops a future edit from *making* the
-	# coincidental identity true again and calling it the invariant.
-	assert set(graph.uncoupled()) - {
-		n for n, node in graph.nodes.items() if node.role.value == "free"
-	}, "every uncoupled node is free, so the containment above is trivial"
+	assert "firm_build_fleet_mw" not in graph.uncoupled()
+	assert "firm_build_fleet_mw" not in graph.computed()
 	assert summary["feedback_loops"], "the summary lost the loop"
 	# Every system is modelled, so the register is empty -- and empty is the
 	# assertion, because a system that quietly lost its equations is exactly
@@ -1534,7 +1534,21 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# their nodes were dead knobs. The other two, `storage_capacity_mw` and
 	# `thermal_storage_capacity`, are endogenous, so they were never in this
 	# register -- which is why the count falls by twenty and not twenty-two.
-	assert len(dead) == 298, len(dead)
+	# Batch 33 took it 298 to 274: twenty retyped placeholders became derived,
+	# and the six new nodes arrived already coupled by their own equations, so
+	# the register falls by exactly the twenty. The six were never dead knobs
+	# -- they did not exist -- and the five bounds named nodes that were
+	# already named by an equation or are not settable at all.
+	#
+	# `uncoupled()` is 284, ten above this count, and the gap is the rule
+	# register rather than drift: each of the ten is read by a cross-validation
+	# rule (`index_above_unity` and its four index members,
+	# `market_structure_without_model` and its pair,
+	# `contract_for_difference_without_guarantees`,
+	# `solvency_below_regulatory_floor`, `concentration_above_hhi_max`), so
+	# the rule is what reads them and the equation register does not. The
+	# containment asserted below is the claim; this count is the record.
+	assert len(dead) == 274, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
@@ -1879,8 +1893,13 @@ def test_the_audit_reports_what_it_did_not_check():
 	# twenty-eight join `skipped`, because their bases are fleet builds,
 	# planned-maintenance hours or the debt stack, none of which the solve
 	# result carries.
-	assert len(audit.checked) == 164, audit.checked
-	assert len(audit.skipped) == 276, audit.skipped
+	# Batch 33 took the computed set 440 to 461. One joins `checked` --
+	# `health_impact_dalys`, whose driver `dalys_per_year` the result carries
+	# -- and twenty join `skipped`, because their bases are the land rate, the
+	# household count, the fleet capacity or the depreciation life, none of
+	# which the solve result carries.
+	assert len(audit.checked) == 165, audit.checked
+	assert len(audit.skipped) == 296, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -1934,8 +1953,9 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# it 382 to 402, and batch 30's supply-and-grid layer took it 402 to
 	# 412. The whole computed set is skipped here because the loop failed,
 	# so this is `len(computed())`, not the skipped half of a partition that
-	# ran, and batch 31's product layer took it to 440.
-	assert len(audit.skipped) == 440, audit.skipped
+	# ran, and batch 31's product layer took it to 440, and batch 33's
+	# residue layer to 461.
+	assert len(audit.skipped) == 461, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -2835,10 +2855,14 @@ def test_the_uncertainty_register_reads_the_declarations(graph: ParameterGraph):
 	# own relation is stochastic: the cat-bond coupon, the drought-adjusted
 	# hydro share, the cause-attributed event count, the scenario river flow,
 	# and the wind and solar resource shares.
-	assert len(reg.inputs) == 75, reg.inputs
+	assert len(reg.inputs) == 74, reg.inputs
 	assert len(reg.derived_stochastic) == 48, reg.derived_stochastic
 	assert len(reg.stochastic_edges) == 1, reg.stochastic_edges
-	# 123 nodes are declared stochastic in total: 75 settable, 48 derived.
+	# 122 nodes are declared stochastic in total: 74 settable, 48 derived.
+	# Batch 33 moved only the settable side, and down: `willingness_to_pay`
+	# was a stochastic placeholder and is now derived, so the input register
+	# loses it and no derived node entered the closure -- the products it
+	# feeds read fixed process parameters.
 	# Batch 27's finance family moved both: three of its bases are declared
 	# stochastic (`aal_usd_million`, `pml_99_5_usd_million`, `microinsurance`)
 	# and one derived parameter entered the closure, `solvency_capital`,
@@ -2852,7 +2876,7 @@ def test_the_uncertainty_register_reads_the_declarations(graph: ParameterGraph):
 	# the density and share bases they read, while the four demand
 	# products that also entered the computed set read fixed process
 	# parameters and stay deterministic. 39 to 42.
-	assert len(reg.inputs) + len(reg.derived_stochastic) == 123
+	assert len(reg.inputs) + len(reg.derived_stochastic) == 122
 	assert len(reg.inputs) + len(reg.derived_stochastic) == sum(
 		1 for node in graph.nodes.values() if str(node.determinism) == "stochastic"
 	), "the register and the declarations disagree"
@@ -3012,7 +3036,7 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	# downstream of the demand, land or water inputs the register already
 	# follows. The input count fell by one, for the reason the derived-
 	# stochastic pin above records.
-	assert "75" in text and "159" in text
+	assert "74" in text and "165" in text
 
 
 # ---------------------------------------------------------------------------
@@ -3807,7 +3831,10 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# Batch 32 ships twenty-two bounds, all hard: a plan that breaches a
 	# capacity ceiling or a lead-time bound is not a soft finding. The
 	# strength register counts equations, so 474 to 496.
-	assert counts == {"hard": 496, "informational": 1, "soft": 2}, counts
+	# Batch 33 ships twenty-six equalities and five bounds, all hard: the six
+	# new nodes are products of shipped bases and the five bounds are the same
+	# kind of ceiling batch 32 shipped. 496 to 522.
+	assert counts == {"hard": 522, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -4150,7 +4177,32 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# spare-parts lead time and the transboundary water ceiling -- each a
 	# definitional relation between two quantities the graph already carries,
 	# not a statement of an external result. 199 to 215.
-	assert len(declared) == 215, f"the citation register moved: {sorted(declared)}"
+	# Batch 33 added eleven of its twenty-six. Six products: the three
+	# depreciation schedules cite Short, Packey & Holt (1995) for the
+	# straight-line and declining-balance formulas; the electrolyser O&M bill
+	# cites IEA/NEA EGC for the variable rate; `value_of_lost_load` cites the
+	# ENTSO-E adequacy methodology; and `willingness_to_pay_usd_per_year` cites
+	# the NREL report for willingness to pay as a benefit valuation. All five
+	# bounds are cited -- Oree et al. (2017) for the two capacity ceilings and
+	# the penetration limit, IEA/NEA EGC for the electrolyser floor, the World
+	# Bank revenue-cap handbook for the review period, and Koltsaklis &
+	# Dagoumas (2018) with Oree for the fleet floor.
+	#
+	# The fifteen that carry None: the seven aliases (an alias of a shipped
+	# quantity states no external result of its own -- `accelerated_depreciation`,
+	# `buffer_pool_contribution`, `consumer_price_index_link`,
+	# `health_impact_dalys`, `health_impact_mortality`, `ppa_indexation`,
+	# `premium_share_of_asset`); the six definitional products whose operands
+	# the graph already carries (`fuel_excise_revenue_usd_per_year`,
+	# `gis_mapped_network_km`, `cross_border_losses_twh`,
+	# `electrolyser_variable_opex_usd_per_year` is *not* among them -- it is
+	# cited above -- so the six are `compensation_rates`,
+	# `gdp_per_capita_growth`, `hydrogen_demand_domestic`,
+	# `hydrogen_production_demand`, `rooftop_solar_households` and
+	# `fuel_excise_revenue_usd_per_year`); and the two whose source is an
+	# `INDEX.md` row with no archived file, which the register does not count.
+	# 215 to 226.
+	assert len(declared) == 226, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -4389,8 +4441,8 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 				f"numeric {numeric!r}"
 			)
 			compared += 1
-	assert compared == 440, (
-		f"expected 402 determined variables in the shipped library, compared "
+	assert compared == 461, (
+		f"expected 461 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "
 		f"promoted; batch 20's sector-coupling layer raised it to 182, "
@@ -4400,8 +4452,9 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 		f"it to 286, batch 25's gate-family coupling raised it to 299, "
 		f"batch 26's adequacy-and-reserve layer raised it to 310, and batch "
 		f"28's product layer raised it to 382, batch 29's demand-and-macro "
-		f"layer raised it to 402 and batch 30's supply-and-grid layer raised "
-		f"it to 412 -- every equation each batch added is affine in the "
+		f"layer raised it to 402, batch 30's supply-and-grid layer raised "
+		f"it to 412, batch 31's product remainder to 440 and batch 33's "
+		f"residue layer to 461 -- every equation each batch added is affine in the "
 		f"variable it solves for, which is the claim the "
 		f"`exact is not None` above makes, at the wider coverage"
 	)

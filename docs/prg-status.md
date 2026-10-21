@@ -2638,6 +2638,138 @@ making the property false, and the test now names `firm_build_fleet_mw`
 instead of counting. A count would have gone on passing while the property it
 stood for quietly emptied out.
 
+**Batch 33 -- the unclassified remainder.** Twenty-one products, six new
+nodes and five bounds, from the residue of the five classification slices in
+`docs/research/coupling-packs/unclassified.md`. That pack read 102 nodes no
+earlier pack had called and gave 29 of them a proposal, carrying 26 equations.
+All 26 ship: twenty-one equalities and five bounds. The nine proposals that add
+no equation are `read` -- nodes the products consume as operands.
+
+*What the residue is.* Of the 102, thirty-five are QUALITATIVE -- procedures,
+standards and institutional arrangements with no base to multiply -- and ten
+are SCENE-SWITCH nodes, run configurations the solver reads rather than
+quantities it computes. Those two classes alone are 45 nodes, and no coupling
+can reach them: a node whose value is "which procedure was followed" has no
+arithmetic, and pretending otherwise is how a graph acquires equations that
+compute nothing. Twenty-four are BASE-NEEDED, meaning the pack could state the
+formula but the graph carries none of its operands; the 29 that got a proposal
+are the 24 PRODUCT rows, the 5 THRESHOLD rows and one GATE-SCENE-SWITCH row.
+`demand_growth_rate` is deprecated and should be removed rather than coupled;
+it is left alone.
+
+*The six new nodes are the reason this batch is a coupling and not a
+renaming.* Each is a quantity the pack computes from two or three bases the
+graph already carries, and none is a dial: the excise take, the mapped route
+length, the cross-border loss, the electrolyser O&M bill, the rooftop count
+and the annual consumer valuation. They are derived on arrival, so
+`computed()` rises by exactly the twenty-six products -- 440 to 461 -- and the
+parameter count rises 1,338 to 1,344.
+
+*The aliases, and the two the pack flags for deletion rather than coupling.*
+Seven of the twenty-one products are aliases of a quantity the graph already
+derives: `accelerated_depreciation` of `depreciation_schedule_accelerated`,
+`buffer_pool_contribution` of `permanence_parameters`,
+`consumer_price_index_link` of `inflation_rate`, `health_impact_dalys` of
+`dalys_per_year`, `health_impact_mortality` of `premature_deaths_per_year`,
+`ppa_indexation` of `tariff_indexation`, and `premium_share_of_asset` of
+`insurance_loss_share_of_cost`. An alias removes a duplicate id from the
+settable set, which is the right outcome for a node that was a second
+spelling. Two of them deserve a reviewer's attention rather than a
+celebration.
+
+`buffer_pool_contribution` may be a *different* object from the permanence
+share: `carbon_credit_reversal_allowance_definition` computes
+`(1 - permanence_parameters) * carbon_credit_volumes` and calls the complement
+the buffer a registry retains. If the contribution rate is the complement and
+not the share itself, this alias is wrong by construction, and the node's
+coupling is its deletion rather than this equation. The shipped description
+carries the question rather than burying it.
+
+`premium_share_of_asset` ships at 0.005 against the catalog's own 0.008, and
+the alias is what resolves the duplicate. `insurance_premium_definition`
+computes `insurance_loss_share_of_cost * capex_usd_per_kw`, so the two ids
+are one premium priced twice. Resolving in favour of 0.005 lowers the shipped
+premium by 37.5% -- which is the correct direction if the catalog's 0.008 was
+a second dial, and the wrong one if it was the better estimate. The rate is
+recorded here as a decision, not a discovery.
+
+*The five bounds, and the one the pack measured but could not ship as a
+bound.* `electrolyser_capacity` is a build size whose MW retype had not
+reached `config/prg.yaml`; this batch's retype is what makes its floor
+meaningful, and the floor holds: 500 MW against the 292.68 MW average draw
+the hydrogen programme implies. `fit_capacity_cap` at 4,000 MW admits the
+2,702.70 MW VRE build with room and breaks at a 5,000 MW scenario -- a
+ceiling equal to the build would be the tautology the sibling pack rejects.
+`renewable_penetration_limit` at 0.5 admits the 0.2703 annual VRE share; the
+bound compares an *annual* share to an *instantaneous* limit, which is the
+weaker of the two claims, because the graph carries no instantaneous
+penetration node. `regulatory_period_length` must be at least
+`regulatory_lag`, 5 years against 1. `firm_build_fleet_mw` must cover
+`firm_capacity_mw`, 10,000 against 9,000.
+
+`firm_build_fleet_mw` is the one a reviewer should delete rather than bound.
+Its own description calls it "the identity every build set must satisfy" and
+says "the reserve margins read the firm part of it"; both claims are false.
+`fleet_build_balance` is the identity, and `firm_capacity_definition` feeds
+the reserve margins. The node has no readers, the bound is the first thing
+that ever named it, and a bound on a quantity nothing consumes is a coupling
+in the register and not in the model. It ships because the standing task is
+that no node floats, and the finding is recorded so the next reader can
+reverse it with one deletion.
+
+*Three deferrals with stated reasons.* `morbidity_cases_per_year` needs a
+morbidity incidence base the graph does not carry. `curtailed_twh` needs a
+curtailment-volume source -- the graph has curtailment *shares* and no volume.
+The four composite-index components (`institutional_capacity`,
+`financial_capacity`, `technical_capacity`, `infrastructure_adequacy`) need
+component data no pack proposes, which is also why the three indices they
+feed -- `adaptive_capacity`, `resilience_score`, `energy_security_index` --
+are BASE-NEEDED rather than PRODUCT.
+
+*Verified at defaults.* Every product evaluates to the value the pack printed:
+`fuel_excise_revenue_usd_per_year` 164,974,190.45; `gis_mapped_network_km`
+34,200; `cross_border_losses_twh` 0 (a self-sufficient reference case, and
+the node is signed so a net export year loses energy on the way out);
+`electrolyser_variable_opex_usd_per_year` 1,666,500;
+`rooftop_solar_households` 1,000,000; `willingness_to_pay_usd_per_year`
+1.5e9; the three depreciation schedules 0.04, 0.08 and 0.04;
+`gdp_per_capita_growth` 0.029412; `health_impact_dalys` 57,600 and
+`health_impact_mortality` 4,800; `hydrogen_demand_domestic` 49.4 and
+`hydrogen_production_demand` 2,563,846.15; `compensation_rates` 7,500. All
+five bounds hold with residuals of +207.32, +1,297.30, +0.2297, +4 and
++1,000. All 26 equations pass the dimensional check; `range_excursions()` is
+empty and `consistency()` reports no violation.
+
+*Register movement.* Parameters 1,338 to 1,344 -- the six new ids. Equations
+499 to 525. Edges 1,033 to 1,075: thirty-seven product edges and five
+constraint edges. Uncoupled 313 to 284. The dead register falls 298 to 274: twenty
+retyped placeholders became derived, and the six new nodes arrived already
+coupled by their own equations, so they were never in it. The gap between
+`uncoupled()` (284) and `dead` (274) is the rule register -- ten nodes read by
+cross-validation rules and by no equation. The strength register counts
+equations and moves 496 to 522 hard, one informational and two soft
+unchanged. The citation register moves 215 to 226: six products and all five
+bounds carry a work, the fifteen that carry None being the seven aliases and
+eight definitional products. `computed()` 440 to 461. The audit partition
+moves 164/276 to 165/296 -- one product joins `checked` because
+`dalys_per_year` is a value the solve result carries, twenty join `skipped`.
+The uncertainty register moves 75 inputs to 74: `willingness_to_pay` was a
+stochastic placeholder and is now derived, and its products read fixed
+process parameters, so no derived node entered the closure and the total
+falls 123 to 122. Dimensional walk unchanged at 488 consistent, the same 11
+inconsistent and 0 undecidable.
+
+*The test the batch had to rewrite rather than repin.* Batch 32's summary
+test named `firm_build_fleet_mw` as the endogenous witness for "not every
+uncoupled node is free". Batch 33's bound names that node, so the register's
+endogenous membership went to zero and the witness became false. The
+assertion is now that the register is `{"free"}` and that
+`firm_build_fleet_mw` is endogenous, uncoupled-by-nothing and uncomputed --
+which is the distinction the two registers exist to draw: a bound *names* its
+subject without fixing it, so a node can be coupled and computed by nothing
+at the same time. Repinning the old witness to a new node would have hidden
+that; asserting the new property states it.
+
 ## Evaluation of the design docs against the code (2026-10-17)
 
 **`docs/how_prg_works.md` (read-only; a teaching narrative, not read as spec).**

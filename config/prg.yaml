@@ -37,24 +37,34 @@ parameters:
     source: docs/params.md
   accelerated_depreciation:
     name: Accelerated depreciation
-    description: Accelerated depreciation
+    description: 'The tax code''s accelerated depreciation rate: the permitted multiple of straight-line
+      over the asset''s depreciable life. 1.0 / 25 = 0.04/year at defaults, because the shipped multiple
+      is 1.0 -- the accelerated schedule and the linear one coincide until a jurisdiction sets a factor
+      above 1.'
     category: Policy
+    subcategory: null
     type: float
+    unit: 1/year
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 0.01
+    - 0.8
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The unclassified remainder (batch 33)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   accelerated_depreciation_factor:
     name: Accelerated depreciation factor
-    description: The multiple of straight-line depreciation the tax code permits. Bounded above by the
-      fastest schedule any jurisdiction allows.
+    description: The multiple of straight-line depreciation the code permits. 1.0 is the linear schedule;
+      2.0 doubles the annual charge. The range is the band any jurisdiction's code allows, not a measured
+      distribution.
     category: Tax & Fiscal
     subcategory: null
     type: float
@@ -67,10 +77,11 @@ parameters:
     role: free
     determinism: policy
     categories: []
-    source: Jurisdiction's tax code
+    source: The unclassified remainder (batch 33)
     source_url: null
     users:
-    - Developers
+    - Planners
+    - Regulators
     priority: P1
     status: to_build
     deprecated_by: null
@@ -2029,20 +2040,27 @@ parameters:
     deprecated_by: null
   buffer_pool_contribution:
     name: Buffer pool contribution
-    description: Buffer pool
+    description: The share of issued carbon credits a registry holds in its buffer against reversal. At
+      0.1 the pool absorbs a tenth of every issuance.
     category: Carbon
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    - 1.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The unclassified remainder (batch 33)
+    source_url: null
     users:
-    - Carbon
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   buffer_zones:
     name: Buffer zones
     description: Buffer zones
@@ -5517,20 +5535,27 @@ parameters:
     source: docs/params.md
   compensation_rates:
     name: Compensation rates
-    description: Compensation
+    description: 'The compensation a project pays per hectare: the multiple of market value the resettlement
+      package offers applied to the land''s own acquisition rate. 1.5 x 5000 = 7500 USD/hectare at defaults.'
     category: Land
+    subcategory: null
     type: float
+    unit: USD/hectare
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
+    - 50.0
+    - 2500000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The unclassified remainder (batch 33)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: to_build
-    users:
-    - Developers
-    source: docs/params.md
+    deprecated_by: null
   compensation_share_of_market:
     name: Compensation as a share of market value
     description: The multiple of market value the compensation package pays. A share of a share; the sample's
@@ -5928,20 +5953,28 @@ parameters:
     deprecated_by: null
   consumer_price_index_link:
     name: Consumer price index link
-    description: CPI link
+    description: The annual indexation rate a CPI-linked tariff or contract applies. The node's name promises
+      an *index* and the graph carries a *rate*; the coupling below makes it the rate, and this prose
+      says so.
     category: RegFin
+    subcategory: null
     type: float
+    unit: 1/year
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - -0.05
+    - 0.5
+    initial: null
+    role: derived
     determinism: fixed
+    categories: []
+    source: The unclassified remainder (batch 33)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: to_build
-    users:
-    - Regulators
-    source: docs/params.md
+    deprecated_by: null
   consumer_protection_spend_usd_per_year:
     name: Consumer protection spend usd per year
     description: 'consumer protection spend usd per year: the compliance register''s derived quantity.
@@ -6824,6 +6857,24 @@ parameters:
     users:
     - Policymakers
     source: docs/params.md
+  cross_border_losses_twh:
+    name: Cross border losses twh
+    description: 'Energy lost in transit on the cross-border flow. Signed because the flow is signed:
+      a net exporter loses energy on the way out. 0 TWh/year at defaults, because the reference case is
+      self-sufficient.'
+    category: Transmission & Grid
+    type: float
+    unit: TWh/year
+    range:
+    - -1000.0
+    - 1000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    source: The unclassified remainder (batch 33)
+    users:
+    - Planners
+    - Regulators
   cross_border_permitting_time:
     name: Cross border permitting time
     description: Years to secure the cross-border permit for a transmission line. The default 2.0 is two
@@ -8371,52 +8422,76 @@ parameters:
     deprecated_by: null
   depreciation_schedule_accelerated:
     name: Depreciation schedule accelerated
-    description: Accelerated depreciation
+    description: 'The accelerated depreciation rate: the permitted multiple of straight-line divided by
+      the depreciable life. 1.0 / 25 = 0.04/year at defaults.'
     category: Tax
+    subcategory: null
     type: float
+    unit: 1/year
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
+    - 0.01
+    - 0.8
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The unclassified remainder (batch 33)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: to_build
-    users:
-    - Developers
-    source: docs/params.md
+    deprecated_by: null
   depreciation_schedule_declining:
     name: Depreciation schedule declining
-    description: Declining balance
+    description: 'The declining-balance rate at 200%: twice the straight-line rate over the asset''s life,
+      the MACRS double-declining convention. 2.0 / 25 = 0.08/year. The 150% convention was rejected: the
+      source describes both and states no preference, and a second node for it is a dial nobody asked
+      for.'
     category: Tax
+    subcategory: null
     type: float
+    unit: 1/year
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 0.03
+    - 0.4
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The unclassified remainder (batch 33)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
-  depreciation_schedule_linear:
-    name: Depreciation schedule linear
-    description: Linear depreciation
-    category: Tax
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
+    - Planners
+    - Regulators
     priority: P1
     status: to_build
+    deprecated_by: null
+  depreciation_schedule_linear:
+    name: Depreciation schedule linear
+    description: 'The straight-line rate: the asset''s cost spread evenly over its depreciable life. 1.0
+      / 25 = 0.04/year. A salvage-value term was rejected: the graph carries no salvage rate, and adding
+      one to complete the formula would be a base this batch does not own.'
+    category: Tax
+    subcategory: null
+    type: float
+    unit: 1/year
+    range:
+    - 0.01
+    - 0.2
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: The unclassified remainder (batch 33)
+    source_url: null
     users:
-    - Developers
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   der_management_systems:
     name: Der management systems
     description: DERMS
@@ -9369,20 +9444,29 @@ parameters:
     - Regulators
   electrolyser_capacity:
     name: Electrolyser capacity
-    description: Electrolyser capacity
+    description: Installed electrolyser nameplate. 500 MW clears the 292.68 MW floor the hydrogen programme's
+      own average draw implies, with headroom to run above it; a plant sized to its average has no capacity
+      to do that.
     category: Sector
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 500.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: existing
+    categories: []
+    source: The unclassified remainder (batch 33)
+    source_url: null
     users:
-    - Industry
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   electrolyser_cost:
     name: Electrolyser capital cost (legacy)
     description: Electrolyser capital cost (legacy) -- one of two ids for the quantity `capex_hydrogen_electrolyser`
@@ -9452,6 +9536,24 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  electrolyser_variable_opex_usd_per_year:
+    name: Electrolyser variable opex usd per year
+    description: The electrolyser fleet's variable O&M bill, with the kilotonnes converted through the
+      graph's 0.03333 MWh/kg. 1666500 USD/year at defaults. `opex_variable_electrolyser` is stated per
+      MWh of hydrogen and no node converted it to a spend.
+    category: Cost
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 2000000000000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    source: The unclassified remainder (batch 33)
+    users:
+    - Planners
+    - Regulators
   electrolysis_electricity_demand_mwh_per_year:
     name: Electrolysis electricity demand mwh per year
     description: 'electrolysis electricity demand mwh per year: the extensive-base coupling''s derived
@@ -10996,20 +11098,29 @@ parameters:
     - Financial analysts
   fit_capacity_cap:
     name: Fit capacity cap
-    description: FiT capacity cap
+    description: The feed-in-tariff programme's capacity ceiling. 4000 MW sits above the 2702.70 MW VRE
+      build, so the ceiling holds with room and a 5000 MW scenario breaks it -- a ceiling equal to the
+      build is the tautology the sibling pack rejects.
     category: Policy
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 4000.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The unclassified remainder (batch 33)
+    source_url: null
     users:
+    - Planners
     - Regulators
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   fit_duration:
     name: FiT contract duration
     description: Feed-in-tariff contract term in years. Same shape as PPA duration; typically shorter
@@ -11779,6 +11890,24 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  fuel_excise_revenue_usd_per_year:
+    name: Fuel excise revenue usd per year
+    description: 'The excise the treasury collects on fossil generation: the duty share of the delivered
+      price over the non-renewable volume. 164974190.45 USD/year at defaults. A revenue no node held,
+      though `fossil_fuel_subsidy_spend_usd_per_year` is the same arithmetic on a different share.'
+    category: Tax & Fiscal
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 4500000000000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    source: The unclassified remainder (batch 33)
+    users:
+    - Planners
+    - Regulators
   fuel_price_escalated_usd_per_mwh:
     name: Escalated fuel price
     description: The delivered fuel price compounded to the horizon. The base-year price and its escalation
@@ -12218,20 +12347,28 @@ parameters:
     deprecated_by: null
   gdp_per_capita_growth:
     name: Gdp per capita growth
-    description: GDP per capita growth
+    description: 'Growth in output per head: (g - n) / (1 + n) from the two rates the graph carries. (0.05
+      - 0.02) / 1.02 = 0.0294/year against a 3% headline GDP rate and a 2% population rate. The uncorrected
+      difference g - n understates the per-capita rate by the denominator at defaults.'
     category: Macro
+    subcategory: null
     type: float
+    unit: 1/year
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - -0.05
+    - 0.18
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The unclassified remainder (batch 33)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   gearing_ratio:
     name: Gearing ratio
     description: 'Debt as a multiple of equity, the complement of the debt fraction. Determined by gearing_ratio_definition.
@@ -12459,6 +12596,24 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  gis_mapped_network_km:
+    name: Gis mapped network km
+    description: 'The route length held in the GIS: the mapped share of the transmission and distribution
+      networks. 34200 km at defaults. A count of asset records was rejected -- the graph states route
+      km and no record count.'
+    category: Digital
+    type: float
+    unit: km
+    range:
+    - 0.0
+    - 400000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    source: The unclassified remainder (batch 33)
+    users:
+    - Planners
+    - Regulators
   gis_requirements:
     name: Gis requirements
     description: The share of network assets in the GIS.
@@ -12795,21 +12950,27 @@ parameters:
     deprecated_by: null
   health_impact_dalys:
     name: Health impact dalys
-    description: DALYs
+    description: 'Disability-adjusted life years lost to the fleet''s emissions: the burden the shipped
+      health chain already computes. 57600 DALY/year at defaults.'
     category: EnvSoc
+    subcategory: null
     type: float
     unit: DALY/year
     range:
     - 0.0
     - 100000000.0
-    default: 50000000.0
-    role: free
+    initial: null
+    role: derived
     determinism: fixed
+    categories: []
+    source: The unclassified remainder (batch 33)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: integrate
-    users:
-    - Health
-    source: docs/params.md
+    deprecated_by: null
   health_impact_morbidity:
     name: Health impact morbidity
     description: Illness cases
@@ -12828,20 +12989,27 @@ parameters:
     source: docs/params.md
   health_impact_mortality:
     name: Health impact mortality
-    description: Premature deaths
+    description: 'Deaths attributable to the fleet''s PM2.5 over the year: what the shipped concentration-response
+      chain already computes. 4800 deaths/year at defaults.'
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: deaths/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 10000000.0
+    initial: null
+    role: derived
     determinism: fixed
+    categories: []
+    source: The unclassified remainder (batch 33)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: integrate
-    users:
-    - Health
-    source: docs/params.md
+    deprecated_by: null
   healthcare_cost_per_case:
     name: Healthcare cost per case
     description: The human-capital price of a DALY, read by health_cost_definition as USD/DALY
@@ -13357,20 +13525,28 @@ parameters:
     source: docs/params.md
   hydrogen_demand_domestic:
     name: Hydrogen demand domestic
-    description: Domestic hydrogen demand
+    description: 'Hydrogen consumed at home: production less what is exported, with the export volume
+      converted from MWh to kilotonnes through the graph''s own 0.03333 MWh/kg. Signed low because exports
+      can exceed domestic production. 50 - 0.6 = 49.4 kt/year at defaults.'
     category: Sector
+    subcategory: null
     type: float
+    unit: kt/year
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - -400.0
+    - 10000.0
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P2
-    status: existing
+    categories: []
+    source: The unclassified remainder (batch 33)
+    source_url: null
     users:
-    - Industry
-    source: docs/params.md
+    - Planners
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   hydrogen_export_port:
     name: Hydrogen export port
     description: 'The export terminal''s average throughput in megawatts: the annual hydrogen energy the
@@ -13669,20 +13845,27 @@ parameters:
     deprecated_by: null
   hydrogen_production_demand:
     name: Hydrogen production demand
-    description: Electricity for hydrogen production
+    description: The electricity hydrogen production draws, which the shipped electrolysis identity already
+      computes from volume, energy per kilogram and efficiency. 2563846.15 MWh/year at defaults.
     category: Demand
+    subcategory: null
     type: float
+    unit: MWh/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 10000000000.0
+    initial: null
+    role: derived
     determinism: fixed
+    categories: []
+    source: The unclassified remainder (batch 33)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: existing
-    users:
-    - Industry
-    source: docs/params.md
+    deprecated_by: null
   hydrogen_production_kt_per_year:
     name: Hydrogen production
     description: Annual hydrogen output, which is the other draw on the catchment.
@@ -20271,20 +20454,27 @@ parameters:
     deprecated_by: null
   ppa_indexation:
     name: Ppa indexation
-    description: Indexation formula
+    description: The annual escalation a power purchase agreement applies to its strike price, which is
+      the tariff indexation rate the graph already carries. 0.05/year at defaults.
     category: Contract
+    subcategory: null
     type: float
+    unit: 1/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 0.3
+    initial: null
+    role: derived
     determinism: fixed
+    categories: []
+    source: The unclassified remainder (batch 33)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: to_build
-    users:
-    - Developers
-    source: docs/params.md
+    deprecated_by: null
   ppa_indexed_price_usd_per_mwh:
     name: PPA indexed price
     description: The PPA price compounded to the contract's end at the indexation rate. The price the
@@ -20473,25 +20663,25 @@ parameters:
     deprecated_by: null
   premium_share_of_asset:
     name: Insurance premium as a share of asset value
-    description: Annual premium as a fraction of the insured asset's value. A share; the range spans utility-scale
-      generation at the low end to distributed assets at the high end.
+    description: The annual insurance premium as a fraction of the insured asset's value, which is the
+      loss share of cost the graph already carries. 0.005 at defaults.
     category: Insurance & Catastrophe
     subcategory: null
     type: float
     unit: '1'
     range:
     - 0.001
-    - 0.05
-    default: 0.008
+    - 0.03
     initial: null
-    role: free
-    determinism: stochastic
+    role: derived
+    determinism: fixed
     categories: []
-    source: Broker quotes for renewable and thermal assets; aggregated
+    source: The unclassified remainder (batch 33)
     source_url: null
     users:
-    - Insurance
-    priority: P2
+    - Planners
+    - Regulators
+    priority: P1
     status: to_build
     deprecated_by: null
   prepayment_metering:
@@ -21743,20 +21933,29 @@ parameters:
     - Planners
   renewable_penetration_limit:
     name: Renewable penetration limit
-    description: Maximum instantaneous penetration
+    description: The instantaneous renewable penetration ceiling, as a share of demand. The bound below
+      compares an *annual* share to this instantaneous limit, which is the weaker of the two claims; the
+      graph carries no instantaneous-penetration node, so it is the strongest form the tree admits.
     category: Climate
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.5
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The unclassified remainder (batch 33)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   renewable_subsidies:
     name: Renewable subsidies
     description: Renewable subsidy per MWh of renewable generation, distinct from the feed-in tariff because
@@ -22645,6 +22844,23 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  rooftop_solar_households:
+    name: Rooftop solar households
+    description: Households with rooftop PV. A count, because the adoption share alone says nothing about
+      how many connections the distribution network carries. 1000000 at defaults.
+    category: Demand-Side
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 100000000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    source: The unclassified remainder (batch 33)
+    users:
+    - Planners
+    - Regulators
   rule_of_law_index:
     name: Rule of law index
     description: Composite index of legal predictability and enforcement, normalised to [0, 1]. Higher
@@ -26446,20 +26662,28 @@ parameters:
     source: docs/params.md
   value_of_lost_load:
     name: Value of lost load
-    description: Value of lost load
+    description: What a megawatt-hour of unserved energy costs the system, which is the VoLL the graph
+      already carries and the shipped reliability-cost identity already prices unserved energy at. 5000
+      USD/MWh at defaults.
     category: Cost
+    subcategory: null
     type: float
+    unit: USD/MWh
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 100.0
+    - 100000.0
+    initial: null
+    role: derived
     determinism: fixed
+    categories: []
+    source: The unclassified remainder (batch 33)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
     priority: P1
     status: existing
-    users:
-    - Utilities
-    source: docs/params.md
+    deprecated_by: null
   variable_stack_usd_per_mwh:
     name: Variable cost stack
     description: 'Fuel plus carbon, the dispatchable fleet''s own marginal cost: the quantity a pass-through
@@ -27352,20 +27576,45 @@ parameters:
     source: docs/params.md
   willingness_to_pay:
     name: Willingness to pay
-    description: WTP
+    description: What a household will pay per megawatt-hour of consumption, 100 USD/MWh against the 1.5
+      MWh a household uses.
     category: Consumer
+    subcategory: null
     type: float
+    unit: USD/MWh
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1000.0
+    default: 100.0
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: The unclassified remainder (batch 33)
+    source_url: null
     users:
+    - Planners
     - Regulators
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  willingness_to_pay_usd_per_year:
+    name: Willingness to pay usd per year
+    description: 'The annual consumer valuation of the electricity households consume: the quantity a
+      cost-benefit test needs and no node held. 1.5e9 USD/year at defaults.'
+    category: Affordability
+    type: float
+    unit: USD/year
+    range:
+    - 0.0
+    - 5000000000000.0
+    role: derived
+    determinism: fixed
+    priority: P1
+    source: The unclassified remainder (batch 33)
+    users:
+    - Planners
+    - Regulators
   wind_capacity_factor_at_vintage:
     name: Wind capacity factor at vintage
     description: 'wind capacity factor at vintage: the coupling''s derived quantity, so a scenario''s
@@ -28025,6 +28274,28 @@ parameters:
     status: existing
     deprecated_by: null
 equations:
+  accelerated_depreciation_definition:
+    name: Accelerated depreciation definition
+    description: 'The tax code''s accelerated rate, as the schedule it names. 0.04/year at defaults. Deriving
+      it from the factor and the life directly was rejected as a second spelling of `depreciation_schedule_accelerated`:
+      two ids for one number is the defect this batch exists to remove.'
+    system: financial
+    lhs: accelerated_depreciation
+    rhs: depreciation_schedule_accelerated
+    relation: eq
+    parameters:
+    - accelerated_depreciation
+    - depreciation_schedule_accelerated
+    free_variables: []
+    determined_variables:
+    - accelerated_depreciation
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{accelerated}_{depreciation} = \mathrm{depreciation}_{schedule\_accelerated}
   additional_abatement_definition:
     name: Abatement clearing additionality
     description: 'The abatement volume that clears the additionality screen: the budget-scaled annual
@@ -28709,6 +28980,29 @@ equations:
     priority: P2
     reference: null
     latex: \mathrm{blended}_{finance\_share} \leq \mathrm{dfi}_{share} + \mathrm{commercial}_{bank\_share}
+  buffer_pool_contribution_definition:
+    name: Buffer pool contribution definition
+    description: The share of issued credits the registry buffers against reversal, which is the permanence
+      share the graph already carries. 0.1 at defaults. A reviewer should decide whether this is a second
+      spelling of the buffer `carbon_credit_reversal_allowance_definition` already computes as `(1 - permanence_parameters)`;
+      if it is, the node's coupling is its deletion, not this alias.
+    system: carbon_trajectory
+    lhs: buffer_pool_contribution
+    rhs: permanence_parameters
+    relation: eq
+    parameters:
+    - buffer_pool_contribution
+    - permanence_parameters
+    free_variables: []
+    determined_variables:
+    - buffer_pool_contribution
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{buffer}_{pool\_contribution} = \mathrm{permanence}_{parameters}
   business_interruption_cover_definition:
     name: The business-interruption cover
     description: 'The revenue indemnified: the cover share times gross revenue. A switch at zero returns
@@ -29915,6 +30209,30 @@ equations:
     reference: Benefit-sharing programmes (the graph's own revenue identity)
     latex: \mathrm{community}_{transition\_funding\_usd\_per\_year} = \mathrm{community}_{transition\_funding}
       \mathrm{community}_{development\_fund\_usd\_per\_year}
+  compensation_rates_definition:
+    name: Compensation rates definition
+    description: 'The compensation a project pays per hectare: the multiple of market value the package
+      offers applied to the land''s own acquisition rate. 1.5 x 5000 = 7500 USD/hectare at defaults. Inverting
+      the pair -- deriving the multiple from the rate -- was rejected: the multiple is the policy dial
+      and the rate is what the project pays.'
+    system: cost_accounting
+    lhs: compensation_rates
+    rhs: compensation_share_of_market * land_acquisition_cost_per_hectare
+    relation: eq
+    parameters:
+    - compensation_rates
+    - compensation_share_of_market
+    - land_acquisition_cost_per_hectare
+    free_variables: []
+    determined_variables:
+    - compensation_rates
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{compensation}_{rates} = \mathrm{compensation}_{share\_of\_market} \mathrm{land}_{acquisition\_cost\_per\_hectare}
   complaint_handling_spend_definition:
     name: Complaint-handling spend
     description: 'Complaint-handling spend: the share times allowed revenue.'
@@ -30083,6 +30401,28 @@ equations:
     priority: P1
     reference: World Bank Regulation of Utilities handbook, revenue caps
     latex: \mathrm{consumer}_{education\_spend\_usd\_per\_year} = \mathrm{consumer}_{education} \mathrm{allowed}_{revenue\_requirement}
+  consumer_price_index_link_definition:
+    name: Consumer price index link definition
+    description: The annual indexation a CPI-linked tariff applies, which is the inflation rate the graph
+      already carries. 0.05/year at defaults. The node's name promises an index and the graph carries
+      a rate; the alias is honest only because this description says the link is a rate.
+    system: financial
+    lhs: consumer_price_index_link
+    rhs: inflation_rate
+    relation: eq
+    parameters:
+    - consumer_price_index_link
+    - inflation_rate
+    free_variables: []
+    determined_variables:
+    - consumer_price_index_link
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{consumer}_{price\_index\_link} = \mathrm{inflation}_{rate}
   consumer_protection_spend_definition:
     name: Consumer-protection spend
     description: 'The metering-accuracy and dispute-resolution systems'' spend: the mandated share of
@@ -30754,6 +31094,30 @@ equations:
     linearity: nonlinear
     latex: \mathrm{crf}_{wind\_onshore} = \frac{\mathrm{discount}_{rate} {\left(1 + \mathrm{discount}_{rate}\right)}^{\mathrm{asset}_{life\_wind\_onshore}}}{{\left(\mathrm{discount}_{rate}
       + 1\right)}^{\mathrm{asset}_{life\_wind\_onshore}} - 1}
+  cross_border_losses_definition:
+    name: Cross border losses definition
+    description: 'Energy lost in transit on the cross-border flow: the loss share applied to net imports.
+      0.03 x 0 = 0 TWh/year at defaults, because the reference case is self-sufficient; a 100 TWh import
+      year loses 3 TWh. Signed because the flow is signed. Using demand as the base was rejected: losses
+      fall on the traded flow, and charging them to energy that never crossed a border is the wrong bill.'
+    system: energy_balance
+    lhs: cross_border_losses_twh
+    rhs: loss_factor_cross_border * net_imports_twh
+    relation: eq
+    parameters:
+    - cross_border_losses_twh
+    - loss_factor_cross_border
+    - net_imports_twh
+    free_variables: []
+    determined_variables:
+    - cross_border_losses_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{cross}_{border\_losses\_twh} = \mathrm{loss}_{factor\_cross\_border} \mathrm{net}_{imports\_twh}
   cross_border_wheeling_cost_definition:
     name: The cross-border wheeling charge
     description: 'The charge on the cross-border flow, at the same rate in both directions: an importing
@@ -31327,6 +31691,73 @@ equations:
     linearity: linear
     latex: \mathrm{residential}_{demand\_share} + \mathrm{commercial}_{demand\_share} + \mathrm{industrial}_{demand\_share}
       + \mathrm{agricultural}_{demand\_share} \leq 1
+  depreciation_schedule_accelerated_definition:
+    name: Depreciation schedule accelerated definition
+    description: 'The accelerated rate: the permitted multiple of straight-line over the life. 1.0/25
+      = 0.04/year at defaults, because the multiple is 1.0. The `factor * (1/life)` respelling was rejected
+      as a no-op: the DSL has no precedence surprise here and the simpler form is the same number.'
+    system: financial
+    lhs: depreciation_schedule_accelerated
+    rhs: accelerated_depreciation_factor / depreciation_life_by_asset
+    relation: eq
+    parameters:
+    - depreciation_schedule_accelerated
+    - accelerated_depreciation_factor
+    - depreciation_life_by_asset
+    free_variables: []
+    determined_variables:
+    - depreciation_schedule_accelerated
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Straight-line and declining-balance depreciation; cf. Short, Packey & Holt (1995), NREL/TP-462-5173
+    latex: \mathrm{depreciation}_{schedule\_accelerated} = \frac{\mathrm{accelerated}_{depreciation\_factor}}{\mathrm{depreciation}_{life\_by\_asset}}
+  depreciation_schedule_declining_definition:
+    name: Depreciation schedule declining definition
+    description: 'The 200% declining-balance rate: twice straight-line over the life. 2/25 = 0.08/year
+      at defaults. The 150% convention is described by the same source and not preferred by it; the shipped
+      form takes the MACRS default and this prose says which.'
+    system: financial
+    lhs: depreciation_schedule_declining
+    rhs: 2.0 / depreciation_life_by_asset
+    relation: eq
+    parameters:
+    - depreciation_schedule_declining
+    - depreciation_life_by_asset
+    free_variables: []
+    determined_variables:
+    - depreciation_schedule_declining
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Straight-line and declining-balance depreciation; cf. Short, Packey & Holt (1995), NREL/TP-462-5173
+    latex: \mathrm{depreciation}_{schedule\_declining} = \frac{2}{\mathrm{depreciation}_{life\_by\_asset}}
+  depreciation_schedule_linear_definition:
+    name: Depreciation schedule linear definition
+    description: 'The straight-line rate: one over the depreciable life. 1/25 = 0.04/year at defaults.
+      The form is the definition rather than a fit; a salvage-value term would need a base the graph does
+      not carry.'
+    system: financial
+    lhs: depreciation_schedule_linear
+    rhs: 1.0 / depreciation_life_by_asset
+    relation: eq
+    parameters:
+    - depreciation_schedule_linear
+    - depreciation_life_by_asset
+    free_variables: []
+    determined_variables:
+    - depreciation_schedule_linear
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Straight-line and declining-balance depreciation; cf. Short, Packey & Holt (1995), NREL/TP-462-5173
+    latex: \mathrm{depreciation}_{schedule\_linear} = {\mathrm{depreciation}_{life\_by\_asset}}^{-1}
   desalination_demand_definition:
     name: The desalination load
     description: 'The electricity a desalination programme draws: the annual water volume times the specific
@@ -31667,6 +32098,30 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{electrified}_{route\_km} = \mathrm{railway}_{electrification} \mathrm{railway}_{route\_km}
+  electrolyser_capacity_bound:
+    name: Electrolyser capacity bound
+    description: 'The installed electrolyser must carry the average electricity draw its own hydrogen
+      programme implies: 2563846.15 MWh/year over 8760 hours is 292.68 MW, and the shipped 500 MW clears
+      it. An equality was rejected -- a build is a decision, and deriving it would make the optimiser''s
+      variable a computed number; it is also wrong by construction, because a plant sized to its average
+      has no capacity to run above it. Routes `unbound`: the right-hand side is derived, so this is a
+      post-solve check.'
+    system: energy_balance
+    lhs: electrolyser_capacity
+    rhs: electrolysis_electricity_demand_mwh_per_year / 8760
+    relation: geq
+    parameters: &id009
+    - electrolyser_capacity
+    - electrolysis_electricity_demand_mwh_per_year
+    free_variables: *id009
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: IEA/NEA, Projected Costs of Generating Electricity (2020)
+    latex: \mathrm{electrolyser}_{capacity} \geq \frac{\mathrm{electrolysis}_{electricity\_demand\_mwh\_per\_year}}{8760}
   electrolyser_cost_alias:
     name: Electrolyser capital cost (legacy) is Electrolyser capital cost
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `electrolyser_cost`
@@ -31691,6 +32146,32 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{electrolyser}_{cost} = \mathrm{capex}_{hydrogen\_electrolyser}
+  electrolyser_variable_opex_definition:
+    name: Electrolyser variable opex definition
+    description: 'The electrolyser fleet''s variable O&M bill: the rate per MWh of hydrogen over the year''s
+      production, with kilotonnes converted through the graph''s 0.03333 MWh/kg. 1.0 x 50 kt x 1e6 kg/kt
+      x 0.03333 MWh/kg = 1666500 USD/year at defaults. Charging O&M per MWh of *electricity* was rejected:
+      the rate''s own description states it per MWh of hydrogen, which is the output.'
+    system: financial
+    lhs: electrolyser_variable_opex_usd_per_year
+    rhs: opex_variable_electrolyser * hydrogen_production_kt_per_year * 1000000 * mwh_per_hydrogen_unit
+    relation: eq
+    parameters:
+    - electrolyser_variable_opex_usd_per_year
+    - hydrogen_production_kt_per_year
+    - mwh_per_hydrogen_unit
+    - opex_variable_electrolyser
+    free_variables: []
+    determined_variables:
+    - electrolyser_variable_opex_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: IEA/NEA, Projected Costs of Generating Electricity (2020)
+    latex: \mathrm{electrolyser}_{variable\_opex\_usd\_per\_year} = 1000000 \mathrm{opex}_{variable\_electrolyser}
+      \mathrm{hydrogen}_{production\_kt\_per\_year} \mathrm{mwh}_{per\_hydrogen\_unit}
   electrolysis_electricity_demand_definition:
     name: The electricity electrolysis draws
     description: 'The electricity the hydrogen programme draws: the annual output in kilograms times hydrogen''s
@@ -31836,10 +32317,10 @@ equations:
     lhs: energy_burden
     rhs: affordability_threshold
     relation: leq
-    parameters: &id009
+    parameters: &id010
     - affordability_threshold
     - energy_burden
-    free_variables: *id009
+    free_variables: *id010
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -32160,6 +32641,32 @@ equations:
     reference: null
     latex: \mathrm{financing}_{close\_share\_of\_licence} = \frac{\mathrm{financing}_{close\_deadline}}{12
       \mathrm{licence}_{duration}}
+  firm_build_fleet_bound:
+    name: Firm build fleet bound
+    description: 'The optimiser''s total build must cover the firm part of the fleet it is building: 10000
+      MW against 9000 MW at defaults. Routes `unbound` -- both sides are endogenous or derived, so this
+      is a post-solve audit check rather than an LP constraint. A reviewer should prefer deleting this
+      node to bounding it: it has zero readers, and its description''s claims -- that it is ''the identity
+      every build set must satisfy'' and that ''the reserve margins read the firm part of it'' -- are
+      both false, because `fleet_build_balance` is the identity and `firm_capacity_definition` feeds the
+      reserve margins.'
+    system: reserve_margin
+    lhs: firm_build_fleet_mw
+    rhs: firm_capacity_mw
+    relation: geq
+    parameters: &id011
+    - firm_build_fleet_mw
+    - firm_capacity_mw
+    free_variables: *id011
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: 'Least-cost generation expansion: Koltsaklis & Dagoumas (2018), Applied Energy 230:563-589;
+      Oree et al. (2017), RSER 69:790-803'
+    latex: \mathrm{firm}_{build\_fleet\_mw} \geq \mathrm{firm}_{capacity\_mw}
   firm_capacity_definition:
     name: Firm capacity
     description: 'The firm fleet is the thermal units plus the dispatchable renewables: the generators
@@ -32229,6 +32736,29 @@ equations:
     priority: P1
     reference: Short, Packey & Holt (1995), NREL/TP-462-5173
     latex: \mathrm{fit}_{annuity\_factor} = \frac{1 - {\left(1 + \mathrm{real}_{discount\_rate}\right)}^{-\mathrm{fit}_{duration}}}{\mathrm{real}_{discount\_rate}}
+  fit_capacity_bound:
+    name: Fit capacity bound
+    description: 'The feed-in-tariff programme''s capacity ceiling must admit the VRE the fleet actually
+      builds, or the programme''s own cap is violated by its own scenario. 2702.70 MW under 4000 at defaults.
+      A floor that *forced* build was rejected: the node is a cap, and a floor would make the programme
+      compel capacity rather than admit it. A cap at the placeholder 500000 was rejected as vacuous. Routes
+      `bound`.'
+    system: financial
+    lhs: fit_capacity_cap
+    rhs: vre_capacity_mw
+    relation: geq
+    parameters: &id012
+    - fit_capacity_cap
+    - vre_capacity_mw
+    free_variables: *id012
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: Oree et al. (2017), RSER 69:790-803
+    latex: \mathrm{fit}_{capacity\_cap} \geq \mathrm{vre}_{capacity\_mw}
   fleet_build_balance:
     name: The build set within the fleet
     description: The optimiser's per-technology builds must not exceed the fleet size the plan declares
@@ -32362,10 +32892,10 @@ equations:
     lhs: flywheel_capacity
     rhs: storage_headroom_mw
     relation: leq
-    parameters: &id010
+    parameters: &id013
     - flywheel_capacity
     - storage_headroom_mw
-    free_variables: *id010
+    free_variables: *id013
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -32473,10 +33003,10 @@ equations:
     lhs: fpic_requirements
     rhs: fpic_compliance_score
     relation: leq
-    parameters: &id011
+    parameters: &id014
     - fpic_compliance_score
     - fpic_requirements
-    free_variables: *id011
+    free_variables: *id014
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -32696,6 +33226,34 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: null
+  fuel_excise_revenue_definition:
+    name: Fuel excise revenue definition
+    description: 'The excise the treasury collects on fossil generation: the duty share of the delivered
+      price over the non-renewable volume. 0.2 x 40 x 20.62 TWh x 1e6 = 164974190.45 USD/year at defaults.
+      Charging it on all generation was rejected -- the duty falls on fossil fuel, and charging renewables
+      would make the excise a generation tax. The base-year price is the partner for an annual volume;
+      the escalated price compounds to the horizon and would mix horizons.'
+    system: financial
+    lhs: fuel_excise_revenue_usd_per_year
+    rhs: excise_duty_fuel * fuel_price_usd_per_mwh * (generation_twh - renewable_generation_twh) * 1000000
+    relation: eq
+    parameters:
+    - fuel_excise_revenue_usd_per_year
+    - excise_duty_fuel
+    - fuel_price_usd_per_mwh
+    - generation_twh
+    - renewable_generation_twh
+    free_variables: []
+    determined_variables:
+    - fuel_excise_revenue_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{fuel}_{excise\_revenue\_usd\_per\_year} = 1000000 \mathrm{excise}_{duty\_fuel} \mathrm{fuel}_{price\_usd\_per\_mwh}
+      \left(\mathrm{generation}_{twh} - \mathrm{renewable}_{generation\_twh}\right)
   fuel_price_band_definition:
     name: The fuel price band's upper edge
     description: 'The upper edge of the fuel price band: the base price grossed up by the volatility share.
@@ -32756,10 +33314,10 @@ equations:
     lhs: fusion_capacity
     rhs: total_capacity_mw
     relation: leq
-    parameters: &id012
+    parameters: &id015
     - fusion_capacity
     - total_capacity_mw
-    free_variables: *id012
+    free_variables: *id015
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -32823,10 +33381,10 @@ equations:
     lhs: gas_capacity
     rhs: gas_new_build
     relation: leq
-    parameters: &id013
+    parameters: &id016
     - gas_capacity
     - gas_new_build
-    free_variables: *id013
+    free_variables: *id016
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -32930,6 +33488,31 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{gdp}_{growth\_rate} = \mathrm{gdp}_{growth}
+  gdp_per_capita_growth_definition:
+    name: Gdp per capita growth definition
+    description: 'Growth in output per head from the two rates the graph carries: (0.05 - 0.02) / 1.02
+      = 0.0294/year at defaults. The Fisher-equation form `(1+g)/(1+n) - 1` was rejected on units -- it
+      is dimensionless against a `1/year` left side -- and the difference form is the same algebra with
+      the ones cancelled.'
+    system: financial
+    lhs: gdp_per_capita_growth
+    rhs: (gdp_growth - population_growth_rate) / (1.0 + population_growth_rate)
+    relation: eq
+    parameters:
+    - gdp_per_capita_growth
+    - gdp_growth
+    - population_growth_rate
+    free_variables: []
+    determined_variables:
+    - gdp_per_capita_growth
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{gdp}_{per\_capita\_growth} = \frac{\mathrm{gdp}_{growth} - \mathrm{population}_{growth\_rate}}{\mathrm{population}_{growth\_rate}
+      + 1}
   gearing_ratio_definition:
     name: Gearing from the debt fraction
     description: Debt over equity, where equity is the complement of the debt fraction. The singularity
@@ -33019,6 +33602,32 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{geothermal}_{effective\_capex\_usd\_per\_kw} = \frac{\mathrm{capex}_{geothermal}}{\mathrm{geothermal}_{drilling\_success}}
+  gis_mapped_network_km_definition:
+    name: Gis mapped network km definition
+    description: 'The route length held in the GIS: the mapped share of the transmission and distribution
+      networks. 0.6 x (12000 + 45000) = 34200 km at defaults. A count of asset records was rejected: the
+      graph carries km and no record count, and the route-km base is what the node''s own description
+      implies.'
+    system: energy_balance
+    lhs: gis_mapped_network_km
+    rhs: gis_requirements * (transmission_line_length_km + distribution_network_km)
+    relation: eq
+    parameters:
+    - gis_mapped_network_km
+    - distribution_network_km
+    - gis_requirements
+    - transmission_line_length_km
+    free_variables: []
+    determined_variables:
+    - gis_mapped_network_km
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{gis}_{mapped\_network\_km} = \mathrm{gis}_{requirements} \left(\mathrm{transmission}_{line\_length\_km}
+      + \mathrm{distribution}_{network\_km}\right)
   gravity_storage_capacity_bound:
     name: Gravity storage capacity bound
     description: Gravity storage inside the storage envelope. The classification pack's own proposed base
@@ -33029,10 +33638,10 @@ equations:
     lhs: gravity_storage_capacity
     rhs: storage_headroom_mw
     relation: leq
-    parameters: &id014
+    parameters: &id017
     - gravity_storage_capacity
     - storage_headroom_mw
-    free_variables: *id014
+    free_variables: *id017
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -33049,10 +33658,10 @@ equations:
     lhs: green_bond_share
     rhs: bond_share
     relation: leq
-    parameters: &id015
+    parameters: &id018
     - bond_share
     - green_bond_share
-    free_variables: *id015
+    free_variables: *id018
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -33149,6 +33758,51 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  health_impact_dalys_definition:
+    name: Health impact dalys definition
+    description: 'Disability-adjusted life years lost to the fleet''s emissions, which the shipped health
+      chain already computes. 57600 DALY/year at defaults. A `premature_deaths * years_of_life_lost` form
+      was rejected: that is `dalys_definition` verbatim, so the equation would add a second spelling of
+      one number.'
+    system: health
+    lhs: health_impact_dalys
+    rhs: dalys_per_year
+    relation: eq
+    parameters:
+    - health_impact_dalys
+    - dalys_per_year
+    free_variables: []
+    determined_variables:
+    - health_impact_dalys
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{health}_{impact\_dalys} = \mathrm{dalys}_{per\_year}
+  health_impact_mortality_definition:
+    name: Health impact mortality definition
+    description: 'Deaths attributable to the fleet''s PM2.5, which the shipped concentration-response
+      chain already computes. 4800 deaths/year at defaults. A second exposure-response form was rejected:
+      `premature_deaths_definition` already carries it and cites WHO AirQ+.'
+    system: health
+    lhs: health_impact_mortality
+    rhs: premature_deaths_per_year
+    relation: eq
+    parameters:
+    - health_impact_mortality
+    - premature_deaths_per_year
+    free_variables: []
+    determined_variables:
+    - health_impact_mortality
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{health}_{impact\_mortality} = \mathrm{premature}_{deaths\_per\_year}
   heat_pump_annualised_cost_definition:
     name: The heat pump's annuity per kW-year
     description: 'The installed heat pump''s annuity: the capital cost per kW annualised by the shipped
@@ -33370,10 +34024,10 @@ equations:
     lhs: hydro_capacity
     rhs: hydro_new_build
     relation: leq
-    parameters: &id016
+    parameters: &id019
     - hydro_capacity
     - hydro_new_build
-    free_variables: *id016
+    free_variables: *id019
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -33383,6 +34037,32 @@ equations:
     reference: Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory); the numeric ceiling
       is a policy figure
     latex: \mathrm{hydro}_{capacity} \leq \mathrm{hydro}_{new\_build}
+  hydrogen_demand_domestic_definition:
+    name: Hydrogen demand domestic definition
+    description: 'Hydrogen consumed at home: production less the exported volume, converted from MWh to
+      kilotonnes through the graph''s own 0.03333 MWh/kg. 50 - 0.6 = 49.4 kt/year at defaults. A `production
+      * (1 - export_share)` form was rejected: no export share exists, and the conversion through `mwh_per_hydrogen_unit`
+      is the identity the graph already uses in the other direction.'
+    system: energy_balance
+    lhs: hydrogen_demand_domestic
+    rhs: hydrogen_production_kt_per_year - hydrogen_export_volume / (mwh_per_hydrogen_unit * 1000000)
+    relation: eq
+    parameters:
+    - hydrogen_demand_domestic
+    - hydrogen_export_volume
+    - hydrogen_production_kt_per_year
+    - mwh_per_hydrogen_unit
+    free_variables: []
+    determined_variables:
+    - hydrogen_demand_domestic
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{hydrogen}_{demand\_domestic} = \mathrm{hydrogen}_{production\_kt\_per\_year} - \frac{\mathrm{hydrogen}_{export\_volume}}{1000000
+      \mathrm{mwh}_{per\_hydrogen\_unit}}
   hydrogen_export_port_definition:
     name: The export terminal's throughput
     description: 'The port''s average throughput in megawatts: the annual hydrogen energy the terminal
@@ -33437,10 +34117,10 @@ equations:
     lhs: hydrogen_fuel_cell_capacity
     rhs: total_capacity_mw
     relation: leq
-    parameters: &id017
+    parameters: &id020
     - hydrogen_fuel_cell_capacity
     - total_capacity_mw
-    free_variables: *id017
+    free_variables: *id020
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -33522,6 +34202,29 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{hydrogen}_{price\_per\_mwh} = \frac{\mathrm{hydrogen}_{price}}{\mathrm{mwh}_{per\_hydrogen\_unit}}
+  hydrogen_production_demand_definition:
+    name: Hydrogen production demand definition
+    description: 'The electricity hydrogen production draws, which the shipped electrolysis identity already
+      computes from volume, energy per kilogram and efficiency. 2563846.15 MWh/year at defaults. A second
+      conversion from kilotonnes through `mwh_per_hydrogen_unit` alone was rejected: it omits `electrolyser_efficiency`
+      (0.65) and would understate the demand by 35%, duplicating a shipped identity incorrectly.'
+    system: energy_balance
+    lhs: hydrogen_production_demand
+    rhs: electrolysis_electricity_demand_mwh_per_year
+    relation: eq
+    parameters:
+    - hydrogen_production_demand
+    - electrolysis_electricity_demand_mwh_per_year
+    free_variables: []
+    determined_variables:
+    - hydrogen_production_demand
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{hydrogen}_{production\_demand} = \mathrm{electrolysis}_{electricity\_demand\_mwh\_per\_year}
   hydrogen_storage_capex_definition:
     name: Hydrogen storage capital cost
     description: 'The capital cost of the hydrogen storage built: installed cost per kWh times energy
@@ -33576,10 +34279,10 @@ equations:
     lhs: ifc_performance_standards
     rhs: debt_financing_share
     relation: leq
-    parameters: &id018
+    parameters: &id021
     - debt_financing_share
     - ifc_performance_standards
-    free_variables: *id018
+    free_variables: *id021
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -33855,10 +34558,10 @@ equations:
     lhs: inertia_requirement
     rhs: system_inertia_mws
     relation: leq
-    parameters: &id019
+    parameters: &id022
     - inertia_requirement
     - system_inertia_mws
-    free_variables: *id019
+    free_variables: *id022
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -34284,10 +34987,10 @@ equations:
     lhs: largest_loss_mw
     rhs: frequency_response_requirement
     relation: leq
-    parameters: &id020
+    parameters: &id023
     - frequency_response_requirement
     - largest_loss_mw
-    free_variables: *id020
+    free_variables: *id023
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -35018,10 +35721,10 @@ equations:
     lhs: llcr_estimate
     rhs: loan_life_coverage_ratio
     relation: geq
-    parameters: &id021
+    parameters: &id024
     - llcr_estimate
     - loan_life_coverage_ratio
-    free_variables: *id021
+    free_variables: *id024
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -35397,10 +36100,10 @@ equations:
     lhs: marine_otec_capacity
     rhs: total_capacity_mw
     relation: leq
-    parameters: &id022
+    parameters: &id025
     - marine_otec_capacity
     - total_capacity_mw
-    free_variables: *id022
+    free_variables: *id025
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -35418,10 +36121,10 @@ equations:
     lhs: marine_tidal_capacity
     rhs: total_capacity_mw
     relation: leq
-    parameters: &id023
+    parameters: &id026
     - marine_tidal_capacity
     - total_capacity_mw
-    free_variables: *id023
+    free_variables: *id026
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -35438,10 +36141,10 @@ equations:
     lhs: marine_wave_capacity
     rhs: total_capacity_mw
     relation: leq
-    parameters: &id024
+    parameters: &id027
     - marine_wave_capacity
     - total_capacity_mw
-    free_variables: *id024
+    free_variables: *id027
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -35665,11 +36368,11 @@ equations:
     lhs: non_spinning_reserve_requirement
     rhs: reserve_margin_min * peak_demand_mw
     relation: leq
-    parameters: &id025
+    parameters: &id028
     - non_spinning_reserve_requirement
     - peak_demand_mw
     - reserve_margin_min
-    free_variables: *id025
+    free_variables: *id028
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -35689,10 +36392,10 @@ equations:
     lhs: nuclear_capacity
     rhs: nuclear_new_build
     relation: leq
-    parameters: &id026
+    parameters: &id029
     - nuclear_capacity
     - nuclear_new_build
-    free_variables: *id026
+    free_variables: *id029
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -36295,10 +36998,10 @@ equations:
     lhs: hydrogen_vehicle_share + electric_vehicle_adoption
     rhs: '1.0'
     relation: leq
-    parameters: &id027
+    parameters: &id030
     - electric_vehicle_adoption
     - hydrogen_vehicle_share
-    free_variables: *id027
+    free_variables: *id030
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -36331,6 +37034,28 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  ppa_indexation_definition:
+    name: Ppa indexation definition
+    description: 'The annual escalation a PPA applies to its strike price, which is the tariff indexation
+      rate the graph already carries. 0.05/year at defaults. A second index base was rejected: `ppa_indexed_price_definition`
+      already reads `tariff_indexation`, so two dials would let two escalations move the same price.'
+    system: ppa_pricing
+    lhs: ppa_indexation
+    rhs: tariff_indexation
+    relation: eq
+    parameters:
+    - ppa_indexation
+    - tariff_indexation
+    free_variables: []
+    determined_variables:
+    - ppa_indexation
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{ppa}_{indexation} = \mathrm{tariff}_{indexation}
   ppa_indexed_price_definition:
     name: PPA indexed price
     description: 'The contract price compounded to the end of the contract. Dimensional check: USD/MWh
@@ -36457,6 +37182,29 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  premium_share_of_asset_definition:
+    name: Premium share of asset definition
+    description: 'The annual premium as a fraction of the insured asset''s value, which is the loss share
+      the graph already carries. 0.005 at defaults, against the catalog''s duplicate 0.008: `insurance_premium_definition`
+      computes `insurance_loss_share_of_cost * capex_usd_per_kw`, so the two ids are one premium and the
+      alias resolves the duplicate in favour of 0.005, which lowers the shipped premium by 37.5%.'
+    system: financial
+    lhs: premium_share_of_asset
+    rhs: insurance_loss_share_of_cost
+    relation: eq
+    parameters:
+    - premium_share_of_asset
+    - insurance_loss_share_of_cost
+    free_variables: []
+    determined_variables:
+    - premium_share_of_asset
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{premium}_{share\_of\_asset} = \mathrm{insurance}_{loss\_share\_of\_cost}
   price_band_lower_definition:
     name: The lower price band
     description: 'The floor a market sets below marginal cost: the price a must-run unit is paid when
@@ -36884,6 +37632,28 @@ equations:
     priority: P1
     reference: Ofwat PR24 Appendix 11, allowed return on capital
     latex: \mathrm{regulatory}_{depreciation} = \frac{\mathrm{regulatory}_{asset\_base}}{\mathrm{depreciation}_{life\_by\_asset}}
+  regulatory_lag_bound:
+    name: Regulatory lag bound
+    description: 'The review period must be at least the lag between incurring a cost and recovering it,
+      or a cost incurred inside one period cannot be recovered before the next review closes. 5 years
+      against a 1-year lag at defaults. A midpoint convention (`lag = period / 2`) was rejected: the lag
+      is a measured institutional fact, not a fraction of the review cycle. Routes `bound`.'
+    system: financial
+    lhs: regulatory_period_length
+    rhs: regulatory_lag
+    relation: geq
+    parameters: &id031
+    - regulatory_lag
+    - regulatory_period_length
+    free_variables: *id031
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: World Bank, Regulation of Utilities handbook (revenue caps)
+    latex: \mathrm{regulatory}_{period\_length} \geq \mathrm{regulatory}_{lag}
   reinsurance_ceded_definition:
     name: The ceded premium
     description: 'The premium ceded to the reinsurer: the ceded share, one less the retention share, times
@@ -37029,6 +37799,28 @@ equations:
     priority: P1
     reference: null
     latex: \mathrm{renewable}_{generation\_twh} = \mathrm{renewable}_{target} \mathrm{generation}_{twh}
+  renewable_penetration_limit_bound:
+    name: Renewable penetration limit bound
+    description: 'The penetration ceiling must admit the annual VRE share the fleet achieves, or the limit
+      is breached by the build the plan chose. 0.2703 under 0.5 at defaults. The bound compares an *annual*
+      share to an *instantaneous* limit, which is the weaker of the two claims -- the graph carries no
+      instantaneous-penetration node. Routes `unbound`: `vre_share` is derived.'
+    system: energy_balance
+    lhs: renewable_penetration_limit
+    rhs: vre_share
+    relation: geq
+    parameters: &id032
+    - renewable_penetration_limit
+    - vre_share
+    free_variables: *id032
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: Oree et al. (2017), RSER 69:790-803
+    latex: \mathrm{renewable}_{penetration\_limit} \geq \mathrm{vre}_{share}
   renewable_subsidy_cost_definition:
     name: The renewable generation subsidy
     description: 'A budget transfer per MWh of renewable generation, distinct from the feed-in tariff:
@@ -37252,10 +38044,10 @@ equations:
     lhs: resettlement_population_share
     rhs: resettlement_requirements
     relation: leq
-    parameters: &id028
+    parameters: &id033
     - resettlement_population_share
     - resettlement_requirements
-    free_variables: *id028
+    free_variables: *id033
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -37318,10 +38110,10 @@ equations:
     lhs: retraining_duration
     rhs: construction_period
     relation: leq
-    parameters: &id029
+    parameters: &id034
     - construction_period
     - retraining_duration
-    free_variables: *id029
+    free_variables: *id034
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -37450,6 +38242,31 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  rooftop_solar_households_definition:
+    name: Rooftop solar households definition
+    description: 'Households with rooftop PV: the adoption share over the household count. 0.1 x 10000000
+      = 1000000 households at defaults. A capacity in MW was rejected -- the graph carries no kW per rooftop,
+      and inventing one would be a base this batch does not own. Population as the base was rejected:
+      `households_total` is the graph''s own rooftop proxy, and population would overstate the count nearly
+      fourfold.'
+    system: demand_supply
+    lhs: rooftop_solar_households
+    rhs: rooftop_solar_adoption * households_total
+    relation: eq
+    parameters:
+    - rooftop_solar_households
+    - households_total
+    - rooftop_solar_adoption
+    free_variables: []
+    determined_variables:
+    - rooftop_solar_households
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: null
+    latex: \mathrm{rooftop}_{solar\_households} = \mathrm{rooftop}_{solar\_adoption} \mathrm{households}_{total}
   sacred_sites_definition:
     name: Sacred sites
     description: Expected count of sacred and culturally significant sites inside the project footprint.
@@ -37480,10 +38297,10 @@ equations:
     lhs: system_saidi_hours_per_year
     rhs: grid_reliability_target
     relation: leq
-    parameters: &id030
+    parameters: &id035
     - grid_reliability_target
     - system_saidi_hours_per_year
-    free_variables: *id030
+    free_variables: *id035
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -37523,10 +38340,10 @@ equations:
     lhs: system_saifi_events_per_year
     rhs: service_quality_standards
     relation: leq
-    parameters: &id031
+    parameters: &id036
     - service_quality_standards
     - system_saifi_events_per_year
-    free_variables: *id031
+    free_variables: *id036
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -37812,10 +38629,10 @@ equations:
     lhs: small_modular_reactor_capacity
     rhs: total_capacity_mw
     relation: leq
-    parameters: &id032
+    parameters: &id037
     - small_modular_reactor_capacity
     - total_capacity_mw
-    free_variables: *id032
+    free_variables: *id037
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -38018,10 +38835,10 @@ equations:
     lhs: solar_pv_capacity
     rhs: solar_pv_land_constraint
     relation: leq
-    parameters: &id033
+    parameters: &id038
     - solar_pv_capacity
     - solar_pv_land_constraint
-    free_variables: *id033
+    free_variables: *id038
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -38042,10 +38859,10 @@ equations:
     lhs: solar_pv_capacity
     rhs: solar_pv_max_build
     relation: leq
-    parameters: &id034
+    parameters: &id039
     - solar_pv_capacity
     - solar_pv_max_build
-    free_variables: *id034
+    free_variables: *id039
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -38067,10 +38884,10 @@ equations:
     lhs: solar_thermal_capacity
     rhs: csp_capacity
     relation: leq
-    parameters: &id035
+    parameters: &id040
     - csp_capacity
     - solar_thermal_capacity
-    free_variables: *id035
+    free_variables: *id040
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -38212,10 +39029,10 @@ equations:
     lhs: spare_parts_lead_time
     rhs: mean_time_between_failures
     relation: leq
-    parameters: &id036
+    parameters: &id041
     - mean_time_between_failures
     - spare_parts_lead_time
-    free_variables: *id036
+    free_variables: *id041
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -38347,10 +39164,10 @@ equations:
     lhs: steel_scrap_eaf_share + steel_h2_dri_share
     rhs: '1.0'
     relation: leq
-    parameters: &id037
+    parameters: &id042
     - steel_h2_dri_share
     - steel_scrap_eaf_share
-    free_variables: *id037
+    free_variables: *id042
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -38371,11 +39188,11 @@ equations:
     lhs: storage_capacity_mw
     rhs: total_capacity_mw + storage_headroom_mw
     relation: leq
-    parameters: &id038
+    parameters: &id043
     - storage_capacity_mw
     - storage_headroom_mw
     - total_capacity_mw
-    free_variables: *id038
+    free_variables: *id043
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -38663,11 +39480,11 @@ equations:
     lhs: thermal_storage_capacity
     rhs: storage_headroom_mw * thermal_storage_duration
     relation: leq
-    parameters: &id039
+    parameters: &id044
     - storage_headroom_mw
     - thermal_storage_capacity
     - thermal_storage_duration
-    free_variables: *id039
+    free_variables: *id044
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -38712,10 +39529,10 @@ equations:
     lhs: tidal_range_capacity
     rhs: total_capacity_mw
     relation: leq
-    parameters: &id040
+    parameters: &id045
     - tidal_range_capacity
     - total_capacity_mw
-    free_variables: *id040
+    free_variables: *id045
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -38894,10 +39711,10 @@ equations:
     lhs: total_water_demand_m3
     rhs: transboundary_water_constraint
     relation: leq
-    parameters: &id041
+    parameters: &id046
     - total_water_demand_m3
     - transboundary_water_constraint
-    free_variables: *id041
+    free_variables: *id046
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -39152,10 +39969,10 @@ equations:
     lhs: district_heating_share + heat_pump_adoption
     rhs: '1.0'
     relation: leq
-    parameters: &id042
+    parameters: &id047
     - district_heating_share
     - heat_pump_adoption
-    free_variables: *id042
+    free_variables: *id047
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -39194,10 +40011,10 @@ equations:
     lhs: v2g_adoption
     rhs: electric_vehicle_adoption
     relation: leq
-    parameters: &id043
+    parameters: &id048
     - electric_vehicle_adoption
     - v2g_adoption
-    free_variables: *id043
+    free_variables: *id048
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -39206,6 +40023,29 @@ equations:
     priority: P2
     reference: null
     latex: \mathrm{v2g}_{adoption} \leq \mathrm{electric}_{vehicle\_adoption}
+  value_of_lost_load_definition:
+    name: Value of lost load definition
+    description: 'What a megawatt-hour of unserved energy costs the system, which is the VoLL the graph
+      already carries and `reliability_cost_definition` already prices unserved energy at. 5000 USD/MWh
+      at defaults. A separate outage-cost curve was rejected: a second value of lost load would give one
+      quantity two prices.'
+    system: reliability
+    lhs: value_of_lost_load
+    rhs: voll_usd_per_mwh
+    relation: eq
+    parameters:
+    - value_of_lost_load
+    - voll_usd_per_mwh
+    free_variables: []
+    determined_variables:
+    - value_of_lost_load
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: ENTSO-E adequacy methodology (value of lost load, definition at Sec. 3.6)
+    latex: \mathrm{value}_{of\_lost\_load} = \mathrm{voll}_{usd\_per\_mwh}
   variable_stack_definition:
     name: The variable cost stack
     description: 'Fuel and carbon: the marginal cost''s variable part. The shipped marginal-cost definition
@@ -39502,11 +40342,11 @@ equations:
     lhs: water_availability * water_availability_m3
     rhs: total_water_demand_m3
     relation: geq
-    parameters: &id044
+    parameters: &id049
     - total_water_demand_m3
     - water_availability
     - water_availability_m3
-    free_variables: *id044
+    free_variables: *id049
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -39655,6 +40495,32 @@ equations:
     priority: P1
     reference: Pass-through pricing
     latex: \mathrm{wheeling}_{charges\_usd\_per\_year} = 1000000 \mathrm{wheeling}_{charges} \mathrm{demand}_{twh}
+  willingness_to_pay_usd_per_year_definition:
+    name: Willingness to pay usd per year definition
+    description: 'The annual consumer valuation of the electricity households consume: 100 USD/MWh x 1.5
+      MWh x 10000000 households = 1.5e9 USD/year at defaults. Economy-wide demand as the base was rejected:
+      the willingness to pay here is the household''s, and the product would value industrial load at
+      a residential rate.'
+    system: affordability
+    lhs: willingness_to_pay_usd_per_year
+    rhs: willingness_to_pay * household_consumption_mwh_per_year * households_total
+    relation: eq
+    parameters:
+    - willingness_to_pay_usd_per_year
+    - household_consumption_mwh_per_year
+    - households_total
+    - willingness_to_pay
+    free_variables: []
+    determined_variables:
+    - willingness_to_pay_usd_per_year
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Willingness to pay as the valuation of a benefit; cf. Short, Packey & Holt (1995), NREL/TP-462-5173
+    latex: \mathrm{willingness}_{to\_pay\_usd\_per\_year} = \mathrm{willingness}_{to\_pay} \mathrm{household}_{consumption\_mwh\_per\_year}
+      \mathrm{households}_{total}
   wind_capacity_factor_at_vintage_definition:
     name: The onshore-wind capacity factor at its vintage year
     description: 'The onshore-wind capacity factor AT its dataset''s vintage year: the factor compounded
@@ -48733,72 +49599,6 @@ relationships:
   description: Enters the amended identity.
   reference: null
   priority: P1
-- source: discount_rate
-  target: weighted_average_cost_of_capital
-  equation_id: wacc_alias
-  relationship: equality
-  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
-    computes.'
-- source: capex_usd_per_kw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: Gross fleet capital enters the base the allowed return is earned on.
-- source: total_capacity_mw
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: The fleet's size sets the scale of the capital in the accounts.
-- source: accumulated_depreciation_fraction
-  target: regulatory_asset_base
-  equation_id: regulatory_asset_base_definition
-  relationship: functional
-  description: What the books have written down between gross capital and the base.
-- source: regulatory_asset_base
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: equality
-  description: Straight-line write-down of the base over the regulatory asset life.
-- source: depreciation_life_by_asset
-  target: regulatory_depreciation
-  equation_id: regulatory_depreciation_definition
-  relationship: functional
-  description: A longer regulatory life spreads the base thinner over the years.
-- source: regulatory_depreciation
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: Depreciation is the first term of the revenue requirement.
-- source: regulatory_asset_base
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: The return is earned on the base, not on gross capital.
-- source: discount_rate
-  target: allowed_revenue_requirement
-  equation_id: allowed_revenue_requirement_definition
-  relationship: functional
-  description: The return rate is the blend the financial block computes.
-- source: allowed_return_on_debt
-  target: cost_of_debt
-  equation_id: cost_of_debt_capped
-  relationship: constraint
-  description: The allowance binds the debt rate a scenario may carry.
-- source: allowed_return_on_equity
-  target: cost_of_equity
-  equation_id: cost_of_equity_capped
-  relationship: constraint
-  description: The allowance binds the equity return a valuation may assume.
-- source: regulated_tariff_usd_per_mwh
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: equality
-  description: The applied tariff is the recovery level in the absence of a cap.
-- source: revenue_cap
-  target: applied_tariff_usd_per_mwh
-  equation_id: applied_tariff_definition
-  relationship: functional
-  description: The cap scales the recovery level; below 1 it withholds part of it.
 - source: carbon_price_escalated_usd_per_tco2
   target: auction_price_cap
   equation_id: auction_price_cap_bound
@@ -49024,6 +49824,456 @@ relationships:
   description: Bounds total_water_demand_m3 against transboundary_water_constraint; a plan can clear the
     physics and fail this.
   reference: null
+  priority: P2
+- source: discount_rate
+  target: weighted_average_cost_of_capital
+  equation_id: wacc_alias
+  relationship: equality
+  description: 'One quantity, two ids: the catalog''s WACC row derives from the blend the financial block
+    computes.'
+- source: capex_usd_per_kw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: Gross fleet capital enters the base the allowed return is earned on.
+- source: total_capacity_mw
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: The fleet's size sets the scale of the capital in the accounts.
+- source: accumulated_depreciation_fraction
+  target: regulatory_asset_base
+  equation_id: regulatory_asset_base_definition
+  relationship: functional
+  description: What the books have written down between gross capital and the base.
+- source: regulatory_asset_base
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: equality
+  description: Straight-line write-down of the base over the regulatory asset life.
+- source: depreciation_life_by_asset
+  target: regulatory_depreciation
+  equation_id: regulatory_depreciation_definition
+  relationship: functional
+  description: A longer regulatory life spreads the base thinner over the years.
+- source: regulatory_depreciation
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: Depreciation is the first term of the revenue requirement.
+- source: regulatory_asset_base
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return is earned on the base, not on gross capital.
+- source: discount_rate
+  target: allowed_revenue_requirement
+  equation_id: allowed_revenue_requirement_definition
+  relationship: functional
+  description: The return rate is the blend the financial block computes.
+- source: allowed_return_on_debt
+  target: cost_of_debt
+  equation_id: cost_of_debt_capped
+  relationship: constraint
+  description: The allowance binds the debt rate a scenario may carry.
+- source: allowed_return_on_equity
+  target: cost_of_equity
+  equation_id: cost_of_equity_capped
+  relationship: constraint
+  description: The allowance binds the equity return a valuation may assume.
+- source: regulated_tariff_usd_per_mwh
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: equality
+  description: The applied tariff is the recovery level in the absence of a cap.
+- source: revenue_cap
+  target: applied_tariff_usd_per_mwh
+  equation_id: applied_tariff_definition
+  relationship: functional
+  description: The cap scales the recovery level; below 1 it withholds part of it.
+- source: depreciation_life_by_asset
+  target: depreciation_schedule_linear
+  equation_id: depreciation_schedule_linear_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Straight-line and declining-balance depreciation; cf. Short, Packey & Holt (1995), NREL/TP-462-5173
+  priority: P1
+- source: depreciation_life_by_asset
+  target: depreciation_schedule_declining
+  equation_id: depreciation_schedule_declining_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Straight-line and declining-balance depreciation; cf. Short, Packey & Holt (1995), NREL/TP-462-5173
+  priority: P1
+- source: accelerated_depreciation_factor
+  target: depreciation_schedule_accelerated
+  equation_id: depreciation_schedule_accelerated_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Straight-line and declining-balance depreciation; cf. Short, Packey & Holt (1995), NREL/TP-462-5173
+  priority: P1
+- source: depreciation_life_by_asset
+  target: depreciation_schedule_accelerated
+  equation_id: depreciation_schedule_accelerated_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Straight-line and declining-balance depreciation; cf. Short, Packey & Holt (1995), NREL/TP-462-5173
+  priority: P1
+- source: depreciation_schedule_accelerated
+  target: accelerated_depreciation
+  equation_id: accelerated_depreciation_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: permanence_parameters
+  target: buffer_pool_contribution
+  equation_id: buffer_pool_contribution_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: compensation_share_of_market
+  target: compensation_rates
+  equation_id: compensation_rates_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: land_acquisition_cost_per_hectare
+  target: compensation_rates
+  equation_id: compensation_rates_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: inflation_rate
+  target: consumer_price_index_link
+  equation_id: consumer_price_index_link_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: gdp_growth
+  target: gdp_per_capita_growth
+  equation_id: gdp_per_capita_growth_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: population_growth_rate
+  target: gdp_per_capita_growth
+  equation_id: gdp_per_capita_growth_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: dalys_per_year
+  target: health_impact_dalys
+  equation_id: health_impact_dalys_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: premature_deaths_per_year
+  target: health_impact_mortality
+  equation_id: health_impact_mortality_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: hydrogen_export_volume
+  target: hydrogen_demand_domestic
+  equation_id: hydrogen_demand_domestic_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: hydrogen_production_kt_per_year
+  target: hydrogen_demand_domestic
+  equation_id: hydrogen_demand_domestic_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: mwh_per_hydrogen_unit
+  target: hydrogen_demand_domestic
+  equation_id: hydrogen_demand_domestic_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: electrolysis_electricity_demand_mwh_per_year
+  target: hydrogen_production_demand
+  equation_id: hydrogen_production_demand_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: loss_factor_cross_border
+  target: cross_border_losses_twh
+  equation_id: cross_border_losses_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: net_imports_twh
+  target: cross_border_losses_twh
+  equation_id: cross_border_losses_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: hydrogen_production_kt_per_year
+  target: electrolyser_variable_opex_usd_per_year
+  equation_id: electrolyser_variable_opex_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IEA/NEA, Projected Costs of Generating Electricity (2020)
+  priority: P1
+- source: mwh_per_hydrogen_unit
+  target: electrolyser_variable_opex_usd_per_year
+  equation_id: electrolyser_variable_opex_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IEA/NEA, Projected Costs of Generating Electricity (2020)
+  priority: P1
+- source: opex_variable_electrolyser
+  target: electrolyser_variable_opex_usd_per_year
+  equation_id: electrolyser_variable_opex_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: IEA/NEA, Projected Costs of Generating Electricity (2020)
+  priority: P1
+- source: excise_duty_fuel
+  target: fuel_excise_revenue_usd_per_year
+  equation_id: fuel_excise_revenue_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: fuel_price_usd_per_mwh
+  target: fuel_excise_revenue_usd_per_year
+  equation_id: fuel_excise_revenue_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: generation_twh
+  target: fuel_excise_revenue_usd_per_year
+  equation_id: fuel_excise_revenue_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: renewable_generation_twh
+  target: fuel_excise_revenue_usd_per_year
+  equation_id: fuel_excise_revenue_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: distribution_network_km
+  target: gis_mapped_network_km
+  equation_id: gis_mapped_network_km_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: gis_requirements
+  target: gis_mapped_network_km
+  equation_id: gis_mapped_network_km_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: transmission_line_length_km
+  target: gis_mapped_network_km
+  equation_id: gis_mapped_network_km_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: households_total
+  target: rooftop_solar_households
+  equation_id: rooftop_solar_households_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: rooftop_solar_adoption
+  target: rooftop_solar_households
+  equation_id: rooftop_solar_households_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: tariff_indexation
+  target: ppa_indexation
+  equation_id: ppa_indexation_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: insurance_loss_share_of_cost
+  target: premium_share_of_asset
+  equation_id: premium_share_of_asset_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: null
+  priority: P1
+- source: voll_usd_per_mwh
+  target: value_of_lost_load
+  equation_id: value_of_lost_load_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: ENTSO-E adequacy methodology (value of lost load, definition at Sec. 3.6)
+  priority: P1
+- source: household_consumption_mwh_per_year
+  target: willingness_to_pay_usd_per_year
+  equation_id: willingness_to_pay_usd_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Willingness to pay as the valuation of a benefit; cf. Short, Packey & Holt (1995), NREL/TP-462-5173
+  priority: P1
+- source: households_total
+  target: willingness_to_pay_usd_per_year
+  equation_id: willingness_to_pay_usd_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Willingness to pay as the valuation of a benefit; cf. Short, Packey & Holt (1995), NREL/TP-462-5173
+  priority: P1
+- source: willingness_to_pay
+  target: willingness_to_pay_usd_per_year
+  equation_id: willingness_to_pay_usd_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the product identity.
+  reference: Willingness to pay as the valuation of a benefit; cf. Short, Packey & Holt (1995), NREL/TP-462-5173
+  priority: P1
+- source: electrolysis_electricity_demand_mwh_per_year
+  target: electrolyser_capacity
+  equation_id: electrolyser_capacity_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds electrolyser_capacity against electrolysis_electricity_demand_mwh_per_year; a plan
+    can clear the physics and fail this.
+  reference: IEA/NEA, Projected Costs of Generating Electricity (2020)
+  priority: P2
+- source: vre_capacity_mw
+  target: fit_capacity_cap
+  equation_id: fit_capacity_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds fit_capacity_cap against vre_capacity_mw; a plan can clear the physics and fail
+    this.
+  reference: Oree et al. (2017), RSER 69:790-803
+  priority: P2
+- source: vre_share
+  target: renewable_penetration_limit
+  equation_id: renewable_penetration_limit_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds renewable_penetration_limit against vre_share; a plan can clear the physics and
+    fail this.
+  reference: Oree et al. (2017), RSER 69:790-803
+  priority: P2
+- source: regulatory_lag
+  target: regulatory_period_length
+  equation_id: regulatory_lag_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds regulatory_period_length against regulatory_lag; a plan can clear the physics and
+    fail this.
+  reference: World Bank, Regulation of Utilities handbook (revenue caps)
+  priority: P2
+- source: firm_capacity_mw
+  target: firm_build_fleet_mw
+  equation_id: firm_build_fleet_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds firm_build_fleet_mw against firm_capacity_mw; a plan can clear the physics and fail
+    this.
+  reference: 'Least-cost generation expansion: Koltsaklis & Dagoumas (2018), Applied Energy 230:563-589;
+    Oree et al. (2017), RSER 69:790-803'
   priority: P2
 cross_validation:
 - id: carbon_price_budget_alignment
