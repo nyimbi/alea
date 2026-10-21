@@ -192,13 +192,48 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	-> 449 (batch 30, +10 identities and +2 thresholds), -> 477 (batch 31,
 	+28), -> 499 (batch 32, +22 thresholds and no identity), -> 525 (batch
 	33, +21 identities and +5 thresholds), unchanged for batch 34, which
-	corrected one equation's body. The identity count is the total minus the
-	inequalities and is asserted as such, so it cannot drift on its own.
+	corrected one equation's body.
+
+	525 -> 532 for batch 36, the whole move from one pack: six identity
+	aliases and products from the contract and market layer, and one
+	inequality, ``gate_closure_bound``. That bound is the first to join the
+	*bound* set since batch 33, and it joins for the reason the classifier
+	exists: both sides are declared quantities, so it reaches the optimiser
+	rather than waiting for a post-solve check. The identity count is the
+	total minus the inequalities and is asserted as such, so it cannot drift
+	on its own.
+
+	532 -> 539 for batch 37, the whole move from one pack: five equalities
+	(two composites, two land aliases and the snapshot weight) and two
+	inequalities (``temperature_target_bound`` and
+	``rolling_horizon_window_bound``). Both bounds join the *bound* set,
+	because both compare two declared quantities -- a warming against its
+	ceiling, a look-ahead against the horizon -- and neither reads a node the
+	graph derives. The two composite equalities are `unbound` post-solve
+	checks for the opposite reason: their operands are declared dials the
+	audit can evaluate but the network cannot supply as columns.
+
+	539 -> 547 for batch 38: six equalities (four new fleet-level products
+	over the retyped per-unit parameters, the settlement-risk security, and
+	the age complement) and two inequalities
+	(``workshop_capacity_workload_bound`` and ``loss_reduction_budget_bound``).
+	Both bounds join the *bound* set: a workshop throughput against a
+	maintenance workload and a spend against a budget are both declared
+	quantities, so neither waits for a post-solve check. The six equalities
+	are identities, which is why the identity count moves by six and the
+	inequality count by two.
+
+	547 -> 552 for batch 39: three equalities (two marine capex products and
+	the solvency funds) and two inequalities (`ocgt_capex_ordering_bound` and
+	`accumulation_exposure_bound`). Both bounds join the *bound* set -- every
+	term is a settable scalar, so both reach the optimiser -- and the three
+	equalities are identities, so the identity count moves by three and the
+	inequality count by two.
 	"""
 	cov = coverage(graph)
-	assert cov["constraint_shaped"] == 64
-	assert cov["identities"] == 461
-	assert cov["total"] == 525
+	assert cov["constraint_shaped"] == 71
+	assert cov["identities"] == 481
+	assert cov["total"] == 552
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
@@ -238,8 +273,32 @@ def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
 	did not. ``llcr_floor_bound`` is the counter-example worth keeping in
 	view: batch 27's single inequality is stated over ``llcr_estimate``, which
 	the graph derives, so it is a post-solve check and not in this list.
+
+	``gate_closure_bound`` joined with batch 36 and is a *time* bound, not a
+	capacity one: it compares the market's gate closure against the settlement
+	period, both declared horizons. It is the first route in this list whose
+	subject is a duration rather than a stock, which is worth naming because
+	the classifier's predicate does not care -- it asks whether every term is
+	a network column or a settable scalar, and both are.
+
+	Two more joined with batch 38, and both are *workload* bounds rather than
+	capacity or time ones: ``workshop_capacity_workload_bound`` puts a
+	workshop's throughput above the fleet's maintenance events, and
+	``loss_reduction_budget_bound`` puts loss-reduction spend below the
+	line-upgrade budget. Neither bounded quantity is derived, which is the
+	whole reason they bind -- the two sides are a dial and a declared limit,
+	so the optimiser can hold them.
+
+	Batch 39 added two more, and neither is a workload bound: one is an
+	*ordering* between two capital costs (a peaker's capex per kW below the
+	combined cycle's) and one is a *coverage* floor (an insurer's exposure
+	above the loss it models at the 99.5th percentile). Both compare
+	settable scalars, so both bind; the coverage floor is the one that
+	required a retype, since `accumulation_risk` shipped dimensionless and
+	the comparison was undecidable until it carried a currency.
 	"""
 	assert bound_routes(graph) == (
+		"accumulation_exposure_bound",
 		"blended_finance_bound",
 		"carbon_budget_constraint",
 		"compressed_air_capacity_bound",
@@ -251,16 +310,19 @@ def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
 		"fpic_consent_bound",
 		"fuel_ccs_adoption_bound",
 		"fusion_capacity_bound",
+		"gate_closure_bound",
 		"gravity_storage_capacity_bound",
 		"green_bond_bound",
 		"hydrogen_fuel_cell_capacity_bound",
 		"industrial_electrification_bound",
 		"largest_loss_response_bound",
 		"local_employment_targets_bound",
+		"loss_reduction_budget_bound",
 		"marine_otec_capacity_bound",
 		"marine_tidal_capacity_bound",
 		"marine_wave_capacity_bound",
 		"non_spinning_reserve_inside_margin",
+		"ocgt_capex_ordering_bound",
 		"powertrain_stock_bound",
 		"regulatory_lag_bound",
 		"reserve_margin",
@@ -268,12 +330,15 @@ def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
 		"resettlement_share_bound",
 		"retention_and_deductible_bound",
 		"retraining_schedule_bound",
+		"rolling_horizon_window_bound",
 		"small_modular_reactor_capacity_bound",
 		"spare_parts_lead_time_bound",
 		"steel_route_bound",
+		"temperature_target_bound",
 		"tidal_range_capacity_bound",
 		"urban_heat_supply_bound",
 		"v2g_subset_bound",
+		"workshop_capacity_workload_bound",
 	)
 
 

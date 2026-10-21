@@ -481,7 +481,11 @@ def test_the_summary_serves_the_endogenous_layer(
 	# scenario still sets -- `accelerated_depreciation_factor`,
 	# `willingness_to_pay`, `electrolyser_capacity`, `fit_capacity_cap` and
 	# `renewable_penetration_limit`.
-	assert len(free) == 724, len(free)
+	# Batch 38 took it 714 to 712: two of its eleven retypes became derived
+	# (`payment_security_required`, `asset_age_distribution`), its nine free
+	# retypes kept the role they shipped with, and its four new nodes were
+	# created derived, so they never entered this count.
+	assert len(free) == 712, len(free)
 
 
 # ---------------------------------------------------------------------------

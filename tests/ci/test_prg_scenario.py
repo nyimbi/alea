@@ -43,7 +43,7 @@ FIRM_MW = 15_000.0
 
 #: The carbon budget these tests state, in MtCO2 over the horizon.
 #:
-#: It is 300 rather than the 200 this module used until batch 33, because 200
+#: It is 280 rather than the 200 this module used until batch 33, because 200
 #: stopped being feasible when `fit_capacity_bound` entered the bound set. That
 #: inequality caps VRE at `fit_capacity_cap` (4,000 MW), so the least-emitting
 #: dispatch the fleet can run still burns gas for every MW of load above 4,000:
@@ -52,10 +52,19 @@ FIRM_MW = 15_000.0
 #: 8,760/8 to annualise, times `horizon_years` -- so the floor is
 #: `4 x (4,500 + 8,582) x 0.00438 = 229.2` Mt. A 200 Mt budget asks the fleet to
 #: emit less than its own cap allows it to, which is a correct refusal and not a
-#: test of the route. 300 Mt sits above the floor and below the 369 Mt the fleet
-#: emits unconstrained, so the budget still binds and the assertions still have
-#: an effect to measure.
-BUDGET_MTCO2 = 300.0
+#: test of the route.
+#:
+#: **280, and the number is measured rather than chosen to pass.** The fleet
+#: emits 297.840 Mt with every other bound in force and no budget stated --
+#: 68,000 MWh of gas over the eight snapshots, read off the solved
+#: ``generators_t.p`` and put through the constraint's own coefficient. A budget
+#: at or above that does not bind: 300 was tried and the solve returned the same
+#: 68,000 MWh, which makes every assertion downstream of it a statement about an
+#: unconstrained solve wearing a constraint's name. 280 sits 2.9% below the
+#: unconstrained figure and 22% above the floor, and the solve returns 63,927
+#: MWh -- 280.000 Mt exactly, to the coefficient's own precision -- so the
+#: budget is what the dispatch is measured against.
+BUDGET_MTCO2 = 280.0
 
 
 @pytest.fixture

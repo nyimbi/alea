@@ -196,6 +196,33 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	untranslated, so the register's gap tracks the denominator exactly:
 	915 -> 861.
 
+	864 -> 859 for batch 36, and all five are aliases or products rather than
+	new knobs: ``counterparty_risk`` and ``cost_pass_through_mechanism`` became
+	the shipped shares under a second name, and ``security_package``,
+	``tax_incentives`` and ``ppa_termination_payments`` became sums of
+	quantities the graph already derives. ``auction_frequency`` was retyped but
+	kept its settable role -- it is an operand of the new volume quotient, not
+	its product -- so the denominator falls by five and the numerator does not
+	move. The gap tracks it: 861 -> 856.
+
+	859 -> 854 for batch 37, and the five are the same shape: the two
+	composites (``geopolitical_risk_index``, ``exposure_index``) and the three
+	aliases (``land_availability``, ``land_aggregation``,
+	``snapshot_weightings``) became derived, so they left the settable surface.
+	The twenty-one nodes the batch retyped as operands -- the fourteen dials and
+	the seven hazard intensities, plus ``temperature_increase``,
+	``temperature_target`` and ``rolling_horizon_window`` -- stay settable,
+	which is what a scenario is for. The gap tracks the denominator: 856 -> 851.
+
+	854 -> 852 for batch 38, and both are derived retypes rather than new
+	nodes: ``payment_security_required`` and ``asset_age_distribution`` shipped
+	as settable float placeholders and became determined, so they left the
+	settable surface. The nine other nodes the batch retyped -- the ramp rates,
+	the minimum stable levels, the two durations, the storage duration, the
+	workshop capacity and the loss-reduction investment -- stay settable, and
+	the four nodes the batch creates are all derived, so they never enter the
+	denominator. The gap tracks it: 851 -> 849.
+
 	The eighteen the engine cannot carry are still outside the denominator:
 	they are chosen by the optimiser, so ``is_settable`` is False for them.
 	They are not missing from the register -- ``endogenous`` carries them, and
@@ -203,7 +230,7 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	"""
 	cov = coverage(graph)
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 864, cov
+	assert cov["total"] == 852, cov
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -279,7 +306,7 @@ def test_the_untranslated_register_is_not_empty_and_says_why(
 	without an equation and the coupling had silently stopped.
 	"""
 	missing = untranslated(graph)
-	assert len(missing) == 861, missing
+	assert len(missing) == 849, missing
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact

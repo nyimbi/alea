@@ -1578,15 +1578,39 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# -- they did not exist -- and the five bounds named nodes that were
 	# already named by an equation or are not settable at all.
 	#
-	# `uncoupled()` is 284, ten above this count, and the gap is the rule
-	# register rather than drift: each of the ten is read by a cross-validation
-	# rule (`index_above_unity` and its four index members,
-	# `market_structure_without_model` and its pair,
-	# `contract_for_difference_without_guarantees`,
-	# `solvency_below_regulatory_floor`, `concentration_above_hhi_max`), so
-	# the rule is what reads them and the equation register does not. The
-	# containment asserted below is the claim; this count is the record.
-	assert len(dead) == 274, len(dead)
+	# Batch 38 took it 248 to 237: eleven nodes the batch coupled, and the
+	# one new settable node it could have left dead -- `storage_energy_capacity_mwh`
+	# -- arrived derived, so it never was a knob. The two free nodes the batch
+	# retyped and left settable, `workshop_capacity` and
+	# `loss_reduction_investment`, left this register by their bounds.
+	#
+	# Batch 39 took it 237 to 233: the four nodes it coupled
+	# (`accumulation_risk`, `capex_gas_ocgt`, `capex_marine_otec`,
+	# `capex_marine_tidal`) were all dead knobs, and its three new ids
+	# arrived derived so they never were.
+	#
+	# `uncoupled()` is 240, seven above this count, and the gap is the rule
+	# register rather than drift: each of the seven is read by a
+	# cross-validation rule (`index_above_unity` and three of its index
+	# members, `market_structure_without_model` and its pair,
+	# `contract_for_difference_without_guarantees`, and
+	# `concentration_above_hhi_max`), so the rule is what reads them and the
+	# equation register does not. The containment asserted below is the claim;
+	# this count is the record.
+	#
+	# `solvency_capital_ratio` left this set with batch 39: the batch made it
+	# an operand of `eligible_own_funds_definition`, so the equation register
+	# reads it and the rule is no longer the only reader.
+	#
+	# It was ten before batch 37 and is seven now, for three reasons.
+	# `rule_of_law_index`, `corruption_perception`, `regulatory_predictability`
+	# and `contract_enforceability` are still members of `index_above_unity`
+	# but were never uncoupled, so the four-member reading this comment used to
+	# carry counted only the members that happened to be in the register.
+	# `exposure_index` and `geopolitical_risk_index` left `uncoupled()` by
+	# becoming derived, and they left the rule at the same time -- a derived
+	# index cannot be 'set', which is the premise its message states.
+	assert len(dead) == 233, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
@@ -1936,8 +1960,37 @@ def test_the_audit_reports_what_it_did_not_check():
 	# -- and twenty join `skipped`, because their bases are the land rate, the
 	# household count, the fleet capacity or the depreciation life, none of
 	# which the solve result carries.
-	assert len(audit.checked) == 165, audit.checked
-	assert len(audit.skipped) == 296, audit.skipped
+	# Batch 36 took the computed set 461 to 467. Three join `checked`
+	# (`counterparty_risk` and `cost_pass_through_mechanism`, aliases of shares
+	# the result carries, and `auction_volume_per_round`, a quotient of two
+	# declared volumes) and three join `skipped` (`security_package`,
+	# `tax_incentives` and `ppa_termination_payments`, whose bases are the
+	# performance bond, the fleet's cash flow and the PPA annuity -- none of
+	# which the solve result carries).
+	# Batch 37 took it 467 to 472, and all five join `skipped`:
+	# `geopolitical_risk_index` and `exposure_index` read governance and hazard
+	# dials the result does not carry, `snapshot_weightings` reads the horizon
+	# and the snapshot count, and the two land aliases read
+	# `available_land_hectares` and `parcels_to_assemble`, which are themselves
+	# derived from the land fraction and area. An alias joins `checked` only
+	# when its driver is a column the result already holds, and none of these
+	# five is.
+	# Batch 38 took it 472 to 478, and the split is 170 checked / 308 skipped.
+	# Two join `checked`: `storage_energy_capacity_mwh` reads
+	# `storage_duration_curve` and `storage_capacity_mw`, both columns the
+	# result holds, and `payment_security_required` reads `settlement_risk`
+	# and `total_revenue_usd_per_year`, both carried. Four join `skipped`:
+	# the three operational products read retyped dials the solve result does
+	# not carry as columns, and `asset_age_distribution` reads `asset_life`
+	# and `remaining_useful_life`, neither of which the result carries.
+	# Batch 39 took it 478 to 481 -- three equalities, since its other two
+	# equations are bounds and determine nothing -- and all three join
+	# `skipped`: the two marine
+	# products read capacities and per-kW rates the result does not carry as
+	# columns, and the solvency product reads `solvency_capital`, which is
+	# itself derived from two insurance inputs the solve does not supply.
+	assert len(audit.checked) == 170, audit.checked
+	assert len(audit.skipped) == 311, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -1993,7 +2046,7 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# so this is `len(computed())`, not the skipped half of a partition that
 	# ran, and batch 31's product layer took it to 440, and batch 33's
 	# residue layer to 461.
-	assert len(audit.skipped) == 461, audit.skipped
+	assert len(audit.skipped) == 481, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -3073,8 +3126,37 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	# Batch 31 took the reach 150 to 159: nine of its derived nodes sit
 	# downstream of the demand, land or water inputs the register already
 	# follows. The input count fell by one, for the reason the derived-
-	# stochastic pin above records.
-	assert "74" in text and "165" in text
+	# stochastic pin above records. Batch 36 moved the reach 159 to 167: eight
+	# of its new derived nodes sit downstream of `total_capacity_mw` and
+	# `cfads_usd_per_kw_year`, both of which the uncertain fuel and demand
+	# factors already reach. The input count is unchanged at 74 -- the batch
+	# declares no new stochastic input, and its two categorical retypes carry
+	# `policy` determinism, which the register does not count. Batch 37 moved
+	# neither count. Its six derived nodes all sit downstream of `fixed`
+	# bases -- `political_stability`, the seven hazard levels,
+	# `available_land_hectares`, `representative_days`, `tsam_segments` and
+	# `time_horizon` -- none of which is in the register's input set, so the
+	# closure is unchanged at 167. The inputs stay at 74 and the
+	# derived-stochastic set at 48: the batch declares no new stochastic
+	# input, and every node it retypes carries `fixed` or `physical`
+	# determinism. Measured, not carried forward from the pack's estimate.
+	# Batch 38 moved the reach 167 to 168: `payment_security_required` is the
+	# one derived node it adds that sits downstream of an uncertain input,
+	# because `total_revenue_usd_per_year` reads the uncertain fuel and demand
+	# factors. The other five are products of `fixed` bases -- the retyped
+	# ramp rates, stable levels, durations and the asset life -- which the
+	# register does not follow. The input count and the derived-stochastic
+	# count are both unchanged: the batch declares no new stochastic input and
+	# none of its derived nodes is stochastic by its own relation. Batch 39
+	# moved the reach 168 to 171: all three of its products sit downstream of
+	# an uncertain input -- the two marine capex products read
+	# `capex_marine_otec` and `capex_marine_tidal`, both declared stochastic,
+	# and the solvency product reads `solvency_capital`, which is derived
+	# from the stochastic `aal_usd_million` and `pml_99_5_usd_million`. The
+	# input count and the derived-stochastic count are both unchanged: the
+	# batch declares no new stochastic input and none of its products is
+	# stochastic by its own relation.
+	assert "74" in text and "171" in text
 
 
 # ---------------------------------------------------------------------------
@@ -3872,7 +3954,15 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# Batch 33 ships twenty-six equalities and five bounds, all hard: the six
 	# new nodes are products of shipped bases and the five bounds are the same
 	# kind of ceiling batch 32 shipped. 496 to 522.
-	assert counts == {"hard": 522, "informational": 1, "soft": 2}, counts
+	# Batches 34 and 35 corrected equations in place and added none, so the
+	# count held at 522 through both. Batch 36 added seven, all hard: six
+	# aliases and products and one time bound, 522 to 529. Batch 37 added
+	# seven, all hard: five equalities and two bounds, 529 to 536. Batch 38
+	# added eight, all hard: six operational products and two workload
+	# bounds, 536 to 544. Batch 39 added five, all hard: three products and
+	# two bounds, 544 to 549. No batch since 33 has added a soft or
+	# informational edge, which is why those two counts have not moved.
+	assert counts == {"hard": 549, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -4240,14 +4330,23 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# `fuel_excise_revenue_usd_per_year`); and the two whose source is an
 	# `INDEX.md` row with no archived file, which the register does not count.
 	# 215 to 226.
-	assert len(declared) == 226, f"the citation register moved: {sorted(declared)}"
+	# Batch 39 added one, the OCGT/CCGT capex ordering bound, which cites
+	# the archived IEA/NEA 2020 text for the ordering its prose states. Its
+	# other four carry None: three are unit conversions and the fourth is a
+	# coherence condition between two shipped quantities. 241 to 242.
+	# Batch 38 took it 233 to 241, and cites all eight: the three operational products and the
+	# workshop bound to the ENTSO-E adequacy methodology, the storage energy
+	# to IEA/NEA EGC's E/P definition, the settlement security and the budget
+	# bound to the World Bank regulatory handbook, and the age complement to
+	# the catalog's own duplicate-row register. 233 to 241.
+	assert len(declared) == 242, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
 		"the report dropped or altered a citation the graph declares; the field "
 		"is read again, which is the thing that was not true before"
 	)
-	# The other 252 carry `None` and not an empty string: "no external
+	# The other 310 carry `None` and not an empty string: "no external
 	# source" and "a source that rendered blank" are different findings.
 	blank = [row.equation_id for row in rows if row.reference == ""]
 	assert not blank, f"a citation rendered as an empty string rather than None: {blank}"
@@ -4479,8 +4578,8 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 				f"numeric {numeric!r}"
 			)
 			compared += 1
-	assert compared == 461, (
-		f"expected 461 determined variables in the shipped library, compared "
+	assert compared == 481, (
+		f"expected 481 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "
 		f"promoted; batch 20's sector-coupling layer raised it to 182, "

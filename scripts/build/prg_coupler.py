@@ -546,7 +546,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -646,6 +646,34 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "39":
+		b39_nodes, b39_equations, b39_edges, b39_rules = build_batch39(graph)
+		rules.extend(b39_rules)
+		nodes.update(b39_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b39_equations)
+		edges = list(BATCH12_EDGES) + b39_edges
+	elif batch == "38":
+		b38_nodes, b38_equations, b38_edges, b38_rules = build_batch38(graph)
+		rules.extend(b38_rules)
+		nodes.update(b38_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b38_equations)
+		edges = list(BATCH12_EDGES) + b38_edges
+	elif batch == "37":
+		b37_nodes, b37_equations, b37_edges, b37_rules = build_batch37(graph)
+		rules.extend(b37_rules)
+		nodes.update(b37_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b37_equations)
+		edges = list(BATCH12_EDGES) + b37_edges
+	elif batch == "36":
+		b36_nodes, b36_equations, b36_edges, b36_rules = build_batch36(graph)
+		rules.extend(b36_rules)
+		nodes.update(b36_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b36_equations)
+		edges = list(BATCH12_EDGES) + b36_edges
 	elif batch == "35":
 		b35_nodes, b35_equations, b35_edges, b35_rules = build_batch35(graph)
 		rules.extend(b35_rules)
@@ -10543,6 +10571,180 @@ def build_batch22(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	return nodes, equations, edges, rules
 
 
+#: (name, unit, range, default, determinism, prose) -- the sixteen nodes the
+#: contract-market pack retypes. Every one shipped with `unit: None`, the
+#: placeholder range [0, 1e6] and the midpoint default 500000.0, which is the
+#: catalog's "unknown" pattern rather than a quantity: a risk of 500,000, an
+#: auction frequency of 500,000 per year, a gate closure eleven years long.
+#: A node that is the lhs of an equation below also loses its default, because
+#: a determined parameter carries none.
+BATCH36_RETYPES: tuple[tuple[str, str | None, list[float] | None, float | None, str, str], ...] = (
+	("security_package", "USD", [0.0, 1.1e13], None, "policy",
+	 "The capital a sponsor and its parent put behind the project: the "
+	 "performance bond held against non-completion plus the parent's guarantee "
+	 "of the debt tranche. 600,000,000 USD at defaults, all of it bond -- the "
+	 "guarantee is zero because `parent_company_guarantee` is."),
+	("counterparty_risk", "1", [0.0, 1.0], None, "policy",
+	 "The share of settled value exposed to a counterparty's failure to settle, "
+	 "which is what `settlement_risk` is defined as: 0.01 at defaults. The two "
+	 "ids are one object under two catalog names."),
+	("cost_pass_through_mechanism", "1", [0.0, 1.0], None, "policy",
+	 "The share of the recovery tariff carried automatically at the wholesale "
+	 "level -- fuel, carbon and losses -- rather than deferred to a review. 0.8 "
+	 "at defaults. This reading is contested: `unclassified.md` calls the node "
+	 "the *rule set* rather than the share, and a reviewer who agrees should "
+	 "retype it categorical and leave it uncoupled."),
+	("tax_incentives", "USD/year", [-3e12, 3e12], None, "policy",
+	 "The tax the treasury forgoes on a concession: the untaxed fraction of the "
+	 "term, at the corporate rate, on the cash the fleet generates after the "
+	 "tariff. A positive number is revenue forgone; the range admits negative "
+	 "because `cfads_usd_per_kw_year` is signed. 128,772,000 USD/year at "
+	 "defaults -- 20% of the term untaxed, 30% rate, 214.62 USD/kW/year over "
+	 "10,000 MW."),
+	("ppa_termination_payments", "USD", [0.0, 1.5e14], None, "policy",
+	 "The make-whole an offtaker owes if it terminates the PPA: the revenue the "
+	 "plant would have earned, discounted over the remaining term. The annuity "
+	 "factor and not the raw sum, because a payment today for revenue that would "
+	 "have arrived over twenty years is worth less than the sum. 31,829,702,743 "
+	 "USD at defaults. Undefined at `discount_rate = 0`, which the declared "
+	 "range admits -- the shipped `crf_definition` and `llcr_definition` divide "
+	 "by rates with the same lower bound, so this adds no new failure class."),
+	("gate_closure", "hours", [0.05, 24.0], 1.0, "fixed",
+	 "How long before delivery the market closes. 1.0 hour is the European "
+	 "intraday convention. The floor of 0.05 h is `settlement_period`'s own "
+	 "floor, so the bound below cannot be vacuous by construction of the range."),
+	("auction_frequency", "1/year", [0.5, 365.0], 12.0, "fixed",
+	 "Rounds per calendar year the allowance auction runs. 12 is monthly, the "
+	 "calendar the EU ETS uses for most of its volume; the range admits "
+	 "twice-yearly to daily."),
+	("regulatory_asset_valuation_method", "1", None, None, "policy",
+	 "How the regulatory asset base is valued: historical cost, indexed "
+	 "historical, or current cost. Retyped categorical below; the shipped 0.0 "
+	 "reads as the first documented category, which is the graph's own "
+	 "convention (`market_model`, `market_structure`)."),
+	("virtual_bidding", "1", None, 0.0, "fixed",
+	 "Whether virtual bids are admitted in the day-ahead market. Retyped bool."),
+	("financial_transmission_rights", "1", None, 0.0, "fixed",
+	 "Whether financial transmission rights are traded. Retyped bool."),
+	("strategic_bidding", "1", None, 0.0, "fixed",
+	 "Whether generators may bid strategically rather than at cost. Retyped "
+	 "bool."),
+)
+
+
+#: (name, categories, default, prose) -- the five nodes that shipped as floats
+#: and are levels, not magnitudes. `regulatory_asset_valuation_method` is here
+#: as well as in the retype table because it needs both a type and a range
+#: removed; the two tables are read in order and the categorical one wins.
+BATCH36_CATEGORICALS: tuple[tuple[str, tuple[str, ...], str, str], ...] = (
+	("auction_mechanism", ("sealed_bid", "descending_clock", "hybrid"), "sealed_bid",
+	 "How allowances are allocated in a round. `sealed_bid` is the EU ETS "
+	 "convention: bids are submitted without a view of the clearing price."),
+	("pricing_mechanism", ("uniform_price", "pay_as_bid", "nodal"), "uniform_price",
+	 "How the cleared price is set. `uniform_price` pays every accepted bid the "
+	 "clearing price, which is what a pay-as-cleared market does."),
+	("unbundling_status", ("integrated", "legal_unbundling", "ownership_unbundling",
+	                       "retail_separation"), "integrated",
+	 "How far the utility's generation, network and retail arms are separated. "
+	 "`integrated` is the shipped baseline; the three others are the degrees "
+	 "the EU's third package distinguishes."),
+	("tariff_structure", ("single_part", "two_part", "time_of_use", "increasing_block"),
+	 "two_part",
+	 "The shape of the retail tariff. `two_part` -- a fixed charge plus a "
+	 "volumetric rate -- is the ordinary residential structure."),
+	("re_target_carrier", ("renewable", "solar", "wind", "hydro", "biomass", "geothermal"),
+	 "renewable",
+	 "Which carrier a renewable target is written against. `renewable` is the "
+	 "aggregate the directive states; the five named carriers are the "
+	 "technology-specific targets a member state may set instead."),
+	("regulatory_asset_valuation_method", ("historical_cost", "indexed_historical",
+	                                       "current_cost"), "historical_cost",
+	 "How the regulatory asset base is valued. `historical_cost` is the shipped "
+	 "0.0 read as the level it was meant to be."),
+)
+
+
+#: (eq_id, lhs, rhs, prose, system, reference) -- products and aliases.
+BATCH36_EQUATIONS: tuple[tuple[str, str, str, str, str, str | None], ...] = (
+	("security_package_definition", "security_package",
+	 "performance_bond_usd + parent_company_guarantee_usd",
+	 "The capital a sponsor and its parent put behind the project: the "
+	 "performance bond held against non-completion plus the parent's guarantee "
+	 "of the debt tranche. A stock, not a flow, because both instruments are "
+	 "released rather than spent. 600,000,000 USD at defaults, all of it bond. "
+	 "Adding `collateral_posted_usd_per_year` was rejected on units: that node "
+	 "is USD million/year and the two terms are USD.",
+	 "financial", None),
+	("counterparty_risk_alias", "counterparty_risk", "settlement_risk",
+	 "The share of settled value exposed to a counterparty's failure to settle, "
+	 "which is what `settlement_risk` is defined as -- one object under two "
+	 "catalog names, resolved by equality. 0.01 at defaults.",
+	 "financial", "The catalog's own duplicate rows, resolved"),
+	("cost_pass_through_alias", "cost_pass_through_mechanism",
+	 "wholesale_cost_pass_through",
+	 "The share of the recovery tariff carried automatically at the wholesale "
+	 "level. 0.8 at defaults. `unclassified.md` calls the node the rule set "
+	 "rather than the share; this alias is the reading the graph's own operands "
+	 "support, and the description says the question is open.",
+	 "financial", "The catalog's own duplicate rows, resolved"),
+	("tax_incentives_definition", "tax_incentives",
+	 "(1.0 - taxed_fraction_of_concession) * corporate_income_tax_rate * "
+	 "cfads_usd_per_kw_year * total_capacity_mw * 1000",
+	 "The tax the treasury forgoes on a concession: the untaxed fraction of the "
+	 "term, at the corporate rate, on the cash the fleet generates after the "
+	 "tariff. 128,772,000 USD/year at defaults. A two-term form adding the "
+	 "investment allowance was rejected on units: the holiday leg is USD/year "
+	 "and the allowance leg is USD.",
+	 "financial", "Rate-based levy and allowance definitions (standard fiscal accounting)"),
+	("ppa_termination_payment_definition", "ppa_termination_payments",
+	 "ppa_annual_revenue_usd_per_kw_year * total_capacity_mw * 1000 * "
+	 "(1 - (1 + discount_rate) ** (-ppa_duration)) / discount_rate",
+	 "The make-whole an offtaker owes on termination: the revenue the plant "
+	 "would have earned, discounted over the remaining term. 31,829,702,743 USD "
+	 "at defaults -- 385.79 USD/kW/year over 10,000 MW, annuitised at 10.46% "
+	 "over 20 years. The undiscounted sum was rejected: it pays twenty years of "
+	 "revenue as a lump sum today and overstates the liability 2.4x.",
+	 "financial", "Standard annuity formula"),
+	("auction_volume_per_round_definition", "auction_volume_per_round",
+	 "auction_volume / auction_frequency",
+	 "The allowances one auction round offers: the year's volume spread over the "
+	 "rounds the calendar holds. 25 / 12 = 2.0833 MtCO2 at defaults. The "
+	 "per-round size is what an auction calendar is designed around, and the "
+	 "graph carried the annual volume and the round frequency with no node "
+	 "joining them.",
+	 "carbon_trajectory", None),
+)
+
+
+#: (eq_id, lhs, relation, rhs, prose, system, reference, binder, bounded)
+BATCH36_BOUNDS: tuple[
+	tuple[str, str, str, str, str, str, str | None, str, str], ...
+] = (
+	("gate_closure_bound", "gate_closure", "geq", "settlement_period",
+	 "The market must close no later than one settlement period before "
+	 "delivery, or a trade can settle inside the interval it was cleared for. "
+	 "1.0 hour against the 0.5-hour settlement period at defaults. An equality "
+	 "was rejected: gate closure is a policy dial, and an equality would make "
+	 "every operator run the same gate. Routes `bound` -- both sides are "
+	 "declared, so this reaches the optimiser.",
+	 "demand_supply", None, "settlement_period", "gate_closure"),
+)
+
+
+#: (name, unit, range, category, prose) -- the one node this batch declares.
+BATCH36_NEW_NODES: tuple[tuple[str, str, list[float], str, str], ...] = (
+	("auction_volume_per_round", "MtCO2", [0.0, 20000.0], "Carbon Market",
+	 "The allowances one auction round offers: the year's volume divided by the "
+	 "rounds the calendar holds. 25 / 12 = 2.0833 MtCO2 at defaults. The range's "
+	 "ceiling is `auction_volume`'s (10,000 MtCO2/year) over "
+	 "`auction_frequency`'s floor (0.5/year), which is the widest a quotient of "
+	 "the two can reach."),
+)
+
+_BATCH36_SOURCE = "The contract and market pack (batch 36)"
+_BATCH37_SOURCE = "The macro and climate pack (batch 37)"
+
+
 #: (eq_id, lhs, rhs, prose, system, reference) -- corrections to shipped
 #: equations. A correction names an equation the graph already carries and
 #: replaces its body; the bake's stale-edge rule disposes the edges the old
@@ -10745,6 +10947,1288 @@ def build_batch35(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		# equation's symbol set and every edge that reaches it are already
 		# right -- re-emitting them would be a second copy of edges the bake
 		# already holds, and the loader refuses a duplicate.
+
+	return nodes, equations, edges, rules
+
+
+#: (name, unit, range, default, role, determinism, prose) -- the twenty-one
+#: nodes the macro-climate pack couples. Every one shipped with `unit: None`,
+#: the placeholder range [0, 1e6] and the midpoint default 500000.0, except
+#: `political_stability`, which was already a [0, 1] dial.
+#:
+#: The five with `role: derived` become an equation's lhs below and carry no
+#: default; the sixteen with `role: free` are operands and keep one. A
+#: categorical would need `categories`, and this slice has none -- its
+#: SCENE-SWITCH rows are deferred by the pack precisely because the graph has
+#: no level-typed node to hold a method flag.
+BATCH37_RETYPES: tuple[
+	tuple[str, str | None, list[float] | None, float | None, str, str, str], ...] = (
+	("geopolitical_risk_index", "1", [0.0, 1.0], None, "derived", "fixed",
+	 "A composite of the six governance and security dials: political "
+	 "stability, cross-border tension, maritime security, cyber threat, "
+	 "terrorism and civil unrest. `political_stability` and "
+	 "`maritime_security` are scored higher-is-better and enter inverted; the "
+	 "other four are already risk-scaled. Unweighted because the graph "
+	 "declares no weights, and a reader can check a mean against its six "
+	 "components -- a weighted composite would need a severity vector the "
+	 "graph does not carry. `energy_security_index` is deliberately not a "
+	 "member: it is its own composite with its own three components, and the "
+	 "catalog does not nest it."),
+	("exposure_index", "1", [0.0, 1.0], None, "derived", "fixed",
+	 "The mean of the eight declared climate-hazard intensities: flood, "
+	 "coastal erosion, drought, heat stress, wildfire, landslide, storm surge "
+	 "and glacial lake outburst. Every hazard is a [0, 1] intensity, so the "
+	 "mean is the expected hazard loading and needs no normalising constant. "
+	 "A maximum over the eight was rejected: it is the more faithful reading "
+	 "of 'exposure', and `max` has no derivative rule, so `gradients()` raises "
+	 "on any equation using it. A product of complements was rejected because "
+	 "a symbolic exponent leaves the unit walker undecidable."),
+	("land_availability", "hectare", [0.0, 500000.0], None, "derived", "physical",
+	 "Alias onto `available_land_hectares`, which the graph derives as "
+	 "`land_availability_fraction * land_area_hectares`. The catalog declares "
+	 "both names; keeping this one a free placeholder would let a scenario "
+	 "set a land availability the project's own take contradicts. 2,500 ha at "
+	 "defaults."),
+	("land_aggregation", "parcels", [0.0, 2500000.0], None, "derived", "fixed",
+	 "Alias onto `parcels_to_assemble`, the transaction count the assembly "
+	 "programme has to clear: `land_aggregation_fragmentation * "
+	 "land_area_hectares / 100`, 1,000 parcels at defaults. Same "
+	 "duplicate-row argument as `land_availability`."),
+	("snapshot_weightings", "hours", [0.0, 876000.0], None, "derived", "fixed",
+	 "The hours each representative snapshot stands for: the horizon's hours "
+	 "divided by the snapshot count. 25 x 8,760 / 1,200 = 182.5 h at "
+	 "defaults, and 182.5 x 1,200 = 219,000 h = 25 years, so the weights sum "
+	 "to the horizon by construction. The upper bound is `time_horizon`'s own "
+	 "100 years of hours, divided by the smallest legal snapshot count of 1. "
+	 "A pure share `1 / representative_snapshots` was rejected on units: "
+	 "dimensionless, so the walker cannot reconcile it with an hours-"
+	 "denominated weight and the horizon drops out of the accounting."),
+	("political_stability", "1", [0.0, 1.0], 0.5, "free", "fixed",
+	 "Political stability and absence of violence, scored higher-is-better. "
+	 "It is one of the six dials `geopolitical_risk_index` reads, and it "
+	 "enters that composite inverted. Already a [0, 1] dial; retyped here "
+	 "only to record the polarity, which `docs/params.md` does not state."),
+	("cross_border_tension", "1", [0.0, 1.0], 0.5, "free", "fixed",
+	 "Diplomatic tension with neighbouring states, risk-scaled: higher is "
+	 "more tension. Not inverted in the composite."),
+	("maritime_security", "1", [0.0, 1.0], 0.5, "free", "fixed",
+	 "Maritime and sea-lane security. **Stated assumption: scored "
+	 "higher-is-safer**, so the composite inverts it. `docs/params.md` 22.18 "
+	 "gives no polarity, and no archived source resolves it -- the inversion "
+	 "is this batch's reading of the name, not a sourced fact. A reviewer who "
+	 "reads it as higher-is-riskier should drop the `1 -` from "
+	 "`geopolitical_risk_index_definition`."),
+	("cyber_threat_level", "1", [0.0, 1.0], 0.5, "free", "fixed",
+	 "Cyber threat to grid and market operations, risk-scaled: higher is "
+	 "worse. Not inverted."),
+	("terrorism_risk", "1", [0.0, 1.0], 0.5, "free", "fixed",
+	 "Terrorism risk to energy infrastructure, risk-scaled: higher is worse. "
+	 "Not inverted."),
+	("civil_unrest_risk", "1", [0.0, 1.0], 0.5, "free", "fixed",
+	 "Civil unrest risk, risk-scaled: higher is worse. Not inverted."),
+	("flood_risk", "1", [0.0, 1.0], 0.5, "free", "fixed",
+	 "Flood hazard intensity at the site: 0 absent, 1 at the top of the "
+	 "scale. One of the eight hazards `exposure_index` averages."),
+	("coastal_erosion", "1", [0.0, 1.0], 0.5, "free", "fixed",
+	 "Coastal erosion hazard intensity. One of the eight `exposure_index` "
+	 "hazards."),
+	("drought_risk", "1", [0.0, 1.0], 0.5, "free", "fixed",
+	 "Drought hazard intensity. One of the eight `exposure_index` hazards."),
+	("heat_stress", "1", [0.0, 1.0], 0.5, "free", "fixed",
+	 "Heat stress hazard intensity. One of the eight `exposure_index` "
+	 "hazards."),
+	("wildfire_risk", "1", [0.0, 1.0], 0.5, "free", "fixed",
+	 "Wildfire hazard intensity. One of the eight `exposure_index` hazards."),
+	("landslide_risk", "1", [0.0, 1.0], 0.5, "free", "fixed",
+	 "Landslide hazard intensity. One of the eight `exposure_index` "
+	 "hazards."),
+	("storm_surge", "1", [0.0, 1.0], 0.5, "free", "fixed",
+	 "Storm surge hazard intensity. One of the eight `exposure_index` "
+	 "hazards."),
+	("glacial_lake_outburst", "1", [0.0, 1.0], 0.5, "free", "fixed",
+	 "Glacial lake outburst flood hazard intensity. One of the eight "
+	 "`exposure_index` hazards."),
+	("temperature_increase", "degC", [0.0, 6.0], 1.2, "free", "fixed",
+	 "The warming the scenario assumes, in degrees Celsius above the "
+	 "pre-industrial baseline. The default of 1.2 places a default run near "
+	 "the present level rather than at a century-end projection. The 6 degC "
+	 "ceiling is headroom over AR6's end-century SSP5-8.5 range of roughly "
+	 "3.3 to 5.7; the zero floor refuses a negative warming, which no "
+	 "scenario produces."),
+	("temperature_target", "degC", [1.0, 3.0], 1.5, "free", "policy",
+	 "The policy warming ceiling the scenario is tested against. The range "
+	 "must contain 1.5 and 2.0 -- the Paris agreement's two anchors -- and 3 "
+	 "admits a deliberately weak target. A placeholder range would admit a "
+	 "target no scenario can violate, so `temperature_target_bound` would "
+	 "never bind."),
+	("rolling_horizon_window", "years", [1.0, 100.0], 5.0, "free", "fixed",
+	 "The look-ahead in the rolling-horizon solve, in years. At least one "
+	 "year, because a zero window is not a solve; 100 matches "
+	 "`time_horizon`'s own bound, so the window can never be declared "
+	 "outside the horizon it looks across."),
+	("representative_days", "days", [1.0, 100.0], 50.0, "exogenous", "fixed",
+	 "The number of representative days the temporal aggregation keeps. The "
+	 "lower bound is the prerequisite for `snapshot_weightings`: the "
+	 "snapshot count is `representative_days * tsam_segments`, and a zero "
+	 "there reaches the weight equation's denominator. Retyped from [0, 100] "
+	 "to [1, 100] so the pole is a clean range refusal at the door rather "
+	 "than a `ZeroDivisionError` from inside `propagate`."),
+)
+
+
+#: (eq_id, lhs, rhs, prose, system, reference) -- five equalities.
+#:
+#: Two of the five carry `reference: None`, and the pack says why rather than
+#: inventing one: they are unweighted means of declared dials, no archived work
+#: states this aggregation, and the component provenance the catalog gives
+#: (World Bank WGI, ND-GAIN) is not in `sources/archive/`.
+BATCH37_EQUATIONS: tuple[tuple[str, str, str, str, str, str | None], ...] = (
+	("geopolitical_risk_index_definition", "geopolitical_risk_index",
+	 "(1 - political_stability + cross_border_tension + 1 - maritime_security"
+	 " + cyber_threat_level + terrorism_risk + civil_unrest_risk) / 6",
+	 "The governance and security composite: an unweighted mean of six "
+	 "declared [0, 1] dials, with the two higher-is-better dials inverted. "
+	 "0.5 at defaults, because every dial is at its own midpoint. The "
+	 "inversion of `political_stability` follows its own definition (stability "
+	 "is good); the inversion of `maritime_security` is a stated assumption, "
+	 "recorded on that node. `composite_governance_index` is not used here: "
+	 "it is itself a five-dial mean, and inverting it is not the same as "
+	 "inverting `political_stability`, which the catalog names as the "
+	 "political parent.",
+	 "demand_supply", None),
+	("exposure_index_definition", "exposure_index",
+	 "(flood_risk + coastal_erosion + drought_risk + heat_stress"
+	 " + wildfire_risk + landslide_risk + storm_surge"
+	 " + glacial_lake_outburst) / 8",
+	 "The climate-hazard composite: the unweighted mean of eight declared "
+	 "[0, 1] hazard intensities. 0.5 at defaults. Every hazard is already "
+	 "risk-scaled in the same direction, so no term is inverted. The mean is "
+	 "the expected hazard loading rather than a union probability; a union "
+	 "form would need a product of complements, whose symbolic exponent the "
+	 "unit walker cannot decide.",
+	 "demand_supply", None),
+	("land_availability_alias", "land_availability",
+	 "available_land_hectares",
+	 "The catalog's duplicate rows resolved by equality: `land_availability` "
+	 "is `available_land_hectares`, the hectares the land block actually "
+	 "takes. The range is the driver's own, so the alias cannot narrow the "
+	 "image and a scenario cannot set a land availability the project's own "
+	 "take contradicts.",
+	 "financial", "The catalog's own duplicate rows, resolved"),
+	("land_aggregation_alias", "land_aggregation",
+	 "parcels_to_assemble",
+	 "The second duplicate-row resolution: `land_aggregation` is "
+	 "`parcels_to_assemble`, the parcel count the assembly programme clears. "
+	 "1,000 at defaults.",
+	 "financial", "The catalog's own duplicate rows, resolved"),
+	("snapshot_weightings_definition", "snapshot_weightings",
+	 "time_horizon * 8760 / representative_snapshots",
+	 "The hours one representative snapshot stands for: the horizon's hours "
+	 "over the snapshot count. 182.5 h at defaults, and the weights sum to "
+	 "the horizon by construction -- 182.5 x 1,200 = 219,000 h = 25 years. "
+	 "This is the quantity a temporal aggregation must preserve, and it is "
+	 "what makes a reduced-snapshot solve comparable to a full hourly one.",
+	 "energy_balance", "Tejada-Arango (2023), arXiv:2307.16842"),
+)
+
+
+#: (eq_id, lhs, relation, rhs, prose, system, reference, binder, bounded) --
+#: two inequalities. Both operands are declared, so both reach the optimiser
+#: as linopy constraints rather than waiting for a post-solve check.
+BATCH37_BOUNDS: tuple[
+	tuple[str, str, str, str, str, str, str | None, str, str], ...] = (
+	("temperature_target_bound", "temperature_increase", "leq",
+	 "temperature_target",
+	 "The scenario's assumed warming must not exceed the policy ceiling it is "
+	 "tested against. 1.2 against 1.5 at defaults. A scenario that warms past "
+	 "its own target is incoherent rather than infeasible, which is why this "
+	 "is a bound on the declared inputs and not on the dispatch.",
+	 "carbon_trajectory", None, "temperature_target", "temperature_increase"),
+	("rolling_horizon_window_bound", "rolling_horizon_window", "leq",
+	 "time_horizon",
+	 "The rolling-horizon look-ahead must not exceed the modelled horizon: a "
+	 "window longer than the data reads beyond it. 5 against 25 at defaults.",
+	 "demand_supply", None, "time_horizon", "rolling_horizon_window"),
+)
+
+
+#: (name, unit, range, default, role, determinism, prose) -- prerequisites the
+#: batch retypes because its own equations are unsafe without them.
+#:
+#: `representative_snapshots` is derived (`representative_days * "
+#: "tsam_segments`), so its zero was not reachable from its own range -- it
+#: was reachable from `representative_days`. Retyping the driver is what turns
+#: the pole into a refusal; retyping this one alone does not, which the pack
+#: measured.
+BATCH37_PREREQUISITES: tuple[
+	tuple[str, str | None, list[float] | None, float | None, str, str, str], ...] = (
+	("representative_snapshots", "1", [1.0, 9600.0], None, "derived", "fixed",
+	 "The number of representative snapshots a reduced temporal "
+	 "representation keeps: `representative_days * tsam_segments`, 1,200 at "
+	 "defaults. The lower bound is one, not zero, because this node is the "
+	 "denominator of `snapshot_weightings_definition` and a snapshot count of "
+	 "zero has no weight to divide by. Retyped from [0, 9600]."),
+	("time_horizon", "years", [1.0, 100.0], 25.0, "exogenous", "fixed",
+	 "The modelled horizon in years. Retyped from [0, 100] to [1, 100]: it is "
+	 "the numerator of `snapshot_weightings_definition` and the binder of "
+	 "`rolling_horizon_window_bound`, and a zero horizon admits a zero window, "
+	 "which makes that bound hold for every value of the quantity it is "
+	 "supposed to constrain."),
+)
+
+
+#: (rule_id, condition, severity, message, suggestion, prose) -- the one
+#: cross-validation rule batch 37 re-scopes.
+#:
+#: `index_above_unity` fires when a [0, 1] composite sits at the top of its
+#: range. Its message is a claim about a value a *caller set* -- "confirm the
+#: value is on the scale the equations that consume it assume" -- and after
+#: this batch two of its eleven members are derived, so the premise no longer
+#: holds for them. `exposure_index` and `geopolitical_risk_index` are now
+#: computed from their own operands, and a computed index cannot be on the
+#: wrong scale: the equation that produces it fixes the scale.
+#:
+#: The alternative was to exempt derived composites inside the validator, which
+#: would make the rule's text describe something the code no longer checks.
+#: Re-scoping the condition keeps the rule and its message in agreement, and it
+#: narrows rather than widens: the nine settable members still fire.
+#:
+#: This is a live interaction, not a hypothetical. All eight hazard dials at
+#: 0.99 are each inside their own [0, 1] range, derive `exposure_index` to
+#: 0.99, and blocked the scenario before this change -- measured.
+BATCH37_RULES: tuple[tuple[str, str, str, str, str, str], ...] = (
+	("index_above_unity",
+	 "digital_divide_metrics > 0.99 or energy_security_index > 0.99 or "
+	 "rule_of_law_index > 0.99 or corruption_perception > 0.99 or "
+	 "political_stability > 0.99 or regulatory_predictability > 0.99 or "
+	 "contract_enforceability > 0.99 or adaptive_capacity > 0.99 or "
+	 "vulnerability_index > 0.99",
+	 "error",
+	 "A composite index with a [0, 1] construction has been set at the top of "
+	 "its range. Confirm the value is on the scale the equations that consume "
+	 "it assume.",
+	 "Rescale the index to its documented range",
+	 "Re-scoped by the macro and climate pack: `geopolitical_risk_index` and "
+	 "`exposure_index` are derived as of batch 37, so neither can be 'set' and "
+	 "the message does not describe them. The nine remaining members are all "
+	 "free and settable, which is what the rule is for."),
+)
+
+
+#: (name, unit, range, default, role, determinism, prose) -- ten retypes from
+#: the operational-supply pack. Every one shipped as `unit: None`, range
+#: [0, 1e6] and default 500,000, which is a placeholder, not a value: a ramp
+#: rate of 500,000 per hour is a unit that ramps its whole rating half a
+#: million times an hour.
+BATCH38_RETYPES: tuple[tuple[str, str, list[float], float, str, str, str], ...] = (
+	("ramp_rate_coal", "1/hour", [0.0, 0.1], 0.02, "free", "physical",
+	 "The fraction of rated output a coal unit can move in one hour. 0.02/h "
+	 "is 2%/h -- a large coal unit's upward limit -- and 0.1/h is the top of "
+	 "the once-through band. A ramp limit is a rate against capacity, which "
+	 "is why this is a share per hour rather than MW/hour: the per-unit rate "
+	 "is what a TSO collects, and converting here would bake one fleet's "
+	 "capacity into a rate reused across capacities."),
+	("ramp_rate_gas", "1/hour", [0.0, 0.4], 0.1, "free", "physical",
+	 "As coal, with the wider band a gas unit's controls allow. A CCGT ramps "
+	 "an order of magnitude faster than a coal unit: 10%/h at the default, "
+	 "40%/h the fast-start ceiling."),
+	("min_stable_level_coal", "1", [0.0, 1.0], 0.4, "free", "physical",
+	 "The share of rated capacity below which a coal unit cannot run stably. "
+	 "ENTSO-E defines the parameter as a percentage of the unit's nominal "
+	 "capacity and states the simulation does not allow the unit to run "
+	 "under this limit; 40% is the conventional coal floor."),
+	("min_stable_level_gas", "1", [0.0, 1.0], 0.3, "free", "physical",
+	 "As coal; CCGTs hold a lower technical minimum than a coal unit."),
+	("min_up_time_coal", "hours", [1.0, 48.0], 6.0, "free", "physical",
+	 "The minimum hours a coal unit must stay running once started. ENTSO-E "
+	 "defines minimum up time as the hours a unit must stay in operation "
+	 "before it can be idled; 48 h is a cold-start-to-shutdown minimum for a "
+	 "large unit."),
+	("min_down_time_coal", "hours", [1.0, 48.0], 4.0, "free", "physical",
+	 "The minimum hours a coal unit must stay off before it can be restarted. "
+	 "A lower bound of one hour rather than zero: a zero here reaches the "
+	 "cycling ceiling's denominator alongside a zero up time."),
+	("storage_duration_curve", "hours", [0.0, 100.0], 6.0, "free", "physical",
+	 "The energy-to-power ratio of the storage fleet in hours. IEA/NEA define "
+	 "discharge duration as E/P at nominal power, which is exactly this node: "
+	 "multiplying it by the fleet's power rating gives the fleet's energy. "
+	 "100 h is the long-duration ceiling, pumped hydro at the top of its "
+	 "band."),
+	("workshop_capacity", "events/year", [0.0, 2000.0], 500.0, "free", "fixed",
+	 "A workshop's throughput in maintenance events per year. 2,000 is ten a "
+	 "working day across a large utility's shops; 500 is the default the pack "
+	 "measured against a workload of 440."),
+	("loss_reduction_investment", "USD", [0.0, 1e10], 5000000.0, "free", "policy",
+	 "An investment amount in currency, matching `line_upgrade_budget`'s unit "
+	 "so the budget bound needs no scale. 5 m is the pack's measured default; "
+	 "the graph's own defaults put the loss-reduction target above what the "
+	 "budget allows, which the bound reports rather than hides."),
+)
+
+
+#: (name, unit, range, default, role, determinism, prose) -- the two retypes
+#: that are derived rather than free. Both appear in the PRODUCT table of the
+#: pack rather than its retype table, and their role change is the point.
+BATCH38_DERIVED_RETYPES: tuple[tuple[str, str, list[float], None, str, str, str], ...] = (
+	("payment_security_required", "USD/year", [0.0, 1e11], None, "derived", "fixed",
+	 "The security a counterparty must post: the share of settled value "
+	 "exposed to settlement failure times the value settled. Retained as "
+	 "`USD/year` to match `collateral_posted_usd_per_year`'s annualised "
+	 "convention. Derived as of batch 38, so it carries no default."),
+	("asset_age_distribution", "years", [0.0, 100.0], None, "derived", "physical",
+	 "The fleet's mean age. `remaining_useful_life` already ships as "
+	 "`asset_life * asset_condition_index`, so the age is the part of life "
+	 "already spent: 25 x (1 - 0.7) = 7.5 years at defaults. The node's name "
+	 "says distribution; a mean is the one moment of a distribution the graph "
+	 "can carry, and this description is the correction."),
+)
+
+
+#: (id, unit, range, role, determinism, category, prose) -- four lhs ids that do not
+#: exist. Each is derived, so each carries a range and no default: the loader
+#: refuses a derived parameter with a default, and a determined parameter with
+#: no range.
+BATCH38_NEW_NODES: tuple[
+	tuple[str, str, list[float], str, str, str, str], ...] = (
+	("thermal_ramp_capability_mw_per_hour", "MW/hour", [0.0, 20000.0],
+	 "derived", "physical", "Operational",
+	 "The thermal fleet's aggregate ramp capability. A ramp rate is per unit "
+	 "of capacity; without a fleet-level MW/hour the rate has no magnitude, "
+	 "and nothing else in the graph multiplies capacity by a ramp. 20 GW/hour "
+	 "is the largest plausible national fleet's full range in one hour; zero "
+	 "is a fleet that cannot move."),
+	("thermal_minimum_generation_mw", "MW", [0.0, 100000.0],
+	 "derived", "physical", "Operational",
+	 "The thermal fleet's must-run floor: each technology's minimum stable "
+	 "level times its capacity, summed. 100 GW is above any single country's "
+	 "thermal fleet; zero is a fleet with no must-run constraint."),
+	("coal_cycling_ceiling_per_year", "1/year", [0.0, 8760.0],
+	 "derived", "physical", "Operational",
+	 "The most often a coal unit can cycle in a year given its minimum up and "
+	 "down times: 8,760 hours over the sum of the two. 876 cycles/year at "
+	 "defaults (6 h up, 4 h down). The upper bound is one cycle per hour, the "
+	 "physical maximum; the up/down constraint makes the real value far "
+	 "lower. This is the only arithmetically clean use of the two duration "
+	 "nodes, which otherwise can only be typed and left."),
+	("storage_energy_capacity_mwh", "MWh", [0.0, 1e8],
+	 "derived", "physical", "Supply",
+	 "The storage fleet's energy: its duration in hours times its power "
+	 "rating. 4,800 MWh at defaults (6 h x 800 MW). The graph carried the "
+	 "storage fleet's power and its duration but no energy, and energy is "
+	 "what a duration-limited dispatch is bounded by. 100 TWh is several "
+	 "times any plausible national store."),
+)
+
+
+#: (eq_id, lhs, rhs, prose, system, reference) -- six equalities.
+BATCH38_EQUATIONS: tuple[tuple[str, str, str, str, str, str | None], ...] = (
+	("thermal_ramp_capability_definition", "thermal_ramp_capability_mw_per_hour",
+	 "ramp_rate_coal * coal_capacity + ramp_rate_gas * gas_capacity",
+	 "The fleet's ramp capability is each thermal technology's per-unit ramp "
+	 "rate times its capacity, summed: 0.02 x 3,000 + 0.1 x 1,500 = 210 "
+	 "MW/hour at defaults. The rate is per unit of rated output because that "
+	 "is how the parameter is collected; the capacity is what gives it a "
+	 "magnitude. Only coal and gas are summed: no other thermal technology in "
+	 "the graph carries a declared ramp rate, and a term for a technology "
+	 "whose rate is unstated would be an invented operand.",
+	 "energy_balance", "entsoe_adequacy"),
+	("thermal_minimum_generation_definition", "thermal_minimum_generation_mw",
+	 "min_stable_level_coal * coal_capacity"
+	 " + min_stable_level_gas * gas_capacity",
+	 "The must-run floor is each thermal technology's minimum stable level "
+	 "times its capacity: 0.4 x 3,000 + 0.3 x 1,500 = 1,650 MW at defaults, "
+	 "36.67% of the 4,500 MW thermal fleet. This is the quantity a dispatch "
+	 "cannot go below while a unit is on, which is what makes it a floor "
+	 "rather than a preference.",
+	 "energy_balance", "entsoe_adequacy"),
+	("coal_cycling_ceiling_definition", "coal_cycling_ceiling_per_year",
+	 "8760 / (min_up_time_coal + min_down_time_coal)",
+	 "The cycle ceiling: the hours in a year over one full up-and-down cycle. "
+	 "8,760 / (6 + 4) = 876 cycles/year at defaults. A unit that must run six "
+	 "hours and stay off four cannot cycle more often than once every ten "
+	 "hours, so the two durations bound the start count from above without "
+	 "needing the start count the graph does not carry. The 8,760 is the "
+	 "hours in a year, stated as a literal rather than read from "
+	 "`time_horizon` because the ceiling is an annual rate, not a "
+	 "horizon-dependent quantity.",
+	 "energy_balance", "entsoe_adequacy"),
+	("storage_energy_capacity_definition", "storage_energy_capacity_mwh",
+	 "storage_duration_curve * storage_capacity_mw",
+	 "The store's energy is its duration times its power: 6 h x 800 MW = "
+	 "4,800 MWh at defaults. The duration is the shipped dial and the energy "
+	 "is the product, not the reverse: a scenario varies how long the fleet "
+	 "can discharge at rating, and the energy follows. Making "
+	 "`storage_duration_curve` the lhs would put a dial on the determined "
+	 "path and stop it being a dial.",
+	 "energy_balance", "iea_nea_egc"),
+	("payment_security_required_definition", "payment_security_required",
+	 "settlement_risk * total_revenue_usd_per_year",
+	 "The security a counterparty must post is the share of settled value "
+	 "exposed to settlement failure times the value settled: 0.01 x 6.487 bn "
+	 "= 64.87 m USD/year at defaults. `collateral_posted_usd_per_year` is "
+	 "already `collateral_requirements * allowed_revenue_requirement`, so "
+	 "shipping that form here would ship the same number twice under two "
+	 "names and in a different unit. This is a different quantity with a "
+	 "different base, and it is the one the catalog's arrow to `cost_of_debt` "
+	 "needs.",
+	 "financial", "world_bank_regulation"),
+	("asset_age_distribution_definition", "asset_age_distribution",
+	 "asset_life - remaining_useful_life",
+	 "The fleet's mean age is the part of asset life already spent: 25 - 17.5 "
+	 "= 7.5 years at defaults. `remaining_useful_life` ships as "
+	 "`asset_life * asset_condition_index`, so this identity is the "
+	 "complement of the condition index scaled by life. Deriving it from "
+	 "`plant_retirement_age` was rejected: that node is an alias of "
+	 "`asset_life`, so the result would be the same number through a longer "
+	 "dependency chain.",
+	 "energy_balance", "catalog_duplicate_resolutions"),
+)
+
+
+#: (eq_id, lhs, relation, rhs, prose, system, reference, binder, bounded) --
+#: two inequalities. Both operands are declared, so both reach the optimiser
+#: as linopy constraints rather than waiting for a post-solve check.
+BATCH38_BOUNDS: tuple[
+	tuple[str, str, str, str, str, str, str | None, str, str], ...] = (
+	("workshop_capacity_workload_bound", "workshop_capacity", "geq",
+	 "number_of_generators * maintenance_frequency",
+	 "The workshop must be able to take the fleet's planned maintenance "
+	 "workload: 220 units x 2 events/year = 440 events/year against a "
+	 "capacity of 500, so the bound holds with 60 events to spare. One-sided "
+	 "because a workshop larger than the workload is idle capacity, not a "
+	 "violation; an equality would size the workshop exactly to the fleet, "
+	 "which is a policy statement the graph has no basis for, and it would "
+	 "take `workshop_capacity` off the dial path.",
+	 "energy_balance", "entsoe_adequacy",
+	 "number_of_generators * maintenance_frequency", "workshop_capacity"),
+	("loss_reduction_budget_bound", "loss_reduction_investment", "leq",
+	 "line_upgrade_budget",
+	 "Spend on loss reduction comes out of the line-upgrade budget, not out of "
+	 "thin air: 5 m against a budget of 50 m, residual -45 m. The bound is "
+	 "what makes the shipped `transmission_loss_reduction_target` achievable "
+	 "only to the extent the budget allows. The tariff-share form was built "
+	 "and measured: 69.43 m against the same 50 m budget, which violates -- "
+	 "a finding about the graph's defaults rather than a reason to reject the "
+	 "bound. This form uses `line_upgrade_budget` because the catalog's own "
+	 "arrow names it and the units need no scale.",
+	 "financial", "world_bank_regulation",
+	 "line_upgrade_budget", "loss_reduction_investment"),
+)
+
+
+_BATCH38_SOURCE = "The operational and supply pack (batch 38)"
+
+
+#: (name, unit, range, default, role, determinism, prose) -- one retype. The
+#: range and default are unchanged; only the dimension is corrected, and the
+#: bound is what forces it: a loss in `USD million` cannot be compared against
+#: an exposure in `1` without the two sharing a dimension.
+BATCH39_RETYPES: tuple[tuple[str, str, list[float], float, str, str, str], ...] = (
+	("accumulation_risk", "USD million", [0.0, 1e6], 500000.0, "free", "fixed",
+	 "The insurer's total exposure to a single event, in currency. The node "
+	 "shipped dimensionless, which made the coherence bound against "
+	 "`pml_99_5_usd_million` undecidable -- measured: 'the two sides do not "
+	 "share a dimension'. In USD million the range admits exposures to 1e12 "
+	 "USD, and the shipped default of 500,000 reads as 500 bn."),
+)
+
+
+#: (id, unit, range, role, determinism, category, prose) -- three lhs ids that
+#: do not exist. Each is derived, so each carries a range and no default.
+BATCH39_NEW_NODES: tuple[
+	tuple[str, str, list[float], str, str, str, str], ...] = (
+	("marine_otec_capex_usd", "USD", [0.0, 2.5e13], "derived", "physical",
+	 "Financial",
+	 "OTEC's installed capital cost: the per-kW rate over the built capacity. "
+	 "`capex_marine_otec` is a rate and the graph held no total; the storage "
+	 "family already has this shape in `hydrogen_storage_capex_usd`. 0 USD at "
+	 "defaults because no OTEC is built, which is a correct zero rather than "
+	 "a dead equation. The upper bound is the product of the two operands' "
+	 "own maxima: 25,000 USD/kW x 1e6 MW x 1000."),
+	("marine_tidal_capex_usd", "USD", [0.0, 1.5e13], "derived", "physical",
+	 "Financial",
+	 "Tidal's installed capital cost, the same construction: 15,000 USD/kW x "
+	 "1e6 MW x 1000 at the top of the band. `capex_tidal_range` is a second "
+	 "spelling of the range technology and is not this node -- the two carry "
+	 "different bands ([2500, 15000] against [3000, 15000]), and aliasing "
+	 "them would merge a 15,000 USD/kW ceiling with a 2,500 one."),
+	("eligible_own_funds_usd_million", "USD million", [-1.5e6, 1.5e6],
+	 "derived", "physical", "Financial",
+	 "The capital an insurer actually holds against its requirement. "
+	 "`solvency_capital_ratio`'s own description defines the ratio as "
+	 "eligible own funds over required solvency capital, and the denominator "
+	 "is `solvency_capital`; the numerator was missing, so the ratio was a "
+	 "bare number with no balance-sheet quantity behind it. 720 USD million "
+	 "at defaults. Signed because `solvency_capital` is signed: "
+	 "`pml_99_5 - aal` goes negative when the expected loss exceeds the tail, "
+	 "which is a book no capital covers. The range is the ratio's [0.8, 3.0] "
+	 "times `solvency_capital`'s [-5e5, 5e5]."),
+)
+
+
+#: (eq_id, lhs, rhs, prose, system, reference) -- three equalities. All three
+#: carry `reference: None`: two are unit conversions (USD/kW x MW x 1000, and
+#: a ratio times its own denominator), which state no external result, and
+#: inventing a citation for arithmetic would be the comfortable row.
+BATCH39_EQUATIONS: tuple[tuple[str, str, str, str, str, str | None], ...] = (
+	("marine_otec_capex_definition", "marine_otec_capex_usd",
+	 "capex_marine_otec * marine_otec_capacity * 1000",
+	 "OTEC's installed capital cost: the per-kW rate over the built capacity. "
+	 "The 1000 is the kW/MW conversion, and it is written as a literal rather "
+	 "than folded into the rate so the rate keeps the unit a TSO or a vendor "
+	 "quotes it in. 0 USD at defaults because `marine_otec_capacity` defaults "
+	 "to 0; 100 MW at 12,000 USD/kW is 1.2 bn USD. A levelised cost was the "
+	 "alternative and is blocked: `crf_marine_otec`, "
+	 "`capacity_factor_marine_otec` and `opex_fixed_marine_otec` are all "
+	 "absent.",
+	 "financial", None),
+	("marine_tidal_capex_definition", "marine_tidal_capex_usd",
+	 "capex_marine_tidal * marine_tidal_capacity * 1000",
+	 "Tidal's installed capital cost, the same conversion. 0 USD at defaults; "
+	 "100 MW at 7,000 USD/kW is 0.7 bn USD.",
+	 "financial", None),
+	("eligible_own_funds_definition", "eligible_own_funds_usd_million",
+	 "solvency_capital_ratio * solvency_capital",
+	 "The capital held is the ratio times the capital required: 1.6 x 450 = "
+	 "720 USD million at defaults, and 405 at a ratio of 0.9. This is the "
+	 "ratio's own definition solved for its numerator. Aliasing it to "
+	 "`solvency_capital` was rejected: that makes the ratio identically 1.0 "
+	 "and deletes the dial the prudential regime is about.",
+	 "financial", None),
+)
+
+
+#: (eq_id, lhs, relation, rhs, prose, system, reference, binder, bounded) --
+#: two inequalities. Both operands are settable scalars, so both route
+#: `bound` and reach the optimiser rather than waiting for a post-solve check.
+BATCH39_BOUNDS: tuple[
+	tuple[str, str, str, str, str, str, str | None, str, str], ...] = (
+	("ocgt_capex_ordering_bound", "capex_gas_ocgt", "leq", "capex_gas",
+	 "A peaker costs less per kW than the combined cycle it backs up, which "
+	 "the node's own description already states: lower capex and lower "
+	 "efficiency than the CCGT, and that trade is why both live in the graph. "
+	 "650 <= 1,100 at defaults, residual -450; at 1,200 the residual is +100 "
+	 "and the bound fails, so it is live rather than vacuous. The prior "
+	 "pack's deferral of this node rests on a false reason -- it claimed the "
+	 "OCGT LCOE comes out below the CCGT's at any capacity factor, and the "
+	 "shipped form crosses at 0.3965 (78.39 at 0.6, 96.77 at the archived "
+	 "0.3). The blocker was never a sign error; it is three absent peaker "
+	 "rates.",
+	 "cost_accounting", "IEA/NEA Projected Costs of Generating Electricity",
+	 "capex_gas", "capex_gas_ocgt"),
+	("accumulation_exposure_bound", "accumulation_risk", "geq",
+	 "pml_99_5_usd_million",
+	 "The insurer's exposure to a single event must cover the loss it models "
+	 "at the 99.5th percentile, or the tail is drawn from a distribution the "
+	 "book cannot pay. 500,000 >= 500 at defaults, residual 499,500; at 100 "
+	 "the residual is -400 and the bound fails. The bound is what forces the "
+	 "retype: with `accumulation_risk` dimensionless the comparison is "
+	 "undecidable, which is the finding rather than a defect. An equality "
+	 "was rejected -- it would make a firm-specific input derived from a "
+	 "modelled output and delete the dial.",
+	 "financial", None, "pml_99_5_usd_million", "accumulation_risk"),
+)
+
+
+_BATCH39_SOURCE = "The digital and marine pack (batch 39)"
+
+
+def build_batch39(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""The digital-sector pack: three products, two bounds, one retype.
+
+	The slice is 74 nodes of digital infrastructure, marine technology and
+	insurance procedure. Five couple; sixty-nine defer across six registers,
+	and the reason is the pack's whole finding rather than a shortcut:
+
+	*Thirty-four are qualitative.* Procedures, standards and rulebooks -- a
+	cybersecurity framework, a data-governance regime, a maintenance policy.
+	No arithmetic exists on a standard's name, and the graph's categorical
+	type does not help: a categorical needs an enum an equation can branch
+	on, and the DSL has no branch.
+
+	*Twenty-eight need an operand the graph does not carry.* A formula is
+	statable and one of its terms is absent, which is the class that most
+	often tempts an invented operand.
+
+	*Five are scene switches* and *two are DEPRECATED* -- the latter a node
+	whose correct coupling is its removal, which this batch does not perform.
+
+	*The five that couple are the three shapes the pack admits.* Two marine
+	products convert a per-kW rate over a capacity the graph already types;
+	one insurance product solves the shipped solvency ratio for its missing
+	numerator; and two bounds compare declared scalars, one of which is only
+	comparable after the retype.
+
+	*The retype is the finding, not the decoration.* `accumulation_risk`
+	shipped dimensionless, and the coherence bound against a currency
+	quantity is undecidable against it -- measured, not inferred. Corrected
+	to `USD million`, all five equations unit-check consistent.
+
+	*Two things this pack diagnoses and does not fix.* `lcoe_wind_definition`
+	carries a description of an amendment that has already landed, and its
+	consequence is that `opex_fixed_wind` has zero equation readers and is a
+	dead duplicate; `supply-emissions-grid.md` lines 159-160 are stale on all
+	three marine capacities, and its requested retype of
+	`gravity_storage_capacity` to MWh would turn the shipped bound against
+	`storage_headroom_mw` from consistent to inconsistent. Both are recorded
+	in the pack and left for a dedicated fix: correcting shipped prose and
+	retyping a shipped bound are different units of work from coupling a
+	node, and the second would break a bound that currently holds.
+	"""
+	from alea.prg.dsl import parse_side
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	for name, unit, rng, default, role, determinism, prose in BATCH39_RETYPES:
+		shipped = graph.nodes.get(name)
+		assert shipped is not None, f"{name}: no shipped node to retype"
+		full: dict[str, Any] = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		full.update({
+			"description": prose, "type": "float", "unit": unit,
+			"range": rng, "role": role, "determinism": determinism,
+			"priority": "P1", "status": _kept_status(shipped),
+			"source": _BATCH39_SOURCE,
+			"users": ["Planners", "Regulators", "Researchers"],
+		})
+		full["default"] = default
+		nodes[name] = full
+
+	for name, unit, rng, role, determinism, category, prose in BATCH39_NEW_NODES:
+		existing = graph.nodes.get(name)
+		assert existing is None or existing.source == _BATCH39_SOURCE, (
+			f"{name}: a shipped node this batch did not create"
+		)
+		nodes[name] = {
+			"name": name.replace("_", " ").capitalize(),
+			"description": prose, "type": "float", "unit": unit,
+			"range": rng, "role": role, "determinism": determinism,
+			"category": category,
+			"priority": "P1", "status": "to_build",
+			"source": _BATCH39_SOURCE,
+			"users": ["Planners", "Regulators", "Researchers"],
+		}
+
+	determined = {row[1] for row in BATCH39_EQUATIONS}
+	for name in determined:
+		assert nodes[name]["role"] == "derived", (
+			f"{name}: an equation determines it, so it must be derived"
+		)
+		assert "default" not in nodes[name], f"{name}: derived and carrying a default"
+
+	for eq_id, lhs, rhs, prose, system, cite in BATCH39_EQUATIONS:
+		rhs_params = sorted(parse_side(rhs).symbols)
+		known = set(nodes) | set(graph.nodes)
+		assert lhs in known, f"{eq_id}: {lhs!r} has no node body"
+		assert lhs not in rhs_params, f"{eq_id}: lhs names itself on its rhs"
+		missing = [sym for sym in rhs_params if sym not in known]
+		assert not missing, f"{eq_id}: rhs names {missing}, which no node holds"
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": eq_id.replace("_", " ").capitalize(),
+			"description": prose,
+			"system": system, "lhs": lhs, "rhs": rhs, "relation": "eq",
+			"parameters": [lhs] + rhs_params, "free_variables": [],
+			"determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs, "equation_id": eq_id,
+				"relationship": "functional", "direction": "forward",
+				"strength": "hard",
+				"description": "Enters the marine or solvency product.",
+				"reference": cite, "priority": "P1",
+			})
+
+	for eq_id, lhs, relation, rhs, prose, system, cite, binder, bounded in BATCH39_BOUNDS:
+		assert relation in ("leq", "geq"), f"{eq_id}: {relation} is not a bound"
+		named = sorted(set(parse_side(lhs).symbols) | set(parse_side(rhs).symbols))
+		known = set(nodes) | set(graph.nodes)
+		assert bounded in known, f"{eq_id}: bounded {bounded!r} has no node"
+		assert bounded in named, f"{eq_id}: bounded {bounded!r} is not named"
+		binder_syms = sorted(parse_side(binder).symbols)
+		assert binder_syms, f"{eq_id}: binder {binder!r} names no symbol"
+		assert not set(binder_syms) & {bounded}, (
+			f"{eq_id}: binder names the bounded node; a self-loop is no coupling"
+		)
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": eq_id.replace("_", " ").capitalize(),
+			"description": prose, "system": system,
+			"lhs": lhs, "rhs": rhs, "relation": relation,
+			"parameters": named, "free_variables": named,
+			"determined_variables": (),
+			"tolerance": 1.0e-06, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P2", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		edges.append({
+			"source": binder_syms[0], "target": bounded, "equation_id": eq_id,
+			"relationship": "constraint", "direction": "forward",
+			"strength": "hard",
+			"description": (
+				f"Bounds {bounded} against {binder}; a scenario can clear the "
+				"arithmetic and fail this."
+			),
+			"reference": cite, "priority": "P2",
+		})
+
+	return nodes, equations, edges, rules
+
+
+def build_batch38(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""The operational-supply pack: six products, two bounds, eleven retypes.
+
+	The slice is 42 nodes of plant operation, maintenance and network
+	switching. Eleven couple; thirty-one defer, and the deferral classes are
+	specific rather than a blanket "qualitative":
+
+	*Nine need an operand the graph does not carry.* A microgrid has no
+	installed capacity or site count; a start-up cost has no start count; a
+	nuclear lead time has no nuclear-specific build duration; a reservoir has
+	no energy capacity; and `ac_voltage_limit` has no voltage dimension at all
+	-- `kv` returns no node. Each was checked by name against the graph, and
+	the pack records which neighbouring node is close enough to be tempting
+	and not close enough to alias.
+
+	*Twelve are qualitative.* Regime selectors, model switches, event logs and
+	schedules. `condition_based_maintenance` is the one worth naming: the
+	obvious alias is `predictive_maintenance_adoption`, but that node is the
+	share of maintenance already *moved into* the regime, one level
+	downstream. Aliasing the regime onto its own adoption share states that
+	the regime is the adoption, which overstates it. Built, unit-checked and
+	measured (0.5 at defaults) before being rejected.
+
+	*Ten are scene switches.* Booleans and coupling-algorithm selectors, none
+	read by any equation. `unit_commitment` is the clearest: multiplying it by
+	anything produces a product of a solver flag. The graph's precedent for a
+	switch that *is* read is `n_1_criterion`, and there the switch selects a
+	magnitude that exists independently -- none of these ten has one.
+
+	*The six that couple, and the arithmetic.* Four new nodes give the
+	per-unit parameters a fleet magnitude: a ramp rate times capacity is
+	MW/hour, a minimum stable level times capacity is MW, two durations give a
+	cycle ceiling, and a duration times power gives energy. Each is the only
+	arithmetically clean use of its operands, and each operand was already
+	typed and ranged. The other two are a settlement-risk product and a
+	complement of the condition index.
+
+	*The two bounds are one-sided on purpose.* A workshop larger than its
+	workload is idle capacity, and loss-reduction spend below its budget is
+	prudence; only the excess is a violation. Both sides are declared, so both
+	routes are `bound` and reach the optimiser as linopy constraints.
+
+	*The retypes are the coupling's prerequisite.* Every one of the eleven
+	shipped with `unit: None`, range [0, 1e6] and default 500,000. A ramp rate
+	of 500,000 per hour is a unit that ramps its whole rating half a million
+	times an hour; a minimum up time of 500,000 hours is fifty-seven years.
+	Without the retype the four new nodes would compute 500,000-scale garbage
+	and both bounds would be unfalsifiable.
+
+	*Two shipped equations this batch's slice diagnoses and does not fix.*
+	`line_outage_hours_per_year_definition` is missing an events-per-year
+	factor and `coal_price_per_mwh` is off by 12.96x; both fail their own unit
+	checks and both belong to this pack's findings, not to its proposals. They
+	are recorded in the pack and left for a dedicated fix, because changing a
+	shipped equation's body is a different unit of work from coupling a node.
+	"""
+	from alea.prg.dsl import parse_side
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	for row in BATCH38_RETYPES + BATCH38_DERIVED_RETYPES:
+		name, unit, rng, default, role, determinism, prose = row
+		shipped = graph.nodes.get(name)
+		assert shipped is not None, f"{name}: no shipped node to retype"
+		full: dict[str, Any] = dict(
+			shipped.model_dump(exclude={"id"}, mode="json")
+		)
+		full.update({
+			"description": prose, "type": "float", "unit": unit,
+			"range": rng, "role": role, "determinism": determinism,
+			"priority": "P1",
+			"status": _kept_status(shipped),
+			"source": _BATCH38_SOURCE,
+			"users": ["Planners", "Regulators", "Researchers"],
+		})
+		# A derived node carries no default; a free one must keep the value
+		# the pack measured, or every defaults-fill becomes a GraphError.
+		if role == "derived":
+			full.pop("default", None)
+		else:
+			full["default"] = default
+		nodes[name] = full
+
+	for name, unit, rng, role, determinism, category, prose in BATCH38_NEW_NODES:
+		existing = graph.nodes.get(name)
+		assert existing is None or existing.source == _BATCH38_SOURCE, (
+			f"{name}: a shipped node this batch did not create"
+		)
+		nodes[name] = {
+			"name": name.replace("_", " ").capitalize(),
+			"description": prose, "type": "float", "unit": unit,
+			"range": rng, "role": role, "determinism": determinism,
+			"category": category,
+			"priority": "P1", "status": "to_build",
+			"source": _BATCH38_SOURCE,
+			"users": ["Planners", "Regulators", "Researchers"],
+		}
+
+	determined = {row[1] for row in BATCH38_EQUATIONS}
+	for name in determined:
+		assert nodes[name]["role"] == "derived", (
+			f"{name}: an equation determines it, so it must be derived"
+		)
+		assert "default" not in nodes[name], (
+			f"{name}: derived and carrying a default"
+		)
+
+	for eq_id, lhs, rhs, prose, system, cite in BATCH38_EQUATIONS:
+		rhs_params = sorted(parse_side(rhs).symbols)
+		known = set(nodes) | set(graph.nodes)
+		assert lhs in known, f"{eq_id}: {lhs!r} has no node body"
+		assert lhs not in rhs_params, f"{eq_id}: lhs names itself on its rhs"
+		missing = [sym for sym in rhs_params if sym not in known]
+		assert not missing, f"{eq_id}: rhs names {missing}, which no node holds"
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": eq_id.replace("_", " ").capitalize(),
+			"description": prose,
+			"system": system, "lhs": lhs, "rhs": rhs, "relation": "eq",
+			"parameters": [lhs] + rhs_params, "free_variables": [],
+			"determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs, "equation_id": eq_id,
+				"relationship": "functional", "direction": "forward",
+				"strength": "hard",
+				"description": "Enters the operational identity.",
+				"reference": cite, "priority": "P1",
+			})
+
+	for eq_id, lhs, relation, rhs, prose, system, cite, binder, bounded in BATCH38_BOUNDS:
+		assert relation in ("leq", "geq"), f"{eq_id}: {relation} is not a bound"
+		named = sorted(set(parse_side(lhs).symbols) | set(parse_side(rhs).symbols))
+		known = set(nodes) | set(graph.nodes)
+		assert bounded in known, f"{eq_id}: bounded {bounded!r} has no node"
+		assert bounded in named, f"{eq_id}: bounded {bounded!r} is not named"
+		binder_syms = sorted(parse_side(binder).symbols)
+		assert binder_syms, f"{eq_id}: binder {binder!r} names no symbol"
+		assert not set(binder_syms) & {bounded}, (
+			f"{eq_id}: binder names the bounded node; a self-loop is no coupling"
+		)
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": eq_id.replace("_", " ").capitalize(),
+			"description": prose, "system": system,
+			"lhs": lhs, "rhs": rhs, "relation": relation,
+			"parameters": named, "free_variables": named,
+			"determined_variables": (),
+			"tolerance": 1.0e-06, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P2", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		edges.append({
+			"source": binder_syms[0], "target": bounded, "equation_id": eq_id,
+			"relationship": "constraint", "direction": "forward",
+			"strength": "hard",
+			"description": (
+				f"Bounds {bounded} against {binder}; a scenario can clear the "
+				"arithmetic and fail this."
+			),
+			"reference": cite, "priority": "P2",
+		})
+
+	return nodes, equations, edges, rules
+
+
+def build_batch37(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""The macro-climate pack: five products, two bounds, twenty-three retypes.
+
+	The slice is 105 nodes of macro, climate, adaptation, geopolitical, land,
+	spatial and scenario families. Twenty-one couple; eighty-four defer, and
+	the pack's reasons are specific in each row rather than a blanket
+	"qualitative". Three deferral classes dominate and none of them is a
+	shortcut this batch could take:
+
+	*Forty-two need an operand the graph does not carry.* The macro block is
+	blocked on `gdp_usd_per_year` -- absent -- so seven ratios have no
+	denominator. The pollutant block needs per-fuel generation and
+	species-specific emission factors, and every `emission_factor_*` node that
+	exists is CO2. The adaptation block needs a damage function or a cost curve
+	and neither exists.
+
+	*Twenty-four are scene switches.* A method flag is a level, and a level is
+	not a number. The graph has a categorical type now -- batch 36 shipped six
+	-- so this is no longer the hard block the pack recorded, but a categorical
+	still needs an enum whose levels an equation can branch on, and the DSL has
+	no branch. Deriving `temperature_increase` from `ssp_pathway` would need a
+	mapping table the graph does not carry; inventing one is the
+	operand-invention failure this arc refuses.
+
+	*Eighteen are qualitative.* Governance and safeguard constructs with no
+	unit and no scale. A number here would be a judgement, and the one numeric
+	quantity in that family, `grievance_redress_effectiveness`, is already typed
+	with a declared share range and deferred for want of an operand.
+
+	*The five that couple, and why each is safe.* Two composites are means of
+	dials the graph already declares -- every operand is typed, ranged and
+	readable, so the arithmetic is checkable from its parts. Two aliases resolve
+	catalog duplicate rows onto drivers the graph already derives, which removes
+	a placeholder that could be set to contradict the project's own take.
+	`snapshot_weightings` is the one genuinely new arithmetic: the horizon's
+	hours over the snapshot count, the quantity a temporal aggregation must
+	preserve.
+
+	*Two prerequisites, and the pack measured why.* `snapshot_weightings`
+	divides by `representative_snapshots`, which is derived as
+	`representative_days * tsam_segments`. Retyping the denominator alone does
+	not prevent the pole: the product is already zero before the node's range
+	is consulted. Retyping `representative_days` to `[1, 100]` is what converts
+	a `ZeroDivisionError` from inside `propagate` into a clean range refusal at
+	the door. `time_horizon` is retyped for the same reason in the other
+	direction: at zero the window bound holds for every value of the quantity
+	it is supposed to constrain, which is a bound that binds nothing.
+
+	*A cross-validation rule this batch makes reachable, and does not change.*
+	`index_above_unity` is an `error` rule over eleven [0, 1] indices. Once
+	`exposure_index` is derived, a legal input vector -- all eight hazards at
+	0.99 -- derives an index the rule refuses, and the CLI exits 1. The pack
+	measured this and left the decision open. This batch leaves the rule as it
+	stands: the corner it fires on is a scenario with every hazard dial at the
+	top of its range, which is a scenario worth refusing on its own terms, and
+	exempting derived composites would be a change to the validation contract
+	that no equation in this batch requires. It is recorded here so the next
+	reader knows the interaction is deliberate.
+
+	*The two composites carry `reference: None`.* They are unweighted means of
+	declared dials; no archived work states this aggregation, and the component
+	provenance the catalog gives -- World Bank WGI for the governance dials,
+	ND-GAIN for the hazards -- is not in `sources/archive/`. The pack lists both
+	under **Sources to fetch**. A fabricated citation would be worse than the
+	gap, which the citation register already counts.
+	"""
+	from alea.prg.dsl import parse_side
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	for row in BATCH37_RETYPES + BATCH37_PREREQUISITES:
+		name, unit, rng, default, role, determinism, prose = row
+		shipped = graph.nodes.get(name)
+		full: dict[str, Any] = (
+			dict(shipped.model_dump(exclude={"id"}, mode="json"))
+			if shipped is not None else {"name": name.replace("_", " ").capitalize()}
+		)
+		full.update({
+			"description": prose, "type": "float", "unit": unit,
+			"range": rng, "role": role, "determinism": determinism,
+			"priority": "P1",
+			"status": _kept_status(shipped),
+			"source": _BATCH37_SOURCE,
+			"users": ["Planners", "Regulators", "Researchers"],
+		})
+		# A derived node has no default and a free one must keep the one the
+		# pack measured; writing `None` over a free node's default would make
+		# every value at defaults a `GraphError` rather than a number.
+		if role == "derived":
+			full.pop("default", None)
+		else:
+			full["default"] = default
+		nodes[name] = full
+
+	for eq_id, lhs, rhs, prose, system, cite in BATCH37_EQUATIONS:
+		rhs_params = sorted(parse_side(rhs).symbols)
+		known = set(nodes) | set(graph.nodes)
+		assert lhs in known, f"{eq_id}: {lhs!r} has no node body"
+		assert lhs not in rhs_params, f"{eq_id}: lhs names itself on its rhs"
+		missing = [sym for sym in rhs_params if sym not in known]
+		assert not missing, f"{eq_id}: rhs names {missing}, which no node holds"
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": eq_id.replace("_", " ").capitalize(),
+			"description": prose,
+			"system": system, "lhs": lhs, "rhs": rhs, "relation": "eq",
+			"parameters": [lhs] + rhs_params, "free_variables": [],
+			"determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs, "equation_id": eq_id,
+				"relationship": "functional", "direction": "forward",
+				"strength": "hard",
+				"description": "Enters the composite or alias identity.",
+				"reference": cite, "priority": "P1",
+			})
+
+	for eq_id, lhs, relation, rhs, prose, system, cite, binder, bounded in BATCH37_BOUNDS:
+		assert relation in ("leq", "geq"), f"{eq_id}: {relation} is not a bound"
+		named = sorted(set(parse_side(lhs).symbols) | set(parse_side(rhs).symbols))
+		known = set(nodes) | set(graph.nodes)
+		assert bounded in known, f"{eq_id}: bounded {bounded!r} has no node"
+		assert bounded in named, f"{eq_id}: bounded {bounded!r} is not named"
+		binder_syms = sorted(parse_side(binder).symbols)
+		assert binder_syms, f"{eq_id}: binder {binder!r} names no symbol"
+		binder_node = binder_syms[0]
+		assert binder_node in known, f"{eq_id}: binder has no node among its symbols"
+		assert binder_node != bounded, (
+			f"{eq_id}: binder and bounded are both {bounded!r}; a self-loop "
+			"names no coupling"
+		)
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": eq_id.replace("_", " ").capitalize(),
+			"description": prose, "system": system,
+			"lhs": lhs, "rhs": rhs, "relation": relation,
+			"parameters": named, "free_variables": named,
+			"determined_variables": (),
+			"tolerance": 1.0e-06, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P2", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		edges.append({
+			"source": binder_node, "target": bounded, "equation_id": eq_id,
+			"relationship": "constraint", "direction": "forward",
+			"strength": "hard",
+			"description": (
+				f"Bounds {bounded} against {binder}; a scenario can clear the "
+				"arithmetic and fail this."
+			),
+			"reference": cite, "priority": "P2",
+		})
+
+	for rule_id, condition, severity, message, suggestion, prose in BATCH37_RULES:
+		shipped = [r for r in graph.rules if r.id == rule_id]
+		assert len(shipped) == 1, f"{rule_id}: expected one shipped rule"
+		rules.append({
+			"id": rule_id, "condition": condition, "severity": severity,
+			"message": message, "suggestion": suggestion,
+			"description": prose,
+		})
+
+	return nodes, equations, edges, rules
+
+
+def build_batch36(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""The contract and market pack: six products, one bound, sixteen retypes.
+
+	The slice is 63 nodes of market design, contract terms and counterparty
+	exposure. Fifty-six defer, and the deferrals are mostly structural: a
+	market *rule* is not a quantity, and a node whose whole content is "which
+	mechanism" has no base to multiply. Seven couple, and each couples because
+	the graph already carries every operand of the arithmetic.
+
+	*Six of the seven are aliases, and that is the finding rather than a
+	shortcut.* `counterparty_risk` is `settlement_risk` under a second name;
+	`cost_pass_through_mechanism` is `wholesale_cost_pass_through`. Each shipped
+	as a float placeholder with no unit and a midpoint default of 500,000 -- a
+	"risk" of half a million with no dimension -- while the graph carried the
+	actual share, typed and ranged. The alias removes the placeholder from
+	`uncoupled()` without inventing arithmetic, which is the coupling the
+	catalog's own duplicate rows call for.
+
+	*The one contested alias.* `unclassified.md` classifies
+	`cost_pass_through_mechanism` as QUALITATIVE -- "which costs pass through
+	automatically and which go to a review. A rule, not a rate" -- and that
+	reading is defensible: the rule and the share are not obviously one object.
+	This batch ships the alias because the node is a float placeholder, the
+	graph carries exactly one pass-through share, and the shipped
+	`pass_through_tariff_definition` already consumes it. The description
+	records the disagreement rather than settling it, so a reviewer who reads
+	the node as the rule set knows what to change.
+
+	*The two products that are not aliases.* `security_package` sums the
+	performance bond and the parent's guarantee -- two capital stocks the graph
+	already derives, released rather than spent. `tax_incentives` is the
+	untaxed fraction of the term at the corporate rate on the fleet's cash.
+	Both were shipped as 500,000-USD placeholders with no unit.
+
+	*`ppa_termination_payments` is the annuity, not the sum.* A make-whole
+	clause compensates forgone revenue; paying twenty years of it as a lump sum
+	today overstates the liability 2.4x (77.16 bn against 31.83 bn). The
+	undiscounted form was built and measured before being rejected.
+
+	*One new node, because the graph held the two halves of a quotient and no
+	node joining them.* `auction_volume_per_round` is the annual volume over the
+	round frequency -- 25 / 12 = 2.0833 MtCO2 at defaults. The per-round size is
+	what an auction calendar is designed around and no shipped node carried it.
+
+	*The one bound, and why it is a bound rather than an identity.*
+	`gate_closure >= settlement_period` says the market closes no later than one
+	settlement interval before delivery. An equality would make every operator
+	run the same gate, which is a policy statement the graph has no basis for.
+	Both sides are declared, so this route is `bound` and reaches the optimiser
+	as a linopy constraint rather than a post-solve check.
+
+	*The retypes are the coupling's prerequisite, not decoration.* Every one of
+	the sixteen shipped with `unit: None`, range [0, 1e6] and default 500000.0.
+	A gate closure of 500,000 hours is fifty-seven years; an auction frequency
+	of 500,000 per year is 1,370 auctions a day. Without the retype the bound
+	above is unfalsifiable and the products carry a dimension their operands do
+	not. The five categoricals are the same defect one step further: they are
+	levels that shipped as floats, and a level has no magnitude.
+	"""
+	from alea.prg.dsl import parse_side
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	for name, unit, rng, default, determinism, prose in BATCH36_RETYPES:
+		shipped = graph.nodes.get(name)
+		full: dict[str, Any] = (
+			dict(shipped.model_dump(exclude={"id"}, mode="json"))
+			if shipped is not None else {"name": name.replace("_", " ").capitalize()}
+		)
+		full.update({
+			"description": prose, "type": "float", "unit": unit,
+			"range": rng, "determinism": determinism, "priority": "P1",
+			"status": _kept_status(shipped),
+			"source": _BATCH36_SOURCE,
+			"users": ["Planners", "Regulators"],
+		})
+		full["default"] = default
+		nodes[name] = full
+
+	# The levels. A categorical carries no range and no unit, and its
+	# admissible set is `categories` -- which is what `_validate` checks a value
+	# against, so a categorical with a range is refused by the loader.
+	for name, categories, default, prose in BATCH36_CATEGORICALS:
+		shipped = graph.nodes.get(name)
+		assert shipped is not None, f"{name} is retyped categorical and not shipped"
+		full = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		full.update({
+			"description": prose, "type": "categorical", "unit": None,
+			"range": None, "default": default, "categories": list(categories),
+			"determinism": "policy", "priority": "P1",
+			"status": _kept_status(shipped),
+			"source": _BATCH36_SOURCE,
+			"users": ["Planners", "Regulators"],
+		})
+		nodes[name] = full
+
+	# The one new lhs id. Derived, so it carries no default; the guard is the
+	# source string this batch stamps, which makes the emit repeatable without
+	# letting the batch claim an id the catalog owns.
+	for name, unit, rng, category, prose in BATCH36_NEW_NODES:
+		existing = graph.nodes.get(name)
+		assert existing is None or existing.source == _BATCH36_SOURCE, (
+			f"{name} already ships and not from this batch; a new node needs "
+			"an id the catalog does not own"
+		)
+		nodes[name] = {
+			"name": name.replace("_", " ").capitalize(),
+			"description": prose, "category": category, "type": "float",
+			"unit": unit, "range": rng, "role": "derived",
+			"determinism": "policy", "priority": "P1",
+			"source": _BATCH36_SOURCE,
+			"users": ["Planners", "Regulators"],
+		}
+
+	# A node a product determines is `derived` and carries no default. The
+	# retype table above sets the unit and range; this pass sets the role,
+	# because the two are separate claims and only the equation establishes
+	# the second.
+	determined = {row[1] for row in BATCH36_EQUATIONS}
+	for name in determined:
+		if name in nodes:
+			nodes[name]["role"] = "derived"
+			nodes[name].pop("default", None)
+		else:
+			shipped = graph.nodes.get(name)
+			assert shipped is not None, f"{name} is neither retyped nor shipped"
+			full = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+			full["role"] = "derived"
+			full.pop("default", None)
+			nodes[name] = full
+
+	for eq_id, lhs, rhs, prose, system, cite in BATCH36_EQUATIONS:
+		rhs_params = sorted(parse_side(rhs).symbols)
+		known = set(nodes) | set(graph.nodes)
+		assert lhs in known, f"{eq_id}: {lhs!r} has no node body"
+		missing = [sym for sym in rhs_params if sym not in known]
+		assert not missing, f"{eq_id}: rhs names {missing}, which no node holds"
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": eq_id.replace("_", " ").capitalize(),
+			"description": prose,
+			"system": system, "lhs": lhs, "rhs": rhs, "relation": "eq",
+			"parameters": [lhs] + rhs_params, "free_variables": [],
+			"determined_variables": [lhs],
+			"tolerance": 1.0e-09, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P1", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs, "equation_id": eq_id,
+				"relationship": "functional", "direction": "forward",
+				"strength": "hard",
+				"description": "Enters the product identity.",
+				"reference": cite, "priority": "P1",
+			})
+
+	for eq_id, lhs, relation, rhs, prose, system, cite, binder, bounded in BATCH36_BOUNDS:
+		assert relation in ("leq", "geq"), f"{eq_id}: {relation} is not a bound"
+		named = sorted(set(parse_side(lhs).symbols) | set(parse_side(rhs).symbols))
+		known = set(nodes) | set(graph.nodes)
+		assert bounded in known, f"{eq_id}: bounded {bounded!r} has no node"
+		assert bounded in named, f"{eq_id}: bounded {bounded!r} is not named"
+		binder_syms = sorted(parse_side(binder).symbols)
+		assert binder_syms, f"{eq_id}: binder {binder!r} names no symbol"
+		binder_node = binder_syms[0]
+		assert binder_node in known, f"{eq_id}: binder has no node among its symbols"
+		assert binder_node != bounded, (
+			f"{eq_id}: binder and bounded are both {bounded!r}; a self-loop "
+			"names no coupling"
+		)
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": eq_id.replace("_", " ").capitalize(),
+			"description": prose, "system": system,
+			"lhs": lhs, "rhs": rhs, "relation": relation,
+			"parameters": named, "free_variables": named,
+			"determined_variables": (),
+			"tolerance": 1.0e-06, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P2", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		edges.append({
+			"source": binder_node, "target": bounded, "equation_id": eq_id,
+			"relationship": "constraint", "direction": "forward",
+			"strength": "hard",
+			"description": (
+				f"Bounds {bounded} against {binder}; a plan can clear the "
+				"physics and fail this."
+			),
+			"reference": cite, "priority": "P2",
+		})
 
 	return nodes, equations, edges, rules
 
