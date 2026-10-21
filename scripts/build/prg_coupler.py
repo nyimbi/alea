@@ -546,7 +546,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -646,6 +646,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "35":
+		b35_nodes, b35_equations, b35_edges, b35_rules = build_batch35(graph)
+		rules.extend(b35_rules)
+		nodes.update(b35_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b35_equations)
+		edges = list(BATCH12_EDGES) + b35_edges
 	elif batch == "33":
 		b33_nodes, b33_equations, b33_edges, b33_rules = build_batch33(graph)
 		rules.extend(b33_rules)
@@ -10206,7 +10213,7 @@ BATCH33_EQUATIONS: tuple[tuple[str, str, str, str, str, str | None], ...] = (
 	 "outage-cost curve was rejected: a second value of lost load would give "
 	 "one quantity two prices.",
 	 "reliability", "ENTSO-E adequacy methodology (value of lost load, "
-	 "definition at Sec. 3.6)"),
+	 "definition at the Glossary, p. 3)"),
 	("willingness_to_pay_usd_per_year_definition", "willingness_to_pay_usd_per_year",
 	 "willingness_to_pay * household_consumption_mwh_per_year * households_total",
 	 "The annual consumer valuation of the electricity households consume: "
@@ -10646,6 +10653,98 @@ def build_batch34(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 				"description": "Enters the product identity.",
 				"reference": cite, "priority": "P1",
 			})
+
+	return nodes, equations, edges, rules
+
+
+def build_batch35(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Batch 35: every stored rendering that describes a different equation.
+
+	This batch adds no node and couples nothing. It repairs a defect class the
+	batches created and the gate caught: an amendment copies the shipped
+	equation's fields, rewrites `lhs` or `rhs`, and leaves `latex` alone -- so
+	the shipped rendering survives a body it no longer describes.
+	`check_latex` compares operand *sets*, so each of these was detectable the
+	moment it shipped and none of them was read.
+
+	Five equations are wrong in four distinct ways, and the ways matter
+	because each is a different thing the rendering lost:
+
+	* `coal_eaf_definition` typesets `forced_outage_rate` where the body holds
+	  `forced_outage_rate_coal`. Batch 31 amended the body to read the coal
+	  fleet's own rate -- 10%, against the generic 24/50024 = 0.048% that
+	  `availability_definition` derives -- and the rendering kept the old
+	  symbol. A reader of the report would have taken a 0.05% forced-outage
+	  rate for a coal fleet, which is a factor of 200 away from the fleet's.
+	* `lcoe_wind_definition` typesets the generic `opex_fixed_wind` (40) where
+	  the body holds `opex_fixed_wind_onshore` (30). The same batch made the
+	  same substitution and the rendering kept the generic name.
+	* `transmission_investment_definition` omits `transmission_cost_multiplier`
+	  entirely. The batch inserted the multiplier into the body precisely
+	  because it was "a dial nothing multiplied"; the rendering then showed a
+	  transmission cost that does not carry it, so a reader could not see the
+	  dial at work.
+	* `fleet_build_balance` typesets twelve technologies where the body sums
+	  eighteen. Batch 30 added the six conversion-plant capacities -- biogas,
+	  landfill gas, gasification, pyrolysis, waste-to-energy and
+	  salinity-gradient -- so a scenario building any of them is counted
+	  against the ceiling. The rendering showed a constraint that does not
+	  mention them, which reads as a constraint they escape.
+	* `water_availability_constraint` had no rendering at all, which is why
+	  `check_latex` never reported it: the check skips a null `latex` rather
+	  than flagging it. A rewrite with no rendering is invisible to the gate,
+	  and that blind spot is recorded here rather than fixed, because deciding
+	  whether every equation *should* declare a rendering is a policy question
+	  about the field and not a repair.
+
+	The repair is a re-typeset from each equation's own body, not a hand-edit
+	of each string. A hand-edited rendering is a third copy of the arithmetic
+	-- the body, the rendering, and now the patch -- and the copy that goes
+	stale is whichever one the next batch does not open. `generated_latex` is
+	already the function that renders a body, so the batch calls it rather
+	than reimplementing it, and the five strings become what the body says by
+	construction rather than by care.
+
+	The rendering is emitted only where it *disagrees*. An equation whose
+	declared rendering differs from the generated one only in notation is
+	passing `check_latex` on purpose -- `\\log_2` for a folded `0.693147`, an
+	author's `\\mathrm{CF}` for `capacity_factor` -- and overwriting those
+	would replace deliberate notation with the renderer's default. So the
+	selection predicate is `check_latex`, not "every equation", which is what
+	makes this a repair rather than a rewrite of the library's typography.
+	"""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	from alea.prg.service import check_latex, generated_latex
+
+	findings = check_latex(graph)
+	assert findings, (
+		"batch 35 repairs renderings that disagree with their arithmetic, and "
+		"check_latex reports none; either the graph is already repaired or the "
+		"gate is not reading it, and a batch that emitted nothing would look "
+		"like a clean pass either way"
+	)
+
+	for finding in findings:
+		eq_id = finding.equation_id
+		shipped = graph.equations.get(eq_id)
+		assert shipped is not None, f"{eq_id} is reported but not shipped"
+		body = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		repaired = generated_latex(shipped)
+		assert repaired != body.get("latex"), (
+			f"{eq_id} is reported by check_latex but the renderer reproduces "
+			"its stored rendering; the finding is about notation the renderer "
+			"cannot express, not about a stale operand set"
+		)
+		body["latex"] = repaired
+		equations[eq_id] = body
+		# No edges are emitted. The arithmetic did not change, so the
+		# equation's symbol set and every edge that reaches it are already
+		# right -- re-emitting them would be a second copy of edges the bake
+		# already holds, and the loader refuses a duplicate.
 
 	return nodes, equations, edges, rules
 

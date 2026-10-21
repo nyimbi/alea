@@ -29983,7 +29983,7 @@ equations:
     priority: P1
     solution_method: direct
     linearity: linear
-    latex: \mathrm{coal}_{eaf} = 1 - \mathrm{forced}_{outage\_rate} - \mathrm{planned}_{outage\_rate}
+    latex: \mathrm{coal}_{eaf} = 1 - \mathrm{forced}_{outage\_rate\_coal} - \mathrm{planned}_{outage\_rate}
   coal_new_build_bound:
     name: Coal new build bound
     description: 'New coal build is capped at the policy ceiling: 3000 MW of reference fleet under a 5000
@@ -32814,6 +32814,8 @@ equations:
     latex: \mathrm{battery}_{capacity} + \mathrm{biomass}_{capacity} + \mathrm{coal}_{capacity} + \mathrm{csp}_{capacity}
       + \mathrm{gas}_{capacity} + \mathrm{geothermal}_{capacity} + \mathrm{hydro}_{capacity} + \mathrm{nuclear}_{capacity}
       + \mathrm{oil}_{capacity} + \mathrm{phs}_{capacity} + \mathrm{wind}_{offshore\_capacity} + \mathrm{wind}_{onshore\_capacity}
+      + \mathrm{biogas}_{capacity} + \mathrm{landfill}_{gas\_capacity} + \mathrm{gasification}_{capacity}
+      + \mathrm{pyrolysis}_{capacity} + \mathrm{waste}_{to\_energy\_capacity} + \mathrm{salinity}_{gradient\_capacity}
       \leq \mathrm{total}_{capacity\_mw} + \mathrm{storage}_{headroom\_mw}
   fleet_emission_intensity_definition:
     name: Fleet emission intensity
@@ -35484,7 +35486,8 @@ equations:
     solution_method: direct
     linearity: nonlinear
     latex: \mathrm{lcoe}_{wind\_usd\_per\_mwh} = \frac{1000 \left(\mathrm{annualised}_{capex\_usd\_per\_kw\_wind}
-      + \mathrm{opex}_{fixed\_wind}\right)}{8760 \mathrm{capacity}_{factor\_wind\_onshore}} + \mathrm{opex}_{variable\_wind}
+      + \mathrm{opex}_{fixed\_wind\_onshore}\right)}{8760 \mathrm{capacity}_{factor\_wind\_onshore}} +
+      \mathrm{opex}_{variable\_wind}
   lcoe_wind_offshore_definition:
     name: LCOE (wind offshore)
     description: 'Wind offshore levelised cost in the fixed-charge-annuity form the field standardises
@@ -39757,8 +39760,8 @@ equations:
     priority: P1
     solution_method: direct
     linearity: linear
-    latex: \mathrm{transmission}_{investment\_usd} = \mathrm{capex}_{transmission} \mathrm{transmission}_{line\_length\_km}
-      \mathrm{total}_{capacity\_mw}
+    latex: \mathrm{transmission}_{investment\_usd} = \mathrm{transmission}_{cost\_multiplier} \mathrm{capex}_{transmission}
+      \mathrm{transmission}_{line\_length\_km} \mathrm{total}_{capacity\_mw}
   transmission_jobs_definition:
     name: Transmission jobs
     description: 'Construction and O&M jobs on the transmission network: the per-km intensity times the
@@ -40048,7 +40051,7 @@ equations:
     solution_method: direct
     linearity: linear
     priority: P1
-    reference: ENTSO-E adequacy methodology (value of lost load, definition at Sec. 3.6)
+    reference: ENTSO-E adequacy methodology (value of lost load, definition at the Glossary, p. 3)
     latex: \mathrm{value}_{of\_lost\_load} = \mathrm{voll}_{usd\_per\_mwh}
   variable_stack_definition:
     name: The variable cost stack
