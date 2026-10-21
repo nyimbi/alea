@@ -230,6 +230,22 @@ def parameters_from_result(
 		total = float(sum(capacity_mix.values()))
 		if total > 0.0:
 			scoped["total_capacity_mw"] = total
+			# `firm_build_fleet_mw` is the same quantity under a second name, and
+			# it needs the same producer. It is `endogenous` -- "the sum of the
+			# optimiser's per-technology builds" -- so nothing in the graph
+			# computes it, and leaving it out of this dict left it at its 10,000
+			# MW reference default while the solve built 15,000. `firm_build_
+			# fleet_bound` reads it, so the audit reported a violation of the
+			# containment against a fleet the result never claimed: the same
+			# "declared is not produced" defect `fleet_parameters` was written
+			# for, on the one node that fix did not reach.
+			#
+			# The value is the *sum of the build*, not `firm_capacity_mw`. Using
+			# the firm part would make `firm_build_fleet_mw >= firm_capacity_mw`
+			# an identity (`x >= x`) that can never fail, which is the tautology
+			# the packs reject everywhere else.
+			if "firm_build_fleet_mw" in graph.nodes:
+				scoped["firm_build_fleet_mw"] = total
 
 	# The optimiser's own capacity decisions, into the three endogenous nodes
 	# the graph declares for them. Without this the fleet nodes keep their

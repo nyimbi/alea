@@ -175,21 +175,41 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	products, the ring-fenced asset, the transaction cost, the two risk
 	charges, the premium pricing and its alias, the solvency capital, and the
 	RAB roll-forward -- and one inequality, the LLCR covenant, so
-	34/310/344 -> 35/324/359."""
+	34/310/344 -> 35/324/359.
+
+	Batches 28 to 34 took that to 64/461/525. The inequality count moved twice
+	after batch 27, and neither move added a *bound* route: 35 -> 37 with
+	batch 30, which stated two further thresholds, and 37 -> 64 with batches
+	32 and 33, whose THRESHOLD class and unclassified remainder stated 22 and
+	5 more. The bound count stayed at 34 throughout, which is the honest
+	reading rather than a stall -- each new inequality is stated over a
+	quantity the graph derives, so it is a post-solve check like the four
+	batch 20 already carried, and ``test_the_bound_set_is_pinned_by_name``
+	names the 21 that do bind. What grew is the register of what the graph
+	*states*, not what the solve enforces.
+
+	Per batch: 359 -> 417 (batch 28, +58 identities), -> 437 (batch 29, +20),
+	-> 449 (batch 30, +10 identities and +2 thresholds), -> 477 (batch 31,
+	+28), -> 499 (batch 32, +22 thresholds and no identity), -> 525 (batch
+	33, +21 identities and +5 thresholds), unchanged for batch 34, which
+	corrected one equation's body. The identity count is the total minus the
+	inequalities and is asserted as such, so it cannot drift on its own.
+	"""
 	cov = coverage(graph)
-	assert cov["constraint_shaped"] == 35
-	assert cov["identities"] == 324
-	assert cov["total"] == 359
+	assert cov["constraint_shaped"] == 64
+	assert cov["identities"] == 461
+	assert cov["total"] == 525
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
-	"""The twenty-one equations whose every term the network can supply.
+	"""The thirty-four equations whose every term the network can supply.
 
 	Six joined the original two when the generated batches were promoted --
 	``reserve_margin_with_firm_vre`` is the firm-VRE variant of the original,
 	``demand_shares_bound`` and the employment/CCS/electrification bounds are
-	system inequalities over declared shares, and ``retention_and_deductible_bound``
-	constrains the insurance module's own fractions. Seven more joined with
+	system inequalities over declared shares, and
+	``retention_and_deductible_bound`` constrains the insurance module's own
+	fractions. Seven more joined with
 	batch 20 (``blended_finance_bound``, ``green_bond_bound``,
 	``powertrain_stock_bound``, ``retraining_schedule_bound``,
 	``steel_route_bound``, ``urban_heat_supply_bound``, ``v2g_subset_bound``),
@@ -200,48 +220,91 @@ def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
 	``resettlement_share_bound``). Each is added to a solve by
 	``add_constraints`` generically, so the pin is the register of what
 	constrains the build, spelled out, rather than a count.
+
+	Thirteen more joined across batches 28 to 33, and all thirteen are
+	*capacity* or *lead-time* bounds rather than share bounds: the storage
+	and generation families the product remainder coupled
+	(``compressed_air_capacity_bound``, ``fit_capacity_bound``,
+	``flywheel_capacity_bound``, ``fusion_capacity_bound``,
+	``gravity_storage_capacity_bound``, ``hydrogen_fuel_cell_capacity_bound``,
+	``marine_otec_capacity_bound``, ``marine_tidal_capacity_bound``,
+	``marine_wave_capacity_bound``, ``small_modular_reactor_capacity_bound``,
+	``tidal_range_capacity_bound``) and two schedule bounds from the supply
+	layer (``regulatory_lag_bound``, ``spare_parts_lead_time_bound``). Each
+	compares a build variable or a declared horizon against another quantity
+	the graph already carries, so every term is a network column or a settable
+	scalar -- which is exactly the predicate the classifier tests, and why
+	they moved the bound count while the 29 inequalities added alongside them
+	did not. ``llcr_floor_bound`` is the counter-example worth keeping in
+	view: batch 27's single inequality is stated over ``llcr_estimate``, which
+	the graph derives, so it is a post-solve check and not in this list.
 	"""
 	assert bound_routes(graph) == (
 		"blended_finance_bound",
 		"carbon_budget_constraint",
+		"compressed_air_capacity_bound",
 		"cooking_clean_target_bound",
 		"cost_of_equity_capped",
 		"demand_shares_bound",
+		"fit_capacity_bound",
+		"flywheel_capacity_bound",
 		"fpic_consent_bound",
 		"fuel_ccs_adoption_bound",
+		"fusion_capacity_bound",
+		"gravity_storage_capacity_bound",
 		"green_bond_bound",
+		"hydrogen_fuel_cell_capacity_bound",
 		"industrial_electrification_bound",
 		"largest_loss_response_bound",
 		"local_employment_targets_bound",
+		"marine_otec_capacity_bound",
+		"marine_tidal_capacity_bound",
+		"marine_wave_capacity_bound",
 		"non_spinning_reserve_inside_margin",
 		"powertrain_stock_bound",
+		"regulatory_lag_bound",
 		"reserve_margin",
 		"reserve_margin_with_firm_vre",
 		"resettlement_share_bound",
 		"retention_and_deductible_bound",
 		"retraining_schedule_bound",
+		"small_modular_reactor_capacity_bound",
+		"spare_parts_lead_time_bound",
 		"steel_route_bound",
+		"tidal_range_capacity_bound",
 		"urban_heat_supply_bound",
 		"v2g_subset_bound",
 	)
 
 
-def test_the_unbound_four_are_unbound_for_one_reason(graph: ParameterGraph):
+def test_every_unbound_route_names_the_derived_quantity_it_cannot_read(
+	graph: ParameterGraph,
+):
 	"""Each names a quantity the graph derives, so it is a post-solve check.
 
 	The reason is the assertion. "Unbound" alone would be satisfied by a
 	constraint that failed to build for any cause at all -- a typo in a symbol,
 	a missing network column, a walker that gave up. Each route has to name the
-	derived quantity it could not read.
+	derived quantity it could not read, and that quantity has to actually be
+	non-settable: a symbol the classifier could not find at all is a different
+	defect wearing the same status.
+
+	The four below are pinned by name because their *specific* unresolved set
+	is the claim -- batch 20 wrote them and each has been re-read since.
+	``water_availability_constraint`` changed its unresolved set from the two
+	component flows to ``total_water_demand_m3`` when the constraint was
+	rewritten to compare available supply against demand instead of comparing
+	the demand flow against its own components, which restated the identity
+	it was meant to test. The remaining twenty-six are covered by the
+	universal predicate rather than enumerated, because a list that must grow
+	with every threshold batch is a list that gets repinned without being
+	read.
 	"""
 	expected = {
 		"affordability_constraint": {"energy_burden"},
 		"dscr_requirement": {"project_gearing_dscr"},
 		"inertia_requirement": {"rocof_df_dt_hz_per_s"},
-		"water_availability_constraint": {
-			"cooling_water_demand_m3",
-			"hydrogen_water_demand_m3",
-		},
+		"water_availability_constraint": {"total_water_demand_m3"},
 	}
 	by_id = {route.equation_id: route for route in routes(graph)}
 	for equation_id, unresolved in expected.items():
@@ -251,7 +314,17 @@ def test_the_unbound_four_are_unbound_for_one_reason(graph: ParameterGraph):
 		# Every one of them is a *derived* node, which is the claim: not a
 		# missing network column but a quantity with no column by construction.
 		for name in unresolved:
-			assert not graph.is_settable(name), name
+			assert not graph.is_settable(name), (equation_id, name)
+
+	# And the same claim, universally: whatever any unbound route names as
+	# unresolved is a node the graph holds and does not let you set.
+	unbound = [route for route in routes(graph) if route.status == "unbound"]
+	assert len(unbound) == 30, [route.equation_id for route in unbound]
+	for route in unbound:
+		assert route.unresolved, route.equation_id
+		for name in route.unresolved:
+			assert name in graph.nodes, (route.equation_id, name)
+			assert not graph.is_settable(name), (route.equation_id, name)
 
 
 def test_every_declared_source_names_a_real_symbol(graph: ParameterGraph):

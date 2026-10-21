@@ -176,6 +176,26 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	denominator fell 920 to 918 -- and the numerator stayed at three, so the
 	register's gap fell 917 to 915.
 
+	918 -> 864 across batches 28 to 34, and every one of the 54 is a
+	parameter that gained an equation. The denominator is the *settable*
+	surface, so coupling a free node moves it down by one: the node did not
+	vanish, it became a value the graph computes. Per batch: 918 -> 895 when
+	batch 28's product remainder made 23 settable nodes derived; 895 -> 891
+	for batch 29's demand and macro layer (four out, no new knobs); 891 ->
+	886 for batch 30's supply, emissions and grid layer (five out); 886 ->
+	879 for batch 31's product remainder (seven out); 879 unchanged for
+	batch 32's THRESHOLD class, which added 22 inequalities over nodes
+	already accounted for and created no settable knob; 879 -> 864 for batch
+	33's unclassified remainder (fifteen out); and 864 unchanged for batch
+	34, which corrected an equation body and created nothing. Across the
+	whole span 61 nodes left the settable surface and 7 entered it, a net
+	54, and all 61 are ``derived`` at this commit -- checked by name, not
+	assumed from the arithmetic.
+
+	The numerator is still three. Every knob the batches created arrived
+	untranslated, so the register's gap tracks the denominator exactly:
+	915 -> 861.
+
 	The eighteen the engine cannot carry are still outside the denominator:
 	they are chosen by the optimiser, so ``is_settable`` is False for them.
 	They are not missing from the register -- ``endogenous`` carries them, and
@@ -183,7 +203,7 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	"""
 	cov = coverage(graph)
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 918, cov
+	assert cov["total"] == 864, cov
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -248,9 +268,18 @@ def test_the_untranslated_register_is_not_empty_and_says_why(
 	27 then made nine finance placeholders derived and added ten settable
 	knobs, a net one, taking it 917 to 915. The numerator stayed at three, so
 	the gap and the denominator fell together.
+
+	Batches 28 to 34 took it 915 to 861, and the arithmetic is the reason
+	rather than a coincidence: the register is the settable surface minus the
+	three translated parameters, so any change to it that is not a new
+	translation moves it by exactly the denominator's delta. The 61 nodes the
+	batches made derived left both sets at once, and the 7 knobs they created
+	entered both. A register that moved without the denominator moving, or
+	the other way, would mean a parameter had crossed the settable boundary
+	without an equation and the coupling had silently stopped.
 	"""
 	missing = untranslated(graph)
-	assert len(missing) == 915, missing
+	assert len(missing) == 861, missing
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact

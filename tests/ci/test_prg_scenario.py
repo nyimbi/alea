@@ -41,6 +41,22 @@ YEARS = (2030, 2040)
 #: Firm capacity the graph's reserve margin admits. See `_network`.
 FIRM_MW = 15_000.0
 
+#: The carbon budget these tests state, in MtCO2 over the horizon.
+#:
+#: It is 300 rather than the 200 this module used until batch 33, because 200
+#: stopped being feasible when `fit_capacity_bound` entered the bound set. That
+#: inequality caps VRE at `fit_capacity_cap` (4,000 MW), so the least-emitting
+#: dispatch the fleet can run still burns gas for every MW of load above 4,000:
+#: 4,500 MW in 2030 and 8,582 MW in 2040, four snapshots each. The constraint's
+#: own coefficient is 0.00438 Mt per MW per snapshot -- 0.4 tCO2/MWh, times
+#: 8,760/8 to annualise, times `horizon_years` -- so the floor is
+#: `4 x (4,500 + 8,582) x 0.00438 = 229.2` Mt. A 200 Mt budget asks the fleet to
+#: emit less than its own cap allows it to, which is a correct refusal and not a
+#: test of the route. 300 Mt sits above the floor and below the 369 Mt the fleet
+#: emits unconstrained, so the budget still binds and the assertions still have
+#: an effect to measure.
+BUDGET_MTCO2 = 300.0
+
 
 @pytest.fixture
 def graph() -> ParameterGraph:
@@ -341,9 +357,9 @@ def test_a_constrained_solve_differs_from_an_unconstrained_one(
 	# which is the default and is right -- refuses it. Asking for the plain solve
 	# *of a scenario that states a budget* therefore means dropping the budget,
 	# which is what `strict=False` says.
-	constrained = engine.solve_from_prg({"carbon_budget_mtco2": 200.0}, graph=graph, force=True)
+	constrained = engine.solve_from_prg({"carbon_budget_mtco2": BUDGET_MTCO2}, graph=graph, force=True)
 	plain = engine.solve_from_prg(
-		{"carbon_budget_mtco2": 200.0}, graph=graph, constrain=False, strict=False, force=True
+		{"carbon_budget_mtco2": BUDGET_MTCO2}, graph=graph, constrain=False, strict=False, force=True
 	)
 	assert constrained.constrained
 	assert not plain.constrained
@@ -372,7 +388,7 @@ def test_the_constraint_terms_are_not_reported_as_dropped(
 	"""
 	engine = _engine(tmp_path)
 	solved = engine.solve_from_prg(
-		{"carbon_budget_mtco2": 200.0, "reserve_margin_min": 0.2}, graph=graph, force=True
+		{"carbon_budget_mtco2": BUDGET_MTCO2, "reserve_margin_min": 0.2}, graph=graph, force=True
 	)
 	assert "carbon_budget_mtco2" not in solved.dropped
 	assert "reserve_margin_min" not in solved.dropped
@@ -390,7 +406,7 @@ def test_the_constraint_terms_are_refused_on_a_strict_translation_no_longer(
 	graph carries it into the solve.
 	"""
 	engine = _engine(tmp_path)
-	solved = engine.solve_from_prg({"carbon_budget_mtco2": 200.0}, graph=graph, force=True)
+	solved = engine.solve_from_prg({"carbon_budget_mtco2": BUDGET_MTCO2}, graph=graph, force=True)
 	assert solved.dropped == ()
 	assert solved.constrained
 
@@ -407,7 +423,7 @@ def test_a_constrained_and_unconstrained_solve_do_not_share_a_cache_key(
 	level up: the number looks right and answers a different question.
 	"""
 	engine = _engine(tmp_path)
-	values = {"carbon_budget_mtco2": 200.0}
+	values = {"carbon_budget_mtco2": BUDGET_MTCO2}
 	constrained = engine.solve_from_prg(values, graph=graph, force=True)
 	plain = engine.solve_from_prg(values, graph=graph, constrain=False, strict=False, force=True)
 	assert constrained.outcome.cache_key != plain.outcome.cache_key
@@ -513,9 +529,9 @@ def test_the_command_solves_under_the_graphs_inequalities(tmp_path) -> None:
 	of the same stated budget must differ -- if they agree, the constraint never
 	reached the model through this door.
 	"""
-	constrained = _cli(tmp_path, "--set", "carbon_budget_mtco2=200")
+	constrained = _cli(tmp_path, "--set", f"carbon_budget_mtco2={BUDGET_MTCO2}")
 	assert constrained.exit_code in (0, 1), constrained.output
-	plain = _cli(tmp_path, "--set", "carbon_budget_mtco2=200", "--no-constrain", "--loose")
+	plain = _cli(tmp_path, "--set", f"carbon_budget_mtco2={BUDGET_MTCO2}", "--no-constrain", "--loose")
 	assert plain.exit_code in (0, 1), plain.output
 	assert constrained.stdout != plain.stdout, (
 		"the constrained and unconstrained runs printed the same thing, so the "
