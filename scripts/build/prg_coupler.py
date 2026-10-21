@@ -546,7 +546,7 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -646,6 +646,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "40":
+		b40_nodes, b40_equations, b40_edges, b40_rules = build_batch40(graph)
+		rules.extend(b40_rules)
+		nodes.update(b40_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b40_equations)
+		edges = list(BATCH12_EDGES) + b40_edges
 	elif batch == "39":
 		b39_nodes, b39_equations, b39_edges, b39_rules = build_batch39(graph)
 		rules.extend(b39_rules)
@@ -11417,6 +11424,388 @@ BATCH38_BOUNDS: tuple[
 
 
 _BATCH38_SOURCE = "The operational and supply pack (batch 38)"
+
+
+#: (name, unit, prose) -- ten retypes that correct a *dimension* and nothing
+#: else. Range, default and role are unchanged, so this table carries no
+#: numbers: the walk reads a node's declared `unit`, never its range, and a
+#: row that restated a default would be a second place for that default to
+#: drift.
+#:
+#: These are the eight failures `docs/prg-status.md` recorded as one decision
+#: and deferred, plus the two that batch 38's and batch 39's packs found. The
+#: decision is made here: an annual quantity is a *rate*, and the graph's own
+#: convention is to say so in the unit. `coal_consumption` ships
+#: `tonnes/year`, `total_revenue_usd_per_year` ships `USD/year`; a node whose
+#: description reads "the sector's tonnes per year" and whose unit reads
+#: `tonnes` is the one that is wrong.
+#:
+#: Three ids that look like they belong here do not, and the distinction is
+#: the batch's own finding: `insurance_premium_usd_per_kw_year`,
+#: `line_outage_hours_per_year` and `mini_grid_programme_spend_usd_per_year`
+#: already shipped with the correct unit. The operand each multiplies was the
+#: untyped one, which is why the repair is on `insurance_loss_share_of_cost`,
+#: `line_outage_probability` and `mini_grid_deployment` instead. Writing this
+#: table from the failing equations rather than from the failing nodes would
+#: have retyped three correct nodes and left three wrong ones untouched.
+BATCH40_RETYPES: tuple[tuple[str, str, str], ...] = (
+	("steel_hydrogen_demand_tonnes", "tonnes/year",
+	 "Hydrogen the H2-DRI steel route consumes per year. Shipped `tonnes`, "
+	 "which made its own equation's rhs a rate against a stock. The name "
+	 "keeps the `_tonnes` suffix because it is the quantity's name, not its "
+	 "dimension -- `coal_consumption` sets the same precedent for a `_tonnes` "
+	 "id carrying `tonnes/year`. 55,000 t/year at defaults (2 Mt steel x 0.5 "
+	 "DRI x 55 kg/t x 1000)."),
+	("co2_captured_cement_tonnes", "tonnes/year",
+	 "CO2 the cement programme captures per year. 3.2 Mt/year at defaults (8 "
+	 "Mt cement x 0.5 CCUS x 0.8 t CO2 per t clinker x 1e6)."),
+	("co2_captured_industry_tonnes", "tonnes/year",
+	 "CO2 the industrial CCUS programme captures per year. 2.58 Mt/year at "
+	 "defaults: 0.1 of the fleet's 25.78 MtCO2 emissions."),
+	("equity_irr_estimate", "1/year",
+	 "The equity return, which is a rate by definition: `(CFADS - debt "
+	 "service) / capex / (1 - debt fraction)` is (USD/kW/year) / (USD/kW). "
+	 "Shipped `1`, so the node its own equation determines was dimensionless "
+	 "and the walk called the equation inconsistent against it. 30.77%/year "
+	 "at defaults -- high because the form is a first-year ratio with no "
+	 "schedule, which the description already states."),
+	("ammonia_export_volume_tonnes", "tonnes/year",
+	 "Ammonia the export programme ships per year. 1,690 t/year at defaults: "
+	 "20,000 MWh/year of hydrogen, half of it as ammonia, over hydrogen's "
+	 "0.03333 MWh/kg and ammonia's 0.1775 t H2 per t NH3."),
+	("line_outage_probability", "events/year",
+	 "Outages per year on the line. Shipped `1/year`, which is a rate of "
+	 "*something* and not of an event, so multiplying it by an hours-per-event "
+	 "duration gave hours per year squared. 2 events/year at defaults. The "
+	 "range [0, 365] is unchanged and reads as it should: at most one outage "
+	 "a day."),
+	("mini_grid_deployment", "connections/year",
+	 "Connections the mini-grid programme serves per year. Shipped `1/year`, "
+	 "which made the per-connection cost a per-year cost: 1,500 USD/connection "
+	 "x 100,000 per year came out 1e6 times too large, at 1.5e11 USD/year "
+	 "against a 5 bn range. The retype is what fixes the magnitude, not a "
+	 "constant in the equation."),
+	("pm25_relative_risk_per_kt", "1/(kt/year)",
+	 "The relative risk a kt/year of PM2.5 adds. The concentration-response "
+	 "slope is per unit of *annual* burden: the shipped `1/kt` made the "
+	 "premature-deaths product carry deaths per year squared. 0.006 per "
+	 "kt/year at defaults, giving 4,800 deaths/year over 5 m people at 0.008 "
+	 "baseline mortality and 20 kt/year."),
+	("insurance_loss_share_of_cost", "1/year",
+	 "The premium as a share of installed cost *per year*, which is what an "
+	 "insurance product quotes. Shipped `1`, a bare share, so the premium "
+	 "product came out USD/kW against a USD/kW/year id. 0.005/year at "
+	 "defaults, against the catalog's duplicate 0.008 that batch 33 resolved "
+	 "in favour of the lower figure."),
+	("premium_share_of_asset", "1/year",
+	 "The annual premium as a fraction of the insured asset's value. Shipped "
+	 "`1`; it aliases `insurance_loss_share_of_cost`, so it carries whatever "
+	 "dimension that node does, and the two must move together."),
+)
+
+
+#: (name, unit, range, default, prose) -- one new node, and it is the only
+#: conversion constant the eleven corrections needed that the graph did not
+#: already carry. The hydrogen and ammonia factors were checked for: both
+#: ship (`mwh_per_hydrogen_unit`, `mwh_per_ammonia_unit`), so the ammonia
+#: product reads the existing one rather than declaring a second.
+BATCH40_NEW_NODES: tuple[tuple[str, str, list[float], float, str], ...] = (
+	("mwh_per_coal_unit", "MWh/tonne", [3.0, 12.0], 6.944,
+	 "Thermal energy in a tonne of coal: 25 GJ/t at 3.6 GJ/MWh is 6.944 "
+	 "MWh/tonne. The fourth member of the `mwh_per_*_unit` family -- oil, LNG "
+	 "and ammonia already ship as constants with the same shape and the same "
+	 "job, converting a commodity quoted per mass or volume into a price per "
+	 "MWh. `coal_price_per_mwh` divided by the literal `25 * 3.6`, which is "
+	 "the same arithmetic with the conversion buried in the equation; the "
+	 "node's own description says the conversion is where a unit error would "
+	 "hide, so it belongs in a typed node with a range a reviewer can "
+	 "question. The band is lignite at 3 MWh/t to anthracite at 12; 25 GJ/t "
+	 "is sub-bituminous, the traded default. Reading `mwh_per_oil_unit`'s "
+	 "range and role as the family convention."),
+)
+
+
+#: (eq_id, lhs, rhs, prose, reference) -- two equation bodies. The other nine
+#: corrections need no body change: their shipped rhs was already right and
+#: the *operand's* dimension was wrong, which is why the retype table alone
+#: takes those nine from inconsistent to consistent.
+BATCH40_EQUATIONS: tuple[tuple[str, str, str, str, str | None], ...] = (
+	("ammonia_export_volume_tonnes_definition", "ammonia_export_volume_tonnes",
+	 "hydrogen_export_volume * ammonia_export_share / mwh_per_hydrogen_unit"
+	 " / 1000 / hydrogen_share_of_ammonia",
+	 "Ammonia shipped: the export energy, the share that goes as ammonia, "
+	 "over hydrogen's energy content and over ammonia's hydrogen fraction. "
+	 "The shipped form multiplied by `1000 * 0.05`, which is the same "
+	 "arithmetic read the other way -- 1000 kg/t and 1/20 for the 5% the "
+	 "ammonia carries -- and gave a dimension of mass x length^2 / time^3. "
+	 "Written as division by the shipped `mwh_per_hydrogen_unit` because that "
+	 "node already exists, is typed `MWh/kg`, and is what four other "
+	 "equations divide by; a second literal for hydrogen's LHV would be two "
+	 "sources for one physical constant. The 1000 converts kg to tonnes, "
+	 "which is the one factor with no node behind it. 1,690 t/year at "
+	 "defaults, and `hydrogen_share_of_ammonia` (0.1775 t H2 per t NH3, "
+	 "stoichiometric) stays as it was: it is the check on the answer, not a "
+	 "term that needed moving.",
+	 None),
+	("coal_price_per_mwh_definition", "coal_price_per_mwh",
+	 "coal_price / mwh_per_coal_unit",
+	 "The commodity price per tonne divided by the energy a tonne carries "
+	 "gives the price per MWh thermal: 80 USD/t over 6.944 MWh/t is 11.52 "
+	 "USD/MWh. The shipped form divided by `25 * 3.6`, which is the same "
+	 "conversion with both factors as literals -- correct arithmetic that "
+	 "still failed its own unit check, because `25` carries no unit and the "
+	 "walker reads `USD/tonne / 1` as USD/tonne. 11.52 USD/MWh against the "
+	 "shipped 0.889: the shipped value was 12.96x low, which the "
+	 "operational-supply pack found and attributed to a factor-of-12.96 "
+	 "error. It was not an arithmetic error; it was the walker refusing to "
+	 "credit an untyped constant, which is the behaviour that catches the "
+	 "real ones.",
+	 None),
+)
+
+
+#: (eq_id, lhs, relation, rhs, prose, reference, binder, bounded) -- one bound.
+BATCH40_BOUNDS: tuple[
+	tuple[str, str, str, str, str, str | None, str, str], ...] = (
+	("remedy_period_bound", "remedy_periods", "leq", "max_remedy_period_days",
+	 "The cure window a contract offers must not exceed the ceiling its "
+	 "licence sets, or the licence's own limit is breached by the contract it "
+	 "authorises. 60 days under a 90-day ceiling at defaults, residual -30; "
+	 "at 120 days the residual is +30 and the bound fails, so it is live. "
+	 "The alternative right-hand side was the literal 365, rejected as a "
+	 "tautology: `remedy_periods`' own range is [1, 365], so a bound against "
+	 "it can never fail. `threshold-product-remainder.md` deferred this node "
+	 "for want of a base and `contract-market.md` cited the deferral; the "
+	 "base is declared here, in the same band as the window it ceilings, "
+	 "which is what makes the bound non-vacuous by construction rather than "
+	 "by a chosen number. An equality was refused by the loader: an "
+	 "inequality bounds a value and only an equality fixes one, and a cure "
+	 "window is a negotiated term, not a computed one.",
+	 None, "max_remedy_period_days", "remedy_periods"),
+)
+
+
+#: (name, unit, range, default, role, determinism, prose) -- the base the
+#: remedy bound needed.
+BATCH40_BASES: tuple[tuple[str, str, list[float], float, str, str, str], ...] = (
+	("max_remedy_period_days", "days", [1.0, 365.0], 90.0, "free", "policy",
+	 "The ceiling a licence places on a cure window. 90 days is a "
+	 "project-finance convention, not a measured figure: the archived World "
+	 "Bank utilities handbook contains no occurrence of 'cure period', "
+	 "'remedy period' or 'grace period' (grep count 0), so the bound carries "
+	 "`reference: None` and the default is recorded as an adopted convention "
+	 "rather than dressed in a citation the repository cannot produce. The "
+	 "range is the same band `remedy_periods` sits in, deliberately: a "
+	 "ceiling outside that band would make the bound vacuous by construction "
+	 "of the ranges rather than by the policy it states."),
+)
+
+
+#: What the two corrected equations named before this batch touched them. A
+#: literal, not a read of the live graph: after the bake the graph names the
+#: new operands, and a condition derived from it would suppress the very edges
+#: this batch adds -- making `--emit40` unreproducible against its own output.
+BATCH40_SHIPPED_OPERANDS: dict[str, frozenset[str]] = {
+	"ammonia_export_volume_tonnes_definition": frozenset({
+		"ammonia_export_volume_tonnes", "hydrogen_export_volume",
+		"ammonia_export_share", "hydrogen_share_of_ammonia",
+	}),
+	"coal_price_per_mwh_definition": frozenset({
+		"coal_price_per_mwh", "coal_price",
+	}),
+}
+
+
+def build_batch40(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""The dimensional corrections the walk found, and the remedy bound.
+
+	Eleven of the graph's 552 equations failed their own dimensional check,
+	and `docs/prg-status.md` recorded the eight it found as one decision to
+	make rather than eight mistakes to fix. This batch makes the decision and
+	finds three more of the same class.
+
+	*Nine of the eleven are an operand's dimension, not an equation's body.*
+	That is the finding worth keeping: a correction that reads the failing
+	equation and rewrites it would have changed nine correct formulas. The
+	walk reports `lhs vs rhs` and the intuitive repair is the rhs, but the
+	rhs is what the author wrote from the physics and the node is what the
+	catalog typed from a spreadsheet. `line_outage_hours_per_year` was
+	`probability * duration` in the shipped body and still is; what was wrong
+	is that `line_outage_probability` shipped `1/year` for a count of events.
+	The same holds for `insurance_premium_definition`,
+	`premium_share_of_asset_definition`, `steel_hydrogen_demand_tonnes`,
+	`co2_captured_cement_tonnes`, `co2_captured_industry_tonnes`,
+	`equity_irr_estimate` and `premature_deaths_definition`.
+
+	*Two are bodies.* `ammonia_export_volume_tonnes` multiplied `1000 * 0.05`
+	where it should divide by hydrogen's energy content, and
+	`coal_price_per_mwh` divided by an untyped `25 * 3.6`. Both were
+	arithmetically right and dimensionally unstatable, which is the case a
+	unit checker exists to refuse: a constant with no unit cannot be checked,
+	and the shipped 0.889 USD/MWh was 12.96x low.
+
+	*`rocof_definition` is diagnosed and deliberately not fixed.* The swing
+	equation is `df/dt = P_loss * f0 / (2 H S)` and the shipped body omits
+	`f0`, so it is wrong by a factor of 50 at a 50 Hz system -- measured
+	1/50th of the correct value. Correcting it drives `frequency_nadir_hz` to
+	43.06 Hz against its own [45, 50] floor, because `frequency_nadir_definition`
+	applies the initial slope over a flat `frequency_response_time_s` of 10 s.
+	Two shipped defaults then disagree: either the nadir chain's response
+	time is too long, or the 45 Hz floor is not the UFLS setting it claims.
+	That is a question about the nadir model, and bending either number to
+	fit the other would be manufacturing agreement. Left inconsistent and
+	recorded here, so the one remaining failure in the walk is a known open
+	question rather than an unexplained red.
+
+	*The remedy bound closes a deferral two packs passed between them.*
+	`threshold-product-remainder.md` deferred `remedy_periods` pending a base
+	and `contract-market.md` cited that deferral forward; the base is declared
+	here.
+	"""
+	from alea.prg.dsl import parse_side
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	for name, unit, prose in BATCH40_RETYPES:
+		shipped = graph.nodes.get(name)
+		assert shipped is not None, f"{name}: no shipped node to retype"
+		# The assert is against a retype that changes nothing *on a graph that
+		# has not seen this batch*. Re-emitting after the bake must still work:
+		# the fragment is the auditable record of what the batch did, so a
+		# second `--emit40` has to reproduce it byte for byte rather than fail
+		# on its own prior output. The `source` field is what distinguishes the
+		# two cases -- a node this batch already retyped carries its mark.
+		if shipped.unit == unit:
+			assert shipped.source == _BATCH40_SOURCE, (
+				f"{name}: already typed {unit} by something other than this "
+				"batch; a retype row whose diagnosis was wrong"
+			)
+		full: dict[str, Any] = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		full.update({
+			"description": prose, "unit": unit,
+			"status": _kept_status(shipped),
+			"source": _BATCH40_SOURCE,
+		})
+		nodes[name] = full
+
+	for name, unit, rng, default, prose in BATCH40_NEW_NODES:
+		existing = graph.nodes.get(name)
+		# As with the retypes: re-emitting after the bake must reproduce the
+		# fragment, so a node this batch created is not "a shipped node it did
+		# not create". Any other source is.
+		assert existing is None or existing.source == _BATCH40_SOURCE, (
+			f"{name}: a shipped node this batch did not create"
+		)
+		nodes[name] = {
+			"name": "MWh per coal unit",
+			"description": prose, "category": "Cost", "type": "float",
+			"unit": unit, "range": rng, "default": default,
+			"role": "exogenous", "determinism": "physical",
+			"priority": "P2", "status": "existing",
+			"source": _BATCH40_SOURCE,
+			"source_url": (
+				"LHV of coal: 25 GJ/t (sub-bituminous); 3.6 GJ/MWh"
+			),
+			"users": ["Planners", "Researchers"],
+		}
+
+	for name, unit, rng, default, role, determinism, prose in BATCH40_BASES:
+		existing = graph.nodes.get(name)
+		assert existing is None or existing.source == _BATCH40_SOURCE, (
+			f"{name}: a shipped node this batch did not create"
+		)
+		nodes[name] = {
+			"name": name.replace("_", " ").capitalize(),
+			"description": prose, "category": "Contract", "type": "float",
+			"unit": unit, "range": rng, "default": default,
+			"role": role, "determinism": determinism,
+			"priority": "P2", "status": "to_build",
+			"source": _BATCH40_SOURCE,
+			"users": ["Planners", "Regulators"],
+		}
+
+	for eq_id, lhs, rhs, prose, cite in BATCH40_EQUATIONS:
+		shipped = graph.equations.get(eq_id)
+		assert shipped is not None, f"{eq_id}: not a shipped equation"
+		rhs_params = sorted(parse_side(rhs).symbols)
+		known = set(nodes) | set(graph.nodes)
+		missing = [sym for sym in rhs_params if sym not in known]
+		assert not missing, f"{eq_id}: rhs names {missing}, which no node holds"
+		assert lhs not in rhs_params, f"{eq_id}: lhs names itself on its rhs"
+		equations[eq_id] = {
+			"id": eq_id, "name": shipped.name, "description": prose,
+			"system": shipped.system, "lhs": lhs, "rhs": rhs, "relation": "eq",
+			"parameters": [lhs] + rhs_params, "free_variables": [],
+			"determined_variables": [lhs],
+			"tolerance": shipped.tolerance, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": (
+				shipped.priority.value
+				if hasattr(shipped.priority, "value") else shipped.priority
+			), "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		# The edge set is corrected with the body: an operand the shipped
+		# equation named and the new one does not is a coupling that no
+		# longer exists, and leaving the edge would keep a parameter counted
+		# as coupled by a formula that stopped reading it.
+		#
+		# The test is against `BATCH40_RETYPES`-era truth, not against the
+		# graph as it stands: the graph has already seen this batch once it is
+		# baked, so reading `shipped.parameters` there would suppress exactly
+		# the edges the batch added and make the fragment unreproducible. The
+		# operands these two corrections add are known -- they are the ones the
+		# shipped bodies did not name -- and they are named here.
+		for sym in rhs_params:
+			if sym not in BATCH40_SHIPPED_OPERANDS[eq_id]:
+				edges.append({
+					"source": sym, "target": lhs, "equation_id": eq_id,
+					"relationship": "functional", "direction": "forward",
+					"strength": "hard",
+					"description": "Enters the corrected product.",
+					"reference": cite, "priority": "P1",
+				})
+
+	for eq_id, lhs, relation, rhs, prose, cite, binder, bounded in BATCH40_BOUNDS:
+		assert relation in ("leq", "geq"), f"{eq_id}: {relation} is not a bound"
+		named = sorted(set(parse_side(lhs).symbols) | set(parse_side(rhs).symbols))
+		known = set(nodes) | set(graph.nodes)
+		assert bounded in known, f"{eq_id}: bounded {bounded!r} has no node"
+		assert bounded in named, f"{eq_id}: bounded {bounded!r} is not named"
+		binder_syms = sorted(parse_side(binder).symbols)
+		assert binder_syms, f"{eq_id}: binder {binder!r} names no symbol"
+		assert not set(binder_syms) & {bounded}, (
+			f"{eq_id}: binder names the bounded node; a self-loop is no coupling"
+		)
+		equations[eq_id] = {
+			"id": eq_id, "name": eq_id.replace("_", " ").capitalize(),
+			"description": prose, "system": "financial",
+			"lhs": lhs, "rhs": rhs, "relation": relation,
+			"parameters": named, "free_variables": named,
+			"determined_variables": (),
+			"tolerance": 1.0e-06, "unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"priority": "P2", "reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		edges.append({
+			"source": binder_syms[0], "target": bounded, "equation_id": eq_id,
+			"relationship": "constraint", "direction": "forward",
+			"strength": "hard",
+			"description": (
+				f"Bounds {bounded} against {binder}; a scenario can clear the "
+				"arithmetic and fail this."
+			),
+			"reference": cite, "priority": "P2",
+		})
+
+	return nodes, equations, edges, rules
+
+
+_BATCH40_SOURCE = "The dimensional corrections (batch 40)"
 
 
 #: (name, unit, range, default, role, determinism, prose) -- one retype. The

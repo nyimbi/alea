@@ -485,7 +485,11 @@ def test_the_summary_serves_the_endogenous_layer(
 	# (`payment_security_required`, `asset_age_distribution`), its nine free
 	# retypes kept the role they shipped with, and its four new nodes were
 	# created derived, so they never entered this count.
-	assert len(free) == 712, len(free)
+	# Batch 40 took it 712 to 713: `max_remedy_period_days` ships as a free
+	# policy dial, and the batch's other new node -- `mwh_per_coal_unit` --
+	# is exogenous, so it is counted under `exogenous` and not here. The
+	# batch's ten retypes did not change a role, so they moved nothing.
+	assert len(free) == 713, len(free)
 
 
 # ---------------------------------------------------------------------------

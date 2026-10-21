@@ -211,6 +211,52 @@ check is reporting the places it would land. Deferred rather than made,
 because inventing the convention and then editing 88 units to agree with it is
 manufacturing a decision no one took.
 
+### The decision, made (batch 40, 2026-10-22)
+
+Every equation in this table has since cleared. Six did so in the intervening
+batches; batch 40 closed the remaining five and found three more of the class.
+The graph now stands at **552 of 553 consistent**, and the one hold-out is
+deliberate.
+
+**The answer to the deferred question is that a node's unit names the divisor.**
+An annual total is a rate, written `.../year`. That is the convention the graph
+already used in most places — `coal_consumption` ships `tonnes/year`,
+`total_revenue_usd_per_year` ships `USD/year` — so the decision ratified the
+majority rather than inventing a vocabulary. The probe that made this look
+expensive was reading the wrong end: retyping the five `TWh` nodes moves the
+failure into `energy_balance`, because *those* equations were the ones that
+needed the divisor added. Both sides move; that is a repair, not a regress.
+
+**The finding worth carrying forward is that nine of the eleven were the
+operand, not the formula.** `line_outage_hours_per_year_definition` was
+`probability * duration` and still is; the node `line_outage_probability`
+shipped `1/year` for a count of events. The walk reports `lhs vs rhs`, and the
+natural repair is to rewrite the rhs — which would have edited nine correct
+formulas and left nine wrong nodes untouched. Write the retype table from the
+failing *nodes*, not from the failing equations. Three ids that look like
+targets (`insurance_premium_usd_per_kw_year`, `line_outage_hours_per_year`,
+`mini_grid_programme_spend_usd_per_year`) already shipped the correct unit.
+
+**An untyped constant is refused, and that is the feature.** `coal_price_per_mwh`
+divided by the literal `25 * 3.6` — right arithmetic, 12.96× low in value, and
+inconsistent because the walker reads `25` as dimensionless. The fix is a typed
+node (`mwh_per_coal_unit`, `MWh/tonne`), not a corrected literal. The
+operational-supply pack reported this as a factor-of-12.96 error; it was not an
+arithmetic error, it was the checker refusing to credit a constant it cannot
+type, which is what catches the real ones.
+
+**`rocof_definition` is the one remaining red, held on purpose.** The swing
+equation is `df/dt = P_loss · f0 / (2 H S)` and the shipped body omits `f0`,
+so it reports 1/50th of the correct value at 50 Hz. Correcting it drives
+`frequency_nadir_hz` to 43.06 Hz against its own [45, 50] floor, because
+`frequency_nadir_definition` applies the initial slope over a flat
+`frequency_response_time_s` of 10 s. Either that response time is too long for
+the model or the 45 Hz floor is not the UFLS setting it claims to be — a
+question about the nadir chain, not about ROCOF. Bending either number to make
+the other fit would be manufacturing agreement, which is the failure mode this
+whole section exists to avoid.
+
+
 ## Not built
 
 - **`00-architecture.md` §6's repository layout declares 37 paths and one does

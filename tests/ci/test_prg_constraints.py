@@ -229,11 +229,18 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	term is a settable scalar, so both reach the optimiser -- and the three
 	equalities are identities, so the identity count moves by three and the
 	inequality count by two.
+
+	552 -> 553 for batch 40, and only one of the two is a new equation: the
+	``remedy_period_bound`` inequality, which joins the *bound* set because
+	both terms are settable scalars. The other body the batch corrected,
+	``coal_price_per_mwh_definition``, was already in the identity class and
+	stayed there, so the identity count is flat at 481 and the shaped count
+	moves by exactly the one bound.
 	"""
 	cov = coverage(graph)
-	assert cov["constraint_shaped"] == 71
+	assert cov["constraint_shaped"] == 72
 	assert cov["identities"] == 481
-	assert cov["total"] == 552
+	assert cov["total"] == 553
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
@@ -325,6 +332,7 @@ def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
 		"ocgt_capex_ordering_bound",
 		"powertrain_stock_bound",
 		"regulatory_lag_bound",
+		"remedy_period_bound",
 		"reserve_margin",
 		"reserve_margin_with_firm_vre",
 		"resettlement_share_bound",

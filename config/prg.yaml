@@ -573,12 +573,13 @@ parameters:
     deprecated_by: null
   ammonia_export_volume_tonnes:
     name: Ammonia export volume tonnes
-    description: 'ammonia export volume tonnes: the sector-mix share''s product, derived, so a scenario''s
-      mix dial has a quantity the reports can name.'
+    description: 'Ammonia the export programme ships per year. 1,690 t/year at defaults: 20,000 MWh/year
+      of hydrogen, half of it as ammonia, over hydrogen''s 0.03333 MWh/kg and ammonia''s 0.1775 t H2 per
+      t NH3.'
     category: Demand-Side
     subcategory: null
     type: float
-    unit: tonnes
+    unit: tonnes/year
     range:
     - 0.0
     - 10000000.0
@@ -586,7 +587,7 @@ parameters:
     role: derived
     determinism: physical
     categories: []
-    source: The sector-coupling identities (cite on the equation)
+    source: The dimensional corrections (batch 40)
     source_url: null
     users:
     - Planners
@@ -4806,12 +4807,12 @@ parameters:
     source: docs/params.md
   co2_captured_cement_tonnes:
     name: Co2 captured cement tonnes
-    description: 'co2 captured cement tonnes: the sector-mix share''s product, derived, so a scenario''s
-      mix dial has a quantity the reports can name.'
+    description: CO2 the cement programme captures per year. 3.2 Mt/year at defaults (8 Mt cement x 0.5
+      CCUS x 0.8 t CO2 per t clinker x 1e6).
     category: Industry
     subcategory: null
     type: float
-    unit: tonnes
+    unit: tonnes/year
     range:
     - 0.0
     - 100000000.0
@@ -4819,7 +4820,7 @@ parameters:
     role: derived
     determinism: physical
     categories: []
-    source: The sector-coupling identities (cite on the equation)
+    source: The dimensional corrections (batch 40)
     source_url: null
     users:
     - Planners
@@ -4830,12 +4831,12 @@ parameters:
     deprecated_by: null
   co2_captured_industry_tonnes:
     name: Co2 captured industry tonnes
-    description: 'co2 captured industry tonnes: the sector-mix share''s product, derived, so a scenario''s
-      mix dial has a quantity the reports can name.'
+    description: 'CO2 the industrial CCUS programme captures per year. 2.58 Mt/year at defaults: 0.1 of
+      the fleet''s 25.78 MtCO2 emissions.'
     category: Industry
     subcategory: null
     type: float
-    unit: tonnes
+    unit: tonnes/year
     range:
     - 0.0
     - 1000000000.0
@@ -4843,7 +4844,7 @@ parameters:
     role: derived
     determinism: physical
     categories: []
-    source: The sector-coupling identities (cite on the equation)
+    source: The dimensional corrections (batch 40)
     source_url: null
     users:
     - Planners
@@ -10496,12 +10497,14 @@ parameters:
     deprecated_by: null
   equity_irr_estimate:
     name: Equity IRR
-    description: The sponsor's return on equity, approximated from the tariff, the cost and the debt service.
-      A full IRR needs a cash-flow schedule; this is the first-year ratio a diligence process reads.
+    description: 'The equity return, which is a rate by definition: `(CFADS - debt service) / capex /
+      (1 - debt fraction)` is (USD/kW/year) / (USD/kW). Shipped `1`, so the node its own equation determines
+      was dimensionless and the walk called the equation inconsistent against it. 30.77%/year at defaults
+      -- high because the form is a first-year ratio with no schedule, which the description already states.'
     category: Financial
     subcategory: null
     type: float
-    unit: '1'
+    unit: 1/year
     range:
     - -1.0
     - 5.0
@@ -10509,7 +10512,7 @@ parameters:
     role: derived
     determinism: policy
     categories: []
-    source: null
+    source: The dimensional corrections (batch 40)
     source_url: null
     users: []
     priority: P2
@@ -14869,12 +14872,14 @@ parameters:
     source: docs/params.md
   insurance_loss_share_of_cost:
     name: Insurance cost as a share of total project cost
-    description: Annual insurance cost as a fraction of the project's total installed cost. A share; the
-      range spans bulk insurance at the low end to complex first-of-a-kind at the high end.
+    description: The premium as a share of installed cost *per year*, which is what an insurance product
+      quotes. Shipped `1`, a bare share, so the premium product came out USD/kW against a USD/kW/year
+      id. 0.005/year at defaults, against the catalog's duplicate 0.008 that batch 33 resolved in favour
+      of the lower figure.
     category: Insurance & Catastrophe
     subcategory: null
     type: float
-    unit: '1'
+    unit: 1/year
     range:
     - 0.001
     - 0.03
@@ -14883,7 +14888,7 @@ parameters:
     role: free
     determinism: stochastic
     categories: []
-    source: Insurance broker market data
+    source: The dimensional corrections (batch 40)
     source_url: null
     users:
     - Insurance
@@ -16542,13 +16547,13 @@ parameters:
     - Financial analysts
   line_outage_probability:
     name: Line outage probability
-    description: Expected line outage events per year. Shipped as a probability, which admits at most
-      one event a year; reframed as the expected rate (the r_i term of the reliability indices' frequency-times-duration
-      product), which is the quantity the product below needs.
+    description: 'Outages per year on the line. Shipped `1/year`, which is a rate of *something* and not
+      of an event, so multiplying it by an hours-per-event duration gave hours per year squared. 2 events/year
+      at defaults. The range [0, 365] is unchanged and reads as it should: at most one outage a day.'
     category: Outage
     subcategory: null
     type: float
-    unit: 1/year
+    unit: events/year
     range:
     - 0.0
     - 365.0
@@ -16557,7 +16562,7 @@ parameters:
     role: free
     determinism: physical
     categories: []
-    source: The coupling build's own corrections (batch 20)
+    source: The dimensional corrections (batch 40)
     source_url: null
     users:
     - Planners
@@ -17680,6 +17685,30 @@ parameters:
     users:
     - Banks
     source: docs/params.md
+  max_remedy_period_days:
+    name: Max remedy period days
+    description: 'The ceiling a licence places on a cure window. 90 days is a project-finance convention,
+      not a measured figure: the archived World Bank utilities handbook contains no occurrence of ''cure
+      period'', ''remedy period'' or ''grace period'' (grep count 0), so the bound carries `reference:
+      None` and the default is recorded as an adopted convention rather than dressed in a citation the
+      repository cannot produce. The range is the same band `remedy_periods` sits in, deliberately: a
+      ceiling outside that band would make the bound vacuous by construction of the ranges rather than
+      by the policy it states.'
+    category: Contract
+    type: float
+    unit: days
+    range:
+    - 1.0
+    - 365.0
+    default: 90.0
+    role: free
+    determinism: policy
+    priority: P2
+    status: to_build
+    source: The dimensional corrections (batch 40)
+    users:
+    - Planners
+    - Regulators
   mean_time_between_failures:
     name: Mean time between failures
     description: Expected operating hours between forced outages for a unit of the class the parameter
@@ -17990,12 +18019,14 @@ parameters:
     deprecated_by: null
   mini_grid_deployment:
     name: Mini grid deployment
-    description: Connections the mini-grid programme serves per year. The catalog's placeholder scale
-      retained as the range; the programme-spend product derives from it.
+    description: 'Connections the mini-grid programme serves per year. Shipped `1/year`, which made the
+      per-connection cost a per-year cost: 1,500 USD/connection x 100,000 per year came out 1e6 times
+      too large, at 1.5e11 USD/year against a 5 bn range. The retype is what fixes the magnitude, not
+      a constant in the equation.'
     category: Demand
     subcategory: null
     type: float
-    unit: 1/year
+    unit: connections/year
     range:
     - 0.0
     - 1000000.0
@@ -18004,7 +18035,7 @@ parameters:
     role: free
     determinism: physical
     categories: []
-    source: The coupling build's own corrections (batch 21)
+    source: The dimensional corrections (batch 40)
     source_url: null
     users:
     - Planners
@@ -18223,6 +18254,32 @@ parameters:
     priority: P2
     status: existing
     deprecated_by: null
+  mwh_per_coal_unit:
+    name: MWh per coal unit
+    description: 'Thermal energy in a tonne of coal: 25 GJ/t at 3.6 GJ/MWh is 6.944 MWh/tonne. The fourth
+      member of the `mwh_per_*_unit` family -- oil, LNG and ammonia already ship as constants with the
+      same shape and the same job, converting a commodity quoted per mass or volume into a price per MWh.
+      `coal_price_per_mwh` divided by the literal `25 * 3.6`, which is the same arithmetic with the conversion
+      buried in the equation; the node''s own description says the conversion is where a unit error would
+      hide, so it belongs in a typed node with a range a reviewer can question. The band is lignite at
+      3 MWh/t to anthracite at 12; 25 GJ/t is sub-bituminous, the traded default. Reading `mwh_per_oil_unit`''s
+      range and role as the family convention.'
+    category: Cost
+    type: float
+    unit: MWh/tonne
+    range:
+    - 3.0
+    - 12.0
+    default: 6.944
+    role: exogenous
+    determinism: physical
+    priority: P2
+    status: existing
+    source: The dimensional corrections (batch 40)
+    users:
+    - Planners
+    - Researchers
+    source_url: 'LHV of coal: 25 GJ/t (sub-bituminous); 3.6 GJ/MWh'
   mwh_per_hydrogen_unit:
     name: MWh per hydrogen unit
     description: Hydrogen's lower heating value is 33.33 kWh per kg (0.03333 MWh/kg); the delivered price
@@ -20356,14 +20413,14 @@ parameters:
     deprecated_by: null
   pm25_relative_risk_per_kt:
     name: Relative risk per kt
-    description: 'Proportional rise in mortality per kilotonne of PM2.5. A linearised concentration-response
-      function, which is what a health impact assessment uses when it has no dispersion model to hand.
-
-      '
+    description: 'The relative risk a kt/year of PM2.5 adds. The concentration-response slope is per unit
+      of *annual* burden: the shipped `1/kt` made the premature-deaths product carry deaths per year squared.
+      0.006 per kt/year at defaults, giving 4,800 deaths/year over 5 m people at 0.008 baseline mortality
+      and 20 kt/year.'
     category: Health
     subcategory: null
     type: float
-    unit: 1/kt
+    unit: 1/(kt/year)
     range:
     - 0.0
     - 0.1
@@ -20372,7 +20429,7 @@ parameters:
     role: exogenous
     determinism: stochastic
     categories: []
-    source: null
+    source: The dimensional corrections (batch 40)
     source_url: null
     users: []
     priority: P2
@@ -21015,12 +21072,13 @@ parameters:
     deprecated_by: null
   premium_share_of_asset:
     name: Insurance premium as a share of asset value
-    description: The annual insurance premium as a fraction of the insured asset's value, which is the
-      loss share of cost the graph already carries. 0.005 at defaults.
+    description: The annual premium as a fraction of the insured asset's value. Shipped `1`; it aliases
+      `insurance_loss_share_of_cost`, so it carries whatever dimension that node does, and the two must
+      move together.
     category: Insurance & Catastrophe
     subcategory: null
     type: float
-    unit: '1'
+    unit: 1/year
     range:
     - 0.001
     - 0.03
@@ -21028,7 +21086,7 @@ parameters:
     role: derived
     determinism: fixed
     categories: []
-    source: The unclassified remainder (batch 33)
+    source: The dimensional corrections (batch 40)
     source_url: null
     users:
     - Planners
@@ -25102,12 +25160,14 @@ parameters:
     source: docs/params.md
   steel_hydrogen_demand_tonnes:
     name: Steel hydrogen demand tonnes
-    description: 'steel hydrogen demand tonnes: the sector-mix share''s product, derived, so a scenario''s
-      mix dial has a quantity the reports can name.'
+    description: Hydrogen the H2-DRI steel route consumes per year. Shipped `tonnes`, which made its own
+      equation's rhs a rate against a stock. The name keeps the `_tonnes` suffix because it is the quantity's
+      name, not its dimension -- `coal_consumption` sets the same precedent for a `_tonnes` id carrying
+      `tonnes/year`. 55,000 t/year at defaults (2 Mt steel x 0.5 DRI x 55 kg/t x 1000).
     category: Industry
     subcategory: null
     type: float
-    unit: tonnes
+    unit: tonnes/year
     range:
     - 0.0
     - 10000000.0
@@ -25115,7 +25175,7 @@ parameters:
     role: derived
     determinism: physical
     categories: []
-    source: The sector-coupling identities (cite on the equation)
+    source: The dimensional corrections (batch 40)
     source_url: null
     users:
     - Planners
@@ -29047,6 +29107,7 @@ equations:
     reference: null
     latex: \mathrm{agricultural}_{irrigation\_load} = \frac{1000000 \mathrm{irrigation}_{pumping\_demand}}{8760}
   allowed_revenue_requirement_definition:
+    id: allowed_revenue_requirement_definition
     name: Allowed revenue requirement
     description: Depreciation plus the allowed return on the base, with that return taken as the blend
       the financial block computes -- the vanilla regulatory WACC the UKRN guidance builds. A tariff that
@@ -29075,29 +29136,38 @@ equations:
     latex: \mathrm{allowed}_{revenue\_requirement} = \mathrm{regulatory}_{depreciation} + \mathrm{regulatory}_{asset\_base}
       \mathrm{discount}_{rate}
   ammonia_export_volume_tonnes_definition:
+    id: ammonia_export_volume_tonnes_definition
     name: Ammonia export volume tonnes
-    description: 'Ammonia the export programme ships: the export energy times the share that goes as ammonia,
-      times the hydrogen mass the ammonia carries, at the unit conversions MWh-to-MJ and tonne.'
+    description: 'Ammonia shipped: the export energy, the share that goes as ammonia, over hydrogen''s
+      energy content and over ammonia''s hydrogen fraction. The shipped form multiplied by `1000 * 0.05`,
+      which is the same arithmetic read the other way -- 1000 kg/t and 1/20 for the 5% the ammonia carries
+      -- and gave a dimension of mass x length^2 / time^3. Written as division by the shipped `mwh_per_hydrogen_unit`
+      because that node already exists, is typed `MWh/kg`, and is what four other equations divide by;
+      a second literal for hydrogen''s LHV would be two sources for one physical constant. The 1000 converts
+      kg to tonnes, which is the one factor with no node behind it. 1,690 t/year at defaults, and `hydrogen_share_of_ammonia`
+      (0.1775 t H2 per t NH3, stoichiometric) stays as it was: it is the check on the answer, not a term
+      that needed moving.'
     system: financial
     lhs: ammonia_export_volume_tonnes
-    rhs: hydrogen_export_volume * ammonia_export_share * hydrogen_share_of_ammonia * 1000 * 0.05
+    rhs: hydrogen_export_volume * ammonia_export_share / mwh_per_hydrogen_unit / 1000 / hydrogen_share_of_ammonia
     relation: eq
     parameters:
     - ammonia_export_volume_tonnes
-    - hydrogen_export_volume
     - ammonia_export_share
+    - hydrogen_export_volume
     - hydrogen_share_of_ammonia
+    - mwh_per_hydrogen_unit
     free_variables: []
     determined_variables:
     - ammonia_export_volume_tonnes
     tolerance: 1.0e-09
     unit_check: true
-    reference: null
-    priority: P1
     solution_method: direct
     linearity: linear
-    latex: \mathrm{ammonia}_{export\_volume\_tonnes} = 50 \mathrm{hydrogen}_{export\_volume} \mathrm{ammonia}_{export\_share}
-      \mathrm{hydrogen}_{share\_of\_ammonia}
+    priority: P1
+    reference: null
+    latex: \mathrm{ammonia}_{export\_volume\_tonnes} = \frac{\mathrm{hydrogen}_{export\_volume} \mathrm{ammonia}_{export\_share}}{1000
+      \mathrm{mwh}_{per\_hydrogen\_unit} \mathrm{hydrogen}_{share\_of\_ammonia}}
   ammonia_price_per_mwh_definition:
     name: ammonia price per mwh (computed)
     description: 'Ammonia''s lower heating value is 18.6 GJ per tonne; at 3.6 GJ per MWh that is 5.167
@@ -29191,6 +29261,7 @@ equations:
     linearity: linear
     latex: null
   applied_tariff_definition:
+    id: applied_tariff_definition
     name: Applied tariff under the cap
     description: The revenue cap's multiplier applied to the cost-recovery tariff. A cap below 1.0 withholds
       part of the revenue requirement -- the incentive instrument a price-control settlement actually
@@ -30724,27 +30795,33 @@ equations:
       resource-availability limits); the numeric ceiling is a policy figure the review does not print'
     latex: \mathrm{coal}_{capacity} \leq \mathrm{coal}_{new\_build}
   coal_price_per_mwh_definition:
+    id: coal_price_per_mwh_definition
     name: Coal price per MWh thermal
-    description: 'Commodity coal price converted to a thermal basis. Dimensional check: USD/tonne divided
-      by (GJ/tonne times MWh/GJ) is USD/MWh. The 3.6 is MWh per GJ; the 25 is GJ per tonne. Both are written
-      so a reader can check the conversion, because the conversion is where a unit error would hide.'
+    description: 'The commodity price per tonne divided by the energy a tonne carries gives the price
+      per MWh thermal: 80 USD/t over 6.944 MWh/t is 11.52 USD/MWh. The shipped form divided by `25 * 3.6`,
+      which is the same conversion with both factors as literals -- correct arithmetic that still failed
+      its own unit check, because `25` carries no unit and the walker reads `USD/tonne / 1` as USD/tonne.
+      11.52 USD/MWh against the shipped 0.889: the shipped value was 12.96x low, which the operational-supply
+      pack found and attributed to a factor-of-12.96 error. It was not an arithmetic error; it was the
+      walker refusing to credit an untyped constant, which is the behaviour that catches the real ones.'
     system: cost_accounting
     lhs: coal_price_per_mwh
-    rhs: coal_price / (25 * 3.6)
+    rhs: coal_price / mwh_per_coal_unit
     relation: eq
     parameters:
+    - coal_price_per_mwh
     - coal_price
-    free_variables:
-    - coal_price
+    - mwh_per_coal_unit
+    free_variables: []
     determined_variables:
     - coal_price_per_mwh
     tolerance: 1.0e-09
-    unit_check: false
-    reference: null
-    priority: P2
+    unit_check: true
     solution_method: direct
     linearity: linear
-    latex: null
+    priority: P2
+    reference: null
+    latex: \mathrm{coal}_{price\_per\_mwh} = \frac{\mathrm{coal}_{price}}{\mathrm{mwh}_{per\_coal\_unit}}
   coal_retirement_half_life_definition:
     name: The coal fleet's retirement half-life
     description: 'Years for the coal fleet to half-retire at the annual rate: the half-life of an exponential
@@ -31355,6 +31432,7 @@ equations:
     linearity: linear
     latex: \mathrm{corporate}_{income\_tax\_rate} = \mathrm{tax}_{rate}
   cost_of_debt_capped:
+    id: cost_of_debt_capped
     name: Debt cost within the allowed return
     description: 'The regulator''s debt allowance binds the commercial cost of debt the scenario may assume:
       a component priced above the allowed return is the pass-through the cap regime forbids, so a scenario
@@ -31402,6 +31480,7 @@ equations:
     reference: Credit-spread decomposition (BIS)
     latex: \mathrm{cost}_{of\_debt} = \mathrm{interest}_{rate} + \mathrm{debt}_{spread} + \mathrm{currency}_{risk\_premium}
   cost_of_equity_capped:
+    id: cost_of_equity_capped
     name: Equity cost within the allowed return
     description: 'The equity-return allowance binds the cost of equity: the CAPM-estimated return a project
       demands cannot exceed what the regulatory settlement awards.'
@@ -38652,6 +38731,7 @@ equations:
     reference: Stoft 2002, Power System Economics, ch. 5
     latex: \mathrm{regulation}_{up\_requirement} = \mathrm{regulation}_{up\_share} \mathrm{peak}_{demand\_mw}
   regulatory_asset_base_definition:
+    id: regulatory_asset_base_definition
     name: Regulated asset base from the fleet
     description: Gross fleet capital less what the books have written down. The gross capital is the capacity-weighted
       capex; the 1000 converts kW-per-MW and the million converts USD. A fraction the regulator's roll-forward
@@ -38680,6 +38760,7 @@ equations:
     latex: \mathrm{regulatory}_{asset\_base} = \frac{\mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}
       \left(1 - \mathrm{accumulated}_{depreciation\_fraction}\right)}{1000}
   regulatory_depreciation_definition:
+    id: regulatory_depreciation_definition
     name: Regulatory depreciation
     description: Straight-line write-down of the asset base over the regulatory asset life. The rate-of-return
       revenue requirement's first term; the second is the return on the base below.
@@ -38821,6 +38902,34 @@ equations:
     solution_method: direct
     linearity: linear
     latex: null
+  remedy_period_bound:
+    id: remedy_period_bound
+    name: Remedy period bound
+    description: 'The cure window a contract offers must not exceed the ceiling its licence sets, or the
+      licence''s own limit is breached by the contract it authorises. 60 days under a 90-day ceiling at
+      defaults, residual -30; at 120 days the residual is +30 and the bound fails, so it is live. The
+      alternative right-hand side was the literal 365, rejected as a tautology: `remedy_periods`'' own
+      range is [1, 365], so a bound against it can never fail. `threshold-product-remainder.md` deferred
+      this node for want of a base and `contract-market.md` cited the deferral; the base is declared here,
+      in the same band as the window it ceilings, which is what makes the bound non-vacuous by construction
+      rather than by a chosen number. An equality was refused by the loader: an inequality bounds a value
+      and only an equality fixes one, and a cure window is a negotiated term, not a computed one.'
+    system: financial
+    lhs: remedy_periods
+    rhs: max_remedy_period_days
+    relation: leq
+    parameters: &id036
+    - max_remedy_period_days
+    - remedy_periods
+    free_variables: *id036
+    determined_variables: []
+    tolerance: 1.0e-06
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P2
+    reference: null
+    latex: \mathrm{remedy}_{periods} \leq \mathrm{max}_{remedy\_period\_days}
   remittance_flows_definition:
     name: Remittance flows
     description: 'Remittances received per year: the share of household income arriving as transfers,
@@ -38879,10 +38988,10 @@ equations:
     lhs: renewable_penetration_limit
     rhs: vre_share
     relation: geq
-    parameters: &id036
+    parameters: &id037
     - renewable_penetration_limit
     - vre_share
-    free_variables: *id036
+    free_variables: *id037
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -39114,10 +39223,10 @@ equations:
     lhs: resettlement_population_share
     rhs: resettlement_requirements
     relation: leq
-    parameters: &id037
+    parameters: &id038
     - resettlement_population_share
     - resettlement_requirements
-    free_variables: *id037
+    free_variables: *id038
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -39180,10 +39289,10 @@ equations:
     lhs: retraining_duration
     rhs: construction_period
     relation: leq
-    parameters: &id038
+    parameters: &id039
     - construction_period
     - retraining_duration
-    free_variables: *id038
+    free_variables: *id039
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -39320,10 +39429,10 @@ equations:
     lhs: rolling_horizon_window
     rhs: time_horizon
     relation: leq
-    parameters: &id039
+    parameters: &id040
     - rolling_horizon_window
     - time_horizon
-    free_variables: *id039
+    free_variables: *id040
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -39387,10 +39496,10 @@ equations:
     lhs: system_saidi_hours_per_year
     rhs: grid_reliability_target
     relation: leq
-    parameters: &id040
+    parameters: &id041
     - grid_reliability_target
     - system_saidi_hours_per_year
-    free_variables: *id040
+    free_variables: *id041
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -39430,10 +39539,10 @@ equations:
     lhs: system_saifi_events_per_year
     rhs: service_quality_standards
     relation: leq
-    parameters: &id041
+    parameters: &id042
     - service_quality_standards
     - system_saifi_events_per_year
-    free_variables: *id041
+    free_variables: *id042
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -39744,10 +39853,10 @@ equations:
     lhs: small_modular_reactor_capacity
     rhs: total_capacity_mw
     relation: leq
-    parameters: &id042
+    parameters: &id043
     - small_modular_reactor_capacity
     - total_capacity_mw
-    free_variables: *id042
+    free_variables: *id043
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -39974,10 +40083,10 @@ equations:
     lhs: solar_pv_capacity
     rhs: solar_pv_land_constraint
     relation: leq
-    parameters: &id043
+    parameters: &id044
     - solar_pv_capacity
     - solar_pv_land_constraint
-    free_variables: *id043
+    free_variables: *id044
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -39998,10 +40107,10 @@ equations:
     lhs: solar_pv_capacity
     rhs: solar_pv_max_build
     relation: leq
-    parameters: &id044
+    parameters: &id045
     - solar_pv_capacity
     - solar_pv_max_build
-    free_variables: *id044
+    free_variables: *id045
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -40023,10 +40132,10 @@ equations:
     lhs: solar_thermal_capacity
     rhs: csp_capacity
     relation: leq
-    parameters: &id045
+    parameters: &id046
     - csp_capacity
     - solar_thermal_capacity
-    free_variables: *id045
+    free_variables: *id046
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -40168,10 +40277,10 @@ equations:
     lhs: spare_parts_lead_time
     rhs: mean_time_between_failures
     relation: leq
-    parameters: &id046
+    parameters: &id047
     - mean_time_between_failures
     - spare_parts_lead_time
-    free_variables: *id046
+    free_variables: *id047
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -40303,10 +40412,10 @@ equations:
     lhs: steel_scrap_eaf_share + steel_h2_dri_share
     rhs: '1.0'
     relation: leq
-    parameters: &id047
+    parameters: &id048
     - steel_h2_dri_share
     - steel_scrap_eaf_share
-    free_variables: *id047
+    free_variables: *id048
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -40327,11 +40436,11 @@ equations:
     lhs: storage_capacity_mw
     rhs: total_capacity_mw + storage_headroom_mw
     relation: leq
-    parameters: &id048
+    parameters: &id049
     - storage_capacity_mw
     - storage_headroom_mw
     - total_capacity_mw
-    free_variables: *id048
+    free_variables: *id049
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -40618,10 +40727,10 @@ equations:
     lhs: temperature_increase
     rhs: temperature_target
     relation: leq
-    parameters: &id049
+    parameters: &id050
     - temperature_increase
     - temperature_target
-    free_variables: *id049
+    free_variables: *id050
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -40747,11 +40856,11 @@ equations:
     lhs: thermal_storage_capacity
     rhs: storage_headroom_mw * thermal_storage_duration
     relation: leq
-    parameters: &id050
+    parameters: &id051
     - storage_headroom_mw
     - thermal_storage_capacity
     - thermal_storage_duration
-    free_variables: *id050
+    free_variables: *id051
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -40796,10 +40905,10 @@ equations:
     lhs: tidal_range_capacity
     rhs: total_capacity_mw
     relation: leq
-    parameters: &id051
+    parameters: &id052
     - tidal_range_capacity
     - total_capacity_mw
-    free_variables: *id051
+    free_variables: *id052
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -40978,10 +41087,10 @@ equations:
     lhs: total_water_demand_m3
     rhs: transboundary_water_constraint
     relation: leq
-    parameters: &id052
+    parameters: &id053
     - total_water_demand_m3
     - transboundary_water_constraint
-    free_variables: *id052
+    free_variables: *id053
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -41236,10 +41345,10 @@ equations:
     lhs: district_heating_share + heat_pump_adoption
     rhs: '1.0'
     relation: leq
-    parameters: &id053
+    parameters: &id054
     - district_heating_share
     - heat_pump_adoption
-    free_variables: *id053
+    free_variables: *id054
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -41278,10 +41387,10 @@ equations:
     lhs: v2g_adoption
     rhs: electric_vehicle_adoption
     relation: leq
-    parameters: &id054
+    parameters: &id055
     - electric_vehicle_adoption
     - v2g_adoption
-    free_variables: *id054
+    free_variables: *id055
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -41501,6 +41610,7 @@ equations:
     reference: null
     latex: \mathrm{vulnerable}_{population} = \mathrm{vulnerability}_{index} \mathrm{population}_{total}
   wacc_alias:
+    id: wacc_alias
     name: WACC is the discount rate
     description: The catalog's WACC row and the financial block's discount rate are one quantity, so the
       duplicate derives from the computed one and the graph keeps a single blend. An equality between
@@ -41609,11 +41719,11 @@ equations:
     lhs: water_availability * water_availability_m3
     rhs: total_water_demand_m3
     relation: geq
-    parameters: &id055
+    parameters: &id056
     - total_water_demand_m3
     - water_availability
     - water_availability_m3
-    free_variables: *id055
+    free_variables: *id056
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -41997,11 +42107,11 @@ equations:
     lhs: workshop_capacity
     rhs: number_of_generators * maintenance_frequency
     relation: geq
-    parameters: &id056
+    parameters: &id057
     - maintenance_frequency
     - number_of_generators
     - workshop_capacity
-    free_variables: *id056
+    free_variables: *id057
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
@@ -52123,6 +52233,34 @@ relationships:
   direction: forward
   strength: hard
   description: Bounds accumulation_risk against pml_99_5_usd_million; a scenario can clear the arithmetic
+    and fail this.
+  reference: null
+  priority: P2
+- source: mwh_per_hydrogen_unit
+  target: ammonia_export_volume_tonnes
+  equation_id: ammonia_export_volume_tonnes_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the corrected product.
+  reference: null
+  priority: P1
+- source: mwh_per_coal_unit
+  target: coal_price_per_mwh
+  equation_id: coal_price_per_mwh_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the corrected product.
+  reference: null
+  priority: P1
+- source: max_remedy_period_days
+  target: remedy_periods
+  equation_id: remedy_period_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: Bounds remedy_periods against max_remedy_period_days; a scenario can clear the arithmetic
     and fail this.
   reference: null
   priority: P2

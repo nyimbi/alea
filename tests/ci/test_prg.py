@@ -1610,7 +1610,12 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# `exposure_index` and `geopolitical_risk_index` left `uncoupled()` by
 	# becoming derived, and they left the rule at the same time -- a derived
 	# index cannot be 'set', which is the premise its message states.
-	assert len(dead) == 233, len(dead)
+	# Batch 40 took it 233 to 232: `remedy_periods` left by its bound against
+	# `max_remedy_period_days`. The batch's ten retypes and one new conversion
+	# node changed no membership -- a retype does not move a node between
+	# registers, and `mwh_per_coal_unit` is exogenous but coupled by the
+	# equation that reads it, so it was never a dead knob.
+	assert len(dead) == 232, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
@@ -3303,26 +3308,55 @@ def test_the_unit_report_separates_inconsistent_from_undecidable(
 def test_the_flagged_equations_are_a_known_set(graph: ParameterGraph):
 	"""The inconsistent set is pinned, so a new one is a failing test.
 
-	Eleven equations are flagged today, and they are three kinds rather than
-	one. Six are annual quantities declared without a per-year divisor: a bare
-	``tonnes`` or ``USD/kW/year`` node computed from a per-year rate
-	(``ammonia_export_volume_tonnes_definition``,
+	ONE equation is flagged today. It has been eleven, twenty and eight at
+	earlier points in the build; the history below is kept because each entry
+	is a measurement of what a retype does to this set, and those measurements
+	are the reason the annual-quantity vocabulary was repaired the way it was.
+
+	WHY TEN LEFT AT BATCH 40, AND WHY THE REPAIR WAS THE NODE. The eleven were
+	three kinds rather than one. Six were annual quantities declared without a
+	per-year divisor (``ammonia_export_volume_tonnes_definition``,
 	``co2_captured_cement_tonnes_definition``,
 	``co2_captured_industry_tonnes_definition``,
 	``steel_hydrogen_demand_tonnes_definition``,
 	``insurance_premium_definition``,
-	``mini_grid_programme_spend_definition``). Two are compounding slips where
-	a factor was dropped or added -- ``premature_deaths_definition`` carries a
-	``pm25_kt_per_year`` against a ``1/kt`` risk coefficient, and
-	``rocof_definition`` divides MW by MW·s to get a per-second rate the node
-	declares as Hz/s. Three are single declarations that disagree with their
-	own equation's stated dimensional check (``coal_price_per_mwh_definition``
-	declares USD/MWh for a per-tonne fuel price over a heat rate,
-	``equity_irr_definition`` declares a dimensionless IRR for a per-year
-	compounding factor, ``line_outage_hours_per_year_definition`` declares a
-	dimensionless quantity for a per-event rate). This test does not bless
-	them; it makes the set move only when someone means it to, because a
-	count that drifts unnoticed is how a dimensional defect ships.
+	``mini_grid_programme_spend_definition``). Two were compounding slips
+	(``premature_deaths_definition`` carried a ``pm25_kt_per_year`` against a
+	``1/kt`` risk coefficient; ``rocof_definition`` divides MW by MW·s to get
+	a per-second rate the node declares as Hz/s). Three were single
+	declarations disagreeing with their own equation's stated check
+	(``coal_price_per_mwh_definition``, ``equity_irr_definition``,
+	``line_outage_hours_per_year_definition``).
+
+	For nine of the ten, the walk's ``lhs vs rhs`` message invited rewriting
+	the rhs, and the rhs was what the author wrote from the physics: the
+	*catalog* had mis-typed the node. ``line_outage_hours_per_year_definition``
+	was ``probability * duration`` before the batch and is ``probability *
+	duration`` after it; ``line_outage_probability`` shipped ``1/year`` for a
+	count of events and is now ``events/year``. Same for the six annual
+	quantities, ``equity_irr_estimate`` and ``premature_deaths_definition``.
+	The tenth, ``coal_price_per_mwh_definition``, was arithmetically right and
+	12.96x low because it divided by an untyped literal ``25 * 3.6`` that the
+	walker reads as dimensionless; the fix is a typed node
+	(``mwh_per_coal_unit``, ``MWh/tonne``, 6.944), not a corrected literal.
+	Writing the retype table from the failing *equations* would have retyped
+	three nodes that already shipped the right unit
+	(``insurance_premium_usd_per_kw_year``, ``line_outage_hours_per_year``,
+	``mini_grid_programme_spend_usd_per_year``) and left three wrong ones
+	untouched. Write it from the failing *nodes*.
+
+	WHY ``rocof_definition`` IS STILL HERE AND IS NOT A MISS. The swing
+	equation needs a ``* f0`` the shipped body omits, wrong by 50x at 50 Hz.
+	Correcting it drives ``frequency_nadir_hz`` to 43.06 Hz, under its own
+	[45, 50] floor, because ``frequency_nadir_definition`` applies the initial
+	slope over a flat ``frequency_response_time_s`` of 10 s. Two shipped
+	defaults disagree; that is a question about the nadir model, and bending
+	the 45 Hz UFLS floor to make the number fit would be manufacturing
+	agreement rather than repairing it. It stays red until the nadir chain is
+	answered.
+
+	The entries that follow are the earlier history, kept because each one
+	measures what a retype does to this set.
 
 	WHY THE PROMOTION GREW THE SET FROM EIGHT TO TWENTY AND WHY NONE OF THE
 	TWELVE WERE FIXED HERE. The generated batches added forty-two equations,
@@ -3424,17 +3458,7 @@ def test_the_flagged_equations_are_a_known_set(graph: ParameterGraph):
 	# the coupling batches added check clean under the same blessing, which
 	# is the blessing earning its keep.
 	assert flagged == {
-		"ammonia_export_volume_tonnes_definition",
-		"co2_captured_cement_tonnes_definition",
-		"co2_captured_industry_tonnes_definition",
-		"coal_price_per_mwh_definition",
-		"equity_irr_definition",
-		"insurance_premium_definition",
-		"line_outage_hours_per_year_definition",
-		"mini_grid_programme_spend_definition",
-		"premature_deaths_definition",
 		"rocof_definition",
-		"steel_hydrogen_demand_tonnes_definition",
 	}, sorted(flagged)
 
 
@@ -3960,9 +3984,13 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# seven, all hard: five equalities and two bounds, 529 to 536. Batch 38
 	# added eight, all hard: six operational products and two workload
 	# bounds, 536 to 544. Batch 39 added five, all hard: three products and
-	# two bounds, 544 to 549. No batch since 33 has added a soft or
-	# informational edge, which is why those two counts have not moved.
-	assert counts == {"hard": 549, "informational": 1, "soft": 2}, counts
+	# two bounds, 544 to 549. Batch 40 added one, hard:
+	# `remedy_period_bound`, a time ceiling of the same kind batch 36 shipped,
+	# 549 to 550. Its other corrected equation, `coal_price_per_mwh_definition`,
+	# was already hard and stayed hard, so it moves nothing here. No batch
+	# since 33 has added a soft or informational edge, which is why those two
+	# counts have not moved.
+	assert counts == {"hard": 550, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -4418,16 +4446,23 @@ def test_the_specs_unit_check_field_loads_and_is_read(graph: ParameterGraph):
 	# And it is read. `False` reclassifies the verdict; it does not skip the
 	# walk, so the equation is still checked and still reported.
 	report = check_graph(graph)
-	# Four equations in the shipped library declare the exemption, and all four
-	# are the same kind: a unit *conversion* whose constant the walker cannot
-	# see. ``coal_price_per_mwh = coal_price / (25 * 3.6)`` divides USD/tonne by
-	# a bare 31.6 that means GJ/tonne times MWh/GJ, so the dimensional check is
-	# discharged by the comment and not by the arithmetic. The declaration is
-	# the author saying so, which is what the field is for -- so this asserts
-	# the set rather than its emptiness, and a fifth exemption is a failing
-	# test.
+	# Three equations in the shipped library declare the exemption, and all
+	# three are the same kind: a unit *conversion* whose constant the walker
+	# cannot see. ``consumer_surplus_definition`` scales TWh to MWh with a bare
+	# ``1000000``; ``gas_price_per_mwh_definition`` divides USD/MMBtu by a bare
+	# ``0.293`` that means MMBtu/MWh; ``llcr_definition``'s annuity carries the
+	# exponent convention the walker does not credit. The declaration is the
+	# author saying so, which is what the field is for -- so this asserts the
+	# set rather than its emptiness, and a fourth exemption is a failing test.
+	#
+	# There were four until batch 40. ``coal_price_per_mwh_definition`` was
+	# ``coal_price / (25 * 3.6)`` and needed the exemption because the walker
+	# reads ``31.6`` as dimensionless; the batch replaced it with
+	# ``coal_price / mwh_per_coal_unit``, where the divisor is a typed
+	# ``MWh/tonne`` node, so the walk discharges it and the exemption went.
+	# That is the exemption doing its job: it marked an untyped constant, and
+	# typing the constant retired the marker.
 	assert set(report.exempt) == {
-		"coal_price_per_mwh_definition",
 		"consumer_surplus_definition",
 		"gas_price_per_mwh_definition",
 		"llcr_definition",
@@ -4442,9 +4477,9 @@ def test_the_specs_unit_check_field_loads_and_is_read(graph: ParameterGraph):
 	patched[target] = patched[target].model_copy(update={"unit_check": False})
 	exempted = ParameterGraph(graph.nodes, patched, graph.edges, rules=graph.rules)
 	after = check_graph(exempted)
-	# The four declarations above, plus the one just patched in. Asserted as a
+	# The three declarations above, plus the one just patched in. Asserted as a
 	# set so this reads as "the patch was read" rather than as a count that
-	# happens to be five.
+	# happens to be four.
 	assert set(after.exempt) == set(report.exempt) | {target}, after.exempt
 	# The check still ran: the exempt equation is in `checks` as before.
 	assert len(after.checks) == len(graph.equations)

@@ -223,6 +223,15 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	the four nodes the batch creates are all derived, so they never enter the
 	denominator. The gap tracks it: 851 -> 849.
 
+	852 -> 854 for batch 40, and the two are both new nodes rather than
+	retypes: ``mwh_per_coal_unit`` (the typed energy density the coal price
+	quotient divides by) and ``max_remedy_period_days`` (the policy ceiling
+	the remedy-period bound reads) both ship settable. The batch's ten retypes
+	changed a unit without changing a role, so nothing left the surface, and
+	the two equations it rewrote in place -- ``ammonia_export_volume_tonnes_definition``
+	and ``coal_price_per_mwh_definition`` -- added no denominator either. The
+	gap tracks it: 849 -> 851.
+
 	The eighteen the engine cannot carry are still outside the denominator:
 	they are chosen by the optimiser, so ``is_settable`` is False for them.
 	They are not missing from the register -- ``endogenous`` carries them, and
@@ -230,7 +239,7 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	"""
 	cov = coverage(graph)
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 852, cov
+	assert cov["total"] == 854, cov
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -304,9 +313,17 @@ def test_the_untranslated_register_is_not_empty_and_says_why(
 	entered both. A register that moved without the denominator moving, or
 	the other way, would mean a parameter had crossed the settable boundary
 	without an equation and the coupling had silently stopped.
+
+	Batches 35 to 39 took it 861 to 849, the same arithmetic as before: the
+	aliases and products those batches made derived left both sets at once.
+	Batch 40 is the first in the recorded range to move it the other way, 849
+	to 851, because its two new nodes are both settable -- ``mwh_per_coal_unit``
+	and ``max_remedy_period_days`` -- so they entered both sets, and its ten
+	retypes changed a unit without crossing the boundary, so they moved
+	neither. The register still equals the settable surface minus three.
 	"""
 	missing = untranslated(graph)
-	assert len(missing) == 849, missing
+	assert len(missing) == 851, missing
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact
