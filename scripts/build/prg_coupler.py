@@ -546,7 +546,8 @@ def emit(batch: str) -> int:
 	graph = load_graph()
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}}
+	aliases: dict[str, str] = {}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -646,6 +647,14 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "41":
+		b41_nodes, b41_equations, b41_edges, b41_rules, b41_aliases = build_batch41(graph)
+		rules.extend(b41_rules)
+		nodes.update(b41_nodes)
+		aliases.update(b41_aliases)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b41_equations)
+		edges = list(BATCH12_EDGES) + b41_edges
 	elif batch == "40":
 		b40_nodes, b40_equations, b40_edges, b40_rules = build_batch40(graph)
 		rules.extend(b40_rules)
@@ -788,6 +797,13 @@ def emit(batch: str) -> int:
 		"relationships": edges,
 		"cross_validation": rules,
 	}
+	# The alias register: a fragment's statement that a deprecated id's
+	# replacement is another node. `_deprecated_reach` refuses an edge or an
+	# equation that names a deprecated node, so an alias cannot be expressed as
+	# arithmetic -- the register is the mechanism, and it is what a caller
+	# migrating a scenario reads.
+	if aliases:
+		document["aliases"] = aliases
 
 	out_dir = ROOT / "config" / "prg_ingest"
 	out_dir.mkdir(parents=True, exist_ok=True)
@@ -11424,6 +11440,266 @@ BATCH38_BOUNDS: tuple[
 
 
 _BATCH38_SOURCE = "The operational and supply pack (batch 38)"
+
+
+_BATCH41_SOURCE = "The dead-arithmetic repair (batch 41)"
+
+
+#: (name, unit, range, default, prose) -- the two ends of the growth
+#: trajectory, whose shipped defaults made the window identically zero.
+#:
+#: This is a retype table that carries numbers, and the reason is the defect:
+#: both nodes shipped `default = 25.0` with `unit = years`, so the difference
+#: `end - start` was 0.0 for every scenario and `demand_growth_factor` computed
+#: `(1 + g) ** 0 = 1.0` -- a compound growth factor that reported no growth.
+#: The generator's `_default_for` returns 25.0 for every `years` node, which is
+#: where both values came from; the catalog states a method ("Temporal
+#: trajectory anchoring") and no number. A start of 0.0 and an end of 10.0 make
+#: the window `horizon_years`, which is the trajectory `energy_demand` already
+#: compounds over, so the factor and the demand agree on the same span.
+#:
+#: The range is unchanged at [0, 100]: both values sit inside it and the
+#: repair is a default, not a bound.
+BATCH41_RETYPES: tuple[tuple[str, str, list[float], float, str], ...] = (
+	("demand_growth_start_year", "years", [0.0, 100.0], 0.0,
+	 "The first year of the growth trajectory, as an offset from the model's "
+	 "base year. Shipped 25.0, which is the generator's default for every "
+	 "`years` node rather than a statement about this one. A start equal to "
+	 "the end year collapsed `demand_growth_window_years` to zero, so "
+	 "`demand_growth_factor` evaluated `(1 + g) ** 0 = 1.0` at every scenario "
+	 "and the whole window family computed an identity. 0.0 is the base year, "
+	 "which is what a start of a trajectory means."),
+	("demand_growth_end_year", "years", [0.0, 100.0], 10.0,
+	 "The last year of the growth trajectory, as an offset from the base "
+	 "year. Shipped 25.0, so `end - start` was 0.0. 10.0 is the shipped "
+	 "`horizon_years`, and that is the point rather than a coincidence: "
+	 "`energy_demand` compounds `base_demand_twh * (1 + g) ** horizon_years`, "
+	 "so a window of the same length makes `demand_growth_factor` the factor "
+	 "that equation already applies. Before this batch the two conventions "
+	 "disagreed -- the factor said 1.0 and the demand said 1.377 -- and the "
+	 "factor had no reader outside its own definition."),
+)
+
+
+#: (eq_id, lhs, rhs, prose, reference) -- the one body that changes. The
+#: deprecated duplicate is *not* here: `_deprecated_reach` refuses an edge or
+#: equation that names a deprecated node, so the alias is expressed in the
+#: fragment's alias register rather than as arithmetic.
+BATCH41_EQUATIONS: tuple[tuple[str, str, str, str, str | None], ...] = (
+	("energy_demand", "demand_twh", "base_demand_twh * demand_growth_factor",
+	 "Demand at the horizon, written as the base times the factor the graph "
+	 "already derives. The shipped body compounded `(1 + demand_growth) ** "
+	 "horizon_years` inline, which is the same arithmetic as "
+	 "`demand_growth_factor` whenever the window equals the horizon -- and it "
+	 "does, by construction, after this batch's retype of the two year nodes. "
+	 "Written against the factor rather than the exponent because the graph "
+	 "carried both spellings and only one of them had a reader: the factor "
+	 "was computed, reported, and consumed by nothing, which is the "
+	 "declared-not-produced defect in its cleanest form. The value is "
+	 "unchanged at the defaults -- 33.8 * 1.0325 ** 10 = 46.53902747054532 "
+	 "either way, measured -- so this is a coupling repair and not a "
+	 "behaviour change.",
+	 None),
+)
+
+
+def build_batch41(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], dict[str, str]]:
+	"""The demand-growth window, repaired; one switch retyped; one alias.
+
+	Three findings, all from the grid-operations pack and all verified against
+	the loaded graph before this batch touched them.
+
+	*The window family computed an identity at every scenario.* Both year
+	nodes shipped 25.0, so `demand_growth_window_years = end - start = 0.0`
+	and `demand_growth_factor = (1 + demand_growth) ** 0 = 1.0`. The factor
+	then had exactly one reader -- its own definition -- and the equation that
+	should have consumed it, `energy_demand`, compounded the exponent inline
+	over `horizon_years` instead. Two spellings of one compound growth, one of
+	them dead, and the dead one was the one the graph named as a derived
+	quantity a report could print. This is the pack's F1 and the cleanest
+	instance of the declared-not-produced class in the graph: a computed
+	quantity that is computed, stored, and read by nothing.
+
+	*The repair is a default, not a formula.* The catalog states a method for
+	both year nodes and no number, and the generator supplies 25.0 for every
+	`years` node from `_default_for`. Setting start to the base year and end
+	to the shipped horizon gives a window equal to the horizon, so the factor
+	and `energy_demand` agree by construction rather than by a chosen number.
+	Measured before shipping: `demand_twh` is 46.53902747054532 both ways, so
+	rewriting `energy_demand` to read the factor changes no value at the
+	defaults. It changes what the graph can be asked: the factor now moves
+	when `demand_growth` moves, because its window is no longer zero.
+
+	*`maintenance_schedule_optimisation` is retyped and deliberately not
+	coupled.* It ships as `float, unit=None, default=500000.0` -- a switch
+	whose value is five hundred thousand. Read as an operand it raises
+	`GraphError: 500000.0 is outside the range`, so it cannot gate anything
+	until it is retyped. The pack built the gate and rejected it for a reason
+	that survives the retype: `maintenance_schedule_optimisation *
+	planned_maintenance_hours_per_year` computes 48,000,000 h/year, 5,479x
+	the anchor's own ceiling, because the placeholder default is what breaks
+	it. Retyped to the graph's switch convention -- `unit = "1"`, range
+	[0, 1], default 1.0 -- the gate would compute 96 h/year, which is sane.
+	It is still not shipped, because the quantity it would produce is the
+	same 96 h/year `planned_maintenance_hours_per_year` already holds: a
+	switch that is on by default, multiplied into the one anchor, produces a
+	node equal to its input and adds a terminal node to the 383 the pack
+	counted. The retype is what makes the switch usable; the coupling needs an
+	anchor that distinguishes optimised from unoptimised maintenance, and the
+	graph does not carry one.
+
+	*The alias is forced by the node's own prose, and it is a register entry
+	rather than an equation.* `cross_border_trading` states it is a duplicate
+	of `cross_border_trade_allowed`, both are `unit = 1`, and the canonical
+	already gates `permitted_imports_definition`. The obvious move -- write
+	`cross_border_trading = cross_border_trade_allowed` as an equation -- is
+	refused by the loader: `_deprecated_reach` raises on any edge or equation
+	naming a deprecated node, because a status nothing acts on is a label, and
+	the point of deprecating a node is that the graph stops propagating
+	through it. The mechanism the loader does provide is the fragment's
+	`aliases` register, which states the replacement without coupling it. That
+	is the right shape: a caller migrating a scenario needs the mapping, and
+	the graph must not compute through the retired id to supply it. No
+	deprecated node in the graph had an alias before this one.
+
+	*What this batch does not do.* The pack's F2, F3, F4, F6, F7 and F8 are
+	recorded in `docs/research/coupling-packs/grid-ops-asset.md` and left: F3
+	is the finding that any batch closing `uncoupled()` by gating switches
+	*increases* the terminal set, which is why the retype above ships without
+	its gate. The 239 remaining uncoupled nodes are overwhelmingly the
+	qualitative and placeholder registers the packs have deferred twice; the
+	count is not the objective and the packs say so with measurements.
+	"""
+	from alea.prg.dsl import parse_side
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+	aliases: dict[str, str] = {}
+
+	for name, unit, rng, default, prose in BATCH41_RETYPES:
+		shipped = graph.nodes.get(name)
+		assert shipped is not None, f"{name}: no shipped node to retype"
+		if shipped.source == _BATCH41_SOURCE:
+			# Re-emitting after the bake reproduces the fragment.
+			pass
+		else:
+			assert shipped.default != default, (
+				f"{name}: already defaults to {default}; a retype row whose "
+				"diagnosis was wrong"
+			)
+		full: dict[str, Any] = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		full.update({
+			"description": prose, "unit": unit, "range": rng,
+			"default": default, "status": _kept_status(shipped),
+			"source": _BATCH41_SOURCE,
+		})
+		nodes[name] = full
+
+	# The switch the pack could not use. Its own row rather than a retype-table
+	# entry because it changes the range, the unit and the default at once --
+	# a switch shipped as a five-hundred-thousand float is not a dimension
+	# error, it is the wrong object.
+	switch = graph.nodes.get("maintenance_schedule_optimisation")
+	assert switch is not None, "maintenance_schedule_optimisation: absent"
+	if switch.unit == "1":
+		assert switch.source == _BATCH41_SOURCE, (
+			"maintenance_schedule_optimisation: already a switch, and not by "
+			"this batch"
+		)
+	switch_body: dict[str, Any] = dict(
+		switch.model_dump(exclude={"id"}, mode="json"))
+	switch_body.update({
+		"description": (
+			"Whether the maintenance schedule is optimised rather than fixed. "
+			"A switch, shipped as `float, unit=None, default=500000.0` -- read "
+			"as an operand it raises `GraphError: 500000.0 is outside the "
+			"range`, so it could not gate anything. Retyped to the graph's "
+			"switch convention: unit `1`, range [0, 1], default 1.0, the same "
+			"shape as `ets_enabled` and `storage_dispatch_enabled`. The "
+			"retype makes the node usable and does not couple it: the gate the "
+			"pack built, `switch * planned_maintenance_hours_per_year`, "
+			"reproduces that anchor's own 96 h/year and would add a terminal "
+			"node to the 383 already counted. A coupling needs an anchor that "
+			"separates optimised from unoptimised maintenance, and the graph "
+			"holds none."
+		),
+		"type": "float", "unit": "1", "range": [0.0, 1.0], "default": 1.0,
+		"role": "free", "determinism": "policy",
+		"status": _kept_status(switch),
+		"source": _BATCH41_SOURCE,
+	})
+	nodes["maintenance_schedule_optimisation"] = switch_body
+
+	for eq_id, lhs, rhs, prose, cite in BATCH41_EQUATIONS:
+		rhs_params = sorted(parse_side(rhs).symbols)
+		known = set(nodes) | set(graph.nodes)
+		missing = [sym for sym in rhs_params if sym not in known]
+		assert not missing, f"{eq_id}: rhs names {missing}, which no node holds"
+		assert lhs not in rhs_params, f"{eq_id}: lhs names itself on its rhs"
+		shipped = graph.equations.get(eq_id)
+		# A rewritten body keeps the shipped equation's identity; a new alias
+		# carries none and takes the graph's defaults.
+		base = (
+			{
+				"name": shipped.name, "system": shipped.system,
+				"tolerance": shipped.tolerance,
+				"priority": (
+					shipped.priority.value
+					if hasattr(shipped.priority, "value") else shipped.priority
+				),
+			}
+			if shipped is not None
+			else {
+				"name": eq_id.replace("_", " ").capitalize(),
+				"system": "market_design",
+				"tolerance": 1.0e-09, "priority": "P2",
+			}
+		)
+		equations[eq_id] = {
+			"id": eq_id, "description": prose, **base,
+			"lhs": lhs, "rhs": rhs, "relation": "eq",
+			"parameters": [lhs] + rhs_params, "free_variables": [],
+			"determined_variables": [lhs],
+			"unit_check": True,
+			"solution_method": "direct", "linearity": "linear",
+			"reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		# The edge set follows the body. `energy_demand` stops reading
+		# `horizon_years` and `demand_growth` directly and starts reading the
+		# factor that already compounds both; leaving the old edges would keep
+		# two operands counted as coupled by a formula that no longer names
+		# them, which is the stale-edge defect.
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs, "equation_id": eq_id,
+				"relationship": "functional", "direction": "forward",
+				"strength": "hard",
+				"description": "Enters the corrected body.",
+				"reference": cite, "priority": "P1",
+			})
+
+	# The deprecated duplicate's replacement, stated in the register rather than
+	# as arithmetic: `_deprecated_reach` refuses an equation that names a
+	# deprecated node, and the reason it does is that deprecating a node means
+	# the graph stops propagating through it. The register is what a caller
+	# migrating a scenario reads.
+	shipped_dep = graph.nodes["cross_border_trading"]
+	assert shipped_dep.status == "deprecated", (
+		"cross_border_trading: the alias assumes the node ships deprecated"
+	)
+	dep_body: dict[str, Any] = dict(
+		shipped_dep.model_dump(exclude={"id"}, mode="json"))
+	# `deprecated_by` is the node's half of the register, and the merge refuses
+	# an alias whose node names a different replacement. It ships `None` today.
+	dep_body["deprecated_by"] = "cross_border_trade_allowed"
+	nodes["cross_border_trading"] = dep_body
+	aliases["cross_border_trading"] = "cross_border_trade_allowed"
+
+	return nodes, equations, edges, rules, aliases
+
 
 
 #: (name, unit, prose) -- ten retypes that correct a *dimension* and nothing

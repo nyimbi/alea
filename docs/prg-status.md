@@ -256,6 +256,58 @@ question about the nadir chain, not about ROCOF. Bending either number to make
 the other fit would be manufacturing agreement, which is the failure mode this
 whole section exists to avoid.
 
+### Dead arithmetic, found and repaired (batch 41, 2026-10-22)
+
+The grid-operations pack measured a family that computed an identity at every
+scenario. `demand_growth_start_year` and `demand_growth_end_year` both shipped
+`25.0`, so `demand_growth_window_years = end - start = 0.0` and
+`demand_growth_factor = (1 + g) ** 0 = 1.0` for every input. The factor then had
+exactly one reader — its own definition — while the equation that should have
+consumed it, `energy_demand`, compounded the exponent inline over
+`horizon_years`. Two spellings of one compound growth, one dead, and the dead
+one was the one the graph named as a derived quantity a report could print.
+
+**The repair is a default, and the generator is where it came from.** The
+catalog states a method for both nodes ("Temporal trajectory anchoring") and no
+number; `prg_from_catalog._default_for` returns `25.0` for every node with
+`unit = "years"`. That is a reasonable default for a *horizon* and a nonsense
+one for a *start year*, and nothing distinguished them. Start is now the base
+year (0.0) and end is the shipped horizon (10.0), so the window equals the
+horizon by construction. Measured before shipping: `demand_twh` is
+46.53902747054532 both ways — `33.8 · 1.0325¹⁰` — so rewriting `energy_demand`
+against the factor changed no value at the defaults. It changed what the graph
+can be asked: the factor now moves when `demand_growth` moves, because its
+window is no longer zero.
+
+**A switch typed as five hundred thousand.** `maintenance_schedule_optimisation`
+shipped `float, unit=None, default=500000.0`. Read as an operand it raises
+`GraphError: 500000.0 is outside the range`, so it could not gate anything.
+Retyped to the graph's switch convention — unit `1`, range [0, 1], default 1.0,
+the shape `ets_enabled` and `storage_dispatch_enabled` already use. It is
+deliberately **not** coupled: the pack built the gate, and `switch ×
+planned_maintenance_hours_per_year` reproduces that anchor's own 96 h/year. A
+switch on by default, multiplied into the one anchor, produces a node equal to
+its input and adds a terminal node to the 383 the pack counted. Closing
+`uncoupled()` is not the objective; a computed quantity that is consumed is.
+
+**The alias is a register entry, not an equation.** `cross_border_trading`
+states it duplicates `cross_border_trade_allowed`, both are `unit = 1`, and the
+canonical already gates `permitted_imports_definition`. Writing
+`cross_border_trading = cross_border_trade_allowed` as an equation is refused
+by the loader: `_deprecated_reach` raises on any edge or equation naming a
+deprecated node, because a status nothing acts on is a label and the point of
+deprecating a node is that the graph stops propagating through it. The
+mechanism is the fragment's `aliases` register, which states the replacement
+without coupling it — the right shape, since a caller migrating a scenario
+needs the mapping and the graph must not compute through the retired id to
+supply it.
+
+The uncoupled count is unchanged at 239, and that is the honest reading: none of
+these three nodes was uncoupled. What the batch repaired was a derived quantity
+that was computed, stored and read by nothing — the declared-not-produced defect
+in its cleanest form.
+
+
 
 ## Not built
 
