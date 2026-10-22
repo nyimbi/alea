@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "42":
+		b42_nodes, b42_equations, b42_edges, b42_rules = build_batch42(graph)
+		rules.extend(b42_rules)
+		nodes.update(b42_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b42_equations)
+		edges = list(BATCH12_EDGES) + b42_edges
 	elif batch == "41":
 		b41_nodes, b41_equations, b41_edges, b41_rules, b41_aliases = build_batch41(graph)
 		rules.extend(b41_rules)
@@ -11440,6 +11447,256 @@ BATCH38_BOUNDS: tuple[
 
 
 _BATCH38_SOURCE = "The operational and supply pack (batch 38)"
+
+
+_BATCH42_SOURCE = "The CCS chain repair (batch 42)"
+
+
+#: (name, unit, range, default, prose) -- the capture share each fuel's CCS
+#: adoption needs before it can act on an emission factor.
+#:
+#: `coal_ccs_adoption` and `gas_ccs_adoption` are shares of the *fleet*, not
+#: capture rates. The shipped graph multiplied the coal share into the fleet
+#: average factor, so a coal dial reduced every tonne the fleet emitted and a
+#: gas dial did nothing at all -- the two dials had the same name for
+#: different objects, and neither carried the rate that turns "a plant has
+#: capture" into "this fraction of its carbon is not emitted".
+#:
+#: The capture rate is the missing operand. A capture plant is not a plant
+#: that emits nothing: the IEA's own CCUS LCOE comparison prices a captured
+#: plant as emitting some of its carbon, and every capture rate in the
+#: literature is below one. 0.90 is the rate the IEA's technology tables use
+#: for a capture plant (sources/archive/iea_nea_egc_2020.txt, the CCUS entry
+#: in the technology cost tables), and it is a parameter rather than a
+#: constant so a scenario can price a solvent that captures 95% or a retrofit
+#: that manages 85%.
+BATCH42_RETYPES: tuple[tuple[str, str, list[float], float, str], ...] = (
+	("ccs_capture_rate", "1", [0.0, 1.0], 0.90,
+	 "The share of a capture plant's carbon that is actually captured. A "
+	 "capture retrofit is not a zero-emission plant: the IEA's CCUS cost "
+	 "comparison prices it as emitting part of its carbon, and the literature "
+	 "reports capture rates below one. 0.90 is the rate the IEA's technology "
+	 "tables use for a capture plant. The node exists because the graph held "
+	 "two adoption shares and no rate, so the shares had nothing to multiply "
+	 "into."),
+	("coal_ccs_adoption", "1", [0.0, 1.0], 0.0,
+	 "The share of the coal fleet fitted with carbon capture. Shipped 0.5, "
+	 "which is `prg_from_catalog._default_for`'s blanket value for every "
+	 "unitless fraction and not a statement about this fleet -- the catalog "
+	 "carries the row as 'To be built'. The default matters now in a way it "
+	 "did not before this batch: while `emissions` read the raw technology "
+	 "factor the dial reached nothing, so its placeholder value was inert. "
+	 "With the arrow repaired, 0.5 would have silently removed a fifth of the "
+	 "fleet's emissions at the defaults. 0.0 is the shipped fleet: the graph "
+	 "has no capture plant until a scenario builds one, and a share of zero "
+	 "is the statement that nothing is retrofitted."),
+	("gas_ccs_adoption", "1", [0.0, 1.0], 0.0,
+	 "The share of the gas fleet fitted with carbon capture. Shipped 0.5, the "
+	 "same generator placeholder as the coal share, and corrected for the same "
+	 "reason: a dial that now reaches emissions must start where the fleet "
+	 "actually is. The `fuel_ccs_adoption_bound` ceiling of 1.0 over the two "
+	 "shares is unaffected -- it constrains the sum, not either default."),
+)
+
+
+#: (eq_id, lhs, rhs, prose, reference) -- the three bodies that make the CCS
+#: dials reach the emissions they are named for.
+#:
+#: The chain is `emission_factor_t_per_mwh` (a technology factor) ->
+#: `fleet_emission_intensity_t_per_mwh` (the fleet average) -> `emissions` and
+#: `carbon_cost`. Shipped, the first arrow applied the *coal* adoption share
+#: to the whole fleet, and the second arrow did not exist: both
+#: `emissions_definition` and `carbon_cost` read the raw technology factor, so
+#: the fleet average was computed, stored, and consumed by nothing. A CCS dial
+#: therefore changed a number no report printed and no cost read.
+BATCH42_EQUATIONS: tuple[tuple[str, str, str, str, str | None], ...] = (
+	("fleet_emission_intensity_definition",
+	 "fleet_emission_intensity_t_per_mwh",
+	 "emission_factor_t_per_mwh * (1 - (coal_capacity * coal_ccs_adoption + "
+	 "gas_capacity * gas_ccs_adoption) / (coal_capacity + gas_capacity) * "
+	 "ccs_capture_rate)",
+	 "The fleet average emission factor at the current build. The shipped "
+	 "body multiplied the coal adoption share into the whole fleet, which "
+	 "made one fuel's dial reduce every tonne the fleet emitted and left the "
+	 "gas dial with no effect at all. The capture share is a capacity-"
+	 "weighted average over the two capture-capable fuels -- a 3000 MW coal "
+	 "fleet at 50% adoption and a 1500 MW gas fleet at 50% are 50% captured "
+	 "between them, and the weights are what make that true for any mix -- "
+	 "times the capture rate, because a capture plant still emits the "
+	 "uncaptured remainder. Both dials now move the number.",
+	 "IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS "
+	 "technology entry; capacity-weighted averaging per the fleet-aggregation "
+	 "convention in `fleet_employment_intensity_jobs_per_mw`"),
+	("emissions_definition",
+	 "emissions_mtco2_per_year",
+	 "generation_twh * fleet_emission_intensity_t_per_mwh",
+	 "Annual emissions as generation times the fleet's own intensity. The "
+	 "shipped body read the raw technology factor, so it ignored the fleet "
+	 "the graph had built and the capture dials that describe it: "
+	 "`fleet_emission_intensity_t_per_mwh` was computed, documented as 'the "
+	 "fleet average at the current build', and read by no equation. This is "
+	 "the arrow that was missing, and without it every CCS dial in the graph "
+	 "was inert.",
+	 "IPCC Guidelines for National Greenhouse Gas Inventories, the "
+	 "activity-data x emission-factor construction; the fleet average is the "
+	 "graph's own `fleet_emission_intensity_t_per_mwh`"),
+)
+
+
+def build_batch42(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Make the CCS dials reach the emissions they name.
+
+	One finding, verified against the loaded graph before this batch touched
+	it: the graph shipped two CCS adoption dials and neither changed a tonne
+	of reported emissions.
+
+	*What the dials did.* `coal_ccs_adoption` had exactly two readers --
+	`fleet_emission_intensity_definition`, which multiplied it into the whole
+	fleet's factor, and `fuel_ccs_adoption_bound`, which caps the two shares
+	together at one. `gas_ccs_adoption` had one: the bound. Neither reached
+	`emissions_mtco2_per_year` or `carbon_cost_usd_per_mwh`, because both of
+	those read `emission_factor_t_per_mwh` directly. So the graph computed a
+	fleet intensity that no equation read, and applied one fuel's share to a
+	fleet whose mix the share does not describe.
+
+	*The repair is an arrow plus a weight.* `emissions` now reads the fleet
+	intensity, which is the arrow that was missing. The intensity itself
+	becomes a capacity-weighted average over the two capture-capable fuels
+	times a capture rate -- weighted because a coal share applied to a mixed
+	fleet is not a fleet share, and rate-scaled because a capture plant emits
+	its uncaptured remainder. Measured after the bake, with the two shares
+	retyped to 0.0: emissions stay at the shipped 25.777 MtCO2/year, because
+	the shipped fleet has no capture plant. Each dial now moves it on its
+	own: coal 0 -> 0.5 -> 1 with gas at 0 takes emissions 25.777 -> 18.044 ->
+	10.311, and gas 0 -> 1 with coal at 0 takes them to 18.044. Before this
+	batch neither dial moved the reported total at all.
+
+	*The shares' own default was the second defect, and the arrow exposed it.*
+	Both dials shipped 0.5 -- `prg_from_catalog._default_for`'s blanket value
+	for every unitless fraction, on catalog rows the document marks "To be
+	built". While the arrow was missing the placeholder was inert, so the
+	defect was invisible; the moment emissions read the fleet intensity, a 0.5
+	capture share deleted a fifth of the fleet's emissions at every default
+	scenario. Retyped to 0.0, which is the statement that the shipped fleet
+	has no capture plant. This is batch 41's 25.0 finding in a different
+	unit: a generator default that is plausible for one family and a claim
+	about the world for another.
+
+	*`carbon_cost` is deliberately left on the technology factor.* The first
+	draft of this batch moved it to the fleet intensity too, on the argument
+	that a carbon price should charge the fleet for the tonnes it emits. That
+	is wrong here, and the tree's own closed-form test caught it:
+	`marginal_cost_usd_per_mwh` is a *marginal* cost, `emission_factor_t_per_mwh`
+	is documented as "the reference technology's" factor, and
+	`test_the_derived_parameters_match_their_closed_forms` asserts
+	`marginal_cost == fuel_price + carbon_price * emission_factor` with the
+	raw factor. A marginal cost prices the marginal unit; the fleet average is
+	the right basis for a *total* emissions account and the wrong one for the
+	cost of the next MWh. Moving it took marginal cost from 65.0 to 53.75 and
+	the feedback loops moved with it, which is how a plausible argument
+	announces itself as a defect.
+
+	*Why a new node rather than a literal.* A capture rate is a technology
+	parameter a scenario should be able to price. The graph already carries
+	`coal_ccs_adoption` and `gas_ccs_adoption` as shares; the rate is the
+	missing third quantity, and folding 0.90 into the equation would have
+	made it a constant no scenario could reach -- the same untyped-constant
+	defect the dimensional walk refuses elsewhere.
+
+	*What this batch does not do.* It does not couple `coal_emissions_reduction`
+	or `gas_emissions_reduction`, the two nodes `docs/param_eqn.md` names as
+	the CCS dials' targets (rows 2.6 and 2.10). Neither exists in the graph,
+	and creating a per-fuel emissions pair would duplicate the fleet
+	decomposition the intensity now carries. The catalog's edges point at a
+	decomposition the graph chose not to build; this batch makes the dials
+	reach the fleet total, which is what a report reads.
+	"""
+	from alea.prg.dsl import parse_side
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	# The capture rate does not exist in the shipped graph; the two adoption
+	# shares do. A created node takes a fresh body, a retyped one keeps the
+	# shipped body's identity and only the fields this batch is about.
+	assert "ccs_capture_rate" not in graph.nodes, (
+		"ccs_capture_rate: already ships; this batch assumed it did not"
+	)
+	for name, unit, rng, default, prose in BATCH42_RETYPES:
+		shipped = graph.nodes.get(name)
+		if shipped is None:
+			nodes[name] = {
+				"id": name,
+				"name": "CCS capture rate",
+				"description": prose,
+				"category": "supply",
+				"subcategory": "ccs",
+				"type": "float",
+				"unit": unit,
+				"range": rng,
+				"default": default,
+				"role": "exogenous",
+				"determinism": "policy",
+				"status": "to_build",
+				"source": _BATCH42_SOURCE,
+				"depends_on": [],
+				"affects": ["fleet_emission_intensity_t_per_mwh"],
+			}
+			continue
+		assert shipped.default != default, (
+			f"{name}: already defaults to {default}; a retype row whose "
+			"diagnosis was wrong"
+		)
+		body: dict[str, Any] = dict(
+			shipped.model_dump(exclude={"id"}, mode="json"))
+		body.update({
+			"description": prose, "unit": unit, "range": rng,
+			"default": default, "source": _BATCH42_SOURCE,
+		})
+		nodes[name] = body
+
+	for eq_id, lhs, rhs, prose, cite in BATCH42_EQUATIONS:
+		rhs_params = sorted(parse_side(rhs).symbols)
+		known = set(nodes) | set(graph.nodes)
+		missing = [sym for sym in rhs_params if sym not in known]
+		assert not missing, f"{eq_id}: rhs names {missing}, which no node holds"
+		assert lhs not in rhs_params, f"{eq_id}: lhs names itself on its rhs"
+		shipped = graph.equations.get(eq_id)
+		assert shipped is not None, f"{eq_id}: no shipped body to rewrite"
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": shipped.name,
+			"description": prose,
+			"system": shipped.system,
+			"lhs": lhs,
+			"rhs": rhs,
+			"relation": "eq",
+			"parameters": [lhs] + rhs_params,
+			"free_variables": [],
+			"determined_variables": [lhs],
+			"tolerance": shipped.tolerance,
+			"unit_check": True,
+			"priority": (
+				shipped.priority.value
+				if hasattr(shipped.priority, "value") else shipped.priority
+			),
+			"solution_method": "direct",
+			"linearity": "linear",
+			"reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs, "equation_id": eq_id,
+				"relationship": "functional", "direction": "forward",
+				"strength": "hard",
+				"description": "Enters the corrected body.",
+				"reference": cite, "priority": "P1",
+			})
+
+	return nodes, equations, edges, rules
 
 
 _BATCH41_SOURCE = "The dead-arithmetic repair (batch 41)"

@@ -4352,6 +4352,29 @@ parameters:
     users:
     - Planners
     - Regulators
+  ccs_capture_rate:
+    id: ccs_capture_rate
+    name: CCS capture rate
+    description: 'The share of a capture plant''s carbon that is actually captured. A capture retrofit
+      is not a zero-emission plant: the IEA''s CCUS cost comparison prices it as emitting part of its
+      carbon, and the literature reports capture rates below one. 0.90 is the rate the IEA''s technology
+      tables use for a capture plant. The node exists because the graph held two adoption shares and no
+      rate, so the shares had nothing to multiply into.'
+    category: supply
+    subcategory: ccs
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.9
+    role: exogenous
+    determinism: policy
+    status: to_build
+    source: The CCS chain repair (batch 42)
+    depends_on: []
+    affects:
+    - fleet_emission_intensity_t_per_mwh
   cdm_methodologies:
     name: Cdm methodologies
     description: CDM
@@ -4895,21 +4918,32 @@ parameters:
     - Utilities
   coal_ccs_adoption:
     name: Coal ccs adoption
-    description: Coal with CCS share
+    description: 'The share of the coal fleet fitted with carbon capture. Shipped 0.5, which is `prg_from_catalog._default_for`''s
+      blanket value for every unitless fraction and not a statement about this fleet -- the catalog carries
+      the row as ''To be built''. The default matters now in a way it did not before this batch: while
+      `emissions` read the raw technology factor the dial reached nothing, so its placeholder value was
+      inert. With the arrow repaired, 0.5 would have silently removed a fifth of the fleet''s emissions
+      at the defaults. 0.0 is the shipped fleet: the graph has no capture plant until a scenario builds
+      one, and a share of zero is the statement that nothing is retrofitted.'
     category: Supply
+    subcategory: null
     type: float
     unit: '1'
     range:
     - 0.0
     - 1.0
-    default: 0.5
+    default: 0.0
+    initial: null
     role: exogenous
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The CCS chain repair (batch 42)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   coal_community_dependencies:
     categories: []
     category: JustTrans
@@ -12300,21 +12334,29 @@ parameters:
     - Utilities
   gas_ccs_adoption:
     name: Gas ccs adoption
-    description: Gas with CCS share
+    description: 'The share of the gas fleet fitted with carbon capture. Shipped 0.5, the same generator
+      placeholder as the coal share, and corrected for the same reason: a dial that now reaches emissions
+      must start where the fleet actually is. The `fuel_ccs_adoption_bound` ceiling of 1.0 over the two
+      shares is unaffected -- it constrains the sum, not either default.'
     category: Supply
+    subcategory: null
     type: float
     unit: '1'
     range:
     - 0.0
     - 1.0
-    default: 0.5
+    default: 0.0
+    initial: null
     role: exogenous
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The CCS chain repair (batch 42)
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   gas_eaf:
     categories: []
     category: Supply-Side
@@ -29139,34 +29181,34 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   allowed_revenue_requirement_definition:
+    id: allowed_revenue_requirement_definition
+    name: Allowed revenue requirement
     description: Depreciation plus the allowed return on the base, with that return taken as the blend
       the financial block computes -- the vanilla regulatory WACC the UKRN guidance builds. A tariff that
       recovers less than this under-recovers the utility; the revenue cap and the applied tariff are the
       instruments around it.
-    determined_variables:
-    - allowed_revenue_requirement
-    free_variables:
-    - regulatory_depreciation
-    - regulatory_asset_base
-    id: allowed_revenue_requirement_definition
-    latex: \mathrm{allowed}_{revenue\_requirement} = \mathrm{regulatory}_{depreciation} + \mathrm{regulatory}_{asset\_base}
-      \mathrm{discount}_{rate}
+    system: financial
     lhs: allowed_revenue_requirement
-    linearity: linear
-    name: Allowed revenue requirement
+    rhs: regulatory_depreciation + regulatory_asset_base * discount_rate
+    relation: eq
     parameters:
     - allowed_revenue_requirement
     - regulatory_depreciation
     - regulatory_asset_base
     - discount_rate
-    priority: P1
-    reference: UKRN cost of capital guidance (2023), §allowed returns
-    relation: eq
-    rhs: regulatory_depreciation + regulatory_asset_base * discount_rate
-    solution_method: direct
-    system: financial
+    free_variables:
+    - regulatory_depreciation
+    - regulatory_asset_base
+    determined_variables:
+    - allowed_revenue_requirement
     tolerance: 1.0e-09
     unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: UKRN cost of capital guidance (2023), §allowed returns
+    latex: \mathrm{allowed}_{revenue\_requirement} = \mathrm{regulatory}_{depreciation} + \mathrm{regulatory}_{asset\_base}
+      \mathrm{discount}_{rate}
   ammonia_export_volume_tonnes_definition:
     description: 'Ammonia shipped: the export energy, the share that goes as ammonia, over hydrogen''s
       energy content and over ammonia''s hydrogen fraction. The shipped form multiplied by `1000 * 0.05`,
@@ -29293,30 +29335,30 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   applied_tariff_definition:
+    id: applied_tariff_definition
+    name: Applied tariff under the cap
     description: The revenue cap's multiplier applied to the cost-recovery tariff. A cap below 1.0 withholds
       part of the revenue requirement -- the incentive instrument a price-control settlement actually
       sets -- and a cap above 1.0 is a premium the accounts must carry.
-    determined_variables:
-    - applied_tariff_usd_per_mwh
-    free_variables:
-    - revenue_cap
-    id: applied_tariff_definition
-    latex: \mathrm{applied}_{tariff\_usd\_per\_mwh} = \mathrm{regulated}_{tariff\_usd\_per\_mwh} \mathrm{revenue}_{cap}
+    system: price_demand
     lhs: applied_tariff_usd_per_mwh
-    linearity: linear
-    name: Applied tariff under the cap
+    rhs: regulated_tariff_usd_per_mwh * revenue_cap
+    relation: eq
     parameters:
     - applied_tariff_usd_per_mwh
     - regulated_tariff_usd_per_mwh
     - revenue_cap
-    priority: P1
-    reference: World Bank Regulation of Utilities handbook, revenue caps
-    relation: eq
-    rhs: regulated_tariff_usd_per_mwh * revenue_cap
-    solution_method: direct
-    system: price_demand
+    free_variables:
+    - revenue_cap
+    determined_variables:
+    - applied_tariff_usd_per_mwh
     tolerance: 1.0e-09
     unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: World Bank Regulation of Utilities handbook, revenue caps
+    latex: \mathrm{applied}_{tariff\_usd\_per\_mwh} = \mathrm{regulated}_{tariff\_usd\_per\_mwh} \mathrm{revenue}_{cap}
   archaeological_sites_definition:
     description: 'Expected count of recorded archaeological sites inside the project footprint: the measured
       site density per 100 km2 times the land take converted to the density''s own denominator. The 10000
@@ -31464,28 +31506,28 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   cost_of_debt_capped:
+    id: cost_of_debt_capped
+    name: Debt cost within the allowed return
     description: 'The regulator''s debt allowance binds the commercial cost of debt the scenario may assume:
       a component priced above the allowed return is the pass-through the cap regime forbids, so a scenario
       carrying it is inadmissible rather than silently under-recovering.'
-    free_variables:
-    - cost_of_debt
-    - allowed_return_on_debt
-    id: cost_of_debt_capped
-    latex: \mathrm{cost}_{of\_debt} \leq \mathrm{allowed}_{return\_on\_debt}
+    system: financial
     lhs: cost_of_debt
-    linearity: linear
-    name: Debt cost within the allowed return
+    rhs: allowed_return_on_debt
+    relation: leq
     parameters:
     - cost_of_debt
     - allowed_return_on_debt
-    priority: P1
-    reference: UKRN cost of capital guidance (2023), §overall framework
-    relation: leq
-    rhs: allowed_return_on_debt
-    solution_method: direct
-    system: financial
+    free_variables:
+    - cost_of_debt
+    - allowed_return_on_debt
     tolerance: 1.0e-06
     unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: UKRN cost of capital guidance (2023), §overall framework
+    latex: \mathrm{cost}_{of\_debt} \leq \mathrm{allowed}_{return\_on\_debt}
   cost_of_debt_priced:
     description: 'The debt rate a scenario may carry: the policy rate plus the borrower spread plus the
       currency risk premium. FPE section 6 applies the currency premium to the cost of debt rather than
@@ -31512,27 +31554,27 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   cost_of_equity_capped:
+    id: cost_of_equity_capped
+    name: Equity cost within the allowed return
     description: 'The equity-return allowance binds the cost of equity: the CAPM-estimated return a project
       demands cannot exceed what the regulatory settlement awards.'
-    free_variables:
-    - cost_of_equity
-    - allowed_return_on_equity
-    id: cost_of_equity_capped
-    latex: \mathrm{cost}_{of\_equity} \leq \mathrm{allowed}_{return\_on\_equity}
+    system: financial
     lhs: cost_of_equity
-    linearity: linear
-    name: Equity cost within the allowed return
+    rhs: allowed_return_on_equity
+    relation: leq
     parameters:
     - cost_of_equity
     - allowed_return_on_equity
-    priority: P1
-    reference: Ofwat PR24 Appendix 11, allowed return on capital
-    relation: leq
-    rhs: allowed_return_on_equity
-    solution_method: direct
-    system: financial
+    free_variables:
+    - cost_of_equity
+    - allowed_return_on_equity
     tolerance: 1.0e-06
     unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Ofwat PR24 Appendix 11, allowed return on capital
+    latex: \mathrm{cost}_{of\_equity} \leq \mathrm{allowed}_{return\_on\_equity}
   cost_pass_through_alias:
     description: The share of the recovery tariff carried automatically at the wholesale level. 0.8 at
       defaults. `unclassified.md` calls the node the rule set rather than the share; this alias is the
@@ -33094,27 +33136,32 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   emissions_definition:
-    description: Generation times an emission factor. One terawatt-hour is one million megawatt-hours,
-      so this reads directly in megatonnes.
-    determined_variables:
-    - emissions_mtco2_per_year
-    free_variables: []
-    latex: null
-    lhs: emissions_mtco2_per_year
-    linearity: linear
+    id: emissions_definition
     name: Annual emissions
+    description: 'Annual emissions as generation times the fleet''s own intensity. The shipped body read
+      the raw technology factor, so it ignored the fleet the graph had built and the capture dials that
+      describe it: `fleet_emission_intensity_t_per_mwh` was computed, documented as ''the fleet average
+      at the current build'', and read by no equation. This is the arrow that was missing, and without
+      it every CCS dial in the graph was inert.'
+    system: carbon_trajectory
+    lhs: emissions_mtco2_per_year
+    rhs: generation_twh * fleet_emission_intensity_t_per_mwh
+    relation: eq
     parameters:
     - emissions_mtco2_per_year
+    - fleet_emission_intensity_t_per_mwh
     - generation_twh
-    - emission_factor_t_per_mwh
-    priority: P1
-    reference: null
-    relation: eq
-    rhs: generation_twh * emission_factor_t_per_mwh
-    solution_method: direct
-    system: carbon_trajectory
+    free_variables: []
+    determined_variables:
+    - emissions_mtco2_per_year
     tolerance: 1.0e-09
     unit_check: true
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    reference: IPCC Guidelines for National Greenhouse Gas Inventories, the activity-data x emission-factor
+      construction; the fleet average is the graph's own `fleet_emission_intensity_t_per_mwh`
+    latex: \mathrm{emissions}_{mtco2\_per\_year} = \mathrm{generation}_{twh} \mathrm{fleet}_{emission\_intensity\_t\_per\_mwh}
   employment_attainment_local_definition:
     description: The share achieved over the share targeted. Both sides are shares of the same workforce,
       so the ratio is the attainment index a monitoring report quotes -- and a target left at the catalog's
@@ -33748,28 +33795,41 @@ equations:
     tolerance: 1.0e-06
     unit_check: true
   fleet_emission_intensity_definition:
-    description: 'The emission factor at the horizon, discounted by the CCS the fleet carries. Dimensional
-      check: tonne/MWh times a dimensionless share is tonne/MWh.'
+    id: fleet_emission_intensity_definition
+    name: Fleet emission intensity
+    description: The fleet average emission factor at the current build. The shipped body multiplied the
+      coal adoption share into the whole fleet, which made one fuel's dial reduce every tonne the fleet
+      emitted and left the gas dial with no effect at all. The capture share is a capacity-weighted average
+      over the two capture-capable fuels -- a 3000 MW coal fleet at 50% adoption and a 1500 MW gas fleet
+      at 50% are 50% captured between them, and the weights are what make that true for any mix -- times
+      the capture rate, because a capture plant still emits the uncaptured remainder. Both dials now move
+      the number.
+    system: emissions
+    lhs: fleet_emission_intensity_t_per_mwh
+    rhs: emission_factor_t_per_mwh * (1 - (coal_capacity * coal_ccs_adoption + gas_capacity * gas_ccs_adoption)
+      / (coal_capacity + gas_capacity) * ccs_capture_rate)
+    relation: eq
+    parameters:
+    - fleet_emission_intensity_t_per_mwh
+    - ccs_capture_rate
+    - coal_capacity
+    - coal_ccs_adoption
+    - emission_factor_t_per_mwh
+    - gas_capacity
+    - gas_ccs_adoption
+    free_variables: []
     determined_variables:
     - fleet_emission_intensity_t_per_mwh
-    free_variables:
-    - emission_factor_t_per_mwh
-    - coal_ccs_adoption
-    latex: null
-    lhs: fleet_emission_intensity_t_per_mwh
-    linearity: linear
-    name: Fleet emission intensity
-    parameters:
-    - emission_factor_t_per_mwh
-    - coal_ccs_adoption
-    priority: P1
-    reference: null
-    relation: eq
-    rhs: emission_factor_t_per_mwh * (1 - coal_ccs_adoption)
-    solution_method: direct
-    system: emissions
     tolerance: 1.0e-09
     unit_check: true
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry; capacity-weighted
+      averaging per the fleet-aggregation convention in `fleet_employment_intensity_jobs_per_mw`
+    latex: \mathrm{fleet}_{emission\_intensity\_t\_per\_mwh} = \mathrm{emission}_{factor\_t\_per\_mwh}
+      \left(1 - \frac{\left(\mathrm{coal}_{capacity} \mathrm{coal}_{ccs\_adoption} + \mathrm{gas}_{capacity}
+      \mathrm{gas}_{ccs\_adoption}\right) \mathrm{ccs}_{capture\_rate}}{\mathrm{coal}_{capacity} + \mathrm{gas}_{capacity}}\right)
   fleet_employment_intensity_definition:
     description: 'Jobs per installed megawatt, capacity-weighted across the technologies the archive prices.
       An intensity and not a total: `direct_jobs` already ships at 43,000 and the per-technology factors
@@ -38767,58 +38827,58 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   regulatory_asset_base_definition:
+    id: regulatory_asset_base_definition
+    name: Regulated asset base from the fleet
     description: Gross fleet capital less what the books have written down. The gross capital is the capacity-weighted
       capex; the 1000 converts kW-per-MW and the million converts USD. A fraction the regulator's roll-forward
       states, not one the model invents.
-    determined_variables:
+    system: financial
+    lhs: regulatory_asset_base
+    rhs: capex_usd_per_kw * total_capacity_mw * (1 - accumulated_depreciation_fraction) / 1000
+    relation: eq
+    parameters:
     - regulatory_asset_base
+    - capex_usd_per_kw
+    - total_capacity_mw
+    - accumulated_depreciation_fraction
     free_variables:
     - capex_usd_per_kw
     - total_capacity_mw
     - accumulated_depreciation_fraction
-    id: regulatory_asset_base_definition
+    determined_variables:
+    - regulatory_asset_base
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Ofwat PR24 Appendix 11, allowed return on capital
     latex: \mathrm{regulatory}_{asset\_base} = \frac{\mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}
       \left(1 - \mathrm{accumulated}_{depreciation\_fraction}\right)}{1000}
-    lhs: regulatory_asset_base
-    linearity: linear
-    name: Regulated asset base from the fleet
-    parameters:
-    - regulatory_asset_base
-    - capex_usd_per_kw
-    - total_capacity_mw
-    - accumulated_depreciation_fraction
-    priority: P1
-    reference: Ofwat PR24 Appendix 11, allowed return on capital
-    relation: eq
-    rhs: capex_usd_per_kw * total_capacity_mw * (1 - accumulated_depreciation_fraction) / 1000
-    solution_method: direct
-    system: financial
-    tolerance: 1.0e-09
-    unit_check: true
   regulatory_depreciation_definition:
+    id: regulatory_depreciation_definition
+    name: Regulatory depreciation
     description: Straight-line write-down of the asset base over the regulatory asset life. The rate-of-return
       revenue requirement's first term; the second is the return on the base below.
-    determined_variables:
-    - regulatory_depreciation
-    free_variables:
-    - depreciation_life_by_asset
-    id: regulatory_depreciation_definition
-    latex: \mathrm{regulatory}_{depreciation} = \frac{\mathrm{regulatory}_{asset\_base}}{\mathrm{depreciation}_{life\_by\_asset}}
+    system: financial
     lhs: regulatory_depreciation
-    linearity: linear
-    name: Regulatory depreciation
+    rhs: regulatory_asset_base / depreciation_life_by_asset
+    relation: eq
     parameters:
     - regulatory_depreciation
     - regulatory_asset_base
     - depreciation_life_by_asset
-    priority: P1
-    reference: Ofwat PR24 Appendix 11, allowed return on capital
-    relation: eq
-    rhs: regulatory_asset_base / depreciation_life_by_asset
-    solution_method: direct
-    system: financial
+    free_variables:
+    - depreciation_life_by_asset
+    determined_variables:
+    - regulatory_depreciation
     tolerance: 1.0e-09
     unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Ofwat PR24 Appendix 11, allowed return on capital
+    latex: \mathrm{regulatory}_{depreciation} = \frac{\mathrm{regulatory}_{asset\_base}}{\mathrm{depreciation}_{life\_by\_asset}}
   regulatory_lag_bound:
     description: 'The review period must be at least the lag between incurring a cost and recovering it,
       or a cost incurred inside one period cannot be recovered before the next review closes. 5 years
@@ -41646,30 +41706,30 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   wacc_alias:
+    id: wacc_alias
+    name: WACC is the discount rate
     description: The catalog's WACC row and the financial block's discount rate are one quantity, so the
       duplicate derives from the computed one and the graph keeps a single blend. An equality between
       two ids for one number is the closure that keeps a scenario setting either name consistent; the
       alternative -- deprecating the id -- loses the label a report may cite.
-    determined_variables:
-    - weighted_average_cost_of_capital
-    free_variables:
-    - discount_rate
-    id: wacc_alias
-    latex: \mathrm{weighted}_{average\_cost\_of\_capital} = \mathrm{discount}_{rate}
+    system: financial
     lhs: weighted_average_cost_of_capital
-    linearity: linear
-    name: WACC is the discount rate
+    rhs: discount_rate
+    relation: eq
     parameters:
     - weighted_average_cost_of_capital
     - discount_rate
-    priority: P1
-    reference: Standard WACC with the interest tax shield
-    relation: eq
-    rhs: discount_rate
-    solution_method: direct
-    system: financial
+    free_variables:
+    - discount_rate
+    determined_variables:
+    - weighted_average_cost_of_capital
     tolerance: 1.0e-09
     unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Standard WACC with the interest tax shield
+    latex: \mathrm{weighted}_{average\_cost\_of\_capital} = \mathrm{discount}_{rate}
   wacc_definition:
     description: 'The blend of debt and equity, with interest shielded by tax. This is why the discount
       rate is derived: the blend and the rate are one quantity.
@@ -42762,24 +42822,6 @@ relationships:
   source: voll_usd_per_mwh
   strength: hard
   target: reliability_cost_usd
-- description: Emissions are generation times a factor.
-  direction: forward
-  equation_id: emissions_definition
-  priority: P1
-  reference: null
-  relationship: equality
-  source: generation_twh
-  strength: hard
-  target: emissions_mtco2_per_year
-- description: The same factor that prices carbon in marginal cost also sets the tonnage.
-  direction: forward
-  equation_id: emissions_definition
-  priority: P1
-  reference: null
-  relationship: equality
-  source: emission_factor_t_per_mwh
-  strength: hard
-  target: emissions_mtco2_per_year
 - description: The budget ratio is the trajectory's score.
   direction: forward
   equation_id: carbon_budget_ratio_definition
@@ -43086,24 +43128,6 @@ relationships:
   source: horizon_years
   strength: hard
   target: fuel_price_escalated_usd_per_mwh
-- description: The technology factor is the intensity before CCS.
-  direction: forward
-  equation_id: fleet_emission_intensity_definition
-  priority: P1
-  reference: null
-  relationship: equality
-  source: emission_factor_t_per_mwh
-  strength: hard
-  target: fleet_emission_intensity_t_per_mwh
-- description: Capture on coal is what the fleet-level intensity is discounted by.
-  direction: forward
-  equation_id: fleet_emission_intensity_definition
-  priority: P2
-  reference: null
-  relationship: functional
-  source: coal_ccs_adoption
-  strength: hard
-  target: fleet_emission_intensity_t_per_mwh
 - description: Cooling is one of the two draws.
   direction: forward
   equation_id: total_water_demand_definition
@@ -52291,6 +52315,86 @@ relationships:
   source: demand_growth_factor
   strength: hard
   target: demand_twh
+- source: ccs_capture_rate
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the corrected body.
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry; capacity-weighted
+    averaging per the fleet-aggregation convention in `fleet_employment_intensity_jobs_per_mw`
+  priority: P1
+- source: coal_capacity
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the corrected body.
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry; capacity-weighted
+    averaging per the fleet-aggregation convention in `fleet_employment_intensity_jobs_per_mw`
+  priority: P1
+- source: coal_ccs_adoption
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the corrected body.
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry; capacity-weighted
+    averaging per the fleet-aggregation convention in `fleet_employment_intensity_jobs_per_mw`
+  priority: P1
+- source: emission_factor_t_per_mwh
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the corrected body.
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry; capacity-weighted
+    averaging per the fleet-aggregation convention in `fleet_employment_intensity_jobs_per_mw`
+  priority: P1
+- source: gas_capacity
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the corrected body.
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry; capacity-weighted
+    averaging per the fleet-aggregation convention in `fleet_employment_intensity_jobs_per_mw`
+  priority: P1
+- source: gas_ccs_adoption
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the corrected body.
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry; capacity-weighted
+    averaging per the fleet-aggregation convention in `fleet_employment_intensity_jobs_per_mw`
+  priority: P1
+- source: fleet_emission_intensity_t_per_mwh
+  target: emissions_mtco2_per_year
+  equation_id: emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the corrected body.
+  reference: IPCC Guidelines for National Greenhouse Gas Inventories, the activity-data x emission-factor
+    construction; the fleet average is the graph's own `fleet_emission_intensity_t_per_mwh`
+  priority: P1
+- source: generation_twh
+  target: emissions_mtco2_per_year
+  equation_id: emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the corrected body.
+  reference: IPCC Guidelines for National Greenhouse Gas Inventories, the activity-data x emission-factor
+    construction; the fleet average is the graph's own `fleet_emission_intensity_t_per_mwh`
+  priority: P1
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0
   id: carbon_price_budget_alignment

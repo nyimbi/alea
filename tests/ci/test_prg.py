@@ -4367,7 +4367,13 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# to IEA/NEA EGC's E/P definition, the settlement security and the budget
 	# bound to the World Bank regulatory handbook, and the age complement to
 	# the catalog's own duplicate-row register. 233 to 241.
-	assert len(declared) == 242, f"the citation register moved: {sorted(declared)}"
+	# Batch 42 added two: the fleet-intensity and emissions definitions, which
+	# were rewritten to carry the works their forms come from -- the IEA/NEA
+	# CCUS cost entry for the capture share and the IPCC activity-data x
+	# emission-factor construction for the fleet account. Both were rewritten
+	# in place and carried None before, so the register grows without the
+	# equation count moving. 242 to 244.
+	assert len(declared) == 244, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (

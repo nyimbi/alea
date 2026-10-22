@@ -307,6 +307,69 @@ these three nodes was uncoupled. What the batch repaired was a derived quantity
 that was computed, stored and read by nothing — the declared-not-produced defect
 in its cleanest form.
 
+### The dials that moved nothing (batch 42, 2026-10-22)
+
+The graph shipped two CCS adoption dials. Neither changed a tonne of reported
+emissions. `coal_ccs_adoption` had two readers — the fleet-intensity equation
+and the bound capping it with the gas share — and `gas_ccs_adoption` had one,
+the bound. `emissions_mtco2_per_year` and `carbon_cost_usd_per_mwh` read
+`emission_factor_t_per_mwh` directly: the factor of *one reference technology*,
+not the fleet's. So the graph computed `fleet_emission_intensity_t_per_mwh`,
+described it as "the fleet average at the current build", and consumed it
+nowhere.
+
+**Two defects wore one name.** The intensity applied the *coal* adoption share
+to the whole fleet, so one fuel's dial reduced every tonne the fleet emitted
+while the other did nothing. And neither share carried a capture rate, because
+the graph held no such node — "a plant has capture" had no way to say "this
+fraction of its carbon is not emitted". The repair is an arrow plus a weight:
+`emissions` reads the fleet intensity, and the intensity is a
+capacity-weighted average over the two capture-capable fuels times
+`ccs_capture_rate` (0.90, the rate the IEA's technology tables use; archived as
+`sources/archive/iea_nea_egc_2020.txt`).
+
+**The third defect was the arrow's own precondition.** Both shares shipped
+`0.5` — `_default_for`'s blanket value for every unitless fraction, on catalog
+rows the document marks "To be built". While nothing read the intensity the
+placeholder was inert; the moment emissions read it, a 0.5 capture share
+deleted a fifth of the fleet's emissions at every default scenario. Retyped to
+0.0: the shipped fleet has no capture plant. This is batch 41's 25.0 finding in
+a different unit — a generator default that is plausible for one family and a
+claim about the world for another.
+
+**Measured, not asserted.** With the shares at 0.0, emissions stay at the
+shipped 25.777 MtCO2/year, because the shipped fleet has no capture. Each dial
+now moves it alone: coal 0→0.5→1 with gas at 0 takes emissions 25.777 → 18.044 →
+10.311, and gas 0→1 with coal at 0 takes them to 18.044. Before the batch,
+neither moved the reported total at all.
+
+**`carbon_cost` was left alone, and that is the batch's own correction.** The
+first draft moved it to the fleet intensity too — a carbon price should charge
+the fleet for the tonnes it emits. The tree's closed-form test refuted it:
+`marginal_cost_usd_per_mwh` is a *marginal* cost,
+`emission_factor_t_per_mwh` is documented as the reference technology's factor,
+and the test asserts `marginal_cost == fuel_price + carbon_price · factor` on
+the raw factor. Moving it took marginal cost 65.0 → 53.75 and dragged both
+feedback loops with it. A marginal cost prices the next MWh; the fleet average
+is the right basis for a total account and the wrong one for a marginal one.
+
+**Why a node and not a literal.** A capture rate is a technology parameter a
+scenario should price. Folding 0.90 into the equation would have made it a
+constant no scenario could reach — the untyped-constant defect the dimensional
+walk refuses elsewhere.
+
+**What the catalog wanted instead.** `docs/param_eqn.md` rows 2.6 and 2.10
+declare `coal_ccs_adoption → coal_emissions_reduction` and
+`gas_ccs_adoption → gas_emissions_reduction`. Neither node exists. Building the
+per-fuel pair would duplicate the fleet decomposition the intensity now carries,
+so the dials reach the fleet total a report reads, and the catalog's
+decomposition stays unbuilt rather than half-built twice.
+
+The uncoupled count holds at 239. The batch added one node, retyped two and
+removed nothing from that set: all three are operands, and what the batch
+repaired was a derived quantity read by nothing — the same class as batch 41,
+which `uncoupled()` does not count at all.
+
 
 
 ## Not built
