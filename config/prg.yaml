@@ -8992,29 +8992,30 @@ parameters:
     - Planners
     - Regulators
   dispatchable_re_capacity_mw:
-    categories: []
-    category: Fleet
-    default: 1500.0
-    deprecated_by: null
-    description: 'Hydro, geothermal and OTEC: renewable, and the operator chooses the output. Counted
-      toward firm capacity because the dispatch is controllable even though the fuel is not.
-
-      '
-    determinism: fixed
-    initial: null
     name: Dispatchable renewable capacity
-    priority: P2
-    range:
-    - 0.0
-    - 1000000.0
-    role: endogenous
-    source: null
-    source_url: null
-    status: to_build
+    description: 'Hydro, geothermal and OTEC: renewable, and the operator chooses the output. Counted
+      toward firm capacity because the dispatch is controllable even though the fuel is not. The reference
+      build reads 2300 MW, the sum of its own leaves -- hydro 1500 and geothermal 800. It shipped 1500,
+      which was neither the leaf sum nor a build anyone chose; an aggregate that disagrees with the members
+      it aggregates is wrong whatever standard it is measured against.'
+    category: Fleet
     subcategory: null
     type: float
     unit: MW
+    range:
+    - 0.0
+    - 1000000.0
+    default: 2300.0
+    initial: null
+    role: endogenous
+    determinism: fixed
+    categories: []
+    source: The firm-capacity repair (batch 43)
+    source_url: null
     users: []
+    priority: P2
+    status: to_build
+    deprecated_by: null
   dispute_resolution_mechanism:
     name: Dispute resolution mechanism
     description: Dispute resolution
@@ -27637,6 +27638,34 @@ parameters:
     unit: MtCO2/year
     users:
     - Regulators
+  vre_capacity_credit:
+    id: vre_capacity_credit
+    name: VRE capacity credit
+    description: 'The share of a VRE fleet''s nameplate that counts toward firm capacity at the peak.
+      Not the capacity factor: that is annual energy over rated output times 8760, a statement about the
+      whole year, while adequacy is a statement about the hours the fleet is least likely to produce in.
+      The quantity is the capacity credit (ELCC) the adequacy literature computes by re-running the system
+      with and without the VRE fleet; the graph had no node for it and used the energy ratio instead,
+      which overstates every reserve margin it reports. 0.15 is the value the US EIA uses for wind in
+      its own worked example (sources/archive/eia_lcoe_methodology.txt: "In the region used in this example,
+      wind has a capacity credit of 15%"), and it sits inside the range the IEA/NEA reports across technologies
+      and regions (sources/archive/iea_nea_egc_2020.txt, Figure 4.4). The range admits the near-zero of
+      a solar-heavy winter-peaking fleet and the 0.4+ of offshore wind in a summer-peaking one.'
+    category: supply
+    subcategory: adequacy
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 0.6
+    default: 0.15
+    role: exogenous
+    determinism: policy
+    status: to_build
+    source: The firm-capacity repair (batch 43)
+    depends_on: []
+    affects:
+    - vre_firm_capacity_mw
   vre_capacity_mw:
     categories: []
     category: Technical
@@ -29860,30 +29889,33 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   capacity_credit_definition:
-    description: 'The firm contribution a renewable fleet makes to the reserve margin. Approximated as
-      the fleet''s average capacity factor, which is the standard first-order proxy when the graph carries
-      no hourly data on the peak-hour output of each technology. Dimensional check: dimensionless times
-      MW is MW.'
+    id: capacity_credit_definition
+    name: VRE capacity credit
+    description: 'The VRE fleet''s contribution to firm capacity, at its capacity credit. The shipped
+      body multiplied nameplate by `capacity_factor`, the annual energy ratio, which answers a different
+      question: how much the fleet generates over a year, not how much of it can be relied on at the peak.
+      Capacity credit is the smaller number and the right one for a reserve margin.'
+    system: reserve_margin
+    lhs: vre_firm_capacity_mw
+    rhs: vre_capacity_mw * vre_capacity_credit
+    relation: eq
+    parameters:
+    - vre_firm_capacity_mw
+    - vre_capacity_credit
+    - vre_capacity_mw
+    free_variables: []
     determined_variables:
     - vre_firm_capacity_mw
-    free_variables:
-    - vre_capacity_mw
-    - capacity_factor
-    latex: null
-    lhs: vre_firm_capacity_mw
-    linearity: linear
-    name: VRE capacity credit
-    parameters:
-    - vre_capacity_mw
-    - capacity_factor
-    priority: P1
-    reference: null
-    relation: eq
-    rhs: vre_capacity_mw * capacity_factor
-    solution_method: direct
-    system: reserve_margin
     tolerance: 1.0e-09
     unit_check: true
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
+      IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt);
+      US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (sources/archive/eia_lcoe_methodology.txt),
+      capacity credit at 1 for dispatchable units and derated for intermittent renewables'
+    latex: \mathrm{vre}_{firm\_capacity\_mw} = \mathrm{vre}_{capacity\_mw} \mathrm{vre}_{capacity\_credit}
   capacity_revenue_usd_per_year_definition:
     description: 'The capacity market''s revenue: the flag''s mechanism paying its price for the firm
       fleet''s megawatt-years. USD/MW/year over MW with the flag''s switch, over the million that lands
@@ -39192,34 +39224,38 @@ equations:
     tolerance: 1.0e-06
     unit_check: true
   reserve_margin_actual_definition:
+    id: reserve_margin_actual_definition
+    name: Actual reserve margin
     description: 'The reserve margin the built fleet delivers: firm capacity plus the firm contribution
-      from VRE, less peak demand, over peak demand. Dimensional check: MW over MW is dimensionless. The
-      VRE contribution enters at its capacity factor; the same credit the reserve-margin constraint uses,
-      so the actual margin and the requirement are on the same basis.'
+      from VRE, less peak demand, over peak demand. The shipped body re-spelled the VRE term as `vre_capacity_mw
+      * capacity_factor` inline, the same energy ratio the requirement used. Both sides agreed because
+      they were the same quantity computed twice, which is why the node reported a margin that met its
+      own requirement on every scenario: the comparison was between two copies of one number. Both sides
+      now read `vre_firm_capacity_mw`, the capacity credit, and the comparison is between the standard
+      and the fleet.'
+    system: reserve_margin
+    lhs: reserve_margin_actual
+    rhs: (firm_capacity_mw + vre_firm_capacity_mw - peak_demand_mw) / peak_demand_mw
+    relation: eq
+    parameters:
+    - reserve_margin_actual
+    - firm_capacity_mw
+    - peak_demand_mw
+    - vre_firm_capacity_mw
+    free_variables: []
     determined_variables:
     - reserve_margin_actual
-    free_variables:
-    - firm_capacity_mw
-    - vre_capacity_mw
-    - capacity_factor
-    - peak_demand_mw
-    latex: null
-    lhs: reserve_margin_actual
-    linearity: nonlinear
-    name: Actual reserve margin
-    parameters:
-    - firm_capacity_mw
-    - vre_capacity_mw
-    - capacity_factor
-    - peak_demand_mw
-    priority: P1
-    reference: null
-    relation: eq
-    rhs: (firm_capacity_mw + vre_capacity_mw * capacity_factor - peak_demand_mw) / peak_demand_mw
-    solution_method: direct
-    system: reserve_margin
     tolerance: 1.0e-09
     unit_check: true
+    priority: P1
+    solution_method: direct
+    linearity: nonlinear
+    reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
+      IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt);
+      US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (sources/archive/eia_lcoe_methodology.txt),
+      capacity credit at 1 for dispatchable units and derated for intermittent renewables'
+    latex: \mathrm{reserve}_{margin\_actual} = \frac{\mathrm{firm}_{capacity\_mw} + \mathrm{vre}_{firm\_capacity\_mw}
+      - \mathrm{peak}_{demand\_mw}}{\mathrm{peak}_{demand\_mw}}
   reserve_margin_required_mw_definition:
     description: 'The planning margin''s face value in MW: the margin share times peak demand.'
     determined_variables:
@@ -39242,29 +39278,40 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   reserve_margin_with_firm_vre:
-    description: 'The reserve margin identity with the renewable fleet''s firm contribution made explicit.
-      An inequality, because it bounds a build rather than fixing one. Dimensional check: MW plus MW must
-      be at least MW times a dimensionless factor.'
-    determined_variables: []
-    free_variables: []
-    latex: null
-    lhs: firm_capacity_mw + vre_capacity_mw * capacity_factor
-    linearity: linear
+    id: reserve_margin_with_firm_vre
     name: Reserve margin with firm VRE
+    description: Firm capacity plus the renewable fleet's firm contribution must cover peak demand with
+      the required margin. The shipped body wrote the renewable term as `vre_capacity_mw * capacity_factor`,
+      which is the fleet's *annual energy* ratio and not its peak contribution -- the two differ, always
+      in the same direction, and using the first overstates the margin. It also made this equation byte-identical
+      to `reserve_margin`, so the graph carried two constraints where one was intended and the one named
+      for the firm-VRE term was the copy. Reading `vre_firm_capacity_mw` is what the name says and what
+      that node's own description claims the constraint already does.
+    system: reserve_margin
+    lhs: firm_capacity_mw + vre_firm_capacity_mw
+    rhs: peak_demand_mw * (1 + reserve_margin_min)
+    relation: geq
     parameters:
     - firm_capacity_mw
-    - vre_capacity_mw
-    - capacity_factor
+    - vre_firm_capacity_mw
     - peak_demand_mw
     - reserve_margin_min
-    priority: P1
-    reference: null
-    relation: geq
-    rhs: peak_demand_mw * (1 + reserve_margin_min)
-    solution_method: numeric
-    system: reserve_margin
+    free_variables: []
+    determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
+    priority: P1
+    solution_method: numeric
+    linearity: linear
+    reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
+      IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt:
+      "Capacity credit reflects the portion of installed capacity that can be reliably expected to be
+      available during times of peak demand"); cf. US EIA, Levelized Cost and Levelized Avoided Cost of
+      New Generation Resources (sources/archive/eia_lcoe_methodology.txt), which derates intermittent
+      renewables'' capacity credit "as a function of the availability of the resource during peak load
+      periods" and puts wind at 15% in its worked example'
+    latex: \mathrm{firm}_{capacity\_mw} + \mathrm{vre}_{firm\_capacity\_mw} \geq \mathrm{peak}_{demand\_mw}
+      \left(1 + \mathrm{reserve}_{margin\_min}\right)
   resettlement_cost_total_definition:
     description: 'The total cost of resettlement, from the population share, the exposed population and
       the per-person cost. Dimensional check: people times dimensionless share times USD/person is USD.'
@@ -43569,24 +43616,6 @@ relationships:
   source: asset_condition_index
   strength: hard
   target: remaining_useful_life
-- description: Firm contribution scales with the renewable fleet.
-  direction: forward
-  equation_id: capacity_credit_definition
-  priority: P1
-  reference: null
-  relationship: equality
-  source: vre_capacity_mw
-  strength: hard
-  target: vre_firm_capacity_mw
-- description: The capacity factor is the credit.
-  direction: forward
-  equation_id: capacity_credit_definition
-  priority: P1
-  reference: null
-  relationship: functional
-  source: capacity_factor
-  strength: hard
-  target: vre_firm_capacity_mw
 - description: Firm capacity plus firm VRE must cover peak demand with margin.
   direction: forward
   equation_id: reserve_margin_with_firm_vre
@@ -43594,15 +43623,6 @@ relationships:
   reference: null
   relationship: constraint
   source: firm_capacity_mw
-  strength: hard
-  target: peak_demand_mw
-- description: The VRE contribution enters the reserve constraint through the capacity factor.
-  direction: forward
-  equation_id: reserve_margin_with_firm_vre
-  priority: P1
-  reference: null
-  relationship: constraint
-  source: vre_capacity_mw
   strength: hard
   target: peak_demand_mw
 - description: The margin is the margin.
@@ -43902,42 +43922,6 @@ relationships:
   source: wind_onshore_capacity
   strength: hard
   target: fuel_diversity_index
-- description: Firm capacity is the first term.
-  direction: forward
-  equation_id: reserve_margin_actual_definition
-  priority: P1
-  reference: null
-  relationship: equality
-  source: firm_capacity_mw
-  strength: hard
-  target: reserve_margin_actual
-- description: The VRE contribution enters at its capacity factor.
-  direction: forward
-  equation_id: reserve_margin_actual_definition
-  priority: P1
-  reference: null
-  relationship: equality
-  source: vre_capacity_mw
-  strength: hard
-  target: reserve_margin_actual
-- description: The credit is the capacity factor.
-  direction: forward
-  equation_id: reserve_margin_actual_definition
-  priority: P1
-  reference: null
-  relationship: functional
-  source: capacity_factor
-  strength: hard
-  target: reserve_margin_actual
-- description: Peak demand is what the margin is measured over.
-  direction: forward
-  equation_id: reserve_margin_actual_definition
-  priority: P1
-  reference: null
-  relationship: functional
-  source: peak_demand_mw
-  strength: hard
-  target: reserve_margin_actual
 - description: Generation is what is sold.
   direction: forward
   equation_id: total_revenue_definition
@@ -52394,6 +52378,111 @@ relationships:
   description: Enters the corrected body.
   reference: IPCC Guidelines for National Greenhouse Gas Inventories, the activity-data x emission-factor
     construction; the fleet average is the graph's own `fleet_emission_intensity_t_per_mwh`
+  priority: P1
+- source: vre_firm_capacity_mw
+  target: firm_capacity_mw
+  equation_id: reserve_margin_with_firm_vre
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the corrected body.
+  reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
+    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt:
+    "Capacity credit reflects the portion of installed capacity that can be reliably expected to be available
+    during times of peak demand"); cf. US EIA, Levelized Cost and Levelized Avoided Cost of New Generation
+    Resources (sources/archive/eia_lcoe_methodology.txt), which derates intermittent renewables'' capacity
+    credit "as a function of the availability of the resource during peak load periods" and puts wind
+    at 15% in its worked example'
+  priority: P1
+- source: peak_demand_mw
+  target: firm_capacity_mw
+  equation_id: reserve_margin_with_firm_vre
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the corrected body.
+  reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
+    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt:
+    "Capacity credit reflects the portion of installed capacity that can be reliably expected to be available
+    during times of peak demand"); cf. US EIA, Levelized Cost and Levelized Avoided Cost of New Generation
+    Resources (sources/archive/eia_lcoe_methodology.txt), which derates intermittent renewables'' capacity
+    credit "as a function of the availability of the resource during peak load periods" and puts wind
+    at 15% in its worked example'
+  priority: P1
+- source: reserve_margin_min
+  target: firm_capacity_mw
+  equation_id: reserve_margin_with_firm_vre
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the corrected body.
+  reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
+    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt:
+    "Capacity credit reflects the portion of installed capacity that can be reliably expected to be available
+    during times of peak demand"); cf. US EIA, Levelized Cost and Levelized Avoided Cost of New Generation
+    Resources (sources/archive/eia_lcoe_methodology.txt), which derates intermittent renewables'' capacity
+    credit "as a function of the availability of the resource during peak load periods" and puts wind
+    at 15% in its worked example'
+  priority: P1
+- source: vre_capacity_credit
+  target: vre_firm_capacity_mw
+  equation_id: capacity_credit_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the corrected body.
+  reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
+    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt);
+    US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (sources/archive/eia_lcoe_methodology.txt),
+    capacity credit at 1 for dispatchable units and derated for intermittent renewables'
+  priority: P1
+- source: vre_capacity_mw
+  target: vre_firm_capacity_mw
+  equation_id: capacity_credit_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the corrected body.
+  reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
+    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt);
+    US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (sources/archive/eia_lcoe_methodology.txt),
+    capacity credit at 1 for dispatchable units and derated for intermittent renewables'
+  priority: P1
+- source: firm_capacity_mw
+  target: reserve_margin_actual
+  equation_id: reserve_margin_actual_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the corrected body.
+  reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
+    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt);
+    US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (sources/archive/eia_lcoe_methodology.txt),
+    capacity credit at 1 for dispatchable units and derated for intermittent renewables'
+  priority: P1
+- source: peak_demand_mw
+  target: reserve_margin_actual
+  equation_id: reserve_margin_actual_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the corrected body.
+  reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
+    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt);
+    US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (sources/archive/eia_lcoe_methodology.txt),
+    capacity credit at 1 for dispatchable units and derated for intermittent renewables'
+  priority: P1
+- source: vre_firm_capacity_mw
+  target: reserve_margin_actual
+  equation_id: reserve_margin_actual_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the corrected body.
+  reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
+    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt);
+    US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (sources/archive/eia_lcoe_methodology.txt),
+    capacity credit at 1 for dispatchable units and derated for intermittent renewables'
   priority: P1
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0

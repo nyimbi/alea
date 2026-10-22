@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "43":
+		b43_nodes, b43_equations, b43_edges, b43_rules = build_batch43(graph)
+		rules.extend(b43_rules)
+		nodes.update(b43_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b43_equations)
+		edges = list(BATCH12_EDGES) + b43_edges
 	elif batch == "42":
 		b42_nodes, b42_equations, b42_edges, b42_rules = build_batch42(graph)
 		rules.extend(b42_rules)
@@ -11447,6 +11454,285 @@ BATCH38_BOUNDS: tuple[
 
 
 _BATCH38_SOURCE = "The operational and supply pack (batch 38)"
+
+
+_BATCH43_SOURCE = "The firm-capacity repair (batch 43)"
+
+
+#: (name, unit, range, default, prose) -- the capacity credit a VRE fleet
+#: contributes to a reserve margin, which is not its capacity factor.
+#:
+#: `capacity_factor` is annual energy divided by rated output times 8760. It
+#: says how much a fleet generates over a *year*; a reserve margin asks how
+#: much of its nameplate it can be relied on at the *peak*. Those are
+#: different numbers and the second is always the smaller: a wind fleet at a
+#: 0.35 annual capacity factor contributes well under 0.35 of its nameplate to
+#: peak adequacy, because the hours that matter are the ones the fleet is
+#: least likely to be producing in.
+#:
+#: The shipped graph used the energy ratio as the firm contribution in three
+#: places, which overstates every reserve margin it reports. The quantity the
+#: margin needs has a name in the adequacy literature -- capacity credit, or
+#: ELCC (effective load-carrying capability) -- and the graph had no node for
+#: it. 0.15 is a conservative mid-range value for a mixed wind-and-solar fleet
+#: in a moderate climate; the range admits the near-zero of a solar-heavy
+#: fleet in a winter-peaking system and the 0.4+ of offshore wind in a
+#: summer-peaking one.
+BATCH43_NODES: tuple[tuple[str, str, list[float], float, str], ...] = (
+	("vre_capacity_credit", "1", [0.0, 0.6], 0.15,
+	 "The share of a VRE fleet's nameplate that counts toward firm capacity "
+	 "at the peak. Not the capacity factor: that is annual energy over rated "
+	 "output times 8760, a statement about the whole year, while adequacy is "
+	 "a statement about the hours the fleet is least likely to produce in. "
+	 "The quantity is the capacity credit (ELCC) the adequacy literature "
+	 "computes by re-running the system with and without the VRE fleet; the "
+	 "graph had no node for it and used the energy ratio instead, which "
+	 "overstates every reserve margin it reports. 0.15 is the value the US "
+	 "EIA uses for wind in its own worked example "
+	 "(sources/archive/eia_lcoe_methodology.txt: \"In the region used in this "
+	 "example, wind has a capacity credit of 15%\"), and it sits inside the "
+	 "range the IEA/NEA reports across technologies and regions "
+	 "(sources/archive/iea_nea_egc_2020.txt, Figure 4.4). The range admits "
+	 "the near-zero of a solar-heavy winter-peaking fleet and the 0.4+ of "
+	 "offshore wind in a summer-peaking one."),
+)
+
+
+#: (name, default, prose) -- the fleet aggregate whose reference value did not
+#: agree with the leaves it aggregates.
+#:
+#: `dispatchable_re_capacity_mw` ships 1500 MW. Its own leaves are
+#: `hydro_capacity` at 1500 and `geothermal_capacity` at 800, which sum to
+#: 2300. The aggregate was neither the leaf sum nor a build anybody chose, and
+#: it is the term `firm_capacity_definition` adds to `thermal_capacity_mw` to
+#: get the firm capacity the reserve margin tests. The understatement was
+#: invisible while the margin derated the VRE fleet by its energy ratio, which
+#: is the larger number; with the capacity credit in its place (this batch) the
+#: reference build reads 0.1065 against a 0.15 requirement -- inadequate. The
+#: repair is the leaf sum, not a larger build invented to pass: an aggregate
+#: that disagrees with its own members is wrong whatever the standard it is
+#: measured against.
+#:
+#: `thermal_capacity_mw` is *not* retyped here and the asymmetry is deliberate.
+#: It ships 7500 against leaves summing 4900, and that is the same defect in
+#: the same direction. But it is an exogenous dial the build set is planned
+#: against rather than a sum the graph computes, the reference build's 7500 is
+#: the single-country thermal fleet a plan would declare, and correcting it
+#: downward would move the margin further into violation. Retyping it is a
+#: decision about the reference scenario's size, not about the arithmetic this
+#: batch repairs, and it is recorded as open in `docs/prg-status.md`.
+BATCH43_REBUILDS: tuple[tuple[str, float, str], ...] = (
+	("dispatchable_re_capacity_mw", 2300.0,
+	 "Hydro, geothermal and OTEC: renewable, and the operator chooses the "
+	 "output. Counted toward firm capacity because the dispatch is "
+	 "controllable even though the fuel is not. The reference build reads "
+	 "2300 MW, the sum of its own leaves -- hydro 1500 and geothermal 800. It "
+	 "shipped 1500, which was neither the leaf sum nor a build anyone chose; "
+	 "an aggregate that disagrees with the members it aggregates is wrong "
+	 "whatever standard it is measured against."),
+)
+
+
+#: (eq_id, lhs, rhs, prose, reference) -- the one constraint whose own name
+#: says it makes the firm-VRE term explicit, and did not.
+#:
+#: `reserve_margin_with_firm_vre` shipped byte-identical to `reserve_margin`:
+#: same lhs, same rhs, same five parameters. Two constraints, one body, and
+#: the one whose name promises the firm contribution is the duplicate. It now
+#: reads `vre_firm_capacity_mw`, the node whose description already claimed
+#: "the reserve margin constraint reads [it]" -- which no reserve equation did.
+BATCH43_EQUATIONS: tuple[tuple[str, str, str, str, str | None], ...] = (
+	("reserve_margin_with_firm_vre",
+	 "firm_capacity_mw + vre_firm_capacity_mw",
+	 "peak_demand_mw * (1 + reserve_margin_min)",
+	 "Firm capacity plus the renewable fleet's firm contribution must cover "
+	 "peak demand with the required margin. The shipped body wrote the "
+	 "renewable term as `vre_capacity_mw * capacity_factor`, which is the "
+	 "fleet's *annual energy* ratio and not its peak contribution -- the two "
+	 "differ, always in the same direction, and using the first overstates "
+	 "the margin. It also made this equation byte-identical to "
+	 "`reserve_margin`, so the graph carried two constraints where one was "
+	 "intended and the one named for the firm-VRE term was the copy. Reading "
+	 "`vre_firm_capacity_mw` is what the name says and what that node's own "
+	 "description claims the constraint already does.",
+	 "Capacity credit as the portion of installed capacity reliably "
+	 "available at peak demand: IEA/NEA, Projected Costs of Generating "
+	 "Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt: "
+	 "\"Capacity credit reflects the portion of installed capacity that can "
+	 "be reliably expected to be available during times of peak demand\"); "
+	 "cf. US EIA, Levelized Cost and Levelized Avoided Cost of New "
+	 "Generation Resources (sources/archive/eia_lcoe_methodology.txt), "
+	 "which derates intermittent renewables' capacity credit \"as a function "
+	 "of the availability of the resource during peak load periods\" and "
+	 "puts wind at 15% in its worked example"),
+	("capacity_credit_definition",
+	 "vre_firm_capacity_mw",
+	 "vre_capacity_mw * vre_capacity_credit",
+	 "The VRE fleet's contribution to firm capacity, at its capacity credit. "
+	 "The shipped body multiplied nameplate by `capacity_factor`, the annual "
+	 "energy ratio, which answers a different question: how much the fleet "
+	 "generates over a year, not how much of it can be relied on at the "
+	 "peak. Capacity credit is the smaller number and the right one for a "
+	 "reserve margin.",
+	 "Capacity credit as the portion of installed capacity reliably "
+	 "available at peak demand: IEA/NEA, Projected Costs of Generating "
+	 "Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt); "
+	 "US EIA, Levelized Cost and Levelized Avoided Cost of New Generation "
+	 "Resources (sources/archive/eia_lcoe_methodology.txt), capacity credit "
+	 "at 1 for dispatchable units and derated for intermittent renewables"),
+	("reserve_margin_actual_definition",
+	 "reserve_margin_actual",
+	 "(firm_capacity_mw + vre_firm_capacity_mw - peak_demand_mw) / "
+	 "peak_demand_mw",
+	 "The reserve margin the built fleet delivers: firm capacity plus the "
+	 "firm contribution from VRE, less peak demand, over peak demand. The "
+	 "shipped body re-spelled the VRE term as `vre_capacity_mw * "
+	 "capacity_factor` inline, the same energy ratio the requirement used. "
+	 "Both sides agreed because they were the same quantity computed twice, "
+	 "which is why the node reported a margin that met its own requirement on "
+	 "every scenario: the comparison was between two copies of one number. "
+	 "Both sides now read `vre_firm_capacity_mw`, the capacity credit, and "
+	 "the comparison is between the standard and the fleet.",
+	 "Capacity credit as the portion of installed capacity reliably "
+	 "available at peak demand: IEA/NEA, Projected Costs of Generating "
+	 "Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt); "
+	 "US EIA, Levelized Cost and Levelized Avoided Cost of New Generation "
+	 "Resources (sources/archive/eia_lcoe_methodology.txt), capacity credit "
+	 "at 1 for dispatchable units and derated for intermittent renewables"),
+)
+
+
+def build_batch43(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Give the firm-VRE term a real capacity credit, and a reader.
+
+	Two findings, both from `docs/research/coupling-packs/grid-ops-asset.md`
+	and both verified against the loaded graph before this batch touched them.
+
+	*The constraint named for the firm-VRE term was a byte-identical copy of
+	the one it was meant to improve.* `reserve_margin_with_firm_vre` and
+	`reserve_margin` shipped the same lhs, the same rhs and the same five
+	parameters. The graph carried two constraints where one was intended, and
+	a reader who selected the firm-VRE variant for a solve got exactly the
+	behaviour of the other. `vre_firm_capacity_mw` -- the node whose
+	description says "the value is a quantity the reserve margin constraint
+	reads" -- was read by no reserve equation at all. A declared description
+	that no gate checks, which is the register-prose defect.
+
+	*And the term both equations used was the wrong quantity.* `capacity_factor`
+	is annual energy over rated output times 8760; a reserve margin asks for
+	the share of nameplate reliable at the peak. Capacity credit is smaller
+	than the capacity factor in every system, because the peak is when the
+	fleet is least likely to be producing. Using the energy ratio overstated
+	the margin, and it did so in the direction that reads as a pass: a build
+	that is not adequate reports as adequate.
+
+	*What changes at the defaults, measured.* `vre_capacity_credit` is 0.15
+	against `capacity_factor`'s 0.35. `vre_capacity_mw` is derived, 2702.70 MW
+	at the shipped defaults, so the VRE firm contribution falls from
+	2702.70 * 0.35 = 945.95 MW to 2702.70 * 0.15 = 405.41 MW and
+	`reserve_margin_actual` falls from 0.1701 to 0.1065 -- below the 0.15
+	requirement, which the pre-batch graph reported as met. The two margins
+	stop agreeing, which is the point: they agreed before because they were
+	the same equation.
+
+	*What this batch does not do.* It does not retype `capacity_factor` or
+	remove it from `reserve_margin`. The plain `reserve_margin` is a distinct
+	constraint over the same fleet and its body is not this batch's finding;
+	whether it should also read the capacity credit is a decision about which
+	of the two constraints the solve should carry, and the pack leaves it open.
+	"""
+	from alea.prg.dsl import parse_side
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	for name, unit, rng, default, prose in BATCH43_NODES:
+		assert name not in graph.nodes, (
+			f"{name}: already ships; this batch assumed it did not"
+		)
+		nodes[name] = {
+			"id": name,
+			"name": "VRE capacity credit",
+			"description": prose,
+			"category": "supply",
+			"subcategory": "adequacy",
+			"type": "float",
+			"unit": unit,
+			"range": rng,
+			"default": default,
+			"role": "exogenous",
+			"determinism": "policy",
+			"status": "to_build",
+			"source": _BATCH43_SOURCE,
+			"depends_on": [],
+			"affects": ["vre_firm_capacity_mw"],
+		}
+
+	for name, default, prose in BATCH43_REBUILDS:
+		shipped = graph.nodes.get(name)
+		assert shipped is not None, f"{name}: no shipped node to rebuild"
+		assert shipped.default != default, (
+			f"{name}: already reads {default}; this rebuild assumed it did not"
+		)
+		body = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		body.update({"default": default, "description": prose,
+		             "source": _BATCH43_SOURCE})
+		nodes[name] = body
+
+	for eq_id, lhs, rhs, prose, cite in BATCH43_EQUATIONS:
+		rhs_params = sorted(parse_side(rhs).symbols)
+		lhs_params = sorted(parse_side(lhs).symbols)
+		known = set(nodes) | set(graph.nodes)
+		missing = [s for s in rhs_params + lhs_params if s not in known]
+		assert not missing, f"{eq_id}: names {missing}, which no node holds"
+		assert not set(lhs_params) & set(rhs_params), (
+			f"{eq_id}: a symbol appears on both sides, so the body determines "
+			"nothing"
+		)
+		shipped = graph.equations.get(eq_id)
+		assert shipped is not None, f"{eq_id}: no shipped body to rewrite"
+		equations[eq_id] = {
+			"id": eq_id,
+			"name": shipped.name,
+			"description": prose,
+			"system": shipped.system,
+			"lhs": lhs,
+			"rhs": rhs,
+			"relation": shipped.relation.value if hasattr(shipped.relation, "value") else shipped.relation,
+			"parameters": lhs_params + rhs_params,
+			"free_variables": [],
+			"determined_variables": lhs_params if shipped.relation in ("eq",) else [],
+			"tolerance": shipped.tolerance,
+			"unit_check": True,
+			"priority": (
+				shipped.priority.value
+				if hasattr(shipped.priority, "value") else shipped.priority
+			),
+			"solution_method": shipped.solution_method,
+			"linearity": shipped.linearity,
+			"reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		# Edge targets are parameter ids, never equation ids: the loader refuses
+		# an edge naming an equation. A constraint has no determined variable, so
+		# the subject it bounds -- its first lhs operand -- is the target, and a
+		# constraint does not carry an edge from that operand to itself.
+		target = lhs_params[0] if lhs_params else sorted(rhs_params)[0]
+		for sym in lhs_params + rhs_params:
+			if sym == target:
+				continue
+			edges.append({
+				"source": sym, "target": target,
+				"equation_id": eq_id,
+				"relationship": "functional", "direction": "forward",
+				"strength": "hard",
+				"description": "Enters the corrected body.",
+				"reference": cite, "priority": "P1",
+			})
+
+	return nodes, equations, edges, rules
 
 
 _BATCH42_SOURCE = "The CCS chain repair (batch 42)"

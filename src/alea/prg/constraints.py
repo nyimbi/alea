@@ -152,6 +152,23 @@ SOURCES: tuple[NetworkSource, ...] = (
 		),
 	),
 	NetworkSource(
+		symbol="vre_firm_capacity_mw",
+		kind="vre_firm_capacity",
+		note=(
+			"Variable nameplate summed over the same generators as "
+			"``vre_capacity_mw`` and multiplied by the settable scalar "
+			"``vre_capacity_credit`` -- the capacity credit, or ELCC, the "
+			"adequacy literature derates a variable fleet by. The graph derives "
+			"this quantity too, and the two must agree: the equation and this "
+			"reader are the same product, so a solve that reads the credit here "
+			"and the equation's value elsewhere sees one number. Reading the "
+			"credit here rather than the graph's derived value is what keeps "
+			"the constraint linear -- a derived value is a post-solve result, "
+			"and a margin that could only be checked after the solve is not a "
+			"constraint on it."
+		),
+	),
+	NetworkSource(
 		symbol="peak_demand_mw",
 		kind="peak_demand",
 		note=(
@@ -459,6 +476,32 @@ def _generator_capacity(network: Any, model: Any, *, variable: bool) -> Any:
 	return total
 
 
+def _credit(ctx: _Context) -> float:
+	"""The capacity credit a variable fleet is derated by, read as a scalar.
+
+	``vre_capacity_credit`` is settable, so it comes from the parameter set
+	when a caller supplies one and from its shipped default otherwise. Either
+	way the route records it as assumed: a margin computed at a default credit
+	is a weaker claim than one computed at a credit the scenario chose, and
+	the register is where a reader sees which.
+	"""
+	node = ctx.graph.nodes.get("vre_capacity_credit")
+	value = ctx.params.get("vre_capacity_credit")
+	if value is None and node is not None:
+		value = node.default
+	if value is None or isinstance(value, str):
+		ctx.unresolved.add("vre_capacity_credit")
+		return 0.0
+	ctx.assumed.add("vre_capacity_credit")
+	return float(value)
+
+
+def _derate(capacity: Any, credit: float) -> Any:
+	"""Nameplate times a credit, linear in the nameplate whether it is a
+	variable or a number."""
+	return capacity * credit
+
+
 def _peak_demand(network: Any) -> float:
 	"""The highest coincident load, in MW."""
 	loads = network.loads
@@ -515,6 +558,10 @@ _READERS = {
 	),
 	"vre_capacity": lambda ctx, _src: _generator_capacity(
 		ctx.network, ctx.model, variable=True
+	),
+	"vre_firm_capacity": lambda ctx, _src: _derate(
+		_generator_capacity(ctx.network, ctx.model, variable=True),
+		_credit(ctx),
 	),
 	"peak_demand": lambda ctx, _src: _peak_demand(ctx.network),
 	"annual_emissions": lambda ctx, _src: _annual_emissions(ctx.network, ctx.model),

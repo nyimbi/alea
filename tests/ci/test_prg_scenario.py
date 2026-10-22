@@ -39,7 +39,15 @@ from alea.whatif.service import WhatIfEngine
 YEARS = (2030, 2040)
 
 #: Firm capacity the graph's reserve margin admits. See `_network`.
-FIRM_MW = 15_000.0
+#:
+#: 16,000 rather than the 15,000 this module used until batch 43, because the
+#: margin now derates the variable fleet by its capacity credit (0.15) instead
+#: of its capacity factor (0.35). At the steepest growth these tests state --
+#: 5% a year, a 13,846 MW peak in 2040 -- the requirement is 15,922 MW of
+#: firm-equivalent capacity, and with VRE capped at `fit_capacity_cap`'s 4,000
+#: MW that is 15,322 MW of firm capacity. 15,000 fell short and the solve came
+#: back infeasible; 16,000 clears both growth rates with headroom.
+FIRM_MW = 16_000.0
 
 #: The carbon budget these tests state, in MtCO2 over the horizon.
 #:
@@ -90,16 +98,23 @@ def _network(firm_mw: float = FIRM_MW) -> pypsa.Network:
 
 	**Why firm capacity is above the graph's default and everything else is not.**
 	A PRG-driven solve runs under the graph's inequalities, and the reserve margin
-	is one of them: ``firm + capacity_factor x VRE >= peak x (1 +
-	reserve_margin_min)``. Demand grows at ``demand_growth``'s default 4% a year
-	over the horizon, so the 2040 peak is ``8500 x 1.04^10`` = 12,582 MW and the
+	is one of them: ``firm + vre_firm_capacity >= peak x (1 +
+	reserve_margin_min)``, where the VRE term is nameplate times the capacity
+	credit. Demand grows at ``demand_growth``'s default 4% a year over the
+	horizon, so the 2040 peak is ``8500 x 1.04^10`` = 12,582 MW and the
 	requirement is 14,469 MW of firm-equivalent capacity. The graph's own
-	``firm_capacity_mw`` default of 9,000 MW does not meet it -- a fleet of that
+	``firm_capacity_mw`` default of 9,800 MW does not meet it -- a fleet of that
 	size is one the graph rejects, which is a true statement about the graph's
-	assumed system and not a test artefact. The fixture is therefore the smallest
-	fleet the graph admits (15,000 MW, with 1,750 MW of firm-equivalent VRE),
-	because a fixture the graph rejects would make every test here a test of the
-	infeasibility path instead of the route.
+	assumed system and not a test artefact. (Before batch 43 the derating was
+	``capacity_factor``, an annual energy ratio, and both margins were the same
+	equation; the requirement is unchanged because it is stated over peak demand
+	alone, but the fleet that satisfies it now has to be firm rather than
+	merely productive.) The fixture is therefore the smallest
+	fleet the graph admits (16,000 MW of gas, which clears the requirement on
+	firm capacity alone; the extendable solar adds its own 4,000 x 0.15 = 600 MW
+	of firm-equivalent capacity on top, and under the pre-batch energy ratio it
+	was 4,000 x 0.35 = 1,400), because a fixture the graph rejects would make
+	every test here a test of the infeasibility path instead of the route.
 	"""
 	network = pypsa.Network()
 	network.add("Bus", "b1", carrier="AC")

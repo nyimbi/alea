@@ -371,6 +371,90 @@ repaired was a derived quantity read by nothing — the same class as batch 41,
 which `uncoupled()` does not count at all.
 
 
+### The constraint that was a copy of itself (batch 43, 2026-10-22)
+
+`reserve_margin_with_firm_vre` shipped with the same lhs, the same rhs and the
+same five parameters as `reserve_margin`. Not similar — byte-identical. A
+reader who selected the firm-VRE variant for a solve got exactly the behaviour
+of the other, and the graph carried two constraints where one was intended.
+`vre_firm_capacity_mw` — the node whose description says "the value is a
+quantity the reserve margin constraint reads" — was read by no reserve
+equation at all. That is the register-prose defect: a description is a claim,
+and nothing checks it against the payload.
+
+**The term both equations used was the wrong quantity.** `capacity_factor` is
+annual energy over rated output times 8760; a reserve margin asks for the share
+of nameplate reliable *at the peak*. Capacity credit is smaller than the
+capacity factor in every system, because the peak is when the fleet is least
+likely to be producing. The IEA/NEA states it plainly — capacity credit "is the
+portion of installed capacity that can be reliably expected to be available
+during times of peak demand" (`sources/archive/iea_nea_egc_2020.txt`, §4) — and
+the EIA derates intermittent renewables' credit "as a function of the
+availability of the resource during peak load periods"
+(`sources/archive/eia_lcoe_methodology.txt`), putting wind at 15% in its worked
+example. The graph had no node for it.
+
+**What the wrong term did, in the direction that reads as a pass.** At the
+shipped defaults `vre_capacity_mw` derives to 2702.70 MW. The energy ratio gave
+2702.70 × 0.35 = 945.95 MW of firm VRE capacity and `reserve_margin_actual` =
+0.1701, comfortably above the 0.15 requirement. The capacity credit gives
+2702.70 × 0.15 = 405.41 MW and the actual margin falls to 0.1065 — below the
+requirement. The pre-batch graph reported an inadequate fleet as adequate,
+which is the failure mode a reserve margin exists to catch.
+
+**Three equations, one node, no new equation.** `capacity_credit_definition`
+now multiplies nameplate by `vre_capacity_credit` (0.15, the EIA's worked wind
+value, a parameter so a scenario can price a better-correlated fleet);
+`reserve_margin_with_firm_vre` and `reserve_margin_actual_definition` both read
+`vre_firm_capacity_mw`. Before, the requirement and the actual margin agreed on
+every scenario for the worst reason: both wrote `vre_capacity_mw *
+capacity_factor`, so the comparison the node exists to make was between two
+copies of one number. A margin that meets its own requirement by construction
+is not a check.
+
+**`reserve_margin` was left alone deliberately.** It is a distinct constraint
+over the same fleet and its body is not this batch's finding. Whether the solve
+should carry the plain margin or the firm-VRE one is a modelling decision the
+grid-ops pack leaves open; what this batch settles is that the two are no
+longer the same equation, so the choice is real.
+
+**A docstring caught by measurement.** The first draft of the batch's own prose
+put `vre_capacity_mw` at 1250 MW and the firm contribution at 437.5 → 187.5 MW.
+The node is derived, not exogenous, and propagates to 2702.70. The numbers were
+rewritten from the run, not from the name.
+
+**The reference build failed its own standard once the derating was right.**
+Correcting the derating exposed a second defect underneath it.
+`dispatchable_re_capacity_mw` shipped 1500 MW, and its own leaves —
+`hydro_capacity` at 1500 and `geothermal_capacity` at 800 — sum to 2300. The
+aggregate was neither the leaf sum nor a build anybody chose, and
+`firm_capacity_definition` adds it to `thermal_capacity_mw` to get the firm
+capacity the margin tests. Retyped to 2300: the leaf sum. The reference build
+then reads firm 9800 MW against a 9775 MW requirement and
+`reserve_margin_actual` 0.2006.
+
+The old build passed for two reasons that cancelled. The thermal aggregate
+ships 7500 MW against leaves summing 4900, an overstatement in the direction
+that helps; the energy-ratio derating was a second overstatement in the same
+direction; and between them the reference fleet looked adequate when its own
+leaves were not. Correcting one overstatement and leaving the other in place
+is what turned the defaults red — which is the useful part of the finding,
+because a defect that only shows when its partner is fixed is a defect no
+single check would have caught.
+
+`thermal_capacity_mw` is deliberately left at 7500. It is the same defect in
+the same direction, but it is a declared plan size rather than a sum the graph
+computes, and correcting it downward would move the margin further into
+violation. Sizing the reference scenario is a decision about the scenario, not
+about the arithmetic this batch repairs; it is open, and it is recorded here
+rather than guessed at.
+
+**The uncoupled count holds at 239**, and for the same reason as batches 41
+and 42: the batch's operands were already named by equations. What it repaired
+was a *derived* quantity whose body was a copy — a class `uncoupled()` cannot
+see.
+
+
 
 ## Not built
 

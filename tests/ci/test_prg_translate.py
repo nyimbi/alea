@@ -239,6 +239,14 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	and added no equation, so no node became determined and nothing left the
 	surface. The gap tracks it: 851 -> 852.
 
+	855 -> 856 for batch 43, and it is one new node: ``vre_capacity_credit``,
+	the capacity credit (ELCC) the reserve equations had in place of the
+	capacity factor. It ships settable (exogenous, unit ``1``), so it enters
+	the denominator and the gap together. The batch rewrote three equation
+	bodies -- two of them the duplicate ``reserve_margin_with_firm_vre`` pair --
+	and added no equation, so no node became determined and nothing left the
+	surface. The gap tracks it: 852 -> 853.
+
 	The eighteen the engine cannot carry are still outside the denominator:
 	they are chosen by the optimiser, so ``is_settable`` is False for them.
 	They are not missing from the register -- ``endogenous`` carries them, and
@@ -246,7 +254,7 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	"""
 	cov = coverage(graph)
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 855, cov
+	assert cov["total"] == 856, cov
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -330,7 +338,7 @@ def test_the_untranslated_register_is_not_empty_and_says_why(
 	neither. The register still equals the settable surface minus three.
 	"""
 	missing = untranslated(graph)
-	assert len(missing) == 852, missing
+	assert len(missing) == 853, missing
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact

@@ -4373,7 +4373,14 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# emission-factor construction for the fleet account. Both were rewritten
 	# in place and carried None before, so the register grows without the
 	# equation count moving. 242 to 244.
-	assert len(declared) == 244, f"the citation register moved: {sorted(declared)}"
+	# Batch 43 added three: the firm-VRE reserve constraint and the two
+	# definitions that carry the capacity credit. All three were rewritten in
+	# place and carried None before, and all three cite the same two archived
+	# works -- IEA/NEA EGC 2020 section 4 for what a capacity credit is and
+	# the EIA LCOE methodology for the derating of intermittent renewables and
+	# its 15% wind example, which is the value `vre_capacity_credit` ships.
+	# The equation count does not move. 244 to 247.
+	assert len(declared) == 247, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (

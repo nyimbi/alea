@@ -422,11 +422,25 @@ def test_the_reserve_margin_binds_and_moves_the_build():
 
 	With coal expensive to run, the unconstrained optimum builds solar for the
 	load alone -- 100 MW, no more -- and the margin is violated. With the
-	constraint the optimiser must satisfy ``firm + vre * 0.35 >= 115``, and
-	with no firm capacity available it builds 115 / 0.35 = 328.57 MW of solar.
-	The number is the physics, not a shape.
+	constraints the optimiser must satisfy ``firm + vre * 0.35 >= 115`` and
+	``firm + vre * 0.15 >= 115``, and with no firm capacity available the
+	second is tighter: it builds 115 / 0.15 = 766.67 MW of solar.
+
+	Both constraints bind, and that is the batch-43 finding made visible. The
+	plain ``reserve_margin`` derates the variable fleet by its capacity
+	factor, which is an annual energy ratio; ``reserve_margin_with_firm_vre``
+	derates it by the capacity credit, which is the share reliably available
+	at the peak. The credit is smaller, so its requirement is the one the
+	build must meet, and the energy-ratio margin is satisfied as a
+	consequence. Before batch 43 the two equations were byte-identical, so
+	this test's expected 328.57 was the answer for either and a solver
+	carrying "the firm-VRE margin" was carrying the energy-ratio one.
 	"""
-	params = {"reserve_margin_min": 0.15, "capacity_factor": 0.35}
+	params = {
+		"reserve_margin_min": 0.15,
+		"capacity_factor": 0.35,
+		"vre_capacity_credit": 0.15,
+	}
 
 	baseline = _network(coal_marginal=100.0, coal_capital=1000.0)
 	baseline.optimize(solver_name="highs", log_to_console=False)
@@ -438,9 +452,12 @@ def test_the_reserve_margin_binds_and_moves_the_build():
 		_network(coal_marginal=100.0, coal_capital=1000.0), params
 	)
 	assert "reserve_margin" in report.added
+	assert "reserve_margin_with_firm_vre" in report.added
 	assert constrained.generators.at["solar", "p_nom_opt"] == pytest.approx(
-		115.0 / 0.35, rel=1e-4
+		115.0 / 0.15, rel=1e-4
 	)
+	# The energy-ratio margin is met, but by a build it did not set.
+	assert constrained.generators.at["solar", "p_nom_opt"] > 115.0 / 0.35
 
 
 def test_the_reserve_margin_counts_a_fixed_unit_as_a_constant():
