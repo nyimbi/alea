@@ -1467,6 +1467,71 @@ consistent with the one pre-existing `rocof_definition` failure.
   `paths.repo_root()`, so the module attribute is what is consulted, and a
   scratch tree is a scratch tree for every reader.
 
+
+### The capital structure had two dials and no coupling (batch 52, 2026-10-23)
+
+`debt_fraction` shipped as an `exogenous` dial at 0.70, read by twelve
+equations: `wacc_definition`, `debt_service_definition`, `llcr_definition`,
+`equity_irr_definition`, and the four cost lines that multiply capex by the
+debt share. `debt_equity_ratio` shipped alongside it as a `free` dial at 2.33.
+**They are the same number in two units** — 2.33/(1 + 2.33) = 0.69970 — and
+nothing tied them, so a scenario could move the gearing and leave every
+equation that prices debt on a 70% share.
+
+Measured on the shipped graph: setting `debt_equity_ratio` to 1.0 left
+`debt_fraction` at 0.7000 and the WACC at 0.104644; setting `debt_fraction` to
+0.5 left the ratio at 2.33. Neither dial moved the other. Three further nodes
+derived from `debt_fraction` — `gearing_ratio`, `equity_share` and
+`debt_financing_share` — so the family computed four spellings of one quantity.
+`debt_financing_share` is read by two inequality rules; `gearing_ratio` by one;
+`equity_share` by nothing.
+
+**Which side became the dial.** The ratio, on the catalog's own evidence: row
+3.38 is "Optimal capital structure" and names the debt-to-equity ratio, and the
+UKRN (2023) Cost of Capital review treats notional gearing as the regulator's
+policy assumption (Recommendation 9, `sources/archive/ukrn_cost_of_capital_2023.txt`).
+A share is a conversion of that, not a fact about the world. `debt_fraction`
+is now `debt_equity_ratio / (1 + debt_equity_ratio)`.
+
+**Three faces of the one number, made reachable.** The batch also removes the
+duplicates rather than leaving them as parallel computations:
+
+- `gearing_ratio_definition` is now a bare alias of `debt_equity_ratio`. The
+  identity is exact: with `debt_fraction = r/(1+r)`, `debt_fraction /
+  (1 - debt_fraction) = r` for every `r`, not merely at the default.
+- `equity_share` replaces the inline `(1 - debt_fraction)` in
+  `wacc_definition`, `technology_risk_charge_definition` and
+  `equity_irr_definition`. It had zero readers; it now has three.
+- `debt_financing_share` needed nothing — it is already read by
+  `debt_mix_bound` and `ifc_covenant_scope_bound`. `affects()` reported zero
+  readers because it skips inequalities by design, which is exactly why the
+  register alone cannot decide whether a node is orphaned.
+
+**The value change, and why it is one.** Deriving the share from the ratio
+moves it from 0.70 to 0.69970 — a 0.03% correction, and the only value change
+in the batch. It propagates to 130 values, worst 0.1429% (`gearing_ratio`,
+2.33333 -> 2.33, which is the disagreement being removed rather than a new
+one). WACC 0.104644 -> 0.104668; debt service 103.8441 -> 103.7996.
+
+| scenario | HEAD share | HEAD WACC | HEAD debt service | batch-52 share | batch-52 WACC | batch-52 debt service |
+|---|---:|---:|---:|---:|---:|---:|
+| defaults | 0.70000 | 0.104644 | 103.8441 | 0.69970 | 0.104668 | 103.7996 |
+| `debt_equity_ratio = 1.0` | **0.70000** | **0.104644** | **103.8441** | 0.50000 | 0.120460 | 74.1744 |
+| `debt_equity_ratio = 3.0` | **0.70000** | **0.104644** | **103.8441** | 0.75000 | 0.100690 | 111.2616 |
+
+The first column of HEAD is identical across all three rows: that is the defect.
+The test `test_the_capital_structure_has_one_dial_and_every_other_face_derives`
+asserts the response, the closed form, and the sign — reducing the gearing
+*raises* the WACC, because after-tax debt costs 0.08092 against equity's 0.16
+and debt is therefore the cheaper source. The sign assertion is guarded by a
+check that debt really is cheaper at the shipped costs, so a graph with the two
+costs swapped fails rather than passing on the wrong direction.
+
+**Registers.** Settable 874 -> 873 (the share out, the ratio already counted);
+`untranslated()` 871 -> 870 for the same reason; `uncoupled()` 236, unchanged.
+Units 604 consistent / 1 inconsistent (`rocof_definition`, pre-existing) / 0
+undecidable. Graph 1429 nodes / 605 equations / 1365 edges / 57 rules.
+
 ### The emission factor was a second dial for the efficiency (batch 51, 2026-10-23)
 
 `emission_factor_coal_t_per_mwh` (0.92), `_gas_` (0.45) and `_oil_` (0.78)

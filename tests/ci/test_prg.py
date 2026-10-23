@@ -1382,6 +1382,83 @@ def test_a_fossil_emission_factor_is_derived_from_its_carbon_content(
 		)
 
 
+def test_the_capital_structure_has_one_dial_and_every_other_face_derives(
+	graph: ParameterGraph, defaults: dict
+):
+	"""Setting the gearing must move the debt share, and it did not.
+
+	The graph carried `debt_fraction` = 0.70 and `debt_equity_ratio` = 2.33 as
+	two independent dials. They are the same number in two units -- 2.33/(1 +
+	2.33) = 0.6997 -- and nothing tied them, so a scenario could set the gearing
+	to 1.0 and leave all twelve equations that price debt on a 70% share. Three
+	further nodes derived from `debt_fraction` and were read by nothing, and
+	`gearing_ratio = debt_fraction / (1 - debt_fraction)` was a third spelling
+	of the same ratio that the cross-validation rule did read.
+
+	Batch 52 makes the ratio the dial and the share its image. A value test
+	cannot see the defect -- both spellings already agreed to three digits -- so
+	this test asserts the *response*: setting the ratio must move the share,
+	the WACC and the debt service. On the pre-batch graph all three are
+	unchanged at any ratio.
+	"""
+	share = graph.node("debt_fraction")
+	assert share.role.value == "derived", share.role
+	assert not graph.is_settable("debt_fraction"), "the share is still a dial"
+	assert graph.is_settable("debt_equity_ratio"), "the ratio is not the dial"
+
+	# The closed form, so a wrong divisor fails as well as a missing response.
+	ratio = defaults["debt_equity_ratio"]
+	assert graph.propagate(defaults).values["debt_fraction"] == pytest.approx(
+		ratio / (1.0 + ratio), rel=1e-12
+	)
+
+	# The response. Every one of these is unchanged on the pre-batch graph.
+	geared = dict(defaults)
+	geared["debt_equity_ratio"] = 1.0
+	before = graph.propagate(defaults).values
+	after = graph.propagate(geared).values
+	for name in ("debt_fraction", "discount_rate", "debt_service_usd_per_kw_year"):
+		assert after[name] != pytest.approx(before[name], rel=1e-9), (
+			f"{name} did not move when the debt-to-equity ratio was set to 1.0; "
+			f"the gearing is not driving the capital structure"
+		)
+	assert after["debt_fraction"] == pytest.approx(0.5), after["debt_fraction"]
+	# The direction, which a "moved" check does not give: at the shipped costs
+	# the after-tax cost of debt is 0.1156 * (1 - 0.3) = 0.08092 against an
+	# equity cost of 0.16, so debt is the cheaper source and *less* leverage
+	# makes the WACC dearer. Asserting the sign against the shipped costs keeps
+	# this from passing on a graph where the two costs were swapped.
+	debt_cost = before["cost_of_debt"] * (1.0 - before["tax_rate"])
+	assert debt_cost < before["cost_of_equity"], (
+		"this assertion assumes debt is the cheaper source; at these costs it "
+		"is not, so the direction below would be the wrong one"
+	)
+	assert after["discount_rate"] > before["discount_rate"], (
+		"reducing the gearing lowered the WACC, which is only right if debt is "
+		"the dearer source"
+	)
+
+	# The three faces of the one number now agree by construction. `gearing_ratio`
+	# is the ratio itself, and `equity_share` is its complement -- if either
+	# drifts from the identity, a scenario reading one for the other is wrong.
+	for scenario in (defaults, geared):
+		values = graph.propagate(scenario).values
+		assert values["gearing_ratio"] == pytest.approx(
+			values["debt_equity_ratio"], rel=1e-12
+		)
+		assert values["equity_share"] + values["debt_fraction"] == pytest.approx(
+			1.0, rel=1e-12
+		)
+
+	# `equity_share` was read by nothing; the equations that spelled its
+	# complement inline now name it, so the node is reachable from the numbers
+	# it feeds rather than being a fourth duplicate.
+	assert graph.affects("equity_share"), (
+		"equity_share is read by no equation, so the inline complements were "
+		"not repointed"
+	)
+
+
 def test_a_range_excursion_does_not_survive_into_the_next_scenario(
 	graph: ParameterGraph, defaults: dict
 ):
@@ -2192,8 +2269,11 @@ def test_the_audit_reports_what_it_did_not_check():
 	# are skipped rather than checked: `checked` stays 197 and `skipped` moves
 	# 331 -> 334. The audit's coverage is unchanged -- it is the computed set
 	# that grew.
+	# Batch 52 added `debt_fraction_definition`, whose `debt_equity_ratio` is
+	# not on the solve result either, so `skipped` moves 334 -> 335 for the
+	# same reason.
 	assert len(audit.checked) == 197, audit.checked
-	assert len(audit.skipped) == 334, audit.skipped
+	assert len(audit.skipped) == 335, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -2250,8 +2330,9 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# ran, and batch 31's product layer took it to 440, and batch 33's
 	# residue layer to 461, batch 44's pollutant layer to 493, and batch 46's
 	# capacity-to-energy layer to 528.
-	# Batch 51's three derived emission factors take it 528 -> 531.
-	assert len(audit.skipped) == 531, audit.skipped
+	# Batch 51's three derived emission factors take it 528 -> 531, and batch
+	# 52's debt-share definition takes it 531 -> 532.
+	assert len(audit.skipped) == 532, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -4265,7 +4346,11 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# Batch 51's three emission-factor equations are equalities with three
 	# hard edges each, taking the hard tier 598 -> 601. The other two tiers
 	# stay flat, which is what the equality is for.
-	assert counts == {"hard": 601, "informational": 1, "soft": 2}, counts
+	# Batch 52 rewrote four equations and added one. The gearing alias and the
+	# three complement rewrites keep their edges, and the new debt-share
+	# definition adds one hard edge: 601 -> 602. Still the two tiers the batch
+	# did not touch, which is what the equality checks.
+	assert counts == {"hard": 602, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -4670,8 +4755,9 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# row, which is the same shape batch 44's pollutant table had.
 	# 259 to 295.
 	# Batch 51's three emission-factor equations each carry a reference (IPCC
-	# 2006 Table 2.2), taking the register 295 -> 298.
-	assert len(declared) == 298, f"the citation register moved: {sorted(declared)}"
+	# 2006 Table 2.2), taking the register 295 -> 298. Batch 52's debt-share
+	# definition cites the UKRN cost-of-capital review, 298 -> 299.
+	assert len(declared) == 299, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -4917,7 +5003,10 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 				f"numeric {numeric!r}"
 			)
 			compared += 1
-	assert compared == 531, (
+	# Batch 52's debt-share definition is affine in the variable it solves for,
+	# like every equation the earlier batches added, so the compared set moves
+	# 531 -> 532.
+	assert compared == 532, (
 		f"expected 481 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "

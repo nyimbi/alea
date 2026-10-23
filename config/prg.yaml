@@ -8531,28 +8531,34 @@ parameters:
     users:
     - Traders
   debt_equity_ratio:
-    categories: []
-    category: Investment & Finance
-    default: 2.33
-    deprecated_by: null
+    name: Debt-to-equity ratio
     description: Debt divided by equity, as a ratio (not a share). Bounded above at 3.0, the ceiling thin-capitalisation
       rules usually set.
-    determinism: fixed
-    initial: null
-    name: Debt-to-equity ratio
-    priority: P1
-    range:
-    - 0.0
-    - 3.0
-    role: free
-    source: docs/params.md#3.38
-    source_url: null
-    status: to_build
+    category: Investment & Finance
     subcategory: null
     type: float
     unit: '1'
+    range:
+    - 0.0
+    - 3.0
+    default: 2.33
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: docs/params.md#3.38
+    source_url: null
     users:
     - Investors
+    priority: P1
+    status: to_build
+    deprecated_by: null
+    depends_on: []
+    affects:
+    - debt_financing_share
+    - debt_fraction
+    - gearing_ratio
+    - thin_capitalisation_utilisation
   debt_financing_share:
     category: Financial
     description: 'debt financing share: the coupling''s derived quantity, so a scenario''s dial has a
@@ -8573,26 +8579,44 @@ parameters:
     - Planners
     - Financial analysts
   debt_fraction:
-    categories: []
-    category: Financial
-    default: 0.7
-    deprecated_by: null
-    description: Share of capex financed with debt rather than equity.
-    determinism: policy
-    initial: null
     name: Debt share
-    priority: P1
-    range:
-    - 0.0
-    - 0.95
-    role: exogenous
-    source: null
-    source_url: null
-    status: to_build
+    description: Debt's share of the capital structure, D/(D+E), from the debt-to-equity ratio. The shipped
+      node was an independent dial at 0.70 while the ratio ships 2.33 -- the same number in two units,
+      with nothing tying them, so a scenario could move the gearing and leave every equation that prices
+      debt on the old share.
+    category: Financial
     subcategory: null
     type: float
     unit: '1'
+    range:
+    - 0.0
+    - 0.95
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: 'The capital structure is one number with several faces. The dial is the debt-to-equity ratio,
+      the catalog''s row 3.38 ''Optimal capital structure'', and the UKRN (2023) Cost of Capital review
+      treats notional gearing as the regulator''s own policy assumption rather than a fixed fact (Recommendation
+      9, `sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard conversions:
+      D/(D+E) = r/(1+r), gearing = r, and equity''s share is 1 - D/(D+E), for r the debt-to-equity ratio.'
+    source_url: null
     users: []
+    priority: P1
+    status: to_build
+    deprecated_by: null
+    depends_on:
+    - debt_equity_ratio
+    affects:
+    - cat_bond_coupon_cost_usd
+    - currency_hedge_cost_usd_per_year
+    - debt_service_usd_per_kw_year
+    - discount_rate
+    - equity_share
+    - llcr_estimate
+    - parent_company_guarantee_usd
+    - sovereign_risk_charge_usd_per_year
+    - withholding_tax_interest_usd_per_year
   debt_management:
     name: Debt management
     description: Whether the utility runs a debt-management capability. Catalog 'Financial model' -- an
@@ -35766,6 +35790,34 @@ equations:
     system: financial
     tolerance: 1.0e-09
     unit_check: true
+  debt_fraction_definition:
+    id: debt_fraction_definition
+    name: Debt fraction
+    system: financial
+    tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    relation: eq
+    lhs: debt_fraction
+    rhs: debt_equity_ratio / (1.0 + debt_equity_ratio)
+    parameters:
+    - debt_equity_ratio
+    - debt_fraction
+    free_variables:
+    - debt_equity_ratio
+    determined_variables:
+    - debt_fraction
+    description: 'Debt''s share of the capital structure, from the debt-to-equity ratio: D/(D+E) = r/(1+r).'
+    reference: 'The capital structure is one number with several faces. The dial is the debt-to-equity
+      ratio, the catalog''s row 3.38 ''Optimal capital structure'', and the UKRN (2023) Cost of Capital
+      review treats notional gearing as the regulator''s own policy assumption rather than a fixed fact
+      (Recommendation 9, `sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard
+      conversions: D/(D+E) = r/(1+r), gearing = r, and equity''s share is 1 - D/(D+E), for r the debt-to-equity
+      ratio.'
+    unit_check: true
+    latex: \mathrm{debt}_{fraction} = \frac{\mathrm{debt}_{equity\_ratio}}{\mathrm{debt}_{equity\_ratio}
+      + 1}
   debt_mix_bound:
     description: 'The three debt-instrument classes cannot, together, exceed debt''s own share of the
       capital structure: they fund the same debt tranche, which the D/E ratio declares.'
@@ -36962,33 +37014,35 @@ equations:
     tolerance: 1.0e-08
     unit_check: true
   equity_irr_definition:
+    name: Equity IRR estimate
     description: 'A first-year ratio: the return the sponsor earns on equity after debt service. Dimensional
       check: (USD/kW/year) / (USD/kW) is 1/year, which is a rate. A full IRR needs a schedule; this is
       the ratio a diligence process reads.'
+    system: financial
+    lhs: equity_irr_estimate
+    rhs: (cfads_usd_per_kw_year - debt_service_usd_per_kw_year) / capex_usd_per_kw / equity_share
+    relation: eq
+    parameters:
+    - capex_usd_per_kw
+    - cfads_usd_per_kw_year
+    - debt_service_usd_per_kw_year
+    - equity_share
+    free_variables:
+    - capex_usd_per_kw
+    - cfads_usd_per_kw_year
+    - debt_service_usd_per_kw_year
+    - equity_share
     determined_variables:
     - equity_irr_estimate
-    free_variables:
-    - cfads_usd_per_kw_year
-    - debt_service_usd_per_kw_year
-    - capex_usd_per_kw
-    - debt_fraction
-    latex: null
-    lhs: equity_irr_estimate
-    linearity: linear
-    name: Equity IRR estimate
-    parameters:
-    - cfads_usd_per_kw_year
-    - debt_service_usd_per_kw_year
-    - capex_usd_per_kw
-    - debt_fraction
-    priority: P2
-    reference: null
-    relation: eq
-    rhs: (cfads_usd_per_kw_year - debt_service_usd_per_kw_year) / capex_usd_per_kw / (1 - debt_fraction)
-    solution_method: direct
-    system: financial
     tolerance: 1.0e-08
     unit_check: true
+    reference: null
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{equity}_{irr\_estimate} = \frac{\mathrm{cfads}_{usd\_per\_kw\_year} - \mathrm{debt}_{service\_usd\_per\_kw\_year}}{\mathrm{capex}_{usd\_per\_kw}
+      \mathrm{equity}_{share}}
+    id: equity_irr_definition
   equity_share_definition:
     description: The equity share is the complement of the debt fraction. This is the identity that makes
       a scenario's debt and equity claims consistent by construction rather than by a cross-validation
@@ -38294,25 +38348,29 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   gearing_ratio_definition:
-    description: Debt over equity, where equity is the complement of the debt fraction. The singularity
-      at a debt fraction of one is excluded by the node's own range, which Batch 2 capped at 0.95.
+    name: Gearing from the debt fraction
+    description: 'Debt as a multiple of equity. Identical to the debt-to-equity ratio by construction:
+      with debt_fraction = r/(1+r), debt_fraction/(1-debt_fraction) = r for every r. Kept as a named face
+      so the gearing rule can cite it.'
+    system: financial
+    lhs: gearing_ratio
+    rhs: debt_equity_ratio
+    relation: eq
+    parameters:
+    - debt_equity_ratio
+    - gearing_ratio
+    free_variables:
+    - debt_equity_ratio
     determined_variables:
     - gearing_ratio
-    free_variables: []
-    latex: \mathrm{gearing}_{ratio} = \frac{\mathrm{debt}_{fraction}}{1 - \mathrm{debt}_{fraction}}
-    lhs: gearing_ratio
-    linearity: nonlinear
-    name: Gearing from the debt fraction
-    parameters:
-    - debt_fraction
-    priority: P1
-    reference: null
-    relation: eq
-    rhs: debt_fraction / (1 - debt_fraction)
-    solution_method: direct
-    system: financial
     tolerance: 1.0e-06
     unit_check: true
+    reference: null
+    priority: P1
+    solution_method: direct
+    linearity: nonlinear
+    latex: \mathrm{gearing}_{ratio} = \mathrm{debt}_{equity\_ratio}
+    id: gearing_ratio_definition
   gender_action_plan_spend_definition:
     description: The plan's ring-fenced share of the community development fund the benefit-sharing programme
       capitalises.
@@ -45926,32 +45984,36 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   technology_risk_charge_definition:
+    name: The technology risk charge
     description: 'The annual cost of the technology premium on the equity tranche: the premium times the
       equity-financed capital. The `(1 - debt_fraction)` is what puts it on the equity tranche and not
       the debt one -- the lender does not carry technology risk, so charging it on the whole capital would
       double-count it against the debt rate.'
-    determined_variables:
-    - technology_risk_charge_usd_per_year
-    free_variables: []
-    latex: \mathrm{technology}_{risk\_charge\_usd\_per\_year} = 1000 \mathrm{technology}_{risk\_premium}
-      \left(1 - \mathrm{debt}_{fraction}\right) \mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}
+    system: financial
     lhs: technology_risk_charge_usd_per_year
-    linearity: linear
-    name: The technology risk charge
+    rhs: technology_risk_premium * equity_share * capex_usd_per_kw * total_capacity_mw * 1000
+    relation: eq
     parameters:
-    - technology_risk_charge_usd_per_year
     - capex_usd_per_kw
-    - debt_fraction
+    - equity_share
     - technology_risk_premium
     - total_capacity_mw
-    priority: P1
-    reference: null
-    relation: eq
-    rhs: technology_risk_premium * (1 - debt_fraction) * capex_usd_per_kw * total_capacity_mw * 1000
-    solution_method: direct
-    system: financial
+    free_variables:
+    - capex_usd_per_kw
+    - equity_share
+    - technology_risk_premium
+    - total_capacity_mw
+    determined_variables:
+    - technology_risk_charge_usd_per_year
     tolerance: 1.0e-09
     unit_check: true
+    reference: null
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{technology}_{risk\_charge\_usd\_per\_year} = 1000 \mathrm{technology}_{risk\_premium}
+      \mathrm{equity}_{share} \mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}
+    id: technology_risk_charge_definition
   temperature_target_bound:
     description: The scenario's assumed warming must not exceed the policy ceiling it is tested against.
       1.2 against 1.5 at defaults. A scenario that warms past its own target is incoherent rather than
@@ -46914,31 +46976,38 @@ equations:
     reference: Standard WACC with the interest tax shield
     latex: \mathrm{weighted}_{average\_cost\_of\_capital} = \mathrm{discount}_{rate}
   wacc_definition:
+    name: Weighted average cost of capital
     description: 'The blend of debt and equity, with interest shielded by tax. This is why the discount
       rate is derived: the blend and the rate are one quantity.
 
       '
+    system: financial
+    lhs: discount_rate
+    rhs: debt_fraction * cost_of_debt * (1 - tax_rate) + equity_share * cost_of_equity
+    relation: eq
+    parameters:
+    - cost_of_debt
+    - cost_of_equity
+    - debt_fraction
+    - equity_share
+    - tax_rate
+    free_variables:
+    - cost_of_debt
+    - cost_of_equity
+    - debt_fraction
+    - equity_share
+    - tax_rate
     determined_variables:
     - discount_rate
-    free_variables: []
-    latex: null
-    lhs: discount_rate
-    linearity: linear
-    name: Weighted average cost of capital
-    parameters:
-    - discount_rate
-    - debt_fraction
-    - cost_of_debt
-    - tax_rate
-    - cost_of_equity
-    priority: P1
-    reference: Standard WACC with the interest tax shield
-    relation: eq
-    rhs: debt_fraction * cost_of_debt * (1 - tax_rate) + (1 - debt_fraction) * cost_of_equity
-    solution_method: direct
-    system: financial
     tolerance: 1.0e-09
     unit_check: true
+    reference: Standard WACC with the interest tax shield
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{discount}_{rate} = \mathrm{debt}_{fraction} \mathrm{cost}_{of\_debt} \left(1 - \mathrm{tax}_{rate}\right)
+      + \mathrm{equity}_{share} \mathrm{cost}_{of\_equity}
+    id: wacc_definition
   wage_bill_definition:
     description: 'The annual wage bill: the average wage per job times the direct workforce. The quantity
       that turns a jobs claim into a claim about income -- at 20,000 USD a job the 43,000-job fleet pays
@@ -48363,15 +48432,6 @@ relationships:
   source: capex_usd_per_kw
   strength: hard
   target: equity_irr_estimate
-- description: More debt means less equity to spread the return over.
-  direction: forward
-  equation_id: equity_irr_definition
-  priority: P2
-  reference: null
-  relationship: functional
-  source: debt_fraction
-  strength: hard
-  target: equity_irr_estimate
 - description: Cash available is the numerator.
   direction: forward
   equation_id: llcr_definition
@@ -48579,15 +48639,6 @@ relationships:
   source: planned_outage_rate
   strength: hard
   target: oil_eaf
-- description: Gearing rises without bound as the debt fraction approaches one.
-  direction: forward
-  equation_id: gearing_ratio_definition
-  priority: P1
-  reference: null
-  relationship: functional
-  source: debt_fraction
-  strength: hard
-  target: gearing_ratio
 - description: The equity share is what the debt fraction does not fund.
   direction: forward
   equation_id: equity_share_definition
@@ -53545,15 +53596,6 @@ relationships:
   reference: null
   relationship: functional
   source: capex_usd_per_kw
-  strength: hard
-  target: technology_risk_charge_usd_per_year
-- description: Enters the finance identity.
-  direction: forward
-  equation_id: technology_risk_charge_definition
-  priority: P1
-  reference: null
-  relationship: functional
-  source: debt_fraction
   strength: hard
   target: technology_risk_charge_usd_per_year
 - description: Enters the finance identity.
@@ -59940,6 +59982,75 @@ relationships:
     The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
     `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
     (2020).
+  priority: P2
+- source: debt_equity_ratio
+  target: debt_fraction
+  equation_id: debt_fraction_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The debt-to-equity ratio the capital structure is set at; every share form is a conversion
+    of it.
+  reference: 'The capital structure is one number with several faces. The dial is the debt-to-equity ratio,
+    the catalog''s row 3.38 ''Optimal capital structure'', and the UKRN (2023) Cost of Capital review
+    treats notional gearing as the regulator''s own policy assumption rather than a fixed fact (Recommendation
+    9, `sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard conversions:
+    D/(D+E) = r/(1+r), gearing = r, and equity''s share is 1 - D/(D+E), for r the debt-to-equity ratio.'
+  priority: P2
+- source: debt_equity_ratio
+  target: gearing_ratio
+  equation_id: gearing_ratio_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The gearing is the debt-to-equity ratio; one number, two names.
+  reference: 'The capital structure is one number with several faces. The dial is the debt-to-equity ratio,
+    the catalog''s row 3.38 ''Optimal capital structure'', and the UKRN (2023) Cost of Capital review
+    treats notional gearing as the regulator''s own policy assumption rather than a fixed fact (Recommendation
+    9, `sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard conversions:
+    D/(D+E) = r/(1+r), gearing = r, and equity''s share is 1 - D/(D+E), for r the debt-to-equity ratio.'
+  priority: P2
+- source: equity_share
+  target: discount_rate
+  equation_id: wacc_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The equity-funded share of capex, read as the named node rather than spelled inline as
+    its complement.
+  reference: 'The capital structure is one number with several faces. The dial is the debt-to-equity ratio,
+    the catalog''s row 3.38 ''Optimal capital structure'', and the UKRN (2023) Cost of Capital review
+    treats notional gearing as the regulator''s own policy assumption rather than a fixed fact (Recommendation
+    9, `sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard conversions:
+    D/(D+E) = r/(1+r), gearing = r, and equity''s share is 1 - D/(D+E), for r the debt-to-equity ratio.'
+  priority: P2
+- source: equity_share
+  target: technology_risk_charge_usd_per_year
+  equation_id: technology_risk_charge_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The equity-funded share of capex, read as the named node rather than spelled inline as
+    its complement.
+  reference: 'The capital structure is one number with several faces. The dial is the debt-to-equity ratio,
+    the catalog''s row 3.38 ''Optimal capital structure'', and the UKRN (2023) Cost of Capital review
+    treats notional gearing as the regulator''s own policy assumption rather than a fixed fact (Recommendation
+    9, `sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard conversions:
+    D/(D+E) = r/(1+r), gearing = r, and equity''s share is 1 - D/(D+E), for r the debt-to-equity ratio.'
+  priority: P2
+- source: equity_share
+  target: equity_irr_estimate
+  equation_id: equity_irr_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The equity-funded share of capex, read as the named node rather than spelled inline as
+    its complement.
+  reference: 'The capital structure is one number with several faces. The dial is the debt-to-equity ratio,
+    the catalog''s row 3.38 ''Optimal capital structure'', and the UKRN (2023) Cost of Capital review
+    treats notional gearing as the regulator''s own policy assumption rather than a fixed fact (Recommendation
+    9, `sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard conversions:
+    D/(D+E) = r/(1+r), gearing = r, and equity''s share is 1 - D/(D+E), for r the debt-to-equity ratio.'
   priority: P2
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0

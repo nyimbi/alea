@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "52":
+		b52_nodes, b52_equations, b52_edges, b52_rules = build_batch52(graph)
+		rules.extend(b52_rules)
+		nodes.update(b52_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b52_equations)
+		edges = list(BATCH12_EDGES) + b52_edges
 	elif batch == "51":
 		b51_nodes, b51_equations, b51_edges, b51_rules = build_batch51(graph)
 		rules.extend(b51_rules)
@@ -17065,6 +17072,422 @@ def build_batch51(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 
 	assert len(nodes) == 10, len(nodes)
 	assert len(equations) == 3, len(equations)
+	return nodes, equations, edges, rules
+
+
+_BATCH52_SOURCE = (
+	"The capital structure is one number with several faces. The dial is the "
+	"debt-to-equity ratio, the catalog's row 3.38 'Optimal capital structure', "
+	"and the UKRN (2023) Cost of Capital review treats notional gearing as the "
+	"regulator's own policy assumption rather than a fixed fact (Recommendation "
+	"9, `sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are "
+	"the standard conversions: D/(D+E) = r/(1+r), gearing = r, and equity's "
+	"share is 1 - D/(D+E), for r the debt-to-equity ratio."
+)
+
+
+def _rebuild(equation: Any, **changes: Any) -> dict[str, Any]:
+	"""Return an equation body with some fields replaced and the latex redrawn.
+
+	The latex is *generated from the rhs*, so it is regenerated rather than
+	carried over: a body whose latex still typesets the old expression passes
+	every structural check and lies to the reader.
+	"""
+	from alea.prg.service import generated_latex as _generated_latex
+	from alea.prg.views import Equation as _Equation
+
+	body = dict(equation.model_dump(exclude={"id"}, mode="json"))
+	body.update(changes)
+	body["id"] = equation.id
+	body["latex"] = _generated_latex(_Equation(**body))  # type: ignore[arg-type]
+	return body
+
+
+def _propagate_graph(nodes: dict[str, Any], equations: dict[str, Any]) -> Any:
+	"""Build the post-merge graph from the shipped document plus this batch."""
+	import copy
+
+	import yaml
+
+	from alea.prg.graph import ParameterGraph as _Graph
+
+	document = copy.deepcopy(yaml.safe_load(Path("config/prg.yaml").read_text()))
+	for name, body in nodes.items():
+		document["parameters"][name] = {**document["parameters"][name], **body}
+	for name, body in equations.items():
+		document["equations"][name] = body
+	document["relationships"] = [
+		edge
+		for edge in document["relationships"]
+		if edge["equation_id"] not in equations
+		or edge["source"] in equations[edge["equation_id"]].get("parameters", ())
+	]
+	return _Graph.from_mapping(document)
+
+
+def _propagate_shipped(
+	nodes: dict[str, Any], equations: dict[str, Any]
+) -> dict[str, Any]:
+	"""Propagate the shipped graph with this batch's node and equation bodies
+	substituted in, so the batch's value neutrality is measured *before* the
+	merge rather than asserted about it afterwards.
+	"""
+	from alea.prg.graph import load_graph
+
+	graph = load_graph()
+	# Read the shipped document off disk: the graph does not expose one, and a
+	# check that silently skipped when it could not find one would report
+	# neutrality it never measured. A corrected equation makes the shipped
+	# edges that name a dropped operand stale; `_propagate_graph` disposes of
+	# them the same way the merge does, and the graph then validates.
+	return _propagate_graph(nodes, equations).propagate(
+		{k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	).values
+
+
+def build_batch52(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Give the capital structure one dial and make every other face derived.
+
+	*The defect.* The graph carries `debt_fraction` = 0.70 (exogenous, read by
+	twelve equations including `wacc_definition`, `debt_service_definition` and
+	`llcr_definition`) and `debt_equity_ratio` = 2.33 (also exogenous). The two
+	are **the same number in two units**: 2.33/(1+2.33) = 0.6997 against a
+	shipped 0.70. Nothing ties them, so a scenario can move one and leave the
+	other exactly where it was.
+
+	*Measured on the shipped graph.* Setting `debt_equity_ratio` to 1.0 leaves
+	`debt_fraction` at 0.7000 and WACC at 0.12046; setting `debt_fraction` to
+	0.5 leaves the ratio at 2.33 and the derived share at 0.6997. Neither dial
+	moves the other. Three further nodes derive from `debt_fraction` --
+	`gearing_ratio`, `equity_share` and `debt_financing_share` -- and all three
+	are read by nothing, so the family computes four spellings of one quantity
+	and no gate can see them disagree.
+
+	*The direction.* `debt_equity_ratio` stays the dial and `debt_fraction`
+	becomes derived from it. The ratio is the catalog's own row for the capital
+	structure ("Optimal capital structure", row 3.38), and UKRN (2023)
+	Recommendation 9 treats notional gearing as a policy assumption the
+	regulator sets -- which is what a dial is. `debt_fraction` is a conversion,
+	not a fact about the world. Deriving it also makes the twelve equations
+	that read it agree with the three that read the ratio, which is the point.
+
+	*What this changes at the defaults.* Almost nothing, and that is asserted:
+	the two spellings differ by 0.03% (0.7000 against 0.6997), so WACC moves in
+	the fifth decimal. The batch is about *coupling*, not about a value: after
+	it, no scenario can set the gearing and the share to values that contradict
+	each other.
+
+	*The canary.* A value test cannot see this -- both spellings already agree
+	to three digits. What separates a derived share from a dial is that the
+	share **responds** to the ratio. The builder asserts that setting
+	`debt_equity_ratio` to 1.0 moves `debt_fraction` to 0.5, which on the
+	shipped graph it does not.
+	"""
+	from alea.prg.dsl import parse_side
+	from alea.prg.service import generated_latex as _generated_latex
+	from alea.prg.views import Equation as _Equation
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	measured = graph.propagate(values).values
+
+	assert graph.nodes["debt_fraction"].role.value == "exogenous", (
+		f"debt_fraction is {graph.nodes['debt_fraction'].role.value!r}, not the "
+		f"independent dial this batch derives"
+	)
+	# A *free* variable, not an exogenous one: free is the role the graph uses
+	# for a dial the scenario sets directly, and it is what `is_settable()`
+	# admits. Asserting "exogenous" here would have failed on a correct node.
+	assert graph.nodes["debt_equity_ratio"].role.value == "free", (
+		f"debt_equity_ratio is {graph.nodes['debt_equity_ratio'].role.value!r}, "
+		f"not the free dial this batch reads"
+	)
+	assert graph.is_settable("debt_equity_ratio"), (
+		"debt_equity_ratio is not settable, so it cannot be the dial this batch "
+		"makes every other share form derive from"
+	)
+
+	# The premise: the two spellings agree to three digits and the graph still
+	# treats them as independent. If they already disagreed materially the
+	# repair would be a value correction rather than a coupling, and the
+	# docstring's "almost nothing at the defaults" would be false.
+	shipped_share = float(measured["debt_fraction"])
+	ratio = float(measured["debt_equity_ratio"])
+	implied = ratio / (1.0 + ratio)
+	assert abs(shipped_share - implied) < 0.01, (
+		f"debt_fraction {shipped_share!r} and the ratio's image {implied!r} differ "
+		f"by more than a rounding step; this is a value defect, not a coupling"
+	)
+
+	# The canary, before the emit: on the shipped graph the share must NOT
+	# respond to the ratio. If it already did, the defect is not present.
+	_canary_values = dict(values)
+	_canary_values["debt_equity_ratio"] = 1.0
+	_canary = graph.propagate(_canary_values).values
+	assert abs(float(_canary["debt_fraction"]) - shipped_share) < 1e-12, (
+		"debt_fraction already responds to debt_equity_ratio; the defect this "
+		"batch corrects is not present and the canary would be vacuous"
+	)
+
+	# The four faces of the one number, and the equation each is rewritten to.
+	# Every one is currently a separate computation from `debt_fraction`, which
+	# is why they cannot disagree today -- but none of them is reachable from
+	# the dial a regulator actually sets.
+	_ratio_derived = (
+		(
+			"debt_fraction",
+			"debt_equity_ratio / (1.0 + debt_equity_ratio)",
+			"Debt's share of the capital structure, D/(D+E), from the "
+			"debt-to-equity ratio. The shipped node was an independent dial at "
+			"0.70 while the ratio ships 2.33 -- the same number in two units, "
+			"with nothing tying them, so a scenario could move the gearing and "
+			"leave every equation that prices debt on the old share.",
+		),
+	)
+
+	# -- emit: debt_fraction becomes derived ---------------------------------
+	factor = "debt_fraction"
+	equation_id = "debt_fraction_definition"
+	assert equation_id not in graph.equations, f"{equation_id}: already ships"
+	rhs, prose = _ratio_derived[0][1], _ratio_derived[0][2]
+	named = set(parse_side(rhs).symbols) | {factor}
+	body = dict(graph.nodes[factor].model_dump(exclude={"id"}, mode="json"))
+	body.update({
+		"role": "derived",
+		"default": None,
+		"determinism": "policy",
+		"description": prose,
+		"source": _BATCH52_SOURCE,
+		"depends_on": ["debt_equity_ratio"],
+		"affects": sorted(graph.affects(factor)),
+	})
+	nodes[factor] = body
+
+	equation_body = {
+		"id": equation_id,
+		"name": "Debt fraction",
+		"system": "financial",
+		"tolerance": 1e-09,
+		"priority": "P2",
+		"solution_method": "direct",
+		"linearity": "linear",
+		"relation": "eq",
+		"lhs": factor,
+		"rhs": rhs,
+		"parameters": sorted(named),
+		"free_variables": sorted(named - {factor}),
+		"determined_variables": [factor],
+		"description": (
+			"Debt's share of the capital structure, from the debt-to-equity "
+			"ratio: D/(D+E) = r/(1+r)."
+		),
+		"reference": _BATCH52_SOURCE,
+		"unit_check": True,
+	}
+	equation_body["latex"] = _generated_latex(_Equation(**equation_body))  # type: ignore[arg-type]
+	equations[equation_id] = equation_body
+	edges.append({
+		"source": "debt_equity_ratio",
+		"target": factor,
+		"equation_id": equation_id,
+		"relationship": "functional",
+		"direction": "forward",
+		"strength": "hard",
+		"description": (
+			"The debt-to-equity ratio the capital structure is set at; every "
+			"share form is a conversion of it."
+		),
+		"reference": _BATCH52_SOURCE,
+		"priority": "P2",
+	})
+
+	# -- emit: the ratio's own declared readers gain the share --------------
+	# These two nodes ship **no** declared depends_on/affects at all, so the
+	# lists have to be built from what the equations say rather than from
+	# `graph._declared`. Building them from the declared side here would drop
+	# the readers the graph already has and introduce the very drift this
+	# batch is meant to remove.
+	ratio_body = dict(graph.nodes["debt_equity_ratio"].model_dump(exclude={"id"}, mode="json"))
+	ratio_body["depends_on"] = []
+	ratio_body["affects"] = sorted(set(graph.affects("debt_equity_ratio")) | {factor})
+	nodes["debt_equity_ratio"] = ratio_body
+
+	# The declared lists have to be corrected in the same fragment as the
+	# equations they describe. The two writes are mutually dependent --
+	# deriving the share adds gearing_ratio to the ratio's readers, and the
+	# three inline complements leaving debt_fraction remove three of its own --
+	# so neither list can be computed before both edits exist. They are fixed
+	# at the end of the builder, once the equation bodies are final.
+
+	# Stage 1 is a *value* change, and the only one in this batch: the shipped
+	# debt_fraction is 0.70 while the ratio it is supposed to be the image of
+	# is 2.33, and 2.33/(1+2.33) = 0.69970. Deriving the share moves it by
+	# 0.03%, and everything that prices debt moves with it. Measure that here
+	# so stage 2's neutrality can be asserted against the right baseline.
+	_stage1 = _propagate_shipped(nodes, equations)
+	def _numeric(value: Any) -> bool:
+		return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+	_moved = {
+		k: (float(measured[k]), float(_stage1[k]))
+		for k in measured
+		if _numeric(measured[k])
+		and _numeric(_stage1[k])
+		and abs(float(_stage1[k]) - float(measured[k]))
+		> 1e-12 * max(1.0, abs(float(measured[k])))
+	}
+	assert _moved, (
+		"deriving debt_fraction from the ratio moved no value at all; the two "
+		"spellings already agreed exactly and the premise of this batch is wrong"
+	)
+	_worst = max(abs(after - before) / max(abs(before), 1e-12) for before, after in _moved.values())
+	assert _worst < 0.01, (
+		f"a value moved by {_worst:.2%}, which is more than reconciling two "
+		f"spellings of one number can explain: {_moved}"
+	)
+	print(f"  stage 1 moved {len(_moved)} values, worst {_worst:.4%}")
+	for _name in ("debt_fraction", "gearing_ratio", "discount_rate"):
+		if _name in _moved:
+			print(f"    {_name}: {_moved[_name][0]!r} -> {_moved[_name][1]!r}")
+
+	# -- emit: gearing becomes an alias of the ratio -------------------------
+	# `gearing_ratio = debt_fraction / (1 - debt_fraction)` and
+	# `debt_equity_ratio = r` are the same number: substituting the definition
+	# of debt_fraction gives (r/(1+r)) / (1/(1+r)) = r identically, at every
+	# r and not merely at the default. Measured on the shipped graph both are
+	# 2.33 to machine precision. Keeping both computations is a duplicate that
+	# no value test can see, so it is collapsed to the bare-symbol alias the
+	# graph already uses 136 times.
+	gearing_id = "gearing_ratio_definition"
+	assert gearing_id in graph.equations, f"{gearing_id}: not shipped"
+	assert graph.equations[gearing_id].rhs.replace(" ", "") == "debt_fraction/(1-debt_fraction)", (
+		f"{gearing_id} no longer reads {graph.equations[gearing_id].rhs!r}; the "
+		f"identity this alias relies on does not hold for that expression"
+	)
+	# Checked against *stage 1*, where debt_fraction has already been derived
+	# from the ratio. Against the shipped graph they differ by 0.14% -- that
+	# difference is the defect, not the alias's doing. After stage 1 the
+	# identity is exact, so the alias is provably value-neutral from here on.
+	assert abs(float(_stage1["gearing_ratio"]) - float(_stage1["debt_equity_ratio"])) < 1e-12, (
+		f"gearing_ratio {_stage1['gearing_ratio']!r} and debt_equity_ratio "
+		f"{_stage1['debt_equity_ratio']!r} are still not the same number after "
+		f"deriving the share, so the identity does not hold and the alias would "
+		f"move a value"
+	)
+	gearing_params = ("debt_equity_ratio", "gearing_ratio")
+	equations[gearing_id] = _rebuild(
+		graph.equations[gearing_id],
+		rhs="debt_equity_ratio",
+		parameters=gearing_params,
+		free_variables=("debt_equity_ratio",),
+		description=(
+			"Debt as a multiple of equity. Identical to the debt-to-equity "
+			"ratio by construction: with debt_fraction = r/(1+r), "
+			"debt_fraction/(1-debt_fraction) = r for every r. Kept as a named "
+			"face so the gearing rule can cite it."
+		),
+	)
+	edges.append({
+		"source": "debt_equity_ratio",
+		"target": "gearing_ratio",
+		"equation_id": gearing_id,
+		"relationship": "functional",
+		"direction": "forward",
+		"strength": "hard",
+		"description": "The gearing is the debt-to-equity ratio; one number, two names.",
+		"reference": _BATCH52_SOURCE,
+		"priority": "P2",
+	})
+
+	# -- emit: the inline equity share becomes the named node ----------------
+	# Three equations spell `(1 - debt_fraction)` inline, which is exactly
+	# `equity_share`. Reading the named node instead gives it three readers and
+	# leaves one place where the complement is computed. The rewrite is an
+	# exact substitution of an equal subexpression, so no value moves.
+	_equity_readers = (
+		("wacc_definition", "debt_fraction * cost_of_debt * (1 - tax_rate) + (1 - debt_fraction) * cost_of_equity"),
+		("technology_risk_charge_definition", "technology_risk_premium * (1 - debt_fraction) * capex_usd_per_kw * total_capacity_mw * 1000"),
+		("equity_irr_definition", "(cfads_usd_per_kw_year - debt_service_usd_per_kw_year) / capex_usd_per_kw / (1 - debt_fraction)"),
+	)
+	for equation_id, expected_rhs in _equity_readers:
+		equation = graph.equations[equation_id]
+		assert equation.rhs.replace(" ", "") == expected_rhs.replace(" ", ""), (
+			f"{equation_id} reads {equation.rhs!r}, not the expression this "
+			f"rewrite was written against; re-derive it rather than patching"
+		)
+		assert "(1 - debt_fraction)" in equation.rhs, (
+			f"{equation_id} does not spell the complement inline, so this rewrite "
+			f"has nothing to replace and would silently change nothing"
+		)
+		rewritten = equation.rhs.replace("(1 - debt_fraction)", "equity_share")
+		# The parameter list is *read off the rewritten expression*, not
+		# adjusted by subtracting the name that was replaced: `wacc_definition`
+		# uses debt_fraction on the debt side as well, so a subtraction would
+		# drop a parameter the arithmetic still names -- which the graph
+		# refuses, correctly.
+		params = tuple(sorted(set(parse_side(rewritten).symbols)))
+		assert "equity_share" in params, (
+			f"{equation_id}: the rewrite did not leave equity_share in the "
+			f"expression; it reads {rewritten!r}"
+		)
+		equations[equation_id] = _rebuild(
+			equation,
+			rhs=rewritten,
+			parameters=params,
+			free_variables=tuple(
+				symbol for symbol in params if symbol not in equation.determined_variables
+			),
+		)
+		edges.append({
+			"source": "equity_share",
+			"target": str(equation.determined_variables[0]),
+			"equation_id": equation_id,
+			"relationship": "functional",
+			"direction": "forward",
+			"strength": "hard",
+			"description": (
+				"The equity-funded share of capex, read as the named node rather "
+				"than spelled inline as its complement."
+			),
+			"reference": _BATCH52_SOURCE,
+			"priority": "P2",
+		})
+
+	# The rewrites are exact substitutions, so every propagated value must be
+	# bit-identical. If one moves, the substitution was not of an equal
+	# subexpression and the batch has changed a number under cover of a
+	# coupling -- the failure mode the batch exists to rule out.
+	_after = _propagate_shipped(nodes, equations)
+	for name in sorted(_after):
+		if not (_numeric(_after[name]) and _numeric(_stage1[name])):
+			continue
+		assert abs(float(_after[name]) - float(_stage1[name])) <= 1e-12 * max(
+			1.0, abs(float(_stage1[name]))
+		), (
+			f"{name} moved from {_stage1[name]!r} to {_after[name]!r} under the "
+			f"alias and complement rewrites, which substitute equal "
+			f"subexpressions and must not move a number"
+		)
+
+	assert len(nodes) == 2, len(nodes)
+	# Recompute the two declared lists now that every equation body is final.
+	# `structure_issues()` compares the declared lists against what the
+	# equations say, and a reader added by one edit and removed by another
+	# cannot be declared until both have landed.
+	_patched = _propagate_graph(nodes, equations)
+	for name in ("debt_equity_ratio", "debt_fraction"):
+		body = dict(nodes.get(name) or graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
+		body["depends_on"] = sorted(_patched.depends_on(name))
+		body["affects"] = sorted(_patched.affects(name))
+		nodes[name] = body
+
+	# One new equation (the share's definition) plus four rewritten in place
+	# (the gearing alias and the three that spelled the equity share inline).
+	assert len(equations) == 5, len(equations)
 	return nodes, equations, edges, rules
 
 
