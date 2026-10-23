@@ -2041,8 +2041,15 @@ def test_the_audit_reports_what_it_did_not_check():
 	# capacities the result does not carry, and `fleet_generation_twh` sums
 	# those eleven, so it is no more reachable than its operands. `checked`
 	# moves 170 -> 193 and `skipped` 323 -> 335.
-	assert len(audit.checked) == 193, audit.checked
-	assert len(audit.skipped) == 335, audit.skipped
+	# Batch 48 retargeted the four sector-demand equations from
+	# `base_demand_twh` to `demand_twh`. All four join `checked`: the solve
+	# result carries `demand_twh` as a column and does not carry the base, so a
+	# body reading the year is reachable from the result and a body reading the
+	# base was not. `checked` moves 193 -> 197 and `skipped` 335 -> 331. This is
+	# a widening of what the audit can check, not a narrowing -- the four were
+	# skipped for a reason the correction removed.
+	assert len(audit.checked) == 197, audit.checked
+	assert len(audit.skipped) == 331, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.

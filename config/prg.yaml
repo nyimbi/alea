@@ -31169,30 +31169,39 @@ equations:
     tolerance: 1.0e-06
     unit_check: true
   agricultural_demand_definition:
-    description: 'The share times the demand it is a share OF. A share with no numerator is a word; with
-      the total demand as its base it is a quantity the metering checks the synthesis against. Units:
-      a dimensionless share times TWh is TWh.'
-    determined_variables:
+    id: agricultural_demand_definition
+    name: Agricultural demand
+    description: 'The agricultural sector''s share of the horizon year''s final demand: `agricultural_demand_share
+      * demand_twh`, the share being a dial and `demand_twh` the demand the share is a share of. The shipped
+      body read `agricultural_demand_share * base_demand_twh` -- the base year, before `demand_growth_factor`
+      compounds it. The four shares are a partition (they sum to 1.0 and `demand_shares_bound` caps them
+      at 1.0), so both bodies sum the four sectors exactly, and the partition property cannot tell them
+      apart: the shipped four summed to `base_demand_twh` = 33.8 TWh while `demand_twh` is 46.539 TWh
+      at the defaults, and every other consumer of demand in the graph already reads the year -- `load_factor`,
+      `import_dependency`, `strategic_reserves`, `market_traded_volume_twh` and `time_of_use_demand_twh`
+      among them, as do the distribution-loss, subsidy and wheeling costs. Nothing reads this node, so
+      the correction changes what the graph reports and no computed value. Units: a dimensionless share
+      times TWh/year is TWh/year.'
+    system: demand_supply
+    lhs: agricultural_demand_twh
+    rhs: agricultural_demand_share * demand_twh
+    relation: eq
+    parameters:
+    - agricultural_demand_share
     - agricultural_demand_twh
+    - demand_twh
     free_variables:
     - agricultural_demand_share
-    - base_demand_twh
-    latex: \mathrm{agricultural}_{demand\_twh} = \mathrm{agricultural}_{demand\_share} \mathrm{base}_{demand\_twh}
-    lhs: agricultural_demand_twh
-    linearity: linear
-    name: Agricultural demand
-    parameters:
+    - demand_twh
+    determined_variables:
     - agricultural_demand_twh
-    - agricultural_demand_share
-    - base_demand_twh
-    priority: P1
-    reference: Bottom-up load synthesis (catalog method cell)
-    relation: eq
-    rhs: agricultural_demand_share * base_demand_twh
-    solution_method: direct
-    system: demand_supply
     tolerance: 1.0e-09
     unit_check: true
+    reference: Bottom-up load synthesis (catalog method cell)
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{agricultural}_{demand\_twh} = \mathrm{agricultural}_{demand\_share} \mathrm{demand}_{twh}
   agricultural_irrigation_load_definition:
     description: 'The average power irrigation pumping draws: the annual pumping energy in TWh converted
       to MWh and divided by the year''s 8,760 hours. It is an average and not a peak -- a load that runs
@@ -33113,30 +33122,39 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   commercial_demand_definition:
-    description: 'The share times the demand it is a share OF. A share with no numerator is a word; with
-      the total demand as its base it is a quantity the metering checks the synthesis against. Units:
-      a dimensionless share times TWh is TWh.'
-    determined_variables:
+    id: commercial_demand_definition
+    name: Commercial demand
+    description: 'The commercial sector''s share of the horizon year''s final demand: `commercial_demand_share
+      * demand_twh`, the share being a dial and `demand_twh` the demand the share is a share of. The shipped
+      body read `commercial_demand_share * base_demand_twh` -- the base year, before `demand_growth_factor`
+      compounds it. The four shares are a partition (they sum to 1.0 and `demand_shares_bound` caps them
+      at 1.0), so both bodies sum the four sectors exactly, and the partition property cannot tell them
+      apart: the shipped four summed to `base_demand_twh` = 33.8 TWh while `demand_twh` is 46.539 TWh
+      at the defaults, and every other consumer of demand in the graph already reads the year -- `load_factor`,
+      `import_dependency`, `strategic_reserves`, `market_traded_volume_twh` and `time_of_use_demand_twh`
+      among them, as do the distribution-loss, subsidy and wheeling costs. Nothing reads this node, so
+      the correction changes what the graph reports and no computed value. Units: a dimensionless share
+      times TWh/year is TWh/year.'
+    system: demand_supply
+    lhs: commercial_demand_twh
+    rhs: commercial_demand_share * demand_twh
+    relation: eq
+    parameters:
+    - commercial_demand_share
     - commercial_demand_twh
+    - demand_twh
     free_variables:
     - commercial_demand_share
-    - base_demand_twh
-    latex: \mathrm{commercial}_{demand\_twh} = \mathrm{commercial}_{demand\_share} \mathrm{base}_{demand\_twh}
-    lhs: commercial_demand_twh
-    linearity: linear
-    name: Commercial demand
-    parameters:
+    - demand_twh
+    determined_variables:
     - commercial_demand_twh
-    - commercial_demand_share
-    - base_demand_twh
-    priority: P1
-    reference: Bottom-up load synthesis (catalog method cell)
-    relation: eq
-    rhs: commercial_demand_share * base_demand_twh
-    solution_method: direct
-    system: demand_supply
     tolerance: 1.0e-09
     unit_check: true
+    reference: Bottom-up load synthesis (catalog method cell)
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{commercial}_{demand\_twh} = \mathrm{commercial}_{demand\_share} \mathrm{demand}_{twh}
   community_benefit_sharing_alias:
     description: The benefit-sharing share under the catalog's second id. The revenue identity `benefit_sharing_from_revenue_definition`
       reads `community_benefit_share_of_revenue`; this equality makes the two names one number.
@@ -38018,30 +38036,39 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   industrial_demand_definition:
-    description: 'The share times the demand it is a share OF. A share with no numerator is a word; with
-      the total demand as its base it is a quantity the metering checks the synthesis against. Units:
-      a dimensionless share times TWh is TWh.'
-    determined_variables:
+    id: industrial_demand_definition
+    name: Industrial demand
+    description: 'The industrial sector''s share of the horizon year''s final demand: `industrial_demand_share
+      * demand_twh`, the share being a dial and `demand_twh` the demand the share is a share of. The shipped
+      body read `industrial_demand_share * base_demand_twh` -- the base year, before `demand_growth_factor`
+      compounds it. The four shares are a partition (they sum to 1.0 and `demand_shares_bound` caps them
+      at 1.0), so both bodies sum the four sectors exactly, and the partition property cannot tell them
+      apart: the shipped four summed to `base_demand_twh` = 33.8 TWh while `demand_twh` is 46.539 TWh
+      at the defaults, and every other consumer of demand in the graph already reads the year -- `load_factor`,
+      `import_dependency`, `strategic_reserves`, `market_traded_volume_twh` and `time_of_use_demand_twh`
+      among them, as do the distribution-loss, subsidy and wheeling costs. Nothing reads this node, so
+      the correction changes what the graph reports and no computed value. Units: a dimensionless share
+      times TWh/year is TWh/year.'
+    system: demand_supply
+    lhs: industrial_demand_twh
+    rhs: industrial_demand_share * demand_twh
+    relation: eq
+    parameters:
+    - demand_twh
+    - industrial_demand_share
     - industrial_demand_twh
     free_variables:
+    - demand_twh
     - industrial_demand_share
-    - base_demand_twh
-    latex: \mathrm{industrial}_{demand\_twh} = \mathrm{industrial}_{demand\_share} \mathrm{base}_{demand\_twh}
-    lhs: industrial_demand_twh
-    linearity: linear
-    name: Industrial demand
-    parameters:
+    determined_variables:
     - industrial_demand_twh
-    - industrial_demand_share
-    - base_demand_twh
-    priority: P1
-    reference: Bottom-up load synthesis (catalog method cell)
-    relation: eq
-    rhs: industrial_demand_share * base_demand_twh
-    solution_method: direct
-    system: demand_supply
     tolerance: 1.0e-09
     unit_check: true
+    reference: Bottom-up load synthesis (catalog method cell)
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{industrial}_{demand\_twh} = \mathrm{industrial}_{demand\_share} \mathrm{demand}_{twh}
   industrial_electrification_bound:
     description: Direct electrification and heat electrification are two routes to the same decarbonised
       industrial load, and a scenario that took both to their maximum would electrify more of industry
@@ -43060,30 +43087,39 @@ equations:
     tolerance: 1.0e-06
     unit_check: true
   residential_demand_definition:
-    description: 'The share times the demand it is a share OF. A share with no numerator is a word; with
-      the total demand as its base it is a quantity the metering checks the synthesis against. Units:
-      a dimensionless share times TWh is TWh.'
-    determined_variables:
+    id: residential_demand_definition
+    name: Residential demand
+    description: 'The residential sector''s share of the horizon year''s final demand: `residential_demand_share
+      * demand_twh`, the share being a dial and `demand_twh` the demand the share is a share of. The shipped
+      body read `residential_demand_share * base_demand_twh` -- the base year, before `demand_growth_factor`
+      compounds it. The four shares are a partition (they sum to 1.0 and `demand_shares_bound` caps them
+      at 1.0), so both bodies sum the four sectors exactly, and the partition property cannot tell them
+      apart: the shipped four summed to `base_demand_twh` = 33.8 TWh while `demand_twh` is 46.539 TWh
+      at the defaults, and every other consumer of demand in the graph already reads the year -- `load_factor`,
+      `import_dependency`, `strategic_reserves`, `market_traded_volume_twh` and `time_of_use_demand_twh`
+      among them, as do the distribution-loss, subsidy and wheeling costs. Nothing reads this node, so
+      the correction changes what the graph reports and no computed value. Units: a dimensionless share
+      times TWh/year is TWh/year.'
+    system: demand_supply
+    lhs: residential_demand_twh
+    rhs: residential_demand_share * demand_twh
+    relation: eq
+    parameters:
+    - demand_twh
+    - residential_demand_share
     - residential_demand_twh
     free_variables:
+    - demand_twh
     - residential_demand_share
-    - base_demand_twh
-    latex: \mathrm{residential}_{demand\_twh} = \mathrm{residential}_{demand\_share} \mathrm{base}_{demand\_twh}
-    lhs: residential_demand_twh
-    linearity: linear
-    name: Residential demand
-    parameters:
+    determined_variables:
     - residential_demand_twh
-    - residential_demand_share
-    - base_demand_twh
-    priority: P1
-    reference: Bottom-up load synthesis (catalog method cell)
-    relation: eq
-    rhs: residential_demand_share * base_demand_twh
-    solution_method: direct
-    system: demand_supply
     tolerance: 1.0e-09
     unit_check: true
+    reference: Bottom-up load synthesis (catalog method cell)
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{residential}_{demand\_twh} = \mathrm{residential}_{demand\_share} \mathrm{demand}_{twh}
   retention_and_deductible_bound:
     description: A risk-retention share and a deductible share are both fractions of the same insured
       loss kept by the insured party, so together they cannot exceed the whole loss. A ceiling because
@@ -48082,78 +48118,6 @@ relationships:
   source: local_employment_share
   strength: hard
   target: locally_sourced_jobs
-- description: Enters the sector's synthesis.
-  direction: forward
-  equation_id: residential_demand_definition
-  priority: P1
-  reference: null
-  relationship: functional
-  source: residential_demand_share
-  strength: hard
-  target: residential_demand_twh
-- description: Enters the sector's synthesis.
-  direction: forward
-  equation_id: residential_demand_definition
-  priority: P1
-  reference: null
-  relationship: functional
-  source: base_demand_twh
-  strength: hard
-  target: residential_demand_twh
-- description: Enters the sector's synthesis.
-  direction: forward
-  equation_id: commercial_demand_definition
-  priority: P1
-  reference: null
-  relationship: functional
-  source: commercial_demand_share
-  strength: hard
-  target: commercial_demand_twh
-- description: Enters the sector's synthesis.
-  direction: forward
-  equation_id: commercial_demand_definition
-  priority: P1
-  reference: null
-  relationship: functional
-  source: base_demand_twh
-  strength: hard
-  target: commercial_demand_twh
-- description: Enters the sector's synthesis.
-  direction: forward
-  equation_id: industrial_demand_definition
-  priority: P1
-  reference: null
-  relationship: functional
-  source: industrial_demand_share
-  strength: hard
-  target: industrial_demand_twh
-- description: Enters the sector's synthesis.
-  direction: forward
-  equation_id: industrial_demand_definition
-  priority: P1
-  reference: null
-  relationship: functional
-  source: base_demand_twh
-  strength: hard
-  target: industrial_demand_twh
-- description: Enters the sector's synthesis.
-  direction: forward
-  equation_id: agricultural_demand_definition
-  priority: P1
-  reference: null
-  relationship: functional
-  source: agricultural_demand_share
-  strength: hard
-  target: agricultural_demand_twh
-- description: Enters the sector's synthesis.
-  direction: forward
-  equation_id: agricultural_demand_definition
-  priority: P1
-  reference: null
-  relationship: functional
-  source: base_demand_twh
-  strength: hard
-  target: agricultural_demand_twh
 - description: Enters the elasticity's implication.
   direction: forward
   equation_id: demand_growth_implied_definition
@@ -58406,6 +58370,90 @@ relationships:
     the capture rate; the per-fuel emission factors are the graph's own `emission_factor_{tech}_t_per_mwh`
     nodes, each carrying its basis in its own `source` field; the weights are the batch-46 capacity-to-energy
     identity
+  priority: P1
+- source: residential_demand_share
+  target: residential_demand_twh
+  equation_id: residential_demand_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'The sector''s share of the horizon year''s demand: a partition weight capped at one in
+    sum by `demand_shares_bound`, applied to `demand_twh`.'
+  reference: Bottom-up load synthesis (catalog method cell)
+  priority: P1
+- source: demand_twh
+  target: residential_demand_twh
+  equation_id: residential_demand_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The horizon year's final demand, after growth is compounded. The shipped edge entered from
+    `base_demand_twh`; this one enters from the year's demand the share is a share of, so the four sectors
+    sum to `demand_twh` rather than to the base.
+  reference: Bottom-up load synthesis (catalog method cell)
+  priority: P1
+- source: commercial_demand_share
+  target: commercial_demand_twh
+  equation_id: commercial_demand_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'The sector''s share of the horizon year''s demand: a partition weight capped at one in
+    sum by `demand_shares_bound`, applied to `demand_twh`.'
+  reference: Bottom-up load synthesis (catalog method cell)
+  priority: P1
+- source: demand_twh
+  target: commercial_demand_twh
+  equation_id: commercial_demand_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The horizon year's final demand, after growth is compounded. The shipped edge entered from
+    `base_demand_twh`; this one enters from the year's demand the share is a share of, so the four sectors
+    sum to `demand_twh` rather than to the base.
+  reference: Bottom-up load synthesis (catalog method cell)
+  priority: P1
+- source: industrial_demand_share
+  target: industrial_demand_twh
+  equation_id: industrial_demand_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'The sector''s share of the horizon year''s demand: a partition weight capped at one in
+    sum by `demand_shares_bound`, applied to `demand_twh`.'
+  reference: Bottom-up load synthesis (catalog method cell)
+  priority: P1
+- source: demand_twh
+  target: industrial_demand_twh
+  equation_id: industrial_demand_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The horizon year's final demand, after growth is compounded. The shipped edge entered from
+    `base_demand_twh`; this one enters from the year's demand the share is a share of, so the four sectors
+    sum to `demand_twh` rather than to the base.
+  reference: Bottom-up load synthesis (catalog method cell)
+  priority: P1
+- source: agricultural_demand_share
+  target: agricultural_demand_twh
+  equation_id: agricultural_demand_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'The sector''s share of the horizon year''s demand: a partition weight capped at one in
+    sum by `demand_shares_bound`, applied to `demand_twh`.'
+  reference: Bottom-up load synthesis (catalog method cell)
+  priority: P1
+- source: demand_twh
+  target: agricultural_demand_twh
+  equation_id: agricultural_demand_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The horizon year's final demand, after growth is compounded. The shipped edge entered from
+    `base_demand_twh`; this one enters from the year's demand the share is a share of, so the four sectors
+    sum to `demand_twh` rather than to the base.
+  reference: Bottom-up load synthesis (catalog method cell)
   priority: P1
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0

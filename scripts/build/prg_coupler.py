@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "48":
+		b48_nodes, b48_equations, b48_edges, b48_rules = build_batch48(graph)
+		rules.extend(b48_rules)
+		nodes.update(b48_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b48_equations)
+		edges = list(BATCH12_EDGES) + b48_edges
 	elif batch == "47":
 		b47_nodes, b47_equations, b47_edges, b47_rules = build_batch47(graph)
 		rules.extend(b47_rules)
@@ -13032,6 +13039,266 @@ def build_batch47(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 			"reference": _BATCH47_SOURCE,
 			"priority": "P1",
 		})
+
+	return nodes, equations, edges, rules
+
+
+#: The four sector shares and the node each one allocates. The shares are read
+#: from the graph rather than restated here; this table names only the pairing,
+#: because a share's value is a scenario dial and a table of values would be a
+#: second copy of the defaults.
+_BATCH48_SECTORS: tuple[tuple[str, str], ...] = (
+	("residential", "residential_demand_twh"),
+	("commercial", "commercial_demand_twh"),
+	("industrial", "industrial_demand_twh"),
+	("agricultural", "agricultural_demand_twh"),
+)
+
+_BATCH48_SOURCE = "Bottom-up load synthesis (catalog method cell)"
+
+
+def build_batch48(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Retarget the four sector-demand equations from the base year to the year.
+
+	*The four names claimed a decomposition they did not perform.* Each shipped
+	body read `<sector>_demand_share * base_demand_twh`. The four shares are
+	0.35 / 0.20 / 0.35 / 0.10 -- a partition, summing to exactly 1.0 -- so the
+	four lhs summed to `base_demand_twh` = 33.8 TWh: the **base** year, before
+	`demand_growth_factor` compounds it. `demand_twh` is
+	`base_demand_twh * demand_growth_factor` = 46.539 TWh at the defaults, and
+	that is the quantity a sector's demand is a share *of*. A node named
+	`residential_demand_twh` reading 11.83 when the year's demand is 46.539 is
+	not a decomposition of demand; it is a decomposition of the base the growth
+	was applied to.
+
+	*Why the base-year body looked right.* The partition property holds either
+	way -- four shares summing to 1.0 sum to whatever they are multiplied by --
+	so the defect is invisible to every structural check. Nothing pinned the
+	values, nothing read the four nodes (`affects()` is empty for all four), and
+	the `demand_shares_bound` inequality constrains only the sum. The only
+	reading that separates the two bodies is a comparison against `demand_twh`,
+	which is the comparison nobody made.
+
+	*What the retarget measures.* At the defaults the four now report 16.2887,
+	9.3078, 16.2887 and 4.6539 TWh, summing to 46.539 -- `demand_twh` exactly,
+	and the same four values scaled by the 1.376894 growth factor the base body
+	dropped.
+
+	*Why this changes no downstream value.* The four nodes are leaves: nothing
+	reads them, so the retarget is a repair of what the graph *reports* and not
+	of what it computes. That is exactly why it needed a batch of its own -- a
+	value nobody reads is a value no gate can see, and the four were wrong for
+	as long as the growth factor has existed. The builder asserts the leaf
+	property rather than assuming it, because a consumer added later would make
+	this batch a change to the solution rather than to the report.
+
+	*The other demand consumers already read the year.* Every other equation
+	reading `demand_twh` -- `load_factor`, `import_dependency`,
+	`strategic_reserves`, `market_traded_volume_twh`, `time_of_use_demand_twh`,
+	`distribution_losses`, `equilibrium_demand`, `forecast_error_band` and the
+	subsidy and wheeling costs -- reads the year. These four were the only
+	equations still decomposing the base, which is what makes the retarget a
+	correction to a consistent convention rather than a new one.
+
+	*The edges.* Each equation's `base_demand_twh` edge is stale after the
+	change, and the merge's stale-edge pass drops it and names it. The four
+	`<sector>_demand_share` edges are re-emitted: their shipped description,
+	"Enters the sector's synthesis.", names no base and is not false, but it
+	names nothing at all, and an edge onto a node whose body changed is the
+	place to say what the node now decomposes. The four new
+	`demand_twh -> <sector>_demand_twh` edges are the coupling the batch adds.
+
+	*Why no cross-validation rule.* `demand_shares_bound` already states the
+	only bound the retarget needs -- the shares sum to at most one, so the four
+	sectors cannot over-allocate `demand_twh`. An equality rule asserting the
+	four sum to `demand_twh` would be the same claim as the four equations, and
+	the cross-validation grammar has no `BinOp`, so a sum-to-unity rule is not
+	expressible there anyway. The equality is a measured fact at the defaults,
+	reported here, not a rule.
+	"""
+	from alea.prg.dsl import parse_side
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	# The target must exist and be derived by an equation that reads the base
+	# directly. A `demand_twh` computed from something other than
+	# `base_demand_twh * demand_growth_factor` would make this retarget a
+	# different claim than the one the description states.
+	assert "demand_twh" in graph.nodes, "demand_twh: the retarget's target does not exist"
+	assert graph.nodes["demand_twh"].role == "derived", (
+		f"demand_twh is {graph.nodes['demand_twh'].role!r}, not derived; the "
+		f"retarget would read a dial"
+	)
+	energy_demand = graph.determined_by("demand_twh")
+	assert energy_demand is not None, "demand_twh: no equation determines it"
+	assert set(energy_demand.parameters) == {
+		"demand_twh", "base_demand_twh", "demand_growth_factor",
+	}, (
+		f"{energy_demand.id}: reads {sorted(energy_demand.parameters)}; the "
+		f"retarget assumes base times growth and nothing else"
+	)
+
+	# No cycle. `demand_twh` must not reach any of the four, or the retarget
+	# would make each equation depend on a node that depends on it.
+	demand_closure = set(graph.depends_on("demand_twh"))
+	for _sector, lhs in _BATCH48_SECTORS:
+		assert lhs not in demand_closure, (
+			f"{lhs}: demand_twh already depends on it; the retarget would close "
+			f"a loop"
+		)
+
+	# The bound that makes the retarget safe. `demand_shares_bound` is what
+	# stops four shares summing above one from allocating more than the year's
+	# demand, so it must still ship and still be a ceiling at 1.0 -- a bound
+	# loosened to an equality at a higher number would let the retarget
+	# over-allocate silently.
+	bound = graph.equations.get("demand_shares_bound")
+	assert bound is not None, (
+		"demand_shares_bound: the ceiling on the shares does not ship; the "
+		"retarget would have no guarantee it cannot over-allocate"
+	)
+	assert bound.relation == "leq" and float(bound.rhs) == 1.0, (
+		f"demand_shares_bound: relation {bound.relation!r} at {bound.rhs!r}, not "
+		f"a ceiling at 1.0"
+	)
+
+	shares: dict[str, str] = {}
+	for sector, lhs in _BATCH48_SECTORS:
+		equation_id = f"{sector}_demand_definition"
+		share = f"{sector}_demand_share"
+		assert equation_id in graph.equations, (
+			f"{equation_id}: this batch assumed it ships"
+		)
+		shipped = graph.equations[equation_id]
+		assert shipped.lhs == lhs, (
+			f"{equation_id}: lhs is {shipped.lhs!r}, not {lhs!r}"
+		)
+		# The correction is a replacement, so the guard is that the shipped
+		# body is the one the defect was measured on. A body already reading
+		# `demand_twh` would be a body somebody repaired first, and overwriting
+		# it would be a silent second correction.
+		expected = f"{share} * base_demand_twh"
+		assert shipped.rhs == expected, (
+			f"{equation_id}: rhs is {shipped.rhs!r}, not {expected!r}; this batch "
+			f"was written against the base-year body and would overwrite a "
+			f"correction it did not make"
+		)
+		# The retarget is value-neutral only while nothing reads the lhs. A
+		# consumer added later would turn this from a report repair into a
+		# change to the solution, and the description would become false.
+		assert graph.affects(lhs) == (), (
+			f"{lhs}: something reads it ({graph.affects(lhs)}); the retarget "
+			f"would change a downstream value"
+		)
+		assert share in graph.nodes, f"{share}: the share node does not exist"
+		shares[sector] = share
+
+	# The partition is the finding, not an assumption: the four shipped
+	# shares sum to 1.0, which is what made the base-year body sum to the base
+	# exactly and the defect invisible. A set summing below one would be a
+	# residual the description would have to name.
+	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	measured = graph.propagate(values).values
+	share_sum = sum(measured[shares[sector]] for sector, _lhs in _BATCH48_SECTORS)
+	assert abs(share_sum - 1.0) < 1e-12, (
+		f"the four shares sum to {share_sum!r}, not 1.0; the four sectors would "
+		f"leave a residual the retarget does not describe"
+	)
+	# The defect, measured before the correction: the shipped bodies sum to the
+	# base year while the year's demand is larger by the growth factor.
+	shipped_sum = sum(measured[lhs] for _sector, lhs in _BATCH48_SECTORS)
+	base = measured["base_demand_twh"]
+	year = measured["demand_twh"]
+	assert abs(shipped_sum - base) < 1e-9, (
+		f"the shipped bodies sum to {shipped_sum!r}, not base_demand_twh "
+		f"{base!r}; the defect this batch corrects is not present"
+	)
+	assert year > base, (
+		f"demand_twh {year!r} is not above base_demand_twh {base!r}; at these "
+		f"defaults the retarget would be a no-op"
+	)
+
+	for sector, lhs in _BATCH48_SECTORS:
+		equation_id = f"{sector}_demand_definition"
+		share = shares[sector]
+		shipped = graph.equations[equation_id]
+
+		rhs = f"{share} * demand_twh"
+		named = set(parse_side(rhs).symbols) | set(parse_side(lhs).symbols)
+		assert lhs in named, f"{equation_id}: the lhs is not in its own body's symbols"
+		assert "base_demand_twh" not in named, (
+			f"{equation_id}: the retarget's body still names base_demand_twh"
+		)
+
+		body = shipped.model_dump(mode="json")
+		body["rhs"] = rhs
+		body["parameters"] = sorted(named)
+		body["free_variables"] = sorted(named - {lhs})
+		body["determined_variables"] = [lhs]
+		body["description"] = (
+			f"The {sector} sector's share of the horizon year's final demand: "
+			f"`{share} * demand_twh`, the share being a dial and `demand_twh` "
+			f"the demand the share is a share of. The shipped body read "
+			f"`{share} * base_demand_twh` -- the base year, before "
+			f"`demand_growth_factor` compounds it. The four shares are a "
+			f"partition (they sum to 1.0 and `demand_shares_bound` caps them at "
+			f"1.0), so both bodies sum the four sectors exactly, and the "
+			f"partition property cannot tell them apart: the shipped four "
+			f"summed to `base_demand_twh` = 33.8 TWh while `demand_twh` is "
+			f"46.539 TWh at the defaults, and every other consumer of demand in "
+			f"the graph already reads the year -- `load_factor`, "
+			f"`import_dependency`, `strategic_reserves`, "
+			f"`market_traded_volume_twh` and `time_of_use_demand_twh` among "
+			f"them, as do the distribution-loss, subsidy and wheeling costs. "
+			f"Nothing reads this node, so the correction changes what the "
+			f"graph reports and no computed value. Units: a dimensionless "
+			f"share times TWh/year is TWh/year."
+		)
+
+		# The declared rendering is the renderer's own output, the one form
+		# whose operand set is the arithmetic's by construction; `check_latex`
+		# compares the two sets, and a hand form would have to restate every
+		# subscripted name to pass.
+		from alea.prg.service import generated_latex as _generated_latex
+		from alea.prg.views import Equation as _Equation
+
+		body["latex"] = _generated_latex(_Equation(**body))  # type: ignore[arg-type]
+		equations[equation_id] = body
+
+		# Both symbols the new body reads, re-emitted. The share edge is
+		# re-emitted rather than left alone because its shipped description
+		# names no base and no year; the demand edge is the coupling the batch
+		# adds, and it did not exist. `base_demand_twh` is absent, so the
+		# merge's stale-edge pass drops its shipped edge and names it.
+		for symbol, description in (
+			(
+				share,
+				"The sector's share of the horizon year's demand: a partition "
+				"weight capped at one in sum by `demand_shares_bound`, applied "
+				"to `demand_twh`.",
+			),
+			(
+				"demand_twh",
+				"The horizon year's final demand, after growth is compounded. "
+				"The shipped edge entered from `base_demand_twh`; this one "
+				"enters from the year's demand the share is a share of, so the "
+				"four sectors sum to `demand_twh` rather than to the base.",
+			),
+		):
+			edges.append({
+				"source": symbol,
+				"target": lhs,
+				"equation_id": equation_id,
+				"relationship": "functional",
+				"direction": "forward",
+				"strength": "hard",
+				"description": description,
+				"reference": _BATCH48_SOURCE,
+				"priority": "P1",
+			})
 
 	return nodes, equations, edges, rules
 
