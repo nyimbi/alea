@@ -421,6 +421,36 @@ precedent in `scripts/build/prg_coupler.py:15421`:
 | 3 | the **3 registry-gap quantities** (`health_impact_morbidity`, `exchange_rate_usd_local`, plus any `USD/start` desire) | each needs a base dimension added to `units.py` first (`case`, `local`, `start`) |
 | 4 | the **34 AMBIGUOUS** | each needs a research pack that names the object; forcing them now would be the guessing the brief forbids |
 
+### Outcome of batch 2 (batch 54, 2026-10-24)
+
+Done, with one coupling and 40 retypes. Where this survey and a coupling pack
+disagreed, the pack was re-measured against the graph's own convention:
+
+- **Four `_load` nodes stay `MW`.** The demand pack
+  (`docs/research/coupling-packs/demand-sector.md`) proposed `MWh/year` for
+  `cold_storage_load`, `post_harvest_processing_load`, `tourism_load` and
+  `wastewater_treatment_load`. Every typed `_load` node in the graph is `MW`
+  and every `_demand` node is an energy per year. The survey's unit stands; the
+  pack's reading would have made these four the only energy-per-year members
+  of a twelve-node family.
+- **`coal_retirement_schedule` keeps the offset reading.** The spec's worked
+  example uses the absolute year 2050, which the graph's `[0, 100]` year
+  convention refuses. Offset kept, mismatch recorded in the node prose.
+- **`temporal_resolution` is not a retype.** It is the same quantity
+  `tsam_segment_hours` already derives as `24 / tsam_segments`, and the range
+  proposed here (`[0.25, 24]`) is exactly that node's image under `24/r` --
+  which is the strongest evidence in this document that the two are one
+  quantity. It became `derived` rather than a dial, and the response canary
+  (2.0 h at 12 segments/day) is the check a defaults-only value test cannot
+  make.
+
+The other 40 are retyped with a unit, a range and a real default but remain
+`role: free` and remain in the dead-knob register: the packs deferred them
+because a share needs a base and a load needs an intensity, and the graph
+carries neither. **A retype gives the node a dimension, not a citation** -- the
+defaults are the catalog's own value where it has one and a stated mid-range
+where it does not.
+
 ---
 
 ## 5. Genuinely ambiguous nodes

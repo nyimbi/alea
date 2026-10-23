@@ -1469,6 +1469,144 @@ consistent with the one pre-existing `rocof_definition` failure.
 
 
 
+### The generic wind O&M node was a third spelling nothing read (batch 55, 2026-10-24)
+
+Three ids carried wind's fixed O&M. `opex_fixed_wind_onshore` ships 30
+`USD/kW/year`, `opex_fixed_wind_offshore` ships 80, and `opex_fixed_wind`
+shipped 40 -- the onshore quantity under a generic name, at a value that
+matched neither. Its description explained the duplication away: "Offshore is
+materially higher and would need its own parameter if the graph is to
+distinguish them; the shipped graph does not." The graph does, and both LCOE
+equations read their own node.
+
+**Measured on HEAD.** `affects`, `constrains`, `rules_reading`, `edges_into`
+and `edges_from` are all empty, no equation's `parameters` names it, and `src/`
+mentions the id nowhere. `scripts/build/prg_coupler.py` names the bare id on
+six lines -- 9415, 9417, 9574, 9577, 10989 and 16142 -- and every one is a
+comment, a docstring or a description string; none executes. The digital-sector
+pack counted four, which undercounts by the two its grep missed. Setting the node to 30 -- the onshore value it claims to be -- moved
+`lcoe_wind_usd_per_mwh` by **0.0**, and 40 moved it by 0.0. The canary ran both
+probes because emptiness in those five registers does not by itself prove
+nothing downstream moves: a node can be uncoupled and still feed a path
+`affects` does not model.
+
+**The repair.** `opex_fixed_wind` becomes `status: deprecated`,
+`deprecated_by: opex_fixed_wind_onshore`, keeping its unit, range and default.
+A tombstone that drops them loses the record of what it was, and the graph's
+own rule is that a deprecation is a classification, not a deletion. The
+successor answers a scenario that still names the old id, and the graph now
+*refuses* to seed it: after the bake, `propagate({"opex_fixed_wind": 30.0})`
+raises `GraphError: opex_fixed_wind is deprecated and was replaced by
+'opex_fixed_wind_onshore'; setting it computes nothing`. That refusal is a
+stronger guarantee than the pre-bake canary, which could only show the value
+moved nothing.
+
+**A second defect in the same family, corrected.** `lcoe_wind_definition`'s
+description narrated the batch-35 amendment in the present tense as though the
+shipped form still read the generic node -- "The shipped form ... read the
+generic `opex_fixed_wind` (40) ... The amendment takes the LCOE from 66.53 to
+63.67". Batch 35 amended the `rhs` and `latex` and left the prose behind, so
+the description described a tree that no longer existed and quoted a
+before/after pair for an amendment two batches old. Prose is what a researcher
+reads. The corrected text states the shipped value at defaults --
+**63.6825 USD/MWh** -- and the reason the form reads the onshore node, rather
+than a delta. It is written through `_rebuild`, which regenerates the latex
+from the `rhs`, so the corrected body cannot typeset an expression it does not
+compute.
+
+**On the pack's own numbers.** The digital-sector pack recorded 63.673170220862986
+for the post-amendment LCOE and 66.52705149940181 for the pre-amendment one.
+The 66.53 is a historical measurement, correct as a record of batch 35. The
+63.6731 is stale: later batches moved the operands and the live value is
+63.68245924494044. Both round to the 63.67 the pack printed, which is why the
+drift went unnoticed -- the pack's three-decimal figure was right and its
+fifteen-significant-figure figure was not.
+
+**Rejected, with reasons from the pack.** Retyping the node `derived` would
+have dropped its default to fix a consumer that does not exist. Deleting it
+outright is the eventual correct end state, but removal is a separate decision
+from classification and should not ride in on a prose correction.
+
+**Registers.** Settable 871 -> 870 and `untranslated()` 868 -> 867, both
+because `is_settable` refuses a tombstone: no node entered or left the tree and
+no arithmetic changed. Dead knobs 223 -> 222 on the same ground. Units 606
+consistent / 1 pre-existing (`rocof_definition`) / 0 undecidable; structure
+issues empty. Graph 1429 nodes / 607 equations / 1367 edges / 57 rules,
+unchanged by the batch. The citation register stays at 301 and the affine solve
+at 534: `lcoe_wind_definition` already carried its NREL ATB reference, so
+rewriting its prose adds a work to nothing.
+
+### Forty-one quantities shipped as the same 500,000 placeholder (batch 54, 2026-10-24)
+
+`docs/research/placeholder-survey.md` classified the 181 rows that still
+carried a placeholder. Of these, 41 are physical or economic quantities -- a
+capital cost, a load, a tariff, a target year -- and every one shipped as
+`type: float`, `unit: null`, `range: null`, `default: 500000.0`. That
+placeholder is a legal number in every dimension, so no check could see the
+problem: a scenario could set a share to half a million and the graph would
+propagate it.
+
+**Measured on HEAD.** `temporal_resolution` -- hours per dispatch step --
+shipped at 500000.0 while `tsam_segment_hours`, the node that already computes
+that same quantity as `24 / tsam_segments`, shipped at 1.0. Moving
+`tsam_segments` from 24 to 12 moved the derived node and left the duplicate
+untouched.
+
+| scenario | HEAD `temporal_resolution` | batch-54 |
+|---|---:|---:|
+| defaults | 500000.0 | 1.0 |
+| `tsam_segments = 12` | **500000.0** | 2.0 |
+
+**The repair, in two parts.**
+
+*One genuine coupling.* `temporal_resolution` is a second id for the quantity
+`tsam_segment_hours` already derives. It becomes `derived`, `determinism:
+fixed`, default `null`, reading `tsam_segment_hours`. Three independent
+readings agree it is the same quantity: hours per step, the same 1.0 at 24
+segments a day, and the survey's proposed `[0.25, 24]` range is exactly the
+image of `tsam_segments`' `[1, 96]` under `24/r` -- computed, not read off the
+prose. The response canary asserts `2.0` at 12 segments, which is the one
+number a value test at the defaults cannot distinguish.
+
+*Forty retypes.* Each gets a unit the pint registry parses, a range its
+default sits inside, and a default that is a real value rather than the
+sentinel. The coupling packs had already adjudicated nearly all of them as
+**defer**, for one repeated reason: a share needs a base, a load needs an
+intensity, and the graph carries neither. Retyping makes the node
+sayable-correctly without pretending it is computable, so those 40 stay
+`role: free` and stay in the dead-knob register. What changes is that the
+graph now *refuses* a value outside the node's own dimension.
+
+**Two survey corrections made on evidence, not taste.**
+
+- **Four `_load` nodes.** The demand pack proposed `MWh/year` for
+  `cold_storage_load`, `post_harvest_processing_load`, `tourism_load` and
+  `wastewater_treatment_load`. Every `_load` node the graph already types is
+  `MW` and every `_demand` node is an energy per year. A `_load` in
+  `MWh/year` would be the only one of its kind in a family of twelve; the
+  survey's `MW` stands.
+- **`coal_retirement_schedule`.** The spec's worked example
+  (`docs/alea_prg.md:1640`) uses `2050`, an absolute year, which a `[0, 100]`
+  range refuses. The graph's own convention for a year node is an offset --
+  `net_zero_year`, `emissions_peak_year` and `renewable_target_year` are all
+  `years` in `[0, 100]`. The offset reading is kept and the mismatch recorded
+  in the node's prose. No shipped rule reads the node, so nothing depends on
+  the choice yet.
+
+**What a later reader should not assume.** The retype gives each node a
+*default*, not a *source*. Where the survey had a defensible value from the
+catalog's own algorithm column it was used; where it had none the default is
+the mid-point of a stated physical range and the node's prose says so. A
+number with a unit and no citation is still a number with no citation.
+
+**Registers.** Settable 872 -> 871 (one retype became derived);
+`untranslated()` 869 -> 868; dead knobs 224 -> 223, for the same reason.
+Units 606 consistent / 1 pre-existing (`rocof_definition`) / 0 undecidable;
+structure issues empty. Graph 1429 nodes / 607 equations / 1367 edges / 57
+rules. The two audit registers move by one each (336 -> 337 and 533 -> 534):
+`tsam_segment_hours` is not on a solve result, so the new definition joins the
+computed-but-unread set rather than the checked set.
+
 ### The reserve requirement was computed from a dial no rule reads (batch 53, 2026-10-23)
 
 Three nodes carried the planning reserve margin. `reserve_margin_min`

@@ -282,8 +282,13 @@ reach as a node the translation layer had failed to reach.
 	# denominator moves 874 -> 873 and the three translated nodes are unchanged.
 	# Batch 53 took `reserve_margin_requirement` out of the settable surface
 	# (derived from `reserve_margin_min`), so the denominator moves 873 -> 872.
+	# Batch 54 took `temporal_resolution` out for the same reason (derived from
+	# `tsam_segment_hours`), so 872 -> 871. Its 40 retyped quantities were
+	# already in the surface and stay in it: a unit and a range do not make a
+	# knob translatable. Batch 55 deprecated `opex_fixed_wind`, and a tombstone
+	# is not settable, so 871 -> 870.
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 872, cov
+	assert cov["total"] == 870, cov
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -379,9 +384,11 @@ the only difference between the two sets.
 	# deprecated the two duplicate job multipliers, and a tombstone is not a
 	# knob the translation layer failed to reach. Batch 52 took one knob out of
 	# the surface (`debt_fraction`, now derived), so 871 -> 870, and batch 53
-	# took `reserve_margin_requirement` out too: 870 -> 869.
+	# took `reserve_margin_requirement` out too: 870 -> 869. Batch 54 took
+	# `temporal_resolution` out on the same ground: 869 -> 868. Batch 55's
+	# `opex_fixed_wind` tombstone is not settable either: 868 -> 867.
 	missing = untranslated(graph)
-	assert len(missing) == 869, missing
+	assert len(missing) == 867, missing
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact

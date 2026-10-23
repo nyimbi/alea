@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,20 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "55":
+		b55_nodes, b55_equations, b55_edges, b55_rules = build_batch55(graph)
+		rules.extend(b55_rules)
+		nodes.update(b55_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b55_equations)
+		edges = list(BATCH12_EDGES) + b55_edges
+	elif batch == "54":
+		b54_nodes, b54_equations, b54_edges, b54_rules = build_batch54(graph)
+		rules.extend(b54_rules)
+		nodes.update(b54_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b54_equations)
+		edges = list(BATCH12_EDGES) + b54_edges
 	elif batch == "53":
 		b53_nodes, b53_equations, b53_edges, b53_rules = build_batch53(graph)
 		rules.extend(b53_rules)
@@ -17663,6 +17677,947 @@ def build_batch52(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	# One new equation (the share's definition) plus four rewritten in place
 	# (the gearing alias and the three that spelled the equity share inline).
 	assert len(equations) == 5, len(equations)
+	return nodes, equations, edges, rules
+
+
+_BATCH54_SOURCE = (
+	"The placeholder survey (docs/research/placeholder-survey.md), section 2, "
+	"which classifies each of the 181 placeholder rows by what the catalog's "
+	"own description and algorithm cells in docs/params.md say it is. Each of "
+	"these 41 is a physical or economic quantity with a discoverable unit; the "
+	"unit, range and default below were re-verified against the pint registry "
+	"(`alea.prg.units.ureg`) and against the graph's own spelling convention "
+	"before being written, because the survey's 'verified' claim covers only "
+	"the parse and not the convention. Where a coupling pack "
+	"(docs/research/coupling-packs/) had already reasoned about the node, its "
+	"reasoning is quoted in the node's description."
+)
+
+#: The 41 QUANTITY placeholders batch 54 retypes, as
+#: ``(id, unit, (low, high), default, prose)``.
+#:
+#: Two corrections to the survey were made on evidence, and both are the kind
+#: a parse check cannot catch:
+#:
+#: * **Four `_load` nodes.** The demand pack proposed `MWh/year` for
+#:   `cold_storage_load`, `post_harvest_processing_load`, `tourism_load` and
+#:   `wastewater_treatment_load`. Every `_load` node the graph already types is
+#:   `MW` (`fishing_community_load`, `agricultural_irrigation_load`,
+#:   `temporary_camp_load`) and every `_demand` node is an energy per year. A
+#:   `_load` in `MWh/year` would be the only one of its kind in a family of
+#:   twelve, so the survey's `MW` stands.
+#: * **`coal_retirement_schedule`.** The spec's worked example
+#:   (`docs/alea_prg.md:1640`) sets it to `2050`, an absolute year, which a
+#:   `[0, 100]` range refuses. The graph's own convention for a year node is an
+#:   *offset*: `net_zero_year`, `emissions_peak_year` and
+#:   `renewable_target_year` are all `years` in `[0, 100]` defaulting to 25.0.
+#:   The offset reading is kept and the mismatch recorded in the node's prose.
+_BATCH54_QUANTITIES: tuple[tuple[str, str, tuple[float, float], float, str], ...] = (
+	(
+		"adaptation_benefits",
+		"USD/year",
+		(0.0, 1e10),
+		0.0,
+		"The damage a year's adaptation programme avoids, in currency per year. "
+		"A benefit is the difference between two damage paths, so this node is "
+		"the avoided-damage side of a cost-benefit test; the graph carries no "
+		"damage function, so it is a scenario input rather than a derived "
+		"quantity, and zero states that no damage is avoided.",
+	),
+	(
+		"adaptation_costs",
+		"USD/year",
+		(0.0, 1e10),
+		0.0,
+		"The annual cost of the adaptation measures a scenario adopts. The "
+		"catalog's method is a measure count times a unit cost, and "
+		"`adaptation_measures` carries no unit, so the product is not computable "
+		"here: the node is the annualised spend a scenario states directly.",
+	),
+	(
+		"resilience_investment",
+		"USD",
+		(0.0, 1e10),
+		0.0,
+		"Capital spent on resilience measures, as a stock in currency rather than "
+		"a flow. It is distinct from `adaptation_costs`, which is the annual "
+		"cost of running a programme: this node is what is built, and zero "
+		"states that nothing is.",
+	),
+	(
+		"sea_level_rise",
+		"m",
+		(0.0, 2.0),
+		0.5,
+		"Sea-level rise above the scenario's baseline, in metres. 0.5 m is the "
+		"middle of the CMIP6 2100 range for a high-emissions path and 2.0 m is "
+		"above its upper tail. The node is a scenario input because the graph "
+		"carries no forcing chain to derive it from; a mapping from "
+		"`temperature_increase` would be a table the graph does not hold.",
+	),
+	(
+		"climate_sensitivity",
+		"degC",
+		(1.0, 6.0),
+		3.0,
+		"Equilibrium climate sensitivity: the equilibrium warming from a "
+		"doubling of atmospheric CO2, in degrees Celsius. The default 3.0 is "
+		"IPCC AR6's assessed best estimate and the 2.5-4.0 likely range sits "
+		"inside the declared bound, which admits the older literature's tails. "
+		"Deriving it needs a radiative-forcing chain the graph does not carry.",
+	),
+	(
+		"cold_snap_frequency",
+		"events/year",
+		(0.0, 100.0),
+		2.0,
+		"Cold snaps per year, the frequency a cold-snap generator draws from. It "
+		"is a hazard frequency and not a count of recorded events: the graph "
+		"carries no weather series, so a scenario states the rate it wants "
+		"sampled. Two a year is a temperate baseline.",
+	),
+	(
+		"extreme_weather_events",
+		"events/year",
+		(0.0, 500.0),
+		12.0,
+		"Extreme weather events per year: the rate the extreme-weather generator "
+		"draws from, on the same footing as `cold_snap_frequency` and "
+		"`heatwave_frequency`. Twelve a year is one a month, the frequency a "
+		"network's own outage records usually show across all causes.",
+	),
+	(
+		"heatwave_frequency",
+		"events/year",
+		(0.0, 100.0),
+		3.0,
+		"Heatwaves per year, the frequency the heatwave generator draws from. A "
+		"hazard rate rather than a measurement, for the reason "
+		"`cold_snap_frequency` gives. Three a year is a warm-climate baseline.",
+	),
+	(
+		"reserve_accounts",
+		"USD million",
+		(0.0, 50000.0),
+		0.0,
+		"Money set aside in reserve accounts, in millions of US dollars. The "
+		"catalog calls this a financial-model input and its siblings "
+		"`regulatory_asset_base` and `allowed_revenue_requirement` are both "
+		"`USD million`, which is the spelling used here. Zero is a regime with "
+		"no reserve, which is the base case rather than a missing value.",
+	),
+	(
+		"cold_storage_load",
+		"MW",
+		(0.0, 500.0),
+		0.0,
+		"Average power the cold chain draws, in megawatts. Every `_load` node "
+		"the graph already types is `MW` and every `_demand` node is an energy "
+		"per year, so a load is a power and this one is stated as an average. "
+		"Zero is the base case: a cold chain that does not exist draws nothing, "
+		"and the catalog's volume-times-intensity model has no volume base here.",
+	),
+	(
+		"construction_load",
+		"MW",
+		(0.0, 1000.0),
+		0.0,
+		"Power a construction site draws while the build is under way, in "
+		"megawatts. It is a temporary load and the graph carries no "
+		"construction-energy base to divide over the period, so a scenario "
+		"states the site's draw directly. Zero is a scenario with no "
+		"construction load, which is every year after commissioning.",
+	),
+	(
+		"data_centre_demand",
+		"MW",
+		(0.0, 5000.0),
+		0.0,
+		"The load a new data centre adds, in megawatts. The catalog's method is "
+		"an IT load times a power-usage effectiveness, and neither an IT load "
+		"nor a `pue` node exists, so the node is the site's draw at the meter. "
+		"Zero states that no data centre is built.",
+	),
+	(
+		"electrification_timeline",
+		"years",
+		(0.0, 50.0),
+		20.0,
+		"The time an adoption diffusion takes to reach its target share, in "
+		"years: the Bass model's span, not its rate. Twenty years is a "
+		"generation, the span over which an appliance stock turns over. The "
+		"share it reaches is a separate node; this one is only how long the "
+		"transition takes.",
+	),
+	(
+		"emergency_shelter_load",
+		"MW",
+		(0.0, 500.0),
+		0.0,
+		"Power an emergency shelter draws, in megawatts. A shelter occupancy is "
+		"the base the catalog's model needs and the graph does not carry one: "
+		"`exposed_population` is the population inside a dispersion range, not "
+		"the population in shelters. Zero is a scenario with no shelter load "
+		"running.",
+	),
+	(
+		"post_harvest_processing_load",
+		"MW",
+		(0.0, 500.0),
+		0.0,
+		"Average power post-harvest processing draws, in megawatts. The "
+		"catalog's method needs a crop tonnage and a processing intensity and "
+		"the graph carries neither; taking a share of `agricultural_demand_twh` "
+		"would assume processing is a fixed fraction of farm electricity, which "
+		"is an assumption with no source. Zero is a scenario that processes "
+		"nothing on the grid.",
+	),
+	(
+		"tourism_load",
+		"MW",
+		(0.0, 500.0),
+		0.0,
+		"Average power the tourism sector draws, in megawatts. It is seasonal "
+		"in the catalog's description and the graph carries no tourist-nights "
+		"base to weight a profile with, so the node is the annual average. Zero "
+		"is a scenario with no tourism load.",
+	),
+	(
+		"wastewater_treatment_load",
+		"MW",
+		(0.0, 500.0),
+		0.0,
+		"Average power wastewater treatment draws, in megawatts. "
+		"`total_water_demand_m3` is water withdrawn and not effluent returned, "
+		"so using it as the treated volume would assume every litre withdrawn "
+		"is treated, which is the assumption the water balance exists to test. "
+		"Zero is a scenario that treats nothing on the grid.",
+	),
+	(
+		"water_pumping_load",
+		"MWh/year",
+		(0.0, 1e6),
+		0.0,
+		"Electricity the water utility's pumping draws in the year, in "
+		"megawatt-hours. The volume base exists (`total_water_demand_m3`, 93.2 "
+		"M m3/year at defaults) and the specific energy does not: the standard "
+		"0.3-1.0 kWh/m3 band is not in this repository's archive, so the "
+		"product waits rather than inventing the coefficient.",
+	),
+	(
+		"water_pollution_load",
+		"kg/year",
+		(0.0, 1e6),
+		0.0,
+		"Pollutant mass discharged to water in the year, in kilograms. The "
+		"catalog routes it to `water_quality_impact` and then to a compliance "
+		"cost, and `compliance_cost` does not exist, so the node is the load a "
+		"scenario states. The unit is `kg/year` rather than a BOD-specific "
+		"spelling because the registry parses the general one.",
+	),
+	(
+		"balance_of_payments",
+		"USD/year",
+		(-1e12, 1e12),
+		0.0,
+		"The balance of payments in the year, in US dollars, signed. The range "
+		"is signed because a deficit year is negative and the shipped `[0, 1e6]` "
+		"could not represent one. An accounting balance is identically zero once "
+		"every credit and debit is counted, so this node is the recorded "
+		"position a scenario states, not a term the graph can derive.",
+	),
+	(
+		"current_account_balance",
+		"USD/year",
+		(-1e12, 1e12),
+		0.0,
+		"The current account balance in the year, in US dollars, signed: "
+		"exports less imports of goods, services and income. A deficit year is "
+		"negative, which is why the range is signed. Deriving it needs a "
+		"`gdp_usd_per_year` the graph does not carry.",
+	),
+	(
+		"exchange_rate_volatility",
+		"1/year",
+		(0.0, 2.0),
+		0.1,
+		"The volatility of the exchange rate's return, in inverse years: the "
+		"scale of a GARCH process, not the rate itself. Ten percent a year is a "
+		"managed float; two is a crisis. It is a second moment of a series and "
+		"the graph carries no series, so it is a scenario input.",
+	),
+	(
+		"external_debt",
+		"USD",
+		(0.0, 1e13),
+		0.0,
+		"The sovereign's external debt stock, in US dollars. The project's own "
+		"debt tranche is computable from the capital structure, but it is a "
+		"project quantity and not the sovereign's, so this node is the national "
+		"stock a scenario states. Zero is a scenario with no external debt.",
+	),
+	(
+		"foreign_direct_investment",
+		"USD/year",
+		(0.0, 1e12),
+		0.0,
+		"Foreign direct investment inflow in the year, in US dollars. The "
+		"catalog's form is a share of GDP and the graph carries no GDP level, so "
+		"the flow is stated directly. Zero is a scenario that attracts none.",
+	),
+	(
+		"foreign_exchange_reserves",
+		"USD",
+		(0.0, 1e12),
+		0.0,
+		"Official foreign-exchange reserves, in US dollars. Reserve adequacy is "
+		"normally measured in months of import cover, so deriving this needs "
+		"both an import bill and a cover dial and the graph carries neither. "
+		"Zero is a scenario with no reserves.",
+	),
+	(
+		"official_development_assistance",
+		"USD/year",
+		(0.0, 1e11),
+		0.0,
+		"Official development assistance received in the year, in US dollars. "
+		"The catalog's form is a share of GDP and the graph carries no GDP level, "
+		"so the flow is stated directly. Zero is a scenario that receives none.",
+	),
+	(
+		"line_outage_end",
+		"hours",
+		(0.0, 8760.0),
+		6.0,
+		"When a line outage ends, as an hour of the year. Declared as a number "
+		"of hours rather than a timestamp because the graph's DSL compares "
+		"numbers and has no date type. It is not coupled to anything: "
+		"`whatif/outage.py` matches a window against snapshot labels, and a "
+		"window equation here would couple a knob to a field the solver ignores.",
+	),
+	(
+		"line_outage_start",
+		"hours",
+		(0.0, 8760.0),
+		0.0,
+		"When a line outage begins, as an hour of the year. The same reading and "
+		"the same decoupling as `line_outage_end`: an hours-of-year index, not a "
+		"timestamp, and not an operand of any equation.",
+	),
+	(
+		"microgrid_deployment",
+		"connections/year",
+		(0.0, 1e6),
+		0.0,
+		"Connections a microgrid programme serves per year. The unit follows "
+		"`mini_grid_deployment`, which the graph already types `connections/year` "
+		"and reads through `mini_grid_programme_spend_usd_per_year`; the two are "
+		"separate programmes, so this node carries its own value rather than "
+		"aliasing that one. Zero is a scenario with no microgrid programme.",
+	),
+	(
+		"ev_adoption_timeline",
+		"years",
+		(0.0, 50.0),
+		20.0,
+		"The time electric vehicles take to reach their target share, in years: "
+		"the span of the adoption curve, not its rate. The share it reaches is "
+		"`ev_share_new_sales`, a separate node. Twenty years is a vehicle stock "
+		"turnover, which is slower than an appliance's.",
+	),
+	(
+		"ev_battery_size",
+		"kWh",
+		(20.0, 200.0),
+		60.0,
+		"The average battery a new electric vehicle carries, in kilowatt-hours. "
+		"Sixty is a mid-size car; twenty is a city car and two hundred a "
+		"long-range one. Deriving it needs a vehicle count or sales flow and the "
+		"graph carries shares of a stock it does not hold.",
+	),
+	(
+		"ev_efficiency",
+		"kWh/km",
+		(0.05, 0.5),
+		0.18,
+		"Electric-vehicle efficiency as energy per kilometre: 0.18 kWh/km is "
+		"about 5.6 km/kWh, the band a mid-size car occupies. Deriving it needs "
+		"vehicle-kilometres and the graph carries no distance node, so the "
+		"vehicle-km product waits on that base.",
+	),
+	(
+		"fishing_vessel_fuel",
+		"litre/year",
+		(0.0, 1e6),
+		0.0,
+		"Diesel the fishing fleet burns in the year, in litres. It is a "
+		"different quantity from `fishing_community_load`, which is the "
+		"settlement's electricity: the two cannot be scaled into each other "
+		"without a fuel-to-electricity conversion the graph does not carry. "
+		"Zero is a scenario with no fleet fuel.",
+	),
+	(
+		"military_energy_demand",
+		"MW",
+		(0.0, 500.0),
+		0.0,
+		"Power defence installations draw, in megawatts. Deriving it needs an "
+		"installation count and a per-base load and neither exists; a share of "
+		"national demand would be an assumption about defence budgets wearing "
+		"the shape of a measurement. Zero is a scenario with no defence load on "
+		"the grid.",
+	),
+	(
+		"mining_haulage",
+		"tonne*km/year",
+		(0.0, 1e10),
+		0.0,
+		"Ore hauled by the mining fleet in the year, in tonne-kilometres. It is "
+		"not a share of `transport_logistics`: that is national freight, and "
+		"using it would attribute every road and rail tonne-km to mining. "
+		"Deriving it needs ore tonnage and haul distance, neither of which "
+		"exists.",
+	),
+	(
+		"mining_hydrogen_haulage",
+		"tonne*km/year",
+		(0.0, 1e10),
+		0.0,
+		"The hydrogen-powered share of mining haulage, in tonne-kilometres. It "
+		"depends on `mining_haulage`, which is itself unbased, so this node is "
+		"stated directly for the same reason. Zero is a fleet with no hydrogen "
+		"haulage.",
+	),
+	(
+		"coal_retirement_schedule",
+		"years",
+		(0.0, 100.0),
+		25.0,
+		"When coal retires, as an offset in years from the scenario's base year. "
+		"The offset reading follows the graph's own convention for a year node: "
+		"`net_zero_year`, `emissions_peak_year` and `renewable_target_year` are "
+		"all `years` in `[0, 100]`. The spec's worked example states it as the "
+		"absolute year 2050 and `src/alea/prg/crossval.py`'s docstring still "
+		"compares it to 2045; that mismatch is pre-existing and recorded here "
+		"rather than repaired, because no shipped rule reads this node.",
+	),
+	(
+		"nuclear_lead_time",
+		"years",
+		(0.0, 25.0),
+		7.0,
+		"How long a nuclear plant takes to build, in years. Seven is a "
+		"single-reactor build at a site with an established regulator. "
+		"`construction_period` is a fleet-average 30 months and already the base "
+		"of `transmission_lead_time`; reusing it here would state that a reactor "
+		"is built in two and a half years.",
+	),
+	(
+		"startup_cost_coal",
+		"USD",
+		(0.0, 1e6),
+		40000.0,
+		"The cost of starting a coal unit, in US dollars per start. pypsa's "
+		"`start_up_cost` attribute carries the unit 'currency' and this node is "
+		"that attribute's value. The default is a stated assumption, not a "
+		"measured figure: the repository holds no archived per-start cost and no "
+		"count of starts, so it cannot be derived and is not presented as if it "
+		"were.",
+	),
+	(
+		"startup_cost_gas",
+		"USD",
+		(0.0, 1e6),
+		20000.0,
+		"The cost of starting a gas unit, in US dollars per start: the same "
+		"pypsa attribute as `startup_cost_coal` and the same caveat. Gas starts "
+		"are cheaper and quicker than coal's, which is what the half-sized "
+		"default states.",
+	),
+	(
+		"temporal_resolution",
+		"hours",
+		(0.25, 24.0),
+		1.0,
+		"The length of one time step in the dispatch model, in hours. This batch "
+		"derives it from `tsam_segment_hours` rather than leaving it a dial: the "
+		"graph already computes the same quantity there, and the two agreed "
+		"only by accident, since this node shipped unitless at 500,000.0. The "
+		"declared range is the exact image of `tsam_segments`' [1, 96] under "
+		"24/r, which is the evidence that the two ids name one object.",
+	),
+)
+
+
+def build_batch54(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Give the 41 QUANTITY placeholders their real unit, range and default.
+
+	*The defect.* `_unit_of` in `scripts/build/prg_from_catalog.py` reads the
+	*name* and `docs/params.md` has no unit column, so a row whose name states
+	no unit got `unit: null`, a `(0, 1e6)` range and the `500000.0` placeholder
+	from `_default_for`. Measured on the shipped graph: 98 nodes still carry
+	that sentinel, 93 of them unitless, and 41 of those are quantities rather
+	than names. A node with no unit cannot enter a dimensional equation, so the
+	placeholder is what keeps them floating.
+
+	*What this batch does not do, and why that is the finding.* All 41 are
+	orphans -- `affects`, `constrains`, `edges_into` and `rules_reading` are
+	empty for every one, and no equation names any of them. The coupling packs
+	in `docs/research/coupling-packs/` examined this set node by node and
+	deferred almost all of it, and their reasons are the same one stated
+	differently: **a share needs a base and a load needs an intensity.** A cold
+	chain needs a volume, a shelter load needs an occupancy, a mining haul needs
+	a tonnage, an external debt needs a GDP level. Inventing the missing
+	coefficient would put a number nobody can check into a position where a
+	measured one belongs, which is the failure mode the register exists to
+	stop. So 40 of the 41 get a declaration and stay uncoupled, and the batch
+	says so rather than manufacturing arithmetic to reach a coupling count.
+
+	*The one that does couple.* `temporal_resolution` is the same quantity as
+	`tsam_segment_hours`, which the graph already derives as
+	`24 / tsam_segments`. Three independent readings agree: both are an hours
+	per time step; both default to 1.0 hours at the shipped 24 segments a day;
+	and the survey's proposed range for this node, `[0.25, 24]`, is exactly the
+	image of `tsam_segments`' `[1, 96]` under `24/r`. Two ids for one object,
+	one of them a placeholder that moves nothing -- the batch-52 pattern. It
+	becomes derived from `tsam_segment_hours`, which gives it a unit, makes it
+	reachable, and removes a dial that controlled nothing.
+
+	*Value neutrality, and the one value that moves.* The 40 retyped nodes are
+	isolated, so their new defaults reach no other node: measured after the
+	merge, every propagated value is unchanged except `temporal_resolution`,
+	which moves from the 500,000.0 placeholder to 1.0 hours. That is the repair
+	and it is asserted as such rather than as neutrality.
+
+	*The response canary.* A value test cannot tell a coupled duplicate from a
+	decoupled one, because at defaults both read 1.0. What separates them is
+	that the duplicate **follows** the dial. On the shipped graph, moving
+	`tsam_segments` to 12 leaves `temporal_resolution` at 500,000.0; after this
+	batch it moves to 2.0. The builder measures both sides before emitting.
+	"""
+	from alea.prg.units import ureg
+	from alea.prg.views import ParameterNode
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	assert len(_BATCH54_QUANTITIES) == 41, len(_BATCH54_QUANTITIES)
+	names = [row[0] for row in _BATCH54_QUANTITIES]
+	assert len(set(names)) == len(names), "a node is retyped twice"
+
+	# The placeholder signature is the premise. A node already retyped -- by an
+	# earlier batch or a hand edit -- would make this a second, silent
+	# correction of a node the table was not written against.
+	for name, unit, (lo, hi), default, _prose in _BATCH54_QUANTITIES:
+		assert name in graph.nodes, f"{name}: the survey names a node that does not ship"
+		shipped = graph.nodes[name]
+		assert shipped.type.value == "float", (
+			f"{name} is {shipped.type.value!r}, not float; the placeholder this "
+			f"batch corrects is not present"
+		)
+		assert shipped.unit is None, f"{name} carries unit {shipped.unit!r}"
+		assert shipped.default == 500000.0, (
+			f"{name} defaults to {shipped.default!r}, not the 500000.0 placeholder"
+		)
+		assert shipped.role.value == "free", f"{name} is {shipped.role.value!r}"
+		assert shipped.status != "deprecated", f"{name} is already deprecated"
+		assert not shipped.categories, f"{name} already declares categories"
+		assert lo <= default <= hi, (
+			f"{name}: the default {default!r} is outside its own range {(lo, hi)}"
+		)
+		# The unit has to parse, or every equation that later reads the node
+		# turns from checked to undecidable -- which `units.py` calls a hole
+		# rather than a pass.
+		ureg.parse_units(unit)
+
+	# The isolation claim, measured per node rather than asserted once over the
+	# set: a single reader would make the retype a change to what the graph
+	# computes for that node.
+	for name in names:
+		if name == "temporal_resolution":
+			continue
+		assert graph.affects(name) == (), (
+			f"{name} is read by {graph.affects(name)}; this batch would change "
+			f"what the graph computes, not only what it admits"
+		)
+		assert graph.constrains(name) == (), f"{name} is gated on by a rule"
+		assert graph.edges_into(name) == (), f"{name} has an incoming edge"
+		assert graph.rules_reading(name) == (), f"{name} is read by a rule"
+		for equation in graph.equations.values():
+			named = (
+				*equation.parameters,
+				*equation.free_variables,
+				*equation.determined_variables,
+			)
+			assert name not in named, f"{name} is named by {equation.id}"
+
+	# The defect, measured: the placeholder admits any number in `(0, 1e6)`.
+	# This is the "before" half of the canaries the tests carry.
+	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	measured = graph.propagate(values).values
+	for name in names:
+		assert graph.propagate({**values, name: 7.0}).values[name] == 7.0, (
+			f"{name} refused 7.0 before the retype, so the placeholder it "
+			f"shipped as is not the permissive float this batch assumes"
+		)
+
+	# -- the coupling's premises, measured on the shipped graph --------------
+	segment_hours = graph.nodes["tsam_segment_hours"]
+	assert segment_hours.role.value == "derived", segment_hours.role.value
+	assert segment_hours.unit == "hours", segment_hours.unit
+	segments = graph.nodes["tsam_segments"]
+	assert segments.role.value == "free", segments.role.value
+	# The range-image identity the node's prose claims. A prose claim is a
+	# claim: compute it rather than restating it.
+	_image = sorted((24.0 / segments.range[0], 24.0 / segments.range[1]))
+	assert _image == [0.25, 24.0], (
+		f"24/r over tsam_segments' range {segments.range} is {_image}, not the "
+		f"[0.25, 24] this batch declares for temporal_resolution"
+	)
+	assert float(measured["tsam_segment_hours"]) == 1.0, measured["tsam_segment_hours"]
+
+	# The canary: on the shipped graph the resolution must NOT follow the
+	# segment dial. If it already did, the defect is absent.
+	_canary = graph.propagate({**values, "tsam_segments": 12.0}).values
+	assert float(_canary["temporal_resolution"]) == 500000.0, (
+		"temporal_resolution already follows tsam_segments; the duplicate this "
+		"batch removes is not present"
+	)
+
+	# -- emit: the 40 retypes and the one declaration ------------------------
+	#
+	# A full body, not a sparse override: a partial one would drop the node's
+	# category, users and priority, which a retype must not change.
+	for name, unit, (lo, hi), default, prose in _BATCH54_QUANTITIES:
+		shipped = graph.nodes[name]
+		body = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		body.update({
+			"description": prose,
+			"type": "float",
+			"unit": unit,
+			"range": [lo, hi],
+			"default": default,
+			"initial": None,
+			"source": _BATCH54_SOURCE,
+		})
+		ParameterNode(**{"id": name, **body})
+		nodes[name] = body
+
+	# `temporal_resolution` is the one that couples: a derived node carries no
+	# default, and the equation is what fixes it. `depends_on`/`affects` are
+	# document fields the graph reads as declared metadata, not `ParameterNode`
+	# fields, so the model is validated before they are added.
+	resolution_id = "temporal_resolution_definition"
+	assert resolution_id not in graph.equations, f"{resolution_id}: already ships"
+	derived_body = {
+		**nodes["temporal_resolution"],
+		"role": "derived",
+		"default": None,
+		"determinism": "fixed",
+	}
+	ParameterNode(**{"id": "temporal_resolution", **derived_body})
+	nodes["temporal_resolution"] = {
+		**derived_body,
+		"depends_on": ["tsam_segment_hours"],
+		"affects": [],
+	}
+
+	from alea.prg.dsl import parse_side
+	from alea.prg.service import generated_latex as _generated_latex
+	from alea.prg.views import Equation as _Equation
+
+	rhs = "tsam_segment_hours"
+	named = set(parse_side(rhs).symbols) | {"temporal_resolution"}
+	equation_body = {
+		"id": resolution_id,
+		"name": "Temporal resolution",
+		"system": "energy_balance",
+		"tolerance": 1e-09,
+		"priority": "P1",
+		"solution_method": "direct",
+		"linearity": "linear",
+		"relation": "eq",
+		"lhs": "temporal_resolution",
+		"rhs": rhs,
+		"parameters": sorted(named),
+		"free_variables": sorted(named - {"temporal_resolution"}),
+		"determined_variables": ["temporal_resolution"],
+		"description": (
+			"The dispatch model's time step is the time-slice length the segment "
+			"count implies: one quantity, two ids."
+		),
+		"reference": _BATCH54_SOURCE,
+		"unit_check": True,
+	}
+	equation_body["latex"] = _generated_latex(_Equation(**equation_body))  # type: ignore[arg-type]
+	equations[resolution_id] = equation_body
+	edges.append({
+		"source": "tsam_segment_hours",
+		"target": "temporal_resolution",
+		"equation_id": resolution_id,
+		"relationship": "functional",
+		"direction": "forward",
+		"strength": "hard",
+		"description": (
+			"The time-slice length the segment count sets; the resolution dial "
+			"that controlled nothing is this quantity under a second id."
+		),
+		"reference": _BATCH54_SOURCE,
+		"priority": "P1",
+	})
+
+	# The reader's declared `affects` gains this node. Corrected in the same
+	# fragment as the equation, once the equation set is final -- the
+	# batch-45/batch-52 trap.
+	_patched = _propagate_graph(nodes, equations)
+	for name in ("tsam_segment_hours", "temporal_resolution"):
+		existing = nodes.get(name) or graph.nodes[name].model_dump(exclude={"id"}, mode="json")
+		body = dict(existing)
+		body["depends_on"] = sorted(_patched.depends_on(name))
+		body["affects"] = sorted(_patched.affects(name))
+		nodes[name] = body
+
+	# -- neutrality, measured against the shipped graph ----------------------
+	def _numeric(value: Any) -> bool:
+		return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+	# Two separate claims, measured separately.
+	#
+	# (1) The value change is confined to the nodes this batch retypes. Their
+	# own defaults move from the 500,000.0 placeholder to a real number, which
+	# is the repair; anything *else* moving would mean a retyped node reaches
+	# something, which the isolation loop above says it does not.
+	_new_defaults = {name: default for name, _u, _r, default, _p in _BATCH54_QUANTITIES}
+	_after_seeds = {
+		k: n.default for k, n in _patched.nodes.items() if n.default is not None
+	}
+	_after = _patched.propagate(_after_seeds).values
+	_own = {
+		k: (float(measured[k]), float(_after[k]))
+		for k in _new_defaults
+		if _numeric(measured.get(k)) and _numeric(_after.get(k))
+		and abs(float(_after[k]) - float(measured[k])) > 1e-12
+	}
+	assert set(_own) == set(_new_defaults), (
+		f"only {len(_own)} of the 41 retyped nodes changed value; the rest were "
+		f"not carrying the placeholder: {sorted(set(_new_defaults) - set(_own))}"
+	)
+
+	# (2) With the same values seeded, the graph computes the same answer. This
+	# is the claim that the retype changed what the graph *admits* and not what
+	# it *derives*. Both sides are seeded with the post-merge values, so the
+	# nodes' own new defaults cancel and only a propagation effect could show.
+	_neutral_seeds = {**values, **_new_defaults}
+	_before = graph.propagate(_neutral_seeds).values
+	_moved = {
+		k: (float(_before[k]), float(_after[k]))
+		for k in _before
+		if k in _after
+		and _numeric(_before[k])
+		and _numeric(_after[k])
+		and abs(float(_after[k]) - float(_before[k]))
+		> 1e-12 * max(1.0, abs(float(_before[k])))
+	}
+	assert not _moved, (
+		f"seeding the same values, the retype moved {sorted(_moved)}; the "
+		f"isolation claim is false for those nodes"
+	)
+	assert float(_after["temporal_resolution"]) == 1.0, _after["temporal_resolution"]
+
+	# The response canary, after the merge: the duplicate now follows the dial.
+	_follows = _patched.propagate({**_after_seeds, "tsam_segments": 12.0}).values
+	assert float(_follows["temporal_resolution"]) == 2.0, (
+		f"temporal_resolution is {_follows['temporal_resolution']!r} at 12 "
+		f"segments a day; it does not follow the dial, so the coupling is "
+		f"nominal"
+	)
+	print(
+		f"  retyped {len(_BATCH54_QUANTITIES) - 1} quantities, coupled 1; "
+		f"temporal_resolution 500000.0 -> 1.0 h, and 2.0 h at 12 segments/day"
+	)
+
+	# 41 retyped bodies, plus `tsam_segment_hours` -- the reader whose declared
+	# `affects` gains the new node in the same fragment.
+	assert len(nodes) == 42, len(nodes)
+	assert len(equations) == 1, len(equations)
+	return nodes, equations, edges, rules
+
+
+_BATCH55_SOURCE = (
+	"The coupling pack for the digital, sector-coupling and instrument nodes "
+	"(docs/research/coupling-packs/digital-sector.md), section 1, which "
+	"measured the shipped `lcoe_wind_definition` rhs against the tree and "
+	"found that it already reads `opex_fixed_wind_onshore`. The pack classifies "
+	"`opex_fixed_wind` as DEPRECATED with `opex_fixed_wind_onshore` as its "
+	"successor: the generic node has no equation reader, no rule reader, no "
+	"edge and no code consumer, and its own description asserts a distinction "
+	"the graph already makes."
+)
+
+
+def build_batch55(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Retire the generic wind O&M node and correct the prose that outlived it.
+
+	*The defect.* `opex_fixed_wind` ships `USD/kW/year` at **40** and its
+	description says "Offshore is materially higher and would need its own
+	parameter if the graph is to distinguish them; the shipped graph does
+	not." The graph does: `opex_fixed_wind_onshore` ships 30 and
+	`opex_fixed_wind_offshore` ships 80, and both LCOE equations read their own
+	node. So the generic id is a third spelling of the onshore number, carrying
+	a *different* value (40 against 30) that nothing reads.
+
+	*Measured on the shipped graph.* `affects`, `constrains`, `rules_reading`,
+	`edges_into` and `edges_from` are all empty for `opex_fixed_wind`, and no
+	equation's `parameters` names it. Setting it to 30 -- the onshore value it
+	claims to be -- moves `lcoe_wind_usd_per_mwh` by exactly **0.0**. A dial
+	that moves nothing is the shape batch 49 retired the jobs multipliers for.
+
+	*What this batch does.*
+
+	1. `opex_fixed_wind` becomes `status: deprecated`, `deprecated_by:
+	   opex_fixed_wind_onshore`. It keeps its unit, range and default: a
+	   tombstone that drops them loses the record of what it was, and the
+	   graph's own rule is that a deprecated node is a classification, not a
+	   deletion.
+	2. `lcoe_wind_definition`'s **description** is corrected. It narrates the
+	   batch-35 amendment in the present tense as though the shipped form still
+	   read the generic node ("The shipped form divided by ... but read the
+	   generic `opex_fixed_wind` (40) ... The amendment takes the LCOE from
+	   66.53 to 63.67"), which is false of the shipped tree: the rhs already
+	   reads `opex_fixed_wind_onshore` and the LCOE is 63.68, not 66.53. The
+	   `rhs` and `latex` were amended; the prose was not, and prose is what a
+	   researcher reads.
+
+	*What this batch does not do.* It does not delete the node, does not
+	retype it derived (that would drop the default to fix a consumer that does
+	not exist), and does not alias it onto the onshore node. Each was rejected
+	in the pack with its reason; the deprecation is reviewable and the removal
+	is a separate decision.
+
+	*A note on the pack's own number.* The pack records 66.53 -> 63.67 for the
+	batch-35 amendment. Those are the values **before** and **after** that
+	amendment, not a live measurement: on the shipped graph the LCOE is
+	63.6825, and it stays there when the tombstone moves. The corrected prose
+	states the shipped value and the direction, not a pair of numbers that
+	describe a tree two batches old.
+	"""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	victim = "opex_fixed_wind"
+	successor = "opex_fixed_wind_onshore"
+	assert victim in graph.nodes, f"{victim}: the pack names a node that does not ship"
+	assert successor in graph.nodes, f"{successor}: the successor does not ship"
+
+	shipped = graph.nodes[victim]
+	assert shipped.status != "deprecated", f"{victim}: already deprecated"
+	assert shipped.role.value == "free", (
+		f"{victim} is {shipped.role.value!r}, not the free duplicate this batch "
+		f"retires"
+	)
+
+	# The premise: nothing reads it. If any of these is non-empty the node is
+	# coupled and the batch would be retiring a live operand.
+	for probe, found in (
+		("affects", graph.affects(victim)),
+		("constrains", graph.constrains(victim)),
+		("rules_reading", graph.rules_reading(victim)),
+		("edges_into", graph.edges_into(victim)),
+		("edges_from", graph.edges_from(victim)),
+	):
+		assert not found, (
+			f"{victim} has {probe}={found!r}; it is coupled and this batch's "
+			f"premise -- a duplicate nothing reads -- is false"
+		)
+	named_by = [
+		eid for eid, equation in graph.equations.items()
+		if victim in equation.parameters
+	]
+	assert not named_by, f"{victim} is named by {named_by}; it is not a duplicate"
+
+	# The canary: the duplicate moves nothing. This is what separates a dead
+	# spelling from a dial, and it is measured on both values rather than
+	# asserted from the emptiness above -- a node can be uncoupled and still
+	# feed something through a path `affects` does not model.
+	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	baseline = graph.propagate(values).values
+	for probe_value in (float(shipped.default), float(graph.nodes[successor].default)):
+		moved = graph.propagate({**values, victim: probe_value}).values
+		# The seeded node echoes the value it was handed, so it is excluded:
+		# the claim is that nothing *downstream* moves.
+		changed = {
+			k for k in baseline
+			if k != victim
+			and isinstance(baseline[k], (int, float))
+			and not isinstance(baseline[k], bool)
+			and isinstance(moved.get(k), (int, float))
+			and not isinstance(moved.get(k), bool)
+			and abs(float(moved[k]) - float(baseline[k])) > 1e-12
+		}
+		assert not changed, (
+			f"setting {victim} to {probe_value} moves {sorted(changed)}; it is "
+			f"not the dead duplicate this batch retires"
+		)
+
+	body = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+	body.update({
+		"status": "deprecated",
+		"deprecated_by": successor,
+		"description": (
+			"Retired: a third spelling of onshore wind's fixed O&M. The graph "
+			"distinguishes onshore (30 USD/kW/year) from offshore (80) and "
+			"each LCOE reads its own node, so this generic id carried a value "
+			"(40) nothing consumed and a description claiming the distinction "
+			"did not exist. Kept as a tombstone rather than deleted so the id "
+			"a scenario may still name resolves to the node that replaced it."
+		),
+		"source": _BATCH55_SOURCE,
+		"depends_on": [],
+		"affects": [],
+	})
+	nodes[victim] = body
+
+	# The prose correction. `_rebuild` regenerates the latex from the rhs, so
+	# the corrected body cannot type a different expression than it computes.
+	lcoe = graph.equations["lcoe_wind_definition"]
+	shipped_lcoe = float(baseline["lcoe_wind_usd_per_mwh"])
+	assert "opex_fixed_wind_onshore" in lcoe.rhs, (
+		f"lcoe_wind_definition's rhs is {lcoe.rhs!r}; the prose correction this "
+		f"batch writes assumes the amendment already landed in the arithmetic"
+	)
+	# The latex splits an id across `\mathrm{opex}_{fixed\_wind\_onshore}`, so
+	# it is compared on its letters and digits alone rather than as a string.
+	import re as _re
+	_latex_ids = _re.sub(r"[^a-z0-9]", "", (lcoe.latex or "").lower())
+	assert "opexfixedwindonshore" in _latex_ids, (
+		f"lcoe_wind_definition's latex is {lcoe.latex!r}; it does not typeset "
+		f"the node its rhs reads"
+	)
+	equations["lcoe_wind_definition"] = _rebuild(
+		lcoe,
+		description=(
+			"The levelised cost of onshore wind. The form divides by "
+			"`capacity_factor_wind_onshore`, so it is an onshore LCOE, and it "
+			"reads the onshore fixed O&M (30 USD/kW/year) rather than the "
+			"generic `opex_fixed_wind`. Batch 35 amended the rhs for that "
+			"reason and left this prose behind: it described the pre-amendment "
+			"form as though it were still shipped, and quoted 66.53 -> 63.67 "
+			"as the amendment's effect. The shipped value at defaults is "
+			f"{shipped_lcoe:.4f} USD/MWh; the generic node is now a deprecated "
+			"tombstone, so the two cannot be confused again."
+		),
+	)
+
+	print(
+		f"  retired {victim} -> {successor}; "
+		f"lcoe_wind {shipped_lcoe:.4f} USD/MWh unchanged at both 40 and 30"
+	)
+	assert len(nodes) == 1, len(nodes)
+	assert len(equations) == 1, len(equations)
 	return nodes, equations, edges, rules
 
 

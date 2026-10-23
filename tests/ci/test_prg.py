@@ -975,6 +975,11 @@ def test_the_summary_reports_the_registers(graph: ParameterGraph):
 		# otherwise break the `{"free"}` claim below, which is why they are
 		# named here rather than filtered silently.
 		"indirect_jobs_multiplier", "induced_jobs_multiplier",
+		# Batch 55 retired the generic wind O&M duplicate. It is `free` rather
+		# than `exogenous`, so it does not threaten the `{"free"}` claim, but
+		# it belongs in this set for the reason the set exists: a fifth
+		# deprecation should have to be written down.
+		"opex_fixed_wind",
 	}, deprecated_uncoupled
 	uncoupled_roles = {
 		graph.role(name).value for name in graph.uncoupled()
@@ -1906,7 +1911,17 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# register that counted tombstones as dead knobs was counting the wrong
 	# object -- a node nobody can set is not a knob a user has to be warned
 	# about -- and the fix is in `is_settable` rather than here.
-	assert len(dead) == 224, len(dead)
+	# Batch 54 took it 224 to 223, and only one of its 41 nodes moved. The 40
+	# retyped quantities were already in this register and stay in it: giving a
+	# node a unit and a range changes what a scenario may *say* about it, not
+	# whether anything reads it, and the coupling packs defer those 40 for want
+	# of a base. `temporal_resolution` left because it became derived from
+	# `tsam_segment_hours` -- a derived node is not settable, and the quantity
+	# it was a placeholder for is now computed rather than dialled.
+	# Batch 55 took it 223 to 222 by deprecating `opex_fixed_wind`, the generic
+	# wind O&M duplicate: `is_settable` refuses a tombstone, so retiring the id
+	# removes it from this register without any arithmetic changing.
+	assert len(dead) == 222, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
@@ -2316,7 +2331,11 @@ def test_the_audit_reports_what_it_did_not_check():
 	# same reason.
 	assert len(audit.checked) == 197, audit.checked
 	# Batch 53's reserve-requirement definition takes it 335 -> 336.
-	assert len(audit.skipped) == 336, audit.skipped
+	# Batch 54's temporal-resolution definition takes it 336 -> 337, for the
+	# same reason as the two before it: `tsam_segment_hours` is not on the
+	# solve result either. The audit's coverage is unchanged; it is the
+	# computed set that grew.
+	assert len(audit.skipped) == 337, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -2375,8 +2394,9 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# capacity-to-energy layer to 528.
 	# Batch 51's three derived emission factors take it 528 -> 531, and batch
 	# 52's debt-share definition takes it 531 -> 532, and batch 53's reserve
-	# requirement 532 -> 533.
-	assert len(audit.skipped) == 533, audit.skipped
+	# requirement 532 -> 533, and batch 54's temporal-resolution definition
+	# 533 -> 534.
+	assert len(audit.skipped) == 534, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -4395,8 +4415,10 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# definition adds one hard edge: 601 -> 602. Still the two tiers the batch
 	# did not touch, which is what the equality checks.
 	# Batch 53's reserve-requirement definition adds one more hard edge, with a
-	# bare alias rhs: 602 -> 603.
-	assert counts == {"hard": 603, "informational": 1, "soft": 2}, counts
+	# bare alias rhs: 602 -> 603. Batch 54's temporal-resolution definition is
+	# the same shape -- one hard edge, a quotient rather than an alias -- taking
+	# it 603 -> 604. The two tiers this batch did not touch stay flat.
+	assert counts == {"hard": 604, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -4804,7 +4826,11 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# 2006 Table 2.2), taking the register 295 -> 298. Batch 52's debt-share
 	# definition cites the UKRN cost-of-capital review, 298 -> 299, and batch
 	# 53's reserve requirement cites NERC's planning reserve framework, 299 -> 300.
-	assert len(declared) == 300, f"the citation register moved: {sorted(declared)}"
+	# Batch 54's temporal-resolution definition cites the placeholder survey and
+	# the `tsam` segmentation it names: 300 -> 301. That citation is a document
+	# in this repository, not a work in `sources/INDEX.md` -- it is the record of
+	# why the node exists, which is what the register is asked to carry.
+	assert len(declared) == 301, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -5052,8 +5078,9 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 			compared += 1
 	# Batch 52's debt-share definition is affine in the variable it solves for,
 	# like every equation the earlier batches added, so the compared set moves
-	# 531 -> 532, and batch 53's reserve requirement 532 -> 533.
-	assert compared == 533, (
+	# 531 -> 532, and batch 53's reserve requirement 532 -> 533, and batch 54's
+	# temporal-resolution definition 533 -> 534.
+	assert compared == 534, (
 		f"expected 481 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "

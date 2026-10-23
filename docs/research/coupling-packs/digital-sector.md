@@ -294,7 +294,7 @@ feature is off. The five stay run configuration.
 | node | class | kind | reason |
 |---|---|---|---|
 | `demand_growth_rate` | DEPRECATED | defer | `deprecated_by: demand_growth`; the loader refuses a deprecated target outright. Carries the correct unit (`1/year`), range [-0.05, 0.15] and default 0.04; the canonical `demand_growth` is 0.0325. Not to be touched — the shipped value is right and the coupling is deletion once no scenario names it. |
-| `opex_fixed_wind` | DEPRECATED | defer | Proposed `status: deprecated`, `deprecated_by: opex_fixed_wind_onshore`. **Measured**: the pair loads (`nodes 1344`, `uncoupled 284`, no `GraphError`) and the node remains in `uncoupled()` — deprecation is a classification, not a coupling, and removal is the batch's job. Evidence for the class: zero equation readers, zero code readers (the only `src`/`scripts` hits are four comment and description strings in `prg_coupler.py`, none of which executes), `lcoe_wind_definition` reads `opex_fixed_wind_onshore` and typesets it, and `lcoe_wind_offshore_definition` reads its own 80. A generic 40 has nothing left to serve. |
+| `opex_fixed_wind` | DEPRECATED | defer | **Shipped in batch 55 (2026-10-24) as proposed.** Proposed `status: deprecated`, `deprecated_by: opex_fixed_wind_onshore`. **Measured**: the pair loads (`nodes 1344`, `uncoupled 284`, no `GraphError`) and the node remains in `uncoupled()` — deprecation is a classification, not a coupling, and removal is the batch's job. Evidence for the class: zero equation readers, zero code readers (the only `src`/`scripts` hits are four comment and description strings in `prg_coupler.py`, none of which executes), `lcoe_wind_definition` reads `opex_fixed_wind_onshore` and typesets it, and `lcoe_wind_offshore_definition` reads its own 80. A generic 40 has nothing left to serve. |
 
 ## Proposals
 
@@ -441,7 +441,22 @@ own declarations. Each was measured; none is inferred.
    claim, and line 10679 states it as a rendering defect ("typesets the generic
    `opex_fixed_wind` (40) where the body holds `opex_fixed_wind_onshore`") that
    the `latex` field does not exhibit. The consequence: `opex_fixed_wind` has
-   **zero** equation readers and is a dead duplicate.
+   **zero** equation readers and is a dead duplicate. **Closed in batch 55
+   (2026-10-24):** the description was rewritten through `_rebuild` and now
+   states the shipped value and the reason the form reads the onshore node. Two
+   corrections to this finding's own numbers. (a) The 66.53 -> 63.67 pair
+   describes the batch-35 tree, two batches before this pack was written; the
+   live LCOE is **63.68245924494044**, which rounds to the 63.67 printed here —
+   the three-decimal figure was right and the fifteen-significant-figure one was
+   stale, which is how the drift went unseen. (b) The three `prg_coupler.py`
+   sites this finding cites are build records, not claims about the shipped
+   tree: lines 9430 and 9590 sit inside `build_batch31`, which is the payload
+   that shipped the false description, and line 11003 sits inside
+   `build_batch35`'s docstring recording the rendering defect that batch 35 then
+   repaired. Reading the third as a live defect is the error — the `latex` field
+   does not exhibit it *because* batch 35 fixed it. Batch 55 left all three
+   alone: a build record describes the tree at the batch that wrote it, and
+   rewriting history to match today is worse than a stale comment.
 
 2. **The `capex_gas_ocgt` deferral's reason is false as stated.**
    *threshold-product-remainder.md* line 123 says "at any capacity factor the

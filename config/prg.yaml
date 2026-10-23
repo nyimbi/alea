@@ -139,36 +139,65 @@ parameters:
     - Researchers
   adaptation_benefits:
     name: Adaptation benefits
-    description: Adaptation benefits
+    description: The damage a year's adaptation programme avoids, in currency per year. A benefit is the
+      difference between two damage paths, so this node is the avoided-damage side of a cost-benefit test;
+      the graph carries no damage function, so it is a scenario input rather than a derived quantity,
+      and zero states that no damage is avoided.
     category: Adapt
+    subcategory: null
     type: float
+    unit: USD/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 10000000000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P1
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   adaptation_costs:
     name: Adaptation costs
-    description: Adaptation costs
+    description: 'The annual cost of the adaptation measures a scenario adopts. The catalog''s method
+      is a measure count times a unit cost, and `adaptation_measures` carries no unit, so the product
+      is not computable here: the node is the annualised spend a scenario states directly.'
     category: Adapt
+    subcategory: null
     type: float
+    unit: USD/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 10000000000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P1
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   adaptation_measures:
     name: Adaptation measures
     description: Adaptation measures
@@ -1499,20 +1528,35 @@ parameters:
     - pm25_annual_mean_ug_per_m3
   balance_of_payments:
     name: Balance of payments
-    description: Balance of payments
+    description: The balance of payments in the year, in US dollars, signed. The range is signed because
+      a deficit year is negative and the shipped `[0, 1e6]` could not represent one. An accounting balance
+      is identically zero once every credit and debit is counted, so this node is the recorded position
+      a scenario states, not a term the graph can derive.
     category: Macro
+    subcategory: null
     type: float
+    unit: USD/year
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    - -1000000000000.0
+    - 1000000000000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Macro
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   balancing_market:
     categories: []
     category: Operational
@@ -5048,20 +5092,35 @@ parameters:
     deprecated_by: null
   climate_sensitivity:
     name: Climate sensitivity
-    description: Climate sensitivity
+    description: 'Equilibrium climate sensitivity: the equilibrium warming from a doubling of atmospheric
+      CO2, in degrees Celsius. The default 3.0 is IPCC AR6''s assessed best estimate and the 2.5-4.0 likely
+      range sits inside the declared bound, which admits the older literature''s tails. Deriving it needs
+      a radiative-forcing chain the graph does not carry.'
     category: Climate
+    subcategory: null
     type: float
+    unit: degC
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    - 6.0
+    default: 3.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Scientists
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   clustering_method:
     name: Clustering method
     description: Which algorithm reduces the network to clusters. Catalog 'Clustering method selection';
@@ -5553,20 +5612,37 @@ parameters:
     - Planners
   coal_retirement_schedule:
     name: Coal retirement schedule
-    description: Coal retirement years
+    description: 'When coal retires, as an offset in years from the scenario''s base year. The offset
+      reading follows the graph''s own convention for a year node: `net_zero_year`, `emissions_peak_year`
+      and `renewable_target_year` are all `years` in `[0, 100]`. The spec''s worked example states it
+      as the absolute year 2050 and `src/alea/prg/crossval.py`''s docstring still compares it to 2045;
+      that mismatch is pre-existing and recorded here rather than repaired, because no shipped rule reads
+      this node.'
     category: Supply
+    subcategory: null
     type: float
+    unit: years
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 100.0
+    default: 25.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P1
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   coastal_erosion:
     categories: []
     category: Adapt
@@ -5593,37 +5669,66 @@ parameters:
     - Researchers
   cold_snap_frequency:
     name: Cold snap frequency
-    description: Cold snap frequency
+    description: 'Cold snaps per year, the frequency a cold-snap generator draws from. It is a hazard
+      frequency and not a count of recorded events: the graph carries no weather series, so a scenario
+      states the rate it wants sampled. Two a year is a temperate baseline.'
     category: Climate
+    subcategory: null
     type: float
+    unit: events/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 100.0
+    default: 2.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   cold_storage_load:
     name: Cold storage load
-    description: Cold chain energy demand
+    description: 'Average power the cold chain draws, in megawatts. Every `_load` node the graph already
+      types is `MW` and every `_demand` node is an energy per year, so a load is a power and this one
+      is stated as an average. Zero is the base case: a cold chain that does not exist draws nothing,
+      and the catalog''s volume-times-intensity model has no volume base here.'
     category: Demand
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Agriculture
     - Health
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   collateral_posted_usd_per_year:
     category: Regulatory
     description: 'collateral posted usd per year: the compliance register''s derived quantity. The security
@@ -6407,20 +6512,35 @@ parameters:
     users: []
   construction_load:
     name: Construction load
-    description: Temporary construction load
+    description: Power a construction site draws while the build is under way, in megawatts. It is a temporary
+      load and the graph carries no construction-energy base to divide over the period, so a scenario
+      states the site's draw directly. Zero is a scenario with no construction load, which is every year
+      after commissioning.
     category: Demand
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Construction
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   construction_machinery:
     categories: []
     category: Sector Coupling
@@ -8136,20 +8256,34 @@ parameters:
     - Regulators
   current_account_balance:
     name: Current account balance
-    description: Current account balance
+    description: 'The current account balance in the year, in US dollars, signed: exports less imports
+      of goods, services and income. A deficit year is negative, which is why the range is signed. Deriving
+      it needs a `gdp_usd_per_year` the graph does not carry.'
     category: Macro
+    subcategory: null
     type: float
+    unit: USD/year
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    - -1000000000000.0
+    - 1000000000000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Macro
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   custom_gis_boundary:
     name: Custom gis boundary
     description: Custom GIS boundary
@@ -8432,20 +8566,34 @@ parameters:
     deprecated_by: null
   data_centre_demand:
     name: Data centre demand
-    description: New data centre load
+    description: The load a new data centre adds, in megawatts. The catalog's method is an IT load times
+      a power-usage effectiveness, and neither an IT load nor a `pue` node exists, so the node is the
+      site's draw at the meter. Zero states that no data centre is built.
     category: Demand
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 5000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Telecom
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   data_privacy_requirements:
     categories: []
     category: Digital
@@ -10347,20 +10495,34 @@ parameters:
     - Policymakers
   electrification_timeline:
     name: Electrification timeline
-    description: Year to reach target
+    description: 'The time an adoption diffusion takes to reach its target share, in years: the Bass model''s
+      span, not its rate. Twenty years is a generation, the span over which an appliance stock turns over.
+      The share it reaches is a separate node; this one is only how long the transition takes.'
     category: Demand
+    subcategory: null
     type: float
+    unit: years
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 50.0
+    default: 20.0
+    initial: null
     role: free
     determinism: policy
-    priority: P1
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Policymakers
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   electrified_industrial_heat_twh:
     category: Industry
     description: 'Electrified industrial process heat: the electrification share times total process heat
@@ -10598,20 +10760,35 @@ parameters:
     deprecated_by: null
   emergency_shelter_load:
     name: Emergency shelter load
-    description: Emergency shelter load
+    description: 'Power an emergency shelter draws, in megawatts. A shelter occupancy is the base the
+      catalog''s model needs and the graph does not carry one: `exposed_population` is the population
+      inside a dispersion range, not the population in shelters. Zero is a scenario with no shelter load
+      running.'
     category: Demand
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Humanitarian
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   emission_factor_biomass_t_per_mwh:
     categories: []
     category: Technology
@@ -11577,52 +11754,94 @@ parameters:
     - Regulators
   ev_adoption_timeline:
     name: Ev adoption timeline
-    description: Year to reach EV share
+    description: 'The time electric vehicles take to reach their target share, in years: the span of the
+      adoption curve, not its rate. The share it reaches is `ev_share_new_sales`, a separate node. Twenty
+      years is a vehicle stock turnover, which is slower than an appliance''s.'
     category: Sector
+    subcategory: null
     type: float
+    unit: years
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 50.0
+    default: 20.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Transport
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   ev_battery_size:
     name: Ev battery size
-    description: Average EV battery size
+    description: The average battery a new electric vehicle carries, in kilowatt-hours. Sixty is a mid-size
+      car; twenty is a city car and two hundred a long-range one. Deriving it needs a vehicle count or
+      sales flow and the graph carries shares of a stock it does not hold.
     category: Sector
+    subcategory: null
     type: float
+    unit: kWh
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 20.0
+    - 200.0
+    default: 60.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Transport
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   ev_efficiency:
     name: Ev efficiency
-    description: EV efficiency
+    description: 'Electric-vehicle efficiency as energy per kilometre: 0.18 kWh/km is about 5.6 km/kWh,
+      the band a mid-size car occupies. Deriving it needs vehicle-kilometres and the graph carries no
+      distance node, so the vehicle-km product waits on that base.'
     category: Sector
+    subcategory: null
     type: float
+    unit: kWh/km
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.05
+    - 0.5
+    default: 0.18
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Transport
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   ev_share_new_sales:
     categories: []
     category: Sector Coupling
@@ -11664,20 +11883,34 @@ parameters:
     source: docs/params.md
   exchange_rate_volatility:
     name: Exchange rate volatility
-    description: Exchange rate volatility
+    description: 'The volatility of the exchange rate''s return, in inverse years: the scale of a GARCH
+      process, not the rate itself. Ten percent a year is a managed float; two is a crisis. It is a second
+      moment of a series and the graph carries no series, so it is a scenario input.'
     category: Macro
+    subcategory: null
     type: float
+    unit: 1/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 2.0
+    default: 0.1
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: integrate
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Investors
-    source: docs/params.md
+    priority: P2
+    status: integrate
+    deprecated_by: null
   excise_duty_fuel:
     categories: []
     category: Tax & Fiscal
@@ -11876,36 +12109,64 @@ parameters:
     - Researchers
   external_debt:
     name: External debt
-    description: External debt
+    description: The sovereign's external debt stock, in US dollars. The project's own debt tranche is
+      computable from the capital structure, but it is a project quantity and not the sovereign's, so
+      this node is the national stock a scenario states. Zero is a scenario with no external debt.
     category: Macro
+    subcategory: null
     type: float
+    unit: USD
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 10000000000000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Macro
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   extreme_weather_events:
     name: Extreme weather events
-    description: Extreme weather frequency
+    description: 'Extreme weather events per year: the rate the extreme-weather generator draws from,
+      on the same footing as `cold_snap_frequency` and `heatwave_frequency`. Twelve a year is one a month,
+      the frequency a network''s own outage records usually show across all causes.'
     category: Climate
+    subcategory: null
     type: float
+    unit: events/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500.0
+    default: 12.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: integrate
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    priority: P2
+    status: integrate
+    deprecated_by: null
   failure_history:
     name: Failure history
     description: Failure history
@@ -12152,20 +12413,35 @@ parameters:
     - Regulators
   fishing_vessel_fuel:
     name: Fishing vessel fuel
-    description: Fishing vessel fuel
+    description: 'Diesel the fishing fleet burns in the year, in litres. It is a different quantity from
+      `fishing_community_load`, which is the settlement''s electricity: the two cannot be scaled into
+      each other without a fuel-to-electricity conversion the graph does not carry. Zero is a scenario
+      with no fleet fuel.'
     category: Sector
+    subcategory: null
     type: float
+    unit: litre/year
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Fisheries
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   fit_annuity_factor:
     category: Financial
     description: 'fit annuity factor: the coupling''s derived quantity, so a scenario''s dial has a number
@@ -12549,36 +12825,64 @@ parameters:
     - Regulators
   foreign_direct_investment:
     name: Foreign direct investment
-    description: Foreign direct investment
+    description: Foreign direct investment inflow in the year, in US dollars. The catalog's form is a
+      share of GDP and the graph carries no GDP level, so the flow is stated directly. Zero is a scenario
+      that attracts none.
     category: Macro
+    subcategory: null
     type: float
+    unit: USD/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1000000000000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Investors
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   foreign_exchange_reserves:
     name: Foreign exchange reserves
-    description: Foreign exchange reserves
+    description: Official foreign-exchange reserves, in US dollars. Reserve adequacy is normally measured
+      in months of import cover, so deriving this needs both an import bill and a cover dial and the graph
+      carries neither. Zero is a scenario with no reserves.
     category: Macro
+    subcategory: null
     type: float
+    unit: USD
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1000000000000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Macro
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   foresight:
     name: Foresight
     description: Whether the model sees the whole horizon or one period at a time. Catalog 'Foresight
@@ -14528,20 +14832,33 @@ parameters:
     - Researchers
   heatwave_frequency:
     name: Heatwave frequency
-    description: Heatwave frequency
+    description: Heatwaves per year, the frequency the heatwave generator draws from. A hazard rate rather
+      than a measurement, for the reason `cold_snap_frequency` gives. Three a year is a warm-climate baseline.
     category: Climate
+    subcategory: null
     type: float
+    unit: events/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 100.0
+    default: 3.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: integrate
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    priority: P2
+    status: integrate
+    deprecated_by: null
   horizon_years:
     categories: []
     category: Emissions
@@ -18549,20 +18866,35 @@ parameters:
     - Financial analysts
   line_outage_end:
     name: Line outage end
-    description: When the outage ends
+    description: 'When a line outage ends, as an hour of the year. Declared as a number of hours rather
+      than a timestamp because the graph''s DSL compares numbers and has no date type. It is not coupled
+      to anything: `whatif/outage.py` matches a window against snapshot labels, and a window equation
+      here would couple a knob to a field the solver ignores.'
     category: Outage
+    subcategory: null
     type: float
+    unit: hours
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 8760.0
+    default: 6.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P1
-    status: existing
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   line_outage_hours_per_year:
     category: Reliability
     description: 'line outage hours per year: the coupling''s derived quantity, so a scenario''s dial
@@ -18609,20 +18941,33 @@ parameters:
     - Financial analysts
   line_outage_start:
     name: Line outage start
-    description: When the outage begins
+    description: 'When a line outage begins, as an hour of the year. The same reading and the same decoupling
+      as `line_outage_end`: an hours-of-year index, not a timestamp, and not an operand of any equation.'
     category: Outage
+    subcategory: null
     type: float
+    unit: hours
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 8760.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P1
-    status: existing
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   line_upgrade_budget:
     categories: []
     category: Outage
@@ -19958,20 +20303,35 @@ parameters:
     - mercury_emissions
   microgrid_deployment:
     name: Microgrid deployment
-    description: Microgrid deployment
+    description: Connections a microgrid programme serves per year. The unit follows `mini_grid_deployment`,
+      which the graph already types `connections/year` and reads through `mini_grid_programme_spend_usd_per_year`;
+      the two are separate programmes, so this node carries its own value rather than aliasing that one.
+      Zero is a scenario with no microgrid programme.
     category: Outage
+    subcategory: null
     type: float
+    unit: connections/year
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   microinsurance:
     categories: []
     category: Investment & Finance
@@ -20059,20 +20419,35 @@ parameters:
     - Regulators
   military_energy_demand:
     name: Military energy demand
-    description: Military energy demand
+    description: Power defence installations draw, in megawatts. Deriving it needs an installation count
+      and a per-base load and neither exists; a share of national demand would be an assumption about
+      defence budgets wearing the shape of a measurement. Zero is a scenario with no defence load on the
+      grid.
     category: Sector
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Defence
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   min_down_time_coal:
     categories: []
     category: Supply
@@ -20327,36 +20702,64 @@ parameters:
     - Mining
   mining_haulage:
     name: Mining haulage
-    description: Mining haulage
+    description: 'Ore hauled by the mining fleet in the year, in tonne-kilometres. It is not a share of
+      `transport_logistics`: that is national freight, and using it would attribute every road and rail
+      tonne-km to mining. Deriving it needs ore tonnage and haul distance, neither of which exists.'
     category: Sector
+    subcategory: null
     type: float
+    unit: tonne*km/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 10000000000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Mining
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   mining_hydrogen_haulage:
     name: Mining hydrogen haulage
-    description: Hydrogen haulage in mining
+    description: The hydrogen-powered share of mining haulage, in tonne-kilometres. It depends on `mining_haulage`,
+      which is itself unbased, so this node is stated directly for the same reason. Zero is a fleet with
+      no hydrogen haulage.
     category: Sector
+    subcategory: null
     type: float
+    unit: tonne*km/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 10000000000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Mining
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   mobile_coverage:
     categories: []
     category: Digital
@@ -20955,20 +21358,35 @@ parameters:
     deprecated_by: null
   nuclear_lead_time:
     name: Nuclear lead time
-    description: Nuclear construction lead time
+    description: How long a nuclear plant takes to build, in years. Seven is a single-reactor build at
+      a site with an established regulator. `construction_period` is a fleet-average 30 months and already
+      the base of `transmission_lead_time`; reusing it here would state that a reactor is built in two
+      and a half years.
     category: Supply
+    subcategory: null
     type: float
+    unit: years
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 25.0
+    default: 7.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   nuclear_new_build:
     categories: []
     category: Supply
@@ -21085,20 +21503,34 @@ parameters:
     - Regulators
   official_development_assistance:
     name: Official development assistance
-    description: Official development assistance
+    description: Official development assistance received in the year, in US dollars. The catalog's form
+      is a share of GDP and the graph carries no GDP level, so the flow is stated directly. Zero is a
+      scenario that receives none.
     category: Macro
+    subcategory: null
     type: float
+    unit: USD/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 100000000000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   offtake_risk_premium:
     categories: []
     category: Contracts
@@ -21531,28 +21963,38 @@ parameters:
     users:
     - Operators
   opex_fixed_wind:
-    categories: []
-    category: Cost
-    default: 40.0
-    deprecated_by: null
-    description: Annual fixed O&M of onshore wind. Offshore is materially higher and would need its own
-      parameter if the graph is to distinguish them; the shipped graph does not.
-    determinism: fixed
-    initial: null
     name: Wind fixed O&M
-    priority: P1
-    range:
-    - 10.0
-    - 80.0
-    role: free
-    source: IRENA, Renewable Power Generation Costs in 2023
-    source_url: null
-    status: existing
+    description: 'Retired: a third spelling of onshore wind''s fixed O&M. The graph distinguishes onshore
+      (30 USD/kW/year) from offshore (80) and each LCOE reads its own node, so this generic id carried
+      a value (40) nothing consumed and a description claiming the distinction did not exist. Kept as
+      a tombstone rather than deleted so the id a scenario may still name resolves to the node that replaced
+      it.'
+    category: Cost
     subcategory: null
     type: float
     unit: USD/kW/year
+    range:
+    - 10.0
+    - 80.0
+    default: 40.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: 'The coupling pack for the digital, sector-coupling and instrument nodes (docs/research/coupling-packs/digital-sector.md),
+      section 1, which measured the shipped `lcoe_wind_definition` rhs against the tree and found that
+      it already reads `opex_fixed_wind_onshore`. The pack classifies `opex_fixed_wind` as DEPRECATED
+      with `opex_fixed_wind_onshore` as its successor: the generic node has no equation reader, no rule
+      reader, no edge and no code consumer, and its own description asserts a distinction the graph already
+      makes.'
+    source_url: null
     users:
     - All
+    priority: P1
+    status: deprecated
+    deprecated_by: opex_fixed_wind_onshore
+    depends_on: []
+    affects: []
   opex_fixed_wind_offshore:
     categories: []
     category: Cost
@@ -23296,20 +23738,35 @@ parameters:
     - Carbon
   post_harvest_processing_load:
     name: Post harvest processing load
-    description: Post-harvest processing load
+    description: Average power post-harvest processing draws, in megawatts. The catalog's method needs
+      a crop tonnage and a processing intensity and the graph carries neither; taking a share of `agricultural_demand_twh`
+      would assume processing is a fixed fraction of farm electricity, which is an assumption with no
+      source. Zero is a scenario that processes nothing on the grid.
     category: Demand
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Agriculture
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   ppa_annual_revenue_usd_per_kw_year:
     categories: []
     category: Contract & Legal
@@ -25337,20 +25794,35 @@ parameters:
     - Researchers
   reserve_accounts:
     name: Reserve accounts
-    description: Reserve accounts
+    description: Money set aside in reserve accounts, in millions of US dollars. The catalog calls this
+      a financial-model input and its siblings `regulatory_asset_base` and `allowed_revenue_requirement`
+      are both `USD million`, which is the spelling used here. Zero is a regime with no reserve, which
+      is the base case rather than a missing value.
     category: Contract
+    subcategory: null
     type: float
+    unit: USD million
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 50000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Banks
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   reserve_margin:
     category: Outage
     description: The catalog's 'Operating reserve margin' is the margin the built fleet actually delivers,
@@ -25629,20 +26101,34 @@ parameters:
     - Carbon
   resilience_investment:
     name: Resilience investment
-    description: Resilience investment
+    description: 'Capital spent on resilience measures, as a stock in currency rather than a flow. It
+      is distinct from `adaptation_costs`, which is the annual cost of running a programme: this node
+      is what is built, and zero states that nothing is.'
     category: Adapt
+    subcategory: null
     type: float
+    unit: USD
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 10000000000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P1
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   resilience_metrics:
     name: Resilience metrics
     description: Resilience metrics
@@ -26455,20 +26941,35 @@ parameters:
     deprecated_by: null
   sea_level_rise:
     name: Sea level rise
-    description: SLR
+    description: Sea-level rise above the scenario's baseline, in metres. 0.5 m is the middle of the CMIP6
+      2100 range for a high-emissions path and 2.0 m is above its upper tail. The node is a scenario input
+      because the graph carries no forcing chain to derive it from; a mapping from `temperature_increase`
+      would be a table the graph does not hold.
     category: Adapt
+    subcategory: null
     type: float
+    unit: m
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 2.0
+    default: 0.5
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Cities
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   security_constrained_dispatch:
     categories: []
     category: Operational
@@ -28076,36 +28577,65 @@ parameters:
     - Regulators
   startup_cost_coal:
     name: Startup cost coal
-    description: Coal start-up cost
+    description: 'The cost of starting a coal unit, in US dollars per start. pypsa''s `start_up_cost`
+      attribute carries the unit ''currency'' and this node is that attribute''s value. The default is
+      a stated assumption, not a measured figure: the repository holds no archived per-start cost and
+      no count of starts, so it cannot be derived and is not presented as if it were.'
     category: Supply
+    subcategory: null
     type: float
+    unit: USD
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 40000.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P1
-    status: existing
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   startup_cost_gas:
     name: Startup cost gas
-    description: Gas start-up cost
+    description: 'The cost of starting a gas unit, in US dollars per start: the same pypsa attribute as
+      `startup_cost_coal` and the same caveat. Gas starts are cheaper and quicker than coal''s, which
+      is what the half-sized default states.'
     category: Supply
+    subcategory: null
     type: float
+    unit: USD
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 20000.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P1
-    status: existing
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   steel_eaf_route_mt:
     category: Industry
     description: 'steel eaf route mt: the coupling''s derived quantity, so a scenario''s dial has a number
@@ -29104,20 +29634,38 @@ parameters:
     deprecated_by: null
   temporal_resolution:
     name: Temporal resolution
-    description: Temporal resolution
+    description: 'The length of one time step in the dispatch model, in hours. This batch derives it from
+      `tsam_segment_hours` rather than leaving it a dial: the graph already computes the same quantity
+      there, and the two agreed only by accident, since this node shipped unitless at 500,000.0. The declared
+      range is the exact image of `tsam_segments`'' [1, 96] under 24/r, which is the evidence that the
+      two ids name one object.'
     category: Temporal
+    subcategory: null
     type: float
+    unit: hours
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 0.25
+    - 24.0
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P1
-    status: existing
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - All
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
+    depends_on:
+    - tsam_segment_hours
+    affects: []
   temporary_camp_load:
     categories: []
     category: Households
@@ -29610,20 +30158,34 @@ parameters:
     - Carbon
   tourism_load:
     name: Tourism load
-    description: Tourism seasonal load
+    description: Average power the tourism sector draws, in megawatts. It is seasonal in the catalog's
+      description and the graph carries no tourist-nights base to weight a profile with, so the node is
+      the annual average. Zero is a scenario with no tourism load.
     category: Demand
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Tourism
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   trade_agreement:
     name: Trade agreement
     description: Which trade agreement the zone trades under. Catalog 'Trade agreement type'; the prior
@@ -30125,29 +30687,33 @@ parameters:
     - Planners
     - Regulators
   tsam_segment_hours:
-    categories: []
-    category: Temporal
-    deprecated_by: null
+    name: Tsam segment hours
     description: 'The length of one time-slice segment: a day divided by the segment count. Twenty-four
       segments give hourly slices, which is the un-aggregated case the segment count exists to depart
       from.'
-    determinism: fixed
-    initial: null
-    name: Tsam segment hours
-    priority: P1
-    range:
-    - 0.25
-    - 24.0
-    role: derived
-    source: The product coupling (batch 28)
-    source_url: null
-    status: existing
+    category: Temporal
     subcategory: null
     type: float
     unit: hours
+    range:
+    - 0.25
+    - 24.0
+    initial: null
+    role: derived
+    determinism: fixed
+    categories: []
+    source: The product coupling (batch 28)
+    source_url: null
     users:
     - Planners
     - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
+    depends_on:
+    - tsam_segments
+    affects:
+    - temporal_resolution
   tsam_segments:
     categories: []
     category: Temporal
@@ -31080,20 +31646,35 @@ parameters:
     - Cities
   wastewater_treatment_load:
     name: Wastewater treatment load
-    description: Wastewater treatment energy
+    description: Average power wastewater treatment draws, in megawatts. `total_water_demand_m3` is water
+      withdrawn and not effluent returned, so using it as the treated volume would assume every litre
+      withdrawn is treated, which is the assumption the water balance exists to test. Zero is a scenario
+      that treats nothing on the grid.
     category: Demand
+    subcategory: null
     type: float
+    unit: MW
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 500.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Water
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   water_availability:
     categories: []
     category: Sector
@@ -31147,36 +31728,66 @@ parameters:
     - Carbon
   water_pollution_load:
     name: Water pollution load
-    description: Pollution load
+    description: Pollutant mass discharged to water in the year, in kilograms. The catalog routes it to
+      `water_quality_impact` and then to a compliance cost, and `compliance_cost` does not exist, so the
+      node is the load a scenario states. The unit is `kg/year` rather than a BOD-specific spelling because
+      the registry parses the general one.
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: kg/year
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   water_pumping_load:
     name: Water pumping load
-    description: Water utility pumping
+    description: 'Electricity the water utility''s pumping draws in the year, in megawatt-hours. The volume
+      base exists (`total_water_demand_m3`, 93.2 M m3/year at defaults) and the specific energy does not:
+      the standard 0.3-1.0 kWh/m3 band is not in this repository''s archive, so the product waits rather
+      than inventing the coefficient.'
     category: Demand
+    subcategory: null
     type: float
+    unit: MWh/year
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
+    default: 0.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source_url: null
     users:
     - Water
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   water_quality_impact:
     categories: []
     category: Sector
@@ -41340,39 +41951,41 @@ equations:
     reference: EIA AEO Levelized Cost of Electricity Methodology, value-cost ratio and its stated threshold
     latex: \mathrm{lcoe}_{value\_cost\_ratio\_wind\_onshore} = \frac{\mathrm{lace}_{wind\_onshore\_usd\_per\_mwh}}{\mathrm{lcoe}_{wind\_usd\_per\_mwh}}
   lcoe_wind_definition:
-    description: 'The levelised cost of onshore wind. The shipped form divided by `capacity_factor_wind_onshore`
-      -- it is an onshore LCOE -- but read the generic `opex_fixed_wind` (40 USD/kW/year) rather than
-      `opex_fixed_wind_onshore` (30). The amendment takes the LCOE from 66.53 to 63.67 USD/MWh at defaults.
-      Aliasing `opex_fixed_wind` to the onshore node was rejected: it would make a shipped node derived
-      and drop its default to fix an equation that is the actual defect.'
-    determined_variables:
-    - lcoe_wind_usd_per_mwh
-    free_variables:
-    - annualised_capex_usd_per_kw_wind
-    - capacity_factor_wind_onshore
-    - opex_fixed_wind_onshore
-    - opex_variable_wind
-    latex: \mathrm{lcoe}_{wind\_usd\_per\_mwh} = \frac{1000 \left(\mathrm{annualised}_{capex\_usd\_per\_kw\_wind}
-      + \mathrm{opex}_{fixed\_wind\_onshore}\right)}{8760 \mathrm{capacity}_{factor\_wind\_onshore}} +
-      \mathrm{opex}_{variable\_wind}
-    lhs: lcoe_wind_usd_per_mwh
-    linearity: nonlinear
     name: Wind LCOE
+    description: 'The levelised cost of onshore wind. The form divides by `capacity_factor_wind_onshore`,
+      so it is an onshore LCOE, and it reads the onshore fixed O&M (30 USD/kW/year) rather than the generic
+      `opex_fixed_wind`. Batch 35 amended the rhs for that reason and left this prose behind: it described
+      the pre-amendment form as though it were still shipped, and quoted 66.53 -> 63.67 as the amendment''s
+      effect. The shipped value at defaults is 63.6825 USD/MWh; the generic node is now a deprecated tombstone,
+      so the two cannot be confused again.'
+    system: cost_accounting
+    lhs: lcoe_wind_usd_per_mwh
+    rhs: (annualised_capex_usd_per_kw_wind + opex_fixed_wind_onshore) * 1000 / (8760 * capacity_factor_wind_onshore)
+      + opex_variable_wind
+    relation: eq
     parameters:
     - annualised_capex_usd_per_kw_wind
     - capacity_factor_wind_onshore
     - lcoe_wind_usd_per_mwh
     - opex_fixed_wind_onshore
     - opex_variable_wind
-    priority: P1
-    reference: NREL ATB 2025 Equations & Variables
-    relation: eq
-    rhs: (annualised_capex_usd_per_kw_wind + opex_fixed_wind_onshore) * 1000 / (8760 * capacity_factor_wind_onshore)
-      + opex_variable_wind
-    solution_method: direct
-    system: cost_accounting
+    free_variables:
+    - annualised_capex_usd_per_kw_wind
+    - capacity_factor_wind_onshore
+    - opex_fixed_wind_onshore
+    - opex_variable_wind
+    determined_variables:
+    - lcoe_wind_usd_per_mwh
     tolerance: 1.0e-08
     unit_check: true
+    reference: NREL ATB 2025 Equations & Variables
+    priority: P1
+    solution_method: direct
+    linearity: nonlinear
+    latex: \mathrm{lcoe}_{wind\_usd\_per\_mwh} = \frac{1000 \left(\mathrm{annualised}_{capex\_usd\_per\_kw\_wind}
+      + \mathrm{opex}_{fixed\_wind\_onshore}\right)}{8760 \mathrm{capacity}_{factor\_wind\_onshore}} +
+      \mathrm{opex}_{variable\_wind}
+    id: lcoe_wind_definition
   lcoe_wind_offshore_definition:
     description: 'Wind offshore levelised cost in the fixed-charge-annuity form the field standardises
       on: the annualised capital charge over the energy the plant actually produces, plus fixed and variable
@@ -46075,6 +46688,35 @@ equations:
     system: carbon_trajectory
     tolerance: 1.0e-06
     unit_check: true
+  temporal_resolution_definition:
+    id: temporal_resolution_definition
+    name: Temporal resolution
+    system: energy_balance
+    tolerance: 1.0e-09
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    relation: eq
+    lhs: temporal_resolution
+    rhs: tsam_segment_hours
+    parameters:
+    - temporal_resolution
+    - tsam_segment_hours
+    free_variables:
+    - tsam_segment_hours
+    determined_variables:
+    - temporal_resolution
+    description: 'The dispatch model''s time step is the time-slice length the segment count implies:
+      one quantity, two ids.'
+    reference: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+      the graph's own spelling convention before being written, because the survey's 'verified' claim
+      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
+      had already reasoned about the node, its reasoning is quoted in the node's description.
+    unit_check: true
+    latex: \mathrm{temporal}_{resolution} = \mathrm{tsam}_{segment\_hours}
   temporary_camp_load_definition:
     description: 'The power a resettlement camp draws: the displaced population, divided by household
       size to get households, times the consumption an energy-poor household actually draws, spread over
@@ -60106,6 +60748,22 @@ relationships:
     in two units, so the MW must be derived from the share the rules gate on, not from a second dial carrying
     the same number.'
   priority: P2
+- source: tsam_segment_hours
+  target: temporal_resolution
+  equation_id: temporal_resolution_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The time-slice length the segment count sets; the resolution dial that controlled nothing
+    is this quantity under a second id.
+  reference: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
+    each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
+    say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
+    range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
+    the graph's own spelling convention before being written, because the survey's 'verified' claim covers
+    only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/) had already
+    reasoned about the node, its reasoning is quoted in the node's description.
+  priority: P1
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0
   id: carbon_price_budget_alignment
