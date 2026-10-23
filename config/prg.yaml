@@ -9608,13 +9608,20 @@ parameters:
     - 0.2
     - 0.5
     default: 0.4
+    initial: null
     role: exogenous
     determinism: physical
-    status: to_build
+    categories: []
     source: The co-pollutant chain (batch 44)
+    source_url: null
+    users: []
+    priority: P2
+    status: to_build
+    deprecated_by: null
     depends_on: []
     affects:
     - coal_fuel_energy_gj
+    - lcoe_coal_usd_per_mwh
   efficiency_gas:
     id: efficiency_gas
     name: Efficiency gas
@@ -9631,13 +9638,20 @@ parameters:
     - 0.35
     - 0.62
     default: 0.58
+    initial: null
     role: exogenous
     determinism: physical
-    status: to_build
+    categories: []
     source: The co-pollutant chain (batch 44)
+    source_url: null
+    users: []
+    priority: P2
+    status: to_build
+    deprecated_by: null
     depends_on: []
     affects:
     - gas_fuel_energy_gj
+    - lcoe_gas_usd_per_mwh
   efficiency_oil:
     id: efficiency_oil
     name: Efficiency oil
@@ -9654,12 +9668,19 @@ parameters:
     - 0.25
     - 0.45
     default: 0.38
+    initial: null
     role: exogenous
     determinism: physical
-    status: to_build
+    categories: []
     source: The co-pollutant chain (batch 44)
+    source_url: null
+    users: []
+    priority: P2
+    status: to_build
+    deprecated_by: null
     depends_on: []
     affects:
+    - lcoe_oil_usd_per_mwh
     - oil_fuel_energy_gj
   efficient_frontier:
     name: Efficient frontier
@@ -37217,48 +37238,57 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   lcoe_coal_definition:
+    id: lcoe_coal_definition
+    name: LCOE (coal)
     description: 'Coal levelised cost in the fixed-charge-annuity form the field standardises on: the
       annualised capital charge over the energy the plant actually produces, plus fixed and variable O&M,
       the fuel the fleet''s heat rate prices, and the stack''s carbon at carbon_price. Dimensional check:
       a USD/kW/year rate over an hours/year denominator with a dimensionless capacity factor is USD/MWh,
-      and every per-MWh term shares it.'
+      and every per-MWh term shares it. Corrected (batch 45): the fuel term is a price per megawatt-hour
+      of *thermal* energy, and it is divided by the plant''s own net efficiency before it is added to
+      a cost per megawatt-hour of *electricity*. The shipped equation added the two bases directly, which
+      no dimensional check can catch -- both sides declare USD/MWh -- and which understated the fuel term
+      by a factor of 1/efficiency_coal.'
+    system: cost_accounting
+    lhs: lcoe_coal_usd_per_mwh
+    rhs: (capex_coal * crf_coal + opex_fixed_coal) * 1000 / (8760 * capacity_factor_coal) + opex_variable_coal
+      + (fuel_cost_coal / efficiency_coal) + emission_factor_coal_t_per_mwh * carbon_price_usd_per_tco2
+    relation: eq
+    parameters:
+    - capacity_factor_coal
+    - capex_coal
+    - carbon_price_usd_per_tco2
+    - crf_coal
+    - efficiency_coal
+    - emission_factor_coal_t_per_mwh
+    - fuel_cost_coal
+    - lcoe_coal_usd_per_mwh
+    - opex_fixed_coal
+    - opex_variable_coal
+    free_variables:
+    - capacity_factor_coal
+    - capex_coal
+    - carbon_price_usd_per_tco2
+    - crf_coal
+    - efficiency_coal
+    - emission_factor_coal_t_per_mwh
+    - fuel_cost_coal
+    - opex_fixed_coal
+    - opex_variable_coal
     determined_variables:
     - lcoe_coal_usd_per_mwh
-    free_variables:
-    - capex_coal
-    - opex_fixed_coal
-    - capacity_factor_coal
-    - opex_variable_coal
-    - fuel_cost_coal
-    - emission_factor_coal_t_per_mwh
-    - carbon_price_usd_per_tco2
-    - crf_coal
-    latex: \mathrm{lcoe}_{coal\_usd\_per\_mwh} = \frac{1000 \left(\mathrm{capex}_{coal} \mathrm{crf}_{coal}
-      + \mathrm{opex}_{fixed\_coal}\right)}{8760 \mathrm{capacity}_{factor\_coal}} + \mathrm{opex}_{variable\_coal}
-      + \mathrm{fuel}_{cost\_coal} + \mathrm{emission}_{factor\_coal\_t\_per\_mwh} \mathrm{carbon}_{price\_usd\_per\_tco2}
-    lhs: lcoe_coal_usd_per_mwh
-    linearity: linear
-    name: LCOE (coal)
-    parameters:
-    - lcoe_coal_usd_per_mwh
-    - capex_coal
-    - opex_fixed_coal
-    - capacity_factor_coal
-    - opex_variable_coal
-    - fuel_cost_coal
-    - emission_factor_coal_t_per_mwh
-    - carbon_price_usd_per_tco2
-    - crf_coal
-    priority: P1
-    reference: NREL ATB 2025 Equations & Variables; Short, Packey & Holt (1995), NREL/TP-462-5173; EIA
-      AEO LCOE methodology
-    relation: eq
-    rhs: (capex_coal * crf_coal + opex_fixed_coal) * 1000 / (8760 * capacity_factor_coal) + opex_variable_coal
-      + fuel_cost_coal + emission_factor_coal_t_per_mwh * carbon_price_usd_per_tco2
-    solution_method: direct
-    system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
+    reference: NREL ATB 2025 Equations & Variables; Short, Packey & Holt (1995), NREL/TP-462-5173; EIA
+      AEO LCOE methodology, which defines the fuel term as the product of the plant heat rate and the
+      fuel price in native units, per megawatthour of generation
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{lcoe}_{coal\_usd\_per\_mwh} = \frac{1000 \left(\mathrm{capex}_{coal} \mathrm{crf}_{coal}
+      + \mathrm{opex}_{fixed\_coal}\right)}{8760 \mathrm{capacity}_{factor\_coal}} + \mathrm{opex}_{variable\_coal}
+      + \frac{\mathrm{fuel}_{cost\_coal}}{\mathrm{efficiency}_{coal}} + \mathrm{emission}_{factor\_coal\_t\_per\_mwh}
+      \mathrm{carbon}_{price\_usd\_per\_tco2}
   lcoe_csp_definition:
     description: 'Csp levelised cost in the fixed-charge-annuity form the field standardises on: the annualised
       capital charge over the energy the plant actually produces, plus fixed and variable O&M, the fuel
@@ -37321,48 +37351,56 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   lcoe_gas_definition:
+    id: lcoe_gas_definition
+    name: LCOE (gas)
     description: 'Gas levelised cost in the fixed-charge-annuity form the field standardises on: the annualised
       capital charge over the energy the plant actually produces, plus fixed and variable O&M, the fuel
       the fleet''s heat rate prices, and the stack''s carbon at carbon_price. Dimensional check: a USD/kW/year
       rate over an hours/year denominator with a dimensionless capacity factor is USD/MWh, and every per-MWh
-      term shares it.'
+      term shares it. Corrected (batch 45): the fuel term is a price per megawatt-hour of *thermal* energy,
+      and it is divided by the plant''s own net efficiency before it is added to a cost per megawatt-hour
+      of *electricity*. The shipped equation added the two bases directly, which no dimensional check
+      can catch -- both sides declare USD/MWh -- and which understated the fuel term by a factor of 1/efficiency_gas.'
+    system: cost_accounting
+    lhs: lcoe_gas_usd_per_mwh
+    rhs: (capex_gas * crf_gas + opex_fixed_gas) * 1000 / (8760 * capacity_factor_gas) + opex_variable_gas
+      + (fuel_cost_gas / efficiency_gas) + emission_factor_gas_t_per_mwh * carbon_price_usd_per_tco2
+    relation: eq
+    parameters:
+    - capacity_factor_gas
+    - capex_gas
+    - carbon_price_usd_per_tco2
+    - crf_gas
+    - efficiency_gas
+    - emission_factor_gas_t_per_mwh
+    - fuel_cost_gas
+    - lcoe_gas_usd_per_mwh
+    - opex_fixed_gas
+    - opex_variable_gas
+    free_variables:
+    - capacity_factor_gas
+    - capex_gas
+    - carbon_price_usd_per_tco2
+    - crf_gas
+    - efficiency_gas
+    - emission_factor_gas_t_per_mwh
+    - fuel_cost_gas
+    - opex_fixed_gas
+    - opex_variable_gas
     determined_variables:
     - lcoe_gas_usd_per_mwh
-    free_variables:
-    - capex_gas
-    - opex_fixed_gas
-    - capacity_factor_gas
-    - opex_variable_gas
-    - fuel_cost_gas
-    - emission_factor_gas_t_per_mwh
-    - carbon_price_usd_per_tco2
-    - crf_gas
-    latex: \mathrm{lcoe}_{gas\_usd\_per\_mwh} = \frac{1000 \left(\mathrm{capex}_{gas} \mathrm{crf}_{gas}
-      + \mathrm{opex}_{fixed\_gas}\right)}{8760 \mathrm{capacity}_{factor\_gas}} + \mathrm{opex}_{variable\_gas}
-      + \mathrm{fuel}_{cost\_gas} + \mathrm{emission}_{factor\_gas\_t\_per\_mwh} \mathrm{carbon}_{price\_usd\_per\_tco2}
-    lhs: lcoe_gas_usd_per_mwh
-    linearity: linear
-    name: LCOE (gas)
-    parameters:
-    - lcoe_gas_usd_per_mwh
-    - capex_gas
-    - opex_fixed_gas
-    - capacity_factor_gas
-    - opex_variable_gas
-    - fuel_cost_gas
-    - emission_factor_gas_t_per_mwh
-    - carbon_price_usd_per_tco2
-    - crf_gas
-    priority: P1
-    reference: NREL ATB 2025 Equations & Variables; Short, Packey & Holt (1995), NREL/TP-462-5173; EIA
-      AEO LCOE methodology
-    relation: eq
-    rhs: (capex_gas * crf_gas + opex_fixed_gas) * 1000 / (8760 * capacity_factor_gas) + opex_variable_gas
-      + fuel_cost_gas + emission_factor_gas_t_per_mwh * carbon_price_usd_per_tco2
-    solution_method: direct
-    system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
+    reference: NREL ATB 2025 Equations & Variables; Short, Packey & Holt (1995), NREL/TP-462-5173; EIA
+      AEO LCOE methodology, which defines the fuel term as the product of the plant heat rate and the
+      fuel price in native units, per megawatthour of generation
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{lcoe}_{gas\_usd\_per\_mwh} = \frac{1000 \left(\mathrm{capex}_{gas} \mathrm{crf}_{gas}
+      + \mathrm{opex}_{fixed\_gas}\right)}{8760 \mathrm{capacity}_{factor\_gas}} + \mathrm{opex}_{variable\_gas}
+      + \frac{\mathrm{fuel}_{cost\_gas}}{\mathrm{efficiency}_{gas}} + \mathrm{emission}_{factor\_gas\_t\_per\_mwh}
+      \mathrm{carbon}_{price\_usd\_per\_tco2}
   lcoe_geothermal_definition:
     description: 'Geothermal levelised cost in the fixed-charge-annuity form the field standardises on:
       the annualised capital charge over the energy the plant actually produces, plus fixed and variable
@@ -37512,48 +37550,56 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   lcoe_oil_definition:
+    id: lcoe_oil_definition
+    name: LCOE (oil)
     description: 'Oil levelised cost in the fixed-charge-annuity form the field standardises on: the annualised
       capital charge over the energy the plant actually produces, plus fixed and variable O&M, the fuel
       the fleet''s heat rate prices, and the stack''s carbon at carbon_price. Dimensional check: a USD/kW/year
       rate over an hours/year denominator with a dimensionless capacity factor is USD/MWh, and every per-MWh
-      term shares it.'
+      term shares it. Corrected (batch 45): the fuel term is a price per megawatt-hour of *thermal* energy,
+      and it is divided by the plant''s own net efficiency before it is added to a cost per megawatt-hour
+      of *electricity*. The shipped equation added the two bases directly, which no dimensional check
+      can catch -- both sides declare USD/MWh -- and which understated the fuel term by a factor of 1/efficiency_oil.'
+    system: cost_accounting
+    lhs: lcoe_oil_usd_per_mwh
+    rhs: (capex_oil * crf_oil + opex_fixed_oil) * 1000 / (8760 * capacity_factor_oil) + opex_variable_oil
+      + (fuel_cost_oil / efficiency_oil) + emission_factor_oil_t_per_mwh * carbon_price_usd_per_tco2
+    relation: eq
+    parameters:
+    - capacity_factor_oil
+    - capex_oil
+    - carbon_price_usd_per_tco2
+    - crf_oil
+    - efficiency_oil
+    - emission_factor_oil_t_per_mwh
+    - fuel_cost_oil
+    - lcoe_oil_usd_per_mwh
+    - opex_fixed_oil
+    - opex_variable_oil
+    free_variables:
+    - capacity_factor_oil
+    - capex_oil
+    - carbon_price_usd_per_tco2
+    - crf_oil
+    - efficiency_oil
+    - emission_factor_oil_t_per_mwh
+    - fuel_cost_oil
+    - opex_fixed_oil
+    - opex_variable_oil
     determined_variables:
     - lcoe_oil_usd_per_mwh
-    free_variables:
-    - capex_oil
-    - opex_fixed_oil
-    - capacity_factor_oil
-    - opex_variable_oil
-    - fuel_cost_oil
-    - emission_factor_oil_t_per_mwh
-    - carbon_price_usd_per_tco2
-    - crf_oil
-    latex: \mathrm{lcoe}_{oil\_usd\_per\_mwh} = \frac{1000 \left(\mathrm{capex}_{oil} \mathrm{crf}_{oil}
-      + \mathrm{opex}_{fixed\_oil}\right)}{8760 \mathrm{capacity}_{factor\_oil}} + \mathrm{opex}_{variable\_oil}
-      + \mathrm{fuel}_{cost\_oil} + \mathrm{emission}_{factor\_oil\_t\_per\_mwh} \mathrm{carbon}_{price\_usd\_per\_tco2}
-    lhs: lcoe_oil_usd_per_mwh
-    linearity: linear
-    name: LCOE (oil)
-    parameters:
-    - lcoe_oil_usd_per_mwh
-    - capex_oil
-    - opex_fixed_oil
-    - capacity_factor_oil
-    - opex_variable_oil
-    - fuel_cost_oil
-    - emission_factor_oil_t_per_mwh
-    - carbon_price_usd_per_tco2
-    - crf_oil
-    priority: P1
-    reference: NREL ATB 2025 Equations & Variables; Short, Packey & Holt (1995), NREL/TP-462-5173; EIA
-      AEO LCOE methodology
-    relation: eq
-    rhs: (capex_oil * crf_oil + opex_fixed_oil) * 1000 / (8760 * capacity_factor_oil) + opex_variable_oil
-      + fuel_cost_oil + emission_factor_oil_t_per_mwh * carbon_price_usd_per_tco2
-    solution_method: direct
-    system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
+    reference: NREL ATB 2025 Equations & Variables; Short, Packey & Holt (1995), NREL/TP-462-5173; EIA
+      AEO LCOE methodology, which defines the fuel term as the product of the plant heat rate and the
+      fuel price in native units, per megawatthour of generation
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{lcoe}_{oil\_usd\_per\_mwh} = \frac{1000 \left(\mathrm{capex}_{oil} \mathrm{crf}_{oil}
+      + \mathrm{opex}_{fixed\_oil}\right)}{8760 \mathrm{capacity}_{factor\_oil}} + \mathrm{opex}_{variable\_oil}
+      + \frac{\mathrm{fuel}_{cost\_oil}}{\mathrm{efficiency}_{oil}} + \mathrm{emission}_{factor\_oil\_t\_per\_mwh}
+      \mathrm{carbon}_{price\_usd\_per\_tco2}
   lcoe_solar_definition:
     description: 'Solar PV levelised cost at its own capex, capacity factor and O&M. Dimensional check:
       USD/kW/year divided by (hours/year times dimensionless) is USD/MWh, plus USD/MWh is USD/MWh. The
@@ -54549,6 +54595,33 @@ relationships:
     rather than HRAPIE coefficients, so it is cited for the form of the calculation and not for the number:
     the linearised excess here is PAF = beta * deltaC for small beta * deltaC, which is that product.'
   priority: P2
+- source: efficiency_coal
+  target: lcoe_coal_usd_per_mwh
+  equation_id: lcoe_coal_definition
+  relationship: functional
+  strength: hard
+  description: 'Divides the thermal fuel price into an electric one: a price per megawatt-hour of heat
+    is a price per efficiency-times-that of electricity.'
+  reference: The fuel-basis repair (batch 45)
+  priority: P1
+- source: efficiency_gas
+  target: lcoe_gas_usd_per_mwh
+  equation_id: lcoe_gas_definition
+  relationship: functional
+  strength: hard
+  description: 'Divides the thermal fuel price into an electric one: a price per megawatt-hour of heat
+    is a price per efficiency-times-that of electricity.'
+  reference: The fuel-basis repair (batch 45)
+  priority: P1
+- source: efficiency_oil
+  target: lcoe_oil_usd_per_mwh
+  equation_id: lcoe_oil_definition
+  relationship: functional
+  strength: hard
+  description: 'Divides the thermal fuel price into an electric one: a price per megawatt-hour of heat
+    is a price per efficiency-times-that of electricity.'
+  reference: The fuel-basis repair (batch 45)
+  priority: P1
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0
   id: carbon_price_budget_alignment

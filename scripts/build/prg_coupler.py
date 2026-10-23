@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "45":
+		b45_nodes, b45_equations, b45_edges, b45_rules = build_batch45(graph)
+		rules.extend(b45_rules)
+		nodes.update(b45_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b45_equations)
+		edges = list(BATCH12_EDGES) + b45_edges
 	elif batch == "44":
 		b44_nodes, b44_equations, b44_edges, b44_rules, b44_aliases = build_batch44(graph)
 		rules.extend(b44_rules)
@@ -11794,6 +11801,200 @@ BATCH44_EQUATIONS: tuple[tuple[str, str, str, str, str | None], ...] = (
 	 "and not for the number: the linearised excess here is PAF = beta * "
 	 "deltaC for small beta * deltaC, which is that product."),
 )
+
+
+_BATCH45_SOURCE = "The fuel-basis repair (batch 45)"
+
+
+def build_batch45(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Price the fuel the plant burns, not the heat it buys.
+
+	One finding, and it is a dimensional one that no gate could see.
+
+	*The three thermal LCOEs added a thermal price to an electric cost.*
+	`lcoe_coal_definition`, `lcoe_gas_definition` and `lcoe_oil_definition`
+	each read a `fuel_cost_*` term and added it to an annualised capital charge
+	spread over *electrical* output. But `fuel_cost_coal` is documented, in its
+	own description, as "Delivered coal cost per megawatt-hour of **thermal**
+	energy" -- and every other node in the fuel family agrees with that: the
+	cross-validation rule `delivered_fuel_below_commodity` compares it against
+	`coal_price_per_mwh`, which is the commodity price converted to a thermal
+	basis, not to an electric one. Three independent statements of the basis,
+	and the LCOE is the only place that disagrees with all three.
+
+	*The unit walker could not see it, and that is the finding worth recording.*
+	Both sides declare `USD/MWh`, so `check_equation` returns decidable and
+	consistent. The thermal and electric basis are the same *dimension* and
+	different *quantities*, which is the case a dimensional check is
+	structurally blind to. This is why the defect survived 44 batches: the
+	arithmetic is dimensionally valid and numerically wrong by the efficiency.
+
+	*What it cost at the defaults, measured.* Coal's fuel term was 12.0
+	USD/MWh_th where it should be 12.0 / 0.40 = 30.0 USD/MWh_e; gas 35.0 where
+	it should be 35.0 / 0.58 = 60.34; oil 80.0 where it should be
+	80.0 / 0.38 = 210.53. The LCOEs were 101.81, 87.82 and 213.51 and are
+	119.81, 113.17 and 344.03. The gas error is the one that matters for the
+	scenario the graph exists to price: gas at 87.82 was *cheaper* than coal
+	at 101.81, which is a claim that a 58%-efficient CCGT running on 35
+	USD/MWh_th gas beats a 40%-efficient coal plant on 12 USD/MWh_th coal.
+	It does not -- 60.34 + 22.50 + 27.82 + 2.5 is not below 30.00 + 46.00 +
+	39.31 + 4.5 -- and the corrected pair (gas 113.17 against coal 119.81)
+	puts them where the fuel prices say they belong, close enough that the
+	carbon price decides between them.
+
+	*Why the efficiency node rather than a new heat-rate node.* The graph
+	already carries `efficiency_coal`, `efficiency_gas` and `efficiency_oil`,
+	each exogenous, each sourced, and each already the divisor that turns a
+	capacity into a fuel burn in `coal_fuel_energy_definition` and its
+	siblings. A heat rate is the reciprocal of that efficiency and adding one
+	would be the two-names-for-one-number defect this build keeps removing.
+	The correction reuses the node the emissions chain already trusts.
+
+	*Which technologies are not corrected, and why that is not an omission.*
+	Biomass and nuclear also carry a `fuel_cost_*` term, and neither has an
+	efficiency node to divide by. Inventing one would mean sourcing an
+	efficiency the archived IEA/NEA tables do not state in the form this graph
+	would need -- and a guessed 0.33 for biomass is exactly the kind of
+	unsourced constant the dimensional walk exists to refuse. They are left on
+	their shipped basis, and the omission is named here rather than silently
+	inherited. The two VRE LCOEs carry no fuel term at all, so the question
+	does not arise for them.
+
+	*What this batch does not do.* It does not reconcile `fuel_cost_coal`'s own
+	default against `coal_price_per_mwh` -- 12.0 against 11.52 is within the
+	transport margin the description claims, and the cross-validation rule is
+	the place that judgement belongs. It does not touch the generic
+	`lcoe_definition`, whose `fuel_price_usd_per_mwh` is also documented per
+	thermal MWh but which has no technology efficiency to divide by; that
+	chain is flagged for a later batch, and the flag is the finding.
+	"""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	from alea.prg.dsl import parse_side
+
+	#: The three technologies whose fuel term is corrected, with the node the
+	#: efficiency is carried on. The pair is the whole correction: one term,
+	#: divided by the efficiency the fleet's own burn already uses.
+	_CORRECTED = {
+		"coal": "efficiency_coal",
+		"gas": "efficiency_gas",
+		"oil": "efficiency_oil",
+	}
+
+	for tech, efficiency in _CORRECTED.items():
+		equation_id = f"lcoe_{tech}_definition"
+		assert equation_id in graph.equations, (
+			f"{equation_id}: this batch assumed it ships"
+		)
+		shipped = graph.equations[equation_id]
+		fuel = f"fuel_cost_{tech}"
+		assert fuel in graph.nodes, f"{fuel}: this batch assumed it ships"
+		assert efficiency in graph.nodes, (
+			f"{efficiency}: this batch assumed it ships"
+		)
+		# The correction is a division of one named term by a named node. The
+		# assertion is that the term is present *unscaled*: an equation that
+		# already divided by an efficiency would be silently divided twice,
+		# and a double correction is the failure mode that looks like success.
+		assert f"/ {efficiency}" not in shipped.rhs, (
+			f"{equation_id}: already divides by {efficiency}; this batch would "
+			f"apply the correction twice"
+		)
+		assert fuel in shipped.rhs, (
+			f"{equation_id}: does not name {fuel}; this batch assumed the fuel "
+			f"term is where the basis error lives"
+		)
+		# Word-boundary so `fuel_cost_coal` is replaced and `fuel_cost_coal_x`
+		# would not be. The term is parenthesised so that the surrounding `+`
+		# binds against the quotient, not against the divisor.
+		corrected_rhs = re.sub(
+			rf"(?<![\w.]){re.escape(fuel)}(?![\w.])",
+			f"({fuel} / {efficiency})",
+			shipped.rhs,
+		)
+		assert corrected_rhs != shipped.rhs, (
+			f"{equation_id}: the substitution changed nothing"
+		)
+
+		# The declared lists are the corrected arithmetic's own closure, not the
+		# shipped lists plus one name. `efficiency_*` enters `parameters` and
+		# `free_variables`; it is exogenous, so it is free here even though the
+		# emissions chain also reads it -- a parameter is free in an equation
+		# unless *that* equation determines it.
+		named = set(parse_side(corrected_rhs).symbols) | set(
+			parse_side(str(shipped.lhs)).symbols
+		)
+		determined = set(shipped.determined_variables)
+		body = shipped.model_dump(mode="json")
+		body["rhs"] = corrected_rhs
+		body["determined_variables"] = sorted(determined & named)
+		body["free_variables"] = sorted(named - determined)
+		body["parameters"] = sorted(named)
+		body["description"] = (
+			(shipped.description or "")
+			+ " Corrected (batch 45): the fuel term is a price per megawatt-hour of "
+			"*thermal* energy, and it is divided by the plant's own net efficiency "
+			"before it is added to a cost per megawatt-hour of *electricity*. The "
+			"shipped equation added the two bases directly, which no dimensional "
+			"check can catch -- both sides declare USD/MWh -- and which "
+			f"understated the fuel term by a factor of 1/{efficiency}."
+		)
+		body["reference"] = (
+			"NREL ATB 2025 Equations & Variables; Short, Packey & Holt (1995), "
+			"NREL/TP-462-5173; EIA AEO LCOE methodology, which defines the fuel "
+			"term as the product of the plant heat rate and the fuel price in "
+			"native units, per megawatthour of generation"
+		)
+		body["latex"] = (
+			body["latex"].replace(
+				rf"\mathrm{{fuel}}_t",
+				rf"\mathrm{{fuel}}_t / \eta_t",
+			)
+			if "fuel" in (body.get("latex") or "")
+			else body.get("latex")
+		)
+		equations[equation_id] = body
+
+		# The node's `affects` list is a declaration the loader strips into
+		# `_declared`, not a model field -- so it is read from there and written
+		# back as a plain document key. The generator does not rebuild it from
+		# the equations, so an edge this batch adds without the matching entry
+		# leaves `structure_issues()` reporting drift between what the node
+		# claims and what the arithmetic reads.
+		declared = graph._declared.get(efficiency, ((), ()))
+		affects = list(declared[1])
+		target = f"lcoe_{tech}_usd_per_mwh"
+		if target not in affects:
+			affects.append(target)
+		node = graph.nodes[efficiency]
+		nodes[efficiency] = {
+			**node.model_dump(mode="json"),
+			"depends_on": list(declared[0]),
+			"affects": sorted(affects),
+		}
+
+		# One new edge: the efficiency enters this LCOE. The existing fuel edge
+		# stays -- the equation still reads that node, now as a quotient's
+		# numerator rather than a bare summand.
+		edges.append({
+			"source": efficiency,
+			"target": f"lcoe_{tech}_usd_per_mwh",
+			"equation_id": equation_id,
+			"relationship": "functional",
+			"strength": "hard",
+			"description": (
+				"Divides the thermal fuel price into an electric one: a price per "
+				"megawatt-hour of heat is a price per efficiency-times-that of "
+				"electricity."
+			),
+			"reference": _BATCH45_SOURCE,
+			"priority": "P1",
+		})
+
+	return nodes, equations, edges, rules
 
 
 def build_batch44(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], dict[str, str]]:

@@ -519,6 +519,56 @@ unchanged in shape at 42 bound / 30 unbound / 72 constraint-shaped / 493
 identities.
 
 
+### The fuel term was priced per unit of heat (batch 45, 2026-10-23)
+
+The three thermal LCOEs added a **thermal** fuel price to an **electric** cost.
+`fuel_cost_coal` is documented, in its own description, as "delivered coal cost
+per megawatt-hour of thermal energy", and every other node in the fuel family
+agrees: `coal_price_per_mwh` is the commodity price converted to a thermal
+basis, and the `delivered_fuel_below_commodity` rule compares the two on that
+basis. `lcoe_coal_definition` was the one place that disagreed with all three,
+summing the price directly into an annualised capital charge spread over
+electrical output.
+
+**No dimensional check could see it.** Both sides declare `USD/MWh`, so
+`check_equation` returns decidable and consistent. Thermal and electric are the
+same *dimension* and different *quantities* — the case a unit walker is
+structurally blind to, which is why the defect survived 44 batches of
+dimension-driven repairs. The arithmetic is valid and wrong by exactly the
+plant's own efficiency.
+
+Measured at the defaults: coal's fuel term was 12.0 where it should be
+12.0 / 0.40 = 30.0; gas 35.0 where it should be 35.0 / 0.58 = 60.34; oil 80.0
+where it should be 80.0 / 0.38 = 210.53. The LCOEs were 101.81, 87.82 and
+213.51 and are **119.81, 113.17 and 344.03**.
+
+**The gas error was the one that mattered.** At 87.82 gas was cheaper than coal
+at 101.81 — a claim that a 58%-efficient CCGT on 35 USD/MWh_th gas beats a
+40%-efficient coal plant on 12 USD/MWh_th coal. It does not. The corrected pair
+sits 6.6 apart, close enough that the carbon price decides between them, which
+is the comparison the graph exists to price.
+
+The correction reuses the existing `efficiency_*` nodes rather than adding a
+heat rate: each is already the divisor that turns capacity into fuel burn in
+`coal_fuel_energy_definition` and its siblings, and a heat rate is the
+reciprocal of an efficiency — the two-names-for-one-number defect this build
+keeps removing. Biomass and nuclear also carry a fuel term and are **not**
+corrected: neither has an efficiency node, and inventing a 0.33 for biomass
+would be exactly the unsourced constant the walk exists to refuse. The generic
+`lcoe_definition` is likewise flagged rather than touched — its
+`fuel_price_usd_per_mwh` is documented per thermal MWh with no technology
+efficiency to divide by.
+
+`structure_issues()` caught the one thing the equation edit did not: `affects`
+is a stored declaration the generator does not rebuild from the arithmetic, so
+an edge added without the matching entry reports drift. The three lists were
+updated with the edges.
+
+Uncoupled holds at 234 — the operands were already named by equations, and what
+this batch repaired was a *basis*, not a connection. Units hold at 564
+consistent, 1 inconsistent, 3 exempt: the walker reads both sides as `USD/MWh`
+and will keep reading them that way.
+
 
 ## Not built
 
