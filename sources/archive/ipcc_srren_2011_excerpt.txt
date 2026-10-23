@@ -1,0 +1,357 @@
+Summary for Policymakers                                                                                                     Summaries
+
+
+
+
+                    energy demand in locations where suitable RE resources exist or can be supplied. However, the actual rate
+                    of integration and the resulting shares of RE will be inﬂuenced by factors such as costs, policies, environ-
+                    mental issues and social aspects. [8.2, 8.3, 9.3, 9.4, 10.2, 10.5]
+
+
+
+5.                  Renewable energy and sustainable development
+                    Historically, economic development has been strongly correlated with increasing energy use and growth of
+                    GHG emissions, and RE can help decouple that correlation, contributing to sustainable development (SD).
+                    Though the exact contribution of RE to SD has to be evaluated in a country-speciﬁc context, RE offers the opportunity
+                    to contribute to social and economic development, energy access, secure energy supply, climate change mitigation, and
+                    the reduction of negative environmental and health impacts. [9.2] Providing access to modern energy services would
+                    support the achievement of the Millennium Development Goals. [9.2.2, 9.3.2]
+
+                    • RE can contribute to social and economic development. Under favorable conditions, cost savings in compari-
+                      son to non-RE use exist, in particular in remote and in poor rural areas lacking centralized energy access. [9.3.1,
+                      9.3.2.] Costs associated with energy imports can often be reduced through the deployment of domestic RE tech-
+                      nologies that are already competitive. [9.3.3] RE can have a positive impact on job creation although the studies
+                      available differ with respect to the magnitude of net employment. [9.3.1]
+
+                    • RE can help accelerate access to energy, particularly for the 1.4 billion people without access to electric-
+                      ity and the additional 1.3 billion using traditional biomass. Basic levels of access to modern energy services
+                      can provide signiﬁcant beneﬁts to a community or household. In many developing countries, decentralized grids
+                      based on RE and the inclusion of RE in centralized energy grids have expanded and improved energy access. In
+                      addition, non-electrical RE technologies also offer opportunities for modernization of energy services, for example,
+                      using solar energy for water heating and crop drying, biofuels for transportation, biogas and modern biomass for
+                      heating, cooling, cooking and lighting, and wind for water pumping. [9.3.2, 8.1] The number of people without
+                      access to modern energy services is expected to remain unchanged unless relevant domestic policies are imple-
+                      mented, which may be supported or complemented by international assistance as appropriate. [9.3.2, 9.4.2]
+
+                    • RE options can contribute to a more secure energy supply, although speciﬁc challenges for integra-
+                      tion must be considered. RE deployment might reduce vulnerability to supply disruption and market volatility if
+                      competition is increased and energy sources are diversiﬁed. [9.3.3, 9.4.3] Scenario studies indicate that concerns
+                      regarding secure energy supply could continue in the future without technological improvements within the
+                      transport sector. [2.8, 9.4.1.1, 9.4.3.1, 10.3] The variable output proﬁles of some RE technologies often necessitate
+                      technical and institutional measures appropriate to local conditions to assure energy supply reliability. [8.2, 9.3.3]
+
+                    • In addition to reduced GHG emissions, RE technologies can provide other important environmental
+                      beneﬁts. Maximizing these beneﬁts depends on the speciﬁc technology, management, and site charac-
+                      teristics associated with each RE project.
+
+                        •   Lifecycle assessments (LCA) for electricity generation indicate that GHG emissions from RE technolo-
+                            gies are, in general, signiﬁcantly lower than those associated with fossil fuel options, and in a range
+                            of conditions, less than fossil fuels employing CCS. The median values for all RE range from 4 to 46 g
+                            CO2eq/kWh while those for fossil fuels range from 469 to 1,001 g CO2eq/kWh (excluding land use change emis-
+                            sions) (Figure SPM.8).
+
+                        •   Most current bioenergy systems, including liquid biofuels, result in GHG emission reductions, and
+                            most biofuels produced through new processes (also called advanced biofuels or next-generation
+                            biofuels) could provide higher GHG mitigation. The GHG balance may be affected by land use
+
+18
+                                                       Summaries                                                                                                                                                                                 Summary for Policymakers
+
+
+
+
+                                                                                                             changes and corresponding emissions and removals. Bioenergy can lead to avoided GHG emissions from
+                                                                                                             residues and wastes in landﬁll disposals and co-products; the combination of bioenergy with CCS may provide
+                                                                                                             for further reductions (see Figure SPM.8). The GHG implications related to land management and land use
+                                                                                                             changes in carbon stocks have considerable uncertainties. [2.2, 2.5, 9.3.4.1]
+
+                                                                                                        •    The sustainability of bioenergy, in particular in terms of lifecycle GHG emissions, is inﬂuenced by
+                                                                                                             land and biomass resource management practices. Changes in land and forest use or management that,
+                                                                                                             according to a considerable number of studies, could be brought about directly or indirectly by biomass produc-
+                                                                                                             tion for use as fuels, power or heat, can decrease or increase terrestrial carbon stocks. The same studies also
+
+
+                                                                             Electricity Generation Technologies Powered by Renewable Resources                                                                                     Electricity Generation Technologies
+                                                                                                                                                                                                                                   Powered by Non-Renewable Resources
+                                                       2,000
+
+
+                                                       1,750
+                                                                         Maximum
+
+                                                       1,500             75th Percentile
+
+                                                                         Median
+                                                       1,250             25th Percentile
+
+                                                                         Minimum
+                                                       1,000
+                                                                         Single Estimates
+                                                                         with CCS
+
+
+
+
+ Lifecycle Greenhouse Gas Emissions [g CO2 eq / kWh]
+                                                         750
+
+
+                                                         500
+
+
+                                                         250
+
+
+                                                           0
+
+
+
+
+                                                                                                                                                                                                                           Nuclear Energy
+                                                                                                                                                                         Hydropower
+                                                                                                                                                                                                                                                                     Coal
+
+
+                                                                                                                                                                                           Ocean Energy
+                                                                                                                                                                                                                                                            Oil
+
+
+                                                                                             Photovoltaics                                                                                                   Wind Energy                      Natural Gas
+                                                                  Biopower
+
+
+                                                                                                                                               Geothermal Energy
+
+                                                                                                                   Concentrating Solar Power
+                                                        -250
+                                                                               *
+                                                        -500
+
+
+                                                        -750
+
+
+                                                       -1,000
+
+
+                                                       -1,250
+
+                                                                                                                                                          * Avoided Emissions, no Removal of GHGs from the Atmosphere
+                                                       -1,500
+
+
+ Count of                                                       222(+4)                     124                   42                              8                      28                10               126            125              83(+7)          24     169(+12)
+ Estimates
+ Count of                                                       52(+0)                      26                    13                              6                      11                5                49             32               36(+4)          10     50(+10)
+ References
+
+
+Figure SPM.8 | Estimates of lifecycle GHG emissions (g CO2eq/kWh) for broad categories of electricity generation technologies, plus some technologies integrated with CCS. Land use-
+related net changes in carbon stocks (mainly applicable to biopower and hydropower from reservoirs) and land management impacts are excluded; negative estimates10 for biopower
+are based on assumptions about avoided emissions from residues and wastes in landﬁll disposals and co-products. References and methods for the review are reported in Annex II. The
+number of estimates is greater than the number of references because many studies considered multiple scenarios. Numbers reported in parentheses pertain to additional references
+and estimates that evaluated technologies with CCS. Distributional information relates to estimates currently available in LCA literature, not necessarily to underlying theoretical or
+practical extrema, or the true central tendency when considering all deployment conditions. [Figure 9.8, 9.3.4.1]
+
+
+                                                                                           10 ‘Negative estimates’ within the terminology of lifecycle assessments presented in the SRREN refer to avoided emissions. Unlike the case of bioen-
+                                                                                              ergy combined with CCS, avoided emissions do not remove GHGs from the atmosphere.
+
+
+                                                                                                                                                                                                                                                                             19
+       Annex II                                                                                                                                                    Methodology
+
+
+
+•      Estimates duplicating prior published work were not included.                         The resulting values underlying Figure 9.8 are shown in Table A.II.4. Fig-
+                                                                                             ures displayed in technology chapters are based on the same data set,
+•      Results had to have been easily convertible to the functional unit                    yet displayed with a higher level of resolution regarding technology sub-
+       chosen for this study: grams of CO2eq per kWh generated.                              categories (e.g., on- and offshore wind energy).
+
+Table A.II.3 reports the counts of references at each stage in the screen-                   A.II.5.2.2       List of references
+ing process for the broad classes of electricity generation technologies
+considered in this report.                                                                   Below, all references for the review of lifecycle assessments of greenhouse
+                                                                                             gas emissions from electricity generation that are shown in the ﬁnal results
+Analysis of estimates                                                                        in this report are listed, sorted by technology and in alphabetical order.
+Estimates of lifecycle GHG emissions from studies passing both
+screens were then analyzed and plotted. First, estimates were cat-                           Biomass-based power generation (52)
+egorized by technology within the broad classes considered in this
+report, listed in Table A.II.3. Second, estimates were converted to                          Beals, D., and D. Hutchinson (1993). Environmental Impacts of Alternative Electric-
+the common functional unit of g CO2eq per kWh generated. This                                     ity Generation Technologies: Final Report. Beals and Associates, Guelph, Ontario,
+conversion was performed using no exogenous assumptions; if                                       Canada, 151 pp.
+any were required, that estimate was not included. Third, esti-                              Beeharry, R.P. (2001). Carbon balance of sugarcane bioenergy systems. Biomass &
+mates of total lifecycle GHG emissions that included contributions                                Bioenergy, 20(5), pp. 361-370.
+from either land use change (LUC) or heat production (in cases                               Corti, A., and L. Lombardi (2004). Biomass integrated gasiﬁcation combined cycle
+of cogeneration) were removed. This step required that studies                                    with reduced CO2 emissions: Performance analysis and life cycle assessment (LCA).
+that considered LUC- or heat-related GHG emissions had to report                                  Energy, 29(12-15), pp. 2109-2124.
+those contributions separately such that estimates included here                             Cottrell, A., J. Nunn, A. Urfer, and L. Wibberley (2003). Systems Assessment of Elec-
+pertain to the generation of electricity alone. Finally, distributional                           tricity Generation Using Biomass and Coal in CFBC. Cooperative Research Centre
+information required for display in box and whisker plots were                                    for Coal in Sustainable Development, Pullenvale, Qld., Australia, 21 pp.
+calculated: minimum, 25th percentile value, 50th percentile value,                           Cowie, A.L. (2004). Greenhouse Gas Balance of Bioenergy Systems Based on Integrated
+75th percentile value and maximum. Technologies with data sets                                    Plantation Forestry in North East New South Wales, Australia: International Energy
+composed of less than ﬁve estimates (e.g., geothermal) have been                                  Agency (IEA)Bioenergy Task 38 on GHG Balances of Biomass and Bioenergy Sys-
+plotted as discrete points rather than superimposing synthetic dis-                               tems. IEA, Paris, France. 6 pp. Available at: www.ieabioenergy-task38.org/projects/
+tributional information.                                                                          task38casestudies/aus-brochure.pdf.
+
+
+
+Table A.II.3 | Counts of LCAs of electricity generation technologies (‘references’) at each stage in the literature collection and screening process and numbers of scenarios
+(‘estimates’) of lifecycle GHG emissions evaluated herein.
+
+                                                                                                                                References providing        Estimates of lifecycle
+                                                                        References passing           References passing
+ Technology category                       References reviewed                                                                     lifecycle GHG               GHG emissions
+                                                                          the ﬁrst screen            the second screen
+                                                                                                                                emissions estimates            passing screens
+
+ Biopower                                            369                          162                          84                          52                          226
+ Coal                                                273                          192                         110                          52                          181
+ Concentrating solar power                           125                          45                           19                          13                          42
+ Geothermal Energy                                    46                          24                           9                            6                           8
+ Hydropower                                           89                          45                           11                          11                          28
+ Natural gas                                         251                          157                          77                          40                          90
+ Nuclear Energy                                      249                          196                          64                          32                          125
+ Ocean energy                                         64                          30                           6                            5                          10
+ Oil                                                  68                          45                           19                          10                          24
+ Photovoltaics                                       400                          239                          75                          26                          124
+ Wind Energy                                         231                          174                          72                          49                          126
+ TOTALS                                             2165                         1309                         546                         296                         984
+ % of total reviewed                                                             60%                          25%                         14%
+ % of those passing ﬁrst screen                                                                               42%                         23%
+ % of those passing second screen                                                                                                         54%
+
+Note: Some double counting is inherent in the totals given that some references investigated more than one technology.
+
+
+                                                                                                                                                                                981
+Methodology                                                                                                                                                          Annex II
+
+
+Table A.II.4 | Aggregated results of literature review of LCAs of GHG emissions from electricity generation technologies as displayed in Figure 9.8 (g CO2eq/kWh).
+
+                       Bio-                  Solar          Geothermal                          Ocean           Wind         Nuclear        Natural
+ Values                                                                       Hydropower                                                                     Oil          Coal
+                      power             PV           CSP      Energy                            Energy         Energy        Energy           Gas
+
+ Minimum                -633            5             7           6                 0               2             2                1          290            510          675
+
+ 25th percentile        360             29           14          20                 3               6             8                8          422            722          877
+
+ 50th
+                         18             46           22          45                 4               8             12            16            469            840          1001
+ percentile
+ 75th
+                         37             80           32          57                 7               9             20            45            548            907          1130
+ percentile
+
+ Maximum                 75          217             89          79                43              23             81            220           930           1170          1689
+
+ CCS min               -1368                                                                                                                   65                          98
+
+ CCS max                -594                                                                                                                  245                         396
+
+Note: CCS = Carbon capture and storage, PV = Photovoltaic, CSP = Concentrating solar power.
+
+
+
+Cuperus, M.A.T. (2003). Biomass Systems: Final Report. Environmental and Eco-               Faix, A., J. Schweinle, S. Scholl, G. Becker, and D. Meier (2010). (GTI-tcbiomass)
+    logical Life Cycle Inventories for Present and Future Power Systems in Europe               life-cycle assessment of the BTO-Process (biomass-to-oil) with combined heat
+    (ECLIPSE): N.V. tot Keuring van Electrotechnische Materialen (KEMA) Nederland               and power generation. Environmental Progress and Sustainable Energy, 29(2),
+    B.V., Arnhem, The Netherlands, 83 pp.                                                       pp. 193-202.
+Damen, K., and A.P.C. Faaij (2003). A Life Cycle Inventory of Existing Biomass              Forsberg, G. (2000). Biomass energy transport – Analysis of bioenergy transport
+    Import Chains for “Green” Electricity Production. NW&S-E-2003-1, Universiteit               chains using life cycle inventory method. Biomass & Bioenergy, 19(1), pp. 17-30.
+    Utrecht Copernicus Institute, Department of Science, Technology and Society,            Froese, R.E., D.R. Shonnard, C.A. Miller, K.P. Koers, and D.M. Johnson (2010). An
+    Utrecht, The Netherlands, 76 pp.                                                            evaluation of greenhouse gas mitigation options for coal-ﬁred power plants in
+Daugherty, E.C. (2001). Biomass Energy Systems Efﬁciency: Analyzed Through a Life               the US Great Lakes states. Biomass and Bioenergy, 34(3), pp. 251-262.
+    Cycle Assessment. M.S. Thesis, Lund University, Lund, Sweden, 39 pp.                    Gaunt, J.L., and J. Lehmann (2008). Energy balance and emissions associated with
+Dones, R., C. Bauer, R. Bolliger, B. Burger, T. Heck, A. Roder, M.F. Emenegger,                 biochar sequestration and pyrolysis bioenergy production. Environmental Science
+    R. Frischknecht, N. Jungbluth, and M. Tuchschmid (2007). Life Cycle Inven-                  & Technology, 42(11), pp. 4152-4158.
+    tories of Energy Systems: Results for Current Systems in Switzerland and Other          Gmünder, S.M., R. Zah, S. Bhatacharjee, M. Classen, P. Mukherjee, and R. Widmer
+    UCTE Countries. Ecoinvent Report No. 5, Paul Scherrer Institute, Swiss Centre for           (2010). Life cycle assessment of village electriﬁcation based on straight Jatropha
+    Life Cycle Inventories, Villigen, Switzerland, 185 pp. Available at: www.ecolo.org/         oil in Chhattisgarh, India. Biomass and Bioenergy, 34(3):347-355.
+    documents/documents_in_english/Life-cycle-analysis-PSI-05.pdf.                          Hanaoka, T., and S.-Y. Yokoyama (2003). CO2 mitigation by biomass-ﬁred power
+Dowaki, K., H. Ishitani, R. Matsuhashi, and N. Sam (2002). A comprehensive life                 generation in Japan. International Energy Journal, 4(2), pp. 99-103.
+    cycle analysis of a biomass energy system. Technology, 8(4-6), pp. 193-204.             Hartmann, D., and M. Kaltschmitt (1999). Electricity generation from solid biomass
+Dowaki, K., S. Mori, H. Abe, P.F. Grierson, M.A. Adams, N. Sam, P. Nimiago,                     via co-combustion with coal - Energy and emission balances from a German case
+    J. Gale, and Y. Kaya (2003). A life cycle analysis of biomass energy system                 study. Biomass & Bioenergy, 16(6), pp. 397-406.
+    tanking [sic] sustainable forest management into consideration. In: Greenhouse          Heller, M.C., G.A. Keoleian, M.K. Mann, and T.A. Volk (2004). Life cycle energy
+    Gas Control Technologies – 6th International Conference, Kyoto, Japan, 1-4                  and environmental beneﬁts of generating electricity from willow biomass. Renew-
+    October 2002. Pergamon, Oxford, pp. 1383-1388.                                              able Energy, 29(7), pp. 1023-1042.
+Dubuisson, X., and I. Sintzoff (1998). Energy and CO2 balances in different power           Herrera, I., C. Lago, Y. Lechon, R. Saez, M. Munarriz, and J. Gil (2008). Life cycle
+    generation routes using wood fuel from short rotation coppice. Biomass & Bioen-             assessment of two biomass power generation plants. In: 16th European Biomass
+    ergy, 15(4-5), pp. 379-390.                                                                 Conference & Exhibition, Valencia, Spain, 2-6 June 2008, pp. 2606-2613.
+Elsayed, M.A., R. Matthews, and N.D. Mortimer (2003). Carbon and Energy Bal-                Hong, S.W. (2007). The Usability of Switchgrass, Rice Straw, and Logging Residue as
+    ances for a Range of Biofuel Options. Resources Research Institute, Shefﬁeld Hallam         Feedstocks for Power Generation in East Texas. M.S. Thesis, Texas A&M University,
+    University, Shefﬁeld, UK, 341 pp.                                                           College Station, TX, USA, 83 pp.
+European Commission (1999). National Implementation. ExternE: Externalities of              IEA (2002). Environmental and Health Impacts of Electricity Generation. A Compari-
+    Energy. European Commission, Directorate-General XII, Luxembourg, 20, 534 pp.               son of the Environmental Impacts of Hydropower with those of Other Generation
+Faaij, A., B. Meuleman, W. Turkenburg, A. van Wijk, B. Ausilio, F. Rosillo-Calle,               Technologies. International Energy Agency (IEA), Paris, France, 239 pp.
+    and D. Hall (1998). Externalities of biomass based electricity production               Jungmeier, G., and J. Spitzer (2001). Greenhouse gas emissions of bioenergy from
+    compared with power generation from coal in the Netherlands. Biomass and                    agriculture compared to fossil energy for heat and electricity supply. Nutrient
+    Bioenergy, 14(2), pp. 125-147.                                                              Cycling in Agroecosystems, 60(1-3), pp. 267-273.
+
+
+
+
+982
+    Annex II                                                                                                                                                  Methodology
+
+
+
+Jungmeier, G., J. Spitzer, and G. Resch (1998). Environmental burdens over the             Sikkema, R., M. Junginger, W. Pichler, S. Hayes, and A.P.C. Faaij (2010). The
+    entire life cycle of a biomass CHP plant. Biomass and Bioenergy, 15(4-5), pp.              international logistics of wood pellets for heating and power production in
+    311-323.                                                                                   Europe: Costs, energy-input and greenhouse gas balances of pellet consumption
+Lettens, S., B. Muys, R. Ceulemans, E. Moons, J. Garcia, and P. Coppin (2003).                 in Italy, Sweden and the Netherlands. Biofuels, Bioproducts and Bioreﬁning, 4(2),
+    Energy budget and greenhouse gas balance evaluation of sustainable coppice                 pp. 132-153.
+    systems for electricity production. Biomass and Bioenergy, 24(3), pp. 179-197.         Spath, P.L., and M.K. Mann (2004). Biomass Power and Conventional Fossil Systems
+Ma, X., F. Li, Z. Zhao, C. Wu, and Y. Chen (2003). Life cycle assessment on bio-               with and without CO2 Sequestration – Comparing the Energy Balance, Green-
+    mass gasiﬁcation combined cycle and coal ﬁred power plant. In: Energy and the              house Gas Emissions and Economics. NREL/TP-510-32575. National Renewable
+    Environment – Proceedings of the International Conference on Energy and the                Energy Laboratory, Golden, CO, USA, 28 pp.
+    Environment, Shanghai, China, 22-24 May, 2003. Shanghai Scientiﬁc and Techni-          Styles, D., and M.B. Jones (2007). Energy crops in Ireland: Quantifying the potential
+    cal Publishers, Shanghai, China, 1, pp. 209-214.                                           life-cycle greenhouse gas reductions of energy-crop electricity. Biomass & Bioen-
+Malkki, H., and Y. Virtanen (2003). Selected emissions and efﬁciencies of energy               ergy, 31(11-12), pp. 759-772.
+    systems based on logging and sawmill residues. Biomass and Bioenergy, 24, pp.          Tiwary, A., and J. Colls (2010). Mitigating secondary aerosol generation potentials
+    321-327.                                                                                   from biofuel use in the energy sector. Science of the Total Environment, 408(3),
+Mann, M.K., and P.L. Spath (1997). Life Cycle Assessment of a Biomass Gasiﬁca-                 pp. 607-616.
+    tion Combined-Cycle System. NREL/TP-430-23076, National Renewable Energy               Wibberley, L. (2001). Coal in a Sustainable Society. Australian Coal Association
+    Laboratory, Golden, CO, USA, 157 pp.                                                       Research Program, Brisbane, Queensland, Australia.
+Mann, M.K., and P.L. Spath (2001). A life-cycle assessment of biomass coﬁring in a         Wibberley, L., J. Nunn, A. Cottrell, M. Searles, A. Urfer, and P. Scaife (2000). Life
+    coal-ﬁred power plant. Clean Products and Processes, 3, pp. 81-91.                         Cycle Analysis for Steel and Electricity Production in Australia. Australian Coal
+Mohan, T. (2005). An Integrated Approach for Techno-economic and Environmental                 Association Research Program, Brisbane, Queensland, Australia, 36 pp.
+    Analysis of Energy from Biomass and Fossil Fuels. M.S. Thesis, Texas A&M University,   Wicke, B., V. Dornburg, M. Junginger, and A. Faaij (2008). Different palm oil pro-
+    College Station, TX, USA, 200 pp.                                                          duction systems for energy purposes and their greenhouse gas implications.
+Pehnt, M. (2006). Dynamic life cycle assessment (LCA) of renewable energy tech-                Biomass and Bioenergy, 32(12), pp. 1322-1337.
+    nologies. Renewable Energy, 31(1), pp. 55-71.                                          Yoshioka, T., K. Aruga, T. Nitami, H. Kobayashi, and H. Sakai (2005). Energy and
+Rafaschieri, A., M. Rapaccini, and G. Manfrida (1999). Life cycle assessment of                carbon dioxide (CO2) balance of logging residues as alternative energy resources:
+    electricity production from poplar energy crops compared with conventional fossil          System analysis based on the method of a life cycle inventory (LCI) analysis.
+    fuels. Energy Conversion and Management, 40(14), pp. 1477-1493.                            Journal of Forest Research, 10(2), pp. 125-134.
+Ramjeawon, T. (2008). Life cycle assessment of electricity generation from bagasse         Zhang, Y.M., S. Habibi, and H.L. MacLean (2007). Environmental and economic
+    in Mauritius. Journal of Cleaner Production, 16(16), pp. 1727-1734.                        evaluation of bioenergy in Ontario, Canada. Journal of the Air and Waste Man-
+Renouf, M.A. (2002). Preliminary LCA of Electricity Generation from Sugarcane                  agement Association, 57(8), pp. 919-933.
+    Bagasse. Environmental Energy Center, University of Queensland, Queensland,
+    Australia, 10 pp. Available at: www.docstoc.com/docs/39528266/PRELIMINARY-
+    LCA-OF-ELECTRICITY-GENERATION-FROM-SUGARCANE-BAGASSE.                                  Coal-ﬁred power generation (52)
+Robertson, K. (2003). Greenhouse Gas Beneﬁts of a Combined Heat and Power
+    Bioenergy System in New Zealand. FORCE Consulting, Kirkland, WA, USA, 16 pp.           Akai, M., N. Nomura, H. Waku, and M. Inoue (1997). Life-cycle analysis of a fossil-
+    Available at: www.ieabioenergy-task38.org/projects/task38casestudies/nz_full-              fuel power plant with CO2 recovery and a sequestering system. Energy, 22(2-3),
+    report.pdf.                                                                                pp. 249-256.
+Saskatchewan Energy Conservation and Development Authority (1994). Levelized               Bates, J.L. (1995). Full Fuel Cycle Atmospheric Emissions and Global Warming
+    Cost and Full Fuel Cycle Environmental Impacts of Saskatchewan’s Electric Supply           Impacts from UK Electricity Generation. Report Number: ETSU-R-88, Energy
+    Options. SECDA Publication No. T800-94-004, Saskatoon, SK, Canada, 205 pp.                 Technical Support Unit (ETSU), London, UK, 51 pp. (ISBN 011 515 4027).
+Schaffner, B., K. Persson, U. Nilsson, and J. Peterson (2002). Environmental and           Corrado, A., P. Fiorini, and E. Sciubba (2006). Environmental assessment and
+    Health Impacts of Electricity Generation. A Comparison of the Environmental                extended exergy analysis of a “Zero CO2 Emission,” high-efﬁciency steam
+    Impacts of Hydropower with Those of Other Generation Technologies. Interna-                power plant. Energy, 31(15), pp. 3186-3198.
+    tional Energy Agency (IEA), Paris, France, 221 pp. Available at: www.ieahydro.         Cottrell, A., J. Nunn, A. Urfer, and L. Wibberley (2003). Systems Assessment of
+    org/reports/ST3-020613b.pdf.                                                               Electricity Generation Using Biomass and Coal in CFBC. Cooperative Research
+Searcy, E., and P. Flynn (2008). Processing of straw/corn stover: Comparison of life           Centre for Coal in Sustainable Development, Pullenvale, Qld., Australia, 21 pp.
+    cycle emissions. International Journal of Green Energy, 5(6), pp. 423-437.             Damen, K., and A.P.C. Faaij (2003). A Life Cycle Inventory of Existing Biomass
+Setterwall, C., M. Munter, P. Sarkozi, and B. Bodlund (2003). Bio-fuelled                      Import Chains for “Green” Electricity Production. NW&S-E-2003-1, Universiteit
+    Combined Heat and Power Systems. Environmental and Ecological Life Cycle                   Utrecht Copernicus Institute, Department of Science, Technology and Society,
+    Inventories for Present and Future Power Systems in Europe (ECLIPSE). N.V. tot             Utrecht, The Netherlands, 76 pp.
+    Keuring van Electrotechnische Materialen (KEMA) Nederland B.V., Arnhem, The            Dolan, S.L. (2007). Life Cycle Assessment and Emergy Synthesis of a Theoretical Off-
+    Netherlands.                                                                               shore Wind Farm for Jacksonville, Florida. M.S. Thesis, University of Florida, 125
+                                                                                               pp.
+
+
+                                                                                                                                                                           983
+

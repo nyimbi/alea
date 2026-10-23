@@ -1,0 +1,1864 @@
+ANNEX
+
+
+III     Technology-specific Cost and
+        Performance Parameters
+
+
+        Editor:
+        Steffen Schlömer (Germany)
+
+        Lead Authors:
+        Thomas Bruckner (Germany), Lew Fulton (USA), Edgar Hertwich (Austria / Norway), Alan McKinnon
+        (UK / Germany), Daniel Perczyk (Argentina), Joyashree Roy (India), Roberto Schaeffer (Brazil),
+        Steffen Schlömer (Germany), Ralph Sims (New Zealand), Pete Smith (UK), Ryan Wiser (USA)
+
+        Contributing Authors:
+        Gesine Hänsel (Germany), David de Jager (Netherlands), Maarten Neelis (China)
+
+
+
+
+        This annex should be cited as:
+
+        Schlömer S., T. Bruckner, L. Fulton, E. Hertwich, A. McKinnon, D. Perczyk, J. Roy, R. Schaeffer, R. Sims, P. Smith, and R. Wiser,
+        2014: Annex III: Technology-specific cost and performance parameters. In: Climate Change 2014: Mitigation of Climate
+        Change. Contribution of Working Group III to the Fifth Assessment Report of the Intergovernmental Panel on Climate
+        Change [Edenhofer, O., R. Pichs-Madruga, Y. Sokona, E. Farahani, S. Kadner, K. Seyboth, A. Adler, I. Baum, S. Brunner, P.
+        Eickemeier, B. Kriemann, J. Savolainen, S. Schlömer, C. von Stechow, T. Zwickel and J.C. Minx (eds.)]. Cambridge University
+        Press, Cambridge, United Kingdom and New York, NY, USA.
+
+
+
+
+                                                                                                                                 1329
+       Technology-specific Cost and Performance Parameters                                                                                                                                                                                                   Annex III
+
+
+       Contents
+
+
+       A.III.1                Introduction ��������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������1331
+
+
+       A.III.2                Energy supply����������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������1331
+
+                              A.III.2.1               Approach��������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������1331
+
+                              A.III.2.2               Data������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������1332
+
+
+
+       A.III.3                Transport ����������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������1336
+
+                              A.III.3.1               Approach��������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������1336
+
+                              A.III.3.2               Data������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������1337
+
+
+AIII   A.III.4                Industry��������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������1344
+
+                              A.III.4.1               Introduction��������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������1344
+
+                              A.III.4.2               Approaches and data by industry sector��������������������������������������������������������������������������������������������������������������������������������������1344
+                                                      A.III.4.2.1  Cement��������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������� 1344
+                                                      A.III.4.2.2  Iron and steel ������������������������������������������������������������������������������������������������������������������������������������������������������������������������������� 1346
+                                                      A.III.4.2.3  Chemicals��������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������� 1346
+                                                      A.III.4.2.4  Pulp and paper����������������������������������������������������������������������������������������������������������������������������������������������������������������������������� 1349
+                                                      A.III.4.2.5  Municipal Solid Waste (MSW) ��������������������������������������������������������������������������������������������������������������������������������������������� 1349
+                                                      A.III.4.2.6  Domestic wastewater��������������������������������������������������������������������������������������������������������������������������������������������������������������� 1352
+
+
+
+       A.III.5                AFOLU ������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������1352
+
+                              A.III.5.1               Introduction��������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������1352
+
+                              A.III.5.2               Approach��������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������1352
+                                                      A.III.5.2.1       Baseline Emission Intensities ����������������������������������������������������������������������������������������������������������������������������������������������� 1352
+                                                      A.III.5.2.2       Improved emission intensities ��������������������������������������������������������������������������������������������������������������������������������������������� 1352
+                                                      A.III.5.2.3       Levelized cost of conserved / sequestered carbon������������������������������������������������������������������������������������������������������� 1353
+
+
+
+       References ��������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������1354
+
+
+
+
+       1330
+Annex III                                                                                             Technology-specific Cost and Performance Parameters
+
+
+A.III.1 Introduction                                                                          More detail on sector-specific metrics, the respective input data and
+                                                                                              assumptions used as well as the conversions required is presented in
+                                                                                              the sector-specific sections below.
+Annex III contains data on technologies and practices that have been
+collected to produce a summary assessment of the potentials and costs                         References for data, justifications for assumptions, and additional con-
+of selected mitigation options in various sectors as displayed in Fig-                        text is provided in footnotes to the data tables. Footnotes are inserted
+ure 7.7, Table 8.3, Figures 10.7, 10.8, 10.9, 10.10, 10.19, 10.21, Figure                     at the most general level possible, i. e., footnotes are inserted at table
+11.16 as well as in corresponding figures in the Technical Summary.                           headings where they apply to the majority of data, at column / row
+                                                                                              headings where they apply to the majority of data in the respective
+The nature and quantity of mitigation options, as well as data avail-                         column / row, and at individual cells where they apply only to data
+ability and quality of the available data, vary significantly across                          points or ranges given in individual cells. Input data are included in
+sectors. Even for largely similar mitigation options, a large variety of                      normal font type, output data resulting from data conversions shown
+context-specific metrics is used to express their cost and potentials                         in figures and tables mentioned above are bolded, and intermediate
+that involve conversions of input data into particular output formats.                        outputs are italicized.
+For the purpose of the Working Group III (WGIII) contribution to the
+Intergovernmental Panel on Climate Change (IPCC) Fifth Assessment
+Report (AR5), a limited but still diverse set of sector-specific metrics is
+used to strike a balance between harmonization of approaches across                           A.III.2 Energy supply
+sectors and adequate consideration of the complexities involved.
+
+Mitigation potentials are approached via product-specific or service-
+specific emission intensities, i. e., emissions per unit of useful outputs,                                                                                                           AIII
+which are as diverse as electricity, steel, and cattle meat. Mitigation                       A.III.2.1         Approach
+potentials on a product / service level can be understood as the poten-
+tial reduction in specific emissions that can result from actions such as                     The emission intensity of electricity production (measured in kg CO2-
+switching to production processes that cause lower emissions for oth-                         equivalents (CO2eq) / MWh) can be used as a measure to compare the
+erwise comparable products1 and reducing production / consumption of                          specific greenhouse gas (GHG) emissions of suggested emission miti-
+emission-intensive products.                                                                  gation options and those of conventional power supply technologies.
+                                                                                              With respect to costs, the levelized cost of energy (LCOE), measured in
+Mitigation costs are approached via different levelized cost metrics,                         USD2010 / MWh, serves the same purpose.2
+which share a common methodological basis but need to be inter-
+preted in very different ways. A detailed introduction to the metrics                         The calculation of LCOE of a technology requires data on all cash flows
+used can be found in the Metrics and Methodology (M&M) Annex                                  that occur during its lifetime (see formula in Annex II.3.1.1) as well as
+(Section A.II.3.1). All of these cost metrics are derived under specific                      on the amount of energy that is provided by the respective technol-
+conditions that vary in practice and, hence, need to be set by assump-                        ogy. Cash flows are usually reported in some aggregate form based on
+tion. These assumptions are not always clear from the literature, where                       widely deployed monetary accounting principles combining cash flows
+such metrics are presented. Hence, comparison of the same metric                              into different categories of expenditures and revenues that occur at
+taken from different studies is not always possible. For this reason, in                      varying points during the lifetime of the investment.
+the AR5 these metrics are generally re-calculated under specified con-
+ditions, e. g., with respect to weighted average cost of capital, based                       The applied method presents LCOE that include all relevant costs asso-
+on underlying input parameters that are less sensitive to assump-                             ciated with the construction and operation of the investigated power
+tions. Sensitivities to assumptions made in the AR5 are made explicit.                        plant in line with the approach in IEA (2010). Taxes and subsidies are
+In several cases, however, the availability of data on the parameters                         excluded, and it is assumed that grids are available to transport the
+needed to re-calculate the relevant cost metric is very limited. In such                      electricity. Additional costs associated with the integration of variable
+cases, expert judgment was used to assess information on costs taken                          sources are neglected as well (see Section 7.8.2 for an assessment of
+directly from the literature.                                                                 these costs).
+
+
+
+
+1
+    Note that comparability of products is not always given even for seemingly similar
+    ones. For instance, in the case of electricity, the timing of production is crucial for
+    the value of the product and reduces the insights that can be derived from simple         2
+                                                                                                  The merits and shortcomings of this method are discussed in detail in the Metrics
+    comparisons of the metrics used here.                                                         and Methodology Annex of the WGIII AR5 (Annex II).
+
+
+                                                                                                                                                                             1331
+       Technology-specific Cost and Performance Parameters                                                                                                                                                 Annex III
+
+
+       The input data used to calculate LCOE are summarized in Table 1                                                                   the overnight costs are equally distributed over the construction
+       below. The conversion of input data into LCOE requires the steps out-                                                             period.
+       lined in the following:                                                                                                       •   d represent the decommissioning cost. Depending on the data in
+                                                                                                                                         the literature, this is incorporated as an extra capital cost at the
+       Levelized cost (LCOE) in USD2010 / MWhe                                                                                           end of the project duration which is discounted to t = 0 (using
+                                                                                                                                         a decommissioning factor d, as in (Equation A.III.3)), or as a cor-
+               α · I + OM
+               ____
+       LCOE = ​           + F
+                          ​                                                             (Equation A.III.1)                               responding variable cost (dv in (Equation A.III.4)). d = 0.15 for
+                       E
+                                                                                                                                         nuclear energy, and zero for all other technologies (given the low
+       α = ​ ____ r              ​                                                     (Equation A.III.2)                               impact on LCOE).
+            1 − (1 + r​)−​​ L​ ​​      T
+
+                                                                                                                                     •   OM are the net annual operation and maintenance costs; sum-
+                     ​L​B​                                                                                                               marizing fixed OM (FOM), variable OM (VOM), and variable by-
+       I = ​ C
+            _ ​ · ​∑ ​(1 + i​)​t​​  · ​ 1 + ​  d
+                                             __                                                                                          product revenues (REV). As a default and if not stated explicitly
+            ​L​B​ t = 1                ( (1 + r​)​​L​  ​ ​​)​
+                                                          T
+                                                                                        (Equation A.III.3)
+                                                                                                                                         otherwise, carbon costs (e. g., due to carbon taxes or emission trad-
+       OM = FOM + (VOM − REV + ​d​υ​) · E                                              (Equation A.III.4)                               ing schemes) are not taken into account in calculating the LCOE
+                                                                                                                                         values.
+       E = P · FLH                                                                     (Equation A.III.5)                           •   E is the energy (electricity) produced annually, which is calculated
+                                                                                                                                         by multiplying the capacity (P) with the number of (equivalent) full
+                   E
+                  _​
+       F = FC · ​  η                                                                    (Equation A.III.6)                               load hours (FLH).
+                                                                                                                                     •   F are the annual fuel costs,
+       Where:                                                                                                                            • FC are the fuel costs per unit of energy input, and
+                                                                                                                                         • η is the conversion efficiency (in lower heating value — LHV).
+AIII   • LCOE is the levelized cost of electricity.                                                                                  •   i is the interest rate over the construction loan (taken as 5 %).
+       • α is the capital recovery factor (CRF).                                                                                     •   LT is the project duration (in operation), as defined in IEA (2010).
+       • r is the weighted average cost of capital (WACC — taken as either                                                           •   LB is the construction period.
+         5 % or 10 %).
+       • I is the investment costs, including finance cost for construction at                                                       Emission Intensities:
+         interest i.
+       • C is the capital costs, excluding finance cost for construction                                                             For data, see Table AIII.2 below. For methodological issues and litera-
+         (‘overnight cost’). In order to calculate the cost for construction,                                                        ture sources, see Annex II, Section A.II.9.3.
+
+
+
+
+       A.III.2.2                   Data
+
+       Table A.III.1 | Cost and performance parameters of selected electricity supply technologiesi, ii
+
+
+                                                                        C               LB                              FOM                           VOM                         REV                     F
+
+
+
+
+                                                                                     Construction time (yr)
+                                                           Overnight capital
+                                                                                                              Fixed annual operation          Variable operation
+                                                           expenditure (excl.                                                                                            Variable by-product     Average fuel price
+                             Options                                                                              and maintenance              and maintenance
+                                                         construction interest)                                                                                        revenue (USD2010 / MWh)      (USD2010 / GJ)
+                                                                                                                 cost (USD2010 / kW)iii      cost (USD2010 / MWh)iii
+                                                             (USD2010 / kW)
+
+
+
+                                                              Min / Median / Max     Avg                         Min / Median / Max           Min / Median / Max         Min / Median / Max          Min / Max
+         Currently Commercially Available Technologies
+         Coal — PCiv                                             380 / 2200 / 3900         5                          0 / 23 / 75                  0 / 3.4 / 9.0                                      2.9 / 5.3
+         Gas — Combined Cycle               v
+                                                                 550 / 1100 / 2100         4                           0 / 7 / 39                  0 / 3.2 / 4.9                                       3.8 / 14
+         Biomass — CHPvi                                      2000 / 5600 / 11000    4.5                             0 / 101 / 400                   0 / 0 / 56               4 / 26 / 93vii          3.3 / 9.3
+         Biomass — cofiringvi,viii                               350 / 900 / 1800          1                         13 / 20 / 20                    0/0/2                                            3.3 / 9.3
+         Biomass — dedicated           vi
+                                                              1900 / 3600 / 6500     4.5                             42 / 99 / 500                 0 / 3.8 / 34                                       3.3 / 9.3
+         Geothermalix, x                                      1000 / 5000 / 10000          3                          0 / 0 / 150                   0 / 11 / 31
+         Hydropowerxi, xii                                       500 / 1900 / 8500         5                         5 / 35 / 250                    0 / 0 / 15
+         Nuclearxiii, xiv                                     1600 / 4300 / 6400           9                          0 / 0 / 110                  1.7 / 13 / 30                                     0.74 / 0.87
+
+
+
+       1332
+Annex III                                                                                                                                                                           Technology-specific Cost and Performance Parameters
+
+
+                                                                C                    LB                                                                        FOM                                VOM                                     REV                                 F
+
+
+
+
+                                                                                  Construction time (yr)
+                                                 Overnight capital
+                                                                                                             Fixed annual operation                                                      Variable operation
+                                                 expenditure (excl.                                                                                                                                                             Variable by-product                 Average fuel price
+                Options                                                                                          and maintenance                                                          and maintenance
+                                               construction interest)                                                                                                                                                         revenue (USD2010 / MWh)                  (USD2010 / GJ)
+                                                                                                                cost (USD2010 / kW)iii                                                  cost (USD2010 / MWh)iii
+                                                   (USD2010 / kW)
+
+
+
+                                                  Min / Median / Max             Avg                                             Min / Median / Max                                      Min / Median / Max                       Min / Median / Max                     Min / Max
+ Concentrated Solar Powerxv, xvi                  3700 / 5100 / 11000                   2                                                      0 / 50 / 66                                      0 / 0 / 35
+ Solar PV — rooftopxvii, xviii                     2200 / 4400 / 5300                   0                                                 17 / 37 / 44                                           0/0/0
+ Solar PV — utility ,    xvii xviii
+                                                   1700 / 3200 / 4300                   0                                                 12 / 20 / 30                                           0/0/0
+ Wind onshorexix, xx                               1200 / 2100 / 3700             1.5                                                               0 / 0 / 60                                 0 / 14 / 26
+ Wind offshorexix, xxi                             2900 / 4400 / 6500             3.5                                                     0 / 40 / 130                                         0 / 16 / 63
+ Pre-commercial Technologies
+ CCS — Coal — Oxyfuelxxii                          2800 / 4000 / 5600                   5                                                 0 / 58 / 140                                       9.1 / 10 / 12xxiii                                                           2.9 / 5.3
+ CCS — Coal — PCxxii                               1700 / 3300 / 6600                   5                                                 0 / 45 / 290                                       11 / 15 / 28xxiii                                                            2.9 / 5.3
+ CCS — Coal — IGCC,            xxii
+                                                   1700 / 3700 / 6600                   5                                                 0 / 23 / 110                                       12 / 13 / 23    xxiii
+                                                                                                                                                                                                                                                                          2.9 / 5.3
+ CCS — Gas — Combined                              1100 / 2000 / 3800                   4                                                      5 / 13 / 73                                  4.8 / 8.3 / 15xxiii                                                           3.8 / 14
+ Cyclexxii
+ Oceanxxiv, xxv                                   2900 / 5400 / 12000                   2                                                 0 / 78 / 360                                        0 / 0.16 / 20
+
+
+
+Table A.III.1 (continued) | Cost and performance parameters of selected electricity supply technologiesi, ii                                                                                                                                                                                      AIII
+
+
+                                                     η                     FLH                               LT                                                                                                                  LCOE
+
+
+
+
+                                                                                                                                    Decommissioning costxxvi
+                                                                                                                                                                                                                     Levelized cost of electricityi
+
+
+
+
+                                                                                                           Plant lifetime (yr)
+                                                                                                                                                                                                                            (USD2010 / MWh)
+                                                                         Capacity
+                                              Plant efficiency          utilization
+                  Options
+                                                    (%)                    / FLH                                                                                                                                                                                        10 % WACC,
+                                                                            (hr)                                                                                     10 % WACC,                        5 % WACC,                            10 % WACC,
+                                                                                                                                                                                                                                                                          high FLH,
+                                                                                                                                                                      high FLH,                         high FLH,                            low FLH,
+                                                                                                                                                                                                                                                                              100
+                                                                                                                                                                 0 USD2010 / tCO2eq direct         0 USD2010 / tCO2eq direct            0 USD2010 / tCO2eq direct
+                                                                                                                                                                                                                                                                      USD2010 / tCO2eq direct
+                                             Min / Median / Max         Min / Max                          Avg                                                       Min / Median / Max               Min / Median / Max                 Min / Median / Max           Min / Median / Max
+ Currently Commercially Available Technologies
+ Coal — PCiv                                     33 / 39 / 48           3700 / 7400                         40                                                          30 / 78 / 120                          27 / 61 / 95                  36 / 120 / 190               97 / 150 / 210
+ Gas — Combined Cyclev                           41 / 55 / 60           3700 / 7400                         30                                                          34 / 79 / 150                        31 / 71 / 140                   43 / 100 / 170               69 / 120 / 200
+ Biomass — CHPvi                                 14 / 29 / 36           3500 / 7000                         30                                                         85 / 180 / 400                     71 / 150 / 330                    130 / 310 / 610                       -xxvii
+ Biomass — cofiringvi                            38 / 41 / 48           3700 / 7400                         40                                                          65 / 89 / 110                          49 / 67 / 88                 100 / 140 / 170            160 / 200 / 260xxviii
+ Biomass — dedicatedvi                           20 / 31 / 48           3500 / 7000                         40                                                         77 / 150 / 320                     63 / 130 / 270                    120 / 230 / 440                       –xxvii
+
+
+
+
+                                                                                                                                    See endnote xxvi
+ Geothermal ,     ix x
+                                                                        5300 / 7900                         30                                                          18 / 89 / 190                        12 / 60 / 130                   25 / 130 / 260                18 / 89 / 190
+ Hydropowerxi, xii                                                      1800 / 7900                         50                                                           9 / 35 / 150                           6 / 22 / 95                  40 / 160 / 630                9 / 35 / 150
+ Nuclear ,xiii xiv
+                                                 33 / 33 / 34           3700 / 7400                         60                                                          45 / 99 / 150                          32 / 65 / 94                  72 / 180 / 260                45 / 99 / 150
+ Concentrated Solar Powerxv, xvi                                        2200 / 3500                         20                                                         150 / 200 / 310                   110 / 150 / 220                    220 / 320 / 480              150 / 200 / 310
+ Solar PV — rooftopxvii, xviii                                          1100 / 2400                         25                                                         110 / 220 / 270                    74 / 150 / 180                    250 / 490 / 600              110 / 220 / 270
+ Solar PV — utility ,    xvii xviii
+                                                                        1200 / 2400                         25                                                         84 / 160 / 210                     56 / 110 / 130                    170 / 310 / 400               84 / 160 / 210
+ Wind onshorexx, xx                                                     1800 / 3500                         25                                                          51 / 84 / 160                        35 / 59 / 120                   92 / 160 / 300                51 / 84 / 160
+ Wind offshorexxi, xx                                                   2600 / 3900                         25                                                         110 / 170 / 250                    80 / 120 / 180                    160 / 240 / 350              110 / 170 / 250
+ Pre-commercial Technologies
+ CCS —Coal — Oxyfuelxxii                         32 / 35 / 41           3700 / 7400                         40                                                         90 / 120 / 170                     71 / 100 / 130                    140 / 180 / 270               92 / 130 / 180
+ CCS — Coal — PCxxii                             28 / 30 / 43           3700 / 7400                         40                                                         69 / 130 / 200                     57 / 110 / 150                     97 / 210 / 310               78 / 150 / 210
+ CCS — Coal — IGCCxxii                           30 / 32 / 35           3700 / 7400                         40                                                         75 / 120 / 200                     63 / 100 / 150                    100 / 180 / 310               85 / 140 / 210
+ CCS — Gas — Combined Cycle           xxii
+                                                 37 / 47 / 54           3700 / 7400                         30                                                         52 / 100 / 210                        45 / 86 / 190                   70 / 140 / 270               55 / 110 / 220
+ Oceanxxiv, xxv                                                         2000 / 5300                         20                                                         82 / 150 / 300                     60 / 110 / 210                    200 / 390 / 780               82 / 150 / 300
+
+
+
+
+                                                                                                                                                                                                                                                                                           1333
+       Technology-specific Cost and Performance Parameters                                                                                                                       Annex III
+
+
+       Notes:
+       i
+              General: Input data are included in normal font type, output data resulting from data conversions are bolded, and intermediate outputs are italicized. Note that many input
+              parameters (C, FOM, VOM, and η) are not independent from each other; they come in parameter sets. Parameters that are systematically varied to obtain output values
+              include fuel prices, WACC, and full load hours (FLH). Lifetimes and construction times are set to standard values. The range in levelized cost of electricity (LCOE) results from
+              calculating two LCOE values per individual parameter set, one at a low and one at a high fuel price, for the number of individual parameter sets available per technology.
+              Variation with WACC and with FLHs is shown in separate output columns. This approach is different from the IPCC Special Report on Renewable Energy Sources and Climate
+              Change Mitigation (SRREN) (IPCC, 2011), where input parameters were considered as independent from each other and the lowest (highest) LCOE value resulted from taking
+              all best-case (worst-case) parameter values.
+       ii
+              General: Comparison of data on capital expenditures with values presented in SRREN (IPCC, 2011) are only possible to limited degrees, since the datasets used in the AR5
+              reflect a larger sample of projects (including those with more extreme costs) than in the SRREN.
+       iii
+              General: Some literature references only report on fixed OM costs (FOM), some only on variable OM costs (VOM), some on both, and some none. The data in the FOM and
+              VOM columns show the range found in literature. Hence, note that these FOM and VOM values cannot be combined to derive total OM costs. The range of levelized costs of
+              electricity shown in the table is the result of calculations for the individual combinations of parameters found in the literature.
+       iv
+              Coal PC (Pulverized Coal): Black and Veatch (2012), DEA (2012), IEA/NEA (2010), IEA (2013a), IEA-RETD (2013), Schmidt et al. (2012), US EIA (2013).
+       v
+              Gas Combined Cycle: Black and Veatch (2012), DEA (2012), IEA/NEA (2010), IEA (2011),IEA (2013a), IEA-RETD (2013), Schmidt et al. (2012), US EIA (2013).
+       vi
+              Biomass: Black and Veatch (2012), DEA (2012), IPCC-SRREN (2011), IRENA (2012), Augustine et al. (2012), US EIA (2013).
+       vii
+              Biomass CHP (Combined Heat and Power): Revenues from heat from CHP are assumed to be the natural gas price divided by 90% (this is the assumed reference boiler
+              efficiency). It is assumed that one-third of the heat production is marketable, caused by losses and seasonal demand changes. This income is subtracted from the variable
+              operation and maintenance costs (proportional to the amount of heat produced per unit of power), where applicable. Only heat production from biomass-CHP is treated in
+              this manner.
+       viii
+              Biomass Co-firing: Capital costs for co-firing as reported in literature (and the summary table) represent an investment to upgrade a dedicated coal power plant to a co-
+              firing installation. The LCOEs shown in the summary table are those of the total upgraded plant. For the calculation of the LCOEs, the capital costs of the co-firing upgrade
+              are added to the median coal PC capital costs. Fuel costs are obtained by weighting coal and biomass costs with their share in the fuel mix (with biomass shares ranging
+              between 5% and 20%). To calculate specific emissions, the dedicated biomass emissions and (pulverized) coal emissions were added, taking into account biomass shares
+              ranging between 5% and 20%. In the direct emissions coal-related emissions are shown, while the biomass related emissions are shown in column n (Biogenic, geogenic
+              CO2 and albedo), indicating indirect emissions. We applied an efficiency of 35% to the coal part of the combustion.
+       ix
+              Geothermal: This category includes both flash steam and binary cycle power plants. Data on costs show wide ranges, depending on specific conditions. Geothermal (binary
+              plant) LCOE averages have increased by 39% since the SRREN (BNEF, and Frankfurt and School-UNEP Centre, 2013). Low-end estimate is from Augustine et al. (2012) for a
+AIII          flash plant at higher temperatures; the high-end estimate is from Black and Veatch and based on enhanced geothermal systems, which are not fully commercialized. IRENA
+              (2013) reports values down to 1400 USD2011/kW.
+       x
+              Geothermal: Black and Veatch (2012), IEA (2013a), Augustine et al. (2012), Schmidt et al. (2012), UK CCC (2011), US EIA (2013).
+       xi
+              Hydropower: This includes both run-of-the-river and reservoir hydropower, over a wide range of capacities. Project data from recent IRENA inventories are incorporated, show-
+              ing a wider range than reported in SRREN. High-end of capital expenditures refers to Japan, but other sources also report these higher values.
+       xii
+              Hydropower: Black and Veatch (2012), IEA (2013a), IEA-RETD (2013), IRENA (2012), Schmidt et al. (2012), UK CCC (2011), US EIA (2013).
+       xiii
+              Nuclear: Limited recent data and/or original data are available in the published literature. More recent, (grey literature) sources provide investment cost and LCOE estimates
+              that are considerably higher than the ones shown here (Brandão et al., 2012). Nuclear fuel prices (per GJ input) are based on fuel cycle costs (usually expressed per MWh
+              generated), assuming a conversion efficiency of 33%. They include the front-end (Uranium mining and milling, conversion, enrichment, and fuel fabrication) and back-end
+              (spent fuel transport, storage, reprocessing, and disposal) costs of the nuclear fuel cycle (see IEA and NEA, 2010).
+       xiv
+              Nuclear: IAEA (2012), EPRI (2011), IEA/NEA (2010), Rangel and Lévêque (2012), UK CCC (2011), US EIA (2013).
+       xv
+              Concentrated Solar Power: This includes both CSP with storage as well as CSP without storage. To prevent an overestimation of the LCOE for CSP with storage, full load hours
+              were used that are directly linked to the design of the system (in- or excluding storage). Project data from recent IRENA inventories are incorporated, showing a wider range
+              than reported in SRREN. High-end value comes from IRENA (solar tower, 6-15 hours of storage). Low-end comes from IEA and is supported by IRENA data.
+       xvi
+              Concentrated Solar Power: Black and Veatch (2012), IEA (2013a), IRENA (2012), US EIA (2013).
+       xvii
+              Solar Photovoltaic: IEA (2013a), IRENA (2013), JRC (2012), LBNL (2013), UK CCC (2011), US EIA (2013).
+       xviii
+              Solar Photovoltaic: Solar PV module prices have declined substantially since the SRREN (IPCC, 2011), accounting for much of the decline in capital costs shown here relative
+              to those used in SRREN. The LCOE of (crystalline silicon) photovoltaic systems fell by 57% since 2009 (BNEF, and Frankfurt and School-UNEP Centre, 2013).
+       xix
+              Wind: Black and Veatch (2012), DEA (2012), IEA (2013a), IEA-RETD (2013), IRENA (2012), JRC (2012), UK CCC (2011), US DoE (2013), US EIA (2013).
+       xx
+              Wind onshore: High-end of capital expenditures is taken from IEA-RETD study (Mostajo Veiga et al., 2013) for Japan. The capital costs presented here show a higher upper
+              end than in the SRREN, and reflect generally smaller wind projects or projects located in remote or otherwise-costly locations. Data from IRENA for Other Asia and Latin
+              America show cost ranges well beyond SRREN. In some regions of the world, wind projects have been increasingly located in lower-quality wind resource sites since the
+              publication of the SRREN (due in part to scarcity of developable higher-quality sites). The FLHs on wind projects, however, have not necessarily decreased -- and in many cases
+              have increased -- due to a simultaneous trend towards longer rotors and higher hub heights. Wind onshore average LCOE have decreased by 15% (BNEF, and Frankfurt and
+              School-UNEP Centre, 2013).
+       xxi
+              Wind offshore: Offshore wind costs have generally increased since the SRREN, partially explaining the higher upper-end of the cost range shown here. Average LCOE of off-
+              shore wind have increased by 44% (BNEF, and Frankfurt and School-UNEP Centre, 2013). Higher capital expenditures reported here are in line with market experiences, i.e., a
+              tendency to more remote areas, deeper seas, higher construction costs and higher steel prices.
+       xxii
+              Carbon Dioxide Capture and Storage (CCS): Black and Veatch (2012), DEA (2012), Herzog (2011), IPCC-SRCCS (2005), Klara and Plunkett (2010), US EIA (2013), Versteeg
+              and Rubin (2011), IEA (2011).
+       xxiii
+              Carbon Dioxide Capture and Storage: Includes transport and storage costs of USD201010/tCO2.
+       xxiv
+              Ocean: Ocean includes both tidal and wave energy conversion technologies. The high-end of capital expenditures is for wave energy DEA (2012). Since the SRREN, marine
+              wave and tidal average LCOE have increased by 36 and 49% respectively (BNEF, and Frankfurt and School-UNEP Centre, 2013).
+       xxv
+              Ocean: Black and Veatch (2012), DEA (2012), UK CCC (2011).
+       xxvi
+              General: Some literature references report decommissioning costs under VOM. If decommissioning costs are not given, default assumptions are made (see ‘Definition of
+              additional parameters’).
+       xxvii
+              Biomass: Due to the complexities involved in estimating GHG emissions from biomass, no estimates for LCOE at a positive carbon price are given here.
+       xxviii
+              Biomass co-firing: Only direct emissions of coal share in fuel consumption are considered to calculate LCOE at a carbon price of 100 USD2010/tCO2eq.
+
+
+
+
+       1334
+Annex III                                                                                            Technology-specific Cost and Performance Parameters
+
+
+Table A.III.2 | Emissions of selected electricity supply technologies (gCO2eq / kWh)i
+
+
+                                                                       Infrastructure & supply   Biogenic CO2 emissions                                     Lifecycle emissions
+                                              Direct emissions                                                                  Methane emissions
+                  Options                                                  chain emissions          and albedo effect                                       (incl. albedo effect)
+                                             Min / Median / Max                                       Typical values                                         Min / Median / Max
+  Currently Commercially Available Technologies
+  Coal — PC                                     670 / 760 / 870                   9.6                        0                          47                     740 / 820 / 910
+  Gas — Combined Cycle                          350 / 370 / 490                   1.6                        0                          91                     410 / 490 / 650
+  Biomass — cofiring                                 n. a. ii                      –                         –                           –                    620 / 740 / 890iii
+  Biomass — dedicated                                n. a.   ii
+                                                                                 210                        27                           0                    130 / 230 / 420iv
+  Geothermal                                           0                          45                         0                           0                       6.0 / 38 / 79
+  Hydropower                                           0                          19                         0                          88                     1.0 / 24 / 2200
+  Nuclear                                              0                          18                         0                           0                      3.7 / 12 / 110
+ Concentrated Solar Power                              0                          29                         0                           0                       8.8 / 27 / 63
+ Solar PV — rooftop                                    0                          42                         0                           0                       26 / 41 / 60
+ Solar PV — utility                                    0                          66                         0                           0                      18 / 48 / 180
+ Wind onshore                                          0                          15                         0                           0                       7.0 / 11 / 56
+ Wind offshore                                         0                          17                         0                           0                       8.0 / 12 / 35
+ Pre-commercial Technologies
+ CCS — Coal — Oxyfuel                            14 / 76 / 110                    17                         0                          67                     100 / 160 / 200
+ CCS — Coal — PC                                 95 / 120 / 140                   28                         0                          68                     190 / 220 / 250
+ CCS — Coal — IGCC                              100 / 120 / 150                   9.9                        0                          62                     170 / 200 / 230          AIII
+
+ CCS — Gas — Combined Cycle                       30 / 57 / 98                    8.9                        0                         110                      94 / 170 / 340
+ Ocean                                                 0                          17                         0                           0                       5.6 / 17 / 28
+
+
+Notes:
+i
+    For a comprehensive discussion of methodological issues and underlying literature sources see Annex II, Section A.II.9.3. Note that input data are included in normal font
+    type, output data resulting from data conversions are bolded, and intermediate outputs are italicized.
+ii
+    Direct emissions from biomass combustion at the power plant are positive and significant, but should be seen in connection with the CO2 absorbed by growing plants. They
+    can be derived from the chemical carbon content of biomass and the power plant efficiency. For a comprehensive discussion see Chapter 11, Section 11.13. For co-firing,
+    carbon content of coal and relative fuel shares need to be considered.
+iii
+    Indirect emissions for co-firing are based on relative fuel shares of biomass from dedicated energy crops and residues (5-20%) and coal (80-95%).
+iv
+    Lifecycle emissions from biomass are for dedicated energy crops and crop residues. Lifecycle emissions of electricity based on other types of biomass are given in Chapter 7,
+    Figure 7.6. For a comprehensive discussion see Chapter 11, Section 11.13.4. For a description of methodological issues see Annex II of this report.
+
+
+
+
+                                                                                                                                                                                 1335
+       Technology-specific Cost and Performance Parameters                                                                                                                    Annex III
+
+
+
+       A.III.3 Transport                                                               conversion of input data into emission intensities and LCCC requires
+                                                                                       the steps outlined in the following:
+
+       A.III.3.1        Approach                                                       Emissions per useful distance travelled (tCO2 eq/ p-km and
+                                                                                       tCO2 eq/ t-km)
+       The following tables provide a limited number of examples of trans-
+                                                                                             VEf​f​i​  · FC​I​i​
+       port modes and technologies in terms of their typical potential CO2eq           EI = ​ ___         ​ · β                                                       (Equation A.III.7)
+                                                                                                O​C​i​
+       emissions per passenger kilometre (p-km) and freight tonne kilometre
+       (t-km), now and in the 2030 timeframe. Estimates of mitigation cost             Where:
+       ranges (USD2010 / tCO2eq avoided) are also provided for the limited set
+       of comparisons where data were available. Mitigation cost ranges for            •     EI is the emission intensity
+       HDVs, shipping and air travel were taken directly from the literature.          •     VEff is the typical vehicle efficiency
+       For sport utility vehicles (SUVs) and light duty vehicles (LDVs), specific      •     FCI is the fuel carbon intensity
+       mitigation costs were re-calculated for well-defined conditions based           •     OC is the vehicle occupancy
+       on basic input parameter sets (see equations and data provided below).          •     ß is a unit conversion factor
+       The methodology to calculate specific mitigation costs, also called lev-
+       elized cost of conserved carbon (LCCC), is discussed in Annex II. Future        Levelized Cost of Conserved Carbon (USD2010 / tCO2eq )
+       estimates of both emission intensities and specific mitigation costs are
+       highly uncertain and depend on a range of assumptions.                                        ΔE  ​
+                                                                                       LCC​C​r​  = ​ _                                                                 (Equation A.III.8)
+                                                                                                     ΔC
+
+       The variation in emission intensities reflects variation in vehicle efficien-   ΔE = αΔI + ΔF                                                                  (Equation A.III.9)
+AIII   cies together with narrow ranges for vehicle occupancy rates, or reflects
+       estimates extracted directly from the literature. No cost uncertainty           α = ​ ____ r        ​                                                         (Equation A.III.10)
+                                                                                            1 − (1 + r​)−L
+                                                                                                        ​​
+       analysis was conducted. As mentioned above, mitigation cost ranges for
+       HDVs, shipping, and air travel were taken directly from the literature. A       ΔF = (VEf​fi​​  · A​D​i​  · F​C​i​  − VEf​f​j​  · A​D​j​  · F​C​j ​) · γ      (Equation A.III.11)
+       standardized uncertainty range of + / - 100 USD2010 / tCO2eq was used for
+       SUVs and LDVs. Some parameters such as CO2eq emitted from electric-             ΔC = (VEf​f​j​  · FC​I​j​  · A​D​j​  − VEf​f​i​  · FC​I​i​  · A​D​i​  ) · η   (Equation A.III.12)
+       ity generation systems and well-to-wheel CO2eq emission levels from
+       advanced biofuels should be considered as specific examples only.               Where:
+
+       This approach was necessary due to a lack of comprehensive studies              • ΔE is the annualized travel cost increment
+       that provide estimates across the full range of vehicle and technology          • ΔC is the difference in annual CO2eq emissions of alternative i and
+       types. Therefore, possible inconsistencies in assumptions and results             baseline vehicle j, i. e., the amount of CO2eq saved
+       mean that the output ranges provided here should be treated with                • α is the capital recovery factor (CRF).
+       caution. The output ranges shown are more indicative than absolute,             • ΔI is the difference in purchase cost of baseline and the alternative
+       as suggested by the fairly wide bands for most emission intensity and             vehicle
+       mitigation cost results.                                                        • ΔF is the difference in annualized fuel expenditures of alternative i
+                                                                                         and baseline vehicle j
+       The meta-analysis of mitigation cost for alternative road transport             • r is the weighted average cost of capital (WACC)
+       options was conducted using a 5 % discount rate and an approxi-                 • L is the vehicle lifetime
+       mate vehicle equipment life of 15 years. No fuel or vehicle taxes were          • VEff is the typical vehicle efficiency as above, but in calculations
+       included. Assumptions were based on the literature review provided                for ΔFC and ΔC average typical vehicle efficiency is used.
+       throughout Chapter 8 and the estimates shown in Tables 8.1 and 8.2.             • AD is the average annual distance travelled
+       Changes in assumptions could result in quite different results.                 • FCi is average unit fuel purchase cost (taxes or subsidies excluded)
+                                                                                         of fuel used in vehicle i
+       Some of the key assumptions are included in footnotes below the                 • γ and η are unit conversion factors
+       tables. Further information is available upon request from authors of
+       Chapter 8.                                                                      Remarks:
+
+       Where emission intensities and LCCC were re-calculated based on                 Variation in output EI derives from variation of vehicle fuel consump-
+       specific input data, those inputs are summarized in Table 1 below. The          tion VEff and vehicle occupancy OC.
+
+
+
+
+       1336
+Annex III                                                                                              Technology-specific Cost and Performance Parameters
+
+
+A.III.3.2             Data
+
+Table A.III.3 | Passenger transport — currently commercially available technologiesi
+
+
+                                                      VEff                  FCI                OC                   ΔI                   L                    AD
+                                                                                                                Vehicle price
+                                                    Vehicle fuel
+                                                                                                             markup on baseline
+                   Option                          consumption
+                                                                      CO2eq intensity   Vehicle occupancy       (Incremental      Vehicle lifetime     Annual distance
+                                              (l / 100km for fossil
+                                                                         of fueliii         (capita)iv             capital             (yrs)vi       travelled (km / yr) vii
+                                                   fuel; kWh / km
+                                                                                                                expenditure)
+                                                 for electricity)ii
+                                                                                                                  (USD2010)v
+ Aviation (commercial, medium to long haul)
+ 2010 Stock Average                                    –                 73 g / MJ              –                    –                   –                     –
+ Narrow and Wide Body                                  –                 73 g / MJ              –                 baseline               –                     –
+ Rail (Light Rail Car)
+ Electric, 600 g CO2eq / kWhel                      1.3 – 2.0           600 g / kWh          60 – 80                 –                   –                     –
+ Electric, 200 g CO2eq / kWhel                      1.3 – 2.0           200 g / kWh          60 – 80                 –                   –                     –
+ Road
+ New Buses, Large Size
+ Diesel                                              36 – 42              3.2 kg / l         40 – 50                 –                   –                     –
+ Hybrid Diesel                                       25 – 29              3.2 kg / l         40 – 50                 –                   –                     –
+ New Sport Utility Vehicles (SUV), Mid-Size
+ 2010 Stock average SUV                              10 – 14              2.8 kg / l         1.5 – 1.7               –                  15                  15,000             AIII
+
+ Gasoline                                           9.6 – 12              2.8 kg / l         1.5 – 1.7            baseline              15                  15,000
+ Hybrid Gasoline (25 % better)                       7.2 – 9              2.8 kg / l         1.5 – 1.7             5000                 15                  15,000
+ New Light Duty Vehicles (LDV), Mid-Size
+ 2010 Stock average LDV                              8 – 11               2.8 kg / l         1.5 – 1.7               –                  15                  15,000
+ Gasoline                                            7.8 – 9              2.8 kg / l         1.5 – 1.7            baseline              15                  15,000
+  Hybrid Gasoline (28 % better)                     5.6 – 6.5             2.8 kg / l         1.5 – 1.7             3000                 15                  15,000
+  Diesel                                            5.9 – 6.7             3.2 kg / l         1.5 – 1.7             2500                 15                  15,000
+  CNG                                                7.8 – 9              2.1 kg / l         1.5 – 1.7             2000                 15                  15,000
+  Electric, 600 g CO2eq / kWhel                    0.24 – 0.3           600 g / kWh          1.5 – 1.7             16000                15                  15,000
+ Electric, 200 g CO2eq / kWhel                     0.24 – 0.3           200 g / kWh          1.5 – 1.7             16000                15                  15,000
+ New 2-Wheelers (Scooter up to 200 cm3 cylinder capacity)
+ 2010 Stock Average                                 1.5 – 2.5             2.8 kg / l         1.1 – 1.3               –                   –                     –
+ Gasoline                                           1.1 – 1.9             2.8 kg / l         1.1 – 1.3               –                   –                     –
+
+
+
+
+                                                                                                                                                                     1337
+       Technology-specific Cost and Performance Parameters                                                                                                                      Annex III
+
+
+       Table A.III.3 (continued) | Passenger transport — currently commercially available technologies
+
+
+                                                                 FC                           EI                      ΔE                       ΔC                        LCCC5 %
+                                                        Average annual                                                                                              Levelized cost of
+                         Option                                                      Emissions per useful                                 Annual CO2eq
+                                                       fuel purchase cost                                   Annualized travel cost                                  conserved carbon
+                                                                                      distance travelled                               savings from vehicle
+                                                     (USD2010 / l for fossil fuel;                          increment (USD2010 / yr)                                   at 5 % WACC
+                                                                                       (gCO2eq / p-km)                                  switch (tCO2eq / yr)
+                                                       UScents2010 / kWh)viii                                                                                        (USD2010 / tCO2eq)
+        Aviation (commercial, medium to long haul)
+        2010 Stock Average                                        –                       80 – 218ix                   –                        –                           –
+        Narrow and Wide Body                                      –                        66 – 95x                    –                        –                         –200xi
+        Rail (Light Rail Car)
+        Electric, 600 g CO2eq / kWhel                             –                        10 – 20                     –                        –                           –
+        Electric, 200 g CO2eq / kWhel                             –                        3.3 – 6.7                   –                        –                           –
+        Road
+        New Buses, Large Size
+        Diesel                                                    –                        23 – 34                     –                        –                           –
+
+        Hybrid Diesel                                             –                        16 – 24                     –                        –                           –
+        New Sport Utility Vehicles (SUV), Mid-Size
+        2010 Stock average SUV                                  0.81                      160 – 260                    –                        –                           –
+        Gasoline                                                0.81                      160 – 220                baseline                  baseline                    baseline
+        Hybrid Gasoline (25 % better)                           0.81                      120 – 170                   150                       1.1                        140
+
+AIII    New Light Duty Vehicles (LDV), Mid-Size
+        2010 Stock average LDV                                  0.81                      130 – 200                    –                        –                           –
+        Gasoline                                                0.81                      130 – 170                baseline                  baseline                    baseline
+        Hybrid Gasoline (28 % better)                           0.81                       92 – 120                   2.5                       1.0                        2.6
+        Diesel                                                  0.81                      110 – 150                   –15                      0.43                        –35
+        CNG                                                     0.35                       97 – 130                  –390                      0.83                       –470
+        Electric, 600 g CO2eq / kWhel                           0.12                       85 – 120                  1000                       1.1                        950
+        Electric, 200 g CO2eq / kWhel                           0.12                       28 – 40                   1000                       2.7                        370
+        New 2-Wheelers (Scooter up to 200 cm cylinder capacity)
+                                               3
+
+
+        2010 Stock Average                                        –                        32 – 63                     –                        –                           –
+        Gasoline                                                  –                        24 – 47                     –                        –                           –
+
+
+       Notes:
+       i
+           Note that input data are included in normal font type, output data resulting from data conversions are bolded, and intermediate outputs are italicized.
+       ii
+           Vehicle fuel economy estimates for road vehicles based on IEA (2012a) and IEA Mobility Model (MoMo) data values, using averages for stock and new vehicles around the
+           world to establish ranges. For rail, water, and air these estimates are based on a range of studies, see Chapter 8 Section 8.3. Rail estimates were based on expert judgment.
+       iii
+           CO2eq fuel intensities are based on IPCC (2006). CO2eq intensities of electricity based on generic low and high carbon power systems. Well-to-wheel estimates from a range
+           of sources, and specific examples as indicated in tables.
+       iv
+           Occupancy rates for trains, buses, SUVs, LDVs, and 2-wheelers based on IEA Mobility Model averages from around the world. Bus and rail represent relatively high intensity
+           usage; average loadings in some countries and regions will be lower.
+       v
+           Vehicle purchase price increments for LDVs based primarily on NRC (2013) and IEA (2012a).
+       vi
+           For LDVs, vehicle lifetime-kilometres set to 156,000 kms based on discounting 15 years and 15,000 km per year. Other vehicle type assumptions depend on literature. No
+           normalization was attempted.
+       vi
+           Annual distance travelled as described above.
+       vii
+           Fuel prices are point estimates based on current and projected future prices in IEA (2012b). Variation in relative fuel prices can have significant impacts on transport costs
+           and LCCC. Though no cost uncertainty analysis was performed, cost ranges were used where available and a standardized USD2010100/tCO2eq uncertainty range was added
+           around all final point estimates.
+       ix
+           Current energy consumption per passenger kilometre is 1.1–3 MJ/p-km (IEA, 2009a).
+       x
+           Based on TOSCA (2011, Table S-1). Slightly wider range for new/very new to account for range of load factors and distances.
+       xi
+           Based on IEA and TOSCA analysis. IEA based on 30 years, 10% discount rate.
+
+
+
+
+       1338
+Annex III                                                                                              Technology-specific Cost and Performance Parameters
+
+
+Table A.III.4 | Passenger transport — future (2030) expected technologiesi
+
+
+                                                        VEff                FCI                OC                     ΔI                  L                    AD
+                                                                                                             Vehicle price mark-
+                                                                                                               up on baseline
+                  Option                          Vehicle fuel
+                                                                      CO2eq intensity   Vehicle occupancy       (Incremental       Vehicle lifetime    Annual distance
+                                                 consumption
+                                                                         of fuelii          (capita) iii           capital              (yrs) v       travelled (km / yr) vi
+                                                   (l / 100km)
+                                                                                                                expenditure)
+                                                                                                                  (USD2010)iv
+ Aviation
+ Narrow Body (20 % better)                                –                   –                 –vii                   –                 15                     –
+ Narrow Body, Open Rotor                                  –                   –                – vii                   –                 15                     –
+ Engine (33 % better)
+ Road
+ Optimized Sport Utility Vehicles (SUV), Mid-Size
+ Gasoline (40 % better)                               5.8 – 7.2           2.8 kg / l         1.5 – 1.7          3500viii, future         15                  15,000
+                                                                                                                  baseline
+ Hybrid Gasoline (50 % better)                         4.8 – 6ix          2.8 kg / l         1.5 – 1.7              1200                 15                  15,000
+ Optimized Light Duty Vehicles (LDV), Mid-Size
+ Gasoline (40 % better)                               4.7 – 5.4x          2.8 kg / l         1.5 – 1.7          2500viii, future         15                  15,000
+                                                                                                                  baseline
+ Hybrid Gasoline (50 % better)                       3.9 – 4.5xi          2.8 kg / l         1.5 – 1.7              1000                 15                  15,000
+ Hybrid Gasoline / Biofuel (50 / 50 share)           3.9 – 4.5xi          2.8 kg / l         1.5 – 1.7              1000                 15                  15,000
+ (Assuming 70 % less CO2eq / MJ
+                                                                                                                                                                               AIII
+ biofuel than / MJ gasoline)
+ Diesel Hybrid                                       3.3 – 3.8xii         3.2 kg / l         1.5 – 1.7              1700                 15                  15,000
+ CNG Hybrid                                          3.9 – 4.5 xi         2.1 kg / l         1.5 – 1.7              1200                 15                  15,000
+ Electric, 200 g CO2eq / kWhel                      0.19 – 0.26xiii     200 g / kWh          1.5 – 1.7              3600                 15                  15,000
+
+
+
+
+                                                                                                                                                                      1339
+       Technology-specific Cost and Performance Parameters                                                                                                                    Annex III
+
+
+       Table A.III.4 (continued) | Passenger transport — future (2030) expected technologiesi
+
+
+                                                                       FC                         EI                      ΔE                        ΔC                     LCCC5 %
+
+                               Option                          Average annual                                                                                         Levelized cost of
+                                                                                         Emissions per useful                                 Annual CO2eq
+                                                              fuel purchase cost                                Annualized travel cost                                conserved carbon
+                                                                                          distance travelled                               savings from vehicle
+                                                             (USD2010 / l for fossil                            increment (USD2010 / yr)                                 at 5 % WACC
+                                                                                           (gCO2eq / p-km)                                  switch (tCO2eq / yr)
+                                                           fuel; UScents2010 / kWh)xiv                                                                                 (USD2010 / tCO2eq)
+        Aviation
+        Narrow Body (20 % better)                                      –                          –                        –                         –                      0 – 150
+        Narrow Body, Open Rotor Engine (33 % better)                   –                       44 – 63xv                   –                         –                      0 – 350
+        Road
+        Optimized Sport Utility Vehicles (SUV), Mid-Size
+        Gasoline (40 % better)                                        0.93                     94 – 130                 –190xvi                    1.8xvi                   –110xvi
+        Hybrid Gasoline (50 % better)                                 0.93                     78 – 110                  –440                       2.2                     –200
+        Optimized Light Duty Vehicles (LDV), Mid-Size
+        Gasoline (40 % better)                                        0.93                     76 – 100                 –230xvii                   1.4xvii                 –160xvii
+        Hybrid Gasoline (50 % better)                                 0.93                     64 – 83                    –21                      0.35                      – 61
+        Hybrid Gasoline / Biofuel (50 / 50 share)                     0.93                     41 – 54                    38                        1.0                       39
+        (Assuming 70 % less CO2eq / MJ
+        biofuel than / MJ gasoline)
+        Diesel Hybrid                                                 0.93                     63 – 83                    –15                      0.36                      –43
+        CNG Hybrid                                                    0.44                     48 – 63                   –310                      0.77                     –410
+AIII    Electric, 200 g CO2eq / kWhel                                 0.13                     23 – 35                    86                        1.4                       61
+
+
+       Notes:
+       i
+            Only those options, where data were available and where significant advances are expected are listed. Other transport options, such as trains, buses and 2-wheelers will
+            remain relevant means of transport in the future but are not covered due to data limitations. Note that input data are included in normal font type, output data resulting from
+            data conversions are bolded, and intermediate outputs are italicized.
+       ii
+            CO2eq fuel intensities are based on IPCC (2006). CO2eq intensities of electricity are based on generic low and high carbon power systems. Well-to-wheel estimates from a
+            range of sources, and specific examples as indicated in tables.
+       iii
+            Occupancy rates for trains, buses, SUVs, LDVs, 2-wheelers based on IEA Mobility Model averages from around the world. Bus and rail represent relatively high intensity usage;
+            average loadings in some countries and regions will be lower.
+       iv
+            Future vehicle purchase price mark ups based primarily on NRC (2013) and NRC (2010), also IEA (2009a), TIAX (2011), TOSCA (2011), Horton G. (2010) and other sources.
+       v
+            For LDVs, vehicle lifetime-kilometres set to 156,000 km based on discounting 15 years and 15,000 km per year. Other vehicle type assumptions depend on literature. No
+            normalization was attempted.
+       vi
+            Annual distance travelled as described above.
+       vii
+            Horton G. (2010) gives ranges from 100 to 150 for Boeing 737-800 and 350 to 500 for Airbus A380.
+       viii
+            Relative to 2010 baseline.
+       ix
+            Based on NRC (2013) and other studies, see Section 8.3.
+       x
+            Based on NRC (2013) and other studies, see Section 8.3.
+       xi
+            Fuel consumption of future hybrid gasoline, hybrid gasoline/biofuel, and hybrid CNG based on NRC (2013) and other studies, see Section 8.3.
+       xii
+            Fuel consumption of future diesel based on NRC (2013) and other studies, see Section 8.3.
+       xiii
+            Fuel consumption of future electric based on NRC (2013) and other studies, see Section 8.3.
+       xiv
+            Future fuel prices based on IEA (2012b). These are point estimates — variation in relative fuel prices can have significant impacts on transport costs and LCCC.
+       xv
+            Value results from assumption of 33% improvement relative to current new narrow and medium body aircrafts based on TOSCA (2011) and Horton G. (2010).
+       xvi
+            Relative to 2010 gasoline SUV at 2010 fuel price of 0.81 USD2010/l.
+       xvii
+            Relative to 2010 gasoline LDV at 2010 fuel price of 0.81 USD2010/l.
+
+
+
+
+       1340
+Annex III                                                                                          Technology-specific Cost and Performance Parameters
+
+
+Table A.III.5 | Freight transport — currently commercially available technologiesi
+
+
+                                                 VEff                     FCI              OC                   ΔI                   L                  AD
+                                                                                                            Vehicle price
+                                                                                                         markup on baseline
+                   Option                     Vehicle fuel
+                                                                   CO2eq intensity                          (Incremental                         Annual distance
+                                             consumption                             Vehicle load (t)                         Vehicle lifetime
+                                                                      of fuelii                                 capital                          travelled (km / yr)
+                                               (l / 100km)
+                                                                                                            expenditure)
+                                                                                                               (USD2010)
+ Aviation (commercial, long haul)iii
+ 2010 Stock Average                                –                        –               –                    –                   –                   –
+  Dedicated Aircraft                               –                        –               –                    –                   –                   –
+  Belly-hold                                       –                        –               –                    –                   –                   –
+  Rail (freight train) iv
+ Diesel, light goods                               –                        –               –                    –                   –                   –
+  Diesel, heavy goods                              –                        –               –                    –                   –                   –
+  Electric, 200g CO2eq / kWhel                     –                        –               –                    –                   –                   –
+ Maritimev
+ Current Average International Shipping            –                        –               –                    –                   –                   –
+  New Large International                          –                        –               –                    –                   –                   –
+  Container Vesselvi
+ Large Bulk Carrier / Tankervii                    –                        –               –                    –                   –                   –
+ LNG Bulk Carrierviii                              –                        –               –                    –                   –                   –             AIII
+ Roadix
+ New Medium Duty Trucks
+ 2010 Stock Average                             16 – 24                 3.2 kg / l       1.6 – 1.9               –                   –                   –
+ Diesel                                         14 – 18                 3.2 kg / l       1.6 – 1.9               –                   –                   –
+  Diesel Hybrid                                 11 – 14                 3.2 kg / l       1.6 – 1.9               –                   –                   –
+  CNG                                           18 – 23                 2.1 kg / l       1.6 – 1.9               –                   –                   –
+  New Heavy Duty, Long-Haul Trucks
+  2010 Stock Average                            28 – 44                 3.2 kg / l        8 – 12                 –                   –                   –
+  Diesel                                        25 – 32                 3.2 kg / l        8 – 12                 –                   –                   –
+  CNG                                           31 – 40                 2.1 kg / l        8 – 12                 –                   –                   –
+
+
+
+
+                                                                                                                                                               1341
+       Technology-specific Cost and Performance Parameters                                                                                                                 Annex III
+
+
+       Table A.III.5 (continued) | Freight transport — currently commercially available technologies i
+
+
+                                                                   FC                        EI                       ΔE                        ΔC                      LCCC5 %
+                                                            Average annual                                                                                        Levelized cost of
+                               Option                                               Emissions per useful                                  Annual CO2eq
+                                                          fuel purchase cost                                Annualized travel cost                                conserved carbon
+                                                                                     distance travelled                                savings from vehicle
+                                                          (USD2010 / l for fossil                           increment (USD2010 / yr)                                 at 5 % WACC
+                                                                                       (gCO2eq / t-km)                                  switch (tCO2eq / yr)
+                                                        fuel; UScents2010 / kWh)                                                                                   (USD2010 / tCO2eq)
+        Aviation (commercial, long haul) iii
+        2010 Stock Average                                         –                     550 – 740                     –                        –                          –
+        Dedicated Aircraft                                         –                     500 – 820                     –                        –                       –200x
+        Belly-hold                                                 –                     520 – 700xi                   –                        –                          –
+        Rail (freight train)    iv
+
+
+        Diesel, light goods                                        –                       26 – 33                     –                        –                          –
+        Diesel, heavy goods                                        –                       18 – 25                     –                        –                          –
+        Electric, 200g CO2eq / kWhel                               –                       6 – 12                      –                        –                          –
+        Maritimev
+        Current Average International Shipping                     –                       10 – 40                     –                        –                          –
+        New Large International Container Vessel vi
+                                                                   –                       10 – 20                     –                        –                          –
+        Large Bulk Carrier / Tankervii                             –                        3–6                        –                        –                          –
+        LNG Bulk Carrierviii                                       –                       9 – 13                      –                        –                          –
+        Road  ix
+
+
+
+AIII    New Medium Duty Trucks
+        2010 Stock Average                                         –                     270 – 490                     –                        –                          –
+        Diesel                                                     –                     240 – 370                     –                        –                          –
+        Diesel Hybrid                                              –                     180 – 270                     –                        –                          –
+        CNG                                                        –                     200 – 300                     –                        –                          –
+        New Heavy Duty, Long-Haul Trucks
+        2010 Stock Average                                         –                      76 – 180                     –                        –                          –
+        Diesel                                                     –                      70 – 130                     –                        –                          –
+        CNG                                                        –                      60 – 110                     –                        –                          –
+
+
+       Notes:
+       i
+            Note that input data are included in normal font type, output data resulting from data conversions are bolded, and intermediate outputs are italicized.
+       ii
+            CO2eq fuel intensities are based on IPCC (2006). CO2eq intensities of electricity based on generic low and high carbon power systems. Well-to-wheel estimates from a range
+            of sources, and specific examples as indicated in tables.
+       iii
+            These baseline carbon intensity values for long haul air freight are based on mean estimates from DEFRA (2013). They relate to Boeing 747 and 757 air freight with an aver-
+            age carrying capacity of 84 tonnes and load factor of 69%. High and low estimates set at 15% above and below the means to reflect differences in the energy efficiency of
+            different aircraft types operating with differing load factors.
+       iv
+            The carbon intensity values for rail freight are based mainly on analyses by DEFRA (2013) and EcoTransit (2011). Expert judgment has been exercised to allow for interna-
+            tional differences in the age, capacity, and efficiency of railway rolling stock and railway operating practices.
+       v
+            Estimates are derived mainly from DEFRA (2012). This source presents mean carbon intensity values for particular types and size ranges of vessels. The ranges around these
+            means allow for differences in actual vessel size, loading, and energy efficiency on the basis of expert judgment.
+       vi
+            Carrying more than 8000 twenty-foot equivalent units (TEU).
+       vii
+            100-200,000 dead weight tonnes.
+       viii
+            100-200,000 cubic metres.
+       ix
+            Truck CO2eq/t-km ranges estimated from NRC (2010) and IEA Mobility Model data for averages for truck load factors around the world; vehicle efficiency estimates primarily
+            from NRC (2010), IEA (2009a) and TIAX (2011). Baseline estimates derived from DEFRA (2013), EcoTransit (2011) and IEA (2009a). High and low estimates allow for varia-
+            tions in vehicle size, weight, age, operation and loading in different parts of the world.
+       x
+            Aviation freight cost estimates assumptions similar to passenger. Based on IEA and TOSCA analysis, IEA based on 30 years, 10% discount rate.
+       xi
+            The allocation of emissions between passenger and freight traffic on belly-hold services conforms to a standard ‘freight weighting’ method.
+
+
+
+
+       1342
+       Table A.III.6 | Freight transport — future (2030) expected technologies i
+
+                                                                                                                                                                                                                                                       Annex III
+                                                        VEff            FCI          OC               ΔI              L              AD                       FC                   EI              ΔE               ΔC                LCCC5 %
+                                                                                                 Vehicle price
+                                                                                                  markup on                                            Average annual
+                                                                                                                                                                             Emissions per    Annualized       Annual CO2eq      Levelized cost of
+                         Optionsii                   Vehicle fuel      CO2eq                        baseline                                            fuel purchase
+                                                                                   Vehicle                         Vehicle    Annual distance                               useful distance    travel cost      savings from     conserved carbon
+                                                    consumption      intensity                   (Incremental                                           cost (USD2010 / l
+                                                                                   load (t)                        lifetime   travelled (km / yr)                              travelled       increment       vehicle switch       at 5 % WACC
+                                                      (l / 100km)     of fueliii                     capital                                            for fossil fuel;
+                                                                                                                                                                            (gCO2 eq/ t-km)   (USD2010 / yr)     (tCO2eq / yr)    (USD2010 / tCO2eq)
+                                                                                                 expenditure)                                          UScents2010 / kWh)
+                                                                                                    (USD2010)
+        Aviation (commercial, long haul)
+        Improved Aircraft (25 % better)                   –               –           –               –               –               –                        –               300 – 450v           –                –                  150vi
+        Improved, Open Rotor Engine (33 % better)         –               –           –               –               –               –                        –               270 – 400v           –                –                  350vi
+        Maritime
+        Optimized Container Vessel                        –               –           –               –               –               –                        –                7 – 13vii           –                –                 –100viii
+        Optimized Bulk Carrier                            –               –           –               –               –               –                        –                 2 – 4vii           –                –                 –100viii
+              iv
+        Road
+        Optimized Medium Duty Trucks
+        Diesel                                          8 – 13        3.2 kg / l   1.6 – 1.9          –               –               –                        –               140 – 260            –                –                 –100
+        Optimized Heavy Duty, Long-Haul Trucks
+        Diesel                                         15 – 22        3.2 kg / l    8 – 12            –               –               –                        –                41 – 91             –                –                 –250
+        Diesel / Biofuel (50 / 50 share)
+        (Assuming 70 % less CO2eq / MJ                 15 – 22        2.1 kg / l    8 – 12            –               –               –                        –                26 – 59             –                –                    –
+        biofuel than / MJ diesel)
+
+
+
+
+       Notes:
+       i
+            Note that input data are included in normal font type, output data resulting from data conversions are bolded, and intermediate outputs are italicized.
+       ii
+            No future rail CO2eq or cost estimates were included due to lack of information.
+       iii
+            CO2eq fuel intensities are based on IPCC (2006). CO2eq intensities of electricity based on generic low and high carbon power systems. Well-to-wheel estimates from a range
+            of sources, and specific examples as indicated in tables.
+       iv
+            Future truck efficiencies and costs primarily from NRC (2010), Zhao et al (2013).
+       v
+            These baseline carbon intensity values for long haul airfreight are based on mean estimates from DEFRA (2013). They relate to Boeing 747 and 757 airfreight with an aver-
+            age carrying capacity of 84 tonnes and load factor of 69%. High and low estimates set at 15% above and below the means to reflect differences in the energy efficiency of
+            different aircraft types operating with differing load factors.
+       vi
+            Projections of the carbon mitigation costs of future aircraft development are based mainly on Tosca. Mitigation costs for future technologies assumed similar to passenger
+            aircraft since the specific large commercial type aircraft are mostly the same configuration.
+       vii
+            Estimates are derived mainly from DEFRA (2012). This source presents mean carbon intensity values for particular types and size ranges of vessels. The ranges around these
+            means allow for differences in actual vessel size, loading and energy efficiency on the basis of expert judgment.
+       viii
+            Shipping cost estimates based primarily on Buhaug (2009), Lloyds Register/DNV (2011), and IEA (2009a) (review of literature).
+                                                                                                                                                                                                                                                       Technology-specific Cost and Performance Parameters
+
+
+
+1343
+
+
+                                                                                                                                                    AIII
+       Technology-specific Cost and Performance Parameters                                                                                                                     Annex III
+
+
+       A.III.4 Industry                                                                         insights into future trends for production practices with different spe-
+                                                                                                cific emissions, but need to be considered with caution.
+
+                                                                                                Specific mitigation costs have been assessed for all production prac-
+       A.III.4.1         Introduction                                                           tices except for the decarbonization of electricity supply, the costs of
+                                                                                                which are dealt with in Chapter 7 (Section 7.8). Specific mitigation
+       The data presented below has been used to assess typical product-                        costs are expressed in USD2010 / tCO2 or USD2010 / tCO2eq and take into
+       specific CO2eq emissions (i. e., emission per unit of product)3 for dif-                 account total incremental operational and capital costs. Generally,
+       ferent production practices, which are commercially available today or                   costs of the abatement options shown vary widely between individual
+       may become so in the future, and for selected industrial sectors. Both                   regions and from plant to plant. Factors influencing the costs include
+       direct and indirect specific emissions are assessed. Specific emissions                  typical capital stock turnover rates (some measures can only be
+       could be reduced by switching to production processes that cause                         applied when plants are replaced), relative energy costs, etc. No meta-
+       lower emissions for otherwise comparable products4 and by reducing                       analysis of such individual cost components has been attempted, how-
+       production / consumption of emission-intensive products. Some produc-                    ever, due to limited data availability. Estimates are based on expert
+       tion practices are mutually exclusive; others can be combined to yield                   judgment of the limited data that is available. Hence, the estimates of
+       deeper reductions in specific emissions. The impact of decarbonizing                     specific mitigation costs should be considered with care and as indica-
+       electricity supplied for industrial processes has been assessed, too, for                tive only.
+       well-defined exemplary conditions.
+                                                                                                Information on specific emissions of different production practices and
+       For all input parameters and specific CO2eq emissions global average                     associated specific mitigation cost is presented in Figures 10.7 – 10.10
+       values are given as a benchmark. Parameters of individual production                     and in Figures 10.19 and 10.20.
+AIII   practices are generally estimates of typical values based on limited
+       studies and expert judgment. Comparisons of input parameters across
+       different individual production practices and with global averages                       A.III.4.2                     Approaches and data by industry
+       (see Tables A.III.8 – A.III.12 below) yields insights into the intermediate                                            sector
+       effect via which changes in final specific CO2eq emissions occur for
+       certain production practices.
+                                                                                                A.III.4.2.1                   Cement
+       Estimates of future global averages in specific CO2eq emissions are
+       derived for long-term scenarios that stabilized GHG concentrations at                    Direct specific emissions of cement (tCO2 / t cement) are derived from
+       about 450 ppm CO2eq and provide data at the necessary level of detail.                   technical parameters via the following equation:
+       These can be considered as another rough benchmark for emission
+       intensities that can be achieved with currently available and potential                  E​I​direct​ = (1 − λ) · clc · (​e​n−el​  · FC​I​n−el​  + C​I​calc​)   (Equation A.III.13)
+       future production practices. Generally, scenarios that provide sufficient
+       detail at the level of industrial subsectors / products are very scarce (2 – 3           Where
+       models) and are in many cases derived from the same data source as
+       data for individual production practices (mostly International Energy                    • λ is the percentage of emissions captured and stored via CCS
+       Agency)5. Comparisons of emission intensities in future 450 ppm stabi-                   • clc is the clinker to cement ratio
+       lization scenarios with available production practices can yield rough                   • en-el is the specific non-electric energy use, i. e., the non-electric
+                                                                                                  energy use per unit of clinker
+                                                                                                • FCIn-el is the carbon intensity of the non-electric fuel used
+                                                                                                • CIcalc is the carbon intensity of the calcination process
+       3
+           Emissions cannot always be expressed in product-specific terms. In the case of
+           chemicals, products are too heterogeneous to express emissions per unit of prod-     Indirect specific emissions of cement (tCO2 / t cement) are derived from
+           uct. Hence, global emissions of different production practices / technologies have
+           been assessed for total global chemicals production.
+                                                                                                specific electricity use and the carbon intensity of electricity:
+       4
+           Note that the extent to which certain production processes can be replaced by
+           others is often constrained by various conditions that need to be considered on a    E​Iindirect
+                                                                                                   ​       ​  = ​e​el​  · FC​I​el​                                    (Equation A.III.14)
+           case by case basis. The replacement of blast oxygen steel furnaces by electric arc
+           furnaces, for instance, is limited by availability of scrap.
+       5
+           Further literature sources are assessed in Chapter 10 (Section 10.7). The data       Where
+           sources assessed in 10.7 could, however, often not be used in the summary
+           assessment mainly due to non-comparability of methodological approaches. Chap-       • eel is the specific electric energy use, i. e., the electricity use per unit
+           ter 6 presents more comprehensive scenario assessments including all sectors
+           of the economy, which often comes, however, at the expense of sectoral detail.         of cement
+           Chapter 10 (Section 10.10) discusses these scenarios from an industry perspective.   • FCIel is the carbon intensity of the electricity used
+
+       1344
+Annex III                                                                                                                                                                                                 Technology-specific Cost and Performance Parameters
+
+
+Total specific emissions of cement (tCO2 / t cement) are the sum of both                                                                                                         in accordance with the definition of each production practice, while all
+direct and indirect specific emissions:                                                                                                                                          other input parameters are kept at global average values.
+
+E​I​total​  = E​I​direct​  + E​I​indirect​                                                                         (Equation A.III.15)                                          Data on technical input parameters is also very limited. Sources are
+                                                                                                                                                                                 specified in footnotes to data entries.
+Remarks:
+                                                                                                                                                                                 Specific mitigation costs (cost of conserved carbon) are estimated
+Variation in emission intensity derives from variation in selected input                                                                                                         based on expert assessment of limited selected studies. See footnote
+parameters. Individual input parameters are varied systematically, i. e.,                                                                                                        ii for details.
+
+
+
+Table A.III.7 | Technical parameters and estimates for cost of conserved carbon of cement production processesi
+
+
+                                                         clc                                en-el                      FCIn-el                       CIcalc                             eel                      FCIel                            λ                     EIdirect                   EIindirect                          EItotal                      LCCC
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                                                  Levelized cost of conserved
+
+
+
+
+                                                        Clinker to cement ratio (%)
+                                                                                                                                                  CO2 intensity of calcination                               CO2 intensity of electricity                                                           Indirect emission intensity
+                                                                                                                                                                                                                                                                       Direct emission intensity                                     Total emission intensity
+                                                                                       Non-electric fuel              CO2 intensity of non-
+
+
+                                                                                                                                                                                                                                              CO2 capture rate (%)
+                                                                                                                                                                                  Electricity intensity
+                        Options
+
+
+
+
+                                                                                                                      electric fuel (tCO2 / GJ)   process (t CO2 / t clinker)                                (kgCO2 / kWh)                                             w / CCS (tCO2 / t cement)    (tCO2 / t cement)                (tCO2 / t cement)            carbon (USD2010 / tCO2)ii
+                                                                                       intensity (GJ / t clinker)                                                                 (kWh / t cement)
+                                                                                                                                                                                                                                                                                                                                                                                                AIII
+   Historical Global Average Data and Future Data for 450 ppm Scenarios from Integrated Models
+   Global average (2030) iii                                   –                                 –                             –                            –                             –                            –                        –                              –                            –                     0.38 – 0.59
+   Global average (2050) iii                                   –                                 –                             –                            –                             –                            –                        –                              –                            –                     0.24 – 0.39
+   Global average (2010)                               0.8                                   3.9                            0.1                       0.51                            109                      0.46iv                            0                       0.72                          0.05                            0.77
+   Currently Commercially Available Technologies
+   Best practice energy intensity                      0.8                            2.9 – 3.1v                            0.1                       0.51                        80 – 90vi                    0.46iv                            0                   0.64 – 0.66 0.037 – 0.041 0.68 – 0.70                                                      < 0 – 150
+   Best practice clinker to cement ratio            0.6 – 0.7vii                             3.9                            0.1                       0.51                            109                      0.46iv                            0                   0.54 – 0.63                       0.05                       0.59 – 0.68                   < 0 – 50viii
+   Best practice energy intensity and
+                                                    0.6 – 0.7vii                      2.9 – 3.1v                            0.1                       0.51                        80 – 90vi                    0.46iv                            0                   0.48 – 0.57 0.037 – 0.041 0.52 – 0.62                                                      < 0 – 150viii
+   clinker to cement ratio combined
+   Improvements in non-electric fuel mixix             0.8                                   3.9                      0.056x                          0.51                            109                      0.46iv                            0                       0.58                          0.05                            0.63                     < 0 – 150viii
+   Decarbonization of electricity supply               0.8                                   3.9                            0.1                       0.51                            109                   0 – 0.39                  xi
+                                                                                                                                                                                                                                                 0                       0.72                      0 – 0.043                      0,72 – 0.76
+   Pre-commercial Technologies
+   CCSxii                                              0.8                                   3.9                            0.1                       0.51                            109                      0.46iv                       75 – 90                  0.072 – 0.18                      0.05                       0.12 – 0.23                   50 – 150xiii
+   CCS and fully decarbonized electricity     xiv
+                                                       0.8                                   3.9                            0.1                       0.51                            109                              0                    75 – 90                  0.072 – 0.18                            0                    0.072 – 0.18
+
+
+Notes:
+i
+     Note that input data are included in normal font type, output data resulting from data conversions are bolded, and intermediate outputs are italicized.
+ii
+     Expert judgment based on McKinsey (2009), 2012, IEA (2009b, 2012a), BEE (2012), and others. The costs of the abatement options shown vary widely between individual
+     regions and from plant to plant. Factors influencing the costs include typical capital stock turnover rates (some measures can only be applied when plants are replaced), rela-
+     tive energy costs, etc.
+iii
+     Data range is taken from the following models: AIM Enduse model (Akashi et al., 2013), IEA 2DS low demand (IEA, 2012a).
+iv
+     Based on global industry-wide average CO2eq intensity of primary energy used in electricity and heat supply in 2010 (see Chapter 10. Table 10.2)
+v
+     This range is based on best practice operation of 4 to 6 stage pre-heater and pre-calciner kiln technology based on IEA (2009b). Actual operation performance does depend
+     on issues such as moisture content and raw material quality and can be above this range.
+vi
+     Best practice electricity consumption is based on IEA (2007).
+vii
+     Minimum clinker to cement ratio is for Portland cement according to IEA (2007), which is a globally achievable value taking availability of substitutes into account IEA
+     (2009b). Further reductions in the clinker to cement ratio are possible for other types of cement (e. g., fly ash or blast furnace slag cement).
+viii
+     For clinker substitution and fuel mix changes, costs depend on the regional availability and price of clinker substitutes and alternative fuels.
+ix
+     This is assuming that only natural gas is used as non-electric fuel. Further reductions in non-electric fuel emission intensity are technically possible, e. g., by increased use of biomass.
+x
+     Natural gas fuel emission factor (IPCC, 2006).
+xi
+     The upper end of the range is based on natural gas combined cycle (NGCC) with an efficiency of 55 % and fuel emission factors from IPCC (2006).
+xii
+     CCS: Carbon dioxide capture and storage. This option assumes no improvements in fuel mix. Feasibility of CCS depends on global CCS developments. CCS is currently not yet
+     applied in the cement sector.
+xiii
+     IEA GHG (2008) estimates CCS abatement cost at 63 to 170 USD / tCO2 avoided.
+xiv
+     This option assumes no improvements in non-electric fuel mix.
+
+
+
+                                                                                                                                                                                                                                                                                                                                                                          1345
+       Technology-specific Cost and Performance Parameters                                                                                                               Annex III
+
+
+       A.III.4.2.2                    Iron and steel                                    CO​2​direct​ = (1 − λ) · CO​2​direct,noCCS​                          (Equation A.III.19)
+
+       Direct specific CO2 emissions of crude steel (tCO2 / t steel) are derived        Where
+       from technical parameters via the following equation:
+                                                                                        • λ is the percentage of emissions captured and stored via CCS
+          ​ ​ = (1 − λ) · E​I​direct,noCCS​
+       E​Idirect                                                (Equation A.III.16)     • CO2direct,noCCS are global direct CO2 emissions in chemicals produc-
+                                                                                          tion in 2010 without CCS
+       Where
+                                                                                        Global indirect CO2 emissions (GtCO2) of global chemicals production
+       • λ is the percentage of emissions captured and stored via CCS                   in 2010 are derived from global electricity use in chemicals production
+       • EIdirect,noCCS is the direct emission intensity without CCS                    and the carbon intensity of electricity:
+
+       Indirect specific CO2 emissions of crude steel (tCO2 / t steel) are derived      CO​2​indirect​ = Elec · FC​I​el​  · γ                                (Equation A.III.20)
+       from specific electricity use and the carbon intensity of electricity:
+                                                                                        Where
+       E​I​indirect​  = ​e​el​  · FC​I​el​                     (Equation A.III.17)
+                                                                                        • Elec is the global electric energy use in the chemicals sector in 2010
+       Where                                                                            • FCIel is the carbon intensity of the electricity used
+                                                                                        • γ is a unit conversion factor of 1 / 1000
+       • eel is the specific electric energy use, i. e., the electricity use per unit
+         of crude steel                                                                 Total global CO2eq emissions (GtCO2eq) of chemicals production in
+AIII   • FCIel is the carbon intensity of the electricity used                          2010 are the sum of direct and indirect CO2 emissions and CO2-equiva-
+                                                                                        lents of non-CO2 emissions:
+       Total specific CO2 emissions of crude steel (tCO2 / t steel) are the sum of
+       both direct and indirect specific emissions:                                     CO2​e​total​  = CO​2​direct​  + CO​2​indirect​  + CO2​e​acid​  + CO2​e​HFC−22​
+                                                                                                                                                                   (Equation A.III.21)
+       E​Itotal
+          ​ ​  = E​I​direct​  + E​I​indirect​                  (Equation A.III.18)
+                                                                                        Where
+       Remarks:
+                                                                                        • CO2eacid are global direct N2O emissions from global nitric and
+       Data on technical input parameters is limited and almost exclusively               adipic acid production expressed in CO2 equivalents
+       based on IEA (2007). Emission intensities of the advanced blast fur-             • CO2eHFC-22 are global direct HFC-23 emissions from HFC-22 pro-
+       nace route, the natural gas DRI route, and the scrap-based electric                duction expressed in CO2 equivalents
+       arc furnace route are point estimates of global best practice based on
+       IEA (2007). Since no variation in input parameters could be derived              Remarks:
+       from the literature, output ranges have been constructed as an interval
+       around the mean value based on + / -10 % of the respective savings.              For most production practices, only central estimates for technical
+       Where input parameters are set by assumption, they are varied within             input parameters could be derived from the available literature. Where
+       typical ranges and become the sole source of variation in output val-            input parameters are set by assumption, they are varied within typi-
+       ues, while all other input parameters are kept at global average values.         cal ranges and become a source of variation in output values. Where
+                                                                                        no variation in input parameters could be derived from the literature,
+       Specific mitigation costs (cost of conserved carbon) are estimated               output ranges have been constructed as an interval around the mean
+       based on expert assessment of limited selected studies. See footnote             value based on + / -10 % of the respective savings.
+       vi for details.
+                                                                                        Specific mitigation costs (cost of conserved carbon) are estimated
+                                                                                        based on expert assessment of limited selected studies. See footnote
+       A.III.4.2.3                    Chemicals                                         iv for details.
+
+       Global direct CO2 emissions (GtCO2) of global chemicals production in
+       2010 are derived from technical parameters via the following equation:
+
+
+
+
+       1346
+Annex III                                                                                                                               Technology-specific Cost and Performance Parameters
+
+
+Table A.III.8 | Technical parameters and estimat+es for cost of conserved carbon of iron and steel production processesi
+
+
+                                                      EIdirect,noCCS                  eel                FCIel                 λ                       EIdirect             EIindirect              EItotal               LCCC
+
+
+
+
+                                                                                                                           CO2 capture rateiv (%)
+                                                      Specific direct CO2                                                                           Specific direct CO2
+                                                                               Specific electricity                                                                       Indirect emission                           Levelized cost of
+                        Optionsii                                                                                                                                                               Total emission
+                                                      emissions w / o CCSiii
+                                                                                                      CO2 intensity
+                                                                               consumption                                                          emissions w / CCSv    intensity (tCO2 / t                         conserved carbon
+                                                                                                      of electricity                                                                            intensity (tCO2 / t
+
+                                                      (tCO2 / t steel)         (kWh / t steel)        (kgCO2 / kWh)                                 (tCO2 / t steel)      steel)                steel)                (USD2010 / tCO2) vi
+
+       Historical Global Average Data and Future Data for 450 ppm Scenarios from Integrated Models
+       Global average (2030)vii                                –                       –                   –                    –                          –                      –             0.92 – 1.36
+       Global average (2050) vii                               –                       –                   –                    –                          –                      –             0.47 – 0.84
+       Global average (2010)                               1.8viii                  820ix                0.46x                  0                         1.8                  0.38                   2.2
+       Currently Commercially Available Technologies
+       Advanced blast furnace routexi                       1.3xii                 350xiii               0.46x                  0                         1.3                  0.16                   1.5              < 0 – 150
+       Natural gas DRI routexiv, xi                         0.7xii                 590xiii               0.46x                  0                         0.7                  0.27                  0.97               50 – 150
+       Scrap based EAF   xv, xi
+                                                          0.25       xii
+                                                                                   350     xiii
+                                                                                                         0.46  x
+                                                                                                                                0                        0.25                  0.16                  0.41              < 0 – 50xvi
+       Decarbonization of electricity supply               1.8     viii
+                                                                                    820     ix
+                                                                                                      0 – 0.39     xvii
+                                                                                                                                0                         1.8               0 – 0.32             1.8 – 2.1
+       Pre-commercial Technologies
+       CCSxviii                                            1.8viii                  820ix                0.46x            75 – 90                   0.18 – 0.45                0.38             0.56 – 0.82             50 – 150
+       CCS and fully decarbonized electricity   xix
+                                                           1.8     viii
+                                                                                       –                   0              75 – 90                   0.18 – 0.45                   0             0.18 – 0.45
+
+                                                                                                                                                                                                                                            AIII
+Note:
+i
+           Note that input data are included in normal font type, output data resulting from data conversions are bolded, and intermediate outputs are italicized.
+ii
+           Non-electric fuel mix improvements are not listed as an abatement option because a large share of the coal use in the iron and steel industry, via the intermediate production
+           of coke, is an inherent feature of the blast furnace technology. The coke is used to reduce iron ore to iron and for structural reasons in the furnace. The limited data availability
+           did not allow assessing the limited potential related to the part of the fuel use that can be substituted.
+iii
+           Direct CO2 emissions contain all emissions from steel production that are unrelated to electricity consumption.
+iv
+           As percentage of specific direct CO2 emissions in steel production.
+v
+           Direct CO2 emissions contain all emissions from steel production that are unrelated to electricity consumption.
+vi
+           Expert judgment based on McKinsey (2009; 2010), IEA (2009b, 2012a), BEE (2012) and others. The costs of the abatement options shown vary widely between individual
+           regions and from plant to plant. Factors influencing the costs include typical capital stock turnover rates (some measures can only be applied when plants are replaced), rela-
+           tive energy costs, etc.
+vii
+           Data range is provided by AIM Enduse model (Akashi et al., 2013) DNE21+ (Sano et al., 2013a; b) and IEA 2DS low demand (IEA, 2012a).
+viii
+           IEA (2012a).
+ix
+           Derived from IEA (2012a, 2013b).
+x
+           Based on global industry-wide average CO2eq intensity of primary energy used in electricity and heat supply in 2010 (see Chapter 10, Table 10.2). This is a simplified calcula-
+           tion in line with the method used for other sectors ignoring the practice in many iron and steel plants to use process derived gases (blast furnace gas and basic oxygen
+           furnace gas) for electricity production. The emissions from these derived gases are already included in the direct emissions.
+xii
+           Excluding rolling and finishing.
+xii
+           Value equals lower bound of total emission intensity in IEA (2007, p. 108, table 5.4) as that is for zero-carbon electricity.
+xiii
+           Derived from spread in total emission intensity in IEA (2007, p. 108, table 5.4) and using a typical coal emission factor of 0.85.
+xiv
+           DRI: Direct reduced iron.
+xv
+           EAF: Electric arc furnace.
+xvi
+           Costs depend heavily on the regional availability and price of scrap.
+xvii
+           The upper end of the range is based on natural gas combined cycle (NGCC) with an efficiency of 55 % and fuel emission factors from IPCC (2006). The approach taken here
+           is a simplified calculation, consistent with the approach for other sectors and does not explicitly take into account the share of the electricity consumed that is produced with
+           process derived gases (see also footnote ix).
+xviii
+           CCS: Carbon dioxide capture and storage. This option assumes no improvements in fuel mix.
+xix
+           This option assumes no improvements in non-electric fuel mix.
+
+
+
+
+                                                                                                                                                                                                                                 1347
+       Technology-specific Cost and Performance Parameters                                                                                                                                                                                                                                                                                                                       Annex III
+
+
+       Table A.III.9 | Technical parameters and estimates for cost of conserved carbon of chemicals production processes i
+
+
+                                                    CO2direct,noCCS                  CO2eacid                        CO2eHFC-22                                 Elec                                      FCIel                            λ                    CO2direct                      CO2indirect                                 CO2total                                  LCCC
+
+
+
+
+                                                                                                                      Global non-CO2 emissions from adipic
+
+
+
+
+                                                                                                                                                                                                                                                                                                  Global indirect CO2 emissions (GtCO2)
+                                                                                                                                                                                                                                                                                                                                              Global total emissions (GtCO2eq)
+                                                                                     Global non-CO2 emissions from
+                                                       Global direct CO2 emissions                                                                                                                                                                               Global direct CO2 emissions
+
+
+
+
+                                                                                                                                                                Global electricity use (TWh)
+                                                                                                                                                                                                      CO2 intensity of electricity                                                                                                                                                 Cost of conserved carbon
+                         Options
+
+
+
+
+                                                                                                                      and nitric acid production (GtCO2eq)ii                                                                          CO2 capture rateiii (%)
+                                                       w / o CCS (GtCO2)             HFC-22 production (GtCO2eq)ii                                                                                    (kgCO2 / kWh)                                              w / CCS (GtCO2)                                                                                                   (USD2010 / tCO2eq) iv
+
+
+         Historical Data and Future Data from IEA ETP 2DS Scenario
+         Global total (2030)v                                    –                             –                                    –                          1400                                             –                          –                    1.5 – 1.6                                 –                                          –
+         Global total (2050)v                                    –                             –                                    –                          1400                                             –                          –                           1.3                                –                                          –
+         Global total (2010)                               1.6         vi
+                                                                                         0.13                               0.12                               1100                            vii
+                                                                                                                                                                                                       0.46             viii
+                                                                                                                                                                                                                                           0                           1.6                       0.51                                        2.4
+         Currently Commercially Available Technologies
+         Best practice energy intensity                    1.0ix                         0.13                               0.12                                860x                                   0.46viii                            0                           1.0                       0.39                                        1.7                                  < 0 – 150
+         Enhanced recycling, cogeneration
+                                                           1.3xi                         0.13                               0.12                               1100vii                                 0.46viii                            0                           1.3                       0.51                                        2.1                                  20 – 150
+         and process intensification
+         Abatement of N2O from
+                                                           1.6vi                         0.13                           0.01xii                                1100vii                                 0.46viii                            0                           1.6                       0.51                                        2.3                                     0 – 50
+AIII     nitric and adipic acid
+         Abatement of HFC-23 emissions
+                                                           1.6vi                            0xiii                           0.12                               1100vii                                 0.46viii                            0                           1.6                       0.51                                        2.2                                     0 – 20
+         from HFC-22 production
+         Improvements in non-electric fuel mixxiv          1.2xv                         0.13                               0.12                               1100vii                                 0.46viii                            0                           1.2                       0.51                                        2.0                                  < 0 – 150
+         Decarbonization of electricity supply             1.6vi                         0.13                               0.12                               1100vii                               0 – 0.39xvi                           0                           1.6                      0 – 0.44                                   1.8 – 2.3
+         Pre-commercial Technologies
+         CCS for ammonia productionxvii                    1.6vi                         0.13                               0.12                               1100vii                                 0.46viii                      3.5xviii                          1.5                       0.51                                        2,3                                  50 – 150
+         CCSxix                                            1.6vi                         0.13                               0.12                               1100vii                                 0.46viii                      75 – 90                    0.16 – 0.4                       0.51                                     0.92 – 1.16                             50 – 150
+         CCS and fully decarbonized electricityxx          1.6vi                         0.13                               0.12                               1100vii                                          0                    75 – 90                    0.16 – 0.4                                0                               0.41 – 0.65
+
+
+       Notes:
+       i
+             Note that input data are included in normal font type, output data resulting from data conversions are bolded, and intermediate outputs are italicized.
+       ii
+             Based on EPA (2013) unless specified otherwise.
+       iii
+             As percentage of global direct CO2 emissions in chemicals production.
+       iv
+             Expert judgment based on McKinsey (2009; 2010), IEA (2009c, 2012a), BEE (2012), and others. The costs of the abatement options shown vary widely between individual
+             regions and from plant to plant. Factors influencing the costs include typical capital stock turnover rates (some measures can only be applied when plants are replaced), rela-
+             tive energy costs, etc.
+       v
+             Based on IEA ETP 2DS scenarios with high and low global energy demand (IEA, 2012a).
+       vi
+             Based on IEA (2012a).
+       vii
+             Based on IEA (IEA, 2013b). IEA (2012a) provided higher values of 1340 TWh.
+       viii
+             Based on global industry-wide average CO2eq intensity of primary energy used in electricity and heat supply in 2010 (see Chapter 10. Table 10.2).
+       ix
+             Based on global potential for savings of 35 % in direct emissions in chemicals production as estimated for 2006 (IEA, 2009c) applied to direct emissions in 2010.
+       x
+             Based on potential for electricity savings of 0.91 EJ (IEA, 2012a).
+       xi
+             Based on global technical potential for saving in primary energy consumption of 4.74 EJ (IEA, 2012a) and assuming that conserved primary energy supply is based on natural
+             gas with an emission factor of 56.2 kg CO2eq / GJ (2006). This translates into savings in global direct CO2 emissions of 0.27 GtCO2eq.
+       xii
+             Based on a global technical potential to save 85 % of non-CO2 emissions from HFC-22 production (EPA, 2013).
+       xiii
+             Based on a global technical potential to save 100 % of non-CO2 emissions from production of adipic and nitric acid (Miller and Kuijpers, 2011)
+       xiv
+             This is assuming that only natural gas is used as non-electric fuel. Further reductions in non-electric fuel emission intensity are technically possible, e. g., by increased use of
+             biomass.
+       xv
+             Based on the assumption that 23 % of direct CO2 emissions can be saved from a switch to natural gas (IEA, 2009c).
+       xvi
+             The upper end of the range is based on natural gas combined cycle (NGCC) with an efficiency of 55 % and fuel emission factors from IPCC (2006).
+       xvii
+             Ammonia production was 159 Mt in 2010 (IEA, 2012a). According to Neelis et al. (2005), a best practice gas-based ammonia facility produces 1.6 tCO2 / t ammonia, of which
+             70 % are pure CO2 emissions (1.1 t CO2 / t ammonia). 50 % of that pure CO2 stream is assumed to be used in urea production (0.55 t CO2 / t ammonia). 90 % of the remaining
+             0.55 tCO2 / t ammonia is assumed to be captured. This results in an effective CO2 capture rate of 3.5 % of total emissions in chemicals by application of CCS in ammonia
+             production.
+       xviii
+             This is the effective rate of CO2 emissions captured in ammonia production relative to global direct CO2 emissions in chemicals. See also endnote xvii.
+       xix
+             This option assumes no improvements in fuel mix.
+       xx
+             This option assumes no improvements in non-electric fuel mix.
+
+
+
+       1348
+Annex III                                                                            Technology-specific Cost and Performance Parameters
+
+
+A.III.4.2.4                    Pulp and paper                                Specific mitigation costs (cost of conserved carbon) are estimated
+                                                                             based on expert assessment of limited selected studies. See footnote
+Specific direct CO2 emissions of paper (tCO2 / t paper) are derived from     v for details.
+technical parameters via the following equation:
+
+   ​ ​ = (1 − λ) · E​I​direct,noCCS​
+E​Idirect                                              (Equation A.III.22)   A.III.4.2.5      Municipal Solid Waste (MSW)
+
+Where                                                                        For waste treatment practices that reduce landfill, specific methane
+                                                                             emission (gCH4 / kg MSW) and specific nitrous oxide emissions (gN2O / kg
+• λ is the percentage of emissions captured and stored via CCS               MSW) are taken directly from the literature. Methane emission intensi-
+• EIdirect,noCCS is the direct emission intensity without CCS                ties (gCH4 / kg MSW) of conventional and improved landfill options are
+                                                                             derived from technical parameters given below. CO2eq emission inten-
+Indirect specific CO2 emissions of paper (tCO2 / t paper) are derived from   sities (tCO2eq / t MSW) are calculated using global warming potentials
+specific electricity use and the carbon intensity of electricity:            (GWP) of methane and nitrous oxide of 21 and 310, respectively.
+
+E​I​indirect​  = ​e​el​  · FC​I​el​                   (Equation A.III.23)   E​I​CH4​ = MCF · DOC · DOCf · F · (1 − OX) · (1 − R) · γ · η​
+                                                                                                                                       (Equation A.III.25)
+Where
+                                                                             Where
+• eel is the specific electric energy use, i. e., the electricity use per
+  tonne of paper                                                             • MCF is the methane correction factor, Min(MCF) = 0.6,
+• FCIel is the carbon intensity of the electricity used                        Max(MCF) = 1                                                                   AIII
+                                                                             • DOC is degradable organic carbon (gC / kg MSW)
+Total specific CO2 emissions of paper (tCO2 / t paper) are the sum of        • DOCf is the fraction of DOC dissimilated, DOCf = 0.5
+both direct and indirect specific emissions:                                 • F is the fraction of methane in landfill gas, F = 0.5
+                                                                             • OX is oxidation factor (fraction)
+E​Itotal
+   ​ ​  = E​I​direct​  + E​I​indirect​                (Equation A.III.24)   • R is the fraction of recovered methane
+                                                                             • γ is the unit conversion factor of C into CH4, γ = 16 / 12
+Remarks:                                                                     • η is a unit conversion factor of 1 / 1000
+
+For most production practices, only central estimates for technical          Values given above are based on Frøiland Jensen and Pipatti (2001)
+input parameters could be derived from the available literature. Where       and Pipatti et al. (2006) default values.
+input parameters are set by assumption, they are varied within typi-
+cal ranges and become a source of variation in output values. Where          Variation in specific emissions is from maximum to minimum assuming
+no variation in input parameters could be derived from the literature,       all input parameters are independently distributed.
+output ranges have been constructed as an interval around the mean
+value based on + / -10 % of the respective savings.                          Cost are taken from EPA (2013) and based on a 10 % WACC.
+
+
+
+
+                                                                                                                                                    1349
+       Technology-specific Cost and Performance Parameters                                                                                                                                                                                                                                                                   Annex III
+
+
+       Table A.III.10 | Technical parameters and estimates for cost of conserved carbon of pulp and paper production processesi
+
+
+                                                    EIdirect,noCCS                               eel                               FCIel                                               λ                        EIdirect                       EIindirect                       EItotal                                       LCCC
+
+
+
+
+                                                                                                                                    CO2 intensity of electricity (kgCO2 / kWh)                                                                                                   Total emission intensity (tCO2 / t paper)     Cost of conserved carbon (USD2010/tCO2) v
+                                                                                        Specific electricity consumption
+                                                      Specific direct CO2 emissions                                                                                                                            Specific direct CO2 emissions
+                                                                                                                                                                                                                                               Indirect emission intensity
+                        Options
+
+
+
+
+                                                                                                                                                                                  CO2 capture rateiii (%)
+                                                      w / o CCSii (tCO2 / t paper)      (kWh / t paper)                                                                                                        w / CCSiv (tCO2 / t paper)      (tCO2 / t paper)
+
+
+        Historical Data and Future Data from IEA ETP 2DS Scenario
+        Global average (2030) vi                                –                     990 – 1100vii                                           –                                        –                    0.26 – 0.30vii                               –                                –
+        Global average (2050)   vi
+                                                                –                     920 – 950                            vii
+                                                                                                                                              –                                        –                    0.16 – 0.20vii                               –                                –
+        Global average (2010)                          0.56viii                         1,200ix                                    0.46x                                               0                          0.56                            0.55                           1,1
+        Currently Commercially Available Technologies
+        Best practice energy intensity                  0.48xi                          1,000xii                                   0.46x                                               0                          0.48                            0.46                          0.94                                         < 0 – 150
+        Co-generation                                  0.53xiii                         1,200ix                                    0.46x                                               0                          0.53                            0.55                           1.1                                          20 – 50
+        Decarbonization of electricity supply          0.56viii                         1,200ix                                  0 – 0.39xiv                                           0                          0.56                         0 – 0.47                       0.56 – 1,0
+AIII    Pre-commercial Technologies
+        CCSxv                                          0.56viii                         1,200ix                                    0.46x                                         75 – 90                    0.056 – 0.14                          0.55                       0.61 – 0.69                                     50 – 150
+        CCS and fully decarbonized electricityxvi      0.56viii                         1,200ix                                  0 – 0.39                                        75 – 90                    0.056 – 0.14                       0 – 0.47                      0.056 – 0.14
+
+
+       Notes:
+       i
+            Note that input data are included in normal font type, output data resulting from data conversions are bolded, and intermediate outputs are italicized.
+       ii
+            Direct CO2 emissions w / o CCS contain all emissions from paper production that are unrelated to electricity consumption, including those that could be captured and stored.
+       iii
+            As percentage of specific direct CO2 emissions in steel production.
+       iv
+            Direct CO2 emissions w / CCS contain all non-captured emissions from paper production that are unrelated to electricity consumption.
+       v
+            Expert judgment based on McKinsey (2009; 2010), IEA (2009b, 2012a), BEE (2012), and others. The costs of the abatement options shown vary widely between individual
+            regions and from plant to plant. Factors influencing the costs include typical capital stock turnover rates (some measures can only be applied when plants are replaced), rela-
+            tive energy costs, etc.
+       vi
+            Based on IEA ETP 2DS scenarios with high and low global energy demand (IEA, 2012a).
+       vii
+            Derived from IEA (2012a).
+       viii
+            Based on global direct emissions of 0.22 GtCO2 and global paper production of 395 Mt (IEA, 2012a).
+       ix
+            Based on global electricity consumption in pulp and paper production of 1.7 EJ (IEA, 2013b) and global paper production of 395 Mt (IEA, 2012a).
+       x
+            Based on global industry-wide average CO2eq intensity of primary energy used in electricity and heat supply in 2010 (see Chapter 10. Table 10.2).
+       xi
+            Based on technical potential for savings in non-electric fuel input of 1.5 GJ / t paper (IEA, 2012a) and assuming no change in the non-electric fuel emission factor of 51 kg
+            CO2 / GJ (derived from IEA, 2012a). This translates into savings in specific direct CO2 emissions of 77 kg CO2 / t paper.
+       xii
+            Based on technical potential for saving electricity of 200 kWh / t paper (IEA, 2012a).
+       xiii
+            Based on technical potential for savings in non-electric fuel input of 0.6 GJ / t paper (derived from IEA, 2012a) and assuming that conserved fuel is natural gas with an emis-
+            sion factor of 56.2 kg CO2eq / GJ (IPCC, 2006). This translates into savings in specific direct CO2 emissions of 34 kg CO2 / t paper.
+       xiv
+            The upper end of the range is based on natural gas combined cycle (NGCC) with an efficiency of 55 % and fuel emission factors from IPCC (2006).
+       xv
+            This option assumes no improvements in fuel mix.
+       xvi
+            This option assumes no improvements in non-electric fuel mix.
+
+
+
+
+       1350
+Annex III                                                                                                Technology-specific Cost and Performance Parameters
+
+
+Table A.III.11 | Technical parameters and estimates for cost of conserved carbon of waste treatment practicesi
+
+
+                                                  DOC                    OX                  R                  EICH4                   EIN2O            EICO2eq                 LCCC
+
+
+                                                                                                           CH4 emission                                                     Levelized cost of
+                                            Degradable
+                                                                                                                                   N2O emission       CO2eq emission
+                                                                     Oxidation factor
+                                                                                         Fraction of                               intensity of MSW                         conserved carbon
+                    Options
+                                            organic carbon                                                 intensity of MSW                           intensity of MSW
+                                                                                                                                   (g N2O / kg                              at 10 % WACC
+                                            (g C / kg MSW) ii, iii   (fraction)          recovered CH4     (gCH4 / kg MSW)ii, iv   MSW) ii, iv        (tCO2eq / t MSW) ii   (USD2010 / tCO2eq)v
+
+                                            min / max                                                      min / max                 min / max         min / max              min / max
+ Reference: Landfill at MSW disposal site     140 / 210                    0                 0                42 / 110                   ~0            0.58 / 1.5
+ Reducing MSW landfill
+ Composting                                          –                     –                 –                 0.0 / 8                0.06 / 0.6      0.019 / 0.35            – 140 / 470
+ Anaerobic digestion                                 –                     –                 –                 0/1/8                     ~0             0 / 0.17               150 / 590
+ Improving MSW landfill practices
+ Biocover                                     140 / 210                 0.8vi                0                8.5 / 21                   ~0           0.12 / 0.19               99 / 100
+ In-situ aeration                             140 / 210                  0.9                 0                4.2 / 11                   ~0           0.058 / 0.10              99 / 130
+ Flaring                                      140 / 210                    0            0.6 / 0.85            6.4 / 43                   ~0           0.087 / 0.35              5.0 / 58
+ CH4 capture for power generation             140 / 210                    0            0.6 / 0.9             4.2 / 43                   ~0           0.058 / 0.35              – 37 / 66
+ CH4 capture for heat generation              140 / 210                    0            0.6 / 0.9             4.2 / 43                   ~0           0.058 / 0.35              – 70 / 89
+
+
+Notes:
+i
+    Note that input data are included in normal font type, output data resulting from data conversions are bolded, and intermediate outputs are italicized.                                       AIII
+ii
+    On wet weight basis.
+iii
+    Total DOC derived from estimates for regional composition of wastes and fraction of DOC in each type of waste (Pipatti et al., 2006, Tables 2.3 and 2.4).
+iv
+    Methane emissions intensity of reference and improved landfill practices is based on Frøiland Jensen and Pipatti (2001, Table 3) and approach above, which is based on equa-
+    tion 1 of aforementioned source. Methane emission intensity and nitrous oxide emissions intensity of reduced landfill options is based on IPCC (2006).
+v
+    Based on EPA (2013).
+vi
+    Based on EPA (2006).
+
+
+
+
+                                                                                                                                                                                        1351
+       Technology-specific Cost and Performance Parameters                                                                                                                    Annex III
+
+
+       A.III.4.2.6          Domestic wastewater                                                     A.III.5.2          Approach
+
+       Specific CO2eq emissions of wastewater (tCO2 / t BOD5) are based on                          Commodity definitions are taken from the FAOSTAT (2013) database,
+       IPCC (2006) using the following equation to convert methane emis-                            where ‘cereals’ is the aggregation of 16 cereal crops, ‘rice’ is paddy
+       sions.                                                                                       rice, ‘milk’ is whole, fresh milk from dairy cows, ‘meat’ is meat from
+                                                                                                    cattle only, and wood is ‘roundwood’.
+       E​I​CO2e​  = MA​X​CH4​ · MCF · GW​PCH4
+                                          ​ ​                               (Equation A.III.26)
+
+       Where                                                                                        A.III.5.2.1        Baseline Emission Intensities
+
+       • MAXCH4 is the maximum CH4 production                                                       Baseline emission intensities represent the minimum and maximum of
+       • MCF is the methane correction factor                                                       regional averages for five world regions. For agricultural commodities
+       • GWPCH4 is the global warming potential of methane, GW​P​CH4​ = 21                          (rice, cereals, milk, and meat), they are calculated based on 11-year
+                                                                                                    averages (2000 – 2010) of total annual CO2eq emissions and total
+       The levelized cost of conserved carbon is taken directly from EPA                            annual production volumes per region taken from (FAOSTAT, 2013).
+       (2013). The discount rate used by EPA (2013) to derive these values                          The following emission categories are considered for the calculation of
+       was 10 %.                                                                                    baseline emission intensities: ‘synthetic fertilizer’ for cereals, ‘rice culti-
+                                                                                                    vation’ for paddy rice, and ‘enteric fermentation’ and ‘manure manage-
+                                                                                                    ment’ for milk and meat.
+
+       A.III.5 AFOLU                                                                                For production of roundwood only afforestation and reforestation of
+AIII                                                                                                idle land is considered. Hence, baseline emission intensities are set to
+                                                                                                    zero.
+
+       A.III.5.1            Introduction
+                                                                                                    A.III.5.2.2        Improved emission intensities
+       Figure 11.16 shows ranges for baseline emission intensities of selected
+       agricultural and forestry commodities, emission intensities after appli-                     Improved emission intensities are derived by deducing product-specific
+       cation of mitigation options, and specific mitigation costs.                                 mitigation potentials from baseline emission intensities.
+
+
+
+
+       Table A.III.12 | Technical parameters and estimates for cost of conserved carbon of wastewater treatment practices.i
+
+
+                                                                    MAXCH4                            MCF                           EICO2e                           LCCC
+                           Options                          Maximum CH4 production            Methane Correction          CO2eq emission intensity       Levelized cost of conserved
+                                                              (kg CH4 / kg BOD5ii)iii          Factor (fraction) iii           (tCO2 / t BOD5)            carbon (USD2010 / tCO2eq)iv
+        Untreated system: Stagnant                                     0.6                           0.4 – 0.8                      5 – 10                             –
+        sewer (open and warm)v
+        Aerobic wastewater plant (WWTP)vi                              0.6                           0.2 – 0.4                     2.5 – 5                          0 – 530
+        Centralized wastewater collection and WWTP    vii
+                                                                       0.6                            0 – 0.1                      0 – 1.3                          0 – 530
+        Aerobic biomass digester with CH4 collectionviii               0.6                            0 – 0.1                      0 – 1.3                          0 – 530
+
+
+       Notes:
+       i
+            Note that input data are included in normal font type, output data resulting from data conversions are bolded, and intermediate outputs are italicized.
+       ii
+            BOD: Biochemical Oxygen Demand. The amount of dissolved oxygen that biological organisms need in order to break down organic material into CH4. For domestic wastewa-
+            ter this value is in the range of 110 – 400 mg / l.
+       iii
+            Based on IPCC (2006). N2O emission are neglected, since they do not play a significant role in emissions from domestic wastewater.
+       iv
+            These values are directly taken from EPA (2013). They are relative to regional baselines.
+       v
+            Untreated wastewater that is stored in a stagnant sewer under open and warm conditions.
+       vi
+            Aerobic wastewater treatment refers to the removal of organic pollutants in wastewater by bacteria that require oxygen to work. Water and carbon dioxide are the end
+            products of the aerobic wastewater treatment process.
+       vii
+            Centralized wastewater collection improves the reduction efficiency. Processes are the same as for the aerobic treatment plant. Centralized collection of wastewater assumes
+            that in general an infrastructure was established that ensures local wastewater storage in closed tanks and secures (emission impermeable) transport from production site to
+            treatment plant.
+       viii
+            Anaerobic wastewater treatment is a process whereby bacteria digest bio-solids in the absence of oxygen.
+
+
+       1352
+Annex III                                                                          Technology-specific Cost and Performance Parameters
+
+
+Mitigation options considered in the derivation of product-specific        vation of the latter is done by dividing the 11-year (2000 – 2010) regional
+mitigation potentials include ‘improved agronomic practices’, ‘nutrient    averages of emissions from enteric fermentation per commodity by the
+management’, ‘tillage and residue management’ and ‘agroforestry’ for       corresponding 11-year regional averages of the total number of produc-
+cereals; ‘rice land management’ for rice; ‘feeding’ and ‘dietary addi-     ing animals for five geographical regions and by subsequently taking
+tives’ for milk and meat production; and ‘afforestation and reforesta-     the unweighted average of those five regional averages. For roundwood,
+tion’ for roundwood production.                                            the carbon sequestration potential is calculated for representative tree
+                                                                           species (based on FAO (2006) and IPCC (2006)) which match the rota-
+For cereals and paddy rice, data on mitigation potentials is provided by   tion periods for short-term rotations given by Sathaye et al. (2006) for
+Smith et al. (2008) as average amount of CO2eq sequestered per land        ten geographical regions. Regional and country averages are calculated
+area for four climate zones. These values are converted into amounts       based on the highest and lowest values for the ten geographical regions.
+of CO2eq sequestered per product by multiplication with global aver-
+age product yields per land area based on FAOSTAT (2013).
+                                                                           A.III.5.2.3     Levelized cost of conserved / sequestered
+For meat and milk, mitigation potentials are provided by Smith et al.                      carbon
+(2008) as percentage reductions in emissions per mitigation option (see
+above) and region for five geographical regions. Minimum, average, and     Mitigation costs for agricultural mitigation options are taken from
+maximum of five regional values per mitigation option are taken and        Smith et al. (2008) for cereals and paddy rice, and from US-EPA (2013)
+converted into amounts of CO2eq sequestered per product by multiplica-     for milk and meat. For the livestock mitigation options, only the low
+tion with an unweighted average of regional averages of emissions from     end of the given cost range is considered. Costs for afforestation and
+enteric fermentation per product derived from FAOSTAT (2013). The deri-    reforestation are based on Sathaye et al. (2006).
+
+                                                                                                                                                         AIII
+
+
+
+
+                                                                                                                                               1353
+       Technology-specific Cost and Performance Parameters                                                                                                                        Annex III
+
+
+       References                                                                                  EPRI (2011). Program on Technology Innovation: Integrated Generation Technology
+                                                                                                       Options: Technical Update, June 2011. Electric Power Research Institute (EPRI),
+                                                                                                       Palo Alto, Available at: http: /  / www.­epri.­com / abstracts / Pages / ProductAbstract.
+       Akashi O., T. Hanaoka, T. Masui, and M. Kainuma (2013). Having global GHG                       aspx?ProductId=000000000001022782.
+           emissions by 2050 without depending on nuclear and CCS. Climatic Change.                FAOSTAT (2013). FAOSTAT database. Food and Agriculture Organization of the
+           doi: 10.1007 / s10584-013-0942-x, ISSN: 0165-0009, 1573 – 1480.                             United Nations. Available at: http: /  / faostat.fao.org / .
+       Augustine C., R. Bain, J. Chapman, P. Denholm, E. Drury, D. G. Hall, E. Lantz,              Finkenrath M. (2011). Cost and Performance of Carbon Dioxide Capture from
+           R. Margolis, R. Tresher, D. Sandor, N. A. Bishop, S. R. Brown, G. F. Cada, F.               Power Generation -- Working Paper. International Energy Agency, Paris, 47 pp.
+           Felker, S. J. Fernandez, A. C. Goodrich, G. Hagerman, G. Heath, S. O’Neil,                  Available at: http: /  / www.­iea.­org / publications / freepublications / publication /
+           J. Pauette, S. Tegen, and K. Young (2012). Renewable Electricity Futures                    costperf_ccs_powergen.pdf.
+           Study, Vol 2. Renewable Electricity Generation and Storage Technologies.                Frøiland Jensen J. E., and R. Pipatti (2001). CH4 Emissions from Solid Waste Dis-
+           National Renewable Energy Laboratory (NREL), Golden, CO, 370 pp. Available                  posal. Intergovernmental Panel on Climate Change (IPCC), Geneva, Switzerland,
+           at: http: /  / www.­nrel.­gov / analysis / re_futures / .                                   439 pp. Available at: http: /  / www.­ipcc-nggip.­iges.­or.­jp / public / gp / bgp / 5_1_
+       BEE (2012). Database of Energy Efficiency Measures Adopted by the Winners of the                CH4_Solid_Waste.pdf.
+           National Awards on Energy Conservations. Bureau of Energy Efficiency (BEE),             Herzog H. J. (2011). Scaling up carbon dioxide capture and storage: From mega-
+           Ministry of Power, Government of India.                                                     tons to gigatons. Energy Economics 33, 597 – 604. Available at: http: /  / ideas.
+       Black & Veatch (2012). Cost and Performance Data for Power Generation Tech-                     repec.org / a / eee / eneeco / v33y2011i4p597 – 604.html.
+           nologies.: Prepared for the National Renewable Energy Laboratory (NREL).                Horton G. (2010). Future Aircraft Fuel Efficiencies — Final Report. UK Depart-
+           Black & Veatch, Golden, CO, 105 pp. Available at: http: /  / bv.com / docs / reports-       ment for Transport, 92 pp. Available at: https: /  / www.­gov.­uk / government /
+           studies / nrel-cost-report.pdf%E2 %80 %8E.                                                  uploads / system / uploads / attachment_data / file / 4515 / future-aircraft-fuel-effi-
+       BNEF, and Frankfurt, and School-UNEP Centre (2013). Global Trends in Renew-                     ciency.pdf.
+AIII       able Energy Investment 2013. FS UNEP Centre. Available at: http: /  / fs-unep-centre.   IAEA (2012). Climate Change and Nuclear Power 2012. International Atomic
+           org / publications / global-trends-renewable-energy-investment-2013.                        Energy Agency, Vienna, Austria, 39 pp.
+       Brandão M., G. Heath, and J. Cooper (2012). What can meta-analyses tell us                  IEA (2007). Tracking Industrial Energy Efficiency and CO2 Emissions: In Support of
+           about the reliability of life cycle assessment for decision support? Journal of             the G8 Plan of Action. International Energy Agency (IEA), Paris, 321 pp. Available
+           Industrial Ecology 16, S3 – S7. doi: 10.1111 / j.1530-9290.2012.00477.x, ISSN:              at: www.­iea.­org / publications / freepublications / publication / tracking_emissions.
+           10881980.                                                                                   pdf.
+       Buhaug O., J. Corbett, V. Eyring, O. Endresen, J. Faber, S. Hanayama, and oth-              IEA (2009a). Transport, Energy and CO2: Moving toward Sustainability. International
+           ers (2009). Second IMO GHG Study 2009. International Maritime Organization,                 Energy Agency, Paris, 414 pp. Available at: http: /  / www.­iea.­org / publications /
+           London, UK, 240 pp. Available at: http: /  / www.­imo.­org / blast / blastDataHelper.       freepublications / publication / transport2009.pdf.
+           asp?data_id=27795&filename=GHGStudyFINAL.pdf.                                           IEA (2009b). Energy Technology Transitions for Industry: Strategies for the next
+       Danish Energy Agency (2012). Technology Data for Energy Plants: Generation                      Industrial Revolution. International Energy Agency (IEA), Paris, Available at:
+           of Electricity and District Heating, Energy Storage and Energy Carrier Genera-              www.­iea.­org / publications / freepublications / publication / industry2009.pdf.
+           tion and Conversion. Danish Energy Office; Energinet, Copenhagen, Available             IEA (2009c). Chemical and Petrochemical Sector — Potential of Best Practice Tech-
+           at:        http: /  / www.­energinet.­dk / SiteCollectionDocuments / Danske%20doku-         nology and Other Measures for Improving Energy Efficiency. International
+           menter / Forskning / Technology_data_for_energy_plants.pdf.                                 Energy Agency (IEA), Paris, 12 pp.
+       DEFRA (2012). Guidelines to Defra / DECC’s GHG Conversion Factors for Com-                  IEA (2012a). Energy Technology Perspectives 2012: Pathways to a Clean Energy
+           pany Reporting. London, Available at: http: /  / www.­defra.­gov.­uk / publications /       System. International Energy Agency (IEA), Organisation for Economic Co-oper-
+           files / pb13773-ghg-conversion-factors-2012.pdf.                                            ation and Development (OECD), Paris, 686 pp. ISBN: 9264174885.
+       Department for Environment, Food and Rural Affairs (2013). 2013 Gov-                        IEA (2012b). World Energy Outlook 2012. International Energy Agency (IEA), Paris,
+           ernment GHG Conversion Factors for Company Reporting: Methodol-                             655 pp. Available at: http: /  / www.­worldenergyoutlook.­org / publications / weo-
+           ogy Paper for Emission Factors. DEFRA, London, UK, 104 pp. Available at:                    2012 / .
+           https: /   / www.­g ov.­u k / government / uploads / system / uploads / attachment_     IEA (2013a). Tracking Clean Energy Progress 2013. IEA Input to the Clean Energy
+           data / file / 224437 / pb13988-emission-factor-methodology-130719.pdf.                      Ministerial. International Energy Agency (IEA), Paris, 149 pp. Available at:
+       EPA (2006). Global Mitigation of Non-CO2 Greenhouse Gases. United States Envi-                  http: /  / www.­iea.­org / publications / TCEP_web.pdf.
+           ronmental Protection Agency (EPA), Washington DC, Available at: http: /  / www.­        IEA (2013b). Energy Statistics and Energy Balances. International Energy Agency
+           epa.­gov / climatechange / Downloads / EPAactivities / GlobalMitigationFullReport.          (IEA), Paris, Available at: http: /  / www.­iea.­org / statistics / .
+           pdf.                                                                                    IEA GHG (2008). CO2 Capture in the Cement Industry. International
+       EPA (2013). Global Mitigation of Non-CO2 Greenhouse Gases: 2010 – 2030. United                  Energy Agency (IEA), Paris, 220 pp. Available at: cdn.globalccsinstitute.
+           States Environmental Protection Agency, Washington, D. C., 410 pp. Avail-                   com / sites / default / files / publications / 95751 / co2-capture-cement-industrypdf.
+           able at: http: /  / www.­epa.­gov / climatechange / Downloads / EPAactivities / MAC_        pdf.
+           Report_2013.pdf.
+
+
+
+       1354
+Annex III                                                                                            Technology-specific Cost and Performance Parameters
+
+
+IEA, and NEA (2010). Projected Costs of Generating Electricity. International               Del Lungo A., J. Ball, and J. Carle (2006). Global Planted Forests Thematic
+    Energy Agency (IEA), OECD Nuclear Energy Agency (NEA), Paris, 215 pp. Avail-                Study: Results and Analysis. Food and Agriculture Organization of the United
+    able at: http: /  / www.­oecd-nea.­org / pub / egc / .                                      Nations, Rome, Italy, 168 pp. Available at: http: /  / www.­fao.­org / forestry /
+IFEU Heidelberg, Öko-Institut, and IVE / RMCON (2011). EcoTransIT World Eco-                    12139 – 03441d093f070ea7d7c4e3ec3f306507.pdf.
+    logical Transport Information Tool for Worldwide Transports — Methodology               McKinsey (2010). Impact of the Financial Crisis on Carbon Economics: Version 2.1
+    and Data. DB Schenker Germany, Internation Union of Railways, Berlin, Han-                  of the Global Greenhouse Gas Abatement Cost Curve. McKinsey & Company.
+    nover, Heidelberg, 106 pp. Available at: http: /  / www.­ecotransit.­org / download /       Available at: http: /  / www.­mckinsey.­com / ~ / media / McKinsey / dotcom / client_
+    ecotransit_background_report.pdf.                                                           service / Sustainability / cost%20curve%20PDFs / ImpactFinancialCrisisCarbon
+IPCC (2005). IPCC Special Report on Carbon Dioxide Capture and Storage. Prepared                EconomicsGHGcostcurveV21.ashx.
+    by Working Group III of the Intergovernmental Panel on Climate Change [B.               McKinsey & Company (2009). Pathways to a Low-Carbon Economy: Version 2 of
+    Metz, O. Davidson, H. C. de Coninck, M. Loos, and L. A. Meyer (eds.)]. Cambridge            the Global Greenhouse Gas Abatement Cost Curve. McKinsey & Company, 190
+    University Press, Cambridge, New York, 431 pp. Available at: http: /  /www.­                pp. Available at: https: /  / solutions.mckinsey.com / climatedesk / default.aspx.
+    ipcc.­ch / pdf / special-reports / srccs / srccs_wholereport.pdf.                       Miller B. R., and L. J. M. Kuijpers (2011). Projecting future HFC-23 emissions.
+IPCC (2006). 2006 IPCC Guidelines for National Greenhouse Gas Inventories [S.                   Atmospheric Chemistry and Physics 11, 13259 – 13267. doi: 10.5194 / acp-11-
+    Eggleston, L. Buendia, K. Miwa, T. Nagara, and K. Tanabe (eds.)]. 673 pp. Avail-            13259-2011, ISSN: 1680-7324.
+    able at: http: /  / www.­ipcc-nggip.­iges.­or.­jp / public / 2006gl / .                 Mostajo Veiga M., P. Farina Alvarez, M. Fernandez- Montes Moraleda, and
+IPCC (2011). IPCC Special Report on Renewable Energy Sources and Climate                        A. Kleinsorge (2013). Cost and Business Comparisons of Renewable vs.
+    Change Mitigation. Prepared by Working Group III of the Intergovernmen-                     Non-Renewable Technologies. International Energy Agency Renewable Energy
+    tal Panel on Climate Change [O. Edenhofer, R. Pichs-Madruga, Y. Sokona,                     Technology Deployment (IEA-RETD), Utrecht; Madrid, 212 pp. Available at:
+    K. Seyboth, P. Matschoss, S. Kadner, T. Zwickel, P. Eickemeier, G. Hansen, S.               http: /  / iea-retd.org / wp-content / uploads / 2013 / 07 / 20130710-RE-COST-FINAL-
+    Schlömer, C. von Stechow (eds.)]. Cambridge University Press, Cambridge,                    REPORT.pdf.
+    United Kingdom and New York, NY, USA, 1075 pp.                                          Neelis M. L., M. Patel, D. J. Gielen, and K. Blok (2005). Modelling CO2 emis-                  AIII
+IRENA (2012). Renewable Energy Technologies: Cost Analysis Series: Wind Power.                  sions from non-energy use with the non-energy use emission accounting
+    International Renewable Energy Agency (IRENA), Abu Dhabi, 56 pp. Available at:              tables (NEAT) model. Resources, Conservation and Recycling 45, 226 – 250. doi:
+    http: /  / www.­irena.­org / DocumentDownloads / Publications / RE_Technologies_            10.1016 / j.resconrec.2005.05.003, ISSN: 0921-3449.
+    Cost_Analysis-WIND_POWER.pdf.                                                           NRC (2010). Technologies and Approaches to Reducing the Fuel Consumption of
+IRENA (2013). Renewable Power Generation Cost in 2012: An Overview. International               Medium- and Heavy-Duty Vehicles. US National Research Council, Washington,
+    Renewable Energy Agency (IRENA), Abu Dhabi, 88 pp. Available at: https: /  / www.­          D. C., 250 pp.
+    irena.­o rg / DocumentDownloads / Publications / Overview_Renewable                     NRC (2013). Transitions to Alternative Vehicles and Fuels. National Academies
+    %20Power%20Generation%20Costs%20in%202012.pdf.                                              Press, Washington, D.C, 170 pp. ISBN: 9780309268523.
+JRC, and Institute for Energy and Transport (2012). PV Status Report 2012.                  Pipatti R., C. Sharma, and M. Yamada (2006). Chapter 2: Waste Generation,
+    European Commission Joint Research Centre, Ispra, Italy, 111 pp. Available at:              Composition and Management Data. In: 2006 IPCC Guidelines for National
+    http: /  / iet.jrc.ec.europa.eu / remea / pv-status-report-2012.                            Greenhouse Gas Inventories: Agriculture, Forestry and Other Land Use (Vol. 4)
+Klara J. M., and J. E. Plunkett (2010). The potential of advanced technologies to               [S. Eggleston, L. Buendia, K. Miwa, T. Nagara, and K. Tanabe (eds.)]. Available at:
+    reduce carbon capture costs in future IGCC power plants. The Ninth Interna-                 http: /  / www.­ipcc-nggip.­iges.­or.­jp / public / 2006gl / pdf / 5_Volume5 / V5_2_Ch2_
+    tional Conference on Greenhouse Gas Control Technologies 4, 112 – 118. doi:                 Waste_Data.pdf.
+    10.1016 / j.ijggc.2009.10.006, ISSN: 1750-5836.                                         Pipatti R., and Svardal, P. (2006). Chapter 3: Solid Waste Disposal. In: 2006
+Lacal Arántegui, Roberto, T. Corsatea, and K. Suomalainen (2012). JRC Wind                      IPCC Guidelines for National Greenhouse Gas Inventories: Agriculture, For-
+    Status Report. Technology, Market and Economic Aspects of Wind Energy in                    estry and Other Land Use (Vol. 4) [S. Eggleston, L. Buendia, K. Miwa, T. Nagara,
+    Europe. European Commission, Joint Research Centre, Institute for Energy and                and K. Tanabe (eds.)]. Available at: http: /  / www.­ipcc-nggip.­iges.­or.­jp / public /
+    Transport, Petten, The Netherlands, 66 pp. Available at: http: /  /setis.ec.europa.         2006gl / pdf / 5_Volume5 / V5_3_Ch3_SWDS.pdf.
+    eu / system / files / LDNA25647ENN_2012_JRC_wind_status_report_FINAL.pdf.               Rangel L. E., and F. Lévêque (2012). Revisiting the Cost Escalation Curse of
+LBNL (2013). Tracking the Sun VI. An Historical Summary of the Installed Price                  Nuclear Power: New Lessons from the French Experience. CERNA, MINES
+    of Photovoltaics in the United States from 1998 to 2012. Lawrence Berkeley                  ParisTech, Paris, France, 26 pp. Available at: http: /  / hal-ensmp.archives-ouvertes.
+    National Laboratory (LBNL), Berkeley, CA, 67 pp. Available at: http: /  /emp.lbl.           fr / hal-00780566.
+    gov / sites / all / files / lbnl-6350e.pdf.                                             Sano F., K. Akimoto, and K. Wada (2013a). Impacts of different diffusion sce-
+Lloyd’s Register and DNV (2011). Air pollution and energy efficiency: estimated                 narios for mitigation technology options and of model representations regard-
+    CO2 emissions reductions from introduction of mandatory technical and opera-                ing renewables intermittency on evaluations of CO2 emissions reductions.
+    tional energy efficiency measures for ships. International Maritime Organiza-               Climatic Change, 1 – 12. doi: 10.1007 / s10584-013-0896-z, ISSN: 0165-0009,
+    tion.                                                                                       1573 – 1480.
+
+
+
+
+                                                                                                                                                                                1355
+       Technology-specific Cost and Performance Parameters                                                                                                                      Annex III
+
+
+       Sano F., K. Wada, K. Akimoto, and J. Oda (2013b). Assessments of GHG emission             TOSCA (2011). Techno-Economic Analysis of Aircraft. Technology Opportunities and
+           reduction scenarios of different levels and different short-term pledges through          Strategies Towards Climate Friendly Transport, Cambridge, UK, 58 pp. Available
+           macro- and sectoral decomposition analyses. Technological Forecasting and                 at: http: /  / www.­toscaproject.­org / FinalReports / TOSCA_WP2_Aircraft.pdf.
+           Social Change. doi: 10.1016 / j.techfore.2013.11.002, ISSN: 0040-1625.                UK CCC (2011). Costs of Low-Carbon Generation Technologies. Global CCS Insti-
+       Sathaye J., W. Makundi, L. Dale, P. Chan, and K. Andrasko (2006). GHG mitiga-                 tute, London.
+           tion potential, costs and benefits in global forests: a dynamic partial equilibrium   US DoE (2013). 2012 Wind Technologies Market Report. Lawrence Berkeley
+           approach. The Energy Journal Special Issue, 127 – 162.                                    National Laboratory (LBNL), Oakridge, TN, 80 pp. Available at: http: /  /www1.­
+       Schmidt T. S., R. Born, and M. Schneider (2012). Assessing the costs of photo-                eere.­energy.­gov / wind / pdfs / 2012_wind_technologies_market_report.pdf.
+           voltaic and wind power in six developing countries. Nature Climate Change 2,          US EIA (2013). Updated Capital Cost Estimates for Utility Scale Electricity Generat-
+           548 – 553. doi: 10.1038 / nclimate1490.                                                   ing Plants. US Energy Information Administration (EIA), Washington DC, 201 pp.
+       Smith P., D. Martino, Z. Cai, D. Gwary, H. Janzen, P. Kumar, B. McCarl, S. Ogle,              Available at: http: /  / www.­eia.­gov / forecasts / capitalcost / pdf / updated_capcost.
+           F. O’Mara, C. Rice, B. Scholes, O. Sirotenko, M. Howden, T. McAllister, G.                pdf.
+           Pan, V. Romanenkov, U. Schneider, S. Towprayoon, M. Wattenbach, and                   Versteeg P., and E. S. Rubin (2011). A technical and economic assessment of
+           J. Smith (2008). Greenhouse gas mitigation in agriculture. Philosophical                  ammonia-based post-combustion CO2 capture at coal-fired power plants. Inter-
+           Transactions of the Royal Society B: Biological Sciences 363, 789 – 813. doi:             national Journal of Greenhouse Gas Control 5, 1596 – 1605. ISSN: 17505836.
+           10.1098 / rstb.2007.2184, ISSN: 0962-8436.                                            Zhao H., A. Burke, and M. Miller (2013). Analysis of Class 8 truck technologies
+       TIAX (2011). European Union Greenhouse Gas Reduction Potential for Heavy-Duty                 for their fuel savings and economics. Transportation Research Part D: Transport
+           Vehicles. National Academy of Sciences, San Francisco, CA, 69 pp.                         and Environment 23, 55 – 63. doi: 10.1016 / j.trd.2013.04.004, ISSN: 1361-9209.
+
+
+
+
+AIII
+
+
+
+
+       1356
+

@@ -134,6 +134,8 @@ the row evidence rather than a pointer.
 | sources/archive/lazard_lcos_v7.pdf | 61b0adf3ab51a30131b1b0a0dfecb0bb76df9a5e55cae8d5e416a7f0d772fd58 |
 | sources/archive/cbam_regulation_2023_956.pdf | 5cd8fa27cb441333e20a93ec9f1d86bac29d5740f76c8d82a55aa292d721d8ca |
 | sources/archive/mtf_energy_access.pdf | 9d23881ad861edf38f409cb3ed4a600c6b295b3ffb78261c6ed42ee278d1c26b |
+| sources/archive/ipcc_ar5_wg3_annex3.pdf | dec39383e03caf843f833ad8f4b373f72be3b86ada6d826bd172e8955ffe24c2 |
+| sources/archive/ipcc_srren_2011_excerpt.pdf | bd3803f18574eba68eb32980df1a63fe7de2cb7307725134980bf6fece500dfe |
 
 ## Why some rows are `n/a`
 
