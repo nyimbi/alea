@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "50":
+		b50_nodes, b50_equations, b50_edges, b50_rules = build_batch50(graph)
+		rules.extend(b50_rules)
+		nodes.update(b50_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b50_equations)
+		edges = list(BATCH12_EDGES) + b50_edges
 	elif batch == "49":
 		b49_nodes, b49_equations, b49_edges, b49_rules = build_batch49(graph)
 		rules.extend(b49_rules)
@@ -13047,6 +13054,569 @@ def build_batch47(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 			"priority": "P1",
 		})
 
+	return nodes, equations, edges, rules
+
+
+#: The 55 procedure names the catalog row states as a switch or a clause, and
+#: the sentence saying which. Every one shipped as `float`, `unit: null`,
+#: `range: [0, 1e6]`, `default: 500000.0` -- the placeholder `_default_for`
+#: returns for any row whose name states no unit.
+_BATCH50_BOOLS: tuple[tuple[str, str], ...] = (
+	("condition_based_maintenance",
+	 "Whether maintenance is triggered by measured condition rather than by "
+	 "elapsed time. The catalog's algorithm cell says 'Optimisation' and its "
+	 "description says 'CBM': the row names a programme, and a programme is "
+	 "present or absent. The shipped 500,000.0 read as a condition threshold "
+	 "in no unit at all."),
+	("iso_55000_compliance",
+	 "Whether the asset owner's management system conforms to ISO 55000. A "
+	 "compliance flag; the shipped float admitted 500,000 as an answer to a "
+	 "yes-or-no question."),
+	("reliability_centred_maintenance",
+	 "Whether the maintenance plan is derived by reliability-centred "
+	 "maintenance analysis. Catalog 'RCM', algorithm 'Optimisation' -- a "
+	 "programme choice, not a magnitude."),
+	("risk_based_maintenance",
+	 "Whether inspection intervals are set by assessed risk. Catalog 'RBM'; "
+	 "the prior pack classed the row GATE-SCENE, which is a switch."),
+	("human_review",
+	 "Whether an automated decision is released only after a person has "
+	 "reviewed it. Catalog 'Priority queue' and the prior pack's GATE-SCENE "
+	 "reading both describe a gate: the review is present or absent, and a "
+	 "queue position of 500,000 is not a policy anyone can hold."),
+	("arrears_management",
+	 "Whether the utility runs an arrears-management programme. Catalog "
+	 "'Financial model' -- a programme-presence flag."),
+	("bill_shock_protection",
+	 "Whether customers are protected from a single bill exceeding a share of "
+	 "their income. Catalog 'Tariff model' -- a protection-presence flag."),
+	("compensation_mechanisms",
+	 "Whether a compensation mechanism exists for outages or damages. Catalog "
+	 "'Compensation' -- a mechanism-presence flag."),
+	("debt_management",
+	 "Whether the utility runs a debt-management capability. Catalog "
+	 "'Financial model' -- an organisational capability, present or absent."),
+	("disconnection_protection",
+	 "Whether vulnerable customers are protected from disconnection. Catalog "
+	 "'Compliance model' -- a protection-presence flag."),
+	("payment_plans",
+	 "Whether instalment payment plans are offered. Catalog 'Financial model' "
+	 "-- a programme-presence flag."),
+	("prepayment_metering",
+	 "Whether supply is metered on a prepayment basis. Catalog 'Prepayment' "
+	 "-- a metering-mode switch."),
+	("assignment_rights",
+	 "Whether the contract permits assignment of rights. Catalog 'Contract "
+	 "model' -- a clause, present or absent."),
+	("change_of_control",
+	 "Whether the contract carries a change-of-control clause. Catalog "
+	 "'Contract model' -- a clause."),
+	("cross_default",
+	 "Whether a default under one agreement triggers default under another. "
+	 "Catalog 'Cross-default' -- a clause."),
+	("default_events",
+	 "Whether the contract enumerates events of default. Catalog 'Events of "
+	 "default' -- a clause."),
+	("direct_agreement",
+	 "Whether a direct agreement exists between the lender and the offtaker. "
+	 "Catalog 'Direct agreement' -- whether a bilateral instrument exists."),
+	("environmental_representations",
+	 "Whether the contract carries environmental representations. Catalog "
+	 "'Environmental reps' -- a clause."),
+	("material_adverse_change",
+	 "Whether the contract carries a material-adverse-change clause. Catalog "
+	 "'MAC clause' -- a clause."),
+	("ppa_change_in_law",
+	 "Whether the PPA allocates change-in-law risk to the offtaker. Catalog "
+	 "'Change in law' -- a clause."),
+	("ppa_force_majeure",
+	 "Whether the PPA carries a force-majeure clause. Catalog 'Force "
+	 "majeure' -- a clause."),
+	("ppa_take_or_pay",
+	 "Whether the PPA is take-or-pay. Catalog 'Take-or-pay provisions' -- a "
+	 "clause."),
+	("social_representations",
+	 "Whether the contract carries social representations. Catalog 'Social "
+	 "reps' -- a clause."),
+	("step_in_rights",
+	 "Whether the lender may step into the project's obligations. Catalog "
+	 "'Step-in rights' -- a clause."),
+	("ami_infrastructure",
+	 "Whether advanced metering infrastructure is deployed. Catalog 'AMI "
+	 "infrastructure' -- a capability flag."),
+	("asset_management_systems",
+	 "Whether an enterprise asset-management system is in place. Catalog "
+	 "'EAM' -- a system-presence flag."),
+	("billing_systems",
+	 "Whether a billing system is in place. Catalog 'Billing' -- a "
+	 "system-presence flag."),
+	("customer_information_systems",
+	 "Whether a customer information system is in place. Catalog 'CIS' -- a "
+	 "system-presence flag."),
+	("cyber_incident_response",
+	 "Whether a cyber-incident response capability exists. Catalog 'Incident "
+	 "response' -- a capability flag."),
+	("data_backup_recovery",
+	 "Whether backup and recovery are practised. Catalog 'Backup & recovery' "
+	 "-- a capability flag."),
+	("der_management_systems",
+	 "Whether a distributed-energy-resource management system is in place. "
+	 "Catalog 'DERMS' -- a capability flag."),
+	("outage_management_systems",
+	 "Whether an outage management system is in place. Catalog 'OMS' -- a "
+	 "capability flag."),
+	("work_management_systems",
+	 "Whether a work management system is in place. Catalog 'WMS' -- a "
+	 "capability flag."),
+	("cumulative_impact_assessment",
+	 "Whether a cumulative impact assessment has been carried out. Catalog "
+	 "'CIA' -- an assessment-presence flag."),
+	("emergency_preparedness",
+	 "Whether an emergency-preparedness capability exists. Catalog "
+	 "'Emergency prep' -- a capability flag."),
+	("equator_principles",
+	 "Whether the project adopts the Equator Principles. Catalog 'Equator "
+	 "Principles' -- an adoption flag."),
+	("grievance_redress_mechanism",
+	 "Whether a grievance-redress mechanism exists. Catalog 'GRM'; the "
+	 "numeric reading of the same concern is "
+	 "`grievance_redress_effectiveness`, which carries unit `1`, so this node "
+	 "is the mechanism and not its score."),
+	("ilo_conventions",
+	 "Whether the project commits to the ILO core conventions. Catalog 'ILO "
+	 "conventions' -- an adoption flag."),
+	("stakeholder_engagement_plan",
+	 "Whether a stakeholder engagement plan exists. Catalog 'SEP' -- a "
+	 "plan-presence flag."),
+	("worker_grievance_mechanism",
+	 "Whether a worker grievance mechanism exists. Catalog 'Grievance "
+	 "mechanism' -- a mechanism-presence flag."),
+	("world_bank_esf",
+	 "Whether the project applies the World Bank Environmental and Social "
+	 "Framework. Catalog 'World Bank ESF' -- an adoption flag."),
+	("market_coupling",
+	 "Whether the zone clears against its neighbours in a coupled market. "
+	 "Catalog 'Market coupling', prior pack SCENE-SWITCH: the switch selects "
+	 "the clearing model, and 7.0 is not a clearing model."),
+	("climate_risk_disclosure",
+	 "Whether the utility discloses under TCFD. Catalog 'TCFD' -- a "
+	 "disclosure-regime flag."),
+	("conservation_easements",
+	 "Whether conservation easements are in force on the site. Catalog "
+	 "'Easements' -- a legal instrument, present or absent."),
+	("land_use_planning",
+	 "Whether statutory land-use planning governs siting. Catalog 'Spatial "
+	 "optimisation' -- a governance-presence flag."),
+	("collusion",
+	 "Whether collusive behaviour is detected in the market model. Catalog "
+	 "'Collusion detection' -- a detection-capability flag."),
+	("new_entrants",
+	 "Whether new entrants may enter the market. Catalog 'Market entry' -- an "
+	 "entry-permission flag."),
+	("insider_trading_rules",
+	 "Whether insider-trading rules are enforced. Catalog 'Insider trading' "
+	 "-- a rule-set flag."),
+	("market_abuse_prevention",
+	 "Whether market-abuse surveillance is in place. Catalog 'Market abuse' "
+	 "-- a surveillance flag."),
+	("trade_repository",
+	 "Whether a trade repository records transactions. Catalog 'Trade "
+	 "repository' -- an institutional presence flag."),
+	("double_tax_treaty",
+	 "Whether a double-tax treaty is in force with the counterparty "
+	 "jurisdiction. Catalog 'Treaty lookup' -- the lookup either finds one "
+	 "or it does not."),
+	("tax_holiday_conditions",
+	 "Whether the tax-holiday conditions are met. Catalog 'Constraint'; the "
+	 "numeric reading is `tax_holiday_duration` in years, so this node is the "
+	 "eligibility test and not the length."),
+	("tax_incentive_zones",
+	 "Whether the site sits in a designated incentive zone. Catalog 'Spatial "
+	 "override' -- a legal designation flag."),
+	("thin_capitalisation_rules",
+	 "Whether thin-capitalisation rules bind the capital structure. Catalog "
+	 "'Constraint'; the numeric reading is `thin_capitalisation_limit`, unit "
+	 "`1`, so this node is the regime and not the ratio."),
+	("transfer_pricing_rules",
+	 "Whether transfer-pricing rules apply to the offtake. Catalog "
+	 "'Compliance model' -- a regime flag."),
+)
+
+
+#: The 33 procedure names the catalog row states as a closed set of levels,
+#: with the levels and the default. Same shipped shape as the bools; a level
+#: name is the value, and the list is the admissible set the graph refuses
+#: against.
+_BATCH50_CATEGORICALS: tuple[tuple[str, tuple[str, ...], str, str], ...] = (
+	("risk_transfer_mechanisms",
+	 ("none", "insurance", "cat_bond", "parametric", "guarantee"), "none",
+	 "Which risk-transfer instrument the project uses. Catalog 'Risk "
+	 "transfer'; `parametric_insurance_coverage` is the numeric sibling, so "
+	 "this node is the instrument and not its size. The shipped 500,000.0 "
+	 "named no instrument."),
+	("asset_management_maturity",
+	 ("initial", "developing", "defined", "managed", "optimising"), "developing",
+	 "Where the asset owner sits on the ISO 55000 maturity ladder. An ordinal "
+	 "level: the ladder is a sequence of stages, and a stage has no "
+	 "magnitude. `developing` is the second of five."),
+	("degradation_model",
+	 ("linear", "exponential", "physics_based"), "linear",
+	 "Which curve family the degradation rate is evaluated on. Catalog "
+	 "'Degradation' with algorithm 'Physics model'; `linear` is the "
+	 "straight-line default the graph's own degradation rate assumes."),
+	("carbon_credit_rating",
+	 ("aaa", "aa", "a", "bbb", "bb", "b", "ccc", "d"), "bbb",
+	 "The credit rating of the carbon credit on the standard agency scale. An "
+	 "ordered set of eight levels; `bbb` is the lowest investment-grade rung, "
+	 "which is what an unrated project's credit is taken as."),
+	("ssp_pathway",
+	 ("ssp1_1_9", "ssp1_2_6", "ssp2_4_5", "ssp3_7_0", "ssp5_8_5"), "ssp2_4_5",
+	 "Which Shared Socioeconomic Pathway the climate projection follows. The "
+	 "five levels are the standard CMIP6 set the catalog's own algorithm cell "
+	 "names; `ssp2_4_5` is the middle-of-the-road pathway."),
+	("near_duplicate_detection",
+	 ("none", "exact", "minhash_lsh"), "minhash_lsh",
+	 "How near-duplicate records are detected. Catalog 'MinHash + LSH' names "
+	 "the method the level selects; `exact` compares keys, `none` switches "
+	 "detection off."),
+	("scenario_template",
+	 ("baseline", "policy", "stress", "custom"), "baseline",
+	 "Which composition a new scenario starts from. Catalog 'Scenario "
+	 "composition'; `baseline` is the defaults, and the three others are the "
+	 "templates the tree names."),
+	("scenario_visibility",
+	 ("private", "team", "organisation", "public"), "private",
+	 "Who may see a saved scenario. Catalog 'Visibility' -- an access level, "
+	 "and `private` is the default a scenario starts at."),
+	("signal_extraction",
+	 ("llm", "regex", "manual"), "llm",
+	 "How a signal is extracted from source text. Catalog 'LLM prompt "
+	 "extraction' names the default level; `regex` and `manual` are the "
+	 "deterministic alternatives."),
+	("signal_scoring",
+	 ("weighted", "rule_based", "llm"), "weighted",
+	 "How an extracted signal is scored. Catalog 'Weighted scoring "
+	 "function'; `weighted` is the shipped method and the two others are the "
+	 "alternatives the implementation offers."),
+	("dispute_resolution_mechanism",
+	 ("regulator", "arbitration", "court"), "regulator",
+	 "Which forum resolves a consumer dispute. Catalog 'Dispute resolution' "
+	 "-- an institutional venue, and `regulator` is the first port of call."),
+	("ppa_arbitration_venue",
+	 ("icc", "lcia", "uncitral", "local_court"), "lcia",
+	 "Which forum hears a PPA arbitration. Catalog 'Arbitration venue' -- a "
+	 "closed set of fora; `lcia` is the London Court of International "
+	 "Arbitration, the common choice in African IPP contracts."),
+	("ppa_dispute_resolution",
+	 ("regulator", "arbitration", "court"), "arbitration",
+	 "Which forum resolves a PPA dispute. The sibling of "
+	 "`dispute_resolution_mechanism` with the contract's own default: a "
+	 "commercial PPA goes to arbitration, not to the regulator."),
+	("ppa_governing_law",
+	 ("local", "english", "new_york", "other"), "local",
+	 "Which law governs the PPA. Catalog 'Governing law' -- a closed set of "
+	 "jurisdictions; `local` is the host state's law."),
+	("ppa_pricing_formula",
+	 ("fixed", "escalating", "indexed", "merchant"), "fixed",
+	 "Which formula sets the PPA price. Catalog 'PPA pricing' -- a formula "
+	 "family, and `fixed` is the flat tariff the graph's own PPA revenue "
+	 "node assumes."),
+	("demand_growth_profile",
+	 ("linear", "logistic", "gompertz"), "logistic",
+	 "Which curve the demand growth follows. Catalog 'Shape of growth curve' "
+	 "with algorithm 'Growth curve shape fitting'; `logistic` is the "
+	 "saturation curve an electrification programme follows, and the other "
+	 "two are the shapes the fitting implementation offers."),
+	("communication_protocols",
+	 ("iec_61850", "dnp3", "modbus", "mqtt"), "iec_61850",
+	 "Which field protocol the digital layer speaks. Catalog 'Protocols' -- a "
+	 "closed set of four standards; `iec_61850` is the substation "
+	 "automation standard."),
+	("trade_agreement",
+	 ("none", "bilateral", "pool", "regional_pool"), "none",
+	 "Which trade agreement the zone trades under. Catalog 'Trade agreement "
+	 "type'; the prior pack gave {Bilateral, Pool, AfSEM}, and `regional_pool` "
+	 "is the AfSEM case. `none` is a zone that trades bilaterally on "
+	 "contracts alone."),
+	("land_rights",
+	 ("customary", "statutory", "mixed", "none"), "customary",
+	 "Which body of law defines the land right. Catalog 'Legal model' -- a "
+	 "tenure class; `customary` is the form most East African project land is "
+	 "held under."),
+	("land_tenure",
+	 ("freehold", "leasehold", "customary", "communal"), "customary",
+	 "Which tenure form the site is held under. Catalog 'Legal model' -- a "
+	 "tenure class; `customary` is the default a project site in the region "
+	 "starts from."),
+	("traditional_land_use",
+	 ("none", "grazing", "cultivation", "sacred", "mixed"), "none",
+	 "Which traditional use the site supports. Catalog 'Traditional use' -- a "
+	 "use class; `none` is a site with no recorded use, which is what an "
+	 "unassessed site states rather than inventing one."),
+	("country_risk_rating",
+	 ("aaa", "aa", "a", "bbb", "bb", "b", "ccc", "d"), "b",
+	 "The sovereign credit rating on the standard agency scale. Catalog "
+	 "'Country risk rating', the same eight levels as `carbon_credit_rating`; "
+	 "`b` is the non-investment-grade rung a frontier market's sovereign "
+	 "paper is taken at."),
+	("fuel_price_scenario",
+	 ("base", "high", "low", "net_zero"), "base",
+	 "Which fuel-price path the scenario uses. Catalog 'Fuel price scenario "
+	 "generator' -- a selector over the shipped price nodes; `base` is the "
+	 "central path."),
+	("novation_terms",
+	 ("none", "full", "partial"), "full",
+	 "How much of a trade is novated to the clearing house. Catalog "
+	 "'Novation' -- a clearing term; `full` is the standard central "
+	 "counterparty arrangement."),
+	("hydrogen_storage_type",
+	 ("salt_cavern", "above_ground", "pipeline"), "salt_cavern",
+	 "Which storage type hydrogen is held in. Catalog 'Storage type', "
+	 "following PyPSA-Earth-Sec's underground options; `salt_cavern` is the "
+	 "cheapest bulk option where the geology allows it."),
+	("clustering_method",
+	 ("kmeans", "hac", "greedy_modularity", "custom"), "kmeans",
+	 "Which algorithm reduces the network to clusters. Catalog 'Clustering "
+	 "method selection'; the implementation cell names all four "
+	 "(`busmap_by_kmeans()`, `busmap_by_hac()`, "
+	 "`busmap_by_greedy_modularity()`, `busmap_by_custom_busmap()`), which is "
+	 "the closed list this node's levels carry."),
+	("distribution_detail",
+	 ("aggregate", "feeder", "settlement"), "aggregate",
+	 "How finely the distribution network is represented. Catalog "
+	 "'Distribution detail level' with algorithm 'Aggregate vs. feeder vs. "
+	 "settlement', which names the three levels; `aggregate` is one node per "
+	 "zone."),
+	("transmission_detail",
+	 ("copper_plate", "zonal", "nodal"), "zonal",
+	 "How finely the transmission network is represented. Catalog "
+	 "'Transmission detail level' with algorithm 'Copper plate vs. zonal vs. "
+	 "nodal', which names the three; `zonal` is the level the graph's own "
+	 "bus layer is built at."),
+	("wave_energy_converter_type",
+	 ("point_absorber", "oscillating_water_column", "overtopping", "attenuator"),
+	 "point_absorber",
+	 "Which wave-energy converter the model assumes. Catalog 'WEC model' -- a "
+	 "closed set of four converter types; `point_absorber` is the most "
+	 "deployed."),
+	("wind_offshore_platform",
+	 ("fixed", "floating"), "fixed",
+	 "Whether the offshore turbine stands on a fixed or a floating platform. "
+	 "Catalog 'Floating vs. fixed platform' names the two; `fixed` is the "
+	 "monopile the shallow-water sites use."),
+	("foresight",
+	 ("perfect", "myopic"), "perfect",
+	 "Whether the model sees the whole horizon or one period at a time. "
+	 "Catalog 'Foresight type' -- two modes, and `perfect` is the "
+	 "optimiser's own assumption."),
+	("temporal_aggregation",
+	 ("none", "tsam", "representative_days"), "none",
+	 "How the time series is reduced before the solve. Catalog 'Temporal "
+	 "aggregation'; `none` is the unaggregated 8760, and the other two are "
+	 "the reductions the implementation offers."),
+	("temporal_clustering",
+	 ("kmeans", "hac", "tsam"), "kmeans",
+	 "Which algorithm selects the representative periods. Catalog 'Temporal "
+	 "clustering'; `kmeans` is the shipped default and the other two are the "
+	 "alternatives."),
+)
+
+
+_BATCH50_SOURCE = (
+	"The placeholder survey (docs/research/placeholder-survey.md): each node's "
+	"action is read from the catalog row's own description and algorithm "
+	"cells in docs/params.md, which name a switch, a clause, a standard or a "
+	"closed set rather than a quantity. Every one shipped as `float` with "
+	"`unit: null` and `default: 500000.0`, the placeholder "
+	"`scripts/build/prg_from_catalog.py::_default_for` returns for a row whose "
+	"name states no unit."
+)
+
+
+def build_batch50(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Retype 88 procedure names from the float placeholder to their real type.
+
+	*The defect.* `_unit_of` in `scripts/build/prg_from_catalog.py` reads the
+	*name* and `docs/params.md` has no unit column, so a row that is a name --
+	"'CBM'", "'Shared Socioeconomic Pathway'", "'Take-or-pay provisions'" --
+	got `(0.0, 1e6)` for a range and `500000.0` for a default. Measured on the
+	shipped graph: 181 nodes carry `unit is None and default == 500000.0`, and
+	all 181 are `type: float`, `role: free`. This batch takes the 88 of them
+	whose catalog row names a switch (55) or a closed set of levels (33). The
+	remaining 93 are quantities, registry gaps and genuinely ambiguous rows,
+	and §4 of the survey says why each is a later batch.
+
+	*Why the type is the repair and not a better default.* A number standing
+	in for a name cannot be corrected by choosing a different number: there is
+	no number that means 'cat_bond'. `market_coupling` at 500,000.0 and at
+	0.0 are equally wrong, because the node admits a value the parameter has
+	no reading for. The `categorical` type is what makes the graph refuse a
+	level it does not declare, and `bool` with an explicit range is what makes
+	it refuse a magnitude. Measured on a merged copy: `trade_agreement =
+	'nonsense'` is refused with the declared levels named, and
+	`market_coupling = 7.0` is refused against `(0.0, 1.0)`.
+
+	*The range on every bool is the load-bearing part, and it is a departure.*
+	A `bool` with `range: null` accepts `7.0` -- measured on the shipped graph
+	at `n_1_criterion`, one of the 23 of 24 shipped bools carrying no range.
+	Retyping 55 nodes to `bool` and leaving the range null would close nothing:
+	the placeholder would still admit 500,000. So every bool here declares
+	`[0.0, 1.0]`, and after the merge the graph carries 79 bools of which 56
+	declare a range -- the batch's 55 plus the one shipped node that already
+	did.
+
+	*What this changes arithmetically: nothing, and that is asserted.* All 88
+	are named by no equation, reached by no edge and read by no rule
+	(`affects`, `edges_into` and `rules_reading` are all empty for every one),
+	so `uncoupled()` stays 236, the dead-knob register stays 224 and the unit
+	walker stays 600 consistent / 1 inconsistent. The retype changes what a
+	scenario may *say*, not what the graph *computes*. The builder asserts the
+	isolation rather than assuming it, because a consumer added later would
+	turn this batch into a change of the solution.
+
+	*Determinism: policy for both classes.* A switch that decides whether a
+	programme exists is a policy dial, and a level is a chosen regime, not a
+	measured fact. That is batch 36's reading of its own six categoricals and
+	it is applied here uniformly. It is not free: three of the 33
+	categoricals shipped `determinism: stochastic` (`scenario_template`,
+	`scenario_visibility`, `fuel_price_scenario`), and moving them to `policy`
+	takes the uncertainty input register 74 to 71. That is the correct reading
+	-- a template selector is not an uncertain quantity -- and the pinned
+	counts in `tests/ci/test_prg.py` are updated with the reason rather than
+	the number being quietly satisfied.
+
+	*What is deliberately unchanged.* `priority`, `status`, `users`, `name`
+	and `category` are the shipped ones: a retype is not a lifecycle change,
+	so `to_build` stays `to_build`. No node is deprecated (the survey's
+	`remittance_dependency` is a quantity and belongs to the later batch), no
+	equation is written, and no rule is added -- a rule over a level name would
+	need the cross-validation grammar's own vocabulary for strings, which it
+	does not have.
+	"""
+	from alea.prg.views import ParameterNode
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	assert len(_BATCH50_BOOLS) == 55, len(_BATCH50_BOOLS)
+	assert len(_BATCH50_CATEGORICALS) == 33, len(_BATCH50_CATEGORICALS)
+	bool_names = [name for name, _prose in _BATCH50_BOOLS]
+	categorical_names = [name for name, _levels, _default, _prose in _BATCH50_CATEGORICALS]
+	assert len(set(bool_names)) == len(bool_names), "a bool is named twice"
+	assert len(set(categorical_names)) == len(categorical_names), "a categorical is named twice"
+	assert not set(bool_names) & set(categorical_names), (
+		f"retyped twice: {sorted(set(bool_names) & set(categorical_names))}"
+	)
+
+	# The placeholder signature is the premise. A node that has already been
+	# retyped -- by an earlier batch, or by a hand edit -- would make this
+	# batch a second, silent correction of a node it was not written against.
+	for name in (*bool_names, *categorical_names):
+		assert name in graph.nodes, f"{name}: the survey names a node that does not ship"
+		shipped = graph.nodes[name]
+		assert shipped.type.value == "float", (
+			f"{name} is {shipped.type.value!r}, not float; the placeholder this "
+			f"batch corrects is not present"
+		)
+		assert shipped.unit is None, f"{name} carries unit {shipped.unit!r}"
+		assert shipped.default == 500000.0, (
+			f"{name} defaults to {shipped.default!r}, not the 500000.0 placeholder"
+		)
+		assert shipped.role.value == "free", f"{name} is {shipped.role.value!r}"
+		assert shipped.status != "deprecated", f"{name} is already deprecated"
+		assert not shipped.categories, f"{name} already declares categories"
+
+	# The isolation claim, measured per node rather than asserted once over a
+	# set: a single reader on a single node would make this a change to the
+	# arithmetic for that node, and the docstring's "nothing moves" would be
+	# false for it.
+	for name in (*bool_names, *categorical_names):
+		assert graph.affects(name) == (), (
+			f"{name} is read by {graph.affects(name)}; this batch would change "
+			f"what the graph computes, not only what it admits"
+		)
+		assert graph.edges_into(name) == (), (
+			f"{name} has an incoming edge; the retype is not isolated"
+		)
+		assert graph.rules_reading(name) == (), (
+			f"{name} is read by the rule {graph.rules_reading(name)}"
+		)
+		for equation in graph.equations.values():
+			named = (
+				*equation.parameters,
+				*equation.free_variables,
+				*equation.determined_variables,
+			)
+			assert name not in named, f"{name} is named by {equation.id}"
+
+	# The defect itself, measured: the placeholder accepts any number in
+	# `(0, 1e6)`, so 7.0 propagates today. This is the same probe the survey
+	# ran, and it is the "before" half of the canaries the tests carry.
+	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	for name in (*bool_names, *categorical_names):
+		assert graph.propagate({**values, name: 7.0}).values[name] == 7.0, (
+			f"{name} refused 7.0 before the retype, so the placeholder it "
+			f"shipped as is not the permissive float this batch assumes"
+		)
+
+	# -- emit -------------------------------------------------------------
+	#
+	# A bool: a range, because `range: null` on a bool refuses nothing. The
+	# body is the shipped one with the four fields a type change touches,
+	# written whole -- a sparse override would drop the node's category,
+	# users and source.
+	for name, prose in _BATCH50_BOOLS:
+		shipped = graph.nodes[name]
+		body = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		body.update({
+			"description": prose,
+			"type": "bool",
+			"unit": None,
+			"range": [0.0, 1.0],
+			"default": False,
+			"categories": [],
+			"initial": None,
+			"determinism": "policy",
+			"source": _BATCH50_SOURCE,
+		})
+		# The model is the guard, not this function's say-so: a bool carrying a
+		# level list, or a categorical without one, is refused here rather than
+		# at the merge.
+		ParameterNode(**{"id": name, **body})
+		nodes[name] = body
+
+	# A categorical: no range and no unit, and `categories` is the admissible
+	# set -- the loader refuses a categorical that carries a range.
+	for name, levels, default, prose in _BATCH50_CATEGORICALS:
+		assert levels, f"{name}: a categorical with no levels is refused at load"
+		assert len(set(levels)) == len(levels), f"{name}: a level is declared twice"
+		assert default in levels, (
+			f"{name}: the default {default!r} is not one of its own levels "
+			f"{list(levels)}"
+		)
+		for level in levels:
+			assert level and level == level.strip() and level == level.lower(), (
+				f"{name}: the level {level!r} is not a bare lower-case name"
+			)
+		shipped = graph.nodes[name]
+		body = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		body.update({
+			"description": prose,
+			"type": "categorical",
+			"unit": None,
+			"range": None,
+			"default": default,
+			"categories": list(levels),
+			"initial": None,
+			"determinism": "policy",
+			"source": _BATCH50_SOURCE,
+		})
+		ParameterNode(**{"id": name, **body})
+		nodes[name] = body
+
+	assert len(nodes) == 88, len(nodes)
 	return nodes, equations, edges, rules
 
 

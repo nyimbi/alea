@@ -271,8 +271,14 @@ and counting it as untranslated was reporting a node no client could
 reach as a node the translation layer had failed to reach.
 	"""
 	cov = coverage(graph)
+	# Batch 49 took it 876 -> 874, and the move is the same correction Batch 44
+	# made, applied to two nodes it had missed: `indirect_jobs_multiplier` and
+	# `induced_jobs_multiplier` are deprecated duplicates of the
+	# `*_employment_multiplier` pair, and `is_settable` refuses a tombstone. No
+	# node entered or left the tree -- the denominator shrank because two
+	# nodes in it stopped being knobs. Batches 47 and 50 moved it not at all.
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 876, cov
+	assert cov["total"] == 874, cov
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -364,8 +370,11 @@ refusing them. The register still equals the settable surface minus
 three, so the three endogenous quantities the engine carries are still
 the only difference between the two sets.
 	"""
+	# 873 -> 871 for the reason the coverage pin above records: batch 49
+	# deprecated the two duplicate job multipliers, and a tombstone is not a
+	# knob the translation layer failed to reach.
 	missing = untranslated(graph)
-	assert len(missing) == 873, missing
+	assert len(missing) == 871, missing
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact

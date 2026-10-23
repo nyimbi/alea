@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import itertools
 import math
+import re
 
 import pytest
 import yaml
@@ -1246,6 +1247,82 @@ def test_a_settable_value_outside_its_range_is_refused(graph: ParameterGraph, de
 		scoped = dict(defaults)
 		scoped["capacity_factor"] = on_bound
 		assert graph.propagate(scoped).values["capacity_factor"] == on_bound
+
+
+def test_a_bool_retyped_from_a_placeholder_refuses_a_magnitude(graph: ParameterGraph, defaults: dict):
+	"""The 55 bools batch 50 retyped, tested on one of them.
+
+	A `bool` with `range: null` refuses nothing: `_refuse_out_of_range` reads
+	`if node.range is None: continue`, so `n_1_criterion = 7.0` propagates
+	today and is reported by no register. That is why the batch declares
+	`[0.0, 1.0]` on every bool it writes, and why this test targets a node the
+	batch retyped rather than a shipped bool -- a test against a shipped bool
+	would pass against the defect it is meant to catch.
+
+	Both paths are checked, because `propagate_change` takes the incremental
+	one.
+	"""
+	node = graph.node("market_coupling")
+	assert node.type is ParameterType.BOOL, node.type
+	assert node.range == (0.0, 1.0), node.range
+
+	scoped = dict(defaults)
+	scoped["market_coupling"] = 7.0
+	with pytest.raises(GraphError, match="outside the range") as caught:
+		graph.propagate(scoped)
+	assert "market_coupling=7.0" in str(caught.value), str(caught.value)
+
+	previous = graph.propagate(defaults)
+	scoped = dict(defaults)
+	scoped["market_coupling"] = 7.0
+	with pytest.raises(GraphError, match="outside the range"):
+		graph.propagate_incremental(scoped, previous, ["market_coupling"])
+
+	# The endpoints are admissible, so the gate is a range and not a
+	# "must be false" in disguise.
+	for on_bound in (0.0, 1.0):
+		scoped = dict(defaults)
+		scoped["market_coupling"] = on_bound
+		assert graph.propagate(scoped).values["market_coupling"] == on_bound
+
+
+def test_a_categorical_retyped_from_a_placeholder_refuses_an_undeclared_level(
+	graph: ParameterGraph, defaults: dict
+):
+	"""The 33 categoricals batch 50 retyped, tested on one of them.
+
+	The shipped placeholder was a `float` in `(0, 1e6)`, so it admitted every
+	number and no level name at all: `trade_agreement = 'nonsense'` failed as
+	a *type* error, not as a statement about the parameter. The retype makes
+	the failure name the node and print the levels, which is the difference
+	between "wrong kind of value" and "this parameter has no such level".
+	"""
+	node = graph.node("trade_agreement")
+	assert node.type is ParameterType.CATEGORICAL, node.type
+	assert node.categories == ("none", "bilateral", "pool", "regional_pool"), node.categories
+	assert node.default in node.categories, node.default
+
+	scoped = dict(defaults)
+	scoped["trade_agreement"] = "nonsense"
+	with pytest.raises(GraphError, match="not one of the levels") as caught:
+		graph.propagate(scoped)
+	message = str(caught.value)
+	assert "trade_agreement='nonsense'" in message, message
+	for level in node.categories:
+		assert repr(level) in message, (level, message)
+
+	previous = graph.propagate(defaults)
+	scoped = dict(defaults)
+	scoped["trade_agreement"] = "nonsense"
+	with pytest.raises(GraphError, match="not one of the levels"):
+		graph.propagate_incremental(scoped, previous, ["trade_agreement"])
+
+	# Every declared level is admissible, which is what makes the refusal a
+	# statement about this list rather than about the type.
+	for level in node.categories:
+		scoped = dict(defaults)
+		scoped["trade_agreement"] = level
+		assert graph.propagate(scoped).values["trade_agreement"] == level
 
 
 def test_a_range_excursion_does_not_survive_into_the_next_scenario(
@@ -3021,10 +3098,18 @@ def test_the_uncertainty_register_reads_the_declarations(graph: ParameterGraph):
 	# batch's: one stochastic input replaced by one stochastic input, and
 	# `pm25_dispersion_factor` is `physical`, so it is not an uncertain input.
 	# A batch that moves either count now has to say which node did it.
-	assert len(reg.inputs) == 74, reg.inputs
+	# Batch 50 moved the settable side only, and down by three. It retyped 33
+	# placeholder `float`s to `categorical` and set `determinism: policy` on
+	# all of them -- a level is a chosen regime, not a measured quantity. Three
+	# of the 33 shipped `stochastic` (`scenario_template`,
+	# `scenario_visibility`, `fuel_price_scenario`) and leave the input
+	# register with the retype. The derived side is untouched: none of the 88
+	# is read by an equation, so nothing entered or left the closure.
+	assert len(reg.inputs) == 71, reg.inputs
 	assert len(reg.derived_stochastic) == 48, reg.derived_stochastic
 	assert len(reg.stochastic_edges) == 1, reg.stochastic_edges
 	# 122 nodes are declared stochastic in total: 74 settable, 48 derived.
+	# Batch 50 takes the total to 119, by the three categoricals named above.
 	# Batch 33 moved only the settable side, and down: `willingness_to_pay`
 	# was a stochastic placeholder and is now derived, so the input register
 	# loses it and no derived node entered the closure -- the products it
@@ -3042,7 +3127,7 @@ def test_the_uncertainty_register_reads_the_declarations(graph: ParameterGraph):
 	# the density and share bases they read, while the four demand
 	# products that also entered the computed set read fixed process
 	# parameters and stay deterministic. 39 to 42.
-	assert len(reg.inputs) + len(reg.derived_stochastic) == 122
+	assert len(reg.inputs) + len(reg.derived_stochastic) == 119
 	# The declarations sum is taken over *live* nodes, and the deprecated ones
 	# are named rather than filtered silently. This assertion is what catches
 	# the register losing a declaration, so it must count the same object the
@@ -3268,7 +3353,15 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	# stays at 74 and the derived-stochastic count at 48: the batch declares no
 	# new uncertain input, and none of its derived nodes is stochastic by its
 	# own relation.
-	assert "74" in text and "194" in text
+	# Batch 50 moved the input count 74 to 71 and left the reach at 194. Its
+	# 88 retypes are named by no equation, so no derived parameter entered or
+	# left the closure; the three that shipped `stochastic` and now carry
+	# `policy` (`scenario_template`, `scenario_visibility`,
+	# `fuel_price_scenario`) are the whole of the move.
+	# Anchored to the tokens the sentence puts them in, not substrings: `"71" in
+	# text` would also pass on 171, 471 or a date.
+	assert re.search(r"\b71 uncertain input", text), text
+	assert re.search(r"reach \b194 derived", text), text
 
 
 # ---------------------------------------------------------------------------

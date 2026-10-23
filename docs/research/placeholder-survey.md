@@ -333,6 +333,11 @@ be **recorded and left**, not retyped to something wrong.
    it (['bilateral', 'pool', 'regional_pool'])
    ```
 
+   That is the probe against this survey's own three-level proposal. The
+   shipped batch declares a fourth, `none` (a zone that trades on bilateral
+   contracts alone), so the message as shipped lists all four. The arithmetic
+   of the point is unchanged.
+
    while a `float` on `[0, 1e6]` accepts a procedure name's placeholder of
    500,000 silently. That is the defect being closed.
 
@@ -351,9 +356,14 @@ be **recorded and left**, not retyped to something wrong.
    every retyped bool an explicit `range: [0.0, 1.0]`.** That is the whole
    point of the slice, and the convention it departs from is the defect.
 4. **It costs nothing structurally.** Measured on the same copy:
-   `uncoupled()` stays 234, the dead-knob register stays 224, and the unit
-   checker stays at 1 inconsistent / 0 undecidable. The retype changes what a
-   scenario may *say*, not what the arithmetic *does*.
+   `uncoupled()` stays at its pre-batch value, the dead-knob register stays
+   224, and the unit checker stays at 1 inconsistent / 0 undecidable. The
+   retype changes what a scenario may *say*, not what the arithmetic *does*.
+   (This paragraph first read `uncoupled()` 234. Re-measured on the tree at
+   batch 49 it is **236**, and 236 after batch 50: none of the 88 is named by
+   an equation, so the register cannot move. The 234 was taken on an earlier
+   tree and is corrected here rather than left as a number a later batch
+   would diff against.)
 
 ### What the batch would be
 
@@ -504,7 +514,7 @@ missing.
 | free node with `default: null` | constructs, but `propagate` then refuses the default set (probed) |
 | `bool` with `range: null` accepts `7.0` | **measured** — so the retype needs an explicit `[0,1]` |
 | `bool` with `range: [0,1]` refuses `7.0` | **measured** |
-| applying all 143 actions to a copy | placeholders 181 → 39; `uncoupled()` 234 → 234; dead 224 → 223; unit checker 1/0 → 1/0 |
+| applying all 143 actions to a copy | placeholders 181 → 39; `uncoupled()` unchanged (236 on the tree at batch 49, see §4.3); dead 224 → 223; unit checker 1/0 → 1/0 |
 
 ### One finding worth carrying forward
 

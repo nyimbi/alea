@@ -534,20 +534,31 @@ parameters:
     - Regulators
   ami_infrastructure:
     name: Ami infrastructure
-    description: AMI infrastructure
+    description: Whether advanced metering infrastructure is deployed. Catalog 'AMI infrastructure' --
+      a capability flag.
     category: Digital
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   ammonia_export_share:
     categories: []
     category: Sector Coupling
@@ -799,20 +810,31 @@ parameters:
     - Developers
   arrears_management:
     name: Arrears management
-    description: Arrears management
+    description: Whether the utility runs an arrears-management programme. Catalog 'Financial model' --
+      a programme-presence flag.
     category: Consumer
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   article_6_2_parameters:
     name: Article 6 2 parameters
     description: Article 6.2
@@ -1189,52 +1211,88 @@ parameters:
     - Investors
   asset_management_maturity:
     name: Asset management maturity
-    description: AM maturity
+    description: 'Where the asset owner sits on the ISO 55000 maturity ladder. An ordinal level: the ladder
+      is a sequence of stages, and a stage has no magnitude. `developing` is the second of five.'
     category: Asset
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: developing
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories:
+    - initial
+    - developing
+    - defined
+    - managed
+    - optimising
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   asset_management_systems:
     name: Asset management systems
-    description: EAM
+    description: Whether an enterprise asset-management system is in place. Catalog 'EAM' -- a system-presence
+      flag.
     category: Digital
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   assignment_rights:
     name: Assignment rights
-    description: Assignment rights
+    description: Whether the contract permits assignment of rights. Catalog 'Contract model' -- a clause,
+      present or absent.
     category: Contract
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Banks
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   auction_frequency:
     categories: []
     category: MktOps
@@ -1761,36 +1819,57 @@ parameters:
     - Carbon
   bill_shock_protection:
     name: Bill shock protection
-    description: Bill shock protection
+    description: Whether customers are protected from a single bill exceeding a share of their income.
+      Catalog 'Tariff model' -- a protection-presence flag.
     category: Consumer
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   billing_systems:
     name: Billing systems
-    description: Billing
+    description: Whether a billing system is in place. Catalog 'Billing' -- a system-presence flag.
     category: Digital
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   biodiversity_impact:
     categories: []
     category: EnvSoc
@@ -3791,20 +3870,38 @@ parameters:
     - Carbon
   carbon_credit_rating:
     name: Carbon credit rating
-    description: Rating
+    description: The credit rating of the carbon credit on the standard agency scale. An ordered set of
+      eight levels; `bbb` is the lowest investment-grade rung, which is what an unrated project's credit
+      is taken as.
     category: Carbon
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: bbb
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories:
+    - aaa
+    - aa
+    - a
+    - bbb
+    - bb
+    - b
+    - ccc
+    - d
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Carbon
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   carbon_credit_retired_volume:
     category: Carbon
     description: The share of issued volume surrendered against a compliance obligation. Retirement is
@@ -4512,20 +4609,31 @@ parameters:
     users: []
   change_of_control:
     name: Change of control
-    description: Change of control
+    description: Whether the contract carries a change-of-control clause. Catalog 'Contract model' --
+      a clause.
     category: Contract
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Banks
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   chemicals_ammonia_production:
     categories: []
     category: Sector
@@ -4836,20 +4944,30 @@ parameters:
     - Planners
   climate_risk_disclosure:
     name: Climate risk disclosure
-    description: TCFD
+    description: Whether the utility discloses under TCFD. Catalog 'TCFD' -- a disclosure-regime flag.
     category: Insurance
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Insurance
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   climate_sensitivity:
     name: Climate sensitivity
     description: Climate sensitivity
@@ -4868,20 +4986,34 @@ parameters:
     source: docs/params.md
   clustering_method:
     name: Clustering method
-    description: Clustering method
+    description: Which algorithm reduces the network to clusters. Catalog 'Clustering method selection';
+      the implementation cell names all four (`busmap_by_kmeans()`, `busmap_by_hac()`, `busmap_by_greedy_modularity()`,
+      `busmap_by_custom_busmap()`), which is the closed list this node's levels carry.
     category: Spatial
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: kmeans
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: existing
+    determinism: policy
+    categories:
+    - kmeans
+    - hac
+    - greedy_modularity
+    - custom
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - All
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   co2_captured_cement_tonnes:
     categories: []
     category: Industry
@@ -5474,20 +5606,31 @@ parameters:
     source: docs/params.md
   collusion:
     name: Collusion
-    description: Collusion detection
+    description: Whether collusive behaviour is detected in the market model. Catalog 'Collusion detection'
+      -- a detection-capability flag.
     category: Market
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   combined_ratio:
     categories: []
     category: Insurance & Catastrophe
@@ -5582,20 +5725,33 @@ parameters:
     - Carbon
   communication_protocols:
     name: Communication protocols
-    description: Protocols
+    description: Which field protocol the digital layer speaks. Catalog 'Protocols' -- a closed set of
+      four standards; `iec_61850` is the substation automation standard.
     category: Digital
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: iec_61850
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories:
+    - iec_61850
+    - dnp3
+    - modbus
+    - mqtt
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   community_benefit_share_of_revenue:
     categories: []
     category: Land Use & Community
@@ -5830,20 +5986,31 @@ parameters:
     - Regulators
   compensation_mechanisms:
     name: Compensation mechanisms
-    description: Compensation
+    description: Whether a compensation mechanism exists for outages or damages. Catalog 'Compensation'
+      -- a mechanism-presence flag.
     category: Consumer
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   compensation_rates:
     categories: []
     category: Land
@@ -6066,20 +6233,33 @@ parameters:
     source: docs/params.md
   condition_based_maintenance:
     name: Condition based maintenance
-    description: CBM
+    description: 'Whether maintenance is triggered by measured condition rather than by elapsed time.
+      The catalog''s algorithm cell says ''Optimisation'' and its description says ''CBM'': the row names
+      a programme, and a programme is present or absent. The shipped 500,000.0 read as a condition threshold
+      in no unit at all.'
     category: Asset
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   connections_per_year:
     category: Grid
     default: 250000.0
@@ -6101,20 +6281,31 @@ parameters:
     - Regulators
   conservation_easements:
     name: Conservation easements
-    description: Easements
+    description: Whether conservation easements are in force on the site. Catalog 'Easements' -- a legal
+      instrument, present or absent.
     category: Land
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Developers
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   construction_jobs_per_mw:
     categories: []
     category: Social
@@ -6780,20 +6971,38 @@ parameters:
     - Regulators
   country_risk_rating:
     name: Country risk rating
-    description: Country risk rating
+    description: The sovereign credit rating on the standard agency scale. Catalog 'Country risk rating',
+      the same eight levels as `carbon_credit_rating`; `b` is the non-investment-grade rung a frontier
+      market's sovereign paper is taken at.
     category: Macro
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: b
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories:
+    - aaa
+    - aa
+    - a
+    - bbb
+    - bb
+    - b
+    - ccc
+    - d
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Investors
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   credit_support_posted_usd_per_year:
     category: Regulatory
     description: 'credit support posted usd per year: the compliance register''s derived quantity. The
@@ -7320,20 +7529,31 @@ parameters:
     - Regulators
   cross_default:
     name: Cross default
-    description: Cross-default
+    description: Whether a default under one agreement triggers default under another. Catalog 'Cross-default'
+      -- a clause.
     category: Contract
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Banks
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   cross_subsidy_level:
     categories: []
     category: Policy
@@ -7701,20 +7921,31 @@ parameters:
     - Regulators
   cumulative_impact_assessment:
     name: Cumulative impact assessment
-    description: CIA
+    description: Whether a cumulative impact assessment has been carried out. Catalog 'CIA' -- an assessment-presence
+      flag.
     category: EnvSoc
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   cumulative_solar_pv_installed_mw:
     category: Generation
     default: 60000.0
@@ -7859,20 +8090,31 @@ parameters:
     source: docs/params.md
   customer_information_systems:
     name: Customer information systems
-    description: CIS
+    description: Whether a customer information system is in place. Catalog 'CIS' -- a system-presence
+      flag.
     category: Digital
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   customs_duty:
     categories: []
     category: Tax & Fiscal
@@ -7948,20 +8190,31 @@ parameters:
     - Planners
   cyber_incident_response:
     name: Cyber incident response
-    description: Incident response
+    description: Whether a cyber-incident response capability exists. Catalog 'Incident response' -- a
+      capability flag.
     category: Digital
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   cyber_insurance:
     categories: []
     category: Digital
@@ -8074,20 +8327,31 @@ parameters:
     users: []
   data_backup_recovery:
     name: Data backup recovery
-    description: Backup & recovery
+    description: Whether backup and recovery are practised. Catalog 'Backup & recovery' -- a capability
+      flag.
     category: Digital
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   data_centre_demand:
     name: Data centre demand
     description: New data centre load
@@ -8253,20 +8517,31 @@ parameters:
     users: []
   debt_management:
     name: Debt management
-    description: Debt management
+    description: Whether the utility runs a debt-management capability. Catalog 'Financial model' -- an
+      organisational capability, present or absent.
     category: Consumer
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   debt_service_coverage_ratio:
     categories: []
     category: Investment & Finance
@@ -8424,36 +8699,58 @@ parameters:
     - Insurance
   default_events:
     name: Default events
-    description: Events of default
+    description: Whether the contract enumerates events of default. Catalog 'Events of default' -- a clause.
     category: Contract
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Banks
-    source: docs/params.md
-  degradation_model:
-    name: Degradation model
-    description: Degradation
-    category: Asset
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
     priority: P2
     status: to_build
+    deprecated_by: null
+  degradation_model:
+    name: Degradation model
+    description: Which curve family the degradation rate is evaluated on. Catalog 'Degradation' with algorithm
+      'Physics model'; `linear` is the straight-line default the graph's own degradation rate assumes.
+    category: Asset
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: linear
+    initial: null
+    role: free
+    determinism: policy
+    categories:
+    - linear
+    - exponential
+    - physics_based
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   demand_charge_revenue_usd_per_year:
     category: Regulatory
     description: 'demand charge revenue usd per year: the compliance register''s derived quantity. The
@@ -8591,20 +8888,33 @@ parameters:
     - Planners
   demand_growth_profile:
     name: Demand growth profile
-    description: Shape of growth curve
+    description: Which curve the demand growth follows. Catalog 'Shape of growth curve' with algorithm
+      'Growth curve shape fitting'; `logistic` is the saturation curve an electrification programme follows,
+      and the other two are the shapes the fitting implementation offers.
     category: Demand
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: logistic
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories:
+    - linear
+    - logistic
+    - gompertz
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - All
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   demand_growth_rate:
     categories: []
     category: Demand-Side
@@ -8886,20 +9196,31 @@ parameters:
     - Regulators
   der_management_systems:
     name: Der management systems
-    description: DERMS
+    description: Whether a distributed-energy-resource management system is in place. Catalog 'DERMS'
+      -- a capability flag.
     category: Digital
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   desalination_capacity:
     categories: []
     category: Sector
@@ -9047,20 +9368,31 @@ parameters:
     - Policymakers
   direct_agreement:
     name: Direct agreement
-    description: Direct agreement
+    description: Whether a direct agreement exists between the lender and the offtaker. Catalog 'Direct
+      agreement' -- whether a bilateral instrument exists.
     category: Contract
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Banks
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   direct_jobs:
     categories: []
     category: Social
@@ -9123,20 +9455,31 @@ parameters:
     - Developers
   disconnection_protection:
     name: Disconnection protection
-    description: Disconnection protection
+    description: Whether vulnerable customers are protected from disconnection. Catalog 'Compliance model'
+      -- a protection-presence flag.
     category: Consumer
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   discount_rate:
     categories: []
     category: Financial
@@ -9235,20 +9578,32 @@ parameters:
     deprecated_by: null
   dispute_resolution_mechanism:
     name: Dispute resolution mechanism
-    description: Dispute resolution
+    description: Which forum resolves a consumer dispute. Catalog 'Dispute resolution' -- an institutional
+      venue, and `regulator` is the first port of call.
     category: Consumer
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: regulator
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories:
+    - regulator
+    - arbitration
+    - court
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   distribution_asset_value_usd:
     category: Cost
     description: 'distribution asset value usd: the extensive-base coupling''s derived quantity. The distribution
@@ -9310,20 +9665,33 @@ parameters:
     source: docs/params.md
   distribution_detail:
     name: Distribution detail
-    description: Distribution detail
+    description: How finely the distribution network is represented. Catalog 'Distribution detail level'
+      with algorithm 'Aggregate vs. feeder vs. settlement', which names the three levels; `aggregate`
+      is one node per zone.
     category: Spatial
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: aggregate
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories:
+    - aggregate
+    - feeder
+    - settlement
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   distribution_expansion_capex_usd_per_year:
     category: Cost
     description: 'distribution expansion capex usd per year: the extensive-base coupling''s derived quantity.
@@ -9492,20 +9860,31 @@ parameters:
     - Cities
   double_tax_treaty:
     name: Double tax treaty
-    description: Treaty network
+    description: Whether a double-tax treaty is in force with the counterparty jurisdiction. Catalog 'Treaty
+      lookup' -- the lookup either finds one or it does not.
     category: Tax
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Investors
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   drought_frequency:
     name: Drought frequency
     description: Drought frequency multiplier
@@ -10090,20 +10469,31 @@ parameters:
     - Researchers
   emergency_preparedness:
     name: Emergency preparedness
-    description: Emergency prep
+    description: Whether an emergency-preparedness capability exists. Catalog 'Emergency prep' -- a capability
+      flag.
     category: EnvSoc
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   emergency_shelter_load:
     name: Emergency shelter load
     description: Emergency shelter load
@@ -10804,36 +11194,58 @@ parameters:
     - Planners
   environmental_representations:
     name: Environmental representations
-    description: Environmental reps
+    description: Whether the contract carries environmental representations. Catalog 'Environmental reps'
+      -- a clause.
     category: Contract
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
+    users:
+    - Banks
     priority: P3
     status: to_build
-    users:
-    - Banks
-    source: docs/params.md
+    deprecated_by: null
   equator_principles:
     name: Equator principles
-    description: Equator Principles
+    description: Whether the project adopts the Equator Principles. Catalog 'Equator Principles' -- an
+      adoption flag.
     category: EnvSoc
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Banks
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   equilibrium_demand_twh:
     categories: []
     category: Demand
@@ -12019,20 +12431,31 @@ parameters:
     source: docs/params.md
   foresight:
     name: Foresight
-    description: Foresight type
+    description: Whether the model sees the whole horizon or one period at a time. Catalog 'Foresight
+      type' -- two modes, and `perfect` is the optimiser's own assumption.
     category: Temporal
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: perfect
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: existing
+    determinism: policy
+    categories:
+    - perfect
+    - myopic
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - All
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   fossil_fuel_subsidies:
     categories: []
     category: Policy
@@ -12546,20 +12969,33 @@ parameters:
     - All
   fuel_price_scenario:
     name: Fuel price scenario
-    description: Fuel price scenario
+    description: Which fuel-price path the scenario uses. Catalog 'Fuel price scenario generator' -- a
+      selector over the shipped price nodes; `base` is the central path.
     category: Macro
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: base
+    initial: null
     role: free
-    determinism: stochastic
-    priority: P2
-    status: integrate
+    determinism: policy
+    categories:
+    - base
+    - high
+    - low
+    - net_zero
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - All
-    source: docs/params.md
+    priority: P2
+    status: integrate
+    deprecated_by: null
   fuel_price_upper_usd_per_mwh:
     categories: []
     category: Costs
@@ -13625,20 +14061,32 @@ parameters:
     - DFIs
   grievance_redress_mechanism:
     name: Grievance redress mechanism
-    description: GRM
+    description: Whether a grievance-redress mechanism exists. Catalog 'GRM'; the numeric reading of the
+      same concern is `grievance_redress_effectiveness`, which carries unit `1`, so this node is the mechanism
+      and not its score.
     category: EnvSoc
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   habitat_loss:
     categories: []
     category: EnvSoc
@@ -14087,20 +14535,32 @@ parameters:
     - Regulators
   human_review:
     name: Human review
-    description: Human review
+    description: 'Whether an automated decision is released only after a person has reviewed it. Catalog
+      ''Priority queue'' and the prior pack''s GATE-SCENE reading both describe a gate: the review is
+      present or absent, and a queue position of 500,000 is not a policy anyone can hold.'
     category: Combined
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: integrate
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - All
-    source: docs/params.md
+    priority: P1
+    status: integrate
+    deprecated_by: null
   hvdc_interconnector_capacity_mw:
     category: Transmission
     description: 'hvdc interconnector capacity mw: the coupling''s derived quantity, so a scenario''s
@@ -14820,20 +15280,32 @@ parameters:
     - Industry
   hydrogen_storage_type:
     name: Hydrogen storage type
-    description: Storage type
+    description: Which storage type hydrogen is held in. Catalog 'Storage type', following PyPSA-Earth-Sec's
+      underground options; `salt_cavern` is the cheapest bulk option where the geology allows it.
     category: Sector
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: salt_cavern
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: existing
+    determinism: policy
+    categories:
+    - salt_cavern
+    - above_ground
+    - pipeline
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Industry
-    source: docs/params.md
+    priority: P2
+    status: existing
+    deprecated_by: null
   hydrogen_vehicle_share:
     categories: []
     category: Sector Coupling
@@ -14926,20 +15398,31 @@ parameters:
     - Planners
   ilo_conventions:
     name: Ilo conventions
-    description: ILO conventions
+    description: Whether the project commits to the ILO core conventions. Catalog 'ILO conventions' --
+      an adoption flag.
     category: EnvSoc
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   import_dependency:
     categories: []
     category: Geopol
@@ -15512,20 +15995,30 @@ parameters:
     - Investors
   insider_trading_rules:
     name: Insider trading rules
-    description: Insider trading
+    description: Whether insider-trading rules are enforced. Catalog 'Insider trading' -- a rule-set flag.
     category: MktOps
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   insurance_loss_share_of_cost:
     categories: []
     category: Insurance & Catastrophe
@@ -16054,20 +16547,31 @@ parameters:
     - Regulators
   iso_55000_compliance:
     name: Iso 55000 compliance
-    description: ISO 55000
+    description: Whether the asset owner's management system conforms to ISO 55000. A compliance flag;
+      the shipped float admitted 500,000 as an answer to a yes-or-no question.
     category: Asset
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   just_transition_fund:
     categories: []
     category: JustTrans
@@ -16698,36 +17202,62 @@ parameters:
     - Developers
   land_rights:
     name: Land rights
-    description: Land rights
+    description: Which body of law defines the land right. Catalog 'Legal model' -- a tenure class; `customary`
+      is the form most East African project land is held under.
     category: Land
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: customary
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories:
+    - customary
+    - statutory
+    - mixed
+    - none
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Developers
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   land_tenure:
     name: Land tenure
-    description: Land tenure
+    description: Which tenure form the site is held under. Catalog 'Legal model' -- a tenure class; `customary`
+      is the default a project site in the region starts from.
     category: Land
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: customary
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories:
+    - freehold
+    - leasehold
+    - customary
+    - communal
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Developers
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   land_use_change:
     categories: []
     category: EnvSoc
@@ -16799,20 +17329,31 @@ parameters:
     - Regulators
   land_use_planning:
     name: Land use planning
-    description: Land use planning
+    description: Whether statutory land-use planning governs siting. Catalog 'Spatial optimisation' --
+      a governance-presence flag.
     category: Land
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: integrate
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Cities
-    source: docs/params.md
+    priority: P1
+    status: integrate
+    deprecated_by: null
   landfill_gas_capacity:
     categories: []
     category: Supply
@@ -18879,20 +19420,31 @@ parameters:
     - Researchers
   market_abuse_prevention:
     name: Market abuse prevention
-    description: Market abuse
+    description: Whether market-abuse surveillance is in place. Catalog 'Market abuse' -- a surveillance
+      flag.
     category: MktOps
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   market_concentration:
     category: Market Design
     description: The HHI over the fleet's own fuel shares, on the 0-10000 scale the competition authorities
@@ -18914,20 +19466,32 @@ parameters:
     - Regulators
   market_coupling:
     name: Market coupling
-    description: Market coupling
+    description: 'Whether the zone clears against its neighbours in a coupled market. Catalog ''Market
+      coupling'', prior pack SCENE-SWITCH: the switch selects the clearing model, and 7.0 is not a clearing
+      model.'
     category: Grid
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   market_liquidity:
     categories: []
     category: MktOps
@@ -19022,20 +19586,31 @@ parameters:
     - Regulators
   material_adverse_change:
     name: Material adverse change
-    description: MAC clause
+    description: Whether the contract carries a material-adverse-change clause. Catalog 'MAC clause' --
+      a clause.
     category: Contract
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Banks
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   max_remedy_period_days:
     category: Contract
     default: 90.0
@@ -19841,20 +20416,32 @@ parameters:
     - Utilities
   near_duplicate_detection:
     name: Near duplicate detection
-    description: Near-duplicate detection
+    description: How near-duplicate records are detected. Catalog 'MinHash + LSH' names the method the
+      level selects; `exact` compares keys, `none` switches detection off.
     category: Combined
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: minhash_lsh
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: integrate
+    determinism: policy
+    categories:
+    - none
+    - exact
+    - minhash_lsh
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - All
-    source: docs/params.md
+    priority: P2
+    status: integrate
+    deprecated_by: null
   net_imports_twh:
     categories: []
     category: Demand
@@ -19942,20 +20529,31 @@ parameters:
     - Regulators
   new_entrants:
     name: New entrants
-    description: Market entry
+    description: Whether new entrants may enter the market. Catalog 'Market entry' -- an entry-permission
+      flag.
     category: Market
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   nominal_frequency_hz:
     categories: []
     category: Technical
@@ -20023,20 +20621,32 @@ parameters:
     - Planners
   novation_terms:
     name: Novation terms
-    description: Novation
+    description: How much of a trade is novated to the clearing house. Catalog 'Novation' -- a clearing
+      term; `full` is the standard central counterparty arrangement.
     category: MktOps
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: full
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: policy
+    categories:
+    - none
+    - full
+    - partial
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Banks
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   nox_emissions:
     name: Nox emissions
     description: Annual nitrogen oxide emission from the fossil fleet, in kilotonnes expressed as NO2.
@@ -21235,20 +21845,30 @@ parameters:
     - Utilities
   outage_management_systems:
     name: Outage management systems
-    description: OMS
+    description: Whether an outage management system is in place. Catalog 'OMS' -- a capability flag.
     category: Digital
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   parameter_overrides:
     name: Parameter overrides
     description: Parameter overrides
@@ -21444,20 +22064,31 @@ parameters:
     - Regulators
   payment_plans:
     name: Payment plans
-    description: Payment plans
+    description: Whether instalment payment plans are offered. Catalog 'Financial model' -- a programme-presence
+      flag.
     category: Consumer
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   payment_security_required:
     categories: []
     category: Grid
@@ -22546,20 +23177,33 @@ parameters:
     - Developers
   ppa_arbitration_venue:
     name: Ppa arbitration venue
-    description: Arbitration venue
+    description: Which forum hears a PPA arbitration. Catalog 'Arbitration venue' -- a closed set of fora;
+      `lcia` is the London Court of International Arbitration, the common choice in African IPP contracts.
     category: Contract
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: lcia
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: policy
+    categories:
+    - icc
+    - lcia
+    - uncitral
+    - local_court
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Lawyers
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   ppa_availability:
     categories: []
     category: Contract & Legal
@@ -22585,20 +23229,31 @@ parameters:
     - Developers
   ppa_change_in_law:
     name: Ppa change in law
-    description: Change in law
+    description: Whether the PPA allocates change-in-law risk to the offtaker. Catalog 'Change in law'
+      -- a clause.
     category: Contract
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Developers
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   ppa_curtailment_compensation:
     name: Ppa curtailment compensation
     description: Curtailment compensation
@@ -22617,20 +23272,32 @@ parameters:
     source: docs/params.md
   ppa_dispute_resolution:
     name: Ppa dispute resolution
-    description: Dispute resolution
+    description: 'Which forum resolves a PPA dispute. The sibling of `dispute_resolution_mechanism` with
+      the contract''s own default: a commercial PPA goes to arbitration, not to the regulator.'
     category: Contract
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: arbitration
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: policy
+    categories:
+    - regulator
+    - arbitration
+    - court
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Lawyers
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   ppa_duration:
     categories: []
     category: Contract & Legal
@@ -22656,36 +23323,59 @@ parameters:
     - Developers
   ppa_force_majeure:
     name: Ppa force majeure
-    description: Force majeure
+    description: Whether the PPA carries a force-majeure clause. Catalog 'Force majeure' -- a clause.
     category: Contract
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Developers
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   ppa_governing_law:
     name: Ppa governing law
-    description: Governing law
+    description: Which law governs the PPA. Catalog 'Governing law' -- a closed set of jurisdictions;
+      `local` is the host state's law.
     category: Contract
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: local
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: policy
+    categories:
+    - local
+    - english
+    - new_york
+    - other
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Lawyers
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   ppa_guarantees:
     categories: []
     category: Policy
@@ -22776,36 +23466,59 @@ parameters:
     users: []
   ppa_pricing_formula:
     name: Ppa pricing formula
-    description: PPA pricing
+    description: Which formula sets the PPA price. Catalog 'PPA pricing' -- a formula family, and `fixed`
+      is the flat tariff the graph's own PPA revenue node assumes.
     category: Contract
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: fixed
+    initial: null
     role: free
-    determinism: fixed
+    determinism: policy
+    categories:
+    - fixed
+    - escalating
+    - indexed
+    - merchant
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
+    users:
+    - Developers
     priority: P1
     status: to_build
-    users:
-    - Developers
-    source: docs/params.md
+    deprecated_by: null
   ppa_take_or_pay:
     name: Ppa take or pay
-    description: Take-or-pay provisions
+    description: Whether the PPA is take-or-pay. Catalog 'Take-or-pay provisions' -- a clause.
     category: Contract
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Developers
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   ppa_termination_payments:
     categories: []
     category: Contract
@@ -22952,20 +23665,31 @@ parameters:
     - Regulators
   prepayment_metering:
     name: Prepayment metering
-    description: Prepayment
+    description: Whether supply is metered on a prepayment basis. Catalog 'Prepayment' -- a metering-mode
+      switch.
     category: Consumer
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   price_band_lower_usd_per_mwh:
     category: Carbon
     description: 'The floor a market sets below marginal cost: the price a must-run unit is paid when
@@ -24063,20 +24787,31 @@ parameters:
     - Regulators
   reliability_centred_maintenance:
     name: Reliability centred maintenance
-    description: RCM
+    description: Whether the maintenance plan is derived by reliability-centred maintenance analysis.
+      Catalog 'RCM', algorithm 'Optimisation' -- a programme choice, not a magnitude.
     category: Asset
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   reliability_cost_usd:
     categories: []
     category: Reliability
@@ -25017,20 +25752,31 @@ parameters:
     - Regulators
   risk_based_maintenance:
     name: Risk based maintenance
-    description: RBM
+    description: Whether inspection intervals are set by assessed risk. Catalog 'RBM'; the prior pack
+      classed the row GATE-SCENE, which is a switch.
     category: Asset
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   risk_of_maladaptation:
     categories: []
     category: Climate Adaptation
@@ -25056,20 +25802,35 @@ parameters:
     - DFIs
   risk_transfer_mechanisms:
     name: Risk transfer mechanisms
-    description: Risk transfer
+    description: Which risk-transfer instrument the project uses. Catalog 'Risk transfer'; `parametric_insurance_coverage`
+      is the numeric sibling, so this node is the instrument and not its size. The shipped 500,000.0 named
+      no instrument.
     category: Adapt
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: none
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories:
+    - none
+    - insurance
+    - cat_bond
+    - parametric
+    - guarantee
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   river_mean_annual_flow_m3_per_s:
     category: Water
     default: 150.0
@@ -25465,36 +26226,62 @@ parameters:
     source: docs/params.md
   scenario_template:
     name: Scenario template
-    description: Scenario template
+    description: Which composition a new scenario starts from. Catalog 'Scenario composition'; `baseline`
+      is the defaults, and the three others are the templates the tree names.
     category: Combined
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: baseline
+    initial: null
     role: free
-    determinism: stochastic
+    determinism: policy
+    categories:
+    - baseline
+    - policy
+    - stress
+    - custom
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
+    users:
+    - All
     priority: P1
     status: existing
-    users:
-    - All
-    source: docs/params.md
+    deprecated_by: null
   scenario_visibility:
     name: Scenario visibility
-    description: Scenario visibility
+    description: Who may see a saved scenario. Catalog 'Visibility' -- an access level, and `private`
+      is the default a scenario starts at.
     category: Combined
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: private
+    initial: null
     role: free
-    determinism: stochastic
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories:
+    - private
+    - team
+    - organisation
+    - public
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - All
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   sea_level_rise:
     name: Sea level rise
     description: SLR
@@ -25857,36 +26644,60 @@ parameters:
     - Regulators
   signal_extraction:
     name: Signal extraction
-    description: Signal extraction
+    description: How a signal is extracted from source text. Catalog 'LLM prompt extraction' names the
+      default level; `regex` and `manual` are the deterministic alternatives.
     category: Combined
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: llm
+    initial: null
     role: free
-    determinism: fixed
+    determinism: policy
+    categories:
+    - llm
+    - regex
+    - manual
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
+    users:
+    - All
     priority: P1
     status: integrate
-    users:
-    - All
-    source: docs/params.md
+    deprecated_by: null
   signal_scoring:
     name: Signal scoring
-    description: Signal scoring
+    description: How an extracted signal is scored. Catalog 'Weighted scoring function'; `weighted` is
+      the shipped method and the two others are the alternatives the implementation offers.
     category: Combined
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: weighted
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories:
+    - weighted
+    - rule_based
+    - llm
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - All
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   skills_gap_assessment:
     categories: []
     category: JustTrans
@@ -26139,20 +26950,30 @@ parameters:
     - Regulators
   social_representations:
     name: Social representations
-    description: Social reps
+    description: Whether the contract carries social representations. Catalog 'Social reps' -- a clause.
     category: Contract
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Banks
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   social_tariff:
     categories: []
     category: Consumer
@@ -26982,36 +27803,61 @@ parameters:
     - Planners
   ssp_pathway:
     name: Ssp pathway
-    description: Shared Socioeconomic Pathway
+    description: Which Shared Socioeconomic Pathway the climate projection follows. The five levels are
+      the standard CMIP6 set the catalog's own algorithm cell names; `ssp2_4_5` is the middle-of-the-road
+      pathway.
     category: Climate
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: ssp2_4_5
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: integrate
+    determinism: policy
+    categories:
+    - ssp1_1_9
+    - ssp1_2_6
+    - ssp2_4_5
+    - ssp3_7_0
+    - ssp5_8_5
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    priority: P1
+    status: integrate
+    deprecated_by: null
   stakeholder_engagement_plan:
     name: Stakeholder engagement plan
-    description: SEP
+    description: Whether a stakeholder engagement plan exists. Catalog 'SEP' -- a plan-presence flag.
     category: EnvSoc
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   stamp_duty:
     categories: []
     category: Tax & Fiscal
@@ -27193,20 +28039,31 @@ parameters:
     source: docs/params.md
   step_in_rights:
     name: Step in rights
-    description: Step-in rights
+    description: Whether the lender may step into the project's obligations. Catalog 'Step-in rights'
+      -- a clause.
     category: Contract
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Banks
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   stochastic_scenarios:
     name: Stochastic scenarios
     description: Stochastic scenarios
@@ -27780,20 +28637,31 @@ parameters:
     - Planners
   tax_holiday_conditions:
     name: Tax holiday conditions
-    description: Conditions for holiday
+    description: Whether the tax-holiday conditions are met. Catalog 'Constraint'; the numeric reading
+      is `tax_holiday_duration` in years, so this node is the eligibility test and not the length.
     category: Tax
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Developers
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   tax_holiday_duration:
     categories: []
     category: Contract & Legal
@@ -27819,20 +28687,31 @@ parameters:
     - Developers
   tax_incentive_zones:
     name: Tax incentive zones
-    description: Special economic zones
+    description: Whether the site sits in a designated incentive zone. Catalog 'Spatial override' -- a
+      legal designation flag.
     category: Tax
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Policymakers
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   tax_incentives:
     categories: []
     category: Policy
@@ -27998,36 +28877,60 @@ parameters:
     - Researchers
   temporal_aggregation:
     name: Temporal aggregation
-    description: Temporal aggregation
+    description: How the time series is reduced before the solve. Catalog 'Temporal aggregation'; `none`
+      is the unaggregated 8760, and the other two are the reductions the implementation offers.
     category: Temporal
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: none
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: existing
+    determinism: policy
+    categories:
+    - none
+    - tsam
+    - representative_days
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - All
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   temporal_clustering:
     name: Temporal clustering
-    description: Temporal clustering
+    description: Which algorithm selects the representative periods. Catalog 'Temporal clustering'; `kmeans`
+      is the shipped default and the other two are the alternatives.
     category: Temporal
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: kmeans
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: existing
+    determinism: policy
+    categories:
+    - kmeans
+    - hac
+    - tsam
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - All
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   temporal_resolution:
     name: Temporal resolution
     description: Temporal resolution
@@ -28247,20 +29150,32 @@ parameters:
     - Investors
   thin_capitalisation_rules:
     name: Thin capitalisation rules
-    description: Thin cap rules
+    description: Whether thin-capitalisation rules bind the capital structure. Catalog 'Constraint'; the
+      numeric reading is `thin_capitalisation_limit`, unit `1`, so this node is the regime and not the
+      ratio.
     category: Tax
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Investors
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   thin_capitalisation_utilisation:
     category: Tax
     description: 'The gearing expressed against the thin-capitalisation ceiling: debt to equity over the
@@ -28540,20 +29455,34 @@ parameters:
     source: docs/params.md
   trade_agreement:
     name: Trade agreement
-    description: Trade agreement type
+    description: Which trade agreement the zone trades under. Catalog 'Trade agreement type'; the prior
+      pack gave {Bilateral, Pool, AfSEM}, and `regional_pool` is the AfSEM case. `none` is a zone that
+      trades bilaterally on contracts alone.
     category: Grid
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: none
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: policy
+    categories:
+    - none
+    - bilateral
+    - pool
+    - regional_pool
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   trade_flow_parameters:
     name: Trade flow parameters
     description: Trade flows
@@ -28572,36 +29501,61 @@ parameters:
     source: docs/params.md
   trade_repository:
     name: Trade repository
-    description: Trade repository
+    description: Whether a trade repository records transactions. Catalog 'Trade repository' -- an institutional
+      presence flag.
     category: MktOps
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   traditional_land_use:
     name: Traditional land use
-    description: Traditional use
+    description: Which traditional use the site supports. Catalog 'Traditional use' -- a use class; `none`
+      is a site with no recorded use, which is what an unassessed site states rather than inventing one.
     category: Land
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: none
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: integrate
+    determinism: policy
+    categories:
+    - none
+    - grazing
+    - cultivation
+    - sacred
+    - mixed
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Developers
-    source: docs/params.md
+    priority: P2
+    status: integrate
+    deprecated_by: null
   transaction_cost_usd_per_year:
     category: Investment & Finance
     description: 'transaction cost usd per year: the finance family''s derived quantity, computed by the
@@ -28674,20 +29628,31 @@ parameters:
     - Regulators
   transfer_pricing_rules:
     name: Transfer pricing rules
-    description: Transfer pricing
+    description: Whether transfer-pricing rules apply to the offtake. Catalog 'Compliance model' -- a
+      regime flag.
     category: Tax
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Investors
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   transmission_capacity_factor:
     name: Transmission capacity factor
     description: Transmission utilisation
@@ -28731,20 +29696,33 @@ parameters:
     - Planners
   transmission_detail:
     name: Transmission detail
-    description: Transmission detail
+    description: How finely the transmission network is represented. Catalog 'Transmission detail level'
+      with algorithm 'Copper plate vs. zonal vs. nodal', which names the three; `zonal` is the level the
+      graph's own bus layer is built at.
     category: Spatial
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: zonal
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: existing
+    determinism: policy
+    categories:
+    - copper_plate
+    - zonal
+    - nodal
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - All
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   transmission_expansion_allowed:
     categories: []
     category: Transmission & Grid
@@ -30124,20 +31102,33 @@ parameters:
     - Developers
   wave_energy_converter_type:
     name: Wave energy converter type
-    description: Wave energy converter type
+    description: Which wave-energy converter the model assumes. Catalog 'WEC model' -- a closed set of
+      four converter types; `point_absorber` is the most deployed.
     category: Supply
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: point_absorber
+    initial: null
     role: free
-    determinism: fixed
-    priority: P3
-    status: to_build
+    determinism: policy
+    categories:
+    - point_absorber
+    - oscillating_water_column
+    - overtopping
+    - attenuator
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Developers
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   weather_derivative_notional_share:
     category: Finance
     default: 0.1
@@ -30510,20 +31501,31 @@ parameters:
     deprecated_by: null
   wind_offshore_platform:
     name: Wind offshore platform
-    description: Platform type
+    description: Whether the offshore turbine stands on a fixed or a floating platform. Catalog 'Floating
+      vs. fixed platform' names the two; `fixed` is the monopile the shallow-water sites use.
     category: Supply
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    subcategory: null
+    type: categorical
+    unit: null
+    range: null
+    default: fixed
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories:
+    - fixed
+    - floating
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Developers
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   wind_onshore_capacity:
     categories: []
     category: Supply-Side
@@ -30781,36 +31783,57 @@ parameters:
     - Planners
   work_management_systems:
     name: Work management systems
-    description: WMS
+    description: Whether a work management system is in place. Catalog 'WMS' -- a capability flag.
     category: Digital
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P2
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
-  worker_grievance_mechanism:
-    name: Worker grievance mechanism
-    description: Grievance mechanism
-    category: EnvSoc
-    type: float
-    range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
-    determinism: fixed
     priority: P2
     status: to_build
+    deprecated_by: null
+  worker_grievance_mechanism:
+    name: Worker grievance mechanism
+    description: Whether a worker grievance mechanism exists. Catalog 'Grievance mechanism' -- a mechanism-presence
+      flag.
+    category: EnvSoc
+    subcategory: null
+    type: bool
+    unit: null
+    range:
+    - 0.0
+    - 1.0
+    default: false
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   working_capital_allowance:
     categories: []
     category: Regulatory Finance
@@ -30878,20 +31901,31 @@ parameters:
     - Researchers
   world_bank_esf:
     name: World bank esf
-    description: World Bank ESF
+    description: Whether the project applies the World Bank Environmental and Social Framework. Catalog
+      'World Bank ESF' -- an adoption flag.
     category: EnvSoc
-    type: float
+    subcategory: null
+    type: bool
+    unit: null
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: false
+    initial: null
     role: free
-    determinism: fixed
-    priority: P1
-    status: to_build
+    determinism: policy
+    categories: []
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): each node''s action is read
+      from the catalog row''s own description and algorithm cells in docs/params.md, which name a switch,
+      a clause, a standard or a closed set rather than a quantity. Every one shipped as `float` with `unit:
+      null` and `default: 500000.0`, the placeholder `scripts/build/prg_from_catalog.py::_default_for`
+      returns for a row whose name states no unit.'
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   x_factor:
     categories: []
     category: Regulatory Finance
