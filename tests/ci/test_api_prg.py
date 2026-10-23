@@ -489,7 +489,16 @@ def test_the_summary_serves_the_endogenous_layer(
 	# policy dial, and the batch's other new node -- `mwh_per_coal_unit` --
 	# is exogenous, so it is counted under `exogenous` and not here. The
 	# batch's ten retypes did not change a role, so they moved nothing.
-	assert len(free) == 713, len(free)
+	# Batch 44 took it 713 to 706: seven free nodes became derived when the
+	# pollutant ledgers shipped -- `nox_emissions`, `sox_emissions`,
+	# `pm10_emissions`, `pm25_annual_mean_ug_per_m3`, `voc_emissions`,
+	# `mercury_emissions` and `co_emissions`. The batch's eighth retype,
+	# `pm25_kt_per_year`, moved from exogenous to derived, so it left the
+	# exogenous count rather than this one, and its four new derived nodes
+	# (`coal_fuel_energy_gj`, `gas_fuel_energy_gj`, `oil_fuel_energy_gj` and
+	# `pm25_fleet_contribution_ug_per_m3`) never entered this count. Twelve
+	# is the net move in `derived`; seven is the move here.
+	assert len(free) == 706, len(free)
 
 
 # ---------------------------------------------------------------------------

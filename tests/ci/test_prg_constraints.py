@@ -137,9 +137,9 @@ def _solve(
 def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	graph: ParameterGraph,
 ):
-	"""Thirty-four of the library's 344 equations can constrain a solve.
+	"""Seventy-three of the library's 601 equations can constrain a solve.
 
-	The denominator is the finding: 310 equations are identities, and folding
+	The denominator is the finding: 528 equations are identities, and folding
 	them into the register would under-report what a solve is actually
 	bound by. Pinned as a literal so a new inequality has to change this line
 	to land. The counts moved 15/153/168 -> 24/182/206 when batch 20 landed:
@@ -243,11 +243,22 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	Every one has a derived left-hand side and a right-hand side the graph
 	supplies, so the identity count moves by twelve and the inequality count
 	not at all.
+
+	565 -> 601 for batch 46, and thirty-five of the thirty-six are identities:
+	the eleven per-technology generation definitions, the fleet total and its
+	headroom, eleven LACE nodes and eleven LCOE value/cost ratios. The
+	thirty-sixth is ``fleet_energy_adequacy``, a ``geq`` -- the fleet's own
+	generation must cover demand -- so the shaped count moves by one, to 73,
+	and the identity count by thirty-five, to 528. That inequality joins the
+	*unbound* set rather than the bound one, because both of its sides,
+	``fleet_generation_twh`` and ``generation_twh``, are derived quantities
+	the network has no column for: it is a post-solve check that the build
+	can serve the load, not a constraint the optimiser holds.
 	"""
 	cov = coverage(graph)
-	assert cov["constraint_shaped"] == 72
-	assert cov["identities"] == 493
-	assert cov["total"] == 565
+	assert cov["constraint_shaped"] == 73
+	assert cov["identities"] == 528
+	assert cov["total"] == 601
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
@@ -375,10 +386,19 @@ def test_every_unbound_route_names_the_derived_quantity_it_cannot_read(
 	component flows to ``total_water_demand_m3`` when the constraint was
 	rewritten to compare available supply against demand instead of comparing
 	the demand flow against its own components, which restated the identity
-	it was meant to test. The remaining twenty-six are covered by the
+	it was meant to test. The remaining twenty-seven are covered by the
 	universal predicate rather than enumerated, because a list that must grow
 	with every threshold batch is a list that gets repinned without being
 	read.
+
+	Batch 46 took the count 30 to 31 with ``fleet_energy_adequacy``, the
+	``geq`` that makes the fleet's own generation cover demand. It lands here
+	rather than in the bound set because both sides are derived --
+	``fleet_generation_twh`` and ``generation_twh`` -- so the network has no
+	column for either and the check runs after the solve. Its unresolved set
+	is ``fleet_generation_twh``, which this batch created, and
+	``generation_twh``, which the energy balance already determined -- so the
+	route joins the set without changing what any existing one names.
 	"""
 	expected = {
 		"affordability_constraint": {"energy_burden"},
@@ -399,7 +419,7 @@ def test_every_unbound_route_names_the_derived_quantity_it_cannot_read(
 	# And the same claim, universally: whatever any unbound route names as
 	# unresolved is a node the graph holds and does not let you set.
 	unbound = [route for route in routes(graph) if route.status == "unbound"]
-	assert len(unbound) == 30, [route.equation_id for route in unbound]
+	assert len(unbound) == 31, [route.equation_id for route in unbound]
 	for route in unbound:
 		assert route.unresolved, route.equation_id
 		for name in route.unresolved:
