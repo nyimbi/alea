@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,14 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "44":
+		b44_nodes, b44_equations, b44_edges, b44_rules, b44_aliases = build_batch44(graph)
+		rules.extend(b44_rules)
+		nodes.update(b44_nodes)
+		aliases.update(b44_aliases)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b44_equations)
+		edges = list(BATCH12_EDGES) + b44_edges
 	elif batch == "43":
 		b43_nodes, b43_equations, b43_edges, b43_rules = build_batch43(graph)
 		rules.extend(b43_rules)
@@ -11456,6 +11464,845 @@ BATCH38_BOUNDS: tuple[
 _BATCH38_SOURCE = "The operational and supply pack (batch 38)"
 
 
+_BATCH44_SOURCE = "The co-pollutant chain (batch 44)"
+
+
+#: (name, unit, range, default, prose) -- the step from a fleet's fuel burn to
+#: the pollutant mass it puts in the air.
+#:
+#: The graph's emission factors are per GJ of *fuel input*; its capacities are
+#: MW of *electrical output*. EMEP/EEA states the factors on a net calorific
+#: value basis and never states a plant efficiency, so the two are joined by an
+#: efficiency node rather than by folding a heat rate into the factor. Keeping
+#: the efficiency separate is what lets a scenario ask what a 45%-efficient
+#: coal fleet emits without restating every factor, and it keeps each number
+#: traceable to the table it came from.
+BATCH44_NODES: tuple[tuple[str, str, list[float], float, str], ...] = (
+	("hours_per_year", "h/year", [8000.0, 8784.0], 8760.0,
+	 "Hours in a year, as a typed node rather than the literal 8760. The unit "
+	 "walker reads a bare literal as dimensionless, so `MW * 0.75 * 8760` "
+	 "carries MW and `MW * 0.75 * hours_per_year` carries MW*h/year, and only "
+	 "the second can be cancelled against a per-MWh factor. 8760 is the mean "
+	 "Gregorian year; the range admits the 8784-hour leap year and a build "
+	 "that derates its own calendar. This is the same defect "
+	 "`coal_price_per_mwh_definition` carried as a bare `25 * 3.6`, which "
+	 "understated that price by 12.96x."),
+	("efficiency_coal", "1", [0.20, 0.50], 0.40,
+	 "Net electrical efficiency of the coal fleet, fuel energy in to "
+	 "electricity out. 0.40 is the median of the supercritical pulverised "
+	 "entries in the IEA/NEA cost study, whose country rows run 36% to 43% "
+	 "(sources/archive/iea_nea_egc_2020.txt, Table 3.10, the "
+	 "supercritical-pulverised rows). It is the divisor that turns a "
+	 "capacity into a fuel burn: a 3000 MW coal fleet at a 0.75 capacity "
+	 "factor generates 19,710 GWh/yr, which at 0.40 efficiency is 177,390 TJ "
+	 "of coal, and it is that number the g/GJ factors are applied to."),
+	("efficiency_gas", "1", [0.35, 0.62], 0.58,
+	 "Net electrical efficiency of the gas fleet. 0.58 is the median of the "
+	 "CCGT rows in the same IEA/NEA table (0.41 to 0.64 across countries); "
+	 "the guidebook's own text puts a modern CCGT \"in excess of 50%\" "
+	 "(sources/archive/emep_eea_guidebook_2023_1a1a.txt, section 3.2). The "
+	 "gas factor matters more than the coal one because the gas NOx factor "
+	 "is already the low one -- 89 against coal's 209 g/GJ -- so the "
+	 "efficiency is doing most of the work in the fleet's NOx total."),
+	("efficiency_oil", "1", [0.25, 0.45], 0.38,
+	 "Net electrical efficiency of the oil-fired fleet. The IEA/NEA study "
+	 "carries no oil-fired row, so this is the conventional steam-cycle "
+	 "value for a residual-fuel-oil plant, which is what the guidebook's "
+	 "heavy-fuel-oil table describes. 0.38 sits between the 0.36 low end of "
+	 "its coal supercritical rows and the 0.40 median: an oil steam unit is "
+	 "a coal boiler on a different fuel, and it is neither better than the "
+	 "supercritical fleet nor as good as a combined cycle."),
+	("background_pm25_ug_per_m3", "ug/m3", [0.0, 60.0], 5.0,
+	 "Annual mean PM2.5 arriving in the modelled airshed from outside it -- "
+	 "long-range transport, secondary aerosol formed from regional precursor "
+	 "emissions, natural dust and sea salt. 5 ug/m3 is the WHO's 2021 annual "
+	 "guideline value, which is the right default for a scenario that is "
+	 "asking whether its own fleet keeps the air clean rather than how dirty "
+	 "the region already is; the range admits the 35 ug/m3 the shipped graph "
+	 "declared as the *total* concentration, which is a defensible regional "
+	 "background for a polluted airshed. The distinction matters because the "
+	 "shipped graph attributed the whole 35 to the domestic fleet, so a "
+	 "scenario that retired every plant still reported a public health "
+	 "crisis caused by power generation."),
+	("pm25_dispersion_factor", "ug/m3/(kt/year)", [0.0001, 1.0], 0.1057,
+	 "The step the health chain was missing: how much ambient PM2.5 "
+	 "concentration a kilotonne a year of primary emission produces. A "
+	 "screening box model over a populated airshed -- the emission spread "
+	 "through a mixing layer of depth H over a region of width W with wind "
+	 "speed u -- gives concentration = emission / (u * H * W), which for "
+	 "u = 3 m/s, H = 500 m and W = 200 km is 1 kt/yr -> 0.1057 ug/m3. The "
+	 "same box at 100 km width gives 0.211, so the range admits a compact "
+	 "airshed and a broad one. The shipped graph had no such node and "
+	 "instead wrote the concentration-response coefficient with a per-kt "
+	 "unit, which is the arithmetic of this step and not of that one."),
+	("pm25_relative_risk_per_ug_per_m3", "1/(ug/m3)", [0.0, 0.05], 0.006015,
+	 "The concentration-response coefficient for all-cause adult mortality, "
+	 "per microgram per cubic metre of annual mean PM2.5. 0.006015 is "
+	 "log(1.062)/10: the WHO HRAPIE recommendation of a 6.2% increase in "
+	 "all-cause adult mortality per 10 ug/m3, linearised. The shipped node "
+	 "`pm25_relative_risk_per_kt` carried this same number with the unit "
+	 "1/(kt/year), which is the coefficient for the *dispersion* step and "
+	 "not for this one -- and because 20 kt/yr and 20 ug/m3 are both 20, "
+	 "the mislabelling produced the identical product and no check could "
+	 "see it."),
+)
+
+
+#: (name, default, prose) -- nodes whose shipped body names the wrong quantity.
+#:
+#: `pm25_kt_per_year` shipped 20.0 as an exogenous dial. It is the fleet's
+#: primary PM2.5, which the guidebook's factors compute from the fuel burn;
+#: leaving it settable is what let the health chain report a constant death
+#: toll while the fleet changed underneath it. It becomes derived.
+#:
+#: `pm25_relative_risk_per_kt` is renamed rather than retyped, because its
+#: *number* was right and its *unit* was wrong. The rename is a new node plus an
+#: alias, and the old id is deprecated so an edge or equation naming it is
+#: refused rather than silently resolving to a coefficient with a different
+#: meaning.
+BATCH44_RENAMES: tuple[tuple[str, str, str, str, float, str], ...] = (
+	("pm25_relative_risk_per_kt", "pm25_relative_risk_per_ug_per_m3",
+	 "1/(ug/m3)", "exogenous", 0.006015,
+	 "The concentration-response coefficient for all-cause adult mortality, "
+	 "per microgram per cubic metre of annual mean PM2.5. The number is "
+	 "unchanged from the node it replaces and the unit is not: the shipped "
+	 "`pm25_relative_risk_per_kt` declared 1/(kt/year), which is the unit of "
+	 "a dispersion factor -- a coefficient that converts a mass emission "
+	 "into a concentration. This node converts a concentration into a "
+	 "relative risk, and the two steps are separated by "
+	 "`pm25_dispersion_factor`. The old id is deprecated rather than "
+	 "deleted so a scenario that names it fails loudly."),
+)
+
+
+#: (eq_id, lhs, rhs, prose, reference) -- the chain from fuel burn to health
+#: burden, rebuilt so that a change in the fleet reaches the death toll.
+#:
+#: The shipped chain ran `premature_deaths = population * mortality_rate *
+#: pm25_kt_per_year * pm25_relative_risk_per_kt`, with the last two both
+#: exogenous dials nobody had to set. The fleet was in the chain nowhere: a
+#: scenario that retired every coal plant reported the same 4,800 deaths.
+BATCH44_EQUATIONS: tuple[tuple[str, str, str, str, str | None], ...] = (
+	("coal_fuel_energy_definition",
+	 "coal_fuel_energy_gj",
+	 "coal_capacity * capacity_factor_coal * hours_per_year * gj_per_mwh / "
+	 "efficiency_coal",
+	 "Fuel energy burned by the coal fleet in a year. Capacity times capacity "
+	 "factor times hours gives electrical energy; dividing by the plant "
+	 "efficiency gives the fuel energy that produced it. This is the "
+	 "quantity the EMEP/EEA factors are stated per unit of, and the shipped "
+	 "graph had no node for it -- the pollutant factors were applied to "
+	 "nothing.",
+	 "EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a "
+	 "(sources/archive/emep_eea_guidebook_2023_1a1a.txt): factors are given "
+	 "per GJ of fuel input on a net calorific value basis. Net efficiency "
+	 "per IEA/NEA Projected Costs of Generating Electricity (2020), Table "
+	 "3.10."),
+	("gas_fuel_energy_definition",
+	 "gas_fuel_energy_gj",
+	 "gas_capacity * capacity_factor_gas * hours_per_year * gj_per_mwh / "
+	 "efficiency_gas",
+	 "Fuel energy burned by the gas fleet in a year, on the same "
+	 "capacity-to-fuel construction as the coal node. Separate nodes rather "
+	 "than one fleet node because every pollutant factor is fuel-specific: "
+	 "gas emits a quarter of coal's NOx and a thousandth of its SOx per GJ, "
+	 "so a fleet total that averaged the two would be wrong for both.",
+	 "EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Table 3-4 (natural gas) and "
+	 "Table 3-19 (gas turbines); net efficiency per IEA/NEA (2020) Table "
+	 "3.10, CCGT rows."),
+	("oil_fuel_energy_definition",
+	 "oil_fuel_energy_gj",
+	 "oil_capacity * capacity_factor_oil * hours_per_year * gj_per_mwh / "
+	 "efficiency_oil",
+	 "Fuel energy burned by the oil-fired fleet in a year. The third fossil "
+	 "fuel, carried because the graph already builds an oil fleet and prices "
+	 "its carbon: an oil plant that emits CO2 in `lcoe_oil_definition` and "
+	 "no NOx here would be a fleet that is a climate problem and not an air "
+	 "quality one.",
+	 "EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Table 3-6 (heavy fuel oil)."),
+	("nox_emissions_definition",
+	 "nox_emissions",
+	 "(coal_fuel_energy_gj * nox_factor_coal_g_per_gj + "
+	 "gas_fuel_energy_gj * nox_factor_gas_g_per_gj + "
+	 "oil_fuel_energy_gj * nox_factor_oil_g_per_gj) / g_per_kt",
+	 "Annual NOx emitted by the fossil fleet, in kilotonnes. Each fuel's "
+	 "factor is applied to that fuel's own burn and the masses are summed; "
+	 "the conversion node turns grams into kilotonnes so the result carries "
+	 "the unit the node declares rather than a bare number.",
+	 "EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2 (hard coal), 3-4 "
+	 "(natural gas), 3-6 (heavy fuel oil), Tier 1 default emission factors "
+	 "in g/GJ. Factors are stated as NO2."),
+	("sox_emissions_definition",
+	 "sox_emissions",
+	 "(coal_fuel_energy_gj * sox_factor_coal_g_per_gj + "
+	 "gas_fuel_energy_gj * sox_factor_gas_g_per_gj + "
+	 "oil_fuel_energy_gj * sox_factor_oil_g_per_gj) / g_per_kt",
+	 "Annual SOx emitted by the fossil fleet, in kilotonnes. The three "
+	 "factors are not independent measurements: the guidebook derives each "
+	 "from a stated fuel sulphur content assuming full conversion to SO2 and "
+	 "no retention in ash, at 1% sulphur for coal and heavy fuel oil. They "
+	 "therefore move with the sulphur assumption, and a scenario that "
+	 "desulphurises its fuel should move these nodes rather than treat the "
+	 "tabulated values as plant properties.",
+	 "EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6; the "
+	 "derivation is EF_SO2 = [S] * 20000 / CV_net, stated in section 3.4.2.2 "
+	 "and restated in the note to each table."),
+	("pm10_emissions_definition",
+	 "pm10_emissions",
+	 "(coal_fuel_energy_gj * pm10_factor_coal_g_per_gj + "
+	 "gas_fuel_energy_gj * pm10_factor_gas_g_per_gj + "
+	 "oil_fuel_energy_gj * pm10_factor_oil_g_per_gj) / g_per_kt",
+	 "Annual primary PM10 emitted by the fossil fleet, in kilotonnes. "
+	 "Filterable particulate only: the guidebook's factors exclude "
+	 "condensable PM, which forms in the plume from SO2 and NOx and is a "
+	 "second-order term this graph does not model. The gas factor is below "
+	 "the limit of quantification in the source and is carried as the "
+	 "stated upper bound.",
+	 "EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, "
+	 "filterable PM emission factors."),
+	("pm25_kt_per_year_definition",
+	 "pm25_kt_per_year",
+	 "(coal_fuel_energy_gj * pm25_factor_coal_g_per_gj + "
+	 "gas_fuel_energy_gj * pm25_factor_gas_g_per_gj + "
+	 "oil_fuel_energy_gj * pm25_factor_oil_g_per_gj) / g_per_kt",
+	 "Annual primary PM2.5 emitted by the fossil fleet, in kilotonnes. This "
+	 "is the node the health chain reads, and it was an exogenous dial of 20 "
+	 "kt/yr with no path to the fleet: retiring every coal plant left the "
+	 "death toll unchanged. The emission is now a function of the build.",
+	 "EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, "
+	 "filterable PM2.5 emission factors."),
+	("voc_emissions_definition",
+	 "voc_emissions",
+	 "(coal_fuel_energy_gj * voc_factor_coal_g_per_gj + "
+	 "gas_fuel_energy_gj * voc_factor_gas_g_per_gj + "
+	 "oil_fuel_energy_gj * voc_factor_oil_g_per_gj) / g_per_kt",
+	 "Annual non-methane VOC emitted by the fossil fleet, in kilotonnes. The "
+	 "precursor rather than the pollutant: NMVOC is not harmful at these "
+	 "concentrations itself, it is the photochemical feedstock for the ozone "
+	 "that is, and it belongs in the graph because an ozone chain that "
+	 "started from an assumed VOC total would be the same defect this batch "
+	 "is repairing one step over.",
+	 "EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, NMVOC "
+	 "emission factors."),
+	("mercury_emissions_definition",
+	 "mercury_emissions",
+	 "(coal_fuel_energy_gj * mercury_factor_coal_mg_per_gj + "
+	 "gas_fuel_energy_gj * mercury_factor_gas_mg_per_gj + "
+	 "oil_fuel_energy_gj * mercury_factor_oil_mg_per_gj) / mg_per_tonne",
+	 "Annual mercury emitted by the fossil fleet, in tonnes. Mercury is the "
+	 "one pollutant here whose gas term is genuinely negligible and whose "
+	 "coal term is not: coal carries 1.4 mg/GJ against gas's 0.05, so a coal "
+	 "fleet emits 28 times more mercury per unit of fuel energy, and the "
+	 "factor is what a mercury-and-air-pollution-control rule is aimed at.",
+	 "EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, Hg "
+	 "emission factors."),
+	("co_emissions_definition",
+	 "co_emissions",
+	 "(coal_fuel_energy_gj * co_factor_coal_g_per_gj + "
+	 "gas_fuel_energy_gj * co_factor_gas_g_per_gj + "
+	 "oil_fuel_energy_gj * co_factor_oil_g_per_gj) / g_per_kt",
+	 "Annual carbon monoxide emitted by the fossil fleet, in kilotonnes. "
+	 "Carried because the guidebook tabulates it beside the pollutants this "
+	 "batch is about and because it is the one of them whose gas factor is "
+	 "the *largest* relative to coal -- 39 g/GJ against 8.7 -- so a fleet "
+	 "that shifts from coal to gas raises its CO while lowering almost "
+	 "everything else.",
+	 "EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, CO "
+	 "emission factors."),
+	("pm25_fleet_contribution_definition",
+	 "pm25_fleet_contribution_ug_per_m3",
+	 "pm25_emissions * pm25_dispersion_factor",
+	 "The concentration the domestic fossil fleet contributes, before the "
+	 "regional background is added. Carried as its own node because the death "
+	 "toll is attributed to it and not to the total: a scenario that retires "
+	 "every plant should report zero deaths from generation, and a chain that "
+	 "multiplied the coefficient by the total concentration would report the "
+	 "background's burden as the fleet's.",
+	 "Box model: Hanna, Briggs & Hosker (1982), Handbook on Atmospheric "
+	 "Diffusion, DOE/TIC-11223, section 9-2, printed pp. 57-58 "
+	 "(sources/archive/hanna_briggs_hosker_1982.pdf). The continuity "
+	 "equation for a volume of width Ax, mixing depth z_i and unit depth "
+	 "is Ax z_i dC/dt = Ax Q_a + u z_i (C_b - C) + Ax (dZ_i/dt)(C_a - C); "
+	 "at steady state with zero background the solution is the well-known "
+	 "box model, C = Q_a Ax / (u z_i), where Q_a is emission per unit area "
+	 "per unit time. The graph writes it per unit emission as "
+	 "C/Q = 1/(u H W) after cancelling Ax against the source area, which "
+	 "is the same equation. The handbook calls it the model used as a "
+	 "screening tool and the workhorse of urban-scale work, which is the "
+	 "claim this node makes for it and no stronger one. It is not the "
+	 "Gaussian area-source algorithm in SCREEN3 or ISC3: those integrate "
+	 "a point-source plume over the source extent and report a maximum "
+	 "1-hour impact at a chosen downwind distance, while this reports a "
+	 "domain-average annual mean. The two agree in dimension and in "
+	 "scaling with wind speed and mixing depth and not in value, which is "
+	 "why the factor is a settable dial rather than a derived constant."),
+	("pm25_concentration_definition",
+	 "pm25_annual_mean_ug_per_m3",
+	 "pm25_fleet_contribution_ug_per_m3 + background_pm25_ug_per_m3",
+	 "Annual mean PM2.5 concentration: the domestic fleet's contribution plus "
+	 "the regional background that arrives from outside the modelled "
+	 "airshed. The shipped graph declared a free 35 ug/m3 and attributed all "
+	 "of it to the fleet through a coefficient that skipped the dispersion "
+	 "step entirely. Splitting the two is what makes a concentration "
+	 "reported at the WHO guideline rather than at an arbitrary dial, and it "
+	 "is what lets a clean build be clean.",
+	 "WHO global air quality guidelines (2021), Table 0.1 and Table 3.24 "
+	 "(sources/archive/who_aqg_2021.pdf): the PM2.5 annual-mean AQG level "
+	 "is 5 ug/m3, with interim targets of 35, 25, 15 and 10. The default "
+	 "`background_pm25_ug_per_m3` is set to the AQG level, which is a "
+	 "choice of counterfactual rather than a measurement: it is the "
+	 "concentration below which WHO states the evidence for an effect is "
+	 "insufficient to set a lower level, so a scenario measuring its own "
+	 "fleet against it is measuring the burden above a clean airshed. The "
+	 "node's range admits the 35 ug/m3 the shipped graph declared, which "
+	 "is the first interim target and a defensible polluted-airshed "
+	 "background. The dispersion step is the separate box model in "
+	 "`pm25_fleet_contribution_definition`; this equation only adds the "
+	 "two."),
+	("premature_deaths_definition",
+	 "premature_deaths_per_year",
+	 "exposed_population * baseline_mortality_rate * "
+	 "pm25_fleet_contribution_ug_per_m3 * pm25_relative_risk_per_ug_per_m3",
+	 "Premature deaths from the ambient PM2.5 the fleet and the background "
+	 "together produce. The linearised concentration-response form: "
+	 "population times baseline mortality is the deaths that would occur "
+	 "anyway, and the excess is that times beta times the concentration "
+	 "above the counterfactual. The shipped body multiplied a per-kt "
+	 "coefficient by a kilotonne total, which is a different quantity with "
+	 "the same number at the shipped defaults -- 20 kt/yr and 20 ug/m3 are "
+	 "both 20 -- so the mislabelling was invisible until the fleet entered "
+	 "the chain.",
+	 "WHO Regional Office for Europe, Health risks of air pollution in "
+	 "Europe -- HRAPIE project: recommendations for concentration-response "
+	 "functions for cost-benefit analysis of particulate matter, ozone and "
+	 "nitrogen dioxide (2013), Table 1, PM long-term exposure, first row "
+	 "(sources/archive/who_hrapie_2013.pdf): PM2.5 annual mean, mortality "
+	 "all-cause (natural) age 30+, group A*, RR = 1.062 per 10 ug/m3 with a "
+	 "95% CI of 1.040 to 1.083, from a meta-analysis of thirteen European "
+	 "cohorts (Hoek et al. 2013). Linearised as log(1.062)/10 = 0.006015 "
+	 "per ug/m3, which is the coefficient this node carries. The AirQ+ "
+	 "manual was the previous citation here and does not state this figure: "
+	 "it describes the software that applies the coefficients, not the "
+	 "coefficients themselves."
+	 " The construction -- attributable burden as the "
+	 "population-attributable fraction times the health outcome -- is the "
+	 "one the WHO AirQ+ manual states on printed p. 2 "
+	 "(sources/archive/who_airq_manual.pdf): 'The attributable burden is "
+	 "calculated by multiplying the population-attributable fraction by "
+	 "the health outcome'. AirQ+ applies IER functions rather than "
+	 "HRAPIE coefficients, so it is cited for the form of the calculation "
+	 "and not for the number: the linearised excess here is PAF = beta * "
+	 "deltaC for small beta * deltaC, which is that product."),
+)
+
+
+def build_batch44(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], dict[str, str]]:
+	"""Give the co-pollutant chain a fleet, a dispersion step and a unit.
+
+	Three findings, all verified against the loaded graph before this batch
+	touched them.
+
+	*Five pollutant nodes had no arithmetic at all.* `nox_emissions`,
+	`sox_emissions`, `pm10_emissions`, `voc_emissions`, `mercury_emissions` and
+	`co_emissions` were catalog rows -- a name, a `500000.0` placeholder and no
+	unit -- and no equation named any of them. They are the emissions a
+	fossil fleet actually produces, they are the ones an air-quality standard
+	is written against, and the graph modelled none of them.
+
+	*The health chain's driver was a dial, not the fleet.*
+	`premature_deaths_per_year` read `pm25_kt_per_year`, an exogenous 20.0 with
+	no path to any capacity. At the shipped defaults the graph reports 4,800
+	premature deaths and USD 28.8bn of health cost, and a scenario that retires
+	every coal plant reports the same 4,800 deaths. A health cost that cannot
+	respond to the build is not a health cost of the build.
+
+	*And the coefficient carried the unit of the step that was missing.*
+	`pm25_relative_risk_per_kt` shipped 0.006 with the unit 1/(kt/year). The
+	number is WHO's concentration-response coefficient -- log(1.062)/10 =
+	0.006015 per ug/m3 -- and its unit is the unit of a *dispersion* factor.
+	The two errors cancelled: 20 kt/yr * 0.006 and 20 ug/m3 * 0.006015 are the
+	same product, so the chain read plausibly and every dimension the walker
+	could check agreed with itself. What was absent was the box model between
+	the emission and the concentration, and with it any dependence on where
+	the fleet is or how much air it disperses into.
+
+	*What the correction does at the defaults, measured.* The coal fleet burns
+	177,390,000 GJ/yr, gas 48,935,172 and oil 3,734,526. PM2.5 comes to 0.682
+	kt/yr rather than 20, which through the 0.1057 box gives 0.0721 ug/m3 of
+	fleet contribution against a 5 ug/m3 background -- a concentration of
+	5.072, not 35. Deaths fall from 4,800 to 17.35. The fall is not the
+	finding; the finding is that the number now moves when the fleet does.
+
+	*A background the fleet does not own.* The first draft added the
+	regional background to the fleet's contribution and multiplied the
+	coefficient by the total. Measured: 1,220 of 1,220 deaths, so a scenario
+	that retired every plant would still report 1,203 deaths a year caused
+	by the 5 ug/m3 background alone -- the same defect one step further
+	down. Splitting `pm25_fleet_contribution_ug_per_m3` out of the total
+	makes the burden attributable to generation 1.4% of the burden of the
+	airshed, which is what a fleet emitting 0.682 kt/yr into a 200 km box
+	should carry against a 5 ug/m3 regional floor.
+
+	*What this batch does not do.* It does not model secondary PM, ozone or
+	deposition, and it does not claim the box model is a regulatory dispersion
+	model: it is a screening tool whose value is that it has the right
+	dimensions and the right scaling, and a scenario that needs an airshed
+	answer should replace the single factor with a Gaussian run rather than
+	retune it. It also leaves the morbidity half of the burden -- hospital
+	admissions, work days lost -- to a node that is still uncoupled, because
+	the HRAPIE coefficients for those endpoints are per-case and would need a
+	population incidence the graph does not carry.
+	"""
+	from alea.prg.dsl import parse_side
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+	aliases: dict[str, str] = {}
+
+	for name, unit, rng, default, prose in BATCH44_NODES:
+		assert name not in graph.nodes, (
+			f"{name}: already ships; this batch assumed it did not"
+		)
+		nodes[name] = {
+			"id": name,
+			"name": name.replace("_", " ").capitalize(),
+			"description": prose,
+			"category": "environment",
+			"subcategory": "air_quality",
+			"type": "float",
+			"unit": unit,
+			"range": rng,
+			"default": default,
+			"role": "exogenous",
+			"determinism": "physical",
+			"status": "to_build",
+			"source": _BATCH44_SOURCE,
+			"depends_on": [],
+			"affects": [],
+		}
+
+	# The six pollutant factors per fuel. Eighteen nodes, one row each, because
+	# a factor is a fact about a fuel and a pollutant and nothing else -- and
+	# because the guidebook tabulates them that way, so a reader can check any
+	# one of them against one cell.
+	for fuel, pollutant, unit, value, prose in _BATCH44_FACTORS:
+		name = f"{pollutant}_factor_{fuel}_g_per_gj" if pollutant != "mercury" else (
+			f"mercury_factor_{fuel}_mg_per_gj"
+		)
+		assert name not in graph.nodes, f"{name}: already ships"
+		nodes[name] = {
+			"id": name,
+			"name": f"{pollutant.upper()} emission factor, {fuel}",
+			"description": prose,
+			"category": "environment",
+			"subcategory": "emission_factor",
+			"type": "float",
+			"unit": unit,
+			"range": [0.0, value * 10 if value else 1.0],
+			"default": value,
+			"role": "exogenous",
+			"determinism": "physical",
+			"status": "existing",
+			"source": _BATCH44_SOURCE,
+			"depends_on": [],
+			"affects": [],
+		}
+
+	for old, new, unit, role, default, prose in BATCH44_RENAMES:
+		shipped = graph.nodes.get(old)
+		assert shipped is not None, f"{old}: no shipped node to rename"
+		assert new not in graph.nodes, f"{new}: already ships"
+		body = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		body.update({
+			"id": new, "name": new.replace("_", " ").capitalize(),
+			"unit": unit, "role": role, "default": default,
+			"description": prose, "source": _BATCH44_SOURCE,
+		})
+		nodes[new] = body
+		old_body = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		old_body.update({
+			# A deprecated node keeps its default, and the reason is now load
+			# bearing twice over. `propagate` is handed every default, so a
+			# cleared one would make it fail on a set that omits a node it can
+			# no longer compute; and the refusal that makes a deprecation
+			# *loud* is keyed on the value differing from the default, so
+			# keeping the default is what lets every ordinary propagation
+			# through while a scenario that actually moves the retired knob is
+			# refused by name. Clearing it would make the second check
+			# unreachable rather than stricter.
+			"status": "deprecated", "deprecated_by": new,
+			"description": (
+				"Deprecated in favour of `" + new + "`. The number was right and "
+				"the unit was not: this node declared 1/(kt/year), the unit of a "
+				"dispersion factor, while carrying WHO's concentration-response "
+				"coefficient per ug/m3. A scenario that still names this id is "
+				"naming a coefficient whose dimension it has misread."
+			),
+			"source": _BATCH44_SOURCE,
+		})
+		nodes[old] = old_body
+		aliases[old] = new
+
+	# The three nodes the chain needs that shipped as dials and become computed.
+	for name in ("pm25_kt_per_year", "pm25_annual_mean_ug_per_m3"):
+		shipped = graph.nodes.get(name)
+		assert shipped is not None, f"{name}: no shipped node to retype"
+		body = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		body.update({"role": "derived", "source": _BATCH44_SOURCE})
+		body.pop("default", None)
+		nodes[name] = body
+
+	# The six pollutant nodes shipped with no unit at all -- a catalog row with
+	# a name and a `500000.0` placeholder. A node without a unit makes every
+	# equation naming it undecidable, which is not a pass: the walker returns
+	# `None` and the check counts it as neither consistent nor inconsistent.
+	# The units are the ones the equations determine.
+	for name, unit, prose in _BATCH44_POLLUTANT_UNITS:
+		shipped = graph.nodes.get(name)
+		assert shipped is not None, f"{name}: no shipped node to retype"
+		body = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		body.update({
+			"unit": unit, "role": "derived", "source": _BATCH44_SOURCE,
+			"description": prose,
+		})
+		body.pop("default", None)
+		nodes[name] = body
+
+	# The aliases: three conversion constants and the four fuel energies the
+	# pollutant equations sum over.
+	for name, unit, default, prose in _BATCH44_CONSTANTS:
+		assert name not in graph.nodes, f"{name}: already ships"
+		nodes[name] = {
+			"id": name,
+			"name": name.replace("_", " ").capitalize(),
+			"description": prose,
+			"category": "environment",
+			"subcategory": "conversion",
+			"type": "float",
+			"unit": unit,
+			"range": [default / 1000.0, default * 1000.0],
+			"default": default,
+			"role": "exogenous",
+			"determinism": "fixed",
+			"status": "existing",
+			"source": _BATCH44_SOURCE,
+			"depends_on": [],
+			"affects": [],
+		}
+
+	for name, unit, prose in _BATCH44_DERIVED:
+		nodes[name] = {
+			"id": name,
+			"name": name.replace("_", " ").capitalize(),
+			"description": prose,
+			"category": "environment",
+			"subcategory": "air_quality",
+			"type": "float",
+			"unit": unit,
+			"range": [0.0, 1.0e12],
+			"role": "derived",
+			"determinism": "physical",
+			"status": "to_build",
+			"source": _BATCH44_SOURCE,
+			"depends_on": [],
+			"affects": [],
+		}
+
+	for eq_id, lhs, rhs, prose, cite in BATCH44_EQUATIONS:
+		rhs_params = sorted(parse_side(rhs).symbols)
+		lhs_params = sorted(parse_side(lhs).symbols)
+		known = set(nodes) | set(graph.nodes)
+		missing = [s for s in rhs_params + lhs_params if s not in known]
+		assert not missing, f"{eq_id}: names {missing}, which no node holds"
+		assert not set(lhs_params) & set(rhs_params), (
+			f"{eq_id}: a symbol appears on both sides, so the body determines "
+			"nothing"
+		)
+		shipped = graph.equations.get(eq_id)
+		base = (
+			{
+				"name": shipped.name, "system": shipped.system,
+				"tolerance": shipped.tolerance,
+				"priority": (
+					shipped.priority.value
+					if hasattr(shipped.priority, "value") else shipped.priority
+				),
+				"solution_method": shipped.solution_method,
+				"linearity": shipped.linearity,
+			}
+			if shipped is not None
+			else {
+				"name": eq_id.replace("_", " ").capitalize(),
+				"system": "health" if "deaths" in eq_id or "concentration" in eq_id
+				else "emissions",
+				"tolerance": 1.0e-09, "priority": "P2",
+				"solution_method": "direct", "linearity": "linear",
+			}
+		)
+		equations[eq_id] = {
+			"id": eq_id, "description": prose, **base,
+			"lhs": lhs, "rhs": rhs, "relation": "eq",
+			"parameters": lhs_params + rhs_params, "free_variables": [],
+			"determined_variables": lhs_params,
+			"unit_check": True,
+			"reference": cite,
+			"latex": r"\mathrm{see\ equation}",
+		}
+		for sym in rhs_params:
+			edges.append({
+				"source": sym, "target": lhs_params[0],
+				"equation_id": eq_id,
+				"relationship": "functional", "direction": "forward",
+				"strength": "hard",
+				"description": "Enters the pollutant chain.",
+				"reference": cite, "priority": "P2",
+			})
+
+	# The declared `depends_on` / `affects` lists are part of the node body and
+	# the structural check reads them against the equations. Writing them by
+	# hand in 34 node literals would be 34 chances to drift; deriving them from
+	# the equations this batch just wrote is the only version that cannot.
+	# Against the whole graph, not just this batch's equations: a node this
+	# batch retypes is still read by equations it did not write, and deriving
+	# `affects` from the fragment alone reported two nodes as feeding nothing
+	# when the shipped `pm25_exceedance_definition` and `pm25_emissions_alias`
+	# read them.
+	live = {
+		e.id: {"lhs": e.lhs, "parameters": list(e.parameters), "relation": e.relation}
+		for e in graph.equations.values()
+	}
+	for eq_id, body in equations.items():
+		live[eq_id] = {
+			"lhs": body["lhs"], "parameters": body["parameters"],
+			"relation": body["relation"],
+		}
+	determined_by: dict[str, list[str]] = {}
+	feeds: dict[str, list[str]] = {}
+	for eq_id, body in live.items():
+		relation = body["relation"]
+		relation = getattr(relation, "value", relation)
+		if relation != "eq":
+			continue
+		lhs = body["lhs"]
+		determined_by.setdefault(lhs, []).extend(body["parameters"])
+		for sym in body["parameters"]:
+			if sym != lhs:
+				feeds.setdefault(sym, []).append(lhs)
+	for name in nodes:
+		if name not in nodes:
+			continue
+		nodes[name]["depends_on"] = sorted(set(determined_by.get(name, [])) - {name})
+		nodes[name]["affects"] = sorted(set(feeds.get(name, [])))
+
+	return nodes, equations, edges, rules, aliases
+
+
+#: (fuel, pollutant, unit, value, prose) -- the Tier 1 factors, one cell each.
+#:
+#: Every value is the default emission factor from the EMEP/EEA Guidebook
+#: 2023, NFR 1.A.1.a, on a net calorific value basis. The coal column is
+#: Table 3-2 (hard coal); the guidebook's note says the Tier 1 factors are
+#: based on its own Tier 2 dry-bottom-boiler rows, and a pulverised-fuel boiler
+#: is the dry-bottom class, so this is the right column for a coal fleet even
+#: though no table is titled "pulverised". Gas is Table 3-4 (natural gas). Oil
+#: is Table 3-6 (heavy fuel oil).
+#:
+#: The SOx factors are *derived* by the guidebook, not measured: each assumes
+#: 1% sulphur by mass, full conversion to SO2 and no retention in ash. They are
+#: carried at the tabulated value and the description says so, because a reader
+#: who takes 820 g/GJ as a property of coal rather than of 1%-sulphur coal will
+#: be wrong about a low-sulphur fleet.
+_BATCH44_FACTORS: tuple[tuple[str, str, str, float, str], ...] = (
+	("coal", "nox", "g/GJ", 209.0,
+	 "NOx emitted per GJ of coal burned, expressed as NO2. Tier 1 default for "
+	 "hard coal under NFR 1.A.1.a, the mean over the range of technologies in "
+	 "use rather than a best-available or an unabated figure. The 95% "
+	 "confidence interval runs 200 to 350 g/GJ, which is narrow: coal's NOx "
+	 "is dominated by the fuel's own nitrogen content and varies less across "
+	 "combustion technologies than gas's does."),
+	("gas", "nox", "g/GJ", 89.0,
+	 "NOx emitted per GJ of natural gas burned, expressed as NO2. Tier 1 "
+	 "default for natural gas, NFR 1.A.1.a. Less than half the coal figure "
+	 "because the fuel carries almost no nitrogen, so the thermal-NOx "
+	 "mechanism is the only one that matters and a lean premix burner "
+	 "suppresses it. The 95% interval is wide -- 15 to 185 -- because the "
+	 "spread across gas combustion technologies is the largest of any fuel."),
+	("oil", "nox", "g/GJ", 142.0,
+	 "NOx emitted per GJ of heavy fuel oil burned, expressed as NO2. Tier 1 "
+	 "default, NFR 1.A.1.a. Between coal and gas: the fuel carries some "
+	 "nitrogen, as coal does, but a liquid flame is more controllable than a "
+	 "pulverised-coal one."),
+	("coal", "sox", "g/GJ", 820.0,
+	 "SOx emitted per GJ of coal burned. Derived by the guidebook from 1% "
+	 "sulphur by mass, full conversion to SO2 and no retention in ash -- it "
+	 "is not an independent measurement of plant performance, and the 95% "
+	 "interval of 330 to 5000 reflects the spread of sulphur content across "
+	 "the world's coals rather than any uncertainty about the combustion. A "
+	 "scenario modelling a low-sulphur coal should lower this node."),
+	("gas", "sox", "g/GJ", 0.244,
+	 "SOx emitted per GJ of natural gas burned, at the EU sulphur "
+	 "specification. The guidebook prints this as the EU-region row beside a "
+	 "US-region 0.281 g/GJ; the EU figure is the one carried because it is "
+	 "the lower and the more widely applicable to a pipeline-quality fuel. "
+	 "Gas is desulphurised at the wellhead, which is why this is three "
+	 "thousand times smaller than coal's."),
+	("oil", "sox", "g/GJ", 495.0,
+	 "SOx emitted per GJ of heavy fuel oil burned, derived on the same 1% "
+	 "sulphur basis as the coal figure. The 95% interval of 146 to 1700 is "
+	 "the widest of the three because marine and industrial fuel oils vary "
+	 "from 0.1% to 4.5% sulphur, and a heavy fuel oil fleet is the one place "
+	 "in this graph where the sulphur assumption is doing most of the work."),
+	("coal", "pm10", "g/GJ", 7.7,
+	 "Filterable PM10 per GJ of coal burned. Tier 1 default, NFR 1.A.1.a, "
+	 "based on an 8.2% ash content. Filterable only: the condensable fraction "
+	 "that forms in the plume from SO2 and NOx is tabulated separately by the "
+	 "source and is not modelled here, which makes this an understatement of "
+	 "total primary-plus-secondary particulate."),
+	("gas", "pm10", "g/GJ", 0.14,
+	 "Filterable PM10 per GJ of natural gas burned. The guidebook marks this "
+	 "below the limit of quantification and gives 0.14 g/GJ as the upper "
+	 "bound; its note states that such factors can be used directly in "
+	 "calculation, which is why it is carried as a value rather than as a "
+	 "flag. Gas emits essentially no primary particulate."),
+	("oil", "pm10", "g/GJ", 25.2,
+	 "Filterable PM10 per GJ of heavy fuel oil burned, on a 1% sulphur basis. "
+	 "Three times the coal figure per unit of fuel energy, because a heavy "
+	 "fuel oil flame produces cenospheres and sulphated ash that a "
+	 "pulverised-coal boiler leaves in the bottom ash."),
+	("coal", "pm25", "g/GJ", 3.4,
+	 "Filterable PM2.5 per GJ of coal burned, 44% of the PM10 fraction. This "
+	 "is the number the health chain runs on: it is the size fraction that "
+	 "reaches the alveoli, and the one whose concentration-response "
+	 "coefficient the WHO derives."),
+	("gas", "pm25", "g/GJ", 0.14,
+	 "Filterable PM2.5 per GJ of natural gas burned, equal to the PM10 factor "
+	 "because what little particulate a gas flame produces is entirely in the "
+	 "fine fraction."),
+	("oil", "pm25", "g/GJ", 19.3,
+	 "Filterable PM2.5 per GJ of heavy fuel oil burned, 77% of the PM10 "
+	 "fraction -- the highest fine-particle share of the three fuels, which "
+	 "is why an oil fleet is a particulate problem out of proportion to its "
+	 "size."),
+	("coal", "voc", "g/GJ", 1.0,
+	 "Non-methane VOC per GJ of coal burned. Small in mass and not small in "
+	 "effect: NMVOC is the photochemical precursor for tropospheric ozone, "
+	 "and the graph carries it so that an ozone chain has a source rather "
+	 "than an assumption."),
+	("gas", "voc", "g/GJ", 2.6,
+	 "Non-methane VOC per GJ of natural gas burned. Higher than coal's, "
+	 "because the unburned methane slip and the trace heavier hydrocarbons in "
+	 "the fuel survive combustion in small quantities."),
+	("oil", "voc", "g/GJ", 2.3,
+	 "Non-methane VOC per GJ of heavy fuel oil burned."),
+	("coal", "mercury", "mg/GJ", 1.4,
+	 "Mercury per GJ of coal burned. The only pollutant in this table whose "
+	 "coal factor is not merely larger than the others but categorically so: "
+	 "coal carries trace mercury in its organic and pyritic fraction, and the "
+	 "flue gas is where it goes. A 3000 MW coal fleet at the shipped defaults "
+	 "emits 0.26 t/yr."),
+	("gas", "mercury", "mg/GJ", 0.05,
+	 "Mercury per GJ of natural gas burned, 28 times smaller than coal's per "
+	 "unit of fuel energy and smaller still per unit of electricity, since "
+	 "gas is also the more efficient fuel."),
+	("oil", "mercury", "mg/GJ", 0.341,
+	 "Mercury per GJ of heavy fuel oil burned. Between coal and gas, "
+	 "reflecting the metal's concentration in the residual fraction after "
+	 "refining."),
+	("coal", "co", "g/GJ", 8.7,
+	 "Carbon monoxide per GJ of coal burned. CO is the product of incomplete "
+	 "combustion and is the one pollutant here that good combustion control "
+	 "reduces rather than one that fuel choice does."),
+	("gas", "co", "g/GJ", 39.0,
+	 "Carbon monoxide per GJ of natural gas burned -- 4.5 times the coal "
+	 "factor, and the reason a coal-to-gas switch is not uniformly an "
+	 "air-quality improvement. A gas flame quenched on a cold surface leaves "
+	 "CO that a coal flame's longer residence time would have oxidised."),
+	("oil", "co", "g/GJ", 15.1,
+	 "Carbon monoxide per GJ of heavy fuel oil burned."),
+)
+
+
+#: (name, unit, default, prose) -- the conversions the pollutant sums need.
+#:
+#: Each is a definitional constant with a typed unit rather than a literal in
+#: an equation, because the unit walker reads a bare literal as dimensionless
+#: and a chain of them cancels nothing. `g_per_kt` and `mg_per_tonne` are what
+#: turn a gram total into the kilotonne and tonne the nodes declare;
+#: `gj_per_mwh` is the bridge between the graph's electrical units and the
+#: guidebook's thermal ones.
+_BATCH44_CONSTANTS: tuple[tuple[str, str, float, str], ...] = (
+	("g_per_kt", "g/kt", 1000000000.0,
+	 "Grams in a kilotonne. A conversion node rather than the literal 1e9 so "
+	 "that `g/GJ * GJ` cancels to grams and the product carries the unit the "
+	 "node declares."),
+	("mg_per_tonne", "mg/tonne", 1000000000.0,
+	 "Milligrams in a tonne. The mercury chain's counterpart to `g_per_kt`: "
+	 "its factors are tabulated in mg/GJ and its node declares tonnes, a "
+	 "factor of 1e9 apart."),
+	("gj_per_mwh", "GJ/MWh", 3.6,
+	 "Gigajoules in a megawatt-hour. Exact by definition -- 1 MWh is 3.6 GJ "
+	 "-- and carried as a node because the emission factors are per GJ of "
+	 "fuel while the graph's capacities are in MW. The same constant the "
+	 "shipped `coal_price_per_mwh_definition` wrote as a bare `25 * 3.6`, "
+	 "where the walker could not see it."),
+)
+
+
+#: (name, unit, prose) -- the six pollutant nodes the catalog shipped bare.
+#:
+#: Every one carried `unit: None` and the `500000.0` placeholder, and no
+#: equation named any of them. A node with no unit is not merely undocumented:
+#: the unit walker returns `None` for any equation naming it, and `None` reads
+#: as *undecidable*, which the report counts as neither consistent nor
+#: inconsistent. Six of the graph's most consequential physical quantities were
+#: outside the reach of its own dimension check.
+_BATCH44_POLLUTANT_UNITS: tuple[tuple[str, str, str], ...] = (
+	("nox_emissions", "kt/year",
+	 "Annual nitrogen oxide emission from the fossil fleet, in kilotonnes "
+	 "expressed as NO2. The unit is the one the guidebook's own reporting "
+	 "convention uses and the one an emission inventory is stated in; the "
+	 "node shipped with none."),
+	("sox_emissions", "kt/year",
+	 "Annual sulphur oxide emission from the fossil fleet, in kilotonnes "
+	 "expressed as SO2. Derived in the source from fuel sulphur content "
+	 "rather than measured, so it moves with the sulphur assumption."),
+	("pm10_emissions", "kt/year",
+	 "Annual primary PM10 emission from the fossil fleet, in kilotonnes. "
+	 "Filterable particulate only; condensable PM is not modelled."),
+	("voc_emissions", "kt/year",
+	 "Annual non-methane VOC emission from the fossil fleet, in "
+	 "kilotonnes. The photochemical precursor for tropospheric ozone."),
+	("mercury_emissions", "tonne/year",
+	 "Annual mercury emission from the fossil fleet, in tonnes. The unit is "
+	 "tonnes rather than kilotonnes because the quantity is four orders of "
+	 "magnitude smaller: a 3000 MW coal fleet emits 0.26 t/yr, which in "
+	 "kilotonnes would be a number no reader could place."),
+	("co_emissions", "kt/year",
+	 "Annual carbon monoxide emission from the fossil fleet, in "
+	 "kilotonnes. The one pollutant here whose gas factor is larger than its "
+	 "coal factor, so a coal-to-gas switch raises it."),
+)
+
+
+#: (name, unit, prose) -- the four fuel-energy nodes and the concentration.
+_BATCH44_DERIVED: tuple[tuple[str, str, str], ...] = (
+	("coal_fuel_energy_gj", "GJ/year",
+	 "Fuel energy the coal fleet burns in a year. The quantity the emission "
+	 "factors are stated per unit of, and the one the graph did not have: it "
+	 "carried a capacity in MW and a factor in g/GJ with nothing between "
+	 "them."),
+	("gas_fuel_energy_gj", "GJ/year",
+	 "Fuel energy the gas fleet burns in a year."),
+	("oil_fuel_energy_gj", "GJ/year",
+	 "Fuel energy the oil-fired fleet burns in a year."),
+	("pm25_fleet_contribution_ug_per_m3", "ug/m3",
+	 "The annual mean PM2.5 concentration the domestic fossil fleet produces, "
+	 "separated from the regional background so that the health burden can be "
+	 "attributed to the fleet rather than to the air it adds to."),
+)
+
 _BATCH43_SOURCE = "The firm-capacity repair (batch 43)"
 
 
@@ -11823,9 +12670,18 @@ BATCH42_EQUATIONS: tuple[tuple[str, str, str, str, str | None], ...] = (
 	 "fleet average at the current build', and read by no equation. This is "
 	 "the arrow that was missing, and without it every CCS dial in the graph "
 	 "was inert.",
-	 "IPCC Guidelines for National Greenhouse Gas Inventories, the "
-	 "activity-data x emission-factor construction; the fleet average is the "
-	 "graph's own `fleet_emission_intensity_t_per_mwh`"),
+	 "IPCC Guidelines for National Greenhouse Gas Inventories, Volume 2 "
+	 "(Energy), Chapter 2, Equation 2.1 on printed p. 2.11 "
+	 "(sources/archive/ipcc_2006_gl_vol2_ch2.pdf), which states the emission "
+	 "as fuel consumption in TJ multiplied by an emission factor per TJ. The "
+	 "graph's construction is that same product with the fleet average in "
+	 "place of the per-fuel factor, generation in TWh times "
+	 "`fleet_emission_intensity_t_per_mwh`, and the fleet average is the "
+	 "graph's own, computed by `fleet_emission_intensity_definition` from the "
+	 "built capacity mix. That substitution is the modelling step, and it is "
+	 "the one IPCC does not make. It states the identity for a single fuel, "
+	 "and averaging over the fleet is what makes it apply to a generation "
+	 "total that does not name its fuels."),
 )
 
 

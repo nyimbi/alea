@@ -236,11 +236,18 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	``coal_price_per_mwh_definition``, was already in the identity class and
 	stayed there, so the identity count is flat at 481 and the shaped count
 	moves by exactly the one bound.
+
+	553 -> 565 for batch 44, and all twelve are identities: the three
+	fuel-energy definitions, the six pollutant totals, the fleet's
+	concentration contribution, the total concentration, deaths and DALYs.
+	Every one has a derived left-hand side and a right-hand side the graph
+	supplies, so the identity count moves by twelve and the inequality count
+	not at all.
 	"""
 	cov = coverage(graph)
 	assert cov["constraint_shaped"] == 72
-	assert cov["identities"] == 481
-	assert cov["total"] == 553
+	assert cov["identities"] == 493
+	assert cov["total"] == 565
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):

@@ -133,9 +133,21 @@ class Citation:
 		Case-insensitive and substring-based: the citation is prose written by
 		whoever wrote the equation, and demanding it match a key exactly would
 		mean editing the physics library to satisfy a bibliography.
+
+		**The key is one of the spellings.** An equation may cite a row by its
+		register key -- ``reference: entsoe_adequacy`` -- and that is not a
+		weaker citation than prose, it is the row's primary identifier. The
+		predicate did not read it, so eight equations citing a bare key were
+		reported as resolving to nothing while the row they named sat in the
+		register. None of the 51 rows lists its own key in ``cites``, which is
+		what let the gap survive: the join looked only at the spellings the
+		column happened to carry. The key is appended here rather than to 51
+		rows, because a register that has to restate its own identifier in a
+		second column is a register with two sources of truth for one name.
 		"""
 		haystack = reference.casefold()
-		return any(needle.casefold() in haystack for needle in self.cites)
+		needles = (*self.cites, self.key)
+		return any(needle.casefold() in haystack for needle in needles)
 
 	@property
 	def archive_path(self) -> Path | None:

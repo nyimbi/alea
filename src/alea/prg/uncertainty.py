@@ -78,10 +78,20 @@ class UncertaintyRegister:
 
 def register(graph: ParameterGraph) -> UncertaintyRegister:
 	"""Read the graph's uncertainty declarations, and what they reach."""
+	# A deprecated node declares nothing about the graph a scenario can move.
+	# It is kept so a caller naming it is told what replaced it, and its own
+	# `determinism` describes the node that was retired. Excluding it here is
+	# not cosmetic: `is_settable` refuses a deprecated node, so without this
+	# filter the tombstone falls into `derived` below and the register reports
+	# it as a derived parameter whose relation is stochastic -- a claim about
+	# arithmetic nothing performs. Batch 44 deprecated
+	# `pm25_relative_risk_per_kt` and the count went 48 to 49 on exactly that
+	# path, which is the defect: the node moved from the input side to the
+	# derived side and was reported either way.
 	uncertain = {
 		name
 		for name, node in graph.nodes.items()
-		if node.determinism is Determinism.STOCHASTIC
+		if node.determinism is Determinism.STOCHASTIC and node.status != "deprecated"
 	}
 	# "Derived" is everything a user cannot set, which is the determiner set
 	# *plus* the loop variables. ``order()`` names only the former -- a loop has

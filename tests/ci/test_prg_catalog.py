@@ -49,7 +49,7 @@ from alea.prg.catalog import (
 	summary,
 	title_count,
 )
-from alea.prg.graph import ParameterGraph, load_graph
+from alea.prg.graph import GraphError, ParameterGraph, load_graph
 
 PRG_PATH = repo_root() / "config" / "prg.yaml"
 
@@ -523,6 +523,7 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 		assert node.status == "deprecated", node.status
 		assert node.deprecated_by in graph.nodes, node.deprecated_by
 
+
 	# The other 667 are the control: a join that reported every node as
 	# disagreeing would pass the assertion above and mean nothing. The
 	# expansion took the agreeing count to 786, the promotion left it at 784
@@ -551,6 +552,53 @@ def test_a_node_the_catalog_does_not_name_is_absent_rather_than_guessed(
 	joined = graph_join(graph=graph)
 	assert "peak_demand_mw" in graph.nodes
 	assert "peak_demand_mw" not in joined
+
+
+def test_a_deprecated_node_cannot_be_set(graph: ParameterGraph):
+	"""Deprecation has to refuse the value, not just label the node.
+
+	The batch that retires an id writes that the old one is kept "so a scenario
+	that names it fails loudly", and until batch 44 nothing made it fail. A
+	deprecated node is not a determiner, not a loop variable and not
+	endogenous, so ``is_settable`` returned True, ``propagate`` accepted the
+	value, computed nothing from it, and returned it as the scenario's own
+	answer. A caller who renamed a knob in a config got a silent no-op.
+
+	``_deprecated_reach`` already refused an *edge* or an *equation* naming a
+	deprecated node. It could not see this: a value is neither, and the
+	failure is a caller stating an input rather than a document stating a
+	relation.
+
+	The control is the replacement: setting the node the tombstone points at
+	must still work, or this test would pass on a graph that refused
+	everything.
+	"""
+	deprecated = sorted(
+		name for name, node in graph.nodes.items() if node.status == "deprecated"
+	)
+	assert deprecated, "the graph holds no deprecated node to test"
+	for name in deprecated:
+		node = graph.nodes[name]
+		assert not graph.is_settable(name), (
+			f"{name} is deprecated and still reads as settable"
+		)
+		values = {
+			key: item.default
+			for key, item in graph.nodes.items()
+			if item.default is not None
+		}
+		# A value the node does not already hold. Setting it to its own default
+		# is a no-op whatever the node's status, so the refusal is written
+		# against a *change* and this test must make one.
+		assert node.default is not None, f"{name} has no default to perturb"
+		values[name] = node.default * 2 + 1
+		with pytest.raises(GraphError, match="deprecated"):
+			graph.propagate(values)
+		# The replacement is the thing the message names, and it has to be
+		# settable itself -- otherwise "migrate to X" sends the caller to
+		# another refusal.
+		assert node.deprecated_by is not None, name
+		assert graph.is_settable(node.deprecated_by), node.deprecated_by
 
 
 # ---------------------------------------------------------------------------

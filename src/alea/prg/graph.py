@@ -619,11 +619,23 @@ class ParameterGraph:
 		states a decision. The two are one answer here and two different
 		diagnoses, which is why :meth:`role` exists: a caller that needs to say
 		*why* a knob was refused must not infer it from this boolean.
+
+		**A deprecated parameter is refused for a fourth reason: it is not a
+		knob any more.** The node is kept so a scenario that names it can be
+		told what replaced it -- see :meth:`_refuse_out_of_range`, which raises
+		on a supplied value rather than this predicate quietly returning False
+		and letting the value stand. It is excluded here as well so that every
+		register built on this predicate (the dead-knob count, the sensitivity
+		inputs, the translation coverage) describes the graph a scenario can
+		actually move, not the tombstones beside it. ``role`` still reports the
+		role the node had, because that is a fact about the node and not a
+		permission.
 		"""
 		return (
 			parameter not in self._determiner
 			and parameter not in self._loop_variables
 			and self._nodes[parameter].role is not Role.ENDOGENOUS
+			and self._nodes[parameter].status != "deprecated"
 		)
 
 	def role(self, parameter: str) -> Role:
@@ -1612,6 +1624,25 @@ class ParameterGraph:
 		derivation that touches it, and the message would name whichever
 		equation happened to ask first rather than the value that is wrong.
 
+		**A deprecated node is refused here too, and for a stronger reason.**
+		``_deprecated_reach`` refuses an edge or an equation that names one, and
+		the batch that deprecates a node writes that its id is kept "so a
+		scenario that names it fails loudly". Nothing made it fail: the node is
+		not a determiner, not a loop variable and not endogenous, so
+		``is_settable`` said yes and ``propagate`` accepted it, computed nothing
+		from it, and returned it as the scenario's value. A caller who renamed a
+		knob in a config and got a silent no-op is the exact failure the
+		deprecation existed to prevent, and it was the one case the reach check
+		could not see -- a *value*, not an edge. The refusal names the
+		replacement, which is the whole content of ``deprecated_by``.
+
+		The test is *differs from the default*, not *is present*, because
+		``propagate`` is handed every default including the deprecated nodes'
+		own and cannot tell that from a caller setting it. The two are not
+		distinguishable and do not need to be: a caller who sets a knob to the
+		value it already holds has set nothing, deprecated or not, and a refusal
+		on presence alone would make every propagation over this graph fail.
+
 		Every key in ``values`` is checked rather than a caller-supplied subset,
 		and the method does not need to distinguish them: a node whose *default*
 		is outside its range never reaches a propagation, because
@@ -1637,6 +1668,15 @@ class ParameterGraph:
 		for name, value in sorted(values.items()):
 			node = self._nodes.get(name)
 			if node is None:
+				continue
+			if node.status == "deprecated":
+				if value != node.default:
+					raise GraphError(
+						f"{name} is deprecated and was replaced by "
+						f"{node.deprecated_by!r}; setting it computes nothing, so "
+						f"a scenario that names it is a scenario with a no-op in "
+						f"it"
+					)
 				continue
 			if not self.is_settable(name):
 				continue

@@ -1413,6 +1413,32 @@ parameters:
     users:
     - Planners
     - Regulators
+  background_pm25_ug_per_m3:
+    id: background_pm25_ug_per_m3
+    name: Background pm25 ug per m3
+    description: Annual mean PM2.5 arriving in the modelled airshed from outside it -- long-range transport,
+      secondary aerosol formed from regional precursor emissions, natural dust and sea salt. 5 ug/m3 is
+      the WHO's 2021 annual guideline value, which is the right default for a scenario that is asking
+      whether its own fleet keeps the air clean rather than how dirty the region already is; the range
+      admits the 35 ug/m3 the shipped graph declared as the *total* concentration, which is a defensible
+      regional background for a polluted airshed. The distinction matters because the shipped graph attributed
+      the whole 35 to the domestic fleet, so a scenario that retired every plant still reported a public
+      health crisis caused by power generation.
+    category: environment
+    subcategory: air_quality
+    type: float
+    unit: ug/m3
+    range:
+    - 0.0
+    - 60.0
+    default: 5.0
+    role: exogenous
+    determinism: physical
+    status: to_build
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - pm25_annual_mean_ug_per_m3
   balance_of_payments:
     name: Balance of payments
     description: Balance of payments
@@ -4878,20 +4904,96 @@ parameters:
     - Traders
   co_emissions:
     name: Co emissions
-    description: CO emissions
+    description: Annual carbon monoxide emission from the fossil fleet, in kilotonnes. The one pollutant
+      here whose gas factor is larger than its coal factor, so a coal-to-gas switch raises it.
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: kt/year
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
-    role: free
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P2
-    status: integrate
+    categories: []
+    source: The co-pollutant chain (batch 44)
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P2
+    status: integrate
+    deprecated_by: null
+    depends_on:
+    - co_factor_coal_g_per_gj
+    - co_factor_gas_g_per_gj
+    - co_factor_oil_g_per_gj
+    - coal_fuel_energy_gj
+    - g_per_kt
+    - gas_fuel_energy_gj
+    - oil_fuel_energy_gj
+    affects: []
+  co_factor_coal_g_per_gj:
+    id: co_factor_coal_g_per_gj
+    name: CO emission factor, coal
+    description: Carbon monoxide per GJ of coal burned. CO is the product of incomplete combustion and
+      is the one pollutant here that good combustion control reduces rather than one that fuel choice
+      does.
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: g/GJ
+    range:
+    - 0.0
+    - 87.0
+    default: 8.7
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - co_emissions
+  co_factor_gas_g_per_gj:
+    id: co_factor_gas_g_per_gj
+    name: CO emission factor, gas
+    description: Carbon monoxide per GJ of natural gas burned -- 4.5 times the coal factor, and the reason
+      a coal-to-gas switch is not uniformly an air-quality improvement. A gas flame quenched on a cold
+      surface leaves CO that a coal flame's longer residence time would have oxidised.
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: g/GJ
+    range:
+    - 0.0
+    - 390.0
+    default: 39.0
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - co_emissions
+  co_factor_oil_g_per_gj:
+    id: co_factor_oil_g_per_gj
+    name: CO emission factor, oil
+    description: Carbon monoxide per GJ of heavy fuel oil burned.
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: g/GJ
+    range:
+    - 0.0
+    - 151.0
+    default: 15.1
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - co_emissions
   coal_capacity:
     categories: []
     category: Supply-Side
@@ -5039,6 +5141,37 @@ parameters:
     unit: '1'
     users:
     - Utilities
+  coal_fuel_energy_gj:
+    id: coal_fuel_energy_gj
+    name: Coal fuel energy gj
+    description: 'Fuel energy the coal fleet burns in a year. The quantity the emission factors are stated
+      per unit of, and the one the graph did not have: it carried a capacity in MW and a factor in g/GJ
+      with nothing between them.'
+    category: environment
+    subcategory: air_quality
+    type: float
+    unit: GJ/year
+    range:
+    - 0.0
+    - 1000000000000.0
+    role: derived
+    determinism: physical
+    status: to_build
+    source: The co-pollutant chain (batch 44)
+    depends_on:
+    - capacity_factor_coal
+    - coal_capacity
+    - efficiency_coal
+    - gj_per_mwh
+    - hours_per_year
+    affects:
+    - co_emissions
+    - mercury_emissions
+    - nox_emissions
+    - pm10_emissions
+    - pm25_kt_per_year
+    - sox_emissions
+    - voc_emissions
   coal_new_build:
     categories: []
     category: Supply
@@ -9458,6 +9591,76 @@ parameters:
     unit: '1'
     users:
     - Regulators
+  efficiency_coal:
+    id: efficiency_coal
+    name: Efficiency coal
+    description: 'Net electrical efficiency of the coal fleet, fuel energy in to electricity out. 0.40
+      is the median of the supercritical pulverised entries in the IEA/NEA cost study, whose country rows
+      run 36% to 43% (sources/archive/iea_nea_egc_2020.txt, Table 3.10, the supercritical-pulverised rows).
+      It is the divisor that turns a capacity into a fuel burn: a 3000 MW coal fleet at a 0.75 capacity
+      factor generates 19,710 GWh/yr, which at 0.40 efficiency is 177,390 TJ of coal, and it is that number
+      the g/GJ factors are applied to.'
+    category: environment
+    subcategory: air_quality
+    type: float
+    unit: '1'
+    range:
+    - 0.2
+    - 0.5
+    default: 0.4
+    role: exogenous
+    determinism: physical
+    status: to_build
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - coal_fuel_energy_gj
+  efficiency_gas:
+    id: efficiency_gas
+    name: Efficiency gas
+    description: Net electrical efficiency of the gas fleet. 0.58 is the median of the CCGT rows in the
+      same IEA/NEA table (0.41 to 0.64 across countries); the guidebook's own text puts a modern CCGT
+      "in excess of 50%" (sources/archive/emep_eea_guidebook_2023_1a1a.txt, section 3.2). The gas factor
+      matters more than the coal one because the gas NOx factor is already the low one -- 89 against coal's
+      209 g/GJ -- so the efficiency is doing most of the work in the fleet's NOx total.
+    category: environment
+    subcategory: air_quality
+    type: float
+    unit: '1'
+    range:
+    - 0.35
+    - 0.62
+    default: 0.58
+    role: exogenous
+    determinism: physical
+    status: to_build
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - gas_fuel_energy_gj
+  efficiency_oil:
+    id: efficiency_oil
+    name: Efficiency oil
+    description: 'Net electrical efficiency of the oil-fired fleet. The IEA/NEA study carries no oil-fired
+      row, so this is the conventional steam-cycle value for a residual-fuel-oil plant, which is what
+      the guidebook''s heavy-fuel-oil table describes. 0.38 sits between the 0.36 low end of its coal
+      supercritical rows and the 0.40 median: an oil steam unit is a coal boiler on a different fuel,
+      and it is neither better than the supercritical fleet nor as good as a combined cycle.'
+    category: environment
+    subcategory: air_quality
+    type: float
+    unit: '1'
+    range:
+    - 0.25
+    - 0.45
+    default: 0.38
+    role: exogenous
+    determinism: physical
+    status: to_build
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - oil_fuel_energy_gj
   efficient_frontier:
     name: Efficient frontier
     description: Efficient frontier
@@ -12311,6 +12514,31 @@ parameters:
     unit: USD/kW
     users:
     - Planners
+  g_per_kt:
+    id: g_per_kt
+    name: G per kt
+    description: Grams in a kilotonne. A conversion node rather than the literal 1e9 so that `g/GJ * GJ`
+      cancels to grams and the product carries the unit the node declares.
+    category: environment
+    subcategory: conversion
+    type: float
+    unit: g/kt
+    range:
+    - 1000000.0
+    - 1000000000000.0
+    default: 1000000000.0
+    role: exogenous
+    determinism: fixed
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - co_emissions
+    - nox_emissions
+    - pm10_emissions
+    - pm25_kt_per_year
+    - sox_emissions
+    - voc_emissions
   gas_capacity:
     categories: []
     category: Supply-Side
@@ -12382,6 +12610,35 @@ parameters:
     unit: '1'
     users:
     - Utilities
+  gas_fuel_energy_gj:
+    id: gas_fuel_energy_gj
+    name: Gas fuel energy gj
+    description: Fuel energy the gas fleet burns in a year.
+    category: environment
+    subcategory: air_quality
+    type: float
+    unit: GJ/year
+    range:
+    - 0.0
+    - 1000000000000.0
+    role: derived
+    determinism: physical
+    status: to_build
+    source: The co-pollutant chain (batch 44)
+    depends_on:
+    - capacity_factor_gas
+    - efficiency_gas
+    - gas_capacity
+    - gj_per_mwh
+    - hours_per_year
+    affects:
+    - co_emissions
+    - mercury_emissions
+    - nox_emissions
+    - pm10_emissions
+    - pm25_kt_per_year
+    - sox_emissions
+    - voc_emissions
   gas_new_build:
     categories: []
     category: Supply
@@ -12888,6 +13145,30 @@ parameters:
     users:
     - Regulators
     - Planners
+  gj_per_mwh:
+    id: gj_per_mwh
+    name: Gj per mwh
+    description: Gigajoules in a megawatt-hour. Exact by definition -- 1 MWh is 3.6 GJ -- and carried
+      as a node because the emission factors are per GJ of fuel while the graph's capacities are in MW.
+      The same constant the shipped `coal_price_per_mwh_definition` wrote as a bare `25 * 3.6`, where
+      the walker could not see it.
+    category: environment
+    subcategory: conversion
+    type: float
+    unit: GJ/MWh
+    range:
+    - 0.0036
+    - 3600.0
+    default: 3.6
+    role: exogenous
+    determinism: fixed
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - coal_fuel_energy_gj
+    - gas_fuel_energy_gj
+    - oil_fuel_energy_gj
   glacial_lake_outburst:
     categories: []
     category: Adapt
@@ -13459,6 +13740,32 @@ parameters:
     type: float
     unit: years
     users: []
+  hours_per_year:
+    id: hours_per_year
+    name: Hours per year
+    description: Hours in a year, as a typed node rather than the literal 8760. The unit walker reads
+      a bare literal as dimensionless, so `MW * 0.75 * 8760` carries MW and `MW * 0.75 * hours_per_year`
+      carries MW*h/year, and only the second can be cancelled against a per-MWh factor. 8760 is the mean
+      Gregorian year; the range admits the 8784-hour leap year and a build that derates its own calendar.
+      This is the same defect `coal_price_per_mwh_definition` carried as a bare `25 * 3.6`, which understated
+      that price by 12.96x.
+    category: environment
+    subcategory: air_quality
+    type: float
+    unit: h/year
+    range:
+    - 8000.0
+    - 8784.0
+    default: 8760.0
+    role: exogenous
+    determinism: physical
+    status: to_build
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - coal_fuel_energy_gj
+    - gas_fuel_energy_gj
+    - oil_fuel_energy_gj
   household_batteries:
     category: Households
     description: 'Household battery systems installed: the adoption share times the household count. A
@@ -17835,20 +18142,118 @@ parameters:
     - Utilities
   mercury_emissions:
     name: Mercury emissions
-    description: Mercury
+    description: 'Annual mercury emission from the fossil fleet, in tonnes. The unit is tonnes rather
+      than kilotonnes because the quantity is four orders of magnitude smaller: a 3000 MW coal fleet emits
+      0.26 t/yr, which in kilotonnes would be a number no reader could place.'
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: tonne/year
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
-    role: free
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The co-pollutant chain (batch 44)
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
+    depends_on:
+    - coal_fuel_energy_gj
+    - gas_fuel_energy_gj
+    - mercury_factor_coal_mg_per_gj
+    - mercury_factor_gas_mg_per_gj
+    - mercury_factor_oil_mg_per_gj
+    - mg_per_tonne
+    - oil_fuel_energy_gj
+    affects: []
+  mercury_factor_coal_mg_per_gj:
+    id: mercury_factor_coal_mg_per_gj
+    name: MERCURY emission factor, coal
+    description: 'Mercury per GJ of coal burned. The only pollutant in this table whose coal factor is
+      not merely larger than the others but categorically so: coal carries trace mercury in its organic
+      and pyritic fraction, and the flue gas is where it goes. A 3000 MW coal fleet at the shipped defaults
+      emits 0.26 t/yr.'
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: mg/GJ
+    range:
+    - 0.0
+    - 14.0
+    default: 1.4
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - mercury_emissions
+  mercury_factor_gas_mg_per_gj:
+    id: mercury_factor_gas_mg_per_gj
+    name: MERCURY emission factor, gas
+    description: Mercury per GJ of natural gas burned, 28 times smaller than coal's per unit of fuel energy
+      and smaller still per unit of electricity, since gas is also the more efficient fuel.
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: mg/GJ
+    range:
+    - 0.0
+    - 0.5
+    default: 0.05
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - mercury_emissions
+  mercury_factor_oil_mg_per_gj:
+    id: mercury_factor_oil_mg_per_gj
+    name: MERCURY emission factor, oil
+    description: Mercury per GJ of heavy fuel oil burned. Between coal and gas, reflecting the metal's
+      concentration in the residual fraction after refining.
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: mg/GJ
+    range:
+    - 0.0
+    - 3.41
+    default: 0.341
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - mercury_emissions
+  mg_per_tonne:
+    id: mg_per_tonne
+    name: Mg per tonne
+    description: 'Milligrams in a tonne. The mercury chain''s counterpart to `g_per_kt`: its factors are
+      tabulated in mg/GJ and its node declares tonnes, a factor of 1e9 apart.'
+    category: environment
+    subcategory: conversion
+    type: float
+    unit: mg/tonne
+    range:
+    - 1000000.0
+    - 1000000000000.0
+    default: 1000000000.0
+    role: exogenous
+    determinism: fixed
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - mercury_emissions
   microgrid_deployment:
     name: Microgrid deployment
     description: Microgrid deployment
@@ -18665,20 +19070,102 @@ parameters:
     source: docs/params.md
   nox_emissions:
     name: Nox emissions
-    description: NOx emissions
+    description: Annual nitrogen oxide emission from the fossil fleet, in kilotonnes expressed as NO2.
+      The unit is the one the guidebook's own reporting convention uses and the one an emission inventory
+      is stated in; the node shipped with none.
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: kt/year
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
-    role: free
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P1
-    status: integrate
+    categories: []
+    source: The co-pollutant chain (batch 44)
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P1
+    status: integrate
+    deprecated_by: null
+    depends_on:
+    - coal_fuel_energy_gj
+    - g_per_kt
+    - gas_fuel_energy_gj
+    - nox_factor_coal_g_per_gj
+    - nox_factor_gas_g_per_gj
+    - nox_factor_oil_g_per_gj
+    - oil_fuel_energy_gj
+    affects: []
+  nox_factor_coal_g_per_gj:
+    id: nox_factor_coal_g_per_gj
+    name: NOX emission factor, coal
+    description: 'NOx emitted per GJ of coal burned, expressed as NO2. Tier 1 default for hard coal under
+      NFR 1.A.1.a, the mean over the range of technologies in use rather than a best-available or an unabated
+      figure. The 95% confidence interval runs 200 to 350 g/GJ, which is narrow: coal''s NOx is dominated
+      by the fuel''s own nitrogen content and varies less across combustion technologies than gas''s does.'
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: g/GJ
+    range:
+    - 0.0
+    - 2090.0
+    default: 209.0
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - nox_emissions
+  nox_factor_gas_g_per_gj:
+    id: nox_factor_gas_g_per_gj
+    name: NOX emission factor, gas
+    description: NOx emitted per GJ of natural gas burned, expressed as NO2. Tier 1 default for natural
+      gas, NFR 1.A.1.a. Less than half the coal figure because the fuel carries almost no nitrogen, so
+      the thermal-NOx mechanism is the only one that matters and a lean premix burner suppresses it. The
+      95% interval is wide -- 15 to 185 -- because the spread across gas combustion technologies is the
+      largest of any fuel.
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: g/GJ
+    range:
+    - 0.0
+    - 890.0
+    default: 89.0
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - nox_emissions
+  nox_factor_oil_g_per_gj:
+    id: nox_factor_oil_g_per_gj
+    name: NOX emission factor, oil
+    description: 'NOx emitted per GJ of heavy fuel oil burned, expressed as NO2. Tier 1 default, NFR 1.A.1.a.
+      Between coal and gas: the fuel carries some nitrogen, as coal does, but a liquid flame is more controllable
+      than a pulverised-coal one.'
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: g/GJ
+    range:
+    - 0.0
+    - 1420.0
+    default: 142.0
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - nox_emissions
   nuclear_capacity:
     categories: []
     category: Supply-Side
@@ -18939,6 +19426,35 @@ parameters:
     unit: '1'
     users:
     - Utilities
+  oil_fuel_energy_gj:
+    id: oil_fuel_energy_gj
+    name: Oil fuel energy gj
+    description: Fuel energy the oil-fired fleet burns in a year.
+    category: environment
+    subcategory: air_quality
+    type: float
+    unit: GJ/year
+    range:
+    - 0.0
+    - 1000000000000.0
+    role: derived
+    determinism: physical
+    status: to_build
+    source: The co-pollutant chain (batch 44)
+    depends_on:
+    - capacity_factor_oil
+    - efficiency_oil
+    - gj_per_mwh
+    - hours_per_year
+    - oil_capacity
+    affects:
+    - co_emissions
+    - mercury_emissions
+    - nox_emissions
+    - pm10_emissions
+    - pm25_kt_per_year
+    - sox_emissions
+    - voc_emissions
   oil_price:
     categories: []
     category: Macroeconomic
@@ -20390,39 +20906,153 @@ parameters:
     - Regulators
   pm10_emissions:
     name: Pm10 emissions
-    description: PM10 emissions
+    description: Annual primary PM10 emission from the fossil fleet, in kilotonnes. Filterable particulate
+      only; condensable PM is not modelled.
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: kt/year
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
-    role: free
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P1
-    status: integrate
+    categories: []
+    source: The co-pollutant chain (batch 44)
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P1
+    status: integrate
+    deprecated_by: null
+    depends_on:
+    - coal_fuel_energy_gj
+    - g_per_kt
+    - gas_fuel_energy_gj
+    - oil_fuel_energy_gj
+    - pm10_factor_coal_g_per_gj
+    - pm10_factor_gas_g_per_gj
+    - pm10_factor_oil_g_per_gj
+    affects: []
+  pm10_factor_coal_g_per_gj:
+    id: pm10_factor_coal_g_per_gj
+    name: PM10 emission factor, coal
+    description: 'Filterable PM10 per GJ of coal burned. Tier 1 default, NFR 1.A.1.a, based on an 8.2%
+      ash content. Filterable only: the condensable fraction that forms in the plume from SO2 and NOx
+      is tabulated separately by the source and is not modelled here, which makes this an understatement
+      of total primary-plus-secondary particulate.'
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: g/GJ
+    range:
+    - 0.0
+    - 77.0
+    default: 7.7
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - pm10_emissions
+  pm10_factor_gas_g_per_gj:
+    id: pm10_factor_gas_g_per_gj
+    name: PM10 emission factor, gas
+    description: Filterable PM10 per GJ of natural gas burned. The guidebook marks this below the limit
+      of quantification and gives 0.14 g/GJ as the upper bound; its note states that such factors can
+      be used directly in calculation, which is why it is carried as a value rather than as a flag. Gas
+      emits essentially no primary particulate.
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: g/GJ
+    range:
+    - 0.0
+    - 1.4000000000000001
+    default: 0.14
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - pm10_emissions
+  pm10_factor_oil_g_per_gj:
+    id: pm10_factor_oil_g_per_gj
+    name: PM10 emission factor, oil
+    description: Filterable PM10 per GJ of heavy fuel oil burned, on a 1% sulphur basis. Three times the
+      coal figure per unit of fuel energy, because a heavy fuel oil flame produces cenospheres and sulphated
+      ash that a pulverised-coal boiler leaves in the bottom ash.
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: g/GJ
+    range:
+    - 0.0
+    - 252.0
+    default: 25.2
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - pm10_emissions
   pm25_annual_mean_ug_per_m3:
-    category: Environment
-    default: 35.0
+    name: Pm25 annual mean ug per m3
     description: The ambient PM2.5 annual mean; sub-Saharan urban means run 30-50 ug/m3, against the WHO
       guideline of 5 -- the exceedance the ratio below states.
-    determinism: physical
-    name: Pm25 annual mean ug per m3
-    priority: P1
+    category: Environment
+    subcategory: null
+    type: float
+    unit: ug/m3
     range:
     - 0.0
     - 200.0
-    role: free
-    source: The compliance-register coupling (batch 22)
-    status: existing
-    type: float
-    unit: ug/m3
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The co-pollutant chain (batch 44)
+    source_url: null
     users:
     - Regulators
     - Planners
+    priority: P1
+    status: existing
+    deprecated_by: null
+    depends_on:
+    - background_pm25_ug_per_m3
+    - pm25_fleet_contribution_ug_per_m3
+    affects:
+    - pm25_exceedance_ratio
+  pm25_dispersion_factor:
+    id: pm25_dispersion_factor
+    name: Pm25 dispersion factor
+    description: 'The step the health chain was missing: how much ambient PM2.5 concentration a kilotonne
+      a year of primary emission produces. A screening box model over a populated airshed -- the emission
+      spread through a mixing layer of depth H over a region of width W with wind speed u -- gives concentration
+      = emission / (u * H * W), which for u = 3 m/s, H = 500 m and W = 200 km is 1 kt/yr -> 0.1057 ug/m3.
+      The same box at 100 km width gives 0.211, so the range admits a compact airshed and a broad one.
+      The shipped graph had no such node and instead wrote the concentration-response coefficient with
+      a per-kt unit, which is the arithmetic of this step and not of that one.'
+    category: environment
+    subcategory: air_quality
+    type: float
+    unit: ug/m3/(kt/year)
+    range:
+    - 0.0001
+    - 1.0
+    default: 0.1057
+    role: exogenous
+    determinism: physical
+    status: to_build
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - pm25_fleet_contribution_ug_per_m3
   pm25_emissions:
     categories: []
     category: EnvSoc
@@ -20465,51 +21095,177 @@ parameters:
     users:
     - Regulators
     - Planners
-  pm25_kt_per_year:
-    categories: []
-    category: Health
-    default: 20.0
-    deprecated_by: null
-    description: Fine particulate emissions, which is what the health impact is a function of.
-    determinism: physical
-    initial: null
-    name: PM2.5 emissions
-    priority: P2
+  pm25_factor_coal_g_per_gj:
+    id: pm25_factor_coal_g_per_gj
+    name: PM25 emission factor, coal
+    description: 'Filterable PM2.5 per GJ of coal burned, 44% of the PM10 fraction. This is the number
+      the health chain runs on: it is the size fraction that reaches the alveoli, and the one whose concentration-response
+      coefficient the WHO derives.'
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: g/GJ
     range:
     - 0.0
-    - 1000.0
+    - 34.0
+    default: 3.4
     role: exogenous
-    source: null
-    source_url: null
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - pm25_kt_per_year
+  pm25_factor_gas_g_per_gj:
+    id: pm25_factor_gas_g_per_gj
+    name: PM25 emission factor, gas
+    description: Filterable PM2.5 per GJ of natural gas burned, equal to the PM10 factor because what
+      little particulate a gas flame produces is entirely in the fine fraction.
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: g/GJ
+    range:
+    - 0.0
+    - 1.4000000000000001
+    default: 0.14
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - pm25_kt_per_year
+  pm25_factor_oil_g_per_gj:
+    id: pm25_factor_oil_g_per_gj
+    name: PM25 emission factor, oil
+    description: Filterable PM2.5 per GJ of heavy fuel oil burned, 77% of the PM10 fraction -- the highest
+      fine-particle share of the three fuels, which is why an oil fleet is a particulate problem out of
+      proportion to its size.
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: g/GJ
+    range:
+    - 0.0
+    - 193.0
+    default: 19.3
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - pm25_kt_per_year
+  pm25_fleet_contribution_ug_per_m3:
+    id: pm25_fleet_contribution_ug_per_m3
+    name: Pm25 fleet contribution ug per m3
+    description: The annual mean PM2.5 concentration the domestic fossil fleet produces, separated from
+      the regional background so that the health burden can be attributed to the fleet rather than to
+      the air it adds to.
+    category: environment
+    subcategory: air_quality
+    type: float
+    unit: ug/m3
+    range:
+    - 0.0
+    - 1000000000000.0
+    role: derived
+    determinism: physical
     status: to_build
+    source: The co-pollutant chain (batch 44)
+    depends_on:
+    - pm25_dispersion_factor
+    - pm25_emissions
+    affects:
+    - pm25_annual_mean_ug_per_m3
+    - premature_deaths_per_year
+  pm25_kt_per_year:
+    name: PM2.5 emissions
+    description: Fine particulate emissions, which is what the health impact is a function of.
+    category: Health
     subcategory: null
     type: float
     unit: kt/year
-    users: []
-  pm25_relative_risk_per_kt:
-    categories: []
-    category: Health
-    default: 0.006
-    deprecated_by: null
-    description: 'The relative risk a kt/year of PM2.5 adds. The concentration-response slope is per unit
-      of *annual* burden: the shipped `1/kt` made the premature-deaths product carry deaths per year squared.
-      0.006 per kt/year at defaults, giving 4,800 deaths/year over 5 m people at 0.008 baseline mortality
-      and 20 kt/year.'
-    determinism: stochastic
-    initial: null
-    name: Relative risk per kt
-    priority: P2
     range:
     - 0.0
-    - 0.1
-    role: exogenous
-    source: The dimensional corrections (batch 40)
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The co-pollutant chain (batch 44)
     source_url: null
+    users: []
+    priority: P2
     status: to_build
+    deprecated_by: null
+    depends_on:
+    - coal_fuel_energy_gj
+    - g_per_kt
+    - gas_fuel_energy_gj
+    - oil_fuel_energy_gj
+    - pm25_factor_coal_g_per_gj
+    - pm25_factor_gas_g_per_gj
+    - pm25_factor_oil_g_per_gj
+    affects:
+    - pm25_emissions
+  pm25_relative_risk_per_kt:
+    name: Relative risk per kt
+    description: 'Deprecated in favour of `pm25_relative_risk_per_ug_per_m3`. The number was right and
+      the unit was not: this node declared 1/(kt/year), the unit of a dispersion factor, while carrying
+      WHO''s concentration-response coefficient per ug/m3. A scenario that still names this id is naming
+      a coefficient whose dimension it has misread.'
+    category: Health
     subcategory: null
     type: float
     unit: 1/(kt/year)
+    range:
+    - 0.0
+    - 0.1
+    default: 0.006
+    initial: null
+    role: exogenous
+    determinism: stochastic
+    categories: []
+    source: The co-pollutant chain (batch 44)
+    source_url: null
     users: []
+    priority: P2
+    status: deprecated
+    deprecated_by: pm25_relative_risk_per_ug_per_m3
+    depends_on: []
+    affects: []
+  pm25_relative_risk_per_ug_per_m3:
+    name: Pm25 relative risk per ug per m3
+    description: 'The concentration-response coefficient for all-cause adult mortality, per microgram
+      per cubic metre of annual mean PM2.5. The number is unchanged from the node it replaces and the
+      unit is not: the shipped `pm25_relative_risk_per_kt` declared 1/(kt/year), which is the unit of
+      a dispersion factor -- a coefficient that converts a mass emission into a concentration. This node
+      converts a concentration into a relative risk, and the two steps are separated by `pm25_dispersion_factor`.
+      The old id is deprecated rather than deleted so a scenario that names it fails loudly.'
+    category: Health
+    subcategory: null
+    type: float
+    unit: 1/(ug/m3)
+    range:
+    - 0.0
+    - 0.1
+    default: 0.006015
+    initial: null
+    role: exogenous
+    determinism: stochastic
+    categories: []
+    source: The co-pollutant chain (batch 44)
+    source_url: null
+    users: []
+    priority: P2
+    status: to_build
+    deprecated_by: null
+    id: pm25_relative_risk_per_ug_per_m3
+    depends_on: []
+    affects:
+    - premature_deaths_per_year
   pml_99_5_usd_million:
     category: Insurance & Catastrophe
     default: 500.0
@@ -24849,20 +25605,103 @@ parameters:
     - Insurers
   sox_emissions:
     name: Sox emissions
-    description: SOx emissions
+    description: Annual sulphur oxide emission from the fossil fleet, in kilotonnes expressed as SO2.
+      Derived in the source from fuel sulphur content rather than measured, so it moves with the sulphur
+      assumption.
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: kt/year
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
-    role: free
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P1
-    status: integrate
+    categories: []
+    source: The co-pollutant chain (batch 44)
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P1
+    status: integrate
+    deprecated_by: null
+    depends_on:
+    - coal_fuel_energy_gj
+    - g_per_kt
+    - gas_fuel_energy_gj
+    - oil_fuel_energy_gj
+    - sox_factor_coal_g_per_gj
+    - sox_factor_gas_g_per_gj
+    - sox_factor_oil_g_per_gj
+    affects: []
+  sox_factor_coal_g_per_gj:
+    id: sox_factor_coal_g_per_gj
+    name: SOX emission factor, coal
+    description: SOx emitted per GJ of coal burned. Derived by the guidebook from 1% sulphur by mass,
+      full conversion to SO2 and no retention in ash -- it is not an independent measurement of plant
+      performance, and the 95% interval of 330 to 5000 reflects the spread of sulphur content across the
+      world's coals rather than any uncertainty about the combustion. A scenario modelling a low-sulphur
+      coal should lower this node.
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: g/GJ
+    range:
+    - 0.0
+    - 8200.0
+    default: 820.0
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - sox_emissions
+  sox_factor_gas_g_per_gj:
+    id: sox_factor_gas_g_per_gj
+    name: SOX emission factor, gas
+    description: SOx emitted per GJ of natural gas burned, at the EU sulphur specification. The guidebook
+      prints this as the EU-region row beside a US-region 0.281 g/GJ; the EU figure is the one carried
+      because it is the lower and the more widely applicable to a pipeline-quality fuel. Gas is desulphurised
+      at the wellhead, which is why this is three thousand times smaller than coal's.
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: g/GJ
+    range:
+    - 0.0
+    - 2.44
+    default: 0.244
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - sox_emissions
+  sox_factor_oil_g_per_gj:
+    id: sox_factor_oil_g_per_gj
+    name: SOX emission factor, oil
+    description: SOx emitted per GJ of heavy fuel oil burned, derived on the same 1% sulphur basis as
+      the coal figure. The 95% interval of 146 to 1700 is the widest of the three because marine and industrial
+      fuel oils vary from 0.1% to 4.5% sulphur, and a heavy fuel oil fleet is the one place in this graph
+      where the sulphur assumption is doing most of the work.
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: g/GJ
+    range:
+    - 0.0
+    - 4950.0
+    default: 495.0
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - sox_emissions
   spare_capacity:
     category: Operational
     description: 'Installed capacity less peak demand: the headroom the fleet carries. The catalog names
@@ -27496,20 +28335,95 @@ parameters:
     - Regulators
   voc_emissions:
     name: Voc emissions
-    description: VOC emissions
+    description: Annual non-methane VOC emission from the fossil fleet, in kilotonnes. The photochemical
+      precursor for tropospheric ozone.
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: kt/year
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
-    role: free
+    initial: null
+    role: derived
     determinism: fixed
-    priority: P2
-    status: integrate
+    categories: []
+    source: The co-pollutant chain (batch 44)
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P2
+    status: integrate
+    deprecated_by: null
+    depends_on:
+    - coal_fuel_energy_gj
+    - g_per_kt
+    - gas_fuel_energy_gj
+    - oil_fuel_energy_gj
+    - voc_factor_coal_g_per_gj
+    - voc_factor_gas_g_per_gj
+    - voc_factor_oil_g_per_gj
+    affects: []
+  voc_factor_coal_g_per_gj:
+    id: voc_factor_coal_g_per_gj
+    name: VOC emission factor, coal
+    description: 'Non-methane VOC per GJ of coal burned. Small in mass and not small in effect: NMVOC
+      is the photochemical precursor for tropospheric ozone, and the graph carries it so that an ozone
+      chain has a source rather than an assumption.'
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: g/GJ
+    range:
+    - 0.0
+    - 10.0
+    default: 1.0
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - voc_emissions
+  voc_factor_gas_g_per_gj:
+    id: voc_factor_gas_g_per_gj
+    name: VOC emission factor, gas
+    description: Non-methane VOC per GJ of natural gas burned. Higher than coal's, because the unburned
+      methane slip and the trace heavier hydrocarbons in the fuel survive combustion in small quantities.
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: g/GJ
+    range:
+    - 0.0
+    - 26.0
+    default: 2.6
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - voc_emissions
+  voc_factor_oil_g_per_gj:
+    id: voc_factor_oil_g_per_gj
+    name: VOC emission factor, oil
+    description: Non-methane VOC per GJ of heavy fuel oil burned.
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: g/GJ
+    range:
+    - 0.0
+    - 23.0
+    default: 2.3
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: The co-pollutant chain (batch 44)
+    depends_on: []
+    affects:
+    - voc_emissions
   voll_usd_per_mwh:
     categories: []
     category: Reliability
@@ -30798,6 +31712,39 @@ equations:
     system: financial
     tolerance: 1.0e-09
     unit_check: true
+  co_emissions_definition:
+    id: co_emissions_definition
+    description: Annual carbon monoxide emitted by the fossil fleet, in kilotonnes. Carried because the
+      guidebook tabulates it beside the pollutants this batch is about and because it is the one of them
+      whose gas factor is the *largest* relative to coal -- 39 g/GJ against 8.7 -- so a fleet that shifts
+      from coal to gas raises its CO while lowering almost everything else.
+    name: Co emissions definition
+    system: emissions
+    tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    lhs: co_emissions
+    rhs: (coal_fuel_energy_gj * co_factor_coal_g_per_gj + gas_fuel_energy_gj * co_factor_gas_g_per_gj
+      + oil_fuel_energy_gj * co_factor_oil_g_per_gj) / g_per_kt
+    relation: eq
+    parameters:
+    - co_emissions
+    - co_factor_coal_g_per_gj
+    - co_factor_gas_g_per_gj
+    - co_factor_oil_g_per_gj
+    - coal_fuel_energy_gj
+    - g_per_kt
+    - gas_fuel_energy_gj
+    - oil_fuel_energy_gj
+    free_variables: []
+    determined_variables:
+    - co_emissions
+    unit_check: true
+    reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, CO emission factors.
+    latex: \mathrm{co}_{emissions} = \frac{\mathrm{coal}_{fuel\_energy\_gj} \mathrm{co}_{factor\_coal\_g\_per\_gj}
+      + \mathrm{gas}_{fuel\_energy\_gj} \mathrm{co}_{factor\_gas\_g\_per\_gj} + \mathrm{oil}_{fuel\_energy\_gj}
+      \mathrm{co}_{factor\_oil\_g\_per\_gj}}{\mathrm{g}_{per\_kt}}
   coal_cycling_ceiling_definition:
     description: 'The cycle ceiling: the hours in a year over one full up-and-down cycle. 8,760 / (6 +
       4) = 876 cycles/year at defaults. A unit that must run six hours and stay off four cannot cycle
@@ -30875,6 +31822,37 @@ equations:
     system: reliability
     tolerance: 1.0e-06
     unit_check: true
+  coal_fuel_energy_definition:
+    id: coal_fuel_energy_definition
+    description: Fuel energy burned by the coal fleet in a year. Capacity times capacity factor times
+      hours gives electrical energy; dividing by the plant efficiency gives the fuel energy that produced
+      it. This is the quantity the EMEP/EEA factors are stated per unit of, and the shipped graph had
+      no node for it -- the pollutant factors were applied to nothing.
+    name: Coal fuel energy definition
+    system: emissions
+    tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    lhs: coal_fuel_energy_gj
+    rhs: coal_capacity * capacity_factor_coal * hours_per_year * gj_per_mwh / efficiency_coal
+    relation: eq
+    parameters:
+    - coal_fuel_energy_gj
+    - capacity_factor_coal
+    - coal_capacity
+    - efficiency_coal
+    - gj_per_mwh
+    - hours_per_year
+    free_variables: []
+    determined_variables:
+    - coal_fuel_energy_gj
+    unit_check: true
+    reference: 'EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a (sources/archive/emep_eea_guidebook_2023_1a1a.txt):
+      factors are given per GJ of fuel input on a net calorific value basis. Net efficiency per IEA/NEA
+      Projected Costs of Generating Electricity (2020), Table 3.10.'
+    latex: \mathrm{coal}_{fuel\_energy\_gj} = \frac{\mathrm{coal}_{capacity} \mathrm{capacity}_{factor\_coal}
+      \mathrm{hours}_{per\_year} \mathrm{gj}_{per\_mwh}}{\mathrm{efficiency}_{coal}}
   coal_new_build_bound:
     description: 'New coal build is capped at the policy ceiling: 3000 MW of reference fleet under a 5000
       MW cap, so a 6000 MW scenario fails. This routes as a post-solve check rather than an LP constraint
@@ -33191,8 +34169,14 @@ equations:
     priority: P1
     solution_method: direct
     linearity: linear
-    reference: IPCC Guidelines for National Greenhouse Gas Inventories, the activity-data x emission-factor
-      construction; the fleet average is the graph's own `fleet_emission_intensity_t_per_mwh`
+    reference: IPCC Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy), Chapter 2,
+      Equation 2.1 on printed p. 2.11 (sources/archive/ipcc_2006_gl_vol2_ch2.pdf), which states the emission
+      as fuel consumption in TJ multiplied by an emission factor per TJ. The graph's construction is that
+      same product with the fleet average in place of the per-fuel factor, generation in TWh times `fleet_emission_intensity_t_per_mwh`,
+      and the fleet average is the graph's own, computed by `fleet_emission_intensity_definition` from
+      the built capacity mix. That substitution is the modelling step, and it is the one IPCC does not
+      make. It states the identity for a single fuel, and averaging over the fleet is what makes it apply
+      to a generation total that does not name its fuels.
     latex: \mathrm{emissions}_{mtco2\_per\_year} = \mathrm{generation}_{twh} \mathrm{fleet}_{emission\_intensity\_t\_per\_mwh}
   employment_attainment_local_definition:
     description: The share achieved over the share targeted. Both sides are shares of the same workforce,
@@ -34400,6 +35384,36 @@ equations:
     system: reliability
     tolerance: 1.0e-06
     unit_check: true
+  gas_fuel_energy_definition:
+    id: gas_fuel_energy_definition
+    description: 'Fuel energy burned by the gas fleet in a year, on the same capacity-to-fuel construction
+      as the coal node. Separate nodes rather than one fleet node because every pollutant factor is fuel-specific:
+      gas emits a quarter of coal''s NOx and a thousandth of its SOx per GJ, so a fleet total that averaged
+      the two would be wrong for both.'
+    name: Gas fuel energy definition
+    system: emissions
+    tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    lhs: gas_fuel_energy_gj
+    rhs: gas_capacity * capacity_factor_gas * hours_per_year * gj_per_mwh / efficiency_gas
+    relation: eq
+    parameters:
+    - gas_fuel_energy_gj
+    - capacity_factor_gas
+    - efficiency_gas
+    - gas_capacity
+    - gj_per_mwh
+    - hours_per_year
+    free_variables: []
+    determined_variables:
+    - gas_fuel_energy_gj
+    unit_check: true
+    reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Table 3-4 (natural gas) and Table 3-19 (gas turbines);
+      net efficiency per IEA/NEA (2020) Table 3.10, CCGT rows.
+    latex: \mathrm{gas}_{fuel\_energy\_gj} = \frac{\mathrm{gas}_{capacity} \mathrm{capacity}_{factor\_gas}
+      \mathrm{hours}_{per\_year} \mathrm{gj}_{per\_mwh}}{\mathrm{efficiency}_{gas}}
   gas_new_build_bound:
     description: 'New gas build capped at 3000 MW against the 1500 MW reference fleet. Routes as a post-solve
       check for the same reason as coal: the capacity is endogenous. A bound on `capex_gas` was rejected
@@ -37398,6 +38412,39 @@ equations:
     system: price_demand
     tolerance: 1.0e-09
     unit_check: true
+  mercury_emissions_definition:
+    id: mercury_emissions_definition
+    description: 'Annual mercury emitted by the fossil fleet, in tonnes. Mercury is the one pollutant
+      here whose gas term is genuinely negligible and whose coal term is not: coal carries 1.4 mg/GJ against
+      gas''s 0.05, so a coal fleet emits 28 times more mercury per unit of fuel energy, and the factor
+      is what a mercury-and-air-pollution-control rule is aimed at.'
+    name: Mercury emissions definition
+    system: emissions
+    tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    lhs: mercury_emissions
+    rhs: (coal_fuel_energy_gj * mercury_factor_coal_mg_per_gj + gas_fuel_energy_gj * mercury_factor_gas_mg_per_gj
+      + oil_fuel_energy_gj * mercury_factor_oil_mg_per_gj) / mg_per_tonne
+    relation: eq
+    parameters:
+    - mercury_emissions
+    - coal_fuel_energy_gj
+    - gas_fuel_energy_gj
+    - mercury_factor_coal_mg_per_gj
+    - mercury_factor_gas_mg_per_gj
+    - mercury_factor_oil_mg_per_gj
+    - mg_per_tonne
+    - oil_fuel_energy_gj
+    free_variables: []
+    determined_variables:
+    - mercury_emissions
+    unit_check: true
+    reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, Hg emission factors.
+    latex: \mathrm{mercury}_{emissions} = \frac{\mathrm{coal}_{fuel\_energy\_gj} \mathrm{mercury}_{factor\_coal\_mg\_per\_gj}
+      + \mathrm{gas}_{fuel\_energy\_gj} \mathrm{mercury}_{factor\_gas\_mg\_per\_gj} + \mathrm{oil}_{fuel\_energy\_gj}
+      \mathrm{mercury}_{factor\_oil\_mg\_per\_gj}}{\mathrm{mg}_{per\_tonne}}
   microinsurance_premium_definition:
     description: 'The premium a covered household pays: the share of income the product is priced at,
       times household income. Priced off income rather than off asset value because the product is an
@@ -37580,6 +38627,39 @@ equations:
     system: reserve_margin
     tolerance: 1.0e-06
     unit_check: true
+  nox_emissions_definition:
+    id: nox_emissions_definition
+    description: Annual NOx emitted by the fossil fleet, in kilotonnes. Each fuel's factor is applied
+      to that fuel's own burn and the masses are summed; the conversion node turns grams into kilotonnes
+      so the result carries the unit the node declares rather than a bare number.
+    name: Nox emissions definition
+    system: emissions
+    tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    lhs: nox_emissions
+    rhs: (coal_fuel_energy_gj * nox_factor_coal_g_per_gj + gas_fuel_energy_gj * nox_factor_gas_g_per_gj
+      + oil_fuel_energy_gj * nox_factor_oil_g_per_gj) / g_per_kt
+    relation: eq
+    parameters:
+    - nox_emissions
+    - coal_fuel_energy_gj
+    - g_per_kt
+    - gas_fuel_energy_gj
+    - nox_factor_coal_g_per_gj
+    - nox_factor_gas_g_per_gj
+    - nox_factor_oil_g_per_gj
+    - oil_fuel_energy_gj
+    free_variables: []
+    determined_variables:
+    - nox_emissions
+    unit_check: true
+    reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2 (hard coal), 3-4 (natural gas), 3-6 (heavy
+      fuel oil), Tier 1 default emission factors in g/GJ. Factors are stated as NO2.
+    latex: \mathrm{nox}_{emissions} = \frac{\mathrm{coal}_{fuel\_energy\_gj} \mathrm{nox}_{factor\_coal\_g\_per\_gj}
+      + \mathrm{gas}_{fuel\_energy\_gj} \mathrm{nox}_{factor\_gas\_g\_per\_gj} + \mathrm{oil}_{fuel\_energy\_gj}
+      \mathrm{nox}_{factor\_oil\_g\_per\_gj}}{\mathrm{g}_{per\_kt}}
   nuclear_new_build_bound:
     description: 'New nuclear capped at 5000 MW -- a single large unit or two SMR modules -- against a
       0 MW reference fleet, so the bound holds vacuously today and bites the moment a scenario builds
@@ -37699,6 +38779,35 @@ equations:
     system: reliability
     tolerance: 1.0e-06
     unit_check: true
+  oil_fuel_energy_definition:
+    id: oil_fuel_energy_definition
+    description: 'Fuel energy burned by the oil-fired fleet in a year. The third fossil fuel, carried
+      because the graph already builds an oil fleet and prices its carbon: an oil plant that emits CO2
+      in `lcoe_oil_definition` and no NOx here would be a fleet that is a climate problem and not an air
+      quality one.'
+    name: Oil fuel energy definition
+    system: emissions
+    tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    lhs: oil_fuel_energy_gj
+    rhs: oil_capacity * capacity_factor_oil * hours_per_year * gj_per_mwh / efficiency_oil
+    relation: eq
+    parameters:
+    - oil_fuel_energy_gj
+    - capacity_factor_oil
+    - efficiency_oil
+    - gj_per_mwh
+    - hours_per_year
+    - oil_capacity
+    free_variables: []
+    determined_variables:
+    - oil_fuel_energy_gj
+    unit_check: true
+    reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Table 3-6 (heavy fuel oil).
+    latex: \mathrm{oil}_{fuel\_energy\_gj} = \frac{\mathrm{oil}_{capacity} \mathrm{capacity}_{factor\_oil}
+      \mathrm{hours}_{per\_year} \mathrm{gj}_{per\_mwh}}{\mathrm{efficiency}_{oil}}
   oil_price_per_mwh_definition:
     description: 'A barrel of crude carries, on the EIA distillate average, 5.8 MMBtu; at 0.29307 MWh
       per MMBtu that is 1.699 MWh delivered per barrel. The delivered price divides by the energy content,
@@ -38127,6 +39236,73 @@ equations:
     system: reliability
     tolerance: 1.0e-09
     unit_check: true
+  pm10_emissions_definition:
+    id: pm10_emissions_definition
+    description: 'Annual primary PM10 emitted by the fossil fleet, in kilotonnes. Filterable particulate
+      only: the guidebook''s factors exclude condensable PM, which forms in the plume from SO2 and NOx
+      and is a second-order term this graph does not model. The gas factor is below the limit of quantification
+      in the source and is carried as the stated upper bound.'
+    name: Pm10 emissions definition
+    system: emissions
+    tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    lhs: pm10_emissions
+    rhs: (coal_fuel_energy_gj * pm10_factor_coal_g_per_gj + gas_fuel_energy_gj * pm10_factor_gas_g_per_gj
+      + oil_fuel_energy_gj * pm10_factor_oil_g_per_gj) / g_per_kt
+    relation: eq
+    parameters:
+    - pm10_emissions
+    - coal_fuel_energy_gj
+    - g_per_kt
+    - gas_fuel_energy_gj
+    - oil_fuel_energy_gj
+    - pm10_factor_coal_g_per_gj
+    - pm10_factor_gas_g_per_gj
+    - pm10_factor_oil_g_per_gj
+    free_variables: []
+    determined_variables:
+    - pm10_emissions
+    unit_check: true
+    reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, filterable PM emission factors.
+    latex: \mathrm{pm10}_{emissions} = \frac{\mathrm{coal}_{fuel\_energy\_gj} \mathrm{pm10}_{factor\_coal\_g\_per\_gj}
+      + \mathrm{gas}_{fuel\_energy\_gj} \mathrm{pm10}_{factor\_gas\_g\_per\_gj} + \mathrm{oil}_{fuel\_energy\_gj}
+      \mathrm{pm10}_{factor\_oil\_g\_per\_gj}}{\mathrm{g}_{per\_kt}}
+  pm25_concentration_definition:
+    id: pm25_concentration_definition
+    description: 'Annual mean PM2.5 concentration: the domestic fleet''s contribution plus the regional
+      background that arrives from outside the modelled airshed. The shipped graph declared a free 35
+      ug/m3 and attributed all of it to the fleet through a coefficient that skipped the dispersion step
+      entirely. Splitting the two is what makes a concentration reported at the WHO guideline rather than
+      at an arbitrary dial, and it is what lets a clean build be clean.'
+    name: Pm25 concentration definition
+    system: health
+    tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    lhs: pm25_annual_mean_ug_per_m3
+    rhs: pm25_fleet_contribution_ug_per_m3 + background_pm25_ug_per_m3
+    relation: eq
+    parameters:
+    - pm25_annual_mean_ug_per_m3
+    - background_pm25_ug_per_m3
+    - pm25_fleet_contribution_ug_per_m3
+    free_variables: []
+    determined_variables:
+    - pm25_annual_mean_ug_per_m3
+    unit_check: true
+    reference: 'WHO global air quality guidelines (2021), Table 0.1 and Table 3.24 (sources/archive/who_aqg_2021.pdf):
+      the PM2.5 annual-mean AQG level is 5 ug/m3, with interim targets of 35, 25, 15 and 10. The default
+      `background_pm25_ug_per_m3` is set to the AQG level, which is a choice of counterfactual rather
+      than a measurement: it is the concentration below which WHO states the evidence for an effect is
+      insufficient to set a lower level, so a scenario measuring its own fleet against it is measuring
+      the burden above a clean airshed. The node''s range admits the 35 ug/m3 the shipped graph declared,
+      which is the first interim target and a defensible polluted-airshed background. The dispersion step
+      is the separate box model in `pm25_fleet_contribution_definition`; this equation only adds the two.'
+    latex: \mathrm{pm25}_{annual\_mean\_ug\_per\_m3} = \mathrm{pm25}_{fleet\_contribution\_ug\_per\_m3}
+      + \mathrm{background}_{pm25\_ug\_per\_m3}
   pm25_emissions_alias:
     description: 'Primary particulate emissions, in kilotonnes per year: the shipped emission-rate node
       under the catalog''s second id. The health system reads the rate, so the equality is what puts the
@@ -38171,6 +39347,76 @@ equations:
     system: carbon_trajectory
     tolerance: 1.0e-09
     unit_check: true
+  pm25_fleet_contribution_definition:
+    id: pm25_fleet_contribution_definition
+    description: 'The concentration the domestic fossil fleet contributes, before the regional background
+      is added. Carried as its own node because the death toll is attributed to it and not to the total:
+      a scenario that retires every plant should report zero deaths from generation, and a chain that
+      multiplied the coefficient by the total concentration would report the background''s burden as the
+      fleet''s.'
+    name: Pm25 fleet contribution definition
+    system: emissions
+    tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    lhs: pm25_fleet_contribution_ug_per_m3
+    rhs: pm25_emissions * pm25_dispersion_factor
+    relation: eq
+    parameters:
+    - pm25_fleet_contribution_ug_per_m3
+    - pm25_dispersion_factor
+    - pm25_emissions
+    free_variables: []
+    determined_variables:
+    - pm25_fleet_contribution_ug_per_m3
+    unit_check: true
+    reference: 'Box model: Hanna, Briggs & Hosker (1982), Handbook on Atmospheric Diffusion, DOE/TIC-11223,
+      section 9-2, printed pp. 57-58 (sources/archive/hanna_briggs_hosker_1982.pdf). The continuity equation
+      for a volume of width Ax, mixing depth z_i and unit depth is Ax z_i dC/dt = Ax Q_a + u z_i (C_b
+      - C) + Ax (dZ_i/dt)(C_a - C); at steady state with zero background the solution is the well-known
+      box model, C = Q_a Ax / (u z_i), where Q_a is emission per unit area per unit time. The graph writes
+      it per unit emission as C/Q = 1/(u H W) after cancelling Ax against the source area, which is the
+      same equation. The handbook calls it the model used as a screening tool and the workhorse of urban-scale
+      work, which is the claim this node makes for it and no stronger one. It is not the Gaussian area-source
+      algorithm in SCREEN3 or ISC3: those integrate a point-source plume over the source extent and report
+      a maximum 1-hour impact at a chosen downwind distance, while this reports a domain-average annual
+      mean. The two agree in dimension and in scaling with wind speed and mixing depth and not in value,
+      which is why the factor is a settable dial rather than a derived constant.'
+    latex: \mathrm{pm25}_{fleet\_contribution\_ug\_per\_m3} = \mathrm{pm25}_{emissions} \mathrm{pm25}_{dispersion\_factor}
+  pm25_kt_per_year_definition:
+    id: pm25_kt_per_year_definition
+    description: 'Annual primary PM2.5 emitted by the fossil fleet, in kilotonnes. This is the node the
+      health chain reads, and it was an exogenous dial of 20 kt/yr with no path to the fleet: retiring
+      every coal plant left the death toll unchanged. The emission is now a function of the build.'
+    name: Pm25 kt per year definition
+    system: emissions
+    tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    lhs: pm25_kt_per_year
+    rhs: (coal_fuel_energy_gj * pm25_factor_coal_g_per_gj + gas_fuel_energy_gj * pm25_factor_gas_g_per_gj
+      + oil_fuel_energy_gj * pm25_factor_oil_g_per_gj) / g_per_kt
+    relation: eq
+    parameters:
+    - pm25_kt_per_year
+    - coal_fuel_energy_gj
+    - g_per_kt
+    - gas_fuel_energy_gj
+    - oil_fuel_energy_gj
+    - pm25_factor_coal_g_per_gj
+    - pm25_factor_gas_g_per_gj
+    - pm25_factor_oil_g_per_gj
+    free_variables: []
+    determined_variables:
+    - pm25_kt_per_year
+    unit_check: true
+    reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, filterable PM2.5 emission
+      factors.
+    latex: \mathrm{pm25}_{kt\_per\_year} = \frac{\mathrm{coal}_{fuel\_energy\_gj} \mathrm{pm25}_{factor\_coal\_g\_per\_gj}
+      + \mathrm{gas}_{fuel\_energy\_gj} \mathrm{pm25}_{factor\_gas\_g\_per\_gj} + \mathrm{oil}_{fuel\_energy\_gj}
+      \mathrm{pm25}_{factor\_oil\_g\_per\_gj}}{\mathrm{g}_{per\_kt}}
   political_risk_cover_definition:
     description: 'The asset value insured against political events: the insured share of the fleet''s
       capital.'
@@ -38434,31 +39680,48 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   premature_deaths_definition:
-    description: 'Exposed population times baseline mortality times the relative risk the particulate
-      burden adds. The concentration-response function, linearised.
-
-      '
-    determined_variables:
-    - premature_deaths_per_year
-    free_variables: []
-    latex: null
-    lhs: premature_deaths_per_year
-    linearity: linear
+    id: premature_deaths_definition
+    description: 'Premature deaths from the ambient PM2.5 the fleet and the background together produce.
+      The linearised concentration-response form: population times baseline mortality is the deaths that
+      would occur anyway, and the excess is that times beta times the concentration above the counterfactual.
+      The shipped body multiplied a per-kt coefficient by a kilotonne total, which is a different quantity
+      with the same number at the shipped defaults -- 20 kt/yr and 20 ug/m3 are both 20 -- so the mislabelling
+      was invisible until the fleet entered the chain.'
     name: Premature deaths
-    parameters:
-    - premature_deaths_per_year
-    - exposed_population
-    - baseline_mortality_rate
-    - pm25_kt_per_year
-    - pm25_relative_risk_per_kt
-    priority: P2
-    reference: Linearised concentration-response; cf. WHO AirQ+ methodology
-    relation: eq
-    rhs: exposed_population * baseline_mortality_rate * pm25_kt_per_year * pm25_relative_risk_per_kt
-    solution_method: direct
     system: health
     tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    lhs: premature_deaths_per_year
+    rhs: exposed_population * baseline_mortality_rate * pm25_fleet_contribution_ug_per_m3 * pm25_relative_risk_per_ug_per_m3
+    relation: eq
+    parameters:
+    - premature_deaths_per_year
+    - baseline_mortality_rate
+    - exposed_population
+    - pm25_fleet_contribution_ug_per_m3
+    - pm25_relative_risk_per_ug_per_m3
+    free_variables: []
+    determined_variables:
+    - premature_deaths_per_year
     unit_check: true
+    reference: 'WHO Regional Office for Europe, Health risks of air pollution in Europe -- HRAPIE project:
+      recommendations for concentration-response functions for cost-benefit analysis of particulate matter,
+      ozone and nitrogen dioxide (2013), Table 1, PM long-term exposure, first row (sources/archive/who_hrapie_2013.pdf):
+      PM2.5 annual mean, mortality all-cause (natural) age 30+, group A*, RR = 1.062 per 10 ug/m3 with
+      a 95% CI of 1.040 to 1.083, from a meta-analysis of thirteen European cohorts (Hoek et al. 2013).
+      Linearised as log(1.062)/10 = 0.006015 per ug/m3, which is the coefficient this node carries. The
+      AirQ+ manual was the previous citation here and does not state this figure: it describes the software
+      that applies the coefficients, not the coefficients themselves. The construction -- attributable
+      burden as the population-attributable fraction times the health outcome -- is the one the WHO AirQ+
+      manual states on printed p. 2 (sources/archive/who_airq_manual.pdf): ''The attributable burden is
+      calculated by multiplying the population-attributable fraction by the health outcome''. AirQ+ applies
+      IER functions rather than HRAPIE coefficients, so it is cited for the form of the calculation and
+      not for the number: the linearised excess here is PAF = beta * deltaC for small beta * deltaC, which
+      is that product.'
+    latex: \mathrm{premature}_{deaths\_per\_year} = \mathrm{exposed}_{population} \mathrm{baseline}_{mortality\_rate}
+      \mathrm{pm25}_{fleet\_contribution\_ug\_per\_m3} \mathrm{pm25}_{relative\_risk\_per\_ug\_per\_m3}
   premium_share_of_asset_definition:
     description: 'The annual premium as a fraction of the insured asset''s value, which is the loss share
       the graph already carries. 0.005 at defaults, against the catalog''s duplicate 0.008: `insurance_premium_definition`
@@ -40337,6 +41600,41 @@ equations:
     system: financial
     tolerance: 1.0e-09
     unit_check: true
+  sox_emissions_definition:
+    id: sox_emissions_definition
+    description: 'Annual SOx emitted by the fossil fleet, in kilotonnes. The three factors are not independent
+      measurements: the guidebook derives each from a stated fuel sulphur content assuming full conversion
+      to SO2 and no retention in ash, at 1% sulphur for coal and heavy fuel oil. They therefore move with
+      the sulphur assumption, and a scenario that desulphurises its fuel should move these nodes rather
+      than treat the tabulated values as plant properties.'
+    name: Sox emissions definition
+    system: emissions
+    tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    lhs: sox_emissions
+    rhs: (coal_fuel_energy_gj * sox_factor_coal_g_per_gj + gas_fuel_energy_gj * sox_factor_gas_g_per_gj
+      + oil_fuel_energy_gj * sox_factor_oil_g_per_gj) / g_per_kt
+    relation: eq
+    parameters:
+    - sox_emissions
+    - coal_fuel_energy_gj
+    - g_per_kt
+    - gas_fuel_energy_gj
+    - oil_fuel_energy_gj
+    - sox_factor_coal_g_per_gj
+    - sox_factor_gas_g_per_gj
+    - sox_factor_oil_g_per_gj
+    free_variables: []
+    determined_variables:
+    - sox_emissions
+    unit_check: true
+    reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6; the derivation is EF_SO2
+      = [S] * 20000 / CV_net, stated in section 3.4.2.2 and restated in the note to each table.
+    latex: \mathrm{sox}_{emissions} = \frac{\mathrm{coal}_{fuel\_energy\_gj} \mathrm{sox}_{factor\_coal\_g\_per\_gj}
+      + \mathrm{gas}_{fuel\_energy\_gj} \mathrm{sox}_{factor\_gas\_g\_per\_gj} + \mathrm{oil}_{fuel\_energy\_gj}
+      \mathrm{sox}_{factor\_oil\_g\_per\_gj}}{\mathrm{g}_{per\_kt}}
   spare_capacity_definition:
     description: 'Installed capacity less peak demand: the headroom the fleet carries. The catalog names
       this node''s formula as a bare symbol, which is the absence of a formula; the headroom is the only
@@ -41588,6 +42886,39 @@ equations:
     system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
+  voc_emissions_definition:
+    id: voc_emissions_definition
+    description: 'Annual non-methane VOC emitted by the fossil fleet, in kilotonnes. The precursor rather
+      than the pollutant: NMVOC is not harmful at these concentrations itself, it is the photochemical
+      feedstock for the ozone that is, and it belongs in the graph because an ozone chain that started
+      from an assumed VOC total would be the same defect this batch is repairing one step over.'
+    name: Voc emissions definition
+    system: emissions
+    tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    lhs: voc_emissions
+    rhs: (coal_fuel_energy_gj * voc_factor_coal_g_per_gj + gas_fuel_energy_gj * voc_factor_gas_g_per_gj
+      + oil_fuel_energy_gj * voc_factor_oil_g_per_gj) / g_per_kt
+    relation: eq
+    parameters:
+    - voc_emissions
+    - coal_fuel_energy_gj
+    - g_per_kt
+    - gas_fuel_energy_gj
+    - oil_fuel_energy_gj
+    - voc_factor_coal_g_per_gj
+    - voc_factor_gas_g_per_gj
+    - voc_factor_oil_g_per_gj
+    free_variables: []
+    determined_variables:
+    - voc_emissions
+    unit_check: true
+    reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, NMVOC emission factors.
+    latex: \mathrm{voc}_{emissions} = \frac{\mathrm{coal}_{fuel\_energy\_gj} \mathrm{voc}_{factor\_coal\_g\_per\_gj}
+      + \mathrm{gas}_{fuel\_energy\_gj} \mathrm{voc}_{factor\_gas\_g\_per\_gj} + \mathrm{oil}_{fuel\_energy\_gj}
+      \mathrm{voc}_{factor\_oil\_g\_per\_gj}}{\mathrm{g}_{per\_kt}}
   voltage_support_definition:
     description: 'Reactive reserve in MVAr: the share of the fleet''s reactive capability held for voltage
       support. The catalog''s formula for this node is a voltage inequality, which is the constraint the
@@ -43031,42 +44362,6 @@ relationships:
   source: induced_jobs_multiplier
   strength: hard
   target: total_jobs
-- description: Health impact scales with who breathes it.
-  direction: forward
-  equation_id: premature_deaths_definition
-  priority: P2
-  reference: null
-  relationship: equality
-  source: exposed_population
-  strength: hard
-  target: premature_deaths_per_year
-- description: The baseline the relative risk multiplies.
-  direction: forward
-  equation_id: premature_deaths_definition
-  priority: P2
-  reference: null
-  relationship: equality
-  source: baseline_mortality_rate
-  strength: hard
-  target: premature_deaths_per_year
-- description: The particulate burden, which is what the fleet emits.
-  direction: forward
-  equation_id: premature_deaths_definition
-  priority: P2
-  reference: null
-  relationship: equality
-  source: pm25_kt_per_year
-  strength: hard
-  target: premature_deaths_per_year
-- description: The concentration-response coefficient.
-  direction: forward
-  equation_id: premature_deaths_definition
-  priority: P2
-  reference: null
-  relationship: functional
-  source: pm25_relative_risk_per_kt
-  strength: hard
-  target: premature_deaths_per_year
 - description: Deaths become burden through years of life lost.
   direction: forward
   equation_id: dalys_definition
@@ -52366,8 +53661,9 @@ relationships:
   direction: forward
   strength: hard
   description: Enters the corrected body.
-  reference: IPCC Guidelines for National Greenhouse Gas Inventories, the activity-data x emission-factor
-    construction; the fleet average is the graph's own `fleet_emission_intensity_t_per_mwh`
+  reference: IPCC Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy), Chapter 2, Equation
+    2.1 on printed p. 2.11, the fuel-consumption times emission-factor product; the fleet average is the
+    graph's own `fleet_emission_intensity_t_per_mwh`
   priority: P1
 - source: generation_twh
   target: emissions_mtco2_per_year
@@ -52376,8 +53672,9 @@ relationships:
   direction: forward
   strength: hard
   description: Enters the corrected body.
-  reference: IPCC Guidelines for National Greenhouse Gas Inventories, the activity-data x emission-factor
-    construction; the fleet average is the graph's own `fleet_emission_intensity_t_per_mwh`
+  reference: IPCC Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy), Chapter 2, Equation
+    2.1 on printed p. 2.11, the fuel-consumption times emission-factor product; the fleet average is the
+    graph's own `fleet_emission_intensity_t_per_mwh`
   priority: P1
 - source: vre_firm_capacity_mw
   target: firm_capacity_mw
@@ -52484,6 +53781,774 @@ relationships:
     US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (sources/archive/eia_lcoe_methodology.txt),
     capacity credit at 1 for dispatchable units and derated for intermittent renewables'
   priority: P1
+- source: capacity_factor_coal
+  target: coal_fuel_energy_gj
+  equation_id: coal_fuel_energy_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: 'EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a (sources/archive/emep_eea_guidebook_2023_1a1a.txt):
+    factors are given per GJ of fuel input on a net calorific value basis. Net efficiency per IEA/NEA
+    Projected Costs of Generating Electricity (2020), Table 3.10.'
+  priority: P2
+- source: coal_capacity
+  target: coal_fuel_energy_gj
+  equation_id: coal_fuel_energy_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: 'EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a (sources/archive/emep_eea_guidebook_2023_1a1a.txt):
+    factors are given per GJ of fuel input on a net calorific value basis. Net efficiency per IEA/NEA
+    Projected Costs of Generating Electricity (2020), Table 3.10.'
+  priority: P2
+- source: efficiency_coal
+  target: coal_fuel_energy_gj
+  equation_id: coal_fuel_energy_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: 'EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a (sources/archive/emep_eea_guidebook_2023_1a1a.txt):
+    factors are given per GJ of fuel input on a net calorific value basis. Net efficiency per IEA/NEA
+    Projected Costs of Generating Electricity (2020), Table 3.10.'
+  priority: P2
+- source: gj_per_mwh
+  target: coal_fuel_energy_gj
+  equation_id: coal_fuel_energy_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: 'EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a (sources/archive/emep_eea_guidebook_2023_1a1a.txt):
+    factors are given per GJ of fuel input on a net calorific value basis. Net efficiency per IEA/NEA
+    Projected Costs of Generating Electricity (2020), Table 3.10.'
+  priority: P2
+- source: hours_per_year
+  target: coal_fuel_energy_gj
+  equation_id: coal_fuel_energy_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: 'EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a (sources/archive/emep_eea_guidebook_2023_1a1a.txt):
+    factors are given per GJ of fuel input on a net calorific value basis. Net efficiency per IEA/NEA
+    Projected Costs of Generating Electricity (2020), Table 3.10.'
+  priority: P2
+- source: capacity_factor_gas
+  target: gas_fuel_energy_gj
+  equation_id: gas_fuel_energy_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Table 3-4 (natural gas) and Table 3-19 (gas turbines);
+    net efficiency per IEA/NEA (2020) Table 3.10, CCGT rows.
+  priority: P2
+- source: efficiency_gas
+  target: gas_fuel_energy_gj
+  equation_id: gas_fuel_energy_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Table 3-4 (natural gas) and Table 3-19 (gas turbines);
+    net efficiency per IEA/NEA (2020) Table 3.10, CCGT rows.
+  priority: P2
+- source: gas_capacity
+  target: gas_fuel_energy_gj
+  equation_id: gas_fuel_energy_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Table 3-4 (natural gas) and Table 3-19 (gas turbines);
+    net efficiency per IEA/NEA (2020) Table 3.10, CCGT rows.
+  priority: P2
+- source: gj_per_mwh
+  target: gas_fuel_energy_gj
+  equation_id: gas_fuel_energy_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Table 3-4 (natural gas) and Table 3-19 (gas turbines);
+    net efficiency per IEA/NEA (2020) Table 3.10, CCGT rows.
+  priority: P2
+- source: hours_per_year
+  target: gas_fuel_energy_gj
+  equation_id: gas_fuel_energy_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Table 3-4 (natural gas) and Table 3-19 (gas turbines);
+    net efficiency per IEA/NEA (2020) Table 3.10, CCGT rows.
+  priority: P2
+- source: capacity_factor_oil
+  target: oil_fuel_energy_gj
+  equation_id: oil_fuel_energy_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Table 3-6 (heavy fuel oil).
+  priority: P2
+- source: efficiency_oil
+  target: oil_fuel_energy_gj
+  equation_id: oil_fuel_energy_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Table 3-6 (heavy fuel oil).
+  priority: P2
+- source: gj_per_mwh
+  target: oil_fuel_energy_gj
+  equation_id: oil_fuel_energy_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Table 3-6 (heavy fuel oil).
+  priority: P2
+- source: hours_per_year
+  target: oil_fuel_energy_gj
+  equation_id: oil_fuel_energy_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Table 3-6 (heavy fuel oil).
+  priority: P2
+- source: oil_capacity
+  target: oil_fuel_energy_gj
+  equation_id: oil_fuel_energy_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Table 3-6 (heavy fuel oil).
+  priority: P2
+- source: coal_fuel_energy_gj
+  target: nox_emissions
+  equation_id: nox_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2 (hard coal), 3-4 (natural gas), 3-6 (heavy
+    fuel oil), Tier 1 default emission factors in g/GJ. Factors are stated as NO2.
+  priority: P2
+- source: g_per_kt
+  target: nox_emissions
+  equation_id: nox_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2 (hard coal), 3-4 (natural gas), 3-6 (heavy
+    fuel oil), Tier 1 default emission factors in g/GJ. Factors are stated as NO2.
+  priority: P2
+- source: gas_fuel_energy_gj
+  target: nox_emissions
+  equation_id: nox_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2 (hard coal), 3-4 (natural gas), 3-6 (heavy
+    fuel oil), Tier 1 default emission factors in g/GJ. Factors are stated as NO2.
+  priority: P2
+- source: nox_factor_coal_g_per_gj
+  target: nox_emissions
+  equation_id: nox_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2 (hard coal), 3-4 (natural gas), 3-6 (heavy
+    fuel oil), Tier 1 default emission factors in g/GJ. Factors are stated as NO2.
+  priority: P2
+- source: nox_factor_gas_g_per_gj
+  target: nox_emissions
+  equation_id: nox_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2 (hard coal), 3-4 (natural gas), 3-6 (heavy
+    fuel oil), Tier 1 default emission factors in g/GJ. Factors are stated as NO2.
+  priority: P2
+- source: nox_factor_oil_g_per_gj
+  target: nox_emissions
+  equation_id: nox_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2 (hard coal), 3-4 (natural gas), 3-6 (heavy
+    fuel oil), Tier 1 default emission factors in g/GJ. Factors are stated as NO2.
+  priority: P2
+- source: oil_fuel_energy_gj
+  target: nox_emissions
+  equation_id: nox_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2 (hard coal), 3-4 (natural gas), 3-6 (heavy
+    fuel oil), Tier 1 default emission factors in g/GJ. Factors are stated as NO2.
+  priority: P2
+- source: coal_fuel_energy_gj
+  target: sox_emissions
+  equation_id: sox_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6; the derivation is EF_SO2 =
+    [S] * 20000 / CV_net, stated in section 3.4.2.2 and restated in the note to each table.
+  priority: P2
+- source: g_per_kt
+  target: sox_emissions
+  equation_id: sox_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6; the derivation is EF_SO2 =
+    [S] * 20000 / CV_net, stated in section 3.4.2.2 and restated in the note to each table.
+  priority: P2
+- source: gas_fuel_energy_gj
+  target: sox_emissions
+  equation_id: sox_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6; the derivation is EF_SO2 =
+    [S] * 20000 / CV_net, stated in section 3.4.2.2 and restated in the note to each table.
+  priority: P2
+- source: oil_fuel_energy_gj
+  target: sox_emissions
+  equation_id: sox_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6; the derivation is EF_SO2 =
+    [S] * 20000 / CV_net, stated in section 3.4.2.2 and restated in the note to each table.
+  priority: P2
+- source: sox_factor_coal_g_per_gj
+  target: sox_emissions
+  equation_id: sox_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6; the derivation is EF_SO2 =
+    [S] * 20000 / CV_net, stated in section 3.4.2.2 and restated in the note to each table.
+  priority: P2
+- source: sox_factor_gas_g_per_gj
+  target: sox_emissions
+  equation_id: sox_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6; the derivation is EF_SO2 =
+    [S] * 20000 / CV_net, stated in section 3.4.2.2 and restated in the note to each table.
+  priority: P2
+- source: sox_factor_oil_g_per_gj
+  target: sox_emissions
+  equation_id: sox_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6; the derivation is EF_SO2 =
+    [S] * 20000 / CV_net, stated in section 3.4.2.2 and restated in the note to each table.
+  priority: P2
+- source: coal_fuel_energy_gj
+  target: pm10_emissions
+  equation_id: pm10_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, filterable PM emission factors.
+  priority: P2
+- source: g_per_kt
+  target: pm10_emissions
+  equation_id: pm10_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, filterable PM emission factors.
+  priority: P2
+- source: gas_fuel_energy_gj
+  target: pm10_emissions
+  equation_id: pm10_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, filterable PM emission factors.
+  priority: P2
+- source: oil_fuel_energy_gj
+  target: pm10_emissions
+  equation_id: pm10_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, filterable PM emission factors.
+  priority: P2
+- source: pm10_factor_coal_g_per_gj
+  target: pm10_emissions
+  equation_id: pm10_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, filterable PM emission factors.
+  priority: P2
+- source: pm10_factor_gas_g_per_gj
+  target: pm10_emissions
+  equation_id: pm10_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, filterable PM emission factors.
+  priority: P2
+- source: pm10_factor_oil_g_per_gj
+  target: pm10_emissions
+  equation_id: pm10_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, filterable PM emission factors.
+  priority: P2
+- source: coal_fuel_energy_gj
+  target: pm25_kt_per_year
+  equation_id: pm25_kt_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, filterable PM2.5 emission
+    factors.
+  priority: P2
+- source: g_per_kt
+  target: pm25_kt_per_year
+  equation_id: pm25_kt_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, filterable PM2.5 emission
+    factors.
+  priority: P2
+- source: gas_fuel_energy_gj
+  target: pm25_kt_per_year
+  equation_id: pm25_kt_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, filterable PM2.5 emission
+    factors.
+  priority: P2
+- source: oil_fuel_energy_gj
+  target: pm25_kt_per_year
+  equation_id: pm25_kt_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, filterable PM2.5 emission
+    factors.
+  priority: P2
+- source: pm25_factor_coal_g_per_gj
+  target: pm25_kt_per_year
+  equation_id: pm25_kt_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, filterable PM2.5 emission
+    factors.
+  priority: P2
+- source: pm25_factor_gas_g_per_gj
+  target: pm25_kt_per_year
+  equation_id: pm25_kt_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, filterable PM2.5 emission
+    factors.
+  priority: P2
+- source: pm25_factor_oil_g_per_gj
+  target: pm25_kt_per_year
+  equation_id: pm25_kt_per_year_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, filterable PM2.5 emission
+    factors.
+  priority: P2
+- source: coal_fuel_energy_gj
+  target: voc_emissions
+  equation_id: voc_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, NMVOC emission factors.
+  priority: P2
+- source: g_per_kt
+  target: voc_emissions
+  equation_id: voc_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, NMVOC emission factors.
+  priority: P2
+- source: gas_fuel_energy_gj
+  target: voc_emissions
+  equation_id: voc_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, NMVOC emission factors.
+  priority: P2
+- source: oil_fuel_energy_gj
+  target: voc_emissions
+  equation_id: voc_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, NMVOC emission factors.
+  priority: P2
+- source: voc_factor_coal_g_per_gj
+  target: voc_emissions
+  equation_id: voc_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, NMVOC emission factors.
+  priority: P2
+- source: voc_factor_gas_g_per_gj
+  target: voc_emissions
+  equation_id: voc_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, NMVOC emission factors.
+  priority: P2
+- source: voc_factor_oil_g_per_gj
+  target: voc_emissions
+  equation_id: voc_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, NMVOC emission factors.
+  priority: P2
+- source: coal_fuel_energy_gj
+  target: mercury_emissions
+  equation_id: mercury_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, Hg emission factors.
+  priority: P2
+- source: gas_fuel_energy_gj
+  target: mercury_emissions
+  equation_id: mercury_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, Hg emission factors.
+  priority: P2
+- source: mercury_factor_coal_mg_per_gj
+  target: mercury_emissions
+  equation_id: mercury_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, Hg emission factors.
+  priority: P2
+- source: mercury_factor_gas_mg_per_gj
+  target: mercury_emissions
+  equation_id: mercury_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, Hg emission factors.
+  priority: P2
+- source: mercury_factor_oil_mg_per_gj
+  target: mercury_emissions
+  equation_id: mercury_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, Hg emission factors.
+  priority: P2
+- source: mg_per_tonne
+  target: mercury_emissions
+  equation_id: mercury_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, Hg emission factors.
+  priority: P2
+- source: oil_fuel_energy_gj
+  target: mercury_emissions
+  equation_id: mercury_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, Hg emission factors.
+  priority: P2
+- source: co_factor_coal_g_per_gj
+  target: co_emissions
+  equation_id: co_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, CO emission factors.
+  priority: P2
+- source: co_factor_gas_g_per_gj
+  target: co_emissions
+  equation_id: co_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, CO emission factors.
+  priority: P2
+- source: co_factor_oil_g_per_gj
+  target: co_emissions
+  equation_id: co_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, CO emission factors.
+  priority: P2
+- source: coal_fuel_energy_gj
+  target: co_emissions
+  equation_id: co_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, CO emission factors.
+  priority: P2
+- source: g_per_kt
+  target: co_emissions
+  equation_id: co_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, CO emission factors.
+  priority: P2
+- source: gas_fuel_energy_gj
+  target: co_emissions
+  equation_id: co_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, CO emission factors.
+  priority: P2
+- source: oil_fuel_energy_gj
+  target: co_emissions
+  equation_id: co_emissions_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Tables 3-2, 3-4 and 3-6, CO emission factors.
+  priority: P2
+- source: pm25_dispersion_factor
+  target: pm25_fleet_contribution_ug_per_m3
+  equation_id: pm25_fleet_contribution_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: 'Box model: Hanna, Briggs & Hosker (1982), Handbook on Atmospheric Diffusion, DOE/TIC-11223,
+    section 9-2, printed pp. 57-58 (sources/archive/hanna_briggs_hosker_1982.pdf). The continuity equation
+    for a volume of width Ax, mixing depth z_i and unit depth is Ax z_i dC/dt = Ax Q_a + u z_i (C_b -
+    C) + Ax (dZ_i/dt)(C_a - C); at steady state with zero background the solution is the well-known box
+    model, C = Q_a Ax / (u z_i), where Q_a is emission per unit area per unit time. The graph writes it
+    per unit emission as C/Q = 1/(u H W) after cancelling Ax against the source area, which is the same
+    equation. The handbook calls it the model used as a screening tool and the workhorse of urban-scale
+    work, which is the claim this node makes for it and no stronger one. It is not the Gaussian area-source
+    algorithm in SCREEN3 or ISC3: those integrate a point-source plume over the source extent and report
+    a maximum 1-hour impact at a chosen downwind distance, while this reports a domain-average annual
+    mean. The two agree in dimension and in scaling with wind speed and mixing depth and not in value,
+    which is why the factor is a settable dial rather than a derived constant.'
+  priority: P2
+- source: pm25_emissions
+  target: pm25_fleet_contribution_ug_per_m3
+  equation_id: pm25_fleet_contribution_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: 'Box model: Hanna, Briggs & Hosker (1982), Handbook on Atmospheric Diffusion, DOE/TIC-11223,
+    section 9-2, printed pp. 57-58 (sources/archive/hanna_briggs_hosker_1982.pdf). The continuity equation
+    for a volume of width Ax, mixing depth z_i and unit depth is Ax z_i dC/dt = Ax Q_a + u z_i (C_b -
+    C) + Ax (dZ_i/dt)(C_a - C); at steady state with zero background the solution is the well-known box
+    model, C = Q_a Ax / (u z_i), where Q_a is emission per unit area per unit time. The graph writes it
+    per unit emission as C/Q = 1/(u H W) after cancelling Ax against the source area, which is the same
+    equation. The handbook calls it the model used as a screening tool and the workhorse of urban-scale
+    work, which is the claim this node makes for it and no stronger one. It is not the Gaussian area-source
+    algorithm in SCREEN3 or ISC3: those integrate a point-source plume over the source extent and report
+    a maximum 1-hour impact at a chosen downwind distance, while this reports a domain-average annual
+    mean. The two agree in dimension and in scaling with wind speed and mixing depth and not in value,
+    which is why the factor is a settable dial rather than a derived constant.'
+  priority: P2
+- source: background_pm25_ug_per_m3
+  target: pm25_annual_mean_ug_per_m3
+  equation_id: pm25_concentration_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: 'WHO global air quality guidelines (2021), Table 0.1 and Table 3.24 (sources/archive/who_aqg_2021.pdf):
+    the PM2.5 annual-mean AQG level is 5 ug/m3, with interim targets of 35, 25, 15 and 10. The default
+    `background_pm25_ug_per_m3` is set to the AQG level, which is a choice of counterfactual rather than
+    a measurement: it is the concentration below which WHO states the evidence for an effect is insufficient
+    to set a lower level, so a scenario measuring its own fleet against it is measuring the burden above
+    a clean airshed. The node''s range admits the 35 ug/m3 the shipped graph declared, which is the first
+    interim target and a defensible polluted-airshed background. The dispersion step is the separate box
+    model in `pm25_fleet_contribution_definition`; this equation only adds the two.'
+  priority: P2
+- source: pm25_fleet_contribution_ug_per_m3
+  target: pm25_annual_mean_ug_per_m3
+  equation_id: pm25_concentration_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: 'WHO global air quality guidelines (2021), Table 0.1 and Table 3.24 (sources/archive/who_aqg_2021.pdf):
+    the PM2.5 annual-mean AQG level is 5 ug/m3, with interim targets of 35, 25, 15 and 10. The default
+    `background_pm25_ug_per_m3` is set to the AQG level, which is a choice of counterfactual rather than
+    a measurement: it is the concentration below which WHO states the evidence for an effect is insufficient
+    to set a lower level, so a scenario measuring its own fleet against it is measuring the burden above
+    a clean airshed. The node''s range admits the 35 ug/m3 the shipped graph declared, which is the first
+    interim target and a defensible polluted-airshed background. The dispersion step is the separate box
+    model in `pm25_fleet_contribution_definition`; this equation only adds the two.'
+  priority: P2
+- source: baseline_mortality_rate
+  target: premature_deaths_per_year
+  equation_id: premature_deaths_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: 'WHO Regional Office for Europe, Health risks of air pollution in Europe -- HRAPIE project:
+    recommendations for concentration-response functions for cost-benefit analysis of particulate matter,
+    ozone and nitrogen dioxide (2013), Table 1, PM long-term exposure, first row (sources/archive/who_hrapie_2013.pdf):
+    PM2.5 annual mean, mortality all-cause (natural) age 30+, group A*, RR = 1.062 per 10 ug/m3 with a
+    95% CI of 1.040 to 1.083, from a meta-analysis of thirteen European cohorts (Hoek et al. 2013). Linearised
+    as log(1.062)/10 = 0.006015 per ug/m3, which is the coefficient this node carries. The AirQ+ manual
+    was the previous citation here and does not state this figure: it describes the software that applies
+    the coefficients, not the coefficients themselves. The construction -- attributable burden as the
+    population-attributable fraction times the health outcome -- is the one the WHO AirQ+ manual states
+    on printed p. 2 (sources/archive/who_airq_manual.pdf): ''The attributable burden is calculated by
+    multiplying the population-attributable fraction by the health outcome''. AirQ+ applies IER functions
+    rather than HRAPIE coefficients, so it is cited for the form of the calculation and not for the number:
+    the linearised excess here is PAF = beta * deltaC for small beta * deltaC, which is that product.'
+  priority: P2
+- source: exposed_population
+  target: premature_deaths_per_year
+  equation_id: premature_deaths_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: 'WHO Regional Office for Europe, Health risks of air pollution in Europe -- HRAPIE project:
+    recommendations for concentration-response functions for cost-benefit analysis of particulate matter,
+    ozone and nitrogen dioxide (2013), Table 1, PM long-term exposure, first row (sources/archive/who_hrapie_2013.pdf):
+    PM2.5 annual mean, mortality all-cause (natural) age 30+, group A*, RR = 1.062 per 10 ug/m3 with a
+    95% CI of 1.040 to 1.083, from a meta-analysis of thirteen European cohorts (Hoek et al. 2013). Linearised
+    as log(1.062)/10 = 0.006015 per ug/m3, which is the coefficient this node carries. The AirQ+ manual
+    was the previous citation here and does not state this figure: it describes the software that applies
+    the coefficients, not the coefficients themselves. The construction -- attributable burden as the
+    population-attributable fraction times the health outcome -- is the one the WHO AirQ+ manual states
+    on printed p. 2 (sources/archive/who_airq_manual.pdf): ''The attributable burden is calculated by
+    multiplying the population-attributable fraction by the health outcome''. AirQ+ applies IER functions
+    rather than HRAPIE coefficients, so it is cited for the form of the calculation and not for the number:
+    the linearised excess here is PAF = beta * deltaC for small beta * deltaC, which is that product.'
+  priority: P2
+- source: pm25_fleet_contribution_ug_per_m3
+  target: premature_deaths_per_year
+  equation_id: premature_deaths_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: 'WHO Regional Office for Europe, Health risks of air pollution in Europe -- HRAPIE project:
+    recommendations for concentration-response functions for cost-benefit analysis of particulate matter,
+    ozone and nitrogen dioxide (2013), Table 1, PM long-term exposure, first row (sources/archive/who_hrapie_2013.pdf):
+    PM2.5 annual mean, mortality all-cause (natural) age 30+, group A*, RR = 1.062 per 10 ug/m3 with a
+    95% CI of 1.040 to 1.083, from a meta-analysis of thirteen European cohorts (Hoek et al. 2013). Linearised
+    as log(1.062)/10 = 0.006015 per ug/m3, which is the coefficient this node carries. The AirQ+ manual
+    was the previous citation here and does not state this figure: it describes the software that applies
+    the coefficients, not the coefficients themselves. The construction -- attributable burden as the
+    population-attributable fraction times the health outcome -- is the one the WHO AirQ+ manual states
+    on printed p. 2 (sources/archive/who_airq_manual.pdf): ''The attributable burden is calculated by
+    multiplying the population-attributable fraction by the health outcome''. AirQ+ applies IER functions
+    rather than HRAPIE coefficients, so it is cited for the form of the calculation and not for the number:
+    the linearised excess here is PAF = beta * deltaC for small beta * deltaC, which is that product.'
+  priority: P2
+- source: pm25_relative_risk_per_ug_per_m3
+  target: premature_deaths_per_year
+  equation_id: premature_deaths_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Enters the pollutant chain.
+  reference: 'WHO Regional Office for Europe, Health risks of air pollution in Europe -- HRAPIE project:
+    recommendations for concentration-response functions for cost-benefit analysis of particulate matter,
+    ozone and nitrogen dioxide (2013), Table 1, PM long-term exposure, first row (sources/archive/who_hrapie_2013.pdf):
+    PM2.5 annual mean, mortality all-cause (natural) age 30+, group A*, RR = 1.062 per 10 ug/m3 with a
+    95% CI of 1.040 to 1.083, from a meta-analysis of thirteen European cohorts (Hoek et al. 2013). Linearised
+    as log(1.062)/10 = 0.006015 per ug/m3, which is the coefficient this node carries. The AirQ+ manual
+    was the previous citation here and does not state this figure: it describes the software that applies
+    the coefficients, not the coefficients themselves. The construction -- attributable burden as the
+    population-attributable fraction times the health outcome -- is the one the WHO AirQ+ manual states
+    on printed p. 2 (sources/archive/who_airq_manual.pdf): ''The attributable burden is calculated by
+    multiplying the population-attributable fraction by the health outcome''. AirQ+ applies IER functions
+    rather than HRAPIE coefficients, so it is cited for the form of the calculation and not for the number:
+    the linearised excess here is PAF = beta * deltaC for small beta * deltaC, which is that product.'
+  priority: P2
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0
   id: carbon_price_budget_alignment

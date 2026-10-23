@@ -251,10 +251,28 @@ def test_the_coverage_count_is_a_literal_and_matches_the_register(
 	they are chosen by the optimiser, so ``is_settable`` is False for them.
 	They are not missing from the register -- ``endogenous`` carries them, and
 	``audit.fleet_parameters`` reads them back out of a solved result.
+
+Batch 44 took it 856 -> 876. The batch added 35 nodes, and 23 of them
+are settable dials no equation determines: the 21 emission factors, the
+background concentration and the hours-per-year constant. Its twelve
+derived nodes -- three fuel energies, six pollutant totals, the fleet
+contribution, deaths and DALYs -- are determined by the twelve
+equations that ship with them, so they entered neither set, and the
+three conversion constants and three efficiencies are settable and
+account for the rest of the 35.
+
+The net movement is 20 rather than 23 because ``is_settable`` now
+refuses a deprecated node, and the three the graph carries
+(`cross_border_trading`, `demand_growth_rate`,
+`pm25_relative_risk_per_kt`) were in this denominator and are not any
+more. That is a correction to the register rather than a loss of
+coverage: a tombstone is not a knob a what-if surface could ever drive,
+and counting it as untranslated was reporting a node no client could
+reach as a node the translation layer had failed to reach.
 	"""
 	cov = coverage(graph)
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 856, cov
+	assert cov["total"] == 876, cov
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -336,9 +354,18 @@ def test_the_untranslated_register_is_not_empty_and_says_why(
 	and ``max_remedy_period_days`` -- so they entered both sets, and its ten
 	retypes changed a unit without crossing the boundary, so they moved
 	neither. The register still equals the settable surface minus three.
+
+Batch 44 moved it 853 -> 873, and the move is the settable nodes the
+batch added with no equation behind them: the 21 emission factors, the
+background concentration, hours per year, the three efficiencies and
+the three conversion constants -- twenty-three in all, less the three
+deprecated nodes that left the denominator when ``is_settable`` began
+refusing them. The register still equals the settable surface minus
+three, so the three endogenous quantities the engine carries are still
+the only difference between the two sets.
 	"""
 	missing = untranslated(graph)
-	assert len(missing) == 853, missing
+	assert len(missing) == 873, missing
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact

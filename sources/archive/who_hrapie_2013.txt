@@ -1,0 +1,2740 @@
+ Health risks of air
+pollution in Europe –
+  HRAPIE project
+    Recommendations for
+   concentration–response
+  functions for cost–benefit
+analysis of particulate matter,
+ ozone and nitrogen dioxide
+
+
+
+
+     This publication arises from the HRAPIE project and has
+     received funding from the European Union.
+                                                  ABSTRACT
+
+         This document presents recommendations for concentration–response functions for key
+         pollutants to be included in cost–benefit analysis supporting the revision of the European
+         Union’s air quality policy. It provides a response to a question posed by the European
+         Commission in the framework of the WHO “Health risks of air pollution in Europe – HRAPIE”
+         project. The essential background to this response was developed through a review of
+         evidence on health aspects of air pollutants summarized by an earlier WHO project, “Review
+         of evidence on health aspects of air pollution – REVIHAAP”. This report recommends
+         concentration–response functions and associated background information for several
+         mortality and morbidity effects associated with short- and long-term exposure to particulate
+         matter, ozone and nitrogen dioxide.
+
+         This publication arises from the HRAPIE project and was co-funded by the European Union.
+
+                                                        Keywords
+
+                                                AIR POLLUTANTS
+                                                ENVIRONMENTAL HEALTH
+                                                EVIDENCE-BASED PRACTICE
+                                                GUIDELINES
+                                                HEALTH POLICY
+                                                NITROGEN DIOXIDE
+                                                OZONE
+                                                PARTICULATE MATTER
+
+
+
+
+Address requests about publications of the WHO Regional Office for Europe to:
+                Publications
+                WHO Regional Office for Europe
+                UN City, Marmorvej 51
+                DK-2100 Copenhagen Ø, Denmark
+Alternatively, complete an online request form for documentation, health information, or for permission to quote or
+translate, on the Regional Office web site (http://www.euro.who.int/pubrequest).
+© World Health Organization 2013
+All rights reserved. The Regional Office for Europe of the World Health Organization welcomes requests for
+permission to reproduce or translate its publications, in part or in full.
+The designations employed and the presentation of the material in this publication do not imply the expression
+of any opinion whatsoever on the part of the World Health Organization concerning the legal status of any
+country, territory, city or area or of its authorities, or concerning the delimitation of its frontiers or boundaries.
+Dotted lines on maps represent approximate borderlines for which there may not yet be full agreement.
+The mention of specific companies or of certain manufacturers products does not imply that they are endorsed
+or recommended by the World Health Organization in preference to others of a similar nature that are not
+mentioned. Errors and omissions excepted, the names of proprietary products are distinguished by initial
+capital letters.
+All reasonable precautions have been taken by the World Health Organization to verify the information
+contained in this publication. However, the published material is being distributed without warranty of any
+kind, either express or implied. The responsibility for the interpretation and use of the material lies with the
+reader. In no event shall the World Health Organization be liable for damages arising from its use. The views
+expressed by authors, editors, or expert groups do not necessarily represent the decisions or the stated policy
+of the World Health Organization.
+
+The views expressed herein can in no way be taken to reflect the official opinion of the European Union.
+                            HRAPIE project: recommendations for concentration–response functions
+                           for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                               page iii
+
+
+
+Contents
+Acknowledgements .............................................................................................................v
+Abbreviations..................................................................................................................... vi
+1. Introduction................................................................................................................... 1
+        1.1. Cost–effectiveness and cost–benefit analyses of EU air quality policies .................... 1
+        1.2. Development process for HRAPIE project recommendations ................................... 2
+        1.3. Implementation of the HRAPIE project recommendations ....................................... 3
+        1.4. Possible double counting of effects of various pollutants........................................12
+2. Long-term PM exposure .................................................................................................12
+        2.1. Effects of long-term PM2.5 exposure on all-cause mortality .....................................12
+        2.2. Effects of long-term PM2.5 exposure on cause-specific mortality..............................15
+        2.3. Effects of long-term PM10 exposure on postneonatal mortality................................17
+        2.4. Effects of long-term PM10 exposure on prevalence of bronchitis in children..............17
+        2.5. Effects of long-term PM10 exposure on incidence of chronic bronchitis in adults .......18
+3. Short-term PM exposure ................................................................................................19
+        3.1. Effects of short-term PM2.5 exposure on all-cause mortality ....................................19
+        3.2. Effects of short-term PM2.5 exposure on hospital admissions for CVDs and
+        respiratory diseases ..................................................................................................21
+        3.3. Effects of short-term PM2.5 exposure on RADs.......................................................22
+        3.4. Effects of short-term PM2.5 exposure on work days lost .........................................23
+        3.5. Effects of short-term PM10 exposure on incidence of asthma symptoms in
+        asthmatic children ....................................................................................................24
+4. Long-term O3 exposure ..................................................................................................24
+        4.1. Effects of long-term O3 exposure on respiratory mortality ......................................24
+5. Short-term O3 exposure .................................................................................................25
+        5.1. Effects of short-term O3 exposure on all-cause mortality........................................25
+        5.2. Effects of short-term O3 exposure on cardiovascular and respiratory mortality .........26
+        5.3. Effects of short-term O3 exposure on hospital admissions for CVDs and respiratory
+        diseases...................................................................................................................26
+        5.4. Effects of short-term O3 exposure on MRADs ........................................................27
+6. Long-term NO2 exposure................................................................................................28
+        6.1. Effects of long-term NO2 exposure on all-cause mortality.......................................28
+        6.2. Effects of long-term NO2 exposure on bronchitic symptoms in asthmatic children ....30
+7. Short-term NO2 exposure ...............................................................................................32
+        7.1. Effects of short-term NO2 exposure on all-cause mortality .....................................32
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page iv
+
+       7.2. Effects of short-term NO2 exposure on hospital admissions for respiratory diseases .33
+References ......................................................................................................................34
+Annex 1. Contributors to the HRAPIE project .......................................................................42
+Annex 2. Effects of long-term NO2 exposure on asthma prevalence in children – qualitative
+description ......................................................................................................................44
+Annex 3. Background information on estimation of effects of NO2 on bronchitic symptoms in
+asthmatic children .............................................................................................................47
+Annex 4. Effects of black carbon exposure – qualitative description .......................................54
+                    HRAPIE project: recommendations for concentration–response functions
+                   for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                        page v
+
+Acknowledgements
+The “Health risks of air pollution in Europe – HRAPIE” project was co-funded by the WHO
+Regional Office for Europe and the European Commission under Contribution Agreement
+07.0307/2012/626738/SUB/ENV.C3. The WHO European Centre for Environment and
+Health, Bonn, Germany, coordinated the project implementation and the development of this
+publication.
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page vi
+
+Abbreviations
+ACS      American Cancer Society
+AHSMOG   Loma Linda University Adventist Health and Smog study
+APED     air pollution epidemiology database
+APHEA    Air Pollution and Health: a European Approach project
+APHENA   Air Pollution and Health: a European and North American approach study
+CAFE     Clean Air for Europe programme
+CI       confidence interval
+COPD     chronic obstructive pulmonary disease
+CRF      concentration–response function
+CVD      cardiovascular disease
+EC       European Commission
+ES       effect estimate
+EU       European Union
+EUROSTAT statistical office of the European Union
+GBD 2010 Global Burden of Disease 2010 study
+HRAPIE   Health risks of air pollution in Europe project
+IARC     International Agency for Research on Cancer
+ICD      International Classification of Diseases
+ICD-9    International Classification of Diseases, ninth revision
+ICD-10   International Classification of Diseases, tenth revision
+IIASA    International Institute for Applied Systems Analysis
+ISAAC    International Study on Asthma and Allergies in Childhood
+MDB      European mortality database
+MRAD     minor restricted activity day
+NLCSAIR  Netherlands Cohort Study on Diet and Cancer, air quality investigation section
+NO2      nitrogen dioxide
+O3       ozone
+OC       organic carbon
+PATY     Pollution and the Young study
+PM       particulate matter
+PM10     particulate matter with an aerodynamic diameter smaller than 10 µm
+PM2.5    particulate matter with an aerodynamic diameter smaller than 2.5 µm
+ppb      parts per billion
+RAD      restricted activity day
+REVIHAAP Review of evidence on health aspects of air pollution project
+RR       relative risk
+SAPALDIA Swiss Study on Air Pollution and Lung Disease in Adults
+SD       standard deviation
+Σ        sum
+                     HRAPIE project: recommendations for concentration–response functions
+                    for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                         page 1
+
+
+
+1. Introduction
+In the framework of the European Union (EU)’s declaration of 2013 as the Year of Air, the
+WHO Regional Office for Europe coordinated two international projects (“Review of
+evidence on health aspects of air pollution – REVIHAAP” and “Health risks of air pollution
+in Europe – HRAPIE”) to provide the European Commission (EC) and its stakeholders with
+evidence-based advice on the health aspects of air pollution. This advice is grounded on a
+review of the latest scientific evidence on the health effects of all pollutants regulated in EC
+directives 2008/50/EC and 2004/107/EC (EC, 2013), as well as additional air pollutants of
+relevance for health, conducted by a large group of invited experts from eminent institutions
+across the world (see Annex 1 for contributors to the HRAPIE project).
+
+The results of these projects support the comprehensive revision of EU air quality policies
+taking place in 2013. To offer effective advice, the REVIHAAP and HRAPIE projects
+address a list of 26 key policy-relevant questions posed by the EC. The questions cover
+general aspects of importance for air quality management, as well as specific topics
+concerning health aspects of individual air pollutants.
+
+As part of the HRAPIE project, experts were asked to formulate a response to question D5:
+“What concentration–response functions for key pollutants should be included in cost–benefit
+analysis supporting the revision of EU air quality policy?” The essential background to this
+response was developed through a review of evidence on health aspects of air pollutants
+summarized by the REVIHAAP project report (WHO, 2013a). In particular, answers to
+REVIHAAP project questions on the pollutants, health outcomes and concentration–response
+functions (CRFs) that could be recommended for health impact assessment (questions A6 for
+particulate matter (PM), B3 for ozone (O3) and C4 for nitrogen dioxide (NO2)) provided the
+basis for the selection of the CRFs recommended for inclusion in the policy analysis.
+
+A separate part of the HRAPIE project documented new emerging risks to health from air
+pollution through a survey of experts. These survey results are available in a separate report
+(WHO, 2013b).
+
+1.1. Cost–effectiveness and cost–benefit analyses of EU air quality
+policies
+Responding to the EC’s request, the HRAPIE project specifically addressed both cost–
+effectiveness and cost–benefit analyses. Analysis of cost–effectiveness aims to identify the
+pollution reduction strategies that will most effectively deliver a given benefit (for example,
+reduction of mortality or of the number of disability-adjusted life-years lost due to exposure).
+The work supporting the EU’s Thematic Strategy on Air Pollution compared about 50
+different strategy options, each requiring substantial modelling effort. For practical reasons,
+therefore, the number of CRFs recommended should be kept to a minimum (optimally, one
+per pollutant) facilitating selection of the policy options.
+
+The cost–benefit analysis performed for the policy option(s) selected aims to compare the
+benefits of actions to reduce environmental burdens against their costs. This requires a
+complete assessment of all impacts: omission of some impacts causes underestimation of the
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 2
+
+benefit of the pollution reduction, which might lead to incorrect conclusions. Therefore, the
+choice of CRFs selected for this analysis should be more comprehensive, including a
+complete set of all health outcomes linked to the exposure indicated by research evidence.
+Cost–benefit analysis should include options based on various alternative assumptions and
+may also test the extent to which the results might change if effects supported by weaker
+evidence were considered.
+
+The health experts involved in the HRAPIE project were in favour of recommending several
+alternative options for analysis to reflect the uncertainties of risk assessment. This would
+require repetition of the cost–effectiveness analysis for each option and would thus multiply
+the number of results for consideration in policy selection. Such an approach would
+significantly complicate the policy debate for stakeholders and policy-makers, so only one
+methodology for cost–effectiveness analysis was selected: estimating the impacts of exposure
+to PM2.5 (PM with an aerodynamic diameter smaller than 2.5 µm) and to O3 on mortality.
+Morbidity effects were not included for two reasons: cost–benefit analyses show that
+mortality impacts dominate the analysis as a whole and mortality data are complete and better
+standardized in EU countries. Nevertheless, the HRAPIE experts recommended more options
+– including effects on mortality and morbidity – for further cost–benefit analysis, also
+covering the effects of exposure to NO2. Other sources – such as IIASA (2013) – offer more
+detailed information on the cost–effectiveness analysis of various policy options at the EU
+level.
+
+1.2. Development process for HRAPIE project recommendations
+The discussion at the WHO REVIHAAP/HRAPIE expert meeting held in Bonn on 15–17
+January 2013 provided general direction for further work on CRFs linking mortality with
+PM2.5 and O3 in cost–effectiveness analysis, as well as for the outcomes to be considered in
+the cost–benefit analysis. This was followed by intensive discussion between the members of
+the Scientific Advisory Committee and other experts using electronic media (e-mails and
+teleconferences), and provided input to the International Institute for Applied Systems
+Analysis (IIASA) cost–effectiveness analysis in March 2013 (IIASA, 2013). Work on health
+outcomes to be considered in the cost–benefit analysis continued and included effects of PM,
+O3 and NO2.
+
+Where available, recent meta-analyses of epidemiological studies were used as the main data
+for the HRAPIE project’s conclusions. In some other cases, a dedicated meta-analysis was
+used in the scope of the HRAPIE project, taking information gathered by the air pollution
+epidemiology database (APED) of St. George’s Hospital Medical School, University of
+London. This database contains details and results from time-series studies of mortality and
+hospital admissions indexed in Medline, Embase, and Web of Knowledge to May 2011
+(Anderson et al., 2007). The United Kingdom Department of Health is currently funding a
+systematic review and meta-analyses of results from time-series studies of PM, O3 and NO2
+using APED. That review also provided evidence for the HRAPIE project analysis.
+
+The Scientific Advisory Committee meeting convened by the WHO European Centre for
+Environment and Health in Bonn, Germany, on 13 June 2013 reviewed the preliminary
+results of the experts’ work. Invited external reviewers also provided detailed comments on a
+draft version of this report in August 2013. The experts used the meeting’s recommendations
+                      HRAPIE project: recommendations for concentration–response functions
+                     for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                          page 3
+
+and external reviewers’ comments to support their discussions in order to finalize their
+contributions.
+
+1.3. Implementation of the HRAPIE project recommendations
+This document presents the HRAPIE project recommendations for input into the cost–benefit
+analysis of the selected policy options. The experts agreed that, according to the REVIHAAP
+project report (WHO, 2013a), there is sufficient evidence for the causality of effects for each
+of the CRFs recommended. They classified the pollutant–outcome pairs recommended for
+cost–benefit analysis into two categories:
+      Group A: pollutant–outcome pairs for which enough data are available to enable
+       reliable quantification of effects;
+      Group B: pollutant–outcome pairs for which there is more uncertainty about the
+       precision of the data used for quantification of effects.
+
+The recommendations consider specific conditions in EU countries – particularly in relation
+to the range of PM, O3 and NO2 concentrations expected to be observed in the EU in 2020 –
+as well as the availability of baseline health data. As a result, generalization of the
+recommended approaches to other regions of the globe or individual countries, or to
+particular mixtures at the local level, may be not appropriate.
+
+Table 1 provides an overview of the recommended elements of the cost–benefit analysis for
+the three pollutants. Recommendations for CRFs are given as relative risks (RRs). Some of
+the studies used to set these CRFs provided odds ratios, which approximate to RRs under
+certain assumptions, such as for small concentration increments and for rare events. The use
+of odds ratios may be more accurate for larger concentration increments, such as in burden
+calculations or if policy options are analysed by the difference in total effects with and
+without the policy (which involves using the total pollutant concentration in the interim
+calculations). Annexes 2 and 3 give examples of the method of calculation using odds ratios.
+
+Europe-wide modelling for particles is only available for PM2.5, so in cases where CRFs are
+expressed against PM10 (PM with an aerodynamic diameter smaller than 10 µm) in the
+literature, a conversion has to be employed in the cost–benefit analysis to assess the
+equivalent impact per unit of PM2.5. This is achieved by multiplying the CRF for PM10 by a
+factor of 1.54, assuming that effects are attributable to the PM2.5 fraction of PM10, based on
+an estimated 65% of PM10 being in the PM2.5 size range. This PM2.5/PM10 ratio of 0.65 is
+considered an average for the European population; however, in specific locations the ratio
+may be in the range 0.4–0.8 and a local estimate would be preferable for the conversion.
+
+Annexes 2 and 4 present additional options for estimating the effects of air pollution on
+health (such as the effects of long-term exposure to NO2 on asthma and of black carbon on
+mortality and hospital admissions); the experts discussed these within the HRAPIE project
+but did not recommend them for current assessment of EU air quality policies.
+
+Among the effect estimates (ESs) for pollutant–outcome pairs listed in Table 1 those marked
+with an asterisk (*) contribute to the total effect (i.e. the effects are additive) of either the
+limited set (Group A*) or the extended set (Group B*) of effects. Calculation of the range of
+overall costs and benefits should be based on the following principles:
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 4
+
+
+
+      the calculation of a limited set of impacts based on the sum (Σ) of Group A*;
+      the range of uncertainty around the limited estimate, from Σ minimum (Group A*,
+       Group A) to Σ maximum (Group A*, Group A), possibly combined with Monte Carlo
+       estimates based on confidence intervals (CIs) of RRs – minimum/maximum functions
+       select smaller/larger effect in the related alternative options;
+      the calculation of an extended set of impacts based on Σ Group A* + Σ Group B*;
+      the range of uncertainty around the extended estimate, from Σ [minimum (Group A*,
+       Group A) + minimum (Group B*, Group B)] to Σ [maximum (Group A*, Group
+       A) + maximum (Group B*, Group B)], possibly combined with Monte Carlo
+       estimates based on CIs of RRs.
+
+The CIs associated with the recommended CRFs quantify the random error and the variability
+attributed to heterogeneity in the epidemiologic ESs used for health impact assessment; this is
+a small part of the total uncertainty in the risk estimates produced by the health impact
+assessment and cost–benefit analysis processes. Other uncertainties are associated with other
+aspects of the overall process – for example, in the measurement and modelling of pollution,
+the estimates of background rates for morbidity (those for mortality are based on population-
+wide data) and monetary valuation. Some less tangible issues arise from the transferability to
+the EU as a whole of CRFs and background rates from locations where studies were carried
+out or data were otherwise gathered; from agreeing what particular pollutant–outcome pairs
+should be used together to estimate the health impacts of particular policies and measures;
+and from assessing the uncertainty of an overall estimate of effects, aggregated (after
+conversion to monetary values) over the various pollutant–outcome pairs of either Group A*
+or Group B* proposed here, or indeed any intermediate variant of these two sets.
+
+An effort was made to give the best evidence-based estimate of the relationship between the
+pollutant and that health outcome for each pollutant–outcome pair included. To avoid double
+counting, the HRAPIE experts proposed explicit rules of adjustment or recommended the
+exclusion of some pollutant–outcome pairs whose effect might – at least to a substantial
+degree – already have been accounted for. Acute effects of air pollution can occur with a
+delay of a few days or even more. In selecting risk coefficients linking short-term exposures
+to health outcomes, however, the distributed lags were not taken into account, possibly
+resulting in underestimation of the overall effect. In addition, some health outcomes on which
+there is evidence of the effects of air pollution were excluded because of difficulties in
+attaching monetary values reliably – for example, low birth weight and lung function.
+Further, the use of Group A* rather than Group B* may lead to underestimation of risk, as
+there is sufficient evidence of a causal relationship for all pollutant–outcome pairs.
+
+The details of the uncertainty assessment and other issues related to the implementation of the
+HRAPIE project’s recommendations in the cost–benefit analysis fall outside of the remit of
+the HRAPIE project. The report on implementation of the HRAPIE project’s
+recommendations for the European air pollution cost–benefit analysis (Holland, 2013)
+provides a thorough description of the methods.
+                                                                                 HRAPIE project: recommendations for concentration–response functions
+                                                                                for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                                                                                     page 5
+
+
+                                                       Table 1. CRFs recommended by the HRAPIE project
+                                                                    PM, long-term exposure
+ Pollutant       Health         Group     RR (95% CI)             Range of       Source of background          Source of CRF                     Comments
+  metric        outcome                   per 10 µg/m3        concentration             health data
+PM2.5,       Mortality, all-    A*      1.062                 All             European mortality database      Meta-analysis of
+annual       cause (natural),           (1.040–1.083)                         (MDB) (WHO, 2013c), rates        13 cohort
+mean         age 30+ years                                                    for deaths from all natural      studies with
+                                                                              causes (International            results: Hoek et
+                                                                              Classification of Diseases,      al. (2013)
+                                                                              tenth revision (ICD-10)
+                                                                              chapters I–XVIII, codes A–R)
+                                                                              in each of the 53 countries of
+                                                                              the WHO European Region,
+                                                                              latest available data
+PM2.5,       Mortality,         A       Global Burden of      All             European detailed mortality      CRFs used in the   An alternative to all-cause mortality
+annual       cerebrovascular            Disease (GBD)                         database (WHO, 2013d),           GBD 2010 study
+mean         disease                    2010 study                            ICD-10 codes                                        Both age-specific and all-age estimates
+             (includes                  (IHME, 2013),                         cerebrovascular: I60–I63,                           to be calculated to assess the potential
+             stroke),                   supra-linear                          I65–I67, I69.0–I69.3;                               effect of age stratification
+             ischaemic heart            exponential decay                     ischaemic heart disease: I20–
+             disease,                   saturation model                      I25; COPD: J40–J44, J47;
+             chronic                    (age-specific),                       trachea, bronchus and lung
+             obstructive                linearized by the                     cancer: C33–C34, D02.1–
+             pulmonary                  PM2.5 expected in                     D02.2, D38.1
+             disease (COPD)             2020 under the
+             and trachea,               current legislation
+             bronchus and               scenario
+             lung cancer,
+             age 30+ years
+PM10,        Postneonatal       B*      1.04                  All             European Health for All          Woodruff, Grillo   More recent analysis (Woodruff, Darrow
+annual       (age 1–12                  (1.02, 1.07)                          database (WHO, 2013e) and        and Schoendorf     and Parker, 2008) based on 3.5 million
+mean         months) infant                                                   United Nations projections       (1997), based      infants in the United States gives
+             mortality, all-                                                                                   on 4 million       RR = 1.18 (1.06, 1.31) for respiratory
+             cause                                                                                             infants in the     postneonatal infant mortality; the older
+                                                                                                               United States      analysis is recommended as a source of
+                                                                                                                                  RR due to unavailability of cause-specific
+                                                                                                                                  postneonatal mortality data
+ HRAPIE project: recommendations for concentration–response functions
+ for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+ page 6
+
+                                                           PM, long-term exposure (continued)
+ Pollutant          Health       Group     RR (95% CI)         Range of      Source of background         Source of CRF                    Comments
+  metric          outcome                  per 10 µg/m3    concentration            health data
+PM10,          Prevalence of     B*      1.08              All             Mean prevalence from the       PATY study         Heterogeneity of the association
+annual         bronchitis in             (0.98–1.19)                       Pollution and the Young        (Hoek et al.,      (p<0.10) between studies
+mean           children, age                                               (PATY) study: 18.6% (range     2012) analysing
+               6–12 (or 6–18)                                              6–41%)                         data from about
+               years                                                                                      40 000 children
+                                                                                                          living in nine
+                                                                                                          countries
+PM10,          Incidence of      B*      1.117             All             Annual incidence 3.9 per       Combination of     Two studies with different odds
+annual         chronic                   (1.040–1.189)                     1000 adults based on the       results from       ratios/RRs; cost–benefit analysis based
+mean           bronchitis in                                               Swiss Study on Air Pollution   longitudinal       on symptoms reporting is weak
+               adults (age                                                 and Lung Disease in Adults     studies Loma       indication of clinically recognized COPD
+               18+ years)                                                  (SAPALDIA)                     Linda University
+                                                                                                          Adventist Health
+                                                                                                          and Smog
+                                                                                                          (AHSMOG) and
+                                                                                                          SAPALDIA
+
+                                                                 PM, short-term exposure
+ Pollutant        Health         Group     RR (95% CI)         Range of     Source of background          Source of CRF                     Comments
+  metric         outcome                   per 10 µg/m3    concentration         health data
+PM2.5, daily   Mortality, all-   A       1.0123            All             MDB (WHO, 2013c)               APED meta-         For information only: not proposed as an
+mean           cause, all ages           (1.0045–1.0201)                                                  analysis of 12     alternative to long-term PM2.5 exposure
+                                                                                                          single-city and
+                                                                                                          one multicity      The premature deaths attributed to
+                                                                                                          studies            short-term changes of PM2.5 are already
+                                                                                                                             accounted for in estimating the effects of
+                                                                                                                             long-term exposure
+PM2.5, daily   Hospital          A*      1.0091            All             European hospital morbidity    APED meta-
+mean           admissions,               (1.0017–1.0166)                   database (WHO, 2013f),         analysis of four
+               cardiovascular                                              ICD, ninth revision (ICD-9)    single-city and
+               diseases                                                    codes 390-459; ICD-10          one multicity
+               (CVDs)                                                      codes I00–I99                  studies
+               (includes
+               stroke), all
+               ages
+                                                                                       HRAPIE project: recommendations for concentration–response functions
+                                                                                      for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                                                                                           page 7
+
+                                                                PM, short-term exposure (continued)
+ Pollutant         Health        Group        RR (95% CI)            Range of        Source of background           Source of CRF                    Comments
+  metric          outcome                     per 10 µg/m3       concentration             health data
+PM2.5, daily   Hospital         A*          1.0190               All               European hospital morbidity     APED meta-
+mean           admissions,                  (0.9982–1.0402)                        database (WHO, 2013f),          analysis of three
+               respiratory                                                         ICD-9 codes 460-519; ICD-       single-city
+               diseases, all                                                       10 codes J00–J99                studies
+               ages
+PM2.5, two-    Restricted       B**         1.047                All               19 RADs per person per          Study of 12 000     One 1987 study from the United States;
+week           activity days                (1.042–1.053)                          year: baseline rate from the    adults followed     no data of background rate in Europe
+average,       (RADs), all                                                         Ostro and Rothschild (1989)     for six years in
+converted to   ages                                                                study                           49 metropolitan
+PM2.5,                                                                                                             areas of the
+annual                                                                                                             United States
+average                                                                                                            (Ostro, 1987)
+PM2.5, two-    Work days        B*          1.046                All               European Health for All         Study of 12 000     High variability of background rates
+week           lost, working-               (1.039–1.053)                          database (WHO, 2013e)           adults followed     based on reported sick absenteeism in
+average,       age population                                                                                      for six years in    Europe, reflecting intercountry
+converted to   (age 20–65                                                                                          49 metropolitan     differences in definition
+PM2.5,         years)                                                                                              areas of the
+annual                                                                                                             United States
+average                                                                                                            (Ostro, 1987)
+PM10, daily    Incidence of     B*          1.028                All               Prevalence of asthma in         Meta-analysis of    Varying definition of the target
+mean           asthma                       (1.006–1.051)                          children based on “severe       36 panel studies    population and of the daily occurrence of
+               symptoms in                                                         asthma” in the International    of asthmatic        symptoms
+               asthmatic                                                           Study on Asthma and             children
+               children aged                                                       Allergies in Childhood          conducted in 51
+               5–19 years                                                          (ISAAC) (Lai et al., 2009) –    populations,
+                                                                                   western Europe: 4.9%;           including 36
+                                                                                   northern and eastern            from Europe,
+                                                                                   Europe: 3.5%. Daily             (Weinmayr et
+                                                                                   incidence of symptoms in        al., 2010)
+                                                                                   this group: 17%
+                                                                                   (interpolation from several
+                                                                                   panel studies)
+ ** Only residual RADs to be added to total effect, after days in hospital, work days lost and days with symptoms are accounted for.
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 8
+
+                                                                   O3, long-term exposure
+Pollutant metric          Health         Group    RR (95% CI)         Range of      Source of background           Source of CRF                  Comments
+                         outcome                  per 10 µg/m3      concentration         health data
+O3, summer months    Mortality,          B       1.014             >35 ppb          MDB (WHO, 2013c), ICD-   Single-pollutant models         Alternative to effects
+(April–September),   respiratory                 (1.005–1.024)     (>70 µg/m³)      10 codes J00–J99         from American Cancer            of short-term O3 on
+average of daily     diseases, age                                                                           Society (ACS) data analysis     all-cause mortality
+maximum 8-hour       30+ years                                                                               (Jerrett et al., 2009a)
+mean over 35 parts
+per billion (ppb)
+
+                                                                   O3, short-term exposure
+Pollutant metric           Health        Group    RR (95% CI)         Range of       Source of background          Source of CRF                  Comments
+                          outcome                 per 10 µg/m3      concentration         health data
+O3, daily maximum    Mortality, all      A*      1.0029            >35 ppb          MDB (WHO, 2013c), ICD-   Air Pollution and Health: a     APHENA study, based
+8-hour mean          (natural) causes,           (1.0014–1.0043)   (>70 µg/m³)      10 chapters I–XVIII,     European and North              on full range of
+                     all ages                                                       codes A–R                American approach study         observed O3
+                                                                                                             (APHENA), based on data         concentrations,
+                                                                                                             from 32 European cities;        including levels <35
+                                                                                                             coefficients adjusted for       ppb; thus effects at O3
+                                                                                                             PM10 in two-pollutant           <35 ppb are ignored
+                                                                                                             model
+O3, daily maximum    Mortality, all      A       1.0029            >10 ppb          MDB (WHO, 2013c), ICD-   APHENA study based on           Alternative to the
+8-hour mean          (natural) causes,           (1.0014–1.0043)   (>20 µg/m³)      10 chapters I–XVIII,     data from 32 European           assessment for O3
+                     all ages                                                       codes A–R                cities; coefficients adjusted   >35 ppb only
+                                                                                                             for PM10 in two-pollutant
+                                                                                                             model
+O3, daily maximum    Mortality, CVDs     A       CVD: 1.0049       >35 ppb          MDB (WHO, 2013c), ICD-   APHENA study based on           Alternative to all-cause
+8-hour mean          and respiratory             (1.0013–          (>70 µg/m³)      10 codes CVD: I00–I99;   data from 32 European           mortality analysis
+                     diseases, all               1.0085);                           respiratory: J00–J99     cities; coefficients adjusted
+                     ages                        respiratory:                                                for PM10 in two-pollutant
+                                                 1.0029                                                      model
+                                                 (0.9989–1.0070)
+O3, daily maximum    Mortality, CVDs     A       CVD: 1.0049       >10 ppb          MDB (WHO, 2013c), ICD-   APHENA study based on           Alternative to the
+8-hour mean          and respiratory             (1.0013–          (>20 µg/m³)      10 codes CVD: I00–I99;   data from 32 European           cause-specific
+                     diseases, all               1.0085);                           respiratory: J00–J99     cities; coefficients adjusted   assessment for O3
+                     ages                        respiratory:                                                for PM10 in two-pollutant       >35 ppb only
+                                                 1.0029                                                      model
+                                                 (0.9989–1.0070)
+                                                                               HRAPIE project: recommendations for concentration–response functions
+                                                                              for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                                                                                   page 9
+
+
+                                                           O3, short-term exposure (continued)
+ Pollutant      Pollutant       Pollut    Pollutant metric        Pollutant         Pollutant metric           Pollutant metric             Pollutant metric
+  metric         metric           ant                              metric
+                                metric
+O3, daily    Hospital           A*       CVD: 1.0089            >35 ppb          European hospital          APHENA study based on       APHENA study based on all
+maximum 8-   admissions,                 (1.0050–1.0127);       (>70 µg/m³)      morbidity database         data from eight             range of observed O3
+hour mean    CVDs (excluding             respiratory: 1.0044                     (WHO, 2013f), ICD-9        European cities;            concentrations, including
+             stroke) and                 (1.0007–1.0083)                         codes CVD: 390–429;        coefficients adjusted for   levels <35 ppb; thus
+             respiratory                                                         respiratory: 460–519       PM10 in two-pollutant       effects at O3 <35 ppb
+             diseases, age                                                       (ICD-10 codes I00–I52;     model                       are ignored
+             65+ years                                                           J00–J99)
+O3, daily    Hospital           A        CVD: 1.0089            >10 ppb          European hospital          APHENA study based on       Alternative to the
+maximum 8-   admissions, CVD             (1.0050–1.0127);       (>20 µg/m³)      morbidity database         data from eight             assessment for O3 >35 ppb
+hour mean    (excluding                  respiratory: 1.0044                     (WHO, 2013f), ICD-9        European cities;            only
+             stroke) and                 (1.0007–1.0083)                         codes CVD: 390–429;        coefficients adjusted for
+             respiratory                                                         respiratory: 460–519       PM10 in two-pollutant
+             diseases, age                                                       (ICD-10 codes I00–I52;     model
+             65+ years                                                           J00–J99)
+O3, daily    Minor restricted   B*       1.0154                 >35 ppb          7.8 days per year, based   Ostro and Rothschild’s      One study from the United
+maximum 8-   activity days               (1.0060–1.0249)        (>70 µg/m³)      on Ostro and Rothschild    (1989) six separate         States in 1989, used as a
+hour mean    (MRADs), all                                                        (1989)                     analyses of annual data     source of both RR and
+             ages                                                                                           1976–1981 of the            background rates
+                                                                                                            United States National
+                                                                                                            Health Interview Survey
+O3, daily    MRADs, all ages    B        1.0154                 >10 ppb          7.8 days per year, based   Ostro and Rothschild’s      Alternative to the
+maximum 8-                               (1.0060–1.0249)        (>20 µg/m³)      on Ostro and Rothschild    (1989) six separate         assessment for O3 >35 ppb
+hour mean                                                                        (1989)                     analyses of annual data     only
+                                                                                                            1976–1981 of the
+                                                                                                            United States National
+                                                                                                            Health Interview Survey
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 10
+
+                                                                NO2, long-term exposure
+Pollutant metric       Health       Group    RR (95% CI) per        Range of       Source of background             Source of CRF                 Comments
+                      outcome                    10 µg/m3         concentration          health data
+NO2, annual mean   Mortality, all   B*      1.055                 >20 µg/m³       MDB (WHO, 2013c), rates       Meta-analysis of all (11)   Some of the long-term
+                   (natural)                (1.031–1.080)                         for deaths from all natural   cohort studies published    NO2 effects may overlap
+                   causes, age                                                    causes (ICD-10 chapters       before January 2013 by      with effects from long-
+                   30+ years                                                      I–XVIII, codes A–R) in        Hoek et al. (2013); RR      term PM2.5 (up to 33%);
+                                                                                  each of the 53 WHO            based on single-            this is therefore
+                                                                                  Regional Office for Europe    pollutant models            recommended for
+                                                                                  countries, latest available                               quantification under
+                                                                                  data                                                      Group B to avoid double
+                                                                                                                                            counting in Group A
+                                                                                                                                            analysis
+NO2, annual mean   Prevalence of    B*      1.021                 All             Background rate of            Southern California         Based on only one
+                   bronchitic               (0.990–1.060) per                     asthmatic children,           Children’s Health Study     available longitudinal
+                   symptoms in              1 µg/m³ change in                     “asthma ever”, in Lai et      (McConnell et al.,          study providing NO2
+                   asthmatic                annual mean NO2                       al. (2009) – western          2003); coefficient from     coefficient adjusted for
+                   children aged                                                  Europe: 15.8%, standard       two-pollutant model         other pollutants
+                   5–14 years                                                     deviation (SD) 7.8%;          with organic carbon
+                                                                                  northern and eastern          (OC) (coefficients from     Supported by studies of
+                                                                                  Europe: 5.1%, SD 2.7%,        models with PM10 or         long-term exposure to
+                                                                                  with a recommended            PM2.5 are higher)           NO2 and lung function
+                                                                                  alternative of “severe                                    and by the wider
+                                                                                  wheeze” in Lai et al.                                     evidence on NO2 and
+                                                                                  (2009) – western Europe:                                  respiratory outcomes
+                                                                                  4.9%; northern and                                        from other types of
+                                                                                  eastern Europe: 3.5%                                      studies
+
+                                                                                  Prevalence of bronchitic
+                                                                                  symptoms among
+                                                                                  asthmatic children
+                                                                                  21.1% to 38.7% (Migliore
+                                                                                  et al., 2009; McConnell et
+                                                                                  al., 2003)
+                                                                           HRAPIE project: recommendations for concentration–response functions
+                                                                          for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                                                                              page 11
+
+
+                                                               NO2, short-term exposure
+Pollutant metric       Health       Group    RR (95% CI) per         Range of   Source of background              Source of CRF                 Comments
+                      outcome                   10 µg/m3         concentratio        health data
+                                                                        n
+NO2, daily         Mortality, all   A*      1.0027               All            MDB (WHO, 2013c), rates       Air Pollution and Health:
+maximum 1-hour     (natural)                (1.0016–1.0038)                     for deaths from all natural   a European Approach
+mean               causes, all                                                  causes (ICD-10 chapters       (APHEA)-2 project with
+                   ages                                                         I–XVIII, codes A–R) in        data from 30 European
+                                                                                each of the 53 countries      cities; RR adjusted for
+                                                                                of the WHO European           PM10
+                                                                                Region, latest available
+                                                                                data
+NO2, daily         Hospital         A       1.0015               All            European hospital             APED meta-analysis of       Alternative to the
+maximum 1-hour     admissions,              (0.9992–1.0038)                     morbidity database (WHO,      four studies published      estimates based on 24-
+mean               respiratory                                                  2013f), ICD-9 codes 460–      before 2006; coefficient    hour NO2 average
+                   diseases, all                                                519; ICD-10 codes J00–        from single-pollutant       (preferred due to
+                   ages                                                         J99                           model                       availability of more
+                                                                                                                                          studies)
+                                                                                                              WHO (2013a) noted
+                                                                                                              that the estimates for
+                                                                                                              this pollutant–outcome
+                                                                                                              pair were robust to
+                                                                                                              adjustment to co-
+                                                                                                              pollutants
+NO2, 24-hour       Hospital         A*      1.0180               All            European hospital             APED meta-analysis of
+mean               admissions,              (1.0115–1.0245)                     morbidity database (WHO,      15 studies published
+                   respiratory                                                  2013f), ICD-9 codes 460–      before 2006; coefficient
+                   diseases, all                                                519; ICD-10 codes J00–        from single-pollutant
+                   ages                                                         J99                           model
+
+                                                                                                              WHO (2013a) noted
+                                                                                                              that the estimates for
+                                                                                                              this pollutant–outcome
+                                                                                                              pair were robust to
+                                                                                                              adjustment to co-
+                                                                                                              pollutants
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 12
+
+
+1.4. Possible double counting of effects of various pollutants
+Quantification of the health impacts of community air pollution in the HRAPIE project
+focuses on three main pollutants: NO2, PM2.5 and O3. In studies of health effects of these
+pollutants, they are usually correlated to some extent – sometimes negatively so, as with O3
+and PM2.5 in winter. The REVIHAAP project report therefore proposes quantification of
+health effects associated with these pollutants only after adjustment for at least one of the
+others (WHO, 2013a). Far fewer studies systematically applying two- or three-pollutant
+modelling are available, however, than studies using single-pollutant models. Furthermore,
+ESs for a given pollutant derived from a multipollutant model may be subject to bias if the
+pollutants are correlated with each other and subject to measurement error (Fung et al., 1999).
+This can lead to underestimation of the RR for a pollutant of interest.
+
+The HRAPIE project therefore uses ESs from the largest possible group of studies – i.e.
+including those from single-pollutant analyses – for quantification. Quantification of the
+impact for one pollutant from single-pollutant models may to some extent include effects
+attributable to another. Consequently, for any particular health outcome and exposure period
+(long-term or short-term exposure), estimated impacts of the three pollutants should not be
+added without recognizing that addition will, in most practical circumstances, lead to some
+overestimation of the true impact. Impacts estimated for one pollutant only will, on the other
+hand, underestimate the true impact of the pollution mixture, if other pollutants also affect
+that same health outcome.
+
+2. Long-term PM exposure
+2.1. Effects of long-term PM2.5 exposure on all-cause mortality
+The HRAPIE experts recommended estimation of the impact of long-term (annual average)
+exposure to PM2.5 on all-cause (natural) mortality in adult populations (age 30+ years) for
+cost–effectiveness analysis; this should also be included in Group A* of the cost–benefit
+analysis. It should be based on a linear CRF, with an RR of 1.062 (95% CI = 1.040, 1.083)
+per 10 µg/m3. The impacts should be calculated at all levels of PM2.5.
+
+The recommended risk coefficient is based on the most recently completed meta-analysis of
+all cohort studies published before January 2013 by Hoek et al. (2013) (Fig. 1). Thirteen
+different studies conducted in adult populations of North America and Europe contributed to
+estimation of this coefficient.
+
+Additional cohort studies on PM and mortality, either all-cause (natural) or cause-specific,
+have also been published. Differences in exposure assessment or other methods limited their
+inclusion in the Hoek et al. (2013) quantitative meta-analysis. Some further studies were
+published after the literature cut-off date of January 2013 (Carey et al., 2013, Kloog et al.,
+2013), but it is of note that the overall body of evidence is qualitatively consistent with the
+results of the meta-analysis. Furthermore, there is a wide range of exposure errors in the
+studies included in the meta-analysis (see Hoek et al., 2013 for details). Studies with a better
+quality of exposure assessment on average estimated a steeper CRF. It was not possible
+within the limited timeframe of the HRAPIE project to classify studies by the quality of their
+                        HRAPIE project: recommendations for concentration–response functions
+                       for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                           page 13
+
+exposure assessment and perform a separate meta-regression to take this into account. The
+authors therefore acknowledge that the current HRAPIE project recommendation could result
+in an underestimate of the exposure–response slope.
+
+    Fig. 1. Meta-analysis of the association between PM2.5 and all-cause mortality (RR per
+                                           10 µg/m3)
+
+
+
+
+Source: Hoek et al. (2013).
+Notes: NLCSAIR = Netherlands Cohort Study on Diet and Cancer, air quality investigation section; I-squared
+  refers to the degree of inconsistency across studies.
+
+As noted in IHME (2013), the RR coefficients for both ischaemic heart disease and stroke are
+modified by age. Whether this effect occurs with ambient air pollution effects on all-cause
+mortality is unknown because no cohort study has yet identified significant differences in age
+effects. It has, however, been regarded as prudent, where possible, to make an adjustment for
+age.
+
+For reasons of simplicity, the Hoek et al. (2013) meta-analysis did not account for this factor.
+The age structure of EU Member States is similar to that of the groups included in
+epidemiological studies. Nevertheless, the authors acknowledge that this could theoretically
+affect the impact estimates based on the Hoek et al. (2013) meta-analysis. The recommended
+alternative analysis is based on the age-stratified supra-linear exponential decay saturation
+model applied in the GBD 2010 study (IHME, 2013), which considered only cause-specific
+mortality.
+
+The PM2.5 levels observed in these studies correspond to the range expected for the EU in
+2020 under the current legislation scenario (not exceeding 20 µg/m3 in most areas). No
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 14
+
+extrapolation beyond the range covered by epidemiological studies on the effects of ambient
+PM2.5 is needed.
+
+Use of the linear function was discussed in the response and rationale given for question A5
+in the REVIHAAP project report, indicating that few of the long-term studies examined the
+shape of the CRF (WHO, 2013a). The available analyses suggest that it is reasonable to use
+linear CRFs to assess risks within Europe, given the expected levels of PM2.5 in 2020. This is
+especially the case for all-cause mortality. For more specific causes of death, a supra-linear
+function, steeper in lower concentrations, may fit the data slightly better.
+
+The recommendation of all-cause analysis as a primary (A*) choice and not a set of CRFs for
+more specific causes of death is supported by two arguments.
+      The wider availability of risk estimates, produced by most long-term studies of all-
+       cause mortality, makes them more appropriate for meta-analysis that incorporates a
+       wide range of characteristics specific to the countries included in the analysis.
+       Different groupings of causes of death in various studies make the synthesis of cause-
+       specific results more difficult because of a reduction in the number of eligible studies.
+       Meta-analysis of all-cause mortality can therefore draw on a greater range of studies
+       than would be possible in a cause-specific analysis. A further point is that all-cause
+       mortality includes deaths from causes that might lie outside the cause-specific groups
+       generally reported but are insufficient in cohort studies for individual estimates.
+      The background national data on all-cause mortality have greater precision than the
+       cause-specific data. The latter may be affected by misclassification of causes of death
+       in mortality registration across the range of countries included in the analysis
+       (Mathers et al., 2005). As a result, with cause-specific impact estimates, the
+       uncertainty related to background health data will add to the CRF uncertainty,
+       complicating interpretation of the impact assessment.
+
+An additional argument for the use of all-cause mortality is the smaller scale of heterogeneity
+of the “all-cause” coefficients reported by various epidemiological studies than that observed
+for cause-specific ones.
+
+Convincing evidence also indicates a relationship between cardiovascular, respiratory and
+lung cancer mortality and PM2.5 exposure, while many other causes of death (such as
+gastrointestinal diseases) are less likely to be affected by this air quality parameter. This
+argument favours cause-specific analysis, recommended as an alternative method (see section
+2.2). The HRAPIE experts judged, however, that the frequency of the causes of death linked
+with exposure was sufficiently similar (between cohorts included in the meta-analysis and
+between countries in the EU where the impacts are to be estimated) to justify the use of all-
+cause mortality in the cost–benefit analysis. If the frequency of the causes of death linked
+with exposure differs markedly between countries, as is the case for global burden estimates,
+then use of all-cause CRFs will lead to both over- and underestimation of impacts at the
+country level. This issue should be addressed through comparison of the two alternative
+methods recommended and in the uncertainty analysis.
+
+The recommendation to assume benefits of any reduction in exposure, including at very low
+modelled levels of PM2.5, is based on the assumption that, even after the pollution reduction,
+the PM2.5 concentration will be likely to exceed the lowest levels observed in recent
+                     HRAPIE project: recommendations for concentration–response functions
+                    for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                        page 15
+
+epidemiological studies (including because of the natural background). As summarized in the
+response to question A5, several cohort studies reported effects on mortality at PM2.5
+concentrations well below an annual average of 10 µg/m3.
+
+Advantages of the method based on the linear function include its simplicity and
+independence of the expected health benefits of pollution reduction from the initial level of
+exposure. It is also important that it follows the approaches applied in the Clean Air for
+Europe (CAFE) programme in 2005. These are familiar to stakeholders and policy-makers
+and allow comparison of new results with those from 2005.
+
+Findings from the follow-up of the Harvard Six Cities study suggest that mortality effects
+may be partially reversible, over a time period possibly as short as a year (Laden et al., 2006;
+Lepeule et al., 2012). The most appropriate way to express the benefits, identified through
+cohort studies, of reduced exposure to PM2.5 is in terms of life-years gained across the
+population as a whole (COMEAP, 2010; WHO, 2000). As described, for example, in
+COMEAP (2010), “attributable deaths” are useful for describing the mortality burden in any
+given year, if some simplifying assumptions are accepted. They are difficult to use, however,
+in comparing numbers of deaths in a reduced pollution scenario with a baseline long-term
+scenario, as everyone dies eventually in both cases. Numbers of deaths can be calculated for
+shorter time periods, but this type of estimate of the impact of exposure is incomplete. Such
+estimates would also need to be accompanied by a description of the relevant time period,
+such as “in the first 10 years” (“per year” is not appropriate as the numbers of attributable
+deaths following a reduction in pollution vary over time as the size and age structure of the
+population is altered by the additional survivors).
+
+The HRAPIE experts recommended estimation of effects in adult populations (age 30+ years)
+as most of the evidence providing the CRFs comes from studies that focused on populations
+around 30 years of age and above.
+
+Baseline mortality rates for the analysis should be based on the data available in the MDB
+(WHO, 2013c). The rates for deaths from all natural causes (ICD-10 chapters I–XVIII, codes
+A–R) in each of the 53 countries of the WHO European Region for the latest year with
+available data should be calculated. The data available in the database are compiled from
+various sources, including a network of country experts; the WHO Regional Office for
+Europe’s technical programmes; and partner organizations such as United Nations agencies,
+the statistical office of the EU (EUROSTAT) and the Organisation for Economic Co-
+operation and Development. The MDB is updated twice a year.
+
+2.2. Effects of long-term PM2.5 exposure on cause-specific mortality
+The cause-specific analysis follows the approach applied in the recently published GBD 2010
+study (Lim et al., 2012). It includes an estimation of the effects of long-term exposure to
+PM2.5 on mortality from four specific causes of death (cerebrovascular disease, ischaemic
+heart disease, COPD and lung cancer) in all regions of the world at age 30+ years. This was
+the preferred approach for the GBD 2010 study because of significant differences in the
+structure of reporting of causes of death between regions (IHME, 2013). The PM2.5 levels
+considered in the GBD 2010 study expanded far beyond the concentrations observed in long-
+term epidemiological studies on the effects of ambient air pollution conducted in North
+America and western Europe, so the estimation of CRFs integrated results of studies on
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 16
+
+ambient air pollution with those of studies on effects of PM from second-hand smoke, indoor
+air pollution from household solid fuel use, and active smoking, following the approach
+published by Pope et al. (2011). This approach assumes that the health impacts of fine PM
+from various sources are similar. It avoids estimation of unrealistically high risks in
+populations exposed to very high ambient levels of PM2.5 (those much higher than in
+Europe), which could result from linear or even logarithmic extrapolation of the results of
+studies on effects of ambient air quality.
+
+The CRFs applied in the GBD 2010 study (IHME, 2013) were based on a three-parameter
+exponential decay saturation model with a power of PM2.5 concentration. The approach to
+developing this model is described in the response and rationale given for question D4 in the
+REVIHAAP project report (WHO, 2013a) and a paper providing a more detailed model
+description is in preparation. This model provided the best overall fit among all four health
+outcomes studied, compared to the seven alternative models examined. The CRFs reflect a
+steeper increase in risk at low exposure levels than that for higher exposures (supra-linear
+function) observed in some epidemiological studies. The estimates of risk based on this
+approach compare well with the results of a recent study conducted in China (Cao et al.,
+2011), with estimated PM2.5 (converted from total suspended particles) concentrations
+ranging from 38–166 µg/m3.
+
+The REVIHAAP project recommended the GBD 2010 approach for cost–benefit analysis,
+noting that its application would involve a linearization of the CRFs, using the PM2.5 level
+expected in 2020 under the current legislation scenario. In practice, estimates were sensitive
+to assumptions about the level below which effects would not be quantified; this was one
+reason the GBD 2010 cause-specific values do not contribute to the total effect but are
+recommended as an alternative to all-cause mortality.
+
+As noted in section 2.1, epidemiological studies of risk factors for both ischaemic heart
+disease and stroke indicate that the RR declines with the logarithm of age (Lim et al., 2012).
+The HRAPIE experts therefore recommended calculation of both age-specific and all-age
+estimates to assess the potential effect of stratification. The matrix of risk coefficients (by
+baseline PM2.5 level and age, for each of the outcomes) is provided in the GBD 2010 study.
+
+Furthermore, the International Agency for Research on Cancer (IARC) recently classified
+ambient air pollution in general, and PM specifically, as a Group 1 carcinogen (IARC, 2013).
+Future health impact assessment and cost–benefit analysis exercises should consider
+recommendations for PM2.5 and lung cancer incidence (besides lung cancer mortality), as this
+outcome contributes to the burden of disease of air pollution. In view of the HRAPIE project
+timeline, however, a formal meta-analysis for this outcome was not undertaken, and specific
+recommendations for lung cancer incidence were not made. The proposed recommendations
+for all-cause and cause-specific mortality (which include lung cancer as a cause of death) are
+thought partially to cover this outcome, but as they relate only to lung cancer mortality and
+not to development of cancer, this may lead to a small underestimation of the effects.
+
+As for all-cause mortality, the calculation of life-years gained is more appropriate than
+numbers of deaths although it is possible to have long-term changes in numbers of deaths
+from specific causes. Again as for all-cause mortality, the duration of follow-up in life tables
+needs to be defined (such as, for example, the lifetime of those at the start of the policy
+change); this is particularly important for lung cancer, where a short lag would be
+                     HRAPIE project: recommendations for concentration–response functions
+                    for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                        page 17
+
+inappropriate and a short follow-up would miss the effect. Baseline rates for mortality should
+be sourced from the European detailed mortality database (WHO, 2013d).
+
+2.3. Effects of long-term PM10 exposure on postneonatal mortality
+For infant mortality, the HRAPIE experts recommended using the results of the study by
+Woodruff, Grillo and Schoendorf (1997), based on 4 million infants in the United States. The
+endpoint was postneonatal infant mortality, defined as death between the ages of 1 and 12
+months. The associations reported in the study between all-cause mortality and PM10
+(measured as the average during the first two months of life) generated an RR of 1.04 (95%
+CI = 1.02, 1.07) per 10 µg/m3 PM10. This study is preferred over a more recent study
+(Woodruff, Darrow and Parker, 2008) of 3.5 million infants in the United States, which
+reports associations with respiratory-specific postneonatal infant mortality. While this later
+study provides general support for infant mortality effect from long-term exposure, data on
+the cause-specific postneonatal mortality are not available in international databases. Further
+studies, mostly in developing countries, provide additional support for an effect of acute
+exposure to PM (Cohen et al., 2004).
+
+Country-specific postneonatal mortality rates should be used, based on the European Health
+for All database (WHO, 2013e), possibly including United Nations projections, as
+background data.
+
+These recommendations are based on a limited number of studies only and, owing to the
+limited resources of the current project, were prepared without a formal systematic review of
+the evidence on the impact of PM on postneonatal mortality. The confidence in quantitative
+estimate of risk is considered to be moderate, and the pollutant–outcome pair is
+recommended for inclusion in Group B*.
+
+2.4. Effects of long-term PM10 exposure on prevalence of bronchitis
+in children
+The CRF for this endpoint is taken from the PATY study (Hoek et al., 2012), which analysed
+data collected by cross-sectional studies previously conducted in 11 countries. Data on
+“bronchitis in the past 12 months” were available from about 40 000 children aged 6 to 12
+years living in nine countries, with most subjects living in European cities. A borderline
+significant association of bronchitis prevalence with long-term average PM10 concentration in
+cities was reported with an ES of 1.08 (95% CI = 0.98, 1.19) per 10 µg/m3 annual mean
+PM10. The analysis found evidence for heterogeneity of the association (p<0.10) between the
+studies, possibly related to the differences in design of individual studies included in the
+PATY study and diagnostic differences affecting bronchitis definition. This outcome
+contributes to the calculation of RADs, so when the total burden of disease and costs due to
+PM are calculated, RADs should be reduced accordingly.
+
+In the cost–benefit analysis, this estimate is to be applied to all children aged 6–12 years (or
+6–18 years if only this age category is available). The baseline rate of bronchitis in the
+previous 12 months can be based on the results of the PATY study. Although the estimates
+from various countries ranged from 6.2% to 41.5%, the HRAPIE experts recommended the
+mean prevalence rate of 18.6% from the PATY study for the analysis. The pollutant–outcome
+pair is recommended for inclusion in Group B*.
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 18
+
+2.5. Effects of long-term PM10 exposure on incidence of chronic
+bronchitis in adults
+The recommended estimate of CRF for chronic bronchitis is based on two studies: the
+AHSMOG study from California, United States (Abbey et al., 1995a; 1995b) and
+SAPALDIA from Switzerland (Schindler et al., 2009). Both conducted longitudinal analyses
+in which the probability of a new case of chronic bronchitis over an approximately 10-year
+inter-survey period was related to PM over the same period, adjusting for other factors.
+Within this framework, the two studies used different exposure metrics: the results in the
+AHSMOG study are for the average annual mean concentration of PM2.5 over the inter-
+survey period (1966–1977), whereas SAPALDIA found relationships with the change in
+annual mean PM10 over the inter-survey period (1991–2002). Both studies defined chronic
+bronchitis similarly, as having had symptoms of cough and/or sputum production on all or
+most days, for at least three months per year for at least two years. For monetary valuation,
+note that this is milder than the often-used requirement of chronic cough and sputum.
+
+The AHSMOG study used a cohort of about 3900 non-smokers above the age of 28 years for
+the first survey. Estimated lifetime exposures over a 20-year period were assigned based on
+detailed history of both work and residential location via two approaches. Using exposures in
+PM10 derived from total suspended particles measurements, Abbey et al. (1995a) estimated an
+RR which gave an estimated change of 7.0% (95% CI = −0.5%, 14.3%) in new cases per
+10 µg/m3 PM10. The CAFE programme analysis (Hurley et al., 2005) used this estimate of
+risk, for which the CI was derived. Using exposures to PM2.5 based on airport visibility data,
+Abbey et al. (1995b) generated an ES of 14% (95% CI = −0.45%, 26.2%) change in new
+cases per 10 µg/m3 of PM2.5. The HRAPIE experts preferred this second study, since there is
+much more uncertainty in estimating PM10 in multiple cities from total suspended particles
+than in directly estimating PM2.5 from airport visibility in each city where good model fits
+were obtained.
+
+Schindler et al. (2009) provide support for the higher estimate of the two RRs from the
+AHSMOG study. This study examined relationships between chronic bronchitis and the
+change in modelled concentrations of PM10 in the residence in about 7000 adults aged 16–60
+years, at first survey residing in eight communities in Switzerland. This study estimated an
+odds ratio of 0.78 (95% CI = 0.62, 0.98), equivalent to a decrease of risk of new reports of
+chronic bronchitis by 22% (95% CI = 2%, 38%) per 10 µg/m3 decrease in PM10.
+
+Converting the results of the Abbey et al. (1995b) study to PM10 units (assuming
+PM2.5/PM10 = 0.65) and using an inverse-variance weighted average of that study with the
+results of the Schindler et al. (2009) study obtains an RR for chronic bronchitis of 1.117 (95%
+CI = 1.040, 1.189) per 10 µg/m3 PM10.
+
+Schindler et al. (2009) also looked at all the subjects in the cohort reporting symptoms that
+can be explained by air pollution, at the end of the inter-survey period. The study reveals a
+substantial dynamic of change in those symptoms, with many not reporting the symptoms in
+a second survey, others reporting new ones, and a smaller group reporting symptoms at both
+surveys. To avoid overestimating the overall attributable burden the HRAPIE experts propose
+to restrict the assessment to quantifying the air pollution-associated burden for reporting
+symptoms at follow-up while being free of symptoms at baseline. Given the dynamics of
+                     HRAPIE project: recommendations for concentration–response functions
+                    for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                        page 19
+
+bronchitis, as defined by questionnaire methods, some of those incident cases will be free of
+symptoms sometime in the future, while others will suffer from a more persistent
+symptomatology.
+
+In the absence of country-specific baseline rates for chronic bronchitis, the HRAPIE experts
+recommended using the estimates from the AHSMOG study and SAPALDIA, which provide
+the RRs. Adjusting for remission, and following the United States Environmental Protection
+Agency’s Environmental Benefits Mapping and Analysis programme, the baseline incidence
+rate from AHSMOG is 3.78 incident cases annually per 1000 adults at risk. Analysis of
+Schindler et al. (2009), again adjusting for remission, gave a remarkably similar value for
+SAPALDIA of 3.9 cases per 1000 adults at risk who reported symptoms at the second survey
+but not at baseline.
+
+These recommendations are based on two studies only and, owing to the limited resources of
+the current project, were prepared without a formal systematic review of the evidence on the
+impact of PM on chronic bronchitis incidence. A recently published systematic review of
+studies on the relationship of COPD to air pollution (Schikowski et al., 2013) could offer
+support. Chronic bronchitis, defined on the basis of reported symptoms of cough and phlegm,
+is considered a rather weak indication of clinically recognized COPD diagnosed on the basis
+of spirometry or clinical examination, but such symptoms are known predictors of objectively
+defined future COPD. The Schikowski et al. (2013) study used objective measures (namely
+spirometry) or ICD codes in the hospital discharge or death record. It concluded that the
+evidence of long-term effects of air pollution on the prevalence and incidence of COPD
+among adults was suggestive but not conclusive, despite plausible biological mechanisms and
+good evidence that air pollution affects lung development in childhood and triggers
+exacerbations in COPD patients.
+
+Based on this conclusion and the possibly incomplete evidence on CRF for chronic bronchitis
+used in the current analysis, quantification of the effects of PM10 on chronic bronchitis
+incidence is recommended for inclusion in Group B*, for which there is less certain
+supportive evidence and less confidence in the CRF. Unresolved difficulties also exist in
+combining and using coefficients from a study of PM level with those of a study of change in
+PM level, and this is a further reason for recommending that this pollutant–outcome pair
+should be included in Group B*.
+
+3. Short-term PM exposure
+3.1. Effects of short-term PM2.5 exposure on all-cause mortality
+The HRAPIE experts expressed concern that the premature deaths attributed to short-term
+changes of PM2.5 concentration were already accounted for in estimations of the effects of
+long-term exposure. They therefore recommended that quantification of the effects of short-
+term exposure should be done for information only; it is not proposed as an alternative to
+quantification of long-term PM2.5 exposure.
+
+The APED meta-analysis included results of 12 single-city time-series studies and one
+multicity study on all-cause mortality for all ages. Single-city (or region) results were for
+Vienna, Austria (Neuberger, Rabczenko and Moshammer, 2007); the coal basin (Peters et al.,
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 20
+
+2000) and Prague (Branis et al., 2010) in the Czech Republic; Erfurt, Germany (Peters et al.,
+2009); Barcelona (Perez et al., 2008), Las Palmas de Gran Canaria and Santa Cruz de
+Tenerife (López-Villarrubia et al., 2010) in Spain; and London (Atkinson et al., 2010) and the
+West Midlands in the United Kingdom (Anderson et al., 2001). The multicity study reported
+results from an analysis of nine French cities (Blanchard, 2008) (Fig. 2). The random effects
+summary estimate, expressed as the percentage increase in the mean number of deaths for a
+10 µg/m3 increment in PM2.5, was 1.23% (95% CI = 0.45%, 2.01%). The individual estimates
+were robust on adjustment for other pollutants.
+
+While additional evidence published since May 2011 is not included in this review, a recent
+multicity study in 10 European Mediterranean metropolitan areas (including Barcelona) – the
+MED-PARTICLES project (Samoli et al., 2013) – found an increase in daily mortality of
+0.55% (95% CI = 0.27%, 0.84%) associated with a 10 µg/m3 increase in PM2.5.
+
+                       Fig. 2. Risk estimates for PM2.5 and all-cause mortality, all ages
+
+
+
+
+ Country             City/region       Lead              Year      Study                                   ES (95% CI)
+                                       author                      period
+
+Eur Aa, multicity
+
+France              Nine French cities Blanchard         2008      2000–2004                          1.59 (0.80, 2.38)
+
+
+Eur A, single city
+Austria              Vienna          Neuberger           2007     2002–2004                           2.57 (1.09, 4.04)
+
+Czech Republic Czech Republic Peters                     2000     1993–1994                          0.57 (−0.20, 1.35)
+               (coal basin)
+Czech Republic Prague                Branis              2010     2006–2006                          0.40 (−0.80, 1.60)
+
+Germany              Erfurt          Peters              2009     1991–2002                          −0.66 (−1.82, 0.50)
+Spain                Barcelona       Perez               2008     2003–2004                           3.92 (2.27, 5.57)
+                     Las Palmas de   López-Villarrubia            2001–2004
+Spain                                                    2010                                        −0.91 (−4.08, 2.25)
+                     Gran Canaria
+
+Spain                Santa Cruz de   López-Villarrubia   2010     2001–2004                          −0.68 (−4.00, 2.63)
+                     Tenerife
+
+United Kingdom London                Atkinson            2010     2000–2005                          0.52 (−0.76, 1.80)
+
+United Kingdom West Midlands         Anderson            2001     1994–1996                          0.34 (−0.85, 1.53)
+
+
+                                                                              −5   −1 0 1   5   10
+                                                           1000 × ln (RR)
+
+Source: work funded by and reproduced with permission of the United Kingdom Department of Health Policy
+   Research Programme.
+a
+  The WHO European Region EUR A countries are: Andorra, Austria, Belgium, Croatia, Czech Republic,
+   Denmark, Finland, France, Germany, Greece, Iceland, Ireland, Israel, Italy, Luxembourg, Malta, Monaco,
+   Netherlands, Norway, Portugal, San Marino, Slovenia, Spain, Sweden, Switzerland and United Kingdom.
+
+Two large multicity studies of PM2.5 and all-cause mortality were also undertaken in Canada
+and the United States. Burnett et al. (2004) studied daily mortality in 12 Canadian cities and
+reported an RR (expressed as a percentage) of 0.60% (95% CI = −0.03%, 1.23%) per 10
+µg/m3 increment in PM2.5. In the United States, Zanobetti and Schwartz (2009) found a
+                              HRAPIE project: recommendations for concentration–response functions
+                             for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                                 page 21
+
+stronger association in their study of 112 cities of 0.98% (95% CI = 0.75%, 1.21%), also per
+10 µg/m3 increment in PM2.5. Both these pooled estimates are smaller than the summary
+estimate from Europe, although their CIs overlap substantially with the European pooled
+estimate. These studies, conducted in developed countries with comparable sources of fine
+particle pollution to European countries, provide support for evidence of an association
+between PM2.5 and mortality observed in Europe.
+
+The time-series studies provide support for the use of evidence from cohort studies for cost–
+benefit analysis. Effects should be calculated at all PM levels. Baseline rates for mortality
+should be sourced from the MDB (WHO, 2013c), which provides mortality indicators
+stratified by 67 causes of death, age and sex.
+
+3.2. Effects of short-term PM2.5 exposure on hospital admissions for
+CVDs and respiratory diseases
+The APED meta-analysis of studies of PM2.5 and CVD hospital admissions in Europe used
+results from five studies of subjects of all ages: a multicity study of six French cities (Host et
+al., 2008) and single-city (or region) studies from Prague (Branis et al., 2010), Madrid
+(Linares and Dìaz, 2010), London (Atkinson et al., 2010) and the West Midlands (United
+Kingdom) (Anderson et al., 2001) (Fig. 3). The random effects summary estimate calculated
+was 0.91% (95% CI = 0.17%, 1.66%) per 10 µg/m3.
+
+    Fig. 3. Risk estimates for short-term PM2.5 and hospital admissions for CVDs, all ages
+
+
+
+
+       Country             City/region     Lead       Year     Study                          ES (95% CI)
+                                           author              period
+
+      Eur Aa, multicity
+
+      France               Six French cities Host       2008    2000–2003                      0.90 (0.10, 1.69)
+
+
+      Eur A, single city
+
+     Czech Republic        Prague          Branis       2010    2006–2006                      1.59 (0.50, 2.68)
+     Spain                 Madrid          Linares      2010    2003–2005                     7.70 (2.96, 12.44)
+
+      United Kingdom       London          Atkinson     2010    2000–2005                     −0.90 (−2.24, 0.43)
+
+     United Kingdom West Midlands          Anderson     2001    1994–1996                     −0.28 (−1.49, 0.92)
+
+
+
+
+                                                                          −5 −1 0 1   5   1
+                                                         1000 × ln (RR)
+
+Source: work funded by and reproduced with permission of the United Kingdom Department of Health Policy
+   Research Programme.
+a
+  The WHO European Region EUR A countries are: Andorra, Austria, Belgium, Croatia, Czech Republic,
+   Denmark, Finland, France, Germany, Greece, Iceland, Ireland, Israel, Italy, Luxembourg, Malta, Monaco,
+   Netherlands, Norway, Portugal, San Marino, Slovenia, Spain, Sweden, Switzerland and United Kingdom.
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 22
+
+Three single-city studies conducted in Prague (Branis et al., 2010), Madrid (Linares and Dìaz,
+2010) and the West Midlands (United Kingdom) (Anderson et al., 2001) also reported results
+for hospital admissions for all-age respiratory disease (Fig. 4). The random effects summary
+estimate calculated was 1.90% (95% CI = −0.18%, 4.02%) per 10 µg/m3 increase in PM2.5.
+
+While additional evidence published since May 2011 is not included in this review, the
+authors note data for hospital admissions in eight Mediterranean cities from the MED-
+PARTICLES project (Stafoggia et al., 2013). This study reported increases in daily
+admissions for CVDs and respiratory diseases (in subjects aged 15+ years) of 0.43% (95% CI
+= 0.04%, 0.83%) and 1.25% (−0.02%, 2.54%) respectively per 10 µg/m3 increases in PM2.5.
+The CRFs are based on European studies but the investigations conducted in other regions, as
+reviewed in the REVIHAAP project report (WHO, 2013a), provide qualitative support.
+
+ Fig. 4. Risk estimates for short-term PM2.5 and hospital admissions for respiratory diseases,
+                                            all ages
+
+
+
+
+     Country            City/region   Lead       Year      Study                                ES (95% CI)
+                                      author               period
+
+
+   Eur Aa single city
+
+   Czech Republic       Prague        Branis     2010      2006–2006                            1.59 (-0.10, 3.27)
+
+   Spain                Madrid        Linares    2010      2003–2005                            6.77 (1.98, 11.55)
+
+   United Kingdom       West Midlands Anderson   2001      1994–1996                            0.67 (-0.51, 1.86)
+
+
+
+
+                                                                         −5   −1 0 1   5   10
+                                                        1000 × ln (RR)
+Source: work funded by and reproduced with permission of the United Kingdom Department of Health Policy
+   Research Programme.
+a
+  The WHO European Region EUR A countries are: Andorra, Austria, Belgium, Croatia, Czech Republic,
+   Denmark, Finland, France, Germany, Greece, Iceland, Ireland, Israel, Italy, Luxembourg, Malta, Monaco,
+   Netherlands, Norway, Portugal, San Marino, Slovenia, Spain, Sweden, Switzerland and United Kingdom.
+
+Baseline hospitalization rates should be taken from the European hospital morbidity database
+(WHO, 2013f). The hospitalizations contribute to the calculation of RADs, so when the total
+burden of disease and costs due to PM are calculated, RADs should be reduced accordingly.
+The pollutant–outcome pairs are recommended for inclusion in Group A*.
+
+3.3. Effects of short-term PM2.5 exposure on RADs
+RADs include days when individuals reduce their normal activities, including days of missed
+work, absences from school and other more minor reductions in daily activity. As a result,
+calculation of RADs is likely to incorporate many of the lower respiratory symptoms, as well
+as other relatively minor outcomes associated with PM in previous research such as doctor
+                            HRAPIE project: recommendations for concentration–response functions
+                           for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                               page 23
+
+visits, medication use and lower and upper respiratory symptoms (Ward and Ayres, 2004;
+Hoek and Brunekreef, 1995). The effects of PM on work days lost, hospitalizations and
+asthmatic symptoms in children contributing to the RADs can be estimated according to the
+methods recommended in the other sections. These more specific outcomes should not be
+added to RADs to avoid double counting of effects.
+
+Only one study is available that can inform the HRAPIE project’s recommendations. The
+CRF for RADs is based on a study of six years of data from the United States National Health
+Interview Survey (Ostro, 1987), which included approximately 12 000 adults (aged 18–64
+years) each year from 49 metropolitan areas of the United States. The relationship between
+two-week average PM2.51 and RADs was estimated for each year individually with ESs
+ranging from 2.8% to 9% per 10 µg/m3 PM2.5. A meta-analysis using inverse-variance
+weighting generates an overall estimate of 4.7% (95% CI = 4.2%, 5.3%) change in RADs per
+10 µg/m3 PM2.5. The HRAPIE experts recommended applying this CRF to all age groups,
+given the likelihood of similar or greater effects of PM2.5 on RADs for those aged under 18
+and over 64 years. Support for this assumption is provided by the United Kingdom General
+Lifestyle Survey of 2008, which reported on the number of RADs experienced by individuals
+in the United Kingdom population (Ali et al., 2010), finding approximately 23 RADs per
+person per year, with 17 RADs per person in the 16–44 age group and 32 RADs per person in
+the 45–64 age group. These results are supported by data for the United States National
+Health Interview Survey (Adams and Marano, 1994), which show restrictions resulting from
+acute conditions (Table 2; RADs resulting from chronic conditions are not included in the
+table but are in the original epidemiological study).
+
+                                Table 2. RADs resulting from acute conditions
+                              Age group              Average number of RADs per year
+                      <5                         8.76
+                      5–17                       6.33
+                      18–24                      6.39
+                      24–44                      6.64
+                      45–64                      6.30
+                      65+                        8.95
+Source: Adams and Marano (1994).
+
+In the absence of national data on RADs, the HRAPIE experts recommended using the
+baseline rate of RADs of 19 per person per year, as in the Ostro and Rothschild (1989) study.
+Fairly similar rates were observed for the Canadian population (Stieb et al., 2002) and that of
+the United Kingdom (Ali et al., 2010).
+
+This pollutant–outcome pair is recommended for inclusion in Group B*. Only the residual
+RADs should be added to the total effect, however, after days in hospital, work days lost and
+days with symptoms are accounted for.
+
+3.4. Effects of short-term PM2.5 exposure on work days lost
+The CRFs for this endpoint are also based on the Ostro (1987) study (see section 3.3). The
+meta-analysis for work days lost generates a CRF of 4.6% (95% CI = 3.9%, 5.3%) change
+
+1
+    Assuming linearity, the health effects of daily variations in PM 2.5 can be calculated using another averaging
+    time, such as daily or annual average.
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 24
+
+per 10 µg/m3 PM2.5, applied to all current workers. For baseline rates, country-specific data
+on absenteeism from work due to illness is provided by the European Health for All database
+(WHO, 2013e). Although baseline rates are available for most countries, the definitions and
+criteria used for registering sick leave differ significantly between countries, increasing the
+uncertainty of burden estimates.
+
+The burden of work days lost (in terms of either disability-adjusted life-years or economic
+costs) should not be added to the burden of RADs because of the clear overlap in the groups
+of people affected. The estimated number of work days lost should therefore be subtracted
+from the estimated number of RADs to avoid double counting before burden calculations,
+and should also be quantified separately.
+
+3.5. Effects of short-term PM10 exposure on incidence of asthma
+symptoms in asthmatic children
+For this endpoint the HRAPIE experts used the meta-analysis of 36 panel studies of asthmatic
+children aged 5–19 years (Weinmayr et al., 2010). The studies were conducted in 51
+populations, including 36 from Europe, with the children’s pre-existing asthmatic status
+confirmed by a physician or by reporting relevant symptoms or medication through a
+questionnaire. The definition of occurrence of asthma symptoms varied by study and
+included coughing, wheezing, shortness of breath, asthma attacks or asthma symptoms. Using
+a random effects analysis to address the heterogeneity between the studies, an effect of 2.8%
+(95% CI = 0.6%, 5.1%) for a 10 µg/m3 change in daily PM10 was estimated.
+
+In the cost–benefit analysis, this CRF should be applied to asthmatics aged 5–19 years. The
+prevalence of asthma in children based on “severe asthma” in ISAAC (Lai et al., 2009) is
+4.9% for western Europe and 3.5% for northern and eastern Europe. Based on interpolation
+of data from several panel studies, the daily incidence of symptoms in this group is assumed
+to be 17% (Peters et al., 1997; Segala et al., 1999; van der Zee et al., 1999).
+
+The burden of asthma symptoms (in terms of either disability-adjusted life-years or economic
+costs) should not be added to the burden of RADs because of the clear overlap in the groups
+of people affected. The estimated number of days with asthma symptoms should therefore be
+subtracted from the estimated number of RADs to avoid double counting before burden
+calculations.
+
+4. Long-term O3 exposure
+4.1. Effects of long-term O3 exposure on respiratory mortality
+The recommended CRFs are based on analyses of the data collected in the ACS cohort,
+including subjects aged 30+ years at the start of the follow-up. At least some proportion of
+the short-term effects on mortality is likely to be included in the estimated number of effects
+of long-term exposure. The HRAPIE experts therefore recommended inclusion of this
+pollutant–outcome pair as an alternative to the effects of short-term O3 on mortality in Group
+B (not contributing to the total effect of the extended set).
+                     HRAPIE project: recommendations for concentration–response functions
+                    for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                        page 25
+
+Estimation of impacts on respiratory mortality in people aged 30+ years uses RR coefficient
+1.014 (95% CI = 1.005, 1.024) per 10 µg/m3 of the summer months (April–September)
+average of daily maximum 8-hour mean O3 concentration. This coefficient is derived from
+the single-pollutant analysis of ACS data in 96 metropolitan statistical areas of the United
+States (Jerrett et al., 2009a). It is re-scaled from 1-hour means to 8-hour means using a ratio
+of 0.72, derived from the APHEA-2 project (Gryparis et al., 2004).
+
+The risk coefficients should be applied to summer months mean 8-hour O3 concentrations
+above 35 ppb. This cut-off point results from the fact that summer months mean O3
+concentration exceeded 35 ppb in most areas included in the ACS analysis, so no information
+exists on the shape of the CRF below that level. The MDB (WHO, 2013c) should be used to
+provide the baseline number of deaths for all 53 countries of the WHO European Region.
+
+5. Short-term O3 exposure
+5.1. Effects of short-term O3 exposure on all-cause mortality
+The HRAPIE experts recommended that this analysis should be included in both the cost–
+effectiveness and the cost–benefit analysis. It includes estimates of the impact of short-term
+(daily maximum 8-hour mean) exposure to O3 on all-cause mortality for all ages. The impacts
+of O3 should be calculated according to the linear function with RR coefficient 1.0029 (95%
+CI = 1.0014, 1.0043) per 10 µg/m3.
+
+The recommended risk coefficients are based on data from 32 European cities included in the
+APHENA study and discussed in more detail in the REVIHAAP project report in the
+response and rationale given for question B1 (WHO, 2013a). The coefficients for the daily
+maximum 8-hour mean O3 concentrations were derived from the coefficients for the 1-hour
+means published in the APHENA study report (Katsouyanni et al., 2009). They were re-
+scaled from 1-hour means to 8-hour means using a ratio of 0.72, derived from the APHEA-2
+project (Gryparis et al., 2004). The recommended coefficients are adjusted for PM10 (to avoid
+or reduce double counting).
+
+For the cost–effectiveness analysis, the HRAPIE experts recommended a cut-off
+concentration of 35 ppb (70 µg/m3) to reflect greater confidence in the significant relationship
+above 35 ppb. An additional argument is the availability of O3 models that can estimate the
+sum of means over 35 ppb with greater reliability than concentrations below 35 ppb. Owing
+to uncertainty regarding the presence of a threshold for O3 effects, additional effort to
+estimate the impacts of O3 in concentrations above 10 ppb, which is the lowest concentration
+observed in monitoring stations in Europe (using the sum of means over 10 ppb), would also
+be justified. In such additional analysis, the same risk coefficients should be used as with the
+sum of means over 35 ppb.
+
+It should be noted that the coefficients in the APHENA study were based on the whole range
+of observed O3 concentrations, including levels below 35 ppb. No assumption of “no effect”
+of the lower levels of O3 is thus made in the impact calculations. Rather, any such impacts are
+ignored in the cost–effectiveness analysis. While this approach should not affect comparison
+of various policies reducing peaks of O3, the effect of this assumption should be tested in the
+cost–benefit analysis.
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 26
+
+The MDB (WHO, 2013c) should be used to provide number of deaths for all 53 countries of
+the WHO European Region, for the latest year with available data. The data are compiled
+from various sources, including a network of country experts; the WHO Regional Office for
+Europe’s technical programmes; and partner organizations such as agencies of the United
+Nations system, EUROSTAT and the Organisation for Economic Co-operation and
+Development. The MDB is updated twice a year.
+
+5.2. Effects of short-term O3 exposure on cardiovascular and
+respiratory mortality
+The impacts of O3 in concentrations above 35 ppb (70 µg/m3) maximum daily 8-hour means
+– using the sum of means over 35 ppb – should be calculated according to the linear function
+with RR coefficients 1.0049 (95% CI = 1.0013, 1.0085) per 10 µg/m3 for cardiovascular and
+1.0029 (95% CI = 0.9989, 1.0070) for respiratory mortality. The source of these coefficients
+is the APHENA study, which also provided the risk function for all-cause core analysis
+(Katsouyanni et al., 2009). Coefficients for cardiovascular mortality for all ages were
+calculated using a weighted average of the results for ages 75+ years and <75 years, based on
+the proportion of subjects in the European population aged 75+ years (6.4% calculated as the
+mean of the city-specific proportions) in the APHENA study.
+
+Additional analysis for O3 concentrations above 20 µg/m3 (10 ppb) – using the sum of means
+over 10 – should also be performed. The MDB (WHO, 2013c) should be used to provide the
+number of deaths for all 53 countries of the WHO European Region.
+
+5.3. Effects of short-term O3 exposure on hospital admissions for
+CVDs and respiratory diseases
+The APHENA study analysed associations between O3 (maximum 1 hour) and hospital
+admissions (Katsouyani et al., 2009). In Europe, data were available from eight cities and
+stratified by respiratory disease and CVDs (cardiac) in subjects aged 65+ years (Table 3). The
+findings of the APHENA study provide the most comprehensive overview of the evidence for
+an association between O3 and hospital admissions for respiratory and cardiac diseases in
+Europe. Results from the United States and Canada are included in Table 3 for comparative
+purposes. The HRAPIE experts note the inconsistency in the results between regions when O3
+estimates are adjusted for PM10: this weakens the evidence for an association between O3 and
+hospital admissions observed in Europe.
+
+    Table 3. Pooled estimates for hospital admissions for respiratory and cardiac diseases
+                    Europe (eight cities)               United States                      Canada
+                    Single       Adjusted           Single        Adjusted          Single       Adjusted
+  Outcome
+                  pollutant      for PM10         pollutant        for PM10       pollutant       for PM10
+                      %             %                 %               %               %              %
+                  (95% CI)      (95% CI)          (95% CI)        (95% CI)        (95% CI)       (95% CI)
+ Cardiac,       −0.10          0.64             0.10            −0.04           0.26           0.63
+ 65+ years      (−0.46, 0.27)  (0.36, 0.91)     (−0.11, 0.31)   (−0.28, 0.19)   (−0.2, 0.73)   (−0.22, 1.5)
+ Respiratory,   0.19           0.32             0.18            0.08            0.74            0.39
+ 65+ years      (−0.28, 0.67)  (0.05, 0.60)     (−0.12, 0.49)   (−0.26, 0.41)   (−0.05, 1.5)    (−1.1, 1.9)
+Source: based on Katsouyanni et al., 2009.
+Note: Figures reported are percentage increases in admissions (95% CI) per 10 µg/m3 increment in daily
+  maximum 1-hour O3 concentrations.
+                            HRAPIE project: recommendations for concentration–response functions
+                           for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                               page 27
+
+
+Following the REVIHAAP project’s recommendations, the cost–benefit analysis should be
+based on the daily maximum 8-hour mean (WHO, 2013a). This was re-scaled from 1-hour
+means to 8-hour means using a ratio of 0.72, derived from the APHEA-2 project (Gryparis et
+al., 2004). The risk coefficients per 10 µg/m3 daily maximum 8-hour mean scaled from the
+APHENA estimates adjusted for PM10 (Table 3), are as follows:
+          for cardiovascular admissions (age 65+ years): 0.89% (95% CI = 0.50%, 1.27%)
+          for respiratory admissions (age 65+ years): 0.44% (95% CI = 0.07%, 0.83%).
+
+Impact estimates of the sum of means over 10 ppb and the sum of means over 35 ppb (daily
+maximum 8-hour) should be calculated.
+
+The baseline numbers of hospital admissions for each country should be taken from the
+European hospital morbidity database (WHO, 2013f) (number of discharges for all ages
+minus numbers for ages 0–14 and 14–64 years).
+
+5.4. Effects of short-term O3 exposure on MRADs
+An RAD is a day when individuals reduce their normal activities, for health-related reasons.
+MRADs do not involve work loss or bed disability, but do include some noticeable limitation
+on “normal” activity.
+
+The recommended CRF is based on the Ostro and Rothschild (1989) study, which carried out
+six separate analyses of annual data of the United States National Health Interview Survey
+1976–1981, examining relationships between respiratory RADs or MRADs and O3 (2-week
+averages of daily 1-hour maximum,2 in µg/m3) or PM2.5 (same data as for Ostro, 1987 – see
+sections 3.3 and 3.4). Perhaps surprisingly, there was no clear or consistent relationship
+linking O3 and respiratory RADs. There was, however, a reasonably strong and consistent
+relationship between MRADs and O3.
+
+Direct evidence on O3 exposure and symptoms in clinical and panel studies was discussed in
+the REVIHAAP project report and supports the plausibility of MRADs (WHO, 2013a). The
+study by Ostro and Rothschild (1989) was used in the CAFE programme; the HRAPIE
+experts propose that the same relationship should be used again and that – as in the CAFE
+programme – this is also used as a surrogate for minor symptoms, to avoid double counting.
+The following short description draws heavily on the CAFE programme cost–benefit analysis
+methodology report (Hurley et al., 2005).
+
+Ostro and Rothschild (1989) reported results for single- and two-pollutant models, adjusting
+for city differences and various individual-level socioeconomic confounders. Following the
+CAFE programme, the HRAPIE experts used the two-pollutant results: the regression
+coefficients for O3 were also adjusted for PM2.5. The regression coefficients for the six
+individual years were very variable, with most (including two negative) being statistically
+significant individually. The weighted mean was derived as 0.00111 (standard error (SE)
+0.00034), giving an increase of 0.111% (95% CI = 0.043%, 0.179%) per µg/m3 O3 (1-hour
+
+2
+    Assuming linearity, the health effects of daily variations in O 3 can be calculated using another averaging time,
+    such as daily or annual average.
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 28
+
+maximum) or 1.54% (95% CI = 0.60%, 2.49%) per 10 µg/m3 O3 (daily 8-hour average). This
+was re-scaled from 1-hour means to 8-hour means using a ratio of 0.72, derived from the
+APHEA-2 project (Gryparis et al., 2004).
+
+The original study only included current workers resident in urban areas. As with PM2.5,
+however, the HRAPIE experts recommended that this CRF and background rates should be
+applied to all age groups, given the likelihood of similar or greater effects on MRADs for
+those aged under 18 and over 64 years.
+
+Ostro and Rothschild (1989) report a mean MRAD of 7.8 days per year among people in
+employment aged 18–64 years. This is likely to be an underestimate of overall rates in the
+18–64 age group because people in employment are on average healthier and better off
+socioeconomically than those who are unemployed. It is also likely to be a further
+underestimate of background rates in older people; thus, the extrapolation to other adults is a
+cautious one.
+
+6. Long-term NO2 exposure
+The HRAPIE experts made the recommendations below for use in estimating the health
+benefits due to NO2 per se; for example, in evaluating policies that change NO2
+concentrations. Coefficients adjusted for other pollutants are therefore recommended for
+several outcomes. Ideally, this would be complemented by calculating the effect of the
+relevant other pollutant adjusted for NO2 (if the concentration of the other pollutant has also
+changed as a result of the relevant policy). This is not always possible, but the health benefits
+for NO2 per se would remain correct.
+
+If calculating the overall effects of air pollution – for example, in burden calculations of
+traffic pollution – an alternative is to use an unadjusted NO2 coefficient without including the
+effect of the other pollutant. This is discussed in detail in the response and rationale given for
+question C4 in the REVIHAAP project report (WHO, 2013a). General restrictions for using
+risk coefficients based on multipollutant models are discussed in the introduction to this
+report (section 1.4).
+
+6.1. Effects of long-term NO2 exposure on all-cause mortality
+The recommendation from the response to question C4 in the REVIHAAP project is to
+include in the cost–benefit analysis the impact of long-term (annual average) exposure to
+NO2 on all-cause (natural) mortality as well as on cardiovascular mortality. The impact
+calculation should be conducted as Group B* to contribute to the total effect of the extended
+set but at the same time avoid potential overlap and double counting of mortality effects from
+PM2.5, which are included in Group A* analysis.
+
+The HRAPIE experts recommended applying to adult populations (age 30+ years) a linear
+CRF for all-cause (natural) mortality, corresponding to an RR of 1.055 (95% CI = 1.031,
+1.08) per 10 µg/m3 annual average NO2. The impact should be calculated for levels of NO2
+above 20 µg/m3. Ideally, the annual average would be assessed at a similar spatial scale to
+that used in the original studies. With a coarser scale the effects of hot spots would be ignored
+in the cost–benefit analysis, leading to underestimation of the total effects. A CRF for
+                      HRAPIE project: recommendations for concentration–response functions
+                     for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                         page 29
+
+cardiovascular mortality is not provided as this effect is already included in all-cause
+mortality.
+
+The recommended risk coefficient is based on the most recently completed meta-analysis of
+all cohort studies published before January 2013 by Hoek et al. (2013). This considered 11
+studies as they were conducted in adult populations of Europe and North America with
+exposure assessment at the level of the address of residence of the cohort members. The
+additional inclusion in the meta-analysis of the large American Society Study, based on
+exposure assessment at the city level and not at the residential address, was associated with
+only a small decreased overall ES (1.047, 95% CI = 1.024, 1.071).
+
+The annual average NO2levels observed in these studies correspond to the range expected for
+the EU in 2020 under the current legislation scenario (not exceeding 40 µg/m3 in most areas).
+No extrapolation beyond the range covered by epidemiological studies on effects of ambient
+NO2is needed.
+
+The recommendation from the REVIHAAP project (question C4) is to use a CRF based on
+ESs mutually adjusted for PM metrics. When the results of available long-term studies were
+reviewed, however, only six investigations performed a multipollutant analysis using traffic
+indicators only (Gehring et al., 2006a; Jerrett et al., 2009b), or specific PM assessment such
+as total suspended particles (Cao et al., 2011), PM10 (Hart et al., 2011) or PM2.5 (Cesaroni et
+al., 2013; Jerrett et al., 2013) (Table 4). The results were generally similar between single and
+multipollutant models, with only small changes in the ESs in the multipollutant models (the
+decrease was in the range 0–33%). In some cases, the CIs of the NO2 effect were wider after
+adjustment for the co-pollutant (not in Jerrett et al., 2009b; Cesaroni et al., 2013; Jerrett et al.,
+2013). Given the results of the multipollutant models, therefore, the CRF is better based on
+the unadjusted meta-analysis, with the acknowledgement that the resulting estimates of the
+effects of NO2 may represent an overestimate in the likely range 0–33%.
+
+The possible threshold above which the NO2 effect can be estimated has been the focus of
+few studies. The study by Naess et al. (2007) investigated the CRF between NO2 and
+mortality. The study included all inhabitants of Oslo, Norway, aged 51–90 years on 1 January
+1992 (n = 143 842) with follow-up of deaths from 1992 to 1998. In the youngest age group
+(51–70 years) risk of death from all causes started to increase at the level of 40 µg/m3. In the
+oldest age group (71–90 years) this increase in risk was linear in the interval 20–60 µg/m3. In
+the study by Cesaroni et al. (2013), investigating the general population of Rome, Italy,
+(n = 1 265 058) with a follow-up from 2001 to 2010, a statistically significant linear CRF of
+NO2 and natural mortality was detected above 20 µg/m3. On the basis of these observations,
+therefore, it is recommended that the NO2 impact should be calculated for levels above
+20 µg/m3. This recommendation should be applied to this pollutant–outcome pair only, as
+evidence is lacking on the possible threshold for quantification of effects for the other
+outcomes associated with NO2.
+
+Findings from the follow-up of the Harvard Six Cities study for PM2.5 suggest that mortality
+effects may be partially reversible, over a time period possibly as short as a year (Laden et al.,
+2006; Lepeule et al., 2012). In the absence of specific information for NO2, a similar lag in
+effects from changing exposure is assumed for NO2.
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 30
+
+Finally, the recommendation from the REVIHAAP project (question C4) is to include
+cardiovascular mortality as a “sensitivity” analysis. However, a meta-analytical value is not
+available for this outcome. On the other hand, as already specified for the PM impact
+assessment, natural mortality already includes cardiovascular causes of death.
+
+Table 4. ESs for NO2 from single- and multipollutant models on all-cause (natural) mortality
+    Reference      Parameter     All-cause (natural) mortality      % reduction         Comments
+    pollutant                    Estimate         95% CI                on
+                                                                    adjustment
+  Gehring et al. (2006a)
+  NO2 single (per Rate ratio     1.19        1.02       1.39        n/a
+  16 µg/m3)
+                                                                                     Women only
+  With traffic                   No change with traffic indicator (data not shown)
+  indicator
+  Jerrett et al. (2009b)
+  NO2 single (per Rate ratio     1.17        1.00       1.36                         Not in Hoek et al.
+  4 pbb)                                                                             (2013); cohort is
+  with traffic                   1.13        0.97       1.32        24%              from a respiratory
+  indicator                                                                          clinic
+  Hart et al. (2011)
+  NO2 single (per Percentage     8.20        4.50       12.10
+                                                                                     Truck drivers
+  8 pbb)            increase
+  with PM10 and                  7.40        2.40       12.50       9.8%
+                                                                                     CIs widen
+  sulphur dioxide
+  Cao et al. (2011)
+  NOx single        Percentage   1.50        0.40       2.50                         General
+  (per 10 µg/m3) increase                                                            population
+  with total                     1.40        0.30       2.50        6.7%
+  suspended                                                                          CIs widen slightly
+  particles
+  Cesaroni et al. (2013)
+  NO2 single (per Rate ratio     1.03        1.02       1.04
+  10 µg/m3)
+                                                                                     General
+  with PM2.5                     1.02       1.01       1.03         33%
+                                                                                     population
+  with traffic                   No change (data not shown)
+  indicator
+  Jerrett et al. (2013)
+  NO2 (per          Rate ratio   1.031       1.008      1.056                        General
+  4.1167 ppb)                                                                        population
+  With PM2.5                     1.025       0.997      1.054       19%
+
+Baseline rates for the total daily number of deaths excluding deaths from external causes
+should be sourced from the MDB, WHO’s database for use in health impact assessment
+(WHO, 2013c).
+
+6.2. Effects of long-term NO2 exposure on bronchitic symptoms in
+asthmatic children
+The response and rationale given for question C4 in the REVIHAAP project report (WHO,
+2013a) suggests using the report by McConnell et al. (2003) from the Southern California
+Children’s Health Study. This is the only study of long-term exposure on a respiratory
+outcome (other than lung function) that includes a coefficient adjusted for other pollutants.
+The uncertainty in using only one study is acknowledged, although the evidence is supported
+                         HRAPIE project: recommendations for concentration–response functions
+                        for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                            page 31
+
+by studies of long-term exposure to NO2 and lung function and by the wider evidence on NO2
+and respiratory outcomes from other types of study.
+
+The effect on bronchitic symptoms (at least three months in a row in the past year) in
+asthmatic children should be calculated based on an odds ratio of 1.04 (approximately3 95%
+CI = 0.98, 1.11) per 1 ppb NO2, equivalent to odds ratio4 of 1.021 (approximately 95%
+CI = 0.99, 1.06) per 1 µg/m3 annual mean NO2 (McConnell et al., 2003). This coefficient is
+derived from the two-pollutant model for the yearly deviations in annual average within
+communities and is adjusted for the effects of OC. The annual mean of 24-hour average NO2
+from community representative monitoring stations or the modelling equivalent should be
+used in effects estimation.
+
+The background rate of asthmatic children is defined as the percentage prevalence of “asthma
+ever” in children aged 13–14 years in the EU countries covered in phase three of the ISAAC
+study (Lai et al., 2009), applied to children aged 5–14 years. Based on this study, the
+following asthma rates can be applied: 15.8% with sensitivity analysis +/− SD 7.8%5 for
+western Europe; 5.1% with sensitivity analysis +/− SD 2.7% for northern and eastern Europe.
+Alternatively, the prevalence of “asthma ever” by country from Lai et al. (2009) and other
+sources should be used.
+
+The best measure of asthmatic children, in general terms, is the prevalence of severe wheeze,
+but that does not match what was used in the original study. Nevertheless, a further
+alternative analysis using prevalence of severe wheeze as a measure of numbers of asthmatic
+children is recommended, acknowledging the uncertainty in assuming that the prevalence of
+bronchitic symptoms is the same in those with severe wheeze (or those with “asthma ever”)
+as defined in ISAAC, as it is in those with doctor-diagnosed asthma in the Southern
+California Children’s Health Study. The 12-month prevalence of severe wheeze taken from
+Lai et al. (2009) is 4.9% for western Europe and 3.5% for northern and eastern Europe.
+
+Uncertainty of the estimation results from both the scarcity of quantitative data on the CRF
+and the weakness of the background morbidity information. This is quantitative uncertainty
+in the exact size of the effect rather than conceptual uncertainty as to the causality of the
+effect. Only one (although well-designed) study from the United States (McConnell et al.,
+2003) provides the risk coefficient, and there is a need for further work to see if these results
+are confirmed in other studies. As with many studies of this type, it relies on self-reporting of
+symptoms, which may vary in reliability (Oksanen et al., 2010). The proportion of asthmatic
+children is very variable across Europe and there is very little background information on the
+prevalence of bronchitic symptoms among them, so using the value from the American study
+is necessary. These additional uncertainties in background morbidity information, which were
+not reviewed in the REVIHAAP project report, led to the HRAPIE experts placing this
+pollutant–outcome pair in category B*. Annex 3 sets out a detailed rationale and discussion
+of the recommended method.
+
+
+
+3
+  Estimated from graph – see Annex 3.
+4
+  Approximately the RR for small concentration changes.
+5
+  Derived from country specific figures in Lai et al. (2009), not population weighted. Range direct from Lai et
+  al. (2009) is 7–28% for western Europe and 2.5–12% in northern and eastern Europe.
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 32
+
+7. Short-term NO2 exposure
+7.1. Effects of short-term NO2 exposure on all-cause mortality
+Responding to question C4, the REVIHAAP project report (WHO, 2013a) recommends
+estimating the effects of short-term NO2 exposure on all-cause mortality in all ages on the
+basis of the results of the APHEA-2 project covering 30 European cities, using a risk
+coefficient adjusted for at least PM mass. APHEA-2 reported associations between mortality
+and short-term exposure to NO2 adjusted for various pollutants, including black smoke and
+PM10 (Table 5).
+
+    Table 5. Pooled estimates for the increase in mortality associated with an increase of
+     10 µg/m3 in daily maximum 1-hour mean NO2, adjusting alternatively for the other
+                                          pollutants
+
+
+
+
+Source: Samoli et al. (2006); reproduced with permission of the European Respiratory Society.
+Notes: Data are presented as percentage increase (95% CI). BS = black smoke; SO2 = sulphur dioxide; O3 8-h =
+  maximum daily 8-hour O3 concentration.
+
+There is virtually no difference between the estimates from the fixed and random effects
+models. No evidence of confounding by either particle metric is seen. Adjustment of the
+association between all-cause mortality and NO2 for particles leads to a narrow range of
+central estimates: from 0.27% to 0.33%, around the unadjusted NO2 estimate of 0.30%. The
+HRAPIE experts recommended the lower of the estimates for health impact assessment:
+0.27% (0.16–0.38%) per 10 µg/m3 NO2 (maximum 1 hour) adjusted for PM10. This produces
+more conservative results than quantification exercises that use an estimate adjusted for black
+smoke. Given the interest in primary combustion particles, the authors note the increase in the
+NO2 estimate (to 0.33% (0.23–0.42%)) following adjustment for black smoke (a good
+indicator of primary combustion particles).
+
+Samoli et al. (2003) assumed a linear CRF between NO2 daily maximum 1-hour mean and
+mortality, based on previous analyses from the APHEA-2 project. The median correlation
+between the daily maximum 1-hour and 24-hour mean NO2 concentrations was 0.90
+(correlation range: 0.80–0.94) and the ratio of 1-hour maximum NO2 to 24-hour mean was
+equal to 1.64 in APHEA cities providing both measures of NO2. It should be noted, however,
+that concentrations vary in both time and space and there is therefore variability in the ratios
+between maximum 1-hour and 24-hour mean concentrations of NO2. The analysis should be
+performed for all NO2 concentrations.
+                         HRAPIE project: recommendations for concentration–response functions
+                        for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                            page 33
+
+Baseline rates for the total daily number of deaths excluding deaths from external causes
+(ICD-10 chapters I–XVIII, codes A–R) should be sourced from the MDB, WHO’s database
+for use in health impact assessment (WHO, 2013c). This pollutant–outcome pair is
+recommended for inclusion in Group A*.
+
+7.2. Effects of short-term NO2 exposure on hospital admissions for
+respiratory diseases
+Responding to question C4, the REVIHAAP project report (WHO, 2013a) recommends
+including the effects of short-term NO2 exposure on hospital admissions for respiratory
+diseases in all ages in the “core” cost–benefit analysis, suggesting that a risk coefficient
+adjusted for at least PM mass should be used.
+
+APED was interrogated to identify time-series studies of NO2 and respiratory hospital
+admissions for all ages. The relevant studies show that there is heterogeneity in the particle
+metrics used in two- and multipollutant models (for example, PM10, PM2.5 and black
+suspended particles6) to adjust estimates of NO2. In addition, multipollutant models varied in
+the pollutants other than particles included in the analyses. While this creates little difficulty
+at the hazard assessment stage, it makes deriving an NO2 estimate adjusted for particles by
+meta-analysis difficult. The APHEA-2 project does not contribute to this database since it
+includes reports only of single-pollutant model estimates of NO2 for respiratory hospital
+admissions, and no all-age estimate for this outcome is available (APHEA-2, 2001).
+
+In the light of the above and the REVIHAAP project report observation in the response and
+rationale to question C2 (WHO, 2013a) that the association between short-term exposure to
+NO2 and respiratory hospital admissions is robust to adjustment for co-pollutants, the
+HRAPIE experts opted to recommend a single-pollutant model estimate, derived by meta-
+analysis, for use in health impact assessment relating to this outcome.
+
+Suitable coefficients were identified from a meta-analysis that used estimates from time-
+series studies published before 2006 (Anderson et al., 2007). The meta-analysis produced the
+following risk coefficients for respiratory hospital admissions, all ages: 0.15% (95%
+CI = −0.08%, 0.38%) per 10 µg/m3 daily maximum 1-hour average NO2 and 1.80% (95%
+CI = 1.15%, 2.45%) per 10 µg/m3 24-hour average NO2. These coefficients are recommended
+for use in the cost–benefit analysis, with the 24-hour average as part of Group A* and the
+maximum 1-hour mean as an alternative (due to limited data availability). The estimates that
+formed part of the meta-analyses are shown in Fig. 5 below – the full references relating to
+the publications cited are available in Anderson et al. (2007). The analysis should be
+performed for all NO2 concentrations.
+
+Baseline hospitalization rates for respiratory diseases (ICD-9 codes 460–519; ICD-10 codes
+J00–J99) can be sourced from the European hospital morbidity database (WHO, 2013f).
+
+
+
+
+6
+ Black suspended particles are considered an indicator of fine particles less than 2 µm in diameter (Simpson et
+al., 2005).
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 34
+
+   Fig. 5. Risk estimates for NO2 and hospital admissions for respiratory diseases, all ages
+                Maximum 1-hour mean                                          24-hour mean
+
+
+
+
+Source: Anderson et al. (2007); work funded by and reproduced with permission of the United Kingdom
+  Department of Health Policy Research Programme.
+Notes: pooled FE est. = pooled fixed effects estimate; pooled RE est. = pooled random effects estimate.
+
+
+References
+Abbey DE et al. (1995a).Estimated long-term ambient concentrations of PM10 and
+  development of respiratory symptoms in a nonsmoking population. International Archives
+  for Occupational and Environmental Health, 50(2):139–152.
+
+Abbey DE et al. (1995b). Chronic respiratory symptoms associated with estimated long-term
+  ambient concentrations of fine particulates less than 2.5 microns in aerodynamic diameter
+  (PM2.5) and other air pollutants. Journal of Exposure Analysis and Environmental
+  Epidemiology, 5(2):137–159.
+
+Adams PF, Marano MA (1995). Current estimates from the National Health Interview
+  Survey, 1994. Vital Health and Statistics, 10(193).
+
+Ali R et al. (2010). General Lifestyle Survey 2008: overview report. Newport, Office of
+   National Statistics (http://www.ons.gov.uk/ons/rel/ghs/general-lifestyle-survey/2008-
+   report/index.html, accessed 20 November 2013).
+
+Anderson HR et al. (2001). Particulate matter and daily mortality and hospital admissions in
+  the West Midlands conurbation of the United Kingdom: associations with fine and coarse
+  particles, black smoke and sulphate. Occupational and Environmental Medicine,
+  58(8):504–510.
+                     HRAPIE project: recommendations for concentration–response functions
+                    for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                        page 35
+
+Anderson HR et al. (2007). Quantitative systematic review of short term associations between
+  ambient air pollution (particulate matter, ozone, nitrogen dioxide, sulphur dioxide and
+  carbon monoxide), and mortality and morbidity. London, Department of Health
+  (https://www.gov.uk/government/publications/quantitative-systematic-review-of-short-
+  term-associations-between-ambient-air-pollution-particulate-matter-ozone-nitrogen-
+  dioxide-sulphur-dioxide-and-carbon-monoxide-and-mortality-and-morbidity, accessed 15
+  June 2013).
+
+Anderson HR, Favarato G, Atkinson RW (2013). Long-term exposure to outdoor air
+  pollution and the prevalence of asthma: meta-analysis of multi-community prevalence
+  studies. Air Quality, Atmosphere and Health, 6(1):57–68.
+
+APHEA-2 (2001). Short-term effects of air pollution on health: a European approach to
+  methodology, dose–response assessment and evaluation of public health significance.
+  (Hard copy of the project report). EC Contract Number ENV4-CT97-0534.
+
+Atkinson RW et al. (2010). Urban ambient particle metrics and health: a time-series analysis.
+  Epidemiology, 21(4):501–511.
+
+Blanchard M et al. (2008). Programme de surveillance air et sante – analyse des liens à court
+   terme entre pollution atmosphérique urbaine et mortalité dans neuf villes françaises.
+   Saint-Maurice, Institut de veille sanitaire (http://www.invs.sante.fr/publications/
+   2008/psas_mortalite/, accessed 9 May 2013).
+
+Brandt SJ et al. (2012). Costs of childhood asthma due to traffic-related pollution in two
+  California communities. European Respiratory Journal, 40(2):363–370.
+
+Branis M et al. (2010). Association of size-resolved number concentrations of particulate
+  matter with cardiovascular and respiratory hospital admissions and mortality in Prague,
+  Czech Republic. Inhalation Toxicology, 22(suppl. 2):21–28.
+
+Burnett RT et al. (2004). Associations between short-term changes in nitrogen dioxide and
+  mortality in Canadian cities. Environmental Health, 59(5):228–236.
+
+Cao J et al. (2011). Association between long-term exposure to outdoor air pollution and
+  mortality in China: a cohort study. Journal of Hazardous Materials, 186(2–3):1594–1600.
+
+Carey IM et al. (2013). Mortality associations with long-term exposure to outdoor air
+  pollution in a national English cohort. American Journal of Respiratory and Critical Care
+  Medicine, 187(11):1226–1233.
+
+Cesaroni G et al. (2013). Long-term exposure to urban air pollution and mortality in a cohort
+  of more than a million adults in Rome. Environmental Health Perspectives, 121(3):324–
+  331.
+
+Cohen AJ et al. (2004). Urban air pollution. In: Ezzati M et al., eds. Comparative
+  quantification of health risks: global and regional burden of disease attributable to
+  selected major risk factors. Vol. 2. Geneva, World Health Organization: 1353–1434
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 36
+
+   (http://www.who.int/publications/cra/chapters/volume2/1353-1434.pdf, accessed 31
+   October 2013).
+
+COMEAP (2010). The mortality effects of long-term exposure to particulate air pollution in
+  the United Kingdom. A report by the Committee on the Medical Effects of Air Pollutants.
+  Chilton, Health Protection Agency (http://news.newclear.server279.com/wp-
+  content/uploads/2011/09/comeap-the-mortality-effects-of-long-term-exposure-to-
+  particulate-air-pollution-in-the-uk-2010.pdf, accessed 15 June 2013).
+
+EC (2013). Legislation: ambient air quality [web site]. Brussels, European Commission
+  (http://ec.europa.eu/environment/air/legis.htm, accessed 13 November 2013).
+
+Fung KY, Krewski D (1999). On measurement error adjustment methods in Poisson
+  regression. Environmetrics, 10(2):213–224.
+
+Gehring U et al. (2006a). Long-term exposure to ambient air pollution and cardiopulmonary
+  mortality in women. Epidemiology, 17(5):545–551.
+
+Gehring U et al. (2006b). Parental education and children’s respiratory and allergic symptoms
+  in the Pollution and the Young (PATY) study. European Respiratory Journal, 27(1):95–
+  107.
+
+Gryparis et al. (2004). Acute effects of ozone on mortality from the “air pollution and health:
+  a European approach” project. American Journal of Respiratory and Critical Care
+  Medicine, 170(10):1080–1087.
+
+Hart JE et al. (2011). Long-term ambient multipollutant exposures and mortality. American
+  Journal of Respiratory and Critical Care Medicine, 183(1):73–78.
+
+Hoek G, Brunekreef B (1995). Effect of photochemical air pollution on acute respiratory
+  symptoms in children. American Journal of Respiratory and Critical Care Medicine,
+  151(1):27–32.
+
+Hoek G et al. (2012). PM10, and children’s respiratory symptoms and lung function in the
+  PATY study. European Respiratory Journal, 40(3):538–547.
+
+Hoek G et al. (2013). Long-term air pollution exposure and cardio-respiratory mortality: a
+  review. Environmental Health, 12:43.
+
+Holland M (2013). Implementation of the HRAPIE recommendations for European Air
+  Pollution CBA work: report to the European Commission. Draft from October 2013.
+
+Host S et al. (2008). Short-term associations between fine and coarse particles and hospital
+  admissions for cardiorespiratory diseases in six French cities. Occupational and
+  Environmental Medicine, 65(8):544–551.
+
+Hurley F et al. (2005). Methodology for the cost–benefit analysis for CAFE. Vol. 2: health
+  impact assessment. Didcot, AEA Technology Environment (http://ec.europa.eu/
+  environment/archives/cafe/pdf/cba_methodology_vol2.pdf, accessed 19 November 2013).
+                      HRAPIE project: recommendations for concentration–response functions
+                     for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                         page 37
+
+Hwang B-F, Lee YL (2010). Air pollution and prevalence of bronchitic symptoms among
+  children in Taiwan. Chest, 138(4):956–964.
+
+IARC (2013). The carcinogenicity of outdoor air pollution. Lancet Oncology
+  (doi:10.1016/S1470-2045(13)70487-X).
+
+IHME (2013). Global Burden of Disease Study 2010 (GBD 2010) – ambient air pollution risk
+  model 1990–2010 [web site]. Seattle, WA, Institute for Health Metrics and Evaluation
+  (http://ghdx.healthmetricsandevaluation.org/record/global-burden-disease-study-2010-
+  gbd-2010-ambient-air-pollution-risk-model-1990-2010, accessed 1 November 2013).
+
+IIASA (2013). Policy scenarios for the revision of the Thematic Strategy on Air Pollution.
+   Laxenburg, International Institute for Applied Systems Analysis (TSAP Report, No. 10;
+   http://ec.europa.eu/environment/air/pdf/review/TSAP-Report-10.pdf, accessed 14
+   November 2013).
+
+Janssen N et al. (2012). Health effects of black carbon. Copenhagen, WHO Regional Office
+   for Europe (http://www.euro.who.int/en/health-topics/environment-and-health/air-
+   quality/publications/2012/health-effects-of-black-carbon, accessed 21 November 2013).
+
+Jerrett M et al. (2013). Spatial analysis of air pollution and mortality in California. American
+   Journal of Respiratory and Critical Care Medicine, 188(5):593–599.
+
+Jerrett M et al. (2009a). Long-term ozone exposure and mortality. New England Journal of
+   Medicine, 360(11):1085–1095.
+
+Jerrett M et al. (2009b). A cohort study of traffic-related air pollution and mortality in
+   Toronto, Ontario, Canada. Environmental Health Perspectives, 117(5):772–777.
+
+Katsouyanni K et al. (2009). Air Pollution and Health: a European and North American
+  Approach (APHENA). Boston, MA, Health Effects Institute (HEI Research Report 142;
+  http://pubs.healtheffects.org/getfile.php?u=518, accessed20 November 2013).
+
+Kloog et al. (2013). Long- and short-term exposure to PM2.5 and mortality: using novel
+  exposure models. Epidemiology, 24(4):555–561.
+
+Künzli N et al. (2008). An attributable risk model for exposures assumed to cause both
+  chronic disease and its exacerbations. Epidemiology, 19(2):179–185.
+
+Laden F et al. (2006). Reduction in fine particulate air pollution and mortality: extended
+  follow-up of the Harvard Six Cities study. American Journal of Respiratory and Critical
+  Care Medicine, 173(6):667–672.
+
+Lai CK et al. (2009). Global variation in the prevalence and severity of asthma symptoms:
+   phase three of the International Study of Asthma and Allergies in Childhood (ISAAC).
+   Thorax, 64(6):476–483.
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 38
+
+Lepeule J et al. (2012). Chronic exposure to fine particles and mortality: an extended follow-
+  up of the Harvard Six City study from 1974 to 2009. Environmental Health Perspectives,
+  120(7):965–970.
+
+Lim SS et al. (2012). A comparative risk assessment of burden of disease and injury
+  attributable to 67 risk factors and risk factor clusters in 21 regions, 1990–2010: a
+  systematic analysis for the Global Burden of Disease Study 2010. Lancet,
+  380(9859):2224–2260.
+
+Linares C, Dìaz J (2010). Short-term effect of PM2.5 on daily hospital admissions in Madrid
+   (2003–2005). International Journal of Environmental Health Research, 20(2):129–140.
+
+López-Villarrubia et al. (2010). Air pollution and mortality in the Canary Islands: a time-
+  series analysis. Environmental Health, 9:8.
+
+Mathers CD et al. (2005). Counting the dead and what they died from: an assessment of the
+  global status of cause of death data. Bulletin of the World Health Organization, 83(3):171–
+  177.
+
+McConnell R et al. (2003). Prospective study of air pollution and bronchitic symptoms in
+  children with asthma. American Journal of Respiratory and Critical Care Medicine,
+  168(7):790–797.
+
+Migliore E et al. (2009). Respiratory symptoms in children living near busy roads and their
+  relationship to vehicular traffic: results of an Italian multicenter study (SIDRIA 2).
+  Environmental Health, 8:27.
+
+Naess Ø et al. (2007). Relation between concentration of air pollution and cause-specific
+  mortality: four-year exposures to nitrogen dioxide and particulate matter pollutants in 470
+  neighborhoods in Oslo, Norway. American Journal of Epidemiology, 165(4):435–443.
+
+Neuberger M, Rabczenko D, Moshammer H (2007). Extended effects of air pollution on
+  cardiopulmonary mortality in Vienna. Atmospheric Environment, 41(38):8549–8556.
+
+Oksanen T et al. (2010). Self-report as an indicator of incident disease. Annals of
+  Epidemiology, 20(7):547–554.
+
+Ostro BD (1987). Air pollution and morbidity revisited: a specification test. Journal of
+  Environmental Economics Management, 14(1):87–98.
+
+Ostro BD, Rothschild S (1989). Air pollution and acute respiratory morbidity: an
+  observational study of multiple pollutants. Environmental Research, 50:238–247.
+
+Patel SP, Järvelin MR, Little MP (2008). Systematic review of worldwide variations of the
+   prevalence of wheezing symptoms in children. Environmental Health, 7:57.
+
+Perez L et al. (2008). Coarse particles from Saharan dust and daily mortality. Epidemiology,
+   19(6):800–807.
+                      HRAPIE project: recommendations for concentration–response functions
+                     for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                         page 39
+
+Perez L et al. (2009). Global goods movement and the local burden of childhood asthma in
+   southern California. American Journal of Public Health, 99(suppl. 3):S622–628.
+
+Perez L et al. (2012). Near-roadway pollution and childhood asthma: implications for
+   developing “win-win” compact urban development and clean vehicle strategies.
+   Environmental Health Perspectives, 120(11):1619–1626.
+
+Peters et al. (1997). Short-term effects of particulate air pollution on respiratory morbidity in
+   asthmatic children. European Respiratory Journal, 10(4):872–879.
+
+Peters A et al. (2000). Associations between mortality and air pollution in central Europe.
+   Environmental Health Perspectives, 108(4):283–287.
+
+Peters A et al. (2009). The influence of improved air quality on mortality risks in Erfurt,
+   Germany. Boston, MA, Health Effects Institute (HEI Research Report 137;
+   http://pubs.healtheffects.org/getfile.php?u=437, accessed 19 November 2013).
+
+Peters JM et al. (1999). A study of twelve Southern California communities with differing
+   levels and types of air pollution. I. Prevalence of respiratory morbidity. American Journal
+   of Respiratory and Critical Care Medicine, 159(3):760–767.
+
+Pope CA 3rd et al. (2011). Lung cancer and cardiovascular disease mortality associated with
+  ambient air pollution and cigarette smoke: shape of the exposure–response relationships.
+  Environmental health perspectives, 119(11):1616–1621.
+
+Rogers DF (2003). Pulmonary mucus: pediatric perspective. Pediatric Pulmonology,
+  36(3):178–188.
+
+Samoli E et al. (2003). Investigating the dose–response relation between air pollution and
+  total mortality in the APHEA-2 multicity project. Occupational and Environmental
+  Medicine, 60(12):977–982.
+
+Samoli E et al. (2006). Short-term effects of nitrogen dioxide on mortality: an analysis within
+  the APHEA project. European Respiratory Journal, 27(6):1129–1138.
+
+Samoli E et al. (2013). Associations between fine and coarse particles and mortality in
+  Mediterranean cities: results from the MED-PARTICLES project. Environmental Health
+  Perspectives, 121(8):932–938.
+
+Schindler C et al. (2009). Improvements in PM10 exposure and reduced rates of respiratory
+  symptoms in a cohort of Swiss adults (SAPALDIA). American Journal of Respiratory and
+  Critical Care Medicine, 179(7):579–587.
+
+Schikowski T et al. (2013). Ambient air pollution – a cause for COPD? European
+  Respiratory Journal (doi:10.1183/09031936.00100112).
+
+Segala C et al. (1999). Short-term effect of winter air pollution on respiratory health of
+  asthmatic children in Paris. European Respiratory Journal, 11(3):677–685.
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 40
+
+Simpson R et al. (2005). The short-term effects of air pollution on hospital admissions in four
+  Australian cities. Australian and New Zealand Journal of Public Health, 29(3):213–221.
+
+Stafoggia M (2013). Short-term association between fine and coarse particulate matter and
+   hospitalizations in southern Europe – results from the MED-PARTICLES project.
+   Environmental Health Perspectives, 121(9):1026–1033.
+
+Stieb DM et al. (2002). Air pollution and disability days in Toronto: results from the national
+   population health survey. Environmental Research, 89(3):210–221.
+
+van der Zee et al. (1999). Acute effects of urban air pollution on respiratory health of children
+  with and without chronic respiratory symptoms. Occupational and Environmental
+  Medicine, 56(12):801–812.
+
+Ward DJ, Ayres JG (2004). Particulate air pollution and panel studies in children: a
+  systematic review. Occupational and Environmental Medicine, 61(4):e13.
+
+Weinmayr G et al. (2010). Short-term effects of PM10 and NO2 on respiratory health among
+  children with asthma or asthma-like symptoms: a systematic review and meta-analysis.
+  Environmental Health Perspectives, 118:449–457.
+
+WHO (2001). Quantification of the health effects of exposure to air pollution: report of a
+ WHO Working Group. Copenhagen, WHO Regional Office for Europe
+ (http://www.euro.who.int/__data/assets/pdf_file/0011/112160/E74256.pdf, accessed 18
+ November 2013).
+
+WHO (2013a). Review of evidence on health aspects of air pollution – REVIHAAP project:
+ technical report. Copenhagen, WHO Regional Office for Europe
+ (http://www.euro.who.int/__data/assets/pdf_file/0004/193108/REVIHAAP-Final-
+ technical-report.pdf, accessed 13 November 2013).
+
+WHO (2013b). Health risks of air pollution in Europe – HRAPIE project: new emerging
+ risks to health from air pollution – results from the survey of experts. Copenhagen, WHO
+ Regional Office for Europe (http://www.euro.who.int/en/health-topics/environment-and-
+ health/air-quality/publications/2013/health-risks-of-air-pollution-in-europe-hrapie-
+ project.-new-emerging-risks-to-health-from-air-pollution-results-from-the-survey-of-
+ experts, accessed 13 November 2013).
+
+WHO (2013c). European mortality database (MDB) [online database]. Copenhagen, WHO
+ Regional Office for Europe (http://data.euro.who.int/hfamdb/, accessed 14 November
+ 2013).
+
+WHO (2013d). European detailed mortality database [online database]. Copenhagen, WHO
+ Regional Office for Europe (http://data.euro.who.int/dmdb/, accessed 14 November 2013).
+
+WHO (2013e). European health for all database [online database]. Copenhagen, WHO
+ Regional Office for Europe (http://data.euro.who.int/hfadb/, accessed 14 November 2013).
+                     HRAPIE project: recommendations for concentration–response functions
+                    for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                        page 41
+
+WHO (2013f). European hospital morbidity database [web site]. Copenhagen, WHO
+ Regional Office for Europe (http://www.euro.who.int/en/what-we-do/data-and-
+ evidence/databases/european-hospital-morbidity-database-hmdb2, accessed 14 November
+ 2013).
+
+Woodruff TJ, Grillo J, Schoendorf KC (1997). The relationship between selected causes of
+ postneonatal infant mortality and particulate air pollution in the United States.
+ Environmental Health Perspectives, 105(6):608–12.
+
+Woodruff TJ, Darrow LA, Parker JD (2008). Air pollution and postneonatal infant mortality
+ in the United States, 1999–2002. Environmental Health Perspectives, 116(1):110–15.
+
+Zanobetti A, Schwartz J (2009). The effect of fine and coarse particulate air pollution on
+  mortality: a national analysis. Environmental Health Perspectives, 117(6):898–903.
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 42
+
+                                          Annex 1
+
+
+                 CONTRIBUTORS TO THE HRAPIE PROJECT
+
+Scientific Advisory Committee
+
+This Committee supervises the implementation of the “Health risks of air pollution in Europe
+– HRAPIE” project and ensures the highest possible quality and relevance of its outputs. The
+following experts are the members of the Committee:
+
+      Hugh Ross Anderson, United Kingdom
+      Bert Brunekreef, the Netherlands
+      Aaron Cohen, United States
+      Klea Katsouyanni, Greece
+      Daniel Krewski, Canada
+      Nino Künzli, Switzerland
+      Xavier Querol, Spain.
+
+Expert authors
+
+The following experts were involved in the review of evidence providing input to the
+quantification of the health effects of PM, ground-level O3 and NO2 as part of the HRAPIE
+project, and in drafting the document containing the conclusions of this review:
+
+      Richard Atkinson, United Kingdom
+      Francesco Forastiere, Italy
+      Fintan Hurley, United Kingdom
+      Michal Krzyzanowski, Germany
+      Inga Mills, United Kingdom
+      Bart Ostro, United States
+      Heather Walton, United Kingdom.
+                    HRAPIE project: recommendations for concentration–response functions
+                   for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                       page 43
+
+External reviewers
+
+The following experts provided comments on the technical content and clarity of the
+document, for various sections of the draft material:
+
+      Tom Bellander, Sweden
+      Bertil Forsberg, Sweden
+      Michael Holland, United Kingdom
+      Bryan Hubbel, United States
+      Erik Lebret, the Netherlands
+      Sarah McGhee, Hong Kong
+      Regula Rapp, Switzerland
+      Evi Samoli, Greece
+      Joel Schwartz, United States
+      Dave Stieb, Canada.
+
+Observers at WHO Expert Group meetings
+
+The following individuals participated in at least one of the WHO meetings organized for the
+HRAPIE project, in the capacity of observer:
+
+      Markus Amann, International Institute for Applied Systems Analysis (IIASA)
+      Arlean Rhode, who provided comments on behalf of Conservation of Clean Air And
+       Water in Europe (CONCAWE)
+      André Zuber, European Commission.
+
+WHO Secretariat
+
+The WHO European Centre for Environment and Health, Bonn, WHO Regional Office for
+Europe, coordinated the work and development of this publication:
+
+      Svetlana Cincurak
+      Marie-Eve Héroux (project leader)
+      Elizabet Paunovic
+      Helena Shkarubo.
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 44
+
+                                                 Annex 2
+
+
+EFFECTS OF LONG-TERM NO2 EXPOSURE ON ASTHMA PREVALENCE
+          IN CHILDREN – QUALITATIVE DESCRIPTION
+
+This annex provides a qualitative description of the effects of the variation in annual average
+exposure to NO2 on asthma prevalence, as the degree to which this is an effect of NO2 per se
+is unknown and a meta-analysis of results is not yet available. Some information is given
+below for use in future calculations of the effect of traffic pollution once the meta-analysis is
+available, provided estimates of NO2 modelling are available at an appropriate spatial scale
+(Table 1). These future quantitative calculations would be in Group B for assessing the
+effects of NO2 per se because of the difficulties in identifying which pollutant is responsible,
+but this uncertainty would not apply if using the CRF to quantify the effects of traffic
+pollution in general.
+
+        Table 1. Recommendations for future calculations of the effect of traffic pollution
+    Indicator                                           Recommendation
+Population in      Children aged 5–14 years
+which effect is
+calculated
+CRF                In future this could be based on a meta-analysis in preparation by Anderson, Favarato and
+                   Atkinson, but this is best used as an indicator for traffic pollution rather than for NO2 per se
+Exposure metric    Annual average NO2 from dispersion modelling or land-use regression modelling, or from
+                   home or school study monitors at a within-city scale (mostly at the home or school address
+                   level)
+Baseline rate      Prevalence of asthma defined as the prevalence of current wheeze in the last 12 months in
+                   children aged 13–14 years in western Europe and in northern and eastern Europe from the
+                   ISAAC study (Lai et al., 2009), applied to children aged 5–14 years
+Uncertainties      A good number of studies are available but no multipollutant models and the pollutants are
+                   closely correlated; effects are shown at a within-city scale but not at a community area
+                   level; baseline asthma prevalence is very variable
+
+
+The rationale for these recommendations is as follows.
+        A range of cross-sectional studies have investigated within-community air pollution
+         exposure contrasts, mostly representative of traffic pollution. These included many
+         positive associations with NO2, some of which were statistically significant. An
+         unpublished meta-analysis by Anderson, Favarato and Atkinson is in progress, based
+         on these studies, with air pollution measurements/modelling at a scale likely to pick
+         up variations due to traffic exposure. The results of this meta-analysis could be used
+         in future for quantitative health impact assessment of traffic pollution, but for NO2 per
+         se calculations it is better to describe the results qualitatively, noting the uncertainty
+         as to whether NO2 is the responsible pollutant. It should be noted that, whether or not
+         the effect is due to NO2 per se, the analysis is picking up an effect that is distinct from
+         the effects of PM pollution varying at a broader spatial scale, such as PM2.5 or PM10
+         (given the fact that these pollutants are not associated with asthma prevalence at a
+         community area scale) (Anderson, Favarato and Atkinson, 2013).
+                  HRAPIE project: recommendations for concentration–response functions
+                 for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                     page 45
+
+   Use of the within-city scale for the exposure metric in estimation of the effects is
+    important as the effects of NO2 have not been shown at the community area level. It is
+    particularly important for the scale of the modelled concentration used for health
+    impact assessment also to be at a fine spatial scale, as only modelling at this scale
+    picks up traffic pollution contrasts.
+   The age range of the children included in the studies included in the meta-analysis
+    was 5–17 years, with the most common age groups centring around about age 10
+    years. Age 5–14 years is suggested as the affected population as this is likely to match
+    up with other health impact calculations using this age group.
+   The prevalence of asthma, defined as current wheeze (in the last 12 months), in
+    children aged 13–14 years in western Europe (including only EU countries) was
+    14.3%; that in northern and eastern Europe was 9.7% (including non-EU countries) in
+    phase three of the ISAAC study (Lai et al., 2009). (This is closer to the around 6–15%
+    range of baseline prevalence of current asthma defined in various ways in the
+    constituent studies of the meta-analysis than severe wheeze.) Both the western Europe
+    and the northern and eastern Europe rates varied widely between countries (SD 7.0,
+    range 8.1–31.2 and SD 5.0, range 3.4–22.7 respectively: SD based on values for each
+    country, without population weighting). Given the wide variation, baseline wheeze
+    prevalence would ideally be country specific, using information from additional
+    sources (such as Hoek et al., 2012; Gehring et al., 2006b; Patel, Järvelin and Little,
+    2008) or the constituent studies of the forthcoming meta-analysis by Anderson,
+    Favarato and Atkinson. If data are not available for all the required countries then
+    future calculations of effects of traffic pollution could use the regional values of
+    14.3% and 9.7% but also include the SD or even the range to make clear the
+    variability in the baseline rate.
+   Calculation of the effect should be performed considering that the scaling by
+    concentration needs to be on a log odds basis. (Although this does not differ much
+    from treating the odds ratio as an RR where the numbers affected are small – such as
+    for a small concentration change – it can make a difference at larger concentration
+    changes – for example, in burden calculations.) Thus:
+      o the log of the odds ratio per ppb or per µg/m3 from the meta-analysis, when
+           available, would need to be multiplied by the concentration difference between
+           the annual average for a baseline and for a reduced traffic pollution scenario
+           with NO2 as an indicator;
+      o the exponential of this figure would give the odds ratio for that concentration
+           difference;
+      o the odds for the baseline occurrence of wheeze are calculated as the probability
+           divided by one minus the probability: if the prevalence is 14.3%, the odds is
+           0.143/(1 − 0.143) = 0.167;
+      o the odds ratio for the concentration difference is then multiplied by this baseline
+           to give the new odds of wheeze after the change in pollution;
+      o the new odds of wheeze is converted back to a probability (prevalence) = new
+           odds/(1 + new odds);
+      o subtracting the baseline prevalence from the new prevalence gives the change in
+           prevalence of wheeze due to the concentration change from the policy option.
+    This gives an upper limit in the unlikely case that all the effect is due to NO2 per se.
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 46
+
+      The variability in asthma prevalence between countries is one source of the ES
+       uncertainty (see details in section 6.2 on bronchitic symptoms in asthmatic children).
+       This was for prevalence of “asthma ever” rather than wheeze, as here, but the
+       principles are the same.
+      The main uncertainty for calculations intended to quantify the impacts of NO2 per se
+       is the close correlation between pollutants and the consequent lack of multipollutant
+       models to test which pollutant is responsible for increased risk of asthma near roads.
+       The degree to which NO2 is responsible for the effect is therefore unknown. The
+       meta-analyses on the prevalence of asthma and wheezing during the study period and
+       on lifetime asthma by Anderson, Favarato and Atkinson (2013), both based on nine
+       studies with pollution gradients mainly between communities, did not show any
+       relationship with NO2 or other pollutants. This emphasizes the importance of
+       matching the scale of the modelling with the studies used to derive the CRF. The
+       difference is probably due to the within-city scale picking up greater exposure
+       contrasts for traffic pollution.
+                      HRAPIE project: recommendations for concentration–response functions
+                     for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                         page 47
+
+                                            Annex 3
+
+
+BACKGROUND INFORMATION ON ESTIMATION OF EFFECTS OF NO2
+         ON BRONCHITIC SYMPTOMS IN ASTHMATIC CHILDREN
+
+
+Choice of CRF: within-community or between-communities
+
+The McConnell et al. (2003) study uses the term “within-community” to describe a
+coefficient based on the yearly variations around the 4-year mean within a particular
+community. Note that the same term is used to describe spatial studies based on a within-
+community spatial scale: this is not what is meant here. The study also includes “between-
+communities” coefficients based on relating changes in bronchitic symptoms in the past year
+in asthmatic children to differences in 4-year average NO2 between the 12 communities
+studied.
+
+Use of the within-community (yearly variation) associations is recommended for the
+following reasons:
+      the within-community associations were stronger;
+      the correlations between NO2 and other pollutants were lower for the within-
+       community analysis than for the between-communities analysis;
+      no consistent between-communities effects were observed in two-pollutant models,
+       but the within-community effects of OC and NO2 were, in general, not confounded by
+       other pollutants (a key issue for health impact assessment of NO2 per se);
+      using 12 areas and four different years, the yearly variation analysis has greater
+       statistical power.
+
+It should be noted that, while the within-community coefficients are related to temporal
+variations, the outcome is defined as “daily cough for three months in a row, congestion or
+phlegm for at least three months in a row or bronchitis” in the past year. It is thus distinct
+from acute day-to-day variations in symptoms in response to daily variations in pollution.
+The exact duration of exposure required for the effect is unclear but it is an effect that can be
+represented by exposure on an annual average basis (see later discussion of the pollution
+metric).
+
+Choice of CRF: is the within-community coefficient independent of the
+between-communities coefficient?
+
+The statistical analysis used in McConnell et al. (2003) was conceptualised as a three-stage
+regression model of bronchitic symptoms against (i) individual time-dependent covariates
+such as yearly variations in pollution, (ii) time-independent confounders (such as gender) and
+(iii) effects of 4-year average pollution.
+
+In essence, the within-community coefficient can be interpreted as being controlled for the
+effect of the community 4-year average as well as gender, race, smoking and so on. This
+would suggest that the within-community coefficient can be applied to yearly variations in
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 48
+
+health impact assessment without also having to calculate a 4-year average effect, unless
+desired. In any case, the 4-year average effect is smaller. The single-pollutant model within-
+community coefficient for NO2 has been used in this way in other papers (Künzli et al., 2008;
+Perez et al., 2009; Perez et al., 2012; Brandt et al., 2012). It should be noted that the between-
+communities coefficient is in any case small compared with the within-community
+coefficient.
+
+Choice of CRF: choice of within-community coefficient adjusted for
+another coefficient
+
+The McConnell et al. (2003) study controlled for a wide variety of pollutants. The within-
+community coefficient for NO2 was stable to adjustment for O3 and a whole variety of
+particle metrics (Fig. 1).
+
+As the aim is to pick out the element of the effect of NO2 that is independent of possible
+confounding by other pollutants, a conservative approach was taken to choose the smallest
+adjusted coefficient. This was the coefficient adjusted for OC, which was the most reduced in
+size, although it remained positive (and only marginally insignificant) after adjustment. (The
+OC within-community coefficient was also reduced and became marginally insignificant after
+adjustment for NO2.)
+
+Fig. 1. Odds ratios for the within-community effects of NO2 and OC, adjusted for each of the
+                                   other pollutants examined
+
+
+
+
+Source: McConnell et al. (2003), online supplement; reprinted with permission of the American Thoracic
+  Society. Copyright © 2012 American Thoracic Society. Official Journal of the American Thoracic Society.
+Notes: I ACID = inorganic acid; O ACID = organic acid; EC =elemental carbon; OC = organic carbon; O 3(10–
+  6) = average ozone between 10:00am and 6:00pm.
+  All odds ratios were adjusted for age, maternal and child’s smoking history, sex and race, and for the
+  between-communities effect of the pollutant indicated. NO2+ and OC+ indicate the within-community odds
+  ratio in a single-pollutant model, adjusted only for the between-communities effects of NO2 (A) and OC (B)
+  and for personal covariates. All other odds ratios are also for NO2 (A), or for OC (B), but adjusted in addition
+  for both within-community and between-communities effects of the adjustment pollutant indicated.
+  Certain aspects of this document may be out of date and caution should be used when applying the
+  information in clinical practice and other usages.
+                      HRAPIE project: recommendations for concentration–response functions
+                     for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                         page 49
+
+The relevant delta coefficient for NO2 adjusted for OC was 0.039 (see Table 5 of McConnell
+et al., 2003). This can be converted to an odds ratio of 1.04, compared with 1.07 per ppb NO2
+for the single-pollutant model. The CIs for the adjusted odds ratio are presented graphically
+in the online supplement to the paper and are approximately 0.98–1.11 per ppb NO2
+(estimated from Fig. 1 above).
+
+With 1 ppb = 1.88 µg/m3 NO2, the odds ratio of 1.04 (approx. 0.98–1.11) per ppb is
+equivalent to an odds ratio of 1.02 (approx. 0.99–1.06) per 1 µg/m3 annual mean NO2.
+
+Definition of pollution metric
+
+The metric used in the study is the annual deviation from the 4-year average of NO2, where
+the annual average is the annual mean of the 24-hour average NO2 measurement (from
+measurements every hour) and the 4-year average is the mean of the four annual averages
+from 1996–1999. The monitoring stations were established to be representative of each
+community.
+
+The HRAPIE experts consider that the adjusted within-community coefficient based on an
+annual deviation from a 4-year average could be applied to the difference between an annual
+average for NO2 for a baseline scenario and a new annual average for NO2 subsequent to
+implementation of a policy. The baseline annual average can be considered conceptually as a
+long-term average as it is postulated to continue if a policy is not implemented. The policy-
+induced change in annual average NO2 would be a small deviation from this in the same way
+that the annual deviations from one year to another in the original study were small.
+
+Definition of affected population
+
+The children included in the McConnell et al. (2003) study were aged 9–13 years, but there is
+no particular reason to suppose that the results would not apply to children a few years
+outside this age band. As these were asthmatic children, and the nature of asthma/wheeze in
+very young children differs, an age group such as 5–14 years may be most appropriate.
+
+The study defined asthmatic children as those children who had ever had doctor-diagnosed
+asthma. McConnell et al. (2003) stated that, in analyses not presented, no effect on bronchitic
+symptoms was found in non-asthmatic children. The study did not specify what proportion of
+the asthmatic children used were of the general population but the cross-sectional study done
+at the start of the Southern California Children’s Health Study (Peters et al., 1999) found that
+14.5% of the children were asthmatic, using the same definition as McConnell et al. (2003).
+This is slightly lower than the 18.3% found in the three American centres in phase three of
+the ISAAC study (see Table 1 of Lai et al., 2009), but the children in this study were a little
+older.
+
+The Lai et al. (2009) study provides figures for the prevalence of “asthma ever” in many
+European countries. While the definition of “asthma ever” is not identical to that used in the
+Southern California Children’s Health Study (there is no specific mention of doctor
+diagnosis), it is likely to be quite similar. The results in Lai et al. (2009) are very variable
+both between countries within a region and between regions. The best approach would be to
+use country-specific values for “asthma ever”. Not all EU countries are covered in Lai et al.
+(2009) but it might be possible with further work to obtain figures from national health
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 50
+
+examination surveys, or from other published literature, for the missing countries. For
+example, Hoek et al. (2012) and Gehring et al. (2006b) also give information on prevalence
+of “asthma ever” (Table 1), including for some countries not included in Lai et al. (2009).
+
+                                     Table 1. Prevalence of “asthma ever”
+              Study               Prevalence of “asthma    Prevalence of “asthma         Prevalence of lifetime
+                                        ever” from the          ever” from the            “asthma ever” from a
+                                  question “Has a doctor     question “Have you             pooled analysis of
+                                    ever diagnosed this     (has your child) ever        several cross-sectional
+                                       child as having      had asthma?” (Lai et          studies of respiratory
+                                    asthma?” (Peters et    al., 2009), age 13–14         symptoms. Age ranges
+                                   al., 1999), age 12–13            years                   varied by dataset,
+                                            years                                           with most studies
+                                                                                            going up to age 12
+                                                                                           years but starting at
+                                                                                         ages 6, 7, 8 or 9 years
+                                                                                            (Hoek et al., 2012;
+                                                                                         Gehring et al., 2006b)
+    Twelve communities in         14.5%
+    Southern California
+    (Children’s Health Study)
+    United States (from three                              18.3%b (SD 1.7%) range        9.7%
+    centres)a (Lai et al.,                                 17.3–20.2%
+    2009) or North America                                 (Lai et al., 2009 give an
+    (Hoek et al., 2012)                                    overall figure for the
+                                                           United States of 17.4%)
+    EU countries in phase                                  12.3% (SD 7.6%) range         6.7–22.2%d
+    three of the ISAAC studyc                              2.5–28.6%
+    (Lai et al., 2009), Hoek et
+    al. (2012) or Gehring et
+    al. (2006b)
+    Western European                                       16.2% (SD 7.8%) range         8.1–9%
+    countries in phase three                               7–28.6%
+                         e
+    of the ISAAC study (all                                (Lai et al., 2009 gives an
+    EU), Hoek et al. (2012) or                             overall figure for western
+                           f
+    Gehring et al. (2006b)                                 Europe of 15.8%)
+    (all but Switzerland EU)
+    Northern and eastern                                   6.9% (SD 2.7%) range          1.9–22.2%h
+    European countries in                                  2.5–12%                       (EU only 6.7–22.2%)
+    phase three of the ISAAC                               (Lai et al. (2009) give an
+    study (those that are                                  overall figure for northern
+    EU),g Hoek et al. (2012)                               and eastern Europe of
+    or Gehring et al. (2006b)                              5.1% but this includes
+                                                           non-EU countries and
+                                                           countries as far east as
+                                                           the Russian Federation)
+a
+  : Chapel Hill, Sarasota and Seattle.
+b
+  : Average, not weighted by population. Also applies to other averages in this column.
+c
+  : From centres (1–13 per country) based in Austria, Belgium, Bulgaria, the Channel Islands, Estonia, Finland,
+    Germany, Hungary, Ireland, the Isle of Man, Italy, Latvia, Lithuania, Malta (classified as Eastern
+    Mediterranean), the Netherlands, Poland, Portugal, Romania, Spain, Sweden and the United Kingdom.
+d
+  : Austria, Bulgaria, the Czech Republic, Germany, Hungary, Italy, the Netherlands, Poland and Slovakia.
+e
+  : From centres (1–13 per country) based in Austria, Belgium, the Channel Islands, Germany, Ireland, the Isle of
+    Man, Italy, the Netherlands, Portugal, Spain and the United Kingdom.
+f
+  : Austria, Germany, Italy, the Netherlands and Switzerland.
+g
+  : From centres (1–3 per country) based in Bulgaria, Estonia, Finland, Hungary, Latvia, Lithuania, Poland,
+    Romania and Sweden.
+h
+  : Bulgaria, the Czech Republic, Hungary, Poland, the Russian Federation and Slovakia (all but the Russian
+    Federation EU).
+                     HRAPIE project: recommendations for concentration–response functions
+                    for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                        page 51
+
+At the present time, the HRAPIE experts propose use of the western Europe and northern and
+eastern Europe regional means from Lai et al. (2009). Given the variability, it is also
+important to include ranges around the mean values. An SD can be derived from the data in
+Lai et al. (2009), although it is not weighted by population. Another option is to use the
+range, but this is very wide and it is unlikely that the whole of the region would have the very
+highest or very lowest prevalence. The relevant values are given below.
+      Western Europe: 15.8% with sensitivity analysis +/− SD 7.8%, range 7–28%.
+      Northern and eastern Europe: 5.1% with sensitivity analysis +/− SD 2.7%, range 2.5–
+       12%.
+
+The diagnosis of asthma in a child is generally used to indicate that the child has not only
+current asthmatic symptoms (the asthmatic state) but also an underlying asthma trait, which
+implies a chronic condition, whether symptomatic or not at any point of time. The use of the
+asthma label by doctors is not standardized and varies from physician to physician and from
+country to country. A report of asthma diagnosis in a questionnaire study does not equate to
+current asthma symptoms.
+
+To assess health impact it is better to use the prevalence of severe wheeze from questionnaire
+studies, mostly recollected over the previous 12 months and expressed as a 12-month
+prevalence, as in ISAAC (Lai et al., 2009). The prevalence of “asthma ever” reported in
+ISAAC is very likely to overestimate the proportion of children with current asthma
+symptoms. Use of the prevalence of severe wheeze as a baseline for estimating bronchitic
+symptoms in asthmatic children based on the McConnell et al. (2003) paper, however, would
+need to recognize that this estimate was based on children with current doctor-diagnosed
+asthma-metric, which is not available for Europe. This problem could be resolved if, in fact,
+doctor-diagnosed asthma in California is closer to the definition of severe wheeze than that of
+“asthma ever” in ISAAC. Comparison of Peters et al. (1999) and Lai et al. (2009) suggests
+the prevalence of doctor-diagnosed asthma in the Southern California Children’s Health
+Study was somewhere between the two ISAAC definitions, but California was not covered in
+Lai et al (2009).
+
+An alternative analysis using prevalence of severe wheeze rather than prevalence of “asthma
+ever” as a measure of numbers of asthmatic children is recommended, acknowledging the
+uncertainty in assuming that the prevalence of bronchitic symptoms is the same in those with
+severe wheeze (or in those with “asthma ever”), as defined in ISAAC, as it is in those with
+doctor-diagnosed asthma in the Southern California Children’s Health Study. The 12-month
+prevalence of severe wheeze taken from Lai et al. (2009) could be used; this is 4.9% for
+western Europe and 3.5% for northern and eastern Europe.
+Baseline rate for bronchitic symptoms in asthmatic children
+The prevalence of bronchitic symptoms (at least three months in a row in the past year) in the
+asthmatic children in the McConnell et al. (2003) study was 38.7% during the first year of the
+study. While questions relating to chronic cough and/or phlegm are included in respiratory
+symptom questionnaires in studies of children, it is uncommon for the results to be stratified
+by whether or not the children have asthma.
+
+In a cross-sectional study in Taiwan modelled on the Southern California Children’s Health
+Study, Hwang and Lee (2010) found a similar prevalence of 36.4% bronchitic symptoms in
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 52
+
+the last year in asthmatic children aged 12–14 years (mostly 12), defined as those with
+doctor-diagnosed asthma.
+
+A study in Italy (Migliore et al., 2009) provides data from which it can be calculated that
+21.1% of asthmatic children had cough or phlegm for at least four days a week (in the
+absence of a cold) for one or more months a year. The definition of asthma was wider,
+however, including one or more wheezing episodes as well as other asthma symptoms as an
+alternative to doctor-diagnosed asthma, and the children were a combined group aged 6–7 as
+well as 13–14 years. No other European studies were found on bronchitic symptoms in
+asthmatic children as opposed to children in general.
+
+Airway mucus hypersecretion is a feature of childhood asthma, has clinical implications and
+– at least in adults – correlates with bronchial hyper-responsiveness and airway obstruction.
+Corticosteroids are effective against goblet cell hyperplasia (Rogers, 2003); thus, some of the
+same issues may apply to variation in bronchitic symptom prevalence in asthmatics, as with
+other asthma symptoms.
+
+The United States is probably similar to Europe in treatment terms, and in a broad sense –
+also like Europe – is a country where the prevalence of severe asthma is less than that of
+“asthma ever”. If instead there was thought to be as high a proportion of untreated asthma as
+there is in some countries, that might be a specific reason why the prevalence from Southern
+California might be considered inappropriate to apply in Europe. In fact, no specific reason
+exists: it is just not known whether it is appropriate or not. It is suggested by the HRAPIE
+experts that the prevalence in the last year of 38.7% from the Southern California Children’s
+Health Study is used, with the prevalence in the last year of 21.1% from the study in Italy
+(using a slightly different definition) as an alternative.
+
+Methodology
+
+The McConnell et al. (2003) study is analysed by logistic regression and the coefficients
+expressed as odds ratios: this needs to be taken into account in the calculation. The approach
+is analogous to that used for calculating effects from odds ratios from panel studies (Hurley et
+al., 2005).
+
+      38.7% of children with asthma have bronchitic symptoms in the last year (from
+       McConnell et al., 2003): this implies an odds of 0.387/(1 − 0.387) = 0.631.
+      The odds ratio is 1.04 per ppb NO2.
+      The odds ratio for a difference between a baseline and a reduced scenario (say a
+       difference of 0.5 ppb) = EXP(−(ln1.04)*0.5) = 0.98 for a reduced scenario with a
+       0.5ppb lower annual average for NO2. New odds is 0.98 × 0.631 = 0.619.
+      As probability 0.619/(1 + 0.619) = 0.382, a 0.5 ppb lower annual average of NO2
+       gives a prevalence that is lower by 0.387–0.382 = 0.5%.
+
+Category A or B
+
+The response and rationale given for question C4 in the REVIHAAP project report (WHO,
+2013a) recommended using bronchitic symptoms in asthmatic children for “core” analysis.
+                     HRAPIE project: recommendations for concentration–response functions
+                    for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+                                                                                        page 53
+
+The report noted that a CRF adjusted for other pollutants was available and that there was
+general support for the plausibility of the effect as a result of toxicological and
+epidemiological evidence of respiratory effects and other studies of long-term exposure to
+NO2 and lung function. It also acknowledged that there was greater uncertainty than for some
+other endpoints in the core analysis (the recommendation is based on only one study).
+
+The further points discussed in this document refer to quantitative uncertainty in the exact
+size of the effect rather than conceptual uncertainty as to the causality of the effect.
+Uncertainty exists for estimating numbers of asthmatic children, but there are data to inform
+the variability and give a range for the results. Data on the prevalence of bronchitic symptoms
+in asthmatics are very limited, so this is an important uncertainty.
+
+Ideally, health impact assessment or cost–benefit analysis would be presented categorized
+according to a range of uncertainties as opposed to just two categories. Given the quantitative
+uncertainty in the size of the effect due to the evidence on baseline numbers of asthmatic
+children and baseline rates of bronchitic symptoms in asthmatic children, examined since the
+REVIHAAP project, the HRAPIE experts concluded that this outcome should be in category
+B. Bronchitic symptoms in asthmatic children is the main outcome for long-term exposure in
+terms of the links with the wider respiratory evidence and the separation from other
+pollutants. It should be emphasized that the Southern California Children’s Health Study and
+the studies on lung function (see the REVIHAAP project) remain important elements of the
+evidence for independent effects of long-term exposure to NO2, even if the exact size of the
+effect is uncertain.
+HRAPIE project: recommendations for concentration–response functions
+for cost–benefit analysis of particulate matter, ozone and nitrogen dioxide
+page 54
+
+                                          Annex 4
+
+
+        EFFECTS OF BLACK CARBON EXPOSURE – QUALITATIVE
+                                     DESCRIPTION
+
+According to the REVIHAAP project’s conclusions (WHO, 2013a), black carbon could be
+used in a sensitivity analysis of the cost–benefit analysis. Europe-wide estimates of black
+carbon exposure are not currently available, however, so the HRAPIE experts do not
+recommend estimation of black carbon impacts in the EU for the cost–benefit analysis of EU
+air quality policies. Black carbon can be an additional indicator in evaluating local action
+aimed at reducing the population’s exposure to combustion PM (for example, from motorized
+traffic). It should be noted that including both PM2.5 and black carbon in such analysis may
+lead to double counting of some of the impacts.
+
+The CRFs for assessment of local black carbon impacts can be retrieved from the WHO
+evaluation of evidence on the health effects of black carbon (Janssen et al., 2012). A quick
+search of the literature using PubMed has not revealed any more recent papers that could
+change the conclusions of this report; nor did the REVIHAAP project’s discussion indicate
+the need to modify the report’s conclusions.
+
+Local assessment of the effects of black carbon exposure can be based on risk estimates
+linking long-term exposure to black carbon with all-cause (natural) mortality, as well as
+short-term exposure to black carbon with hospital admissions for asthma in children and for
+CVDs (mostly for ages over 65 years).
+WHO/EURO:2013-8621-48393-71842
+

@@ -455,6 +455,70 @@ was a *derived* quantity whose body was a copy — a class `uncoupled()` cannot
 see.
 
 
+### The tombstone that was still a knob (batch 44, 2026-10-23)
+
+Batch 44 rebuilt the pollutant chain so the fleet reaches the death toll: fuel
+energy from capacity, six pollutant ledgers from the EMEP/EEA factors, PM2.5
+dispersion through a box model, and deaths from the concentration the fleet
+actually produces. The health chain had run
+`population × mortality × pm25_kt × pm25_relative_risk_per_kt` with the last
+two exogenous dials nobody had to set, so a scenario that retired every coal
+plant reported the same 4,800 deaths. At the shipped defaults the corrected
+chain reports **17.35** deaths, and generation's share of them is **1.4%** of
+the airshed's burden — the rest is the 5.0 µg/m³ regional background, which the
+fleet does not own. Reporting 1,220 of 1,220 deaths as attributable to the
+fleet was the first draft's answer and it was wrong by two orders of magnitude.
+
+**The rename exposed a class the graph could not see.** The old node declared
+`1/(kt/year)` — the unit of a dispersion factor — while carrying WHO's
+concentration-response coefficient per µg/m³. It was deprecated in favour of
+`pm25_relative_risk_per_ug_per_m3`, and the batch's own prose said the old id
+was kept "so a scenario that names it fails loudly". Nothing made it fail.
+`_deprecated_reach` refuses an *edge* or an *equation* naming a deprecated node;
+it could not see a *value*. The node is not a determiner, not a loop variable
+and not endogenous, so `is_settable` returned True, `propagate` accepted the
+value, computed nothing from it, and returned it as the scenario's answer. A
+caller who renamed a knob in a config got a silent no-op.
+
+Two fixes, both at the source rather than at the counts. `is_settable` now
+refuses a deprecated node — it is not a knob any more — and
+`_refuse_out_of_range` raises on a supplied value that *differs from the
+default*, naming the replacement. The differs-from-default test is not a
+weakening: `propagate` is handed every default including the deprecated nodes'
+own and cannot tell that from a caller setting it, and a caller who sets a knob
+to the value it already holds has set nothing.
+
+**The register counted the tombstone either way.** With `is_settable` fixed the
+uncertainty register's input count stayed at 74 — one stochastic input replaced
+by one — but `derived_stochastic` went 48 to **49**, because the deprecated node
+now fell into the "not settable, not endogenous" set and was reported as a
+derived parameter whose own relation is stochastic. A claim about arithmetic
+nothing performs. Excluding deprecated nodes from the register's declaration set
+put it back to 74 / 48, identical to the previous batch.
+
+**The citation register refused its own keys.** Eight equations cite a row by
+its register key (`reference: entsoe_adequacy`), and `Citation.resolves` matched
+only the `cites` column — where **0 of 51 rows lists its own key**. So eight
+load-bearing citations were reported as resolving to nothing while the rows they
+named sat in the register. The key is a row's primary identifier and is now one
+of the spellings. The ninth was real: `emissions_definition` cited the IPCC
+Guidelines, which had no row. Equation 2.1 (printed p. 2.11) states
+`Emissions = Fuel Consumption × Emission Factor`; the chapter is archived at
+`sources/archive/ipcc_2006_gl_vol2_ch2.pdf` and the citation now names the
+equation and records the step IPCC does not make — replacing the per-fuel factor
+with the graph's own fleet average.
+
+**Uncoupled falls 239 → 234.** Six of them are the co-pollutant nodes
+(`co_emissions`, `mercury_emissions`, `nox_emissions`, `pm10_emissions`,
+`sox_emissions`, `voc_emissions`), which had equations and no readers until the
+batch's ledger totals named them. The other three are the deprecations leaving
+the settable surface. Units hold at 564 consistent, 1 inconsistent (the
+pre-existing `rocof_definition`), 3 exempt; the translate denominator falls
+879 → 876 for the same three tombstones, and the constraint register is
+unchanged in shape at 42 bound / 30 unbound / 72 constraint-shaped / 493
+identities.
+
+
 
 ## Not built
 

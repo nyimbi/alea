@@ -953,7 +953,27 @@ def test_the_summary_reports_the_registers(graph: ParameterGraph):
 	# storage capacities the catalog adds plus `storage_capacity_mw` -- and the
 	# coincidence broke. Asserting the *containment* is the claim that was
 	# meant, and it holds at any count.
-	uncoupled_roles = {graph.role(name).value for name in graph.uncoupled()}
+	# A deprecated node is retained so that a scenario naming it fails loudly,
+	# and it keeps its role and its default for that reason -- `propagate` would
+	# fail on a set that omitted it. It is named by no equation, so it lands in
+	# this register, but its role describes the node it replaced rather than the
+	# graph's live surface. Batch 44 deprecated `pm25_relative_risk_per_kt` in
+	# favour of `pm25_relative_risk_per_ug_per_m3`; the old node is `exogenous`,
+	# and that is what broke the `{"free"}` claim below. The claim is about live
+	# nodes, so the role set is taken over those, and the excluded nodes are
+	# named here rather than filtered silently -- a fourth deprecation should
+	# have to be written down.
+	deprecated_uncoupled = {
+		name for name in graph.uncoupled()
+		if graph.nodes[name].status == "deprecated"
+	}
+	assert deprecated_uncoupled == {
+		"cross_border_trading", "demand_growth_rate", "pm25_relative_risk_per_kt",
+	}, deprecated_uncoupled
+	uncoupled_roles = {
+		graph.role(name).value for name in graph.uncoupled()
+		if name not in deprecated_uncoupled
+	}
 	assert uncoupled_roles <= {"free", "endogenous"}, uncoupled_roles
 	# The register's endogenous membership has now gone to zero. It was four
 	# at batch 31, one after batch 32 bounded `storage_capacity_mw`, and batch
@@ -1615,7 +1635,20 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# node changed no membership -- a retype does not move a node between
 	# registers, and `mwh_per_coal_unit` is exogenous but coupled by the
 	# equation that reads it, so it was never a dead knob.
-	assert len(dead) == 232, len(dead)
+	# Batch 44 took it 232 to 224, and the eight are two groups. Six are the
+	# co-pollutant nodes (`co_emissions`, `mercury_emissions`, `nox_emissions`,
+	# `pm10_emissions`, `sox_emissions`, `voc_emissions`), which were dead knobs
+	# by an *arithmetic slip in the other direction*: they had equations, but
+	# nothing read them, so they were `computed()` and coupled while the
+	# pollutant totals nobody summed. Batch 44's ledger equations name them.
+	# The other two are not a coupling at all: `is_settable` now refuses a
+	# deprecated node, so `pm25_relative_risk_per_kt` and `cross_border_trading`
+	# left this register without any arithmetic changing. `demand_growth_rate`
+	# is the third deprecated node and was already out by `rules_reading`. A
+	# register that counted tombstones as dead knobs was counting the wrong
+	# object -- a node nobody can set is not a knob a user has to be warned
+	# about -- and the fix is in `is_settable` rather than here.
+	assert len(dead) == 224, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
@@ -1994,8 +2027,14 @@ def test_the_audit_reports_what_it_did_not_check():
 	# products read capacities and per-kW rates the result does not carry as
 	# columns, and the solvency product reads `solvency_capital`, which is
 	# itself derived from two insurance inputs the solve does not supply.
+	# Batch 44 added twelve equalities and all twelve join `skipped`: the
+	# three fuel-energy definitions read capacities and capacity factors the
+	# solve result does not carry as columns, the six pollutant totals read
+	# the emission factors, and the three concentration and burden products
+	# read `pm25_emissions`, which is itself derived. `checked` is flat at
+	# 170 and `skipped` moves 311 -> 323.
 	assert len(audit.checked) == 170, audit.checked
-	assert len(audit.skipped) == 311, audit.skipped
+	assert len(audit.skipped) == 323, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -2050,8 +2089,8 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# 412. The whole computed set is skipped here because the loop failed,
 	# so this is `len(computed())`, not the skipped half of a partition that
 	# ran, and batch 31's product layer took it to 440, and batch 33's
-	# residue layer to 461.
-	assert len(audit.skipped) == 481, audit.skipped
+	# residue layer to 461, and batch 44's pollutant layer to 493.
+	assert len(audit.skipped) == 493, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -2951,6 +2990,16 @@ def test_the_uncertainty_register_reads_the_declarations(graph: ParameterGraph):
 	# own relation is stochastic: the cat-bond coupon, the drought-adjusted
 	# hydro share, the cause-attributed event count, the scenario river flow,
 	# and the wind and solar resource shares.
+	# Batch 44 moved neither count, and the reason is worth recording because
+	# the first run said otherwise. The health chain retyped
+	# `pm25_relative_risk_per_kt` as `pm25_relative_risk_per_ug_per_m3`: the old
+	# id is deprecated, `is_settable` refuses a deprecated node, and the
+	# register counted the tombstone on the *derived* side instead -- 48 went to
+	# 49 while the input count stayed at 74. Excluding deprecated nodes from the
+	# declaration set fixed it and left the register identical to the previous
+	# batch's: one stochastic input replaced by one stochastic input, and
+	# `pm25_dispersion_factor` is `physical`, so it is not an uncertain input.
+	# A batch that moves either count now has to say which node did it.
 	assert len(reg.inputs) == 74, reg.inputs
 	assert len(reg.derived_stochastic) == 48, reg.derived_stochastic
 	assert len(reg.stochastic_edges) == 1, reg.stochastic_edges
@@ -2973,8 +3022,26 @@ def test_the_uncertainty_register_reads_the_declarations(graph: ParameterGraph):
 	# products that also entered the computed set read fixed process
 	# parameters and stay deterministic. 39 to 42.
 	assert len(reg.inputs) + len(reg.derived_stochastic) == 122
+	# The declarations sum is taken over *live* nodes, and the deprecated ones
+	# are named rather than filtered silently. This assertion is what catches
+	# the register losing a declaration, so it must count the same object the
+	# register counts -- otherwise a tombstone carrying `determinism:
+	# stochastic` makes the two sides disagree by one and the assertion stops
+	# being about the register at all. Batch 44's
+	# `pm25_relative_risk_per_kt` is that tombstone: it is stochastic, it is
+	# deprecated, and it is not a declaration about anything the graph computes.
+	deprecated_stochastic = {
+		name
+		for name, node in graph.nodes.items()
+		if str(node.determinism) == "stochastic" and node.status == "deprecated"
+	}
+	assert deprecated_stochastic == {"pm25_relative_risk_per_kt"}, (
+		deprecated_stochastic
+	)
 	assert len(reg.inputs) + len(reg.derived_stochastic) == sum(
-		1 for node in graph.nodes.values() if str(node.determinism) == "stochastic"
+		1
+		for node in graph.nodes.values()
+		if str(node.determinism) == "stochastic" and node.status != "deprecated"
 	), "the register and the declarations disagree"
 
 
@@ -3161,6 +3228,14 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	# input count and the derived-stochastic count are both unchanged: the
 	# batch declares no new stochastic input and none of its products is
 	# stochastic by its own relation.
+	# Batch 44 left the summary exactly where batch 39 put it, and the earlier
+	# reading here of "75" was wrong: it was measured before the deprecated
+	# node was excluded from the register, so it counted a tombstone. The chain
+	# it added -- fuel energy, the six pollutant ledgers, the dispersion factor
+	# and the concentration -- is `physical` throughout, and a physical
+	# accounting identity does not become uncertain because an upstream input
+	# is, which is the module's own distinction between reachability and
+	# determinism.
 	assert "74" in text and "171" in text
 
 
@@ -3990,7 +4065,10 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# was already hard and stayed hard, so it moves nothing here. No batch
 	# since 33 has added a soft or informational edge, which is why those two
 	# counts have not moved.
-	assert counts == {"hard": 550, "informational": 1, "soft": 2}, counts
+	# 550 -> 562 for batch 44: the twelve new equations each carry a `hard`
+	# edge from every rhs symbol to the variable they determine. The bounds
+	# and identities this batch did not add, so the other two tiers are flat.
+	assert counts == {"hard": 562, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -4380,7 +4458,14 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# the EIA LCOE methodology for the derating of intermittent renewables and
 	# its 15% wind example, which is the value `vre_capacity_credit` ships.
 	# The equation count does not move. 244 to 247.
-	assert len(declared) == 247, f"the citation register moved: {sorted(declared)}"
+	# Batch 44 added twelve: the three fuel-energy definitions, the six
+	# pollutant totals, the fleet's own concentration contribution and the
+	# total. Each carries the guidebook table its factors come from or the
+	# IEA/NEA efficiency row its divisor does, so a reader reaches the cell
+	# rather than a genre. The deaths equation was rewritten in place and
+	# already carried the AirQ+ citation, so it does not add to the register.
+	# 247 to 259.
+	assert len(declared) == 259, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -4626,7 +4711,7 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 				f"numeric {numeric!r}"
 			)
 			compared += 1
-	assert compared == 481, (
+	assert compared == 493, (
 		f"expected 481 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "
