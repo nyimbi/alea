@@ -3781,6 +3781,84 @@ parameters:
     type: float
     unit: '1'
     users: []
+  carbon_content_coal_t_per_gj:
+    id: carbon_content_coal_t_per_gj
+    name: Carbon content, coal
+    description: 94 600 kg CO2/TJ is the IPCC 2006 default carbon content for other bituminous coal, Table
+      2.2. Divided by 3.6 GJ/MWh it is 0.34056 tCO2/MWh at 100% efficiency, which is the number a plant's
+      stack term approaches as its heat rate approaches the thermodynamic limit.
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: tonne/GJ
+    range:
+    - 0.0
+    - 0.1892
+    default: 0.0946
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
+      Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
+      -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+      The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
+      `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
+      (2020).
+    depends_on: []
+    affects:
+    - emission_factor_coal_t_per_mwh
+  carbon_content_gas_t_per_gj:
+    id: carbon_content_gas_t_per_gj
+    name: Carbon content, gas
+    description: 56 100 kg CO2/TJ is the IPCC 2006 default for natural gas, Table 2.2. Gas is the lowest-carbon
+      fossil fuel per unit of heat, which is why a CCGT at 58% efficiency emits less than half what a
+      coal plant at 40% does for the same MWh.
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: tonne/GJ
+    range:
+    - 0.0
+    - 0.1122
+    default: 0.0561
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
+      Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
+      -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+      The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
+      `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
+      (2020).
+    depends_on: []
+    affects:
+    - emission_factor_gas_t_per_mwh
+  carbon_content_oil_t_per_gj:
+    id: carbon_content_oil_t_per_gj
+    name: Carbon content, oil
+    description: '77 400 kg CO2/TJ is the IPCC 2006 default for residual fuel oil, Table 2.2. Between
+      coal and gas, as the fuel''s H:C ratio implies: the carbon content falls monotonically as the fuel
+      gets lighter.'
+    category: environment
+    subcategory: emission_factor
+    type: float
+    unit: tonne/GJ
+    range:
+    - 0.0
+    - 0.1548
+    default: 0.0774
+    role: exogenous
+    determinism: physical
+    status: existing
+    source: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
+      Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
+      -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+      The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
+      `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
+      (2020).
+    depends_on: []
+    affects:
+    - emission_factor_oil_t_per_mwh
   carbon_cost_usd_per_mwh:
     categories: []
     category: Emissions
@@ -10055,7 +10133,6 @@ parameters:
     users:
     - Regulators
   efficiency_coal:
-    id: efficiency_coal
     name: Efficiency coal
     description: 'Net electrical efficiency of the coal fleet, fuel energy in to electricity out. 0.40
       is the median of the supercritical pulverised entries in the IEA/NEA cost study, whose country rows
@@ -10084,9 +10161,9 @@ parameters:
     depends_on: []
     affects:
     - coal_fuel_energy_gj
+    - emission_factor_coal_t_per_mwh
     - lcoe_coal_usd_per_mwh
   efficiency_gas:
-    id: efficiency_gas
     name: Efficiency gas
     description: Net electrical efficiency of the gas fleet. 0.58 is the median of the CCGT rows in the
       same IEA/NEA table (0.41 to 0.64 across countries); the guidebook's own text puts a modern CCGT
@@ -10113,10 +10190,10 @@ parameters:
     deprecated_by: null
     depends_on: []
     affects:
+    - emission_factor_gas_t_per_mwh
     - gas_fuel_energy_gj
     - lcoe_gas_usd_per_mwh
   efficiency_oil:
-    id: efficiency_oil
     name: Efficiency oil
     description: 'Net electrical efficiency of the oil-fired fleet. The IEA/NEA study carries no oil-fired
       row, so this is the conventional steam-cycle value for a residual-fuel-oil plant, which is what
@@ -10143,6 +10220,7 @@ parameters:
     deprecated_by: null
     depends_on: []
     affects:
+    - emission_factor_oil_t_per_mwh
     - lcoe_oil_usd_per_mwh
     - oil_fuel_energy_gj
   efficient_frontier:
@@ -10534,51 +10612,83 @@ parameters:
     users:
     - Regulators
   emission_factor_coal_t_per_mwh:
-    categories: []
-    category: Technology
-    default: 0.92
-    deprecated_by: null
-    description: 'CO2 per megawatt-hour for coal: stack factor from the fuel''s carbon content; lifecycle
-      additions folded in for the low-carbon technologies, whose stack term is zero.'
-    determinism: physical
-    initial: null
     name: Emission factor coal t per mwh
-    priority: P1
-    range:
-    - 0.0
-    - 1.5
-    role: exogenous
-    source: IPCC lifecycle emission factors, 2014; fuel carbon contents
-    source_url: null
-    status: existing
-    subcategory: null
-    type: float
-    unit: tonne/MWh
-    users:
-    - Regulators
-  emission_factor_gas_t_per_mwh:
-    categories: []
+    description: 'CO2 the coal fleet emits per MWh generated, as the fuel''s carbon content over the plant''s
+      net efficiency: `carbon_content_coal_t_per_gj * gj_per_mwh / efficiency_coal`. The shipped node
+      carried 0.92 as an independent dial, 7.5% away from what the graph''s own efficiency implies, so
+      a scenario that raised `efficiency_coal` moved the fuel energy and left the emissions it causes
+      untouched. The carbon content is IPCC 2006 Table 2.2''s default; the efficiency is the IEA/NEA (2020)
+      net efficiency the same LCOE already reads. Dimensional check: tonne/GJ times GJ/MWh over a dimensionless
+      efficiency is tonne/MWh.'
     category: Technology
-    default: 0.45
-    deprecated_by: null
-    description: 'CO2 per megawatt-hour for gas: stack factor from the fuel''s carbon content; lifecycle
-      additions folded in for the low-carbon technologies, whose stack term is zero.'
-    determinism: physical
-    initial: null
-    name: Emission factor gas t per mwh
-    priority: P1
-    range:
-    - 0.0
-    - 1.5
-    role: exogenous
-    source: IPCC lifecycle emission factors, 2014; fuel carbon contents
-    source_url: null
-    status: existing
     subcategory: null
     type: float
     unit: tonne/MWh
+    range:
+    - 0.0
+    - 1.5
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
+      Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
+      -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+      The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
+      `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
+      (2020).
+    source_url: null
     users:
     - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
+    depends_on:
+    - carbon_content_coal_t_per_gj
+    - efficiency_coal
+    - gj_per_mwh
+    affects:
+    - fleet_emission_intensity_t_per_mwh
+    - lcoe_coal_usd_per_mwh
+  emission_factor_gas_t_per_mwh:
+    name: Emission factor gas t per mwh
+    description: 'CO2 the gas fleet emits per MWh generated, as the fuel''s carbon content over the plant''s
+      net efficiency: `carbon_content_gas_t_per_gj * gj_per_mwh / efficiency_gas`. The shipped node carried
+      0.92 as an independent dial, 22.6% away from what the graph''s own efficiency implies, so a scenario
+      that raised `efficiency_gas` moved the fuel energy and left the emissions it causes untouched. The
+      carbon content is IPCC 2006 Table 2.2''s default; the efficiency is the IEA/NEA (2020) net efficiency
+      the same LCOE already reads. Dimensional check: tonne/GJ times GJ/MWh over a dimensionless efficiency
+      is tonne/MWh.'
+    category: Technology
+    subcategory: null
+    type: float
+    unit: tonne/MWh
+    range:
+    - 0.0
+    - 1.5
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
+      Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
+      -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+      The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
+      `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
+      (2020).
+    source_url: null
+    users:
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
+    depends_on:
+    - carbon_content_gas_t_per_gj
+    - efficiency_gas
+    - gj_per_mwh
+    affects:
+    - fleet_emission_intensity_t_per_mwh
+    - lcoe_gas_usd_per_mwh
   emission_factor_geothermal_t_per_mwh:
     categories: []
     category: Technology
@@ -10649,28 +10759,44 @@ parameters:
     users:
     - Regulators
   emission_factor_oil_t_per_mwh:
-    categories: []
-    category: Technology
-    default: 0.78
-    deprecated_by: null
-    description: 'CO2 per megawatt-hour for oil: stack factor from the fuel''s carbon content; lifecycle
-      additions folded in for the low-carbon technologies, whose stack term is zero.'
-    determinism: physical
-    initial: null
     name: Emission factor oil t per mwh
-    priority: P1
-    range:
-    - 0.0
-    - 1.5
-    role: exogenous
-    source: IPCC lifecycle emission factors, 2014; fuel carbon contents
-    source_url: null
-    status: existing
+    description: 'CO2 the oil fleet emits per MWh generated, as the fuel''s carbon content over the plant''s
+      net efficiency: `carbon_content_oil_t_per_gj * gj_per_mwh / efficiency_oil`. The shipped node carried
+      0.92 as an independent dial, 6.0% away from what the graph''s own efficiency implies, so a scenario
+      that raised `efficiency_oil` moved the fuel energy and left the emissions it causes untouched. The
+      carbon content is IPCC 2006 Table 2.2''s default; the efficiency is the IEA/NEA (2020) net efficiency
+      the same LCOE already reads. Dimensional check: tonne/GJ times GJ/MWh over a dimensionless efficiency
+      is tonne/MWh.'
+    category: Technology
     subcategory: null
     type: float
     unit: tonne/MWh
+    range:
+    - 0.0
+    - 1.5
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
+      Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
+      -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+      The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
+      `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
+      (2020).
+    source_url: null
     users:
     - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
+    depends_on:
+    - carbon_content_oil_t_per_gj
+    - efficiency_oil
+    - gj_per_mwh
+    affects:
+    - fleet_emission_intensity_t_per_mwh
+    - lcoe_oil_usd_per_mwh
   emission_factor_t_per_mwh:
     categories: []
     category: Emissions
@@ -13799,7 +13925,6 @@ parameters:
     - Regulators
     - Planners
   gj_per_mwh:
-    id: gj_per_mwh
     name: Gj per mwh
     description: Gigajoules in a megawatt-hour. Exact by definition -- 1 MWh is 3.6 GJ -- and carried
       as a node because the emission factors are per GJ of fuel while the graph's capacities are in MW.
@@ -13813,13 +13938,22 @@ parameters:
     - 0.0036
     - 3600.0
     default: 3.6
+    initial: null
     role: exogenous
     determinism: fixed
-    status: existing
+    categories: []
     source: The co-pollutant chain (batch 44)
+    source_url: null
+    users: []
+    priority: P2
+    status: existing
+    deprecated_by: null
     depends_on: []
     affects:
     - coal_fuel_energy_gj
+    - emission_factor_coal_t_per_mwh
+    - emission_factor_gas_t_per_mwh
+    - emission_factor_oil_t_per_mwh
     - gas_fuel_energy_gj
     - oil_fuel_energy_gj
   glacial_lake_outburst:
@@ -36435,6 +36569,102 @@ equations:
     system: financial
     tolerance: 1.0e-09
     unit_check: true
+  emission_factor_coal_definition:
+    id: emission_factor_coal_definition
+    name: Emission factor, coal
+    system: emissions
+    tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    relation: eq
+    lhs: emission_factor_coal_t_per_mwh
+    rhs: carbon_content_coal_t_per_gj * gj_per_mwh / efficiency_coal
+    parameters:
+    - carbon_content_coal_t_per_gj
+    - efficiency_coal
+    - emission_factor_coal_t_per_mwh
+    - gj_per_mwh
+    free_variables:
+    - carbon_content_coal_t_per_gj
+    - efficiency_coal
+    - gj_per_mwh
+    determined_variables:
+    - emission_factor_coal_t_per_mwh
+    description: The coal fleet's CO2 per MWh from the fuel's carbon content and the fleet's net efficiency.
+    reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2
+      (Stationary Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy
+      industries' -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+      The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
+      `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
+      (2020).
+    unit_check: true
+    latex: \mathrm{emission}_{factor\_coal\_t\_per\_mwh} = \frac{\mathrm{carbon}_{content\_coal\_t\_per\_gj}
+      \mathrm{gj}_{per\_mwh}}{\mathrm{efficiency}_{coal}}
+  emission_factor_gas_definition:
+    id: emission_factor_gas_definition
+    name: Emission factor, gas
+    system: emissions
+    tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    relation: eq
+    lhs: emission_factor_gas_t_per_mwh
+    rhs: carbon_content_gas_t_per_gj * gj_per_mwh / efficiency_gas
+    parameters:
+    - carbon_content_gas_t_per_gj
+    - efficiency_gas
+    - emission_factor_gas_t_per_mwh
+    - gj_per_mwh
+    free_variables:
+    - carbon_content_gas_t_per_gj
+    - efficiency_gas
+    - gj_per_mwh
+    determined_variables:
+    - emission_factor_gas_t_per_mwh
+    description: The gas fleet's CO2 per MWh from the fuel's carbon content and the fleet's net efficiency.
+    reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2
+      (Stationary Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy
+      industries' -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+      The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
+      `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
+      (2020).
+    unit_check: true
+    latex: \mathrm{emission}_{factor\_gas\_t\_per\_mwh} = \frac{\mathrm{carbon}_{content\_gas\_t\_per\_gj}
+      \mathrm{gj}_{per\_mwh}}{\mathrm{efficiency}_{gas}}
+  emission_factor_oil_definition:
+    id: emission_factor_oil_definition
+    name: Emission factor, oil
+    system: emissions
+    tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    relation: eq
+    lhs: emission_factor_oil_t_per_mwh
+    rhs: carbon_content_oil_t_per_gj * gj_per_mwh / efficiency_oil
+    parameters:
+    - carbon_content_oil_t_per_gj
+    - efficiency_oil
+    - emission_factor_oil_t_per_mwh
+    - gj_per_mwh
+    free_variables:
+    - carbon_content_oil_t_per_gj
+    - efficiency_oil
+    - gj_per_mwh
+    determined_variables:
+    - emission_factor_oil_t_per_mwh
+    description: The oil fleet's CO2 per MWh from the fuel's carbon content and the fleet's net efficiency.
+    reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2
+      (Stationary Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy
+      industries' -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+      The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
+      `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
+      (2020).
+    unit_check: true
+    latex: \mathrm{emission}_{factor\_oil\_t\_per\_mwh} = \frac{\mathrm{carbon}_{content\_oil\_t\_per\_gj}
+      \mathrm{gj}_{per\_mwh}}{\mathrm{efficiency}_{oil}}
   emissions_definition:
     id: emissions_definition
     name: Annual emissions
@@ -59581,6 +59811,135 @@ relationships:
     ''Levelised cost of electricity''. The employment multipliers are the input-output multipliers of
     the Leontief inverse; the shipped `indirect_employment_multiplier` and `induced_employment_multiplier`
     nodes carry their own source fields.'
+  priority: P2
+- source: carbon_content_coal_t_per_gj
+  target: emission_factor_coal_t_per_mwh
+  equation_id: emission_factor_coal_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Carbon content of the coal the fleet burns, per GJ.
+  reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
+    Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
+    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+    The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
+    `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
+    (2020).
+  priority: P2
+- source: gj_per_mwh
+  target: emission_factor_coal_t_per_mwh
+  equation_id: emission_factor_coal_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gigajoules in a megawatt-hour; converts the per-GJ content to a per-MWh one.
+  reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
+    Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
+    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+    The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
+    `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
+    (2020).
+  priority: P2
+- source: efficiency_coal
+  target: emission_factor_coal_t_per_mwh
+  equation_id: emission_factor_coal_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Net electrical efficiency of the coal fleet: the divisor that turns fuel energy into delivered
+    MWh.'
+  reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
+    Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
+    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+    The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
+    `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
+    (2020).
+  priority: P2
+- source: carbon_content_gas_t_per_gj
+  target: emission_factor_gas_t_per_mwh
+  equation_id: emission_factor_gas_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Carbon content of the gas the fleet burns, per GJ.
+  reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
+    Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
+    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+    The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
+    `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
+    (2020).
+  priority: P2
+- source: gj_per_mwh
+  target: emission_factor_gas_t_per_mwh
+  equation_id: emission_factor_gas_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gigajoules in a megawatt-hour; converts the per-GJ content to a per-MWh one.
+  reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
+    Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
+    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+    The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
+    `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
+    (2020).
+  priority: P2
+- source: efficiency_gas
+  target: emission_factor_gas_t_per_mwh
+  equation_id: emission_factor_gas_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Net electrical efficiency of the gas fleet: the divisor that turns fuel energy into delivered
+    MWh.'
+  reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
+    Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
+    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+    The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
+    `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
+    (2020).
+  priority: P2
+- source: carbon_content_oil_t_per_gj
+  target: emission_factor_oil_t_per_mwh
+  equation_id: emission_factor_oil_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Carbon content of the oil the fleet burns, per GJ.
+  reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
+    Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
+    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+    The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
+    `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
+    (2020).
+  priority: P2
+- source: gj_per_mwh
+  target: emission_factor_oil_t_per_mwh
+  equation_id: emission_factor_oil_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Gigajoules in a megawatt-hour; converts the per-GJ content to a per-MWh one.
+  reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
+    Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
+    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+    The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
+    `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
+    (2020).
+  priority: P2
+- source: efficiency_oil
+  target: emission_factor_oil_t_per_mwh
+  equation_id: emission_factor_oil_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Net electrical efficiency of the oil fleet: the divisor that turns fuel energy into delivered
+    MWh.'
+  reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
+    Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
+    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+    The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
+    `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
+    (2020).
   priority: P2
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0

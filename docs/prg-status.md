@@ -1467,6 +1467,73 @@ consistent with the one pre-existing `rocof_definition` failure.
   `paths.repo_root()`, so the module attribute is what is consulted, and a
   scratch tree is a scratch tree for every reader.
 
+### The emission factor was a second dial for the efficiency (batch 51, 2026-10-23)
+
+`emission_factor_coal_t_per_mwh` (0.92), `_gas_` (0.45) and `_oil_` (0.78)
+shipped as `exogenous` dials, and every thermal LCOE reads one of them as its
+carbon-cost term: `emission_factor_<tech>_t_per_mwh *
+carbon_price_usd_per_tco2`. The same graph also carries `efficiency_coal`
+(0.40), `efficiency_gas` (0.58) and `efficiency_oil` (0.38), which the same
+LCOE reads as the fuel-energy divisor. The two sets are the same physical fact
+measured twice — a plant's CO2 per MWh *is* its fuel's carbon content per GJ
+times 3.6, over its net efficiency — and nothing tied them together.
+
+**The arithmetic.** Dividing the IPCC 2006 default carbon contents (Table 2.2:
+94 600 / 56 100 / 77 400 kg CO2/TJ) by the shipped efficiencies gives
+0.851400 / 0.348207 / 0.733263, against the shipped 0.92 / 0.45 / 0.78. The
+factors sat **8.1%, 29.2% and 6.4% high**; gas is the outlier because 0.45
+implies a 44.9%-efficient plant while the graph ships 58%.
+
+| quantity | before | after | change |
+|---|---:|---:|---:|
+| `emission_factor_coal_t_per_mwh` | 0.920000 | 0.851400 | -7.5% |
+| `emission_factor_gas_t_per_mwh` | 0.450000 | 0.348207 | -22.6% |
+| `emission_factor_oil_t_per_mwh` | 0.780000 | 0.733263 | -6.0% |
+| `fleet_emission_intensity_t_per_mwh` | 0.327098 | 0.295172 | **-9.76%** |
+| `emissions_mtco2_per_year` | 16.8633 | 15.2174 | -9.76% |
+| `lcoe_coal_usd_per_mwh` | 119.810 | 116.380 | -2.9% |
+| `lcoe_gas_usd_per_mwh` | 113.170 | 108.077 | -4.5% |
+| `lcoe_oil_usd_per_mwh` | 344.030 | 341.697 | -0.7% |
+
+**Which side moved, and why.** The efficiencies stayed and the factors became
+derived: `carbon_content_<fuel>_t_per_gj * gj_per_mwh / efficiency_<fuel>`.
+The efficiencies are the better-sourced pair — each names a table in IEA/NEA
+(2020) and 0.58 is the CCGT median of it. The factors' source field read "IPCC
+lifecycle emission factors, 2014", which is false for all three (they are
+direct-combustion figures) and pointed at no archived row. Deriving them fixes
+the arithmetic and the citation in one move. Moving the *efficiencies* instead
+would have left three unbacked dials carrying a false label.
+
+**The canary, and why a value test cannot see this.** A derived factor and a
+shipped factor both evaluate to a number, so every value assertion passes on
+the broken graph. What separates them is whether the factor *responds* to the
+efficiency. Measured differentially:
+
+| scenario | HEAD factor | HEAD LCOE coal | batch-51 factor | batch-51 LCOE coal |
+|---|---:|---:|---:|---:|
+| defaults | 0.920000 | 119.810 | 0.851400 | 116.380 |
+| `efficiency_coal = 0.45` | **0.920000** | 116.477 | **0.756800** | 108.320 |
+
+On HEAD the efficiency moves the LCOE and leaves the emissions it causes
+untouched — the defect, visible only in the differential. The shipped test
+`test_a_fossil_emission_factor_is_derived_from_its_carbon_content` asserts the
+role, the closed-form value to 1e-9, and the response; reverting one factor to
+a dial makes it fail on the role.
+
+**Registers, all unmoved by design.** The settable surface stays 874 — three
+dials out, three carbon-content nodes in — so `untranslated()` stays 871.
+`uncoupled()` stays 236: the three factors were already named by the LCOEs and
+the intensity, and the three new nodes are named by the three new equations.
+Units 603 consistent / 1 inconsistent (`rocof_definition`, pre-existing) / 0
+undecidable. Five pinned counts moved by exactly +3 (audit `skipped` 331->334
+and 528->531, citation register 295->298, hard-tier edges 598->601, affine
+solve coverage 528->531), each updated with the reason rather than the number.
+
+**Still open in the same audit:** biomass 0.04 has no traceable basis
+(`docs/research/emission-factor-basis-audit.md` recommendation 3), and the
+register still cannot read a node-level citation (recommendation 5, which needs
+the provenance/citation split in the schema first).
+
 ### Closed since this list was written
 
 **Six layer-5 gates ran and passed while the register counted them as

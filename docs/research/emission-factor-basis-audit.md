@@ -240,22 +240,47 @@ emission factors, 2014" applied uniformly:
 
 ## Recommended corrections
 
-Ordered by materiality, none applied here (this audit changes no graph file):
+Ordered by materiality. **Recommendations 1, 2 and 4 are applied as of batch
+51** (2026-10-23); 3 and 5 are still open, and the status of each is stated
+below rather than left for a reader to diff against the graph.
 
 1. **Reconcile the fossil factors with `efficiency_*`.** Either the factors
    move to 0.851 / 0.348 / 0.733, or the efficiencies move to 0.37 / 0.449 /
    0.357. Pick one direction and make the other derived. ~11% on the headline.
+
+   **APPLIED (batch 51).** The second direction: the efficiencies stay, because
+   they are the better-sourced pair (IEA/NEA 2020 net efficiencies, with 0.58
+   the CCGT median of that table), and the three factors became derived as
+   `carbon_content_<fuel>_t_per_gj * gj_per_mwh / efficiency_<fuel>`. Three new
+   exogenous nodes carry the carbon contents in the unit the IPCC table prints.
+   Measured on the loaded graph: the factors are now **0.851400 / 0.348207 /
+   0.733263**; `fleet_emission_intensity_t_per_mwh` **0.327098 -> 0.295172**
+   (**-9.76%**, matching this audit's scenario table); `emissions_mtco2_per_year`
+   **16.8633 -> 15.2174**. The three thermal LCOEs move with them -- coal
+   119.810 -> 116.380, gas 113.17 -> 108.077, oil 344.03 -> 341.697 -- because
+   each carries `emission_factor_<tech> * carbon_price_usd_per_tco2`.
+
+   The direction was chosen on sourcing, not on convenience: moving the
+   *efficiencies* to 0.37 / 0.449 / 0.357 would have left the factors as
+   unbacked dials and kept the false lifecycle label.
 2. **Relabel the source.** "IPCC lifecycle emission factors, 2014" is false for
    coal, gas and oil. The defensible string for those three is "IPCC 2006
    Guidelines Vol. 2 Ch. 2 default carbon contents (Table 2.2), divided by the
    graph's `efficiency_<tech>`" -- which is also the fix that makes (1)
    automatic.
+
+   **APPLIED (batch 51).** Both the three carbon-content nodes and the three
+   derived factors now carry that string, and the three values (94 600,
+   56 100, 77 400 kg CO2/TJ) were verified against the archived
+   `sources/archive/ipcc_2006_gl_vol2_ch2.txt` rather than quoted from memory.
 3. **Restate biomass.** Choose a published value with a stated basis and cite
    the table it comes from (AR5 Table A.III.2 median 0.23, or SRREN A.II.4
    median 0.018, or state the feedstock assumption). 0.04 should not remain an
    unattributed number. Effect on headline: <0.6%.
 4. **Leave nuclear, hydro and geothermal alone.** Lifecycle, inside published
-   ranges, 1.13% of the numerator combined.
+   ranges, 1.13% of the numerator combined. **APPLIED** in the sense that batch
+   51 did not touch them: only the three fossil factors were derived, and the
+   four low-carbon factors remain exogenous lifecycle dials.
 5. **Give the register a node-source channel — but not as stated above.**
    `citation_report()` reads equations only, and 1 262 of 1 330 parameter
    sources resolve to nothing because of it. Measured since this audit was

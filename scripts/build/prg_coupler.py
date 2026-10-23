@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "51":
+		b51_nodes, b51_equations, b51_edges, b51_rules = build_batch51(graph)
+		rules.extend(b51_rules)
+		nodes.update(b51_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b51_equations)
+		edges = list(BATCH12_EDGES) + b51_edges
 	elif batch == "50":
 		b50_nodes, b50_equations, b50_edges, b50_rules = build_batch50(graph)
 		rules.extend(b50_rules)
@@ -16782,6 +16789,282 @@ def build_batch36(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 			"reference": cite, "priority": "P2",
 		})
 
+	return nodes, equations, edges, rules
+
+
+#: The three fossil fuels whose emission factor is the fuel's carbon content
+#: divided by the fleet's own net efficiency, and the nodes each one reads.
+#: The carbon content is IPCC 2006 Table 2.2's default, in tCO2/GJ; the
+#: efficiency is the node the graph already carries and the LCOE already reads.
+_BATCH51_FOSSIL: tuple[tuple[str, str, float, str], ...] = (
+	(
+		"coal",
+		"carbon_content_coal_t_per_gj",
+		0.0946,
+		"94 600 kg CO2/TJ is the IPCC 2006 default carbon content for other "
+		"bituminous coal, Table 2.2. Divided by 3.6 GJ/MWh it is 0.34056 "
+		"tCO2/MWh at 100% efficiency, which is the number a plant's stack term "
+		"approaches as its heat rate approaches the thermodynamic limit.",
+	),
+	(
+		"gas",
+		"carbon_content_gas_t_per_gj",
+		0.0561,
+		"56 100 kg CO2/TJ is the IPCC 2006 default for natural gas, Table 2.2. "
+		"Gas is the lowest-carbon fossil fuel per unit of heat, which is why a "
+		"CCGT at 58% efficiency emits less than half what a coal plant at 40% "
+		"does for the same MWh.",
+	),
+	(
+		"oil",
+		"carbon_content_oil_t_per_gj",
+		0.0774,
+		"77 400 kg CO2/TJ is the IPCC 2006 default for residual fuel oil, "
+		"Table 2.2. Between coal and gas, as the fuel's H:C ratio implies: the "
+		"carbon content falls monotonically as the fuel gets lighter.",
+	),
+)
+
+_BATCH51_SOURCE = (
+	"IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 "
+	"(Energy), Ch. 2 (Stationary Combustion), Table 2.2 'Default emission "
+	"factors for stationary combustion in the energy industries' -- the "
+	"default carbon content by fuel, in kg CO2/TJ. Archived at "
+	 "`sources/archive/ipcc_2006_gl_vol2_ch2.pdf`. The conversion to t/MWh is "
+	"the fuel's carbon content divided by the fleet's net electrical "
+	"efficiency, `efficiency_<tech>`, which the graph carries from IEA/NEA "
+	"Projected Costs of Generating Electricity (2020)."
+)
+
+
+def build_batch51(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Make the three fossil emission factors a derived quantity, not a second dial.
+
+	*The defect.* `emission_factor_coal_t_per_mwh` (0.92), `_gas_` (0.45) and
+	`_oil_` (0.78) are `exogenous` dials, and every thermal LCOE reads one of
+	them as the carbon-cost term: `emission_factor_<tech>_t_per_mwh *
+	carbon_price_usd_per_tco2`. The graph also carries `efficiency_coal` (0.40),
+	`efficiency_gas` (0.58) and `efficiency_oil` (0.38), which the same LCOE
+	reads as the fuel-energy divisor. The two sets are **the same physical
+	fact measured twice**: a plant's CO2 per MWh *is* its fuel's carbon content
+	per GJ times 3.6, divided by its net efficiency. Nothing in the tree ties
+	them together, so a scenario can raise an efficiency and leave the
+	emissions it implies untouched.
+
+	*Measured.* Dividing the IPCC 2006 carbon contents by the shipped
+	efficiencies gives 0.8514 / 0.3482 / 0.7333 t/MWh against the shipped
+	0.92 / 0.45 / 0.78 -- the factors sit **8.1%, 29.2% and 6.4% high**, and
+	the gas pair is the outlier because 0.45 implies a 44.9%-efficient plant
+	while the graph ships 58%. On the fleet-weighted headline the correction is
+	**-9.76%** (`fleet_emission_intensity_t_per_mwh` 0.327098 -> 0.295172), and
+	the same margin overstates the carbon cost of coal, gas and oil in all
+	three thermal LCOEs.
+
+	*Why the efficiencies stay and the factors move.* The efficiencies are the
+	better-sourced pair: each names a table in IEA/NEA (2020) and 0.58 is the
+	CCGT median of that table. The factors named "IPCC lifecycle emission
+	factors, 2014", which is false for all three -- they are direct-combustion
+	figures, and `sources/INDEX.md` holds no 2014 lifecycle row to point at.
+	Making the factors derived fixes the arithmetic *and* the citation in one
+	move, because the derived node's source is the carbon-content table it
+	actually comes from.
+
+	*What this changes.* Three exogenous dials become derived, and three new
+	exogenous nodes carry the carbon contents in the unit the IPCC table
+	prints. The settable surface is unchanged at 874 -- three out, three in --
+	and `untranslated()` stays 871 for the same reason. `uncoupled()` does not
+	move: the three factors were already named by the LCOEs and the intensity,
+	and the three new nodes are named by the three new equations.
+
+	*The canary is the point.* The defect is invisible at defaults to any test
+	that reads only the values, because a derived factor and a shipped factor
+	both evaluate to a number. What separates them is whether the factor
+	**moves when the efficiency does**: the canary sets `efficiency_coal` to
+	0.45 and asserts the coal factor and the coal LCOE both move, which they
+	cannot do while the factor is an independent dial.
+	"""
+	from alea.prg.dsl import parse_side
+	from alea.prg.service import generated_latex as _generated_latex
+	from alea.prg.views import Equation as _Equation
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	measured = graph.propagate(values).values
+
+	# The premise: each factor is an exogenous dial today, and each ships at a
+	# value the carbon content does not reproduce. If a factor already equalled
+	# the derived form there would be no defect to correct.
+	for tech, content_node, content, _prose in _BATCH51_FOSSIL:
+		factor = f"emission_factor_{tech}_t_per_mwh"
+		eff = f"efficiency_{tech}"
+		assert content_node not in graph.nodes, f"{content_node}: already ships"
+		assert graph.nodes[factor].role.value == "exogenous", (
+			f"{factor} is {graph.nodes[factor].role.value!r}, not the exogenous dial "
+			f"this batch derives"
+		)
+		assert graph.nodes[eff].unit == "1", f"{eff} carries unit {graph.nodes[eff].unit!r}"
+		assert 0.0 < float(graph.nodes[eff].default) < 1.0, (
+			f"{eff} defaults to {graph.nodes[eff].default!r}, which is not a share"
+		)
+		implied = content * 3.6 / float(measured[eff])
+		shipped = float(measured[factor])
+		assert abs(shipped - implied) > 0.01, (
+			f"{factor} ships {shipped!r} and the carbon content implies {implied!r}; "
+			f"the two already agree and there is nothing to reconcile"
+		)
+
+	# The two readers the derivation must reach. A factor nothing reads would
+	# make this a new node rather than a repair of the one the LCOE prices.
+	for tech, _c, _v, _p in _BATCH51_FOSSIL:
+		factor = f"emission_factor_{tech}_t_per_mwh"
+		readers = set(graph.affects(factor))
+		assert f"lcoe_{tech}_usd_per_mwh" in readers, (
+			f"{factor} is not read by lcoe_{tech}_usd_per_mwh; readers are "
+			f"{sorted(readers)}"
+		)
+
+	# The canary, run before the emit so it measures the *shipped* graph: an
+	# efficiency change must leave the factor fixed while the factor is a dial.
+	_canary_values = dict(values)
+	_canary_values["efficiency_coal"] = 0.45
+	_canary = graph.propagate(_canary_values).values
+	assert abs(float(_canary["emission_factor_coal_t_per_mwh"]) - float(
+		measured["emission_factor_coal_t_per_mwh"]
+	)) < 1e-12, (
+		"the coal factor already moves with efficiency_coal; the defect this "
+		"batch corrects is not present and the canary would be vacuous"
+	)
+	assert abs(float(_canary["lcoe_coal_usd_per_mwh"]) - float(
+		measured["lcoe_coal_usd_per_mwh"]
+	)) > 1e-6, (
+		"efficiency_coal does not move lcoe_coal at all, so the canary's second "
+		"half cannot distinguish the derived form from the shipped one"
+	)
+
+	# -- emit: the carbon contents ------------------------------------------
+	for tech, content_node, content, prose in _BATCH51_FOSSIL:
+		nodes[content_node] = {
+			"id": content_node,
+			"name": f"Carbon content, {tech}",
+			"description": prose,
+			"category": "environment",
+			"subcategory": "emission_factor",
+			"type": "float",
+			"unit": "tonne/GJ",
+			"range": [0.0, content * 2.0],
+			"default": content,
+			"role": "exogenous",
+			"determinism": "physical",
+			"status": "existing",
+			"source": _BATCH51_SOURCE,
+			"depends_on": [],
+			"affects": [f"emission_factor_{tech}_t_per_mwh"],
+		}
+
+	# -- emit: the factors, now derived --------------------------------------
+	for tech, content_node, content, _prose in _BATCH51_FOSSIL:
+		factor = f"emission_factor_{tech}_t_per_mwh"
+		eff = f"efficiency_{tech}"
+		equation_id = f"emission_factor_{tech}_definition"
+		assert equation_id not in graph.equations, f"{equation_id}: already ships"
+
+		rhs = f"{content_node} * gj_per_mwh / {eff}"
+		named = set(parse_side(rhs).symbols) | {factor}
+		body = dict(graph.nodes[factor].model_dump(exclude={"id"}, mode="json"))
+		body.update({
+			"role": "derived",
+			"default": None,
+			"determinism": "physical",
+			"description": (
+				f"CO2 the {tech} fleet emits per MWh generated, as the fuel's "
+				f"carbon content over the plant's net efficiency: "
+				f"`{content_node} * gj_per_mwh / {eff}`. The shipped node carried "
+				f"0.92 as an independent dial, {abs(content * 3.6 / float(measured[eff]) - float(measured[factor])) / float(measured[factor]):.1%} "
+				f"away from what the graph's own efficiency implies, so a scenario "
+				f"that raised `{eff}` moved the fuel energy and left the emissions "
+				f"it causes untouched. The carbon content is IPCC 2006 Table 2.2's "
+				f"default; the efficiency is the IEA/NEA (2020) net efficiency the "
+				f"same LCOE already reads. Dimensional check: tonne/GJ times GJ/MWh "
+				f"over a dimensionless efficiency is tonne/MWh."
+			),
+			"source": _BATCH51_SOURCE,
+			"depends_on": sorted({content_node, "gj_per_mwh", eff}),
+			"affects": sorted(graph.affects(factor)),
+		})
+		nodes[factor] = body
+
+		equation_body = {
+			"id": equation_id,
+			"name": f"Emission factor, {tech}",
+			"system": "emissions",
+			"tolerance": 1e-09,
+			"priority": "P2",
+			"solution_method": "direct",
+			"linearity": "linear",
+			"relation": "eq",
+			"lhs": factor,
+			"rhs": rhs,
+			"parameters": sorted(named),
+			"free_variables": sorted(named - {factor}),
+			"determined_variables": [factor],
+			"description": (
+				f"The {tech} fleet's CO2 per MWh from the fuel's carbon content "
+				f"and the fleet's net efficiency."
+			),
+			"reference": _BATCH51_SOURCE,
+			"unit_check": True,
+		}
+		equation_body["latex"] = _generated_latex(_Equation(**equation_body))  # type: ignore[arg-type]
+		equations[equation_id] = equation_body
+
+		for symbol, description in (
+			(content_node, f"Carbon content of the {tech} the fleet burns, per GJ."),
+			("gj_per_mwh", "Gigajoules in a megawatt-hour; converts the per-GJ content to a per-MWh one."),
+			(eff, f"Net electrical efficiency of the {tech} fleet: the divisor that turns fuel energy into delivered MWh."),
+		):
+			edges.append({
+				"source": symbol,
+				"target": factor,
+				"equation_id": equation_id,
+				"relationship": "functional",
+				"direction": "forward",
+				"strength": "hard",
+				"description": description,
+				"reference": _BATCH51_SOURCE,
+				"priority": "P2",
+			})
+
+	# The upstream nodes declare `affects`, and the loader strips that list into
+	# `_declared` rather than rebuilding it from the equations. A new reader
+	# without the matching entry leaves `structure_issues()` reporting drift --
+	# the batch-45 lesson. Each of these four gains one or three targets and
+	# nothing else about the body changes.
+	for upstream, added in (
+		("efficiency_coal", ["emission_factor_coal_t_per_mwh"]),
+		("efficiency_gas", ["emission_factor_gas_t_per_mwh"]),
+		("efficiency_oil", ["emission_factor_oil_t_per_mwh"]),
+		(
+			"gj_per_mwh",
+			[
+				"emission_factor_coal_t_per_mwh",
+				"emission_factor_gas_t_per_mwh",
+				"emission_factor_oil_t_per_mwh",
+			],
+		),
+	):
+		declared = graph._declared.get(upstream)
+		assert declared is not None, f"{upstream}: ships no declared depends_on/affects"
+		body = dict(graph.nodes[upstream].model_dump(exclude={"id"}, mode="json"))
+		body["depends_on"] = list(declared[0])
+		body["affects"] = sorted(set(declared[1]) | set(added))
+		nodes[upstream] = body
+
+	assert len(nodes) == 10, len(nodes)
+	assert len(equations) == 3, len(equations)
 	return nodes, equations, edges, rules
 
 

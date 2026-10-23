@@ -1325,6 +1325,63 @@ def test_a_categorical_retyped_from_a_placeholder_refuses_an_undeclared_level(
 		assert graph.propagate(scoped).values["trade_agreement"] == level
 
 
+def test_a_fossil_emission_factor_is_derived_from_its_carbon_content(
+	graph: ParameterGraph, defaults: dict
+):
+	"""The factor moves when the efficiency does, which a dial cannot do.
+
+	`emission_factor_{coal,gas,oil}_t_per_mwh` shipped as exogenous dials at
+	0.92 / 0.45 / 0.78 while the graph also carried `efficiency_{tech}` at
+	0.40 / 0.58 / 0.38 -- the same physical fact measured twice, with nothing
+	tying them. Batch 51 made the factor `carbon_content * gj_per_mwh /
+	efficiency`, so the two now agree by construction.
+
+	A value test cannot see this defect: a derived factor and a shipped factor
+	both evaluate to a number. What separates them is whether the factor
+	**responds** to the efficiency, so this test sets an efficiency and
+	asserts the factor moves -- and asserts the value the closed form gives,
+	so a wrong divisor fails too.
+	"""
+	from alea.prg.graph import GraphError  # noqa: F401  (documented below)
+
+	content = {
+		"coal": 0.0946,
+		"gas": 0.0561,
+		"oil": 0.0774,
+	}
+	for tech, carbon in content.items():
+		factor = f"emission_factor_{tech}_t_per_mwh"
+		node = graph.node(factor)
+		# Derived, so a scenario cannot set it: setting a derived value and
+		# the inputs that determine it is the refusal this whole graph exists
+		# for.
+		assert node.role.value == "derived", node.role
+		assert not graph.is_settable(factor), f"{factor} is still settable"
+
+		# The closed form, at the defaults, to the last digit the arithmetic
+		# gives. A divisor that is merely *a* number passes a "moves" check.
+		eff = defaults[f"efficiency_{tech}"]
+		assert graph.propagate(defaults).values[factor] == pytest.approx(
+			carbon * 3.6 / eff, rel=1e-9
+		), factor
+
+	# The response, which is the whole point: a *less* efficient plant emits
+	# more per MWh, so lowering an efficiency must raise the factor. The
+	# perturbation goes down rather than up because gas ships 0.58 against a
+	# declared ceiling of 0.62 -- a +0.05 step leaves its admissible range and
+	# the range gate refuses the scenario before the factor is ever computed.
+	for tech, _carbon in content.items():
+		factor = f"emission_factor_{tech}_t_per_mwh"
+		lowered = dict(defaults)
+		lowered[f"efficiency_{tech}"] = defaults[f"efficiency_{tech}"] - 0.05
+		before = graph.propagate(defaults).values[factor]
+		after = graph.propagate(lowered).values[factor]
+		assert after > before, (
+			f"{factor} did not rise when efficiency_{tech} fell; the factor is "
+			f"not reading its own efficiency"
+		)
+
+
 def test_a_range_excursion_does_not_survive_into_the_next_scenario(
 	graph: ParameterGraph, defaults: dict
 ):
@@ -2130,8 +2187,13 @@ def test_the_audit_reports_what_it_did_not_check():
 	# base was not. `checked` moves 193 -> 197 and `skipped` 335 -> 331. This is
 	# a widening of what the audit can check, not a narrowing -- the four were
 	# skipped for a reason the correction removed.
+	# Batch 51 added three derived emission factors. The solve result carries
+	# neither `carbon_content_<fuel>_t_per_gj` nor `gj_per_mwh`, so all three
+	# are skipped rather than checked: `checked` stays 197 and `skipped` moves
+	# 331 -> 334. The audit's coverage is unchanged -- it is the computed set
+	# that grew.
 	assert len(audit.checked) == 197, audit.checked
-	assert len(audit.skipped) == 331, audit.skipped
+	assert len(audit.skipped) == 334, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -2188,7 +2250,8 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# ran, and batch 31's product layer took it to 440, and batch 33's
 	# residue layer to 461, batch 44's pollutant layer to 493, and batch 46's
 	# capacity-to-energy layer to 528.
-	assert len(audit.skipped) == 528, audit.skipped
+	# Batch 51's three derived emission factors take it 528 -> 531.
+	assert len(audit.skipped) == 531, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -4199,7 +4262,10 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# sum, the headroom quotient and the `geq` adequacy bound. The two tiers
 	# this batch did not touch stay flat, which is what the equality below is
 	# for.
-	assert counts == {"hard": 598, "informational": 1, "soft": 2}, counts
+	# Batch 51's three emission-factor equations are equalities with three
+	# hard edges each, taking the hard tier 598 -> 601. The other two tiers
+	# stay flat, which is what the equality is for.
+	assert counts == {"hard": 601, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -4603,7 +4669,9 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# one work cited across a family of equations rather than a new work per
 	# row, which is the same shape batch 44's pollutant table had.
 	# 259 to 295.
-	assert len(declared) == 295, f"the citation register moved: {sorted(declared)}"
+	# Batch 51's three emission-factor equations each carry a reference (IPCC
+	# 2006 Table 2.2), taking the register 295 -> 298.
+	assert len(declared) == 298, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -4849,7 +4917,7 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 				f"numeric {numeric!r}"
 			)
 			compared += 1
-	assert compared == 528, (
+	assert compared == 531, (
 		f"expected 481 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "
