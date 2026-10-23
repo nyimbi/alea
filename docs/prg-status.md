@@ -805,6 +805,75 @@ factors. Registering the lifecycle basis is a new index row plus an archived
 copy, and it is the honest follow-on.
 
 
+### Two spellings of one number, never meeting (batches 48 and 49, 2026-10-23)
+
+Batches 48 and 49 are one defect class: a node whose name claims a quantity,
+and an equation that computes that quantity from a different node with the
+same meaning and a different value.
+
+**Batch 48 — the sector shares partitioned the base, not the year.** The four
+`{residential,commercial,industrial,agricultural}_demand_twh` equations each
+read `<sector>_demand_share * base_demand_twh`. The four shares sum to exactly
+1.0 and `demand_shares_bound` caps them at 1.0, so both the shipped body and
+the repair sum the four sectors exactly — the partition property cannot tell
+them apart. What separates them is the total: the shipped four summed to
+`base_demand_twh` = 33.8 TWh, while `demand_twh` = `base_demand_twh *
+demand_growth_factor` = 46.539 TWh is the quantity a sector's demand is a
+share *of*. Retargeted to `share * demand_twh`, they now sum to 46.539 exactly,
+and every other demand consumer in the graph — `load_factor`,
+`import_dependency`, `strategic_reserves`, `market_traded_volume_twh`,
+`time_of_use_demand_twh`, and the distribution-loss, subsidy and wheeling
+costs — already read the year. The four were the only exceptions.
+
+**Batch 49 — two equations reading the wrong member of a pair.** The annuity
+factor: `crf_solar_pv` and `crf_wind_onshore` are computed from their own asset
+lives and were read by nothing, while the annualised-capex equations read the
+fleet-generic `crf` over `asset_life`. Every other technology reads its own
+factor. The defect is invisible at the defaults because all three asset lives
+are 25.0 — so the repair carries a live canary, and the canary is the whole
+evidence:
+
+| `asset_life_solar_pv` | `crf_solar_pv` | solar LCOE |
+|---:|---:|---:|
+| 25 (default) | 0.114124 | 70.309 |
+| 40 | 0.106635 | **66.035** |
+
+Before the repair the LCOE column read 70.309 in both rows: a scenario
+lengthening a solar asset's life moved the node named for that quantity and
+nothing else. Onshore wind behaves the same, 63.673 → 60.253.
+
+The jobs multipliers: `total_jobs` read `indirect_jobs_multiplier` (1.4) and
+`induced_jobs_multiplier` (0.8) — both `status: to_build` — while its own
+components `indirect_jobs` and `induced_jobs` read
+`indirect_employment_multiplier` (1.2) and `induced_employment_multiplier`
+(0.7), both `existing`. The total was 137,600 against a component sum of
+124,700, a 10.3% overstatement in a node whose description calls it "the number
+a build programme is argued on". It now reads its three components and equals
+their sum exactly.
+
+**Two things the batch learned the hard way, both recorded because they recur.**
+
+*Retiring a node's last reader can strand the node, and a test is what catches
+it.* Repointing the equation alone failed
+`test_the_summary_reports_the_registers`, which pins `uncoupled_roles ==
+{"free"}` so that a dial nothing computes cannot quietly float. Dropping the
+equation's dependence left two `exogenous` dials uncoupled. The repair is to
+deprecate the stranded pair in the same batch, not to relax the invariant.
+
+*`_deprecated_reach` checks edges and equations, but not rules.* A rule naming
+a deprecated node loads clean and gates on a knob the graph has retired — the
+`reserve_margin_required_mw` shape, where two spellings of one number gate
+independently. So `jobs_multiplier_out_of_range` is repointed in the same
+fragment, before the tombstones ship. A batch that deprecates a node must
+repoint every rule reading it, and the builder's guard must assert against
+what it *emits* rather than the pre-bake graph, which still carries the body
+being replaced.
+
+Counts hold at 1426 nodes, 601 equations, 1354 edges, 57 rules across both
+batches. `structure_issues()` and `check_latex` are empty; units are 600
+consistent with the one pre-existing `rocof_definition` failure.
+
+
 ## Not built
 
 - **`00-architecture.md` §6's repository layout declares 37 paths and one does
