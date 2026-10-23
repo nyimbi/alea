@@ -2033,8 +2033,16 @@ def test_the_audit_reports_what_it_did_not_check():
 	# the emission factors, and the three concentration and burden products
 	# read `pm25_emissions`, which is itself derived. `checked` is flat at
 	# 170 and `skipped` moves 311 -> 323.
-	assert len(audit.checked) == 170, audit.checked
-	assert len(audit.skipped) == 323, audit.skipped
+	# Batch 46 took the computed set 493 to 528. Twenty-three join `checked`:
+	# the eleven per-technology LACE nodes and the eleven value-cost ratios
+	# read prices, capacities and factors the result carries as columns, and
+	# `fleet_generation_headroom` is a quotient of two carried quantities.
+	# Twelve join `skipped`: the eleven per-technology generation totals read
+	# capacities the result does not carry, and `fleet_generation_twh` sums
+	# those eleven, so it is no more reachable than its operands. `checked`
+	# moves 170 -> 193 and `skipped` 323 -> 335.
+	assert len(audit.checked) == 193, audit.checked
+	assert len(audit.skipped) == 335, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -2089,8 +2097,9 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# 412. The whole computed set is skipped here because the loop failed,
 	# so this is `len(computed())`, not the skipped half of a partition that
 	# ran, and batch 31's product layer took it to 440, and batch 33's
-	# residue layer to 461, and batch 44's pollutant layer to 493.
-	assert len(audit.skipped) == 493, audit.skipped
+	# residue layer to 461, batch 44's pollutant layer to 493, and batch 46's
+	# capacity-to-energy layer to 528.
+	assert len(audit.skipped) == 528, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -3236,7 +3245,18 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	# accounting identity does not become uncertain because an upstream input
 	# is, which is the module's own distinction between reachability and
 	# determinism.
-	assert "74" in text and "171" in text
+	# Batch 46 moved the reach 171 to 194. Twenty-three of its thirty-six
+	# derived nodes sit downstream of an uncertain input: the eleven LACE nodes
+	# and the eleven value-cost ratios read `capacity_price` and
+	# `marginal_cost_usd_per_mwh` (and, for the four intermittent LACE nodes,
+	# `vre_capacity_credit`), and the headroom quotient reads `generation_twh`,
+	# which the demand factors already reached. The twelve generation
+	# identities are downstream of capacities and capacity factors the register
+	# does not carry as uncertain, so they do not move it. The input count
+	# stays at 74 and the derived-stochastic count at 48: the batch declares no
+	# new uncertain input, and none of its derived nodes is stochastic by its
+	# own relation.
+	assert "74" in text and "194" in text
 
 
 # ---------------------------------------------------------------------------
@@ -4068,7 +4088,13 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# 550 -> 562 for batch 44: the twelve new equations each carry a `hard`
 	# edge from every rhs symbol to the variable they determine. The bounds
 	# and identities this batch did not add, so the other two tiers are flat.
-	assert counts == {"hard": 562, "informational": 1, "soft": 2}, counts
+	# 562 -> 598 for batch 46: its thirty-six new equations are thirty-five
+	# equalities and one inequality, all hard. Eleven per-technology LACE
+	# nodes, eleven value-cost ratios, eleven generation identities, the fleet
+	# sum, the headroom quotient and the `geq` adequacy bound. The two tiers
+	# this batch did not touch stay flat, which is what the equality below is
+	# for.
+	assert counts == {"hard": 598, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -4465,7 +4491,14 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# rather than a genre. The deaths equation was rewritten in place and
 	# already carried the AirQ+ citation, so it does not add to the register.
 	# 247 to 259.
-	assert len(declared) == 259, f"the citation register moved: {sorted(declared)}"
+	# Batch 46 added twenty-six: the eleven value-cost ratios and their eleven
+	# definitions, the eleven generation identities, the fleet sum, the
+	# headroom quotient, LACE and the adequacy bound all carry the EIA LCOE
+	# methodology, which is archived as `eia_lcoe_methodology.txt`. That is
+	# one work cited across a family of equations rather than a new work per
+	# row, which is the same shape batch 44's pollutant table had.
+	# 259 to 295.
+	assert len(declared) == 295, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -4711,7 +4744,7 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 				f"numeric {numeric!r}"
 			)
 			compared += 1
-	assert compared == 493, (
+	assert compared == 528, (
 		f"expected 481 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "

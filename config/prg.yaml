@@ -1955,6 +1955,34 @@ parameters:
     unit: USD/MWh
     users:
     - Developers
+  biomass_generation_twh:
+    id: biomass_generation_twh
+    name: Biomass generation
+    description: 'Annual electrical output of the biomass fleet: installed capacity times the technology''s
+      capacity factor times the hours in a year. This is the identity the per-technology LCOEs already
+      use as their denominator -- `lcoe_coal_definition` divides an annualised cost by `8760 * capacity_factor_coal`
+      -- stated here as an energy total so the fleet''s output is a quantity a balance can read rather
+      than a factor inside a cost.'
+    category: Physical
+    subcategory: generation
+    type: float
+    unit: TWh/year
+    range:
+    - 0.0
+    - 500.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Planners
+    - Investors
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   biomass_sustainability_limit:
     categories: []
     category: Supply
@@ -5172,6 +5200,34 @@ parameters:
     - pm25_kt_per_year
     - sox_emissions
     - voc_emissions
+  coal_generation_twh:
+    id: coal_generation_twh
+    name: Coal generation
+    description: 'Annual electrical output of the coal fleet: installed capacity times the technology''s
+      capacity factor times the hours in a year. This is the identity the per-technology LCOEs already
+      use as their denominator -- `lcoe_coal_definition` divides an annualised cost by `8760 * capacity_factor_coal`
+      -- stated here as an energy total so the fleet''s output is a quantity a balance can read rather
+      than a factor inside a cost.'
+    category: Physical
+    subcategory: generation
+    type: float
+    unit: TWh/year
+    range:
+    - 0.0
+    - 500.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Planners
+    - Investors
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   coal_new_build:
     categories: []
     category: Supply
@@ -7387,6 +7443,34 @@ parameters:
     unit: MW
     users:
     - Developers
+  csp_generation_twh:
+    id: csp_generation_twh
+    name: Csp generation
+    description: 'Annual electrical output of the csp fleet: installed capacity times the technology''s
+      capacity factor times the hours in a year. This is the identity the per-technology LCOEs already
+      use as their denominator -- `lcoe_coal_definition` divides an annualised cost by `8760 * capacity_factor_coal`
+      -- stated here as an energy total so the fleet''s output is a quantity a balance can read rather
+      than a factor inside a cost.'
+    category: Physical
+    subcategory: generation
+    type: float
+    unit: TWh/year
+    range:
+    - 0.0
+    - 500.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Planners
+    - Investors
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   csp_storage_hours:
     categories: []
     category: Storage
@@ -11632,6 +11716,62 @@ parameters:
     users:
     - Planners
     - Regulators
+  fleet_generation_headroom:
+    id: fleet_generation_headroom
+    name: Fleet generation headroom
+    description: Fleet output capability divided by the generation the balance dispatches. A ratio above
+      one is a fleet that could produce more than its load requires -- capacity headroom in energy terms,
+      which is a different statistic from the reserve margin, because the reserve margin is measured at
+      peak and this is measured over the year. A ratio below one is a fleet that cannot serve its own
+      load at its stated capacity factors, and that is a planning failure the graph could not previously
+      express.
+    category: Physical
+    subcategory: generation
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 20.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  fleet_generation_twh:
+    id: fleet_generation_twh
+    name: Fleet generation
+    description: 'Annual electrical output of every modelled generating technology at its own capacity
+      factor: the sum of the eleven per-technology outputs. This is the fleet''s *capability*, not the
+      energy the balance dispatches -- a system with headroom generates less than this, and the ratio
+      of the two is `fleet_generation_headroom`. The distinction is the one the graph was missing: before
+      this node, a scenario that retired the entire coal fleet reported the same generation as one that
+      built it.'
+    category: Physical
+    subcategory: generation
+    type: float
+    unit: TWh/year
+    range:
+    - 0.0
+    - 5000.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Planners
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   flood_risk:
     categories: []
     category: Adapt
@@ -12660,6 +12800,34 @@ parameters:
     - pm25_kt_per_year
     - sox_emissions
     - voc_emissions
+  gas_generation_twh:
+    id: gas_generation_twh
+    name: Gas generation
+    description: 'Annual electrical output of the gas fleet: installed capacity times the technology''s
+      capacity factor times the hours in a year. This is the identity the per-technology LCOEs already
+      use as their denominator -- `lcoe_coal_definition` divides an annualised cost by `8760 * capacity_factor_coal`
+      -- stated here as an energy total so the fleet''s output is a quantity a balance can read rather
+      than a factor inside a cost.'
+    category: Physical
+    subcategory: generation
+    type: float
+    unit: TWh/year
+    range:
+    - 0.0
+    - 500.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Planners
+    - Investors
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   gas_new_build:
     categories: []
     category: Supply
@@ -13125,6 +13293,34 @@ parameters:
     users:
     - Planners
     - Regulators
+  geothermal_generation_twh:
+    id: geothermal_generation_twh
+    name: Geothermal generation
+    description: 'Annual electrical output of the geothermal fleet: installed capacity times the technology''s
+      capacity factor times the hours in a year. This is the identity the per-technology LCOEs already
+      use as their denominator -- `lcoe_coal_definition` divides an annualised cost by `8760 * capacity_factor_coal`
+      -- stated here as an energy total so the fleet''s output is a quantity a balance can read rather
+      than a factor inside a cost.'
+    category: Physical
+    subcategory: generation
+    type: float
+    unit: TWh/year
+    range:
+    - 0.0
+    - 500.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Planners
+    - Investors
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   gis_mapped_network_km:
     category: Digital
     description: 'The route length held in the GIS: the mapped share of the transmission and distribution
@@ -13784,9 +13980,31 @@ parameters:
     source: The co-pollutant chain (batch 44)
     depends_on: []
     affects:
+    - biomass_generation_twh
     - coal_fuel_energy_gj
+    - coal_generation_twh
+    - csp_generation_twh
     - gas_fuel_energy_gj
+    - gas_generation_twh
+    - geothermal_generation_twh
+    - hydro_generation_twh
+    - lace_biomass_usd_per_mwh
+    - lace_coal_usd_per_mwh
+    - lace_csp_usd_per_mwh
+    - lace_gas_usd_per_mwh
+    - lace_geothermal_usd_per_mwh
+    - lace_hydro_usd_per_mwh
+    - lace_nuclear_usd_per_mwh
+    - lace_oil_usd_per_mwh
+    - lace_solar_pv_usd_per_mwh
+    - lace_wind_offshore_usd_per_mwh
+    - lace_wind_onshore_usd_per_mwh
+    - nuclear_generation_twh
     - oil_fuel_energy_gj
+    - oil_generation_twh
+    - solar_pv_generation_twh
+    - wind_offshore_generation_twh
+    - wind_onshore_generation_twh
   household_batteries:
     category: Households
     description: 'Household battery systems installed: the adoption share times the household count. A
@@ -14041,6 +14259,34 @@ parameters:
     users:
     - Planners
     - Regulators
+  hydro_generation_twh:
+    id: hydro_generation_twh
+    name: Hydro generation
+    description: 'Annual electrical output of the hydro fleet: installed capacity times the technology''s
+      capacity factor times the hours in a year. This is the identity the per-technology LCOEs already
+      use as their denominator -- `lcoe_coal_definition` divides an annualised cost by `8760 * capacity_factor_coal`
+      -- stated here as an energy total so the fleet''s output is a quantity a balance can read rather
+      than a factor inside a cost.'
+    category: Physical
+    subcategory: generation
+    type: float
+    unit: TWh/year
+    range:
+    - 0.0
+    - 500.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Planners
+    - Investors
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   hydro_inflow_vintage_offset_years:
     category: Generation
     description: 'hydro inflow vintage offset years: the coupling''s derived quantity, so a scenario''s
@@ -15872,6 +16118,380 @@ parameters:
     users:
     - Regulators
     - Planners
+  lace_biomass_usd_per_mwh:
+    id: lace_biomass_usd_per_mwh
+    name: Biomass levelized avoided cost
+    description: 'The value a marginal new biomass unit earns per MWh: the system marginal price plus
+      the capacity revenue it collects, spread over its own generating hours. EIA defines LACE as a proxy
+      for the revenue a candidate project earns by displacing another marginal asset, summed over its
+      financial life and annualised by dividing by average annual electrical output -- so the capacity
+      term is divided by the same `CF x 8,760` this technology''s LCOE uses as its denominator. The energy
+      term is `marginal_cost_usd_per_mwh`, the short-run marginal cost of fuel plus carbon: EIA''s own
+      definition sets the value by the variable cost of the most expensive unit that needs to be dispatched,
+      and under marginal-cost bidding that variable cost is the clearing price. The graph solves no merit
+      order, so this is a representative marginal unit''s SRMC rather than a cleared price -- a limitation
+      the reader should know, since a scenario with a binding price cap or market power would need a solved
+      price instead. The capacity credit is 1.0: a dispatchable unit is available at the peak, which is
+      the convention `firm_capacity_definition` already applies to `thermal_capacity_mw`.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lace_coal_usd_per_mwh:
+    id: lace_coal_usd_per_mwh
+    name: Coal levelized avoided cost
+    description: 'The value a marginal new coal unit earns per MWh: the system marginal price plus the
+      capacity revenue it collects, spread over its own generating hours. EIA defines LACE as a proxy
+      for the revenue a candidate project earns by displacing another marginal asset, summed over its
+      financial life and annualised by dividing by average annual electrical output -- so the capacity
+      term is divided by the same `CF x 8,760` this technology''s LCOE uses as its denominator. The energy
+      term is `marginal_cost_usd_per_mwh`, the short-run marginal cost of fuel plus carbon: EIA''s own
+      definition sets the value by the variable cost of the most expensive unit that needs to be dispatched,
+      and under marginal-cost bidding that variable cost is the clearing price. The graph solves no merit
+      order, so this is a representative marginal unit''s SRMC rather than a cleared price -- a limitation
+      the reader should know, since a scenario with a binding price cap or market power would need a solved
+      price instead. The capacity credit is 1.0: a dispatchable unit is available at the peak, which is
+      the convention `firm_capacity_definition` already applies to `thermal_capacity_mw`.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lace_csp_usd_per_mwh:
+    id: lace_csp_usd_per_mwh
+    name: Csp levelized avoided cost
+    description: 'The value a marginal new csp unit earns per MWh: the system marginal price plus the
+      capacity revenue it collects, spread over its own generating hours. EIA defines LACE as a proxy
+      for the revenue a candidate project earns by displacing another marginal asset, summed over its
+      financial life and annualised by dividing by average annual electrical output -- so the capacity
+      term is divided by the same `CF x 8,760` this technology''s LCOE uses as its denominator. The energy
+      term is `marginal_cost_usd_per_mwh`, the short-run marginal cost of fuel plus carbon: EIA''s own
+      definition sets the value by the variable cost of the most expensive unit that needs to be dispatched,
+      and under marginal-cost bidding that variable cost is the clearing price. The graph solves no merit
+      order, so this is a representative marginal unit''s SRMC rather than a cleared price -- a limitation
+      the reader should know, since a scenario with a binding price cap or market power would need a solved
+      price instead. The capacity credit is `vre_capacity_credit`: an intermittent resource is not counted
+      at nameplate at the peak, and the graph already derates it the same way in the reserve margin.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lace_gas_usd_per_mwh:
+    id: lace_gas_usd_per_mwh
+    name: Gas levelized avoided cost
+    description: 'The value a marginal new gas unit earns per MWh: the system marginal price plus the
+      capacity revenue it collects, spread over its own generating hours. EIA defines LACE as a proxy
+      for the revenue a candidate project earns by displacing another marginal asset, summed over its
+      financial life and annualised by dividing by average annual electrical output -- so the capacity
+      term is divided by the same `CF x 8,760` this technology''s LCOE uses as its denominator. The energy
+      term is `marginal_cost_usd_per_mwh`, the short-run marginal cost of fuel plus carbon: EIA''s own
+      definition sets the value by the variable cost of the most expensive unit that needs to be dispatched,
+      and under marginal-cost bidding that variable cost is the clearing price. The graph solves no merit
+      order, so this is a representative marginal unit''s SRMC rather than a cleared price -- a limitation
+      the reader should know, since a scenario with a binding price cap or market power would need a solved
+      price instead. The capacity credit is 1.0: a dispatchable unit is available at the peak, which is
+      the convention `firm_capacity_definition` already applies to `thermal_capacity_mw`.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lace_geothermal_usd_per_mwh:
+    id: lace_geothermal_usd_per_mwh
+    name: Geothermal levelized avoided cost
+    description: 'The value a marginal new geothermal unit earns per MWh: the system marginal price plus
+      the capacity revenue it collects, spread over its own generating hours. EIA defines LACE as a proxy
+      for the revenue a candidate project earns by displacing another marginal asset, summed over its
+      financial life and annualised by dividing by average annual electrical output -- so the capacity
+      term is divided by the same `CF x 8,760` this technology''s LCOE uses as its denominator. The energy
+      term is `marginal_cost_usd_per_mwh`, the short-run marginal cost of fuel plus carbon: EIA''s own
+      definition sets the value by the variable cost of the most expensive unit that needs to be dispatched,
+      and under marginal-cost bidding that variable cost is the clearing price. The graph solves no merit
+      order, so this is a representative marginal unit''s SRMC rather than a cleared price -- a limitation
+      the reader should know, since a scenario with a binding price cap or market power would need a solved
+      price instead. The capacity credit is 1.0: a dispatchable unit is available at the peak, which is
+      the convention `firm_capacity_definition` already applies to `thermal_capacity_mw`.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lace_hydro_usd_per_mwh:
+    id: lace_hydro_usd_per_mwh
+    name: Hydro levelized avoided cost
+    description: 'The value a marginal new hydro unit earns per MWh: the system marginal price plus the
+      capacity revenue it collects, spread over its own generating hours. EIA defines LACE as a proxy
+      for the revenue a candidate project earns by displacing another marginal asset, summed over its
+      financial life and annualised by dividing by average annual electrical output -- so the capacity
+      term is divided by the same `CF x 8,760` this technology''s LCOE uses as its denominator. The energy
+      term is `marginal_cost_usd_per_mwh`, the short-run marginal cost of fuel plus carbon: EIA''s own
+      definition sets the value by the variable cost of the most expensive unit that needs to be dispatched,
+      and under marginal-cost bidding that variable cost is the clearing price. The graph solves no merit
+      order, so this is a representative marginal unit''s SRMC rather than a cleared price -- a limitation
+      the reader should know, since a scenario with a binding price cap or market power would need a solved
+      price instead. The capacity credit is 1.0: a dispatchable unit is available at the peak, which is
+      the convention `firm_capacity_definition` already applies to `thermal_capacity_mw`.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lace_nuclear_usd_per_mwh:
+    id: lace_nuclear_usd_per_mwh
+    name: Nuclear levelized avoided cost
+    description: 'The value a marginal new nuclear unit earns per MWh: the system marginal price plus
+      the capacity revenue it collects, spread over its own generating hours. EIA defines LACE as a proxy
+      for the revenue a candidate project earns by displacing another marginal asset, summed over its
+      financial life and annualised by dividing by average annual electrical output -- so the capacity
+      term is divided by the same `CF x 8,760` this technology''s LCOE uses as its denominator. The energy
+      term is `marginal_cost_usd_per_mwh`, the short-run marginal cost of fuel plus carbon: EIA''s own
+      definition sets the value by the variable cost of the most expensive unit that needs to be dispatched,
+      and under marginal-cost bidding that variable cost is the clearing price. The graph solves no merit
+      order, so this is a representative marginal unit''s SRMC rather than a cleared price -- a limitation
+      the reader should know, since a scenario with a binding price cap or market power would need a solved
+      price instead. The capacity credit is 1.0: a dispatchable unit is available at the peak, which is
+      the convention `firm_capacity_definition` already applies to `thermal_capacity_mw`.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lace_oil_usd_per_mwh:
+    id: lace_oil_usd_per_mwh
+    name: Oil levelized avoided cost
+    description: 'The value a marginal new oil unit earns per MWh: the system marginal price plus the
+      capacity revenue it collects, spread over its own generating hours. EIA defines LACE as a proxy
+      for the revenue a candidate project earns by displacing another marginal asset, summed over its
+      financial life and annualised by dividing by average annual electrical output -- so the capacity
+      term is divided by the same `CF x 8,760` this technology''s LCOE uses as its denominator. The energy
+      term is `marginal_cost_usd_per_mwh`, the short-run marginal cost of fuel plus carbon: EIA''s own
+      definition sets the value by the variable cost of the most expensive unit that needs to be dispatched,
+      and under marginal-cost bidding that variable cost is the clearing price. The graph solves no merit
+      order, so this is a representative marginal unit''s SRMC rather than a cleared price -- a limitation
+      the reader should know, since a scenario with a binding price cap or market power would need a solved
+      price instead. The capacity credit is 1.0: a dispatchable unit is available at the peak, which is
+      the convention `firm_capacity_definition` already applies to `thermal_capacity_mw`.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lace_solar_pv_usd_per_mwh:
+    id: lace_solar_pv_usd_per_mwh
+    name: Solar pv levelized avoided cost
+    description: 'The value a marginal new solar pv unit earns per MWh: the system marginal price plus
+      the capacity revenue it collects, spread over its own generating hours. EIA defines LACE as a proxy
+      for the revenue a candidate project earns by displacing another marginal asset, summed over its
+      financial life and annualised by dividing by average annual electrical output -- so the capacity
+      term is divided by the same `CF x 8,760` this technology''s LCOE uses as its denominator. The energy
+      term is `marginal_cost_usd_per_mwh`, the short-run marginal cost of fuel plus carbon: EIA''s own
+      definition sets the value by the variable cost of the most expensive unit that needs to be dispatched,
+      and under marginal-cost bidding that variable cost is the clearing price. The graph solves no merit
+      order, so this is a representative marginal unit''s SRMC rather than a cleared price -- a limitation
+      the reader should know, since a scenario with a binding price cap or market power would need a solved
+      price instead. The capacity credit is `vre_capacity_credit`: an intermittent resource is not counted
+      at nameplate at the peak, and the graph already derates it the same way in the reserve margin.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lace_wind_offshore_usd_per_mwh:
+    id: lace_wind_offshore_usd_per_mwh
+    name: Wind offshore levelized avoided cost
+    description: 'The value a marginal new wind offshore unit earns per MWh: the system marginal price
+      plus the capacity revenue it collects, spread over its own generating hours. EIA defines LACE as
+      a proxy for the revenue a candidate project earns by displacing another marginal asset, summed over
+      its financial life and annualised by dividing by average annual electrical output -- so the capacity
+      term is divided by the same `CF x 8,760` this technology''s LCOE uses as its denominator. The energy
+      term is `marginal_cost_usd_per_mwh`, the short-run marginal cost of fuel plus carbon: EIA''s own
+      definition sets the value by the variable cost of the most expensive unit that needs to be dispatched,
+      and under marginal-cost bidding that variable cost is the clearing price. The graph solves no merit
+      order, so this is a representative marginal unit''s SRMC rather than a cleared price -- a limitation
+      the reader should know, since a scenario with a binding price cap or market power would need a solved
+      price instead. The capacity credit is `vre_capacity_credit`: an intermittent resource is not counted
+      at nameplate at the peak, and the graph already derates it the same way in the reserve margin.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lace_wind_onshore_usd_per_mwh:
+    id: lace_wind_onshore_usd_per_mwh
+    name: Wind onshore levelized avoided cost
+    description: 'The value a marginal new wind onshore unit earns per MWh: the system marginal price
+      plus the capacity revenue it collects, spread over its own generating hours. EIA defines LACE as
+      a proxy for the revenue a candidate project earns by displacing another marginal asset, summed over
+      its financial life and annualised by dividing by average annual electrical output -- so the capacity
+      term is divided by the same `CF x 8,760` this technology''s LCOE uses as its denominator. The energy
+      term is `marginal_cost_usd_per_mwh`, the short-run marginal cost of fuel plus carbon: EIA''s own
+      definition sets the value by the variable cost of the most expensive unit that needs to be dispatched,
+      and under marginal-cost bidding that variable cost is the clearing price. The graph solves no merit
+      order, so this is a representative marginal unit''s SRMC rather than a cleared price -- a limitation
+      the reader should know, since a scenario with a binding price cap or market power would need a solved
+      price instead. The capacity credit is `vre_capacity_credit`: an intermittent resource is not counted
+      at nameplate at the peak, and the graph already derates it the same way in the reserve margin.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: USD/MWh
+    range:
+    - 0.0
+    - 1000.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
   land_acquisition_cost_per_hectare:
     categories: []
     category: Land Use & Community
@@ -16538,6 +17158,314 @@ parameters:
     type: float
     unit: USD/MWh
     users: []
+  lcoe_value_cost_ratio_biomass:
+    id: lcoe_value_cost_ratio_biomass
+    name: Biomass value-cost ratio
+    description: 'This technology''s LACE divided by its own LCOE. EIA states the threshold exactly: ''A
+      value-cost ratio greater than one indicates that the marginal new unit brings in value higher than
+      its cost by displacing more expensive generation and capacity options, and a value index of less
+      than one indicates that the cost of the marginal new unit of capacity exceeds its value to the system.''
+      A ratio below one for a technology is that technology failing to earn its keep at the scenario''s
+      prices; a fleet where every ratio is below one is a system where no available build is economic.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 100.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lcoe_value_cost_ratio_coal:
+    id: lcoe_value_cost_ratio_coal
+    name: Coal value-cost ratio
+    description: 'This technology''s LACE divided by its own LCOE. EIA states the threshold exactly: ''A
+      value-cost ratio greater than one indicates that the marginal new unit brings in value higher than
+      its cost by displacing more expensive generation and capacity options, and a value index of less
+      than one indicates that the cost of the marginal new unit of capacity exceeds its value to the system.''
+      A ratio below one for a technology is that technology failing to earn its keep at the scenario''s
+      prices; a fleet where every ratio is below one is a system where no available build is economic.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 100.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lcoe_value_cost_ratio_csp:
+    id: lcoe_value_cost_ratio_csp
+    name: Csp value-cost ratio
+    description: 'This technology''s LACE divided by its own LCOE. EIA states the threshold exactly: ''A
+      value-cost ratio greater than one indicates that the marginal new unit brings in value higher than
+      its cost by displacing more expensive generation and capacity options, and a value index of less
+      than one indicates that the cost of the marginal new unit of capacity exceeds its value to the system.''
+      A ratio below one for a technology is that technology failing to earn its keep at the scenario''s
+      prices; a fleet where every ratio is below one is a system where no available build is economic.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 100.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lcoe_value_cost_ratio_gas:
+    id: lcoe_value_cost_ratio_gas
+    name: Gas value-cost ratio
+    description: 'This technology''s LACE divided by its own LCOE. EIA states the threshold exactly: ''A
+      value-cost ratio greater than one indicates that the marginal new unit brings in value higher than
+      its cost by displacing more expensive generation and capacity options, and a value index of less
+      than one indicates that the cost of the marginal new unit of capacity exceeds its value to the system.''
+      A ratio below one for a technology is that technology failing to earn its keep at the scenario''s
+      prices; a fleet where every ratio is below one is a system where no available build is economic.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 100.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lcoe_value_cost_ratio_geothermal:
+    id: lcoe_value_cost_ratio_geothermal
+    name: Geothermal value-cost ratio
+    description: 'This technology''s LACE divided by its own LCOE. EIA states the threshold exactly: ''A
+      value-cost ratio greater than one indicates that the marginal new unit brings in value higher than
+      its cost by displacing more expensive generation and capacity options, and a value index of less
+      than one indicates that the cost of the marginal new unit of capacity exceeds its value to the system.''
+      A ratio below one for a technology is that technology failing to earn its keep at the scenario''s
+      prices; a fleet where every ratio is below one is a system where no available build is economic.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 100.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lcoe_value_cost_ratio_hydro:
+    id: lcoe_value_cost_ratio_hydro
+    name: Hydro value-cost ratio
+    description: 'This technology''s LACE divided by its own LCOE. EIA states the threshold exactly: ''A
+      value-cost ratio greater than one indicates that the marginal new unit brings in value higher than
+      its cost by displacing more expensive generation and capacity options, and a value index of less
+      than one indicates that the cost of the marginal new unit of capacity exceeds its value to the system.''
+      A ratio below one for a technology is that technology failing to earn its keep at the scenario''s
+      prices; a fleet where every ratio is below one is a system where no available build is economic.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 100.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lcoe_value_cost_ratio_nuclear:
+    id: lcoe_value_cost_ratio_nuclear
+    name: Nuclear value-cost ratio
+    description: 'This technology''s LACE divided by its own LCOE. EIA states the threshold exactly: ''A
+      value-cost ratio greater than one indicates that the marginal new unit brings in value higher than
+      its cost by displacing more expensive generation and capacity options, and a value index of less
+      than one indicates that the cost of the marginal new unit of capacity exceeds its value to the system.''
+      A ratio below one for a technology is that technology failing to earn its keep at the scenario''s
+      prices; a fleet where every ratio is below one is a system where no available build is economic.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 100.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lcoe_value_cost_ratio_oil:
+    id: lcoe_value_cost_ratio_oil
+    name: Oil value-cost ratio
+    description: 'This technology''s LACE divided by its own LCOE. EIA states the threshold exactly: ''A
+      value-cost ratio greater than one indicates that the marginal new unit brings in value higher than
+      its cost by displacing more expensive generation and capacity options, and a value index of less
+      than one indicates that the cost of the marginal new unit of capacity exceeds its value to the system.''
+      A ratio below one for a technology is that technology failing to earn its keep at the scenario''s
+      prices; a fleet where every ratio is below one is a system where no available build is economic.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 100.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lcoe_value_cost_ratio_solar_pv:
+    id: lcoe_value_cost_ratio_solar_pv
+    name: Solar pv value-cost ratio
+    description: 'This technology''s LACE divided by its own LCOE. EIA states the threshold exactly: ''A
+      value-cost ratio greater than one indicates that the marginal new unit brings in value higher than
+      its cost by displacing more expensive generation and capacity options, and a value index of less
+      than one indicates that the cost of the marginal new unit of capacity exceeds its value to the system.''
+      A ratio below one for a technology is that technology failing to earn its keep at the scenario''s
+      prices; a fleet where every ratio is below one is a system where no available build is economic.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 100.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lcoe_value_cost_ratio_wind_offshore:
+    id: lcoe_value_cost_ratio_wind_offshore
+    name: Wind offshore value-cost ratio
+    description: 'This technology''s LACE divided by its own LCOE. EIA states the threshold exactly: ''A
+      value-cost ratio greater than one indicates that the marginal new unit brings in value higher than
+      its cost by displacing more expensive generation and capacity options, and a value index of less
+      than one indicates that the cost of the marginal new unit of capacity exceeds its value to the system.''
+      A ratio below one for a technology is that technology failing to earn its keep at the scenario''s
+      prices; a fleet where every ratio is below one is a system where no available build is economic.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 100.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
+  lcoe_value_cost_ratio_wind_onshore:
+    id: lcoe_value_cost_ratio_wind_onshore
+    name: Wind onshore value-cost ratio
+    description: 'This technology''s LACE divided by its own LCOE. EIA states the threshold exactly: ''A
+      value-cost ratio greater than one indicates that the marginal new unit brings in value higher than
+      its cost by displacing more expensive generation and capacity options, and a value index of less
+      than one indicates that the cost of the marginal new unit of capacity exceeds its value to the system.''
+      A ratio below one for a technology is that technology failing to earn its keep at the scenario''s
+      prices; a fleet where every ratio is below one is a system where no available build is economic.'
+    category: Cost
+    subcategory: lcoe
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 100.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Investors
+    - Planners
+    priority: P1
+    status: to_build
+    deprecated_by: null
   lcoe_wind_offshore_usd_per_mwh:
     categories: []
     category: Cost
@@ -19209,6 +20137,34 @@ parameters:
     unit: MW
     users:
     - Planners
+  nuclear_generation_twh:
+    id: nuclear_generation_twh
+    name: Nuclear generation
+    description: 'Annual electrical output of the nuclear fleet: installed capacity times the technology''s
+      capacity factor times the hours in a year. This is the identity the per-technology LCOEs already
+      use as their denominator -- `lcoe_coal_definition` divides an annualised cost by `8760 * capacity_factor_coal`
+      -- stated here as an energy total so the fleet''s output is a quantity a balance can read rather
+      than a factor inside a cost.'
+    category: Physical
+    subcategory: generation
+    type: float
+    unit: TWh/year
+    range:
+    - 0.0
+    - 500.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Planners
+    - Investors
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   nuclear_lead_time:
     name: Nuclear lead time
     description: Nuclear construction lead time
@@ -19476,6 +20432,34 @@ parameters:
     - pm25_kt_per_year
     - sox_emissions
     - voc_emissions
+  oil_generation_twh:
+    id: oil_generation_twh
+    name: Oil generation
+    description: 'Annual electrical output of the oil fleet: installed capacity times the technology''s
+      capacity factor times the hours in a year. This is the identity the per-technology LCOEs already
+      use as their denominator -- `lcoe_coal_definition` divides an annualised cost by `8760 * capacity_factor_coal`
+      -- stated here as an energy total so the fleet''s output is a quantity a balance can read rather
+      than a factor inside a cost.'
+    category: Physical
+    subcategory: generation
+    type: float
+    unit: TWh/year
+    range:
+    - 0.0
+    - 500.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Planners
+    - Investors
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   oil_price:
     categories: []
     category: Macroeconomic
@@ -25430,6 +26414,34 @@ parameters:
     unit: USD/kW
     users:
     - All
+  solar_pv_generation_twh:
+    id: solar_pv_generation_twh
+    name: Solar pv generation
+    description: 'Annual electrical output of the solar pv fleet: installed capacity times the technology''s
+      capacity factor times the hours in a year. This is the identity the per-technology LCOEs already
+      use as their denominator -- `lcoe_coal_definition` divides an annualised cost by `8760 * capacity_factor_coal`
+      -- stated here as an energy total so the fleet''s output is a quantity a balance can read rather
+      than a factor inside a cost.'
+    category: Physical
+    subcategory: generation
+    type: float
+    unit: TWh/year
+    range:
+    - 0.0
+    - 500.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Planners
+    - Investors
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   solar_pv_land_constraint:
     categories: []
     category: Supply
@@ -28600,6 +29612,10 @@ parameters:
     source: The firm-capacity repair (batch 43)
     depends_on: []
     affects:
+    - lace_csp_usd_per_mwh
+    - lace_solar_pv_usd_per_mwh
+    - lace_wind_offshore_usd_per_mwh
+    - lace_wind_onshore_usd_per_mwh
     - vre_firm_capacity_mw
   vre_capacity_mw:
     categories: []
@@ -29444,6 +30460,34 @@ parameters:
     unit: USD/kW
     users:
     - Developers
+  wind_offshore_generation_twh:
+    id: wind_offshore_generation_twh
+    name: Wind offshore generation
+    description: 'Annual electrical output of the wind offshore fleet: installed capacity times the technology''s
+      capacity factor times the hours in a year. This is the identity the per-technology LCOEs already
+      use as their denominator -- `lcoe_coal_definition` divides an annualised cost by `8760 * capacity_factor_coal`
+      -- stated here as an energy total so the fleet''s output is a quantity a balance can read rather
+      than a factor inside a cost.'
+    category: Physical
+    subcategory: generation
+    type: float
+    unit: TWh/year
+    range:
+    - 0.0
+    - 500.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Planners
+    - Investors
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   wind_offshore_platform:
     name: Wind offshore platform
     description: Platform type
@@ -29505,6 +30549,34 @@ parameters:
     unit: USD/kW
     users:
     - All
+  wind_onshore_generation_twh:
+    id: wind_onshore_generation_twh
+    name: Wind onshore generation
+    description: 'Annual electrical output of the wind onshore fleet: installed capacity times the technology''s
+      capacity factor times the hours in a year. This is the identity the per-technology LCOEs already
+      use as their denominator -- `lcoe_coal_definition` divides an annualised cost by `8760 * capacity_factor_coal`
+      -- stated here as an energy total so the fleet''s output is a quantity a balance can read rather
+      than a factor inside a cost.'
+    category: Physical
+    subcategory: generation
+    type: float
+    unit: TWh/year
+    range:
+    - 0.0
+    - 500.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The capacity-to-energy repair (batch 46)
+    source_url: null
+    users:
+    - Planners
+    - Investors
+    - Regulators
+    priority: P1
+    status: to_build
+    deprecated_by: null
   wind_speed_multiplier:
     name: Wind speed multiplier
     description: Wind speed multiplier
@@ -30663,6 +31735,41 @@ equations:
     system: employment
     tolerance: 1.0e-09
     unit_check: true
+  biomass_generation_definition:
+    id: biomass_generation_definition
+    name: Biomass annual generation
+    description: Annual output at the technology's own capacity factor. NREL ATB 2025 defines the capacity
+      factor as 'the ratio of actual annual output to output at rated capacity for an entire year' and
+      writes the per-MW output as `CF x 8,760`; EIA's LCOE methodology works the arithmetic for a 1 MW
+      turbine -- 'Generating hours = 30% x 8,760 hours/year = 2,628 hours/year' -- and reports the result
+      as '2,628 MWh/MW (2,628 equivalent operating hours)'; Short, Packey & Holt define the ratio the
+      identity inverts. The identity is stated in three parts across the three sources rather than once,
+      which is why this equation cites all three.
+    system: energy_balance
+    lhs: biomass_generation_twh
+    rhs: biomass_capacity * capacity_factor_biomass * hours_per_year / 1000000
+    relation: eq
+    parameters:
+    - biomass_capacity
+    - biomass_generation_twh
+    - capacity_factor_biomass
+    - hours_per_year
+    free_variables:
+    - biomass_capacity
+    - capacity_factor_biomass
+    - hours_per_year
+    determined_variables:
+    - biomass_generation_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025, Equations and Variables (capacity factor and the CF x 8,760 denominator);
+      EIA AEO LCOE Methodology, generating-hours arithmetic; Short, Packey & Holt (1995) NREL/TP-462-5173,
+      capacity factor definition
+    latex: \mathrm{biomass}_{generation\_twh} = \frac{\mathrm{biomass}_{capacity} \mathrm{capacity}_{factor\_biomass}
+      \mathrm{hours}_{per\_year}}{1000000}
   biomass_sustainability_bound:
     description: 'The biomass build may not exceed the sustainable resource the policy declares. Stated
       as a bound in megawatts rather than as a fuel-mass ceiling: the mass form needs a heat rate and
@@ -31874,6 +32981,41 @@ equations:
       Projected Costs of Generating Electricity (2020), Table 3.10.'
     latex: \mathrm{coal}_{fuel\_energy\_gj} = \frac{\mathrm{coal}_{capacity} \mathrm{capacity}_{factor\_coal}
       \mathrm{hours}_{per\_year} \mathrm{gj}_{per\_mwh}}{\mathrm{efficiency}_{coal}}
+  coal_generation_definition:
+    id: coal_generation_definition
+    name: Coal annual generation
+    description: Annual output at the technology's own capacity factor. NREL ATB 2025 defines the capacity
+      factor as 'the ratio of actual annual output to output at rated capacity for an entire year' and
+      writes the per-MW output as `CF x 8,760`; EIA's LCOE methodology works the arithmetic for a 1 MW
+      turbine -- 'Generating hours = 30% x 8,760 hours/year = 2,628 hours/year' -- and reports the result
+      as '2,628 MWh/MW (2,628 equivalent operating hours)'; Short, Packey & Holt define the ratio the
+      identity inverts. The identity is stated in three parts across the three sources rather than once,
+      which is why this equation cites all three.
+    system: energy_balance
+    lhs: coal_generation_twh
+    rhs: coal_capacity * capacity_factor_coal * hours_per_year / 1000000
+    relation: eq
+    parameters:
+    - capacity_factor_coal
+    - coal_capacity
+    - coal_generation_twh
+    - hours_per_year
+    free_variables:
+    - capacity_factor_coal
+    - coal_capacity
+    - hours_per_year
+    determined_variables:
+    - coal_generation_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025, Equations and Variables (capacity factor and the CF x 8,760 denominator);
+      EIA AEO LCOE Methodology, generating-hours arithmetic; Short, Packey & Holt (1995) NREL/TP-462-5173,
+      capacity factor definition
+    latex: \mathrm{coal}_{generation\_twh} = \frac{\mathrm{coal}_{capacity} \mathrm{capacity}_{factor\_coal}
+      \mathrm{hours}_{per\_year}}{1000000}
   coal_new_build_bound:
     description: 'New coal build is capped at the policy ceiling: 3000 MW of reference fleet under a 5000
       MW cap, so a 6000 MW scenario fails. This routes as a post-solve check rather than an LP constraint
@@ -33138,6 +34280,41 @@ equations:
     system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
+  csp_generation_definition:
+    id: csp_generation_definition
+    name: Csp annual generation
+    description: Annual output at the technology's own capacity factor. NREL ATB 2025 defines the capacity
+      factor as 'the ratio of actual annual output to output at rated capacity for an entire year' and
+      writes the per-MW output as `CF x 8,760`; EIA's LCOE methodology works the arithmetic for a 1 MW
+      turbine -- 'Generating hours = 30% x 8,760 hours/year = 2,628 hours/year' -- and reports the result
+      as '2,628 MWh/MW (2,628 equivalent operating hours)'; Short, Packey & Holt define the ratio the
+      identity inverts. The identity is stated in three parts across the three sources rather than once,
+      which is why this equation cites all three.
+    system: energy_balance
+    lhs: csp_generation_twh
+    rhs: csp_capacity * capacity_factor_csp * hours_per_year / 1000000
+    relation: eq
+    parameters:
+    - capacity_factor_csp
+    - csp_capacity
+    - csp_generation_twh
+    - hours_per_year
+    free_variables:
+    - capacity_factor_csp
+    - csp_capacity
+    - hours_per_year
+    determined_variables:
+    - csp_generation_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025, Equations and Variables (capacity factor and the CF x 8,760 denominator);
+      EIA AEO LCOE Methodology, generating-hours arithmetic; Short, Packey & Holt (1995) NREL/TP-462-5173,
+      capacity factor definition
+    latex: \mathrm{csp}_{generation\_twh} = \frac{\mathrm{csp}_{capacity} \mathrm{capacity}_{factor\_csp}
+      \mathrm{hours}_{per\_year}}{1000000}
   csp_storage_hours_definition:
     description: 'A CSP plant''s store is a thermal store, so its hours at rated output are the graph''s
       thermal-store duration: 8 h, against this node''s shipped 24. The alias resolves a disagreement
@@ -34917,6 +36094,112 @@ equations:
     system: employment
     tolerance: 1.0e-09
     unit_check: true
+  fleet_energy_adequacy:
+    id: fleet_energy_adequacy
+    name: Fleet energy adequacy
+    description: 'The fleet''s annual output capability must be at least the energy the balance dispatches.
+      This is the energy-level companion to `reserve_margin`, which bounds capacity against *peak* demand:
+      a fleet can clear the peak and still be unable to produce the energy the year requires at its own
+      capacity factors, and nothing in the graph could express that before this equation. It is stated
+      as an inequality because a fleet with surplus capability is the normal case -- the shipped defaults
+      carry 1.32x -- and an equality would force the system to spill.'
+    system: energy_balance
+    lhs: fleet_generation_twh
+    rhs: generation_twh
+    relation: geq
+    parameters:
+    - fleet_generation_twh
+    - generation_twh
+    free_variables: []
+    determined_variables: []
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: 'Energy-level adequacy: the generation identity against the energy balance; cf. ENTSO-E
+      adequacy practice for the capacity-level analogue'
+    latex: \mathrm{fleet}_{generation\_twh} \geq \mathrm{generation}_{twh}
+  fleet_generation_definition:
+    id: fleet_generation_definition
+    name: Fleet annual generation
+    description: 'The fleet''s annual electrical output capability: the sum of the eleven per-technology
+      outputs. Additive because the technologies are separate plants whose outputs sum, and because no
+      archived source states a fleet-level aggregation rule beyond addition -- the IEA/NEA caveat about
+      weighting (`iea_nea_egc_2020.txt:2345`) is about averaging *costs* across technologies, not about
+      adding their energies, which is what a balance requires.'
+    system: energy_balance
+    lhs: fleet_generation_twh
+    rhs: coal_generation_twh + gas_generation_twh + oil_generation_twh + biomass_generation_twh + nuclear_generation_twh
+      + hydro_generation_twh + solar_pv_generation_twh + wind_onshore_generation_twh + wind_offshore_generation_twh
+      + csp_generation_twh + geothermal_generation_twh
+    relation: eq
+    parameters:
+    - biomass_generation_twh
+    - coal_generation_twh
+    - csp_generation_twh
+    - fleet_generation_twh
+    - gas_generation_twh
+    - geothermal_generation_twh
+    - hydro_generation_twh
+    - nuclear_generation_twh
+    - oil_generation_twh
+    - solar_pv_generation_twh
+    - wind_offshore_generation_twh
+    - wind_onshore_generation_twh
+    free_variables:
+    - biomass_generation_twh
+    - coal_generation_twh
+    - csp_generation_twh
+    - gas_generation_twh
+    - geothermal_generation_twh
+    - hydro_generation_twh
+    - nuclear_generation_twh
+    - oil_generation_twh
+    - solar_pv_generation_twh
+    - wind_offshore_generation_twh
+    - wind_onshore_generation_twh
+    determined_variables:
+    - fleet_generation_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Additive over the generation identity; no archived source defines a fleet aggregation beyond
+      summation
+    latex: \mathrm{fleet}_{generation\_twh} = \mathrm{coal}_{generation\_twh} + \mathrm{gas}_{generation\_twh}
+      + \mathrm{oil}_{generation\_twh} + \mathrm{biomass}_{generation\_twh} + \mathrm{nuclear}_{generation\_twh}
+      + \mathrm{hydro}_{generation\_twh} + \mathrm{solar}_{pv\_generation\_twh} + \mathrm{wind}_{onshore\_generation\_twh}
+      + \mathrm{wind}_{offshore\_generation\_twh} + \mathrm{csp}_{generation\_twh} + \mathrm{geothermal}_{generation\_twh}
+  fleet_generation_headroom_definition:
+    id: fleet_generation_headroom_definition
+    name: Fleet generation headroom
+    description: Capability over dispatch. `generation_twh` is what `energy_balance` determines from demand
+      and losses; `fleet_generation_twh` is what the fleet can produce at its capacity factors. The ratio
+      is the fraction of the fleet's potential the system uses, and its reciprocal is the spare energy.
+      Dividing rather than subtracting keeps the quantity scale-free, so a scenario that doubles both
+      the load and the fleet is not reported as a doubling of headroom.
+    system: energy_balance
+    lhs: fleet_generation_headroom
+    rhs: fleet_generation_twh / generation_twh
+    relation: eq
+    parameters:
+    - fleet_generation_headroom
+    - fleet_generation_twh
+    - generation_twh
+    free_variables:
+    - fleet_generation_twh
+    - generation_twh
+    determined_variables:
+    - fleet_generation_headroom
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: Ratio of the generation identity to the energy balance
+    latex: \mathrm{fleet}_{generation\_headroom} = \frac{\mathrm{fleet}_{generation\_twh}}{\mathrm{generation}_{twh}}
   flywheel_capacity_bound:
     description: 'Flywheel storage sits inside the storage envelope for the same reason as compressed
       air: it shifts energy and adds no generation. Holds at 0; fails past 5000 MW.'
@@ -35435,6 +36718,41 @@ equations:
       net efficiency per IEA/NEA (2020) Table 3.10, CCGT rows.
     latex: \mathrm{gas}_{fuel\_energy\_gj} = \frac{\mathrm{gas}_{capacity} \mathrm{capacity}_{factor\_gas}
       \mathrm{hours}_{per\_year} \mathrm{gj}_{per\_mwh}}{\mathrm{efficiency}_{gas}}
+  gas_generation_definition:
+    id: gas_generation_definition
+    name: Gas annual generation
+    description: Annual output at the technology's own capacity factor. NREL ATB 2025 defines the capacity
+      factor as 'the ratio of actual annual output to output at rated capacity for an entire year' and
+      writes the per-MW output as `CF x 8,760`; EIA's LCOE methodology works the arithmetic for a 1 MW
+      turbine -- 'Generating hours = 30% x 8,760 hours/year = 2,628 hours/year' -- and reports the result
+      as '2,628 MWh/MW (2,628 equivalent operating hours)'; Short, Packey & Holt define the ratio the
+      identity inverts. The identity is stated in three parts across the three sources rather than once,
+      which is why this equation cites all three.
+    system: energy_balance
+    lhs: gas_generation_twh
+    rhs: gas_capacity * capacity_factor_gas * hours_per_year / 1000000
+    relation: eq
+    parameters:
+    - capacity_factor_gas
+    - gas_capacity
+    - gas_generation_twh
+    - hours_per_year
+    free_variables:
+    - capacity_factor_gas
+    - gas_capacity
+    - hours_per_year
+    determined_variables:
+    - gas_generation_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025, Equations and Variables (capacity factor and the CF x 8,760 denominator);
+      EIA AEO LCOE Methodology, generating-hours arithmetic; Short, Packey & Holt (1995) NREL/TP-462-5173,
+      capacity factor definition
+    latex: \mathrm{gas}_{generation\_twh} = \frac{\mathrm{gas}_{capacity} \mathrm{capacity}_{factor\_gas}
+      \mathrm{hours}_{per\_year}}{1000000}
   gas_new_build_bound:
     description: 'New gas build capped at 3000 MW against the 1500 MW reference fleet. Routes as a post-solve
       check for the same reason as coal: the capacity is endogenous. A bound on `capex_gas` was rejected
@@ -35721,6 +37039,41 @@ equations:
     system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
+  geothermal_generation_definition:
+    id: geothermal_generation_definition
+    name: Geothermal annual generation
+    description: Annual output at the technology's own capacity factor. NREL ATB 2025 defines the capacity
+      factor as 'the ratio of actual annual output to output at rated capacity for an entire year' and
+      writes the per-MW output as `CF x 8,760`; EIA's LCOE methodology works the arithmetic for a 1 MW
+      turbine -- 'Generating hours = 30% x 8,760 hours/year = 2,628 hours/year' -- and reports the result
+      as '2,628 MWh/MW (2,628 equivalent operating hours)'; Short, Packey & Holt define the ratio the
+      identity inverts. The identity is stated in three parts across the three sources rather than once,
+      which is why this equation cites all three.
+    system: energy_balance
+    lhs: geothermal_generation_twh
+    rhs: geothermal_capacity * capacity_factor_geothermal * hours_per_year / 1000000
+    relation: eq
+    parameters:
+    - capacity_factor_geothermal
+    - geothermal_capacity
+    - geothermal_generation_twh
+    - hours_per_year
+    free_variables:
+    - capacity_factor_geothermal
+    - geothermal_capacity
+    - hours_per_year
+    determined_variables:
+    - geothermal_generation_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025, Equations and Variables (capacity factor and the CF x 8,760 denominator);
+      EIA AEO LCOE Methodology, generating-hours arithmetic; Short, Packey & Holt (1995) NREL/TP-462-5173,
+      capacity factor definition
+    latex: \mathrm{geothermal}_{generation\_twh} = \frac{\mathrm{geothermal}_{capacity} \mathrm{capacity}_{factor\_geothermal}
+      \mathrm{hours}_{per\_year}}{1000000}
   gis_mapped_network_km_definition:
     description: 'The route length held in the GIS: the mapped share of the transmission and distribution
       networks. 0.6 x (12000 + 45000) = 34200 km at defaults. A count of asset records was rejected: the
@@ -36110,6 +37463,41 @@ equations:
     system: energy_balance
     tolerance: 1.0e-09
     unit_check: true
+  hydro_generation_definition:
+    id: hydro_generation_definition
+    name: Hydro annual generation
+    description: Annual output at the technology's own capacity factor. NREL ATB 2025 defines the capacity
+      factor as 'the ratio of actual annual output to output at rated capacity for an entire year' and
+      writes the per-MW output as `CF x 8,760`; EIA's LCOE methodology works the arithmetic for a 1 MW
+      turbine -- 'Generating hours = 30% x 8,760 hours/year = 2,628 hours/year' -- and reports the result
+      as '2,628 MWh/MW (2,628 equivalent operating hours)'; Short, Packey & Holt define the ratio the
+      identity inverts. The identity is stated in three parts across the three sources rather than once,
+      which is why this equation cites all three.
+    system: energy_balance
+    lhs: hydro_generation_twh
+    rhs: hydro_capacity * capacity_factor_hydro * hours_per_year / 1000000
+    relation: eq
+    parameters:
+    - capacity_factor_hydro
+    - hours_per_year
+    - hydro_capacity
+    - hydro_generation_twh
+    free_variables:
+    - capacity_factor_hydro
+    - hours_per_year
+    - hydro_capacity
+    determined_variables:
+    - hydro_generation_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025, Equations and Variables (capacity factor and the CF x 8,760 denominator);
+      EIA AEO LCOE Methodology, generating-hours arithmetic; Short, Packey & Holt (1995) NREL/TP-462-5173,
+      capacity factor definition
+    latex: \mathrm{hydro}_{generation\_twh} = \frac{\mathrm{hydro}_{capacity} \mathrm{capacity}_{factor\_hydro}
+      \mathrm{hours}_{per\_year}}{1000000}
   hydro_inflow_vintage_offset_definition:
     description: How much the hydro inflow record's design year leads or trails the PV data's vintage.
       The vintage selectors are set independently, and this offset is the check a scenario author runs
@@ -36988,6 +38376,532 @@ equations:
     system: employment
     tolerance: 1.0e-09
     unit_check: true
+  lace_biomass_definition:
+    id: lace_biomass_definition
+    name: Biomass levelized avoided cost
+    description: 'EIA''s LACE for this technology, restricted to the two revenue streams the graph models:
+      energy and capacity. EIA''s numerator also carries spinning-reserve revenue, RPS compliance revenue
+      and an intermittent-limit cost; the graph has no node for the first two and no binding intermittent
+      cap for the third, so omitting them is a scope statement rather than a silent zero -- a scenario
+      that needs them should add the nodes rather than inflate the two terms that exist. The division
+      by `capacity_factor_biomass x 8,760` is EIA''s own annualisation: LACE is a per-MWh value and a
+      capacity payment is per MW-year.
+
+
+      The energy term is the marginal price, not `capture_price_usd_per_mwh`: the capture price is a VRE-specific
+      haircut for cannibalisation, and this ratio is evaluated for dispatchable technologies that suffer
+      no such haircut. Applying a VRE adjustment across the whole fleet is a basis substitution of exactly
+      the kind batch 45 repaired in the thermal LCOEs -- both sides would read USD/MWh and the arithmetic
+      would be wrong by the cannibalisation factor. EIA''s own LACE energy term is the marginal price,
+      so the faithful reading and the safe one agree.'
+    system: cost_accounting
+    lhs: lace_biomass_usd_per_mwh
+    rhs: marginal_cost_usd_per_mwh + capacity_market * capacity_price * 1.0 / (capacity_factor_biomass
+      * hours_per_year)
+    relation: eq
+    parameters:
+    - capacity_factor_biomass
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - lace_biomass_usd_per_mwh
+    - marginal_cost_usd_per_mwh
+    free_variables:
+    - capacity_factor_biomass
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - marginal_cost_usd_per_mwh
+    determined_variables:
+    - lace_biomass_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, LACE definition (energy revenue + capacity
+      revenue, divided by generating hours)
+    latex: \mathrm{lace}_{biomass\_usd\_per\_mwh} = \mathrm{marginal}_{cost\_usd\_per\_mwh} + \frac{\mathrm{capacity}_{market}
+      \mathrm{capacity}_{price}}{\mathrm{capacity}_{factor\_biomass} \mathrm{hours}_{per\_year}}
+  lace_coal_definition:
+    id: lace_coal_definition
+    name: Coal levelized avoided cost
+    description: 'EIA''s LACE for this technology, restricted to the two revenue streams the graph models:
+      energy and capacity. EIA''s numerator also carries spinning-reserve revenue, RPS compliance revenue
+      and an intermittent-limit cost; the graph has no node for the first two and no binding intermittent
+      cap for the third, so omitting them is a scope statement rather than a silent zero -- a scenario
+      that needs them should add the nodes rather than inflate the two terms that exist. The division
+      by `capacity_factor_coal x 8,760` is EIA''s own annualisation: LACE is a per-MWh value and a capacity
+      payment is per MW-year.
+
+
+      The energy term is the marginal price, not `capture_price_usd_per_mwh`: the capture price is a VRE-specific
+      haircut for cannibalisation, and this ratio is evaluated for dispatchable technologies that suffer
+      no such haircut. Applying a VRE adjustment across the whole fleet is a basis substitution of exactly
+      the kind batch 45 repaired in the thermal LCOEs -- both sides would read USD/MWh and the arithmetic
+      would be wrong by the cannibalisation factor. EIA''s own LACE energy term is the marginal price,
+      so the faithful reading and the safe one agree.'
+    system: cost_accounting
+    lhs: lace_coal_usd_per_mwh
+    rhs: marginal_cost_usd_per_mwh + capacity_market * capacity_price * 1.0 / (capacity_factor_coal *
+      hours_per_year)
+    relation: eq
+    parameters:
+    - capacity_factor_coal
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - lace_coal_usd_per_mwh
+    - marginal_cost_usd_per_mwh
+    free_variables:
+    - capacity_factor_coal
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - marginal_cost_usd_per_mwh
+    determined_variables:
+    - lace_coal_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, LACE definition (energy revenue + capacity
+      revenue, divided by generating hours)
+    latex: \mathrm{lace}_{coal\_usd\_per\_mwh} = \mathrm{marginal}_{cost\_usd\_per\_mwh} + \frac{\mathrm{capacity}_{market}
+      \mathrm{capacity}_{price}}{\mathrm{capacity}_{factor\_coal} \mathrm{hours}_{per\_year}}
+  lace_csp_definition:
+    id: lace_csp_definition
+    name: Csp levelized avoided cost
+    description: 'EIA''s LACE for this technology, restricted to the two revenue streams the graph models:
+      energy and capacity. EIA''s numerator also carries spinning-reserve revenue, RPS compliance revenue
+      and an intermittent-limit cost; the graph has no node for the first two and no binding intermittent
+      cap for the third, so omitting them is a scope statement rather than a silent zero -- a scenario
+      that needs them should add the nodes rather than inflate the two terms that exist. The division
+      by `capacity_factor_csp x 8,760` is EIA''s own annualisation: LACE is a per-MWh value and a capacity
+      payment is per MW-year.
+
+
+      The energy term is the marginal price, not `capture_price_usd_per_mwh`: the capture price is a VRE-specific
+      haircut for cannibalisation, and this ratio is evaluated for dispatchable technologies that suffer
+      no such haircut. Applying a VRE adjustment across the whole fleet is a basis substitution of exactly
+      the kind batch 45 repaired in the thermal LCOEs -- both sides would read USD/MWh and the arithmetic
+      would be wrong by the cannibalisation factor. EIA''s own LACE energy term is the marginal price,
+      so the faithful reading and the safe one agree.'
+    system: cost_accounting
+    lhs: lace_csp_usd_per_mwh
+    rhs: marginal_cost_usd_per_mwh + capacity_market * capacity_price * vre_capacity_credit / (capacity_factor_csp
+      * hours_per_year)
+    relation: eq
+    parameters:
+    - capacity_factor_csp
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - lace_csp_usd_per_mwh
+    - marginal_cost_usd_per_mwh
+    - vre_capacity_credit
+    free_variables:
+    - capacity_factor_csp
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - marginal_cost_usd_per_mwh
+    - vre_capacity_credit
+    determined_variables:
+    - lace_csp_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, LACE definition (energy revenue + capacity
+      revenue, divided by generating hours)
+    latex: \mathrm{lace}_{csp\_usd\_per\_mwh} = \mathrm{marginal}_{cost\_usd\_per\_mwh} + \frac{\mathrm{capacity}_{market}
+      \mathrm{capacity}_{price} \mathrm{vre}_{capacity\_credit}}{\mathrm{capacity}_{factor\_csp} \mathrm{hours}_{per\_year}}
+  lace_gas_definition:
+    id: lace_gas_definition
+    name: Gas levelized avoided cost
+    description: 'EIA''s LACE for this technology, restricted to the two revenue streams the graph models:
+      energy and capacity. EIA''s numerator also carries spinning-reserve revenue, RPS compliance revenue
+      and an intermittent-limit cost; the graph has no node for the first two and no binding intermittent
+      cap for the third, so omitting them is a scope statement rather than a silent zero -- a scenario
+      that needs them should add the nodes rather than inflate the two terms that exist. The division
+      by `capacity_factor_gas x 8,760` is EIA''s own annualisation: LACE is a per-MWh value and a capacity
+      payment is per MW-year.
+
+
+      The energy term is the marginal price, not `capture_price_usd_per_mwh`: the capture price is a VRE-specific
+      haircut for cannibalisation, and this ratio is evaluated for dispatchable technologies that suffer
+      no such haircut. Applying a VRE adjustment across the whole fleet is a basis substitution of exactly
+      the kind batch 45 repaired in the thermal LCOEs -- both sides would read USD/MWh and the arithmetic
+      would be wrong by the cannibalisation factor. EIA''s own LACE energy term is the marginal price,
+      so the faithful reading and the safe one agree.'
+    system: cost_accounting
+    lhs: lace_gas_usd_per_mwh
+    rhs: marginal_cost_usd_per_mwh + capacity_market * capacity_price * 1.0 / (capacity_factor_gas * hours_per_year)
+    relation: eq
+    parameters:
+    - capacity_factor_gas
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - lace_gas_usd_per_mwh
+    - marginal_cost_usd_per_mwh
+    free_variables:
+    - capacity_factor_gas
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - marginal_cost_usd_per_mwh
+    determined_variables:
+    - lace_gas_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, LACE definition (energy revenue + capacity
+      revenue, divided by generating hours)
+    latex: \mathrm{lace}_{gas\_usd\_per\_mwh} = \mathrm{marginal}_{cost\_usd\_per\_mwh} + \frac{\mathrm{capacity}_{market}
+      \mathrm{capacity}_{price}}{\mathrm{capacity}_{factor\_gas} \mathrm{hours}_{per\_year}}
+  lace_geothermal_definition:
+    id: lace_geothermal_definition
+    name: Geothermal levelized avoided cost
+    description: 'EIA''s LACE for this technology, restricted to the two revenue streams the graph models:
+      energy and capacity. EIA''s numerator also carries spinning-reserve revenue, RPS compliance revenue
+      and an intermittent-limit cost; the graph has no node for the first two and no binding intermittent
+      cap for the third, so omitting them is a scope statement rather than a silent zero -- a scenario
+      that needs them should add the nodes rather than inflate the two terms that exist. The division
+      by `capacity_factor_geothermal x 8,760` is EIA''s own annualisation: LACE is a per-MWh value and
+      a capacity payment is per MW-year.
+
+
+      The energy term is the marginal price, not `capture_price_usd_per_mwh`: the capture price is a VRE-specific
+      haircut for cannibalisation, and this ratio is evaluated for dispatchable technologies that suffer
+      no such haircut. Applying a VRE adjustment across the whole fleet is a basis substitution of exactly
+      the kind batch 45 repaired in the thermal LCOEs -- both sides would read USD/MWh and the arithmetic
+      would be wrong by the cannibalisation factor. EIA''s own LACE energy term is the marginal price,
+      so the faithful reading and the safe one agree.'
+    system: cost_accounting
+    lhs: lace_geothermal_usd_per_mwh
+    rhs: marginal_cost_usd_per_mwh + capacity_market * capacity_price * 1.0 / (capacity_factor_geothermal
+      * hours_per_year)
+    relation: eq
+    parameters:
+    - capacity_factor_geothermal
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - lace_geothermal_usd_per_mwh
+    - marginal_cost_usd_per_mwh
+    free_variables:
+    - capacity_factor_geothermal
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - marginal_cost_usd_per_mwh
+    determined_variables:
+    - lace_geothermal_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, LACE definition (energy revenue + capacity
+      revenue, divided by generating hours)
+    latex: \mathrm{lace}_{geothermal\_usd\_per\_mwh} = \mathrm{marginal}_{cost\_usd\_per\_mwh} + \frac{\mathrm{capacity}_{market}
+      \mathrm{capacity}_{price}}{\mathrm{capacity}_{factor\_geothermal} \mathrm{hours}_{per\_year}}
+  lace_hydro_definition:
+    id: lace_hydro_definition
+    name: Hydro levelized avoided cost
+    description: 'EIA''s LACE for this technology, restricted to the two revenue streams the graph models:
+      energy and capacity. EIA''s numerator also carries spinning-reserve revenue, RPS compliance revenue
+      and an intermittent-limit cost; the graph has no node for the first two and no binding intermittent
+      cap for the third, so omitting them is a scope statement rather than a silent zero -- a scenario
+      that needs them should add the nodes rather than inflate the two terms that exist. The division
+      by `capacity_factor_hydro x 8,760` is EIA''s own annualisation: LACE is a per-MWh value and a capacity
+      payment is per MW-year.
+
+
+      The energy term is the marginal price, not `capture_price_usd_per_mwh`: the capture price is a VRE-specific
+      haircut for cannibalisation, and this ratio is evaluated for dispatchable technologies that suffer
+      no such haircut. Applying a VRE adjustment across the whole fleet is a basis substitution of exactly
+      the kind batch 45 repaired in the thermal LCOEs -- both sides would read USD/MWh and the arithmetic
+      would be wrong by the cannibalisation factor. EIA''s own LACE energy term is the marginal price,
+      so the faithful reading and the safe one agree.'
+    system: cost_accounting
+    lhs: lace_hydro_usd_per_mwh
+    rhs: marginal_cost_usd_per_mwh + capacity_market * capacity_price * 1.0 / (capacity_factor_hydro *
+      hours_per_year)
+    relation: eq
+    parameters:
+    - capacity_factor_hydro
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - lace_hydro_usd_per_mwh
+    - marginal_cost_usd_per_mwh
+    free_variables:
+    - capacity_factor_hydro
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - marginal_cost_usd_per_mwh
+    determined_variables:
+    - lace_hydro_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, LACE definition (energy revenue + capacity
+      revenue, divided by generating hours)
+    latex: \mathrm{lace}_{hydro\_usd\_per\_mwh} = \mathrm{marginal}_{cost\_usd\_per\_mwh} + \frac{\mathrm{capacity}_{market}
+      \mathrm{capacity}_{price}}{\mathrm{capacity}_{factor\_hydro} \mathrm{hours}_{per\_year}}
+  lace_nuclear_definition:
+    id: lace_nuclear_definition
+    name: Nuclear levelized avoided cost
+    description: 'EIA''s LACE for this technology, restricted to the two revenue streams the graph models:
+      energy and capacity. EIA''s numerator also carries spinning-reserve revenue, RPS compliance revenue
+      and an intermittent-limit cost; the graph has no node for the first two and no binding intermittent
+      cap for the third, so omitting them is a scope statement rather than a silent zero -- a scenario
+      that needs them should add the nodes rather than inflate the two terms that exist. The division
+      by `capacity_factor_nuclear x 8,760` is EIA''s own annualisation: LACE is a per-MWh value and a
+      capacity payment is per MW-year.
+
+
+      The energy term is the marginal price, not `capture_price_usd_per_mwh`: the capture price is a VRE-specific
+      haircut for cannibalisation, and this ratio is evaluated for dispatchable technologies that suffer
+      no such haircut. Applying a VRE adjustment across the whole fleet is a basis substitution of exactly
+      the kind batch 45 repaired in the thermal LCOEs -- both sides would read USD/MWh and the arithmetic
+      would be wrong by the cannibalisation factor. EIA''s own LACE energy term is the marginal price,
+      so the faithful reading and the safe one agree.'
+    system: cost_accounting
+    lhs: lace_nuclear_usd_per_mwh
+    rhs: marginal_cost_usd_per_mwh + capacity_market * capacity_price * 1.0 / (capacity_factor_nuclear
+      * hours_per_year)
+    relation: eq
+    parameters:
+    - capacity_factor_nuclear
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - lace_nuclear_usd_per_mwh
+    - marginal_cost_usd_per_mwh
+    free_variables:
+    - capacity_factor_nuclear
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - marginal_cost_usd_per_mwh
+    determined_variables:
+    - lace_nuclear_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, LACE definition (energy revenue + capacity
+      revenue, divided by generating hours)
+    latex: \mathrm{lace}_{nuclear\_usd\_per\_mwh} = \mathrm{marginal}_{cost\_usd\_per\_mwh} + \frac{\mathrm{capacity}_{market}
+      \mathrm{capacity}_{price}}{\mathrm{capacity}_{factor\_nuclear} \mathrm{hours}_{per\_year}}
+  lace_oil_definition:
+    id: lace_oil_definition
+    name: Oil levelized avoided cost
+    description: 'EIA''s LACE for this technology, restricted to the two revenue streams the graph models:
+      energy and capacity. EIA''s numerator also carries spinning-reserve revenue, RPS compliance revenue
+      and an intermittent-limit cost; the graph has no node for the first two and no binding intermittent
+      cap for the third, so omitting them is a scope statement rather than a silent zero -- a scenario
+      that needs them should add the nodes rather than inflate the two terms that exist. The division
+      by `capacity_factor_oil x 8,760` is EIA''s own annualisation: LACE is a per-MWh value and a capacity
+      payment is per MW-year.
+
+
+      The energy term is the marginal price, not `capture_price_usd_per_mwh`: the capture price is a VRE-specific
+      haircut for cannibalisation, and this ratio is evaluated for dispatchable technologies that suffer
+      no such haircut. Applying a VRE adjustment across the whole fleet is a basis substitution of exactly
+      the kind batch 45 repaired in the thermal LCOEs -- both sides would read USD/MWh and the arithmetic
+      would be wrong by the cannibalisation factor. EIA''s own LACE energy term is the marginal price,
+      so the faithful reading and the safe one agree.'
+    system: cost_accounting
+    lhs: lace_oil_usd_per_mwh
+    rhs: marginal_cost_usd_per_mwh + capacity_market * capacity_price * 1.0 / (capacity_factor_oil * hours_per_year)
+    relation: eq
+    parameters:
+    - capacity_factor_oil
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - lace_oil_usd_per_mwh
+    - marginal_cost_usd_per_mwh
+    free_variables:
+    - capacity_factor_oil
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - marginal_cost_usd_per_mwh
+    determined_variables:
+    - lace_oil_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, LACE definition (energy revenue + capacity
+      revenue, divided by generating hours)
+    latex: \mathrm{lace}_{oil\_usd\_per\_mwh} = \mathrm{marginal}_{cost\_usd\_per\_mwh} + \frac{\mathrm{capacity}_{market}
+      \mathrm{capacity}_{price}}{\mathrm{capacity}_{factor\_oil} \mathrm{hours}_{per\_year}}
+  lace_solar_pv_definition:
+    id: lace_solar_pv_definition
+    name: Solar pv levelized avoided cost
+    description: 'EIA''s LACE for this technology, restricted to the two revenue streams the graph models:
+      energy and capacity. EIA''s numerator also carries spinning-reserve revenue, RPS compliance revenue
+      and an intermittent-limit cost; the graph has no node for the first two and no binding intermittent
+      cap for the third, so omitting them is a scope statement rather than a silent zero -- a scenario
+      that needs them should add the nodes rather than inflate the two terms that exist. The division
+      by `solar_pv_capacity_factor x 8,760` is EIA''s own annualisation: LACE is a per-MWh value and a
+      capacity payment is per MW-year.
+
+
+      The energy term is the marginal price, not `capture_price_usd_per_mwh`: the capture price is a VRE-specific
+      haircut for cannibalisation, and this ratio is evaluated for dispatchable technologies that suffer
+      no such haircut. Applying a VRE adjustment across the whole fleet is a basis substitution of exactly
+      the kind batch 45 repaired in the thermal LCOEs -- both sides would read USD/MWh and the arithmetic
+      would be wrong by the cannibalisation factor. EIA''s own LACE energy term is the marginal price,
+      so the faithful reading and the safe one agree.'
+    system: cost_accounting
+    lhs: lace_solar_pv_usd_per_mwh
+    rhs: marginal_cost_usd_per_mwh + capacity_market * capacity_price * vre_capacity_credit / (solar_pv_capacity_factor
+      * hours_per_year)
+    relation: eq
+    parameters:
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - lace_solar_pv_usd_per_mwh
+    - marginal_cost_usd_per_mwh
+    - solar_pv_capacity_factor
+    - vre_capacity_credit
+    free_variables:
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - marginal_cost_usd_per_mwh
+    - solar_pv_capacity_factor
+    - vre_capacity_credit
+    determined_variables:
+    - lace_solar_pv_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, LACE definition (energy revenue + capacity
+      revenue, divided by generating hours)
+    latex: \mathrm{lace}_{solar\_pv\_usd\_per\_mwh} = \mathrm{marginal}_{cost\_usd\_per\_mwh} + \frac{\mathrm{capacity}_{market}
+      \mathrm{capacity}_{price} \mathrm{vre}_{capacity\_credit}}{\mathrm{solar}_{pv\_capacity\_factor}
+      \mathrm{hours}_{per\_year}}
+  lace_wind_offshore_definition:
+    id: lace_wind_offshore_definition
+    name: Wind offshore levelized avoided cost
+    description: 'EIA''s LACE for this technology, restricted to the two revenue streams the graph models:
+      energy and capacity. EIA''s numerator also carries spinning-reserve revenue, RPS compliance revenue
+      and an intermittent-limit cost; the graph has no node for the first two and no binding intermittent
+      cap for the third, so omitting them is a scope statement rather than a silent zero -- a scenario
+      that needs them should add the nodes rather than inflate the two terms that exist. The division
+      by `capacity_factor_wind_offshore x 8,760` is EIA''s own annualisation: LACE is a per-MWh value
+      and a capacity payment is per MW-year.
+
+
+      The energy term is the marginal price, not `capture_price_usd_per_mwh`: the capture price is a VRE-specific
+      haircut for cannibalisation, and this ratio is evaluated for dispatchable technologies that suffer
+      no such haircut. Applying a VRE adjustment across the whole fleet is a basis substitution of exactly
+      the kind batch 45 repaired in the thermal LCOEs -- both sides would read USD/MWh and the arithmetic
+      would be wrong by the cannibalisation factor. EIA''s own LACE energy term is the marginal price,
+      so the faithful reading and the safe one agree.'
+    system: cost_accounting
+    lhs: lace_wind_offshore_usd_per_mwh
+    rhs: marginal_cost_usd_per_mwh + capacity_market * capacity_price * vre_capacity_credit / (capacity_factor_wind_offshore
+      * hours_per_year)
+    relation: eq
+    parameters:
+    - capacity_factor_wind_offshore
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - lace_wind_offshore_usd_per_mwh
+    - marginal_cost_usd_per_mwh
+    - vre_capacity_credit
+    free_variables:
+    - capacity_factor_wind_offshore
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - marginal_cost_usd_per_mwh
+    - vre_capacity_credit
+    determined_variables:
+    - lace_wind_offshore_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, LACE definition (energy revenue + capacity
+      revenue, divided by generating hours)
+    latex: \mathrm{lace}_{wind\_offshore\_usd\_per\_mwh} = \mathrm{marginal}_{cost\_usd\_per\_mwh} + \frac{\mathrm{capacity}_{market}
+      \mathrm{capacity}_{price} \mathrm{vre}_{capacity\_credit}}{\mathrm{capacity}_{factor\_wind\_offshore}
+      \mathrm{hours}_{per\_year}}
+  lace_wind_onshore_definition:
+    id: lace_wind_onshore_definition
+    name: Wind onshore levelized avoided cost
+    description: 'EIA''s LACE for this technology, restricted to the two revenue streams the graph models:
+      energy and capacity. EIA''s numerator also carries spinning-reserve revenue, RPS compliance revenue
+      and an intermittent-limit cost; the graph has no node for the first two and no binding intermittent
+      cap for the third, so omitting them is a scope statement rather than a silent zero -- a scenario
+      that needs them should add the nodes rather than inflate the two terms that exist. The division
+      by `capacity_factor_wind_onshore x 8,760` is EIA''s own annualisation: LACE is a per-MWh value and
+      a capacity payment is per MW-year.
+
+
+      The energy term is the marginal price, not `capture_price_usd_per_mwh`: the capture price is a VRE-specific
+      haircut for cannibalisation, and this ratio is evaluated for dispatchable technologies that suffer
+      no such haircut. Applying a VRE adjustment across the whole fleet is a basis substitution of exactly
+      the kind batch 45 repaired in the thermal LCOEs -- both sides would read USD/MWh and the arithmetic
+      would be wrong by the cannibalisation factor. EIA''s own LACE energy term is the marginal price,
+      so the faithful reading and the safe one agree.'
+    system: cost_accounting
+    lhs: lace_wind_onshore_usd_per_mwh
+    rhs: marginal_cost_usd_per_mwh + capacity_market * capacity_price * vre_capacity_credit / (capacity_factor_wind_onshore
+      * hours_per_year)
+    relation: eq
+    parameters:
+    - capacity_factor_wind_onshore
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - lace_wind_onshore_usd_per_mwh
+    - marginal_cost_usd_per_mwh
+    - vre_capacity_credit
+    free_variables:
+    - capacity_factor_wind_onshore
+    - capacity_market
+    - capacity_price
+    - hours_per_year
+    - marginal_cost_usd_per_mwh
+    - vre_capacity_credit
+    determined_variables:
+    - lace_wind_onshore_usd_per_mwh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, LACE definition (energy revenue + capacity
+      revenue, divided by generating hours)
+    latex: \mathrm{lace}_{wind\_onshore\_usd\_per\_mwh} = \mathrm{marginal}_{cost\_usd\_per\_mwh} + \frac{\mathrm{capacity}_{market}
+      \mathrm{capacity}_{price} \mathrm{vre}_{capacity\_credit}}{\mathrm{capacity}_{factor\_wind\_onshore}
+      \mathrm{hours}_{per\_year}}
   land_acquisition_cost_definition:
     description: 'The project''s land bill: the USD per hectare times the hectares acquired, at the purchase-or-lease
       rate the IFC land-acquisition practice sets.'
@@ -37635,6 +39549,340 @@ equations:
     system: cost_accounting
     tolerance: 1.0e-08
     unit_check: true
+  lcoe_value_cost_ratio_biomass_definition:
+    id: lcoe_value_cost_ratio_biomass_definition
+    name: Biomass value-cost ratio
+    description: 'EIA''s value-cost ratio, `LACE / LCOE`, evaluated for this technology on this technology''s
+      own basis -- its own capacity factor in the generating-hours denominator and its own capacity credit
+      in the numerator. The ratio pairs the two metrics EIA insists must be read together: ''LCOE and
+      LCOS by themselves do not capture all of the factors that contribute to actual investment decisions,
+      making direct comparisons of LCOE and LCOS across technologies problematic and misleading as a method
+      to assess the economic competitiveness of various generation alternatives.'' This equation is the
+      only reader of `lcoe_biomass_usd_per_mwh`; before batch 46 that node was derived and consumed by
+      nothing.'
+    system: cost_accounting
+    lhs: lcoe_value_cost_ratio_biomass
+    rhs: lace_biomass_usd_per_mwh / lcoe_biomass_usd_per_mwh
+    relation: eq
+    parameters:
+    - lace_biomass_usd_per_mwh
+    - lcoe_biomass_usd_per_mwh
+    - lcoe_value_cost_ratio_biomass
+    free_variables:
+    - lace_biomass_usd_per_mwh
+    - lcoe_biomass_usd_per_mwh
+    determined_variables:
+    - lcoe_value_cost_ratio_biomass
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, value-cost ratio and its stated threshold
+    latex: \mathrm{lcoe}_{value\_cost\_ratio\_biomass} = \frac{\mathrm{lace}_{biomass\_usd\_per\_mwh}}{\mathrm{lcoe}_{biomass\_usd\_per\_mwh}}
+  lcoe_value_cost_ratio_coal_definition:
+    id: lcoe_value_cost_ratio_coal_definition
+    name: Coal value-cost ratio
+    description: 'EIA''s value-cost ratio, `LACE / LCOE`, evaluated for this technology on this technology''s
+      own basis -- its own capacity factor in the generating-hours denominator and its own capacity credit
+      in the numerator. The ratio pairs the two metrics EIA insists must be read together: ''LCOE and
+      LCOS by themselves do not capture all of the factors that contribute to actual investment decisions,
+      making direct comparisons of LCOE and LCOS across technologies problematic and misleading as a method
+      to assess the economic competitiveness of various generation alternatives.'' This equation is the
+      only reader of `lcoe_coal_usd_per_mwh`; before batch 46 that node was derived and consumed by nothing.'
+    system: cost_accounting
+    lhs: lcoe_value_cost_ratio_coal
+    rhs: lace_coal_usd_per_mwh / lcoe_coal_usd_per_mwh
+    relation: eq
+    parameters:
+    - lace_coal_usd_per_mwh
+    - lcoe_coal_usd_per_mwh
+    - lcoe_value_cost_ratio_coal
+    free_variables:
+    - lace_coal_usd_per_mwh
+    - lcoe_coal_usd_per_mwh
+    determined_variables:
+    - lcoe_value_cost_ratio_coal
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, value-cost ratio and its stated threshold
+    latex: \mathrm{lcoe}_{value\_cost\_ratio\_coal} = \frac{\mathrm{lace}_{coal\_usd\_per\_mwh}}{\mathrm{lcoe}_{coal\_usd\_per\_mwh}}
+  lcoe_value_cost_ratio_csp_definition:
+    id: lcoe_value_cost_ratio_csp_definition
+    name: Csp value-cost ratio
+    description: 'EIA''s value-cost ratio, `LACE / LCOE`, evaluated for this technology on this technology''s
+      own basis -- its own capacity factor in the generating-hours denominator and its own capacity credit
+      in the numerator. The ratio pairs the two metrics EIA insists must be read together: ''LCOE and
+      LCOS by themselves do not capture all of the factors that contribute to actual investment decisions,
+      making direct comparisons of LCOE and LCOS across technologies problematic and misleading as a method
+      to assess the economic competitiveness of various generation alternatives.'' This equation is the
+      only reader of `lcoe_csp_usd_per_mwh`; before batch 46 that node was derived and consumed by nothing.'
+    system: cost_accounting
+    lhs: lcoe_value_cost_ratio_csp
+    rhs: lace_csp_usd_per_mwh / lcoe_csp_usd_per_mwh
+    relation: eq
+    parameters:
+    - lace_csp_usd_per_mwh
+    - lcoe_csp_usd_per_mwh
+    - lcoe_value_cost_ratio_csp
+    free_variables:
+    - lace_csp_usd_per_mwh
+    - lcoe_csp_usd_per_mwh
+    determined_variables:
+    - lcoe_value_cost_ratio_csp
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, value-cost ratio and its stated threshold
+    latex: \mathrm{lcoe}_{value\_cost\_ratio\_csp} = \frac{\mathrm{lace}_{csp\_usd\_per\_mwh}}{\mathrm{lcoe}_{csp\_usd\_per\_mwh}}
+  lcoe_value_cost_ratio_gas_definition:
+    id: lcoe_value_cost_ratio_gas_definition
+    name: Gas value-cost ratio
+    description: 'EIA''s value-cost ratio, `LACE / LCOE`, evaluated for this technology on this technology''s
+      own basis -- its own capacity factor in the generating-hours denominator and its own capacity credit
+      in the numerator. The ratio pairs the two metrics EIA insists must be read together: ''LCOE and
+      LCOS by themselves do not capture all of the factors that contribute to actual investment decisions,
+      making direct comparisons of LCOE and LCOS across technologies problematic and misleading as a method
+      to assess the economic competitiveness of various generation alternatives.'' This equation is the
+      only reader of `lcoe_gas_usd_per_mwh`; before batch 46 that node was derived and consumed by nothing.'
+    system: cost_accounting
+    lhs: lcoe_value_cost_ratio_gas
+    rhs: lace_gas_usd_per_mwh / lcoe_gas_usd_per_mwh
+    relation: eq
+    parameters:
+    - lace_gas_usd_per_mwh
+    - lcoe_gas_usd_per_mwh
+    - lcoe_value_cost_ratio_gas
+    free_variables:
+    - lace_gas_usd_per_mwh
+    - lcoe_gas_usd_per_mwh
+    determined_variables:
+    - lcoe_value_cost_ratio_gas
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, value-cost ratio and its stated threshold
+    latex: \mathrm{lcoe}_{value\_cost\_ratio\_gas} = \frac{\mathrm{lace}_{gas\_usd\_per\_mwh}}{\mathrm{lcoe}_{gas\_usd\_per\_mwh}}
+  lcoe_value_cost_ratio_geothermal_definition:
+    id: lcoe_value_cost_ratio_geothermal_definition
+    name: Geothermal value-cost ratio
+    description: 'EIA''s value-cost ratio, `LACE / LCOE`, evaluated for this technology on this technology''s
+      own basis -- its own capacity factor in the generating-hours denominator and its own capacity credit
+      in the numerator. The ratio pairs the two metrics EIA insists must be read together: ''LCOE and
+      LCOS by themselves do not capture all of the factors that contribute to actual investment decisions,
+      making direct comparisons of LCOE and LCOS across technologies problematic and misleading as a method
+      to assess the economic competitiveness of various generation alternatives.'' This equation is the
+      only reader of `lcoe_geothermal_usd_per_mwh`; before batch 46 that node was derived and consumed
+      by nothing.'
+    system: cost_accounting
+    lhs: lcoe_value_cost_ratio_geothermal
+    rhs: lace_geothermal_usd_per_mwh / lcoe_geothermal_usd_per_mwh
+    relation: eq
+    parameters:
+    - lace_geothermal_usd_per_mwh
+    - lcoe_geothermal_usd_per_mwh
+    - lcoe_value_cost_ratio_geothermal
+    free_variables:
+    - lace_geothermal_usd_per_mwh
+    - lcoe_geothermal_usd_per_mwh
+    determined_variables:
+    - lcoe_value_cost_ratio_geothermal
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, value-cost ratio and its stated threshold
+    latex: \mathrm{lcoe}_{value\_cost\_ratio\_geothermal} = \frac{\mathrm{lace}_{geothermal\_usd\_per\_mwh}}{\mathrm{lcoe}_{geothermal\_usd\_per\_mwh}}
+  lcoe_value_cost_ratio_hydro_definition:
+    id: lcoe_value_cost_ratio_hydro_definition
+    name: Hydro value-cost ratio
+    description: 'EIA''s value-cost ratio, `LACE / LCOE`, evaluated for this technology on this technology''s
+      own basis -- its own capacity factor in the generating-hours denominator and its own capacity credit
+      in the numerator. The ratio pairs the two metrics EIA insists must be read together: ''LCOE and
+      LCOS by themselves do not capture all of the factors that contribute to actual investment decisions,
+      making direct comparisons of LCOE and LCOS across technologies problematic and misleading as a method
+      to assess the economic competitiveness of various generation alternatives.'' This equation is the
+      only reader of `lcoe_hydro_usd_per_mwh`; before batch 46 that node was derived and consumed by nothing.'
+    system: cost_accounting
+    lhs: lcoe_value_cost_ratio_hydro
+    rhs: lace_hydro_usd_per_mwh / lcoe_hydro_usd_per_mwh
+    relation: eq
+    parameters:
+    - lace_hydro_usd_per_mwh
+    - lcoe_hydro_usd_per_mwh
+    - lcoe_value_cost_ratio_hydro
+    free_variables:
+    - lace_hydro_usd_per_mwh
+    - lcoe_hydro_usd_per_mwh
+    determined_variables:
+    - lcoe_value_cost_ratio_hydro
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, value-cost ratio and its stated threshold
+    latex: \mathrm{lcoe}_{value\_cost\_ratio\_hydro} = \frac{\mathrm{lace}_{hydro\_usd\_per\_mwh}}{\mathrm{lcoe}_{hydro\_usd\_per\_mwh}}
+  lcoe_value_cost_ratio_nuclear_definition:
+    id: lcoe_value_cost_ratio_nuclear_definition
+    name: Nuclear value-cost ratio
+    description: 'EIA''s value-cost ratio, `LACE / LCOE`, evaluated for this technology on this technology''s
+      own basis -- its own capacity factor in the generating-hours denominator and its own capacity credit
+      in the numerator. The ratio pairs the two metrics EIA insists must be read together: ''LCOE and
+      LCOS by themselves do not capture all of the factors that contribute to actual investment decisions,
+      making direct comparisons of LCOE and LCOS across technologies problematic and misleading as a method
+      to assess the economic competitiveness of various generation alternatives.'' This equation is the
+      only reader of `lcoe_nuclear_usd_per_mwh`; before batch 46 that node was derived and consumed by
+      nothing.'
+    system: cost_accounting
+    lhs: lcoe_value_cost_ratio_nuclear
+    rhs: lace_nuclear_usd_per_mwh / lcoe_nuclear_usd_per_mwh
+    relation: eq
+    parameters:
+    - lace_nuclear_usd_per_mwh
+    - lcoe_nuclear_usd_per_mwh
+    - lcoe_value_cost_ratio_nuclear
+    free_variables:
+    - lace_nuclear_usd_per_mwh
+    - lcoe_nuclear_usd_per_mwh
+    determined_variables:
+    - lcoe_value_cost_ratio_nuclear
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, value-cost ratio and its stated threshold
+    latex: \mathrm{lcoe}_{value\_cost\_ratio\_nuclear} = \frac{\mathrm{lace}_{nuclear\_usd\_per\_mwh}}{\mathrm{lcoe}_{nuclear\_usd\_per\_mwh}}
+  lcoe_value_cost_ratio_oil_definition:
+    id: lcoe_value_cost_ratio_oil_definition
+    name: Oil value-cost ratio
+    description: 'EIA''s value-cost ratio, `LACE / LCOE`, evaluated for this technology on this technology''s
+      own basis -- its own capacity factor in the generating-hours denominator and its own capacity credit
+      in the numerator. The ratio pairs the two metrics EIA insists must be read together: ''LCOE and
+      LCOS by themselves do not capture all of the factors that contribute to actual investment decisions,
+      making direct comparisons of LCOE and LCOS across technologies problematic and misleading as a method
+      to assess the economic competitiveness of various generation alternatives.'' This equation is the
+      only reader of `lcoe_oil_usd_per_mwh`; before batch 46 that node was derived and consumed by nothing.'
+    system: cost_accounting
+    lhs: lcoe_value_cost_ratio_oil
+    rhs: lace_oil_usd_per_mwh / lcoe_oil_usd_per_mwh
+    relation: eq
+    parameters:
+    - lace_oil_usd_per_mwh
+    - lcoe_oil_usd_per_mwh
+    - lcoe_value_cost_ratio_oil
+    free_variables:
+    - lace_oil_usd_per_mwh
+    - lcoe_oil_usd_per_mwh
+    determined_variables:
+    - lcoe_value_cost_ratio_oil
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, value-cost ratio and its stated threshold
+    latex: \mathrm{lcoe}_{value\_cost\_ratio\_oil} = \frac{\mathrm{lace}_{oil\_usd\_per\_mwh}}{\mathrm{lcoe}_{oil\_usd\_per\_mwh}}
+  lcoe_value_cost_ratio_solar_pv_definition:
+    id: lcoe_value_cost_ratio_solar_pv_definition
+    name: Solar pv value-cost ratio
+    description: 'EIA''s value-cost ratio, `LACE / LCOE`, evaluated for this technology on this technology''s
+      own basis -- its own capacity factor in the generating-hours denominator and its own capacity credit
+      in the numerator. The ratio pairs the two metrics EIA insists must be read together: ''LCOE and
+      LCOS by themselves do not capture all of the factors that contribute to actual investment decisions,
+      making direct comparisons of LCOE and LCOS across technologies problematic and misleading as a method
+      to assess the economic competitiveness of various generation alternatives.'' This equation is the
+      only reader of `lcoe_solar_usd_per_mwh`; before batch 46 that node was derived and consumed by nothing.'
+    system: cost_accounting
+    lhs: lcoe_value_cost_ratio_solar_pv
+    rhs: lace_solar_pv_usd_per_mwh / lcoe_solar_usd_per_mwh
+    relation: eq
+    parameters:
+    - lace_solar_pv_usd_per_mwh
+    - lcoe_solar_usd_per_mwh
+    - lcoe_value_cost_ratio_solar_pv
+    free_variables:
+    - lace_solar_pv_usd_per_mwh
+    - lcoe_solar_usd_per_mwh
+    determined_variables:
+    - lcoe_value_cost_ratio_solar_pv
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, value-cost ratio and its stated threshold
+    latex: \mathrm{lcoe}_{value\_cost\_ratio\_solar\_pv} = \frac{\mathrm{lace}_{solar\_pv\_usd\_per\_mwh}}{\mathrm{lcoe}_{solar\_usd\_per\_mwh}}
+  lcoe_value_cost_ratio_wind_offshore_definition:
+    id: lcoe_value_cost_ratio_wind_offshore_definition
+    name: Wind offshore value-cost ratio
+    description: 'EIA''s value-cost ratio, `LACE / LCOE`, evaluated for this technology on this technology''s
+      own basis -- its own capacity factor in the generating-hours denominator and its own capacity credit
+      in the numerator. The ratio pairs the two metrics EIA insists must be read together: ''LCOE and
+      LCOS by themselves do not capture all of the factors that contribute to actual investment decisions,
+      making direct comparisons of LCOE and LCOS across technologies problematic and misleading as a method
+      to assess the economic competitiveness of various generation alternatives.'' This equation is the
+      only reader of `lcoe_wind_offshore_usd_per_mwh`; before batch 46 that node was derived and consumed
+      by nothing.'
+    system: cost_accounting
+    lhs: lcoe_value_cost_ratio_wind_offshore
+    rhs: lace_wind_offshore_usd_per_mwh / lcoe_wind_offshore_usd_per_mwh
+    relation: eq
+    parameters:
+    - lace_wind_offshore_usd_per_mwh
+    - lcoe_value_cost_ratio_wind_offshore
+    - lcoe_wind_offshore_usd_per_mwh
+    free_variables:
+    - lace_wind_offshore_usd_per_mwh
+    - lcoe_wind_offshore_usd_per_mwh
+    determined_variables:
+    - lcoe_value_cost_ratio_wind_offshore
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, value-cost ratio and its stated threshold
+    latex: \mathrm{lcoe}_{value\_cost\_ratio\_wind\_offshore} = \frac{\mathrm{lace}_{wind\_offshore\_usd\_per\_mwh}}{\mathrm{lcoe}_{wind\_offshore\_usd\_per\_mwh}}
+  lcoe_value_cost_ratio_wind_onshore_definition:
+    id: lcoe_value_cost_ratio_wind_onshore_definition
+    name: Wind onshore value-cost ratio
+    description: 'EIA''s value-cost ratio, `LACE / LCOE`, evaluated for this technology on this technology''s
+      own basis -- its own capacity factor in the generating-hours denominator and its own capacity credit
+      in the numerator. The ratio pairs the two metrics EIA insists must be read together: ''LCOE and
+      LCOS by themselves do not capture all of the factors that contribute to actual investment decisions,
+      making direct comparisons of LCOE and LCOS across technologies problematic and misleading as a method
+      to assess the economic competitiveness of various generation alternatives.'' This equation is the
+      only reader of `lcoe_wind_usd_per_mwh`; before batch 46 that node was derived and consumed by nothing.'
+    system: cost_accounting
+    lhs: lcoe_value_cost_ratio_wind_onshore
+    rhs: lace_wind_onshore_usd_per_mwh / lcoe_wind_usd_per_mwh
+    relation: eq
+    parameters:
+    - lace_wind_onshore_usd_per_mwh
+    - lcoe_value_cost_ratio_wind_onshore
+    - lcoe_wind_usd_per_mwh
+    free_variables:
+    - lace_wind_onshore_usd_per_mwh
+    - lcoe_wind_usd_per_mwh
+    determined_variables:
+    - lcoe_value_cost_ratio_wind_onshore
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: EIA AEO Levelized Cost of Electricity Methodology, value-cost ratio and its stated threshold
+    latex: \mathrm{lcoe}_{value\_cost\_ratio\_wind\_onshore} = \frac{\mathrm{lace}_{wind\_onshore\_usd\_per\_mwh}}{\mathrm{lcoe}_{wind\_usd\_per\_mwh}}
   lcoe_wind_definition:
     description: 'The levelised cost of onshore wind. The shipped form divided by `capacity_factor_wind_onshore`
       -- it is an onshore LCOE -- but read the generic `opex_fixed_wind` (40 USD/kW/year) rather than
@@ -38706,6 +40954,41 @@ equations:
     latex: \mathrm{nox}_{emissions} = \frac{\mathrm{coal}_{fuel\_energy\_gj} \mathrm{nox}_{factor\_coal\_g\_per\_gj}
       + \mathrm{gas}_{fuel\_energy\_gj} \mathrm{nox}_{factor\_gas\_g\_per\_gj} + \mathrm{oil}_{fuel\_energy\_gj}
       \mathrm{nox}_{factor\_oil\_g\_per\_gj}}{\mathrm{g}_{per\_kt}}
+  nuclear_generation_definition:
+    id: nuclear_generation_definition
+    name: Nuclear annual generation
+    description: Annual output at the technology's own capacity factor. NREL ATB 2025 defines the capacity
+      factor as 'the ratio of actual annual output to output at rated capacity for an entire year' and
+      writes the per-MW output as `CF x 8,760`; EIA's LCOE methodology works the arithmetic for a 1 MW
+      turbine -- 'Generating hours = 30% x 8,760 hours/year = 2,628 hours/year' -- and reports the result
+      as '2,628 MWh/MW (2,628 equivalent operating hours)'; Short, Packey & Holt define the ratio the
+      identity inverts. The identity is stated in three parts across the three sources rather than once,
+      which is why this equation cites all three.
+    system: energy_balance
+    lhs: nuclear_generation_twh
+    rhs: nuclear_capacity * capacity_factor_nuclear * hours_per_year / 1000000
+    relation: eq
+    parameters:
+    - capacity_factor_nuclear
+    - hours_per_year
+    - nuclear_capacity
+    - nuclear_generation_twh
+    free_variables:
+    - capacity_factor_nuclear
+    - hours_per_year
+    - nuclear_capacity
+    determined_variables:
+    - nuclear_generation_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025, Equations and Variables (capacity factor and the CF x 8,760 denominator);
+      EIA AEO LCOE Methodology, generating-hours arithmetic; Short, Packey & Holt (1995) NREL/TP-462-5173,
+      capacity factor definition
+    latex: \mathrm{nuclear}_{generation\_twh} = \frac{\mathrm{nuclear}_{capacity} \mathrm{capacity}_{factor\_nuclear}
+      \mathrm{hours}_{per\_year}}{1000000}
   nuclear_new_build_bound:
     description: 'New nuclear capped at 5000 MW -- a single large unit or two SMR modules -- against a
       0 MW reference fleet, so the bound holds vacuously today and bites the moment a scenario builds
@@ -38854,6 +41137,41 @@ equations:
     reference: EMEP/EEA Guidebook 2023, NFR 1.A.1.a, Table 3-6 (heavy fuel oil).
     latex: \mathrm{oil}_{fuel\_energy\_gj} = \frac{\mathrm{oil}_{capacity} \mathrm{capacity}_{factor\_oil}
       \mathrm{hours}_{per\_year} \mathrm{gj}_{per\_mwh}}{\mathrm{efficiency}_{oil}}
+  oil_generation_definition:
+    id: oil_generation_definition
+    name: Oil annual generation
+    description: Annual output at the technology's own capacity factor. NREL ATB 2025 defines the capacity
+      factor as 'the ratio of actual annual output to output at rated capacity for an entire year' and
+      writes the per-MW output as `CF x 8,760`; EIA's LCOE methodology works the arithmetic for a 1 MW
+      turbine -- 'Generating hours = 30% x 8,760 hours/year = 2,628 hours/year' -- and reports the result
+      as '2,628 MWh/MW (2,628 equivalent operating hours)'; Short, Packey & Holt define the ratio the
+      identity inverts. The identity is stated in three parts across the three sources rather than once,
+      which is why this equation cites all three.
+    system: energy_balance
+    lhs: oil_generation_twh
+    rhs: oil_capacity * capacity_factor_oil * hours_per_year / 1000000
+    relation: eq
+    parameters:
+    - capacity_factor_oil
+    - hours_per_year
+    - oil_capacity
+    - oil_generation_twh
+    free_variables:
+    - capacity_factor_oil
+    - hours_per_year
+    - oil_capacity
+    determined_variables:
+    - oil_generation_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025, Equations and Variables (capacity factor and the CF x 8,760 denominator);
+      EIA AEO LCOE Methodology, generating-hours arithmetic; Short, Packey & Holt (1995) NREL/TP-462-5173,
+      capacity factor definition
+    latex: \mathrm{oil}_{generation\_twh} = \frac{\mathrm{oil}_{capacity} \mathrm{capacity}_{factor\_oil}
+      \mathrm{hours}_{per\_year}}{1000000}
   oil_price_per_mwh_definition:
     description: 'A barrel of crude carries, on the EIA distillate average, 5.8 MMBtu; at 0.29307 MWh
       per MMBtu that is 1.699 MWh delivered per barrel. The delivered price divides by the energy content,
@@ -41524,6 +43842,41 @@ equations:
     system: employment
     tolerance: 1.0e-09
     unit_check: true
+  solar_pv_generation_definition:
+    id: solar_pv_generation_definition
+    name: Solar pv annual generation
+    description: Annual output at the technology's own capacity factor. NREL ATB 2025 defines the capacity
+      factor as 'the ratio of actual annual output to output at rated capacity for an entire year' and
+      writes the per-MW output as `CF x 8,760`; EIA's LCOE methodology works the arithmetic for a 1 MW
+      turbine -- 'Generating hours = 30% x 8,760 hours/year = 2,628 hours/year' -- and reports the result
+      as '2,628 MWh/MW (2,628 equivalent operating hours)'; Short, Packey & Holt define the ratio the
+      identity inverts. The identity is stated in three parts across the three sources rather than once,
+      which is why this equation cites all three.
+    system: energy_balance
+    lhs: solar_pv_generation_twh
+    rhs: solar_pv_capacity * solar_pv_capacity_factor * hours_per_year / 1000000
+    relation: eq
+    parameters:
+    - hours_per_year
+    - solar_pv_capacity
+    - solar_pv_capacity_factor
+    - solar_pv_generation_twh
+    free_variables:
+    - hours_per_year
+    - solar_pv_capacity
+    - solar_pv_capacity_factor
+    determined_variables:
+    - solar_pv_generation_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025, Equations and Variables (capacity factor and the CF x 8,760 denominator);
+      EIA AEO LCOE Methodology, generating-hours arithmetic; Short, Packey & Holt (1995) NREL/TP-462-5173,
+      capacity factor definition
+    latex: \mathrm{solar}_{pv\_generation\_twh} = \frac{\mathrm{solar}_{pv\_capacity} \mathrm{solar}_{pv\_capacity\_factor}
+      \mathrm{hours}_{per\_year}}{1000000}
   solar_pv_land_constraint_bound:
     description: 'The land ceiling expressed as the PV nameplate the available land supports: 10000 MW
       at the reference build under a 20000 MW ceiling. The node is a *converted* land ceiling and its
@@ -43490,6 +45843,41 @@ equations:
     system: employment
     tolerance: 1.0e-09
     unit_check: true
+  wind_offshore_generation_definition:
+    id: wind_offshore_generation_definition
+    name: Wind offshore annual generation
+    description: Annual output at the technology's own capacity factor. NREL ATB 2025 defines the capacity
+      factor as 'the ratio of actual annual output to output at rated capacity for an entire year' and
+      writes the per-MW output as `CF x 8,760`; EIA's LCOE methodology works the arithmetic for a 1 MW
+      turbine -- 'Generating hours = 30% x 8,760 hours/year = 2,628 hours/year' -- and reports the result
+      as '2,628 MWh/MW (2,628 equivalent operating hours)'; Short, Packey & Holt define the ratio the
+      identity inverts. The identity is stated in three parts across the three sources rather than once,
+      which is why this equation cites all three.
+    system: energy_balance
+    lhs: wind_offshore_generation_twh
+    rhs: wind_offshore_capacity * capacity_factor_wind_offshore * hours_per_year / 1000000
+    relation: eq
+    parameters:
+    - capacity_factor_wind_offshore
+    - hours_per_year
+    - wind_offshore_capacity
+    - wind_offshore_generation_twh
+    free_variables:
+    - capacity_factor_wind_offshore
+    - hours_per_year
+    - wind_offshore_capacity
+    determined_variables:
+    - wind_offshore_generation_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025, Equations and Variables (capacity factor and the CF x 8,760 denominator);
+      EIA AEO LCOE Methodology, generating-hours arithmetic; Short, Packey & Holt (1995) NREL/TP-462-5173,
+      capacity factor definition
+    latex: \mathrm{wind}_{offshore\_generation\_twh} = \frac{\mathrm{wind}_{offshore\_capacity} \mathrm{capacity}_{factor\_wind\_offshore}
+      \mathrm{hours}_{per\_year}}{1000000}
   wind_onshore_cost_alias:
     description: 'The alias resolution the fragments'' alias register declared and nothing applied: `wind_onshore_cost`
       and `capex_wind_onshore` are two spellings of one quantity. The equality states it in the graph''s
@@ -43514,6 +45902,41 @@ equations:
     system: employment
     tolerance: 1.0e-09
     unit_check: true
+  wind_onshore_generation_definition:
+    id: wind_onshore_generation_definition
+    name: Wind onshore annual generation
+    description: Annual output at the technology's own capacity factor. NREL ATB 2025 defines the capacity
+      factor as 'the ratio of actual annual output to output at rated capacity for an entire year' and
+      writes the per-MW output as `CF x 8,760`; EIA's LCOE methodology works the arithmetic for a 1 MW
+      turbine -- 'Generating hours = 30% x 8,760 hours/year = 2,628 hours/year' -- and reports the result
+      as '2,628 MWh/MW (2,628 equivalent operating hours)'; Short, Packey & Holt define the ratio the
+      identity inverts. The identity is stated in three parts across the three sources rather than once,
+      which is why this equation cites all three.
+    system: energy_balance
+    lhs: wind_onshore_generation_twh
+    rhs: wind_onshore_capacity * capacity_factor_wind_onshore * hours_per_year / 1000000
+    relation: eq
+    parameters:
+    - capacity_factor_wind_onshore
+    - hours_per_year
+    - wind_onshore_capacity
+    - wind_onshore_generation_twh
+    free_variables:
+    - capacity_factor_wind_onshore
+    - hours_per_year
+    - wind_onshore_capacity
+    determined_variables:
+    - wind_onshore_generation_twh
+    tolerance: 1.0e-09
+    unit_check: true
+    solution_method: direct
+    linearity: linear
+    priority: P1
+    reference: NREL ATB 2025, Equations and Variables (capacity factor and the CF x 8,760 denominator);
+      EIA AEO LCOE Methodology, generating-hours arithmetic; Short, Packey & Holt (1995) NREL/TP-462-5173,
+      capacity factor definition
+    latex: \mathrm{wind}_{onshore\_generation\_twh} = \frac{\mathrm{wind}_{onshore\_capacity} \mathrm{capacity}_{factor\_wind\_onshore}
+      \mathrm{hours}_{per\_year}}{1000000}
   withholding_tax_dividends_cost_definition:
     description: 'Withholding tax on distributed cash: the rate times cash available for debt service
       net of debt service. The base is the distributable residual, so a project whose debt service exceeds
@@ -54622,6 +57045,1122 @@ relationships:
     is a price per efficiency-times-that of electricity.'
   reference: The fuel-basis repair (batch 45)
   priority: P1
+- source: coal_capacity
+  target: coal_generation_twh
+  equation_id: coal_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_coal
+  target: coal_generation_twh
+  equation_id: coal_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: coal_generation_twh
+  equation_id: coal_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: gas_capacity
+  target: gas_generation_twh
+  equation_id: gas_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_gas
+  target: gas_generation_twh
+  equation_id: gas_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: gas_generation_twh
+  equation_id: gas_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: oil_capacity
+  target: oil_generation_twh
+  equation_id: oil_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_oil
+  target: oil_generation_twh
+  equation_id: oil_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: oil_generation_twh
+  equation_id: oil_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: biomass_capacity
+  target: biomass_generation_twh
+  equation_id: biomass_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_biomass
+  target: biomass_generation_twh
+  equation_id: biomass_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: biomass_generation_twh
+  equation_id: biomass_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: nuclear_capacity
+  target: nuclear_generation_twh
+  equation_id: nuclear_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_nuclear
+  target: nuclear_generation_twh
+  equation_id: nuclear_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: nuclear_generation_twh
+  equation_id: nuclear_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hydro_capacity
+  target: hydro_generation_twh
+  equation_id: hydro_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_hydro
+  target: hydro_generation_twh
+  equation_id: hydro_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: hydro_generation_twh
+  equation_id: hydro_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: solar_pv_capacity
+  target: solar_pv_generation_twh
+  equation_id: solar_pv_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: solar_pv_capacity_factor
+  target: solar_pv_generation_twh
+  equation_id: solar_pv_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: solar_pv_generation_twh
+  equation_id: solar_pv_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: wind_onshore_capacity
+  target: wind_onshore_generation_twh
+  equation_id: wind_onshore_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_wind_onshore
+  target: wind_onshore_generation_twh
+  equation_id: wind_onshore_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: wind_onshore_generation_twh
+  equation_id: wind_onshore_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: wind_offshore_capacity
+  target: wind_offshore_generation_twh
+  equation_id: wind_offshore_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_wind_offshore
+  target: wind_offshore_generation_twh
+  equation_id: wind_offshore_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: wind_offshore_generation_twh
+  equation_id: wind_offshore_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: csp_capacity
+  target: csp_generation_twh
+  equation_id: csp_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_csp
+  target: csp_generation_twh
+  equation_id: csp_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: csp_generation_twh
+  equation_id: csp_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: geothermal_capacity
+  target: geothermal_generation_twh
+  equation_id: geothermal_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_geothermal
+  target: geothermal_generation_twh
+  equation_id: geothermal_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: geothermal_generation_twh
+  equation_id: geothermal_generation_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
+    the hours in the year are what turn a nameplate rating into energy.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: biomass_generation_twh
+  target: fleet_generation_twh
+  equation_id: fleet_generation_definition
+  relationship: functional
+  strength: hard
+  description: One technology's annual output, summed into the fleet's.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: coal_generation_twh
+  target: fleet_generation_twh
+  equation_id: fleet_generation_definition
+  relationship: functional
+  strength: hard
+  description: One technology's annual output, summed into the fleet's.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: csp_generation_twh
+  target: fleet_generation_twh
+  equation_id: fleet_generation_definition
+  relationship: functional
+  strength: hard
+  description: One technology's annual output, summed into the fleet's.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: gas_generation_twh
+  target: fleet_generation_twh
+  equation_id: fleet_generation_definition
+  relationship: functional
+  strength: hard
+  description: One technology's annual output, summed into the fleet's.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: geothermal_generation_twh
+  target: fleet_generation_twh
+  equation_id: fleet_generation_definition
+  relationship: functional
+  strength: hard
+  description: One technology's annual output, summed into the fleet's.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hydro_generation_twh
+  target: fleet_generation_twh
+  equation_id: fleet_generation_definition
+  relationship: functional
+  strength: hard
+  description: One technology's annual output, summed into the fleet's.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: nuclear_generation_twh
+  target: fleet_generation_twh
+  equation_id: fleet_generation_definition
+  relationship: functional
+  strength: hard
+  description: One technology's annual output, summed into the fleet's.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: oil_generation_twh
+  target: fleet_generation_twh
+  equation_id: fleet_generation_definition
+  relationship: functional
+  strength: hard
+  description: One technology's annual output, summed into the fleet's.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: solar_pv_generation_twh
+  target: fleet_generation_twh
+  equation_id: fleet_generation_definition
+  relationship: functional
+  strength: hard
+  description: One technology's annual output, summed into the fleet's.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: wind_offshore_generation_twh
+  target: fleet_generation_twh
+  equation_id: fleet_generation_definition
+  relationship: functional
+  strength: hard
+  description: One technology's annual output, summed into the fleet's.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: wind_onshore_generation_twh
+  target: fleet_generation_twh
+  equation_id: fleet_generation_definition
+  relationship: functional
+  strength: hard
+  description: One technology's annual output, summed into the fleet's.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: fleet_generation_twh
+  target: fleet_generation_headroom
+  equation_id: fleet_generation_headroom_definition
+  relationship: functional
+  strength: hard
+  description: The capability, as the ratio's numerator.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: generation_twh
+  target: fleet_generation_headroom
+  equation_id: fleet_generation_headroom_definition
+  relationship: functional
+  strength: hard
+  description: The dispatched energy, as the ratio's denominator.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: fleet_generation_twh
+  target: generation_twh
+  equation_id: fleet_energy_adequacy
+  relationship: constraint
+  strength: hard
+  description: The fleet's capability bounds the energy the balance may dispatch.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_coal
+  target: lace_coal_usd_per_mwh
+  equation_id: lace_coal_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_market
+  target: lace_coal_usd_per_mwh
+  equation_id: lace_coal_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_price
+  target: lace_coal_usd_per_mwh
+  equation_id: lace_coal_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: lace_coal_usd_per_mwh
+  equation_id: lace_coal_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: marginal_cost_usd_per_mwh
+  target: lace_coal_usd_per_mwh
+  equation_id: lace_coal_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_gas
+  target: lace_gas_usd_per_mwh
+  equation_id: lace_gas_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_market
+  target: lace_gas_usd_per_mwh
+  equation_id: lace_gas_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_price
+  target: lace_gas_usd_per_mwh
+  equation_id: lace_gas_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: lace_gas_usd_per_mwh
+  equation_id: lace_gas_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: marginal_cost_usd_per_mwh
+  target: lace_gas_usd_per_mwh
+  equation_id: lace_gas_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_oil
+  target: lace_oil_usd_per_mwh
+  equation_id: lace_oil_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_market
+  target: lace_oil_usd_per_mwh
+  equation_id: lace_oil_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_price
+  target: lace_oil_usd_per_mwh
+  equation_id: lace_oil_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: lace_oil_usd_per_mwh
+  equation_id: lace_oil_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: marginal_cost_usd_per_mwh
+  target: lace_oil_usd_per_mwh
+  equation_id: lace_oil_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_biomass
+  target: lace_biomass_usd_per_mwh
+  equation_id: lace_biomass_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_market
+  target: lace_biomass_usd_per_mwh
+  equation_id: lace_biomass_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_price
+  target: lace_biomass_usd_per_mwh
+  equation_id: lace_biomass_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: lace_biomass_usd_per_mwh
+  equation_id: lace_biomass_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: marginal_cost_usd_per_mwh
+  target: lace_biomass_usd_per_mwh
+  equation_id: lace_biomass_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_nuclear
+  target: lace_nuclear_usd_per_mwh
+  equation_id: lace_nuclear_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_market
+  target: lace_nuclear_usd_per_mwh
+  equation_id: lace_nuclear_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_price
+  target: lace_nuclear_usd_per_mwh
+  equation_id: lace_nuclear_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: lace_nuclear_usd_per_mwh
+  equation_id: lace_nuclear_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: marginal_cost_usd_per_mwh
+  target: lace_nuclear_usd_per_mwh
+  equation_id: lace_nuclear_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_hydro
+  target: lace_hydro_usd_per_mwh
+  equation_id: lace_hydro_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_market
+  target: lace_hydro_usd_per_mwh
+  equation_id: lace_hydro_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_price
+  target: lace_hydro_usd_per_mwh
+  equation_id: lace_hydro_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: lace_hydro_usd_per_mwh
+  equation_id: lace_hydro_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: marginal_cost_usd_per_mwh
+  target: lace_hydro_usd_per_mwh
+  equation_id: lace_hydro_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_market
+  target: lace_solar_pv_usd_per_mwh
+  equation_id: lace_solar_pv_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_price
+  target: lace_solar_pv_usd_per_mwh
+  equation_id: lace_solar_pv_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: lace_solar_pv_usd_per_mwh
+  equation_id: lace_solar_pv_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: marginal_cost_usd_per_mwh
+  target: lace_solar_pv_usd_per_mwh
+  equation_id: lace_solar_pv_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: solar_pv_capacity_factor
+  target: lace_solar_pv_usd_per_mwh
+  equation_id: lace_solar_pv_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: vre_capacity_credit
+  target: lace_solar_pv_usd_per_mwh
+  equation_id: lace_solar_pv_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_wind_onshore
+  target: lace_wind_onshore_usd_per_mwh
+  equation_id: lace_wind_onshore_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_market
+  target: lace_wind_onshore_usd_per_mwh
+  equation_id: lace_wind_onshore_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_price
+  target: lace_wind_onshore_usd_per_mwh
+  equation_id: lace_wind_onshore_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: lace_wind_onshore_usd_per_mwh
+  equation_id: lace_wind_onshore_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: marginal_cost_usd_per_mwh
+  target: lace_wind_onshore_usd_per_mwh
+  equation_id: lace_wind_onshore_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: vre_capacity_credit
+  target: lace_wind_onshore_usd_per_mwh
+  equation_id: lace_wind_onshore_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_wind_offshore
+  target: lace_wind_offshore_usd_per_mwh
+  equation_id: lace_wind_offshore_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_market
+  target: lace_wind_offshore_usd_per_mwh
+  equation_id: lace_wind_offshore_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_price
+  target: lace_wind_offshore_usd_per_mwh
+  equation_id: lace_wind_offshore_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: lace_wind_offshore_usd_per_mwh
+  equation_id: lace_wind_offshore_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: marginal_cost_usd_per_mwh
+  target: lace_wind_offshore_usd_per_mwh
+  equation_id: lace_wind_offshore_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: vre_capacity_credit
+  target: lace_wind_offshore_usd_per_mwh
+  equation_id: lace_wind_offshore_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_csp
+  target: lace_csp_usd_per_mwh
+  equation_id: lace_csp_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_market
+  target: lace_csp_usd_per_mwh
+  equation_id: lace_csp_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_price
+  target: lace_csp_usd_per_mwh
+  equation_id: lace_csp_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: lace_csp_usd_per_mwh
+  equation_id: lace_csp_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: marginal_cost_usd_per_mwh
+  target: lace_csp_usd_per_mwh
+  equation_id: lace_csp_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: vre_capacity_credit
+  target: lace_csp_usd_per_mwh
+  equation_id: lace_csp_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_factor_geothermal
+  target: lace_geothermal_usd_per_mwh
+  equation_id: lace_geothermal_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_market
+  target: lace_geothermal_usd_per_mwh
+  equation_id: lace_geothermal_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: capacity_price
+  target: lace_geothermal_usd_per_mwh
+  equation_id: lace_geothermal_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: hours_per_year
+  target: lace_geothermal_usd_per_mwh
+  equation_id: lace_geothermal_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: marginal_cost_usd_per_mwh
+  target: lace_geothermal_usd_per_mwh
+  equation_id: lace_geothermal_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the avoided-cost stream: the energy price, the capacity payment and its credit,
+    or the generating hours that annualise it to a per-MWh value.'
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lace_coal_usd_per_mwh
+  target: lcoe_value_cost_ratio_coal
+  equation_id: lcoe_value_cost_ratio_coal_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lcoe_coal_usd_per_mwh
+  target: lcoe_value_cost_ratio_coal
+  equation_id: lcoe_value_cost_ratio_coal_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lace_gas_usd_per_mwh
+  target: lcoe_value_cost_ratio_gas
+  equation_id: lcoe_value_cost_ratio_gas_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lcoe_gas_usd_per_mwh
+  target: lcoe_value_cost_ratio_gas
+  equation_id: lcoe_value_cost_ratio_gas_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lace_oil_usd_per_mwh
+  target: lcoe_value_cost_ratio_oil
+  equation_id: lcoe_value_cost_ratio_oil_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lcoe_oil_usd_per_mwh
+  target: lcoe_value_cost_ratio_oil
+  equation_id: lcoe_value_cost_ratio_oil_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lace_biomass_usd_per_mwh
+  target: lcoe_value_cost_ratio_biomass
+  equation_id: lcoe_value_cost_ratio_biomass_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lcoe_biomass_usd_per_mwh
+  target: lcoe_value_cost_ratio_biomass
+  equation_id: lcoe_value_cost_ratio_biomass_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lace_nuclear_usd_per_mwh
+  target: lcoe_value_cost_ratio_nuclear
+  equation_id: lcoe_value_cost_ratio_nuclear_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lcoe_nuclear_usd_per_mwh
+  target: lcoe_value_cost_ratio_nuclear
+  equation_id: lcoe_value_cost_ratio_nuclear_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lace_hydro_usd_per_mwh
+  target: lcoe_value_cost_ratio_hydro
+  equation_id: lcoe_value_cost_ratio_hydro_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lcoe_hydro_usd_per_mwh
+  target: lcoe_value_cost_ratio_hydro
+  equation_id: lcoe_value_cost_ratio_hydro_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lace_solar_pv_usd_per_mwh
+  target: lcoe_value_cost_ratio_solar_pv
+  equation_id: lcoe_value_cost_ratio_solar_pv_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lcoe_solar_usd_per_mwh
+  target: lcoe_value_cost_ratio_solar_pv
+  equation_id: lcoe_value_cost_ratio_solar_pv_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lace_wind_onshore_usd_per_mwh
+  target: lcoe_value_cost_ratio_wind_onshore
+  equation_id: lcoe_value_cost_ratio_wind_onshore_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lcoe_wind_usd_per_mwh
+  target: lcoe_value_cost_ratio_wind_onshore
+  equation_id: lcoe_value_cost_ratio_wind_onshore_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lace_wind_offshore_usd_per_mwh
+  target: lcoe_value_cost_ratio_wind_offshore
+  equation_id: lcoe_value_cost_ratio_wind_offshore_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lcoe_wind_offshore_usd_per_mwh
+  target: lcoe_value_cost_ratio_wind_offshore
+  equation_id: lcoe_value_cost_ratio_wind_offshore_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lace_csp_usd_per_mwh
+  target: lcoe_value_cost_ratio_csp
+  equation_id: lcoe_value_cost_ratio_csp_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lcoe_csp_usd_per_mwh
+  target: lcoe_value_cost_ratio_csp
+  equation_id: lcoe_value_cost_ratio_csp_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lace_geothermal_usd_per_mwh
+  target: lcoe_value_cost_ratio_geothermal
+  equation_id: lcoe_value_cost_ratio_geothermal_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: lcoe_geothermal_usd_per_mwh
+  target: lcoe_value_cost_ratio_geothermal
+  equation_id: lcoe_value_cost_ratio_geothermal_definition
+  relationship: functional
+  strength: hard
+  description: One side of the value-cost ratio.
+  reference: The capacity-to-energy repair (batch 46)
+  priority: P1
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0
   id: carbon_price_budget_alignment
@@ -54973,3 +58512,37 @@ cross_validation:
   severity: warning
   suggestion: Enable ets_enabled, or set carbon_price_coverage to 0.0, or name the carbon tax that collects
     the revenue instead
+- id: no_technology_clears_its_cost
+  condition: lcoe_value_cost_ratio_coal < 1.0 and lcoe_value_cost_ratio_gas < 1.0 and lcoe_value_cost_ratio_oil
+    < 1.0 and lcoe_value_cost_ratio_biomass < 1.0 and lcoe_value_cost_ratio_nuclear < 1.0 and lcoe_value_cost_ratio_hydro
+    < 1.0 and lcoe_value_cost_ratio_solar_pv < 1.0 and lcoe_value_cost_ratio_wind_onshore < 1.0 and lcoe_value_cost_ratio_wind_offshore
+    < 1.0 and lcoe_value_cost_ratio_csp < 1.0 and lcoe_value_cost_ratio_geothermal < 1.0
+  severity: warning
+  message: 'No available technology earns back its levelised cost at this scenario''s energy and capacity
+    prices. EIA''s threshold is a ratio of one: below it the marginal new unit''s cost exceeds the value
+    it displaces. Every technology failing together is a system where no build is economic, which is a
+    stronger statement than any single technology failing.'
+  suggestion: Raise the marginal price or capacity_price, or check the technologies' capex, capacity factors
+    and fuel bases
+  parameters:
+  - lcoe_value_cost_ratio_coal
+  - lcoe_value_cost_ratio_gas
+  - lcoe_value_cost_ratio_oil
+  - lcoe_value_cost_ratio_biomass
+  - lcoe_value_cost_ratio_nuclear
+  - lcoe_value_cost_ratio_hydro
+  - lcoe_value_cost_ratio_solar_pv
+  - lcoe_value_cost_ratio_wind_onshore
+  - lcoe_value_cost_ratio_wind_offshore
+  - lcoe_value_cost_ratio_csp
+  - lcoe_value_cost_ratio_geothermal
+- id: fleet_cannot_serve_its_own_load
+  condition: fleet_generation_headroom < 1.0
+  severity: error
+  message: 'The fleet cannot produce the energy the balance dispatches at its own capacity factors. This
+    is distinct from the reserve-margin failure: the fleet may clear the peak and still be unable to serve
+    the year, because adequacy at peak and adequacy over the year are different constraints and the graph
+    previously carried only the first.'
+  suggestion: Raise a generating capacity, raise a capacity factor, or lower the demand the balance dispatches
+  parameters:
+  - fleet_generation_headroom

@@ -569,6 +569,117 @@ this batch repaired was a *basis*, not a connection. Units hold at 564
 consistent, 1 inconsistent, 3 exempt: the walker reads both sides as `USD/MWh`
 and will keep reading them that way.
 
+### The fleet could not make energy (batch 46, 2026-10-23)
+
+Nothing in the graph converted an installed capacity into generated energy. The
+tree carried eleven per-technology capacities, eleven capacity factors and a
+typed `hours_per_year`, and no equation multiplied them. The three
+`*_fuel_energy_definition` equations are the only capacity-to-energy identities
+present, and they output GJ of *fuel* — the input side of the efficiency the
+LCOEs divide by, not electricity.
+
+The consequence was measurable. `generation_twh` was determined by
+`energy_balance` from demand and losses alone, so no capacity could move it.
+At the shipped defaults the fleet at its own capacity factors makes **68.065
+TWh**; the graph reported **51.554**. Zeroing any single technology's capacity
+left `generation_twh` unchanged to twelve decimal places.
+
+**The consumer problem, and why the obvious repair is the wrong one.** Twelve
+per-technology LCOEs were derived with no reader: the graph computed a ranking
+— hydro 60.24, wind 63.67, solar 70.31, geothermal 79.16, biomass 87.27,
+nuclear 104.19, gas 113.17, coal 119.81, offshore 121.00, csp 212.63, oil
+344.03 — and nothing consumed it. Weighting those by generation and calling the
+result a fleet LCOE is what the sources refuse. IEA/NEA reports that "the system
+value of variable renewables such as wind and solar decreases as their share in
+the power supply increases" (`iea_nea_egc_2020.txt:1143-1146`), so a fixed weight
+vector is not a system cost, and that a per-technology indicator "depends on
+some sort of allocation of the overall system costs between technologies"
+(`:18762-18766`). What the literature does state completely is EIA's levelized
+avoided cost of electricity and the value-cost ratio
+`LACE / LCOE`, with its threshold stated exactly — "greater than one indicates
+that the marginal new unit brings in value higher than its cost"
+(`eia_lcoe_methodology.txt:194-196`). So the ranking is coupled through LACE and
+a value-cost ratio, and no fleet LCOE was manufactured.
+
+**Three designs written and reverted, each wrong for a different reason.** The
+first hung one `least_cost_lcoe_usd_per_mwh = min(...)` over the eleven LCOEs
+with one ratio off it. It baked, propagated, and reported sane values — then
+took twenty tests red. `dsl.py:1243-1251` refuses `min` in a derivative:
+*"'min' has no derivative rule; it is non-differentiable where its arguments
+cross, and a formula that hid that would be used in a solver that then
+oscillates."* One node therefore broke `gradients()`, `sensitivity()`, the
+conflict-lever machinery (a conflict on the fleet's cost offered **zero** levers)
+and the unit walker, which reported `undecidable` on a node the graph ships. A
+node no gate can read is worse than no node. It was also the wrong metric: EIA
+defines the value-cost ratio on a *candidate* project, not on the cheapest one.
+
+The second replaced `min()` with a single `lace_usd_per_mwh` shared by all
+eleven ratios. It passed the full suite — 212 tests — and was still wrong on the
+arithmetic, in exactly the way batch 45 was wrong. Its capacity term divides by
+generating hours, so it divided by the **generic** `capacity_factor` (0.35) for
+coal at 0.75 and oil at 0.15 alike; and it multiplied by `vre_capacity_credit`
+(0.15) for nuclear and coal, which are available at the peak and suffer no
+intermittent haircut. Both sides read `USD/MWh`, so the unit walker could not see
+it. The defect is invisible at the shipped defaults — `capacity_market` is 0, so
+the whole capacity term vanishes — and only appears when a capacity market is
+live. At `capacity_market = 1` the single-LACE design priced coal's capacity
+revenue at 1.957 USD/MWh against a correct 6.088, and oil's at 1.957 against
+30.441, a 15× understatement on the peaker.
+
+The third is what ships: eleven `lace_{tech}_usd_per_mwh` nodes, each on its own
+capacity factor and its own credit, and eleven `lcoe_value_cost_ratio_{tech}`
+off them. EIA computes the ratio per technology — "we calculate LACE-to-LCOE …
+ratios for each technology" (`eia_lcoe_methodology.txt:191`) — so this is the
+faithful shape, not a workaround. The dispatchable credit is 1.0, matching
+`firm_capacity_definition`, which already counts `thermal_capacity_mw` at full
+nameplate in the reserve margin; a LACE that derated it would state a second,
+contradictory rule for the same quantity.
+
+**A basis error of my own, caught before the first bake.** The original LACE
+draft used `capture_price_usd_per_mwh` — the VRE cannibalisation price — as the
+energy term. Applying a VRE adjustment to technologies that suffer no
+cannibalisation haircut is the same class of defect: both sides read `USD/MWh`,
+the arithmetic is wrong by the adjustment factor, and no unit check can see it.
+It read as VCR 0.729 — "no build is economic" — against 1.079 once the energy
+term was EIA's actual definition, the marginal price.
+
+**Measured after the bake.** `fleet_generation_twh` 68.065, `generation_twh`
+51.554, `fleet_generation_headroom` 1.320. At the shipped defaults
+(`capacity_market` 0) every LACE collapses to the marginal price of 65.00 and
+the ratios are hydro 1.079 and onshore wind 1.021 clearing their cost, solar
+0.924, geothermal 0.821, biomass 0.745, nuclear 0.624, gas 0.574, coal 0.543,
+offshore wind 0.537, csp 0.306, oil 0.189 failing it. At `capacity_market = 1`
+the capacity term separates on each technology's own basis and the ratios move
+to hydro 1.217, onshore 1.048, solar 0.969, geothermal 0.889, biomass 0.820,
+nuclear 0.673, gas 0.642, coal 0.593, offshore 0.551, csp 0.314, oil 0.277.
+
+Canaries, each measured: zeroing coal drops the fleet total by exactly 19.710
+TWh and the headroom to 0.938; zeroing solar by 19.272 and to 0.946;
+`coal+solar = 0` takes headroom to 0.564, firing the adequacy rule.
+`capex_hydro +3000` takes the hydro ratio 1.079 → 0.517, crossing EIA's
+threshold downward. `fuel_price_usd_per_mwh 10` takes every LACE to 35.00 and
+pushes **all eleven** ratios below one, firing the economic rule; at 80 the
+fossil ratios fall (coal 0.876, gas 0.928, offshore 0.868) while the
+low-fuel-cost technologies clear. All eleven LACE values were checked against an
+independent closed form to 1e-9, and the fleet sum against the sum of its eleven
+terms to machine precision.
+
+**What this batch does not do.** It does not force `generation_twh` to equal the
+fleet's potential, and it should not: 1.32× headroom is a fleet with surplus
+capacity, and an equality would model a system spilling a third of its output.
+The relationship is a `geq` — the fleet must be able to serve the load — which
+is the constraint a planning exercise needs, plus the ratio as a reported
+quantity. `thermal_capacity_mw` still ships 7500 against leaves summing 4900;
+that is a separate finding and a separate batch.
+
+Counts: 1426 nodes, 601 equations, 1342 edges, 57 rules; uncoupled holds at 234
+— the new equations name operands that were already coupled, and all
+thirty-five new nodes are derived (the batch adds 35 nodes and 36 equations). Units 600 consistent, 1 inconsistent
+(`rocof_definition`, pre-existing), 3 exempt, **0 undecidable** — the figure the
+`min()` draft had broken and this design restores. `structure_issues()` is empty
+after the `affects` repair on the two exogenous operands the batch newly reads
+(`hours_per_year`, `vre_capacity_credit`).
+
 
 ## Not built
 

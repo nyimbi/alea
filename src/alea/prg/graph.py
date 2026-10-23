@@ -688,6 +688,16 @@ class ParameterGraph:
 		exogenous node is an input a scenario is expected to set, and nothing
 		downstream of these 781 reads them, so calling them inputs would claim a
 		consumer that does not exist.
+
+		**A deprecated node is not filtered out here, and that is deliberate.**
+		This register states a structural fact about the document -- no equation
+		names this node -- and a tombstone satisfies it. Whether a node may be
+		*set* is :meth:`is_settable`'s question, and that predicate does exclude
+		tombstones. Three nodes carry the status at present
+		(``cross_border_trading``, ``demand_growth_rate``,
+		``pm25_relative_risk_per_kt``), and every consumer that means "the live
+		unread surface" subtracts them by name rather than trusting this method
+		to have done it silently.
 		"""
 		named = {
 			name

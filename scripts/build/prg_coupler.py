@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "46":
+		b46_nodes, b46_equations, b46_edges, b46_rules = build_batch46(graph)
+		rules.extend(b46_rules)
+		nodes.update(b46_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b46_equations)
+		edges = list(BATCH12_EDGES) + b46_edges
 	elif batch == "45":
 		b45_nodes, b45_equations, b45_edges, b45_rules = build_batch45(graph)
 		rules.extend(b45_rules)
@@ -11993,6 +12000,748 @@ def build_batch45(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 			"reference": _BATCH45_SOURCE,
 			"priority": "P1",
 		})
+
+	return nodes, equations, edges, rules
+
+
+_BATCH46_SOURCE = "The capacity-to-energy repair (batch 46)"
+
+#: The eleven generating technologies the graph models per-technology, with the
+#: capacity node and the capacity factor each one's annual output is computed
+#: from. The pair is the operand set of the generation identity, and it is
+#: written once here so the fleet total, the per-technology totals and the
+#: least-cost ranking cannot drift apart.
+_BATCH46_TECHS: tuple[tuple[str, str, str, str], ...] = (
+	("coal", "coal_capacity", "capacity_factor_coal", "lcoe_coal_usd_per_mwh"),
+	("gas", "gas_capacity", "capacity_factor_gas", "lcoe_gas_usd_per_mwh"),
+	("oil", "oil_capacity", "capacity_factor_oil", "lcoe_oil_usd_per_mwh"),
+	("biomass", "biomass_capacity", "capacity_factor_biomass", "lcoe_biomass_usd_per_mwh"),
+	("nuclear", "nuclear_capacity", "capacity_factor_nuclear", "lcoe_nuclear_usd_per_mwh"),
+	("hydro", "hydro_capacity", "capacity_factor_hydro", "lcoe_hydro_usd_per_mwh"),
+	("solar_pv", "solar_pv_capacity", "solar_pv_capacity_factor", "lcoe_solar_usd_per_mwh"),
+	("wind_onshore", "wind_onshore_capacity", "capacity_factor_wind_onshore", "lcoe_wind_usd_per_mwh"),
+	("wind_offshore", "wind_offshore_capacity", "capacity_factor_wind_offshore", "lcoe_wind_offshore_usd_per_mwh"),
+	("csp", "csp_capacity", "capacity_factor_csp", "lcoe_csp_usd_per_mwh"),
+	("geothermal", "geothermal_capacity", "capacity_factor_geothermal", "lcoe_geothermal_usd_per_mwh"),
+)
+
+
+def _batch46_generation_rhs(capacity: str, capacity_factor: str) -> str:
+	"""The generation identity, spelled the way the graph's own precedents do.
+
+	`capacity * capacity_factor * hours_per_year / 1000000` is
+	`coal_fuel_energy_definition`'s spelling with the fuel divisor removed and
+	the MWh-to-TWh conversion added. `hours_per_year` rather than a bare 8760
+	because the unit walker reads a literal as dimensionless and the typed node
+	as h/year -- the reason the node exists, stated in its own description.
+	"""
+	return f"{capacity} * {capacity_factor} * hours_per_year / 1000000"
+
+
+def build_batch46(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Give the fleet an energy output, and the LCOE ranking a consumer.
+
+	Two findings, both measured against the loaded graph before this batch
+	touched anything.
+
+	*Nothing converted an installed capacity into generated energy.* The graph
+	carries eleven per-technology capacities, eleven capacity factors and a
+	typed `hours_per_year`, and not one equation multiplied them. The three
+	`*_fuel_energy_definition` equations are the only capacity-to-energy
+	identities in the tree, and they output GJ of *fuel*, not MWh of
+	electricity -- they convert a plant's size into the heat it burns, which is
+	the input side of the efficiency the LCOEs divide by. The consequence is
+	that `generation_twh` was determined by `energy_balance` from demand and
+	losses alone, and no capacity could move it. Measured: the fleet at its own
+	capacity factors makes 68.065 TWh, the graph reported 51.554, and zeroing
+	any single technology's capacity left `generation_twh` unchanged to twelve
+	decimal places.
+
+	*Twelve per-technology LCOEs were derived with no reader.* The graph
+	computed a technology ranking -- hydro 60.24, wind 63.67, solar 70.31,
+	geothermal 79.16, biomass 87.27, nuclear 104.19, gas 113.17, coal 119.81,
+	offshore wind 121.00, csp 212.63, oil 344.03 USD/MWh -- and nothing
+	consumed it. No least-cost build, no merit order, no capacity target. That
+	is the "declared is not produced" class on the graph's own headline output.
+
+	*Why the consumer is LACE and not a fleet-average LCOE.* The obvious repair
+	-- weight the eleven by generation and call the result the fleet's levelised
+	cost -- is the one the sources refuse. IEA/NEA's *Projected Costs of
+	Generating Electricity* reports that "the system value of variable
+	renewables such as wind and solar decreases as their share in the power
+	supply increases" (`iea_nea_egc_2020.txt:1143-1146`), so a fixed weight
+	vector is not a system cost, and warns that a per-technology
+	indicator "depends on some sort of allocation of the overall system costs
+	between technologies, raising methodological difficulties" (`:18762-18766`).
+	What
+	the literature does state, completely, is the companion metric: EIA's
+	levelized avoided cost of electricity, defined as a per-MW revenue stream
+	divided by generating hours (`eia_lcoe_methodology.txt:168-174`), and the
+	value-cost ratio `LACE / LCOE` whose threshold is stated exactly -- "greater
+	than one indicates that the marginal new unit brings in value higher than
+	its cost" (`:194-196`). So this batch couples the ranking through LACE and
+	the value-cost ratio, both of which are claims the sources make, and does
+	*not* manufacture a fleet LCOE the sources do not define.
+
+	*The consumer, and why it is per technology rather than a minimum.* Each of
+	the eleven LCOEs gets its own `lace_{tech}_usd_per_mwh` and its own
+	`lcoe_value_cost_ratio_{tech}` -- `LACE / LCOE` -- and one rule fires when
+	every ratio sits below one. Three wrong designs were written and reverted
+	before this one, and each failed for a different reason worth recording.
+
+	The first was a single `least_cost_lcoe_usd_per_mwh = min(...)` over the
+	eleven, with one ratio hung off it. The DSL has no derivative rule for
+	`min` (`dsl.py:1243-1251`), so that one node made `gradients()`,
+	`sensitivity()`, every conflict lever and the unit walker fail at once: a
+	gate reporting *undecidable* on a node the graph ships is worse than no
+	node. It was also the wrong metric -- EIA defines the value-cost ratio on a
+	*candidate* project, not on the cheapest one.
+
+	The second was a single `lace_usd_per_mwh` shared by all eleven ratios.
+	That one propagated and looked right, and was still wrong on the
+	arithmetic, in exactly the way batch 45 was wrong: its capacity term
+	divides by generating hours, so it divided by the *generic*
+	`capacity_factor` (0.35) for coal at 0.75 and oil at 0.15 alike, and it
+	multiplied by `vre_capacity_credit` (0.15) for nuclear and coal, which are
+	available at the peak and suffer no intermittent haircut. Both sides read
+	USD/MWh; no unit check can see it. EIA computes the ratio per technology
+	("we calculate LACE-to-LCOE ... ratios for each technology", `:191`), so
+	eleven LACE nodes, each on its own capacity factor and its own credit, is
+	the faithful shape rather than a workaround. The dispatchable credit is
+	1.0, matching `firm_capacity_definition`, which already counts
+	`thermal_capacity_mw` at full nameplate in the reserve margin.
+
+	Short, Packey & Holt's ranking claim (`short_1995:2685-2688`) is served by
+	the ratios' ordering without needing a node that picks the winner. The rule
+	terminates the diagnostic, which is the established terminal for such a
+	claim in this graph -- `equity_irr_estimate` is derived with no equation
+	reader and one rule, and is the precedent.
+
+	*What this batch does not do.* It does not make `generation_twh` equal to
+	the fleet's potential, and it should not: a fleet with 1.32x the energy its
+	load needs is a fleet with headroom, and forcing the balance to consume all
+	of it would model a system that spills a third of its output. What it does
+	instead is state the relationship as a `geq` -- the fleet must be able to
+	serve the load, which is the constraint a planning exercise actually needs
+	-- and expose the ratio as a reported quantity. It also does not fix
+	`thermal_capacity_mw`, which ships 7500 against leaves summing 4900; that is
+	a separate finding and a separate batch.
+	"""
+	from alea.prg.dsl import parse_side
+	from alea.prg.graph import default_prg_path
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	# ------------------------------------------------------------------
+	# 1. The generation identity, per technology, and its fleet total.
+	# ------------------------------------------------------------------
+	# Each technology's annual output. The node ids follow the `*_generation_twh`
+	# convention `renewable_generation_twh` established.
+	generation_terms: list[str] = []
+	for tech, capacity, capacity_factor, _lcoe in _BATCH46_TECHS:
+		name = f"{tech}_generation_twh"
+		assert name not in graph.nodes, f"{name}: already ships; this batch assumed it did not"
+		assert capacity in graph.nodes, f"{capacity}: the identity's operand does not exist"
+		assert capacity_factor in graph.nodes, f"{capacity_factor}: the identity's operand does not exist"
+		nodes[name] = {
+			"id": name,
+			"name": f"{tech.replace('_', ' ').capitalize()} generation",
+			"description": (
+				f"Annual electrical output of the {tech.replace('_', ' ')} fleet: "
+				"installed capacity times the technology's capacity factor times "
+				"the hours in a year. This is the identity the per-technology "
+				"LCOEs already use as their denominator -- `lcoe_coal_definition` "
+				"divides an annualised cost by `8760 * capacity_factor_coal` -- "
+				"stated here as an energy total so the fleet's output is a "
+				"quantity a balance can read rather than a factor inside a cost."
+			),
+			"category": "Physical",
+			"subcategory": "generation",
+			"type": "float",
+			"unit": "TWh/year",
+			"range": [0.0, 500.0],
+			"default": None,
+			"initial": None,
+			"role": "derived",
+			"determinism": "physical",
+			"categories": [],
+			"source": _BATCH46_SOURCE,
+			"source_url": None,
+			"users": ["Planners", "Investors", "Regulators"],
+			"priority": "P1",
+			"status": "to_build",
+			"deprecated_by": None,
+		}
+		rhs = _batch46_generation_rhs(capacity, capacity_factor)
+		named = set(parse_side(rhs).symbols) | {name}
+		equations[f"{tech}_generation_definition"] = {
+			"id": f"{tech}_generation_definition",
+			"name": f"{tech.replace('_', ' ').capitalize()} annual generation",
+			"description": (
+				"Annual output at the technology's own capacity factor. NREL ATB "
+				"2025 defines the capacity factor as 'the ratio of actual annual "
+				"output to output at rated capacity for an entire year' and writes "
+				"the per-MW output as `CF x 8,760`; EIA's LCOE methodology works "
+				"the arithmetic for a 1 MW turbine -- 'Generating hours = 30% x "
+				"8,760 hours/year = 2,628 hours/year' -- and reports the result as "
+				"'2,628 MWh/MW (2,628 equivalent operating hours)'; Short, Packey "
+				"& Holt define the ratio the identity inverts. The identity is "
+				"stated in three parts across the three sources rather than once, "
+				"which is why this equation cites all three."
+			),
+			"system": "energy_balance",
+			"lhs": name,
+			"rhs": rhs,
+			"relation": "eq",
+			"parameters": sorted(named),
+			"free_variables": sorted(named - {name}),
+			"determined_variables": [name],
+			"tolerance": 1.0e-09,
+			"unit_check": True,
+			"solution_method": "direct",
+			"linearity": "linear",
+			"priority": "P1",
+			"reference": (
+				"NREL ATB 2025, Equations and Variables (capacity factor and the "
+				"CF x 8,760 denominator); EIA AEO LCOE Methodology, generating-hours "
+				"arithmetic; Short, Packey & Holt (1995) NREL/TP-462-5173, capacity "
+				"factor definition"
+			),
+			"latex": rf"{name} = P_{{{tech}}} \cdot CF_{{{tech}}} \cdot 8760 / 10^6",
+		}
+		generation_terms.append(name)
+		for sym in (capacity, capacity_factor, "hours_per_year"):
+			edges.append({
+				"source": sym,
+				"target": name,
+				"equation_id": f"{tech}_generation_definition",
+				"relationship": "functional",
+				"strength": "hard",
+				"description": (
+					"Enters the annual-output identity: a plant's size, the share "
+					"of the year it runs, and the hours in the year are what turn "
+					"a nameplate rating into energy."
+				),
+				"reference": _BATCH46_SOURCE,
+				"priority": "P1",
+			})
+
+	# The fleet total. Spelled as a flat sum, the convention
+	# `fleet_build_balance` already uses, because `sum(... for i in range(n))`
+	# requires integer-literal bounds and the technology list is data.
+	fleet_rhs = " + ".join(generation_terms)
+	fleet_name = "fleet_generation_twh"
+	assert fleet_name not in graph.nodes, f"{fleet_name}: already ships"
+	nodes[fleet_name] = {
+		"id": fleet_name,
+		"name": "Fleet generation",
+		"description": (
+			"Annual electrical output of every modelled generating technology at "
+			"its own capacity factor: the sum of the eleven per-technology "
+			"outputs. This is the fleet's *capability*, not the energy the "
+			"balance dispatches -- a system with headroom generates less than "
+			"this, and the ratio of the two is `fleet_generation_headroom`. The "
+			"distinction is the one the graph was missing: before this node, a "
+			"scenario that retired the entire coal fleet reported the same "
+			"generation as one that built it."
+		),
+		"category": "Physical",
+		"subcategory": "generation",
+		"type": "float",
+		"unit": "TWh/year",
+		"range": [0.0, 5000.0],
+		"default": None,
+		"initial": None,
+		"role": "derived",
+		"determinism": "physical",
+		"categories": [],
+		"source": _BATCH46_SOURCE,
+		"source_url": None,
+		"users": ["Planners", "Regulators"],
+		"priority": "P1",
+		"status": "to_build",
+		"deprecated_by": None,
+	}
+	per_tech_names = {f"{t}_generation_twh" for t, _c, _cf, _l in _BATCH46_TECHS}
+	named = set(parse_side(fleet_rhs).symbols) | {fleet_name}
+	equations["fleet_generation_definition"] = {
+		"id": "fleet_generation_definition",
+		"name": "Fleet annual generation",
+		"description": (
+			"The fleet's annual electrical output capability: the sum of the "
+			"eleven per-technology outputs. Additive because the technologies "
+			"are separate plants whose outputs sum, and because no archived "
+			"source states a fleet-level aggregation rule beyond addition -- the "
+			"IEA/NEA caveat about weighting (`iea_nea_egc_2020.txt:2345`) is about "
+			"averaging *costs* across technologies, not about adding their "
+			"energies, which is what a balance requires."
+		),
+		"system": "energy_balance",
+		"lhs": fleet_name,
+		"rhs": fleet_rhs,
+		"relation": "eq",
+		"parameters": sorted(named),
+		"free_variables": sorted(named - {fleet_name}),
+		"determined_variables": [fleet_name],
+		"tolerance": 1.0e-09,
+		"unit_check": True,
+		"solution_method": "direct",
+		"linearity": "linear",
+		"priority": "P1",
+		"reference": (
+			"Additive over the generation identity; no archived source defines a "
+			"fleet aggregation beyond summation"
+		),
+		"latex": r"G_{fleet} = \sum_t P_t \cdot CF_t \cdot 8760 / 10^6",
+	}
+	for tech_name in sorted(per_tech_names):
+		edges.append({
+			"source": tech_name,
+			"target": fleet_name,
+			"equation_id": "fleet_generation_definition",
+			"relationship": "functional",
+			"strength": "hard",
+			"description": "One technology's annual output, summed into the fleet's.",
+			"reference": _BATCH46_SOURCE,
+			"priority": "P1",
+		})
+
+	# The headroom ratio: capability against what the balance actually dispatches.
+	headroom_name = "fleet_generation_headroom"
+	assert headroom_name not in graph.nodes, f"{headroom_name}: already ships"
+	nodes[headroom_name] = {
+		"id": headroom_name,
+		"name": "Fleet generation headroom",
+		"description": (
+			"Fleet output capability divided by the generation the balance "
+			"dispatches. A ratio above one is a fleet that could produce more "
+			"than its load requires -- capacity headroom in energy terms, which "
+			"is a different statistic from the reserve margin, because the "
+			"reserve margin is measured at peak and this is measured over the "
+			"year. A ratio below one is a fleet that cannot serve its own load "
+			"at its stated capacity factors, and that is a planning failure the "
+			"graph could not previously express."
+		),
+		"category": "Physical",
+		"subcategory": "generation",
+		"type": "float",
+		"unit": "1",
+		"range": [0.0, 20.0],
+		"default": None,
+		"initial": None,
+		"role": "derived",
+		"determinism": "physical",
+		"categories": [],
+		"source": _BATCH46_SOURCE,
+		"source_url": None,
+		"users": ["Planners", "Regulators"],
+		"priority": "P1",
+		"status": "to_build",
+		"deprecated_by": None,
+	}
+	headroom_rhs = f"{fleet_name} / generation_twh"
+	named = set(parse_side(headroom_rhs).symbols) | {headroom_name}
+	equations["fleet_generation_headroom_definition"] = {
+		"id": "fleet_generation_headroom_definition",
+		"name": "Fleet generation headroom",
+		"description": (
+			"Capability over dispatch. `generation_twh` is what `energy_balance` "
+			"determines from demand and losses; `fleet_generation_twh` is what "
+			"the fleet can produce at its capacity factors. The ratio is the "
+			"fraction of the fleet's potential the system uses, and its "
+			"reciprocal is the spare energy. Dividing rather than subtracting "
+			"keeps the quantity scale-free, so a scenario that doubles both the "
+			"load and the fleet is not reported as a doubling of headroom."
+		),
+		"system": "energy_balance",
+		"lhs": headroom_name,
+		"rhs": headroom_rhs,
+		"relation": "eq",
+		"parameters": sorted(named),
+		"free_variables": sorted(named - {headroom_name}),
+		"determined_variables": [headroom_name],
+		"tolerance": 1.0e-09,
+		"unit_check": True,
+		"solution_method": "direct",
+		"linearity": "linear",
+		"priority": "P1",
+		"reference": "Ratio of the generation identity to the energy balance",
+		"latex": r"H = G_{fleet} / G_{dispatched}",
+	}
+	edges.append({
+		"source": fleet_name, "target": headroom_name,
+		"equation_id": "fleet_generation_headroom_definition",
+		"relationship": "functional", "strength": "hard",
+		"description": "The capability, as the ratio's numerator.",
+		"reference": _BATCH46_SOURCE, "priority": "P1",
+	})
+	edges.append({
+		"source": "generation_twh", "target": headroom_name,
+		"equation_id": "fleet_generation_headroom_definition",
+		"relationship": "functional", "strength": "hard",
+		"description": "The dispatched energy, as the ratio's denominator.",
+		"reference": _BATCH46_SOURCE, "priority": "P1",
+	})
+
+	# The adequacy constraint, in energy rather than at peak. `geq`, because the
+	# fleet must be able to serve the load; `leq` would be the reverse claim and
+	# is not what a planning exercise needs.
+	equations["fleet_energy_adequacy"] = {
+		"id": "fleet_energy_adequacy",
+		"name": "Fleet energy adequacy",
+		"description": (
+			"The fleet's annual output capability must be at least the energy "
+			"the balance dispatches. This is the energy-level companion to "
+			"`reserve_margin`, which bounds capacity against *peak* demand: a "
+			"fleet can clear the peak and still be unable to produce the energy "
+			"the year requires at its own capacity factors, and nothing in the "
+			"graph could express that before this equation. It is stated as an "
+			"inequality because a fleet with surplus capability is the normal "
+			"case -- the shipped defaults carry 1.32x -- and an equality would "
+			"force the system to spill."
+		),
+		"system": "energy_balance",
+		"lhs": fleet_name,
+		"rhs": "generation_twh",
+		"relation": "geq",
+		"parameters": [fleet_name, "generation_twh"],
+		"free_variables": [],
+		"determined_variables": [],
+		"tolerance": 1.0e-09,
+		"unit_check": True,
+		"solution_method": "direct",
+		"linearity": "linear",
+		"priority": "P1",
+		"reference": (
+			"Energy-level adequacy: the generation identity against the energy "
+			"balance; cf. ENTSO-E adequacy practice for the capacity-level analogue"
+		),
+		"latex": r"G_{fleet} \geq G_{dispatched}",
+	}
+	edges.append({
+		"source": fleet_name, "target": "generation_twh",
+		"equation_id": "fleet_energy_adequacy",
+		"relationship": "constraint", "strength": "hard",
+		"description": "The fleet's capability bounds the energy the balance may dispatch.",
+		"reference": _BATCH46_SOURCE, "priority": "P1",
+	})
+
+	# ------------------------------------------------------------------
+	# 2. The LCOE ranking, and its LACE consumer.
+	# ------------------------------------------------------------------
+	# LACE, per EIA's definition, and *per technology*. The first draft of this
+	# batch wrote a single `lace_usd_per_mwh` and hung all eleven ratios off
+	# it. That was wrong on the arithmetic, in the way batch 45 was wrong: the
+	# capacity term divides by generating hours, so it must divide by *this*
+	# technology's capacity factor -- coal runs 0.75 and oil 0.15, and one
+	# generic 0.35 misprices both -- and the capacity credit is a VRE concept,
+	# so applying `vre_capacity_credit` (0.15) to a nuclear plant that is
+	# available at peak is a basis substitution no unit check can see. Both
+	# sides read USD/MWh either way. EIA computes the ratio per technology
+	# ("we calculate LACE-to-LCOE ... ratios for each technology", `:191`), so
+	# eleven LACE nodes is the faithful shape, not a workaround.
+	#
+	# The dispatchable credit is 1.0, which is the graph's own established
+	# convention: `firm_capacity_definition` counts `thermal_capacity_mw` at
+	# full nameplate for the reserve margin, and a LACE that derated it here
+	# would state a second, contradictory rule for the same quantity. The VRE
+	# credit is `vre_capacity_credit`, the same node the reserve margin uses.
+	_vre_techs = frozenset({"solar_pv", "wind_onshore", "wind_offshore", "csp"})
+	lace_names: dict[str, str] = {}
+	for tech, _capacity, capacity_factor, _lcoe in _BATCH46_TECHS:
+		lace_name = f"lace_{tech}_usd_per_mwh"
+		assert lace_name not in graph.nodes, f"{lace_name}: already ships"
+		credit = "vre_capacity_credit" if tech in _vre_techs else "1.0"
+		nodes[lace_name] = {
+			"id": lace_name,
+			"name": f"{tech.replace('_', ' ').capitalize()} levelized avoided cost",
+			"description": (
+				"The value a marginal new "
+				f"{tech.replace('_', ' ')} unit earns per MWh: the system marginal "
+				"price plus the capacity revenue it collects, spread over its own "
+				"generating hours. EIA defines LACE as a proxy for the revenue a "
+				"candidate project earns by displacing another marginal asset, "
+				"summed over its financial life and annualised by dividing by "
+				"average annual electrical output -- so the capacity term is "
+				"divided by the same `CF x 8,760` this technology's LCOE uses as "
+				"its denominator. The energy term is `marginal_cost_usd_per_mwh`, "
+				"the short-run marginal cost of fuel plus carbon: EIA's own "
+				"definition sets the value by the variable cost of the most "
+				"expensive unit that needs to be dispatched, and under "
+				"marginal-cost bidding that variable cost is the clearing price. "
+				"The graph solves no merit order, so this is a representative "
+				"marginal unit's SRMC rather than a cleared price -- a limitation "
+				"the reader should know, since a scenario with a binding price "
+				"cap or market power would need a solved price instead."
+				+ (
+					" The capacity credit is `vre_capacity_credit`: an "
+					"intermittent resource is not counted at nameplate at the "
+					"peak, and the graph already derates it the same way in the "
+					"reserve margin."
+					if tech in _vre_techs
+					else " The capacity credit is 1.0: a dispatchable unit is "
+					"available at the peak, which is the convention "
+					"`firm_capacity_definition` already applies to "
+					"`thermal_capacity_mw`."
+				)
+			),
+			"category": "Cost",
+			"subcategory": "lcoe",
+			"type": "float",
+			"unit": "USD/MWh",
+			"range": [0.0, 1000.0],
+			"default": None,
+			"initial": None,
+			"role": "derived",
+			"determinism": "policy",
+			"categories": [],
+			"source": _BATCH46_SOURCE,
+			"source_url": None,
+			"users": ["Investors", "Planners"],
+			"priority": "P1",
+			"status": "to_build",
+			"deprecated_by": None,
+		}
+		lace_rhs = (
+			"marginal_cost_usd_per_mwh + capacity_market * capacity_price * "
+			f"{credit} / ({capacity_factor} * hours_per_year)"
+		)
+		named = set(parse_side(lace_rhs).symbols) | {lace_name}
+		equations[f"lace_{tech}_definition"] = {
+			"id": f"lace_{tech}_definition",
+			"name": f"{tech.replace('_', ' ').capitalize()} levelized avoided cost",
+			"description": (
+				"EIA's LACE for this technology, restricted to the two revenue "
+				"streams the graph models: energy and capacity. EIA's numerator "
+				"also carries spinning-reserve revenue, RPS compliance revenue "
+				"and an intermittent-limit cost; the graph has no node for the "
+				"first two and no binding intermittent cap for the third, so "
+				"omitting them is a scope statement rather than a silent zero -- "
+				"a scenario that needs them should add the nodes rather than "
+				"inflate the two terms that exist. The division by "
+				f"`{capacity_factor} x 8,760` is EIA's own annualisation: LACE is "
+				"a per-MWh value and a capacity payment is per MW-year.\n\n"
+				"The energy term is the marginal price, not `capture_price_"
+				"usd_per_mwh`: the capture price is a VRE-specific haircut for "
+				"cannibalisation, and this ratio is evaluated for dispatchable "
+				"technologies that suffer no such haircut. Applying a VRE "
+				"adjustment across the whole fleet is a basis substitution of "
+				"exactly the kind batch 45 repaired in the thermal LCOEs -- both "
+				"sides would read USD/MWh and the arithmetic would be wrong by "
+				"the cannibalisation factor. EIA's own LACE energy term is the "
+				"marginal price, so the faithful reading and the safe one agree."
+			),
+			"system": "cost_accounting",
+			"lhs": lace_name,
+			"rhs": lace_rhs,
+			"relation": "eq",
+			"parameters": sorted(named),
+			"free_variables": sorted(named - {lace_name}),
+			"determined_variables": [lace_name],
+			"tolerance": 1.0e-09,
+			"unit_check": True,
+			"solution_method": "direct",
+			"linearity": "linear",
+			"priority": "P1",
+			"reference": (
+				"EIA AEO Levelized Cost of Electricity Methodology, LACE "
+				"definition (energy revenue + capacity revenue, divided by "
+				"generating hours)"
+			),
+			"latex": (
+				rf"\mathrm{{LACE}}_{{{tech}}} = p_{{marginal}} + "
+				rf"\frac{{c_{{cap}} \cdot \kappa}}{{{capacity_factor} \cdot 8760}}"
+			),
+		}
+		lace_names[tech] = lace_name
+		for sym in sorted(named - {lace_name}):
+			edges.append({
+				"source": sym,
+				"target": lace_name,
+				"equation_id": f"lace_{tech}_definition",
+				"relationship": "functional",
+				"strength": "hard",
+				"description": (
+					"Enters the avoided-cost stream: the energy price, the "
+					"capacity payment and its credit, or the generating hours "
+					"that annualise it to a per-MWh value."
+				),
+				"reference": _BATCH46_SOURCE,
+				"priority": "P1",
+			})
+
+	# The value-cost ratio, per technology. EIA applies it to a candidate
+	# project, not to the cheapest one, so there is one ratio per technology
+	# and each of the eleven LCOEs this batch set out to couple gets its own
+	# reader. A single `min()` over the eleven was the compact spelling and is
+	# the wrong one twice over: the DSL has no derivative rule for `min` (so
+	# every gradient, conflict lever and unit check downstream of it fails),
+	# and the metric EIA defines is a comparison, not a minimum.
+	ratio_names: list[str] = []
+	for tech, _capacity, _cf, lcoe in _BATCH46_TECHS:
+		assert lcoe in graph.nodes, f"{lcoe}: the ratio's operand does not exist"
+		ratio_name = f"lcoe_value_cost_ratio_{tech}"
+		assert ratio_name not in graph.nodes, f"{ratio_name}: already ships"
+		nodes[ratio_name] = {
+			"id": ratio_name,
+			"name": f"{tech.replace('_', ' ').capitalize()} value-cost ratio",
+			"description": (
+				"This technology's LACE divided by its own LCOE. EIA states the "
+				"threshold exactly: 'A value-cost ratio greater than one "
+				"indicates that the marginal new unit brings in value higher "
+				"than its cost by displacing more expensive generation and "
+				"capacity options, and a value index of less than one indicates "
+				"that the cost of the marginal new unit of capacity exceeds its "
+				"value to the system.' A ratio below one for a technology is that "
+				"technology failing to earn its keep at the scenario's prices; a "
+				"fleet where every ratio is below one is a system where no "
+				"available build is economic."
+			),
+			"category": "Cost",
+			"subcategory": "lcoe",
+			"type": "float",
+			"unit": "1",
+			"range": [0.0, 100.0],
+			"default": None,
+			"initial": None,
+			"role": "derived",
+			"determinism": "policy",
+			"categories": [],
+			"source": _BATCH46_SOURCE,
+			"source_url": None,
+			"users": ["Investors", "Planners"],
+			"priority": "P1",
+			"status": "to_build",
+			"deprecated_by": None,
+		}
+		ratio_rhs = f"{lace_names[tech]} / {lcoe}"
+		named = set(parse_side(ratio_rhs).symbols) | {ratio_name}
+		equations[f"{ratio_name}_definition"] = {
+			"id": f"{ratio_name}_definition",
+			"name": f"{tech.replace('_', ' ').capitalize()} value-cost ratio",
+			"description": (
+				"EIA's value-cost ratio, `LACE / LCOE`, evaluated for this "
+				"technology on this technology's own basis -- its own capacity "
+				"factor in the generating-hours denominator and its own capacity "
+				"credit in the numerator. The ratio pairs the two metrics EIA "
+				"insists must be read together: 'LCOE and LCOS by themselves do "
+				"not capture all of the factors that contribute to actual "
+				"investment decisions, making direct comparisons of LCOE and LCOS "
+				"across technologies problematic and misleading as a method to "
+				"assess the economic competitiveness of various generation "
+				"alternatives.' This equation is the only reader of "
+				f"`{lcoe}`; before batch 46 that node was derived and consumed by "
+				"nothing."
+			),
+			"system": "cost_accounting",
+			"lhs": ratio_name,
+			"rhs": ratio_rhs,
+			"relation": "eq",
+			"parameters": sorted(named),
+			"free_variables": sorted(named - {ratio_name}),
+			"determined_variables": [ratio_name],
+			"tolerance": 1.0e-09,
+			"unit_check": True,
+			"solution_method": "direct",
+			"linearity": "linear",
+			"priority": "P1",
+			"reference": (
+				"EIA AEO Levelized Cost of Electricity Methodology, value-cost "
+				"ratio and its stated threshold"
+			),
+			"latex": rf"\mathrm{{VCR}}_{{{tech}}} = \mathrm{{LACE}}_{{{tech}}} / \mathrm{{LCOE}}_{{{tech}}}",
+		}
+		ratio_names.append(ratio_name)
+		for sym in (lace_names[tech], lcoe):
+			edges.append({
+				"source": sym,
+				"target": ratio_name,
+				"equation_id": f"{ratio_name}_definition",
+				"relationship": "functional",
+				"strength": "hard",
+				"description": "One side of the value-cost ratio.",
+				"reference": _BATCH46_SOURCE,
+				"priority": "P1",
+			})
+
+	# The two exogenous operands this batch newly reads are nodes whose
+	# `affects` list the *document* owns -- the loader strips it into
+	# `_declared` and the generator does not rebuild it. An edge added without
+	# the matching entry leaves `structure_issues()` reporting drift between
+	# what the node claims and what the arithmetic reads, which is what batch
+	# 45 hit on the efficiency nodes. Read the declared pair, add the targets
+	# this batch creates, and write both keys back as plain document keys.
+	# `hours_per_year` is read by the eleven generation identities and by the
+	# eleven LACE nodes; `vre_capacity_credit` only by the four intermittent
+	# LACE nodes, because the other seven carry a credit of 1.0 and name no
+	# node at all.
+	_new_targets = {
+		"hours_per_year": sorted(
+			{*(f"{t}_generation_twh" for t, _c, _cf, _l in _BATCH46_TECHS),
+			 *lace_names.values()}
+		),
+		"vre_capacity_credit": sorted(
+			lace_names[t] for t in _vre_techs if t in lace_names
+		),
+	}
+	# The node body is re-emitted from the *document*, not from `model_dump`:
+	# a dump fills in defaults the document never declared -- `priority: P2`,
+	# `users: []`, `categories: []` -- and writing those back would read as a
+	# policy choice this batch did not make. The graph does not retain the raw
+	# mapping, so it is read here.
+	_document = yaml.safe_load(default_prg_path().read_text())
+	for operand, targets in _new_targets.items():
+		declared = graph._declared.get(operand, ((), ()))
+		affects = set(declared[1]) | set(targets)
+		body = dict(_document["parameters"][operand])
+		body.pop("depends_on", None)
+		body.pop("affects", None)
+		body["depends_on"] = list(declared[0])
+		body["affects"] = sorted(affects)
+		nodes[operand] = body
+
+	# ------------------------------------------------------------------
+	# 3. The rules the two diagnostics terminate in.
+	# ------------------------------------------------------------------
+	rules.append({
+		"id": "no_technology_clears_its_cost",
+		"condition": " and ".join(f"{n} < 1.0" for n in ratio_names),
+		"severity": "warning",
+		"message": (
+			"No available technology earns back its levelised cost at this "
+			"scenario's energy and capacity prices. EIA's threshold is a ratio of "
+			"one: below it the marginal new unit's cost exceeds the value it "
+			"displaces. Every technology failing together is a system where no "
+			"build is economic, which is a stronger statement than any single "
+			"technology failing."
+		),
+		"suggestion": (
+			"Raise the marginal price or capacity_price, or check the "
+			"technologies' capex, capacity factors and fuel bases"
+		),
+		"parameters": list(ratio_names),
+	})
+	rules.append({
+		"id": "fleet_cannot_serve_its_own_load",
+		"condition": f"{headroom_name} < 1.0",
+		"severity": "error",
+		"message": (
+			"The fleet cannot produce the energy the balance dispatches at its "
+			"own capacity factors. This is distinct from the reserve-margin "
+			"failure: the fleet may clear the peak and still be unable to serve "
+			"the year, because adequacy at peak and adequacy over the year are "
+			"different constraints and the graph previously carried only the "
+			"first."
+		),
+		"suggestion": (
+			"Raise a generating capacity, raise a capacity factor, or lower the "
+			"demand the balance dispatches"
+		),
+		"parameters": [headroom_name],
+	})
 
 	return nodes, equations, edges, rules
 
