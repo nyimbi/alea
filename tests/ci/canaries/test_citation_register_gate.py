@@ -39,7 +39,14 @@ sys.exit(pytest.main(["-q", "-p", "no:randomly",
 #: returning `False` unconditionally is the smallest edit that makes *every*
 #: citation unresolvable -- so the gate must report every citation as
 #: unregistered rather than reporting none.
-TARGET = "return any(needle.casefold() in haystack for needle in self.cites)"
+#:
+#: The needle set is ``(*self.cites, self.key)`` since batch 44 taught the join
+#: to read a row's own key, not only the spellings its ``cites`` column lists.
+#: The target string was left on the pre-batch-44 spelling, so this canary had
+#: been failing at its own guard -- "canary target not found" -- rather than
+#: exercising the gate. A canary whose patch does not apply is a canary that
+#: did not run, and the guard is what said so.
+TARGET = "return any(needle.casefold() in haystack for needle in needles)"
 
 
 def test_the_citation_gate_fails_when_the_join_is_blinded():

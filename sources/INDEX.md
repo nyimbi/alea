@@ -62,7 +62,7 @@ citing or a row added and never wired.
 | swing_equation | Swing equation at t=0 (df/dt = -P_loss / (2 H S)) | | | | | n/a | Swing equation |
 | n1_criterion | N-1 planning criterion | | | | | n/a | Standard N-1 planning criterion |
 | nrel_atb_2025 | Annual Technology Baseline 2025, Equations & Variables | NREL | 2025 | https://atb.nlr.gov/electricity/2025/equations_&_variables | Public domain (US govt) | sources/archive/nrel_atb_2025_equations.html | NREL ATB 2025 Equations & Variables; NREL ATB battery equations |
-| eia_lcoe_methodology | Levelized Cost of Electricity Methodology (AEO supplement) | EIA | 2024 | https://www.eia.gov/outlooks/aeo/electricity_generation/pdf/LCOE_methodology.pdf | Public domain (US govt) | sources/archive/eia_lcoe_methodology.pdf | EIA AEO LCOE methodology |
+| eia_lcoe_methodology | Levelized Cost of Electricity Methodology (AEO supplement) | EIA | 2024 | https://www.eia.gov/outlooks/aeo/electricity_generation/pdf/LCOE_methodology.pdf | Public domain (US govt) | sources/archive/eia_lcoe_methodology.pdf | EIA AEO LCOE methodology; EIA AEO Levelized Cost of Electricity Methodology |
 | short_1995 | A Manual for the Economic Evaluation of Energy Efficiency and Renewable Energy Technologies, NREL/TP-462-5173 | Short, Packey & Holt | 1995 | https://www.nrel.gov/docs/legosti/old/5173.pdf | Public domain (US govt) | sources/archive/short_packey_holt_1995.pdf | Short, Packey & Holt (1995), NREL/TP-462-5173 |
 | ukrn_cost_of_capital | Guidance for regulators on the methodology for setting the cost of capital | UK Regulators Network | 2023 | https://ukrn.org.uk/app/uploads/2023/03/CoC-guidance_22.03.23.pdf | UKRN terms (free) | sources/archive/ukrn_cost_of_capital_2023.pdf | UKRN cost of capital guidance (2023), §allowed returns; UKRN cost of capital guidance (2023), §overall framework; Ofwat PR24 Appendix 11, allowed return on capital |
 | eia_demand_elasticities | Review of Key International Demand Elasticities | EIA / Stanford EMF | 2017 | https://www.eia.gov/workingpapers/pdf/key_international_demand_elasticities.pdf | Public domain (US govt) | sources/archive/eia_international_demand_elasticities.pdf | EIA/Stanford EMF demand elasticities |
@@ -70,6 +70,8 @@ citing or a row added and never wired.
 | world_bank_regulation | Handbook for Evaluating Infrastructure Regulatory Systems | Brown, Stern & Tenenbaum, World Bank | 2006 | https://openknowledge.worldbank.org/handle/10986/7030 | World Bank copyright (free download; permission normally granted) | sources/archive/world_bank_regulating_utilities_handbook.pdf | World Bank Regulation of Utilities handbook, revenue caps; Pass-through pricing; World Bank, Regulation of Utilities handbook |
 | fuel_tables | Standard fuel properties: LHV of ammonia 18.6 GJ/t, hydrogen 33.33 kWh/kg, 5.8 MMBtu/barrel crude, 0.29307 MWh/MMBtu HHV | | | | | n/a | LHV of NH3: 18.6 GJ/t (standard fuel tables); LHV of H2: 33.33 kWh/kg (standard fuel tables); EIA conversion basis (5.8 MMBtu/barrel); Physical constant: 1 MMBtu = 0.29307 MWh (HHV); EIA conversion basis (5.8 MMBtu/barrel); physical constant 0.29307 MWh/MMBtu |
 | catalog_method_cells | The catalog's own method cells as coupling provenance (bottom-up synthesis, rate-of-return) | | | | | n/a | Bottom-up load synthesis (catalog method cell) |
+| fleet_generation_identity | Additive over the generation identity, and the headroom ratio against the energy balance — arithmetic on quantities the tree already declares | | | | | n/a | Additive over the generation identity; Ratio of the generation identity to the energy balance |
+| energy_level_adequacy | Energy-level adequacy: the generation identity against the energy balance, the energy analogue of ENTSO-E's capacity-level practice | | | | | n/a | Energy-level adequacy: the generation identity against the energy balance |
 | fragments_alias_register | The generated fragments' alias register, applied as equality equations | | | | | n/a | The fragments' alias register (docs/param_batch7.md and successors), applied |
 | leontief_multipliers | Input-output employment multipliers (the demand-pull chain) | | | | | n/a | Leontief input-output employment multipliers |
 | lazar_lcos | Lazard's Levelized Cost of Storage Analysis -- Version 7.0 | Lazard | 2021 | https://www.lazard.com/research-insights/levelized-cost-of-energy-levelized-cost-of-storage-and-levelized-cost-of-hydrogen-2021/ | Proprietary (free download from Lazard) | sources/archive/lazard_lcos_v7.pdf | Lazard LCOS |
@@ -90,7 +92,7 @@ citing or a row added and never wired.
 | ieee_1366_tutorial | IEEE Guide for Electric Power Distribution Reliability Indices (1366), tutorial deck; IEEE Std 1366 (distribution reliability) | IEEE Boston PES | 2019 | https://site.ieee.org/boston-pes/files/2019/03/IEEE-1366-Reliability-Indices-2-2019.pdf | IEEE (c) | sources/archive/ieee_1366_reliability_tutorial.pdf | IEEE Guide for Electric Power Distribution Reliability Indices (1366), tutorial deck; IEEE Std 1366 (distribution reliability) |
 | eu_ets_2023_959 | Directive (EU) 2023/959 amending Directive 2003/87/EC -- Art. 21 auction platform and price formation | European Parliament and Council | 2023 | https://eur-lex.europa.eu/eli/dir/2023/959/oj | EU terms (reusable with attribution, Decision 2011/833/EU) | | EU ETS Directive 2023/959, Art. 21 (auction platform and price formation) |
 | verra_gold_standard | Verified Carbon Standard and Gold Standard avoided-emissions accounting (project methodologies and the buffer-pool permanence rules) | Verra / Gold Standard Foundation | | https://verra.org/methodologies/ | Verra and Gold Standard terms (methodologies free to read) | | Verra/Gold Standard avoided-emissions accounting |
-| mtf_energy_access | Multi-Tier Framework for Measuring Energy Access (household access survey and tier definitions) | ESMAP, World Bank | 2015 | https://www.esmap.org/node/59623 | World Bank copyright (free download) | | Multi-Tier Framework (MTF) energy access measurement |
+| mtf_energy_access | Beyond Connections: Energy Access Redefined — ESMAP Technical Report 008/15 (the Multi-Tier Framework's tier definitions) | ESMAP, World Bank | 2015 | https://openknowledge.worldbank.org/handle/10986/24368 | World Bank copyright (free download) | sources/archive/mtf_energy_access.pdf | Multi-Tier Framework (MTF) energy access measurement |
 | oecd_action4_2015 | Limiting Base Erosion Involving Interest Deductions and Other Financial Payments, Action 4 (2015 Final Report) | OECD / G20 | 2015 | https://www.oecd.org/tax/beps/limiting-base-erosion-involving-interest-deductions-and-other-financial-payments-action-4-2015.pdf | OECD terms (free to read) | | OECD, Limiting Base Erosion Involving Interest Deductions and Other Financial Payments, Action 4 (2015) |
 | inventory_carrying_cost | Standard inventory carrying-cost accounting: holding cost as a rate on average inventory value | | | | | n/a | Standard inventory carrying-cost accounting |
 | hou_2008_china | Electricity Consumption and Economic Growth in China: Multivariable Cointegration Analysis | Hou & Tan, North China Electric Power University | 2008 | https://doi.org/10.1109/wicom.2008.1932 | Proprietary (IEEE paywall) | | Hou & Tan 2008; Electricity Consumption and Economic Growth in China |
@@ -131,23 +133,41 @@ the row evidence rather than a pointer.
 | sources/archive/world_bank_regulating_utilities_handbook.pdf | 4f65e2264a5d6b815f5e0603b56b53bd8a66c8c7573c77cd4199e8a361d25926 |
 | sources/archive/lazard_lcos_v7.pdf | 61b0adf3ab51a30131b1b0a0dfecb0bb76df9a5e55cae8d5e416a7f0d772fd58 |
 | sources/archive/cbam_regulation_2023_956.pdf | 5cd8fa27cb441333e20a93ec9f1d86bac29d5740f76c8d82a55aa292d721d8ca |
+| sources/archive/mtf_energy_access.pdf | 9d23881ad861edf38f409cb3ed4a600c6b295b3ffb78261c6ed42ee278d1c26b |
 
-## Why five rows are `n/a`
+## Why some rows are `n/a`
 
-It is worth being explicit, because a reader who sees five rows with no custodian
-will assume the register is incomplete rather than that the citations are a
-different kind of claim.
+Twenty-three of the register's rows carry `n/a` in the archived column, and it is
+worth being explicit, because a reader who sees them with no custodian will assume
+the register is incomplete rather than that the citations are a different kind of
+claim.
 
-`crf_definition` cites "the standard annuity formula". `wacc_definition` cites
-"the standard WACC with the interest tax shield". `rocof_definition` cites "the
-swing equation at t=0". `tariff_cost_recovery` cites "average-cost pricing".
-`reserve_margin` cites "the standard N-1 planning criterion".
+Five are textbook derivations: `crf_definition` cites "the standard annuity
+formula", `wacc_definition` cites "the standard WACC with the interest tax
+shield", `rocof_definition` cites "the swing equation at t=0",
+`tariff_cost_recovery` cites "average-cost pricing", and `reserve_margin` cites
+"the standard N-1 planning criterion". Each names a *derivation*, not a work.
+They are in every power-systems textbook and no one of them is the source: the
+equation is correct because the algebra is, and the citation is telling the reader
+which textbook result is being used rather than attributing a number to a
+measurement. An entry with a plausible-looking paper attached would be the more
+comfortable row and the less honest one.
 
-Each names a *derivation*, not a work. They are in every power-systems textbook
-and no one of them is the source: the equation is correct because the algebra is,
-and the citation is telling the reader which textbook result is being used rather
-than attributing a number to a measurement. An entry with a plausible-looking
-paper attached would be the more comfortable row and the less honest one.
+The rest are the same kind of claim one level down: an identity the tree states
+about its *own* quantities (`fleet_generation_identity`,
+`catalog_duplicate_resolutions`, `marginal_cost_split`, `standard_fiscal`,
+`fisher_equation`, `bis_credit_spread`, `vat_tariffs`, `pass_through_pricing`,
+`inventory_carrying_cost`, `fuel_tables`, `leontief_multipliers`,
+`composition_shares`, `benefit_sharing_shares`, `guarantee_risk_pricing`,
+`fiscal_definitions`, `catalog_method_cells`, `fragments_alias_register`) or an
+adequacy criterion applied at the energy level rather than the capacity level
+(`energy_level_adequacy`). There is no work to archive for "the generation
+identity is additive"; archiving a paper would imply the identity needed one.
+
+The rows that *do* name a custodian are the ones where a specific institution's
+figure or method is being adopted — IRENA's cost statistics for the learning
+curve, WHO's concentration-response function for premature deaths, ENTSO-E's
+adequacy practice for the reserve margin, and IEA/NEA's LCOE definition.
 
 The four that *do* name a custodian are the ones where a specific institution's
 figure or method is being adopted — IRENA's cost statistics for the learning
