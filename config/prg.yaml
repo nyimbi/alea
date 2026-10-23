@@ -36011,39 +36011,93 @@ equations:
   fleet_emission_intensity_definition:
     id: fleet_emission_intensity_definition
     name: Fleet emission intensity
-    description: The fleet average emission factor at the current build. The shipped body multiplied the
-      coal adoption share into the whole fleet, which made one fuel's dial reduce every tonne the fleet
-      emitted and left the gas dial with no effect at all. The capture share is a capacity-weighted average
-      over the two capture-capable fuels -- a 3000 MW coal fleet at 50% adoption and a 1500 MW gas fleet
-      at 50% are 50% captured between them, and the weights are what make that true for any mix -- times
-      the capture rate, because a capture plant still emits the uncaptured remainder. Both dials now move
-      the number.
+    description: 'The fleet average emission factor at the current build: a generation-weighted mean over
+      the seven fuels that carry an `emission_factor_{tech}_t_per_mwh` node, with each capture dial reducing
+      its own fuel''s factor. The shipped body had three faults. It divided by `coal_capacity + gas_capacity`,
+      so a scenario that retired both thermal fleets raised `ZeroDivisionError: zero to a negative power`
+      -- a thermal retirement is a scenario the model must represent. It weighted by capacity where the
+      quantity is per MWh: the lhs is tonne/MWh, so the mean is over energy, and at the defaults coal
+      runs 0.75 and gas 0.6, which makes a capacity weight the wrong one in a direction no unit check
+      can see. And it multiplied the generic `emission_factor_t_per_mwh` (0.5) into every fuel, discarding
+      the seven per-fuel factors the graph ships -- coal 0.92, gas 0.45, oil 0.78, biomass 0.04, nuclear
+      0.006, hydro 0.01, geothermal 0.03. Measured at the defaults the generation-weighted intensity is
+      0.327098 t/MWh against the shipped 0.5000, a factor of 1.529 high, and `emissions_mtco2_per_year`
+      inherited the error unchanged. The denominator is the full `fleet_generation_twh` rather than the
+      seven fuels'' sum because the four zero-carbon VRE -- solar_pv, wind_onshore, wind_offshore, csp
+      -- carry no emission-factor node: they contribute nothing to the numerator and correctly dilute
+      the denominator, which is the right direct-emissions treatment, since an MWh of wind emits no tonnes
+      and a mean that excluded it would be the dispatchable fleet''s intensity under the fleet''s name.
+      No epsilon guard is needed: after the restructure a zero denominator requires every capacity factor
+      to vanish, not the two thermal ones alone, and 0/0 is genuinely undefined, so an empty fleet is
+      the caller''s to refuse rather than something the equation should absorb. Retiring both thermal
+      fleets leaves 40.4712 TWh from the other five fuels and returns 0.014405 t/MWh without raising.
+      The capture dials now enter their own fuel''s term, so neither can reach a fuel it does not capture
+      -- batch 42 repaired a body in which the coal dial scaled the whole fleet and the gas dial did nothing;
+      the weighting was the remaining half.'
     system: emissions
     lhs: fleet_emission_intensity_t_per_mwh
-    rhs: emission_factor_t_per_mwh * (1 - (coal_capacity * coal_ccs_adoption + gas_capacity * gas_ccs_adoption)
-      / (coal_capacity + gas_capacity) * ccs_capture_rate)
+    rhs: (coal_generation_twh * emission_factor_coal_t_per_mwh * (1 - coal_ccs_adoption * ccs_capture_rate)
+      + gas_generation_twh * emission_factor_gas_t_per_mwh * (1 - gas_ccs_adoption * ccs_capture_rate)
+      + oil_generation_twh * emission_factor_oil_t_per_mwh + biomass_generation_twh * emission_factor_biomass_t_per_mwh
+      + nuclear_generation_twh * emission_factor_nuclear_t_per_mwh + hydro_generation_twh * emission_factor_hydro_t_per_mwh
+      + geothermal_generation_twh * emission_factor_geothermal_t_per_mwh) / fleet_generation_twh
     relation: eq
     parameters:
-    - fleet_emission_intensity_t_per_mwh
+    - biomass_generation_twh
     - ccs_capture_rate
-    - coal_capacity
     - coal_ccs_adoption
-    - emission_factor_t_per_mwh
-    - gas_capacity
+    - coal_generation_twh
+    - emission_factor_biomass_t_per_mwh
+    - emission_factor_coal_t_per_mwh
+    - emission_factor_gas_t_per_mwh
+    - emission_factor_geothermal_t_per_mwh
+    - emission_factor_hydro_t_per_mwh
+    - emission_factor_nuclear_t_per_mwh
+    - emission_factor_oil_t_per_mwh
+    - fleet_emission_intensity_t_per_mwh
+    - fleet_generation_twh
     - gas_ccs_adoption
-    free_variables: []
+    - gas_generation_twh
+    - geothermal_generation_twh
+    - hydro_generation_twh
+    - nuclear_generation_twh
+    - oil_generation_twh
+    free_variables:
+    - biomass_generation_twh
+    - ccs_capture_rate
+    - coal_ccs_adoption
+    - coal_generation_twh
+    - emission_factor_biomass_t_per_mwh
+    - emission_factor_coal_t_per_mwh
+    - emission_factor_gas_t_per_mwh
+    - emission_factor_geothermal_t_per_mwh
+    - emission_factor_hydro_t_per_mwh
+    - emission_factor_nuclear_t_per_mwh
+    - emission_factor_oil_t_per_mwh
+    - fleet_generation_twh
+    - gas_ccs_adoption
+    - gas_generation_twh
+    - geothermal_generation_twh
+    - hydro_generation_twh
+    - nuclear_generation_twh
+    - oil_generation_twh
     determined_variables:
     - fleet_emission_intensity_t_per_mwh
     tolerance: 1.0e-09
     unit_check: true
+    reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+      the capture rate; the per-fuel factors are the graph's own `emission_factor_{tech}_t_per_mwh` nodes,
+      and the generation weights are the batch-46 generation identity
     priority: P1
     solution_method: direct
     linearity: linear
-    reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry; capacity-weighted
-      averaging per the fleet-aggregation convention in `fleet_employment_intensity_jobs_per_mw`
-    latex: \mathrm{fleet}_{emission\_intensity\_t\_per\_mwh} = \mathrm{emission}_{factor\_t\_per\_mwh}
-      \left(1 - \frac{\left(\mathrm{coal}_{capacity} \mathrm{coal}_{ccs\_adoption} + \mathrm{gas}_{capacity}
-      \mathrm{gas}_{ccs\_adoption}\right) \mathrm{ccs}_{capture\_rate}}{\mathrm{coal}_{capacity} + \mathrm{gas}_{capacity}}\right)
+    latex: \mathrm{fleet}_{emission\_intensity\_t\_per\_mwh} = \frac{\mathrm{coal}_{generation\_twh} \mathrm{emission}_{factor\_coal\_t\_per\_mwh}
+      \left(1 - \mathrm{coal}_{ccs\_adoption} \mathrm{ccs}_{capture\_rate}\right) + \mathrm{gas}_{generation\_twh}
+      \mathrm{emission}_{factor\_gas\_t\_per\_mwh} \left(1 - \mathrm{gas}_{ccs\_adoption} \mathrm{ccs}_{capture\_rate}\right)
+      + \mathrm{oil}_{generation\_twh} \mathrm{emission}_{factor\_oil\_t\_per\_mwh} + \mathrm{biomass}_{generation\_twh}
+      \mathrm{emission}_{factor\_biomass\_t\_per\_mwh} + \mathrm{nuclear}_{generation\_twh} \mathrm{emission}_{factor\_nuclear\_t\_per\_mwh}
+      + \mathrm{hydro}_{generation\_twh} \mathrm{emission}_{factor\_hydro\_t\_per\_mwh} + \mathrm{geothermal}_{generation\_twh}
+      \mathrm{emission}_{factor\_geothermal\_t\_per\_mwh}}{\mathrm{fleet}_{generation\_twh}}
   fleet_employment_intensity_definition:
     description: 'Jobs per installed megawatt, capacity-weighted across the technologies the archive prices.
       An intensity and not a total: `direct_jobs` already ships at 43,000 and the per-technology factors
@@ -56063,66 +56117,6 @@ relationships:
   source: demand_growth_factor
   strength: hard
   target: demand_twh
-- source: ccs_capture_rate
-  target: fleet_emission_intensity_t_per_mwh
-  equation_id: fleet_emission_intensity_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: Enters the corrected body.
-  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry; capacity-weighted
-    averaging per the fleet-aggregation convention in `fleet_employment_intensity_jobs_per_mw`
-  priority: P1
-- source: coal_capacity
-  target: fleet_emission_intensity_t_per_mwh
-  equation_id: fleet_emission_intensity_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: Enters the corrected body.
-  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry; capacity-weighted
-    averaging per the fleet-aggregation convention in `fleet_employment_intensity_jobs_per_mw`
-  priority: P1
-- source: coal_ccs_adoption
-  target: fleet_emission_intensity_t_per_mwh
-  equation_id: fleet_emission_intensity_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: Enters the corrected body.
-  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry; capacity-weighted
-    averaging per the fleet-aggregation convention in `fleet_employment_intensity_jobs_per_mw`
-  priority: P1
-- source: emission_factor_t_per_mwh
-  target: fleet_emission_intensity_t_per_mwh
-  equation_id: fleet_emission_intensity_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: Enters the corrected body.
-  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry; capacity-weighted
-    averaging per the fleet-aggregation convention in `fleet_employment_intensity_jobs_per_mw`
-  priority: P1
-- source: gas_capacity
-  target: fleet_emission_intensity_t_per_mwh
-  equation_id: fleet_emission_intensity_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: Enters the corrected body.
-  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry; capacity-weighted
-    averaging per the fleet-aggregation convention in `fleet_employment_intensity_jobs_per_mw`
-  priority: P1
-- source: gas_ccs_adoption
-  target: fleet_emission_intensity_t_per_mwh
-  equation_id: fleet_emission_intensity_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: Enters the corrected body.
-  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry; capacity-weighted
-    averaging per the fleet-aggregation convention in `fleet_employment_intensity_jobs_per_mw`
-  priority: P1
 - source: fleet_emission_intensity_t_per_mwh
   target: emissions_mtco2_per_year
   equation_id: emissions_definition
@@ -58160,6 +58154,258 @@ relationships:
   strength: hard
   description: One side of the value-cost ratio.
   reference: The capacity-to-energy repair (batch 46)
+  priority: P1
+- source: biomass_generation_twh
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters the generation-weighted mean: a fuel''s annual output weights its factor, a capture
+    dial reduces only its own fuel''s term, and the fleet total is the denominator the zero-carbon technologies
+    dilute.'
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+    the capture rate; the per-fuel emission factors are the graph's own `emission_factor_{tech}_t_per_mwh`
+    nodes, each carrying its basis in its own `source` field; the weights are the batch-46 capacity-to-energy
+    identity
+  priority: P1
+- source: ccs_capture_rate
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters the generation-weighted mean: a fuel''s annual output weights its factor, a capture
+    dial reduces only its own fuel''s term, and the fleet total is the denominator the zero-carbon technologies
+    dilute.'
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+    the capture rate; the per-fuel emission factors are the graph's own `emission_factor_{tech}_t_per_mwh`
+    nodes, each carrying its basis in its own `source` field; the weights are the batch-46 capacity-to-energy
+    identity
+  priority: P1
+- source: coal_ccs_adoption
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters the generation-weighted mean: a fuel''s annual output weights its factor, a capture
+    dial reduces only its own fuel''s term, and the fleet total is the denominator the zero-carbon technologies
+    dilute.'
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+    the capture rate; the per-fuel emission factors are the graph's own `emission_factor_{tech}_t_per_mwh`
+    nodes, each carrying its basis in its own `source` field; the weights are the batch-46 capacity-to-energy
+    identity
+  priority: P1
+- source: coal_generation_twh
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters the generation-weighted mean: a fuel''s annual output weights its factor, a capture
+    dial reduces only its own fuel''s term, and the fleet total is the denominator the zero-carbon technologies
+    dilute.'
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+    the capture rate; the per-fuel emission factors are the graph's own `emission_factor_{tech}_t_per_mwh`
+    nodes, each carrying its basis in its own `source` field; the weights are the batch-46 capacity-to-energy
+    identity
+  priority: P1
+- source: emission_factor_biomass_t_per_mwh
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters the generation-weighted mean: a fuel''s annual output weights its factor, a capture
+    dial reduces only its own fuel''s term, and the fleet total is the denominator the zero-carbon technologies
+    dilute.'
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+    the capture rate; the per-fuel emission factors are the graph's own `emission_factor_{tech}_t_per_mwh`
+    nodes, each carrying its basis in its own `source` field; the weights are the batch-46 capacity-to-energy
+    identity
+  priority: P1
+- source: emission_factor_coal_t_per_mwh
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters the generation-weighted mean: a fuel''s annual output weights its factor, a capture
+    dial reduces only its own fuel''s term, and the fleet total is the denominator the zero-carbon technologies
+    dilute.'
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+    the capture rate; the per-fuel emission factors are the graph's own `emission_factor_{tech}_t_per_mwh`
+    nodes, each carrying its basis in its own `source` field; the weights are the batch-46 capacity-to-energy
+    identity
+  priority: P1
+- source: emission_factor_gas_t_per_mwh
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters the generation-weighted mean: a fuel''s annual output weights its factor, a capture
+    dial reduces only its own fuel''s term, and the fleet total is the denominator the zero-carbon technologies
+    dilute.'
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+    the capture rate; the per-fuel emission factors are the graph's own `emission_factor_{tech}_t_per_mwh`
+    nodes, each carrying its basis in its own `source` field; the weights are the batch-46 capacity-to-energy
+    identity
+  priority: P1
+- source: emission_factor_geothermal_t_per_mwh
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters the generation-weighted mean: a fuel''s annual output weights its factor, a capture
+    dial reduces only its own fuel''s term, and the fleet total is the denominator the zero-carbon technologies
+    dilute.'
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+    the capture rate; the per-fuel emission factors are the graph's own `emission_factor_{tech}_t_per_mwh`
+    nodes, each carrying its basis in its own `source` field; the weights are the batch-46 capacity-to-energy
+    identity
+  priority: P1
+- source: emission_factor_hydro_t_per_mwh
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters the generation-weighted mean: a fuel''s annual output weights its factor, a capture
+    dial reduces only its own fuel''s term, and the fleet total is the denominator the zero-carbon technologies
+    dilute.'
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+    the capture rate; the per-fuel emission factors are the graph's own `emission_factor_{tech}_t_per_mwh`
+    nodes, each carrying its basis in its own `source` field; the weights are the batch-46 capacity-to-energy
+    identity
+  priority: P1
+- source: emission_factor_nuclear_t_per_mwh
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters the generation-weighted mean: a fuel''s annual output weights its factor, a capture
+    dial reduces only its own fuel''s term, and the fleet total is the denominator the zero-carbon technologies
+    dilute.'
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+    the capture rate; the per-fuel emission factors are the graph's own `emission_factor_{tech}_t_per_mwh`
+    nodes, each carrying its basis in its own `source` field; the weights are the batch-46 capacity-to-energy
+    identity
+  priority: P1
+- source: emission_factor_oil_t_per_mwh
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters the generation-weighted mean: a fuel''s annual output weights its factor, a capture
+    dial reduces only its own fuel''s term, and the fleet total is the denominator the zero-carbon technologies
+    dilute.'
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+    the capture rate; the per-fuel emission factors are the graph's own `emission_factor_{tech}_t_per_mwh`
+    nodes, each carrying its basis in its own `source` field; the weights are the batch-46 capacity-to-energy
+    identity
+  priority: P1
+- source: fleet_generation_twh
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters the generation-weighted mean: a fuel''s annual output weights its factor, a capture
+    dial reduces only its own fuel''s term, and the fleet total is the denominator the zero-carbon technologies
+    dilute.'
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+    the capture rate; the per-fuel emission factors are the graph's own `emission_factor_{tech}_t_per_mwh`
+    nodes, each carrying its basis in its own `source` field; the weights are the batch-46 capacity-to-energy
+    identity
+  priority: P1
+- source: gas_ccs_adoption
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters the generation-weighted mean: a fuel''s annual output weights its factor, a capture
+    dial reduces only its own fuel''s term, and the fleet total is the denominator the zero-carbon technologies
+    dilute.'
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+    the capture rate; the per-fuel emission factors are the graph's own `emission_factor_{tech}_t_per_mwh`
+    nodes, each carrying its basis in its own `source` field; the weights are the batch-46 capacity-to-energy
+    identity
+  priority: P1
+- source: gas_generation_twh
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters the generation-weighted mean: a fuel''s annual output weights its factor, a capture
+    dial reduces only its own fuel''s term, and the fleet total is the denominator the zero-carbon technologies
+    dilute.'
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+    the capture rate; the per-fuel emission factors are the graph's own `emission_factor_{tech}_t_per_mwh`
+    nodes, each carrying its basis in its own `source` field; the weights are the batch-46 capacity-to-energy
+    identity
+  priority: P1
+- source: geothermal_generation_twh
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters the generation-weighted mean: a fuel''s annual output weights its factor, a capture
+    dial reduces only its own fuel''s term, and the fleet total is the denominator the zero-carbon technologies
+    dilute.'
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+    the capture rate; the per-fuel emission factors are the graph's own `emission_factor_{tech}_t_per_mwh`
+    nodes, each carrying its basis in its own `source` field; the weights are the batch-46 capacity-to-energy
+    identity
+  priority: P1
+- source: hydro_generation_twh
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters the generation-weighted mean: a fuel''s annual output weights its factor, a capture
+    dial reduces only its own fuel''s term, and the fleet total is the denominator the zero-carbon technologies
+    dilute.'
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+    the capture rate; the per-fuel emission factors are the graph's own `emission_factor_{tech}_t_per_mwh`
+    nodes, each carrying its basis in its own `source` field; the weights are the batch-46 capacity-to-energy
+    identity
+  priority: P1
+- source: nuclear_generation_twh
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters the generation-weighted mean: a fuel''s annual output weights its factor, a capture
+    dial reduces only its own fuel''s term, and the fleet total is the denominator the zero-carbon technologies
+    dilute.'
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+    the capture rate; the per-fuel emission factors are the graph's own `emission_factor_{tech}_t_per_mwh`
+    nodes, each carrying its basis in its own `source` field; the weights are the batch-46 capacity-to-energy
+    identity
+  priority: P1
+- source: oil_generation_twh
+  target: fleet_emission_intensity_t_per_mwh
+  equation_id: fleet_emission_intensity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters the generation-weighted mean: a fuel''s annual output weights its factor, a capture
+    dial reduces only its own fuel''s term, and the fleet total is the denominator the zero-carbon technologies
+    dilute.'
+  reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+    the capture rate; the per-fuel emission factors are the graph's own `emission_factor_{tech}_t_per_mwh`
+    nodes, each carrying its basis in its own `source` field; the weights are the batch-46 capacity-to-energy
+    identity
   priority: P1
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0

@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "47":
+		b47_nodes, b47_equations, b47_edges, b47_rules = build_batch47(graph)
+		rules.extend(b47_rules)
+		nodes.update(b47_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b47_equations)
+		edges = list(BATCH12_EDGES) + b47_edges
 	elif batch == "46":
 		b46_nodes, b46_equations, b46_edges, b46_rules = build_batch46(graph)
 		rules.extend(b46_rules)
@@ -12742,6 +12749,289 @@ def build_batch46(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		),
 		"parameters": [headroom_name],
 	})
+
+	return nodes, equations, edges, rules
+
+
+#: The fuels the fleet intensity averages over, with the capture-adoption node
+#: each one reads where it has one. The membership rule is not "the fuels that
+#: emit": it is *exactly* the technologies carrying an
+#: `emission_factor_{tech}_t_per_mwh` node, which is the fact about the graph
+#: that decides whether a fuel can enter the numerator at all. The empty string
+#: marks a fuel with no capture dial -- oil, biomass, nuclear, hydro and
+#: geothermal have no `{tech}_ccs_adoption` node, and inventing one here would
+#: be a dial the graph does not carry.
+#:
+#: The four zero-carbon VRE are absent on purpose and are *not* a gap: they have
+#: no factor node, so they contribute nothing to the numerator, and they dilute
+#: the denominator through `fleet_generation_twh`. A mean that dropped them from
+#: the denominator would report the dispatchable fleet's intensity while calling
+#: it the fleet's.
+_BATCH47_FUELS: tuple[tuple[str, str], ...] = (
+	("coal", "coal_ccs_adoption"),
+	("gas", "gas_ccs_adoption"),
+	("oil", ""),
+	("biomass", ""),
+	("nuclear", ""),
+	("hydro", ""),
+	("geothermal", ""),
+)
+
+#: The edge citation. It names what each operand *is* in the arithmetic rather
+#: than the batch that rewrote it, because a `reference` is what a reader
+#: follows to question the equation and a batch label is not a source. The
+#: capture basis is IEA/NEA's, which this equation already cited; the per-fuel
+#: factors are the graph's own nodes and carry their own `source` field.
+_BATCH47_SOURCE = (
+	"IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS "
+	"technology entry, for the capture rate; the per-fuel emission factors "
+	"are the graph's own `emission_factor_{tech}_t_per_mwh` nodes, each "
+	"carrying its basis in its own `source` field; the weights are the "
+	"batch-46 capacity-to-energy identity"
+)
+
+
+def _batch47_intensity_rhs() -> str:
+	"""The generation-weighted mean, built from the fuel table.
+
+	A capture-capable fuel's term is `generation * factor * (1 - adoption *
+	capture_rate)`: a capture plant still emits the uncaptured remainder, and
+	the dial may reach only its own fuel. A fuel without a dial contributes
+	`generation * factor` unscaled.
+
+	The denominator is `fleet_generation_twh`, not the sum of the seven
+	numerators, so the zero-carbon VRE dilute the mean rather than vanish from
+	it.
+	"""
+	terms: list[str] = []
+	for tech, adoption in _BATCH47_FUELS:
+		term = f"{tech}_generation_twh * emission_factor_{tech}_t_per_mwh"
+		if adoption:
+			term = f"{term} * (1 - {adoption} * ccs_capture_rate)"
+		terms.append(term)
+	return "(" + " + ".join(terms) + ") / fleet_generation_twh"
+
+
+def build_batch47(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Repair the fleet emission intensity: weight it by generation, per fuel.
+
+	One shipped equation, three faults, all measured against the loaded graph
+	before this batch touched anything.
+
+	*It divided by zero.* The shipped body was
+	`emission_factor_t_per_mwh * (1 - (coal_capacity * coal_ccs_adoption +
+	gas_capacity * gas_ccs_adoption) / (coal_capacity + gas_capacity) *
+	ccs_capture_rate)`. `propagate` with `coal_capacity = gas_capacity = 0`
+	raises `ZeroDivisionError: zero to a negative power` -- the DSL evaluates
+	the quotient as a negative power, so the division does not return an
+	infinity a reader could see, it aborts the propagation. A thermal
+	retirement is a scenario the model must represent.
+
+	*It weighted by capacity where the quantity is per MWh.* The lhs is
+	tonne/MWh, so the mean is over energy. At the shipped defaults coal runs a
+	0.75 capacity factor and gas 0.6, so 3000 MW of coal makes 19.71 TWh and
+	1500 MW of gas 7.884 TWh: the capacity weights are wrong in the direction
+	the two capacity factors differ, and no unit check can see it because both
+	the weight and the quantity read as a ratio.
+
+	*It used the generic factor for every fuel.* `emission_factor_t_per_mwh`
+	ships 0.5 and the graph ships seven per-fuel factors beside it -- coal
+	0.92, gas 0.45, oil 0.78, biomass 0.04, nuclear 0.006, hydro 0.01,
+	geothermal 0.03. The generic node is the *reference* technology's factor
+	and multiplying it into every fuel discarded all seven.
+
+	*What the correction measures.* At the defaults the generation-weighted
+	mean is 0.327098 t/MWh; the shipped body reported 0.5000, a factor of
+	1.529 high, and `emissions_mtco2_per_year` inherited the error unchanged
+	because it multiplies `generation_twh` by this intensity.
+
+	*Why the denominator is the full fleet.* The four zero-carbon VRE --
+	`solar_pv`, `wind_onshore`, `wind_offshore`, `csp` -- have no
+	`emission_factor_{tech}_t_per_mwh` node. They contribute nothing to the
+	numerator and correctly dilute the denominator: that is the right
+	direct-emissions treatment, because an MWh of wind emits no tonnes and a
+	mean that excluded it would be the dispatchable fleet's intensity wearing
+	the fleet's name.
+
+	*Why no epsilon guard.* After the restructure a zero denominator requires
+	*every* capacity factor to vanish, not just the two thermal ones. Only a
+	completely empty fleet still raises, and 0/0 is genuinely undefined, so
+	that case is a caller's to refuse rather than the equation's to absorb.
+	Measured: retiring both thermal fleets (`coal_capacity = gas_capacity = 0`)
+	leaves 40.4712 TWh from the other five fuels and returns 0.014405 t/MWh
+	without raising.
+
+	*The edges the correction drops.* `coal_capacity`, `gas_capacity` and
+	`emission_factor_t_per_mwh` no longer appear in the body, so the three
+	shipped edges naming them are stale. The merge drops them itself and
+	counts them under `<stale-edge>`, because a corrected equation is exactly
+	what makes a shipped edge stale; this batch does not re-emit them and does
+	not need to.
+
+	*Why no cross-validation rule.* The plausible bound -- the intensity lies
+	between the cleanest and the dirtiest fuel's factor -- is false under full
+	capture: coal at adoption 1.0 with `ccs_capture_rate` 1.0 contributes
+	zero, so the mean can fall below nuclear's 0.006. The bound that *is* true
+	is on the effective per-fuel factors `factor * (1 - adoption * rate)`,
+	which is arithmetic, and the cross-validation grammar admits no `BinOp`.
+	A rule the grammar cannot express is not worth a weaker substitute.
+
+	*The citation.* The capture basis is IEA/NEA's CCUS technology entry, which
+	this equation already cites. The per-fuel factors are the graph's own
+	nodes and name their basis in their own `source` field; that basis is not
+	a row in `sources/INDEX.md`, so it is not cited here.
+	"""
+	from alea.prg.dsl import parse_side
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	equation_id = "fleet_emission_intensity_definition"
+	lhs = "fleet_emission_intensity_t_per_mwh"
+	assert equation_id in graph.equations, (
+		f"{equation_id}: this batch assumed it ships"
+	)
+	shipped = graph.equations[equation_id]
+	assert shipped.lhs == lhs, (
+		f"{equation_id}: lhs is {shipped.lhs!r}, not {lhs!r}"
+	)
+	# The correction is a replacement, not a patch, so the guard is that the
+	# shipped body is the one the three faults were measured on. A body that
+	# already reads a per-fuel factor would be a body somebody repaired first,
+	# and overwriting it would be a silent second correction.
+	assert "emission_factor_coal_t_per_mwh" not in shipped.rhs, (
+		f"{equation_id}: already reads a per-fuel factor; this batch would "
+		f"overwrite a correction it did not make"
+	)
+	assert "/ (coal_capacity + gas_capacity)" in shipped.rhs, (
+		f"{equation_id}: the shipped body no longer carries the capacity "
+		f"quotient this batch was written to remove"
+	)
+
+	# The fuel table is verified against the graph rather than trusted. The
+	# membership rule is the set of technologies with a per-fuel factor node,
+	# so a factor node added later fails loudly here instead of being silently
+	# omitted from the mean -- and a factor node removed fails as a missing
+	# operand rather than as a NameError inside a solve.
+	factor_techs = {
+		name.removeprefix("emission_factor_").removesuffix("_t_per_mwh")
+		for name in graph.nodes
+		if name.startswith("emission_factor_")
+		and name.endswith("_t_per_mwh")
+		and name != "emission_factor_t_per_mwh"
+	}
+	assert factor_techs == {tech for tech, _adoption in _BATCH47_FUELS}, (
+		f"the fuels carrying an emission-factor node are {sorted(factor_techs)}, "
+		f"but this batch's table names "
+		f"{sorted(tech for tech, _a in _BATCH47_FUELS)}; the mean would omit "
+		f"or invent a fuel"
+	)
+	for tech, adoption in _BATCH47_FUELS:
+		for operand in (f"{tech}_generation_twh", f"emission_factor_{tech}_t_per_mwh"):
+			assert operand in graph.nodes, f"{operand}: the mean's operand does not exist"
+		if adoption:
+			assert adoption in graph.nodes, f"{adoption}: the capture dial does not exist"
+	assert "fleet_generation_twh" in graph.nodes, (
+		"fleet_generation_twh: the denominator does not exist; batch 46 ships it"
+	)
+
+	rhs = _batch47_intensity_rhs()
+	named = set(parse_side(rhs).symbols) | set(parse_side(lhs).symbols)
+	assert lhs in named, "the lhs is not in the symbol set of its own body"
+
+	body = shipped.model_dump(mode="json")
+	body["rhs"] = rhs
+	body["parameters"] = sorted(named)
+	body["free_variables"] = sorted(named - {lhs})
+	body["determined_variables"] = [lhs]
+	body["description"] = (
+		"The fleet average emission factor at the current build: a "
+		"generation-weighted mean over the seven fuels that carry an "
+		"`emission_factor_{tech}_t_per_mwh` node, with each capture dial "
+		"reducing its own fuel's factor. The shipped body had three faults. It "
+		"divided by `coal_capacity + gas_capacity`, so a scenario that retired "
+		"both thermal fleets raised `ZeroDivisionError: zero to a negative "
+		"power` -- a thermal retirement is a scenario the model must "
+		"represent. It weighted by capacity where the quantity is per MWh: the "
+		"lhs is tonne/MWh, so the mean is over energy, and at the defaults "
+		"coal runs 0.75 and gas 0.6, which makes a capacity weight the wrong "
+		"one in a direction no unit check can see. And it multiplied the "
+		"generic `emission_factor_t_per_mwh` (0.5) into every fuel, discarding "
+		"the seven per-fuel factors the graph ships -- coal 0.92, gas 0.45, "
+		"oil 0.78, biomass 0.04, nuclear 0.006, hydro 0.01, geothermal 0.03. "
+		"Measured at the defaults the generation-weighted intensity is "
+		"0.327098 t/MWh against the shipped 0.5000, a factor of 1.529 high, "
+		"and `emissions_mtco2_per_year` inherited the error unchanged. The "
+		"denominator is the full `fleet_generation_twh` rather than the seven "
+		"fuels' sum because the four zero-carbon VRE -- solar_pv, "
+		"wind_onshore, wind_offshore, csp -- carry no emission-factor node: "
+		"they contribute nothing to the numerator and correctly dilute the "
+		"denominator, which is the right direct-emissions treatment, since an "
+		"MWh of wind emits no tonnes and a mean that excluded it would be the "
+		"dispatchable fleet's intensity under the fleet's name. No epsilon "
+		"guard is needed: after the restructure a zero denominator requires "
+		"every capacity factor to vanish, not the two thermal ones alone, and "
+		"0/0 is genuinely undefined, so an empty fleet is the caller's to "
+		"refuse rather than something the equation should absorb. Retiring "
+		"both thermal fleets leaves 40.4712 TWh from the other five fuels and "
+		"returns 0.014405 t/MWh without raising. The capture dials now enter "
+		"their own fuel's term, so neither can reach a fuel it does not "
+		"capture -- batch 42 repaired a body in which the coal dial scaled the "
+		"whole fleet and the gas dial did nothing; the weighting was the "
+		"remaining half."
+	)
+	body["reference"] = (
+		"IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS "
+		"technology entry, for the capture rate; the per-fuel factors are the "
+		"graph's own `emission_factor_{tech}_t_per_mwh` nodes, and the "
+		"generation weights are the batch-46 generation identity"
+	)
+
+	# The declared rendering is the renderer's own output for this body, which
+	# is the one form whose operand set is the arithmetic's by construction --
+	# `check_latex` compares the two sets, and a hand form has to restate every
+	# subscripted name to pass. `emit` regenerates it regardless; computing it
+	# here keeps the builder's own return value honest.
+	from alea.prg.service import generated_latex as _generated_latex
+	from alea.prg.views import Equation as _Equation
+
+	body["latex"] = _generated_latex(_Equation(**body))  # type: ignore[arg-type]
+	equations[equation_id] = body
+
+	# One edge per symbol the new body reads, in the style the shipped
+	# `ccs_capture_rate` edge established. The three symbols *both* bodies read
+	# -- `ccs_capture_rate`, `coal_ccs_adoption`, `gas_ccs_adoption` -- are
+	# re-emitted rather than left alone, because their shipped edges each end
+	# in "capacity-weighted averaging per the fleet-aggregation convention in
+	# `fleet_employment_intensity_jobs_per_mw`", and this batch deletes exactly
+	# that weighting. Leaving them untouched would ship three edges asserting a
+	# weighting the equation no longer performs -- a claim the merge cannot
+	# flag, because the edge still names a symbol the body still reads. The
+	# merge counts a differing edge as a correction and replaces it by its
+	# `source->target` key, so this is three corrections the batch did make.
+	# The three the body dropped (`coal_capacity`, `gas_capacity`,
+	# `emission_factor_t_per_mwh`) are absent, and the merge's stale-edge pass
+	# removes their shipped edges and names them, because a corrected equation
+	# is exactly what makes a shipped edge stale.
+	for symbol in sorted(named - {lhs}):
+		edges.append({
+			"source": symbol,
+			"target": lhs,
+			"equation_id": equation_id,
+			"relationship": "functional",
+			"direction": "forward",
+			"strength": "hard",
+			"description": (
+				"Enters the generation-weighted mean: a fuel's annual output "
+				"weights its factor, a capture dial reduces only its own "
+				"fuel's term, and the fleet total is the denominator the "
+				"zero-carbon technologies dilute."
+			),
+			"reference": _BATCH47_SOURCE,
+			"priority": "P1",
+		})
 
 	return nodes, equations, edges, rules
 

@@ -680,6 +680,122 @@ thirty-five new nodes are derived (the batch adds 35 nodes and 36 equations). Un
 after the `affects` repair on the two exogenous operands the batch newly reads
 (`hours_per_year`, `vre_capacity_credit`).
 
+### The intensity weighted by the wrong quantity (batch 47, 2026-10-23)
+
+Batch 42 gave `emissions_mtco2_per_year` the fleet intensity to read, and the
+intensity it read was wrong in three ways at once. All three were measured on
+the loaded graph before this batch touched anything.
+
+**It divided by zero.** The shipped body was
+
+```
+emission_factor_t_per_mwh
+  * (1 - (coal_capacity * coal_ccs_adoption + gas_capacity * gas_ccs_adoption)
+         / (coal_capacity + gas_capacity) * ccs_capture_rate)
+```
+
+The DSL evaluates the quotient as a negative power, so `coal_capacity =
+gas_capacity = 0` did not return an infinity a reader could see — it raised
+`ZeroDivisionError: zero to a negative power` and aborted the propagation. A
+thermal retirement is a scenario the model must represent; it was the one
+scenario this equation could not survive.
+
+**It weighted by capacity where the quantity is per MWh.** The lhs is
+tonne/MWh, so the mean is over energy. Coal runs a 0.75 capacity factor and gas
+0.6, so 3000 MW of coal makes 19.710 TWh and 1500 MW of gas 7.884 TWh — the
+capacity weights are wrong in exactly the direction the two factors differ, and
+no unit check can see it because the weight and the quantity both read as a
+ratio. This is batch 45's basis error in a different body: same dimension,
+different quantity.
+
+**It used one generic factor for every fuel.** `emission_factor_t_per_mwh`
+ships 0.5 and the graph ships seven per-fuel factors beside it — coal 0.92, gas
+0.45, oil 0.78, biomass 0.04, nuclear 0.006, hydro 0.01, geothermal 0.03. The
+generic node is the *reference technology's* factor, which the batch-42 section
+above says in as many words, and multiplying it into every fuel discarded all
+seven.
+
+**The repair is a restructure, not a guard.** Batch 46 shipped the
+per-technology `{tech}_generation_twh` nodes, so the intensity is now a
+generation-weighted mean over the seven fuels that carry a factor, each capture
+dial scaling only its own fuel:
+
+```
+(coal_generation_twh * emission_factor_coal_t_per_mwh * (1 - coal_ccs_adoption * ccs_capture_rate)
+ + gas_generation_twh * emission_factor_gas_t_per_mwh * (1 - gas_ccs_adoption * ccs_capture_rate)
+ + oil_generation_twh * emission_factor_oil_t_per_mwh
+ + ...)
+/ fleet_generation_twh
+```
+
+The denominator is the full eleven-technology fleet, not the seven fuels' sum.
+The four zero-carbon VRE — `solar_pv`, `wind_onshore`, `wind_offshore`, `csp` —
+carry no emission-factor node, contribute nothing to the numerator, and
+correctly dilute the mean. A mean that dropped them from the denominator would
+report the dispatchable fleet's intensity under the fleet's name.
+
+**No epsilon guard, and the reason is structural.** After the restructure a
+zero denominator requires *every* capacity factor to vanish, not the two
+thermal ones alone. Measured: retiring coal and gas takes the fleet to 40.4712
+TWh and the intensity to 0.014405 without raising; retiring oil as well gives
+0.006874. Only a completely empty fleet still raises, and 0/0 is genuinely
+undefined — that is a caller's to refuse, not something the equation should
+absorb. `max()` would not have been available anyway: it has no derivative
+rule, and batch 46's `min()` draft is the lesson.
+
+**Measured at the defaults.** The intensity is **0.327098** t/MWh against the
+shipped **0.500000** — a factor of 1.529 high — and
+`emissions_mtco2_per_year` falls from **25.777** to **16.863** MtCO2/year. The
+figure was checked against an independent hand-computation over the seven
+terms, exact to the printed digits, and the fifteen new edges were verified to
+be exactly the symbols the new body reads and the old one did not.
+
+**Canaries, each measured.** The dials are zero at the defaults, so every one
+of these switches a term on:
+
+| scenario | intensity | emissions |
+|---|---|---|
+| `coal_ccs_adoption` 0.5 | 0.207214 | 10.683 |
+| `coal_ccs_adoption` 1.0 | 0.087329 | 4.502 |
+| `gas_ccs_adoption` 1.0 | 0.280187 | 14.445 |
+| both at 1.0 | 0.040418 | 2.084 |
+| coal 1.0, `ccs_capture_rate` 0.5 | 0.193893 | 9.996 |
+
+The gas dial moves emissions on its own, which it could not before batch 42 and
+did not after it either. The derivatives carry the right signs:
+`d/d(coal_ccs_adoption)` is −0.2398 and `d/d(emission_factor_coal_t_per_mwh)`
+is +0.2896.
+
+**No cross-validation rule, and that is a grammar limit rather than a choice.**
+The plausible bound — the intensity lies between the cleanest and the dirtiest
+fuel's factor — is *false* under full capture: coal at adoption 1.0 with
+`ccs_capture_rate` 1.0 contributes zero, so the mean can fall below nuclear's
+0.006. The bound that is true is on the effective factors
+`factor * (1 - adoption * rate)`, which is arithmetic, and the cross-validation
+grammar admits no `BinOp`. A weaker rule would have been a gate that cannot
+fail.
+
+**One open question this batch does not answer.**
+`emissions_definition` applies the intensity to `generation_twh` (51.554,
+demand-side) rather than `fleet_generation_twh` (68.065). Which generation an
+intensity should be applied to is a modelling decision, not an arithmetic one,
+and it wants its own batch.
+
+Counts: 1426 nodes, 601 equations, 1354 edges, 57 rules; uncoupled holds at 234
+— the batch adds no node and no rule, correcting one equation and re-pointing
+its edges (3 dropped as stale, 3 corrected, 15 added). Units 600 consistent, 1
+inconsistent (`rocof_definition`, pre-existing), 0 undecidable.
+`structure_issues()` is empty and `check_latex` reports no finding.
+
+**Citation gap, recorded rather than papered over.** The seven
+`emission_factor_{tech}_t_per_mwh` nodes name "IPCC lifecycle emission factors,
+2014" in their own `source` field, and `sources/INDEX.md` carries no row for
+that work — its only IPCC entry is the 2006 *Guidelines*, Volume 2, a different
+document. The edges therefore cite IEA/NEA (registered at `sources/INDEX.md:50`
+and archived) for the capture rate and point at the factor nodes for the
+factors. Registering the lifecycle basis is a new index row plus an archived
+copy, and it is the honest follow-on.
+
 
 ## Not built
 

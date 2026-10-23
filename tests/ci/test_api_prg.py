@@ -743,7 +743,16 @@ def test_the_consistency_route_checks_a_set_it_was_handed(
 	assert body["violations"], "an unfinanceable scenario produced no violation"
 	violation = body["violations"][0]
 	assert violation["detail"], "a violation with no detail is not actionable"
-	assert violation["equation_id"] == "dscr_requirement", violation
+	# Batch 47 corrected `fleet_emission_intensity_t_per_mwh` from 0.5000 to
+	# 0.3271, which cut emissions 35% and with them carbon revenue. At a
+	# five-year life the revenue share now falls to 4.21% against the 5%
+	# `carbon_finance_share` floor, so `carbon_finance_bound` fires alongside
+	# the DSCR covenant and sorts first. That second violation is a real
+	# consequence of the repair, not noise: this test is about the DSCR
+	# scenario, so it asserts the DSCR is among the violations rather than
+	# that it heads the list.
+	fired = {v["equation_id"] for v in body["violations"]}
+	assert "dscr_requirement" in fired, fired
 
 
 def test_the_consistency_report_is_the_shipped_default_scenario(
