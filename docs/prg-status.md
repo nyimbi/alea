@@ -775,11 +775,19 @@ fuel's factor — is *false* under full capture: coal at adoption 1.0 with
 grammar admits no `BinOp`. A weaker rule would have been a gate that cannot
 fail.
 
-**One open question this batch does not answer.**
-`emissions_definition` applies the intensity to `generation_twh` (51.554,
-demand-side) rather than `fleet_generation_twh` (68.065). Which generation an
-intensity should be applied to is a modelling decision, not an arithmetic one,
-and it wants its own batch.
+**The basis question, settled rather than deferred.**
+`emissions_definition` applies the intensity to `generation_twh` (51.554)
+rather than `fleet_generation_twh` (68.065), and that is correct.
+`generation_twh` is not the demand-side figure: `energy_balance` solves
+`generation_twh * (1 - transmission_loss_fraction) + net_imports_twh =
+equilibrium_demand_twh`, which at the defaults gives (47.430 − 0) / 0.92 =
+51.554 exactly. Because the intensity is a per-MWh mean and the graph scales
+every technology's output by one dispatch ratio α = 51.554 / 68.065 = 0.7574,
+the two bases are **algebraically identical** — `num / fleet_generation_twh`
+and `(α·num) / (α·fleet_generation_twh)` both give 0.3270978. Applying the
+intensity to `fleet_generation_twh` would be the error, not the repair: it
+charges the fleet for capacity it never dispatched, 22.264 MtCO2 against
+16.863. There is no batch to write here.
 
 Counts: 1426 nodes, 601 equations, 1354 edges, 57 rules; uncoupled holds at 234
 — the batch adds no node and no rule, correcting one equation and re-pointing
