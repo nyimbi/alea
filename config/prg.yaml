@@ -15158,26 +15158,36 @@ parameters:
     - Policymakers
     source: docs/params.md
   indirect_jobs_multiplier:
-    categories: []
-    category: Social
-    default: 1.4
-    deprecated_by: null
-    description: Indirect jobs in the supply chain per direct job.
-    determinism: fixed
-    initial: null
     name: Indirect jobs multiplier
-    priority: P2
-    range:
-    - 0.0
-    - 5.0
-    role: exogenous
-    source: null
-    source_url: null
-    status: to_build
+    description: 'DEPRECATED. Duplicate of `indirect_employment_multiplier` at a different value: this
+      node defaulted to 1.4 while `indirect_employment_multiplier` defaults to 1.2. Two ids for one input-output
+      coefficient meant `total_jobs` was not the sum of its components -- it used this pair while `indirect_jobs`
+      and `induced_jobs` used `indirect_employment_multiplier`''s. The surviving node is the one carrying
+      a documented empirical band. A scenario that still names this id is naming a coefficient the graph
+      no longer computes from.'
+    category: Social
     subcategory: null
     type: float
     unit: '1'
+    range:
+    - 0.0
+    - 5.0
+    default: 1.4
+    initial: null
+    role: exogenous
+    determinism: fixed
+    categories: []
+    source: 'The annuity-factor coupling (batch 49): the capital recovery factor formula is the standard
+      CRF = r(1+r)^n / ((1+r)^n - 1), as given in IRENA (2023) Renewable Power Generation Costs in 2022,
+      Annex: ''Methodology'', and in IEA/NEA Projected Costs of Generating Electricity (2020), Appendix
+      ''Levelised cost of electricity''. The employment multipliers are the input-output multipliers of
+      the Leontief inverse; the shipped `indirect_employment_multiplier` and `induced_employment_multiplier`
+      nodes carry their own source fields.'
+    source_url: null
     users: []
+    priority: P2
+    status: deprecated
+    deprecated_by: indirect_employment_multiplier
   induced_employment_multiplier:
     categories: []
     category: Employment
@@ -15218,26 +15228,36 @@ parameters:
     - Policymakers
     source: docs/params.md
   induced_jobs_multiplier:
-    categories: []
-    category: Social
-    default: 0.8
-    deprecated_by: null
-    description: Jobs induced by the spending of direct employees, per direct job.
-    determinism: fixed
-    initial: null
     name: Induced jobs multiplier
-    priority: P2
-    range:
-    - 0.0
-    - 5.0
-    role: exogenous
-    source: null
-    source_url: null
-    status: to_build
+    description: 'DEPRECATED. Duplicate of `induced_employment_multiplier` at a different value: this
+      node defaulted to 0.8 while `induced_employment_multiplier` defaults to 0.7. Two ids for one input-output
+      coefficient meant `total_jobs` was not the sum of its components -- it used this pair while `indirect_jobs`
+      and `induced_jobs` used `induced_employment_multiplier`''s. The surviving node is the one carrying
+      a documented empirical band. A scenario that still names this id is naming a coefficient the graph
+      no longer computes from.'
+    category: Social
     subcategory: null
     type: float
     unit: '1'
+    range:
+    - 0.0
+    - 5.0
+    default: 0.8
+    initial: null
+    role: exogenous
+    determinism: fixed
+    categories: []
+    source: 'The annuity-factor coupling (batch 49): the capital recovery factor formula is the standard
+      CRF = r(1+r)^n / ((1+r)^n - 1), as given in IRENA (2023) Renewable Power Generation Costs in 2022,
+      Annex: ''Methodology'', and in IEA/NEA Projected Costs of Generating Electricity (2020), Appendix
+      ''Levelised cost of electricity''. The employment multipliers are the input-output multipliers of
+      the Leontief inverse; the shipped `indirect_employment_multiplier` and `induced_employment_multiplier`
+      nodes carry their own source fields.'
+    source_url: null
     users: []
+    priority: P2
+    status: deprecated
+    deprecated_by: induced_employment_multiplier
   industrial_ccus_share:
     categories: []
     category: Sector Coupling
@@ -31334,51 +31354,71 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   annualised_capex_solar_definition:
-    description: 'Solar capex recovered per year, at the system discount rate. Dimensional check: USD/kW
-      times a dimensionless factor is USD/kW/year.'
+    id: annualised_capex_solar_definition
+    name: Annualised solar capex
+    description: 'Solar capex recovered per year, at the system discount rate and over the technology''s
+      own economic life: `capex_solar_pv * crf_solar_pv`, where `crf_solar_pv` is the capital recovery
+      factor over `asset_life_solar_pv`. The shipped body read the fleet-generic `crf`, which annualises
+      over `asset_life` = 25 y -- the fleet average, not this technology''s life. Every other technology
+      in the graph reads its own factor (`lcoe_biomass` reads `crf_biomass`, `lcoe_coal` reads `crf_coal`,
+      `lcoe_wind_offshore` reads `crf_wind_offshore`), and these two did not, so a scenario that lengthens
+      a solar asset''s life moved `crf_solar_pv` while the solar LCOE stayed exactly fixed. At the defaults
+      `asset_life_solar_pv` equals `asset_life` and the two factors coincide, which is why the defect
+      is invisible until a scenario separates them. Dimensional check: USD/kW times a dimensionless factor
+      is USD/kW/year.'
+    system: cost_accounting
+    lhs: annualised_capex_usd_per_kw_solar
+    rhs: capex_solar_pv * crf_solar_pv
+    relation: eq
+    parameters:
+    - annualised_capex_usd_per_kw_solar
+    - capex_solar_pv
+    - crf_solar_pv
+    free_variables:
+    - capex_solar_pv
+    - crf_solar_pv
     determined_variables:
     - annualised_capex_usd_per_kw_solar
-    free_variables:
-    - capex_solar_pv
-    - crf
-    latex: null
-    lhs: annualised_capex_usd_per_kw_solar
-    linearity: linear
-    name: Annualised solar capex
-    parameters:
-    - capex_solar_pv
-    - crf
-    priority: P2
-    reference: null
-    relation: eq
-    rhs: capex_solar_pv * crf
-    solution_method: direct
-    system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
+    reference: null
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{annualised}_{capex\_usd\_per\_kw\_solar} = \mathrm{capex}_{solar\_pv} \mathrm{crf}_{solar\_pv}
   annualised_capex_wind_definition:
-    description: 'Onshore wind capex recovered per year, at the same discount rate. Dimensional check:
-      USD/kW times a dimensionless factor is USD/kW/year.'
+    id: annualised_capex_wind_definition
+    name: Annualised wind capex
+    description: 'Onshore wind capex recovered per year, at the system discount rate and over the technology''s
+      own economic life: `capex_wind_onshore * crf_wind_onshore`, where `crf_wind_onshore` is the capital
+      recovery factor over `asset_life_wind_onshore`. The shipped body read the fleet-generic `crf`, which
+      annualises over `asset_life` = 25 y -- the fleet average, not this technology''s life. Every other
+      technology in the graph reads its own factor (`lcoe_biomass` reads `crf_biomass`, `lcoe_coal` reads
+      `crf_coal`, `lcoe_wind_offshore` reads `crf_wind_offshore`), and these two did not, so a scenario
+      that lengthens a solar asset''s life moved `crf_wind_onshore` while the solar LCOE stayed exactly
+      fixed. At the defaults `asset_life_wind_onshore` equals `asset_life` and the two factors coincide,
+      which is why the defect is invisible until a scenario separates them. Dimensional check: USD/kW
+      times a dimensionless factor is USD/kW/year.'
+    system: cost_accounting
+    lhs: annualised_capex_usd_per_kw_wind
+    rhs: capex_wind_onshore * crf_wind_onshore
+    relation: eq
+    parameters:
+    - annualised_capex_usd_per_kw_wind
+    - capex_wind_onshore
+    - crf_wind_onshore
+    free_variables:
+    - capex_wind_onshore
+    - crf_wind_onshore
     determined_variables:
     - annualised_capex_usd_per_kw_wind
-    free_variables:
-    - capex_wind_onshore
-    - crf
-    latex: null
-    lhs: annualised_capex_usd_per_kw_wind
-    linearity: linear
-    name: Annualised wind capex
-    parameters:
-    - capex_wind_onshore
-    - crf
-    priority: P2
-    reference: null
-    relation: eq
-    rhs: capex_wind_onshore * crf
-    solution_method: direct
-    system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
+    reference: null
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{annualised}_{capex\_usd\_per\_kw\_wind} = \mathrm{capex}_{wind\_onshore} \mathrm{crf}_{wind\_onshore}
   applied_tariff_definition:
     id: applied_tariff_definition
     name: Applied tariff under the cap
@@ -44894,27 +44934,39 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   total_jobs_definition:
-    description: Direct employment plus what the supply chain and the wage bill support.
+    id: total_jobs_definition
+    name: Total jobs
+    description: 'Direct employment plus the supply-chain and wage-bill jobs it supports: `direct_jobs
+      + indirect_jobs + induced_jobs`, the total being the sum of its three components. The shipped body
+      read `direct_jobs * (1 + indirect_jobs_multiplier + induced_jobs_multiplier)` with multipliers 1.4
+      and 0.8, while `indirect_jobs` and `induced_jobs` are computed from `indirect_employment_multiplier`
+      (1.2) and `induced_employment_multiplier` (0.7) -- two spellings of one coefficient at different
+      values. The shipped total was 137,600 against a component sum of 124,700, a 10.3% overstatement
+      in a node whose own description calls it the number a build programme is argued on. Reading the
+      components makes the total the sum by construction, and gives `indirect_jobs` and `induced_jobs`
+      their first consumer. Units: jobs.'
+    system: employment
+    lhs: total_jobs
+    rhs: direct_jobs + indirect_jobs + induced_jobs
+    relation: eq
+    parameters:
+    - direct_jobs
+    - indirect_jobs
+    - induced_jobs
+    - total_jobs
+    free_variables:
+    - direct_jobs
+    - indirect_jobs
+    - induced_jobs
     determined_variables:
     - total_jobs
-    free_variables: []
-    latex: null
-    lhs: total_jobs
-    linearity: linear
-    name: Total jobs
-    parameters:
-    - total_jobs
-    - direct_jobs
-    - indirect_jobs_multiplier
-    - induced_jobs_multiplier
-    priority: P2
-    reference: null
-    relation: eq
-    rhs: direct_jobs * (1 + indirect_jobs_multiplier + induced_jobs_multiplier)
-    solution_method: direct
-    system: employment
     tolerance: 1.0e-09
     unit_check: true
+    reference: null
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{total}_{jobs} = \mathrm{direct}_{jobs} + \mathrm{indirect}_{jobs} + \mathrm{induced}_{jobs}
   total_loss_utilisation_window_definition:
     description: 'The total window tax losses may be utilised over: the carryback and carryforward years
       together, which is what the effective tax-rate smoothing relies on.'
@@ -46894,33 +46946,6 @@ relationships:
   source: om_jobs_per_mw
   strength: hard
   target: direct_jobs
-- description: Supply-chain and induced employment scale with direct employment.
-  direction: forward
-  equation_id: total_jobs_definition
-  priority: P2
-  reference: null
-  relationship: equality
-  source: direct_jobs
-  strength: hard
-  target: total_jobs
-- description: The input-output multiplier.
-  direction: forward
-  equation_id: total_jobs_definition
-  priority: P2
-  reference: null
-  relationship: functional
-  source: indirect_jobs_multiplier
-  strength: hard
-  target: total_jobs
-- description: The induced multiplier.
-  direction: forward
-  equation_id: total_jobs_definition
-  priority: P2
-  reference: null
-  relationship: functional
-  source: induced_jobs_multiplier
-  strength: hard
-  target: total_jobs
 - description: Deaths become burden through years of life lost.
   direction: forward
   equation_id: dalys_definition
@@ -47326,42 +47351,6 @@ relationships:
   source: expense_ratio
   strength: hard
   target: combined_ratio
-- description: Capex is annualised at the recovery factor.
-  direction: forward
-  equation_id: annualised_capex_solar_definition
-  priority: P2
-  reference: null
-  relationship: equality
-  source: capex_solar_pv
-  strength: hard
-  target: annualised_capex_usd_per_kw_solar
-- description: The recovery factor is the annualisation.
-  direction: forward
-  equation_id: annualised_capex_solar_definition
-  priority: P2
-  reference: null
-  relationship: equality
-  source: crf
-  strength: hard
-  target: annualised_capex_usd_per_kw_solar
-- description: Same shape as the solar case.
-  direction: forward
-  equation_id: annualised_capex_wind_definition
-  priority: P2
-  reference: null
-  relationship: equality
-  source: capex_wind_onshore
-  strength: hard
-  target: annualised_capex_usd_per_kw_wind
-- description: Same recovery factor.
-  direction: forward
-  equation_id: annualised_capex_wind_definition
-  priority: P2
-  reference: null
-  relationship: equality
-  source: crf
-  strength: hard
-  target: annualised_capex_usd_per_kw_wind
 - description: Base-year cost is what the escalation compounds.
   direction: forward
   equation_id: fuel_cost_escalated_coal_definition
@@ -58455,6 +58444,110 @@ relationships:
     sum to `demand_twh` rather than to the base.
   reference: Bottom-up load synthesis (catalog method cell)
   priority: P1
+- source: crf_solar_pv
+  target: annualised_capex_usd_per_kw_solar
+  equation_id: annualised_capex_solar_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The capital recovery factor over this technology's own economic life `asset_life_solar_pv`,
+    not the fleet-generic `crf`. The shipped edge entered from `crf`; this one enters from the factor
+    named for the technology the capex belongs to.
+  reference: 'The annuity-factor coupling (batch 49): the capital recovery factor formula is the standard
+    CRF = r(1+r)^n / ((1+r)^n - 1), as given in IRENA (2023) Renewable Power Generation Costs in 2022,
+    Annex: ''Methodology'', and in IEA/NEA Projected Costs of Generating Electricity (2020), Appendix
+    ''Levelised cost of electricity''. The employment multipliers are the input-output multipliers of
+    the Leontief inverse; the shipped `indirect_employment_multiplier` and `induced_employment_multiplier`
+    nodes carry their own source fields.'
+  priority: P2
+- source: capex_solar_pv
+  target: annualised_capex_usd_per_kw_solar
+  equation_id: annualised_capex_solar_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Overnight capital cost per kW, annualised by `crf_solar_pv`.
+  reference: 'The annuity-factor coupling (batch 49): the capital recovery factor formula is the standard
+    CRF = r(1+r)^n / ((1+r)^n - 1), as given in IRENA (2023) Renewable Power Generation Costs in 2022,
+    Annex: ''Methodology'', and in IEA/NEA Projected Costs of Generating Electricity (2020), Appendix
+    ''Levelised cost of electricity''. The employment multipliers are the input-output multipliers of
+    the Leontief inverse; the shipped `indirect_employment_multiplier` and `induced_employment_multiplier`
+    nodes carry their own source fields.'
+  priority: P2
+- source: crf_wind_onshore
+  target: annualised_capex_usd_per_kw_wind
+  equation_id: annualised_capex_wind_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The capital recovery factor over this technology's own economic life `asset_life_wind_onshore`,
+    not the fleet-generic `crf`. The shipped edge entered from `crf`; this one enters from the factor
+    named for the technology the capex belongs to.
+  reference: 'The annuity-factor coupling (batch 49): the capital recovery factor formula is the standard
+    CRF = r(1+r)^n / ((1+r)^n - 1), as given in IRENA (2023) Renewable Power Generation Costs in 2022,
+    Annex: ''Methodology'', and in IEA/NEA Projected Costs of Generating Electricity (2020), Appendix
+    ''Levelised cost of electricity''. The employment multipliers are the input-output multipliers of
+    the Leontief inverse; the shipped `indirect_employment_multiplier` and `induced_employment_multiplier`
+    nodes carry their own source fields.'
+  priority: P2
+- source: capex_wind_onshore
+  target: annualised_capex_usd_per_kw_wind
+  equation_id: annualised_capex_wind_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Overnight capital cost per kW, annualised by `crf_wind_onshore`.
+  reference: 'The annuity-factor coupling (batch 49): the capital recovery factor formula is the standard
+    CRF = r(1+r)^n / ((1+r)^n - 1), as given in IRENA (2023) Renewable Power Generation Costs in 2022,
+    Annex: ''Methodology'', and in IEA/NEA Projected Costs of Generating Electricity (2020), Appendix
+    ''Levelised cost of electricity''. The employment multipliers are the input-output multipliers of
+    the Leontief inverse; the shipped `indirect_employment_multiplier` and `induced_employment_multiplier`
+    nodes carry their own source fields.'
+  priority: P2
+- source: direct_jobs
+  target: total_jobs
+  equation_id: total_jobs_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The direct construction and O&M jobs, entering the total as itself.
+  reference: 'The annuity-factor coupling (batch 49): the capital recovery factor formula is the standard
+    CRF = r(1+r)^n / ((1+r)^n - 1), as given in IRENA (2023) Renewable Power Generation Costs in 2022,
+    Annex: ''Methodology'', and in IEA/NEA Projected Costs of Generating Electricity (2020), Appendix
+    ''Levelised cost of electricity''. The employment multipliers are the input-output multipliers of
+    the Leontief inverse; the shipped `indirect_employment_multiplier` and `induced_employment_multiplier`
+    nodes carry their own source fields.'
+  priority: P2
+- source: indirect_jobs
+  target: total_jobs
+  equation_id: total_jobs_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Supply-chain jobs on `indirect_employment_multiplier`; the shipped total used a second,
+    different multiplier instead of this node.
+  reference: 'The annuity-factor coupling (batch 49): the capital recovery factor formula is the standard
+    CRF = r(1+r)^n / ((1+r)^n - 1), as given in IRENA (2023) Renewable Power Generation Costs in 2022,
+    Annex: ''Methodology'', and in IEA/NEA Projected Costs of Generating Electricity (2020), Appendix
+    ''Levelised cost of electricity''. The employment multipliers are the input-output multipliers of
+    the Leontief inverse; the shipped `indirect_employment_multiplier` and `induced_employment_multiplier`
+    nodes carry their own source fields.'
+  priority: P2
+- source: induced_jobs
+  target: total_jobs
+  equation_id: total_jobs_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Wage-bill jobs on `induced_employment_multiplier`; the shipped total used a second, different
+    multiplier instead of this node.
+  reference: 'The annuity-factor coupling (batch 49): the capital recovery factor formula is the standard
+    CRF = r(1+r)^n / ((1+r)^n - 1), as given in IRENA (2023) Renewable Power Generation Costs in 2022,
+    Annex: ''Methodology'', and in IEA/NEA Projected Costs of Generating Electricity (2020), Appendix
+    ''Levelised cost of electricity''. The employment multipliers are the input-output multipliers of
+    the Leontief inverse; the shipped `indirect_employment_multiplier` and `induced_employment_multiplier`
+    nodes carry their own source fields.'
+  priority: P2
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0
   id: carbon_price_budget_alignment
@@ -58529,13 +58622,6 @@ cross_validation:
     tariff that is above the level at which the load was surveyed
   severity: info
   suggestion: Verify reference_tariff_usd_per_mwh, or accept the surplus transfer as the policy
-- condition: indirect_jobs_multiplier > 3.0 or induced_jobs_multiplier > 2.0
-  id: jobs_multiplier_out_of_range
-  message: A jobs multiplier above 3 (indirect) or 2 (induced) is outside the range most input-output
-    studies report for energy infrastructure
-  severity: warning
-  suggestion: Use the study's value, or record that this is a national-accounts coefficient rather than
-    a rule of thumb
 - condition: solar_pv_learning_rate > 0.35 or battery_learning_rate > 0.35 or electrolyser_learning_rate
     > 0.35
   id: learning_rates_out_of_range
@@ -58840,3 +58926,10 @@ cross_validation:
   suggestion: Raise a generating capacity, raise a capacity factor, or lower the demand the balance dispatches
   parameters:
   - fleet_generation_headroom
+- id: jobs_multiplier_out_of_range
+  condition: indirect_employment_multiplier > 3.0 or induced_employment_multiplier > 2.0
+  message: A jobs multiplier above 3 (indirect) or 2 (induced) is outside the range most input-output
+    studies report for energy infrastructure
+  severity: warning
+  suggestion: Use the study's value, or record that this is a national-accounts coefficient rather than
+    a rule of thumb

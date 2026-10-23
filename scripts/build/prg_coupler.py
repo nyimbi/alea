@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "49":
+		b49_nodes, b49_equations, b49_edges, b49_rules = build_batch49(graph)
+		rules.extend(b49_rules)
+		nodes.update(b49_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b49_equations)
+		edges = list(BATCH12_EDGES) + b49_edges
 	elif batch == "48":
 		b48_nodes, b48_equations, b48_edges, b48_rules = build_batch48(graph)
 		rules.extend(b48_rules)
@@ -13047,6 +13054,410 @@ def build_batch47(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 #: from the graph rather than restated here; this table names only the pairing,
 #: because a share's value is a scenario dial and a table of values would be a
 #: second copy of the defaults.
+_BATCH49_CRF: tuple[tuple[str, str, str], ...] = (
+	("solar", "crf_solar_pv", "asset_life_solar_pv"),
+	("wind", "crf_wind_onshore", "asset_life_wind_onshore"),
+)
+
+_BATCH49_DUPLICATE_DIALS: tuple[tuple[str, str], ...] = (
+	("indirect_jobs_multiplier", "indirect_employment_multiplier"),
+	("induced_jobs_multiplier", "induced_employment_multiplier"),
+)
+
+_BATCH49_SOURCE = (
+	"The annuity-factor coupling (batch 49): the capital recovery factor "
+	"formula is the standard CRF = r(1+r)^n / ((1+r)^n - 1), as given in "
+	"IRENA (2023) Renewable Power Generation Costs in 2022, Annex: "
+	"'Methodology', and in IEA/NEA Projected Costs of Generating Electricity "
+	"(2020), Appendix 'Levelised cost of electricity'. The employment "
+	"multipliers are the input-output multipliers of the Leontief inverse; "
+	"the shipped `indirect_employment_multiplier` and "
+	"`induced_employment_multiplier` nodes carry their own source fields."
+)
+
+
+def build_batch49(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Retarget two pairs of equations onto the dial each one is named for.
+
+	*Two nodes per pair, one number, and neither equation reading the node its
+	own name points at.* Both pairs are the same defect in a different system:
+	a technology-specific dial ships, an equation computes the technology's
+	cost or job total, and the equation reads the fleet-generic dial instead.
+
+	*Pair one: the annuity factor.* `crf_solar_pv` and `crf_wind_onshore` are
+	computed from their own asset lives and read by nothing.
+	`annualised_capex_solar_definition` and `annualised_capex_wind_definition`
+	read the fleet-generic `crf`, which annualises over `asset_life` = 25 y.
+	Every other technology reads its own: `lcoe_biomass` reads `crf_biomass`,
+	`lcoe_coal` reads `crf_coal`, `lcoe_wind_offshore` reads
+	`crf_wind_offshore`. Solar and onshore wind -- the two technologies whose
+	asset life most obviously departs from the fleet average -- read the
+	generic one. At the defaults the defect is invisible because
+	`asset_life_solar_pv` = `asset_life_wind_onshore` = `asset_life` = 25.0,
+	so the two factors are the same number. That is why this batch needs a
+	live canary: setting `asset_life_solar_pv` = 40 moves `crf_solar_pv`
+	from 0.114124 to 0.106635 while `lcoe_solar_usd_per_mwh` does not move at
+	all, which is a scenario a reader can run and a gate that the defaults
+	cannot see.
+
+	*Pair two: the jobs multipliers.* `total_jobs_definition` reads
+	`indirect_jobs_multiplier` (1.4) and `induced_jobs_multiplier` (0.8),
+	both `status: to_build`. `indirect_jobs` and `induced_jobs` are computed
+	from `indirect_employment_multiplier` (1.2) and
+	`induced_employment_multiplier` (0.7), both `status: existing`. So the
+	graph holds two spellings of one coefficient at different values, and
+	`total_jobs` is not the sum of its components: 43,000 direct +
+	51,600 indirect + 30,100 induced = 124,700, against `total_jobs` =
+	137,600, a 10.3% overstatement in a node whose own description calls it
+	"the number a build programme is argued on".
+
+	*Why the second pair is retired rather than left live.* Retargeting the
+	equation is not enough on its own: it leaves the `to_build` pair named by
+	no equation, and the graph's own invariant refuses an uncoupled node whose
+	role is `exogenous` -- `test_the_summary_reports_the_registers` pins
+	`uncoupled_roles == {"free"}` precisely so a dial nothing computes cannot
+	quietly float. Measured, not predicted: the retarget alone fails that test
+	with `{'exogenous', 'free'}`. So the pair is deprecated in favour of the
+	`existing` pair, which is what a duplicate spelling deserves: one
+	coefficient, two ids, and the survivor is the node carrying a documented
+	empirical band.
+
+	*The ordering that makes the deprecation legal.* `_deprecated_reach`
+	refuses an edge or an equation naming a deprecated node but checks **no**
+	rules, so a rule left on the retired pair would load clean and gate on a
+	knob the graph has retired -- the `reserve_margin_required_mw` shape,
+	where the rule gates on an independent dial and the computed requirement
+	is read by nothing. This batch therefore repoints the rule *first*, in the
+	same fragment, and only then deprecates.
+
+	*What this changes at the defaults.* The jobs repair is value-bearing:
+	`total_jobs` falls from 137,600 to 124,700 and the number now equals the
+	sum of the three components. The CRF repair is value-neutral at the
+	defaults by construction -- the two asset lives are equal -- and
+	value-bearing only under a scenario that separates them. Both are asserted
+	below rather than assumed, because "value-neutral" is a claim about
+	today's defaults and the canary is what separates it from "does nothing".
+	"""
+	from alea.prg.dsl import parse_side
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	measured = graph.propagate(values).values
+
+	# -- pair one: the annuity factor ------------------------------------
+	#
+	# The shipped body is the guard. A body already reading its own crf would
+	# be a correction somebody else made, and overwriting it would be a silent
+	# second correction to a node this batch was not written against.
+	crf_equations = {
+		"solar": "annualised_capex_solar_definition",
+		"wind": "annualised_capex_wind_definition",
+	}
+	crf_lhs = {
+		"solar": "annualised_capex_usd_per_kw_solar",
+		"wind": "annualised_capex_usd_per_kw_wind",
+	}
+	crf_capex = {
+		"solar": "capex_solar_pv",
+		"wind": "capex_wind_onshore",
+	}
+	for tech, crf_node, life_node in _BATCH49_CRF:
+		equation_id = crf_equations[tech]
+		lhs = crf_lhs[tech]
+		capex = crf_capex[tech]
+		assert crf_node in graph.nodes, f"{crf_node}: the specific crf does not ship"
+		assert life_node in graph.nodes, f"{life_node}: the asset life does not ship"
+		# The specific factor must be computed from the specific life and
+		# nothing else, or reading it here would be a different claim than the
+		# one the description makes.
+		specific = graph.determined_by(crf_node)
+		assert specific is not None, f"{crf_node}: no equation determines it"
+		assert set(specific.parameters) == {"discount_rate", life_node, crf_node}, (
+			f"{specific.id}: reads {sorted(specific.parameters)}; the batch "
+			f"assumes the specific factor is computed from {life_node!r}"
+		)
+		shipped = graph.equations[equation_id]
+		assert shipped.lhs == lhs, f"{equation_id}: lhs is {shipped.lhs!r}, not {lhs!r}"
+		expected = f"{capex} * crf"
+		assert shipped.rhs == expected, (
+			f"{equation_id}: rhs is {shipped.rhs!r}, not {expected!r}; this batch "
+			f"was written against the generic-crf body"
+		)
+		# The defect, measured: the specific factor is read by nothing.
+		assert graph.affects(crf_node) == (), (
+			f"{crf_node}: something already reads it ({graph.affects(crf_node)}); "
+			f"the defect this batch corrects is not present"
+		)
+		assert graph.affects(life_node), (
+			f"{life_node}: moves nothing, so the retarget could not be canaried"
+		)
+
+	# The specific factor differs from the generic one only when the lives
+	# differ, and at the defaults they do not. Asserting the equality here is
+	# what makes "value-neutral at the defaults" a measured claim; the canary
+	# below is what makes it a claim about the defaults rather than about the
+	# arithmetic.
+	for tech, crf_node, life_node in _BATCH49_CRF:
+		assert measured[life_node] == measured["asset_life"], (
+			f"{life_node} is {measured[life_node]!r}, not the fleet asset_life "
+			f"{measured['asset_life']!r}; the defaults would already separate the "
+			f"two factors and this batch would be value-bearing at them"
+		)
+		assert abs(measured[crf_node] - measured["crf"]) < 1e-12, (
+			f"{crf_node} {measured[crf_node]!r} != crf {measured['crf']!r} at "
+			f"equal lives; the two formulas are not the same formula"
+		)
+
+	# The canary: separate one life and confirm the specific factor moves while
+	# the node it should feed does not. A gate that only reads the defaults
+	# would pass on a graph where the retarget had not happened.
+	_canary_values = dict(values)
+	_canary_values["asset_life_solar_pv"] = 40.0
+	_canary = graph.propagate(_canary_values).values
+	assert abs(float(_canary["crf_solar_pv"]) - float(measured["crf_solar_pv"])) > 1e-6, (
+		"the canary did not move crf_solar_pv; the scenario is degenerate and the "
+		"defect it is meant to expose would go unseen"
+	)
+	assert abs(
+		float(_canary["annualised_capex_usd_per_kw_solar"])
+		- float(measured["annualised_capex_usd_per_kw_solar"])
+	) < 1e-12, (
+		"annualised_capex_usd_per_kw_solar already moves with asset_life_solar_pv; "
+		"the defect this batch corrects is not present"
+	)
+
+	# -- pair two: the jobs multipliers ----------------------------------
+	#
+	# The rule is repointed in the same batch as the equation. A rule left
+	# reading the retired dial while the equation reads the live one is the
+	# `reserve_margin_required_mw` shape: two spellings of one number, gating
+	# independently, with no check that can see it.
+	total_jobs = graph.equations["total_jobs_definition"]
+	assert total_jobs.rhs == (
+		"direct_jobs * (1 + indirect_jobs_multiplier + induced_jobs_multiplier)"
+	), f"total_jobs_definition: rhs is {total_jobs.rhs!r}, not the duplicate-dial body"
+	for dead, live in _BATCH49_DUPLICATE_DIALS:
+		assert dead in graph.nodes and live in graph.nodes, (
+			f"{dead}/{live}: one of the pair does not ship"
+		)
+		assert graph.nodes[dead].default != graph.nodes[live].default, (
+			f"{dead} and {live} carry the same default; the pair would not be "
+			f"two spellings at different values and the repair would be a no-op"
+		)
+
+	component_sum = (
+		float(measured["direct_jobs"])
+		+ float(measured["indirect_jobs"])
+		+ float(measured["induced_jobs"])
+	)
+	assert abs(float(measured["total_jobs"]) - component_sum) > 1.0, (
+		f"total_jobs {measured['total_jobs']!r} already equals the component sum "
+		f"{component_sum!r}; the defect this batch corrects is not present"
+	)
+
+	# -- emit -------------------------------------------------------------
+	for tech, crf_node, life_node in _BATCH49_CRF:
+		equation_id = crf_equations[tech]
+		lhs = crf_lhs[tech]
+		capex = crf_capex[tech]
+		rhs = f"{capex} * {crf_node}"
+		named = set(parse_side(rhs).symbols) | set(parse_side(lhs).symbols)
+		# The generic `crf` must be gone from the body, not merely accompanied
+		# by the specific one: a body reading both would keep the generic edge
+		# alive and the retarget would be an addition rather than a correction.
+		assert "crf" not in named, f"{equation_id}: the new body still names the generic crf"
+		assert crf_node in named and life_node not in named, (
+			f"{equation_id}: the body must read the specific factor and not the "
+			f"asset life directly"
+		)
+
+		body = graph.equations[equation_id].model_dump(mode="json")
+		body["rhs"] = rhs
+		body["parameters"] = sorted(named)
+		body["free_variables"] = sorted(named - {lhs})
+		body["determined_variables"] = [lhs]
+		body["description"] = (
+			f"{'Solar' if tech == 'solar' else 'Onshore wind'} capex recovered "
+			f"per year, at the system discount rate and over the "
+			f"technology's own economic life: `{capex} * {crf_node}`, where "
+			f"`{crf_node}` is the capital recovery factor over `{life_node}`. "
+			f"The shipped body read the fleet-generic `crf`, which annualises "
+			f"over `asset_life` = 25 y -- the fleet average, not this "
+			f"technology's life. Every other technology in the graph reads its "
+			f"own factor (`lcoe_biomass` reads `crf_biomass`, `lcoe_coal` reads "
+			f"`crf_coal`, `lcoe_wind_offshore` reads `crf_wind_offshore`), and "
+			f"these two did not, so a scenario that lengthens a solar asset's "
+			f"life moved `{crf_node}` while the solar LCOE stayed exactly "
+			f"fixed. At the defaults `{life_node}` equals `asset_life` and the "
+			f"two factors coincide, which is why the defect is invisible until "
+			f"a scenario separates them. Dimensional check: USD/kW times a "
+			f"dimensionless factor is USD/kW/year."
+		)
+		from alea.prg.service import generated_latex as _generated_latex
+		from alea.prg.views import Equation as _Equation
+
+		body["latex"] = _generated_latex(_Equation(**body))  # type: ignore[arg-type]
+		equations[equation_id] = body
+
+		# Both symbols the new body reads. The specific-factor edge is the
+		# coupling the batch adds; the capex edge is re-emitted because the
+		# shipped one carried no reference and this one does. The generic
+		# `crf -> lhs` edge is absent from the fragment, so the merge's
+		# stale-edge pass drops it and names it.
+		for symbol, description in (
+			(
+				crf_node,
+				f"The capital recovery factor over this technology's own "
+				f"economic life `{life_node}`, not the fleet-generic `crf`. The "
+				f"shipped edge entered from `crf`; this one enters from the "
+				f"factor named for the technology the capex belongs to.",
+			),
+			(
+				capex,
+				f"Overnight capital cost per kW, annualised by `{crf_node}`.",
+			),
+		):
+			edges.append({
+				"source": symbol,
+				"target": lhs,
+				"equation_id": equation_id,
+				"relationship": "functional",
+				"direction": "forward",
+				"strength": "hard",
+				"description": description,
+				"reference": _BATCH49_SOURCE,
+				"priority": "P2",
+			})
+
+	# The jobs equation: read the live pair, so the total is the sum.
+	jobs_rhs = "direct_jobs + indirect_jobs + induced_jobs"
+	named = set(parse_side(jobs_rhs).symbols) | {"total_jobs"}
+	assert "indirect_jobs_multiplier" not in named, "the new jobs body names the retired dial"
+	body = graph.equations["total_jobs_definition"].model_dump(mode="json")
+	body["rhs"] = jobs_rhs
+	body["parameters"] = sorted(named)
+	body["free_variables"] = sorted(named - {"total_jobs"})
+	body["determined_variables"] = ["total_jobs"]
+	body["description"] = (
+		"Direct employment plus the supply-chain and wage-bill jobs it "
+		"supports: `direct_jobs + indirect_jobs + induced_jobs`, the total "
+		"being the sum of its three components. The shipped body read "
+		"`direct_jobs * (1 + indirect_jobs_multiplier + "
+		"induced_jobs_multiplier)` with multipliers 1.4 and 0.8, while "
+		"`indirect_jobs` and `induced_jobs` are computed from "
+		"`indirect_employment_multiplier` (1.2) and "
+		"`induced_employment_multiplier` (0.7) -- two spellings of one "
+		"coefficient at different values. The shipped total was 137,600 "
+		"against a component sum of 124,700, a 10.3% overstatement in a node "
+		"whose own description calls it the number a build programme is argued "
+		"on. Reading the components makes the total the sum by construction, "
+		"and gives `indirect_jobs` and `induced_jobs` their first consumer. "
+		"Units: jobs."
+	)
+	from alea.prg.service import generated_latex as _generated_latex
+	from alea.prg.views import Equation as _Equation
+
+	body["latex"] = _generated_latex(_Equation(**body))  # type: ignore[arg-type]
+	equations["total_jobs_definition"] = body
+
+	for symbol, description in (
+		("direct_jobs", "The direct construction and O&M jobs, entering the total as itself."),
+		("indirect_jobs", "Supply-chain jobs on `indirect_employment_multiplier`; the shipped total used a second, different multiplier instead of this node."),
+		("induced_jobs", "Wage-bill jobs on `induced_employment_multiplier`; the shipped total used a second, different multiplier instead of this node."),
+	):
+		edges.append({
+			"source": symbol,
+			"target": "total_jobs",
+			"equation_id": "total_jobs_definition",
+			"relationship": "functional",
+			"direction": "forward",
+			"strength": "hard",
+			"description": description,
+			"reference": _BATCH49_SOURCE,
+			"priority": "P2",
+		})
+
+	# The rule, repointed in the same batch as the equation. `_deprecated_reach`
+	# does not check rules, so a rule left on the retired pair would load clean
+	# and gate on a knob the equation no longer reads.
+	shipped_rule = next(
+		(r for r in graph.rules if r.id == "jobs_multiplier_out_of_range"), None
+	)
+	assert shipped_rule is not None, "jobs_multiplier_out_of_range: the rule does not ship"
+	assert shipped_rule.condition == (
+		"indirect_jobs_multiplier > 3.0 or induced_jobs_multiplier > 2.0"
+	), f"jobs_multiplier_out_of_range: condition is {shipped_rule.condition!r}"
+	rules.append({
+		"id": "jobs_multiplier_out_of_range",
+		"condition": "indirect_employment_multiplier > 3.0 or induced_employment_multiplier > 2.0",
+		"message": (
+			"A jobs multiplier above 3 (indirect) or 2 (induced) is outside the "
+			"range most input-output studies report for energy infrastructure"
+		),
+		"severity": "warning",
+		"suggestion": (
+			"Use the study's value, or record that this is a national-accounts "
+			"coefficient rather than a rule of thumb"
+		),
+	})
+
+	# Retire the duplicate pair. The deprecation is only legal once nothing
+	# reaches the node -- no edge, no equation, and (because `_deprecated_reach`
+	# does not look at rules) no rule. The rule repoint above is what makes the
+	# last of those true, and the assertions here are what stop this batch
+	# shipping a tombstone something still reads.
+	for dead, live in _BATCH49_DUPLICATE_DIALS:
+		# The guard is on what this batch *emits*, not on the shipped graph,
+		# which still carries the body being replaced. A node this fragment
+		# names is a node `_deprecated_reach` will refuse once merged, so the
+		# check is that no emitted body or rule names the one being retired.
+		for eq_id, eq_body in equations.items():
+			assert dead not in parse_side(str(eq_body["rhs"])).symbols, (
+				f"{eq_id}: the emitted body still names {dead}; deprecating it "
+				f"would fail `_deprecated_reach` on the merged graph"
+			)
+		for rule in rules:
+			assert dead not in rule["condition"], (
+				f"{rule['id']}: the emitted rule still names {dead}; the repoint "
+				f"must come before the deprecation"
+			)
+		for edge in edges:
+			assert dead not in (edge["source"], edge["target"]), (
+				f"{edge['source']}->{edge['target']}: the emitted edge names {dead}"
+			)
+		assert graph.nodes[dead].status != "deprecated", (
+			f"{dead}: already deprecated; this batch would overwrite the tombstone"
+		)
+		body = dict(graph.nodes[dead].model_dump(exclude={"id"}, mode="json"))
+		body.update({
+			# The default is kept for the same reason batch 44 kept it: a
+			# scenario naming the retired id must fail loudly by name, and the
+			# refusal is keyed on the value differing from the default. Clearing
+			# it would make that check unreachable rather than stricter.
+			"status": "deprecated",
+			"deprecated_by": live,
+			"description": (
+				f"DEPRECATED. Duplicate of `{live}` at a different value: this "
+				f"node defaulted to {graph.nodes[dead].default!r} while "
+				f"`{live}` defaults to {graph.nodes[live].default!r}. Two ids "
+				f"for one input-output coefficient meant `total_jobs` was not "
+				f"the sum of its components -- it used this pair while "
+				f"`indirect_jobs` and `induced_jobs` used `{live}`'s. The "
+				f"surviving node is the one carrying a documented empirical "
+				f"band. A scenario that still names this id is naming a "
+				f"coefficient the graph no longer computes from."
+			),
+			"source": _BATCH49_SOURCE,
+		})
+		nodes[dead] = body
+
+	return nodes, equations, edges, rules
+
+
 _BATCH48_SECTORS: tuple[tuple[str, str], ...] = (
 	("residential", "residential_demand_twh"),
 	("commercial", "commercial_demand_twh"),

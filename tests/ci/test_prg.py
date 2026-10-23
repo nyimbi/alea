@@ -969,6 +969,11 @@ def test_the_summary_reports_the_registers(graph: ParameterGraph):
 	}
 	assert deprecated_uncoupled == {
 		"cross_border_trading", "demand_growth_rate", "pm25_relative_risk_per_kt",
+		# Batch 49 retired the duplicate jobs multipliers once `total_jobs`
+		# stopped reading them. They are `exogenous` tombstones and would
+		# otherwise break the `{"free"}` claim below, which is why they are
+		# named here rather than filtered silently.
+		"indirect_jobs_multiplier", "induced_jobs_multiplier",
 	}, deprecated_uncoupled
 	uncoupled_roles = {
 		graph.role(name).value for name in graph.uncoupled()
