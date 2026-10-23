@@ -1459,6 +1459,48 @@ def test_the_capital_structure_has_one_dial_and_every_other_face_derives(
 	)
 
 
+def test_the_required_reserve_capacity_follows_the_planning_dial(
+	graph: ParameterGraph, defaults: dict
+):
+	"""Raising the planning margin must raise the capacity it requires.
+
+	`reserve_margin_required_mw = reserve_margin_requirement * peak_demand_mw`
+	read a **free** dial, while every reserve rule and `lolp` read
+	`reserve_margin_min`. Both shipped 0.15, so the two agreed at the defaults
+	and a value test could not tell them apart. Raising the planning dial to
+	0.35 left the required capacity at 1275 MW -- unchanged -- while raising
+	the duplicate moved it to 2975 MW and left the rules gating on 0.15.
+
+	Batch 53 makes `reserve_margin_requirement` derived from
+	`reserve_margin_min`. This test asserts the response, which is the only
+	observable that separates a derived duplicate from a dial.
+	"""
+	requirement = graph.node("reserve_margin_requirement")
+	assert requirement.role.value == "derived", requirement.role
+	assert not graph.is_settable("reserve_margin_requirement")
+	assert graph.is_settable("reserve_margin_min"), "the planning dial is not settable"
+
+	# The closed form, so a wrong divisor fails as well as a missing response.
+	values = graph.propagate(defaults).values
+	assert values["reserve_margin_requirement"] == pytest.approx(
+		values["reserve_margin_min"], rel=1e-12
+	)
+
+	# The response, and the value it produces: 0.35 on a 8 500 MW peak is
+	# 2975 MW. A response that moved the node by the wrong multiple passes a
+	# bare "changed" check.
+	raised = dict(defaults)
+	raised["reserve_margin_min"] = 0.35
+	after = graph.propagate(raised).values
+	assert after["reserve_margin_required_mw"] > values["reserve_margin_required_mw"], (
+		"raising the planning reserve margin did not raise the required "
+		"capacity; the requirement is not reading the dial the rules gate on"
+	)
+	assert after["reserve_margin_required_mw"] == pytest.approx(
+		0.35 * values["peak_demand_mw"], rel=1e-12
+	)
+
+
 def test_a_range_excursion_does_not_survive_into_the_next_scenario(
 	graph: ParameterGraph, defaults: dict
 ):
@@ -2273,7 +2315,8 @@ def test_the_audit_reports_what_it_did_not_check():
 	# not on the solve result either, so `skipped` moves 334 -> 335 for the
 	# same reason.
 	assert len(audit.checked) == 197, audit.checked
-	assert len(audit.skipped) == 335, audit.skipped
+	# Batch 53's reserve-requirement definition takes it 335 -> 336.
+	assert len(audit.skipped) == 336, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -2331,8 +2374,9 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# residue layer to 461, batch 44's pollutant layer to 493, and batch 46's
 	# capacity-to-energy layer to 528.
 	# Batch 51's three derived emission factors take it 528 -> 531, and batch
-	# 52's debt-share definition takes it 531 -> 532.
-	assert len(audit.skipped) == 532, audit.skipped
+	# 52's debt-share definition takes it 531 -> 532, and batch 53's reserve
+	# requirement 532 -> 533.
+	assert len(audit.skipped) == 533, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -4350,7 +4394,9 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# three complement rewrites keep their edges, and the new debt-share
 	# definition adds one hard edge: 601 -> 602. Still the two tiers the batch
 	# did not touch, which is what the equality checks.
-	assert counts == {"hard": 602, "informational": 1, "soft": 2}, counts
+	# Batch 53's reserve-requirement definition adds one more hard edge, with a
+	# bare alias rhs: 602 -> 603.
+	assert counts == {"hard": 603, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -4756,8 +4802,9 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# 259 to 295.
 	# Batch 51's three emission-factor equations each carry a reference (IPCC
 	# 2006 Table 2.2), taking the register 295 -> 298. Batch 52's debt-share
-	# definition cites the UKRN cost-of-capital review, 298 -> 299.
-	assert len(declared) == 299, f"the citation register moved: {sorted(declared)}"
+	# definition cites the UKRN cost-of-capital review, 298 -> 299, and batch
+	# 53's reserve requirement cites NERC's planning reserve framework, 299 -> 300.
+	assert len(declared) == 300, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -5005,8 +5052,8 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 			compared += 1
 	# Batch 52's debt-share definition is affine in the variable it solves for,
 	# like every equation the earlier batches added, so the compared set moves
-	# 531 -> 532.
-	assert compared == 532, (
+	# 531 -> 532, and batch 53's reserve requirement 532 -> 533.
+	assert compared == 533, (
 		f"expected 481 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "

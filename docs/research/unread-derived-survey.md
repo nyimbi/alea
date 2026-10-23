@@ -218,7 +218,16 @@ constraint or equation reads. Recommendation: either give each register a
 consuming equation (a `total_*` aggregation, which the graph does not have —
 see §5, item f) or stop generating them.
 
-## 4. The shortlist — SHOULD BE CONSUMED, ranked by how misleading the absence is
+## 4. The shortlist
+
+> **Re-measured 2026-10-23, after batch 53.** Items 1 and 3 below **no longer
+> reproduce**: `annualised_capex_solar_definition` reads `crf_solar_pv` and
+> `annualised_capex_wind_definition` reads `crf_wind_onshore`, and
+> `total_jobs_definition` sums `direct_jobs + indirect_jobs + induced_jobs`.
+> Both were fixed by earlier batches and this survey was not re-run. Item 2
+> was live and is fixed by batch 53. The counts in §1-§2 (1426/601/57, 234,
+> 389, 357, 413) are a snapshot of the same date; the graph is now
+> 1429/606/1366. Treat every item here as a claim needing a fresh measurement. — SHOULD BE CONSUMED, ranked by how misleading the absence is
 
 Ranked by: does a reader of the output believe something the graph does not
 compute?

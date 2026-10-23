@@ -25394,26 +25394,31 @@ parameters:
     - Planners
     - Regulators
   reserve_margin_min:
-    categories: []
-    category: Technical
-    default: 0.15
-    deprecated_by: null
-    description: Firm capacity required above peak demand, as a fraction.
-    determinism: policy
-    initial: null
     name: Minimum reserve margin
-    priority: P1
-    range:
-    - 0.0
-    - 1.0
-    role: exogenous
-    source: null
-    source_url: null
-    status: existing
+    description: Firm capacity required above peak demand, as a fraction.
+    category: Technical
     subcategory: null
     type: float
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.15
+    initial: null
+    role: exogenous
+    determinism: policy
+    categories: []
+    source: null
+    source_url: null
     users: []
+    priority: P1
+    status: existing
+    deprecated_by: null
+    depends_on: []
+    affects:
+    - lolp
+    - planning_reserve_margin
+    - reserve_margin_requirement
   reserve_margin_required_mw:
     category: Regulatory
     description: 'reserve margin required mw: the compliance register''s derived quantity. The planning
@@ -25433,29 +25438,37 @@ parameters:
     - Regulators
     - Planners
   reserve_margin_requirement:
-    categories: []
-    category: Cost
-    default: 0.15
-    deprecated_by: null
-    description: The planning reserve margin, duplicate semantics of reserve_margin_min; the product states
-      its MW face value.
-    determinism: policy
-    initial: null
     name: Reserve margin requirement
-    priority: P2
-    range:
-    - 0.0
-    - 1.0
-    role: free
-    source: The compliance-register coupling (batch 22)
-    source_url: null
-    status: existing
+    description: 'The planning reserve margin, as the fraction of forecast peak demand the rules require.
+      A second id for `reserve_margin_min`, which is the dial: keeping it as a free dial let a scenario
+      set a requirement the reserve rules never consulted.'
+    category: Cost
     subcategory: null
     type: float
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    initial: null
+    role: derived
+    determinism: policy
+    categories: []
+    source: 'The planning reserve margin is one requirement with one value. NERC''s planning reserve framework
+      states the requirement as a fraction of forecast peak demand, and the MW face of it is that fraction
+      times the peak: P_required = P_peak * (1 + m). The share and the MW are the same assumption in two
+      units, so the MW must be derived from the share the rules gate on, not from a second dial carrying
+      the same number.'
+    source_url: null
     users:
     - Regulators
     - Planners
+    priority: P2
+    status: existing
+    deprecated_by: null
+    depends_on:
+    - reserve_margin_min
+    affects:
+    - reserve_margin_required_mw
   resettlement_cost_per_person:
     categories: []
     category: Land Use & Community
@@ -44347,6 +44360,33 @@ equations:
     system: reserve_margin
     tolerance: 1.0e-09
     unit_check: true
+  reserve_margin_requirement_definition:
+    id: reserve_margin_requirement_definition
+    name: Reserve margin requirement
+    system: reliability
+    tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    relation: eq
+    lhs: reserve_margin_requirement
+    rhs: reserve_margin_min
+    parameters:
+    - reserve_margin_min
+    - reserve_margin_requirement
+    free_variables:
+    - reserve_margin_min
+    determined_variables:
+    - reserve_margin_requirement
+    description: 'The planning reserve margin is the requirement `reserve_margin_min` carries: one assumption,
+      two ids.'
+    reference: 'The planning reserve margin is one requirement with one value. NERC''s planning reserve
+      framework states the requirement as a fraction of forecast peak demand, and the MW face of it is
+      that fraction times the peak: P_required = P_peak * (1 + m). The share and the MW are the same assumption
+      in two units, so the MW must be derived from the share the rules gate on, not from a second dial
+      carrying the same number.'
+    unit_check: true
+    latex: \mathrm{reserve}_{margin\_requirement} = \mathrm{reserve}_{margin\_min}
   reserve_margin_with_firm_vre:
     id: reserve_margin_with_firm_vre
     name: Reserve margin with firm VRE
@@ -60051,6 +60091,20 @@ relationships:
     treats notional gearing as the regulator''s own policy assumption rather than a fixed fact (Recommendation
     9, `sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard conversions:
     D/(D+E) = r/(1+r), gearing = r, and equity''s share is 1 - D/(D+E), for r the debt-to-equity ratio.'
+  priority: P2
+- source: reserve_margin_min
+  target: reserve_margin_requirement
+  equation_id: reserve_margin_requirement_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The planning reserve margin the rules gate on; its MW face is this fraction times peak
+    demand.
+  reference: 'The planning reserve margin is one requirement with one value. NERC''s planning reserve
+    framework states the requirement as a fraction of forecast peak demand, and the MW face of it is that
+    fraction times the peak: P_required = P_peak * (1 + m). The share and the MW are the same assumption
+    in two units, so the MW must be derived from the share the rules gate on, not from a second dial carrying
+    the same number.'
   priority: P2
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0

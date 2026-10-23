@@ -280,8 +280,10 @@ reach as a node the translation layer had failed to reach.
 	# Batch 52 took `debt_fraction` out of the settable surface -- it is now
 	# derived from `debt_equity_ratio`, which was already counted -- so the
 	# denominator moves 874 -> 873 and the three translated nodes are unchanged.
+	# Batch 53 took `reserve_margin_requirement` out of the settable surface
+	# (derived from `reserve_margin_min`), so the denominator moves 873 -> 872.
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 873, cov
+	assert cov["total"] == 872, cov
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -376,9 +378,10 @@ the only difference between the two sets.
 	# 873 -> 871 for the reason the coverage pin above records: batch 49
 	# deprecated the two duplicate job multipliers, and a tombstone is not a
 	# knob the translation layer failed to reach. Batch 52 took one knob out of
-	# the surface (`debt_fraction`, now derived), so 871 -> 870.
+	# the surface (`debt_fraction`, now derived), so 871 -> 870, and batch 53
+	# took `reserve_margin_requirement` out too: 870 -> 869.
 	missing = untranslated(graph)
-	assert len(missing) == 870, missing
+	assert len(missing) == 869, missing
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact

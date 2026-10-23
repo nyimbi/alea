@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "53":
+		b53_nodes, b53_equations, b53_edges, b53_rules = build_batch53(graph)
+		rules.extend(b53_rules)
+		nodes.update(b53_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b53_equations)
+		edges = list(BATCH12_EDGES) + b53_edges
 	elif batch == "52":
 		b52_nodes, b52_equations, b52_edges, b52_rules = build_batch52(graph)
 		rules.extend(b52_rules)
@@ -17084,6 +17091,174 @@ _BATCH52_SOURCE = (
 	"the standard conversions: D/(D+E) = r/(1+r), gearing = r, and equity's "
 	"share is 1 - D/(D+E), for r the debt-to-equity ratio."
 )
+
+
+_BATCH53_SOURCE = (
+	"The planning reserve margin is one requirement with one value. NERC's "
+	"planning reserve framework states the requirement as a fraction of "
+	"forecast peak demand, and the MW face of it is that fraction times the "
+	"peak: P_required = P_peak * (1 + m). The share and the MW are the same "
+	"assumption in two units, so the MW must be derived from the share the "
+	"rules gate on, not from a second dial carrying the same number."
+)
+
+
+def build_batch53(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Make the reserve requirement's MW face read the dial the rules use.
+
+	*The defect.* Three nodes carry the planning reserve margin:
+
+	- `reserve_margin_min` (exogenous, 0.15) -- what every rule and every
+	  inequality in the family gates on, and what `lolp` is computed from.
+	- `planning_reserve_margin` (derived) -- a bare alias of the above.
+	- `reserve_margin_requirement` (**free**, 0.15) -- read only by
+	  `reserve_margin_required_mw`.
+
+	`reserve_margin_required_mw` is read by nothing, so the defect is not that
+	it is wrong but that it is unreachable: it computes a requirement from a
+	dial no rule consults.
+
+	*Measured on the shipped graph.* Raising the planning dial
+	`reserve_margin_min` from 0.15 to 0.35 leaves `reserve_margin_required_mw`
+	at **1275.0 MW**, unchanged, while raising `reserve_margin_requirement` to
+	the same 0.35 moves it to 2975.0 and leaves the rules gating on 0.15. A
+	reader who raises the planning margin sees no change in required capacity.
+
+	*The direction.* `reserve_margin_min` is the dial: it is what the rules
+	read, what `lolp` reads, and it is `exogenous` rather than a free variable
+	the model is meant to solve for. `reserve_margin_requirement` becomes
+	derived from it -- a second spelling, not a second decision -- and
+	`reserve_margin_required_mw` keeps its definition, now reading a quantity
+	that moves with the dial.
+
+	*Why this is value-neutral.* Both nodes ship 0.15, so every propagated
+	value is unchanged at the defaults. The batch is about reachability, and a
+	value test cannot see it: what separates a derived duplicate from a dial
+	is that it **follows** the dial. The builder asserts the response before
+	emitting.
+	"""
+	from alea.prg.dsl import parse_side
+	from alea.prg.service import generated_latex as _generated_latex
+	from alea.prg.views import Equation as _Equation
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	measured = graph.propagate(values).values
+
+	driver = graph.nodes["reserve_margin_min"]
+	duplicate = graph.nodes["reserve_margin_requirement"]
+	assert driver.role.value == "exogenous", (
+		f"reserve_margin_min is {driver.role.value!r}, not the exogenous dial this "
+		f"batch makes the requirement follow"
+	)
+	assert duplicate.role.value == "free", (
+		f"reserve_margin_requirement is {duplicate.role.value!r}, not the free "
+		f"duplicate this batch derives"
+	)
+
+	# The premise: the two dials carry the same number. If they did not, the
+	# batch would be a value correction and the docstring's neutrality claim
+	# would be false.
+	assert abs(
+		float(measured["reserve_margin_requirement"])
+		- float(measured["reserve_margin_min"])
+	) < 1e-12, (
+		f"reserve_margin_requirement {measured['reserve_margin_requirement']!r} "
+		f"and reserve_margin_min {measured['reserve_margin_min']!r} differ, so "
+		f"deriving one from the other would move a value"
+	)
+
+	# The canary: on the shipped graph the requirement must NOT follow the
+	# planning dial. If it already did, the defect is absent and this batch
+	# would change nothing while claiming to.
+	_canary = dict(values)
+	_canary["reserve_margin_min"] = 0.35
+	_canary_values = graph.propagate(_canary).values
+	assert float(_canary_values["reserve_margin_required_mw"]) == float(
+		measured["reserve_margin_required_mw"]
+	), (
+		"reserve_margin_required_mw already follows reserve_margin_min; the "
+		"defect this batch corrects is not present"
+	)
+
+	factor = "reserve_margin_requirement"
+	equation_id = "reserve_margin_requirement_definition"
+	assert equation_id not in graph.equations, f"{equation_id}: already ships"
+	rhs = "reserve_margin_min"
+	named = set(parse_side(rhs).symbols) | {factor}
+
+	body = dict(graph.nodes[factor].model_dump(exclude={"id"}, mode="json"))
+	body.update({
+		"role": "derived",
+		"default": None,
+		"determinism": "policy",
+		"description": (
+			"The planning reserve margin, as the fraction of forecast peak "
+			"demand the rules require. A second id for `reserve_margin_min`, "
+			"which is the dial: keeping it as a free dial let a scenario set a "
+			"requirement the reserve rules never consulted."
+		),
+		"source": _BATCH53_SOURCE,
+		"depends_on": ["reserve_margin_min"],
+		"affects": sorted(graph.affects(factor)),
+	})
+	nodes[factor] = body
+
+	equation_body = {
+		"id": equation_id,
+		"name": "Reserve margin requirement",
+		"system": "reliability",
+		"tolerance": 1e-09,
+		"priority": "P2",
+		"solution_method": "direct",
+		"linearity": "linear",
+		"relation": "eq",
+		"lhs": factor,
+		"rhs": rhs,
+		"parameters": sorted(named),
+		"free_variables": sorted(named - {factor}),
+		"determined_variables": [factor],
+		"description": (
+			"The planning reserve margin is the requirement `reserve_margin_min` "
+			"carries: one assumption, two ids."
+		),
+		"reference": _BATCH53_SOURCE,
+		"unit_check": True,
+	}
+	equation_body["latex"] = _generated_latex(_Equation(**equation_body))  # type: ignore[arg-type]
+	equations[equation_id] = equation_body
+	edges.append({
+		"source": "reserve_margin_min",
+		"target": factor,
+		"equation_id": equation_id,
+		"relationship": "functional",
+		"direction": "forward",
+		"strength": "hard",
+		"description": (
+			"The planning reserve margin the rules gate on; its MW face is this "
+			"fraction times peak demand."
+		),
+		"reference": _BATCH53_SOURCE,
+		"priority": "P2",
+	})
+
+	# Correct the dial's declared readers in the same fragment, once the
+	# equation set is final -- the batch-45/batch-52 trap.
+	_patched = _propagate_graph(nodes, equations)
+	for name in ("reserve_margin_min", "reserve_margin_requirement"):
+		existing = nodes.get(name) or graph.nodes[name].model_dump(exclude={"id"}, mode="json")
+		body = dict(existing)
+		body["depends_on"] = sorted(_patched.depends_on(name))
+		body["affects"] = sorted(_patched.affects(name))
+		nodes[name] = body
+
+	assert len(nodes) == 2, len(nodes)
+	assert len(equations) == 1, len(equations)
+	return nodes, equations, edges, rules
 
 
 def _rebuild(equation: Any, **changes: Any) -> dict[str, Any]:

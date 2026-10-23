@@ -1468,6 +1468,50 @@ consistent with the one pre-existing `rocof_definition` failure.
   scratch tree is a scratch tree for every reader.
 
 
+
+### The reserve requirement was computed from a dial no rule reads (batch 53, 2026-10-23)
+
+Three nodes carried the planning reserve margin. `reserve_margin_min`
+(exogenous, 0.15) is what every reserve rule, every inequality and `lolp`
+gate on. `planning_reserve_margin` is a bare alias of it.
+`reserve_margin_requirement` shipped as a **free** dial at the same 0.15 and
+was read by exactly one equation, `reserve_margin_required_mw` -- which
+nothing reads. So the graph computed a required capacity from a dial no rule
+consulted.
+
+**Measured.** Raising the planning dial to 0.35 leaves
+`reserve_margin_required_mw` at **1275.0 MW**, unchanged. Raising the
+duplicate to 0.35 moves it to 2975.0 MW and leaves every rule gating on 0.15.
+A reader who raises the planning reserve margin sees no change in the capacity
+it requires.
+
+| scenario | HEAD required MW | batch-53 required MW |
+|---|---:|---:|
+| defaults | 1275.0 | 1275.0 |
+| `reserve_margin_min = 0.35` | **1275.0** | 2975.0 |
+
+**The repair.** `reserve_margin_requirement` becomes derived from
+`reserve_margin_min`. The dial is the one the rules read; the duplicate is a
+second id for the same assumption, not a second decision. The batch is
+value-neutral at the defaults -- both nodes ship 0.15 -- and the whole change
+is reachability. A value test cannot see that, so the test asserts the
+response: raising the dial must raise the requirement, and to
+`0.35 * peak_demand_mw` exactly.
+
+**Registers.** Settable 873 -> 872; `untranslated()` 870 -> 869;
+`uncoupled()` unchanged. Units 605 consistent / 1 pre-existing / 0
+undecidable; structure issues empty. Graph 1429 nodes / 606 equations / 1366
+edges / 57 rules.
+
+**A stale survey, corrected here.** `docs/research/unread-derived-survey.md`
+§4 lists three "should be consumed" defects. Two of them -- the solar and
+onshore-wind LCOEs reading the fleet-generic `crf` instead of their own
+annuity factor, and `total_jobs` summing multipliers that differ from the
+components' -- **no longer reproduce on the shipped graph**: both were fixed
+by earlier batches and the survey was not re-measured. Only the reserve
+margin item survived. The survey's counts (1426/601/57) are likewise a
+snapshot; the graph is now 1429/606/1366.
+
 ### The capital structure had two dials and no coupling (batch 52, 2026-10-23)
 
 `debt_fraction` shipped as an `exogenous` dial at 0.70, read by twelve
