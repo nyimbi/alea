@@ -256,9 +256,24 @@ Ordered by materiality, none applied here (this audit changes no graph file):
    unattributed number. Effect on headline: <0.6%.
 4. **Leave nuclear, hydro and geothermal alone.** Lifecycle, inside published
    ranges, 1.13% of the numerator combined.
-5. **Give the register a node-source channel.** 1 262 of 1 330 parameter sources
-   resolve to nothing because `citation_report()` reads equations only. The two
-   new rows belong in the register once that channel exists.
+5. **Give the register a node-source channel — but not as stated above.**
+   `citation_report()` reads equations only, and 1 262 of 1 330 parameter
+   sources resolve to nothing because of it. Measured since this audit was
+   written (2026-10-23, on the tree at batch 49): the blocker is not only the
+   missing channel, it is that most of what the channel would carry is not a
+   citation. Of 1 332 node sources, **709 (53.2%) are batch provenance markers**
+   ("The product coupling (batch 28)"), **216 (16.2%) are the catalog pointer
+   `docs/params.md`**, and only **407 (30.6%) name a work**. Widening the gate
+   to read node sources as they stand would demand the register resolve 925
+   strings that are not citations, and the gate would be red until every one was
+   either rewritten or exempted — which is how a gate gets a filter written to
+   quiet it.
+
+   The repair is two steps, in this order: separate provenance from citation in
+   the node schema (a `provenance` field for the batch marker, leaving `source`
+   for the work), *then* teach `citation_report()` to read the `source` channel.
+   Done in the other order it fails open or fails red. The two IPCC rows this
+   audit archived belong in the register once the first step lands.
 
 ## Sources
 
