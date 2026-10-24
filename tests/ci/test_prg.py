@@ -43,6 +43,7 @@ from alea.prg.dsl import (
 	linear_coefficients,
 	linearity_in,
 	parse,
+	parse_side,
 	simplify,
 	solve_affine,
 	solve_for,
@@ -1601,6 +1602,128 @@ def test_one_affordability_line_is_one_dial_and_one_inequality(
 	scoped["energy_burden_limit"] = 0.02
 	with pytest.raises(GraphError, match="affordability_threshold"):
 		graph.propagate(scoped)
+
+
+def test_every_bound_states_its_coupling_or_declares_that_it_cannot(
+	graph: ParameterGraph, defaults: dict
+):
+	"""A bound with no edge is a constraint the drawn graph does not contain.
+
+	`constrains()` and `affects()` read the equations, so a bound's absence
+	from the edge set never affects admissibility -- a scenario that breaks
+	`debt_mix_bound` is refused either way. Two consumers do read the edges:
+	the `/graph` route, which serves `relationships` as "what a reader draws",
+	and `alea.prg.uncertainty`, which walks them filtered by relationship type.
+	For those two, twenty-three inequalities stating a coupling declared none.
+
+	The rule asserted here is the one that makes the defect unrepeatable: a
+	bound against a symbolic rhs carries one edge per rhs operand, and a bound
+	against a literal either names the shared stock its summands compete for
+	(declared as peer edges) or is listed as one that does not. A new bound
+	that does neither fails this test rather than shipping invisible.
+
+	The two exemptions are asserted as exemptions, not skipped: if one later
+	gains a symbolic rhs the batch that changes it should have to say so.
+	"""
+	symbolic = {
+		equation.id
+		for equation in graph.equations.values()
+		if equation.relation != "eq" and parse_side(equation.rhs).symbols
+	}
+	declared: dict[str, set[tuple[str, str]]] = {}
+	for edge in graph.edges:
+		declared.setdefault(edge.equation_id, set()).add((edge.source, edge.target))
+
+	# Every symbolic bound declares at least one edge. This is the assertion
+	# that was false for twenty-three equations before batch 63.
+	edgeless = sorted(symbolic - set(declared))
+	assert edgeless == [], edgeless
+
+	# And the direction is the bound's own: every source is an rhs operand and
+	# every target an lhs subject. An edge pointing the other way would draw
+	# the constraint backwards, which is worse than drawing nothing.
+	#
+	# Nine bounds shipped before batch 63 drawing against this convention --
+	# some reversed (`fleet_build_balance` runs its nineteen edges from the lhs
+	# summands to `total_capacity_mw`, so the drawing says the parts bound the
+	# total rather than the reverse), some omitting an rhs symbol, one pointing
+	# at a node its rhs does not name at all (`reserve_margin` sources
+	# `vre_capacity_mw` against a rhs of `peak_demand_mw` and
+	# `reserve_margin_min`). They are named here rather than repaired: each is
+	# a separate judgement about what its equation means, and rewriting nine
+	# pre-existing edges inside a batch about twenty-three edgeless ones would
+	# hide the change in a set nobody was reviewing. A bound that is not on
+	# this list must draw its edges the bound's way.
+	_DEVIATING = {
+		"carbon_budget_constraint",
+		"fleet_build_balance",
+		"fleet_energy_adequacy",
+		"reserve_margin",
+		"reserve_margin_with_firm_vre",
+		"storage_capacity_mw_bound",
+		"thermal_storage_capacity_bound",
+		"water_availability_constraint",
+		"workshop_capacity_workload_bound",
+	}
+	assert _DEVIATING <= symbolic, _DEVIATING - symbolic
+	for equation_id in sorted(symbolic - _DEVIATING):
+		equation = graph.equations[equation_id]
+		rhs = set(parse_side(equation.rhs).symbols)
+		lhs = set(parse_side(equation.lhs).symbols)
+		for source, target in sorted(declared[equation_id]):
+			assert source in rhs, (equation_id, source, rhs)
+			assert target in lhs, (equation_id, target, lhs)
+
+	# The literal-rhs bounds: each is either coupled by a shared-stock claim or
+	# named as one that is not. Nothing may sit in neither set, which is what
+	# lets this test distinguish "deliberately uncoupled" from "forgotten".
+	literal = {
+		equation.id
+		for equation in graph.equations.values()
+		if equation.relation != "eq" and not parse_side(equation.rhs).symbols
+	}
+	uncoupled = {
+		"local_employment_targets_bound",
+		"retention_and_deductible_bound",
+	}
+	assert uncoupled <= literal, uncoupled - literal
+	coupled_literal = literal - uncoupled
+	missing = sorted(equation_id for equation_id in coupled_literal if not declared.get(equation_id))
+	assert missing == [], missing
+	# The exemptions carry no edge at all, so "listed as uncoupled" and "has
+	# no edge" are the same claim rather than two that could drift apart.
+	for equation_id in sorted(uncoupled):
+		assert equation_id not in declared, (equation_id, declared[equation_id])
+
+	# The peer edges cover every unordered pair of summands exactly once. One
+	# arrow per pair is the representation, not a direction: a shared-stock
+	# claim is symmetric, and drawing it twice would say the graph holds two
+	# couplings where the bound states one. What must hold is that no pair is
+	# missing -- a three-way split with two edges leaves one share unrelated
+	# to the third, which is the defect this batch is about.
+	for equation_id in sorted(coupled_literal):
+		summands = sorted(parse_side(graph.equations[equation_id].lhs).symbols)
+		expected = {
+			(a, b) for index, a in enumerate(summands) for b in summands[index + 1:]
+		}
+		actual = {tuple(sorted(pair)) for pair in declared[equation_id]}
+		assert actual == expected, (equation_id, actual, expected)
+
+	# The coupling is still arithmetic, not decoration: the bounds bind at
+	# defaults, and breaking one is refused by the equation regardless of the
+	# edge. `debt_mix_bound` is the P1 member and the sharpest case -- three
+	# instrument shares against debt's own share, all four of which were
+	# edgeless nodes before this batch.
+	full = dict(graph.propagate(defaults).values)
+	assert float(full["debt_financing_share"]) > 0.0
+	scoped = {
+		**full,
+		"bond_share": 0.6,
+		"dfi_share": 0.6,
+		"commercial_bank_share": 0.6,
+	}
+	violated = sorted(item.equation_id for item in graph.consistency(scoped))
+	assert "debt_mix_bound" in violated, violated
 
 
 def test_a_categorical_retyped_from_a_placeholder_refuses_an_undeclared_level(
@@ -4810,6 +4933,10 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# touch stay flat, which is what the equality checks -- and the deleted
 	# equation is the only reason the total moves, since the surviving bound
 	# kept its tier and gained an edge of the same `hard` strength.
+	# Batch 63 declares thirty edges for the twenty-one bounds that stated a
+	# coupling and carried none, and moves nothing here: the register counts
+	# equations, and `strength_of` already reads an uncited equation as `hard`.
+	# The tier was right; the edge set was what disagreed with it.
 	assert counts == {"hard": 603, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation

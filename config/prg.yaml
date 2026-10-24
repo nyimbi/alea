@@ -61155,6 +61155,230 @@ relationships:
   strength: hard
   description: 'The 10% line binds the burden the tariff computes: the constraint this equation has always
     stated and never declared.'
+- source: commercial_bank_share
+  target: blended_finance_share
+  equation_id: blended_finance_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Bounds blended_finance_share: `blended_finance_share` must not exceed `dfi_share + commercial_bank_share`.'
+- source: dfi_share
+  target: blended_finance_share
+  equation_id: blended_finance_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Bounds blended_finance_share: `blended_finance_share` must not exceed `dfi_share + commercial_bank_share`.'
+- source: carbon_revenue_share_of_revenue
+  target: carbon_finance_share
+  equation_id: carbon_finance_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Bounds carbon_finance_share: `carbon_finance_share` must not exceed `carbon_revenue_share_of_revenue`.'
+- source: clean_cooking_target
+  target: cooking_lpg_penetration
+  equation_id: cooking_clean_target_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Bounds cooking_lpg_penetration: `cooking_lpg_penetration` must not exceed `clean_cooking_target`.'
+- source: debt_financing_share
+  target: bond_share
+  equation_id: debt_mix_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Bounds bond_share: `bond_share + dfi_share + commercial_bank_share` must not exceed `debt_financing_share`.'
+- source: debt_financing_share
+  target: commercial_bank_share
+  equation_id: debt_mix_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Bounds commercial_bank_share: `bond_share + dfi_share + commercial_bank_share` must not
+    exceed `debt_financing_share`.'
+- source: debt_financing_share
+  target: dfi_share
+  equation_id: debt_mix_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Bounds dfi_share: `bond_share + dfi_share + commercial_bank_share` must not exceed `debt_financing_share`.'
+- source: agricultural_demand_share
+  target: commercial_demand_share
+  equation_id: demand_shares_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Shares one stock with commercial_demand_share: `residential_demand_share + commercial_demand_share
+    + industrial_demand_share + agricultural_demand_share <= 1.0`.'
+- source: agricultural_demand_share
+  target: industrial_demand_share
+  equation_id: demand_shares_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Shares one stock with industrial_demand_share: `residential_demand_share + commercial_demand_share
+    + industrial_demand_share + agricultural_demand_share <= 1.0`.'
+- source: agricultural_demand_share
+  target: residential_demand_share
+  equation_id: demand_shares_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Shares one stock with residential_demand_share: `residential_demand_share + commercial_demand_share
+    + industrial_demand_share + agricultural_demand_share <= 1.0`.'
+- source: commercial_demand_share
+  target: industrial_demand_share
+  equation_id: demand_shares_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Shares one stock with industrial_demand_share: `residential_demand_share + commercial_demand_share
+    + industrial_demand_share + agricultural_demand_share <= 1.0`.'
+- source: commercial_demand_share
+  target: residential_demand_share
+  equation_id: demand_shares_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Shares one stock with residential_demand_share: `residential_demand_share + commercial_demand_share
+    + industrial_demand_share + agricultural_demand_share <= 1.0`.'
+- source: industrial_demand_share
+  target: residential_demand_share
+  equation_id: demand_shares_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Shares one stock with residential_demand_share: `residential_demand_share + commercial_demand_share
+    + industrial_demand_share + agricultural_demand_share <= 1.0`.'
+- source: fpic_compliance_score
+  target: fpic_requirements
+  equation_id: fpic_consent_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Bounds fpic_requirements: `fpic_requirements` must not exceed `fpic_compliance_score`.'
+- source: coal_ccs_adoption
+  target: gas_ccs_adoption
+  equation_id: fuel_ccs_adoption_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Shares one stock with gas_ccs_adoption: `coal_ccs_adoption + gas_ccs_adoption <= 1.0`.'
+- source: bond_share
+  target: green_bond_share
+  equation_id: green_bond_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Bounds green_bond_share: `green_bond_share` must not exceed `bond_share`.'
+- source: debt_financing_share
+  target: ifc_performance_standards
+  equation_id: ifc_covenant_scope_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Bounds ifc_performance_standards: `ifc_performance_standards` must not exceed `debt_financing_share`.'
+- source: industrial_electrification
+  target: industrial_heat_electrification
+  equation_id: industrial_electrification_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Shares one stock with industrial_heat_electrification: `industrial_electrification + industrial_heat_electrification
+    <= 1.5`.'
+- source: system_inertia_mws
+  target: inertia_requirement
+  equation_id: inertia_minimum_enforced
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Bounds inertia_requirement: `inertia_requirement` must not exceed `system_inertia_mws`.'
+- source: frequency_response_requirement
+  target: largest_loss_mw
+  equation_id: largest_loss_response_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Bounds largest_loss_mw: `largest_loss_mw` must not exceed `frequency_response_requirement`.'
+- source: peak_demand_mw
+  target: non_spinning_reserve_requirement
+  equation_id: non_spinning_reserve_inside_margin
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Bounds non_spinning_reserve_requirement: `non_spinning_reserve_requirement` must not exceed
+    `reserve_margin_min * peak_demand_mw`.'
+- source: reserve_margin_min
+  target: non_spinning_reserve_requirement
+  equation_id: non_spinning_reserve_inside_margin
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Bounds non_spinning_reserve_requirement: `non_spinning_reserve_requirement` must not exceed
+    `reserve_margin_min * peak_demand_mw`.'
+- source: electric_vehicle_adoption
+  target: hydrogen_vehicle_share
+  equation_id: powertrain_stock_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Shares one stock with hydrogen_vehicle_share: `hydrogen_vehicle_share + electric_vehicle_adoption
+    <= 1.0`.'
+- source: resettlement_requirements
+  target: resettlement_population_share
+  equation_id: resettlement_share_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Bounds resettlement_population_share: `resettlement_population_share` must not exceed
+    `resettlement_requirements`.'
+- source: construction_period
+  target: retraining_duration
+  equation_id: retraining_schedule_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Bounds retraining_duration: `retraining_duration` must not exceed `construction_period`.'
+- source: grid_reliability_target
+  target: system_saidi_hours_per_year
+  equation_id: saidi_ceiling_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Bounds system_saidi_hours_per_year: `system_saidi_hours_per_year` must not exceed `grid_reliability_target`.'
+- source: service_quality_standards
+  target: system_saifi_events_per_year
+  equation_id: saifi_ceiling_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Bounds system_saifi_events_per_year: `system_saifi_events_per_year` must not exceed `service_quality_standards`.'
+- source: steel_h2_dri_share
+  target: steel_scrap_eaf_share
+  equation_id: steel_route_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Shares one stock with steel_scrap_eaf_share: `steel_scrap_eaf_share + steel_h2_dri_share
+    <= 1.0`.'
+- source: district_heating_share
+  target: heat_pump_adoption
+  equation_id: urban_heat_supply_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Shares one stock with heat_pump_adoption: `district_heating_share + heat_pump_adoption
+    <= 1.0`.'
+- source: electric_vehicle_adoption
+  target: v2g_adoption
+  equation_id: v2g_subset_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Bounds v2g_adoption: `v2g_adoption` must not exceed `electric_vehicle_adoption`.'
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0
   id: carbon_price_budget_alignment

@@ -1626,6 +1626,87 @@ which is the failure the register exists to prevent.
 
 
 
+### Twenty-three bounds that stated a coupling and declared none (batch 63, 2026-10-24)
+
+Batch 62 measured twenty-four inequalities carrying zero edges and recorded the
+cause as one emit loop. It is **three**. `BATCH20_BOUNDS`
+(`prg_coupler.py:3827`) writes nine, `BATCH22_BOUNDS` (`prg_coupler.py:10731`)
+writes ten, and five more are declared inside other batches' tables. All three
+paths write `equations[eq_id]` and append nothing to `edges`. Batch 62 repaired
+one of the twenty-four when it gave `energy_burden_affordability_bound` the edge
+its own inequality stated, leaving twenty-three.
+
+**What was actually broken, and what was not.** `constrains()` and `affects()`
+read the equations, so admissibility was never affected — a scenario breaking
+`debt_mix_bound` is refused whether or not an edge says so. Two consumers do
+read the edge set: the `/graph` route, which serves `relationships` as "what a
+reader draws", and `alea.prg.uncertainty`, which walks them filtered by
+relationship type. For those two a bound with no edge is a constraint that does
+not exist. Nineteen nodes had **no incident edge at all** because of this —
+`dfi_share`, `bond_share`, `commercial_bank_share`, `green_bond_share` among
+them, four tranche dials with catalog rows 9.36–9.41 that fed nothing visible.
+
+**The convention, measured before it was encoded.** Every bound with a symbolic
+rhs that already carried an edge draws it from the rhs operand to the lhs
+subject: `cost_of_debt_capped`, `biomass_sustainability_bound`,
+`fusion_capacity_bound` and batch 62's repair all do. Nine existing bounds
+deviate — `fleet_build_balance` runs its nineteen edges *backwards*, from lhs
+summands to `total_capacity_mw`; `reserve_margin` sources a node its rhs never
+names. Those nine are **named in a register in the test rather than repaired**:
+each is a separate judgement about what its equation means, and rewriting nine
+pre-existing edges inside a batch about twenty-three edgeless ones would hide
+the change in a set nobody was reviewing.
+
+**The literal-rhs bounds.** Eight bounds are stated against a constant, so
+there is no rhs node to originate an edge. Six of them assert that their lhs
+summands are disjoint shares of one stock, and the bound's own prose says so —
+"the same crude-steel output", "the same urban building stock's heat", "the
+same vehicle stock". For those the stock is the coupling and it is unnamed, so
+the batch declares the peer relations among the summands: one edge per unordered
+pair, which is one arrow per coupling, not two. The two that assert no shared
+stock (`local_employment_targets_bound`'s 2.0 ceiling,
+`retention_and_deductible_bound`'s 1.0) are left edge-free **on purpose**, and
+the test asserts they are on the exemption list and carry no edge — so a later
+reader can tell "deliberately uncoupled" from "forgotten".
+
+**The gate is the rule, not the count.** `test_every_bound_states_its_coupling_or_declares_that_it_cannot`
+asserts that every symbolic bound declares at least one edge, that each source
+is an rhs operand and each target an lhs subject (outside the named deviation
+register), that every literal bound is either pair-complete or on the exemption
+list, and that the exemptions carry nothing. A new bound that ships invisible
+fails it. Canaried against four disjoint mutations, each firing its own
+assertion: dropping `debt_mix_bound`'s three edges; reversing
+`green_bond_bound`'s; removing one peer edge from the four-way demand split;
+adding a spurious edge to an exempt bound.
+
+**A canary that tested nothing, caught.** The first attempt at the peer-edge
+mutation removed `residential_demand_share` as a *source* and removed zero
+edges — it is the lexicographically first summand, so it is always a target.
+The mutation reported `1 passed`; the count of removed edges is what exposed it.
+
+**A register that did not move, and should not have.** `strength_counts()` reads
+603 hard before and after, because it counts **equations** and `strength_of`
+already defaults an uncited equation to `hard`. The thirty new edges attach to
+twenty-one equations that were already counted. An early edit to this batch's
+test comment claimed 603 → 633; the failure was the comment, not the register.
+
+**Registers.** Nodes 1429, equations 606, rules 57 all unchanged — the batch
+writes edges and nothing else. Edges 1367 → 1397; `constraint` 68 → 98; `hard`
+1356 → 1386. Zero-edge inequalities 23 → 2, both exempt by name. Edgeless nodes
+250 → 231. `uncoupled()` 237, settable 867, `untranslated()` 864, dead knobs
+221, `structure_issues()` empty, `range_excursions()` empty, `bound_routes` 42,
+catalog join 650 — all unchanged. Unit checker 605/606 with only the
+pre-existing `rocof_definition`. Violations at defaults: zero, before and after.
+
+**Still open, and measured.** Nine bounds draw their edges against the
+convention (the deviation register above); each needs its own judgement.
+`cost_of_debt_priced` builds the debt rate from `interest_rate + debt_spread +
+currency_risk_premium` and **never from the tranche shares**, while
+`docs/param_eqn.md` rows 9.36–9.41 send all five shares into `cost_of_debt`. The
+shares are now drawn, but they still feed no arithmetic. That is a modelling
+change — a tranche-weighted rate is a different equation, and every LCOE
+downstream moves with it — so it is recorded rather than made here.
+
 ### Two ids for one share, and the lever moved half the graph (batch 61, 2026-10-24)
 
 `local_content_requirement` (singular, catalog row 4.23) and

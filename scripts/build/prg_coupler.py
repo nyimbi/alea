@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}, "59": {}, "60": {}, "61": {}, "62": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}, "59": {}, "60": {}, "61": {}, "62": {}, "63": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "63":
+		b63_nodes, b63_equations, b63_edges, b63_rules = build_batch63(graph)
+		rules.extend(b63_rules)
+		nodes.update(b63_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b63_equations)
+		edges = list(BATCH12_EDGES) + b63_edges
 	elif batch == "62":
 		b62_nodes, b62_equations, b62_edges, b62_rules, b62_aliases = build_batch62(graph)
 		rules.extend(b62_rules)
@@ -19601,6 +19608,241 @@ _BATCH62_SOURCE = (
 	"and a formula row in `docs/param_eqn_formula1.md`. This id appears in "
 	"none of them."
 )
+
+#: The duplicate pair: (victim, successor).
+_BATCH62_DUPLICATE: tuple[str, str] = (
+	"energy_burden_limit", "affordability_threshold",
+)
+
+
+# ---------------------------------------------------------------------------
+# Batch 63 -- the fifteen bounds that state a coupling and declare none.
+#
+# *The finding.* Batch 62 measured twenty-four inequalities carrying zero edges
+# and recorded them as a systemic defect in `BATCH22_BOUNDS`'s emit loop. It is
+# not one loop. Three emit paths write a bound and append nothing to `edges`:
+# `BATCH20_BOUNDS` (nine rows, line 3827), `BATCH22_BOUNDS` (ten rows, line
+# 10731), and five bounds declared inside other batches. Batch 62 repaired one
+# of the twenty-four when it gave `energy_burden_affordability_bound` the edge
+# its own inequality stated, leaving twenty-three.
+#
+# *What the edge is for, and what it is not.* `constrains()` and `affects()`
+# read the EQUATIONS, so admissibility was never affected -- a scenario that
+# breaks `debt_mix_bound` is refused whether or not an edge says so. What is
+# affected is the drawn graph: the `/graph` route serves `relationships` as
+# "what a reader draws", and `alea.prg.uncertainty` walks the edge set filtered
+# by relationship type. For those two consumers a bound with no edge is a
+# constraint that does not exist.
+#
+# *The convention, measured rather than assumed.* Every bound with a symbolic
+# rhs that carries an edge draws it from the rhs operand to the lhs subject --
+# `cost_of_debt_capped`, `biomass_sustainability_bound`, `fusion_capacity_bound`
+# and batch 62's repair all do. The bound reads "the rhs bounds the lhs", and
+# the arrow points the way the constraint pushes. Nine existing bounds deviate
+# (some reversed, some omitting a symbol); the majority is what this batch
+# follows, and the deviation is left alone rather than silently rewritten.
+#
+# *The literal-rhs bounds.* Eight bounds are stated against a constant, so
+# there is no rhs node to originate an edge. Six of them assert that their lhs
+# summands are disjoint shares of ONE stock -- the bound's own prose says so:
+# "the same crude-steel output", "the same urban building stock's heat", "the
+# same vehicle stock". For those the stock is the coupling, and it is unnamed,
+# so the batch declares the peer relations among the summands instead: each
+# says its share competes for a stock the other also draws on. The two that do
+# not assert a shared stock (`local_employment_targets_bound`'s 2.0 ceiling and
+# `retention_and_deductible_bound`'s 1.0) are left with no edge on purpose --
+# inventing a peer relation between two quantities the bound never claims are
+# related would be a worse defect than the one this batch fixes.
+# ---------------------------------------------------------------------------
+
+#: Bounds stated against a literal, whose lhs summands the bound's prose
+#: declares to be shares of one unnamed stock. The peer edges are drawn only
+#: among these summands; the set is explicit so a later reader can see which
+#: constant bounds were judged to couple and which were not.
+_BATCH63_SHARED_STOCK_BOUNDS: tuple[str, ...] = (
+	"steel_route_bound",
+	"urban_heat_supply_bound",
+	"powertrain_stock_bound",
+	"fuel_ccs_adoption_bound",
+	"industrial_electrification_bound",
+	"demand_shares_bound",
+)
+
+#: Constant bounds whose summands are NOT claimed to share a stock: a target
+#: ceiling and a retention-plus-deductible cap. Left edge-free deliberately.
+_BATCH63_UNCoupled_CONSTANT_BOUNDS: tuple[str, ...] = (
+	"local_employment_targets_bound",
+	"retention_and_deductible_bound",
+)
+
+#: Every bound the batch is about: the twenty-three batch 62 measured, minus
+#: the one it repaired itself. Sorted, so the builder can assert the graph is
+#: in one of the two states this batch's own application distinguishes.
+_BATCH63_ALL_BOUNDS: tuple[str, ...] = (
+	"blended_finance_bound",
+	"carbon_finance_bound",
+	"cooking_clean_target_bound",
+	"debt_mix_bound",
+	"demand_shares_bound",
+	"fpic_consent_bound",
+	"fuel_ccs_adoption_bound",
+	"green_bond_bound",
+	"ifc_covenant_scope_bound",
+	"industrial_electrification_bound",
+	"inertia_minimum_enforced",
+	"largest_loss_response_bound",
+	"local_employment_targets_bound",
+	"non_spinning_reserve_inside_margin",
+	"powertrain_stock_bound",
+	"resettlement_share_bound",
+	"retention_and_deductible_bound",
+	"retraining_schedule_bound",
+	"saidi_ceiling_bound",
+	"saifi_ceiling_bound",
+	"steel_route_bound",
+	"urban_heat_supply_bound",
+	"v2g_subset_bound",
+)
+
+
+def build_batch63(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Declare the edge every symbolic bound already states, and nothing else.
+
+	*Why this batch writes no nodes and no equations.* The bounds are correct as
+	written -- all twenty-three are satisfied at defaults, and their operands
+	are the ones their prose names. The defect is entirely in the declared edge
+	set, so the batch touches only `edges`. A batch that also rewrote the
+	equation bodies would make the correction impossible to review.
+
+	*Why the equation bodies are re-emitted unchanged.* `emit()` writes whole
+	documents, and a fragment carrying `relationships` alone would merge
+	correctly but leave the batch's record incomplete. The bodies are copied
+	from the shipped graph and asserted equal, so the fragment states "these
+	equations, unchanged, now carry these edges" rather than implying a
+	correction it did not make.
+	"""
+	from alea.prg.dsl import parse_side
+
+	edges: list[dict[str, Any]] = []
+	equations: dict[str, Any] = {}
+	covered: set[str] = set()
+
+	zero = sorted(
+		(
+			equation
+			for equation in graph.equations.values()
+			if equation.relation != "eq"
+			and not any(edge.equation_id == equation.id for edge in graph.edges)
+		),
+		key=lambda equation: equation.id,
+	)
+	# The canary the batch rests on: the set it is about to repair is exactly
+	# the twenty-three batch 62 measured, and no bound it believes is edge-free
+	# already carries one. A batch that silently repaired nothing would pass
+	# every downstream assertion.
+	#
+	# This makes the builder a one-shot: run against the tree it produced it
+	# finds two edgeless bounds, not twenty-three, and raises. That is the same
+	# shape as every other batch in this file and the reason `--emit63` is a
+	# record of how the change was derived rather than a re-runnable exporter.
+	# The gate that survives re-running is
+	# `test_every_bound_states_its_coupling_or_declares_that_it_cannot`.
+	remaining = sorted(equation.id for equation in zero)
+	assert remaining == sorted(_BATCH63_ALL_BOUNDS), remaining
+
+	for equation in zero:
+		lhs_symbols = sorted(parse_side(equation.lhs).symbols)
+		rhs_symbols = sorted(parse_side(equation.rhs).symbols)
+		# The body, unchanged, so the fragment is a complete record. The tuple
+		# fields are converted to lists because `yaml.safe_dump` refuses a
+		# tuple it has no representer for, and the loader reads either.
+		equations[equation.id] = {
+			key: list(value) if isinstance(value, tuple) else value
+			for key, value in equation.model_dump(mode="json").items()
+			if key != "id"
+		}
+		if rhs_symbols:
+			# The bound's own direction: every rhs operand pushes down on every
+			# lhs subject. Skip a symbol that is on both sides -- a bound from a
+			# quantity to itself is not an edge.
+			for source in rhs_symbols:
+				for target in lhs_symbols:
+					if source == target:
+						continue
+					edges.append({
+						"source": source,
+						"target": target,
+						"equation_id": equation.id,
+						"relationship": "constraint",
+						"direction": "forward",
+						"strength": "hard",
+						"description": (
+							f"Bounds {target}: `{equation.lhs}` must not exceed "
+							f"`{equation.rhs}`."
+						),
+					})
+			covered.add(equation.id)
+		elif equation.id in _BATCH63_SHARED_STOCK_BOUNDS:
+			# The stock is unnamed and the bound is against a literal, so the
+			# coupling is between the shares themselves: each competes for the
+			# same stock the other draws on.
+			for index, source in enumerate(lhs_symbols):
+				for target in lhs_symbols[index + 1:]:
+					edges.append({
+						"source": source,
+						"target": target,
+						"equation_id": equation.id,
+						"relationship": "constraint",
+						"direction": "forward",
+						"strength": "hard",
+						"description": (
+							f"Shares one stock with {target}: "
+							f"`{equation.lhs} <= {equation.rhs}`."
+						),
+					})
+			covered.add(equation.id)
+
+	# The two constant bounds that were judged not to couple, asserted rather
+	# than left implicit: if one of them later gains a symbolic rhs the batch
+	# should stop, not silently start drawing edges it never justified.
+	for equation_id in _BATCH63_UNCoupled_CONSTANT_BOUNDS:
+		assert equation_id in equations, equation_id
+		assert not parse_side(graph.equations[equation_id].rhs).symbols, equation_id
+		assert equation_id not in covered, equation_id
+
+	assert covered == {
+		equation.id
+		for equation in zero
+		if equation.id not in _BATCH63_UNCoupled_CONSTANT_BOUNDS
+	}, sorted(covered)
+	# Fifteen bounds carry a symbolic rhs; six more are constant with a shared
+	# stock. Twenty-one of twenty-three, and the two left over are named above.
+	assert len(covered) == 21, len(covered)
+	# Nineteen from the fifteen symbolic bounds (one per rhs operand per lhs
+	# subject), eleven from the six shared-stock bounds (one per unordered
+	# pair of summands: six from the four-way demand split, one each from the
+	# five two-way splits).
+	assert len(edges) == 30, len(edges)
+
+	# Nothing this batch declares may duplicate an edge the graph already
+	# carries, and no edge may point a node at itself. Both are the failure
+	# modes of a generated edge set: a doubled record of one coupling, and a
+	# self-loop the loader would accept and no reader could interpret.
+	declared = {(edge["source"], edge["target"]) for edge in edges}
+	assert len(declared) == len(edges), "two edges for one pair"
+	shipped = {(edge.source, edge.target) for edge in graph.edges}
+	assert not declared & shipped, sorted(declared & shipped)
+	for edge in edges:
+		assert edge["source"] != edge["target"], edge
+
+	# Every endpoint must be a node the graph holds, or `from_mapping` refuses
+	# the whole document and the failure names the edge rather than the cause.
+	for edge in edges:
+		assert edge["source"] in graph.nodes, edge
+		assert edge["target"] in graph.nodes, edge
+
+	return {}, equations, edges, []
+
 
 #: The duplicate pair: (victim, successor).
 _BATCH62_DUPLICATE: tuple[str, str] = (
