@@ -272,6 +272,16 @@ algorithm** · **prior pack verdict** · **classification** · **action** ·
 | **AMBIGUOUS** | 34 | genuinely undecidable from the tree — deferred, not forced |
 | **total** | **181** | |
 
+**Status as of batch 57 (2026-10-24).** The **KEEP** class is shipped: all
+thirteen rows carry the unit `1`, the range and the default this document's §2
+table states, and `config/prg.yaml` no longer holds the `500000.0` sentinel for
+any of them. The retype was applied in `build_batch57` of
+`scripts/build/prg_coupler.py`, which asserts each row's pre-merge placeholder
+state before overwriting it, so a later batch that retypes one of these first
+fails this build rather than being silently overwritten. The QUANTITY rows were
+done at batch 54; the NAME, AMBIGUOUS and DEAD rows are still open. See
+`docs/prg-status.md` for what the thirteen measured.
+
 ### NAME, broken down by the action it needs
 
 | action | count |

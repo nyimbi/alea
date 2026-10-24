@@ -462,6 +462,7 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 		"netting_agreements",
 		"non_spinning_reserve",
 		"non_spinning_reserve_requirement",
+		"opex_fixed_wind",
 		"parent_company_guarantee",
 		"permanence_parameters",
 		"planning_reserve_margin",
@@ -524,7 +525,7 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 		assert node.deprecated_by in graph.nodes, node.deprecated_by
 
 
-	# The other 667 are the control: a join that reported every node as
+	# The other 652 are the control: a join that reported every node as
 	# disagreeing would pass the assertion above and mean nothing. The
 	# expansion took the agreeing count to 786, the promotion left it at 784
 	# for the two deprecations above, batch 20 took it to 764 for its twenty
@@ -535,8 +536,12 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 	# subsidy, employment-target and market-operation definitions above,
 	# batch 25 took it to 678 for the nine gate-family definitions above,
 	# batch 26 took it to 667 for the eleven adequacy-and-reserve nodes above,
-	# and batch 27 took it to 653 for the fourteen finance-family nodes above.
-	assert sum(1 for join in joins.values() if join.agrees) == 653
+	# batch 27 took it to 653 for the fourteen finance-family nodes above, and
+	# batch 55 took it to 652 by deprecating `opex_fixed_wind` -- the generic
+	# wind O&M duplicate -- which the catalog still marks `existing`. The
+	# graph is right and the catalog is stale: the register's whole job is to
+	# show that, so the disagreement is pinned above rather than suppressed.
+	assert sum(1 for join in joins.values() if join.agrees) == 652
 
 
 def test_a_node_the_catalog_does_not_name_is_absent_rather_than_guessed(
@@ -729,6 +734,7 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 		'netting_agreements: the graph says existing and the catalog says to_build',
 		'non_spinning_reserve: the graph says existing and the catalog says to_build',
 		'non_spinning_reserve_requirement: the graph says existing and the catalog says to_build',
+		'opex_fixed_wind: the graph says deprecated and the catalog says existing',
 		'parent_company_guarantee: the graph says existing and the catalog says to_build',
 		'permanence_parameters: the graph says existing and the catalog says to_build',
 		'planning_reserve_margin: the graph says existing and the catalog says to_build',

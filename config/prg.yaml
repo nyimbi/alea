@@ -7578,20 +7578,31 @@ parameters:
     - Investors
   critical_mineral_dependencies:
     name: Critical mineral dependencies
-    description: Critical minerals
+    description: Critical minerals. Retyped from the untyped 500,000 sentinel to unit `1`, range [0.0,
+      1.0], default 0.2. The classification and the value come from `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for this row; the sentinel's [0, 1e6] range admitted
+      values the quantity cannot take.
     category: Geopol
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.2
+    initial: null
     role: free
     determinism: fixed
-    priority: P1
-    status: to_build
+    categories: []
+    source: The placeholder retype (batch 57). The classification, unit, range and default are `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for each row; the value is that survey's stated default,
+      not a choice made here.
+    source_url: null
     users:
     - Policymakers
-    source: docs/params.md
+    priority: P1
+    status: to_build
+    deprecated_by: null
   cross_border_losses_twh:
     category: Transmission & Grid
     description: 'Energy lost in transit on the cross-border flow. Signed because the flow is signed:
@@ -8353,36 +8364,58 @@ parameters:
     - Regulators
   cvar_alpha:
     name: Cvar alpha
-    description: CVaR tail level
+    description: CVaR tail level. Retyped from the untyped 500,000 sentinel to unit `1`, range [0.5, 0.999],
+      default 0.95. The classification and the value come from `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for this row; the sentinel's [0, 1e6] range admitted
+      values the quantity cannot take.
     category: Combined
+    subcategory: null
     type: float
+    unit: '1'
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.5
+    - 0.999
+    default: 0.95
+    initial: null
     role: free
     determinism: fixed
-    priority: P1
-    status: existing
+    categories: []
+    source: The placeholder retype (batch 57). The classification, unit, range and default are `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for each row; the value is that survey's stated default,
+      not a choice made here.
+    source_url: null
     users:
     - All
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   cvar_omega:
     name: Cvar omega
-    description: Risk-aversion weight
+    description: Risk-aversion weight. Retyped from the untyped 500,000 sentinel to unit `1`, range [0.0,
+      10.0], default 1.0. The classification and the value come from `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for this row; the sentinel's [0, 1e6] range admitted
+      values the quantity cannot take.
     category: Combined
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 10.0
+    default: 1.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P1
-    status: existing
+    categories: []
+    source: The placeholder retype (batch 57). The classification, unit, range and default are `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for each row; the value is that survey's stated default,
+      not a choice made here.
+    source_url: null
     users:
     - All
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   cyber_cover_usd_per_year:
     category: Policy
     description: 'The revenue indemnified against cyber loss: the cover share times gross revenue.'
@@ -10137,20 +10170,31 @@ parameters:
     deprecated_by: null
   drought_frequency:
     name: Drought frequency
-    description: Drought frequency multiplier
+    description: Drought frequency multiplier. Retyped from the untyped 500,000 sentinel to unit `1`,
+      range [0.0, 5.0], default 1.0. The classification and the value come from `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for this row; the sentinel's [0, 1e6] range admitted
+      values the quantity cannot take.
     category: Sector
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 5.0
+    default: 1.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The placeholder retype (batch 57). The classification, unit, range and default are `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for each row; the value is that survey's stated default,
+      not a choice made here.
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   drought_risk:
     categories: []
     category: Adapt
@@ -10177,20 +10221,31 @@ parameters:
     - Researchers
   drought_severity:
     name: Drought severity
-    description: Drought severity multiplier
+    description: Drought severity multiplier. Retyped from the untyped 500,000 sentinel to unit `1`, range
+      [0.0, 5.0], default 1.0. The classification and the value come from `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for this row; the sentinel's [0, 1e6] range admitted
+      values the quantity cannot take.
     category: Sector
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 5.0
+    default: 1.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The placeholder retype (batch 57). The classification, unit, range and default are `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for each row; the value is that survey's stated default,
+      not a choice made here.
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   dscr_min:
     categories: []
     category: Financial
@@ -12040,20 +12095,31 @@ parameters:
     - Insurance
   export_competitiveness:
     name: Export competitiveness
-    description: Export competitiveness
+    description: Export competitiveness. Retyped from the untyped 500,000 sentinel to unit `1`, range
+      [0.0, 1.0], default 0.5. The classification and the value come from `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for this row; the sentinel's [0, 1e6] range admitted
+      values the quantity cannot take.
     category: Geopol
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.5
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The placeholder retype (batch 57). The classification, unit, range and default are `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for each row; the value is that survey's stated default,
+      not a choice made here.
+    source_url: null
     users:
     - Policymakers
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   export_duty:
     categories: []
     category: Tax & Fiscal
@@ -14064,20 +14130,31 @@ parameters:
     - Planners
   gender_impact:
     name: Gender impact
-    description: Gender dimensions
+    description: Gender dimensions. Retyped from the untyped 500,000 sentinel to unit `1`, range [0.0,
+      1.0], default 0.5. The classification and the value come from `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for this row; the sentinel's [0, 1e6] range admitted
+      values the quantity cannot take.
     category: EnvSoc
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.5
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The placeholder retype (batch 57). The classification, unit, range and default are `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for each row; the value is that survey's stated default,
+      not a choice made here.
+    source_url: null
     users:
     - DFIs
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   generation_twh:
     categories: []
     category: Demand
@@ -15326,20 +15403,31 @@ parameters:
     - Regulators
   hydro_reservoir_level:
     name: Hydro reservoir level
-    description: Initial reservoir level
+    description: Initial reservoir level. Retyped from the untyped 500,000 sentinel to unit `1`, range
+      [0.0, 1.0], default 0.5. The classification and the value come from `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for this row; the sentinel's [0, 1e6] range admitted
+      values the quantity cannot take.
     category: Supply
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.5
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: integrate
+    categories: []
+    source: The placeholder retype (batch 57). The classification, unit, range and default are `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for each row; the value is that survey's stated default,
+      not a choice made here.
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P2
+    status: integrate
+    deprecated_by: null
   hydrogen_demand_domestic:
     categories: []
     category: Sector
@@ -21482,20 +21570,31 @@ parameters:
     - Regulators
   number_of_retailers:
     name: Number of retailers
-    description: Number of retailers
+    description: Number of retailers. Retyped from the untyped 500,000 sentinel to unit `1`, range [1.0,
+      1000.0], default 5.0. The classification and the value come from `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for this row; the sentinel's [0, 1e6] range admitted
+      values the quantity cannot take.
     category: Market
+    subcategory: null
     type: float
+    unit: '1'
     range:
-    - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    - 1000.0
+    default: 5.0
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The placeholder retype (batch 57). The classification, unit, range and default are `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for each row; the value is that survey's stated default,
+      not a choice made here.
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   occupational_health_safety:
     categories: []
     category: EnvSoc
@@ -24477,20 +24576,31 @@ parameters:
     - Regulators
   probability_weight:
     name: Probability weight
-    description: Scenario probability
+    description: Scenario probability. Retyped from the untyped 500,000 sentinel to unit `1`, range [0.0,
+      1.0], default 0.5. The classification and the value come from `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for this row; the sentinel's [0, 1e6] range admitted
+      values the quantity cannot take.
     category: Combined
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.5
+    initial: null
     role: free
     determinism: stochastic
-    priority: P1
-    status: existing
+    categories: []
+    source: The placeholder retype (batch 57). The classification, unit, range and default are `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for each row; the value is that survey's stated default,
+      not a choice made here.
+    source_url: null
     users:
     - All
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   profit_margin:
     category: Insurance & Catastrophe
     default: 0.05
@@ -24867,20 +24977,31 @@ parameters:
     - Researchers
   rare_earth_dependencies:
     name: Rare earth dependencies
-    description: Rare earths
+    description: Rare earths. Retyped from the untyped 500,000 sentinel to unit `1`, range [0.0, 1.0],
+      default 0.3. The classification and the value come from `docs/research/placeholder-survey.md`, which
+      read the catalog's own description cell for this row; the sentinel's [0, 1e6] range admitted values
+      the quantity cannot take.
     category: Geopol
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.3
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The placeholder retype (batch 57). The classification, unit, range and default are `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for each row; the value is that survey's stated default,
+      not a choice made here.
+    source_url: null
     users:
     - Policymakers
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   re_target_carrier:
     categories:
     - renewable
@@ -25598,20 +25719,31 @@ parameters:
     - Regulators
   renewable_curtailment_limit:
     name: Renewable curtailment limit
-    description: Maximum curtailment
+    description: Maximum curtailment. Retyped from the untyped 500,000 sentinel to unit `1`, range [0.0,
+      1.0], default 0.05. The classification and the value come from `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for this row; the sentinel's [0, 1e6] range admitted
+      values the quantity cannot take.
     category: Climate
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.05
+    initial: null
     role: free
     determinism: fixed
-    priority: P2
-    status: to_build
+    categories: []
+    source: The placeholder retype (batch 57). The classification, unit, range and default are `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for each row; the value is that survey's stated default,
+      not a choice made here.
+    source_url: null
     users:
     - Planners
-    source: docs/params.md
+    priority: P2
+    status: to_build
+    deprecated_by: null
   renewable_generation_twh:
     category: Regulatory
     description: 'renewable generation twh: the compliance register''s derived quantity. The renewable
@@ -26211,20 +26343,31 @@ parameters:
     - DFIs
   retail_competition:
     name: Retail competition
-    description: Retail competition
+    description: Retail competition. Retyped from the untyped 500,000 sentinel to unit `1`, range [0.0,
+      1.0], default 0.5. The classification and the value come from `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for this row; the sentinel's [0, 1e6] range admitted
+      values the quantity cannot take.
     category: Market
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 1.0
+    default: 0.5
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The placeholder retype (batch 57). The classification, unit, range and default are `docs/research/placeholder-survey.md`,
+      which read the catalog's own description cell for each row; the value is that survey's stated default,
+      not a choice made here.
+    source_url: null
     users:
     - Regulators
-    source: docs/params.md
+    priority: P3
+    status: to_build
+    deprecated_by: null
   retention_share:
     categories: []
     category: Insurance & Catastrophe

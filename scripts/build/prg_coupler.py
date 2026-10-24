@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "57":
+		b57_nodes, b57_equations, b57_edges, b57_rules = build_batch57(graph)
+		rules.extend(b57_rules)
+		nodes.update(b57_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b57_equations)
+		edges = list(BATCH12_EDGES) + b57_edges
 	elif batch == "56":
 		b56_nodes, b56_equations, b56_edges, b56_rules = build_batch56(graph)
 		rules.extend(b56_rules)
@@ -18858,6 +18865,180 @@ def build_batch56(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		f"emissions {_old_emissions:.6f} -> {_new_emissions:.6f}, "
 		f"lcoe_biomass {_old_lcoe:.3f} -> {_new_lcoe:.3f} ({_lcoe_pct:+.3f}%); "
 		f"3 sibling descriptions corrected, values unchanged"
+	)
+	return nodes, equations, edges, rules
+
+
+#: The source string every batch-57 node carries, and the reason it is not a
+#: label. `prg_from_catalog.load_existing()` drops any node whose `source` is the
+#: generator's own marker (`docs/params.md`) and re-emits it from the catalog
+#: row, so this field is what tells the bake a node is reviewed work rather than
+#: generated. The first merge of this batch left the marker in place and the bake
+#: reverted all thirteen rows to the sentinel.
+_BATCH57_SOURCE = (
+	"The placeholder retype (batch 57). The classification, unit, range and "
+	"default are `docs/research/placeholder-survey.md`, which read the catalog's "
+	"own description cell for each row; the value is that survey's stated "
+	"default, not a choice made here."
+)
+
+#: The thirteen placeholder rows `docs/research/placeholder-survey.md`
+#: classified KEEP, each with the unit, range, default and sibling that survey
+#: row states. The survey did the classification and the retype never shipped:
+#: every one still carries the 500,000 sentinel in a range of [0, 1e6] with no
+#: unit, so a scenario can set `cvar_alpha` to 500,000 against a confidence
+#: level that cannot exceed 1.
+#:
+#: Only rows the survey marks **KEEP** are here. AMBIGUOUS rows (a unit the
+#: catalog does not disambiguate, e.g. `interannual_variability`, a coefficient
+#: of variation of an unnamed series) and the NAME rows (a procedure, standard
+#: or selector rather than a quantity) stay placeholders, because retyping them
+#: would mean inventing the answer rather than reading it.
+_BATCH57_RETYPES: tuple[tuple[str, str, tuple[float, float], float, str | None], ...] = (
+	(
+		"renewable_curtailment_limit",
+		"1",
+		(0.0, 1.0),
+		0.05,
+		"renewable_penetration_limit",
+	),
+	("cvar_alpha", "1", (0.5, 0.999), 0.95, None),
+	("cvar_omega", "1", (0.0, 10.0), 1.0, None),
+	("probability_weight", "1", (0.0, 1.0), 0.5, None),
+	("gender_impact", "1", (0.0, 1.0), 0.5, "resilience_score"),
+	("critical_mineral_dependencies", "1", (0.0, 1.0), 0.2, "sanctions_exposure"),
+	("export_competitiveness", "1", (0.0, 1.0), 0.5, None),
+	("rare_earth_dependencies", "1", (0.0, 1.0), 0.3, "sanctions_exposure"),
+	("number_of_retailers", "1", (1.0, 1000.0), 5.0, "number_of_generators"),
+	("retail_competition", "1", (0.0, 1.0), 0.5, "market_concentration"),
+	("drought_frequency", "1", (0.0, 5.0), 1.0, "hydro_drought_multiplier"),
+	("drought_severity", "1", (0.0, 5.0), 1.0, "hydro_drought_multiplier"),
+	("hydro_reservoir_level", "1", (0.0, 1.0), 0.5, None),
+)
+
+
+def build_batch57(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Retype the thirteen placeholder rows the survey already classified KEEP.
+
+	*The defect.* `docs/research/placeholder-survey.md` classified all 181 rows
+	that shipped the 500,000 sentinel and, for thirteen of them, wrote down the
+	unit, range and default each should carry. Those thirteen still hold the
+	sentinel:
+	`cvar_alpha` is a CVaR confidence level whose declared range is [0, 1e6], so
+	a scenario can set a tail level of 500,000; `probability_weight` is a
+	scenario probability on the same range; `hydro_reservoir_level` is a share
+	of full supply. A number whose declared range admits 500,000 is not a
+	quantity, and the graph cannot tell a scenario that set it deliberately from
+	one that never set it.
+
+	*Why these thirteen and not the other 42 unitless rows.* The survey's KEEP
+	class is the one where the catalog's own description settles both the unit
+	and the range, so the retype reads an answer rather than choosing one. Its
+	AMBIGUOUS rows (`mining_demand_growth` is MW or 1/year,
+	`interannual_variability` is a coefficient of variation of an unnamed
+	series) would need a decision the catalog does not make; its NAME rows need
+	a text or mapping schema type the node model does not carry. Retyping those
+	here would be inventing provenance, which is the defect this batch is
+	repairing.
+
+	*No value is invented either.* The survey states a default for every KEEP
+	row, and that is the default shipped here; each is asserted inside the range
+	the same row declares, so a survey row that contradicts itself fails the
+	build rather than landing a value the range forbids.
+
+	*What this does not change.* Retyping a node changes its unit, its range and
+	its default. It does not relate the node to any arithmetic, so it cannot move
+	the node or equation count. The builder asserts the premise of that claim
+	rather than the count: none of the thirteen is named by a shipped equation's
+	`parameters` or `determined_variables`, which is why the settable register
+	and the uncoupled register cannot move. The counts after the merge are in
+	`docs/prg-status.md`, read off the baked graph.
+	"""
+	from alea.prg.views import ParameterNode
+
+	assert graph is not None
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	for name, unit, span, default, sibling in _BATCH57_RETYPES:
+		node = graph.nodes[name]
+		# The premise: every one of these is still an untyped placeholder. If a
+		# later batch retypes one, this assertion fires rather than silently
+		# overwriting a considered unit with the survey's earlier reading.
+		assert node.unit is None, f"{name} already carries unit {node.unit!r}"
+		assert node.default == 500000.0, f"{name} default is {node.default!r}, not the sentinel"
+		assert node.range == (0.0, 1000000.0), f"{name} range is {node.range!r}"
+
+		lo, hi = span
+		assert lo < hi, f"{name}: empty range {span!r}"
+		assert lo <= default <= hi, (
+			f"{name}: the survey's default {default!r} is outside the range {span!r} "
+			"the same survey row declares"
+		)
+
+		# A sibling is the graph's own evidence for the unit convention: the
+		# survey cites it, and if the sibling disagrees the citation is wrong.
+		if sibling is not None:
+			assert sibling in graph.nodes, f"{name}: sibling {sibling!r} is not in the graph"
+			assert graph.nodes[sibling].unit == unit, (
+				f"{name}: the survey's sibling {sibling!r} carries unit "
+				f"{graph.nodes[sibling].unit!r}, not the {unit!r} claimed for {name}"
+			)
+
+		# `exclude={"id"}` rather than `exclude_none=True`: the batch-56
+		# precedent, and the file's own convention. Dropping every `None` field
+		# instead would rewrite the node's key set -- `subcategory`, `initial`,
+		# `source_url` and `deprecated_by` would vanish from thirteen nodes and
+		# a diff that should be three fields wide would touch the whole body.
+		body = node.model_dump(exclude={"id"}, mode="json")
+		body.update({
+			"unit": unit,
+			"range": [lo, hi],
+			"default": default,
+			# The source string is what makes the retype survive the bake.
+			# `prg_from_catalog.load_existing()` drops every node whose `source`
+			# is the generator's own marker (`docs/params.md`) and re-emits it
+			# from the catalog row, so a retyped node left carrying that marker
+			# is regenerated back to the 500,000 sentinel on the next bake. This
+			# is not a label: it is the field the bake reads to decide what is
+			# reviewed work. The first merge of this batch shipped without it and
+			# the bake reverted all thirteen.
+			"source": _BATCH57_SOURCE,
+			"description": (
+				f"{node.description.rstrip('.')}. Retyped from the untyped "
+				f"500,000 sentinel to unit `{unit}`, range [{lo}, {hi}], "
+				f"default {default}. The classification and the value come from "
+				"`docs/research/placeholder-survey.md`, which read the catalog's "
+				"own description cell for this row; the sentinel's [0, 1e6] "
+				"range admitted values the quantity cannot take."
+			),
+		})
+		# Constructed before it is stored, so a body the model refuses fails
+		# here rather than at the next load.
+		ParameterNode(**{"id": name, **body})
+		nodes[name] = body
+
+	assert len(nodes) == len(_BATCH57_RETYPES), len(nodes)
+
+	# The premise of "the registers cannot move": a retype gives a dial a
+	# dimension, it does not couple it. If a later batch couples one of these,
+	# this fires and the batch's neutrality claim needs re-measuring rather than
+	# being carried forward as prose.
+	named = set()
+	for equation in graph.equations.values():
+		named.update(equation.parameters or ())
+		named.update(equation.determined_variables or ())
+	coupled = sorted(set(nodes) & named)
+	assert not coupled, (
+		f"{coupled} are named by a shipped equation, so retyping them is not "
+		"value-neutral and this batch's register counts are stale"
+	)
+
+	print(
+		f"  retyped {len(nodes)} placeholder rows to unit `1` with declared "
+		f"ranges; defaults {sorted((n, b['default']) for n, b in nodes.items())}"
 	)
 	return nodes, equations, edges, rules
 

@@ -1330,6 +1330,61 @@ def test_a_categorical_retyped_from_a_placeholder_refuses_an_undeclared_level(
 		assert graph.propagate(scoped).values["trade_agreement"] == level
 
 
+def test_the_survey_keep_rows_no_longer_carry_the_sentinel(graph: ParameterGraph, defaults: dict):
+	"""The thirteen rows `placeholder-survey.md` classified KEEP, as a set.
+
+	The survey's KEEP class is the one where the catalog's own description
+	settles the unit and the range, so batch 57 read its answer rather than
+	choosing one. The defect it closes is the range: `cvar_alpha` is a CVaR
+	confidence level that shipped `unit: null` on `[0, 1e6]` with a default of
+	500000.0, so a scenario could set a tail level to half a million and the
+	graph had no way to tell that from never setting it.
+
+	Tested as a set rather than node by node, because the failure worth
+	catching is a later bake regenerating one of them: `prg_from_catalog`
+	drops any node whose `source` is the generator's marker and re-emits it
+	from the catalog row, so a retype that leaves that marker in place is
+	silently reverted to the sentinel. That is what happened on the first
+	merge of this batch, and this test is what would have caught it.
+	"""
+	keep = {
+		"renewable_curtailment_limit": ((0.0, 1.0), 0.05),
+		"cvar_alpha": ((0.5, 0.999), 0.95),
+		"cvar_omega": ((0.0, 10.0), 1.0),
+		"probability_weight": ((0.0, 1.0), 0.5),
+		"gender_impact": ((0.0, 1.0), 0.5),
+		"critical_mineral_dependencies": ((0.0, 1.0), 0.2),
+		"export_competitiveness": ((0.0, 1.0), 0.5),
+		"rare_earth_dependencies": ((0.0, 1.0), 0.3),
+		"number_of_retailers": ((1.0, 1000.0), 5.0),
+		"retail_competition": ((0.0, 1.0), 0.5),
+		"drought_frequency": ((0.0, 5.0), 1.0),
+		"drought_severity": ((0.0, 5.0), 1.0),
+		"hydro_reservoir_level": ((0.0, 1.0), 0.5),
+	}
+	for name, (span, default) in keep.items():
+		node = graph.node(name)
+		assert node.unit == "1", (name, node.unit)
+		assert node.range == span, (name, node.range)
+		assert node.default == default, (name, node.default)
+		assert node.source != "docs/params.md", (
+			f"{name} carries the generator's marker, so the next bake re-emits it "
+			"from the catalog row and the retype is lost"
+		)
+
+	# The refusal, on a node the batch wrote. The sentinel is what a scenario
+	# could say before; the endpoint is what the range must still admit, so the
+	# gate is a range rather than a ban on one number.
+	scoped = dict(defaults)
+	scoped["cvar_alpha"] = 500000.0
+	with pytest.raises(GraphError, match="outside the range"):
+		graph.propagate(scoped)
+	for on_bound in (0.5, 0.999):
+		scoped = dict(defaults)
+		scoped["cvar_alpha"] = on_bound
+		assert graph.propagate(scoped).values["cvar_alpha"] == on_bound
+
+
 def test_a_fossil_emission_factor_is_derived_from_its_carbon_content(
 	graph: ParameterGraph, defaults: dict
 ):

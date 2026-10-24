@@ -1469,6 +1469,74 @@ consistent with the one pre-existing `rocof_definition` failure.
 
 
 
+### Thirteen dimensionless dials were still 500,000 (batch 57, 2026-10-24)
+
+`docs/research/placeholder-survey.md` classified all 181 nodes that shipped the
+`500000.0` sentinel and put thirteen in a class it called **KEEP**: genuinely
+dimensionless, a real scalar, with the unit, range and default each should
+carry written out in the survey's own table. None of the thirteen had shipped.
+Every one still read `unit: null`, `range: [0.0, 1000000.0]`,
+`default: 500000.0`:
+
+| node | shipped | now |
+|---|---|---|
+| `cvar_alpha` | `null`, [0, 1e6], 500000 | `1`, [0.5, 0.999], 0.95 |
+| `renewable_curtailment_limit` | `null`, [0, 1e6], 500000 | `1`, [0.0, 1.0], 0.05 |
+| `number_of_retailers` | `null`, [0, 1e6], 500000 | `1`, [1.0, 1000.0], 5.0 |
+| `drought_frequency`, `drought_severity` | `null`, [0, 1e6], 500000 | `1`, [0.0, 5.0], 1.0 |
+| `cvar_omega` | `null`, [0, 1e6], 500000 | `1`, [0.0, 10.0], 1.0 |
+| the other seven | `null`, [0, 1e6], 500000 | `1`, [0.0, 1.0], a stated default |
+
+`cvar_alpha` is the one that reads worst: a CVaR tail level whose declared range
+admitted 500,000, against a confidence level that cannot exceed 1. The others
+are the same defect at lower stakes — `probability_weight` is a scenario
+probability, `hydro_reservoir_level` a share of full supply, `gender_impact` a
+normalised score. A range that admits the sentinel is not a range, and the graph
+cannot tell a scenario that set one of these deliberately from one that never
+set it.
+
+**Only the KEEP class.** The survey's AMBIGUOUS rows stay placeholders —
+`interannual_variability` is a coefficient of variation of an unnamed series,
+`mining_demand_growth` is MW or 1/year, and the catalog does not say which.
+Its NAME rows need a text or mapping type the node model does not carry. Those
+would need a decision invented here, which is the defect this batch repairs.
+
+**No value was invented.** Each default is the one the survey states, asserted
+inside the range the same survey row declares, so a row that contradicted
+itself would fail the build rather than land a value its own range forbids.
+Where the survey cites a sibling as its evidence for the unit, the builder
+asserts the sibling's shipped unit matches — eight of the thirteen cite one, and
+all eight agree.
+
+**The bake reverted it once, and that is the finding worth keeping.** The first
+merge put the thirteen new bodies into `config/prg.yaml` and the bake then wrote
+them back to the sentinel. `prg_from_catalog.load_existing()` drops every node
+whose `source` is `docs/params.md` — the generator's own marker — and re-emits
+it from the catalog row, so a retyped node left carrying that marker is
+regenerated. The retype now sets a `source` naming the batch and the survey it
+read, which is what the bake reads to decide a node is reviewed work. A node
+edit that does not change `source` is an edit the next bake deletes.
+
+**Measured.** Node count 1429, equation count 607, `structure_issues()` empty,
+`uncoupled()` 235 and the settable register 870 — all unchanged, as they must
+be: the retype gives thirteen dials a dimension, it does not relate any of them
+to arithmetic. Sentinel rows 57 → 44 and unitless nodes 148 → 135, both by
+exactly the thirteen. The unit checker stays at its pre-batch 1 inconsistent
+(`rocof_definition`, a pre-existing defect this batch neither touches nor
+hides), and the untranslated register stays at 867.
+
+**A second red gate, found while running the adjacent module.** Batch 55
+deprecated `opex_fixed_wind` without moving the two catalog-register pins in
+`tests/ci/test_prg_catalog.py`: the disagreement set, the sorted message list,
+and the agreeing count (653 → 652). The register itself was right — it reports
+`opex_fixed_wind: the graph says deprecated and the catalog says existing`,
+which is the stale catalog row batch 55 superseded. The pins now name it and the
+count is corrected. Neither batch 55 nor 56 ran that module; the same "the
+targeted run passed is a statement about the files it named" trap the batch-56
+notes record.
+
+
+
 ### The biomass factor was a number with no provenance (batch 56, 2026-10-24)
 
 `emission_factor_biomass_t_per_mwh` shipped 0.04 tCO2/MWh. The
