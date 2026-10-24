@@ -986,6 +986,11 @@ def test_the_summary_reports_the_registers(graph: ParameterGraph):
 		# singular. Also `free`, and the retirement repointed its one reader
 		# (`local_content_capex_definition`) so no equation names it now.
 		"local_content_requirements",
+		# Batch 62 retired the unsourced burden limit, keeping the threshold.
+		# It is `exogenous`, not `free`, so it also had to be named here for
+		# the `{"free"}` claim below -- and unlike batches 55/59/61 its one
+		# reader was *deleted* rather than repointed, so nothing names it.
+		"energy_burden_limit",
 	}, deprecated_uncoupled
 	uncoupled_roles = {
 		graph.role(name).value for name in graph.uncoupled()
@@ -1515,6 +1520,89 @@ def test_the_two_local_content_consumers_now_move_together(
 		graph.propagate(scoped)
 
 
+def test_one_affordability_line_is_one_dial_and_one_inequality(
+	graph: ParameterGraph, defaults: dict
+):
+	"""Two ids for the 10% line, and two statements of the inequality they gate.
+
+	`energy_burden_limit` and `affordability_threshold` were one statistic
+	under two names -- both unit `1`, both default 0.1 -- and each gated its
+	own equation: the limit `affordability_constraint` (``limit >= burden``,
+	P1, with an edge), the threshold `energy_burden_affordability_bound`
+	(``burden <= threshold``, P2, with *no* edge at all). So setting one dial
+	moved half the answer, and setting both reported the same inequality
+	twice.
+
+	The test asserts the whole repair, because the deprecation alone would be
+	half of it: the surviving equation must be the only statement, it must
+	carry the edge it never had, and it must be filed under the system the
+	spec puts it in. A test asserting only the tombstone would pass on a tree
+	that repointed the P1 onto the threshold -- which does not fix the
+	duplication, it doubles it: one dial, two violations of one claim.
+	"""
+	victim = graph.node("energy_burden_limit")
+	successor = graph.node("affordability_threshold")
+
+	assert victim.status == "deprecated", victim.status
+	assert victim.deprecated_by == "affordability_threshold", victim.deprecated_by
+	assert successor.status != "deprecated", successor.status
+	# The tombstone states the quantity it was, at the type it was. The ranges
+	# are *not* equal and that is a fact about the two ids rather than an
+	# oversight: the threshold admits a 0% line, the limit's floor was 0.01.
+	assert victim.unit == successor.unit == "1", (victim.unit, successor.unit)
+	assert victim.default == successor.default == 0.1, (victim.default, successor.default)
+	assert successor.range == (0.0, 0.5), successor.range
+
+	# The restatement is gone, and the survivor is the only equation either
+	# dial's inequality lives in.
+	assert "affordability_constraint" not in graph.equations
+	assert graph.constrains("affordability_threshold") == (
+		"energy_burden_affordability_bound",
+	), graph.constrains("affordability_threshold")
+	assert graph.constrains("energy_burden_limit") == ()
+
+	bound = graph.equations["energy_burden_affordability_bound"]
+	assert bound.relation == "leq", bound.relation
+	assert bound.lhs == "energy_burden", bound.lhs
+	assert bound.rhs == "affordability_threshold", bound.rhs
+	# Filed under the affordability system, not the batch-22 emit loop's
+	# hardcoded `reserve_margin`.
+	assert bound.system == "affordability", bound.system
+
+	# The declared edge the equation always stated and never carried. Without
+	# it the `/graph` route draws the 10% line constraining nothing, and
+	# `alea.prg.uncertainty` -- which walks the edge set by relationship type
+	# -- cannot see it either.
+	declared = {
+		(edge.source, edge.target)
+		for edge in graph.edges
+		if edge.equation_id == "energy_burden_affordability_bound"
+	}
+	assert declared == {("affordability_threshold", "energy_burden")}, declared
+
+	# The coupling, measured rather than inferred from the declarations: the
+	# one surviving dial fires exactly one violation, at both probes, and the
+	# burden itself does not move -- a constraint gates a scenario, it does
+	# not compute a value.
+	full = dict(graph.propagate(defaults).values)
+	burden = float(full["energy_burden"])
+	assert burden < 0.1, burden
+	for probe in (0.05, 0.02):
+		scoped = {**full, "affordability_threshold": probe}
+		violated = sorted(
+			item.equation_id for item in graph.consistency(scoped)
+		)
+		assert violated == ["energy_burden_affordability_bound"], (probe, violated)
+		assert abs(float(graph.propagate(scoped).values["energy_burden"]) - burden) < 1e-12
+
+	# And the tombstone is not a knob: setting it is refused, and the refusal
+	# names the successor so a caller migrating a scenario knows where to go.
+	scoped = dict(defaults)
+	scoped["energy_burden_limit"] = 0.02
+	with pytest.raises(GraphError, match="affordability_threshold"):
+		graph.propagate(scoped)
+
+
 def test_a_categorical_retyped_from_a_placeholder_refuses_an_undeclared_level(
 	graph: ParameterGraph, defaults: dict
 ):
@@ -1974,7 +2062,7 @@ def test_a_policy_lever_is_reported_as_constraining_something(graph: ParameterGr
 	"""A constraint's inputs are couplings, and the graph must say so.
 
 	`affects` read only the determining equations, so a parameter that appears
-	in an inequality reported nothing at all. Moving ``energy_burden_limit``
+	in an inequality reported nothing at all. Moving ``affordability_threshold``
 	does not move any *value* -- it decides whether the scenario is admissible,
 	which is the whole question for a regulator's lever. So the register for it
 	is ``constrains``, and the assertion is that every such lever is visible in
@@ -1982,7 +2070,7 @@ def test_a_policy_lever_is_reported_as_constraining_something(graph: ParameterGr
 	"""
 	for lever in (
 		"dscr_min",
-		"energy_burden_limit",
+		"affordability_threshold",
 		"reserve_margin_min",
 		"rocof_limit_hz_per_s",
 		"water_availability_m3",
@@ -1991,7 +2079,14 @@ def test_a_policy_lever_is_reported_as_constraining_something(graph: ParameterGr
 	):
 		assert graph.constrains(lever), f"{lever} bounds no inequality"
 	assert "dscr_requirement" in graph.constrains("dscr_min")
-	assert "affordability_constraint" in graph.constrains("energy_burden_limit")
+	# Batch 62 retired `energy_burden_limit`, the second id for the 10% line,
+	# and deleted `affordability_constraint`, the second statement of the
+	# inequality. The surviving pair is named here so a regression that
+	# restores either one fails rather than silently doubling the register.
+	assert graph.constrains("affordability_threshold") == (
+		"energy_burden_affordability_bound",
+	)
+	assert "affordability_constraint" not in graph.equations
 	# And the value-coupling path is unchanged for a lever that does move one.
 	assert "project_gearing_dscr" in graph.affects("cfads_usd_per_kw_year")
 
@@ -2207,6 +2302,12 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# way, 235 to 236, because the repoint moved that reader onto the singular
 	# and left the tombstone naming nothing -- which is the register's design,
 	# not a regression: a deprecated node stays in `uncoupled()` by construction.
+	# Batch 62 moved nothing here either, and for the same reason as batch 61:
+	# `energy_burden_limit` was read by `affordability_constraint`, so it was
+	# coupled and never a dead knob. `uncoupled()` went 236 -> 237 because the
+	# batch also *deleted* that equation, so the tombstone it left behind now
+	# names nothing -- the count rises by one for a retirement that removed a
+	# duplicate rather than for one that uncovered an orphan.
 	assert len(dead) == 221, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
@@ -4704,7 +4805,12 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# bare alias rhs: 602 -> 603. Batch 54's temporal-resolution definition is
 	# the same shape -- one hard edge, a quotient rather than an alias -- taking
 	# it 603 -> 604. The two tiers this batch did not touch stay flat.
-	assert counts == {"hard": 604, "informational": 1, "soft": 2}, counts
+	# Batch 62 deleted `affordability_constraint`, an uncited `geq` that
+	# `strength_of` counted as hard, so 604 -> 603. The two tiers it did not
+	# touch stay flat, which is what the equality checks -- and the deleted
+	# equation is the only reason the total moves, since the surviving bound
+	# kept its tier and gained an edge of the same `hard` strength.
+	assert counts == {"hard": 603, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.

@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}, "59": {}, "60": {}, "61": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}, "59": {}, "60": {}, "61": {}, "62": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,14 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "62":
+		b62_nodes, b62_equations, b62_edges, b62_rules, b62_aliases = build_batch62(graph)
+		rules.extend(b62_rules)
+		aliases.update(b62_aliases)
+		nodes.update(b62_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b62_equations)
+		edges = list(BATCH12_EDGES) + b62_edges
 	elif batch == "61":
 		b61_nodes, b61_equations, b61_edges, b61_rules, b61_aliases = build_batch61(graph)
 		rules.extend(b61_rules)
@@ -19577,6 +19585,239 @@ def build_batch61(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		f"{_BATCH61_EQ} now reads {successor}"
 	)
 	return {victim: body}, {_BATCH61_EQ: equation_body}, edges, [], {victim: successor}
+
+
+#: The batch-62 source string. `energy_burden_limit` has no catalog row, no
+#: `docs/param_eqn.md` row and no mention in `docs/alea_prg.md`, so the bake's
+#: `load_existing()` has nothing to re-emit it *from* -- but the string is set
+#: anyway, because the moment a catalog row appears the node would be adopted
+#: back as reviewed work and the tombstone would be lost.
+_BATCH62_SOURCE = (
+	"The unsourced energy-burden limit retired (batch 62). "
+	"`energy_burden_limit` and `affordability_threshold` are one statistic -- "
+	"the 10% energy-poverty line -- and the graph carried both. The threshold "
+	"is canonical: catalog row 20.1, a row in `docs/param_eqn.md`, the "
+	"`affordability_threshold` inequality in `docs/alea_prg.md` section 13, "
+	"and a formula row in `docs/param_eqn_formula1.md`. This id appears in "
+	"none of them."
+)
+
+#: The duplicate pair: (victim, successor).
+_BATCH62_DUPLICATE: tuple[str, str] = (
+	"energy_burden_limit", "affordability_threshold",
+)
+
+#: The unsourced restatement of the inequality this batch deletes.
+_BATCH62_REDUNDANT = "affordability_constraint"
+
+#: The surviving bound, and the subsystem it belongs to. `BATCH22_BOUNDS`
+#: emits every one of its bounds with `system: "reserve_margin"`, which was
+#: wrong for this member and is what this batch corrects.
+_BATCH62_BOUND = "energy_burden_affordability_bound"
+
+
+def build_batch62(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], dict[str, str]]:
+	"""Retire the unsourced burden limit, and leave one inequality where two stood.
+
+	*The finding, in two parts.*
+
+	First, two ids for one statistic. `energy_burden_limit` and
+	`affordability_threshold` both name the energy-burden share of income above
+	which a household is in energy poverty: both carry unit ``1``, both default
+	to 0.1, both live on [0, 0.5]-ish ranges. The threshold's own description
+	says so in as many words -- "the same statistic the shipped
+	`energy_burden_limit` carries". Measured on the shipped graph, moving
+	either dial to 0.02 violates the inequality that reads it:
+
+	    limit=0.02 thr=0.1  -> ['affordability_constraint']
+	    limit=0.1  thr=0.02 -> ['energy_burden_affordability_bound']
+
+	So a regulator who sets the 10% line on one id changes half the answer, and
+	a scenario that sets both reports the *same* inequality twice.
+
+	Second, and the reason the duplicate cannot be fixed by a repoint alone:
+	the two ids bound the same quantity from opposite sides through two
+	different equations. `affordability_constraint` is ``energy_burden_limit
+	geq energy_burden`` (P1, one edge); `energy_burden_affordability_bound` is
+	``energy_burden leq affordability_threshold`` (P2, no edge at all). Repoint
+	the P1 onto the threshold and one dial produces two violations of one
+	claim -- verified, not assumed:
+
+	    threshold=0.02 -> ['affordability_constraint',
+	                       'energy_burden_affordability_bound']
+
+	*Why the threshold is canonical.* Four independent registers agree.
+	`docs/params.md` row 20.1; `docs/param_eqn.md` row 20.1, which lists it as
+	feeding `energy_poverty_rate`; `docs/alea_prg.md` section 13, whose System
+	14 "Affordability" table names the inequality `affordability_threshold` at
+	P2; and `docs/param_eqn_formula1.md`, which carries its formula. A search
+	of all four for `energy_burden_limit` returns nothing: the id has no
+	catalog row, no linkage row, no spec mention and no formula. It is not the
+	less-documented spelling of a real quantity; it is a name the kernel
+	invented, and the quantity it named already had a documented home.
+
+	*Why `affordability_constraint` goes with it.* It is the other id's
+	reader, so retiring the node forces a decision about the equation anyway;
+	and once repointed it would be a second statement of the inequality
+	`energy_burden_affordability_bound` already carries. Priority is not the
+	answer -- `P1`/`P2` is reported and never enforced anywhere in
+	`alea.prg` (grepped: the only reads are into a report field), so the P1
+	label on the constraint gates nothing that the P2 label on the bound does
+	not. The inequality survives at the spec's own priority; the restatement
+	does not.
+
+	*What this batch also fixes.* `energy_burden_affordability_bound` shipped
+	with no edge at all, so the declared relationship set -- which
+	`alea.prg.uncertainty` walks by relationship type and which the `/graph`
+	route serves as "what a reader draws" -- said the 10% line constrains
+	nothing. It also shipped under `system: "reserve_margin"`, a batch-22 emit
+	loop's hardcoded value, which filed an affordability bound under the
+	reserve-margin subsystem. Both are corrected here: the edge is declared and
+	the system is `affordability`, which is where the spec puts it.
+
+	*What this batch does not do.* It does not touch `energy_burden`, which is
+	determined by `energy_burden_definition` and stays a derived route. It does
+	not create `energy_poverty_rate`'s operands: `docs/param_eqn.md` row 20.2
+	says the rate reads `energy_burden`, but its own denominator
+	(`total_households`) and numerator (`households_burden`) are not nodes, and
+	inventing them is a different batch with its own sources.
+	"""
+	from alea.prg.dsl import parse_side
+	from alea.prg.views import ParameterNode
+
+	victim, successor = _BATCH62_DUPLICATE
+
+	assert victim in graph.nodes, f"{victim} is not in the graph"
+	assert successor in graph.nodes, f"{successor} is not in the graph"
+
+	shipped = graph.nodes[victim]
+	replacement = graph.nodes[successor]
+
+	assert shipped.status != "deprecated", f"{victim} is already deprecated"
+	assert shipped.unit == replacement.unit == "1", (shipped.unit, replacement.unit)
+	assert shipped.default == replacement.default, (shipped.default, replacement.default)
+	# The ranges are not equal and must not be asserted equal: the threshold
+	# admits 0.0 and the limit's floor is 0.01. That is a real difference in
+	# what each id permits, and it is a second reason the surviving id is the
+	# one worth keeping -- a 0% burden line is a coherent setting and a 0.01%
+	# floor is an artefact of whoever typed the range.
+	assert shipped.range == (0.01, 0.5), shipped.range
+	assert replacement.range == (0.0, 0.5), replacement.range
+
+	# The premise: neither id has provenance. If the victim gained a catalog
+	# row or a source since this batch was written, the canonicality argument
+	# has changed and this is where that surfaces.
+	assert shipped.source is None, f"{victim} now carries a source: {shipped.source!r}"
+
+	redundant = graph.equations[_BATCH62_REDUNDANT]
+	assert redundant.lhs == victim, (redundant.lhs, victim)
+	assert redundant.relation == "geq", redundant.relation
+	assert redundant.rhs == "energy_burden", redundant.rhs
+
+	bound = graph.equations[_BATCH62_BOUND]
+	assert bound.lhs == "energy_burden", bound.lhs
+	assert bound.relation == "leq", bound.relation
+	assert bound.rhs == successor, bound.rhs
+	# The two defects this batch fixes on the surviving equation, asserted so
+	# a later correction to either makes the batch fail rather than silently
+	# re-state a repair that has already happened.
+	assert bound.system == "reserve_margin", bound.system
+	assert not [x for x in graph.edges if x.equation_id == _BATCH62_BOUND], (
+		f"{_BATCH62_BOUND} now carries an edge; the under-report is already fixed"
+	)
+
+	# The victim's whole reader set: exactly the equation being deleted. A
+	# second reader would need its own repoint, and a zero would mean the
+	# duplicate was already dead.
+	named_by = sorted(
+		item.id
+		for item in graph.equations.values()
+		if victim in (
+			*item.parameters,
+			*item.free_variables,
+			*item.determined_variables,
+		)
+	)
+	assert named_by == [_BATCH62_REDUNDANT], f"{victim} is named by {named_by}"
+
+	# The canary, on the shipped graph: the two dials gate the same inequality
+	# through two equations, so setting both to the same value reports it
+	# twice. Measured, because the claim is about violations and not about
+	# declarations.
+	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	full = dict(graph.propagate(values).values)
+	probe = 0.02
+	assert float(full["energy_burden"]) > probe, (
+		f"the burden {full['energy_burden']} sits below the probe {probe}, so the "
+		"canary would fire both bounds for the wrong reason"
+	)
+	both = sorted(
+		x.equation_id
+		for x in graph.consistency({**full, victim: probe, successor: probe})
+	)
+	assert both == [_BATCH62_REDUNDANT, _BATCH62_BOUND], both
+	# And each dial alone fires its own equation -- the half-graph movement the
+	# duplicate causes.
+	only_limit = sorted(
+		x.equation_id for x in graph.consistency({**full, victim: probe})
+	)
+	only_threshold = sorted(
+		x.equation_id for x in graph.consistency({**full, successor: probe})
+	)
+	assert only_limit == [_BATCH62_REDUNDANT], only_limit
+	assert only_threshold == [_BATCH62_BOUND], only_threshold
+
+	body = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+	body.update({
+		"status": "deprecated",
+		"deprecated_by": successor,
+		"source": _BATCH62_SOURCE,
+		"description": (
+			"Retired: a second id for the 10% energy-poverty line, which "
+			"`affordability_threshold` already carries. Both are the share of "
+			"household income above which a tariff is unaffordable, both default "
+			"to 0.1, and each gated its own inequality -- this id through "
+			"`affordability_constraint`, the threshold through "
+			"`energy_burden_affordability_bound` -- so setting one moved half the "
+			"graph and setting both reported one inequality twice. The threshold "
+			"is canonical by four registers: catalog row 20.1, `param_eqn.md` "
+			"row 20.1, the section 13 inequality, and a formula row. This id "
+			"appears in none of them."
+		),
+	})
+	ParameterNode(**{"id": victim, **body})
+
+	# The surviving bound, corrected. Its arithmetic is unchanged -- the
+	# inequality was always right -- so only the subsystem moves; the edge it
+	# never had is declared below.
+	bound_body = dict(bound.model_dump(exclude={"id"}, mode="json"))
+	bound_body.update({
+		"system": "affordability",
+		"description": (
+			"The household energy burden at the shipped tariff sits inside the "
+			"10% affordability line. The line is `affordability_threshold`, the "
+			"canonical id for the statistic: `energy_burden_limit`, which this "
+			"batch retired, was a second name for it and gated a second, "
+			"redundant statement of this same inequality."
+		),
+	})
+
+	edges = [{
+		"source": successor, "target": "energy_burden",
+		"equation_id": _BATCH62_BOUND, "relationship": "constraint",
+		"strength": "hard",
+		"description": (
+			"The 10% line binds the burden the tariff computes: the constraint "
+			"this equation has always stated and never declared."
+		),
+	}]
+
+	print(
+		f"  deprecated {victim} in favour of {successor}; deleted "
+		f"{_BATCH62_REDUNDANT}; {_BATCH62_BOUND} refiled under affordability "
+		f"and given its edge"
+	)
+	return {victim: body}, {_BATCH62_BOUND: bound_body}, edges, [], {victim: successor}
 
 
 _BATCH60_EQ = "x_factor_revenue_reduction_definition"

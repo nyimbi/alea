@@ -256,9 +256,17 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	can serve the load, not a constraint the optimiser holds.
 	"""
 	cov = coverage(graph)
-	assert cov["constraint_shaped"] == 73
-	assert cov["identities"] == 528
-	assert cov["total"] == 601
+	# Batch 62 deleted `affordability_constraint`, the unsourced restatement of
+	# the inequality `energy_burden_affordability_bound` already carries, so the
+	# shaped count moves 73 -> 72 and the total 607 -> 606. `identities` did not
+	# move with it -- the deleted equation was a `geq`, not an identity -- and
+	# it reads 534 here rather than the 528 this pin carried before: measured on
+	# `HEAD:config/prg.yaml` it was already 534, so that six is a pin that went
+	# stale in an earlier batch and is corrected here rather than attributed to
+	# this one.
+	assert cov["constraint_shaped"] == 72
+	assert cov["identities"] == 534
+	assert cov["total"] == 606
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
@@ -401,7 +409,12 @@ def test_every_unbound_route_names_the_derived_quantity_it_cannot_read(
 	route joins the set without changing what any existing one names.
 	"""
 	expected = {
-		"affordability_constraint": {"energy_burden"},
+		# Batch 62 deleted `affordability_constraint` and kept this, the
+		# surviving statement of the same inequality. The unresolved set is
+		# unchanged: `energy_burden` is derived on both sides of the swap, and
+		# the new edge this batch declared does not make the network able to
+		# supply it.
+		"energy_burden_affordability_bound": {"energy_burden"},
 		"dscr_requirement": {"project_gearing_dscr"},
 		"inertia_requirement": {"rocof_df_dt_hz_per_s"},
 		"water_availability_constraint": {"total_water_demand_m3"},
@@ -419,7 +432,10 @@ def test_every_unbound_route_names_the_derived_quantity_it_cannot_read(
 	# And the same claim, universally: whatever any unbound route names as
 	# unresolved is a node the graph holds and does not let you set.
 	unbound = [route for route in routes(graph) if route.status == "unbound"]
-	assert len(unbound) == 31, [route.equation_id for route in unbound]
+	# 31 -> 30 with batch 62, which deleted `affordability_constraint` -- one
+	# unbound route -- and kept the surviving bound, which is already in the
+	# set. The deletion removed a route; it did not resolve one.
+	assert len(unbound) == 30, [route.equation_id for route in unbound]
 	for route in unbound:
 		assert route.unresolved, route.equation_id
 		for name in route.unresolved:

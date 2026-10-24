@@ -92,6 +92,16 @@ not an equation:
   but this member was not an example of it: it was a duplicate that the
   classification could not distinguish from one, because both look identical
   from the outside.
+
+  **The same blind spot retired `energy_burden_limit` (batch 62).** That node
+  looked like the exogenous threshold its description claims — a 10% burden
+  line, unit `1`, range [0.01, 0.5] — and it was, except that
+  `affordability_threshold` was the same threshold under a documented name
+  (catalog row 20.1, a `param_eqn.md` row, a §13 inequality, a formula row).
+  Nothing in the class above would have flagged it: an exogenous policy dial
+  with a real unit and a real range is exactly what the register expects to
+  see. The duplicate was found by comparing *provenance*, not shape — one id
+  with four registers behind it and one with none.
 - **40 `_capacity`** decision variables the optimizer solves for
 - **20 `_rate`** and **22 `_share`** independent dials
 

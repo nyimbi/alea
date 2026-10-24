@@ -11491,11 +11491,14 @@ parameters:
     categories: []
     category: Affordability
     default: 0.1
-    deprecated_by: null
-    description: 'The burden above which a tariff is politically impossible, whatever its LCOE. The system
-      that stops a scenario being cost-optimal and socially impossible at once.
-
-      '
+    deprecated_by: affordability_threshold
+    description: 'Retired: a second id for the 10% energy-poverty line, which `affordability_threshold`
+      already carries. Both are the share of household income above which a tariff is unaffordable, both
+      default to 0.1, and each gated its own inequality -- this id through `affordability_constraint`,
+      the threshold through `energy_burden_affordability_bound` -- so setting one moved half the graph
+      and setting both reported one inequality twice. The threshold is canonical by four registers: catalog
+      row 20.1, `param_eqn.md` row 20.1, the section 13 inequality, and a formula row. This id appears
+      in none of them.'
     determinism: policy
     initial: null
     name: Affordability limit
@@ -11504,9 +11507,13 @@ parameters:
     - 0.01
     - 0.5
     role: exogenous
-    source: null
+    source: 'The unsourced energy-burden limit retired (batch 62). `energy_burden_limit` and `affordability_threshold`
+      are one statistic -- the 10% energy-poverty line -- and the graph carried both. The threshold is
+      canonical: catalog row 20.1, a row in `docs/param_eqn.md`, the `affordability_threshold` inequality
+      in `docs/alea_prg.md` section 13, and a formula row in `docs/param_eqn_formula1.md`. This id appears
+      in none of them.'
     source_url: null
-    status: to_build
+    status: deprecated
     subcategory: null
     type: float
     unit: '1'
@@ -33374,25 +33381,6 @@ equations:
     system: reliability
     tolerance: 1.0e-09
     unit_check: true
-  affordability_constraint:
-    description: The burden above which a tariff is politically impossible, whatever its LCOE.
-    determined_variables: []
-    free_variables: []
-    latex: null
-    lhs: energy_burden_limit
-    linearity: linear
-    name: Affordability limit
-    parameters:
-    - energy_burden_limit
-    - energy_burden
-    priority: P1
-    reference: null
-    relation: geq
-    rhs: energy_burden
-    solution_method: numeric
-    system: affordability
-    tolerance: 1.0e-06
-    unit_check: true
   agricultural_demand_definition:
     id: agricultural_demand_definition
     name: Agricultural demand
@@ -37856,7 +37844,10 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   energy_burden_affordability_bound:
-    description: The household energy burden at the shipped tariff sits inside the 10% affordability line.
+    description: 'The household energy burden at the shipped tariff sits inside the 10% affordability
+      line. The line is `affordability_threshold`, the canonical id for the statistic: `energy_burden_limit`,
+      which this batch retired, was a second name for it and gated a second, redundant statement of this
+      same inequality.'
     determined_variables: []
     free_variables: &id011
     - affordability_threshold
@@ -37871,7 +37862,7 @@ equations:
     relation: leq
     rhs: affordability_threshold
     solution_method: direct
-    system: reserve_margin
+    system: affordability
     tolerance: 1.0e-06
     unit_check: true
   energy_burden_definition:
@@ -49293,15 +49284,6 @@ relationships:
   source: household_income_usd_per_year
   strength: hard
   target: energy_burden
-- description: The burden must stay under the limit, or the tariff is politically impossible.
-  direction: forward
-  equation_id: affordability_constraint
-  priority: P1
-  reference: null
-  relationship: constraint
-  source: energy_burden
-  strength: hard
-  target: energy_burden_limit
 - description: The thermal fleet's water draw scales with what it generates.
   direction: forward
   equation_id: cooling_water_definition
@@ -61166,6 +61148,13 @@ relationships:
   strength: hard
   description: 'The same content share the jobs count applies, applied to capex: one policy lever, two
     consumers.'
+- source: affordability_threshold
+  target: energy_burden
+  equation_id: energy_burden_affordability_bound
+  relationship: constraint
+  strength: hard
+  description: 'The 10% line binds the burden the tariff computes: the constraint this equation has always
+    stated and never declared.'
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0
   id: carbon_price_budget_alignment

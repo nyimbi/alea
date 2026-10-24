@@ -498,7 +498,12 @@ def test_the_summary_serves_the_endogenous_layer(
 	# (`coal_fuel_energy_gj`, `gas_fuel_energy_gj`, `oil_fuel_energy_gj` and
 	# `pm25_fleet_contribution_ug_per_m3`) never entered this count. Twelve
 	# is the net move in `derived`; seven is the move here.
-	assert len(free) == 706, len(free)
+	# The pin reads 704 rather than the 706 above because it went stale in an
+	# earlier batch: measured on `HEAD:config/prg.yaml` before batch 62 the
+	# count was already 704, so those two are not this batch's. Batch 62 itself
+	# moved nothing here -- `energy_burden_limit` was `exogenous`, so it left
+	# the exogenous register and never appeared in this one.
+	assert len(free) == 704, len(free)
 
 
 # ---------------------------------------------------------------------------

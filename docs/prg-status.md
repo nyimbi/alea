@@ -1525,6 +1525,107 @@ batch and the figures here are the shipped tree's own.
 
 
 
+### One 10% line, two ids, and two statements of one inequality (batch 62, 2026-10-24)
+
+`energy_burden_limit` and `affordability_threshold` both name the share of
+household income above which a tariff is unaffordable. Both carry unit `1`,
+both default to 0.1. The threshold's own shipped description says it in as many
+words: "the same statistic the shipped `energy_burden_limit` carries."
+
+They were not interchangeable, because each gated its own equation. The limit
+was the bounded subject of `affordability_constraint` — `limit >= burden`, P1,
+one edge. The threshold was the bound of `energy_burden_affordability_bound` —
+`burden <= threshold`, P2, and **no edge at all**. So setting one dial moved
+half the answer:
+
+| dial moved | violations reported |
+|---|---|
+| `energy_burden_limit` = 0.02 | `affordability_constraint` |
+| `affordability_threshold` = 0.02 | `energy_burden_affordability_bound` |
+| both = 0.02 | both — one inequality, reported twice |
+
+**Why the threshold is canonical.** Four registers agree and none of them
+mention the limit. `docs/params.md` row 20.1; `docs/param_eqn.md` row 20.1,
+which lists it as feeding `energy_poverty_rate`; `docs/alea_prg.md` §13, whose
+System 14 "Affordability" table names the inequality `affordability_threshold`
+at P2; and `docs/param_eqn_formula1.md`, which carries its formula. A search of
+all four for `energy_burden_limit` returns nothing: no catalog row, no linkage
+row, no spec mention, no formula. It is not the less-documented spelling of a
+real quantity; it is a name the kernel invented for a quantity that already had
+a documented home.
+
+**Why the deprecation alone would have been half a fix, in the other
+direction.** The obvious repair — repoint the P1 constraint onto the surviving
+threshold — does not remove the duplication, it doubles it. Verified before
+writing the batch:
+
+```
+threshold=0.02 -> ['affordability_constraint', 'energy_burden_affordability_bound']
+```
+
+One dial, two violations of one claim. So the batch retires the node *and*
+deletes `affordability_constraint`, leaving the inequality where the spec puts
+it. Priority is not an argument for keeping the P1: `P1`/`P2` is carried in the
+equation body and read only into a report field — grepped across `alea.prg`, no
+gate, solver or route consults it — so the P1 label gated nothing the P2 label
+does not.
+
+**Two defects fixed on the survivor.** `energy_burden_affordability_bound`
+shipped under `system: "reserve_margin"`, an affordability bound filed in the
+reserve-margin subsystem by the hardcoded value in `BATCH22_BOUNDS`'s emit loop
+(`prg_coupler.py:10723`). It also shipped with no edge, so the declared
+relationship set — what the `/graph` route serves as "what a reader draws", and
+what `alea.prg.uncertainty` walks by relationship type — said the 10% line
+constrained nothing. Both are corrected: the system is `affordability` and the
+edge `affordability_threshold -> energy_burden` is declared.
+
+**The canary.** The builder asserts on the shipped graph that both dials fire,
+that each alone fires its own equation, and that setting both reports both —
+the defect as three measurements. The test
+(`test_prg.py::test_one_affordability_line_is_one_dial_and_one_inequality`)
+asserts the repair, and was canaried three times against three disjoint
+mutations, because the first assertion failing proves nothing about the other
+two: against the pre-batch tree it fails on `to_build` where `deprecated` is
+expected; with only the edge removed it fails on the declared-edge set; with
+only `system` reverted it fails on `reserve_margin` against `affordability`.
+
+**Registers.** Nodes 1429 and rules 57 unchanged. Equations 607 → 606 (the
+deleted restatement); edges 1367 → 1367 (one disposed with the deleted
+equation, one declared for the survivor). `structure_issues()` empty;
+`range_excursions()` empty. `uncoupled()` 236 → 237 and `settable` 868 → 867:
+the tombstone is neither settable nor named, which is the register's design.
+Dead knobs hold at 221 — like batch 61 and unlike 55/59, this duplicate *had* a
+reader, so it was never a dead knob. `untranslated` 865 → 864. Catalog join
+holds at 650: the retired id had no catalog row, so it never appeared in the
+join.
+
+**A systemic finding, measured and not fixed here.** Twenty-four inequalities
+carry **zero** edges in the declared set. All twenty-four come from the same
+emit loop — `BATCH22_BOUNDS` (`prg_coupler.py:10723`) writes `equations[eq_id]`
+and appends nothing to `edges` — so the register under-reports every bound that
+batch produced. The consequence is narrower than it looks: `constrains()` and
+`affects()` read the *equations*, so admissibility checks are correct; what is
+wrong is the drawn graph and the relationship-typed walk in
+`alea.prg.uncertainty`. Twenty-three nodes are coupled by name yet carry no
+incident edge for this reason. Fixing it is a separate batch with its own
+verification — the convention is one edge per rhs operand targeting the lhs
+subject, which `workshop_capacity_workload_bound` already breaks by declaring
+one edge for two operands — and it is recorded here rather than bundled in.
+
+**A citation gap, measured and left open.** The whole affordability chain is
+uncited, and this batch did not fix it because fixing it needs a source it
+could verify. `energy_burden_affordability_bound` and `energy_burden_definition`
+both carry `reference: None`, as do all four of the definition's operands
+(`tariff_usd_per_mwh`, `household_consumption_mwh_per_year`,
+`household_income_usd_per_year`, `energy_burden`). The 10% line is a real
+published statistic with a known provenance, but no search tool was available in
+the session that wrote this batch, so the citation was left empty rather than
+written from recall. An absent reference is a state the citation register
+reports and counts; an unverified one would be a claim a reader could not check,
+which is the failure the register exists to prevent.
+
+
+
 ### Two ids for one share, and the lever moved half the graph (batch 61, 2026-10-24)
 
 `local_content_requirement` (singular, catalog row 4.23) and

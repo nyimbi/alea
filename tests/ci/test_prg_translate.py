@@ -294,9 +294,10 @@ the current membership is the `deprecated_uncoupled` set in
 	# knob translatable. Batch 55 deprecated `opex_fixed_wind`, and a tombstone
 	# is not settable, so 871 -> 870. Batch 59's `remittance_dependency`
 	# tombstone is the same: 870 -> 869. Batch 61's
-	# `local_content_requirements` tombstone likewise: 869 -> 868.
+	# `local_content_requirements` tombstone likewise: 869 -> 868. Batch 62's
+	# `energy_burden_limit` tombstone is the same again: 868 -> 867.
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 868, cov
+	assert cov["total"] == 867, cov
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -396,9 +397,10 @@ the only difference between the two sets.
 	# `temporal_resolution` out on the same ground: 869 -> 868. Batch 55's
 	# `opex_fixed_wind` tombstone is not settable either: 868 -> 867. Batch 59's
 	# `remittance_dependency` tombstone is the same: 867 -> 866. Batch 61's
-	# `local_content_requirements` tombstone is the same: 866 -> 865.
+	# `local_content_requirements` tombstone is the same: 866 -> 865. Batch 62's
+	# `energy_burden_limit` tombstone is the same: 865 -> 864.
 	missing = untranslated(graph)
-	assert len(missing) == 865, missing
+	assert len(missing) == 864, missing
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact
