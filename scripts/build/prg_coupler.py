@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "56":
+		b56_nodes, b56_equations, b56_edges, b56_rules = build_batch56(graph)
+		rules.extend(b56_rules)
+		nodes.update(b56_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b56_equations)
+		edges = list(BATCH12_EDGES) + b56_edges
 	elif batch == "55":
 		b55_nodes, b55_equations, b55_edges, b55_rules = build_batch55(graph)
 		rules.extend(b55_rules)
@@ -18618,6 +18625,240 @@ def build_batch55(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	)
 	assert len(nodes) == 1, len(nodes)
 	assert len(equations) == 1, len(equations)
+	return nodes, equations, edges, rules
+
+
+_BATCH56_SOURCE = (
+	"IPCC (2014) Climate Change 2014: Mitigation of Climate Change, Annex III "
+	"'Technology-specific cost and performance parameters', Table A.III.2 "
+	"'Emissions of selected electricity supply technologies (gCO2eq/kWh)', "
+	"p. 1335 -- the lifecycle column, which is the min / median / max of the "
+	"reviewed LCA literature rather than a stack measurement. Archived at "
+	"`sources/archive/ipcc_ar5_wg3_annex3.pdf`. The alternative source, "
+	"IPCC-SRREN (2011) Table A.II.4, is archived alongside it at "
+	"`sources/archive/ipcc_srren_2011_excerpt.pdf` and was rejected for a "
+	"reason this batch records rather than leaves implicit."
+)
+
+#: The three lifecycle factors whose value this batch does not change, and the
+#: AR5 A.III.2 range each sits inside. The range is carried so a reader can see
+#: that "low within a very wide range" is a stated choice, not an accident.
+_BATCH56_LIFECYCLE: tuple[tuple[str, str, tuple[float, float, float]], ...] = (
+	("emission_factor_nuclear_t_per_mwh", "nuclear", (0.0037, 0.012, 0.110)),
+	("emission_factor_hydro_t_per_mwh", "hydropower", (0.0010, 0.024, 2.200)),
+	("emission_factor_geothermal_t_per_mwh", "geothermal", (0.0060, 0.038, 0.079)),
+)
+
+
+def build_batch56(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Restate biomass on a cited basis, and correct four descriptions that lie.
+
+	*The defect, in two parts.*
+
+	1. `emission_factor_biomass_t_per_mwh` ships **0.04** and cites "IPCC
+	   lifecycle emission factors, 2014". No such work exists: `sources/INDEX.md`
+	   holds `ipcc_2006_gl_vol2` (a different work, direct combustion) and no
+	   2014 lifecycle row, and neither archived lifecycle table gives 0.04.
+	   AR5 WG3 Annex III Table A.III.2 puts dedicated biomass at 130 / 230 / 420
+	   gCO2eq/kWh; SRREN Table A.II.4 puts biopower at a 50th percentile of 18.
+	   The audit (`docs/research/emission-factor-basis-audit.md`, recommendation
+	   3) established that 0.04 is a lifecycle-order figure of unknown
+	   provenance and left the choice open.
+
+	2. All four lifecycle factors -- biomass, nuclear, hydro, geothermal --
+	   share the description "stack factor from the fuel's carbon content;
+	   lifecycle additions folded in for the low-carbon technologies, whose
+	   stack term is zero." For these four the *stack term is the zero part*:
+	   nuclear and hydro and geothermal have no combustion at all, and
+	   biomass's biogenic CO2 is excluded from reported totals, which is why
+	   its stack term is not what the node holds. The sentence is the reverse
+	   of the truth for the very nodes it describes, and it is what a
+	   researcher reads.
+
+	*Why the AR5 median and not SRREN's 18.* The two sources disagree by an
+	order of magnitude at the median, and SRREN cannot arbitrate: its printed
+	row is non-monotonic (minimum -633, 25th percentile 360, 50th 18, 75th 37,
+	maximum 75), so a percentile read off it is not a quantity. AR5's row is
+	monotone and states min / median / max. Choosing the median is a modelling
+	choice and the batch says so in the node's prose; the point is that the
+	number is now traceable to a cell in an archived table.
+
+	*Measured, before writing.* Biomass is **0.122% of the emission numerator**
+	at the shipped generation, so the value barely moves the headline: the
+	fleet intensity goes 0.29517156 -> 0.29688328 (**+0.580%**) and
+	`emissions_mtco2_per_year` 15.217127 -> 15.305372. What does move is
+	`lcoe_biomass_usd_per_mwh`, which reads the factor as its carbon-cost term:
+	87.275 -> **96.775 USD/MWh (+10.885%)**. The batch is small on the
+	headline and material on one LCOE, and both are asserted rather than
+	described.
+
+	*What this batch does not do.* It does not touch nuclear, hydro or
+	geothermal. All three sit below the AR5 median but inside the published
+	min-max range, their combined weight in the numerator is 1.13%, and being
+	low within a very wide range is a defensible fleet-average choice. Their
+	descriptions are corrected; their values are not. Recommendation 5 of the
+	audit -- the node-source channel -- is a schema change and stays open: it
+	needs provenance separated from citation before `citation_report()` can
+	read node sources, and doing it in the other order fails open or fails red.
+	"""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	from alea.prg.views import ParameterNode
+
+	biomass = "emission_factor_biomass_t_per_mwh"
+	assert biomass in graph.nodes, f"{biomass} does not ship"
+	shipped = graph.nodes[biomass]
+	assert shipped.role.value == "exogenous", (
+		f"{biomass} is {shipped.role.value!r}; this batch restates an exogenous "
+		f"lifecycle dial and would be overwriting a computed quantity"
+	)
+	assert float(shipped.default) == 0.04, (
+		f"{biomass} ships {shipped.default!r}, not the 0.04 the audit's "
+		f"recommendation 3 is about; the finding has moved and the prose this "
+		f"batch writes would describe a different node"
+	)
+
+	# The canary: the value the batch writes must be the one it asserts. A
+	# constant copied from the docstring into the body is a number no gate
+	# reads; deriving it from the table row and asserting the arithmetic keeps
+	# the two together.
+	_ar5_biomass = (0.130, 0.230, 0.420)
+	new_default = _ar5_biomass[1]
+	assert 0.0 <= new_default <= 1.5, new_default
+
+	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	baseline = graph.propagate(values).values
+	_old_intensity = float(baseline["fleet_emission_intensity_t_per_mwh"])
+	_old_emissions = float(baseline["emissions_mtco2_per_year"])
+	_old_lcoe = float(baseline["lcoe_biomass_usd_per_mwh"])
+	moved = graph.propagate({**values, biomass: new_default}).values
+	_new_intensity = float(moved["fleet_emission_intensity_t_per_mwh"])
+	_new_emissions = float(moved["emissions_mtco2_per_year"])
+	_new_lcoe = float(moved["lcoe_biomass_usd_per_mwh"])
+
+	# The direction is the claim. A restatement upward on a factor the
+	# intensity is linear in must raise both, and the LCOE with them.
+	assert _new_intensity > _old_intensity, (
+		f"raising {biomass} from 0.04 to {new_default} did not raise the "
+		f"fleet intensity ({_old_intensity} -> {_new_intensity}); the factor is "
+		f"not the numerator term this batch believes it is"
+	)
+	assert _new_lcoe > _old_lcoe, (
+		f"raising {biomass} did not raise lcoe_biomass "
+		f"({_old_lcoe} -> {_new_lcoe}); the carbon-cost term is not live at "
+		f"the shipped carbon price"
+	)
+	_intensity_pct = (_new_intensity / _old_intensity - 1.0) * 100.0
+	_lcoe_pct = (_new_lcoe / _old_lcoe - 1.0) * 100.0
+	assert 0.4 < _intensity_pct < 0.8, (
+		f"the headline moved {_intensity_pct:+.3f}%, outside the 0.4-0.8% band "
+		f"the docstring's 0.580% measurement predicts; either the generation "
+		f"weights or the numerator changed and the prose is stale"
+	)
+
+	body = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+	body.update({
+		"default": new_default,
+		"source": _BATCH56_SOURCE,
+		"description": (
+			"Lifecycle CO2eq per megawatt-hour for dedicated biomass, on a "
+			"stated basis: the median of the IPCC AR5 WG3 Annex III Table "
+			"A.III.2 range for biomass-dedicated plant (130 / 230 / 420 "
+			"gCO2eq/kWh), i.e. 0.230 t/MWh. This is a *lifecycle* figure, not a "
+			"stack measurement -- biomass's biogenic CO2 is conventionally "
+			"excluded from reported totals, which is what makes a single "
+			"number for it a modelling choice rather than a measurement. The "
+			"spread is the finding: AR5's median is 230 and SRREN's is 18, "
+			"because the two treat land-use change and biogenic carbon "
+			"differently. The shipped 0.04 was a lifecycle-order number of "
+			"unknown provenance under a citation to a work that does not "
+			"exist. A scenario that wants a different feedstock basis should "
+			"set this node rather than read it as a physical constant."
+		),
+	})
+	ParameterNode(**{"id": biomass, **body})
+	nodes[biomass] = body
+
+	# The three the batch does not revalue. Their descriptions are corrected
+	# because they are false in the same way; their values stay.
+	for name, label, (lo, median, hi) in _BATCH56_LIFECYCLE:
+		assert name in graph.nodes, f"{name} does not ship"
+		node = graph.nodes[name]
+		assert node.role.value == "exogenous", f"{name} is {node.role.value!r}"
+		held = float(node.default)
+		assert lo <= held <= hi, (
+			f"{name} ships {held}, outside the AR5 A.III.2 range for {label} "
+			f"({lo}, {hi}); the prose this batch writes would claim it is "
+			f"inside a range it is not"
+		)
+		_other = dict(node.model_dump(exclude={"id"}, mode="json"))
+		_other.update({
+			"source": _BATCH56_SOURCE,
+			"description": (
+				f"Lifecycle CO2eq per megawatt-hour for {label}. This is a "
+				f"*lifecycle* figure and not a stack measurement: {label} has "
+				f"no combustion, so there is no stack term to measure and the "
+				f"whole of the number is the infrastructure and supply chain. "
+				f"AR5 WG3 Annex III Table A.III.2 puts {label} at {lo * 1000:g} "
+				f"/ {median * 1000:g} / {hi * 1000:g} gCO2eq/kWh; the graph "
+				f"ships {held * 1000:g}, below the median but inside the range. "
+				f"Being low within a very wide range is a stated choice for a "
+				f"fleet-average model, not a basis error -- the same choice the "
+				f"fossil factors could not make, because theirs had a stack "
+				f"term to disagree with."
+			),
+		})
+		ParameterNode(**{"id": name, **_other})
+		nodes[name] = _other
+
+	assert len(nodes) == 4, len(nodes)
+
+	# The register wiring. `citation_report()` reads *equations*, not nodes, so
+	# a work cited only by a node source is a row nothing reaches. The
+	# fleet-intensity equation is the one that genuinely consumes these four
+	# factors, so its reference is where their basis belongs -- and extending
+	# it is what lets the AR5 and SRREN rows resolve instead of sitting
+	# unreachable.
+	intensity = graph.equations["fleet_emission_intensity_definition"]
+	for factor in ("emission_factor_biomass_t_per_mwh", "emission_factor_nuclear_t_per_mwh"):
+		assert factor in intensity.parameters, (
+			f"{factor} is not an operand of fleet_emission_intensity_definition; "
+			f"the reference this batch writes would cite a basis for a quantity "
+			f"the equation does not read"
+		)
+	equations["fleet_emission_intensity_definition"] = _rebuild(
+		intensity,
+		reference=(
+			"IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS "
+			"technology entry, for the capture rate; the per-fuel factors are "
+			"the graph's own `emission_factor_{tech}_t_per_mwh` nodes, and the "
+			"generation weights are the batch-46 generation identity. The "
+			"lifecycle factors -- biomass, nuclear, hydro and geothermal -- take "
+			"their basis from IPCC (2014) Climate Change 2014: Mitigation of "
+			"Climate Change, Annex III, Table A.III.2 'Emissions of selected "
+			"electricity supply technologies', p. 1335, archived at "
+			"`sources/archive/ipcc_ar5_wg3_annex3.pdf`. The alternative "
+			"lifecycle table, IPCC-SRREN (2011) Table A.II.4, is archived at "
+			"`sources/archive/ipcc_srren_2011_excerpt.pdf` and is not used: its "
+			"biopower row is non-monotonic (minimum -633, 25th percentile 360, "
+			"50th 18, 75th 37, maximum 75 gCO2eq/kWh), so a percentile read off "
+			"it is not a quantity."
+		),
+	)
+
+	assert len(equations) == 1, len(equations)
+	assert not edges, len(edges)
+	assert not rules, len(rules)
+	print(
+		f"  biomass 0.04 -> {new_default} (AR5 A.III.2 median); intensity "
+		f"{_old_intensity:.8f} -> {_new_intensity:.8f} ({_intensity_pct:+.3f}%), "
+		f"emissions {_old_emissions:.6f} -> {_new_emissions:.6f}, "
+		f"lcoe_biomass {_old_lcoe:.3f} -> {_new_lcoe:.3f} ({_lcoe_pct:+.3f}%); "
+		f"3 sibling descriptions corrected, values unchanged"
+	)
 	return nodes, equations, edges, rules
 
 

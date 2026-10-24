@@ -4827,9 +4827,10 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# definition cites the UKRN cost-of-capital review, 298 -> 299, and batch
 	# 53's reserve requirement cites NERC's planning reserve framework, 299 -> 300.
 	# Batch 54's temporal-resolution definition cites the placeholder survey and
-	# the `tsam` segmentation it names: 300 -> 301. That citation is a document
-	# in this repository, not a work in `sources/INDEX.md` -- it is the record of
-	# why the node exists, which is what the register is asked to carry.
+	# the `tsam` segmentation it names: 300 -> 301. That citation was registered
+	# only as prose until batch 56, when the survey got an INDEX row of its own;
+	# until then `citation_report()` reported it unregistered, because the
+	# report reads equations and the row did not exist.
 	assert len(declared) == 301, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}

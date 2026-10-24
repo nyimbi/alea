@@ -10790,28 +10790,40 @@ parameters:
     status: to_build
     deprecated_by: null
   emission_factor_biomass_t_per_mwh:
-    categories: []
-    category: Technology
-    default: 0.04
-    deprecated_by: null
-    description: 'CO2 per megawatt-hour for biomass: stack factor from the fuel''s carbon content; lifecycle
-      additions folded in for the low-carbon technologies, whose stack term is zero.'
-    determinism: physical
-    initial: null
     name: Emission factor biomass t per mwh
-    priority: P1
-    range:
-    - 0.0
-    - 1.5
-    role: exogenous
-    source: IPCC lifecycle emission factors, 2014; fuel carbon contents
-    source_url: null
-    status: existing
+    description: 'Lifecycle CO2eq per megawatt-hour for dedicated biomass, on a stated basis: the median
+      of the IPCC AR5 WG3 Annex III Table A.III.2 range for biomass-dedicated plant (130 / 230 / 420 gCO2eq/kWh),
+      i.e. 0.230 t/MWh. This is a *lifecycle* figure, not a stack measurement -- biomass''s biogenic CO2
+      is conventionally excluded from reported totals, which is what makes a single number for it a modelling
+      choice rather than a measurement. The spread is the finding: AR5''s median is 230 and SRREN''s is
+      18, because the two treat land-use change and biogenic carbon differently. The shipped 0.04 was
+      a lifecycle-order number of unknown provenance under a citation to a work that does not exist. A
+      scenario that wants a different feedstock basis should set this node rather than read it as a physical
+      constant.'
+    category: Technology
     subcategory: null
     type: float
     unit: tonne/MWh
+    range:
+    - 0.0
+    - 1.5
+    default: 0.23
+    initial: null
+    role: exogenous
+    determinism: physical
+    categories: []
+    source: 'IPCC (2014) Climate Change 2014: Mitigation of Climate Change, Annex III ''Technology-specific
+      cost and performance parameters'', Table A.III.2 ''Emissions of selected electricity supply technologies
+      (gCO2eq/kWh)'', p. 1335 -- the lifecycle column, which is the min / median / max of the reviewed
+      LCA literature rather than a stack measurement. Archived at `sources/archive/ipcc_ar5_wg3_annex3.pdf`.
+      The alternative source, IPCC-SRREN (2011) Table A.II.4, is archived alongside it at `sources/archive/ipcc_srren_2011_excerpt.pdf`
+      and was rejected for a reason this batch records rather than leaves implicit.'
+    source_url: null
     users:
     - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   emission_factor_coal_t_per_mwh:
     name: Emission factor coal t per mwh
     description: 'CO2 the coal fleet emits per MWh generated, as the fuel''s carbon content over the plant''s
@@ -10891,74 +10903,103 @@ parameters:
     - fleet_emission_intensity_t_per_mwh
     - lcoe_gas_usd_per_mwh
   emission_factor_geothermal_t_per_mwh:
-    categories: []
-    category: Technology
-    default: 0.03
-    deprecated_by: null
-    description: 'CO2 per megawatt-hour for geothermal: stack factor from the fuel''s carbon content;
-      lifecycle additions folded in for the low-carbon technologies, whose stack term is zero.'
-    determinism: physical
-    initial: null
     name: Emission factor geothermal t per mwh
-    priority: P1
-    range:
-    - 0.0
-    - 1.5
-    role: exogenous
-    source: IPCC lifecycle emission factors, 2014; fuel carbon contents
-    source_url: null
-    status: existing
+    description: 'Lifecycle CO2eq per megawatt-hour for geothermal. This is a *lifecycle* figure and not
+      a stack measurement: geothermal has no combustion, so there is no stack term to measure and the
+      whole of the number is the infrastructure and supply chain. AR5 WG3 Annex III Table A.III.2 puts
+      geothermal at 6 / 38 / 79 gCO2eq/kWh; the graph ships 30, below the median but inside the range.
+      Being low within a very wide range is a stated choice for a fleet-average model, not a basis error
+      -- the same choice the fossil factors could not make, because theirs had a stack term to disagree
+      with.'
+    category: Technology
     subcategory: null
     type: float
     unit: tonne/MWh
+    range:
+    - 0.0
+    - 1.5
+    default: 0.03
+    initial: null
+    role: exogenous
+    determinism: physical
+    categories: []
+    source: 'IPCC (2014) Climate Change 2014: Mitigation of Climate Change, Annex III ''Technology-specific
+      cost and performance parameters'', Table A.III.2 ''Emissions of selected electricity supply technologies
+      (gCO2eq/kWh)'', p. 1335 -- the lifecycle column, which is the min / median / max of the reviewed
+      LCA literature rather than a stack measurement. Archived at `sources/archive/ipcc_ar5_wg3_annex3.pdf`.
+      The alternative source, IPCC-SRREN (2011) Table A.II.4, is archived alongside it at `sources/archive/ipcc_srren_2011_excerpt.pdf`
+      and was rejected for a reason this batch records rather than leaves implicit.'
+    source_url: null
     users:
     - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   emission_factor_hydro_t_per_mwh:
-    categories: []
-    category: Technology
-    default: 0.01
-    deprecated_by: null
-    description: 'CO2 per megawatt-hour for hydro: stack factor from the fuel''s carbon content; lifecycle
-      additions folded in for the low-carbon technologies, whose stack term is zero.'
-    determinism: physical
-    initial: null
     name: Emission factor hydro t per mwh
-    priority: P1
-    range:
-    - 0.0
-    - 1.5
-    role: exogenous
-    source: IPCC lifecycle emission factors, 2014; fuel carbon contents
-    source_url: null
-    status: existing
-    subcategory: null
-    type: float
-    unit: tonne/MWh
-    users:
-    - Regulators
-  emission_factor_nuclear_t_per_mwh:
-    categories: []
+    description: 'Lifecycle CO2eq per megawatt-hour for hydropower. This is a *lifecycle* figure and not
+      a stack measurement: hydropower has no combustion, so there is no stack term to measure and the
+      whole of the number is the infrastructure and supply chain. AR5 WG3 Annex III Table A.III.2 puts
+      hydropower at 1 / 24 / 2200 gCO2eq/kWh; the graph ships 10, below the median but inside the range.
+      Being low within a very wide range is a stated choice for a fleet-average model, not a basis error
+      -- the same choice the fossil factors could not make, because theirs had a stack term to disagree
+      with.'
     category: Technology
-    default: 0.006
-    deprecated_by: null
-    description: 'CO2 per megawatt-hour for nuclear: stack factor from the fuel''s carbon content; lifecycle
-      additions folded in for the low-carbon technologies, whose stack term is zero.'
-    determinism: physical
-    initial: null
-    name: Emission factor nuclear t per mwh
-    priority: P1
-    range:
-    - 0.0
-    - 1.5
-    role: exogenous
-    source: IPCC lifecycle emission factors, 2014; fuel carbon contents
-    source_url: null
-    status: existing
     subcategory: null
     type: float
     unit: tonne/MWh
+    range:
+    - 0.0
+    - 1.5
+    default: 0.01
+    initial: null
+    role: exogenous
+    determinism: physical
+    categories: []
+    source: 'IPCC (2014) Climate Change 2014: Mitigation of Climate Change, Annex III ''Technology-specific
+      cost and performance parameters'', Table A.III.2 ''Emissions of selected electricity supply technologies
+      (gCO2eq/kWh)'', p. 1335 -- the lifecycle column, which is the min / median / max of the reviewed
+      LCA literature rather than a stack measurement. Archived at `sources/archive/ipcc_ar5_wg3_annex3.pdf`.
+      The alternative source, IPCC-SRREN (2011) Table A.II.4, is archived alongside it at `sources/archive/ipcc_srren_2011_excerpt.pdf`
+      and was rejected for a reason this batch records rather than leaves implicit.'
+    source_url: null
     users:
     - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
+  emission_factor_nuclear_t_per_mwh:
+    name: Emission factor nuclear t per mwh
+    description: 'Lifecycle CO2eq per megawatt-hour for nuclear. This is a *lifecycle* figure and not
+      a stack measurement: nuclear has no combustion, so there is no stack term to measure and the whole
+      of the number is the infrastructure and supply chain. AR5 WG3 Annex III Table A.III.2 puts nuclear
+      at 3.7 / 12 / 110 gCO2eq/kWh; the graph ships 6, below the median but inside the range. Being low
+      within a very wide range is a stated choice for a fleet-average model, not a basis error -- the
+      same choice the fossil factors could not make, because theirs had a stack term to disagree with.'
+    category: Technology
+    subcategory: null
+    type: float
+    unit: tonne/MWh
+    range:
+    - 0.0
+    - 1.5
+    default: 0.006
+    initial: null
+    role: exogenous
+    determinism: physical
+    categories: []
+    source: 'IPCC (2014) Climate Change 2014: Mitigation of Climate Change, Annex III ''Technology-specific
+      cost and performance parameters'', Table A.III.2 ''Emissions of selected electricity supply technologies
+      (gCO2eq/kWh)'', p. 1335 -- the lifecycle column, which is the min / median / max of the reviewed
+      LCA literature rather than a stack measurement. Archived at `sources/archive/ipcc_ar5_wg3_annex3.pdf`.
+      The alternative source, IPCC-SRREN (2011) Table A.II.4, is archived alongside it at `sources/archive/ipcc_srren_2011_excerpt.pdf`
+      and was rejected for a reason this batch records rather than leaves implicit.'
+    source_url: null
+    users:
+    - Regulators
+    priority: P1
+    status: existing
+    deprecated_by: null
   emission_factor_oil_t_per_mwh:
     name: Emission factor oil t per mwh
     description: 'CO2 the oil fleet emits per MWh generated, as the fuel''s carbon content over the plant''s
@@ -38009,7 +38050,6 @@ equations:
     tolerance: 1.0e-06
     unit_check: true
   fleet_emission_intensity_definition:
-    id: fleet_emission_intensity_definition
     name: Fleet emission intensity
     description: 'The fleet average emission factor at the current build: a generation-weighted mean over
       the seven fuels that carry an `emission_factor_{tech}_t_per_mwh` node, with each capture dial reducing
@@ -38085,9 +38125,15 @@ equations:
     - fleet_emission_intensity_t_per_mwh
     tolerance: 1.0e-09
     unit_check: true
-    reference: IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
-      the capture rate; the per-fuel factors are the graph's own `emission_factor_{tech}_t_per_mwh` nodes,
-      and the generation weights are the batch-46 generation identity
+    reference: 'IEA/NEA Projected Costs of Generating Electricity (2020), the CCUS technology entry, for
+      the capture rate; the per-fuel factors are the graph''s own `emission_factor_{tech}_t_per_mwh` nodes,
+      and the generation weights are the batch-46 generation identity. The lifecycle factors -- biomass,
+      nuclear, hydro and geothermal -- take their basis from IPCC (2014) Climate Change 2014: Mitigation
+      of Climate Change, Annex III, Table A.III.2 ''Emissions of selected electricity supply technologies'',
+      p. 1335, archived at `sources/archive/ipcc_ar5_wg3_annex3.pdf`. The alternative lifecycle table,
+      IPCC-SRREN (2011) Table A.II.4, is archived at `sources/archive/ipcc_srren_2011_excerpt.pdf` and
+      is not used: its biopower row is non-monotonic (minimum -633, 25th percentile 360, 50th 18, 75th
+      37, maximum 75 gCO2eq/kWh), so a percentile read off it is not a quantity.'
     priority: P1
     solution_method: direct
     linearity: linear
@@ -38098,6 +38144,7 @@ equations:
       \mathrm{emission}_{factor\_biomass\_t\_per\_mwh} + \mathrm{nuclear}_{generation\_twh} \mathrm{emission}_{factor\_nuclear\_t\_per\_mwh}
       + \mathrm{hydro}_{generation\_twh} \mathrm{emission}_{factor\_hydro\_t\_per\_mwh} + \mathrm{geothermal}_{generation\_twh}
       \mathrm{emission}_{factor\_geothermal\_t\_per\_mwh}}{\mathrm{fleet}_{generation\_twh}}
+    id: fleet_emission_intensity_definition
   fleet_employment_intensity_definition:
     description: 'Jobs per installed megawatt, capacity-weighted across the technologies the archive prices.
       An intensity and not a total: `direct_jobs` already ships at 43,000 and the per-technology factors

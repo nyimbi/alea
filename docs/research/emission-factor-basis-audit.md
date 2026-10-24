@@ -240,9 +240,10 @@ emission factors, 2014" applied uniformly:
 
 ## Recommended corrections
 
-Ordered by materiality. **Recommendations 1, 2 and 4 are applied as of batch
-51** (2026-10-23); 3 and 5 are still open, and the status of each is stated
-below rather than left for a reader to diff against the graph.
+Ordered by materiality. **Recommendations 1, 2, 3 and 4 are applied as of
+batches 51 and 56** (2026-10-23, 2026-10-24); 5 is still open, and the status
+of each is stated below rather than left for a reader to diff against the
+graph.
 
 1. **Reconcile the fossil factors with `efficiency_*`.** Either the factors
    move to 0.851 / 0.348 / 0.733, or the efficiencies move to 0.37 / 0.449 /
@@ -277,6 +278,23 @@ below rather than left for a reader to diff against the graph.
    the table it comes from (AR5 Table A.III.2 median 0.23, or SRREN A.II.4
    median 0.018, or state the feedstock assumption). 0.04 should not remain an
    unattributed number. Effect on headline: <0.6%.
+
+   **APPLIED (batch 56).** The AR5 A.III.2 median, **0.230** t/MWh. SRREN's
+   0.018 was rejected on this audit's own caveat above, now made operative: the
+   biopower column is non-monotonic as printed (min -633, 25th 360, 50th 18,
+   75th 37, max 75 gCO2eq/kWh), so its 50th entry is a statement about row
+   order and not a median. Measured on the loaded graph: biomass 0.04 -> 0.23;
+   `fleet_emission_intensity_t_per_mwh` 0.295172 -> **0.296883** (**+0.580%**,
+   consistent with this audit's <0.6% estimate); `lcoe_biomass_usd_per_mwh`
+   87.275 -> **96.775** (**+10.885%**) -- the headline barely moves because
+   biomass is a small share of generation, and the biomass LCOE moves a great
+   deal because the factor is a direct term in it. Both numbers are printed by
+   `build_batch56` rather than quoted.
+
+   The same batch corrected the description the four lifecycle factors shared:
+   all four said "stack factor from the fuel's carbon content", and none of
+   them has a stack term. Nuclear 0.006, hydro 0.01 and geothermal 0.03 were
+   left alone, each asserted inside its AR5 A.III.2 range.
 4. **Leave nuclear, hydro and geothermal alone.** Lifecycle, inside published
    ranges, 1.13% of the numerator combined. **APPLIED** in the sense that batch
    51 did not touch them: only the three fossil factors were derived, and the
@@ -299,6 +317,16 @@ below rather than left for a reader to diff against the graph.
    for the work), *then* teach `citation_report()` to read the `source` channel.
    Done in the other order it fails open or fails red. The two IPCC rows this
    audit archived belong in the register once the first step lands.
+
+   **Partially closed the other way (batch 56).** Rather than wait on the schema
+   split, batch 56 wired both IPCC works through
+   `fleet_emission_intensity_definition` -- the equation that actually consumes
+   the four lifecycle factors -- and added their INDEX rows. `citation_report()`
+   reads equations, so this registers both works today without touching the
+   node schema, and it leaves recommendation 5's substance intact: 1 262 node
+   sources still resolve to nothing, and 53.2% of them are still batch
+   provenance markers rather than citations. The `provenance`/`source` split is
+   still the correct repair for that.
 
 ## Sources
 

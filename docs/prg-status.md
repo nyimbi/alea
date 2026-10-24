@@ -1469,6 +1469,99 @@ consistent with the one pre-existing `rocof_definition` failure.
 
 
 
+### The biomass factor was a number with no provenance (batch 56, 2026-10-24)
+
+`emission_factor_biomass_t_per_mwh` shipped 0.04 tCO2/MWh. The
+emission-factor-basis audit traced every sibling to a table -- coal, gas and oil
+to IPCC 2006 Guidelines Vol. 2, nuclear and hydro to lifecycle studies -- and
+biomass to nothing. 0.04 t/MWh is 40 gCO2eq/kWh, which is a *low* lifecycle
+figure for biopower, and the audit could not find the table that says 40. A
+lifecycle number without a basis is not a measurement of anything: biopower's
+published range runs from negative (with carbon capture and sequestration on
+the feedstock) to above gas, and the choice of percentile is the whole content
+of the parameter.
+
+**Measured on HEAD.** The audit's own recommendation 3 asked for the factor to
+be restated on a table it names. AR5 WG3 Annex III Table A.III.2 (p. 1335,
+`sources/archive/ipcc_ar5_wg3_annex3.txt` line 453) gives dedicated biomass as
+lifecycle **min 130 / median 230 / max 420** gCO2eq/kWh. The shipped 40 is
+below even the minimum: it is not any percentile of this table. The same table
+is where the other three factors' ranges come from, and reading it confirms
+nuclear 3.7 / 12 / 110, hydropower 1.0 / 24 / 2200 and geothermal 6.0 / 38 / 79
+exactly as the builder carries them.
+
+**The repair.** `new_default = 0.230` t/MWh, the AR5 median. The change is
+small in the fleet and large where biomass is actually used: fleet emission
+intensity goes 0.29517156 -> 0.29688328 t/MWh (**+0.580%**, because biomass is
+a small share of the generation mix), while `lcoe_biomass_usd_per_mwh` goes
+87.275 -> 96.775 (**+10.885%**, because the carbon cost of the fuel is a direct
+term in that LCOE). Both numbers are printed by the builder rather than
+recorded in prose after the fact.
+
+**Why SRREN was archived and then rejected.** IPCC-SRREN (2011) Annex II Table
+A.II.4 is the other standard lifecycle table and is more commonly cited for
+this quantity. Its biopower row is non-monotonic: minimum **-633**, 25th
+percentile **360**, 50th **18**, 75th **37**, maximum **75** gCO2eq/kWh. A
+distribution whose 25th percentile exceeds its median is a table whose columns
+were not sorted by value, so "the median of the SRREN biopower row" is a
+statement about row order, not about biopower. Taking the 50th entry of an
+unsorted column and calling it a median would have produced a number that
+looks like a percentile and is not one. The excerpt is archived at
+`sources/archive/ipcc_srren_2011_excerpt.pdf` and the equation's `reference`
+says in the shipped tree that it is not used and why, so the next reader does
+not repeat the investigation.
+
+**A description shared by four nodes that described none of them.** All four
+lifecycle factors -- biomass, nuclear, hydro, geothermal -- carried the same
+description: "stack factor from the fuel's carbon content". None of the four
+has a stack term. A nuclear plant has no stack, and neither does a hydro
+reservoir; their figures are lifecycle averages over construction, fuel cycle
+and decommissioning, which is a different quantity from a combustion emission
+factor and cannot be read off a fuel's carbon content. The corrected text says
+what the number is and where it comes from. The three values were **not**
+changed: nuclear 0.006, hydro 0.01 and geothermal 0.03 all sit inside their
+AR5 A.III.2 ranges -- (0.0037, 0.110), (0.0010, 2.200) and (0.0060, 0.079)
+t/MWh respectively -- and the builder asserts each one does before leaving it
+alone. Note what that comparison says: each shipped value sits at or near the
+*bottom* of a very wide range, which is a stated choice now rather than an
+accident, and the range is carried in the builder so a reader can see it.
+
+**The citation register had been red since batch 53, and this segment found
+it.** `citation_report()` reads equations only -- `_equation_references()` never
+touches a node's `source` field -- so a work cited from a parameter could never
+register. Batches 53 and 54 each added an equation citing a work with no INDEX
+row, and neither batch ran `tests/ci/test_citation_register.py`, so two
+`unregistered` gaps had been accumulating under a green-looking targeted run.
+The repair wires AR5 and SRREN through `fleet_emission_intensity_definition`,
+the equation that actually consumes the four factors, which registers four
+works: the two IPCC reports, the placeholder survey (batches 53/54's second
+citation), and the planning-reserve-margin identity. Post-bake, citation gaps
+are `{'unarchived': 7}` -- every gap kind the tests fail on is clean for the
+first time.
+
+**A register row's `archived` cell has one meaning.** It is a path under
+`sources/archive/` with a recorded digest, or the literal `n/a` for a
+derivation. The first version of the placeholder-survey row put
+`docs/research/placeholder-survey.md` there, which failed two gates in
+sequence: the digest test read it as an archive path and found no digest, and
+after moving it, the custodian test read `n/a` as a derivation and rejected
+the "This repository" custodian. The row now follows the precedent set by
+`catalog_method_cells` and `fragments_alias_register` -- a repo-internal
+register is `n/a`, with the path in the `work` cell, because the live file is
+git-versioned and an archive copy would only be a second copy to go stale.
+
+**Registers.** Graph 1429 nodes / 607 equations / 1367 edges / 57 rules,
+unchanged: four defaults moved and one equation's prose was rewritten, and
+neither adds a node, an equation or an edge. Settable 870 and untranslated 867,
+unchanged by the batch (no node entered or left). Units 606 consistent / 1
+pre-existing (`rocof_definition`) / 0 undecidable; structure issues empty.
+The `test_prg.py` register pinned at 301 stays at 301: that count is *equations
+carrying a reference*, and `fleet_emission_intensity_definition` already had
+one, so rewriting its prose moves nothing. The registered *works* rose by four
+-- the two IPCC reports, the placeholder survey and the reserve-margin identity
+-- from the INDEX rows the repair added, which is a different register and the
+one that was red.
+
 ### The generic wind O&M node was a third spelling nothing read (batch 55, 2026-10-24)
 
 Three ids carried wind's fixed O&M. `opex_fixed_wind_onshore` ships 30
