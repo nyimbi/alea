@@ -19452,29 +19452,37 @@ parameters:
     users:
     - Regulators
   local_content_requirements:
-    categories: []
-    category: Land Use & Community
-    default: 0.3
-    deprecated_by: null
-    description: Duplicate of `local_content_requirement` under a plural spelling. Corrected to the same
-      range and default; the duplication itself is a finding — the graph should not carry two ids for
-      one quantity, and the next batch should nominate one as canonical and mark the other deprecated.
-    determinism: policy
-    initial: null
     name: Local content requirements
-    priority: P2
-    range:
-    - 0.0
-    - 1.0
-    role: free
-    source: docs/params.md#28.9
-    source_url: null
-    status: to_build
+    description: 'Retired: a second id for the share `local_content_requirement` already carries. Both
+      name the share of project inputs that must be sourced in-country, both at unit `1` over [0, 1] with
+      default 0.3, and each had exactly one reader -- the singular the jobs count, this one the capex
+      share. Two dials for one policy lever meant a scenario could move one and leave the other''s consumer
+      at 0.3, invisible at the shipped default because both are 0.3. The singular is canonical by `docs/param_eqn.md`,
+      which treats row 4.23 as the hub and row 28.9 as a leaf. The capex equation now reads the singular,
+      so this id resolves to the same quantity it always named.'
+    category: Land Use & Community
     subcategory: null
     type: float
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.3
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: 'The duplicate local-content share retired (batch 61). `local_content_requirements` is the
+      same quantity as the shipped `local_content_requirement` -- the share of project inputs sourced
+      in-country -- and the two ids moved independently. The singular is canonical: `docs/param_eqn.md`
+      treats 4.23 as the hub and the plural (28.9) as a leaf, and the singular''s id is the one the equation
+      bodies already spell.'
+    source_url: null
     users:
     - Regulators
+    priority: P2
+    status: deprecated
+    deprecated_by: local_content_requirement
   local_employment_share:
     categories: []
     category: Land Use & Community
@@ -42718,29 +42726,32 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   local_content_capex_definition:
-    description: 'The fleet''s capex that must be sourced in-country: the content share times the total,
-      at the MW-to-kW conversion and the USD-million scale.'
-    determined_variables:
-    - local_content_capex_mm_usd
-    free_variables: []
-    latex: \mathrm{local}_{content\_capex\_mm\_usd} = \frac{1000 \mathrm{local}_{content\_requirements}
-      \mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}}{1000000}
-    lhs: local_content_capex_mm_usd
-    linearity: linear
     name: Capex sourced in-country
+    description: 'The fleet''s capex that must be sourced in-country: the content share times the total,
+      at the MW-to-kW conversion and the USD-million scale. The share is `local_content_requirement`,
+      the same dial `local_jobs_definition` applies to employment -- the plural id this equation used
+      to read was a duplicate of it, and reading a different id left the two consumers of one policy lever
+      movable independently.'
+    system: cost_accounting
+    lhs: local_content_capex_mm_usd
+    rhs: local_content_requirement * capex_usd_per_kw * total_capacity_mw * 1000.0 / 1000000.0
+    relation: eq
     parameters:
     - local_content_capex_mm_usd
     - capex_usd_per_kw
-    - local_content_requirements
+    - local_content_requirement
     - total_capacity_mw
-    priority: P1
-    reference: NREL ATB 2025 Equations & Variables
-    relation: eq
-    rhs: local_content_requirements * capex_usd_per_kw * total_capacity_mw * 1000.0 / 1000000.0
-    solution_method: direct
-    system: cost_accounting
+    free_variables: []
+    determined_variables:
+    - local_content_capex_mm_usd
     tolerance: 1.0e-09
     unit_check: true
+    reference: NREL ATB 2025 Equations & Variables
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{local}_{content\_capex\_mm\_usd} = \frac{1000 \mathrm{local}_{content\_requirement}
+      \mathrm{capex}_{usd\_per\_kw} \mathrm{total}_{capacity\_mw}}{1000000}
   local_content_employment_alias:
     description: The local employment share under the catalog's second id. `local_jobs` already computes
       the count from `local_employment_share`; a second share node would let a scenario move the share
@@ -53017,15 +53028,6 @@ relationships:
   priority: P1
   reference: null
   relationship: functional
-  source: local_content_requirements
-  strength: hard
-  target: local_content_capex_mm_usd
-- description: Enters the product.
-  direction: forward
-  equation_id: local_content_capex_definition
-  priority: P1
-  reference: null
-  relationship: functional
   source: total_capacity_mw
   strength: hard
   target: local_content_capex_mm_usd
@@ -61157,6 +61159,13 @@ relationships:
     only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/) had already
     reasoned about the node, its reasoning is quoted in the node's description.
   priority: P1
+- source: local_content_requirement
+  target: local_content_capex_mm_usd
+  equation_id: local_content_capex_definition
+  relationship: functional
+  strength: hard
+  description: 'The same content share the jobs count applies, applied to capex: one policy lever, two
+    consumers.'
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0
   id: carbon_price_budget_alignment

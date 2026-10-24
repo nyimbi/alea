@@ -982,6 +982,10 @@ def test_the_summary_reports_the_registers(graph: ParameterGraph):
 		"opex_fixed_wind",
 		# Batch 59 retired the duplicate remittance share. Also `free`.
 		"remittance_dependency",
+		# Batch 61 retired the plural local-content share, keeping the
+		# singular. Also `free`, and the retirement repointed its one reader
+		# (`local_content_capex_definition`) so no equation names it now.
+		"local_content_requirements",
 	}, deprecated_uncoupled
 	uncoupled_roles = {
 		graph.role(name).value for name in graph.uncoupled()
@@ -1435,6 +1439,80 @@ def test_the_rpi_x_reduction_is_the_share_it_names_and_not_the_remainder(
 		out = graph.propagate(scoped).values
 		base = float(out["allowed_revenue_requirement"])
 		assert abs(float(out["x_factor_revenue_reduction"]) - probe * base) < 1e-9, probe
+
+
+def test_the_two_local_content_consumers_now_move_together(
+	graph: ParameterGraph, defaults: dict
+):
+	"""One policy lever, two consumers, and they used to move independently.
+
+	`local_content_requirement` (singular, catalog row 4.23) and
+	`local_content_requirements` (plural, row 28.9) were two ids for one share:
+	same unit `1`, same range [0, 1], same default 0.3. Each had exactly one
+	reader -- the singular fed `local_jobs_definition`, the plural fed
+	`local_content_capex_definition` -- so a scenario that moved the lever
+	moved one consumer and left the other at 0.3. At the shipped default the
+	two agree, which is why the duplication survived four hundred tests.
+
+	The test asserts the *coupling*, not the deprecation: both consumers are
+	read from the singular, and both respond to it. A test asserting only that
+	the plural is deprecated would pass on a tree that deprecated it without
+	repointing the capex equation -- which would leave that equation naming a
+	tombstone, and `_deprecated_reach` would refuse the load, but the failure
+	would read as a broken graph rather than as the missing half of this fix.
+	"""
+	victim = graph.node("local_content_requirements")
+	successor = graph.node("local_content_requirement")
+
+	assert victim.status == "deprecated", victim.status
+	assert victim.deprecated_by == "local_content_requirement", victim.deprecated_by
+	assert successor.status != "deprecated", successor.status
+	# The tombstone states the quantity it was, at the type it was.
+	assert victim.unit == successor.unit == "1", (victim.unit, successor.unit)
+	assert victim.range == successor.range, (victim.range, successor.range)
+	assert victim.default == successor.default, (victim.default, successor.default)
+
+	# The equation that used to read the plural now reads the singular, and
+	# the edge register agrees with the arithmetic rather than the old body.
+	equation = graph.equations["local_content_capex_definition"]
+	assert "local_content_requirements" not in equation.rhs, equation.rhs
+	assert "local_content_requirement" in equation.rhs, equation.rhs
+	assert "local_content_requirements" not in equation.parameters, equation.parameters
+	declared = {
+		edge.source for edge in graph.edges
+		if edge.equation_id == "local_content_capex_definition"
+	}
+	assert "local_content_requirements" not in declared, declared
+	assert "local_content_requirement" in declared, declared
+
+	# The coupling: both consumers respond to the one dial, at two values, so
+	# a fix that repointed the equation but broke the arithmetic fails here.
+	baseline = graph.propagate(defaults).values
+	jobs_default = float(baseline["local_jobs"])
+	capex_default = float(baseline["local_content_capex_mm_usd"])
+	for probe in (0.1, 0.6):
+		scoped = dict(defaults)
+		scoped["local_content_requirement"] = probe
+		out = graph.propagate(scoped).values
+		assert abs(float(out["local_jobs"]) - jobs_default) > 1e-9, probe
+		assert abs(float(out["local_content_capex_mm_usd"]) - capex_default) > 1e-9, (
+			f"the capex consumer did not follow the singular to {probe}; it is "
+			"still reading a different share"
+		)
+		# And it is linear in the share, which is what "the share times the
+		# base" means -- a repoint that left the old arithmetic somewhere
+		# would move the value without moving it proportionally.
+		ratio = float(out["local_content_capex_mm_usd"]) / capex_default
+		assert abs(ratio - probe / float(defaults["local_content_requirement"])) < 1e-9, (
+			probe, ratio
+		)
+
+	# The tombstone is not a knob: setting it is refused, and the refusal names
+	# the successor so a caller migrating a scenario knows where to go.
+	scoped = dict(defaults)
+	scoped["local_content_requirements"] = 0.5
+	with pytest.raises(GraphError, match="local_content_requirement"):
+		graph.propagate(scoped)
 
 
 def test_a_categorical_retyped_from_a_placeholder_refuses_an_undeclared_level(
@@ -2122,7 +2200,13 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# Batch 55 took it 223 to 222 by deprecating `opex_fixed_wind`, the generic
 	# wind O&M duplicate: `is_settable` refuses a tombstone, so retiring the id
 	# removes it from this register without any arithmetic changing. Batch 59
-	# took it 222 to 221 the same way, for `remittance_dependency`.
+	# took it 222 to 221 the same way, for `remittance_dependency`. Batch 61
+	# moved nothing here by retiring `local_content_requirements`: unlike the
+	# two above, that duplicate *had* a reader (`local_content_capex_definition`),
+	# so it was coupled and never a dead knob. `uncoupled()` went the other
+	# way, 235 to 236, because the repoint moved that reader onto the singular
+	# and left the tombstone naming nothing -- which is the register's design,
+	# not a regression: a deprecated node stays in `uncoupled()` by construction.
 	assert len(dead) == 221, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)

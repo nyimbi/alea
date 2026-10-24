@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}, "59": {}, "60": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}, "59": {}, "60": {}, "61": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,14 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "61":
+		b61_nodes, b61_equations, b61_edges, b61_rules, b61_aliases = build_batch61(graph)
+		rules.extend(b61_rules)
+		aliases.update(b61_aliases)
+		nodes.update(b61_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b61_equations)
+		edges = list(BATCH12_EDGES) + b61_edges
 	elif batch == "60":
 		b60_nodes, b60_equations, b60_edges, b60_rules = build_batch60(graph)
 		rules.extend(b60_rules)
@@ -19362,6 +19370,213 @@ def build_batch59(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		f"{replacement.default}"
 	)
 	return {victim: body}, {}, [], []
+
+
+#: The batch-61 source string, and the same bake trap batches 57, 58 and 59 hit:
+#: a node whose `source` stays `docs/params.md` is re-emitted from the catalog
+#: row by `prg_from_catalog.load_existing()` and the deprecation is lost.
+_BATCH61_SOURCE = (
+	"The duplicate local-content share retired (batch 61). "
+	"`local_content_requirements` is the same quantity as the shipped "
+	"`local_content_requirement` -- the share of project inputs sourced "
+	"in-country -- and the two ids moved independently. The singular is "
+	"canonical: `docs/param_eqn.md` treats 4.23 as the hub and the plural "
+	"(28.9) as a leaf, and the singular's id is the one the equation bodies "
+	"already spell."
+)
+
+#: The duplicate pair this batch resolves: (victim, successor).
+_BATCH61_DUPLICATE: tuple[str, str] = (
+	"local_content_requirements", "local_content_requirement",
+)
+
+#: The equation whose rhs names the victim, and the corrected rhs.
+_BATCH61_EQ = "local_content_capex_definition"
+
+
+def build_batch61(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], dict[str, str]]:
+	"""Retire the plural `local_content_requirements`, and repoint its one reader.
+
+	*The finding.* Two ids for one share. `local_content_requirement` (singular,
+	catalog row 4.23, Policy) and `local_content_requirements` (plural, row
+	28.9, Land Use) both carry unit ``1``, range [0, 1] and default 0.3. Each
+	has exactly one reader, and the readers are different quantities:
+	`local_jobs_definition` multiplies `direct_jobs` by the singular, and
+	`local_content_capex_definition` multiplies capex by the plural. So a
+	scenario that moves one lever moves one consumer and leaves the other at
+	its default. Measured on the shipped graph:
+
+	    singular 0.1 -> local_jobs 4300.00, capex 3600.00 (frozen at 0.3)
+	    singular 0.6 -> local_jobs 25800.00, capex 3600.00 (frozen at 0.3)
+	    plural   0.6 -> local_jobs 12900.00 (frozen at 0.3), capex 7200.00
+
+	At the shipped default of 0.3 on both, nothing shows: the two consumers
+	agree by coincidence, which is why the duplication survived.
+
+	*Why the singular is canonical.* `docs/param_eqn.md` is the dependency
+	register, and it treats 4.23 as a hub -- rows 15.9, 15.23 and 19.25 all
+	list it as a predecessor -- while 28.9 is a leaf pointing at
+	`local_content_employment`. The singular is also the spelling the equation
+	bodies use. Nomination by the register the repo already keeps is the
+	non-arbitrary choice; picking by name would be a preference.
+
+	*Why the reader must move in the same batch.* Deprecating the plural alone
+	would leave `local_content_capex_definition` naming a deprecated node,
+	which `_deprecated_reach` refuses as a load error -- correctly, since a
+	status nothing enforces is a label. The equation's rhs is therefore
+	corrected to read the singular in this batch, and the merge disposes of
+	the stale edge (`local_content_requirements -> local_content_capex_mm_usd`)
+	as the corrected arithmetic legalises. A new edge from the singular carries
+	the coupling the equation now states.
+
+	*What this batch does not do.* It does not merge the two *consumers*: the
+	content share applied to jobs and the content share applied to capex are
+	both `share * base` at the same share, and they stay two nodes because they
+	answer different questions (how many jobs, how much money). It does not
+	touch `local_jobs`, whose own defect -- it and `locally_sourced_jobs` are
+	the same product of `direct_jobs` and a 0.3 share, computed from two
+	different dials -- is a separate finding recorded in `docs/prg-status.md`
+	and left alone here, because retiring it needs a decision about which dial
+	survives and that decision is not this batch's to make.
+	"""
+	from alea.prg.dsl import parse_side
+	from alea.prg.views import ParameterNode
+
+	victim, successor = _BATCH61_DUPLICATE
+
+	assert victim in graph.nodes, f"{victim} is not in the graph"
+	assert successor in graph.nodes, f"{successor} is not in the graph"
+
+	shipped = graph.nodes[victim]
+	replacement = graph.nodes[successor]
+
+	assert shipped.status != "deprecated", f"{victim} is already deprecated"
+	assert shipped.unit == replacement.unit == "1", (shipped.unit, replacement.unit)
+	assert shipped.range == replacement.range, (shipped.range, replacement.range)
+	assert shipped.default == replacement.default, (shipped.default, replacement.default)
+	assert shipped.role == replacement.role == "free", (shipped.role, replacement.role)
+
+	# The premise the whole batch rests on: the two ids are one quantity, so
+	# they carry the same type. If either drifted this batch is retiring the
+	# wrong node, and the assertion is where that is found rather than in a
+	# reader's head.
+	assert shipped.name.lower() in {"local content", "local content requirements"}, shipped.name
+	assert replacement.name.lower() == "local content requirement", replacement.name
+
+	equation = graph.equations[_BATCH61_EQ]
+	assert equation.rhs == (
+		"local_content_requirements * capex_usd_per_kw * total_capacity_mw "
+		"* 1000.0 / 1000000.0"
+	), f"{_BATCH61_EQ} no longer carries the shipped form: {equation.rhs!r}"
+
+	# The victim's reader set, measured. Exactly the one equation, and it is
+	# the one this batch corrects -- a second reader would need its own
+	# repoint, and a zero would mean the duplicate is already dead and the
+	# retirement is a different (simpler) batch.
+	named_by = sorted(
+		item.id
+		for item in graph.equations.values()
+		if victim in (
+			*item.parameters,
+			*item.free_variables,
+			*item.determined_variables,
+		)
+	)
+	assert named_by == [_BATCH61_EQ], f"{victim} is named by {named_by}"
+
+	# The canary, on the shipped graph: moving the *singular* leaves the capex
+	# consumer frozen, which is the defect. Measured rather than inferred from
+	# the reader lists, because the point is about values and not about
+	# declarations.
+	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	baseline = graph.propagate(values).values
+	for probe in (0.1, 0.6):
+		moved = graph.propagate({**values, successor: probe}).values
+		assert abs(float(moved["local_jobs"]) - float(baseline["local_jobs"])) > 1e-9, (
+			f"moving {successor} to {probe} left local_jobs at "
+			f"{float(baseline['local_jobs'])}; the singular is not the jobs dial"
+		)
+		assert abs(
+			float(moved["local_content_capex_mm_usd"])
+			- float(baseline["local_content_capex_mm_usd"])
+		) < 1e-9, (
+			f"moving {successor} to {probe} already moves the capex consumer; "
+			"the duplicate is not the defect this batch retires"
+		)
+
+	rhs = (
+		"local_content_requirement * capex_usd_per_kw * total_capacity_mw "
+		"* 1000.0 / 1000000.0"
+	)
+	assert sorted(parse_side(rhs).symbols) == sorted(
+		{"local_content_requirement", "capex_usd_per_kw", "total_capacity_mw"}
+	), rhs
+
+	body = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+	body.update({
+		"status": "deprecated",
+		"deprecated_by": successor,
+		"source": _BATCH61_SOURCE,
+		"description": (
+			"Retired: a second id for the share `local_content_requirement` "
+			"already carries. Both name the share of project inputs that must "
+			"be sourced in-country, both at unit `1` over [0, 1] with default "
+			"0.3, and each had exactly one reader -- the singular the jobs "
+			"count, this one the capex share. Two dials for one policy lever "
+			"meant a scenario could move one and leave the other's consumer at "
+			"0.3, invisible at the shipped default because both are 0.3. The "
+			"singular is canonical by `docs/param_eqn.md`, which treats row "
+			"4.23 as the hub and row 28.9 as a leaf. The capex equation now "
+			"reads the singular, so this id resolves to the same quantity it "
+			"always named."
+		),
+	})
+	ParameterNode(**{"id": victim, **body})
+
+	equation_body = dict(equation.model_dump(exclude={"id"}, mode="json"))
+	equation_body.update({
+		"rhs": rhs,
+		"latex": (
+			r"\mathrm{local}_{content\_capex\_mm\_usd} = \frac{1000 "
+			r"\mathrm{local}_{content\_requirement} \mathrm{capex}_{usd\_per\_kw} "
+			r"\mathrm{total}_{capacity\_mw}}{1000000}"
+		),
+		"parameters": [
+			"local_content_capex_mm_usd",
+			"capex_usd_per_kw",
+			"local_content_requirement",
+			"total_capacity_mw",
+		],
+		"description": (
+			"The fleet's capex that must be sourced in-country: the content "
+			"share times the total, at the MW-to-kW conversion and the "
+			"USD-million scale. The share is `local_content_requirement`, the "
+			"same dial `local_jobs_definition` applies to employment -- the "
+			"plural id this equation used to read was a duplicate of it, and "
+			"reading a different id left the two consumers of one policy lever "
+			"movable independently."
+		),
+	})
+
+	# The edge the corrected arithmetic now states. The stale one is disposed
+	# by the merge, which drops any edge whose equation no longer names its
+	# source; this is the replacement, and it is the reason the corrected
+	# equation is not left with an under-reported coupling.
+	edges = [{
+		"source": successor, "target": "local_content_capex_mm_usd",
+		"equation_id": _BATCH61_EQ, "relationship": "functional",
+		"strength": "hard",
+		"description": (
+			"The same content share the jobs count applies, applied to capex: "
+			"one policy lever, two consumers."
+		),
+	}]
+
+	print(
+		f"  deprecated {victim} in favour of {successor}; "
+		f"{_BATCH61_EQ} now reads {successor}"
+	)
+	return {victim: body}, {_BATCH61_EQ: equation_body}, edges, [], {victim: successor}
 
 
 _BATCH60_EQ = "x_factor_revenue_reduction_definition"

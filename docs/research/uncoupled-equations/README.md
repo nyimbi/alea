@@ -82,6 +82,16 @@ not an equation:
 - **25 booleans** (`ets_enabled`, `carbon_border_adjustment`, `ppa_guarantees`)
 - **18 `_requirements`** with no unit (`adms_requirements`,
   `cybersecurity_requirements`, `fpic_requirements`, `local_content_requirements`)
+
+  **`local_content_requirements` is no longer one of them (batch 61).** It was
+  the plural duplicate of `local_content_requirement` — same unit `1`, same
+  range, same default — and each id fed a different consumer, so the one policy
+  lever moved half the graph. The plural is now a tombstone pointing at the
+  singular, and `local_content_capex_definition` reads the singular. The class
+  this bullet describes is real (a compliance obligation with no arithmetic),
+  but this member was not an example of it: it was a duplicate that the
+  classification could not distinguish from one, because both look identical
+  from the outside.
 - **40 `_capacity`** decision variables the optimizer solves for
 - **20 `_rate`** and **22 `_share`** independent dials
 

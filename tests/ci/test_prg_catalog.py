@@ -449,6 +449,7 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 		"line_outage_duration",
 		"line_outage_probability",
 		"line_upgrade_budget",
+		"local_content_requirements",
 		"local_employment_targets",
 		"maintenance_duration",
 		"maladaptation_risk",
@@ -541,11 +542,13 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 	# batch 55 took it to 652 by deprecating `opex_fixed_wind` -- the generic
 	# wind O&M duplicate -- which the catalog still marks `existing`, and
 	# batch 59 took it to 651 by deprecating `remittance_dependency` -- the
-	# duplicate remittance share -- which the catalog marks `to_build`. The
-	# graph is right and the catalog is stale in both cases: the register's
-	# whole job is to show that, so the disagreement is pinned above rather
-	# than suppressed.
-	assert sum(1 for join in joins.values() if join.agrees) == 651
+	# duplicate remittance share -- which the catalog marks `to_build`. Batch
+	# 61 took it to 650 by deprecating `local_content_requirements`, the plural
+	# duplicate of `local_content_requirement`, which the catalog also marks
+	# `to_build`. The graph is right and the catalog is stale in all three
+	# cases: the register's whole job is to show that, so the disagreement is
+	# pinned above rather than suppressed.
+	assert sum(1 for join in joins.values() if join.agrees) == 650
 
 
 def test_a_node_the_catalog_does_not_name_is_absent_rather_than_guessed(
@@ -725,6 +728,7 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 		'line_outage_duration: the graph says existing and the catalog says to_build',
 		'line_outage_probability: the graph says existing and the catalog says to_build',
 		'line_upgrade_budget: the graph says existing and the catalog says to_build',
+		'local_content_requirements: the graph says deprecated and the catalog says to_build',
 		'local_employment_targets: the graph says existing and the catalog says to_build',
 		'maintenance_duration: the graph says existing and the catalog says to_build',
 		'maladaptation_risk: the graph says existing and the catalog says to_build',

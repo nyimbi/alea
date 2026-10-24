@@ -1525,6 +1525,87 @@ batch and the figures here are the shipped tree's own.
 
 
 
+### Two ids for one share, and the lever moved half the graph (batch 61, 2026-10-24)
+
+`local_content_requirement` (singular, catalog row 4.23) and
+`local_content_requirements` (plural, row 28.9) shipped as two ids for one
+quantity: the share of project inputs that must be sourced in-country. Same
+unit `1`, same range [0, 1], same default 0.3. Each had exactly one reader, and
+the readers were different quantities — the singular fed `local_jobs_definition`
+(`direct_jobs * local_content_requirement`) and the plural fed
+`local_content_capex_definition` (the content share times capex times capacity,
+at the kW and USD-million scales).
+
+**Measured, which is how the duplication shows at all.** At the shipped default
+both dials are 0.3, so the two consumers agree and nothing is visible. Moving
+one dial moves one consumer and leaves the other frozen:
+
+| probe | `local_jobs` | `local_content_capex_mm_usd` |
+|---|---|---|
+| defaults (both 0.3) | 12,900.00 | 3,600.00 |
+| singular = 0.1 | 4,300.00 | 3,600.00 — frozen at the plural's 0.3 |
+| singular = 0.6 | 25,800.00 | 3,600.00 — frozen at the plural's 0.3 |
+| plural = 0.6 | 12,900.00 — frozen | 7,200.00 |
+
+After the batch, one lever moves both: singular 0.1 gives 4,300 jobs and 1,200
+USD million; singular 0.6 gives 25,800 and 7,200.
+
+**Why the singular is canonical, and why that is not a preference.** The plural's
+own shipped description asked for this batch — "the duplication itself is a
+finding — the graph should not carry two ids for one quantity, and the next
+batch should nominate one as canonical and mark the other deprecated". The
+nomination is settled by `docs/param_eqn.md`, the dependency register the repo
+already keeps: row 4.23 is a hub (rows 15.9, 15.23 and 19.25 all list it as a
+predecessor) and row 28.9 is a leaf pointing at `local_content_employment`. The
+singular is also the spelling the equation bodies use. Naming the survivor from
+the register is the non-arbitrary choice; picking by the shorter string would be
+a preference wearing a decision's clothes.
+
+**The half that is easy to miss.** Deprecating the plural alone would leave
+`local_content_capex_definition` naming a tombstone, and `_deprecated_reach`
+refuses that as a load error — correctly, since a status nothing enforces is a
+label. The batch therefore also corrects that equation's rhs to read the
+singular. The merge disposes of the stale edge
+(`local_content_requirements -> local_content_capex_mm_usd`) because the
+corrected arithmetic no longer names its source, and the batch declares the
+replacement edge from the singular. The edge count stays at 1367: one out, one
+in.
+
+**The canary.** The builder asserts, on the shipped graph, that moving the
+singular moves `local_jobs` and does *not* move the capex consumer — the defect,
+stated as a measurement rather than inferred from the reader lists. The test in
+`test_prg.py::test_the_two_local_content_consumers_now_move_together` asserts the
+opposite of the fixed tree, at two probe values, and adds the linearity check
+(`capex` scales as `probe / default`) so a repoint that left the old arithmetic
+in place fails rather than merely moving. Canaried against the pre-batch graph:
+the test fails at its first assertion, `to_build` where `deprecated` is expected.
+
+**Registers.** Nodes 1429, equations 607, edges 1367 and rules 57 are unchanged;
+`structure_issues()` empty; `range_excursions()` empty. `uncoupled()` goes
+235 → 236 and `settable` 869 → 868, both for the same reason and neither a
+regression: a tombstone is not settable and stays in `uncoupled()` by
+construction. The dead-knob register holds at 221 — unlike batches 55 and 59,
+this duplicate *had* a reader, so it was never a dead knob. `untranslated`
+866 → 865 on the same ground as the settable move. The catalog join goes
+651 → 650 agreeing: the graph now says `deprecated` where the catalog still says
+`to_build`, and that disagreement is pinned by name.
+
+**A second finding, measured and deliberately not fixed here.**
+`local_jobs` (`direct_jobs * local_content_requirement`) and
+`locally_sourced_jobs` (`direct_jobs * local_employment_share`) are the same
+product computed from two different dials, and at defaults both give 12,900 —
+because `local_content_requirement` and `local_employment_share` are both 0.3.
+Neither has a reader, so the collision reaches nothing today, but it is the same
+defect one level out: a scenario that sets the content share moves one job count
+and not the other, and a reader of either would find two answers to "how many
+local jobs". Retiring it needs a decision the graph cannot make on its own —
+which dial is the policy lever, and whether content share and employment share
+are even the same quantity (they need not be: one is about sourcing, the other
+about who is hired). That is a research question, so it stays open and is
+recorded rather than guessed at.
+
+
+
 ### The credit book computes six quantities and reaches nothing (measured 2026-10-24)
 
 Recorded here as an open finding, not a batch. It was found while looking for
