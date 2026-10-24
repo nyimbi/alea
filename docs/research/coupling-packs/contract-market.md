@@ -60,6 +60,17 @@ change the shape of the whole pack; the rest are findings.
    number surfaced the error. This is a shipped equation this pack contradicts;
    it is not in the slice and is not fixed here.
 
+   **Closed at batch 60 (2026-10-24).** The rhs is now
+   `x_factor * allowed_revenue_requirement`. The figures quoted above
+   (680.405376 and 13.885824) were measured when this pack was written; on the
+   tree batch 60 corrected they are **680.517085** and **13.888104**, a ratio
+   of exactly 49 at the shipped X of 0.02. The equation's `reference` is now
+   `None`: the World Bank handbook it named is archived, discusses price-cap
+   regulation, and states the RPI-X arithmetic nowhere, so the corrected form
+   cites the identity it uses rather than a work that does not carry it. See
+   `docs/prg-status.md`, "The RPI-X reduction computed the revenue the cap
+   leaves".
+
 3. **`market_concentration_definition` cites Stoft (2002), which is not
    archived.** `sources/INDEX.md` carries a `stoft_2002` row with an empty
    `archived` cell (paywalled textbook), and **13 shipped equations** cite it —

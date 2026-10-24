@@ -1397,6 +1397,46 @@ def test_the_retired_remittance_share_points_at_a_value_it_could_not_have_carrie
 		graph.propagate(scoped)
 
 
+def test_the_rpi_x_reduction_is_the_share_it_names_and_not_the_remainder(
+	graph: ParameterGraph, defaults: dict
+):
+	"""The RPI-X offset computes a reduction, and the reduction is `x * base`.
+
+	The shipped equation was `(1 - x_factor) * allowed_revenue_requirement`,
+	which is the revenue the cap *leaves* rather than the reduction it applies.
+	The node's name and description both say reduction, so the arithmetic was
+	the only side disagreeing, and the pack that first flagged it
+	(`docs/research/coupling-packs/contract-market.md`, finding 2) called the
+	shipped form 49x the described quantity.
+
+	The two forms differ by a factor of 49 at the shipped X of 0.02, not by a
+	vanishing term, which is what makes this testable: the assertion below is
+	that the value equals the *share of the base* and simultaneously does not
+	equal the *remainder*. A test asserting only that the value is positive
+	would pass on the shipped defect.
+	"""
+	values = graph.propagate(defaults).values
+	requirement = float(values["allowed_revenue_requirement"])
+	x_factor = float(values["x_factor"])
+	reduction = float(values["x_factor_revenue_reduction"])
+
+	assert 0.0 < x_factor < 1.0, x_factor
+	assert abs(reduction - x_factor * requirement) < 1e-9, (
+		f"the reduction is {reduction}, not x*base = {x_factor * requirement}"
+	)
+	assert abs(reduction - (1.0 - x_factor) * requirement) > 1e-6, (
+		"the value still equals the remainder, which is the defect this repairs"
+	)
+
+	# A reduction cannot exceed the base it is a share of, at any X in range.
+	for probe in (0.02, 0.05, 0.1):
+		scoped = dict(defaults)
+		scoped["x_factor"] = probe
+		out = graph.propagate(scoped).values
+		base = float(out["allowed_revenue_requirement"])
+		assert abs(float(out["x_factor_revenue_reduction"]) - probe * base) < 1e-9, probe
+
+
 def test_a_categorical_retyped_from_a_placeholder_refuses_an_undeclared_level(
 	graph: ParameterGraph, defaults: dict
 ):
@@ -4993,7 +5033,19 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# only as prose until batch 56, when the survey got an INDEX row of its own;
 	# until then `citation_report()` reported it unregistered, because the
 	# report reads equations and the row did not exist.
-	assert len(declared) == 301, f"the citation register moved: {sorted(declared)}"
+	# Batch 60 is the first batch to move this register *down*, and the movement
+	# is the point. `x_factor_revenue_reduction_definition` cited the World Bank
+	# *Regulation of Utilities* handbook, which is archived at
+	# `sources/archive/world_bank_regulating_utilities_handbook.txt`. The
+	# handbook discusses price-cap and revenue-cap regulation and states the
+	# RPI-X arithmetic nowhere -- "RPI" and "X factor" appear in no formula
+	# context in the archived text -- so the citation was a label for a family
+	# rather than support for the equation, and the corrected arithmetic is an
+	# identity (`x * base`) that needs no external result. The reference is
+	# therefore `None` and the register goes 301 -> 300. That is coverage
+	# falling because an unsupported citation left, not a citation being lost:
+	# the batch-34 note records the same judgement for the buffer rate.
+	assert len(declared) == 300, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (

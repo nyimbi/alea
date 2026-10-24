@@ -48608,28 +48608,34 @@ equations:
     tolerance: 1.0e-06
     unit_check: true
   x_factor_revenue_reduction_definition:
-    description: 'The RPI-X productivity offset: the allowed requirement less the annual efficiency the
-      regulator assumes the utility can find. The reduction is a share of the requirement and not of the
-      cost, which is why the formula is a multiplication and not a subtraction of an absolute.'
+    id: x_factor_revenue_reduction_definition
+    name: The RPI-X revenue reduction
+    description: 'The RPI-X productivity offset: the annual efficiency the regulator assumes the utility
+      can find, as a share of the allowed revenue requirement. The reduction is `x_factor * allowed_revenue_requirement`,
+      not `(1 - x_factor) * allowed_revenue_requirement`: the complement of the X times the requirement
+      is the revenue the cap *leaves*, which is the cap''s answer rather than the reduction it applies.
+      At the shipped X of 0.02 on a requirement of 694.405189 USD million/year the reduction is 13.888104
+      and the remainder 680.517085 -- a factor of 49 apart. A reduction that is a stated share of a base
+      is the share times the base, so this form needs no citation beyond that identity; the World Bank
+      handbook this equation names discusses price-cap regulation and does not state the arithmetic.'
+    lhs: x_factor_revenue_reduction
+    rhs: x_factor * allowed_revenue_requirement
+    latex: \mathrm{x}_{factor\_revenue\_reduction} = \mathrm{x}_{factor} \mathrm{allowed}_{revenue\_requirement}
+    parameters:
+    - x_factor_revenue_reduction
+    - x_factor
+    - allowed_revenue_requirement
     determined_variables:
     - x_factor_revenue_reduction
     free_variables: []
-    latex: \mathrm{x}_{factor\_revenue\_reduction} = \left(1 - \mathrm{x}_{factor}\right) \mathrm{allowed}_{revenue\_requirement}
-    lhs: x_factor_revenue_reduction
     linearity: linear
-    name: The RPI-X revenue reduction
-    parameters:
-    - x_factor_revenue_reduction
-    - allowed_revenue_requirement
-    - x_factor
     priority: P1
-    reference: World Bank Regulation of Utilities handbook, revenue caps
     relation: eq
-    rhs: (1 - x_factor) * allowed_revenue_requirement
     solution_method: direct
     system: financial
     tolerance: 1.0e-09
     unit_check: true
+    reference: null
   years_from_carbon_tax_to_net_zero_definition:
     description: 'Years between the carbon tax''s start and the net-zero year: the pricing''s own running
       length on the policy clock.'

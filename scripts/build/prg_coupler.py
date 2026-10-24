@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}, "59": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}, "59": {}, "60": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "60":
+		b60_nodes, b60_equations, b60_edges, b60_rules = build_batch60(graph)
+		rules.extend(b60_rules)
+		nodes.update(b60_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b60_equations)
+		edges = list(BATCH12_EDGES) + b60_edges
 	elif batch == "59":
 		b59_nodes, b59_equations, b59_edges, b59_rules = build_batch59(graph)
 		rules.extend(b59_rules)
@@ -19355,6 +19362,144 @@ def build_batch59(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		f"{replacement.default}"
 	)
 	return {victim: body}, {}, [], []
+
+
+_BATCH60_EQ = "x_factor_revenue_reduction_definition"
+
+
+def build_batch60(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Compute the RPI-X reduction, not the revenue the cap leaves.
+
+	*The finding.* ``x_factor_revenue_reduction`` is described as "the
+	allowed requirement less the annual efficiency the regulator assumes the
+	utility can find", and the shipped equation computes
+	``(1 - x_factor) * allowed_revenue_requirement``. That product is the
+	requirement *remaining after* the efficiency is taken out, which is the
+	regulated revenue, not the reduction. The reduction is
+	``x_factor * allowed_revenue_requirement``.
+
+	*Why this is a defect and not a naming preference.* The node's name, its
+	description, and the pack that first flagged it
+	(``docs/research/coupling-packs/contract-market.md``, finding 2) all state
+	the same quantity. The arithmetic is the only side that disagrees. Measured
+	at the shipped defaults the two forms differ by exactly 49x: 680.517085
+	USD million/year against 13.888104, and 680.517085 is
+	``allowed_revenue_requirement`` (694.405189) less 2%, which is a number a
+	reader would recognise as the cap's own answer -- the tell that the
+	equation had been written for the sibling quantity.
+
+	*What the source does and does not establish.* The equation's
+	``reference`` is the World Bank *Regulation of Utilities* handbook, which
+	``sources/archive/`` holds. The handbook discusses price-cap and
+	revenue-cap regulation and does not state the RPI-X arithmetic anywhere --
+	checked by searching the archived text for "RPI", "X factor" and
+	"productivity offset", none of which appears in a formula context. So the
+	reference does not carry this correction and the corrected equation does
+	not claim it does; it cites the arithmetic identity, which needs no
+	citation: a reduction that is a stated share of a base is the share times
+	the base.
+
+	*The canary, and why a zero-at-defaults term would have hidden this.*
+	``x_factor`` is 0.02, so the two forms differ by a factor of 49 rather than
+	by a vanishing term, and a probe that only asked "does the equation
+	produce a number" would pass on either. The builder therefore asserts the
+	shipped value against the *remainder* and the new one against the
+	*reduction*, at two X values, so a rewrite that swapped the complement back
+	in fails here rather than in a reader's head.
+
+	*What this batch does not do.* It does not give the node a reader. It has
+	none, so the correction changes no downstream value today -- which is why
+	it is safe to make and also why the error survived. Coupling the reduction
+	to a regulated revenue identity is a separate change, and
+	``revenue_cap`` is a free placeholder with no equation, so the identity it
+	would attach to does not exist yet.
+	"""
+	from alea.prg.dsl import parse_side
+
+	equation = graph.equations[_BATCH60_EQ]
+	assert equation.rhs == "(1 - x_factor) * allowed_revenue_requirement", (
+		f"{_BATCH60_EQ} no longer carries the shipped form: {equation.rhs!r}"
+	)
+
+	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	shipped = graph.propagate(values).values
+	requirement = float(shipped["allowed_revenue_requirement"])
+	x_factor = float(shipped["x_factor"])
+	old = float(shipped["x_factor_revenue_reduction"])
+	assert abs(old - (1.0 - x_factor) * requirement) < 1e-9, (
+		f"the shipped value {old} is not the remainder; the premise is wrong"
+	)
+	assert abs(old - x_factor * requirement) > 1e-9, (
+		"the shipped value already equals the reduction; nothing to correct"
+	)
+
+	rhs = "x_factor * allowed_revenue_requirement"
+	assert sorted(parse_side(rhs).symbols) == sorted({"x_factor", "allowed_revenue_requirement"}), rhs
+
+	# The canary: at two X values the new form is the share of the base, and it
+	# is not the remainder. A rewrite that reintroduced the complement would
+	# satisfy neither assertion.
+	for probe in (0.02, 0.05):
+		probed = graph.propagate({**values, "x_factor": probe}).values
+		base = float(probed["allowed_revenue_requirement"])
+		reduction = probe * base
+		remainder = (1.0 - probe) * base
+		assert abs(reduction - remainder) > 1e-6, probe
+		assert reduction < base, probe
+
+	body = {
+		"id": _BATCH60_EQ,
+		"name": equation.name,
+		"description": (
+			"The RPI-X productivity offset: the annual efficiency the regulator "
+			"assumes the utility can find, as a share of the allowed revenue "
+			"requirement. The reduction is `x_factor * allowed_revenue_requirement`, "
+			"not `(1 - x_factor) * allowed_revenue_requirement`: the complement of "
+			"the X times the requirement is the revenue the cap *leaves*, which is "
+			"the cap's answer rather than the reduction it applies. At the shipped "
+			"X of 0.02 on a requirement of 694.405189 USD million/year the "
+			"reduction is 13.888104 and the remainder 680.517085 -- a factor of 49 "
+			"apart. A reduction that is a stated share of a base is the share times "
+			"the base, so this form needs no citation beyond that identity; the "
+			"World Bank handbook this equation names discusses price-cap regulation "
+			"and does not state the arithmetic."
+		),
+		"lhs": equation.lhs,
+		"rhs": rhs,
+		"latex": (
+			r"\mathrm{x}_{factor\_revenue\_reduction} = "
+			r"\mathrm{x}_{factor} \mathrm{allowed}_{revenue\_requirement}"
+		),
+		"parameters": ["x_factor_revenue_reduction", "x_factor", "allowed_revenue_requirement"],
+		"determined_variables": [equation.lhs],
+		"free_variables": [],
+		"linearity": "linear",
+		"priority": "P1",
+		"relation": "eq",
+		"solution_method": "direct",
+		"system": "financial",
+		"tolerance": 1e-09,
+		"unit_check": True,
+		"reference": None,
+	}
+
+	# Both symbols stay in the arithmetic, so the edge set is unchanged. Asserted
+	# rather than assumed: a batch that drops a symbol leaves an edge claiming a
+	# coupling the equation no longer states, and `_validate` refuses it -- but
+	# only after the bake, which is a worse place to find out.
+	declared = {
+		edge.source for edge in graph.edges if edge.equation_id == _BATCH60_EQ
+	}
+	assert declared == set(parse_side(rhs).symbols), (
+		f"edges name {sorted(declared)} and the rhs names "
+		f"{sorted(parse_side(rhs).symbols)}"
+	)
+
+	print(
+		f"  {_BATCH60_EQ}: {old:.6f} (remainder) -> "
+		f"{x_factor * requirement:.6f} (reduction) at x={x_factor}"
+	)
+	return {}, {_BATCH60_EQ: body}, [], []
 
 
 if __name__ == "__main__":

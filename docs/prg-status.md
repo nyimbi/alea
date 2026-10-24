@@ -1469,6 +1469,136 @@ consistent with the one pre-existing `rocof_definition` failure.
 
 
 
+### The RPI-X reduction computed the revenue the cap leaves (batch 60, 2026-10-24)
+
+`x_factor_revenue_reduction_definition` computed
+`(1 - x_factor) * allowed_revenue_requirement`. That product is the revenue
+the cap **leaves** after the efficiency is taken out — the regulated revenue,
+which is the cap's answer. The node's name says reduction, and its own
+description says "the allowed requirement *less* the annual efficiency the
+regulator assumes the utility can find", closing with "the reduction is a share
+of the requirement and not of the cost, which is why the formula is a
+multiplication and not a subtraction of an absolute". A multiplication by the
+complement is a multiplication, so the sentence read as satisfied while
+describing the sibling quantity.
+
+**Measured at the shipped defaults.** `allowed_revenue_requirement` is
+694.405189 USD million/year and `x_factor` is 0.02, so the shipped form gives
+**680.517085** — which is the requirement less 2%, a number a reader would
+recognise as the cap's own result. The reduction is `x_factor * requirement` =
+**13.888104**. The two differ by exactly **49x**, which is
+`(1 - x)/x` at `x = 0.02` and therefore not a coincidence: the complement and
+the share are related by a factor fixed by the X.
+
+**The canary.** The builder asserts the shipped value against the *remainder*
+and the corrected one against the *share*, and refuses to run if either holds
+of the other. Re-planting the old rhs in a copy of the document gives
+680.517085 against the fixed tree's 13.888104, so the test in
+`test_prg.py::test_the_rpi_x_reduction_is_the_share_it_names_and_not_the_remainder`
+separates the two forms at the shipped X and at two further X values. A test
+asserting only that the value is positive would have passed on the defect,
+because the shipped form is also positive — this is the case where the wrong
+answer is a perfectly plausible number.
+
+**What the reference does and does not carry.** The equation named the World
+Bank *Regulation of Utilities* handbook, and `sources/archive/` holds it. The
+handbook discusses price-cap and revenue-cap regulation at length and states
+the RPI-X arithmetic nowhere: searching the archived text for "RPI", "X
+factor" and "productivity offset" turns up no formula. The corrected equation
+therefore cites the identity it actually uses — a reduction that is a stated
+share of a base is the share times the base — and sets `reference` to null
+rather than leaving a citation that does not support the arithmetic. That is
+the same judgement the batch-34 note records for the buffer rate: a citation
+that does not say what the equation claims is worse than an empty one.
+
+**No register moves, and that is the finding.** Nodes 1429, equations 607,
+edges 1367 and rules 57 are unchanged; `structure_issues()` is empty;
+`uncoupled()` stays at 235, `settable` at 869 and `untranslated` at 866; the
+unit checker stays at 606 consistent / 1 inconsistent (`rocof_definition`,
+pre-existing). Both symbols stayed in the arithmetic, so no edge moved. The
+node has no reader, which is why the error survived and why the correction is
+safe: nothing downstream consumed the wrong number. The pack that first
+flagged it
+(`docs/research/coupling-packs/contract-market.md`, finding 2) quoted
+680.405376 and 13.885824; those were measured at a different time than this
+batch and the figures here are the shipped tree's own.
+
+
+
+### The credit book computes six quantities and reaches nothing (measured 2026-10-24)
+
+Recorded here as an open finding, not a batch. It was found while looking for
+the next coupling, and it is written down because the fix is a modelling
+decision rather than an algebra correction.
+
+**The measurement.** Walk `affects` from each of the six nodes in the carbon
+credit family and the walk terminates immediately:
+
+| node | `affects` |
+|---|---|
+| `carbon_credit_value_usd_per_year` | `carbon_credit_insurance_cost_usd_per_year`, `settlement_risk_exposure_usd_per_year` |
+| `carbon_credit_insurance_cost_usd_per_year` | nothing |
+| `settlement_risk_exposure_usd_per_year` | nothing |
+| `article_6_credits` | nothing |
+| `carbon_credit_retired_volume` | nothing |
+| `voluntary_market_volume_mtco2` | nothing |
+| `carbon_credit_reversal_allowance` | nothing |
+
+So the family is *coupled* -- every node is in an equation and `uncoupled()`
+does not list any of them -- and the whole subtree is a dead end. The
+`uncoupled()` register cannot see this: it asks whether a node is in an
+equation, not whether anything reads the equation's output. This is the same
+shape as the declared-is-not-produced class, one register further out.
+
+**Two inconsistencies inside the dead end, both real.**
+
+*The value identity prices a volume its sibling says is zero.*
+`carbon_credit_value_definition` computes
+`carbon_credit_prices * carbon_credit_volumes * 1e6`, and its own prose
+justifies the *price*: "a credit sold into the voluntary market is not an
+allowance". The graph holds the volume that sentence is about --
+`voluntary_market_volume_definition` computes
+`voluntary_carbon_market * carbon_credit_volumes` -- and nothing reads it. At
+the shipped defaults the two disagree by the whole book: the value identity
+implies 45.0 Mt priced at the voluntary clearing price while the voluntary
+volume is 0.0 Mt, because `voluntary_carbon_market` is 0.0 and its description
+says the programme is compliance-led.
+
+*The four disposition channels have no feasibility condition.* Each draws a
+share of the same gross volume, and they overshoot. At defaults
+(`permanence_parameters` 0.1, `carbon_credit_retirement` 0.05,
+`corresponding_adjustment` 0.8, `voluntary_carbon_market` 0.0) the four
+allocate 0.95 of 45 Mt. Setting `corresponding_adjustment` to 1.0 allocates
+51.75 Mt against 45 issued; setting `carbon_credit_retirement` to 0.5
+allocates 63.0. Nothing refuses either. The graph's cross-validation grammar
+has no `BinOp` -- `permanence_parameters + carbon_credit_retirement <= 1` is a
+`DslError` -- so a sum constraint cannot be written as a rule. A derived
+residual node with a non-negative range *would* carry it: probed with a
+throwaway node computing `volumes - article6 - retired - allowance`, a
+scenario at `corresponding_adjustment = 1.0` produces -6.75 and
+`range_excursions()` reports it. That mechanism exists and is unused here.
+
+**Why no batch was written.** Swapping the value identity's base to
+`voluntary_market_volume_mtco2` is expressible and internally consistent, and
+it is wrong: it drives the value and both costs to zero at defaults, so the
+insurance premium becomes zero on a book whose three non-voluntary channels
+still dispose of 42.75 Mt -- 4.5 buffered, 2.25 retired, 36.0 transferred
+under Article 6. The correct form needs a price for those channels that the
+graph does not carry -- `carbon_price_usd_per_tco2`
+is the ETS price the value equation explicitly rejects, and no bilateral
+Article 6 price exists. The repair is therefore a new node plus a decision
+about which price each channel realises at, and the three prices are a
+research question, not an algebra question. Since the subtree reaches nothing,
+no version of this fix changes a single downstream result today; what it
+changes is whether the credit book can be believed once something reads it.
+
+The upstream coupling is the thing that would make this matter: whatever
+consumes `carbon_credit_value_usd_per_year` -- a revenue or a cost aggregate --
+is missing, and until it exists the family is six correct-looking numbers
+computed into a void.
+
+
+
 ### The last DEAD row, retired (batch 59, 2026-10-24)
 
 `docs/research/placeholder-survey.md` classified all 181 sentinel rows. After
