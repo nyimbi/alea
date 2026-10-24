@@ -50703,15 +50703,6 @@ relationships:
   priority: P1
   reference: null
   relationship: functional
-  source: lcoe_solar_usd_per_mwh
-  strength: soft
-  target: lcoe_solar_usd_per_mwh
-- description: Enters the technology's levelised cost.
-  direction: forward
-  equation_id: lcoe_solar_definition
-  priority: P1
-  reference: null
-  relationship: functional
   source: opex_fixed_solar
   strength: soft
   target: lcoe_solar_usd_per_mwh
@@ -50751,15 +50742,6 @@ relationships:
   source: asset_life_wind_onshore
   strength: hard
   target: crf_wind_onshore
-- description: Enters the technology's levelised cost.
-  direction: forward
-  equation_id: lcoe_wind_definition
-  priority: P1
-  reference: null
-  relationship: functional
-  source: lcoe_wind_usd_per_mwh
-  strength: soft
-  target: lcoe_wind_usd_per_mwh
 - description: Enters the annuity whose yearly charge carries the capital.
   direction: forward
   equation_id: crf_wind_offshore_definition
@@ -61379,6 +61361,99 @@ relationships:
   direction: forward
   strength: hard
   description: 'Bounds v2g_adoption: `v2g_adoption` must not exceed `electric_vehicle_adoption`.'
+- source: crf
+  target: annualised_capex_usd_per_kw
+  equation_id: annualised_capex
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters annualised_capex_usd_per_kw: an input of `annualised_capex_usd_per_kw = capex_usd_per_kw
+    * crf`.'
+- source: capture_price_sensitivity
+  target: capture_price_usd_per_mwh
+  equation_id: capture_price_equation
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters capture_price_usd_per_mwh: an input of `capture_price_usd_per_mwh = marginal_cost_usd_per_mwh
+    * (1 - capture_price_sensitivity * vre_share)`.'
+- source: marginal_cost_usd_per_mwh
+  target: capture_price_usd_per_mwh
+  equation_id: capture_price_equation
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters capture_price_usd_per_mwh: an input of `capture_price_usd_per_mwh = marginal_cost_usd_per_mwh
+    * (1 - capture_price_sensitivity * vre_share)`.'
+- source: marginal_cost_usd_per_mwh
+  target: capture_price_ratio
+  equation_id: capture_price_ratio_definition
+  relationship: functional
+  direction: forward
+  strength: informational
+  description: 'Enters capture_price_ratio: an input of `capture_price_ratio = capture_price_usd_per_mwh
+    / marginal_cost_usd_per_mwh`.'
+- source: dispatchable_re_capacity_mw
+  target: firm_capacity_mw
+  equation_id: firm_capacity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters firm_capacity_mw: an input of `firm_capacity_mw = thermal_capacity_mw + dispatchable_re_capacity_mw`.'
+- source: thermal_capacity_mw
+  target: firm_capacity_mw
+  equation_id: firm_capacity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters firm_capacity_mw: an input of `firm_capacity_mw = thermal_capacity_mw + dispatchable_re_capacity_mw`.'
+- source: marginal_cost_usd_per_mwh
+  target: lcoe_usd_per_mwh
+  equation_id: lcoe_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters lcoe_usd_per_mwh: an input of `lcoe_usd_per_mwh = annualised_capex_usd_per_kw *
+    1000 / (8760 * capacity_factor) + marginal_cost_usd_per_mwh`.'
+- source: fuel_price_usd_per_mwh
+  target: marginal_cost_usd_per_mwh
+  equation_id: marginal_cost
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters marginal_cost_usd_per_mwh: an input of `marginal_cost_usd_per_mwh = fuel_price_usd_per_mwh
+    + carbon_cost_usd_per_mwh`.'
+- source: discount_rate
+  target: real_discount_rate
+  equation_id: real_discount_rate_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters real_discount_rate: an input of `real_discount_rate = (discount_rate - inflation_rate)
+    / (1 + inflation_rate)`.'
+- source: marginal_cost_usd_per_mwh
+  target: vre_capacity_mw
+  equation_id: vre_build
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters vre_capacity_mw: an input of `vre_capacity_mw = vre_capacity_target_mw * capture_price_usd_per_mwh
+    / marginal_cost_usd_per_mwh`.'
+- source: vre_capacity_target_mw
+  target: vre_capacity_mw
+  equation_id: vre_build
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters vre_capacity_mw: an input of `vre_capacity_mw = vre_capacity_target_mw * capture_price_usd_per_mwh
+    / marginal_cost_usd_per_mwh`.'
+- source: total_capacity_mw
+  target: vre_share
+  equation_id: vre_share_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters vre_share: an input of `vre_share = vre_capacity_mw / total_capacity_mw`.'
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0
   id: carbon_price_budget_alignment

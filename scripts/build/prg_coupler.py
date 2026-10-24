@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}, "59": {}, "60": {}, "61": {}, "62": {}, "63": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}, "59": {}, "60": {}, "61": {}, "62": {}, "63": {}, "64": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "64":
+		b64_nodes, b64_equations, b64_edges, b64_rules = build_batch64(graph)
+		rules.extend(b64_rules)
+		nodes.update(b64_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b64_equations)
+		edges = list(BATCH12_EDGES) + b64_edges
 	elif batch == "63":
 		b63_nodes, b63_equations, b63_edges, b63_rules = build_batch63(graph)
 		rules.extend(b63_rules)
@@ -1392,6 +1399,15 @@ def build_batch13(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 				set(parse_side(str(corrected)).symbols)
 				| set(parse_side(str(lhs)).symbols)
 			):
+				# The lhs of these two is the determined variable itself, so
+				# the union above would draw an edge from the LCOE into the
+				# LCOE -- a node declared as its own input. The loader accepts
+				# it (a self-loop is a legal edge shape) and every reader that
+				# walks the edges reports the technology's cost as depending on
+				# itself. Skip it: an equality's lhs is the quantity it
+				# determines, not an operand.
+				if sym in set(equations[shipped[0]]["determined_variables"]):
+					continue
 				edges.append({
 					"source": sym, "target": lhs,
 					"equation_id": eq_id, "relationship": "functional", "strength": "soft",
@@ -19609,12 +19625,6 @@ _BATCH62_SOURCE = (
 	"none of them."
 )
 
-#: The duplicate pair: (victim, successor).
-_BATCH62_DUPLICATE: tuple[str, str] = (
-	"energy_burden_limit", "affordability_threshold",
-)
-
-
 # ---------------------------------------------------------------------------
 # Batch 63 -- the fifteen bounds that state a coupling and declare none.
 #
@@ -19840,6 +19850,140 @@ def build_batch63(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	for edge in edges:
 		assert edge["source"] in graph.nodes, edge
 		assert edge["target"] in graph.nodes, edge
+
+	return {}, equations, edges, []
+
+
+# ---------------------------------------------------------------------------
+# Batch 64 -- the nine equalities that name an input and declare no edge to it.
+#
+# *The finding.* Batch 63 repaired every BOUND that stated a coupling and
+# declared none. The same defect exists on equalities, where it is worse: a
+# bound with no edge is a constraint the drawn graph omits, but an equality
+# with a missing input edge is a *computed* quantity whose declared inputs
+# disagree with its arithmetic. `firm_capacity_definition` shipped zero edges
+# for two inputs, so `thermal_capacity_mw` and `dispatchable_re_capacity_mw`
+# had no incident edge at all -- while feeding the reserve margin, the inertia
+# constant, black-start capability and capacity revenue through
+# `firm_capacity_mw`.
+#
+# *How the set was found, and what it excludes.* The register is every
+# equality where an rhs symbol has no edge sourcing it, MINUS the equation's
+# own `determined_variables`. That exclusion is not cosmetic: an equation's
+# rhs names the quantity it solves for, so an edge from `crf` to
+# `annualised_capex_usd_per_kw` -- or from `discount_rate` to
+# `real_discount_rate` -- would draw a dependency the equation does not have.
+# Twelve edges across nine equations remain.
+#
+# *What is NOT changed.* The equation bodies are re-emitted unchanged, for the
+# reason batch 63 gives: the arithmetic is right and only the declaration is
+# wrong, so a batch that also rewrote the bodies would make the correction
+# impossible to review. No node is retyped.
+#
+# *A trap this batch deliberately did not walk into.* `thermal_capacity_mw`
+# ships 7500 MW while its stated leaves (`coal_capacity`, `gas_capacity`,
+# `oil_capacity`, `nuclear_capacity`, `biomass_capacity`,
+# `waste_to_energy_capacity`) sum to 4900, and making it the leaf sum takes
+# the reserve margin from 1.0993 of requirement to 0.8333 -- a violated
+# reference build. It looks like an aggregate that disagrees with its members,
+# which is the defect an earlier batch fixed for `dispatchable_re_capacity_mw`.
+# It is not: `alea.prg.audit.fleet_parameters` fills `thermal_capacity_mw`
+# from the SOLVE, by carrier class, and the per-technology leaves are filled
+# by nothing. The node is a boundary the optimiser writes, not a sum the graph
+# computes, so converting it to a derived leaf sum would break the production
+# path and freeze the fleet at its defaults. The 7500-vs-4900 gap is a
+# default-versus-live-fill difference, which is a different (and open)
+# question. Recorded here so the next reader does not "fix" it.
+# ---------------------------------------------------------------------------
+
+#: The nine equalities, and the rhs inputs each fails to declare. Every entry
+#: is an INPUT: a symbol on the rhs that the equation does not determine.
+_BATCH64_MISSING_INPUT_EDGES: tuple[tuple[str, str], ...] = (
+	("annualised_capex", "crf"),
+	("capture_price_equation", "capture_price_sensitivity"),
+	("capture_price_equation", "marginal_cost_usd_per_mwh"),
+	("capture_price_ratio_definition", "marginal_cost_usd_per_mwh"),
+	("firm_capacity_definition", "dispatchable_re_capacity_mw"),
+	("firm_capacity_definition", "thermal_capacity_mw"),
+	("lcoe_definition", "marginal_cost_usd_per_mwh"),
+	("marginal_cost", "fuel_price_usd_per_mwh"),
+	("real_discount_rate_definition", "discount_rate"),
+	("vre_build", "marginal_cost_usd_per_mwh"),
+	("vre_build", "vre_capacity_target_mw"),
+	("vre_share_definition", "total_capacity_mw"),
+)
+
+
+def build_batch64(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Declare the input edge each of these nine equalities states and omits.
+
+	*The gate.* The builder recomputes the missing-input set from the live
+	graph rather than trusting the table, and asserts the two agree. A table
+	that drifted from the graph would otherwise emit edges for an equation
+	that no longer exists, or silently omit one that does.
+	"""
+	from alea.prg.dsl import parse_side
+
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	declared: set[tuple[str, str]] = set()
+	for equation_id, source in _BATCH64_MISSING_INPUT_EDGES:
+		equation = graph.equations[equation_id]
+		target = equation.determined_variables[0]
+		assert source != target, (equation_id, source)
+		declared.add((equation_id, source))
+		edges.append({
+			"source": source,
+			"target": target,
+			"equation_id": equation_id,
+			# The tier is a property of the EQUATION, and the loader refuses a
+			# document whose edges disagree about one. Inheriting it is the
+			# only correct choice: hard-coding `hard` broke the load on
+			# `capture_price_ratio_definition`, whose existing edge is
+			# `informational` -- the equation is a derived ratio, not a
+			# load-bearing constraint, and a second edge claiming otherwise
+			# would make the tier depend on which edge a reader read first.
+			"strength": graph.strength_of(equation_id),
+			"relationship": "functional",
+			"direction": "forward",
+			"description": (
+				f"Enters {target}: an input of `{equation.lhs} = {equation.rhs}`."
+			),
+		})
+
+	# The gate: the table is exactly what the graph is missing. Recomputed
+	# here, not read from a constant, so a later edit to any of these equations
+	# that adds or drops a symbol fails the builder instead of shipping a
+	# fragment that no longer describes the graph.
+	shipped: dict[str, set[str]] = {}
+	for edge in graph.edges:
+		shipped.setdefault(edge.equation_id, set()).add(edge.source)
+	actual: set[tuple[str, str]] = set()
+	for equation in graph.equations.values():
+		if equation.relation != "eq":
+			continue
+		rhs = set(parse_side(equation.rhs).symbols)
+		determined = set(equation.determined_variables or ())
+		missing = rhs - shipped.get(equation.id, set()) - determined
+		actual |= {(equation.id, symbol) for symbol in missing}
+	assert actual == declared, sorted(actual ^ declared)
+
+	# Every edge names a node the graph holds, and no edge duplicates one the
+	# graph already carries -- the two failure modes of a generated edge set.
+	present = {(edge.source, edge.target) for edge in graph.edges}
+	for edge in edges:
+		assert edge["source"] in graph.nodes, edge
+		assert edge["target"] in graph.nodes, edge
+		assert (edge["source"], edge["target"]) not in present, edge
+	assert len({(edge["source"], edge["target"]) for edge in edges}) == len(edges)
+
+	for equation_id in {equation_id for equation_id, _ in _BATCH64_MISSING_INPUT_EDGES}:
+		equation = graph.equations[equation_id]
+		equations[equation_id] = {
+			key: list(value) if isinstance(value, tuple) else value
+			for key, value in equation.model_dump(mode="json").items()
+			if key != "id"
+		}
 
 	return {}, equations, edges, []
 

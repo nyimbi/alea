@@ -1626,6 +1626,92 @@ which is the failure the register exists to prevent.
 
 
 
+### Twelve input edges the arithmetic used and the graph never declared (batch 64, 2026-10-24)
+
+Batch 63 repaired every *inequality* that stated a coupling and declared no
+edge. The same defect sat on equalities, and it costs more there. A bound with
+no edge is a constraint the drawing omits; an equality with a missing input
+edge is a **computed** quantity whose declared inputs disagree with its
+arithmetic, and nothing that reads the edges can see the disagreement.
+
+The sharp case was `firm_capacity_definition`:
+
+    firm_capacity_mw = thermal_capacity_mw + dispatchable_re_capacity_mw
+
+It shipped zero edges. Neither input had an incident edge anywhere in the
+graph, while `firm_capacity_mw` fed seven readers — the reserve margin and its
+firm-VRE variant, the inertia constant, black-start capability, capacity
+revenue, and two definitions. Two of the largest nodes in the fleet were, as
+far as the drawn graph was concerned, unconnected.
+
+Twelve edges across nine equalities were missing. The register is every
+equality where an rhs symbol carries no edge sourcing it, minus the equation's
+own `determined_variables`. That exclusion is not cosmetic: an equation's rhs
+names the quantity it solves for, so an edge from `crf` into
+`annualised_capex_usd_per_kw` — or from `discount_rate` into
+`real_discount_rate` — would draw a dependency the equation does not have.
+
+**Two defects found on the way, both pre-existing.**
+
+The loader refused the first draft: `capture_price_ratio_definition` is cited
+at `informational`, and a hard-coded `hard` on the new edge made the tier
+depend on which edge a reader read first. The tier is a property of the
+*equation*, so the builder now inherits `strength_of(equation_id)` instead of
+asserting one. That the loader caught it is the invariant working.
+
+And the direction check surfaced two self-loops: `lcoe_solar_definition` and
+`lcoe_wind_definition` each carried an edge from the LCOE into the LCOE. The
+cause is in `build_batch13`'s emit loop, which unions the lhs symbols into the
+source set — correct for an lhs that is a sum, degenerate for these two, whose
+lhs is the determined variable itself. A node declared as its own input is
+worse than a reversed edge: it makes a technology's cost depend on itself. The
+loop now skips any symbol in `determined_variables`.
+
+**The trap this batch did not walk into.** `thermal_capacity_mw` ships 7500 MW
+while its six stated leaves sum to 4900, and making it the leaf sum takes the
+reserve margin from 1.0993 of requirement to 0.8333 — a violated reference
+build. It reads as an aggregate disagreeing with its members, which is what an
+earlier batch fixed for `dispatchable_re_capacity_mw`. It is not:
+`alea.prg.audit.fleet_parameters` fills `thermal_capacity_mw` from the *solve*,
+by carrier class, and the per-technology leaves are filled by nothing. It is a
+boundary the optimiser writes, not a sum the graph computes, so the leaf-sum
+"fix" would have broken the production path and frozen the fleet at its
+defaults. The 7500-versus-4900 gap is a default-versus-live-fill difference —
+a real question, and a different one.
+
+**The gate is the complete rule, with no exception register.**
+`test_every_equality_declares_an_edge_from_each_symbol_it_reads` asserts, over
+all 534 equalities, that every symbol an equality names on either side carries
+an edge into the variable it determines; that no edge's target is outside
+`determined_variables`; that no source is the determined variable (the
+self-loop case); and that no equation is cited at two strengths. The tree has
+zero exceptions, so a register would be the place a future defect hid. A
+register is the right shape when the deviations are reviewed judgements — batch
+63's nine bounds — and the wrong shape when the count is zero.
+
+Canaried against four disjoint mutations, each firing its own assertion:
+dropping `crf → annualised_capex_usd_per_kw` (the missing-edge assertion);
+re-introducing the solar self-loop (the self-loop assertion); reversing
+`thermal_capacity_mw → firm_capacity_mw` (the missing-edge assertion, by
+removing the forward edge); and flipping one `capture_price_ratio_definition`
+edge to `hard` (the loader's tier refusal). A fifth attempt tested nothing —
+the patch anchor did not match the on-disk block shape and the assertion in the
+canary script caught it before the suite ran. Each canary was restored from a
+file copy and verified byte-identical by `md5`.
+
+Registers. Edges 1397 → 1407: twelve declared, two self-loops removed. Nodes
+1429, equations 606, rules 57 unchanged — the batch writes edges and nothing
+else. `constraint` 98 unchanged, `functional` 1178 → 1190. `hard`/`soft`/
+`informational` 603/2/1 unchanged, and should be: the tier counts *equations*,
+and every equation here was already counted. `uncoupled()` 237,
+`structure_issues()` empty, `range_excursions()` empty. Violations at defaults:
+zero, before and after.
+
+Left open: the nine deviation bounds batch 63 named; the 7500-versus-4900
+`thermal_capacity_mw` gap; `cost_of_debt_priced` ignoring the tranche shares
+`docs/param_eqn.md` rows 9.36–9.41 send into `cost_of_debt`.
+
+
 ### Twenty-three bounds that stated a coupling and declared none (batch 63, 2026-10-24)
 
 Batch 62 measured twenty-four inequalities carrying zero edges and recorded the

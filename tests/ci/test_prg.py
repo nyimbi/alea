@@ -1726,6 +1726,89 @@ def test_every_bound_states_its_coupling_or_declares_that_it_cannot(
 	assert "debt_mix_bound" in violated, violated
 
 
+def test_every_equality_declares_an_edge_from_each_symbol_it_reads(
+	graph: ParameterGraph,
+):
+	"""An equality's declared inputs must be the inputs its arithmetic uses.
+
+	Batch 63 asserted this rule for inequalities and found twenty-three that
+	stated a coupling and declared none. The same defect sat on equalities,
+	where it costs more: a bound with no edge is a constraint the drawing
+	omits, but an equality with a missing input edge is a *computed* quantity
+	whose declared inputs disagree with its arithmetic, and the disagreement
+	is invisible to every reader that trusts the edges.
+
+	`firm_capacity_definition` was the sharp case. It computes
+	`firm_capacity_mw = thermal_capacity_mw + dispatchable_re_capacity_mw` and
+	shipped zero edges, so both inputs had no incident edge at all while
+	`firm_capacity_mw` fed the reserve margin, the inertia constant,
+	black-start capability and capacity revenue through seven readers.
+
+	The rule, stated once and asserted over all 534 equalities rather than
+	over the nine that were wrong: every symbol an equality names -- on either
+	side -- carries an edge into the variable it determines. The variable
+	itself is excluded, because an equality's rhs names the quantity it solves
+	for and an edge from a variable to itself would draw a dependency the
+	equation does not have.
+
+	Written as the complete rule, with no register of exceptions, because the
+	tree has none: the count of missing symbols is zero. A register here would
+	be the place a future defect hid.
+	"""
+	determined = {
+		equation.id: set(equation.determined_variables or ())
+		for equation in graph.equations.values()
+		if equation.relation == "eq"
+	}
+	assert len(determined) == 534, len(determined)
+
+	sourced: dict[str, set[str]] = {}
+	for edge in graph.edges:
+		sourced.setdefault(edge.equation_id, set()).add(edge.source)
+
+	missing: list[tuple[str, str]] = []
+	for equation_id, targets in determined.items():
+		equation = graph.equations[equation_id]
+		symbols = set(parse_side(equation.lhs).symbols) | set(parse_side(equation.rhs).symbols)
+		for symbol in sorted(symbols - targets - sourced.get(equation_id, set())):
+			missing.append((equation_id, symbol))
+	assert missing == [], missing
+
+	# The rule is about the *input* edge, so the direction matters: an edge
+	# from a symbol to the variable it determines, never the reverse. A
+	# reversed edge satisfies the source set above and draws the equality
+	# backwards, which is the failure a count of edges cannot see. A
+	# SELF-loop is the degenerate case of the same defect -- the variable
+	# declared as its own input -- and is worse than reversed, because it
+	# makes a cost depend on itself. `lcoe_solar_definition` and
+	# `lcoe_wind_definition` each carried one: their emit loop unioned the
+	# lhs symbols into the source set, and for these two the lhs is the
+	# determined variable. Repaired at the emitter and asserted here.
+	bad_edges: list[tuple[str, str, str]] = []
+	for equation_id, targets in determined.items():
+		equation = graph.equations[equation_id]
+		lhs = set(parse_side(equation.lhs).symbols)
+		rhs = set(parse_side(equation.rhs).symbols)
+		for edge in graph.edges:
+			if edge.equation_id != equation_id:
+				continue
+			assert edge.target in targets, (equation_id, edge.target, targets)
+			assert edge.source in lhs | rhs, (equation_id, edge.source)
+			if edge.source in targets:
+				bad_edges.append((equation_id, edge.source, edge.target))
+	assert bad_edges == [], bad_edges
+
+	# And the tier is the equation's, not the edge's: the loader refuses a
+	# document whose edges disagree, so this asserts the refusal is still in
+	# force rather than trusting that no one has relaxed it.
+	strengths: dict[str, set[str]] = {}
+	for edge in graph.edges:
+		strengths.setdefault(edge.equation_id, set()).add(edge.strength)
+	assert all(len(tiers) == 1 for tiers in strengths.values()), {
+		equation_id: tiers for equation_id, tiers in strengths.items() if len(tiers) > 1
+	}
+
+
 def test_a_categorical_retyped_from_a_placeholder_refuses_an_undeclared_level(
 	graph: ParameterGraph, defaults: dict
 ):
