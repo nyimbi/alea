@@ -106,3 +106,8 @@ models/
 # changes. Committing it would put a binary blob in every clone and in every
 # diff that touches it, for no reader's benefit.
 .zvec-grep/
+
+# Timestamped backups written by the ops-safety rule before editing shared
+# config. They are the previous state of a file that is already in the tree;
+# committing one puts a whole duplicate of `config/prg.yaml` in history.
+*.bak.[0-9]*-[0-9]*
