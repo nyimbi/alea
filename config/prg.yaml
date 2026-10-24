@@ -684,25 +684,33 @@ parameters:
     - Planners
     - Traders
   ancillary_services_market:
-    categories: []
-    category: Policy
-    default: 0.0
-    deprecated_by: null
-    description: Whether an ancillary services market is modelled. A boolean.
-    determinism: policy
-    initial: null
     name: Ancillary services market active
-    priority: P2
-    range: null
-    role: free
-    source: docs/params.md#4.36
-    source_url: null
-    status: integrate
+    description: 'Whether an ancillary services market is modelled. A boolean. Declared range [0, 1]:
+      this boolean shipped `range: null`, and a null range is skipped by `_refuse_out_of_range`, so a
+      scenario could set it to any number and the equations reading it would multiply by that number.'
+    category: Policy
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Regulators
+    priority: P2
+    status: integrate
+    deprecated_by: null
   annualised_capex_usd_per_kw:
     categories: []
     category: Costs
@@ -1558,25 +1566,33 @@ parameters:
     status: to_build
     deprecated_by: null
   balancing_market:
-    categories: []
-    category: Operational
-    default: 1.0
-    deprecated_by: null
-    description: Whether a balancing market is modelled. A boolean.
-    determinism: fixed
-    initial: null
     name: Balancing market active
-    priority: P2
-    range: null
-    role: free
-    source: docs/params.md#11.5
-    source_url: null
-    status: to_build
+    description: 'Whether a balancing market is modelled. A boolean. Declared range [0, 1]: this boolean
+      shipped `range: null`, and a null range is skipped by `_refuse_out_of_range`, so a scenario could
+      set it to any number and the equations reading it would multiply by that number.'
+    category: Operational
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 1.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Traders
+    priority: P2
+    status: to_build
+    deprecated_by: null
   base_demand_twh:
     categories: []
     category: Demand
@@ -2626,25 +2642,33 @@ parameters:
     users:
     - Planners
   capacity_market:
-    categories: []
-    category: Policy
-    default: 0.0
-    deprecated_by: null
-    description: Whether a capacity market is modelled. A boolean.
-    determinism: policy
-    initial: null
     name: Capacity market active
-    priority: P2
-    range: null
-    role: free
-    source: docs/params.md#4.34
-    source_url: null
-    status: integrate
+    description: 'Whether a capacity market is modelled. A boolean. Declared range [0, 1]: this boolean
+      shipped `range: null`, and a null range is skipped by `_refuse_out_of_range`, so a scenario could
+      set it to any number and the equations reading it would multiply by that number.'
+    category: Policy
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Regulators
+    priority: P2
+    status: integrate
+    deprecated_by: null
   capacity_price:
     categories: []
     category: Market
@@ -3746,26 +3770,34 @@ parameters:
     unit: USD/MWh
     users: []
   carbon_border_adjustment:
-    categories: []
-    category: Policy
-    default: 0.0
-    deprecated_by: null
-    description: Whether a CBAM is applied to exports. A boolean; the sample's CBAM is a policy that is
-      either on or off, not a quantity.
-    determinism: policy
-    initial: null
     name: Carbon border adjustment applied
-    priority: P2
-    range: null
-    role: free
-    source: docs/params.md#4.7
-    source_url: null
-    status: integrate
+    description: 'Whether a CBAM is applied to exports. A boolean; the sample''s CBAM is a policy that
+      is either on or off, not a quantity. Declared range [0, 1]: this boolean shipped `range: null`,
+      and a null range is skipped by `_refuse_out_of_range`, so a scenario could set it to any number
+      and the equations reading it would multiply by that number.'
+    category: Policy
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Policymakers
+    priority: P2
+    status: integrate
+    deprecated_by: null
   carbon_budget:
     category: Climate
     description: 'Two ids for one quantity: the catalog carries `carbon_budget` and the constraint register
@@ -6836,25 +6868,33 @@ parameters:
     users:
     - Investors
   contract_for_difference:
-    categories: []
-    category: Policy
-    default: 0.0
-    deprecated_by: null
-    description: Whether a CfD mechanism is modelled. A boolean.
-    determinism: policy
-    initial: null
     name: Contract for difference active
-    priority: P2
-    range: null
-    role: free
-    source: docs/params.md#4.33
-    source_url: null
-    status: to_build
+    description: 'Whether a CfD mechanism is modelled. A boolean. Declared range [0, 1]: this boolean
+      shipped `range: null`, and a null range is skipped by `_refuse_out_of_range`, so a scenario could
+      set it to any number and the equations reading it would multiply by that number.'
+    category: Policy
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Regulators
+    priority: P2
+    status: to_build
+    deprecated_by: null
   cooking_lpg_penetration:
     categories: []
     category: Demand-Side
@@ -7673,25 +7713,33 @@ parameters:
     - Regulators
     - Researchers
   cross_border_trade_allowed:
-    categories: []
-    category: Transmission & Grid
-    default: 1.0
-    deprecated_by: null
-    description: Whether cross-border trade is permitted. A boolean.
-    determinism: policy
-    initial: null
     name: Cross-border trade allowed
-    priority: P1
-    range: null
-    role: free
-    source: docs/params.md#5.17
-    source_url: null
-    status: existing
+    description: 'Whether cross-border trade is permitted. A boolean. Declared range [0, 1]: this boolean
+      shipped `range: null`, and a null range is skipped by `_refuse_out_of_range`, so a scenario could
+      set it to any number and the equations reading it would multiply by that number.'
+    category: Transmission & Grid
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 1.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Planners
+    priority: P1
+    status: existing
+    deprecated_by: null
   cross_border_trading:
     categories: []
     category: Market Design
@@ -8692,25 +8740,33 @@ parameters:
     - Regulators
     - Planners
   day_ahead_market:
-    categories: []
-    category: Operational
-    default: 1.0
-    deprecated_by: null
-    description: Whether a day-ahead market is modelled. A boolean.
-    determinism: fixed
-    initial: null
     name: Day-ahead market active
-    priority: P1
-    range: null
-    role: free
-    source: docs/params.md#11.2
-    source_url: null
-    status: integrate
+    description: 'Whether a day-ahead market is modelled. A boolean. Declared range [0, 1]: this boolean
+      shipped `range: null`, and a null range is skipped by `_refuse_out_of_range`, so a scenario could
+      set it to any number and the equations reading it would multiply by that number.'
+    category: Operational
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 1.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Traders
+    priority: P1
+    status: integrate
+    deprecated_by: null
   debt_equity_ratio:
     name: Debt-to-equity ratio
     description: Debt divided by equity, as a ratio (not a share). Bounded above at 3.0, the ceiling thin-capitalisation
@@ -9606,25 +9662,33 @@ parameters:
     users:
     - DFIs
   dg_placement_enabled:
-    categories: []
-    category: Loss Mitigation
-    default: 1.0
-    deprecated_by: null
-    description: Corrected from float to bool.
-    determinism: policy
-    initial: null
     name: Distributed generation placement enabled
-    priority: P2
-    range: null
-    role: free
-    source: docs/params.md#8.24
-    source_url: null
-    status: to_build
+    description: 'Corrected from float to bool. Declared range [0, 1]: this boolean shipped `range: null`,
+      and a null range is skipped by `_refuse_out_of_range`, so a scenario could set it to any number
+      and the equations reading it would multiply by that number.'
+    category: Loss Mitigation
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 1.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Utilities
+    priority: P2
+    status: to_build
+    deprecated_by: null
   digital_divide_metrics:
     categories: []
     category: Digital
@@ -16944,25 +17008,33 @@ parameters:
     - Utilities
     source: docs/params.md
   intraday_market:
-    categories: []
-    category: Operational
-    default: 0.0
-    deprecated_by: null
-    description: Whether an intraday market is modelled. A boolean.
-    determinism: fixed
-    initial: null
     name: Intraday market active
-    priority: P2
-    range: null
-    role: free
-    source: docs/params.md#11.4
-    source_url: null
-    status: to_build
+    description: 'Whether an intraday market is modelled. A boolean. Declared range [0, 1]: this boolean
+      shipped `range: null`, and a null range is skipped by `_refuse_out_of_range`, so a scenario could
+      set it to any number and the equations reading it would multiply by that number.'
+    category: Operational
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Traders
+    priority: P2
+    status: to_build
+    deprecated_by: null
   investment_allowance:
     name: Investment allowance
     description: Investment allowance
@@ -18885,25 +18957,33 @@ parameters:
     - Planners
     - Financial analysts
   life_extension_possible:
-    categories: []
-    category: Supply-Side
-    default: 0.0
-    deprecated_by: null
-    description: Whether the model may extend an ageing plant's life. A boolean.
-    determinism: policy
-    initial: null
     name: Life extension possible
-    priority: P2
-    range: null
-    role: free
-    source: docs/params.md#2.71
-    source_url: null
-    status: to_build
+    description: 'Whether the model may extend an ageing plant''s life. A boolean. Declared range [0,
+      1]: this boolean shipped `range: null`, and a null range is skipped by `_refuse_out_of_range`, so
+      a scenario could set it to any number and the equations reading it would multiply by that number.'
+    category: Supply-Side
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Planners
+    priority: P2
+    status: to_build
+    deprecated_by: null
   lifeline_tariff:
     name: Lifeline tariff
     description: Lifeline tariff
@@ -21065,45 +21145,61 @@ parameters:
     users:
     - Planners
   n_1_criterion:
-    categories: []
-    category: Operational
-    default: 1.0
-    deprecated_by: null
-    description: Whether the dispatch model enforces N-1 security. A boolean.
-    determinism: fixed
-    initial: null
     name: N-1 security criterion enforced
-    priority: P1
-    range: null
-    role: free
-    source: docs/params.md#11.8
-    source_url: null
-    status: existing
-    subcategory: null
-    type: bool
-    unit: '1'
-    users:
-    - Utilities
-  n_2_criterion:
-    categories: []
+    description: 'Whether the dispatch model enforces N-1 security. A boolean. Declared range [0, 1]:
+      this boolean shipped `range: null`, and a null range is skipped by `_refuse_out_of_range`, so a
+      scenario could set it to any number and the equations reading it would multiply by that number.'
     category: Operational
-    default: 0.0
-    deprecated_by: null
-    description: Whether the dispatch model enforces N-2 security. A boolean.
-    determinism: fixed
-    initial: null
-    name: N-2 security criterion enforced
-    priority: P2
-    range: null
-    role: free
-    source: docs/params.md#11.9
-    source_url: null
-    status: to_build
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 1.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Utilities
+    priority: P1
+    status: existing
+    deprecated_by: null
+  n_2_criterion:
+    name: N-2 security criterion enforced
+    description: 'Whether the dispatch model enforces N-2 security. A boolean. Declared range [0, 1]:
+      this boolean shipped `range: null`, and a null range is skipped by `_refuse_out_of_range`, so a
+      scenario could set it to any number and the equations reading it would multiply by that number.'
+    category: Operational
+    subcategory: null
+    type: bool
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
+    users:
+    - Utilities
+    priority: P2
+    status: to_build
+    deprecated_by: null
   near_duplicate_detection:
     name: Near duplicate detection
     description: How near-duplicate records are detected. Catalog 'MinHash + LSH' names the method the
@@ -22494,26 +22590,34 @@ parameters:
     users:
     - Utilities
   outage_coordination:
-    categories: []
-    category: Operational
-    default: 1.0
-    deprecated_by: null
-    description: Corrected from float to bool. Whether planned outages are coordinated across the fleet;
-      a scenario either models the coordination or does not.
-    determinism: policy
-    initial: null
     name: Outage coordination enabled
-    priority: P2
-    range: null
-    role: free
-    source: docs/params.md#11.23
-    source_url: null
-    status: to_build
+    description: 'Corrected from float to bool. Whether planned outages are coordinated across the fleet;
+      a scenario either models the coordination or does not. Declared range [0, 1]: this boolean shipped
+      `range: null`, and a null range is skipped by `_refuse_out_of_range`, so a scenario could set it
+      to any number and the equations reading it would multiply by that number.'
+    category: Operational
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 1.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Utilities
+    priority: P2
+    status: to_build
+    deprecated_by: null
   outage_duration:
     categories: []
     category: Outage
@@ -23088,25 +23192,33 @@ parameters:
     - Planners
     - Regulators
   phase_shifting_enabled:
-    categories: []
-    category: Loss Mitigation
-    default: 0.0
-    deprecated_by: null
-    description: Corrected from float to bool.
-    determinism: policy
-    initial: null
     name: Phase shifting enabled
-    priority: P3
-    range: null
-    role: free
-    source: docs/params.md#8.22
-    source_url: null
-    status: to_build
+    description: 'Corrected from float to bool. Declared range [0, 1]: this boolean shipped `range: null`,
+      and a null range is skipped by `_refuse_out_of_range`, so a scenario could set it to any number
+      and the equations reading it would multiply by that number.'
+    category: Loss Mitigation
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Utilities
+    priority: P3
+    status: to_build
+    deprecated_by: null
   phs_capacity:
     categories: []
     category: Supply-Side
@@ -24132,25 +24244,33 @@ parameters:
     status: to_build
     deprecated_by: null
   ppa_guarantees:
-    categories: []
-    category: Policy
-    default: 0.0
-    deprecated_by: null
-    description: Whether the government guarantees the PPA. A boolean.
-    determinism: policy
-    initial: null
     name: Government PPA guarantees active
-    priority: P2
-    range: null
-    role: free
-    source: docs/params.md#4.32
-    source_url: null
-    status: to_build
+    description: 'Whether the government guarantees the PPA. A boolean. Declared range [0, 1]: this boolean
+      shipped `range: null`, and a null range is skipped by `_refuse_out_of_range`, so a scenario could
+      set it to any number and the equations reading it would multiply by that number.'
+    category: Policy
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Regulators
+    priority: P2
+    status: to_build
+    deprecated_by: null
   ppa_indexation:
     categories: []
     category: Contract
@@ -25096,25 +25216,33 @@ parameters:
     users:
     - Investors
   real_time_market:
-    categories: []
-    category: Operational
-    default: 0.0
-    deprecated_by: null
-    description: Whether a real-time market is modelled. A boolean.
-    determinism: fixed
-    initial: null
     name: Real-time market active
-    priority: P2
-    range: null
-    role: free
-    source: docs/params.md#11.3
-    source_url: null
-    status: to_build
+    description: 'Whether a real-time market is modelled. A boolean. Declared range [0, 1]: this boolean
+      shipped `range: null`, and a null range is skipped by `_refuse_out_of_range`, so a scenario could
+      set it to any number and the equations reading it would multiply by that number.'
+    category: Operational
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Traders
+    priority: P2
+    status: to_build
+    deprecated_by: null
   redeployed_jobs:
     categories: []
     category: JustTrans
@@ -27155,25 +27283,33 @@ parameters:
     status: to_build
     deprecated_by: null
   security_constrained_dispatch:
-    categories: []
-    category: Operational
-    default: 1.0
-    deprecated_by: null
-    description: Whether the dispatch is constrained by network limits. A boolean.
-    determinism: fixed
-    initial: null
     name: Security-constrained dispatch enforced
-    priority: P1
-    range: null
-    role: free
-    source: docs/params.md#11.7
-    source_url: null
-    status: existing
+    description: 'Whether the dispatch is constrained by network limits. A boolean. Declared range [0,
+      1]: this boolean shipped `range: null`, and a null range is skipped by `_refuse_out_of_range`, so
+      a scenario could set it to any number and the equations reading it would multiply by that number.'
+    category: Operational
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 1.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Utilities
+    priority: P1
+    status: existing
+    deprecated_by: null
   security_package:
     categories: []
     category: Contract
@@ -27732,26 +27868,34 @@ parameters:
     - Utilities
     source: docs/params.md
   smart_metering_rollout:
-    categories: []
-    category: Digital
-    default: 1.0
-    deprecated_by: null
-    description: Corrected from float to bool. The shipped node is a rollout — a programme that is either
-      on or off — not the penetration share; the share is `smart_metering_penetration`.
-    determinism: policy
-    initial: null
     name: Smart metering rollout (deprecated type marker)
-    priority: P2
-    range: null
-    role: free
-    source: docs/params.md#21.10
-    source_url: null
-    status: to_build
+    description: 'Corrected from float to bool. The shipped node is a rollout — a programme that is either
+      on or off — not the penetration share; the share is `smart_metering_penetration`. Declared range
+      [0, 1]: this boolean shipped `range: null`, and a null range is skipped by `_refuse_out_of_range`,
+      so a scenario could set it to any number and the equations reading it would multiply by that number.'
+    category: Digital
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 1.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Utilities
+    priority: P2
+    status: to_build
+    deprecated_by: null
   snapshot_weightings:
     categories: []
     category: Temporal
@@ -28992,25 +29136,33 @@ parameters:
     unit: MW
     users: []
   storage_dispatch_enabled:
-    categories: []
-    category: Loss Mitigation
-    default: 1.0
-    deprecated_by: null
-    description: Corrected from float to bool.
-    determinism: policy
-    initial: null
     name: Storage dispatch enabled
-    priority: P2
-    range: null
-    role: free
-    source: docs/params.md#8.25
-    source_url: null
-    status: existing
+    description: 'Corrected from float to bool. Declared range [0, 1]: this boolean shipped `range: null`,
+      and a null range is skipped by `_refuse_out_of_range`, so a scenario could set it to any number
+      and the equations reading it would multiply by that number.'
+    category: Loss Mitigation
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 1.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Utilities
+    priority: P2
+    status: existing
+    deprecated_by: null
   storage_duration_curve:
     categories: []
     category: Supply
@@ -30214,26 +30366,34 @@ parameters:
     users:
     - Regulators
   topology_switching_enabled:
-    categories: []
-    category: Loss Mitigation
-    default: 1.0
-    deprecated_by: null
-    description: Corrected from float to bool. The parameter is on or off; the shipped [0, 1e6] admitted
-      a value 500,000 times the maximum.
-    determinism: policy
-    initial: null
     name: Topology switching enabled
-    priority: P2
-    range: null
-    role: free
-    source: docs/params.md#8.21
-    source_url: null
-    status: to_build
+    description: 'Corrected from float to bool. The parameter is on or off; the shipped [0, 1e6] admitted
+      a value 500,000 times the maximum. Declared range [0, 1]: this boolean shipped `range: null`, and
+      a null range is skipped by `_refuse_out_of_range`, so a scenario could set it to any number and
+      the equations reading it would multiply by that number.'
+    category: Loss Mitigation
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 1.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Utilities
+    priority: P2
+    status: to_build
+    deprecated_by: null
   total_capacity_mw:
     categories: []
     category: Technical
@@ -30641,25 +30801,33 @@ parameters:
     status: existing
     deprecated_by: null
   transmission_expansion_allowed:
-    categories: []
-    category: Transmission & Grid
-    default: 1.0
-    deprecated_by: null
-    description: Whether the expansion model may build transmission. A boolean.
-    determinism: policy
-    initial: null
     name: Transmission expansion allowed
-    priority: P1
-    range: null
-    role: free
-    source: docs/params.md#5.1
-    source_url: null
-    status: existing
+    description: 'Whether the expansion model may build transmission. A boolean. Declared range [0, 1]:
+      this boolean shipped `range: null`, and a null range is skipped by `_refuse_out_of_range`, so a
+      scenario could set it to any number and the equations reading it would multiply by that number.'
+    category: Transmission & Grid
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 1.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Planners
+    priority: P1
+    status: existing
+    deprecated_by: null
   transmission_investment_usd:
     category: Cost
     description: 'transmission investment usd: the extensive-base coupling''s derived quantity. The line''s
@@ -31018,25 +31186,33 @@ parameters:
     - Planners
     - Regulators
   unit_commitment:
-    categories: []
-    category: Operational
-    default: 1.0
-    deprecated_by: null
-    description: Whether the dispatch model enforces unit commitment. A boolean.
-    determinism: fixed
-    initial: null
     name: Unit commitment enforced
-    priority: P1
-    range: null
-    role: free
-    source: docs/params.md#11.6
-    source_url: null
-    status: existing
+    description: 'Whether the dispatch model enforces unit commitment. A boolean. Declared range [0, 1]:
+      this boolean shipped `range: null`, and a null range is skipped by `_refuse_out_of_range`, so a
+      scenario could set it to any number and the equations reading it would multiply by that number.'
+    category: Operational
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 1.0
+    initial: null
+    role: free
+    determinism: fixed
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Utilities
+    priority: P1
+    status: existing
+    deprecated_by: null
   unserved_energy_gwh:
     categories: []
     category: Reliability
@@ -31398,25 +31574,33 @@ parameters:
     unit: USD/MWh
     users: []
   voltage_optimisation_enabled:
-    categories: []
-    category: Loss Mitigation
-    default: 1.0
-    deprecated_by: null
-    description: Corrected from float to bool.
-    determinism: policy
-    initial: null
     name: Voltage optimisation enabled
-    priority: P2
-    range: null
-    role: free
-    source: docs/params.md#8.23
-    source_url: null
-    status: to_build
+    description: 'Corrected from float to bool. Declared range [0, 1]: this boolean shipped `range: null`,
+      and a null range is skipped by `_refuse_out_of_range`, so a scenario could set it to any number
+      and the equations reading it would multiply by that number.'
+    category: Loss Mitigation
     subcategory: null
     type: bool
     unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 1.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: 'The boolean range repair (batch 58). Every boolean in the graph now declares the range [0,
+      1]; this batch supplies it to the twenty-three that shipped `range: null` and therefore refused
+      nothing. The rationale is `build_batch50`''s own, which stated it when it typed the placeholder
+      survey''s 55 flags: a range is what makes a bool refuse a value that is not a truth value, and `range:
+      null` on a bool refuses nothing.'
+    source_url: null
     users:
     - Utilities
+    priority: P2
+    status: to_build
+    deprecated_by: null
   voltage_support_requirement:
     category: Operational
     description: 'Reactive reserve in MVAr: the share of the fleet''s reactive capability held for voltage

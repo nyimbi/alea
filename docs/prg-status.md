@@ -1469,6 +1469,52 @@ consistent with the one pre-existing `rocof_definition` failure.
 
 
 
+### Twenty-three booleans refused nothing (batch 58, 2026-10-24)
+
+A boolean is a truth value. The graph holds 79 of them, and 56 declared
+`range: [0, 1]` and refused `7.0`. Twenty-three declared `range: null`, and
+`_refuse_out_of_range` opens with `if node.range is None: continue`, so a null
+range is not a narrow range -- it is no range, and those twenty-three accepted
+any number a scenario cared to state.
+
+**Measured, not argued.** Nine of the twenty-three are read by a shipped
+equation, and each carried the wrong answer downstream instead of raising:
+
+| flag | set to 7.0 | consequence |
+|---|---|---|
+| `ppa_guarantees` | 7.0 | `offtake_risk_premium_applied` 0.05 → **-0.30**, a negative premium |
+| `n_1_criterion` | 7.0 | `contingency_reserve_mw` 1000 → **7000** MW |
+| `transmission_expansion_allowed` | 7.0 | `permitted_transmission_spend_usd` 50M → **350M** |
+| `capacity_market` | 7.0 | `capacity_revenue_usd_per_year` 0 → 2744; 24 values move |
+| `carbon_border_adjustment` | 7.0 | `cbam_price_applied` 0 → 609 |
+
+In each case the flag is a *multiplier in a product*, not a cosmetic field. An
+unbounded multiplier is a dial the model does not have.
+
+**Why the range and not the unit.** All twenty-three already carry
+`unit: '1'`, and that is right: a flag multiplied into a population has to
+resolve as dimensionless, and `check_graph` reports an operand with no unit as
+undecidable, which the register prints as inconsistent. The two fields are
+independent, which is exactly how one of them could be missing on
+twenty-three nodes while every checker stayed silent.
+
+**The convention was already written down.** `build_batch50` says, of the 55
+flags it typed: *"A bool: a range, because `range: null` on a bool refuses
+nothing."* The 23 predate it and were never brought into line. This batch is
+that line, not a new rule.
+
+**Measured after.** Graph 1429 nodes / 607 equations / 1367 edges / 57 rules,
+unchanged; `structure_issues()` empty; `uncoupled()` 235 and settable 870,
+both unchanged, because a range bounds a knob without coupling it.
+`untranslated()` 867. Unit checker 606 consistent / 1 inconsistent
+(`rocof_definition`, pre-existing). Booleans admitting a non-truth value:
+**23 → 0**.
+
+The batch is written as a class, and the test asserts the class. A test naming
+only the nine coupled flags would leave fourteen open, and the next batch to
+couple one of those fourteen would reintroduce the defect without touching a
+line of the test.
+
 ### Thirteen dimensionless dials were still 500,000 (batch 57, 2026-10-24)
 
 `docs/research/placeholder-survey.md` classified all 181 nodes that shipped the

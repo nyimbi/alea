@@ -1258,11 +1258,17 @@ def test_a_bool_retyped_from_a_placeholder_refuses_a_magnitude(graph: ParameterG
 	"""The 55 bools batch 50 retyped, tested on one of them.
 
 	A `bool` with `range: null` refuses nothing: `_refuse_out_of_range` reads
-	`if node.range is None: continue`, so `n_1_criterion = 7.0` propagates
-	today and is reported by no register. That is why the batch declares
+	`if node.range is None: continue`, so a flag with no range propagates any
+	number and is reported by no register. That is why the batch declares
 	`[0.0, 1.0]` on every bool it writes, and why this test targets a node the
 	batch retyped rather than a shipped bool -- a test against a shipped bool
 	would pass against the defect it is meant to catch.
+
+	This docstring used to name `n_1_criterion = 7.0` as its example of the
+	defect propagating. Batch 58 gave that node a range, so the example became
+	false; the surviving illustration is the class rather than one member, and
+	`test_every_boolean_refuses_a_magnitude` is the gate that holds the whole
+	set.
 
 	Both paths are checked, because `propagate_change` takes the incremental
 	one.
@@ -1289,6 +1295,65 @@ def test_a_bool_retyped_from_a_placeholder_refuses_a_magnitude(graph: ParameterG
 		scoped = dict(defaults)
 		scoped["market_coupling"] = on_bound
 		assert graph.propagate(scoped).values["market_coupling"] == on_bound
+
+
+def test_every_boolean_refuses_a_magnitude(graph: ParameterGraph, defaults: dict):
+	"""No boolean in the graph admits a value that is not a truth value.
+
+	The whole class, not a witness. Twenty-three booleans shipped `range: null`
+	-- every one of them with `unit: '1'` -- and `_refuse_out_of_range` skips a
+	node whose range is null, so `7.0` propagated. Nine of the twenty-three are
+	read by a shipped equation and each carried the wrong number downstream
+	rather than raising: `ppa_guarantees = 7.0` drove
+	`offtake_risk_premium_applied` to -0.30, and `n_1_criterion = 7.0`
+	multiplied `contingency_reserve_mw` to 7000 MW.
+
+	This test is why the batch was written as a class and not a list of nine.
+	A test naming only the coupled ones would leave fourteen open, and the next
+	batch to couple one of those fourteen would reintroduce the defect without
+	touching a line of this file.
+
+	The two bounds are asserted admissible, so the gate is a range and not a
+	"must be false" in disguise. A boolean whose default sits on a bound is
+	normal here: 24 default to 1.0.
+	"""
+	booleans = [
+		(name, node) for name, node in graph.nodes.items()
+		if node.type is ParameterType.BOOL
+	]
+	assert len(booleans) == 79, len(booleans)
+
+	for name, node in booleans:
+		assert node.range == (0.0, 1.0), (
+			f"{name} declares range {node.range!r}; a boolean's range is its "
+			"admissible set and a null one refuses nothing"
+		)
+
+	# The clause above is the gate. A per-node `propagate(name=7.0)` loop over
+	# every boolean would add nothing: every bool is `free`, and 78 of 79 are
+	# settable, so `range == (0, 1)` *entails* the refusal and the loop can
+	# never fail on a graph that passed the assertion above. It is kept as one
+	# live probe rather than 79 tautologies, on a node that was permissive
+	# before this batch -- `capacity_market` is read by an equation, so the
+	# refusal is the difference between a wrong number downstream and a raise.
+	scoped = dict(defaults)
+	scoped["capacity_market"] = 7.0
+	with pytest.raises(GraphError, match="outside the range"):
+		graph.propagate(scoped)
+
+	# Both paths, because `propagate_change` takes the incremental one and a
+	# range enforced on one of two doors is a range a caller can walk around.
+	previous = graph.propagate(defaults)
+	scoped = dict(defaults)
+	scoped["capacity_market"] = 7.0
+	with pytest.raises(GraphError, match="outside the range"):
+		graph.propagate_incremental(scoped, previous, ["capacity_market"])
+
+	# The endpoints are admissible, so the gate is a range and not a
+	# "must be false" in disguise. `capacity_market` defaults to 0.0.
+	scoped = dict(defaults)
+	scoped["capacity_market"] = 1.0
+	assert graph.propagate(scoped).values["capacity_market"] == 1.0
 
 
 def test_a_categorical_retyped_from_a_placeholder_refuses_an_undeclared_level(

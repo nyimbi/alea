@@ -693,11 +693,36 @@ class ParameterGraph:
 		This register states a structural fact about the document -- no equation
 		names this node -- and a tombstone satisfies it. Whether a node may be
 		*set* is :meth:`is_settable`'s question, and that predicate does exclude
-		tombstones. Three nodes carry the status at present
-		(``cross_border_trading``, ``demand_growth_rate``,
-		``pm25_relative_risk_per_kt``), and every consumer that means "the live
-		unread surface" subtracts them by name rather than trusting this method
-		to have done it silently.
+		tombstones. Every consumer that means "the live unread surface"
+		subtracts them by status rather than trusting this method to have done
+		it silently.
+
+		No count is stated here on purpose. The docstring above makes the
+		argument that a figure written into prose drifts the first time a node
+		is added, and an earlier version of this paragraph then carried one --
+		"three nodes carry the status at present", naming
+		``cross_border_trading``, ``demand_growth_rate`` and
+		``pm25_relative_risk_per_kt``. Batches 49 and 55 retired three more and
+		the sentence went on asserting the old number.
+		``test_every_settable_parameter_affects_or_constrains_something`` pins
+		the set by name, so a further deprecation has to be written down there;
+		this paragraph points at that pin instead of competing with it.
+
+		**This register has a floor above zero, and it is structural.** Two
+		classes of node cannot be named by an equation at all. A *categorical*
+		carries a level name and a level has no arithmetic -- ``translate``
+		says so at ``_graph_value``, ``audit`` refuses to put one in a ratio,
+		and ``_NON_SCALAR_TYPES`` refuses a numeric default on one -- so all 41
+		are here and none can leave. A *tombstone* must not be wired into an
+		equation, since the point of retiring an id is that nothing computes
+		from it. On the shipped graph that is 41 + 6 = 47 of 235.
+
+		So "drive ``uncoupled()`` to zero" is not a reachable goal and a batch
+		that states it as one will report failure forever. The reachable target
+		is the numeric, live remainder -- 119 on the shipped graph -- and this
+		paragraph exists because the count alone does not say which 47 are
+		permanent. No figure here is load-bearing: they are the shipped graph's
+		values and the classes are the claim.
 		"""
 		named = {
 			name

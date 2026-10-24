@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "58":
+		b58_nodes, b58_equations, b58_edges, b58_rules = build_batch58(graph)
+		rules.extend(b58_rules)
+		nodes.update(b58_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b58_equations)
+		edges = list(BATCH12_EDGES) + b58_edges
 	elif batch == "57":
 		b57_nodes, b57_equations, b57_edges, b57_rules = build_batch57(graph)
 		rules.extend(b57_rules)
@@ -19039,6 +19046,176 @@ def build_batch57(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	print(
 		f"  retyped {len(nodes)} placeholder rows to unit `1` with declared "
 		f"ranges; defaults {sorted((n, b['default']) for n, b in nodes.items())}"
+	)
+	return nodes, equations, edges, rules
+
+
+#: The source string every batch-58 node carries. As in batch 57 this is not a
+#: label: `prg_from_catalog.load_existing()` drops any node whose `source` is
+#: the generator's marker (`docs/params.md`) and re-emits it from the catalog
+#: row, so a retype that leaves the marker in place is reverted by the next
+#: bake.
+_BATCH58_SOURCE = (
+	"The boolean range repair (batch 58). Every boolean in the graph now "
+	"declares the range [0, 1]; this batch supplies it to the twenty-three "
+	"that shipped `range: null` and therefore refused nothing. The rationale "
+	"is `build_batch50`'s own, which stated it when it typed the placeholder "
+	"survey's 55 flags: a range is what makes a bool refuse a value that is "
+	"not a truth value, and `range: null` on a bool refuses nothing."
+)
+
+#: The booleans shipping `range: null`, with the default each already carries.
+#: Read off the graph rather than transcribed: the builder asserts this list is
+#: exactly the set that admits 7.0, so a node added or retired moves the list.
+_BATCH58_BOOLS: tuple[tuple[str, float], ...] = (
+	("ancillary_services_market", 0.0),
+	("balancing_market", 1.0),
+	("capacity_market", 0.0),
+	("carbon_border_adjustment", 0.0),
+	("contract_for_difference", 0.0),
+	("cross_border_trade_allowed", 1.0),
+	("day_ahead_market", 1.0),
+	("dg_placement_enabled", 1.0),
+	("intraday_market", 0.0),
+	("life_extension_possible", 0.0),
+	("n_1_criterion", 1.0),
+	("n_2_criterion", 0.0),
+	("outage_coordination", 1.0),
+	("phase_shifting_enabled", 0.0),
+	("ppa_guarantees", 0.0),
+	("real_time_market", 0.0),
+	("security_constrained_dispatch", 1.0),
+	("smart_metering_rollout", 1.0),
+	("storage_dispatch_enabled", 1.0),
+	("topology_switching_enabled", 1.0),
+	("transmission_expansion_allowed", 1.0),
+	("unit_commitment", 1.0),
+	("voltage_optimisation_enabled", 1.0),
+)
+
+
+def build_batch58(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Give the twenty-three rangeless booleans the range the other 56 carry.
+
+	*The defect.* A boolean is a truth value and the graph holds 79 of them.
+	Fifty-six declare ``range: [0, 1]`` and refuse ``7.0``; twenty-three declare
+	``range: null`` and accept it. ``_refuse_out_of_range`` skips a node whose
+	range is ``None`` (``graph.py``, the ``if node.range is None: continue``
+	branch), so the range is the only thing standing between a flag and any
+	number a scenario cares to state.
+
+	*Why it matters, measured rather than argued.* Nine of the twenty-three are
+	read by a shipped equation, and each propagates a wrong answer rather than
+	raising. Setting ``ppa_guarantees`` to 7.0 drives
+	``offtake_risk_premium_applied`` to -0.30, a negative premium; setting
+	``n_1_criterion`` to 7.0 multiplies ``contingency_reserve_mw`` by seven, to
+	7000 MW. The boolean is not a cosmetic field in those nine: it is a
+	multiplier in a product, and an unbounded multiplier is a dial the model
+	does not have.
+
+	*Why ``range`` and not ``unit``.* The twenty-three carry ``unit: '1'``, and
+	that is correct: a flag multiplied into a population has to be resolvable as
+	dimensionless, and ``check_graph`` reports an equation whose operand has no
+	unit as *undecidable*, which the register prints as inconsistent. So the
+	unit stays and the range is what this batch adds. The two fields are
+	independent here, which is exactly why one of them could be missing for
+	twenty-three nodes without any checker noticing.
+
+	*What this does not do.* It changes no default, couples no node, and moves
+	no register count except the one this defect owns -- the number of booleans
+	that admit a non-truth value, 23 to 0. The five tombstones in the slice are
+	absent because ``cross_border_trading`` is the one deprecated bool that
+	already carries its range.
+	"""
+	from alea.prg.views import ParameterNode
+
+	assert _BATCH58_BOOLS, "the batch has no rows"
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+	rules: list[dict[str, Any]] = []
+
+	# The permissive set, measured. This is the premise of the batch and not a
+	# restatement of the table: a bool that refuses 7.0 is already correct and
+	# needs nothing, and the table is checked against this rather than trusted.
+	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	permissive: set[str] = set()
+	for name, node in graph.nodes.items():
+		if node.type != "bool" or node.status == "deprecated":
+			continue
+		try:
+			graph.propagate({**values, name: 7.0})
+		except Exception:
+			continue
+		permissive.add(name)
+
+	declared = {name for name, _ in _BATCH58_BOOLS}
+	assert declared == permissive, (
+		f"the table and the graph disagree: only-in-table {sorted(declared - permissive)}, "
+		f"only-in-graph {sorted(permissive - declared)}. A boolean added since this "
+		"list was written has to be written down here, and one that has been "
+		"repaired has to come out."
+	)
+
+	for name, default in _BATCH58_BOOLS:
+		node = graph.nodes[name]
+		assert node.type == "bool", f"{name} is {node.type!r}, not a bool"
+		assert node.range is None, f"{name} already declares range {node.range!r}"
+		assert node.unit == "1", (
+			f"{name} carries unit {node.unit!r}; this batch adds the range and "
+			"leaves the unit alone, so a node whose unit has changed is not the "
+			"one the table describes"
+		)
+		assert node.default == default, (
+			f"{name} defaults to {node.default!r}, not the {default!r} the table "
+			"records; the range must contain the default and this asserts the "
+			"default did not move"
+		)
+		assert 0.0 <= default <= 1.0, f"{name}: default {default!r} is outside [0, 1]"
+
+		body = node.model_dump(exclude={"id"}, mode="json")
+		body.update({
+			"range": [0.0, 1.0],
+			"source": _BATCH58_SOURCE,
+			"description": (
+				f"{node.description.rstrip('.')}. Declared range [0, 1]: this "
+				"boolean shipped `range: null`, and a null range is skipped by "
+				"`_refuse_out_of_range`, so a scenario could set it to any "
+				"number and the equations reading it would multiply by that "
+				"number."
+			),
+		})
+		ParameterNode(**{"id": name, **body})
+		nodes[name] = body
+
+	assert len(nodes) == len(_BATCH58_BOOLS), len(nodes)
+
+	# The claim this batch makes, asserted on the merged graph rather than
+	# described. After the merge every bool refuses 7.0 and accepts both bounds.
+	merged = dict(graph.nodes)
+	for name, body in nodes.items():
+		merged[name] = ParameterNode(**{"id": name, **body})
+	for name in (*declared, "capacity_market"):
+		node = merged[name]
+		assert node.range == (0.0, 1.0), (name, node.range)
+		for bound in (0.0, 1.0):
+			assert node.range[0] <= bound <= node.range[1], (name, bound)
+
+	# A default outside its own range is refused at load, so this batch would
+	# fail at the merge rather than here -- but asserting it here names the
+	# node that broke instead of the document.
+	for name, body in nodes.items():
+		assert body["range"][0] <= body["default"] <= body["range"][1], (name, body["default"])
+
+	coupled = sorted(declared & {
+		nm
+		for equation in graph.equations.values()
+		for nm in (*equation.parameters, *equation.determined_variables)
+	})
+	print(
+		f"  gave {len(nodes)} rangeless booleans the range [0, 1]; "
+		f"{len(coupled)} of them are read by an equation ({', '.join(coupled)})"
 	)
 	return nodes, equations, edges, rules
 
