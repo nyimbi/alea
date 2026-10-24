@@ -269,6 +269,12 @@ more. That is a correction to the register rather than a loss of
 coverage: a tombstone is not a knob a what-if surface could ever drive,
 and counting it as untranslated was reporting a node no client could
 reach as a node the translation layer had failed to reach.
+
+That paragraph names the three tombstones the graph carried at batch 44. It
+carries six now -- batches 49, 55 and 59 retired three more -- so read the
+three as the record of that batch, not as the current set. The pin that holds
+the current membership is the `deprecated_uncoupled` set in
+`test_prg.py::test_the_summary_reports_the_registers`, which names every one.
 	"""
 	cov = coverage(graph)
 	# Batch 49 took it 876 -> 874, and the move is the same correction Batch 44
@@ -286,9 +292,10 @@ reach as a node the translation layer had failed to reach.
 	# `tsam_segment_hours`), so 872 -> 871. Its 40 retyped quantities were
 	# already in the surface and stay in it: a unit and a range do not make a
 	# knob translatable. Batch 55 deprecated `opex_fixed_wind`, and a tombstone
-	# is not settable, so 871 -> 870.
+	# is not settable, so 871 -> 870. Batch 59's `remittance_dependency`
+	# tombstone is the same: 870 -> 869.
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 870, cov
+	assert cov["total"] == 869, cov
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -386,9 +393,10 @@ the only difference between the two sets.
 	# the surface (`debt_fraction`, now derived), so 871 -> 870, and batch 53
 	# took `reserve_margin_requirement` out too: 870 -> 869. Batch 54 took
 	# `temporal_resolution` out on the same ground: 869 -> 868. Batch 55's
-	# `opex_fixed_wind` tombstone is not settable either: 868 -> 867.
+	# `opex_fixed_wind` tombstone is not settable either: 868 -> 867. Batch 59's
+	# `remittance_dependency` tombstone is the same: 867 -> 866.
 	missing = untranslated(graph)
-	assert len(missing) == 867, missing
+	assert len(missing) == 866, missing
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact

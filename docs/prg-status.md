@@ -1469,6 +1469,50 @@ consistent with the one pre-existing `rocof_definition` failure.
 
 
 
+### The last DEAD row, retired (batch 59, 2026-10-24)
+
+`docs/research/placeholder-survey.md` classified all 181 sentinel rows. After
+batches 54, 57 and 58, 39 remained, and their classes were 34 AMBIGUOUS, 4
+NAME-blocked and **1 DEAD**. The DEAD row is the only one that needs no
+research: it is a duplicate of a node that already ships.
+
+`remittance_dependency` and `remittance_income_share` are the same quantity —
+the share of household income arriving as remittance transfers. The survivor
+carries unit `1`, range [0, 0.5], default 0.05, and one reader
+(`remittance_flows_definition`). The victim carried no unit, the [0, 1e6]
+sentinel, and no reader at all. Two ids for one share is the defect; the typed
+one with a consumer is the survivor.
+
+**The tombstone's default is the migration path, so it is the successor's.**
+A deprecated node is kept so a scenario naming the old id can be told where to
+go, and `propagate` refuses a parameter set that omits a non-derived node — so
+the tombstone must carry a value. Leaving the sentinel would hand a migrating
+caller 500,000 for a share that cannot exceed 1. The node now reads unit `1`,
+range [0, 0.5], default 0.05: the quantity it was, at the value the graph
+computes it at.
+
+**That value is inherited, and it is not yet referenced.**
+`remittance_income_share` says "5% is the order remittance-receiving economies
+show" with `source: "The demand and macro coupling (batch 29)"` and no
+`source_url` — a batch label, not a citation. The tombstone copies it because
+copying an uncited value is still better than shipping a sentinel, but the
+citation is owed by that node and this batch does not supply it. The standing
+requirement that a default be referenced is unmet here, and naming it is the
+honest record; inventing a source would be worse than the gap.
+
+**Measured after.** Graph 1429 nodes / 607 equations / 1367 edges / 57 rules,
+unchanged; `structure_issues()` empty; `uncoupled()` **235, unchanged** — a
+tombstone stays in that register by design, so this batch closes nothing in it.
+`settable` 870 → **869** and `untranslated` 867 → **866**, both because
+`is_settable` refuses a tombstone and the translation register is built on it.
+Unit checker 606 consistent / 1 inconsistent (`rocof_definition`,
+pre-existing). Catalog register: agreeing 652 → **651**, and the disagreement
+is pinned by name with the reason (the catalog still says `to_build`; the graph
+is right and the catalog is stale).
+
+The 38 rows still on the sentinel are 34 AMBIGUOUS and 4 NAME-blocked. Forcing
+a type on those is the guessing the brief forbids, so they stay.
+
 ### Twenty-three booleans refused nothing (batch 58, 2026-10-24)
 
 A boolean is a truth value. The graph holds 79 of them, and 56 declared

@@ -980,6 +980,8 @@ def test_the_summary_reports_the_registers(graph: ParameterGraph):
 		# it belongs in this set for the reason the set exists: a fifth
 		# deprecation should have to be written down.
 		"opex_fixed_wind",
+		# Batch 59 retired the duplicate remittance share. Also `free`.
+		"remittance_dependency",
 	}, deprecated_uncoupled
 	uncoupled_roles = {
 		graph.role(name).value for name in graph.uncoupled()
@@ -1354,6 +1356,45 @@ def test_every_boolean_refuses_a_magnitude(graph: ParameterGraph, defaults: dict
 	scoped = dict(defaults)
 	scoped["capacity_market"] = 1.0
 	assert graph.propagate(scoped).values["capacity_market"] == 1.0
+
+
+def test_the_retired_remittance_share_points_at_a_value_it_could_not_have_carried(
+	graph: ParameterGraph, defaults: dict
+):
+	"""A tombstone's default is the migration path, so it has to be a real one.
+
+	`remittance_dependency` shipped the 500,000 sentinel with no unit and no
+	reader, as a second id for the share `remittance_income_share` already
+	carries. Retiring it is the survey's own classification (row 135, DEAD).
+
+	The claim this test makes is narrower than "it is deprecated": a
+	deprecation that leaves the sentinel in place hands every scenario that
+	still names the old id a default of 500,000 for a share that cannot exceed
+	1, and `propagate` refuses a parameter set that omits a non-derived node --
+	so the tombstone *must* carry a value and that value is what a migrating
+	caller inherits. Copying the successor's is the only honest choice.
+	"""
+	victim = graph.node("remittance_dependency")
+	successor = graph.node("remittance_income_share")
+
+	assert victim.status == "deprecated", victim.status
+	assert victim.deprecated_by == "remittance_income_share", victim.deprecated_by
+	assert successor.status != "deprecated", successor.status
+
+	# The tombstone states the quantity it was, at the value the graph now
+	# computes it at -- not the placeholder it shipped.
+	assert victim.unit == successor.unit == "1", (victim.unit, successor.unit)
+	assert victim.range == successor.range, (victim.range, successor.range)
+	assert victim.default == successor.default, (victim.default, successor.default)
+	assert victim.range != (0.0, 1000000.0), victim.range
+	assert victim.default != 500000.0, victim.default
+
+	# A tombstone is not a knob: setting it is refused rather than silently
+	# accepted, and the refusal names the successor so the caller can migrate.
+	scoped = dict(defaults)
+	scoped["remittance_dependency"] = 0.25
+	with pytest.raises(GraphError, match="remittance_income_share"):
+		graph.propagate(scoped)
 
 
 def test_a_categorical_retyped_from_a_placeholder_refuses_an_undeclared_level(
@@ -2040,8 +2081,9 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# it was a placeholder for is now computed rather than dialled.
 	# Batch 55 took it 223 to 222 by deprecating `opex_fixed_wind`, the generic
 	# wind O&M duplicate: `is_settable` refuses a tombstone, so retiring the id
-	# removes it from this register without any arithmetic changing.
-	assert len(dead) == 222, len(dead)
+	# removes it from this register without any arithmetic changing. Batch 59
+	# took it 222 to 221 the same way, for `remittance_dependency`.
+	assert len(dead) == 221, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)

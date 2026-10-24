@@ -475,6 +475,7 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 		"reactive_power_requirement",
 		"regulation_down_requirement",
 		"regulation_up_requirement",
+		"remittance_dependency",
 		"renewable_subsidies",
 		"reporting_requirements",
 		"reserve_margin",
@@ -538,10 +539,13 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 	# batch 26 took it to 667 for the eleven adequacy-and-reserve nodes above,
 	# batch 27 took it to 653 for the fourteen finance-family nodes above, and
 	# batch 55 took it to 652 by deprecating `opex_fixed_wind` -- the generic
-	# wind O&M duplicate -- which the catalog still marks `existing`. The
-	# graph is right and the catalog is stale: the register's whole job is to
-	# show that, so the disagreement is pinned above rather than suppressed.
-	assert sum(1 for join in joins.values() if join.agrees) == 652
+	# wind O&M duplicate -- which the catalog still marks `existing`, and
+	# batch 59 took it to 651 by deprecating `remittance_dependency` -- the
+	# duplicate remittance share -- which the catalog marks `to_build`. The
+	# graph is right and the catalog is stale in both cases: the register's
+	# whole job is to show that, so the disagreement is pinned above rather
+	# than suppressed.
+	assert sum(1 for join in joins.values() if join.agrees) == 651
 
 
 def test_a_node_the_catalog_does_not_name_is_absent_rather_than_guessed(
@@ -747,6 +751,7 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 		'reactive_power_requirement: the graph says existing and the catalog says to_build',
 		'regulation_down_requirement: the graph says existing and the catalog says to_build',
 		'regulation_up_requirement: the graph says existing and the catalog says to_build',
+		'remittance_dependency: the graph says deprecated and the catalog says to_build',
 		'renewable_subsidies: the graph says existing and the catalog says to_build',
 		'reporting_requirements: the graph says existing and the catalog says to_build',
 		'reserve_margin: the graph says existing and the catalog says to_build',

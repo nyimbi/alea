@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}, "59": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "59":
+		b59_nodes, b59_equations, b59_edges, b59_rules = build_batch59(graph)
+		rules.extend(b59_rules)
+		nodes.update(b59_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b59_equations)
+		edges = list(BATCH12_EDGES) + b59_edges
 	elif batch == "58":
 		b58_nodes, b58_equations, b58_edges, b58_rules = build_batch58(graph)
 		rules.extend(b58_rules)
@@ -19218,6 +19225,136 @@ def build_batch58(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		f"{len(coupled)} of them are read by an equation ({', '.join(coupled)})"
 	)
 	return nodes, equations, edges, rules
+
+
+#: The batch-59 source string, and the same bake trap batch 57 and 58 hit: a
+#: node whose `source` stays `docs/params.md` is re-emitted from the catalog row
+#: by `prg_from_catalog.load_existing()` and the deprecation is lost.
+_BATCH59_SOURCE = (
+	"The duplicate remittance share retired (batch 59). `remittance_dependency` "
+	"is the same quantity as the shipped `remittance_income_share` -- the share "
+	"of household income arriving as transfers -- with no reader, no unit and "
+	"the 500,000 sentinel. The survey's own row 135 classifies it DEAD and "
+	"names the successor; this batch writes the tombstone the classification "
+	"asks for."
+)
+
+#: The one node the placeholder survey classifies DEAD, and its successor.
+_BATCH59_DEAD: tuple[str, str] = ("remittance_dependency", "remittance_income_share")
+
+
+def build_batch59(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Retire `remittance_dependency`, the last DEAD row in the survey.
+
+	*The finding.* `docs/research/placeholder-survey.md` row 135 classifies
+	this node DEAD -- "superseded by a shipped node" -- and names
+	`remittance_income_share` as the successor. The successor carries unit
+	``1``, range ``[0, 0.5]``, default ``0.05`` and one reader
+	(``remittance_flows_definition``). This node carries the 500,000 sentinel,
+	no unit, and no reader at all. Two ids for one share is the defect; the
+	typed one with a consumer is the survivor.
+
+	*Why the tombstone keeps a real default rather than the sentinel.* A
+	deprecated node is kept so that a scenario naming the old id can be told
+	where to go, and ``propagate`` refuses a parameter set that omits a
+	non-derived node -- so the tombstone must carry a value. Carrying the
+	sentinel would make the migration path hand a caller 500,000 for a share
+	that cannot exceed 1. The default written here is the successor's own, and
+	the range is the successor's range: the tombstone states the quantity it
+	was, at the value the graph now computes it at.
+
+	*What this does not do.* It does not delete the node -- ``uncoupled()``
+	keeps a tombstone by design, so the register stays at 235 and this batch
+	closes nothing in it. It does not touch the successor, which is already
+	correct. And it deprecates nothing else: the survey's other 38 sentinel
+	rows are AMBIGUOUS (34) or NAME-blocked (4), and forcing a type on those
+	would be the guessing the brief forbids.
+	"""
+	from alea.prg.views import ParameterNode
+
+	victim, successor = _BATCH59_DEAD
+
+	assert victim in graph.nodes, f"{victim} is not in the graph"
+	assert successor in graph.nodes, f"{successor} is not in the graph"
+
+	shipped = graph.nodes[victim]
+	replacement = graph.nodes[successor]
+
+	# The premise, measured. Each of these is a reason the node is dead rather
+	# than a dial, and each would have to be re-argued if it stopped holding.
+	assert shipped.status != "deprecated", f"{victim} is already deprecated"
+	assert shipped.unit is None, f"{victim} carries unit {shipped.unit!r}"
+	assert shipped.range == (0.0, 1000000.0), f"{victim} range is {shipped.range!r}"
+	assert shipped.default == 500000.0, f"{victim} default is {shipped.default!r}"
+
+	named_by = sorted(
+		equation.id
+		for equation in graph.equations.values()
+		if victim in (
+			*equation.parameters,
+			*equation.free_variables,
+			*equation.determined_variables,
+		)
+	)
+	assert not named_by, f"{victim} is named by {named_by}; it is not a duplicate"
+
+	assert replacement.unit == "1", (
+		f"{successor} carries unit {replacement.unit!r}; the tombstone copies the "
+		"successor's range and default, which only mean anything at its unit"
+	)
+	assert replacement.range is not None, f"{successor} carries no range"
+	assert replacement.default is not None, f"{successor} carries no default"
+	lo, hi = replacement.range
+	assert lo <= replacement.default <= hi, (successor, replacement.default, replacement.range)
+
+	# The canary: the duplicate moves nothing. Measured on both values rather
+	# than inferred from the empty reader list, because a node can be unread by
+	# an equation and still reach something through a path.
+	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
+	baseline = graph.propagate(values).values
+	for probe in (float(shipped.default), float(replacement.default)):
+		moved = graph.propagate({**values, victim: probe}).values
+		changed = {
+			k for k in baseline
+			if k != victim
+			and isinstance(baseline[k], (int, float))
+			and not isinstance(baseline[k], bool)
+			and isinstance(moved.get(k), (int, float))
+			and not isinstance(moved.get(k), bool)
+			and abs(float(moved[k]) - float(baseline[k])) > 1e-12
+		}
+		assert not changed, (
+			f"setting {victim} to {probe} moves {sorted(changed)}; it is not the "
+			"dead duplicate this batch retires"
+		)
+
+	body = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+	body.update({
+		"status": "deprecated",
+		"deprecated_by": successor,
+		"unit": replacement.unit,
+		"range": [lo, hi],
+		"default": replacement.default,
+		"source": _BATCH59_SOURCE,
+		"description": (
+			"Retired: a second id for the share `remittance_income_share` "
+			"already carries. Both name the share of household income arriving "
+			"as remittance transfers; that node is typed `1` over [0, 0.5] "
+			"with default 0.05 and is read by "
+			"`remittance_flows_definition`, while this one carried no unit, the "
+			"[0, 1e6] sentinel and no reader. The default and range here are "
+			"the successor's, so a scenario that still names this id resolves "
+			"to the value the graph actually computes rather than to 500,000."
+		),
+	})
+	ParameterNode(**{"id": victim, **body})
+
+	print(
+		f"  deprecated {victim} in favour of {successor}; tombstone now "
+		f"unit `{replacement.unit}`, range [{lo}, {hi}], default "
+		f"{replacement.default}"
+	)
+	return {victim: body}, {}, [], []
 
 
 if __name__ == "__main__":

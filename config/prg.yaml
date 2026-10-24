@@ -25787,20 +25787,33 @@ parameters:
     - Banks
   remittance_dependency:
     name: Remittance dependency
-    description: Remittance dependency
+    description: 'Retired: a second id for the share `remittance_income_share` already carries. Both name
+      the share of household income arriving as remittance transfers; that node is typed `1` over [0,
+      0.5] with default 0.05 and is read by `remittance_flows_definition`, while this one carried no unit,
+      the [0, 1e6] sentinel and no reader. The default and range here are the successor''s, so a scenario
+      that still names this id resolves to the value the graph actually computes rather than to 500,000.'
     category: Macro
+    subcategory: null
     type: float
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 0.5
+    default: 0.05
+    initial: null
     role: free
     determinism: fixed
-    priority: P3
-    status: to_build
+    categories: []
+    source: The duplicate remittance share retired (batch 59). `remittance_dependency` is the same quantity
+      as the shipped `remittance_income_share` -- the share of household income arriving as transfers
+      -- with no reader, no unit and the 500,000 sentinel. The survey's own row 135 classifies it DEAD
+      and names the successor; this batch writes the tombstone the classification asks for.
+    source_url: null
     users:
     - Households
-    source: docs/params.md
+    priority: P3
+    status: deprecated
+    deprecated_by: remittance_income_share
   remittance_flows:
     categories: []
     category: Macro

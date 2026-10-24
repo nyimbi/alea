@@ -279,8 +279,19 @@ any of them. The retype was applied in `build_batch57` of
 `scripts/build/prg_coupler.py`, which asserts each row's pre-merge placeholder
 state before overwriting it, so a later batch that retypes one of these first
 fails this build rather than being silently overwritten. The QUANTITY rows were
-done at batch 54; the NAME, AMBIGUOUS and DEAD rows are still open. See
+done at batch 54; the NAME and AMBIGUOUS rows are still open. See
 `docs/prg-status.md` for what the thirteen measured.
+
+**Status as of batch 59 (2026-10-24).** The one DEAD row is now closed:
+`remittance_dependency` is a tombstone naming `remittance_income_share`, and it
+carries the successor's unit, range and default rather than the sentinel, so a
+scenario that still names it migrates to a value the quantity can take. That
+leaves **38 sentinel rows open — 34 AMBIGUOUS and 4 NAME-blocked** — and the
+NAME-blocked four (`scenario_description`, `scenario_owner`, `scenario_tag`,
+`parameter_overrides`) still need a text or mapping type the node model does
+not carry. The 55 bools this survey typed are also done: batch 58 gave all 23
+that had shipped `range: null` the range the convention this survey's §4 states
+requires.
 
 ### NAME, broken down by the action it needs
 
