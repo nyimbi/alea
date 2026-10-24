@@ -1896,6 +1896,75 @@ def test_no_description_asserts_a_relation_its_equation_does_not_compute(
 	assert "peak_to_average_ratio" not in graph.nodes
 
 
+def test_no_equation_description_names_a_node_it_cannot_reach(graph: ParameterGraph):
+	"""A backticked name that resolves to nothing makes a true claim unreadable.
+
+	`annualised_capex_solar_definition` and `annualised_capex_wind_definition`
+	carried the same paragraph, copied, and both named `lcoe_biomass`,
+	`lcoe_coal` and `lcoe_wind_offshore`. The graph carries
+	`lcoe_biomass_usd_per_mwh`, `lcoe_coal_usd_per_mwh` and
+	`lcoe_wind_offshore_usd_per_mwh`. The paragraph's job is to establish that
+	these two equations are the anomaly -- every other technology reads its own
+	capital recovery factor -- and a researcher checking that claim looks up
+	`lcoe_biomass`, finds nothing, and cannot tell whether the claim is false or
+	the name is wrong. The graph's own identifier search resolves names; a name
+	that resolves to nothing defeats it.
+
+	The predicate is deliberately narrow, and the narrowness is the honest
+	part. It flags a name only when the name plus an underscore is a prefix of
+	*exactly one* shipped id, because that is the case where the intended
+	target is determined by the author's own naming rather than chosen by me.
+	Names reaching zero candidates are excluded: most are words in prose
+	(`none`, `free`, `linear`), and the rest are quantities the graph genuinely
+	does not carry, which a description is entitled to say. A name reaching two
+	candidates is excluded because the correction would be a guess.
+
+	That leaves the gate a lower bound on the class rather than a closure, the
+	same trade batch 65 made. It cannot see a description that is wrong without
+	naming something, and it will not fire on a name it cannot resolve
+	unambiguously.
+	"""
+	import re
+
+	token = re.compile(r"`([a-z][a-z0-9_]{3,})`")
+	shipped = set(graph.nodes) | set(graph.equations)
+
+	dangling: list[tuple[str, str, str]] = []
+	for equation in graph.equations.values():
+		for match in token.finditer(equation.description or ""):
+			name = match.group(1)
+			if name in shipped:
+				continue
+			candidates = [i for i in graph.nodes if i.startswith(name + "_")]
+			if len(candidates) == 1:
+				dangling.append((equation.id, name, candidates[0]))
+
+	assert dangling == [], dangling
+
+	# The premise, asserted rather than assumed: the two corrected equations
+	# still make the claim, and they make it about the node that exists. A
+	# future edit that deletes the paragraph would pass the gate above by
+	# saying nothing, which is not the same as saying something true.
+	for equation_id, factor, technology in (
+		("annualised_capex_solar_definition", "crf_solar_pv", "solar"),
+		("annualised_capex_wind_definition", "crf_wind_onshore", "wind"),
+	):
+		text = graph.equations[equation_id].description or ""
+		assert f"`{factor}`" in text, equation_id
+		# The sentence about a scenario moving this factor must name this
+		# technology. The wind copy shipped saying "a solar asset's life
+		# moved `crf_wind_onshore` while the solar LCOE stayed exactly
+		# fixed" -- solar twice, in the paragraph about wind.
+		assert f"a {technology} asset's life moved `{factor}`" in text, (equation_id, text)
+		assert f"the {technology} LCOE stayed exactly fixed" in text, (equation_id, text)
+
+	# The three corrected names resolve, and each is what the prose meant.
+	for name in ("lcoe_biomass_usd_per_mwh", "lcoe_coal_usd_per_mwh", "lcoe_wind_offshore_usd_per_mwh"):
+		assert name in graph.nodes, name
+	for absent in ("lcoe_biomass", "lcoe_coal", "lcoe_wind_offshore"):
+		assert absent not in graph.nodes, absent
+
+
 def test_a_categorical_retyped_from_a_placeholder_refuses_an_undeclared_level(
 	graph: ParameterGraph, defaults: dict
 ):

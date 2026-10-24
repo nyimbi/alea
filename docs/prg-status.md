@@ -1626,6 +1626,48 @@ which is the failure the register exists to prevent.
 
 
 
+### Six node names that resolved to nothing (batch 66, 2026-10-25)
+
+Batch 65 read node descriptions against their equations. This reads equation
+descriptions against the graph itself, and finds six names that reach no node.
+
+`annualised_capex_solar_definition` and `annualised_capex_wind_definition`
+carried one paragraph between them, copied verbatim. Its job is to establish
+that these two equations are the anomaly -- every other technology reads its
+own capital recovery factor -- and it named `lcoe_biomass`, `lcoe_coal` and
+`lcoe_wind_offshore` as the readers. The graph carries
+`lcoe_biomass_usd_per_mwh`, `lcoe_coal_usd_per_mwh` and
+`lcoe_wind_offshore_usd_per_mwh`. A researcher checking the claim looks up
+`lcoe_biomass`, finds nothing, and cannot tell whether the claim is false or
+the name is wrong. The claim was true; only the names were wrong.
+
+The copy also kept the original's subject. The wind equation said "a scenario
+that lengthens a solar asset's life moved `crf_wind_onshore` while the solar
+LCOE stayed exactly fixed" -- solar twice, in a paragraph about wind. That is
+what a copied paragraph does: the values get edited and the nouns do not.
+
+The gate flags a backticked name only when the name plus an underscore is a
+prefix of exactly one shipped id. That narrowness is the honest part. Names
+reaching zero candidates are excluded because most are words in prose (`none`,
+`free`, `linear`, `derived`) and the rest are quantities the graph genuinely
+lacks -- `current_account_balance` says so in as many words, "deriving it needs
+a `gdp_usd_per_year` the graph does not carry", which is a description doing
+its job. A name reaching two candidates is excluded because the correction
+would be a guess. So the gate is a lower bound on the class, not a closure,
+the same trade batch 65 made.
+
+Canaried three ways, each firing its own assertion and each restored from a
+backup with the md5 verified: reintroducing `lcoe_biomass` in the solar
+equation; restoring "a solar asset's life moved `crf_wind_onshore`" in the
+wind one; and deleting the paragraph entirely. The third is the one worth
+keeping: a gate that only scans for dangling names passes a description that
+names nothing at all, so the test also asserts the paragraph is still there
+and still makes its claim about the right technology.
+
+Registers unchanged: nodes 1429, equations 606, edges 1407, rules 57,
+functional 1190, hard/soft/informational 603/2/1, `uncoupled()` 237. Two
+descriptions changed and nothing else.
+
 ### Three descriptions that asserted the opposite of their equation (batch 65, 2026-10-24)
 
 Batch 64 checked that every equality's *arithmetic* had its declared inputs.

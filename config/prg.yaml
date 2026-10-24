@@ -33554,12 +33554,12 @@ equations:
       own economic life: `capex_solar_pv * crf_solar_pv`, where `crf_solar_pv` is the capital recovery
       factor over `asset_life_solar_pv`. The shipped body read the fleet-generic `crf`, which annualises
       over `asset_life` = 25 y -- the fleet average, not this technology''s life. Every other technology
-      in the graph reads its own factor (`lcoe_biomass` reads `crf_biomass`, `lcoe_coal` reads `crf_coal`,
-      `lcoe_wind_offshore` reads `crf_wind_offshore`), and these two did not, so a scenario that lengthens
-      a solar asset''s life moved `crf_solar_pv` while the solar LCOE stayed exactly fixed. At the defaults
-      `asset_life_solar_pv` equals `asset_life` and the two factors coincide, which is why the defect
-      is invisible until a scenario separates them. Dimensional check: USD/kW times a dimensionless factor
-      is USD/kW/year.'
+      in the graph reads its own factor (`lcoe_biomass_usd_per_mwh` reads `crf_biomass`, `lcoe_coal_usd_per_mwh`
+      reads `crf_coal`, `lcoe_wind_offshore_usd_per_mwh` reads `crf_wind_offshore`), and these two did
+      not, so a scenario that lengthens a solar asset''s life moved `crf_solar_pv` while the solar LCOE
+      stayed exactly fixed. At the defaults `asset_life_solar_pv` equals `asset_life` and the two factors
+      coincide, which is why the defect is invisible until a scenario separates them. Dimensional check:
+      USD/kW times a dimensionless factor is USD/kW/year.'
     system: cost_accounting
     lhs: annualised_capex_usd_per_kw_solar
     rhs: capex_solar_pv * crf_solar_pv
@@ -33587,12 +33587,12 @@ equations:
       own economic life: `capex_wind_onshore * crf_wind_onshore`, where `crf_wind_onshore` is the capital
       recovery factor over `asset_life_wind_onshore`. The shipped body read the fleet-generic `crf`, which
       annualises over `asset_life` = 25 y -- the fleet average, not this technology''s life. Every other
-      technology in the graph reads its own factor (`lcoe_biomass` reads `crf_biomass`, `lcoe_coal` reads
-      `crf_coal`, `lcoe_wind_offshore` reads `crf_wind_offshore`), and these two did not, so a scenario
-      that lengthens a solar asset''s life moved `crf_wind_onshore` while the solar LCOE stayed exactly
-      fixed. At the defaults `asset_life_wind_onshore` equals `asset_life` and the two factors coincide,
-      which is why the defect is invisible until a scenario separates them. Dimensional check: USD/kW
-      times a dimensionless factor is USD/kW/year.'
+      technology in the graph reads its own factor (`lcoe_biomass_usd_per_mwh` reads `crf_biomass`, `lcoe_coal_usd_per_mwh`
+      reads `crf_coal`, `lcoe_wind_offshore_usd_per_mwh` reads `crf_wind_offshore`), and these two did
+      not, so a scenario that lengthens a wind asset''s life moved `crf_wind_onshore` while the wind LCOE
+      stayed exactly fixed. At the defaults `asset_life_wind_onshore` equals `asset_life` and the two
+      factors coincide, which is why the defect is invisible until a scenario separates them. Dimensional
+      check: USD/kW times a dimensionless factor is USD/kW/year.'
     system: cost_accounting
     lhs: annualised_capex_usd_per_kw_wind
     rhs: capex_wind_onshore * crf_wind_onshore

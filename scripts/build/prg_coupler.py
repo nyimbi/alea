@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}, "59": {}, "60": {}, "61": {}, "62": {}, "63": {}, "64": {}, "65": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}, "59": {}, "60": {}, "61": {}, "62": {}, "63": {}, "64": {}, "65": {}, "66": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "66":
+		b66_nodes, b66_equations, b66_edges, b66_rules = build_batch66(graph)
+		rules.extend(b66_rules)
+		nodes.update(b66_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b66_equations)
+		edges = list(BATCH12_EDGES) + b66_edges
 	elif batch == "65":
 		b65_nodes, b65_equations, b65_edges, b65_rules = build_batch65(graph)
 		rules.extend(b65_rules)
@@ -20150,6 +20157,140 @@ def build_batch65(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	assert found == set(corrections), sorted(found ^ set(corrections))
 
 	return nodes, {}, [], []
+
+
+#: Equation descriptions naming a node the graph does not carry, with the node
+#: each name was meant to reach. The near-miss is mechanical: the dangling name
+#: plus one underscore is a prefix of exactly one shipped id, so the correction
+#: is the target the author's own naming implies and not a guess between two.
+_BATCH66_DANGLING: tuple[tuple[str, str, str], ...] = (
+	("annualised_capex_solar_definition", "lcoe_biomass", "lcoe_biomass_usd_per_mwh"),
+	("annualised_capex_solar_definition", "lcoe_coal", "lcoe_coal_usd_per_mwh"),
+	("annualised_capex_solar_definition", "lcoe_wind_offshore", "lcoe_wind_offshore_usd_per_mwh"),
+	("annualised_capex_wind_definition", "lcoe_biomass", "lcoe_biomass_usd_per_mwh"),
+	("annualised_capex_wind_definition", "lcoe_coal", "lcoe_coal_usd_per_mwh"),
+	("annualised_capex_wind_definition", "lcoe_wind_offshore", "lcoe_wind_offshore_usd_per_mwh"),
+)
+
+#: The corrected sentences. Both equations carried the same paragraph, copied
+#: from the solar one: the wind version said "a scenario that lengthens a
+#: solar asset's life moved `crf_wind_onshore` while the solar LCOE stayed
+#: exactly fixed", naming the wrong technology twice in one clause. The shared
+#: sentence now reads the technology it belongs to.
+_BATCH66_DESCRIPTIONS: tuple[tuple[str, str, str, str], ...] = (
+	(
+		"annualised_capex_solar_definition",
+		"lcoe_biomass_usd_per_mwh",
+		"crf_solar_pv",
+		"Solar capex recovered per year, at the system discount rate and over the technology's own"
+		" economic life: `capex_solar_pv * crf_solar_pv`, where `crf_solar_pv` is the capital"
+		" recovery factor over `asset_life_solar_pv`. The shipped body read the fleet-generic `crf`,"
+		" which annualises over `asset_life` = 25 y -- the fleet average, not this technology's life."
+		" Every other technology in the graph reads its own factor (`lcoe_biomass_usd_per_mwh` reads"
+		" `crf_biomass`, `lcoe_coal_usd_per_mwh` reads `crf_coal`, `lcoe_wind_offshore_usd_per_mwh`"
+		" reads `crf_wind_offshore`), and these two did not, so a scenario that lengthens a solar"
+		" asset's life moved `crf_solar_pv` while the solar LCOE stayed exactly fixed. At the"
+		" defaults `asset_life_solar_pv` equals `asset_life` and the two factors coincide, which is"
+		" why the defect is invisible until a scenario separates them. Dimensional check: USD/kW"
+		" times a dimensionless factor is USD/kW/year.",
+	),
+	(
+		"annualised_capex_wind_definition",
+		"lcoe_biomass_usd_per_mwh",
+		"crf_wind_onshore",
+		"Onshore wind capex recovered per year, at the system discount rate and over the"
+		" technology's own economic life: `capex_wind_onshore * crf_wind_onshore`, where"
+		" `crf_wind_onshore` is the capital recovery factor over `asset_life_wind_onshore`. The"
+		" shipped body read the fleet-generic `crf`, which annualises over `asset_life` = 25 y --"
+		" the fleet average, not this technology's life. Every other technology in the graph reads"
+		" its own factor (`lcoe_biomass_usd_per_mwh` reads `crf_biomass`, `lcoe_coal_usd_per_mwh`"
+		" reads `crf_coal`, `lcoe_wind_offshore_usd_per_mwh` reads `crf_wind_offshore`), and these"
+		" two did not, so a scenario that lengthens a wind asset's life moved `crf_wind_onshore`"
+		" while the wind LCOE stayed exactly fixed. At the defaults"
+		" `asset_life_wind_onshore` equals `asset_life` and the two factors coincide, which is why"
+		" the defect is invisible until a scenario separates them. Dimensional check: USD/kW times"
+		" a dimensionless factor is USD/kW/year.",
+	),
+)
+
+
+def build_batch66(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Repair six dangling node names and the wrong technology in a copied sentence.
+
+	*The finding.* Two equations carried one paragraph between them, copied
+	verbatim, and the copy kept the original's subject. The wind version said
+	"a scenario that lengthens a solar asset's life moved `crf_wind_onshore`
+	while the solar LCOE stayed exactly fixed" -- solar twice in a clause about
+	wind. Both also named three nodes that do not exist: `lcoe_biomass`,
+	`lcoe_coal` and `lcoe_wind_offshore`, which are `lcoe_biomass_usd_per_mwh`,
+	`lcoe_coal_usd_per_mwh` and `lcoe_wind_offshore_usd_per_mwh`.
+
+	*Why a dangling name costs more than a typo.* The paragraph's whole job is
+	to establish that these two equations are the anomaly -- every other
+	technology reads its own factor. A researcher checking that claim looks up
+	`lcoe_biomass`, finds nothing, and cannot tell whether the claim is false
+	or the name is wrong. The graph's own search resolves identifiers; a name
+	that resolves to nothing makes a true claim unverifiable.
+
+	*The gate.* The builder re-derives the class from the live graph: every
+	backticked token in every equation description that resolves to no node and
+	no equation, whose prefix-plus-underscore reaches exactly one shipped id.
+	Asserting the table equals that set means a later description that invents
+	a name fails the build rather than shipping. Names that reach zero or two
+	candidates are excluded on purpose -- a name with no near-miss is either a
+	word in prose or a quantity the graph genuinely lacks, and neither is a
+	correction this batch can make.
+	"""
+	import re
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+
+	token = re.compile(r"`([a-z][a-z0-9_]{3,})`")
+	shipped_ids = set(graph.nodes) | set(graph.equations)
+
+	# The class, derived rather than declared.
+	derived: set[tuple[str, str, str]] = set()
+	for equation in graph.equations.values():
+		for match in token.finditer(equation.description or ""):
+			name = match.group(1)
+			if name in shipped_ids:
+				continue
+			candidates = [i for i in graph.nodes if i.startswith(name + "_")]
+			if len(candidates) == 1:
+				derived.add((equation.id, name, candidates[0]))
+
+	assert derived == set(_BATCH66_DANGLING), sorted(derived ^ set(_BATCH66_DANGLING))
+	assert len({e for e, _, _ in _BATCH66_DANGLING}) == 2, "a third equation appeared"
+
+	for equation_id, old_name, new_name in _BATCH66_DANGLING:
+		assert new_name in graph.nodes, new_name
+
+	for equation_id, _, factor, description in _BATCH66_DESCRIPTIONS:
+		assert equation_id in graph.equations, equation_id
+		equation = graph.equations[equation_id]
+		assert description != equation.description, equation_id
+		# The sentence must name the technology it belongs to, and every
+		# dangling name must be gone.
+		assert factor in description, (equation_id, factor)
+		for _, old_name, _ in _BATCH66_DANGLING:
+			assert f"`{old_name}`" not in description, (equation_id, old_name)
+		equations[equation_id] = {
+			key: list(value) if isinstance(value, tuple) else value
+			for key, value in equation.model_dump(mode="json").items()
+			if key != "id"
+		}
+		equations[equation_id]["description"] = description
+
+	# The wind paragraph must not say "solar" about itself. The word survives
+	# legitimately in the solar equation, so the check is scoped to the wind
+	# one: it names `crf_wind_onshore` as its factor, and a sentence about a
+	# scenario moving that factor must not attribute it to a solar asset.
+	wind = equations["annualised_capex_wind_definition"]["description"]
+	assert "a solar asset's life moved `crf_wind_onshore`" not in wind, "the copy still has the wrong subject"
+	assert "the solar LCOE stayed exactly fixed" not in wind, "the copy still has the wrong technology"
+
+	return nodes, equations, [], []
 
 
 #: The duplicate pair: (victim, successor).
