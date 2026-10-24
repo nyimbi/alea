@@ -259,9 +259,18 @@ async def test_check_consistency_reports_both_verdicts(prg: PRGClient) -> None:
 
 	# Five years of asset life against a 20-year debt is a DSCR the graph
 	# refuses, and the violation names the equation that refused it.
+	#
+	# It is not the only one, and asserting the exact list would pin this test
+	# to whichever bounds happen to be live. Shortening asset life raises
+	# annualised capex, which raises total revenue, which lowers the carbon
+	# stream's weight in it -- so a fixed carbon-finance share stops being
+	# covered by the collateral it names and `carbon_finance_bound` fires too.
+	# Both are real refusals of the same scenario.
 	dirty = await prg.check_consistency({"asset_life": 5.0})
 	assert dirty["consistent"] is False
-	assert [v["equation_id"] for v in dirty["violations"]] == ["dscr_requirement"]
+	refused = [v["equation_id"] for v in dirty["violations"]]
+	assert "dscr_requirement" in refused, refused
+	assert set(refused) <= {"dscr_requirement", "carbon_finance_bound"}, refused
 
 
 async def test_consistency_report_is_the_shipped_default(prg: PRGClient) -> None:

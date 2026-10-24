@@ -4101,9 +4101,11 @@ parameters:
     - Carbon
   carbon_credit_reversal_allowance:
     category: Carbon
-    description: 'The complement of the permanence share: the buffer a registry retains against the credit
-      being reversed by fire, disease or land-use change. A forest credit that burns has to be replaced
-      from the buffer, and the buffer is sized by the reversal risk the permanence share names.'
+    description: 'The volume the permanence share sets aside: the share of issued volume held back against
+      non-permanence, applied to the credit volume (`permanence_parameters * carbon_credit_volumes`).
+      At defaults 0.1 x 45 MtCO2/year is 4.5 MtCO2/year. It is the share itself, not its complement: `permanence_parameters`
+      is the share held back, so its complement would be the volume released, which is the opposite of
+      an allowance. The buffer a registry retains is this volume.'
     determinism: policy
     name: Carbon credit reversal allowance
     priority: P1
@@ -14132,16 +14134,12 @@ parameters:
     categories: []
     category: Investment & Finance
     deprecated_by: null
-    description: 'Debt as a multiple of equity, the complement of the debt fraction. Determined by gearing_ratio_definition.
-      The description here previously read "debt as a fraction of total capitalisation", which is the
-      debt fraction and not the gearing ratio -- the two differ by the factor 1/(1 - debt_fraction), so
-      a scenario reading one for the other was out by 3.3x at the default. The range was corrected for
-      the same reason and is the larger half of the same error: it read [0, 0.95], which is `debt_fraction`''s
-      bound and not this node''s. A multiple of equity is unbounded above as the debt fraction approaches
-      1, and over the driver''s own range [0, 0.95] the image is [0, 19]. At the default debt_fraction
-      = 0.7 the ratio is 2.3333, which the old range refused -- the node was declared out of range at
-      its own default. The bound is the image of `debt_fraction`''s range under the definition, so it
-      is derived rather than chosen; if that range moves, this one moves with it.'
+    description: 'Debt as a multiple of equity, determined by `gearing_ratio_definition` as `debt_equity_ratio`.
+      Not the complement of the debt fraction: a complement of a share is a share, and this is a multiple.
+      The relation between them is `debt_fraction = r / (1 + r)` for a multiple r, so the two carry the
+      same capital structure in different units -- 2.33 as a multiple is 0.7 as a fraction. The description
+      here previously read ''debt as a fraction of total capitalisation'', which was the debt fraction
+      under this node''s name; the value and the equation were always the multiple.'
     determinism: fixed
     initial: null
     name: Gearing ratio
@@ -19281,8 +19279,11 @@ parameters:
     categories: []
     category: Demand-Side
     deprecated_by: null
-    description: Annual demand divided by peak demand times the hours in a year. The complement of the
-      peak-to-average ratio; the parameter a distribution-planning study reports.
+    description: 'Annual demand divided by peak demand times the hours in a year: `(demand_twh * 1000000)
+      / (peak_demand_mw * 8760)`, the average load as a fraction of the peak. The reciprocal of the peak-to-average
+      ratio, not its complement -- a complement of a ratio is not a ratio. At defaults 180 TWh over 25,000
+      MW x 8,760 h is 0.822. The graph carries no `peak_to_average_ratio` node, so the reciprocal is stated
+      here rather than pointed at.'
     determinism: physical
     initial: null
     name: Load factor

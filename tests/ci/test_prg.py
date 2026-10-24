@@ -1809,6 +1809,93 @@ def test_every_equality_declares_an_edge_from_each_symbol_it_reads(
 	}
 
 
+def test_no_description_asserts_a_relation_its_equation_does_not_compute(
+	graph: ParameterGraph,
+):
+	"""A node's prose and its arithmetic must describe the same object.
+
+	This is the check no numeric gate can make. Every quantity involved can be
+	right -- the value, the range, the unit, the edges -- while the sentence a
+	researcher reads says the node is something else. Three did:
+
+	* `carbon_credit_reversal_allowance` said "the complement of the permanence
+	  share" and computes `permanence_parameters * carbon_credit_volumes`.
+	  Batch 34 corrected the equation *from* the complement and wrote the
+	  reasoning into the equation's description, never touching the node's --
+	  so the two records of one object disagreed.
+	* `gearing_ratio` said "the complement of the debt fraction" and computes a
+	  multiple of equity. A complement of a share is a share.
+	* `load_factor` said "the complement of the peak-to-average ratio" and
+	  computes its reciprocal -- and named a node (`peak_to_average_ratio`)
+	  that does not exist.
+
+	The predicate is deliberately narrow: it looks for an *assertion* of a
+	complement ("the complement of", "one minus") with no negating word in the
+	clause before it, on a node whose determining equation computes neither
+	`1 - x` nor something that could be read as one. Narrow is the honest
+	choice -- it cannot find a description that is wrong without using the word
+	"complement", so it is a lower bound on the class, not a closure. A
+	broader net over natural language would fire on correct prose and be
+	switched off within a month.
+
+	The negation clause is load-bearing, not decoration: the corrected
+	descriptions say "Not the complement of the debt fraction" and "the
+	reciprocal ..., not its complement", so a naive phrase search would report
+	this batch's own fixes as defects. That is the failure mode of every prose
+	gate -- it must be able to read a correction as a correction.
+	"""
+	import re
+
+	assertion = re.compile(r"(?<!not )(?<!never )the complement of|one minus", re.I)
+	negated = re.compile(r"\b(not|never|rather than|instead of)\b[^.]{0,50}$", re.I)
+
+	offenders: list[tuple[str, str, str]] = []
+	for name, node in graph.nodes.items():
+		text = node.description or ""
+		for match in assertion.finditer(text):
+			if negated.search(text[max(0, match.start() - 50):match.start()]):
+				continue
+			determining = [
+				equation
+				for equation in graph.equations.values()
+				if equation.determined_variables and equation.determined_variables[0] == name
+			]
+			if not determining:
+				continue
+			rhs = determining[0].rhs or ""
+			if re.search(r"\b1(\.0)?\s*-\s*", rhs):
+				continue
+			offenders.append((name, determining[0].id, rhs))
+	assert offenders == [], offenders
+
+	# And the three corrected nodes state the relation their equation computes.
+	# Asserted on the arithmetic, not on a phrase, so a later edit to any of
+	# the three equations fails here rather than leaving the prose behind.
+	for node_id, equation_id, expected, marker in (
+		("carbon_credit_reversal_allowance", "carbon_credit_reversal_allowance_definition",
+		 "permanence_parameters * carbon_credit_volumes", "not its complement"),
+		("gearing_ratio", "gearing_ratio_definition", "debt_equity_ratio",
+		 "Not the complement of the debt fraction"),
+		("load_factor", "load_factor_definition",
+		 "(demand_twh * 1000000) / (peak_demand_mw * 8760)", "not its complement"),
+	):
+		assert graph.equations[equation_id].rhs == expected, (
+			equation_id, graph.equations[equation_id].rhs
+		)
+		# The description must carry the correction explicitly. Asserting a
+		# marker rather than the absence of a word, because the corrected
+		# prose necessarily names the wrong relation in order to deny it --
+		# "a complement of a share is a share" is part of the correction.
+		description = graph.nodes[node_id].description or ""
+		assert marker in description, (node_id, description[:200])
+
+	# `load_factor`'s old description pointed at a node the graph does not
+	# carry. Asserted as an absence so a later batch that adds
+	# `peak_to_average_ratio` has to revisit the sentence rather than leaving
+	# a description that names two objects.
+	assert "peak_to_average_ratio" not in graph.nodes
+
+
 def test_a_categorical_retyped_from_a_placeholder_refuses_an_undeclared_level(
 	graph: ParameterGraph, defaults: dict
 ):

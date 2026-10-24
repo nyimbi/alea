@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}, "59": {}, "60": {}, "61": {}, "62": {}, "63": {}, "64": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}, "59": {}, "60": {}, "61": {}, "62": {}, "63": {}, "64": {}, "65": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "65":
+		b65_nodes, b65_equations, b65_edges, b65_rules = build_batch65(graph)
+		rules.extend(b65_rules)
+		nodes.update(b65_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b65_equations)
+		edges = list(BATCH12_EDGES) + b65_edges
 	elif batch == "64":
 		b64_nodes, b64_equations, b64_edges, b64_rules = build_batch64(graph)
 		rules.extend(b64_rules)
@@ -19986,6 +19993,163 @@ def build_batch64(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		}
 
 	return {}, equations, edges, []
+
+
+# ---------------------------------------------------------------------------
+# Batch 65 -- three nodes whose description states the opposite of their
+# arithmetic.
+#
+# *The finding.* A node's description is the sentence a researcher reads to
+# decide whether to trust the node. When it contradicts the equation that
+# determines the node, the reader gets the wrong object with the graph's
+# authority behind it -- and no numeric check can see it, because the
+# arithmetic is right and only the prose is wrong.
+#
+# All three were found by a predicate, not by reading 1,429 descriptions: a
+# node whose text asserts a *complement* ("the complement of", "one minus")
+# while the equation determining it computes neither `1 - x` nor a quantity
+# that could be read as one. The predicate returns exactly these three. It
+# cannot find a description that is wrong in a way that does not use the word
+# "complement", so this batch is a lower bound on the class, not a closure.
+#
+# *Each is a different mechanism, which is why each is written out.*
+#
+# `carbon_credit_reversal_allowance` says "the complement of the permanence
+# share" and its equation computes `permanence_parameters *
+# carbon_credit_volumes`. Batch 34 corrected that equation FROM the complement
+# -- it multiplied `(1 - permanence_parameters)` and reported 40.5 of 45
+# MtCO2/year as the buffer -- and wrote the corrected reasoning into the
+# equation's description. It never touched the node's, so the equation and the
+# node it determines now say opposite things about the same object. This is
+# the residue of a correct fix: the arithmetic moved and the prose it
+# contradicted did not.
+#
+# `gearing_ratio` says "the complement of the debt fraction" and computes
+# `debt_equity_ratio`. The complement of a share is a share; a multiple of
+# equity is not. The node's own description already contains a correction
+# ("previously read 'debt as a fraction of total capitalisation'") but still
+# opens by calling the quantity a complement, so a reader who stops at the
+# first clause gets the wrong object. `debt_fraction = r/(1+r)` is the relation
+# the equation's own description states, and it is not complementation.
+#
+# `load_factor` says "the complement of the peak-to-average ratio" and computes
+# annual energy over peak power times the hours in the year -- which is the
+# *reciprocal* of peak-to-average, not its complement. Worse, the node it names
+# (`peak_to_average_ratio`) does not exist in the graph, so the description
+# points at nothing.
+#
+# *What this batch does not do.* It does not change a single equation body, a
+# node value, a range, a unit or an edge. Every one of the three computations
+# is correct as shipped; only the sentence is wrong. A batch that also moved
+# the arithmetic would make the correction unreadable.
+# ---------------------------------------------------------------------------
+
+#: (node id, corrected description). Each replacement is written to be read
+#: against the equation that determines the node, and states the relation
+#: rather than naming a complement.
+_BATCH65_DESCRIPTIONS: tuple[tuple[str, str], ...] = (
+	(
+		"carbon_credit_reversal_allowance",
+		"The volume the permanence share sets aside: the share of issued volume "
+		"held back against non-permanence, applied to the credit volume "
+		"(`permanence_parameters * carbon_credit_volumes`). At defaults 0.1 x "
+		"45 MtCO2/year is 4.5 MtCO2/year. It is the share itself, not its "
+		"complement: `permanence_parameters` is the share held back, so its "
+		"complement would be the volume released, which is the opposite of an "
+		"allowance. The buffer a registry retains is this volume.",
+	),
+	(
+		"gearing_ratio",
+		"Debt as a multiple of equity, determined by `gearing_ratio_definition` "
+		"as `debt_equity_ratio`. Not the complement of the debt fraction: a "
+		"complement of a share is a share, and this is a multiple. The relation "
+		"between them is `debt_fraction = r / (1 + r)` for a multiple r, so the "
+		"two carry the same capital structure in different units -- 2.33 as a "
+		"multiple is 0.7 as a fraction. The description here previously read "
+		"'debt as a fraction of total capitalisation', which was the debt "
+		"fraction under this node's name; the value and the equation were always "
+		"the multiple.",
+	),
+	(
+		"load_factor",
+		"Annual demand divided by peak demand times the hours in a year: "
+		"`(demand_twh * 1000000) / (peak_demand_mw * 8760)`, the average load as "
+		"a fraction of the peak. The reciprocal of the peak-to-average ratio, "
+		"not its complement -- a complement of a ratio is not a ratio. At "
+		"defaults 180 TWh over 25,000 MW x 8,760 h is 0.822. The graph carries "
+		"no `peak_to_average_ratio` node, so the reciprocal is stated here "
+		"rather than pointed at.",
+	),
+)
+
+
+def build_batch65(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Correct three node descriptions that state the opposite of their equation.
+
+	*The gate.* The builder re-derives the defect class from the live graph and
+	asserts the table covers exactly it. The predicate is: the description
+	asserts a complement, and the determining equation computes neither `1 - x`
+	nor a quantity whose form could be read as a complement. A node that later
+	gains a genuine complement -- `water_quality_impact`, say -- drops out of
+	the set and the builder refuses, rather than re-writing a description that
+	has become true.
+	"""
+	nodes: dict[str, Any] = {}
+	corrections: dict[str, str] = dict(_BATCH65_DESCRIPTIONS)
+	assert len(corrections) == len(_BATCH65_DESCRIPTIONS), "two corrections for one node"
+
+	for node_id, description in _BATCH65_DESCRIPTIONS:
+		assert node_id in graph.nodes, node_id
+		shipped = graph.nodes[node_id]
+		assert description != shipped.description, node_id
+		# Every field but the sentence, carried over from the model so a field
+		# this batch has no opinion about cannot be emitted as null. A
+		# hand-built dict would have to name each one, and the first field
+		# added to the model afterwards would silently drop out of the node.
+		nodes[node_id] = {
+			key: list(value) if isinstance(value, tuple) else value
+			for key, value in shipped.model_dump(mode="json").items()
+			if key != "id"
+		}
+		nodes[node_id]["description"] = description
+
+	# The gate: the table is exactly the class the predicate finds.
+	#
+	# The predicate must not fire on a description that *corrects* the
+	# complement claim, and the corrected text here says "Not the complement
+	# of the debt fraction" -- which matches a naive phrase search. A predicate
+	# that cannot tell an assertion from its denial would report this batch's
+	# own fixes as defects, so the match is required to be an assertion: the
+	# phrase, with no negating word in the clause before it. "Not the
+	# complement", "rather than the complement", "the reciprocal ... not its
+	# complement" are all corrections and are excluded.
+	import re
+
+	assertion = re.compile(r"(?<!not )(?<!never )the complement of|one minus", re.I)
+	negated = re.compile(r"\b(not|never|rather than|instead of)\b[^.]{0,50}$", re.I)
+
+	found: set[str] = set()
+	for name, node in graph.nodes.items():
+		text = node.description or ""
+		for match in assertion.finditer(text):
+			# The clause before the phrase decides whether it asserts or
+			# denies. A negation anywhere in the preceding 50 characters of
+			# the same sentence is a correction.
+			if negated.search(text[max(0, match.start() - 50):match.start()]):
+				continue
+			determining = [
+				equation
+				for equation in graph.equations.values()
+				if equation.determined_variables and equation.determined_variables[0] == name
+			]
+			if not determining:
+				continue
+			if re.search(r"\b1(\.0)?\s*-\s*", determining[0].rhs or ""):
+				continue
+			found.add(name)
+	assert found == set(corrections), sorted(found ^ set(corrections))
+
+	return nodes, {}, [], []
 
 
 #: The duplicate pair: (victim, successor).

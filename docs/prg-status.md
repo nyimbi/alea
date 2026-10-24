@@ -1626,6 +1626,71 @@ which is the failure the register exists to prevent.
 
 
 
+### Three descriptions that asserted the opposite of their equation (batch 65, 2026-10-24)
+
+Batch 64 checked that every equality's *arithmetic* had its declared inputs.
+This checks the sentence above the arithmetic. A description is what a reader
+consults to decide whether to trust a node, and three of them stated a relation
+the equation does not compute — in each case the complement, where the equation
+computes the share or the reciprocal.
+
+`carbon_credit_reversal_allowance` said the allowance is "the complement of the
+permanence share". Batch 34 corrected the arithmetic to multiply by
+`permanence_parameters` and left the sentence. `gearing_ratio` said it is "the
+complement of the debt fraction" while `gearing_ratio_definition` returns
+`debt_equity_ratio`, a ratio, which has no complement worth stating.
+`load_factor` said it is "the complement of the peak-to-average ratio" while
+`load_factor_definition` computes `(demand_twh * 1000000) / (peak_demand_mw *
+8760)` — the reciprocal of that ratio, not one minus it. That third sentence
+also named `peak_to_average_ratio`, a node that does not exist.
+
+The distinction is not pedantry. The complement of a share is a share in
+`[0, 1]` that moves the other way; the reciprocal of a ratio is unbounded and
+moves the same way under the same numerator. A reader who took `load_factor` as
+a complement would expect it to fall when peak demand rises. It falls, and so
+does the reciprocal, so a spot check at one point agrees with both readings.
+The readings diverge on a doubling: the complement of a peak-to-average ratio
+of 2 is 0.5 under one reading and 0.5 under the other only because 1 - 1/2
+happens to equal 1/2. At a ratio of 4 the complement is 0.75 and the reciprocal
+is 0.25.
+
+The gate is `test_no_description_asserts_a_relation_its_equation_does_not_compute`.
+It scans every node description for an assertion phrase ("the complement of",
+"one minus"), skips any occurrence a negation within fifty characters governs,
+skips any node whose determining equation's rhs actually contains a `1 -`
+subtraction, and asserts the survivors are exactly the three corrected nodes.
+The negation clause is load-bearing: the *corrected* sentences still use the
+word "complement", in the form "not its complement", and a gate without it
+would flag its own fix.
+
+Canaried against three disjoint mutations, each firing its own assertion and
+each restored from a backup with the md5 checked: restoring the original
+`gearing_ratio` sentence; restoring the `load_factor` complement sentence; and
+leaving the descriptions alone while inverting `load_factor_definition`'s rhs.
+A first attempt at the `gearing_ratio` canary tested nothing — its anchor was a
+single-line string and the on-disk text is folded across lines, so the patch
+did not apply and the suite reported a pass. The canary now patches by line
+range and asserts the line it meant.
+
+Two failures surfaced in the full run, both pre-existing at HEAD and neither
+caused by the descriptions. `test_the_generator_reproduces_the_shipped_graph`
+failed because the generator owns the description folding, so hand-editing the
+YAML left it stale against its own writer; the rebake changed whitespace only.
+`test_check_consistency_reports_both_verdicts` failed on a real coupling:
+shortening `asset_life` to five years raises annualised capex, which raises
+total revenue, which lowers the carbon stream's weight in it, so a fixed
+`carbon_finance_share` of 0.05 stops being covered by the collateral it names
+and `carbon_finance_bound` -- made live by batch 63 -- fires alongside
+`dscr_requirement`. The bound is right; the test pinned an exact list written
+before that bound could fire. It now asserts the dscr refusal is present and
+that the set is within the two equations that legitimately refuse this
+scenario, canaried in both directions.
+
+Registers unchanged: nodes 1429, equations 606, edges 1407, rules 57,
+functional 1190, hard/soft/informational 603/2/1, `uncoupled()` 237. Three
+descriptions changed and nothing else. `structure_issues()` and
+`range_excursions()` empty; violations at defaults zero.
+
 ### Twelve input edges the arithmetic used and the graph never declared (batch 64, 2026-10-24)
 
 Batch 63 repaired every *inequality* that stated a coupling and declared no
