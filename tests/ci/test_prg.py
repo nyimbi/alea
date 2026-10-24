@@ -59,6 +59,41 @@ from alea.prg.views import Equation, ParameterType
 
 PRG_PATH = repo_root() / "config" / "prg.yaml"
 
+# The findings the shipped defaults produce, and the only ones they may.
+#
+# Every "a clean scenario is clean" gate in this module asserted an *empty*
+# violation list until batch 67, and it was empty for the wrong reason:
+# ``rocof_definition`` was missing its nominal-frequency factor, so it computed
+# 0.0128 Hz/s where the swing equation gives 0.638, and the nadir it feeds came
+# out at 49.87 Hz -- inside every under-frequency limit in any grid code. The
+# gates were green because the physics was 50x too optimistic.
+#
+# With the factor restored the shipped scenario reports what it actually is.
+# Inertia 39,200 MW.s (firm capacity 9,800 MW at H = 4 s) against a 1,000 MW
+# largest loss gives a RoCoF of 0.638 Hz/s, and the 10 s response time puts the
+# frequency at response onset at 43.62 Hz. That is below the node's own
+# admissible floor of 45 Hz, so the graph raises ``_out_of_range``, and below
+# the 48 Hz rule threshold, so ``frequency_nadir_below_protection`` fires. Both
+# are correct reports about the scenario, not defects in the report.
+#
+# The numbers are *not* adjusted to make these go away. `docs/prg-status.md`
+# states the rule for this chain: "Bending either number to make the other fit
+# would be manufacturing agreement." The response time is 10 s and carries no
+# archived citation, and the 45 Hz floor is the UFLS setting the node claims
+# to be. Resolving which is wrong is a modelling question with a source
+# requirement, and it is recorded in `docs/prg-status.md` rather than settled
+# by editing a default.
+#
+# The gates below therefore compare against this set *exactly*, not as a
+# subset: a second, unrelated finding still fails every one of them.
+KNOWN_DEFAULT_FINDINGS = frozenset({"frequency_nadir_hz_out_of_range"})
+KNOWN_DEFAULT_RULES = frozenset({"frequency_nadir_below_protection"})
+
+
+def _default_violation_ids(graph: ParameterGraph, values) -> set[str]:
+	"""The equation ids ``consistency`` reports, as a set for comparison."""
+	return {v.equation_id for v in graph.consistency(values)}
+
 
 @pytest.fixture
 def graph() -> ParameterGraph:
@@ -564,7 +599,7 @@ def test_an_inconsistent_parameter_set_is_reported(graph: ParameterGraph, defaul
 	parameters independently.
 	"""
 	values = graph.propagate(defaults).values
-	assert graph.consistency(values) == []
+	assert _default_violation_ids(graph, values) == KNOWN_DEFAULT_FINDINGS
 
 	values["marginal_cost_usd_per_mwh"] = 999.0
 	violations = graph.consistency(values)
@@ -578,7 +613,7 @@ def test_an_inequality_violation_is_reported_and_a_satisfied_one_is_not(
 ):
 	"""The reserve margin bounds a build; it does not fix one."""
 	values = graph.propagate(defaults).values
-	assert graph.consistency(values) == []
+	assert _default_violation_ids(graph, values) == KNOWN_DEFAULT_FINDINGS
 
 	values["peak_demand_mw"] = 20000.0  # no longer coverable at the margin
 	violations = graph.consistency(values)
@@ -1123,8 +1158,12 @@ def test_check_scenario_propagates_before_it_validates(graph: ParameterGraph, de
 	parameter as a violation whenever the caller had not computed them.
 	"""
 	result = check_scenario(dict(defaults), graph)
-	assert result.consistent, result.violations
-	assert not result.violations
+	# The shipped defaults are not clean -- see `KNOWN_DEFAULT_FINDINGS` -- so
+	# this asserts the *propagation* happened, which is what the test is about:
+	# a derived parameter that was never computed would report itself here.
+	assert {v.equation_id for v in result.violations} == KNOWN_DEFAULT_FINDINGS, (
+		result.violations
+	)
 
 
 def test_propagate_change_reports_what_moved(graph: ParameterGraph, defaults: dict):
@@ -1590,10 +1629,16 @@ def test_one_affordability_line_is_one_dial_and_one_inequality(
 	assert burden < 0.1, burden
 	for probe in (0.05, 0.02):
 		scoped = {**full, "affordability_threshold": probe}
+		# The nadir finding is present in every scenario here (see
+		# `KNOWN_DEFAULT_FINDINGS`); what this asserts is that tightening the
+		# threshold adds exactly one violation and it is the affordability
+		# bound, which is the claim the test is about.
 		violated = sorted(
 			item.equation_id for item in graph.consistency(scoped)
 		)
-		assert violated == ["energy_burden_affordability_bound"], (probe, violated)
+		assert violated == sorted(
+			KNOWN_DEFAULT_FINDINGS | {"energy_burden_affordability_bound"}
+		), (probe, violated)
 		assert abs(float(graph.propagate(scoped).values["energy_burden"]) - burden) < 1e-12
 
 	# And the tombstone is not a knob: setting it is refused, and the refusal
@@ -1965,6 +2010,154 @@ def test_no_equation_description_names_a_node_it_cannot_reach(graph: ParameterGr
 		assert absent not in graph.nodes, absent
 
 
+def test_every_equation_is_dimensionally_consistent(graph: ParameterGraph):
+	"""The unit check runs on all 606, and one equation was failing it.
+
+	`rocof_definition` determined `rocof_df_dt_hz_per_s`, declared `Hz/s`, from
+	`largest_loss_mw / (2 * system_inertia_mws)`. MW over MW.s is 1/s. The
+	per-unit swing equation at t=0 is d(omega)/dt = -P_loss/(2HS) -- a rate in
+	per unit per second -- and a frequency slope is that rate times the nominal
+	frequency, because omega = f/f0 by definition. The factor was missing, so
+	the equation computed a quantity 50x too small at 50 Hz.
+
+	The dimensional failure was the whole evidence and it had been visible for
+	batches. The reason it read as bookkeeping is that a single inconsistent
+	equation among 605 consistent ones looks like a vocabulary defect rather
+	than a missing factor, and nothing downstream refused. What it actually
+	cost: `frequency_nadir_hz` reads this slope, so the nadir sat at 49.87 Hz
+	-- inside every under-frequency limit -- where the correct slope puts it at
+	43.62 Hz, below the node's own 45 Hz floor and below the 48 Hz threshold
+	the graph's own protection rule names. A model that reports a safe nadir
+	for an unsafe loss is the exact failure the equation exists to prevent.
+
+	The gate is the unit checker's own verdict, not a second implementation:
+	`check_graph` walks every equation including the exempt ones and this
+	asserts it reports nothing inconsistent and nothing undecidable. Zero is
+	the count, so there is no exception register to go stale.
+	"""
+	from alea.prg.units import check_graph
+
+	report = check_graph(graph)
+	assert len(report.checks) == len(graph.equations), (
+		f"the unit check skipped {len(graph.equations) - len(report.checks)} equations"
+	)
+	assert [c.equation_id for c in report.inconsistent] == [], (
+		[f"{c.equation_id}: {c.detail}" for c in report.inconsistent]
+	)
+	# An undecidable equation is not a pass: the check could not decide it, so
+	# a clean verdict does not follow. Asserted separately because collapsing
+	# the two would let a unit added to the vocabulary silently turn an
+	# undecidable into a consistent without anyone reading it.
+	assert [c.equation_id for c in report.undecidable] == [], (
+		[f"{c.equation_id}: {c.detail}" for c in report.undecidable]
+	)
+
+	# The premise: the equation that was wrong now carries the factor, its
+	# determined node is still declared Hz/s, and the input is declared. A
+	# future edit that "simplifies" the rhs by dropping the nominal frequency
+	# fails here rather than in the unit check, which is the same finding one
+	# layer earlier.
+	equation = graph.equations["rocof_definition"]
+	assert equation.rhs == "nominal_frequency_hz * largest_loss_mw / (2 * system_inertia_mws)", equation.rhs
+	assert graph.nodes["rocof_df_dt_hz_per_s"].unit == "Hz/s"
+	assert "nominal_frequency_hz" in equation.parameters, equation.parameters
+
+	# The arithmetic, not only its dimensions: the per-unit form is what the
+	# old body computed, and it is 50x smaller at the shipped nominal.
+	from alea.prg.dsl import parse_side
+
+	values = {
+		name: node.default
+		for name, node in graph.nodes.items()
+		if node.default is not None and isinstance(node.default, (int, float))
+	}
+	values.update({"largest_loss_mw": 1000.0, "system_inertia_mws": 39200.0, "nominal_frequency_hz": 50.0})
+	slope = parse_side(equation.rhs).eval(values)
+	assert abs(slope - 50.0 * 1000.0 / (2 * 39200.0)) < 1e-12, slope
+	assert abs(slope - 0.6377551020408163) < 1e-9, slope
+
+
+def test_the_nadir_definition_states_the_bound_direction_it_actually_has(
+	graph: ParameterGraph,
+):
+	"""The linear form overstates the nadir, and the description used to say the opposite.
+
+	`frequency_nadir_definition` is ``f0 - rocof * response_time``. Its
+	description called that "a lower bound on the nadir, i.e. more conservative
+	than the truth". It is an upper bound, and optimistic: response only ever
+	reduces the slope magnitude once it engages, so ``f(t) >= f0 - rocof0*t``
+	for every ``t``, which makes the computed quantity the frequency at
+	response onset -- at or above the nadir. Reporting a higher number for a
+	lower nadir understates the hazard, in a node whose stated job is to be
+	what the UFLS relays are set against.
+
+	The direction is checked numerically over admissible slope profiles rather
+	than by reading the sentence back, because the sentence is the thing under
+	test. "Admissible" is pinned: the loss sets ``|slope| = rocof0``
+	immediately, and response thereafter only reduces it, so every profile
+	starts at ``rocof0`` and is non-increasing.
+	"""
+	import numpy as np
+
+	equation = graph.equations["frequency_nadir_definition"]
+	values = {
+		name: node.default
+		for name, node in graph.nodes.items()
+		if node.default is not None and isinstance(node.default, (int, float))
+	}
+	values.update(
+		{
+			"largest_loss_mw": 1000.0,
+			"system_inertia_mws": 39200.0,
+			"nominal_frequency_hz": 50.0,
+			"frequency_response_time_s": 10.0,
+		}
+	)
+	# `rocof_df_dt_hz_per_s` is derived and carries no default, so it is computed
+	# from the swing equation rather than assumed -- the same body the graph
+	# ships, so a change there moves this test too.
+	values["rocof_df_dt_hz_per_s"] = parse_side(
+		graph.equations["rocof_definition"].rhs
+	).eval(values)
+	linear = parse_side(equation.rhs).eval(values)
+	f0 = values["nominal_frequency_hz"]
+	rocof0 = (f0 - linear) / values["frequency_response_time_s"]
+	assert rocof0 > 0
+	assert abs(rocof0 - values["rocof_df_dt_hz_per_s"]) < 1e-12
+
+	# Admissible trajectories. The equation's own premise is that the loss sets
+	# the slope to rocof0 and holds it there until response engages at
+	# `t_response`; only after that may the response reduce it. So the profile
+	# is flat at 1.0 until t_response and non-increasing afterwards -- the
+	# weaker family (decay allowed from t=0) leaves the frequency barely
+	# falling and would make the test vacuous, which is how the first version
+	# of this gate read 0 of 2000.
+	rng = np.random.default_rng(0)
+	t = np.linspace(0.0, 30.0, 3001)
+	engage = t <= values["frequency_response_time_s"]
+	below = 0
+	for _ in range(2000):
+		shape = np.minimum.accumulate(rng.uniform(0.0, 1.0, t.size))
+		shape[engage] = 1.0
+		shape = np.minimum.accumulate(shape)
+		assert shape[0] == 1.0
+		f = f0 - np.concatenate([[0.0], np.cumsum(rocof0 * shape[:-1] * np.diff(t))])
+		if f.min() < linear - 1e-12:
+			below += 1
+	assert below == 2000, (
+		f"the true nadir fell below the linear form in only {below} of 2000 "
+		f"admissible profiles; if it were a lower bound it would be 0"
+	)
+
+	# And the description says so, and no longer claims the opposite.
+	description = equation.description or ""
+	assert "UPPER bound" in description, description
+	assert "lower bound on the nadir" not in description, description
+	# The old claim was that it was the safe direction.
+	assert "more conservative than the truth" not in description, description
+	assert "optimistic" in description, description
+
+
 def test_a_categorical_retyped_from_a_placeholder_refuses_an_undeclared_level(
 	graph: ParameterGraph, defaults: dict
 ):
@@ -2247,10 +2440,20 @@ def test_a_range_excursion_does_not_survive_into_the_next_scenario(
 	scoped = dict(defaults)
 	scoped["tariff_usd_per_mwh"] = 900.0
 	graph.propagate(scoped)
-	assert graph.range_excursions()
+	leaked = set(graph.range_excursions())
+	# `range_excursions` is keyed by node id; `KNOWN_DEFAULT_FINDINGS` names the
+	# equation each excursion is reported through, so strip the suffix.
+	known_nodes = {e.removesuffix("_out_of_range") for e in KNOWN_DEFAULT_FINDINGS}
+	assert leaked - known_nodes, "the bad scenario reported nothing to clear"
 	graph.propagate(defaults)
-	assert graph.range_excursions() == {}
-	assert check_scenario(defaults, graph).consistent
+	# The register is cleared and rebuilt from *this* scenario, so what remains
+	# is what the defaults themselves produce -- not a leftover. Before batch 67
+	# this asserted an empty register, which held only because the corrected
+	# nadir was not yet computed; see `KNOWN_DEFAULT_FINDINGS`.
+	assert set(graph.range_excursions()) == known_nodes, graph.range_excursions()
+	assert not leaked <= set(graph.range_excursions()), (
+		"the previous scenario's excursions survived into this one"
+	)
 
 
 def test_an_equation_with_no_root_at_all_is_still_an_error(
@@ -3001,7 +3204,13 @@ def test_the_audit_reports_what_it_did_not_check():
 	from alea.prg.graph import load_graph
 
 	audit = audit_scenario_result(_solved())
-	assert audit.consistent
+	# The audit's own partition, not the scenario's cleanliness: the fixture
+	# carries the graph's defaults and so inherits the nadir finding (see
+	# `KNOWN_DEFAULT_FINDINGS`). What this test is about is that the audit
+	# reports which equations it checked and which it could not.
+	assert {v.equation_id for v in audit.violations} == KNOWN_DEFAULT_FINDINGS, (
+		[str(v) for v in audit.violations]
+	)
 	# Batch 30's ten products took the computed set 402 to 412. One is
 	# reachable from what the result supplies -- `baseline_emissions` reads
 	# the emissions total the solve reports -- and joins `checked` (158 to
@@ -3174,12 +3383,22 @@ def test_the_audit_finds_an_unfinanceable_scenario_the_engine_solved():
 	"""
 	from alea.prg.audit import audit_scenario_result
 
-	assert audit_scenario_result(_solved(50.0)).consistent
+	# The fixture carries the graph's defaults, so both scenarios inherit the
+	# nadir finding (see `KNOWN_DEFAULT_FINDINGS`). The claim under test is the
+	# *difference*: the finance covenant refuses 200 and not 50, which is what
+	# the optimiser alone would not tell you.
+	accepted = audit_scenario_result(_solved(50.0))
+	assert {v.equation_id for v in accepted.violations} == KNOWN_DEFAULT_FINDINGS, (
+		[str(v) for v in accepted.violations]
+	)
 	refused = audit_scenario_result(_solved(200.0))
 	assert not refused.consistent
 	assert any(v.equation_id == "dscr_requirement" for v in refused.violations), [
 		str(v) for v in refused.violations
 	]
+	assert "dscr_requirement" not in {v.equation_id for v in accepted.violations}, (
+		"the covenant fired at a carbon price the test expects it to accept"
+	)
 
 
 def test_the_intensity_gap_measures_rather_than_passes():
@@ -3445,7 +3664,13 @@ def test_the_loop_converges_on_the_criterion_it_is_audited_by(
 	"""
 	result = graph.propagate(defaults)
 	assert result.loops, "the shipped graph lost its loop"
-	assert graph.consistency(result.values) == [], graph.consistency(result.values)
+	# The loop's own convergence, not the scenario's cleanliness: the shipped
+	# defaults carry the nadir finding (see `KNOWN_DEFAULT_FINDINGS`), and what
+	# this test pins is that the loop did not *also* leave an equation it
+	# declared solved in violation.
+	assert _default_violation_ids(graph, result.values) == KNOWN_DEFAULT_FINDINGS, (
+		graph.consistency(result.values)
+	)
 	# And the answer is still the closed form, so the tighter rule did not
 	# change what the loop converges to.
 	total = defaults["total_capacity_mw"]
@@ -3668,10 +3893,22 @@ def test_a_singular_jacobian_is_named_rather_than_reported_as_zero():
 def test_a_consistent_scenario_reports_no_conflicts(
 	graph: ParameterGraph, defaults: dict
 ):
+	"""No *caller-induced* conflict, which is what the detector is for.
+
+	The shipped defaults carry one out-of-range finding of their own -- see
+	`KNOWN_DEFAULT_FINDINGS` -- so this pins that the detector adds nothing on
+	top of it. A conflict the caller's own supplied values did not create would
+	be the detector misreading a consistent scenario.
+	"""
 	result = graph.propagate(defaults)
 	report = detect_conflicts(graph, result.values, supplied=defaults)
-	assert report.consistent, report.summary()
 	assert report.checked, "nothing was checked, so the pass is vacuous"
+	assert {c.subject for c in report.conflicts if c.blocks} == {"frequency_nadir_hz"}, (
+		report.summary()
+	)
+	assert {c.kind for c in report.conflicts} == {ConflictKind.OUT_OF_RANGE}, (
+		report.summary()
+	)
 
 
 def test_setting_a_derived_parameter_is_an_over_determination(
@@ -3963,8 +4200,15 @@ def test_the_conflict_command_exits_non_zero_on_a_conflict(graph: ParameterGraph
 	assert conflicted.exit_code == 1, conflicted.output
 	assert "dscr_requirement" in conflicted.output
 
-	clean = _prg("conflicts")
+	# Not the bare defaults: with the corrected swing equation they report the
+	# nadir finding (see `KNOWN_DEFAULT_FINDINGS`) and exit 1. A 4 s response
+	# time is a real grid-code-grade scenario that *is* clean, so the exit-code
+	# contrast the test is about survives.
+	clean = _prg("conflicts", "--set", "frequency_response_time_s=4")
 	assert clean.exit_code == 0, clean.output
+	# And the defaults themselves exit 1, which is the graph refusing a
+	# scenario it used to pass.
+	assert _prg("conflicts").exit_code == 1
 
 
 def test_the_conflict_command_accepts_a_derived_parameter_because_that_is_the_conflict(
@@ -4614,9 +4858,14 @@ def test_the_flagged_equations_are_a_known_set(graph: ParameterGraph):
 	# twelve the classes below name. The per-technology crf/LCOE equations
 	# the coupling batches added check clean under the same blessing, which
 	# is the blessing earning its keep.
-	assert flagged == {
-		"rocof_definition",
-	}, sorted(flagged)
+	#
+	# Batch 67 closed the last one. `rocof_definition` determined `Hz/s` from
+	# MW over MW.s, which is 1/s: the per-unit swing equation's rate, missing
+	# the nominal-frequency factor that turns it into hertz. The register now
+	# stands at empty, which is the state this pin existed to reach -- it was
+	# never asserting that one equation *should* be inconsistent, only that
+	# this was the whole of the set.
+	assert flagged == set(), sorted(flagged)
 
 
 def test_the_summary_carries_the_unit_register(graph: ParameterGraph):
@@ -4819,11 +5068,22 @@ def test_the_declared_cross_validation_rules_hold_at_every_default(
 	# instrument exists, so the revenue has a collector. A second rule firing
 	# here still fails the test, and `test_every_declared_rule_can_fire`
 	# keeps the quiet rule proven able to fire rather than deleted.
-	live: set[str] = set()
+	#
+	# Batch 67 restored the nominal-frequency factor to `rocof_definition` and
+	# `frequency_nadir_below_protection` now fires at the defaults -- see
+	# `KNOWN_DEFAULT_RULES` for why that is the graph reporting a real property
+	# of the shipped scenario rather than a rule written inside out.
+	live: set[str] = set(KNOWN_DEFAULT_RULES)
 	assert {f.rule.id for f in report.violations} == live, [
 		str(f) for f in report.violations
 	]
-	assert not report.blocks
+	# A blocking finding is one of severity `error`, so the rule that fires at
+	# the defaults blocks the scenario -- which is the point: a nadir below the
+	# first UFLS stage is not a warning. Pinned to the known rule so a second
+	# blocking finding still fails here.
+	assert {f.rule.id for f in report.findings if f.rule.severity == "error"} == (
+		KNOWN_DEFAULT_RULES
+	), [str(f) for f in report.findings if f.rule.severity == "error"]
 
 
 def test_every_declared_rule_can_fire(graph: ParameterGraph, defaults: dict):
@@ -5245,7 +5505,12 @@ def test_the_informational_tier_is_read_and_cannot_fire_through_a_solve(
 	assert not any(
 		v.equation_id == "capture_price_ratio_definition" for v in check.violations
 	), "a determined equation cannot fail after the graph recomputes it"
-	assert check.consistent
+	# The scenario is not clean -- the defaults carry the nadir finding, see
+	# `KNOWN_DEFAULT_FINDINGS` -- but nothing *else* fails, which is the claim:
+	# the informational tier has nothing to gate once the graph re-solves.
+	assert {v.equation_id for v in check.violations} == KNOWN_DEFAULT_FINDINGS, (
+		check.violations
+	)
 	# `consistent` excludes an informational finding, so a direct check of a raw
 	# set still calls the scenario consistent -- the gate reads `blocks`.
 	assert all(v.blocks for v in direct) is False
@@ -5337,6 +5602,12 @@ def test_the_conflict_gate_reads_the_tier_and_a_softened_edge_stops_blocking():
 
 	target = "llcr_floor_bound"
 	carbon_price = "90"
+	# A response time that keeps the nadir inside its range, so the LLCR
+	# covenant is genuinely the only blocker. Without it the shipped defaults
+	# report the nadir finding at every carbon price (see
+	# `KNOWN_DEFAULT_FINDINGS`) and softening the LLCR edge could not flip the
+	# exit code -- the canary would fail on its premise.
+	response_time = "4"
 
 	# The premise: the softened edge is the only blocker at this scenario.
 	graph = load_graph()
@@ -5344,6 +5615,7 @@ def test_the_conflict_gate_reads_the_tier_and_a_softened_edge_stops_blocking():
 		k: n.default for k, n in graph.nodes.items() if n.default is not None
 	}
 	scenario["carbon_price_usd_per_tco2"] = float(carbon_price)
+	scenario["frequency_response_time_s"] = float(response_time)
 	propagated = graph.propagate(scenario)
 	blockers = {
 		c.subject
@@ -5372,7 +5644,15 @@ def test_the_conflict_gate_reads_the_tier_and_a_softened_edge_stops_blocking():
 		path.write_text(yaml.safe_dump(document, sort_keys=False))
 		runner = CliRunner()
 		result = runner.invoke(
-			app, ["prg", "conflicts", "--set", f"carbon_price_usd_per_tco2={carbon_price}"]
+			app,
+			[
+				"prg",
+				"conflicts",
+				"--set",
+				f"carbon_price_usd_per_tco2={carbon_price}",
+				"--set",
+				f"frequency_response_time_s={response_time}",
+			],
 		)
 		assert result.exit_code == 0, result.output
 		# Printed, not hidden: the finding survives and only the gate moves.
@@ -5383,7 +5663,15 @@ def test_the_conflict_gate_reads_the_tier_and_a_softened_edge_stops_blocking():
 		path.write_bytes(backup)
 	# The backup restored the hard edge, so the gate fires again.
 	restored = CliRunner().invoke(
-		app, ["prg", "conflicts", "--set", f"carbon_price_usd_per_tco2={carbon_price}"]
+		app,
+		[
+			"prg",
+			"conflicts",
+			"--set",
+			f"carbon_price_usd_per_tco2={carbon_price}",
+			"--set",
+			f"frequency_response_time_s={response_time}",
+		],
 	)
 	assert restored.exit_code == 1, restored.output
 
@@ -5841,7 +6129,19 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 				f"{variable!r} is derived but declares no range, so there is no "
 				f"bracket to search and nothing to compare against"
 			)
-			numeric = solve_for(residual, variable, values, bracket=bracket)
+			# The declared range is the node's *admissible* set, not the set the
+			# solver may look in -- `graph._widen` searches outward for exactly
+			# this reason, so that an answer outside the range is a reported
+			# excursion rather than an unsolvable equation. `frequency_nadir_hz`
+			# is the case in point after batch 67: its corrected value is
+			# 43.62 Hz against a 45 Hz floor. Widening here keeps this test
+			# comparing the two *algorithms*, which is its claim, instead of
+			# re-asserting that every derived value is admissible.
+			numeric = graph._widen(residual, variable, values, bracket)
+			assert numeric is not None, (
+				f"{equation.id!r} solved for {variable!r}: the numeric search "
+				f"found no root even after widening past the declared range"
+			)
 			assert math.isclose(exact, numeric, rel_tol=1e-9, abs_tol=1e-12), (
 				f"{equation.id!r} solved for {variable!r}: exact {exact!r} vs "
 				f"numeric {numeric!r}"

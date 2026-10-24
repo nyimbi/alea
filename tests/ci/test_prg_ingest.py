@@ -675,9 +675,22 @@ def test_the_ingested_graph_is_consistent_at_its_own_defaults():
 	assert len(result.values) == len(graph.nodes)
 
 	report = check_scenario(values, graph)
-	assert report.violations == (), report.violations
-	assert not report.excursions, report.excursions  # a mapping, empty when clean
-	assert report.cross_validation.violations == (), report.cross_validation.violations
+	# The ingested graph is the batch fragments merged over the shipped base,
+	# so it carries `frequency_nadir_hz` and inherits the corrected swing
+	# equation. At the shipped defaults that node lands at 43.62 Hz against its
+	# 45 Hz floor -- a real finding about the scenario, not about the merge
+	# (see `KNOWN_DEFAULT_FINDINGS` in test_prg.py). The assertions below pin
+	# that the merge adds nothing of its own: exactly one violation, and no
+	# excursion beyond the one the base graph already reports.
+	assert {v.equation_id for v in report.violations} == {
+		"frequency_nadir_hz_out_of_range"
+	}, report.violations
+	assert set(report.excursions) == {"frequency_nadir_hz"}, report.excursions
+	# The same node trips the 48 Hz rule, for the same reason. Pinned by id so
+	# a rule that starts firing on the merge itself still fails here.
+	assert {f.rule.id for f in report.cross_validation.violations} == {
+		"frequency_nadir_below_protection"
+	}, report.cross_validation.violations
 
 
 def test_a_derived_node_is_not_declared_out_of_range_at_its_own_default():

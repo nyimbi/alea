@@ -1626,6 +1626,136 @@ which is the failure the register exists to prevent.
 
 
 
+### The swing equation was missing the nominal frequency (batch 67, 2026-10-25)
+
+`rocof_definition` determined `rocof_df_dt_hz_per_s`, declared `Hz/s`, from
+`largest_loss_mw / (2 * system_inertia_mws)`. MW over MW·s is 1/s. The unit
+check had been reporting this equation as the only inconsistent one in the
+graph, and nothing acted on it.
+
+The per-unit swing equation at t=0 is
+
+    d(omega)/dt = -P_loss / (2 H S)
+
+where omega is per unit, so the result is a rate in per unit per second and
+carries no hertz. A frequency slope is that rate times the nominal frequency,
+because omega = f/f0 by definition:
+
+    df/dt = f0 * P_loss / (2 H S)
+
+The factor was missing. At the shipped 50 Hz the equation computed 0.0128 Hz/s
+where the correct value is 0.638 -- 50x too small.
+
+Why the dimensional failure read as bookkeeping: one inconsistent equation
+among 605 consistent ones looks like a vocabulary defect, and the obvious
+repair is to change a unit string until the check goes quiet. Here the
+vocabulary was right. The operands are genuinely MW and MW·s, the quotient is
+genuinely 1/s, and the determined node is genuinely Hz/s. The mismatch was the
+factor, and no amount of relabelling would have made the physics right.
+
+What it cost is the reason this is a batch and not a lint fix.
+`frequency_nadir_hz` reads this slope directly:
+
+    nadir = f0 - rocof * response_time
+
+At the shipped 10 s response time the old slope put the nadir at 49.87 Hz --
+inside every under-frequency limit in any grid code -- where the correct slope
+puts it at 43.62 Hz, below the node's own 45 Hz floor and below the 48 Hz
+threshold the graph's own protection rule names. A model
+that reports a safe nadir for an unsafe loss is the exact failure the equation
+exists to prevent. The RoCoF limit node, 1.0 Hz/s, also now sits above a
+computed 0.638 rather than above 0.0128, so the headroom it reports is real
+rather than 78x overstated.
+
+Two supporting defects surfaced while fixing it. The equation's `reference`
+read "Swing equation at t=0, df/dt = -P_loss / (2 H S)" -- stating the
+per-unit form under a hertz-per-second name, which is the same error one level
+up, and now says which form is per unit and where the factor comes from. And
+the loader refused the new arithmetic until `nominal_frequency_hz` was added
+to `parameters`, then the batch-64 edge gate refused it again until the edge
+existed: both gates working as designed, on a change that would have been a
+one-line edit if either were absent.
+
+The gate is `test_every_equation_is_dimensionally_consistent`, which asserts
+`check_graph` reports zero inconsistent and zero undecidable over all 606
+equations, then pins the corrected rhs, the declared unit, the parameter list,
+and the arithmetic evaluated at the shipped values. Canaried three ways:
+dropping the factor with the parameter and edge removed so the unit check is
+reached -- it fires with "the two sides do not share a dimension"; and
+replacing 2H with 4H, which is dimensionally valid and numerically wrong, to
+prove the arithmetic assertion is not just the unit check restated.
+
+Registers. Edges 1407 -> 1408: the nominal frequency is now a declared input.
+Nodes 1429, equations 606, rules 57, functional 1190, hard/soft/informational
+603/2/1, `uncoupled()` 237, all unchanged. **Inconsistent equations 1 -> 0** --
+the register this batch exists to close. Violations at defaults: the nadir
+moves from 49.87 Hz to 43.62 Hz, which is a stricter verdict and the correct
+one.
+
+#### What the corrected number cost: 20 gates that were green for the wrong reason
+
+Twenty tests failed the moment the factor was restored, and every one of them
+traced to the same finding. That is the finding, not a regression: the shipped
+default scenario reports a nadir below the node's own 45 Hz floor and below
+the 48 Hz rule, and it always should have. The tests asserted an empty
+violation list at the defaults and were green only because the slope feeding
+the nadir was 50x too small.
+
+The measured chain at the shipped values: firm capacity 9,800 MW at H = 4 s is
+39,200 MW·s of stored energy; a 1,000 MW largest loss is 10.2% of firm capacity
+and gives a RoCoF of 0.638 Hz/s; the 10 s response time then puts the frequency
+at response onset at 43.62 Hz. A nadir at or above 48 Hz needs a response time
+of 3.14 s or less; at or above the 45 Hz floor, 7.84 s.
+
+**Neither number was changed.** `frequency_response_time_s` is 10 s and
+carries no archived citation -- `sources/INDEX.md` row 66 cites the swing
+equation with no URL and no local copy, and no archived document in the repo
+states an FCR activation or dead time. The 45 Hz floor is the UFLS setting the
+node claims to be. Which one is wrong is a modelling question that needs a
+source, and bending either to make the other fit is the manufacturing
+agreement this section already names as the failure mode. It is recorded here
+and left open.
+
+The gates now compare against `KNOWN_DEFAULT_FINDINGS` in `tests/ci/test_prg.py`
+*exactly* rather than asserting an empty set, so a second unrelated finding
+still fails every one of them. Three needed more than that:
+
+* `test_the_affine_solve_agrees_with_the_bracket_search` called `solve_for`
+  against the node's declared range, which no longer contains the root. It now
+  calls `graph._widen`, the same search `_derive` uses, so it keeps comparing
+  the two *algorithms* -- which is its claim -- instead of re-asserting that
+  every derived value is admissible.
+* `test_the_conflict_gate_reads_the_tier_and_a_softened_edge_stops_blocking`
+  needs the softened edge to be the only blocker. It now runs at a 4 s response
+  time, where the nadir is clean and the LLCR covenant really is alone.
+* `test_the_conflict_command_exits_non_zero_on_a_conflict` asserted a clean
+  run exits 0. The defaults now exit 1, so the clean leg is a 4 s scenario and
+  the test also asserts the defaults exit 1.
+
+#### A second defect: the nadir equation's description had the bound backwards
+
+`frequency_nadir_definition` said the linear form "is a lower bound on the
+nadir, i.e. more conservative than the truth". It is an **upper** bound, and
+optimistic. Response only ever reduces the slope magnitude once it engages, so
+`f(t) >= f0 - rocof0*t` for every `t`: the quantity is the frequency at
+response onset, which is at or above the nadir. Reporting a higher number for a
+lower nadir understates the hazard. Checked over 20,000 admissible slope
+profiles -- non-increasing from the initial RoCoF -- the true nadir was strictly
+below the linear form in every one. The description now says so, and says the
+value is a screen rather than the nadir.
+
+That leaves the id itself: `frequency_nadir_hz` is not the nadir. Renaming it
+reaches 14 sites across four files and is a modelling decision, so it is left
+for a batch of its own rather than folded into this one.
+
+#### A third: the audit stopped saying what it had not checked
+
+`ScenarioAudit.summary()` printed its "N not carried by the result" partition
+only on the consistent branch. So the summary a reader most needs to qualify --
+the one carrying a finding -- was the one that stopped reporting how much of
+the graph it never looked at. Both branches now carry it. The partition is a
+property of the result, not of the verdict.
+
 ### Six node names that resolved to nothing (batch 66, 2026-10-25)
 
 Batch 65 read node descriptions against their equations. This reads equation

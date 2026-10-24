@@ -253,8 +253,14 @@ async def test_check_consistency_reports_both_verdicts(prg: PRGClient) -> None:
 	answers "fine".
 	"""
 	clean = await prg.check_consistency()
-	assert clean["consistent"] is True
-	assert clean["violations"] == []
+	# Not `consistent is True`: the shipped defaults report the nadir finding
+	# (see `KNOWN_DEFAULT_FINDINGS` in test_prg.py), which is a real property
+	# of the scenario the graph is right to refuse. What this test is about is
+	# that the *body round-trips* -- the client's empty set reaches the service
+	# and the service answers about the graph rather than about a missing key.
+	assert [v["equation_id"] for v in clean["violations"]] == [
+		"frequency_nadir_hz_out_of_range"
+	], clean["violations"]
 	assert clean["checked"] > 0
 
 	# Five years of asset life against a 20-year debt is a DSCR the graph
@@ -270,7 +276,11 @@ async def test_check_consistency_reports_both_verdicts(prg: PRGClient) -> None:
 	assert dirty["consistent"] is False
 	refused = [v["equation_id"] for v in dirty["violations"]]
 	assert "dscr_requirement" in refused, refused
-	assert set(refused) <= {"dscr_requirement", "carbon_finance_bound"}, refused
+	assert set(refused) <= {
+		"dscr_requirement",
+		"carbon_finance_bound",
+		"frequency_nadir_hz_out_of_range",
+	}, refused
 
 
 async def test_consistency_report_is_the_shipped_default(prg: PRGClient) -> None:
@@ -282,8 +292,14 @@ async def test_consistency_report_is_the_shipped_default(prg: PRGClient) -> None
 	defaults as missing inputs.
 	"""
 	baseline = await prg.consistency_report()
-	assert baseline["consistent"] is True
+	# The shipped defaults carry the nadir finding, so the report is not
+	# `consistent` -- see `KNOWN_DEFAULT_FINDINGS` in test_prg.py. The claim
+	# here is that the route seeds the defaults rather than checking the empty
+	# set, which shows up as the same answer both ways.
 	assert baseline["checked"] > 0
+	assert [v["equation_id"] for v in baseline["violations"]] == [
+		"frequency_nadir_hz_out_of_range"
+	], baseline["violations"]
 	empty = await prg.check_consistency()
 	assert baseline["checked"] == empty["checked"]
 	assert baseline["consistent"] == empty["consistent"]
@@ -323,7 +339,16 @@ async def test_detect_and_resolve_conflicts(prg: PRGClient) -> None:
 	assert applied, "the over-determined conflict was not reported"
 	assert applied[0]["applied"] is not None, "no in-range correction was found"
 	assert applied[0]["applied"]["within_range"] is True
-	assert applied[0]["resolved"] is True
+	# `resolved` is scenario-wide -- `not consistency(values_after)` -- so it is
+	# False here even though the correction closed the conflict it targeted:
+	# the shipped defaults carry the nadir finding (see `KNOWN_DEFAULT_FINDINGS`
+	# in test_prg.py) and no move on `marginal_cost` reaches it. The claim this
+	# test makes is that the *targeted* conflict is gone, so that is what it
+	# asserts, plus the exact reason `resolved` is not True.
+	assert applied[0]["resolved"] is False, (
+		"a scenario-wide clean verdict would mean the nadir finding vanished"
+	)
+	assert applied[0]["values_after"], "the resolved set was not carried"
 	# The set after the correction is carried, and the corrected parameter is
 	# in it -- a resolution reporting ``values_after`` without the move would
 	# be a payload a client could not render.

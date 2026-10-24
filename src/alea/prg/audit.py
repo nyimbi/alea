@@ -190,8 +190,16 @@ class ScenarioAudit:
 				f"checked about them{tail}"
 			)
 		blocking = sum(1 for violation in self.violations if violation.blocks)
+		# The "not carried" partition is reported on both branches. It used to
+		# appear only when the audit found nothing, which meant the one summary
+		# a reader most needs to qualify -- the one that carries a finding --
+		# was also the one that stopped saying how much of the graph it never
+		# looked at. The coverage is a property of the result, not of the
+		# verdict.
 		return (
-			f"{blocking} violation(s) over {len(self.checked)} parameter(s)"
+			f"{blocking} violation(s) over {len(self.checked)} parameter(s); "
+			f"{len(self.skipped)} not carried by the result, so nothing was "
+			f"checked about them"
 		)
 
 

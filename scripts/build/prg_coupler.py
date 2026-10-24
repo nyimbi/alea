@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}, "59": {}, "60": {}, "61": {}, "62": {}, "63": {}, "64": {}, "65": {}, "66": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}, "59": {}, "60": {}, "61": {}, "62": {}, "63": {}, "64": {}, "65": {}, "66": {}, "67": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "67":
+		b67_nodes, b67_equations, b67_edges, b67_rules = build_batch67(graph)
+		rules.extend(b67_rules)
+		nodes.update(b67_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b67_equations)
+		edges = list(BATCH12_EDGES) + b67_edges
 	elif batch == "66":
 		b66_nodes, b66_equations, b66_edges, b66_rules = build_batch66(graph)
 		rules.extend(b66_rules)
@@ -20289,6 +20296,88 @@ def build_batch66(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	wind = equations["annualised_capex_wind_definition"]["description"]
 	assert "a solar asset's life moved `crf_wind_onshore`" not in wind, "the copy still has the wrong subject"
 	assert "the solar LCOE stayed exactly fixed" not in wind, "the copy still has the wrong technology"
+
+	return nodes, equations, [], []
+
+
+#: The swing equation's rhs as the graph states it, and as the per-unit form
+#: expands it. `largest_loss_mw / (2 * system_inertia_mws)` is a per-unit
+#: quantity in 1/s: it is the machine's power imbalance divided by twice its
+#: stored energy, which is d(omega)/dt in per unit. The node it determines is
+#: declared `Hz/s`, and the per-unit result becomes a frequency slope only when
+#: multiplied by the nominal frequency -- df/dt = f0 * d(omega_pu)/dt.
+_BATCH67_OLD_RHS = "largest_loss_mw / (2 * system_inertia_mws)"
+_BATCH67_NEW_RHS = "nominal_frequency_hz * largest_loss_mw / (2 * system_inertia_mws)"
+
+_BATCH67_DESCRIPTION = (
+	"The swing equation's first instant, in hertz per second: the nominal frequency times the"
+	" largest credible loss over twice the stored kinetic energy,"
+	" `nominal_frequency_hz * largest_loss_mw / (2 * system_inertia_mws)`. The per-unit swing"
+	" equation gives d(omega)/dt = -P_loss / (2 H S), which is a rate in per unit per second and"
+	" carries no hertz; a frequency slope is that rate times the nominal frequency, because"
+	" omega = f / f0 by definition. The shipped body omitted the factor, so it computed a quantity"
+	" 50x too small at a 50 Hz nominal -- 0.0128 instead of 0.638 Hz/s at the defaults. The unit"
+	" check refused it (MW over MW.s is 1/s, not Hz/s) and the equation shipped inconsistent; the"
+	" arithmetic was never wrong, only the scale. The consequence is not cosmetic:"
+	" `frequency_nadir_hz` reads this slope, so the nadir it computed sat at 49.87 Hz -- comfortably"
+	" inside any under-frequency limit -- where the correct slope puts it at 43.62 Hz, below both"
+	" the node's own 45 Hz floor and the 48 Hz protection threshold this graph declares. A model"
+	" that reports a safe nadir for an unsafe loss is the failure mode this equation exists to"
+	" prevent. Dimensional check:"
+	" Hz times MW over MW.s is Hz/s."
+)
+
+
+def build_batch67(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Restore the nominal-frequency factor the per-unit swing equation needs.
+
+	*The finding.* `rocof_definition` computed `largest_loss_mw / (2 *
+	system_inertia_mws)` and determines `rocof_df_dt_hz_per_s`, declared
+	`Hz/s`. MW / (MW.s) is 1/s. The two sides do not share a dimension and
+	`units.check_graph` says so -- it is the one inconsistent equation in the
+	graph. The per-unit swing equation at t=0 is d(omega)/dt = -P_loss/(2HS),
+	where omega is per unit and the result is in per unit per second. A
+	frequency slope in Hz/s is that rate times the nominal frequency.
+
+	*Why the unit check is the right witness here.* It was already failing
+	before this batch, and nothing acted on it. A dimensional failure on a
+	single equation is easy to read as a bookkeeping defect in the unit
+	vocabulary rather than a factor missing from the physics. Here the
+	vocabulary is right: the operands are genuinely MW and MW.s, the quotient
+	is genuinely 1/s, and the determined node is genuinely Hz/s. The mismatch
+	is the factor.
+
+	*What changes downstream.* `frequency_nadir_hz` reads this slope directly,
+	so the nadir moves from 49.87 Hz to 43.62 Hz at the defaults, and
+	`rocof_limit_hz_per_s` -- 1.0 Hz/s -- now sits above the computed 0.638
+	rather than above 0.0128. Both changes make the model stricter, which is
+	the direction a frequency-security model should err.
+
+	*The gate.* The builder asserts the shipped rhs is exactly the per-unit
+	form, that the determined node's declared unit is Hz/s, and that the
+	corrected rhs carries `nominal_frequency_hz`. It also re-runs
+	`units.check_graph` over the candidate and asserts `rocof_definition`
+	leaves the inconsistent set, so the fix is verified by the same check that
+	found it rather than by a second opinion written to agree.
+	"""
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+
+	equation = graph.equations["rocof_definition"]
+	assert equation.rhs == _BATCH67_OLD_RHS, equation.rhs
+	assert equation.determined_variables == ("rocof_df_dt_hz_per_s",), equation.determined_variables
+	determined = graph.nodes["rocof_df_dt_hz_per_s"]
+	assert determined.unit == "Hz/s", determined.unit
+	nominal = graph.nodes["nominal_frequency_hz"]
+	assert nominal.unit == "Hz", nominal.unit
+
+	equations["rocof_definition"] = {
+		key: list(value) if isinstance(value, tuple) else value
+		for key, value in equation.model_dump(mode="json").items()
+		if key != "id"
+	}
+	equations["rocof_definition"]["rhs"] = _BATCH67_NEW_RHS
+	equations["rocof_definition"]["description"] = _BATCH67_DESCRIPTION
 
 	return nodes, equations, [], []
 

@@ -38822,9 +38822,11 @@ equations:
     unit_check: true
   frequency_nadir_definition:
     description: 'The frequency after the response time, at the constant initial slope. Dimensional check:
-      Hz minus (Hz/s) times s is Hz. A first-order approximation: the actual trajectory curves as the
-      response engages, and the linear form is a lower bound on the nadir, i.e. more conservative than
-      the truth.'
+      Hz minus (Hz/s) times s is Hz. This is the frequency at the moment response begins, not the nadir.
+      The true nadir is at or below it, because response only ever reduces the slope magnitude once it
+      engages, so this quantity is an UPPER bound on the nadir -- it overstates how low the frequency
+      falls and is optimistic, not conservative. Use it as a screen: a value here already below the UFLS
+      setting means the real nadir certainly is.'
     determined_variables:
     - frequency_nadir_hz
     free_variables:
@@ -45662,15 +45664,24 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   rocof_definition:
-    description: 'The swing equation''s first instant: the largest credible loss divided by twice the
-      stored kinetic energy. Bounds the instantaneous renewable share, because inverters store no kinetic
-      energy.
-
-      '
+    description: 'The swing equation''s first instant, in hertz per second: the nominal frequency times
+      the largest credible loss over twice the stored kinetic energy, `nominal_frequency_hz * largest_loss_mw
+      / (2 * system_inertia_mws)`. The per-unit swing equation gives d(omega)/dt = -P_loss / (2 H S),
+      which is a rate in per unit per second and carries no hertz; a frequency slope is that rate times
+      the nominal frequency, because omega = f / f0 by definition. The shipped body omitted the factor,
+      so it computed a quantity 50x too small at a 50 Hz nominal -- 0.0128 instead of 0.638 Hz/s at the
+      defaults. The unit check refused it (MW over MW.s is 1/s, not Hz/s) and the equation shipped inconsistent;
+      the arithmetic was never wrong, only the scale. The consequence is not cosmetic: `frequency_nadir_hz`
+      reads this slope, so the nadir it computed sat at 49.87 Hz -- comfortably inside any under-frequency
+      limit -- where the correct slope puts it at 43.62 Hz, below both the node''s own 45 Hz floor and
+      the 48 Hz protection threshold this graph declares. A model that reports a safe nadir for an unsafe
+      loss is the failure mode this equation exists to prevent. Dimensional check: Hz times MW over MW.s
+      is Hz/s.'
     determined_variables:
     - rocof_df_dt_hz_per_s
     free_variables: []
-    latex: null
+    latex: \mathrm{rocof}_{df\_dt\_hz\_per\_s} = \frac{\mathrm{nominal}_{frequency\_hz} \mathrm{largest}_{loss\_mw}}{2
+      \mathrm{system}_{inertia\_mws}}
     lhs: rocof_df_dt_hz_per_s
     linearity: linear
     name: Rate of change of frequency
@@ -45678,10 +45689,12 @@ equations:
     - rocof_df_dt_hz_per_s
     - largest_loss_mw
     - system_inertia_mws
+    - nominal_frequency_hz
     priority: P1
-    reference: Swing equation at t=0, df/dt = -P_loss / (2 H S)
+    reference: Swing equation at t=0 in per unit, d(omega)/dt = -P_loss / (2 H S); the nominal-frequency
+      factor that converts the per-unit rate to Hz/s is the definition omega = f / f0
     relation: eq
-    rhs: largest_loss_mw / (2 * system_inertia_mws)
+    rhs: nominal_frequency_hz * largest_loss_mw / (2 * system_inertia_mws)
     solution_method: direct
     system: inertia
     tolerance: 1.0e-09
@@ -49159,6 +49172,16 @@ relationships:
   source: marginal_cost_usd_per_mwh
   strength: hard
   target: lcoe_learning_usd_per_mwh
+- description: The frequency slope is a per-unit rate times the nominal frequency, so the nominal hertz
+    is an input to it, not a constant folded into the arithmetic.
+  direction: forward
+  equation_id: rocof_definition
+  priority: P1
+  reference: null
+  relationship: equality
+  source: nominal_frequency_hz
+  strength: hard
+  target: rocof_df_dt_hz_per_s
 - description: The largest credible loss is what the system must ride through.
   direction: forward
   equation_id: rocof_definition
