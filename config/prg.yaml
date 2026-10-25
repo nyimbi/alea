@@ -2284,26 +2284,29 @@ parameters:
   buffer_pool_contribution:
     categories: []
     category: Carbon
-    deprecated_by: null
-    description: The share of issued carbon credits a registry holds in its buffer against reversal. At
-      0.1 the pool absorbs a tenth of every issuance.
+    default: 0.1
+    description: DEPRECATED. Duplicate of `permanence_parameters`. This node was declared `derived` with
+      an equation setting it equal to that share, so the graph carried one number under two ids -- the
+      two-names-for-one-quantity defect, not a second quantity. Its unit `1`, range [0, 1] and default
+      of 0.1 all restated the share it aliased. Verra's AFOLU Non-Permanence Risk Tool v4.2 calls the
+      object a buffer-pool contribution (2.5.4), which is where the name came from; the quantity it names
+      is the permanence share.
     determinism: policy
+    deprecated_by: permanence_parameters
     initial: null
-    name: Buffer pool contribution
-    priority: P1
+    name: Buffer pool contribution (deprecated)
+    priority: P3
     range:
     - 0.0
     - 1.0
-    role: derived
-    source: The unclassified remainder (batch 33)
+    role: free
+    source: null
     source_url: null
-    status: to_build
+    status: deprecated
     subcategory: null
     type: float
     unit: '1'
-    users:
-    - Planners
-    - Regulators
+    users: []
   buffer_zones:
     name: Buffer zones
     description: Buffer zones
@@ -23128,8 +23131,16 @@ parameters:
     category: Carbon
     default: 0.1
     deprecated_by: null
-    description: 'Reversal allowance on the credit book: the share of issued volume held back against
-      non-permanence. A share, and its complement is the buffer a registry actually retains.'
+    description: 'The share of issued volume held back against non-permanence, which is what a registry
+      deposits into its buffer pool. A share of the issuance, not of the value: at 0.1 the registry retains
+      4.5 of 45 MtCO2/year. This is the withheld share, not its complement -- the complement is the volume
+      released, the opposite of a buffer, and an earlier spelling of this description said so backwards.
+      Verra''s AFOLU Non-Permanence Risk Tool v4.2 makes the share a risk output rather than a free dial:
+      an overall risk rating converts directly to a percentage (2.5.4), floors at 12 (2.5.2) and fails
+      the project above 60 (2.5.3), so a Verra project deposits between 12% and 60%. Programs that set
+      the share rather than deriving it span 2% (Isometric) to 20% (Gold Standard, Plan Vivo); ACR uses
+      a flat 10% for CCS. The 0.1 default is that ACR figure and sits below Verra''s floor, which is a
+      fact about which program the default was taken from, not a defect in it.'
     determinism: policy
     initial: null
     name: Permanence parameters
@@ -34127,29 +34138,6 @@ equations:
     system: financial
     tolerance: 1.0e-06
     unit_check: true
-  buffer_pool_contribution_definition:
-    description: The share of issued credits the registry buffers against reversal, which is the permanence
-      share the graph already carries. 0.1 at defaults. A reviewer should decide whether this is a second
-      spelling of the buffer `carbon_credit_reversal_allowance_definition` already computes as `(1 - permanence_parameters)`;
-      if it is, the node's coupling is its deletion, not this alias.
-    determined_variables:
-    - buffer_pool_contribution
-    free_variables: []
-    latex: \mathrm{buffer}_{pool\_contribution} = \mathrm{permanence}_{parameters}
-    lhs: buffer_pool_contribution
-    linearity: linear
-    name: Buffer pool contribution definition
-    parameters:
-    - buffer_pool_contribution
-    - permanence_parameters
-    priority: P1
-    reference: null
-    relation: eq
-    rhs: permanence_parameters
-    solution_method: direct
-    system: carbon_trajectory
-    tolerance: 1.0e-09
-    unit_check: true
   business_interruption_cover_definition:
     description: 'The revenue indemnified: the cover share times gross revenue. A switch at zero returns
       zero, which is the gated quantity rather than a scenario branch.'
@@ -34540,11 +34528,12 @@ equations:
     description: 'The volume the permanence share sets aside: the allowance a registry holds against the
       credit being reversed by fire, disease or land-use change. A forest credit that burns has to be
       replaced from this allowance, and the allowance is sized by the reversal risk the permanence share
-      names. The share is the allowance, not its complement. `permanence_parameters` describes itself
-      as ''the share of issued volume held back against non-permanence'', so its complement is the volume
-      *not* held back -- the opposite of an allowance -- and the shipped form, which multiplied the complement,
-      reported 40.5 of 45 MtCO2/year as the buffer. Batch 34 corrected it to 4.5, and `buffer_pool_contribution`
-      now agrees with the volume it names instead of contradicting it.'
+      names. The share is the allowance, not its complement. The shipped form multiplied the complement
+      and reported 40.5 of 45 MtCO2/year as the buffer; batch 34 corrected it to 4.5. This is the arithmetic
+      Verra''s AFOLU Non-Permanence Risk Tool v4.2 states at 2.5.4 -- an overall risk rating converts
+      to a percentage, and that percentage multiplies the net change in the project''s carbon stocks --
+      so the share times the volume is the deposit, and the risk rating is what sets the share. The registry
+      holds this volume in the pooled buffer account and releases it only if project integrity is maintained.'
     determined_variables:
     - carbon_credit_reversal_allowance
     free_variables: []
@@ -34557,7 +34546,11 @@ equations:
     - carbon_credit_volumes
     - permanence_parameters
     priority: P1
-    reference: null
+    reference: Verra, AFOLU Non-Permanence Risk Tool v4.2 (2023), 2.5.4 (risk rating converted to a percentage
+      and multiplied by the net change in carbon stocks) and 2.5.2 (the minimum rating of 12), archived
+      at sources/archive/verra_afolu_npt_v42.txt; Cambridge Permanence and Durability Workshop 2024, Current
+      Practice Among Carbon Crediting Programs, for the programs that set the share directly rather than
+      deriving it, archived at sources/archive/cambridge_buffer_pool_workshop_2024.txt
     relation: eq
     rhs: permanence_parameters * carbon_credit_volumes
     solution_method: direct
@@ -57419,15 +57412,6 @@ relationships:
   source: depreciation_schedule_accelerated
   strength: hard
   target: accelerated_depreciation
-- description: Enters the product identity.
-  direction: forward
-  equation_id: buffer_pool_contribution_definition
-  priority: P1
-  reference: null
-  relationship: functional
-  source: permanence_parameters
-  strength: hard
-  target: buffer_pool_contribution
 - description: Enters the product identity.
   direction: forward
   equation_id: compensation_rates_definition

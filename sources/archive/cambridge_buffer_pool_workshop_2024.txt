@@ -1,0 +1,1707 @@
+                      Cambridge Permanence and Durability
+                      Workshop
+
+                      January 31–February 1, 2024
+
+                      Workshop Resources and Summary
+
+
+
+
+                                                                                                                                                                             1
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      Table of Contents
+                      Permanence Resources ...............................................................................................................3
+                          Historical Context ............................................................................................................................... 3
+                          Permanence and Durability Approaches ............................................................................................. 4
+                              Supply Side Targeted Risk Mitigation Mechanisms ......................................................................................... 5
+                              Different Approaches to Account for Carbon Emissions .................................................................................. 8
+                          Current Practice Among Carbon Crediting Programs ........................................................................ 10
+                          Permanence and Durability Parameters ........................................................................................... 16
+                          Permanence and Durability Source Index ......................................................................................... 18
+                              Supply Side Targeted Risk Mitigation Mechanisms ....................................................................................... 18
+                              Different Approaches to Account for Carbon Emissions ................................................................................ 18
+                          IC-VCM Glossary ............................................................................................................................... 20
+                      Workshop Overview .................................................................................................................24
+                      Workshop Discussion Insights ...................................................................................................25
+                          Shift From Permanence to Durability ................................................................................................ 25
+                          Issue of Fungibility ............................................................................................................................ 26
+                          Need for Increased Investment ......................................................................................................... 27
+                          Improved Compensation Mechanisms.............................................................................................. 28
+                          Scaling Longer-duration Carbon Sequestration and Storage ............................................................. 29
+                      Systems Design Exercise Outputs ..............................................................................................31
+                          Common Threads Throughout Outputs ............................................................................................ 31
+                          Details of Individual Outputs ............................................................................................................ 32
+
+
+
+
+                                                                                                                                                                             2
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      Permanence Resources
+                      Historical Context
+                      Carbon markets and emissions trading systems seek to leverage markets to incentivize
+                      and mobilize finance for cost-effective, standardized and verified greenhouse gas
+                      emission reductions and carbon removals. Carbon markets broadly refer to “cap and
+                      trade” and other emissions trading systems, as well as voluntary and compliance
+                      “offset” markets that generate tradeable certificates representing one tonne of CO2e
+                      avoided, reduced, or removed from the atmosphere.
+                      Demand for these certificates is driven by either 1) compliance obligations on
+                      companies or governments as a result of regulation or 2) voluntary actors seeking to
+                      deliver on climate action goals or targets.
+                      Conventions and terminology have changed over the years but generally speaking, a
+                      “carbon credit” represents one metric tonne of CO2e avoided, reduced or removed
+                      emissions from the atmosphere. Most carbon credits are used as a carbon “offset”, e.g.
+                      to compensate for a tonne of emissions elsewhere, either under mandatory or voluntary
+                      systems. If a carbon credit is claimed as an offset, there’s a general expectation in the
+                      market that purchasing and retiring a carbon offset delivers an equivalent or
+                      commensurate amount of atmospheric benefit/climate change mitigation benefit to the
+                      tonne of emissions you are compensating for.
+                      The concept of “permanence” has long been considered a key tenant of a high-quality
+                      carbon credit. “Permanence” is the concept that carbon removed or reduced through an
+                      offset project must have a high degree of certainty that it will last for a sufficient period
+                      of time to account for/compensate for the harm of the impact of carbon dioxide in the
+                      atmosphere it is intended to address.
+                      However, to date, carbon credits considered “permanent” have been issued from a
+                      range of project types resulting in carbon removed or reduced for different periods of
+                      time—ranging from a year to centuries. This lack of consistent accounting for
+                      differences in storage or reduction duration across project types, and the lack of
+                      consensus across the policy making and scientific fields about the appropriate period of
+                      time required to store carbon in order to fully mitigate the negative impacts of the
+                      compensated tonne, has led to concerns over the validity of some claims based on
+                      carbon credits and uncertainty around how to value the climate impact from different
+                      projects of different lengths. Despite broad recognition of the atmospheric value and
+                      benefit of temporary removal and storage of carbon, there is not yet consensus on how
+                      to value these types of projects relative to projects that store carbon for much longer
+                      terms.
+                      Recently, “durability” has gained traction as an alternative to “permanence.” This
+                      represents a recognition that shorter term solutions have value in climate mitigation and
+                      that a range of approaches are available to value and conduct accounting for the
+                      duration of impact (i.e., minimizing the risk that the impact is reversed or not achieved
+                      for the length of time we initially believe it to be) rather than a minimum time period that
+                      all projects must adhere to. Others in the market insist that only solutions that last as
+                      long as carbon in the atmosphere (i.e., between 300 and 1,000 years) have merit.
+
+
+                                                                                                                                                                             3
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      Current approaches to permanence across voluntary and compliance standard setting
+                      bodies vary widely with respect to classification of risk across mitigation project types,
+                      how removals and reductions are accounted for, risk mitigation and management
+                      assessments and systems, length of monitoring, reporting and verification periods, etc.
+                      This is a key policy issue but has historically been driven by individual standard bodies
+                      and mechanisms and addressed piecemeal across the market. Notably California has
+                      extended the disclosure requirements to durability and risk mitigation and specified
+                      these be “for any project that the business entity knows or should know that such
+                      reductions or removal enhancements are less than the atmospheric lifetime of carbon
+                      dioxide emissions.”
+                      Incumbent ratings entities, data providers, insurers and price assessment agencies
+                      evaluate duration without a common framework/s to compare projects of different
+                      durations. Rather, proxies are used for data such as credit type and vintage.
+                      The European emission trading scheme appears to favor a conservative approach to
+                      equivalence for VCCs and exclusion of any carbon credits, even if permanent. A recent
+                      CO2RE report called for the focus on monitoring reporting and verification be applied to
+                      all removals ‘regardless of whether of differing permanence and policy/market design.
+                      Although the UNFCCC Supervisory Body for Article 6.4 decided in 2023 to ‘focus on
+                      measures that address reversals on a tonne-for-tonne basis and drop tonne-year
+                      carbon accounting method (tonne-year carbon accounting method discussed below)
+                      from near-term considerations’ work is ongoing and Article 6.4 agreements pushed out
+                      for another year.
+                      Permanence and Durability Approaches
+                      Approaches to address permanence and durability risks in the voluntary carbon market
+                      range from wholesale changes to the way carbon storage is accounted for to more
+                      targeted risk mitigation measures that can be aligned to most existing standards bodies
+                      today. Below is an overview of sample approaches to address permanence and
+                      durability in the voluntary markets that may be discussed more in-depth at the
+                      workshop.
+                      The descriptions below do not include commentary on the market demand for such
+                      approaches but focus on how they address permanence or durability risk in the supply
+                      of carbon credits. This is not to say that demand is not important. On the contrary,
+                      market demand is a vital consideration when determining the feasibility of implementing
+                      any given approach along with other considerations (see Permanence and Durability
+                      Parameters). Furthermore, how the “demand” side of the market, e.g. carbon credit
+                      purchasers and investors, sees requirements imposed by standard setting bodies and
+                      regulators has a significant impact on whether a given approach to permanence will be
+                      successful over time. Feasibility of application and acceptability by “demand” side
+                      actors should be taken into consideration.
+                      IC-VCM, despite its focus on the supply side, regularly coordinates with other
+                      ecosystem actors more focused on the demand side of the market, including the
+                      Voluntary Carbon Markets Initiative, We Mean Business Coalition, Climate Disclosure
+
+
+
+                                                                                                                                                                             4
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      Project, Science Based Targets Initiative, and Greenhouse Gas Protocol (see recent,
+                      relevant examples from COP28 here and here).
+                      In addition, the descriptions below do not explicitly identify assignment of liability for
+                      reversal risk. For any approach, building a system that will attract investment from
+                      traditional capital markets will require clarity on which market actor bears liability in the
+                      event of a default as well as available recourse. Currently, there is not a standard
+                      approach to assigning responsibility for compensating reversals. Market actors have
+                      long advocated for seller liability and the majority of more prominent standards and
+                      protocols in the voluntary carbon market space rely on seller liability for any reversal
+                      (discussed in more detail below).
+                      For additional reading regarding each approach, please reference the Permanence and
+                      Durability Index in the appendix.
+                      Supply Side Targeted Risk Mitigation Mechanisms
+                      These approaches to address permanence and durability risks are focused specifically
+                      on the supply side of the market and involve little change in how buyers would account
+                      for their emissions.
+                      Minimum Project Duration with Monitoring, Reporting, and Verification (MRV),
+                      Compensation, and Liability Assignment
+                      It is common practice in the carbon crediting markets to require a monitoring, reporting,
+                      and verification (MRV) and compensation period during which project developers must
+                      regularly monitor for any reversals and implement mitigation or compensation measures
+                      if the emissions underlying a previously issued credit are reversed.
+                      Each standard takes a different approach to determining the length of their MRV and
+                      compensation period, typically based on a combination of project type risk and
+                      individual project risk assessments. For example, Climate Action Reserve’s U.S. Forest
+                      Protocol specifies that forest projects must be monitored and verified “for a period of
+                      100 years following the issuance of any [climate reserve tonne] for GHG reductions or
+                      removals achieved by the project.” Verra requires its agriculture, forestry, and other land
+                      use projects to assess permanence risk over 100 years; however, it requires a minimum
+                      project duration of only 40 years. To account for this difference, Verra is developing a
+                      long-term monitoring system for projects certified under its methodologies that would
+                      continue to monitor reversal risk after the crediting period or MRV and compensation
+                      period expires.
+                      MRV and compensation periods for engineered removals vary depending on project
+                      type. For example, geologic storage protocols often point to the U.S. Environmental
+                      Protection Agency’s guidance around class VI wells for carbon dioxide sequestration,
+                      which requires a minimum 50-year monitoring period after the injection well is closed.
+                      That being said, while government regulations may require an MRV period, protocols
+                      may not require compensation in the event of a reversal for engineered solutions—even
+                      during this MRV period.
+                      In addressing permanence and durability risk in its Assessment Framework, IC-VCM
+                      provided guidance around MRV and compensation periods by activity type. For
+                      activities that are considered to have a “material risk” of reversal (i.e., conservation and
+
+
+                                                                                                                                                                             5
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      avoided conversion, agriculture soil carbon sequestration, forestry sequestration, and
+                      wetland and marine ecosystem restoration/management), IC-VCM requires a minimum
+                      40-year monitoring and compensation period. For projects that are considered to have a
+                      lower risk of reversal (i.e., displacement of non-renewable biomass, biochar, carbon
+                      capture with geological storage or mineralization, enhanced weathering, carbon dioxide
+                      in concrete) IC-VCM requires standards to conduct a general risk assessment and
+                      implement appropriate measures to mitigate any material risks. For Jurisdictional
+                      REDD+ projects, IC-VCM requires a minimum 40-year monitoring and compensation
+                      period.
+                      In the next iteration of its Assessment Framework, IC-VCM noted that it would
+                      specifically consider two changes to its guidance:
+                                 Extending the monitoring and compensation period (e.g., 100 years)
+                            
+                                  Shifting the monitoring and compensation oversight to the carbon-crediting
+                                  program or relevant jurisdiction
+                      Buffer Pools
+                      Buffer pools are the most commonly used tool to address permanence and durability
+                      risks in the market today and were specifically addressed by IC-VCM in its Assessment
+                      Framework. Buffer pools are a mechanism whereby a portion of a project’s overall
+                      credits are reserved to cover unplanned reversals and ensure that any specific entity
+                      (whether a project or a credit issuer or otherwise) has reduced or removed more carbon
+                      dioxide from the atmosphere than it has released. Buffer pools are used by the largest
+                      registries today (e.g., Verra, Gold Standard, American Climate Registry, Climate Action
+                      Reserve, etc.) and are typically managed by the registries themselves; however, each
+                      standard takes a slightly different approach to buffer pool management.
+                      In its Assessment Framework, IC-VCM provided guidance for when buffer pools are
+                      required and how they should be structured. For projects that are considered to have a
+                      material risk of reversal (i.e., conservation and avoided conversion, agriculture soil
+                      carbon sequestration, forestry sequestration, and wetland and marine ecosystem
+                      restoration/management), IC-VCM requires a minimum of 20% of all credits issued by
+                      the standard to be placed in a pooled buffer reserve. For projects that are considered to
+                      have a lower risk of reversal (i.e., displacement of non-renewable biomass, biochar,
+                      carbon capture with geological storage or mineralization, enhanced weathering, carbon
+                      dioxide in concrete) IC-VCM requires standards to conduct a general risk assessment
+                      and implement appropriate measures to mitigate any material risks. For Jurisdictional
+                      REDD+ projects, IC-VCM requires a pooled buffer reserve but leaves discretion on the
+                      adequate size, noting that it should be “proportional to reversal risk and adequate to
+                      compensate for potential reversals.”
+                      In the next iteration of its Assessment Framework, IC-VCM noted that it would consider
+                      requiring credit issuers to have provisions in place to ensure the continued operation of
+                      pooled buffer reserves until the latest expiration of any given project (e.g., in case the
+                      credit issuer ceases to exist or can no longer operate the pooled buffer reserve).
+                      Insurance
+
+
+
+
+                                                                                                                                                                             6
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      While some consider buffer pools a form of insurance, other third-party insurance
+                      offerings have begun to appear. Insurance policies targeted at the voluntary carbon
+                      market are being offered by large more traditional insurers and startups alike; however,
+                      policies that cover risk related to permanence and durability remain few and far
+                      between. Several insurers have chosen to enter the market focused on mitigating other
+                      risks associated with carbon credit transactions, including political risk and delivery risk,
+                      among others.
+                      Insurance policies that address permanence and durability could be targeted at project
+                      developers, carbon credit buyers, and credit issuers. For project developers, an
+                      insurance policy could cover an unavoidable reversal after credits have been issued
+                      (e.g., an afforestation project damaged by wildfire or pest infestation or a carbon dioxide
+                      injection site with a caprock damaged by unrelated seismic activity). For carbon credit
+                      buyers, an insurance policy could cover a portfolio of credits purchased and be priced
+                      according to the activities associated with the credits purchased. For credit issuers, an
+                      insurance policy could cover the pooled buffer reserve, providing issuers with the ability
+                      to compensate those who purchased the credits.
+                      An open question among insurers related to permanence and durability is that of
+                      fungibility. Given that buyers are often purchasing a carbon credit to offset an emission,
+                      monetary compensation may not be the preferred remedy. Instead, insurers are
+                      exploring the possibility of paying out policies in carbon credits, but this introduces a
+                      new set of issues to be addressed—should the replacement credit be from the same
+                      activity? Should it be from the same issuer? Should the replacement credits be from a
+                      project in the same geography? What are the ecological impacts associated with the
+                      different options? These questions and more are still being debated, with insurers
+                      developing their own approaches to fungibility.
+                      Discounting
+                      Discounting is another approach that is used to account for permanence and durability
+                      risk as well as other risk factors associated with a carbon credit. There are both ex-post
+                      and ex-ante examples of discounting being applied to carbon credits. It is common
+                      practice for crediting methodologies and standards to require a variety of discounts to
+                      be applied prior to credit issuance to address a range of issues, including uncertainty
+                      and to ensure conservativeness. In some instances buyers and developers have
+                      applied an ex post credit discount, where a credit that is issued as equal to a metric
+                      tonne of carbon dioxide removed from the atmosphere is multiplied by a percentage
+                      somewhere between 0% and 100% to become worth less than one metric tonne of
+                      carbon dioxide removed according to its individual risk profile as determined by the
+                      buyer or broker. This method is extended to the project level, where the overall volume
+                      of issued credits is discounted to account for permanence, durability risk, and other
+                      associated risks.
+                      Risk-adjusted discounting is commonly used in financial markets and has its origins in
+                      the capital asset pricing model first published in 1964 and is still frequently used to
+                      value future cash flows. While risk-adjusted discounting has been a concept discussed
+                      in the carbon markets since shortly after the adoption of the Kyoto Protocol, it has more
+                      recently been a feature of how carbon credit ratings agencies assign value to a carbon
+
+
+                                                                                                                                                                             7
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      credit. For example, Sylvera has encouraged its customers to use its ratings to calculate
+                      a discount rate, while BeZero has introduced a framework that applies a discount factor
+                      to its ratings. Risk-adjusted discounting has also been used on the demand side by
+                      carbon credit intermediaries like Rubicon Carbon as a tool to manage the over-crediting
+                      risk of projects across a portfolio.
+                      Finally discounting is also used to calculate and assign value to emissions avoided or
+                      reduced in monetary terms (typically structured as a “social cost of carbon” calculation)
+                      to enable assignment of value to various durations of carbon storage in economic terms
+                      and to derive a net present value of the avoided damages of emissions in the future.
+                      Other activity and methodology-specific mechanisms
+                      There are several activity-specific mechanisms that could be implemented at the project
+                      level to aid in mitigating permanence or durability risk. Each of these mechanisms will
+                      be specific to the particular activity type and are typically addressed through project
+                      specific methodology requirements.
+                      For example, in its geologically stored carbon methodology, Puro.Earth requires that
+                      carbon dioxide be sequestered in reservoirs or geological formations that meet U.S.
+                      Environmental Protection Agency class I, class II, class VI, or EU regulations. The Gold
+                      Standard, requires that, with limited exceptions, calcium carbonate from indirect mineral
+                      carbonation must be used as filler in construction materials only to avoid accidental
+                      release through municipal solid waste incineration. Verra recently concluded a public
+                      comment period for its proposed ABACUS label for afforestation, reforestation, and
+                      revegetation activities, outlining several project-level measures to enhance permanence
+                      and durability. The project working group proposed mandating that projects be
+                      “ecologically appropriate” for the geographic area, disallowing projects with more than
+                      one contiguous hectare of monoculture, and requiring at the project validation phase a
+                      proposed approach to ensure carbon stock stability after the crediting period (e.g., legal
+                      protection, ongoing capacity building, alignment of financial incentives, etc.).
+                      Different Approaches to Account for Carbon Emissions
+                      These approaches differ from those outlined above in that they could require a change
+                      in how purchasers approach carbon credit use and accounting to address permanence
+                      and durability risk in carbon credit projects.
+                      Tonne-Year Accounting
+                      Tonne-year accounting refers to a family of approaches that seek to introduce time into
+                      how carbon emissions are accounted for, providing market participants with a common
+                      unit (a tonne-year) and method to compare the impact and durability of different credited
+                      emission mitigation activities with the impact and duration of emissions from elsewhere
+                      in the economy. In the voluntary carbon markets, the application most associated with
+                      tonne-year accounting is known as vertical stacking.
+                      Vertical stacking refers to “buying multiple short-termne-year accounting aims to provide
+                      a means to account for and compare the impact of temporary carbon storage and
+                      projects of different durations. ” credits upfront to “offset one tonne of carbon dioxide
+                      emitted today.” For example, to offset one agetonne emitted in 2020, an organization
+                      would purchase multiple credits with a 20-year duration to attempt to approximate the
+
+
+                                                                                                                                                                             8
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      impact of the carbon emitted in 2020. One of the more significant challenges with
+                      vertical stacking is determining how high the stack should be—e.g., is it two 20-year
+                      credits? Three? More? Two prominent approaches for calculating the value of
+                      temporary storage in a vertical stack, Moura-Costa and Lashof, were first introduced in
+                      the 1990s, while more recent research has sought to reframe the conversation around
+                      the social value of an offset.
+                      While the IC-VCM did not explicitly address tonne-year accounting in its Assessment
+                      Framework, it noted during its feedback summary that tonne-year accounting
+                      approaches without any minimum time commitment would not be granted Core Carbon
+                      Principles status. The expert panel acknowledged that tonne-year accounting in some
+                      form “could work as an incentive mechanism or policy tool for maintaining carbon
+                      storage;” however, it rejected the “flawed premise that storing carbon for arbitrarily short
+                      periods of time” could be deemed equal to a permanent reduction in emissions.
+                      Temporary Crediting
+                      Often linked with tonne-year accounting, but arguably a distinct concept is the idea of
+                      temporary crediting. Temporary crediting frequently relies on some of the same
+                      scholarship (i.e., Moura-Costa, Lashof, Groom and Venmans) in seeking to arrive at a
+                      value for short-term carbon storage and then allows for a credit “expiration” after a given
+                      time interval. What happens upon expiration is still up for debate—carbon credit buyers
+                      could then replace the credit with another one, a public entity could manage the
+                      replacement of expiring credits, etc.—the key element is just that the credit itself is time-
+                      bound.
+                      Temporary crediting could have positive atmospheric and social benefits. In terms of
+                      atmospheric benefits, it could give “ecosystems more time to adapt to climate change”
+                      and also provide society with more time to “develop and deploy alternative mitigation
+                      actions.” From a social perspective, temporary crediting could direct capital to
+                      indigenous peoples and local communities who are often intimately involved in projects
+                      that issue temporary credits (e.g., reforestation and ecosystem restoration projects).
+                      Permanent Additional Carbon Tonne
+                      The Permanent Additional Carbon Tonne (PACT) is a framework for quantifying the
+                      long-term economic value of nature-based solutions to compare directly with carbon
+                      capture and storage or geosequestration. It was developed by a team of Cambridge
+                      University researchers and first published in October 2023. The framework includes six
+                      elements: additionality, permanence, leakage, biodiversity, livelihoods, and justice.
+
+
+
+
+                                                                                                                                                                             9
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      Current Practice Among Carbon Crediting Programs
+                      Current approaches to permanence and durability vary among carbon crediting
+                      programs and activity type. With the release of the IC-VCM’s Core Carbon Principles
+                      last year, some carbon crediting programs have updated their methodologies to meet
+                      IC-VCM standards, while others were already meeting or exceeding IC-VCM guidance.
+                      The research included below is non-exhaustive and does not represent all carbon
+                      crediting programs or all activity types for each carbon crediting program. The research
+                      is meant to highlight how a few carbon crediting programs approach issues of
+                      permanence and durability in different activity types and is not representative of any
+                      formal assessment by the IC-VCM. Additional relevant detail related to each carbon
+                      crediting program is included after the summary graphics.
+
+
+                          M on it orin g an d com p en sat ion p eriod s for
+                          select ed carb on cred it in g p rog ram s (1/2)
+                                                                                                                                                                                                  NON-EXHAUSITIVE
+
+                                                                                   <20 years              20 years               30 years                4 0 years               50 years                 10 0 + years
+                          Am erican Carbon Regist ry
+                                                                                                                                                                           M in im u m 4 0 -yea r m on it orin g a n d
+                          AFOLU p roject s1                                                                                                                                        com p en sa t ion p eriod
+
+                                                                                                   M in im u m 5-yea r m on it orin g p eriod w it h a lon g -t erm ,
+                          CCS p roject s2                                                              b in d in g coven a n t t o com p en sa t e for reversa ls
+
+                          Archit ect ure for RED D +
+                          Transactions (ART)
+                                                                                                   M on it orin g a lig n s w it h cred it in g p eriod s; n o fu rt h er m on it orin g req u irem en t s if p roject d oes
+                          ART TREES p roject s3                                                       n ot ren ew ; p roject s elig ib le for CORSIA m u st p a rt icip a t e in a t lea st 4 cred it in g p eriod s
+
+                          Clim at e Act ion Reserve
+                                                                                                      10 0 -yea r m on it orin g a n d com p en sa t ion
+                          U.S. Forest Prot ocol                                                          p eriod from d a t e of cred it issu a n ce
+
+                                                                                                                                                30 -yea r m on it orin g a n d com p en sa t ion p eriod from d a t e
+                          M exican Forest Prot ocol                                                                                             of cred it issu a n ce w it h in cen t ives t o m eet 10 0 -yea r t erm
+
+                          The Gold St andard
+                                                                                                                                                M in im u m 30 -yea r a n d m a xim u m 50 -yea r p roject p eriod ;
+                          Lan d u se an d forest ry p roject s                                                                                        n o m on it orin g req u irem en t s a ft er p roject p eriod
+
+
+                          1Ag ricult ure, forest ry and ot her land use; 2Carbon capt ure and st orag e; 3The REDD+ Environm ent al
+
+                          Excellence St andard                                                                                                                                                                                 27
+
+
+
+
+                                                                                                                                                                                                                                    10
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                          M on it orin g an d com p en sat ion p eriod s for
+                          select ed carb on cred it in g p rog ram s (2/2)
+                                                                                                                                                                                            NON-EXHAUSITIVE
+
+                                                                           <20 years                  20 years               30 years              4 0 years               50 years                10 0 + years
+                          Isom et ric
+                                                                                                                           Post -in ject ion m on it orin g is a lig n ed t o reg u la t ory
+                          CO2 st orag e in salin e aq u ifers                                                           req u irem en t s; 20 -yea rs in t h e EU a n d 50 yea rs in t h e US
+
+                          Plan Vivo
+                                                                                        Risks t o ca rb on b en efit s for a p eriod of a t lea st 50 yea rs
+                          Clim at e st an d ard                                            m u st b e id en t ified a n d sig n ifica n t risks m it ig a t ed
+
+                          Puro.eart h
+                                                                                                   Project s m u st su b m it a lon g -t erm (d efin ed a s 10 0 yea rs) risk
+                          Carb on at ed m in erals                                               a ssessm en t a n d m it ig a t ion p la n a ssocia t ed w it h p erm a n en ce
+
+                                                                                               St ora g e sit es m u st b e m on it ored “over t im e;” h ow ever n o
+                          Terrest rial b iom ass                                                           sp ecific m in im u m d u ra t ion is ou t lin ed
+
+                          Verra
+                                                                                                                                                                     M in im u m 4 0 -yea r p roject d u ra t ion ; lon g -
+                          AFOLU p roject s                                                                                                                           t erm m on it orin g syst em in d evelop m en t
+                                                                                                M in im u m p ost -in ject ion m on it orin g
+                          Geolog ic carb on seq u est rat ion                                           req u irem en t of 10 yea rs
+
+
+
+
+                                                                                                                                                                                                                          28
+
+
+
+
+                          Ot h er reversal risk m it ig at ion m easu res b y carb on
+                          cred it in g p rog ram (1/2)
+                                                                                                                                                                                            NON-EXHAUSITIVE
+                                                                   Prog ram u ses a             Fract ion of            Fract ion of               Prog ram                Easily fin d ab le,          Provision s t o
+                                                                    p ooled b u ffer        cred it s in b u ffer     cred it s in b u ffer       req u ires or                 p u b licly            op erat e reserve
+                                                                      reserve t o           is st an d ard % of          sp ecific t o           in cen t ivizes               availab le                if Prog ram
+                                                                   com p en sat e for          t ot al issu ed           in d ivid u al          m it ig at ion of        in form at ion on            ceases t o exist
+                                                                       reversal              carb on cred it s          p roject risk            reversal risk            b u ffer con t en t s
+                          Am erican Carbon Regist ry
+                          AFOLU p roject s
+                          CCS p roject s
+
+                          Archit ect ure for RED D +
+                          Transact ions (ART)
+                          ART TREES p roject s
+
+                          Clim at e Act ion Reserve
+                          U.S. Forest Prot ocol
+                          M exican Forest Prot ocol
+
+                          The Gold St andard
+                          Lan d u se an d forest ry p roject s
+
+                                                                                                                                                                                                                          29
+
+
+
+
+                                                                                                                                                                                                                               11
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                          Ot h er reversal risk m it ig at ion m easu res b y carb on
+                          cred it in g p rog ram (2/2)
+                                                                                                                                                                              NON-EXHAUSITIVE
+                                                                   Prog ram u ses a         Fract ion of          Fract ion of            Prog ram           Easily fin d ab le,     Provision s t o
+                                                                    p ooled b u ffer    cred it s in b u ffer   cred it s in b u ffer    req u ires or            p u b licly       op erat e reserve
+                                                                      reserve t o       is st an d ard % of        sp ecific t o        in cen t ivizes          availab le           if Prog ram
+                                                                   com p en sat e for      t ot al issu ed         in d ivid u al       m it ig at ion of   in form at ion on       ceases t o exist
+                                                                       reversal          carb on cred it s        p roject risk         reversal risk       b u ffer con t en t s
+                          Isom et ric
+                          D irect air cap t u re + in ject ion
+
+
+                          Plan Vivo
+                          Clim at e St an d ard
+
+
+                          Puro.eart h
+                          Carb on at ed m in erals
+                          Terrest rial b iom ass
+
+
+                          Verra
+                          AFOLU p roject s
+                          Geolog ic carb on seq u est rat ion
+                                                                                                                                                                                                   30
+
+
+
+
+                      American Carbon Registry
+                      The American Carbon Registry’s reversal risk mitigation requirements are specific to the
+                      activity type, with AFOLU projects mirroring IC-VCM’s 40-year monitoring and
+                      compensation period requirement. Across both AFOLU and CCS projects, ACR requires
+                      project developers to contribute to a pooled buffer reserve that can be used as
+                      compensation in the event of a reversal risk. The contribution from AFOLU projects is
+                      determined based on a risk assessment, with lower risk factors leading to a lower
+                      required contribution. For CCS projects, the requirement is a flat 10% with a required
+                      binding risk mitigation covenant. No information regarding contingency plans for the
+                      continued operation of the pooled buffer reserve was found.
+                      Architecture for REDD+ Transactions (ART)
+                      The ART TREES program requires a reversal risk assessment to determine a buffer
+                      contribution that is tailored to the individual jurisdiction. Reversal risk is evaluated every
+                      five years; however, should a jurisdiction withdraw from the program, no further
+                      monitoring related to already issued credits is required. No information regarding
+                      contingency plans for the continued operation of the pooled buffer reserve was found.
+                      Climate Action Reserve
+                      Both of Climate Action Reserve’s protocols require a reversal risk assessment to
+                      determine the required buffer contribution, with the contribution lower if more risk
+                      mitigation measures are included in the project design. Climate Action Reserve
+                      indicates that its bylaws require the continued operation of the pooled buffer reserve
+                      should the organization cease to exist, but the exact pathway is left undetermined and
+                      dependent on future market conditions. The program may publish information regarding
+
+
+
+                                                                                                                                                                                                        12
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      its pooled buffer reserve contents in the login-only section of its website; however, no
+                      information was found in investigating the public portions of its website.
+                      The Gold Standard
+                      Unlike other carbon crediting programs, Gold Standard requires a flat 20% contribution
+                      to its pooled buffer reserve by all land-use projects, with other built-in requirements that
+                      seek to minimize reversal risk. Gold Standard was also one of the few standards to set
+                      a maximum project duration period for land-use projects. No information regarding
+                      contingency plans for the continued operation of the pooled buffer reserve was found.
+                      Isometric
+                      Isometric requires a small, 2% contribution to a pooled buffer reserve as a reversal risk
+                      mitigation measure, even though the program focuses on methodologies that achieve
+                      “effective” permanence. The program requires other risk mitigation measures aligned to
+                      state or national regulations for its saline aquifer storage module. No information
+                      regarding contingency plans for the continued operation of the pooled buffer reserve or
+                      information on the pooled buffer reserve’s contents was found.
+                      Plan Vivo
+                      Plan Vivo requires a flat 20% of all issued credits to be transferred to its risk buffer and
+                      requires mitigation of significant reversal risks for at least 50 years. Plan Vivo’s standard
+                      also incorporates several other requirements aimed at further mitigating reversal risk.
+                      Plan Vivo has published the number of credits in its pooled buffer reserve for previous
+                      protocols; however, it has not updated its website with information for the most recent
+                      versions. No information regarding contingency plans for the continued operation of the
+                      pooled buffer reserve was found.
+                      Puro.Earth
+                      Puro.Earth was the only carbon crediting program researched that does not have a
+                      pooled buffer reserve to manage reversal risk. Instead, it relies on a combination of
+                      monitoring requirements, documentation requirements (e.g., land title in the case of
+                      terrestrial biomass storage) and pre-issuance deductions to manage reversal risk.
+                      Verra
+                      Verra recently updated some of its guidance to mirror the permanence requirements
+                      contained in the IC-VCM’s Assessment Framework. Verra is the only standard that is
+                      building a long-term monitoring capability that will eventually be deployed to monitor for
+                      reversal risk after the project period concludes. Verra requires that every program
+                      conduct a risk assessment to determine a buffer pool contribution, with a lower
+                      contribution tied to strong risk mitigation measures. Of all carbon crediting programs
+                      investigated, Verra provided the most comprehensive account of its pooled buffer
+                      reserve contents, with data down to the project level publicly available. No information
+                      regarding contingency plans for the continued operation of the pooled buffer reserve
+                      was found.
+                      Sources for the Information in this Section
+
+
+
+
+                                                                                                                                                                             13
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      "The ACR Standard: Requirements and Specifications for the Quantification, Monitoring,
+                      Reporting, Verification, and Registration of Project-Based GHG Emissions Reductions
+                      and Removals." American Carbon Registry. Last modified 2023.
+                      https://acrcarbon.org/wp-content/uploads/2023/10/ACR-Standard-v8.0.pdf.
+                      AFOLU Non-Permanence Risk Tool. Verra, 2023. https://verra.org/wp-
+                      content/uploads/2023/10/AFOLU-Non-Permanence-Risk-Tool-v4.2-FINAL.pdf.
+                      "Buffer Pool Account Balance." American Carbon Registry. Accessed
+                      February 21, 2024. https://acr2.apx.com/myModule/rpt/myrpt.asp?r=209.
+                      Carbonated Materials Methodology for CO2 Removal. Puro.Earth, 2022.
+                      https://connect.puro.earth/carbonated-materials-carbon-removal-methodology.
+                      Geologic Carbon Storage (GCS) Requirements. Verra, 2023. https://verra.org/wp-
+                      content/uploads/2022/12/GCS-Requirements-v4.0-FINAL.pdf.
+                      Geologic Carbon Storage Non-Permanence Risk Tool. Verra, 2023. https://verra.org/wp-
+                      content/uploads/2022/12/GCS-Non-Permanence-Risk-Tool-v4.0-FINAL.pdf.
+                      GHG Emissions Reduction & Sequestration Product Requirements. The Gold Standard
+                      Foundation, 2022. https://globalgoals.goldstandard.org/standards/501_V2.1_PR_GHG-
+                      Emissions-Reductions-Sequestration.pdf.
+                      "Isometric Standard." Isometric. Last modified February 15, 2024.
+                      https://science.isometric.com/standard.
+                      Mexico Forest Protocol. Climate Action Reserve, 2022.
+                      https://www.climateactionreserve.org/wp-content/uploads/2023/12/Mexico-Forest-
+                      Protocol-V3.0_ENG_Errata-and-Clarifications.pdf.
+                      "PV Climate Procedures Manual." Plan Vivo Foundation. n.d.
+                      https://www.planvivo.org/Handlers/Download.ashx?IDMF=0246a6cf-2587-4889-8951-
+                      3f1532524e17.
+                      PV Climate Project Requirements. Plan Vivo Foundation, 2023.
+                      https://www.planvivo.org/Handlers/Download.ashx?IDMF=73de49fa-638f-4edc-b37e-
+                      6d2147b6ca3e.
+                      The REDD+ Environmental Excellence Standard (TREES). The Architecture for REDD+
+                      Transactions, February 11, 2021. https://www.artredd.org/wp-
+                      content/uploads/2021/12/TREES-2.0-August-2021-Clean.pdf.
+                      Terrestrial Storage of Biomass Methodology for CO2 Removal. Puro.Earth, 2023.
+                      https://connect.puro.earth/terrestrial-storage-of-biomass.
+                      Tyne, Rebecca, and Jonathan Lambert. "CO₂ Storage in Saline Aquifers V1.0."
+                      Isometric. Last modified February 16, 2024.
+                      https://science.isometric.com/module/saline-aquifer-storage.
+                      U.S. Forest Protocol. Climate Action Reserve, 2023.
+                      https://www.climateactionreserve.org/wp-
+                      content/uploads/2023/07/Final_Forest_Protocol_V5.1_7.14.2023.pdf.
+
+
+
+
+                                                                                                                                                                             14
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      "V4.0 Non-Permanence Buffer." Plan Vivo Foundation. Accessed February 21, 2024.
+                      https://www.planvivo.org/buffer.
+                      "Verra Carbon Registry." Verra. Accessed February 21, 2024.
+                      https://registry.verra.org/app/search/VCS.
+
+
+
+
+                                                                                                                                                                             15
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      Permanence and Durability Parameters
+                      Workshop attendees will discuss and consider approaches to permanence and
+                      durability in practice today and novel proposed approaches such as those described
+                      above. These Parameters aim to describe the attributes of the ideal permanence and
+                      durability system for the carbon market. and assist attendees in the systems design
+                      exercise.
+                      As workshop attendees discuss different approaches and complete their systems
+                      design exercise, they are encouraged to reference these parameters and provide a
+                      subjective evaluation of any approach or recommendation.
+
+                        Category                                   Parameter                                                       Evalutation
+
+                        Science                                    Approach provides quantifiable                                  Uncertain                           Certain
+                                                                   certainty of atmospheric impact                                  1         2           3          4       5
+                                                                   and has credible scientific
+                                                                   literature supporting it
+
+                        Policy                                     Is “standardizable” across                                      Uncertain                           Certain
+                                                                   geographies, legal systems and                                   1         2           3          4       5
+                                                                   project types
+
+                        Enforceability                             Enables binding legal contracts                                 Uncertain                           Certain
+                                                                   and clear assignment of liability                                1         2           3          4       5
+
+                        Accounting                                 Approach enables projects of                                    Uncertain                           Certain
+                                                                   different durations to be                                        1         2           3          4       5
+                                                                   compared against one another
+
+                        Feasibility                                Approach could be implemented                                   Uncertain                           Certain
+                                                                   and adopted at scale (i.e. aligns                                1         2           3          4       5
+                                                                   with how financial markets, legal
+                                                                   contracts, and accounting
+                                                                   frameworks function)
+
+                        Risk Mitigation                            Approach incorporates or has                                    Uncertain                           Certain
+                                                                   identified risk mitigation                                       1         2           3          4       5
+                                                                   strategy(ies) to ensure impact
+
+                        IPs & LCs                                  Approach lowers barriers to IPs  Uncertain                                                          Certain
+                                                                   & LCs participation and adoption 1    2                                                3          4       5
+
+
+
+
+                                                                                                                                                                             16
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                        Supply                                     Approach increases the supply                                   Uncertain                           Certain
+                                                                   of carbon reductions and
+                                                                                                                                    1         2           3          4       5
+                                                                   removals that lead to positive
+                                                                   atmospheric impact of
+                                                                   reasonable certainty
+
+                        Demand                                     Approach increases the demand                                   Uncertain                           Certain
+                                                                   of carbon reductions and                                         1         2           3          4       5
+                                                                   removals that lead to positive
+                                                                   atmospheric impact of
+                                                                   reasonable certainty
+
+                        Bankability                                Approach encourages private-                                    Uncertain                           Certain
+                                                                   sector investment in a variety of                                1         2           3          4       5
+                                                                   structures
+
+                        vali                                       Approach aligns incentives                                      Uncertain                           Certain
+                                                                   among different stakeholders
+                                                                                                                                    1         2           3          4       5
+
+
+
+
+                                                                                                                                                                             17
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      Permanence and Durability Source Index
+                      Supply Side Targeted Risk Mitigation Mechanisms
+                      Buffer Pools
+                      Badgley, Grayson, Freya Chay, Oriana S. Chegwidden, Joseph J. Hamman, Jeremy
+                      Freeman, and Danny Cullenward. "California’s forest carbon offsets buffer pool is
+                      severely undercapitalized." Frontiers in Forests and Global Change 5 (August 2022).
+                      https://www.frontiersin.org/articles/10.3389/ffgc.2022.930426/full.
+                      Insurance
+                      Dorfman, Natalia, Paul Young, and Racheal Notto. "Fungibility Challenges in the Carbon
+                      Markets." Kita. Last modified November 9, 2023. https://www.kita.earth/blog/report-
+                      fungibility-challenges-in-the-carbon-markets.
+                      Discounting
+                      Clough, Brian, Jennifer Jenkins, and Tom Montag. "Rubicon Carbon's Approach to
+                      Fixing Legacy Carbon Credits." Last modified August 2023.
+                      https://landing.rubiconcarbon.com/rubicon-carbons-approach-to-fixing-legacy-carbon-
+                      credits.
+                      Kollmuss, Anja, and Michael Lazarus. "Discounting offsets: issues and options." Carbon
+                      Management 2, no. 5 (2011), 539-549.
+                      https://www.tandfonline.com/doi/pdf/10.4155/cmt.11.49.
+                      Marshall, Elizabeth, and Alexia Kelly. "The Time Value of Carbon and Carbon Storage:
+                      Clarifying the Terms and the Policy Implications of the Debate." SSRN Electronic
+                      Journal, November 2010. https://ssrn.com/abstract=1722345.
+                      Other activity and methodology-specific mechanisms
+                      Díaz, Sandra, Andy Hector, and David A. Wardle. "Biodiversity in forest carbon
+                      sequestration initiatives: not just a side benefit." Current Opinion in Environmental
+                      Sustainability 1, no. 1 (October 2009), 55-60.
+                      https://ri.conicet.gov.ar/bitstream/handle/11336/20742/CONICET_Digital_Nro.24773.pdf.
+                      Different Approaches to Account for Carbon Emissions
+                      Tonne-year accounting
+                      Brander, Matthew, and Derik Broekhoff. "Discounting emissions from temporarily stored
+                      carbon creates false claims on contribution to cumulative emissions and temperature
+                      alignment." SSRN Electronic Journal, February 2023.
+                      https://ssrn.com/abstract=4353340.
+                      Chay, Freya, Grayson Badgley, Kata Martin, Jeremy Freeman, Joe Hamman, and
+                      Danny Cullenward. "Unpacking Ton-year Accounting." CarbonPlan. Last modified
+                      January 31, 2022. https://carbonplan.org/research/ton-year-explainer.
+                      Fearnside, Philip M., Daniel A. Lashof, and Pedro Moura Costa. "Accounting for time in
+                      Mitigating Global Warming through land-use change and forestry." Mitigation and
+
+
+
+
+                                                                                                                                                                             18
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      Adaptation Strategies for Global Change 5 (September 2000), 239-270.
+                      https://oxfordclimatepolicy.org/sites/default/files/10.1023%252FA_1009625122628.pdf.
+                      Groom, Ben, and Frank Venmans. "The social value of offsets." Nature 619, no. 7971
+                      (July 2023), 768-773. https://assets.researchsquare.com/files/rs-
+                      1515075/v1_covered.pdf?c=1649365723.
+                      Moura Costa, Pedro, and Charlie Wilson. "An equivalence factor between CO2 avoided
+                      emissions and sequestration – description and applications in forestry." Mitigation and
+                      Adaptation Strategies for Global Change 5 (March 2000), 51-60.
+                      https://oxfordclimatepolicy.org/sites/default/files/10.1023%252FA_1009697625521.pdf.
+                      Parisa, Zack, Eric Marland, Brent Sohngen, Gregg Marland, and Jennifer Jenkins. "The
+                      Time Value of Carbon Storage." Forest Policy and Economics 144 (November 2022).
+                      https://www.sciencedirect.com/science/article/pii/S1389934122001538.
+                      Wood, Stephen A., Katharine Hayhoe, Mark A. Bradford, Sara E. Kuebbing, Peter W.
+                      Ellis, Emma Fuller, and Deborah Bossio. "Mitigating near-term climate
+                      change." Environmental Research Letters 18, no. 10 (October 2023), 101002.
+                      https://iopscience.iop.org/article/10.1088/1748-9326/acfdbd.
+                      Permanent Additional Carbon Tonne
+                      Balmford, Andrew, David Coomes, Michael Dales, Patrick Ferris, James Hartup, Sadiq
+                      Jaffer, Srinivasan Keshav, et al. "PACT Tropical Moist Forest Accreditation Methodology
+                      v2.0." December 2023. https://www.cambridge.org/engage/coe/article-
+                      details/657c8b819138d23161bb055f.
+                      Balmford, Andrew, Srinivasan Keshav, Frank Venmans, David Coomes, Ben Groom,
+                      Anil Madhavapeddy, and Tom Swinfield. "Realizing the social value of impermanent
+                      carbon credits." Nature Climate Change 13, no. 11 (November 2023), 1172-1178.
+                      https://www.cambridge.org/engage/coe/article-details/64aed5749ea64cc167e7422d.
+
+
+
+
+                                                                                                                                                                             19
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      IC-VCM Glossary
+                      The glossary below was developed by the IC-VCM and released in tandem with their
+                      Core Carbon Principles and Assessment Framework.1
+                      Baseline Scenario
+                      A description of the situation and the outcome that is predicted or assumed to occur in
+                      the absence of the incentives created by the carbon credits and their associated
+                      mitigation activities, while holding all other factors constant.
+                      Benefit Distribution Mechanism(s)
+                      The system(s) or channel(s) through which Monetary and/or Non-Monetary Benefits are
+                      distributed.
+                      Benefit Sharing
+                      The sharing of Monetary and Non-Monetary Benefits with mitigation activity’s Partners.
+                      Benefit Sharing Arrangement(s)
+                      The arrangement(s) that describe Partners, Monetary and Non-Monetary Benefits, and
+                      the Benefit Distribution Mechanism(s). Benefit Sharing Arrangements describe the
+                      processes for the distribution of Monetary and Non-Monetary Benefits to Beneficiaries,
+                      including the types and proportions of benefits to be shared and the Mechanism by
+                      which such benefits will be distributed. Benefit Sharing Arrangements are included in a
+                      part of mitigation activity documentation and form the basis of the development of the
+                      Benefit Sharing Plan.
+                      Carbon Credit
+                      A tradable financial instrument that is issued by a carbon-crediting program. A carbon
+                      credit represents a greenhouse gas emission reduction to, or removal from, the
+                      atmosphere equivalent to one metric tonne of carbon dioxide equivalent, calculated as
+                      the difference in emissions from a baseline scenario to a project scenario. Carbon
+                      credits are uniquely serialized, issued, tracked and retired or administratively cancelled
+                      by means of an electronic registry operated by an administrative body, such as a
+                      carbon-crediting program.
+                      Carbon-Crediting Program
+                      A standard setting program that registers mitigation activities and issues carbon credits.
+                      Conservative Approaches
+                      A conservative approach errs on the side of caution to ensure emission reductions or
+                      removals are unlikely to be overestimated.
+                      Crediting Period
+                      The period in which verified emission reductions or removals attributable to a mitigation
+                      activity can result in the issuance of carbon credits.
+                      Double Claiming
+                      A type of double counting in which the same emission reduction or removal is claimed
+
+
+                      1
+                       "Terms & Definitions." Integrity Council for the Voluntary Carbon Markets. Last modified July 2022.
+                      https://icvcm.org/wp-content/uploads/2022/07/ICVCM-Public-Consultation-FINAL-Part-5.pdf.
+
+
+
+                                                                                                                                                                             20
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      by two different entities towards achieving mitigation targets or goals: once by a country,
+                      jurisdiction or other entity that reports lower emissions or higher removals for the
+                      purpose of demonstrating achievement of a mitigation target or goal, and once by the
+                      entity retiring the carbon credit for the purpose of making an emission offsetting claim.
+                      Double Counting
+                      A situation in which a single emission reduction or removal is counted more than once
+                      towards achieving mitigation targets or goals. Double counting can occur through
+                      double issuance, double use, and double claiming.
+                      Double Issuance
+                      A type of double counting in which more than one carbon credit is issued for the same
+                      emission reduction or removal. Double issuance leads to double counting if more than
+                      one of these carbon credits is claimed towards achieving mitigation targets or goals.
+                      Double Use
+                      A type of double counting in which a single carbon credit is claimed twice towards
+                      achieving mitigation targets or goals (e.g., by two entities or twice by one entity).
+                      Emission Reduction
+                      A net reduction in anthropogenic emissions by sources.
+                      Grievance Resolution Mechanism
+                      An independent mechanism for addressing complaints, concerns or disputes related to
+                      the mitigation activities in a fair, effective and transparent way.
+                      Jurisdictional REDD+ Activities
+                      Mitigation activities undertaken at national or sub-national scale by jurisdictions in
+                      developing countries to reduce emissions from deforestation and forest degradation, as
+                      well as the sustainable management of forests and the conservation and enhancement
+                      of forest carbon stocks.
+                      Mitigation Activity
+                      An activity that reduces anthropogenic emissions of a greenhouse gas or enhances
+                      removals by sinks relative to emissions in the activity’s baseline scenario and seeks
+                      registration and issuance of carbon credits under a carbon-crediting program. The term
+                      refers to activities that may be implemented at different scales, including projects,
+                      programmatic approaches, policies or jurisdictional REDD+ activities. They may also be
+                      implemented at one or more sites.
+                      Mitigation Activity Proponent
+                      The legal entity requesting the registration of a mitigation activity and issuance of
+                      carbon credits under a carbon-crediting program. The mitigation activity proponent may
+                      be a public or private entity.
+                      Non-Monetary Benefits
+                      Goods, services or other benefits funded from carbon credit revenues, or directly related
+                      to the implementation and operation of the mitigation activity, that provide a direct
+                      incentive to Partners to help implement the activity and can be monitored in an objective
+                      manner (e.g., technical assistance, capacity building, and in-kind inputs or investments
+                      such as seedlings, equipment, buildings). These benefits, if any, are included in the
+                      Benefit Sharing Plan.
+
+
+                                                                                                                                                                             21
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      Non-Permanence
+                      A situation in which mitigation is subject to reversal.
+                      Normative Program Documents
+                      The documents adopted under a carbon-crediting program that specify requirements,
+                      procedures, and administrative and operational aspects of the program. These
+                      documents include, but are not limited to, general program standards, quantification
+                      methodologies, procedures, provisions, manuals, guidance and forms.
+                      Offsetting (Offset)
+                      The compensation for an entity’s greenhouse gas emissions within its scope by
+                      achieving an equivalent amount of emission reductions or removals outside the
+                      boundary or value chain of that entity.
+                      Partners
+                      A subset or group of a mitigation activity’s stakeholders (IPLCs involved in or affected
+                      by mitigation activity implementation) identified in the activity documentation to receive
+                      Monetary and/or Non-Monetary Benefits resulting from the sale of carbon credits or
+                      result-based payments of emissions reductions.
+                      Project Scenario
+                      A description of the situation and the outcome that is predicted or assumed to occur in
+                      the presence of the mitigation activity to be credited, while holding all other factors
+                      constant.
+                      Removal
+                      A net enhancement of anthropogenic removals by sinks.
+                      Retirement
+                      The transfer of a carbon credit to a registry account that permanently removes the
+                      carbon credit from circulation. The term retirement applies to the use of the carbon
+                      credit by an entity to meet voluntary commitments or compliance obligations. The term
+                      is distinct from administrative cancellations.
+                      Validation and Verification Body (VVB)
+                      An independent third-party entity that is accredited for performing validation and/or
+                      verification audits. Verification and validation bodies are often also referred to as
+                      auditors.
+                      Validation
+                      The process of independent, third-party evaluation of a mitigation activity requesting
+                      registration under a carbon-crediting program by an accredited Validation and
+                      Verification Body (VVB) against the program provisions of the applicable
+                      carboncrediting program.
+                      Verification
+                      The process of periodic independent, third-party ex-post evaluation by a VVB of
+                      requests by a registered mitigation activity to issue carbon credits against the program
+                      provisions of the applicable carbon-crediting program.
+                      Vintage
+                      The year in which the carbon emission reduction took place. Because the verification
+
+
+                                                                                                                                                                             22
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      process can take two to three years from project/program inception, projects/programs
+                      may generate credits for already-reduced emissions
+
+
+
+
+                                                                                                                                                                             23
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      Workshop Overview
+                      On January 31 and February 1, 2024, 60+ experts from across the carbon market
+                      ecosystem—policymakers, practitioners, academia, and more—convened at Cambridge
+                      University to discuss issues and challenges related to permanence and durability and
+                      identify potential solutions for the continued development of the market.
+                      The discussion at the Cambridge Permanence and Durability Workshop will serve as an
+                      input to the IC-VCM CIWP on Permanence. After publishing its Core Carbon Principles
+                      and corresponding Assessment Framework in July 2023, the IC-VCM launched the
+                      CIWPs to consider key issues related to the future of the carbon markets and to develop
+                      recommendations to inform the next iteration of IC-VCM CCP label requirements.
+                      The Cambridge Permanence and Durability Workshop was the first step of a rigorous
+                      stakeholder engagement process leading up to the release of the revised IC-VCM
+                      standards in 2026.
+                      The workshop was designed with two objectives in mind:
+                                 Develop a shared understanding among the expert community on 1)
+                                  approaches to addressing the issue of permanence for carbon crediting
+                                  purposes, and 2) on key open questions or gaps in understanding or knowledge.
+                                 Develop recommendations for addressing permanence (including risk
+                                  assessment, allocation, and mitigation) that will result in “investment-grade”
+                                  carbon credits that maintain scientific rigor in delivering climate impact
+                                  while balancing complex policy, legal, financial, equity, and implementation
+                                  tradeoffs.
+                      These objectives tie directly to the IC-VCM’s overarching mission of setting definitive
+                      global standards using the best available science and expertise, so that high-quality
+                      carbon credits can serve as a financing mechanism for genuine and additional
+                      greenhouse gas (GHG) reductions and removals.
+                      In line with these objectives and the IC-VCM mission, the workshop had two distinct
+                      parts: 1) expert presentation and discussions related to permanence and durability and
+                      2) a “systems design” exercise. The panel discussions addressed a range of topics
+                      related to permanence, including scientific perspectives on the economic and
+                      atmospheric impact and value of carbon storage, to the role of the financial sector and
+                      insurance in carbon markets, to an overview of how standard-setting bodies currently
+                      address permanence and durability. During the systems design exercise, workshop
+                      participants worked in small groups to develop recommendations for how permanence
+                      and durability should be addressed by various market actors.
+
+
+
+
+                                                                                                                                                                             24
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      Workshop Discussion Insights
+                      The Cambridge Workshop provided a forum to share perspectives on permanence and
+                      durability in carbon markets. Ahead of the workshop, the organizers conducted informal,
+                      30-minute interviews with 30+ attendees to solicit their opinion on the unresolved
+                      challenges regarding permanence and durability, promising measures to mitigate
+                      reversal risk, and the role of the IC-VCM in issuing permanence and durability guidance
+                      that allows for the market to scale. During the workshop, attendees participated in panel
+                      discussions on a variety of topics related to permanence and durability and had the
+                      opportunity to share their reflections in small-group and large-group formats.
+                      As expected, attendees’ views differed depending on their role in the ecosystem and
+                      beliefs about the role of carbon credits in driving climate benefits; however, workshop
+                      participants noted that there appeared to be more consensus than previous discussions
+                      about permanence and durability. Below is an aggregated, anonymized synthesis of
+                      views about key topics expressed during pre-workshop interviews and discussion during
+                      the Workshop itself.
+                      Shift From Permanence to Durability
+                      In the pre-workshop interviews, participants were quick to point out the importance of
+                      semantics when discussing reversal risk, noticing the unique name of the workshop:
+                      The Cambridge Permanence and Durability Workshop. While “permanence” has
+                      historically been the accepted term for this type of risk, several attendees advocated for
+                      shifting to a discussion of durability as a better way to conceptualize the issue. This
+                      change in language reflects that there are several different factors that determine how
+                      long the benefits of a particular mitigation activity can be expected—some of which are
+                      easier to control for than others—and that there is an inherent unknown when
+                      discussing the length of time that an activity sequesters carbon. As one participant
+                      noted in their reflections, “what’s important is that carbon stays sequestered for as long
+                      as it matters.”
+                      For projects deemed to have a material risk of reversal, the IC-VCM currently sets that
+                      threshold at 40 years, but in a panel with members of carbon crediting programs, it was
+                      evident that each body takes a different approach (see Current Practice Among Carbon
+                      Crediting Programs). Throughout this panel discussion and the workshop, the ideal
+                      minimum threshold to establish “permanence” was debated, with participants voicing
+                      support for anything from 20 years to 100+ years. Notably, there were no participants
+                      that advocated for a 1,000-year permanence standard, even though there are market
+                      proponents of this approach.2 Vocal opposition towards longer thresholds came from
+                      the project developer community, noting that in many parts of the world (especially the
+                      Global South), there is no legal framework in place or appetite among landowners to
+
+
+                      2
+                       Hausfather, Zeke, Freya Chay, Jeremy Freeman, and Danny Cullenward. "The SBTi Net-zero Standard
+                      Should Include Guidance on Carbon Removal." CarbonPlan (blog). November 22, 2022.
+                      https://carbonplan.org/research/sbti-carbon-removal.
+
+
+
+
+                                                                                                                                                                             25
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      sign a contract with such a long duration. Participants specifically called out the Māori
+                      regulations, where any leases longer than 21 years require court approval, and
+                      perpetual leases are often structured as 21-year leases with the option to renew at each
+                      21-year term.3
+                      While there was ultimately no consensus around the appropriate threshold to define
+                      “permanence,” and workshop participants recognized that there is no “right answer” to
+                      defining permanence, there was recognition for a need to be more transparent about
+                      the anticipated duration of a particular mitigation activity. Attendees noted that there
+                      could be several factors including environmental, legal, and social risk that served as an
+                      input into developing the expected duration of a mitigation activity. Workshop
+                      participants also noted that the market currently lacks a mechanism to address reversal
+                      risk after a project’s expected duration and suggested that various actors—from the IC-
+                      VCM, to carbon crediting programs, to national governments—develop a system to
+                      monitor and account for longer-term reversal risk.
+                      Issue of Fungibility
+                      In the pre-workshop interviews, nearly every interviewee raised the issue of fungibility
+                      (i.e., equating one tonne of carbon from one project to a tonne of carbon from a different
+                      project or emissions source with a different duration) as one of the top open questions
+                      around permanence and durability. There remains no market-wide consensus on how
+                      purchasers or regulatory bodies should address varying levels of reversal risk or
+                      duration associated with credits from different activity types.
+                      Some participants argued that once minimum reversal risk mitigation measures were in
+                      place (e.g., a buffer pool, insurance, etc.), durability should not matter to carbon credit
+                      purchasers, assuming the credit is backed by a credible system that “makes the
+                      atmosphere whole” in the event of a rerelease of stored carbon. Their rationale was
+                      rooted in the severity of the climate emergency that we are now facing, given slow and
+                      insufficient progress against the 1.5C° threshold agreed to under the Paris Agreement. 4
+                      They advocated for guidance that matched the urgency of the crisis, arguing that there
+                      is climate benefit that accrues at most durations of carbon sequestration. If society has
+                      the privilege of debating permanence in 50 years, they argue, then we have averted the
+                      worst of the anticipated climate disasters. These participants often highlighted that it is
+                      impossible to guarantee the permanence of any carbon removal or reduction outcome,
+                      given that legal and market structures do not exist to ensure longevity beyond several
+                      decades, and there is significant uncertainty related to climate or human conditions in
+                      hundreds, let alone thousands, of years.
+
+
+                      3
+                       "Māori Land: What is a Whenua Lease?" Ministry of Māori Development. Accessed March 4, 2024.
+                      https://www.tupu.nz/en/kokiri/whenua-leases/what-is-a-whenua-lease.
+                      4
+                       "New Analysis of National Climate Plans: Insufficient Progress Made, COP28 Must Set Stage for
+                      Immediate Action," United Nations Framework Convention on Climate Change, last modified November
+                      14, 2023, https://unfccc.int/news/new-analysis-of-national-climate-plans-insufficient-progress-made-
+                      cop28-must-set-stage-for-immediate.
+
+
+
+
+                                                                                                                                                                             26
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      Others emphasized the importance of ensuring that claims of reduction or removal
+                      matched the actual emissions liability and expressed skepticism at the notion of a 1:1
+                      equivalence of all carbon credits. This logic was frequently mentioned in the context of
+                      atmospheric equivalence of carbon emissions, noting that carbon credit buyers use their
+                      purchase to offset a tonne of carbon dioxide emitted from fossil fuel combustion, which
+                      could remain in the atmosphere for up to 1,000 years.5
+                      Carbon credit buyers who believe that a credit backed by a short-term activity is an
+                      equivalent offset to their carbon dioxide emission could contribute to negative climate
+                      impacts through increased cumulative warming if reversal occurs and is not
+                      compensated for, or if commensurately more climate damage is done from the emission
+                      than from the activity that underpins the credit retired to address that emission.
+                      Participants also noted implementation concerns around a market wide approach to
+                      fungibility. Given that several countries have already implemented (or are in the process
+                      of implementing) regulation for their carbon markets, it would be challenging to
+                      retroactively align around one standard.
+                      Some participants noted that differentiation among carbon credits could be a positive. If
+                      buyers better understood the expected durability of a particular mitigation activity, it
+                      could aid them in developing a balanced portfolio of credits from different activity types.
+                      Attendees noted the value of a portfolio approach when discussing the need for
+                      investment in more permanent, engineered solutions to carbon capture and storage to
+                      scale in time to help achieve climate goals.
+                      Overall, there was consensus that IC-VCM should coordinate closely with other market
+                      oversight bodies, policymakers, and other market actors in developing any guidance
+                      that could impact the perceived fungibility of carbon credits.
+                      Need for Increased Investment
+                      There was broad recognition that carbon markets needed to shift towards being a more
+                      investable asset class to achieve the scale needed to meet climate goals. In their 2021
+                      blueprint, the Task Force for Scaling Voluntary Carbon Markets (the IC-VCM’s
+                      predecessor organization) highlighted the need for a 15-fold increase in the supply of
+                      carbon credits by 2030 and a 100-fold increase by 2050 to reach targets consistent with
+                      the 1.5-degree pathway.6 This cannot be accomplished without a significant increase in
+                      the amount of public and private finance currently being invested in the carbon markets.
+                      Issues of permanence and durability are cited as one of several factors that could be
+                      holding back further investment. In a panel discussion on creating an investment-grade
+                      asset class, there was consensus that clear and accepted guidance around issues of
+
+
+
+
+                      5
+                       Buis, Alan. "The Atmosphere: Getting a Handle on Carbon Dioxide." National Aeronautics and Space
+                      Administration (blog). October 9, 2019. https://climate.nasa.gov/news/2915/the-atmosphere-getting-a-
+                      handle-on-carbon-dioxide/.
+                      6
+                       Final Report. Task Force for Scaling Voluntary Carbon Markets, 2021. https://icvcm.org/wp-
+                      content/uploads/2022/03/TSVCM_Report.pdf.
+
+
+
+                                                                                                                                                                             27
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      permanence and durability as well as other core elements of supply (and demand) was
+                      crucial in order for private capital to be mobilized.
+                      Panelists also discussed other factors that are inhibiting scale, including the lack of
+                      intermediaries that could help large financial institutions better understand what they are
+                      investing in. They noted that currently, you have to be very close to a particular project
+                      and its diligence to arrive at an investment decision, but in other commodities markets,
+                      this is not the case. Panelists noted that intermediaries can also play a role in
+                      aggregating and communicating risks using standardized criteria, which could provide
+                      clarity and lead to securitization.
+                      In terms of immediate options to increase investment while the financial plumbing
+                      develops over the course of the next several years, workshop participants highlighted
+                      two suggestions: alignment around standards and long-term offtake. In discussing
+                      standards, participants noted that the IC-VCM’s Core Carbon Principles were a great
+                      first step, and once fully implemented, could serve to unite the market around what
+                      high-integrity supply looks like. Attendees also mentioned the importance of long-term
+                      offtake given the nature of a (typically nature-based solutions) project developer looks
+                      like. With little-to-no collateral to lend against, long-term offtake contracts can help to
+                      de-risk project finance.
+                      Improved Compensation Mechanisms
+                      In the most recent Assessment Framework, the IC-VCM endorsed buffer pools as the
+                      sole compensation mechanism for avoidable reversal risks, as it was the only approach
+                      that had gained widespread market acceptance. It also noted that there are a range of
+                      additional reversal compensation mechanisms under development and piloting across
+                      the market, including insurance, and that those will be further explored in the context of
+                      the Continuous Improvement Work Programs. Workshop participants agreed on the
+                      need to improve buffer pool design and operation, while also allowing for the use of
+                      alternative compensation mechanisms.
+                      Workshop attendees linked three principal issues to buffer pools when discussing their
+                      improvement: risk allocation, appropriate capitalization, and conflict of interest. The
+                      issue of risk allocation centers on which parties bear the risk of reversal when. Current
+                      IC-VCM guidance places this risk largely on the carbon crediting program or project
+                      developer for a defined monitoring and compensation period, after which no one bears
+                      the risk. Workshop participants suggested ideas for how risk could be redistributed by
+                      requiring purchasers to bear some risk and replace credits that face reversal, creating a
+                      public entity to take on the risk after the monitoring and compensation period ends, or
+                      simply improving current buffer pool management with “sunset clauses” to transfer risk
+                      after a certain period of time or when the organization managing the buffer ceases to
+                      exist. Standard setting bodies are also exploring whether long-term liability for
+                      monitoring and reversal mitigation could shift to them from the developer at the end of a
+                      project’s active crediting period. Most participants agreed that project developers or
+                      carbon crediting programs should continue to bear the costs of reversal risk, with one
+                      participant noting that it is unheard of that a buyer should be responsible for the quality
+                      of a product in other industries.
+
+
+
+
+                                                                                                                                                                             28
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      Several attendees noted that insurance and reinsurance could play a role in helping
+                      project developers and carbon crediting programs mitigate reversal risk. For example,
+                      through the purchase of an insurance policy, project developers could manage their own
+                      reversal risk and eliminate the need for pooled buffer reserves at the carbon crediting
+                      program level. Alternatively, carbon crediting programs could work with insurers to take
+                      on management of buffer pools themselves, leveraging the advanced analytics
+                      capabilities that are in-house at many insurance companies. While the workshop
+                      conversation on the role of insurance was largely positive, some participants cautioned
+                      that insurance is not a panacea and that the industry is still nascent. While some of the
+                      larger insurance conglomerates participate in the space, insurance for carbon credits is
+                      still largely specialized, and insurance for reversal risk in particular is still developing.
+                      Another issue raised with respect to buffer pools was appropriate capitalization. A recent
+                      analysis of the buffer pool associated with California’s cap-and-trade program found that
+                      wildfires have already depleted 20% of the credits meant to mitigate reversal risk for the
+                      next 100 years.7 To address capitalization concerns, participants suggested several
+                      different ideas (many of which are noted in the Systems Design Exercise Outputs)
+                      including: encouraging carbon crediting programs to purchase more durable credits to
+                      pair with issuances for shorter-duration activity types, requiring the use of customized
+                      risk assessments instead of blanket buffer pool contributions for high-risk mitigation
+                      activities, or insurance policies for pooled buffer reserves that payout when the buffer
+                      drops below a certain credit count.
+                      Workshop attendees also pointed out the inherent conflict of interest that exists for
+                      buffer pools: those who manage buffer pools as a risk mitigation mechanism are also
+                      responsible for emitting carbon credits. In a competitive marketplace for carbon
+                      crediting programs, standards bodies could be incentivized to lower the amount of
+                      buffer contributions required to allow project developers to issue more credits and
+                      maximize their revenue. Carbon crediting programs to-date have built in safeguards
+                      between those who may interface with project developers and those who manage the
+                      risk evaluation process; however, given they are affiliated with the same organization,
+                      the risk cannot be mitigated entirely.
+                      Scaling Longer-duration Carbon Sequestration and Storage
+                      Cambridge Workshop attendees universally recognized the role that engineered carbon
+                      removals and mitigation activities with longer-duration storage will play in helping to
+                      achieve climate goals. Several participants expressed alignment with the Oxford
+                      Principles. The Principles allow the use of short-duration offsets as a bridge to longer-
+
+
+
+
+                      7
+                        Badgley, Grayson, Freya Chay, Oriana S. Chegwidden, Joseph J. Hamman, Jeremy Freeman, and
+                      Danny Cullenward. "California’s forest carbon offsets buffer pool is severely undercapitalized." Frontiers
+                      in Forests and Global Change 5 (August 2022).
+                      https://www.frontiersin.org/articles/10.3389/ffgc.2022.930426/full.
+
+
+
+
+                                                                                                                                                                             29
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      term storage but emphasize that “significant investment in in carbon removal with a low
+                      risk of reversal begins now to reach the thousand-fold increase needed by 2050.”8
+                      Some workshop attendees viewed IC-VCM’s guidance around permanence as an
+                      important input to directing an appropriate amount of investment towards longer-
+                      duration storage. For example, this could be done indirectly by setting a high threshold
+                      for what qualifies as “permanent” or directly like mandating investment in emerging
+                      technologies as part of a pooled buffer reserve. While there was no consensus opinion
+                      on how the IC-VCM should approach this issue, it was re-iterated by workshop
+                      participants as an important challenge to address in the near-term.
+
+
+
+
+                      8
+                       Axelsson, Kaya, Audrey Wagner, Injy Johnstone, Myles Allen, Ben Caldecott, Nick Eyre, Sam
+                      Fankhauser, et al. Oxford Principles for Net Zero Aligned Carbon Offsetting (revised 2024). University of
+                      Oxford, 2024. https://www.smithschool.ox.ac.uk/sites/default/files/2024-02/Oxford-Principles-for-Net-Zero-
+                      Aligned-Carbon-Offsetting-revised-2024.pdf.
+
+
+
+                                                                                                                                                                             30
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      Systems Design Exercise Outputs
+                      The systems design exercise provided space for workshop participants to work in small
+                      groups of diverse backgrounds to develop a system that would effectively address
+                      permanence and durability risk while achieving three objectives: delivering climate
+                      change impact, maintaining an appropriate quality bar for high-integrity supply of carbon
+                      credits, and encouraging investment at a scale commensurate with the size of the
+                      climate crisis. Each group was asked to describe any risk mitigation and
+                      or/compensation mechanisms envisioned in their system, consider the benefits and
+                      tradeoffs of adopting the approach, outline any considerations for specific project types,
+                      and evaluate their system against the Permanence and Durability Parameters. In total,
+                      there were eight different groups, each with their own unique perspective; however,
+                      several reversal risk mitigation mechanisms appeared across groups.
+                      Common Threads Throughout Outputs
+                      Adjusting buffer pool requirements to focus on more durable solutions. Three
+                      groups mentioned changing buffer pool requirements at the carbon crediting program
+                      level over time to focus on solutions with less reversal risk. For example, a given
+                      standard or registry would be required to have a minimum percentage (e.g., 15%) of its
+                      pooled buffer reserve comprised of credits from low-reversal risk credits (e.g., carbon
+                      capture with geologic storage) and this percentage would increase over time until 100%
+                      of the pooled buffer reserve was made up of these credits. Adopting this guidance
+                      would likely require a change in how carbon crediting programs manage their pooled
+                      buffer reserve. Currently, the pooled buffer reserve makeup generally mirrors the
+                      portfolio of projects certified by a particular standard. This guidance could see carbon
+                      crediting programs work with project developers to contribute credits to the pooled
+                      buffer reserve that are not necessarily credits from the program in which they are
+                      certifying, depending on the threshold of low-reversal risk credits required.
+                      Contributing to a fund for long-duration credits. A couple of the groups
+                      recommended the creation of a fund to invest in long-duration credits. The fund could
+                      be capitalized in a variety of ways, including through a potential fee levied on the
+                      issuance of short-duration credits or through required contributions to the fund of shorter
+                      duration credits that could be liquidated in the event of a reversal and proceeds used to
+                      procure permanent CDR. These funds could then be invested in a trust or endowment
+                      to compensate for reversals after the conclusion of the 40-year monitoring and
+                      compensation period, with a focus on supporting the development of engineered
+                      solutions that have a longer duration. Participants noted that this idea recognizes the
+                      risks associated with shorter-duration projects and could provide a source of capital to
+                      build the capacity of longer-duration projects over time.
+                      Setting a new minimum duration requirement. In the current version of its
+                      Assessment Framework, the IC-VCM set a minimum 40-year monitoring and
+                      compensation period for projects deemed to have high reversal risk. Several groups
+                      aligned around a 100-year monitoring and compensation period as a revised minimum
+                      duration requirement; however, the risk allocation and responsibilities could change
+                      throughout the period. For example, several groups suggested that project developers
+                      be responsible for reversal risk for the first 40 years of the 100-year period but that
+
+
+                                                                                                                                                                             31
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      carbon crediting programs or independent bodies be responsible for monitoring and
+                      compensation during years 40-100. No groups suggested setting a minimum threshold
+                      of more than 100 years.
+                      Creating an independent third party to evaluate or monitor ongoing reversal risk.
+                      Many groups recognized the gap in current guidance after the expiration of the 40-year
+                      monitoring and compensation period for high-reversal risk projects. Participants noted
+                      Verra’s recently announced effort to develop a long-term monitoring system for reversal
+                      risk, but recognized that there could be efficiencies of scale achieved by sharing this
+                      data and possibly implementation structures across crediting programs and centralizing
+                      the long-term reversal risk monitoring. This independent, third party could also re-
+                      evaluate reversal risk over time to ensure that any compensation mechanism (e.g.,
+                      buffer pool) is adequately funded as risk profile changes.
+                      Requiring the replacement of credits after the expiration of the monitoring and
+                      compensation period. Some participants recommended a systematic adoption of
+                      temporary crediting as a solution to addressing reversal risk. After a credit’s monitoring
+                      and compensation period expires, the buyer, standard, or some other body would be
+                      required to replace it with another credit. This credit could be more durable in nature
+                      with an eye towards long-term carbon storage or a shorter-duration credit—whichever is
+                      more feasible.
+                      Details of Individual Outputs
+                      The details of the proposed approach for each group at the Cambridge Workshop are
+                      included below. Responses to each question have been lightly edited for grammar;
+                      however, they have been left largely intact as “raw outputs” from the exercise. This was
+                      done intentionally to allow the reader to draw their own conclusions from each proposed
+                      approach. If a question is left blank, the group did not provide an answer to it. The
+                      proposals listed in the order in which they were presented. Inclusion of these proposals
+                      here does not indicate an endorsement of these proposals by the convenors of the
+                      workshop.
+                      Proposal #1
+                      What is a brief description of your approach?
+                      At the registry level, the crediting program will require that buffer pool contributions to
+                      mitigate reversal risk are made from qualified non-reversible credits. Over time, the
+                      proportion contributed to the buffer pool from long-term durable storage credits
+                      increases to 100%.
+                      The buffer pool is the compensation mechanism, and this can be reinsured as needed.
+                      If a reversal exceeds what the project contributed to the buffer, the project must make
+                      up the difference. The contents of the buffer pool, including the mechanism for
+                      increasing the share of removals, will be in the public domain.
+                      How will this approach achieve objectives of scaling high-integrity supply and
+                      investment?
+                      This approach is an on-ramp solution creating a built-in demand pull for high durability
+                      removals that increases over time, starting now. It also builds confidence in the
+
+
+                                                                                                                                                                             32
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      management of temporary storage because the credits with reversal risk are backed by
+                      nonreversible tons, including and increasing percentage of high durability removals.
+                      What are the benefits of this approach? What are the tradeoffs?
+                      Buffer pools are managed transparently in a consistent way at the program level,
+                      thereby increasing harmonization among standards & programs. It builds on the existing
+                      approach in the market for managing reversal risk. It also addresses the lack of demand
+                      signals to increase supply for long-term removals.
+                      The economics of this approach will be reflected in the price for the temporary tons,
+                      potentially driving up prices. This does not address the need for accurate oversight of
+                      reversals.
+                      What are the considerations for different project types (if any)?
+                      Need to define what credit types are eligible, what is the standardized reversal risk for
+                      each project type, appropriate ramp for transition to permanent removal.
+                      What are key assumptions or open questions associated with your approach?
+                      We are assuming there is a higher implied climate value for the permanent tons.
+                      Assumes that we have a standardized risk model, appropriate MRV, any other registry
+                      issues (i.e., validation and verification body credibility) are solved. Assumes that supply
+                      will materialize in response to the demand signal.
+                      Proposal #2
+                      What is a brief description of your approach?
+                      Replace buffer pool with tax on projects according to risk (forward and backward-
+                      looking risk assessment updated every five years, but with standard contribution to
+                      start). Tax goes into long-term trust/endowment (Nature Bridge Fund?) managed by
+                      designee of standard (possibly ONE fund for all standards). Standard takes on
+                      durability liability and long-term monitoring years 40-100 (or maybe until all obligations
+                      are compensated for), buys credits / makes investments at any time to address
+                      reversals (ideally tech removals, though at the beginning maybe a blend). Actual
+                      durability reported ex-post, system designed to achieve effective permanence. Ideally
+                      every temporary credit gets replaced by a permanent credit (including non-reversals).
+                      Accommodates shorter durations with higher upfront contribution.
+                      Other Considerations:
+                                 Endorse 40-year threshold. (Innovation encouraged at standard and developer
+                                  level to possibly shorten and align with 6.4) developers bears liability for
+                                  monitoring and reversals, but maybe can also compensate financially as
+                                  opposed to with credits?
+                                 Exploration of pairing with PACT or vertical stacking (tonne year) or other tactics
+                                  to manage reversal risk and enable participation during X year period (may
+                                  require changes at standard level, and needs to be very carefully explored given
+                                  legitimacy concerns)
+                      How will this approach achieve objectives of scaling high-integrity supply and
+                      investment?
+
+
+                                                                                                                                                                             33
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      What are the benefits of this approach? What are the tradeoffs?
+                      This answers the question of equivalency, makes a claim credible, opens up funds.
+                      Joins nature-based and engineered removals, creating demand for long-term removals.
+                      Mirrors what the global science says has to happen (NBS as bridge, tech removals
+                      long-term)
+                      What are the considerations for different project types (if any)?
+                      Maybe differential rates/applications for different forest types.
+                      What are key assumptions or open questions associated with your approach?
+                                 This idea needs a lot of modelling and stress testing to see if its feasible
+                                 Engineered solutions will come down in price quick enough and exist at a big
+                                  enough scale
+                                 Buyers are willing to pay more to accommodate this kind of tax approach
+                                 40 years is short enough the enable widespread adoption
+                      Proposal #3
+                      What is a brief description of your approach?
+                                 100-year climate benefit per ton;
+                                 Stewardship model (ownership, liability, beneficiary); accreditation of liable party
+                                  (e.g. require insurance)
+                                 Reversal managed via buffer pool or, if buffer pool used, re-purchase of ton of at
+                                  least same vintage year of reversal;
+                                 Data shared for external auditing of climate impact to enable methodology
+                                  updates
+                      How will this approach achieve objectives of scaling high-integrity supply and
+                      investment?
+                                 Consistency of 100 years
+                                 Liability tracking
+                                 Scientific auditing
+                      What are the benefits of this approach? What are the tradeoffs?
+                                 Aligning around 100 years
+                      What are the considerations for different project types (if any)?
+                                 Buffer pool sizing
+                                 Economic efficiency
+                      What are key assumptions or open questions associated with your approach?
+                                 Data that should be shared for auditing
+                                 Liability accreditation
+                      Proposal #4
+                      What is a brief description of your approach?
+
+
+
+                                                                                                                                                                             34
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                      Stage 1: Require all standards to standardize risk assessment that determines
+                      contribution to buffer pool—e.g., same approach to assessing political, natural risk,
+                      management, financial risk, market risks using same data and default value
+                      Stage 2: ICVCM requires over time a transformation of buffer to credits with no reversal
+                      risk such as mineralization, etc. When reversal happens, replace with these kinds of
+                      credits with - ICVCM requirement to achieve 5%/year shift of buffer pool
+                      Stage 3: Universal buffer hosted by entity such as World Bank, with one approach to
+                      when buffer is accessed (currently difference in this among standards, some release
+                      over time, some don’t). If credits not used within specified period, sold to buyers as a
+                      spot product of projects or retired. Sold as product to buyers.
+                                 Size of buffer is conservative but efficient
+                                 Intentional/avoidable risks managed how:
+                                      o Projects with Reversal risk pay a price at issuance based on their level of
+                                         reversal risk
+                                      o Bonus every crediting period for non-reversals—you get credits out of the
+                                         buffer—eventually you can sell them. 20-year project with 40-year
+                                         requirement means higher contribution up front, then payback over time
+                                         with no reversals
+                                 Reversal detection system managed by an independent body
+                      How will this approach achieve objectives of scaling high-integrity supply and
+                      investment?
+                      Standardize management of one of the key risks facing markets, provide incentives for
+                      purchase/investment in low-risk reversal projects through buffer
+                      What are the benefits of this approach? What are the tradeoffs?
+                      Feasibility—big change that has to happen in stages over time
+                      What are the considerations for different project types (if any)?
+                      Recognizes benefits of low-reversal-risk projects while not punitive to projects that face
+                      limitations in commitment to long-term
+                      What are key assumptions or open questions associated with your approach?
+                      How to refine approach to incentivize avoiding avoidable reversals
+                      Proposal #5
+                      What is a brief description of your approach?
+                                 We are going to assume all credits are high-quality
+                                 Post-closure monitoring will be for 40 years or until functionally stable; if not, then
+                                  all credits are cancelled
+                                 We set up two 3rd party independent organizations both funded by transaction
+                                  fees:
+                                      o “CDM methodology panel” which defines the % haircut for each project
+                                          type
+                                      o The entity that houses the buffer pool
+
+
+                                                                                                                                                                             35
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                                 All methodologies have conservative discounting for expected losses
+                                 The meth panel will consider issues of social durability
+                                 There is a variable haircut in the form of credits depending on the risk of reversal
+                                  of the project type
+                                 The haircut goes into the market wide mixed buffer pool
+                                 Periodic haircut updates at least every 5 years based on data informed reversal
+                                  risk evaluations (i.e. lower risk lower haircut)
+                                 Automatic renewal of the buffer pool, credits are cancelled once the project is no
+                                  longer issuing credits and monitored for performance.
+                                 Fungibility enables scaling?? and the buffer enables insurance for the risk of
+                                  reversal.
+                                 Where the credits are cancelled (e.g. due to ceased monitoring) they are also
+                                  cancelled in the buffer
+                      How will this approach achieve objectives of scaling high-integrity supply and
+                      investment?
+                      Risks are diversified; someone can insure and take on the liability; this increases trust
+                      confidence and therefore scale. This aligns incentives in terms of who manages the
+                      buffer pools because of independence; incentives the project developers to reduce their
+                      haircut once they reduce their risks
+                      What are the benefits of this approach? What are the tradeoffs?
+                      It’s not perfect, it might not incentivize all removals.
+                      What are the considerations for different project types (if any)?
+                      Big haircuts from the riskier projects, small haircuts from less risky projects.
+                      What are key assumptions or open questions associated with your approach?
+                      We are ignoring issues of backward litigation which could affect the quality of the buffer
+                      pool. Continuous renewal of the buffer pool
+                      Proposal #6
+                      What is a brief description of your approach?
+                                 Design principles
+                                    o Avoid net atmospheric harm but don’t paralyze investment
+                                    o Channel funds to durable carbon removal because it is the natural resting
+                                        place for neutralization claims. Organization portfolios
+                                    o Allow ‘cover’ to invest in low-durability credits now, because it is critical
+                                        path to Paris-aligned goals
+                                    o Incentivize nature-based credits that are ‘designed’ for higher durability
+                                    o Shift long-tail liability for reversals after monitoring period
+                                 Description of approach: long-term permanence fund
+                                    o Durability-weighted portfolio, with a floor for high-durability CDR, growing
+                                        over time
+                                    o Registry-controlled buffer pool, as in ICVCM proposal, covers
+                                        unintentional reversals during the at-least 40-year monitoring period
+
+
+                                                                                                                                                                             36
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                                              Project developer compensates for intentional reversals
+                                              Buffer contribution should be highly sensitive to project-specific risk
+                                        o Durability Fund, run by a public body, collects funds (or credits) from every
+                                          issuance of short-durability credits
+                                              Contribution is a function of the durability (and thus liability)
+                                                 selected by the project (at least 40 years, up to 100 years)
+                                              Contribution could be in cash (for re-investment in durable CDR) or
+                                                 in short-durability credits (if we think this avoids price risk in the
+                                                 future)
+                                        o Funds are re-invested in (advanced market commitment for) high-
+                                          durability credits that are retired
+
+                            Durability Fund Concept
+
+                                                                                                                                                   The Durability Fund (DF)
+                                                                                                                                                   would be managed by a
+                                                                                             Durability Fund                                       public bodies and could be
+                                                                                                                                                   structured in 2 ways:
+
+                                                                                                                                                   Option 1: DF would estimate
+                                                                                                                                                   the potential shortfall for
+                            • Follow standard                   • Liability                                                                        each project and a
+                              guidance and                        transferred to                                                                   corresponding number of any
+                                                                                                                                                   credit issuance would be be
+                              liability                           Durability Fund
+                                                                                                                                                   transferred to the DF ex ante
+                              arrangements                                                                                                         to build up a global buffer
+                                                                                                                                                   pool
+
+
+                                                                                                                                                   Option 2: DF would estimate
+                                                                                                                                                   a financial contribution to buy
+                                                                                                                                                   durable emission reductions
+                                                                                                                                                   to cover estimated shortfalls
+
+
+
+                                     40 years                                                      40+ years
+
+
+
+                      How will this approach achieve objectives of scaling high-integrity supply and
+                      investment?
+                      What are the benefits of this approach? What are the tradeoffs?
+                                 Benefits
+                                     o Shorter duration credits achieve effective/synthetic permanence if the
+                                         project contributes to a fund that channels money to advanced
+                                         commitment high durability CDR.
+                                     o Designing for durability, and taking on longer monitoring (liability) periods
+                                         are incentivized
+                                     o Liability is limited to the monitoring period
+                                 Drawbacks
+                                     o We don’t have a great way of estimating the Durability Fund contribution
+                                         (whether in cash or credits) today
+                                     o Who should manage the durability fund?
+
+
+
+                                                                                                                                                                                37
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                                     o Subjective choice that funneling money towards durable CDR is better
+                                        than buying multiple lower-durability credits today
+                                     o Potential for remaining atmospheric liability if we don’t get the Durability
+                                        Fund right
+                                 Tradeoffs
+                                     o Subjective choice that funneling money towards durable CDR is better
+                                        than buying multiple lower-durability credits today
+                                     o Potential for remaining atmospheric liability if we don’t get the Durability
+                                        Fund right
+                      What are the considerations for different project types (if any)?
+                      What are key assumptions or open questions associated with your approach?
+                      Proposal #7
+                      What is a brief description of your approach?
+                      Term limited credits: enabling term contracts, to reduce reversal concerns, infuse
+                      market flexibility for scale, and allow a like-for-like comparison of different solutions
+                      Key features of this approach:
+                                 There is flexibility in contract length to allow different project types (e.g. 5-1,000
+                                  years) and durability is tied to contract length.
+                                 Each project is labelled by durability, and could be distinguished by other key
+                                  features (e.g. co-benefits)—giving the market more options and flexibility to set
+                                  price.
+                                 Horizontal stacking: a company that emits a ton of CO2 buys a horizontal series
+                                  e.g., can reup after a forestry contract ends to continue investing in that forest or
+                                  purchase CDR credits in future years if prices come.
+                                 If reversals, project developer must make whole. The buffer pool can be smaller,
+                                  limited to delivery risk. Managed by standard.
+                      How will this approach achieve objectives of scaling high-integrity supply and
+                      investment?
+                                 Accelerates bringing supply online
+                                 Enhances transparency and honesty: does not force projects to claim spurious
+                                  commitments to “durability” that are predicated on systems that do not yet exist
+                                  (e.g. monitoring periods far beyond project timeline, etc).
+                                 Gives the market more options and flexibility.
+                      What are the benefits of this approach? What are the tradeoffs?
+                                 Benefits
+                                     o Feasible: works within existing market, legal etc frameworks (e.g.
+                                         limitations in local legislation regarding contract lengths).
+                                     o Inclusive: allows more smallholders and communities to participate and
+                                         reduces risks to them.
+                                 Tradeoffs
+
+
+
+                                                                                                                                                                             38
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+                                        o Requires commitment by corporates/emitters to shoulder the liability and
+                                          continue horizontal stacking (or see below about transferring liability).
+                                        o Makes it harder for the market to claim carbon neutrality (but this is
+                                          increasingly not allowed)
+                                        o Possible that it causes crashing in prices for shorter-duration contract
+                                          terms—but this needs market research
+                      What are the considerations for different project types (if any)?
+                      What are key assumptions or open questions associated with your approach?
+                                 An entity (e.g. Global Carbon Market Utility) would likely be needed to manage
+                                  the liabilities created by buyers for requirement to repeatedly purchase credits for
+                                  the same emission.
+                                 This doesn’t “solve” permanence, but instead stops pretending that the current
+                                  system is permanent. We are acknowledging reality.
+                      Proposal #8
+                      What is a brief description of your approach?
+                                 The approach is a 40-year rule from issuance date with some caveats around
+                                  contracting not being the only consideration for durability. Every tonne has a 40-
+                                  year durability according to this approach. The consideration here is that
+                                  commercial plantation harvest might not be able to meet those standards
+                                  because of replanting laws, so this is a solution to part of the problem and
+                                  exceptions might be in order.
+                                 Stress testing of Buffer pools
+                                 The standards have a self-monitoring mechanism every 5 years for continuous
+                                  monitoring of losses that could result in reversals.
+                                 Transition and longevity plan
+                      How will this approach achieve objectives of scaling high-integrity supply and
+                      investment?
+                      This approach is not a big departure from the ICVCM position. We believe that this as a
+                      bare minimum requirement for standards to follow. Also the added years of longevity
+                      could be an answer to the integrity question.
+                      What are the benefits of this approach? What are the tradeoffs?
+                      Tradeoffs are of the science. It is very clear that the actual claim should be time
+                      stamped, but market acceptability to this complexity is uncertain.
+                      Benefits are project level flexibility. Very important for market access
+                      What are the considerations for different project types (if any)?
+                      Considerations if any should be the way this durability period is established. Contracts
+                      should not be the only basis for this period. Could be considered differently for
+                      developed and developing economies. Harvest ARR should be looked at differently.
+                      What are key assumptions or open questions associated with your approach?
+                      Should high durable credits be labeled? Is 40 years after crediting the answer?
+
+
+                                                                                                                                                                             39
+
+https://doi.org/10.33774/coe-2024-lq0q7 ORCID: https://orcid.org/0009-0008-5993-5317 Content not peer-reviewed by Cambridge University Press. License: All Rights Reserved
+

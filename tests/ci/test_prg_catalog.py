@@ -381,6 +381,7 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 		"black_start_requirement",
 		"blended_finance_share",
 		"bond_share",
+		"buffer_pool_contribution",
 		"business_interruption_insurance",
 		"capacity_price",
 		"carbon_budget",
@@ -545,10 +546,13 @@ def test_five_nodes_agree_with_the_catalog_and_one_has_drifted(
 	# duplicate remittance share -- which the catalog marks `to_build`. Batch
 	# 61 took it to 650 by deprecating `local_content_requirements`, the plural
 	# duplicate of `local_content_requirement`, which the catalog also marks
-	# `to_build`. The graph is right and the catalog is stale in all three
-	# cases: the register's whole job is to show that, so the disagreement is
-	# pinned above rather than suppressed.
-	assert sum(1 for join in joins.values() if join.agrees) == 650
+	# `to_build`. Batch 69 took it to 649 by deprecating
+	# `buffer_pool_contribution`, the alias of `permanence_parameters` whose
+	# own equation set it equal to that share -- a second id for one number,
+	# which is the defect this register exists to surface. The graph is right
+	# and the catalog is stale in all four cases: the register's whole job is
+	# to show that, so the disagreement is pinned above rather than suppressed.
+	assert sum(1 for join in joins.values() if join.agrees) == 649
 
 
 def test_a_node_the_catalog_does_not_name_is_absent_rather_than_guessed(
@@ -660,6 +664,7 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 		'black_start_requirement: the graph says existing and the catalog says to_build',
 		'blended_finance_share: the graph says existing and the catalog says to_build',
 		'bond_share: the graph says existing and the catalog says to_build',
+		'buffer_pool_contribution: the graph says deprecated and the catalog says to_build',
 		'business_interruption_insurance: the graph says existing and the catalog says to_build',
 		'capacity_price: the graph says existing and the catalog says integrate',
 		'carbon_budget: the graph says existing and the catalog says to_build',

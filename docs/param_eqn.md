@@ -959,8 +959,8 @@
 | 26.2 | `baseline_methodology` | Baseline | Carbon | → `baseline_emissions`; ← `mrv_parameters` |
 | 26.3 | `baseline_emissions` | Baseline emissions | Carbon | → `additionality_test`; ← `baseline_methodology` |
 | 26.4 | `leakage_parameters` | Leakage | Carbon | → `carbon_credit_issuance`; ← `baseline_emissions` |
-| 26.5 | `permanence_parameters` | Permanence | Carbon | → `carbon_credit_issuance`; ← `buffer_pool_contribution` |
-| 26.6 | `buffer_pool_contribution` | Buffer pool | Carbon | → `permanence_parameters`; ← `carbon_credit_issuance` |
+| 26.5 | `permanence_parameters` | Permanence | Carbon | → `carbon_credit_reversal_allowance` (the share times the credit volume); → `carbon_credit_issuance` |
+| 26.6 | `buffer_pool_contribution` | Buffer pool | Carbon | **DEPRECATED (batch 69)** — duplicate of `permanence_parameters`; the equation `buffer_pool_contribution = permanence_parameters` was a rename, so both the equation and its edge are removed |
 | 26.7 | `mrv_parameters` | MRV | Carbon | → `carbon_credit_issuance`; ← `corresponding_adjustment` |
 | 26.8 | `corresponding_adjustment` | CA | Carbon | → `carbon_credit_issuance`; ← `article_6_2_parameters` |
 | 26.9 | `article_6_2_parameters` | Article 6.2 | Carbon | → `corresponding_adjustment`; ← `article_6_4_parameters` |

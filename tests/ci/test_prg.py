@@ -1027,6 +1027,11 @@ def test_the_summary_reports_the_registers(graph: ParameterGraph):
 		# the `{"free"}` claim below -- and unlike batches 55/59/61 its one
 		# reader was *deleted* rather than repointed, so nothing names it.
 		"energy_burden_limit",
+		# Batch 69 retired the buffer-pool alias of `permanence_parameters`.
+		# It was `derived` with an equation setting it equal to that share --
+		# one number under two ids -- so both the equation and its edge are
+		# gone, and it is `free` now that nothing determines it.
+		"buffer_pool_contribution",
 	}, deprecated_uncoupled
 	uncoupled_roles = {
 		graph.role(name).value for name in graph.uncoupled()
@@ -1106,10 +1111,21 @@ def test_the_reversal_allowance_is_the_share_and_not_its_complement(
 	assert allowance == share * volumes
 	assert allowance == 4.5
 	assert allowance != (1 - share) * volumes
-	# The buffer contribution names the same share, which is why the two agree
-	# now and did not before: the alias was right and the equation it was
-	# supposed to be spelling was not.
-	assert float(values["buffer_pool_contribution"]) == share
+
+	# `buffer_pool_contribution` used to be asserted equal to the share here.
+	# Batch 69 deprecated it instead: the equation setting it equal to
+	# `permanence_parameters` made it a second id for one number, which is the
+	# defect class this batch exists to remove, not a coupling. A tombstone
+	# carries its old default so it still propagates, and the assertion is that
+	# it is *not* reachable by any equation -- the alias's coupling is its
+	# deletion, and a graph that quietly re-coupled it would fail here.
+	node = graph.node("buffer_pool_contribution")
+	assert node.status == "deprecated", node.status
+	assert node.deprecated_by == "permanence_parameters", node.deprecated_by
+	assert not any(
+		"buffer_pool_contribution" in (equation.parameters or [])
+		for equation in graph.equations.values()
+	), "a deprecated node is reached by an equation; `_deprecated_reach` should refuse this at load"
 
 
 def test_the_unreached_engine_knobs_are_computed_not_transcribed(monkeypatch):
@@ -1789,7 +1805,7 @@ def test_every_equality_declares_an_edge_from_each_symbol_it_reads(
 	`firm_capacity_mw` fed the reserve margin, the inertia constant,
 	black-start capability and capacity revenue through seven readers.
 
-	The rule, stated once and asserted over all 534 equalities rather than
+	The rule, stated once and asserted over all 533 equalities rather than
 	over the nine that were wrong: every symbol an equality names -- on either
 	side -- carries an edge into the variable it determines. The variable
 	itself is excluded, because an equality's rhs names the quantity it solves
@@ -1805,7 +1821,11 @@ def test_every_equality_declares_an_edge_from_each_symbol_it_reads(
 		for equation in graph.equations.values()
 		if equation.relation == "eq"
 	}
-	assert len(determined) == 534, len(determined)
+	# 534 until batch 69 removed `buffer_pool_contribution_definition`, an
+	# equality whose rhs was the bare share it determined -- a rename rather
+	# than a relation. The rule itself is unchanged and still has no
+	# exceptions; the count falls with the equation.
+	assert len(determined) == 533, len(determined)
 
 	sourced: dict[str, set[str]] = {}
 	for edge in graph.edges:
@@ -3292,8 +3312,9 @@ def test_the_audit_reports_what_it_did_not_check():
 	# Batch 54's temporal-resolution definition takes it 336 -> 337, for the
 	# same reason as the two before it: `tsam_segment_hours` is not on the
 	# solve result either. The audit's coverage is unchanged; it is the
-	# computed set that grew.
-	assert len(audit.skipped) == 337, audit.skipped
+	# computed set that grew. Batch 69 removed `buffer_pool_contribution`'s
+	# alias equation, so it leaves the computed set and 337 -> 336.
+	assert len(audit.skipped) == 336, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -3353,8 +3374,10 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# Batch 51's three derived emission factors take it 528 -> 531, and batch
 	# 52's debt-share definition takes it 531 -> 532, and batch 53's reserve
 	# requirement 532 -> 533, and batch 54's temporal-resolution definition
-	# 533 -> 534.
-	assert len(audit.skipped) == 534, audit.skipped
+	# 533 -> 534. Batch 69 takes it 534 -> 533: `buffer_pool_contribution`
+	# stops being derived when its alias equation is removed, so the computed
+	# set shrinks by one and the unexamined set with it.
+	assert len(audit.skipped) == 533, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -5436,7 +5459,10 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# coupling and carried none, and moves nothing here: the register counts
 	# equations, and `strength_of` already reads an uncited equation as `hard`.
 	# The tier was right; the edge set was what disagreed with it.
-	assert counts == {"hard": 603, "informational": 1, "soft": 2}, counts
+	# Batch 69 deleted `buffer_pool_contribution_definition`, an alias whose one
+	# hard edge went with it: 603 -> 602. The two tiers it did not touch stay
+	# flat, which is the claim the equality makes.
+	assert counts == {"hard": 602, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -5900,7 +5926,20 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# frequency response defined as response within 0.5 s of triggering. It does
 	# not state the 10 s default; that gap stays open and is recorded in
 	# `docs/prg-status.md`.
-	assert len(declared) == 301, f"the citation register moved: {sorted(declared)}"
+	#
+	# Batch 69 moves it 301 -> 302, and the movement is a citation *replacing*
+	# a bare assertion rather than a number being counted. The batch-34 note
+	# above says "the same judgement for the buffer rate": the reversal
+	# allowance was judged definitional, an identity over operands the graph
+	# already carries, and shipped with `reference: null`. The archived Verra
+	# AFOLU Non-Permanence Risk Tool v4.2 states the arithmetic at 2.5.4 -- a
+	# risk rating converts to a percentage, and that percentage multiplies the
+	# net change in carbon stocks -- so the judgement was wrong and the
+	# reference is now the standard's own rule. The same batch deprecates
+	# `buffer_pool_contribution` and removes its equation, which is why the
+	# equation count falls; a deprecated node may not be reached by an
+	# equation (`_deprecated_reach`), so the alias's coupling is its deletion.
+	assert len(declared) == 302, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -6161,8 +6200,10 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 	# Batch 52's debt-share definition is affine in the variable it solves for,
 	# like every equation the earlier batches added, so the compared set moves
 	# 531 -> 532, and batch 53's reserve requirement 532 -> 533, and batch 54's
-	# temporal-resolution definition 533 -> 534.
-	assert compared == 534, (
+	# temporal-resolution definition 533 -> 534. Batch 69 takes it back to 533:
+	# `buffer_pool_contribution` stops being derived when its alias equation is
+	# removed, so one fewer equation is compared.
+	assert compared == 533, (
 		f"expected 481 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "

@@ -5156,9 +5156,10 @@ BATCH24_RETYPES: tuple[tuple[str, str, list[float], float, str, str, str], ...] 
 	 "Share of issued credit volume retired against a compliance obligation. "
 	 "A share of the issued volume."),
 	("permanence_parameters", "1", [0.0, 1.0], 0.1, "Carbon", "policy",
-	 "Reversal allowance on the credit book: the share of issued volume held "
-	 "back against non-permanence. A share, and its complement is the buffer "
-	 "a registry actually retains."),
+	 "The share of issued volume held back against non-permanence, which is "
+	 "what a registry deposits into its buffer pool. A share of the issuance, "
+	 "not of the value. This is the withheld share, not its complement -- the "
+	 "complement is the volume released, the opposite of a buffer."),
 	("carbon_credit_insurance", "1", [0.0, 1.0], 0.02, "Carbon", "policy",
 	 "Premium on insuring the credit book, as a share of its value. A share "
 	 "of the value, which is what makes the premium a spend."),
@@ -5373,14 +5374,24 @@ BATCH24_EQUATIONS: tuple[
 	 "change. A forest credit that burns has to be replaced from this "
 	 "allowance, and the allowance is sized by the reversal risk the "
 	 "permanence share names. The share is the allowance, not its "
-	 "complement. `permanence_parameters` describes itself as 'the share "
-	 "of issued volume held back against non-permanence', so its "
-	 "complement is the volume *not* held back -- the opposite of an "
-	 "allowance -- and the shipped form, which multiplied the complement, "
-	 "reported 40.5 of 45 MtCO2/year as the buffer. Batch 34 corrected it "
-	 "to 4.5, and `buffer_pool_contribution` now agrees with the volume it "
-	 "names instead of contradicting it.",
-	 "carbon_trajectory", "linear", "MtCO2/year", [0.0, 1000.0], None),
+	 "complement. The shipped form multiplied the complement and reported "
+	 "40.5 of 45 MtCO2/year as the buffer; batch 34 corrected it to 4.5. "
+	 "This is the arithmetic Verra's AFOLU Non-Permanence Risk Tool v4.2 "
+	 "states at 2.5.4 -- an overall risk rating converts to a percentage, "
+	 "and that percentage multiplies the net change in the project's "
+	 "carbon stocks -- so the share times the volume is the deposit, and "
+	 "the risk rating is what sets the share. The registry holds this "
+	 "volume in the pooled buffer account and releases it only if project "
+	 "integrity is maintained.",
+	 "carbon_trajectory", "linear", "MtCO2/year", [0.0, 1000.0],
+	 "Verra, AFOLU Non-Permanence Risk Tool v4.2 (2023), 2.5.4 (risk "
+	 "rating converted to a percentage and multiplied by the net change "
+	 "in carbon stocks) and 2.5.2 (the minimum rating of 12), archived at "
+	 "sources/archive/verra_afolu_npt_v42.txt; Cambridge Permanence and "
+	 "Durability Workshop 2024, Current Practice Among Carbon Crediting "
+	 "Programs, for the programs that set the share directly rather than "
+	 "deriving it, archived at "
+	 "sources/archive/cambridge_buffer_pool_workshop_2024.txt"),
 	("voluntary_market_volume_definition",
 	 "The volume sold into the voluntary market",
 	 "voluntary_market_volume_mtco2",
@@ -10195,8 +10206,11 @@ BATCH33_RETYPES: tuple[tuple[str, str, list[float], float, str, str], ...] = (
 	 "linear schedule; 2.0 doubles the annual charge. The range is the band any "
 	 "jurisdiction's code allows, not a measured distribution."),
 	("buffer_pool_contribution", "1", [0.0, 1.0], 0.1, "policy",
-	 "The share of issued carbon credits a registry holds in its buffer against "
-	 "reversal. At 0.1 the pool absorbs a tenth of every issuance."),
+	 "DEPRECATED. Duplicate of `permanence_parameters`. This node was declared "
+	 "`derived` with an equation setting it equal to that share, so the graph "
+	 "carried one number under two ids -- the two-names-for-one-quantity "
+	 "defect, not a second quantity. Its unit `1`, range [0, 1] and default of "
+	 "0.1 all restated the share it aliased."),
 	("compensation_rates", "USD/hectare", [50.0, 2.5e6], 7500.0, "policy",
 	 "The compensation a project pays per hectare: the multiple of market value "
 	 "the resettlement package offers applied to the land's own acquisition "
@@ -10307,15 +10321,10 @@ BATCH33_EQUATIONS: tuple[tuple[str, str, str, str, str, str | None], ...] = (
 	 "financial", None),
 
 	# --- carbon buffer and land ------------------------------------------
-	("buffer_pool_contribution_definition", "buffer_pool_contribution",
-	 "permanence_parameters",
-	 "The share of issued credits the registry buffers against reversal, which "
-	 "is the permanence share the graph already carries. 0.1 at defaults. A "
-	 "reviewer should decide whether this is a second spelling of the buffer "
-	 "`carbon_credit_reversal_allowance_definition` already computes as "
-	 "`(1 - permanence_parameters)`; if it is, the node's coupling is its "
-	 "deletion, not this alias.",
-	 "carbon_trajectory", None),
+	# `buffer_pool_contribution` is no longer emitted: batch 69 deprecated it as
+	# a duplicate of `permanence_parameters`, and a deprecated node may not be
+	# reached by an equation or an edge (`_deprecated_reach`). Re-emitting this
+	# alias would make the graph fail to load.
 	("compensation_rates_definition", "compensation_rates",
 	 "compensation_share_of_market * land_acquisition_cost_per_hectare",
 	 "The compensation a project pays per hectare: the multiple of market value "
@@ -10548,14 +10557,18 @@ def build_batch33(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	each is a function of two or three nodes that already exist, which is what
 	makes it a coupling rather than a new dial.
 
-	*Seven of the products are aliases, and two of them are marked for deletion
-	rather than coupling.* `buffer_pool_contribution` and
-	`premium_share_of_asset` are the pack's own flagged candidates: each may be
+	*Seven of the products are aliases, and two of them were flagged for
+	deletion rather than coupling.* `buffer_pool_contribution` and
+	`premium_share_of_asset` were the pack's own flagged candidates: each may be
 	a second spelling of a quantity the graph already derives, in which case
-	the node's coupling is its removal. This batch ships the alias because that
-	removes the node from `uncoupled()` without inventing arithmetic, and the
-	shipped description carries the reviewer's question rather than burying it.
-	The `premium_share_of_asset` alias is also what resolves the catalog's
+	the node's coupling is its removal. This batch shipped the alias because
+	that removes the node from `uncoupled()` without inventing arithmetic, and
+	the shipped description carried the reviewer's question rather than burying
+	it. *Batch 69 answered it for the first of the two*: an equation of the form
+	`x = y` over the same unit, range and default is a rename, so
+	`buffer_pool_contribution` is now deprecated with `deprecated_by:
+	permanence_parameters` and its equation and edge are gone. The
+	`premium_share_of_asset` alias is also what resolves the catalog's
 	duplicate premium in favour of 0.005 against the node's own 0.008, which
 	lowers the shipped premium by 37.5% -- a decision recorded, not a
 	discovery.
@@ -10995,8 +11008,14 @@ def build_batch34(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	tenths of every issuance is not a permanence mechanism; it is the share
 	inverted. This batch corrects the equation to
 	`permanence_parameters * carbon_credit_volumes`, taking the allowance from
-	40.5 to 4.5 MtCO2/year and making `buffer_pool_contribution` agree with the
-	volume it names.
+	40.5 to 4.5 MtCO2/year.
+
+	*Batch 69 retired the alias this paragraph used to defend.* The paragraph
+	ended by saying the correction made `buffer_pool_contribution` "agree with
+	the volume it names". It never named a volume -- it was `x = y` over the
+	share itself, unit `1`, and the agreement was a rename agreeing with
+	itself. The node is now deprecated with `deprecated_by:
+	permanence_parameters`, and its equation and edge are gone.
 
 	The argument stops there deliberately. Registry practice -- the buffer
 	rates programmes actually withhold -- would corroborate the 10%, and no

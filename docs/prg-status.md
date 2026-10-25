@@ -1874,6 +1874,71 @@ per-start cost and no count of starts, stated in their own descriptions) and
 `capex_gravity_storage` (needs `gravity_storage_capacity` in MWh, still a
 placeholder). Each needs a source or a base node, not an equation.
 
+### The permanence family had one number under two ids (batch 69, 2026-10-25)
+
+Batch 33 coupled `buffer_pool_contribution` with the equation
+`buffer_pool_contribution = permanence_parameters` and then wrote the doubt
+into the equation's description rather than resolving it: "A reviewer should
+decide whether this is a second spelling ... if it is, the node's coupling is
+its deletion, not this alias." That is a question left in a shipped artefact,
+where every reader of the graph meets it and none can answer it.
+
+It is a second spelling, and the equation proves it without leaving the tree.
+The two ids carry the same unit (`1`), the same range (`[0, 1]`) and the same
+default (0.1), and one is defined as an identity over the other. A node whose
+determining equation is `x = y` is not a quantity; it is a rename. The batch
+deprecates it with `deprecated_by: permanence_parameters`, removes its equation
+and its edge, and the loader's `_deprecated_reach` makes the removal
+mandatory rather than tidy: a deprecated node may not be named by an equation
+or an edge, so leaving the alias in place would have failed the load.
+
+**The prose was wrong in the direction that matters.** `permanence_parameters`
+described itself as "the share of issued volume held back against
+non-permanence. A share, and its complement is the buffer a registry actually
+retains." Both halves of the second sentence are false. The share *is* what a
+registry retains — Verra deposits the percentage itself, not its complement —
+and the complement is the volume released, which is the opposite of a buffer.
+Batch 34 corrected the arithmetic from the complement and never touched this
+sentence, so the node went on asserting the form the equation had been fixed
+away from. `test_no_description_asserts_a_relation_its_equation_does_not_compute`
+missed it for a reason worth recording: that gate looks for "the complement of"
+on a node whose equation computes neither `1 - x` nor a readable equivalent,
+and this node *is* the share, so the assertion was true of the node and false
+of the object. A prose gate keyed to an arithmetic shape cannot see a
+description that inverts the direction of a correct equation.
+
+**The source that settles it was already in the register, unarchived.**
+`citation_report()` listed `verra_gold_standard` as one of seven `unarchived`
+gaps — a row citing a methodology index page, with no copy. The Cambridge
+Permanence and Durability Workshop (2024) names the document behind that row:
+Verra's AFOLU Non-Permanence Risk Tool v4.2. It is now archived, and it states
+the rule the equation implements:
+
+> 2.5.4 To determine the number of buffer credits that shall be deposited in
+> the AFOLU pooled buffer account, the overall risk rating shall be converted
+> to a percentage (e.g., an overall risk rating of 35 converts to 35 percent).
+> This percentage shall be multiplied by the net change in the project's
+> carbon stocks ...
+
+So the share is a *risk output*, floored at 12 (2.5.2) and failing the project
+above 60 (2.5.3) — a Verra project deposits between 12% and 60%, not any point
+in `[0, 1]`. The shipped range stays `[0, 1]` because it is the graph's
+declared admissible set for a share and narrowing it to one program's band
+would make the graph a Verra model; the description records the band instead.
+The 0.1 default is ACR's flat 10% for CCS projects, below Verra's floor, and
+that is a fact about which program the default was taken from rather than a
+defect in it. Isometric's 2% is why "wider than any registry permits" would
+have been a false finding, and the first draft of the description said exactly
+that until the survey was read.
+
+Three registers moved. Equations 606 → 605, edges 1408 → 1407, uncoupled
+237 → 238 (the tombstone is still uncoupled, by `uncoupled()`'s documented
+choice not to filter by status). Deprecated 9 → 10. The citation register went
+301 → 302: `carbon_credit_reversal_allowance_definition` had `reference: null`
+on the batch-34 judgement that it was definitional, and 2.5.4 is the standard's
+own statement of that arithmetic, so the judgement was wrong rather than the
+citation unavailable. Two INDEX rows added, both archived, both digested.
+
 ### Six node names that resolved to nothing (batch 66, 2026-10-25)
 
 Batch 65 read node descriptions against their equations. This reads equation

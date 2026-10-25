@@ -1,0 +1,1616 @@
+AFOLU Non-Permanence Risk
+Tool
+
+
+
+
+12 October 2023        v4.2
+ABOUT VERRA
+Verra sets the world’s leading standards for climate action and sustainable development. We build
+standards for activities as diverse as reducing deforestation, to improving agricultural practices, to
+addressing plastic waste, and to achieving gender equality. We manage programs to certify that these
+activities achieve measurable high-integrity outcomes. And we work with governments, businesses, and
+civil society to advance the use of these standards, including through the development of markets.
+Everything we do is in service of increasingly ambitious climate and sustainable development goals –
+and an accelerated transition to a sustainable future.
+
+Verra’s certification programs include the Verified Carbon Standard (VCS) Program and its Jurisdictional
+and Nested REDD+ (JNR) framework, the Climate, Community & Biodiversity Standards (CCBS)
+Program, the Sustainable Development Verified Impact Standard (SD VISta) Program, and the Plastic
+Waste Reduction Program.
+
+
+Intellectual Property Rights, Copyright, and Disclaimer
+The intellectual property rights of all materials in this document are owned by Verra or by entities that
+have consented to their inclusion in this document.
+
+The use of these materials in the establishment or operation of a project in a Verra certification
+program is permissible (“Authorized Use”). All other commercial use of these materials is prohibited.
+Without limiting the generality of the foregoing, viewing, downloading, modifying, copying, distributing,
+transmitting, storing, reproducing, or otherwise using, publishing, licensing, transferring, selling, or
+creating derivative works (in whatever format) from this document or any information obtained from this
+document other than for the Authorized Use or for personal, academic, or other non-commercial
+purposes is prohibited.
+
+All copyright and other proprietary notices contained in this document must be retained on any copies
+made under the Authorized Use. All other rights of the copyright owner not expressly addressed above
+are reserved.
+
+No representation, warranty, or guarantee express or implied is made in this document. No
+representation, warranty, or guarantee express or implied is made that the information provided is
+accurate, current, or complete. While care is taken in the collection and provision of this information,
+Verra and its officers, employees, agents, advisers, and sponsors will not be liable for any errors,
+omissions, misstatements, or mistakes in any information or damages resulting from the use of this
+information, or any decision made, or action taken in reliance on this information.
+CONTENTS
+1         INTRODUCTION AND SCOPE .............................................................................. 1
+    1.1      Scope................................................................................................................................... 2
+
+2         RISK ANALYSIS AND BUFFER DETERMINATION ................................................... 3
+    2.1      Step 1: Risk Analysis ............................................................................................................ 3
+    2.2      Internal Risks ........................................................................................................................ 4
+    2.3      External Risks...................................................................................................................... 12
+    2.4      Natural Risks ...................................................................................................................... 17
+    2.5      Step 2: Overall Non-Permanence Risk Rating and Buffer Determination ................. 25
+
+APPENDIX 1: DOCUMENT HISTORY ............................................................................. 27
+                                                                           1 Introduction and Scope
+
+
+
+
+1 INTRODUCTION AND SCOPE
+This tool provides the procedures for analyzing non-permanence risk and determining buffer
+contributions for Agriculture Forestry and Other Land Use (AFOLU) projects. The tool sets out
+requirements for project proponents, implementing partners, and validation/verification bodies to
+assess risk and determine the appropriate risk rating.
+
+The first version of this tool was developed from 2007–2008 by the VCS AFOLU Advisory Group – a
+working group of leading experts in each AFOLU project category - and involved an extensive peer
+review process. In 2010, the tool underwent public stakeholder consultation and was revised as part of
+VCS Program Version 3. More than 25 independent reviewers, including preeminent risk experts,
+investors, NGO representatives, and project developers, supported these efforts and provided detailed
+feedback. The VCS AFOLU Steering Committee also provided oversight.
+
+In 2023, Verra revised the tool to include projected future climate change impacts, sea-level rise (SLR)
+and ALM-specific risks, among other changes. Future climate and SLR impacts are predicted based on
+information provided by the Intergovernmental Panel on Climate Change (IPCC) in the contribution of
+Working Group I (the physical science basis) of the Sixth Assessment Report (AR6) and the Special
+Report on the Ocean and Cryosphere in a Changing Climate (SROCC, 2019). Input was sought through
+Verra’s Nature-Based Solutions working groups and two public stakeholder consultations.
+
+This document will be updated periodically, and readers should ensure that they are using the current
+version.
+
+
+
+
+                                                                                                        1
+                                                                           1 Introduction and Scope
+
+
+1.1 Scope
+1.1.1   This document sets out the procedures for completing a non-permanence risk analysis to
+        determine the non-permanence risk rating (“risk rating”), which shall be used to determine the
+        number of buffer credits that an AFOLU project shall deposit into the AFOLU pooled buffer
+        account (the procedure for depositing buffer credits is set out in the Registration and Issuance
+        Process). Risk ratings are based on an assessment of risk factors that are added together to
+        determine the total risk rating, as set out in Section 2. This document and the AFOLU pooled
+        buffer account are subject to periodic reconciliation and revision based on a review of existing
+        AFOLU verification reports and an assessment of project performance, as set out in the VCS
+        Program Guide.
+
+1.1.2   In addition to the requirements in this document, AFOLU projects shall comply with all
+        applicable VCS Program rules and requirements.
+
+1.1.3   Project proponents shall clearly document and substantiate the risk score selected for the
+        project. Supporting records shall include all relevant assumptions, parameters, and data
+        sources so that the reader can reproduce the results.
+
+1.1.4   The validation/verification body shall evaluate the risk assessment undertaken by the project
+        proponent and assess all data, rationales, assumptions, justifications, and documentation
+        provided by the project proponent to support the non-permanence risk rating.
+
+1.1.5   Non-permanence risk analysis shall only be applied to GHG removals or avoided emissions
+        through carbon sinks. Project activities generating emissions reductions of N2O, CH4, or fossil-
+        derived CO2 are not subject to buffer withholding since these GHG benefits cannot be reversed.
+
+
+
+
+                                                                                                        2
+                                                              2 Risk Analysis and Buffer Determination
+
+
+
+
+2 RISK ANALYSIS AND BUFFER
+  DETERMINATION
+2.1 Step 1: Risk Analysis
+2.1.1   Potential transient and permanent losses in carbon stocks shall be assessed over a period of
+        100 years based on present conditions and the information available at the time of the risk
+        analysis, unless otherwise specified in Sections 2.2 to 2.4. Projects with a project start date in
+        the past, or projects analyzing risk at a subsequent verification event shall assess the potential
+        transient and permanent losses for the next 100 years.
+
+2.1.2   The risk analysis shall be conducted as follows:
+
+        1) Risk factors are classified into three categories: internal risks, external risks, and natural
+           risks, and further into sub-categories such as project management, financial viability, and
+           stakeholder engagement. The project shall be evaluated against each of the risk factors in
+           each category and sub-category as set out in Sections 2.2 (internal risks), 2.3 (external
+           risks), and 2.4 (natural risks). A risk score shall be assigned for each risk category and
+           sub-category and shall follow the calculation formulas in each table to determine the risk
+           rating for the category and sub-category.
+
+        2) The AFOLU Non-Permanence Risk Assessment Calculation Tool shall be used to assess risk
+           and complete the Non-Permanence Risk Report.
+
+        3) Where applicable, and where the project proponent demonstrates that related mitigation
+           activities will be (at validation) or are being (at verification) applied, the risk rating for the
+           sub-category will be reduced, as determined in Sections 2.2 to 2.4.
+
+        4) As set out in Sections 2.2 to 2.4, all sub-categories set a minimum rating of zero, even
+           when the calculation would otherwise result in a rating lower than zero.
+
+        5) The total risk rating for each category (internal, external, and natural) shall be determined
+           by summing the ratings for each sub-category in the category. The total rating for any
+           category shall not be less than zero.
+
+        6) Projects assessed as Risk Failed for any risk factor shall fail the entire risk analysis. Where
+           the overall risk rating or the summed risk rating for each category is unacceptably high, as
+           set out in Section 2.5.4, the project shall fail the risk analysis. Projects that fail the risk
+           assessment shall not be eligible for crediting until the project has adequately addressed
+           the risk to the extent that it would no longer be assessed as Fail.
+
+        7) An overall risk rating percentage shall be determined based on the ratings from each risk
+           category as set out in Section 0.
+                                                            2 Risk Analysis and Buffer Determination
+
+
+2.1.3   Where risks are relevant to only a portion of the project area in a grouped project, the project
+        area shall be divided into sub-areas with similar risk profiles for the non-permanence risk
+        assessment (Further requirements on non-permanence risk analysis for grouped projects are
+        set out in the VCS Standard).
+
+2.1.4   Where a risk or mitigation factor does not apply to the project, the score shall be zero for that
+        factor.
+
+
+2.2 Internal Risks
+2.2.1   Project management (PM) shall be assessed using Table 1, noting the following:
+
+        1) Each project management risk factor set out in Table 1 shall be assessed.
+
+        2) Management teams are the individuals responsible for day-to-day management and
+           implementation of project activities. Management teams may include the project
+           proponent, the implementing partner (see the VCS Program Definitions for the definition of
+           implementing partner), or carbon project development partners who have contractual
+           commitments to support the project activities.
+
+        3) Evidence that species planted are adapted to the same or similar agro-ecological zone(s) in
+           which the project is located and that ALM practices are appropriate to the agro-ecological
+           zone(s), soil types, and cropping/grassland systems may be demonstrated through
+           publications in scientific journals; technical reports from government agencies, NGOs or
+           research groups; or successful use over time by other projects registered under the VCS
+           Program or another approved GHG program.
+
+        4) Ongoing enforcement refers to protecting carbon stocks in the project area from
+           encroachment by outside actors; for example, where a REDD project faces risk from
+           external actors entering the project area for illegal logging.
+
+        5) Projects shall have an adaptive management plan. Adaptive management plans identify,
+           assess, and create a mitigation plan for potential risks to the project, including those
+           identified in this document, and any other obstacles to project implementation. They
+           include a process for monitoring progress, documenting lessons learned or corrections that
+           may be needed, and incorporating them into project decision-making in future monitoring
+           periods. The onus is on the project proponent to demonstrate that such plans are in place
+           and have considered potential risks and obstacles to the project. Further, a system is in
+           place for adapting to changing circumstances.
+
+
+
+
+                                                                                                            4
+                                                                    2 Risk Analysis and Buffer Determination
+
+
+Table 1: Project Management
+
+ Project Management                                                                                          Score
+
+           Does the project have an adaptive management plan in place that includes a monitoring plan? If No,
+ Q1
+           the project fails the risk assessment. If Yes, proceed to Q2.
+
+
+ Q2        Do any of the following project management risks apply to the project?
+
+
+           Species planted (where applicable) associated with more than 25 percent of the stocks on
+ a)        which GHG credits have previously been issued are not native nor proven to be adapted to the      2
+           same or similar agro-ecological zone(s) as the project area.
+
+
+           Ongoing enforcement to prevent encroachment by outside actors is required to protect more
+ b)                                                                                                          2
+           than 50 percent of stocks on which GHG credits have previously been issued.
+
+
+           Management team does not include individuals with significant experience in all skills
+ c)        necessary to successfully undertake the project activities (i.e., any area of required            2
+           experience is not covered by an individual with at least five years’ experience in that area).
+
+
+           Management team does not maintain a presence in the country or is located more than one
+ d)                                                                                                          2
+           day of travel from the project site, considering all parcels or polygons in the project area.
+
+
+           Management team has previously failed to submit a loss report within two years of detecting a
+ e)                                                                                                          2
+           loss event.
+
+
+           ALM projects: Some or all the farmers participating in the project have not received training
+ f)        on the improved ALM practices implemented as part of the project or the monitoring and            2
+           reporting procedures implemented during the crediting period.
+
+
+           ALM projects: Some or all the farmers participating in the project are unaware of the potential
+ g)                                                                                                          2
+           for yields to decrease temporarily due to the transition to improved agricultural practices.
+
+
+ Q3        Do any of the following mitigations apply to the project?
+
+
+           Mitigation: Management team includes individuals with significant (i.e., more than five years)
+           experience in AFOLU project design and implementation, carbon accounting, and reporting
+ h)                                                                                                          −2
+           (e.g., individuals who have successfully managed projects through validation, verification, and
+           issuance of GHG credits) under the VCS Program or other approved GHG programs.
+
+
+           Mitigation (ALM projects): A comprehensive training plan for all farmers participating in the
+ i)        project is in place, covering implementation of planned ALM practices, monitoring and             −2
+           reporting obligations and their potential costs.
+
+      Total Project Management (PM) = [as applicable, (a + b + c + d + e + f + g + h + i)]
+      Total shall not be less than zero.
+
+
+
+                                                                                                                     5
+                                                                2 Risk Analysis and Buffer Determination
+
+
+2.2.2 Financial viability (FV) shall be assessed using Table 2, noting the following:
+
+        1) The financial viability of a project is based on 1) the number of years until breakeven is
+           reached (i.e., the payback period) and 2) the funding secured relative to what is needed to
+           implement and operate the project until reaching breakeven.
+
+        2) Breakeven is the point at which total cost equals total revenue. The length of time it takes
+           to breakeven is the payback period. The payback period shall be calculated following
+           generally accepted accounting principles (i.e., Payback period = initial investment/net cash
+           flow per year). In the calculation of cash flow per year, cash in may include commercial
+           revenue streams associated with the project, secured revenue, and conservatively
+           projected revenues from the sale of GHG credits and other funding sources, such as donor
+           funds, and carbon prepayments. Cash out shall include, at a minimum, project
+           implementation costs, costs associated with GHG credit generation (e.g., validation,
+           verification, and registration), and, where applicable, interest expenses, repayment of
+           loans, and any required equity distributions.
+
+        3) The percentage of needed funding secured shall be calculated by summing all funding and
+           revenue secured and dividing this by the total cash out up to and including the year the
+           project reaches breakeven.
+
+        4) Projects may demonstrate that funding has been secured through, for example, financial
+           statements, bank records, executed commodity purchase agreements, executed emission
+           reduction purchase agreements, or other signed contractual agreements. Evidence shall be
+           provided showing agreement counterparties are in good financial standing and can meet
+           their financial obligations. Given execution uncertainties, options contracts shall not be
+           counted as secured funding. The assumptions made for revenue from both carbon and
+           other commercial sources (e.g., timber, agricultural commodities) must be conservative.
+           The source, pricing assumptions, frequency of verification, and other relevant variables
+           shall be clearly documented.
+
+        5) Callable financial resources are those not included in secured funding but readily available
+           to the project. The availability of such resources may be indicated through letters of credit,
+           revolving credit lines or other financial backing. Signed agreements shall be provided as
+           evidence to demonstrate the project’s ability to access funding as needed.
+
+Table 2: Financial Viability
+
+ Financial Viability                                                                          Score
+
+ Q1        How long is the project’s payback period (i.e., how many years will it take to breakeven)?
+
+
+ a)        The payback period is greater than 20 years from the current risk assessment.      Risk failed
+
+
+           The payback period is greater than 10 years from the current risk assessment,
+ b)                                                                                           3
+           but less than or equal to 20 years.
+
+
+
+                                                                                                            6
+                                                                       2 Risk Analysis and Buffer Determination
+
+
+ Financial Viability                                                                           Score
+
+             The payback period is greater than seven and up to and including 10 years
+ c)                                                                                            2
+             from the current risk assessment.
+
+
+             The payback period is greater than four and up to and including seven years
+ d)                                                                                            1
+             from the current risk assessment.
+
+
+ e)          The payback period is four years or less from the current risk assessment.        0
+
+
+             What percent of funding has the project secured to cover the total cash out required before the
+ Q2
+             project reaches breakeven?
+
+
+             Project has secured less than 15 percent of the funding needed to cover the
+ f)                                                                                            3
+             total cash out required before the project reaches breakeven.
+
+
+             Project has secured from 15 percent to less than 40 percent of the funding
+ g)          needed to cover the total cash out required before the project reaches            2
+             breakeven.
+
+
+             Project has secured from 40 percent to less than 80 percent of the funding
+ h)          needed to cover the total cash out required before the project reaches            1
+             breakeven.
+
+
+             Project has secured 80 percent or more of the funding needed to cover the
+ i)                                                                                            0
+             total cash out before the project reaches breakeven.
+
+
+ Q3          Does the following mitigation apply to the project?
+
+
+             Mitigation: Project has available, as callable and secured financial resources,
+ j)                                                                                            −2
+             at least 80 percent of total cash out before the project reaches breakeven.
+
+ Total Financial Viability (FV) = [as applicable, ((b, c, d, or e) + (f, g, h or i )+ j)]
+ Total shall not be less than zero and the sub-total for question two with the mitigation j
+ shall not be less than zero (note: the mitigation only applies to Q2)
+
+
+
+2.2.3    Opportunity cost (OC) shall be assessed using Table 3, noting the following:
+
+         1) Opportunity cost analysis shall be based on the net present value (NPV) of the alternative
+            land uses identified in the project’s additionality assessment except where most baseline
+            activities are subsistence driven (see 3 below). The onus is on the project proponent to
+            demonstrate and substantiate what constitutes credible alternative land use scenarios.
+            The alternative land use scenarios shall be the activities identified in the baseline scenario.
+
+
+
+
+                                                                                                               7
+                                                                2 Risk Analysis and Buffer Determination
+
+
+       2) The NPV analysis shall cover the project crediting period, compare credible alternatives to
+          the project and use a conservative estimate of revenue from GHG credit sales and other
+          project revenue streams. Estimates of GHG credit prices shall be based on market
+          intelligence reports or other published sources.
+
+       3) The NPV analysis shall also compare potential price fluctuations of commodities impacted
+          by the project. The financial discount rates used shall be based on published sources and
+          represent the appropriate risk for the relevant land use scenario. Where the project
+          proponent is not the landowner or tenant, the NPV to the landowner or tenant shall be
+          compared.
+
+       4) Where most baseline activities are subsistence-driven, an NPV analysis is not required.
+          Instead, a quantitative assessment of the net impacts of the project on the social and
+          economic well-being of the communities that derive livelihoods from the project area (see
+          Section 0) shall be undertaken within five years of the current risk assessment. The
+          analysis shall be based on social assessments such as household surveys and participatory
+          rural appraisals that follow best practices. Baseline scenario assumptions of household
+          revenue shall be based on third-party data (e.g., household surveys or national statistics).
+          The impact of carbon revenues on communities shall only be considered where the
+          communities have designed and agreed on a benefit-sharing plan.
+
+Table 3: Opportunity Cost
+
+ Opportunity Cost                                                                                        Score
+
+ Q1     Are the baseline activities subsistence-driven? If No, proceed to Q2. If Yes, proceed to Q3.
+
+
+        What is the NPV of the most profitable alternative land use activity compared to the NPV of the project
+ Q2
+        activity? A response is only required if the answer to Q1 is No
+
+
+        Net present value (NPV) of the most profitable alternative land use activity is expected to be
+ a)                                                                                                      8
+        at least 100 percent more than that of the project activities.
+
+
+        NPV of the most profitable alternative land use activity is expected to be greater than 50
+ b)                                                                                                      6
+        percent and up to 100 percent more than that of project activities.
+
+
+        NPV of the most profitable alternative land use activity is expected to be greater than 20
+ c)                                                                                                      4
+        percent and up to and including 50 percent more than that of project activities.
+
+
+        NPV of the most profitable alternative land use activity is expected to be 20 percent or less
+ d)                                                                                                      0
+        than that of project activities.
+
+
+        NPV of project activities is expected to be greater than 20 percent and up to 50 percent
+ e)                                                                                                      −2
+        more profitable than that of the most profitable alternative land use activity.
+
+
+
+
+                                                                                                                  8
+                                                                       2 Risk Analysis and Buffer Determination
+
+
+ Opportunity Cost                                                                                                 Score
+
+            NPV of project activities is expected to be over 50 percent more profitable than that of the
+ f)                                                                                                               −4
+            most profitable alternative land use activity.
+
+
+            Does the project have net positive community impacts? A response is only required if the answer to Q1
+ Q3
+            is Yes
+
+
+ g)         Net positive community impacts of project activities are not demonstrated.                            8
+
+
+ h)         Net positive community impacts of project activities are demonstrated.                                0
+
+
+ Q4         Do any of the following mitigations apply to the project?
+
+
+            Mitigation: Project is protected by a legally binding agreement (see Section 2.2.5) to
+ i)         continue management practices that protect the credited carbon stocks over the duration of            −2
+            the project crediting period.
+
+
+            Mitigation: Project is protected by legally binding agreement (see Section 2.2.5) to continue
+ j)                                                                                                               −4
+            management practices that protect the credited carbon stocks for at least 100 years.
+
+
+            Mitigation: Where there is a potential for revenue loss compared to the most profitable
+            alternative land use activity, project is a non-profit 1 or has additional financial support (e.g.,
+ k)                                                                                                               −2
+            via grants, government funding, ecosystem services payments or SD VISta assets) to
+            overcome expected revenue loss.
+
+      Total Opportunity Cost (OC) = [as applicable, (a, b, c, d, e, f, g, or h) + (i or j) + k]
+      Total shall not be less than zero.
+
+
+2.2.4      Project longevity (PL) shall be assessed using Table 4, noting the following:
+
+           1) The project longevity score shall be determined by the formulas set out in Table 4.
+
+           2) Evidence shall be provided demonstrating that project ownership (see the VCS Standard for
+              project ownership requirements) can be maintained for the entire project longevity (e.g.,
+              where ownership is secured through a concession that is shorter than the project longevity,
+              the concession is renewable for the entire longevity period being claimed).
+
+           3) For all AFOLU project types, the entire project longevity shall be covered by management,
+              financial, and monitoring plans submitted to local government, financial institutions, or
+
+
+1 A non-profit is an organization that does not distribute any surplus funds to owners or shareholders, but instead uses
+
+them to pursue its goals, such as poverty alleviation, community development, or biodiversity conservation. Although
+governments and government agencies may meet this definition, they are not considered non-profit organizations in this
+tool.
+
+
+                                                                                                                          9
+                                                   2 Risk Analysis and Buffer Determination
+
+
+    made public. The intention to continue management practices shall be stated and planned
+    for in these documents. They may include external evidence such as municipal land-use
+    plans, institutional structures, ecological-economic zoning, etc. For ARR and IFM projects
+    with harvesting, the project longevity is the number of years that project activities that
+    maintain carbon stocks will be maintained, either through the continuation of the project
+    activity or replanting or re-growth of trees after the last harvest or cutting cycle in the
+    project crediting period. Projects shall demonstrate their commitment to continue the
+    management practice or to replant or allow re-growth through evidence. Evidence may
+    include certification of sustainable forest management under the Forest Stewardship
+    Council (FSC), Programme for the Endorsement of Forest Certification (PEFC), or other
+    internationally recognized schemes, a detailed management plan outlining practices that
+    will be implemented to maintain or increase carbon stocks over the long term, or
+    contractual agreements for timber supply beyond the last harvest in the project crediting
+    period. Re-growth may be considered only where project areas, after harvesting, will be
+    managed for regeneration (naturally or with assistance), maintaining the current species
+    mix and allowing trees to re-grow at least to the age at which trees were harvested, as
+    demonstrated in management plans.
+
+4) Legal agreement or requirement to continue the management practice refers to any legally
+   enforceable agreement or requirement, such as a conservation easement or protected area
+   law requiring the continuation of the management practice that sequesters carbon or
+   avoids emissions for the project’s longevity. In ARR and IFM projects with harvesting, where
+   allowing re-growth of harvested areas is required by law, this may be demonstrated by
+   citing the appropriate legal statute and common practice.
+
+5) Project longevity may be assessed at the project level (i.e., across aggregated project
+   activity instances) in grouped projects.
+
+6) Grouped projects where contract durations with individual project activity instances are
+   less than the project longevity shall apply the Without legal agreement or requirement to
+   continue the management practice formula in Table 4. Further, a plan for ensuring that the
+   GHG benefit of the project is maintained over the full project longevity at the group level
+   shall be established and, at a minimum, include the following:
+
+    a) A description of how the project proponent will incentivize project activity instances to
+       continue their participation in the project (e.g., contract renewal terms, providing
+       ongoing training and support, vesting schedules);
+
+    b) A plan for how project activity instances that do not renew their contracts will be
+       monitored for permanence for at least the project longevity as set out in the VCS
+       Standard. Where such monitoring is not possible, projects shall assume a complete
+       loss of carbon stocks when a project activity instance leaves the project and follow the
+       loss event reporting requirements set out in the Registration and Issuance Process;
+
+
+
+                                                                                               10
+                                                                   2 Risk Analysis and Buffer Determination
+
+
+            c) A description of how the project proponent intends to expand the project over time to
+               include additional project activity instances to help compensate for any losses; and
+
+            d) A commitment from the project proponent to maintain the project for at least the
+               project longevity.
+
+Table 4: Project Longevity
+
+ Project Longevity                                                              Score
+
+ Q1      Did the project request registration on or after 1 January 2024?
+
+
+         Does the project have a legally binding agreement that covers at least a 100-year period from the
+ Q2
+         project’s start date? If Yes, the project is given a zero score for this risk category. If No, proceed to Q2.
+
+
+         What is the project longevity in years? If you answered Yes to
+         Q1 and the project longevity is less than 40 years, the project
+         fails the risk assessment. If you answered No to Q1 and the
+ Q3      project longevity is less than 30 years, the project fails the risk    Number of years
+         assessment. Please note that projects with project longevity of
+         less than 40 years will be ineligible for the Core Carbon
+         Principles label.
+
+
+         Does the project have a management, financial and monitoring plan for the entire project longevity? If
+ Q4
+         No, the project fails the risk assessment. If Yes, proceed to Q5.
+
+
+ Q5      Is the project an ARR or IFM project with harvesting? If No, proceed to Q7. If Yes, proceed to Q6.
+
+
+         Can the project demonstrate a commitment to continue the management practice, replant or allow re-
+ Q6
+         growth? If No, the project fails the risk assessment. If Yes, proceed to Q7.
+
+
+         Does the project have legal agreement or requirement to continue the management practice(s)? If No,
+ Q7
+         proceed to a. If Yes, proceed to b.
+
+
+         Without legal agreement or requirement to continue the
+ a)                                                                             = 25 − (project longevity/5)
+         management practice.
+
+
+         With legal agreement or requirement to continue the
+ b)                                                                             = 25 − (project longevity/4)
+         management practice.
+
+
+         Is the project a grouped project where contract durations with individual project activity instances are
+ Q8
+         less than the project longevity?
+
+ Total Project Longevity (PL) = [as applicable, (a or b)]
+ Total shall not be less than zero.
+
+
+
+
+                                                                                                                     11
+                                                            2 Risk Analysis and Buffer Determination
+
+
+2.2.5   The total risk rating for internal risk shall be determined using Table 5.
+
+Table 5: Total Internal Risk
+
+ Total Internal Risk                                                                        Rating
+
+ Total Internal Risk = (PM + FV + OC + PL)
+ Total shall not be less than zero.
+
+
+2.3 External Risks
+2.3.1   Land and resource tenure (LT) shall be assessed using Table 6, noting the following:
+
+        1) The project proponent shall select the risk score for the land rights, resource access rights,
+           use rights and the ownership situation applicable to the project.
+
+        2) Land and resource tenure is the system of rights to lands, territories, and resources,
+           including obligations, rules, institutions, and processes regulating ownership of, access to,
+           and use of land and associated resources. Land and resource rights may be synonymous
+           with property rights and encompass full ownership and lesser usufructuary rights to use or
+           have access to the project area and the resources within it, such as rights to fell timber,
+           collect fallen branches or graze livestock.
+
+        3) Land may be government-, community- or privately owned. Ownership refers to a title or
+           right encompassing full control of the land in perpetuity and may include the right to
+           transfer or sell land or resource access and use rights.
+
+        4) A conservation easement or servitude is a permanent, legally binding restriction voluntarily
+           placed on an area of land to protect its associated conservation resources or values. It
+           transfers with the land when the ownership changes.
+
+        5) A protected area is a clearly defined area recognized, dedicated, and managed through
+           legal or other means to achieve the long-term conservation of nature and its associated
+           ecosystem services and cultural values. Protected areas include national parks, nature
+           reserves, wilderness areas, wildlife management areas and landscape-protected areas,
+           which the government, communities, or other entities may manage.
+
+        6) Ownership shall be demonstrated as set out in the VCS Standard. There may be
+           overlapping rights, such as where customary rights overlap with legal ownership. Evidence
+           shall be provided that due process has been undertaken to discover any disputes over
+           ownership and land, resource access, or use rights, including determining whether there
+           are overlapping boundaries or competing claims on the land or resources that may put the
+           project carbon stocks at risk of reversal. The onus is upon the project proponent to
+           demonstrate such a process has been undertaken, failing which the project shall not pass
+           the risk assessment and shall not be eligible for crediting. Evidence may include survey
+
+
+
+                                                                                                       12
+                                                               2 Risk Analysis and Buffer Determination
+
+
+          responses, correspondence with relevant land title agencies or departments, or proof that
+          the project has secured title insurance.
+
+      7) Stakeholder encroachment in the project area impacting project carbon stocks (e.g., tree
+         harvesting, land conversion) after the project start date and within five years of the current
+         risk report is considered a dispute. Disputes also include water use rights that may affect
+         the hydrology or sediment in WRC project areas by causing the project area’s water table to
+         drop or otherwise impact the hydrology of the project area, resulting in higher GHG
+         emissions. The project shall demonstrate endorsement (through a legal agreement) from
+         all entities with verified ownership claims or land, resource access, or use rights (such as
+         customary rights holders).
+
+      8) WRC projects are subject to upstream and sea impacts (e.g., changes in water and
+         sediment flows, tidal processes, SLR) that may undermine the permanence of carbon
+         stocks. Such impacts can be the result of natural processes or policy decisions.
+         Hydrologically connected areas adjacent to a WRC project shall not significantly negatively
+         impact the project area (see the VCS Standard for requirements on hydrological
+         connectivity in WRC projects).
+
+      9) Projects located in a country/jurisdiction with a history of national, sub-national, or local
+         government (“Government”) intervention in land or resource use have a higher non-
+         permanence risk because such intervention demonstrates that the government is willing
+         and able to upset expectations regarding land and resource ownership. That evidence of
+         past practice may reflect political volatility and future potential risk of non-permanence.
+         The risk is mitigated entirely if specific instances of expropriation and government
+         intervention in land rights in the project area have been conclusively resolved against the
+         government in a court of competent jurisdiction.
+
+Table 6: Land Tenure (Ownership) and Resource Access or Impacts
+
+  Land Tenure (Ownership) and Resource Access or Impacts                                             Score
+
+Q1      Has due process been undertaken to discover any disputes over ownership and land, resource
+        access, or use rights? If No, the project fails the risk assessment. If Yes, proceed to Q2.
+
+
+Q2      Has the project executed a binding legal agreement(s) (such as a contract) securing the legal right to
+        control and operate project activities over the entire project area with all entities that have verified
+        ownership claims or verified land, resource access, or use rights (such as customary rights holders)?
+        If No, the project fails the risk assessment. If Yes, proceed to Q3.
+
+
+ Q3     Do the same or different entities hold land ownership and resource access or use rights?
+
+
+ a)     Ownership and resource access or use rights are held by the same entity(ies).                0
+
+
+
+
+                                                                                                               13
+                                                                  2 Risk Analysis and Buffer Determination
+
+
+     Land Tenure (Ownership) and Resource Access or Impacts                                               Score
+
+b)         Ownership and resource access or use rights are held by different entity(ies) (e.g., the
+                                                                                                          2
+           government owns the land, and the project proponent holds a lease or concession).
+
+
+Q4         Is the project in a country/jurisdiction with a history of national, sub-national, or local government
+           (“Government”) intervention in land or resource use?
+
+
+c)         Government has previously expropriated significant areas of land (i.e., 10% or more) in        10
+           the project area in the past 20 years.
+
+
+d)         Government has previously changed land rights in the project’s jurisdiction (e.g.,             5
+           cancelled, or blocked land titles, expropriated land or issued overlapping land titles) in
+           the past 20 years.
+
+
+e)         No instances of Government intervention in the past 20 years or specific instances of          0
+           expropriation and government intervention in land rights in the project area have been
+           conclusively resolved against the government in a court of competent jurisdiction.
+
+
+Q5         What percent of the project area is affected by disputes over land tenure or ownership?
+
+
+f)         Disputes exist in more than 5 percent of the project area.                                     10
+
+
+g)         Disputes exist in up to and including 5 percent of the project area.                           5
+
+
+h)         No disputes exist.                                                                             0
+
+
+Q6         What percent of the project area has disputes over access or use rights?
+
+
+i)         Disputes exist in more than 5 percent of the project area.                                     10
+
+
+j)         Disputes exist in up to and including 5 percent of the project area.                           5
+
+
+k)         No disputes exist.                                                                             0
+
+
+           Have the risks of upstream and sea impacts undermining the carbon stocks of a WRC project been
+Q7         demonstrated as insignificant or effectively mitigated for the ten years that follow the risk
+           assessment?
+
+
+           Potential upstream and sea impacts are not demonstrated to be insignificant or
+l)                                                                                                        5
+           effectively mitigated.
+
+
+           Potential upstream and sea impacts are demonstrated to be insignificant or
+m)                                                                                                        0
+           effectively mitigated.
+
+
+
+
+                                                                                                                    14
+                                                                    2 Risk Analysis and Buffer Determination
+
+
+  Land Tenure (Ownership) and Resource Access or Impacts                                                   Score
+
+ Q8         Do any of the following mitigations apply to the project?
+
+
+            Mitigation: Project area is protected by a legally binding agreement (e.g., a license,
+            conservation easement, conservation servitude or protected area) to continue
+ n)                                                                                                        −2
+            management practices that protect carbon stocks for the duration of the project
+            crediting period.
+
+
+            Mitigation: Where disputes over land tenure, ownership or access or use rights exist,
+ o)         documented evidence is provided that demonstrates the project is taking action to try          −2
+            to resolve the disputes or clarify overlapping claims.
+
+ Total Land and Resource Tenure (LT) = [as applicable, ((a or b) + (c, d, or e) + (f, g or
+ h) + (I, j or k) + (l or m) + n + o)]
+ Total shall not be less than zero.
+
+
+2.3.2     Stakeholder engagement (SE) shall be assessed using Table 7, noting the following:
+
+          1) Stakeholder engagement shall be assessed for projects where local populations, including
+             those living in the project area or within 20 km of the boundary of the project area, are
+             reliant on the project area, such as for essential food, fuel, fodder, medicines or building
+             materials. Evidence of stakeholder engagement may include social assessments such as
+             household surveys and participatory rural appraisals.
+
+          2) Stakeholders are considered consulted and involved in participatory planning where there
+             have been direct meetings and planning with associations or community groups that are
+             legally recognized to represent the households.
+
+Table 7: Stakeholder Engagement
+
+      Stakeholder Engagement                                                                                Score
+         Are local populations, including those living in the project area or within 20 km of the boundary of the
+ Q1      project area, reliant on the project area? If No, the risk rating for stakeholder engagement is zero. If Yes,
+         proceed to Q2.
+
+         Have more or less than 50 percent of stakeholders living within and reliant on the project area been
+ Q2
+         consulted?
+
+
+         Less than 50 percent of stakeholders living within the project area and who are reliant on
+ a)                                                                                                         10
+         the project area have been consulted.
+
+
+         More than 50 percent of stakeholders living within the project area and who are reliant
+ b)                                                                                                         0
+         on the project have been consulted.
+
+
+
+
+                                                                                                                     15
+                                                                  2 Risk Analysis and Buffer Determination
+
+
+      Stakeholder Engagement                                                                              Score
+
+          Have more or less than 20 percent of stakeholders living outside the project area within 20 km of the
+ Q3
+          project area, and who are reliant on the project area been consulted?
+
+
+          Less than 20 percent of stakeholders living outside the project area within 20 km of the
+ c)                                                                                                       5
+          project area, and who are reliant on the project area have been consulted.
+
+
+          More than 20 percent of stakeholders living outside the project area within 20 km of the
+ d)                                                                                                       0
+          project area, and who are reliant on the project area have been consulted.
+
+      Total Stakeholder Engagement (SE) = [as applicable, (a or b) + (c or d)]
+      Total shall not be less than zero.
+
+
+2.3.3      Political risk (PC) shall be assessed using Table 8, noting the following:
+
+           1) A governance score (of between −2.5 and 2.5) shall be calculated from the mean of
+              governance scores across the six indicators of the World Bank Institute’s Worldwide
+              Governance Indicators (WGI). 2 The mean should be averaged over the most recent five
+              years of available data. Governance scores shall be translated into risk scores as set out in
+              Table 8.
+
+           2) The mitigation discount may be subtracted if all the following apply to the project:
+
+               a) The project is in a country that is a Party to the Paris Agreement, and the country has
+                  submitted a Nationally Determined Contribution (NDC) to the UNFCCC Secretariat in the
+                  last five years;
+
+               b) The country’s NDC includes AFOLU commitments (conditional or unconditional); and
+
+               c) The country has a documented and active climate change plan that includes the
+                  project activity (e.g., a climate-smart agriculture program).
+
+Table 8: Political Risk
+
+ Political Risk                                                                                               Score
+
+ Q1        What is the governance score for the country?
+
+
+ a)        Governance score of less than −0.79.                                                               6
+
+
+ b)        Governance score of −0.79 to less than −0.32.                                                      4
+
+
+
+
+2 The World Bank Institute Worldwide Governance Indicators are available at: http://info.worldbank.org/governance/wgi
+
+
+
+                                                                                                                  16
+                                                                  2 Risk Analysis and Buffer Determination
+
+
+ Political Risk                                                                                          Score
+
+ c)        Governance score of −0.32 to less than 0.19.                                                  2
+
+
+ d)        Governance score of 0.19 to less than 0.82.                                                   1
+
+
+ e)        Governance score of 0.82 or more.                                                             0
+
+
+ Q2        Does the following mitigation apply to the project?
+
+
+           Mitigation: The project is in a country that: 1) is party to the Paris Agreement and has
+           submitted an NDC to the UNFCCC Secretariat in the last five years; 2) includes AFOLU
+ f)                                                                                                      −2
+           commitments (conditional or unconditional) in its NDC, and 3) has a documented and active
+           climate change plan that includes the project activity.
+
+      Total Political Risk (PC) [as applicable, ((a, b, c, d or e) + f)]
+      Total shall not be less than zero.
+
+
+2.3.4      The total risk rating for external risk shall be determined using Table 9.
+
+Table 9: External Risk
+
+ External Risk                                                                                         Rating
+
+      Total External Risk = (LT + SE + PC)
+
+      Total shall not be less than zero.
+
+
+
+2.4 Natural Risks
+2.4.1      Natural risk is comprised of historic natural risk, projected future climate change impact, and
+           sea-level rise impact.
+
+2.4.2      Historic natural risks shall be assessed using Table 10 and Table 11 and the AFOLU Non-
+           Permanence Risk Assessment Calculation Tool, noting the following:
+
+               1) Historic natural risk is based on likelihood (i.e., the historical average number of times
+                  the event has occurred in the project area over the last 100 years) and significance
+                  (i.e., the average size of each event). The frequency and significance of events shall be
+                  estimated based on historical records, probabilities, remote sensing data, peer-
+                  reviewed scientific literature, survey data or documented local knowledge. Where data
+                  are available for at least 20 years but less than 100 years, projects shall conservatively
+                  extrapolate using the data. Where data are unavailable for the project area, likelihood
+                  and significance shall be determined based on conservative estimates (i.e., not
+
+
+
+                                                                                                                17
+                                                              2 Risk Analysis and Buffer Determination
+
+
+                underestimating the possible frequency or severity) of historical events in the project
+                region.
+
+            2) The significance of natural risks shall be determined based on the damage that the
+               project would sustain if the event occurred. It shall be estimated by calculating the
+               percentage of average carbon stocks in the project area that would be lost in a single
+               event.
+
+            3) The natural risk mitigation factors may be applied where evidence demonstrates that
+               prevention measures are in place, or the project has a history of effectively containing
+               natural risk. Examples of mitigation or prevention measures include the following:
+
+                a) Fire risk: Fuel removal, the establishment of fire breaks and fire towers, and ready
+                   access to adequate fire-fighting equipment.
+
+                b) Risk of pest or disease outbreaks: Planting of biodiverse species, selection of pest
+                   or disease resistant species and co-planting of vegetation that inhibits pest
+                   infestation during the early growing period.
+
+                c) Extreme weather risk: Planting of frost-tolerant species in areas where winter frost
+                   is a risk, use of riparian zones or other buffers for flood or storm control and use of
+                   species tolerant of wet soil conditions where flooding risks exist.
+
+                d) Other natural risks: Use of plant species tolerant of salinity fluctuations in estuarine
+                   wetlands.
+
+2.4.3   Historic natural risk shall be assessed as follows:
+
+        1) AFOLU projects shall assess, at a minimum, fire, pest and disease outbreaks, extreme
+           weather events such as droughts and hurricanes, and geological risks such as earthquakes
+           and volcanoes. WRC projects shall also assess changes in the seasonal timing and depth
+           of the water table and, where applicable, wrack deposition in tidal wetlands from storm
+           surges.
+
+        2) Likelihood and significance (LS) and mitigation (M) (if any) shall be assessed for each risk
+           factor identified (see Table 10). The sub-total risk value is calculated by multiplying the LS
+           and M for each natural risk applicable to the project.
+
+2.4.4   The projected future climate change impact shall be assessed based on climatic impact drivers
+        (CIDs). The CID approach produces an amplifying factor to increase the historic natural risk
+        score based on projected future climate change impact (see Table 11). Projected future climate
+        change impact shall be assessed using the AFOLU Non-Permanence Risk Assessment
+        Calculation Tool, noting the following:
+
+         1) For each CID category, the project change value and direction of change (positive or
+            negative) shall be used to specify if it is expected to have a positive or negative impact on
+            the project. For example, increasing mean air temperature can be a risk to successfully
+
+                                                                                                          18
+                                                            2 Risk Analysis and Buffer Determination
+
+
+             establishing seedlings in a reforestation project (negative impact), but could promote
+             better yields for certain crops in an ALM project (positive impact). The impact shall be
+             justified as follows:
+
+             a) For CID categories that are expected to positively impact the project, reference an
+                external source(s) (e.g., peer-reviewed literature or a report published by a government
+                agency) to justify the positive impact.
+
+             b) For CID categories that are expected to have a negative impact with a CID impact level
+                of one, reference an external source(s) (e.g., peer-reviewed literature or a report
+                published by a government agency) to justify the negative impact.
+
+             c) For CID categories that are expected to have a negative impact with a CID impact level
+                of two or greater, no justification of the impact is required.
+
+             d) For CID categories that do not apply to the project, provide a brief explanation (e.g., a
+                few sentences) to justify why that category is irrelevant to the project activity.
+
+        2) Risk from projected future climate change impacts can be reduced where evidence is
+           provided that the project proponent meets a minimum of five adaptive capacity criteria. To
+           meet each adaptive capacity criterion the project proponent shall answer all interpretation
+           questions and provide supporting evidence. If at least five criteria are met (see Table 12),
+           the amplifying factor fraction is reduced by 40 percent. Evidence supporting the
+           implementation of adaptive capacity criteria shall be provided.
+
+        3) The natural risk affected by climate change (NR-c) is calculated by multiplying the historic
+           natural risk score by the projected future climate change impact amplifying factor. The
+           amplifying factor shall only be applied to natural risks indicated to be affected by climate
+           change (e.g., fire, extreme weather).
+
+2.4.5   The SLR risk shall be assessed where the project is in a coastal zone using the AFOLU Non-
+        Permanence Risk Assessment Calculation Tool, noting the following:
+
+         1) SLR risk shall be assessed based on the physical and natural conditions of the project
+            (i.e., ecosystem degradation, coastal flooding, coastal erosion, and degree of salinization)
+            and the overall impact level of coastal flood and erosion.
+
+         2) The SLR risk rating can be reduced where evidence is provided that the project proponent
+            has taken specific measures to adapt (See Table 14).
+
+         3) The sub-total SLR risk score is calculated by multiplying the SLR risk score by the
+            adaptation score.
+
+2.4.6   The total risk rating for natural risk is determined as the sum of natural risk affected by climate
+        change (NR-c), natural risk not affected by climate change (NR-nc) and SLR risk. If the total
+        natural risk is above 35, the project fails the risk assessment and ineligible for crediting.
+
+
+
+
+                                                                                                        19
+                                                                    2 Risk Analysis and Buffer Determination
+
+
+Table 10: Historic Natural Risk Scores
+
+ Significance                                Historical Likelihood
+
+                                             More        Once           Once       Once       Once every 100
+                                             than        every 10       every 25   every 50   years or less
+                                             once        to less        to less    to less    frequently, or risk
+                                             every 10    than 25        than 50    than       is not applicable to
+                                             years       years          years      100        the project area
+                                                                                   years
+
+
+Catastrophic (70 percent or greater loss
+                                               FAIL            30         20          5                4
+of carbon stocks)
+
+
+Devastating (50 percent to less than 70
+                                               30              20          5          4                3
+percent loss of carbon stocks)
+
+
+Major (25 percent to less than 50
+                                               20              5           4          3                2
+percent loss of carbon stocks)
+
+
+Minor (5 percent to less than 25
+                                                5              4           3          2                1
+percent loss of carbon stocks)
+
+
+Insignificant (less than 5 percent loss of
+carbon stocks) or transient (full
+                                                4              3           2          1                1
+recovery of lost carbon stocks expected
+within 10 years of any event)
+
+
+Not applicable                                  0              0           0          0                0
+
+
+ Mitigation Score
+
+ Prevention measures applicable to the risk factor are implemented                                    0.50
+
+
+ Demonstrated history of effectively containing natural risk                                          0.50
+
+
+ Both of the above                                                                                    0.25
+
+
+ None of the above                                                                                      1
+
+
+
+
+                                                                                                               20
+                                                                   2 Risk Analysis and Buffer Determination
+
+
+Table 11: Natural Risk Assessment
+
+ Natural Risk                        Historic       Mitigation       Sub-total         Affected by Climate
+                                     Natural Risk   (M)              Risk (LS×M)       Change?
+                                     Score (LS)
+
+a) Fire (F)                                                                                        Yes
+
+
+b) Pest and disease                                                                                Yes
+   outbreaks (PD)
+
+
+c) Extreme weather (W)                                                                             Yes
+
+
+d) Geological risk (G)*
+
+
+e) Other natural risk (ON1)
+
+
+f) Other natural risk (ON2)
+
+
+g) Other natural risk (ON3)
+
+
+h) Sea-level rise (SLR)                                                                            Yes
+
+
+                                                                                     Future      Total
+                                                                                     Climate     (Aggregated sub-
+ Projected Future Climate Change
+                                            Aggregated Sub-total Risk                Change      total risk x future
+ Impact on Natural Risk
+                                                                                     Impact      climate change
+                                                                                     Factor 3    impact factor)
+
+Natural risk associated with climate        Sum of the post-mitigation risk           1 to 1.4
+change impact (NR-c)                        rating of each historical natural risk
+                                            impacted by climate change
+
+
+Natural risk NOT associated with            Sum of the post-mitigation risk
+climate change impact (NR-nc)               rating of each historical natural risk       1
+                                            not impacted by climate change
+
+
+  Total Natural Risk                                                                              Rating
+
+Total Natural Risk = (NR-c + NR-nc + SLR)
+
+
+Total shall not be less than zero.
+
+* If the geological risk is landslide, please indicate “yes” it is affected by climate change, otherwise indicate
+“no.”
+
+
+
+3 As calculated using the AFOLU Non-Permanence Risk Assessment Calculation Tool
+
+
+
+                                                                                                                    21
+                                                                     2 Risk Analysis and Buffer Determination
+
+
+Table 12: Criteria for Evaluating Adaptive Capacity to Future Climate Change 4
+Criteria          Adaptive Capacity                                                 Supporting Evidence Examples
+                  Description:
+
+                  Availability of a range of policy options to address climate
+                  change that apply directly to the project activity                A document or report of policies
+                                                                                    identified at the national or
+                  Participation of different actors, levels, and sectors in the     subnational level or internally to
+                  climate change governance process                                 address climate change.
+1) Variety        Interpretation:
+                                                                               A role-activity matrix within an
+                  Are there policies to address climate change at the national adaptive management plan that
+                  and sub-national levels, and has the project proponent       indicates the staff who will lead the
+                  taken them into account in the project design?               climate change mitigation actions.
+
+                  Has the project proponent identified organizational actors
+                  responsible for such actions?
+
+                  Description:
+
+                  Ability to address future climate events and learn from past
+                  experiences to improve routines regarding climatic
+                  experiences                                                  A document, report, or internal
+                                                                               communication consolidated into
+2) Learning       Evidence of changes in assumptions that support actions      an adaptative management plan in
+capacity          regarding climate change experiences                         which the project explores and
+                                                                               explains how it plans to learn from
+                  Interpretation:                                              and adapt to climate events.
+                  Has the project proponent considered results from the
+                  calculation models and past experiences of climate events
+                  in its internal decision-making processes?
+
+                                                                                A document, report, or internal
+                  Description:
+                                                                                communication showing how
+                  Continual access to climate information at different spatial- climate change information (at
+                  temporal scales (e.g., early warning systems, climate         different spatial-temporal scales
+                  change projections)                                           from national reports to the
+                                                                                UNFCCC, local or regional remote
+3) Room for       Interpretation:                                               sensing systems for monitoring,
+change                                                                          free-access portals such as
+                  Has the project proponent included climate change
+                                                                                Interactive Atlas of IPCC or
+                  information available at different spatial and temporal
+                                                                                Thinkhazard) improved the
+                  scales (e.g., climate change projections presented in
+                                                                                project’s decision-making process
+                  national climate assessments or national communications
+                                                                                and a plan for incorporating new
+                  to the United Nations Framework on Climate Change) in its
+                                                                                climate change information into
+                  decision-making processes?
+                                                                                project decision-making.
+
+
+
+
+4 Adapted from Gupta, J., Termeer, C., Klostermann, J., Meijerink, S., van den Brink, M., Jong, P., Nooteboom, S., &
+
+Bergsma, E. (2010). The Adaptive Capacity Wheel: A method to assess the inherent characteristics of institutions to
+enable the adaptive capacity of society. Environmental Science & Policy, 13(6), 459–471.
+https://doi.org/10.1016/j.envsci.2010.05.006
+
+                                                                                                                         22
+                                                             2 Risk Analysis and Buffer Determination
+
+
+Criteria     Adaptive Capacity                                              Supporting Evidence Examples
+             Description:
+                                                                            A report, sustainability agenda,
+             Long-term vision on climate change, or                         agreements, cooperative
+                                                                            agreements, research proposals,
+             Stimulus for action, entrepreneurship, and collaboration
+                                                                            consultancies, or other supporting
+             from different stakeholders
+                                                                            documents in which the project
+4)           Interpretation:                                                proponent alone or in collaboration
+Leadership                                                                  has communicated its performance
+             Has the project proponent developed actions on its own or      and impacts on a wide range of
+             by collaborating with other stakeholders to address climate    sustainability topics, including
+             change impacts, or has the project proponent manifested        climate change and the risks and
+             in the vision or mission statements of the organization        opportunities facing the
+             elements related to climate change impacts, adaptation,        organization.
+             and mitigation?
+
+             Description:
+
+             Availability of climate change expertise, knowledge, and
+             human labor force in the field of environmental sciences
+
+             Availability of financial resources to support policy
+                                                                            A financial report(s) describing the
+             measures and financial incentives to address climate
+                                                                            human labor force and financial
+5)           change
+                                                                            resources that will be used to
+Resources                                                                   support climate change policy
+             Interpretation:
+                                                                            measures.
+             Has the project proponent included in its financial reports
+             descriptions of both (i) the human labor force with
+             knowledge of environmental sciences and (ii) financial
+             resources to support policy measures to address climate
+             change?
+
+             Description:
+
+             Evidence of policies, practices, and behaviors that address    A document, report, or
+             climate change effectively                                     communication in which the
+                                                                            project proponent shows the set of
+             Availability of accountability procedures to implement
+                                                                            indicators used to measure the
+             climate change-orientated actions
+6) Fair                                                                     impact of its policies, practices,
+governance   Interpretation:                                                and behaviors or public access to
+                                                                            annual management reports where
+             Has the project proponent included a set of indicators to      climate change actions are
+             assess the impact of policies, practices, and behaviors of     presented (for example, the
+             the organization that will address climate change relevant     achievement of SDG targets)
+             to the project activity and report on the project’s progress
+             against those indicators?
+
+
+
+
+                                                                                                              23
+                                                                  2 Risk Analysis and Buffer Determination
+
+
+Criteria         Adaptive Capacity                                                Supporting Evidence Examples
+                 Description:
+
+                 Availability of novel solutions to reduce the threat, or take
+                 advantage, of climate change
+                                                                                  Peer-reviewed literature or a
+                 Interpretation:                                                  government agency report detailing
+7)                                                                                novel solutions, activities, or
+                 Has the project proponent implemented novel solutions to
+Innovation                                                                        practices to reduce the threat of
+                 reduce the threat or take advantage of climate change?
+                                                                                  climate change or take advantage
+                                                                                  of potential opportunities.
+                 Note that novel solutions may also include the application
+                 of ancestral or traditional practices that could prevent or
+                 reduce the impacts of adverse consequences from climate
+                 change.
+
+
+
+
+Table 13: SLR Risk Score
+
+Significance                         SLR Impact Level
+
+
+                                     High (5)         Major (4)       Minor (3)       Low (2)        Insignificant (1)
+
+
+
+Catastrophic (70 percent or
+                                     FAIL             30              20              5              4
+greater loss of carbon stocks)
+
+
+Devastating (50 percent to less
+than 70 percent loss of carbon       30               20              5               4              3
+stocks)
+
+
+Major (25 percent to less than 50
+                                     20               5               4               3              2
+percent loss of carbon stocks)
+
+
+Minor (5 percent to less than 25
+                                     5                4               3               2              1
+percent loss of carbon stocks)
+
+Insignificant (less than 5 percent
+loss of carbon stocks) or transient
+(full recovery of lost carbon stocks 4                3               2               1              1
+expected within 10 years of any
+event)
+
+Not Applicable                       0                0               0               0              0
+
+
+
+
+                                                                                                                  24
+                                                                 2 Risk Analysis and Buffer Determination
+
+
+Table 14: SLR Adaptation Scores
+
+                                                                                                      Reduction
+Type of Measure         Description
+                                                                                                      Score
+
+                        Restoration strategies, creation of new natural buffer areas, preservation,
+Ecosystem-based
+                        supporting inland migration of impacted coastal plant communities (e.g.,      0.5
+adaptation (EbA)
+                        mangroves)
+
+
+Land use planning,
+public participation,   Decision analysis, land use planning, public participation, livelihood
+                                                                                                      0.5
+and conflict resolution support and conflict resolution approaches
+approaches
+
+
+                        Filling of beaches, piers, breakwaters, structures, and barriers against
+Protection barriers
+                        flooding for protection and prevention of erosion, green and blue             0.6
+(bioengineering)
+                        infrastructure
+
+
+Application of two or more measures listed above                                                      0.25
+
+
+None of the above                                                                                     1
+
+
+
+
+2.5 Step 2: Overall Non-Permanence Risk Rating and Buffer
+        Determination
+2.5.1    The overall non-permanence risk rating shall be determined using Table 15. The overall risk
+         rating shall be rounded up to the nearest whole percent.
+
+Table 15: Overall Risk Rating
+
+Risk Category                                                                           Rating
+
+a)              Internal Risk (from Table 5)
+
+
+b)              External Risk (from Table 9)
+
+
+c)              Natural Risk (from Table 11)
+
+
+Overall Risk Rating = (a + b + c)
+
+
+
+2.5.2    The minimum risk rating shall be 12, regardless of the risk rating calculated using Table 15.
+
+
+
+
+                                                                                                              25
+                                                             2 Risk Analysis and Buffer Determination
+
+
+2.5.3   Where the overall risk rating exceeds 60, project risk is deemed unacceptably high, and the
+        project fails the risk analysis. These projects shall not be eligible for crediting until risks are
+        adequately addressed or sufficient mitigation measures are implemented to lower the overall
+        risk rating to less than or equal to 60. Further, where the sum of risk ratings for any risk
+        category is greater than the following thresholds, the project fails the risk analysis and shall not
+        be eligible for crediting (until risks are mitigated to result in totals below these thresholds):
+
+        1) Internal risk threshold: 35
+
+        2) External risk threshold: 20
+
+        3) Natural risk threshold: 35
+
+2.5.4   To determine the number of buffer credits that shall be deposited in the AFOLU pooled buffer
+        account, the overall risk rating shall be converted to a percentage (e.g., an overall risk rating of
+        35 converts to 35 percent). This percentage shall be multiplied by the net change in the
+        project’s carbon stocks (stated in the monitoring and verification report), as set out in the
+        Registration and Issuance Process. Where a project is divided into more than one geographic
+        area or cluster for risk analysis, the overall risk rating percentage for each area shall be
+        multiplied by the net change in the project’s carbon stocks (stated in the verification report) in
+        the geographic area.
+
+2.5.5   Buffer credits shall be deposited in the AFOLU pooled buffer account following the procedures
+        set out in the Registration and Issuance Process. The same document sets out the rules and
+        requirements for the release and cancellation of buffer credits from the AFOLU pooled buffer
+        account.
+
+
+
+
+                                                                                                          26
+                                                                         Appendix 1: Document History
+
+
+
+APPENDIX 1: DOCUMENT HISTORY
+Version   Date           Comment
+
+v4.0      19 Sep 2019    Initial version released under VCS Version 4.
+
+v4.1      29 August      Updates effective for all project requests submitted on or after 1 January 2024:
+          2023
+                             1)   Added a requirement for all projects to use the AFOLU Non-Permanence
+          Corrected 25            Risk Assessment Calculation Tool to complete the risk analysis.
+          September
+          2023               2)   Updated the natural risk assessment to include an analysis of projected
+                                  future impacts from climate change and sea level rise.
+
+                                  Note that projects may use version 4.0 of this tool to compare their
+                                  calculated risk score with a previous risk score for the purposes of
+                                  determining whether the project is eligible for a time release of buffer
+                                  credits and, where eligible, to calculate the release volume (see the
+                                  Registration and Issuance Process for more details on buffer releases).
+                                  This may only be done for the first eligible time release after 1 January
+                                  2024. The most recent version of this tool shall be used to calculate the
+                                  buffer credits to be deposited. In all other cases, the project must adhere
+                                  to the process set out in the Registration and Issuance Process to
+                                  determine whether the project is eligible for a buffer release.
+
+                             3)   Added ALM-specific risk and mitigation options (throughout).
+
+                             4)   Introduced new withholdings for projects that have previously failed to
+                                  submit a loss event report on time and projects located in countries with a
+                                  history of intervention in land or resource use.
+
+                             5)   Modified project longevity formulas to ensure projects with longevity of less
+                                  than 100 years do not receive a zero score and removed the stakeholder
+                                  engagement mitigation measure (now required in the VCS Standard, v4.5)
+
+                             6)   Updated the political risk mitigation discount requirements to reflect
+                                  current climate change policy.
+
+                             7)   Removed the ability for projects to obtain negative scores in any sub-
+                                  category and eliminated the possibility of obtaining a natural risk score of
+                                  zero unless natural risks are not applicable.
+
+                             8)   Made adaptive management plans a requirement.
+
+                             9)   Extended project longevity to 40 years and removed the stakeholder
+                                  engagement mitigation measure (now required in the VCS Standard, v4.5).
+
+                             9)   Minor edits to text to aid readability and improve accuracy (throughout).
+
+                         Updates effective for all projects which request registration on or after 1 January
+                         2024:
+
+                             1)   Extended project longevity to 40 years.
+Version   Date         Comment
+
+V4.2      12 October   Updates effective for all project requests submitted on or after 1 January 2024:
+          2023
+                           1)   Updates to align with the new Digital Non-Permanence Risk Calculator.
+
+                           2)   Updates to clarify which projects are subject to the 40-year project
+                                longevity requirement, in line with the Corrections and Clarifications to the
+                                VCS Rules and Requirements published 25 September 2023 and
+                                incorporated above.
+
+
+
+
+                                                                                                            28
+Standards for a Sustainable Future
+
