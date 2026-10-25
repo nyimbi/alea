@@ -1819,6 +1819,61 @@ the same class of question as the 10 s response time above, and the answer is
 to bake the intended body and delete the scratch, not to reconcile a merge
 that no production reader consults.
 
+### The 237 uncoupled nodes, counted by why (census, 2026-10-25)
+
+The standing complaint is that no node should float. This is the census of
+what is actually left, taken against the coupling packs rather than guessed,
+so that "uncoupled" stops reading as one undifferentiated number.
+
+| class | count | what closing it would need |
+|---|---|---|
+| QUALITATIVE | 98 | A model that consumes a name. These are contract clauses (`cross_default`, `change_of_control`), digital systems (`billing_systems`, `cyber_incident_response`) and governance labels (`grievance_redress_effectiveness`). They are the graph's declared free space. |
+| BASE-NEEDED | 79 | An operand the graph does not carry. A share needs a volume, a load needs an intensity, a count needs a density. |
+| SCENE-SWITCH | 52 | Run configuration — `foresight`, `unit_commitment`, `market_model`, `temporal_aggregation`. Not quantities, so no equation can determine them. |
+| DEPRECATED | 9 | Tombstones. The correct coupling is the removal that already happened. |
+| **total** | **237** | |
+
+Five nodes the packs do not classify are all deprecated duplicates
+(`energy_burden_limit`, `indirect_jobs_multiplier`, `induced_jobs_multiplier`,
+`local_content_requirements`, `pm25_relative_risk_per_kt`), so the four
+classes cover the register exactly.
+
+Two checks that would have found real breakage, both run and both clean.
+**No node is `derived` and uncoupled** — every derived node has a determining
+equation. And the five nodes whose `determined_by()` returns `None`
+(`capture_price_usd_per_mwh`, `equilibrium_demand_twh`,
+`regulated_tariff_usd_per_mwh`, `vre_capacity_mw`, `vre_share`) are not
+broken: they are the loop variables of an `iterative` equation set, and
+`_determiner` skips iterative equations by design because a fixed point has no
+place in a topological order. The graph is a simultaneous system there and the
+feedback solver resolves it.
+
+**The scene-switch class is the one worth arguing about, and the packs get it
+wrong.** They classify 52 nodes as "run configuration the solver reads". The
+solver reads none of them. `translated()` reports exactly three settable
+parameters reaching an engine knob — `carbon_price_usd_per_tco2`,
+`demand_growth`, `fuel_price_usd_per_mwh` — out of 867 settable parameters, and
+`ScenarioParameters` carries ten fields of which eight are numeric knobs. There
+is no knob for `foresight`,
+`unit_commitment`, `market_model`, `temporal_aggregation`,
+`transmission_detail` or `scenario_template`, and their ids appear nowhere in
+`src/`. So a scenario that sets one of those 52 is accepted by the graph,
+translated to nothing, and solved as though it had not been set.
+
+That is not fixable by an equation. It needs engine features — a foresight
+switch in the expansion model, a market-model selector, a time-aggregation
+route — and until those exist the honest classification of these 52 is not
+"configuration the solver reads" but "configuration nothing reads", which is
+the declared-is-not-produced defect with a longer fuse. Recorded, not repaired:
+writing the switch into the graph would be exactly the mistake the
+declared-is-not-produced register names.
+
+The three deferred BASE-NEEDED items already on the backlog are the ones with
+a named missing operand: `startup_cost_coal`/`startup_cost_gas` (no archived
+per-start cost and no count of starts, stated in their own descriptions) and
+`capex_gravity_storage` (needs `gravity_storage_capacity` in MWh, still a
+placeholder). Each needs a source or a base node, not an equation.
+
 ### Six node names that resolved to nothing (batch 66, 2026-10-25)
 
 Batch 65 read node descriptions against their equations. This reads equation
