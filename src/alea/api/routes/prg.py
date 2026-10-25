@@ -767,7 +767,25 @@ async def conflicts_resolve(
 					current=applied.current,
 					relative_move=applied.relative_move,
 				),
-				resolved=not loaded.consistency(after.values),
+				# Whether *this* conflict is resolved, not whether the whole set
+				# is clean. The difference is not cosmetic: the shipped defaults
+				# carry a finding of their own (the frequency nadir sits below
+				# its floor, see `docs/prg-status.md`), so a set-wide reading
+				# reports `resolved=False` for a correction that worked
+				# perfectly. A caller stepping through a resolution is being
+				# told about the one conflict it asked about; the unrelated
+				# finding is already in every consistency payload it can fetch.
+				#
+				# The equation is resolved through `determined_by` rather than by
+				# matching the subject against equation ids: the parameter is
+				# `marginal_cost_usd_per_mwh` and its equation is `marginal_cost`,
+				# so a string test would have to guess at the suffix. `None` means
+				# no equation determines the subject -- an under-determined
+				# conflict, which has no residual to clear.
+				resolved=not any(
+					v.equation_id == loaded.determined_by(conflict.subject)
+					for v in loaded.consistency(after.values)
+				),
 				values_after=after.values,
 			)
 		)

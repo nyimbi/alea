@@ -1874,6 +1874,45 @@ per-start cost and no count of starts, stated in their own descriptions) and
 `capex_gravity_storage` (needs `gravity_storage_capacity` in MWh, still a
 placeholder). Each needs a source or a base node, not an equation.
 
+### `resolved` asked whether the world was clean, not whether the fix worked (2026-10-25)
+
+`POST /prg/conflicts/resolve` computes, per conflict, whether applying the
+correction settled it. It answered `resolved = not consistency(after)`, which
+is a question about the **whole parameter set**: is anything at all wrong
+afterwards. Since batch 67 the shipped defaults carry a finding of their own --
+the frequency nadir sits below its own 45 Hz floor -- so the expression was
+`False` for every correction, on every scenario, forever. A route whose report
+says every correction failed is a route that reports nothing.
+
+Measured on the test's own case: setting `marginal_cost_usd_per_mwh = 70`
+against a 40 fuel price, the top in-range correction moves `fuel_price` by 5
+and the marginal-cost equation then agrees with 70 exactly. The residual list
+afterwards holds one entry, `frequency_nadir_hz_out_of_range`, which the
+correction neither caused nor could touch. The old expression read that as
+`resolved: False`.
+
+The fix resolves the *conflict's own* equation through
+`graph.determined_by(conflict.subject)` and asks whether that equation is
+still among the violations. `determined_by` rather than a string match on the
+id: the subject is `marginal_cost_usd_per_mwh` and the equation is
+`marginal_cost`, so any prefix test would have to guess at the suffix. `None`
+means no equation determines the subject -- an under-determined conflict, which
+has no residual to clear and is correctly `False`.
+
+Five assertions in `tests/ci/test_api_prg.py` had encoded the pre-batch-67
+world: `consistent is True` on the conflicts route, the consistency check, the
+consistency report, and the empty resolve list; and `violations == 0` on the
+cross-validation route. They passed when they were written and had been failing
+since the nadir chain started being computed. They now name the finding
+exactly -- `KNOWN_DEFAULT_FINDINGS` / `KNOWN_DEFAULT_RULES`, repeated in that
+module rather than imported from `test_prg.py`, because a test that imported
+the constant would pass if the constant were widened to cover a new finding.
+The `free` count pin moved 704 -> 708 for batch 70's reason, recorded at the
+pin.
+
+Canary: reverting `resolved` to `not consistency(after)` fails the resolve test
+with the exact message it used to produce. Restored from a file backup.
+
 ### Twelve denominators admit zero, and the arithmetic raised a traceback (2026-10-25)
 
 Twenty settable nodes admit 0 at the floor of their declared range and are

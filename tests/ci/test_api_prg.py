@@ -27,6 +27,27 @@ from alea.config.paths import repo_root
 
 ADMIN_KEY = "alea_admin_" + "0" * 40
 
+#: The one violation the shipped defaults carry, and the one rule they break.
+#:
+#: `docs/prg-status.md` records it in full: firm capacity 9,800 MW at H = 4 s is
+#: 39,200 MW.s; a 1,000 MW largest loss gives a RoCoF of 0.638 Hz/s; the 10 s
+#: response time puts the frequency at response onset at 43.62 Hz, below the
+#: node's own 45 Hz floor. Neither number is adjusted to make the other fit --
+#: the response time carries no archived citation and the floor is the UFLS
+#: setting -- so the graph reports it and the gates name it exactly.
+#:
+#: The same two sets are `KNOWN_DEFAULT_FINDINGS` / `KNOWN_DEFAULT_RULES` in
+#: `test_prg.py`. They are repeated rather than imported because this module
+#: drives the HTTP surface, and a test that imported the other module's
+#: constant would pass if that constant were widened to cover a new finding.
+KNOWN_DEFAULT_FINDINGS = frozenset({"frequency_nadir_hz_out_of_range"})
+KNOWN_DEFAULT_RULES = frozenset({"frequency_nadir_below_protection"})
+
+
+def _violation_ids(body: dict) -> set[str]:
+	"""The equation ids a consistency payload reports, as a set."""
+	return {v["equation_id"] for v in body["violations"]}
+
 
 @pytest.fixture
 def prg_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Config:
@@ -245,14 +266,28 @@ def test_the_sensitivity_route_422s_an_unknown_override(
 def test_the_conflicts_route_reports_and_ranks(
 	prg_client: TestClient, analyst_key: dict[str, str]
 ) -> None:
-	"""A consistent default set reports no conflicts, and says what it checked."""
+	"""The default set's conflicts are the known finding, and the report says what it checked.
+
+	``consistent`` is false at the shipped defaults, and that is the documented
+	state of the graph rather than a regression: the frequency-nadir chain puts
+	the nadir below its own floor (`KNOWN_DEFAULT_FINDINGS`). What this test
+	pins is that the *conflict* register finds nothing beyond it -- a conflict
+	is an over- or under-determination, which is a different question from a
+	residual failure -- and that the payload names what it examined.
+	"""
 	response = prg_client.post(
 		"/api/v1/prg/conflicts", json={}, headers=analyst_key
 	)
 	assert response.status_code == 200, response.text
 	body = response.json()
-	assert body["consistent"] is True
-	assert body["conflicts"] == []
+	assert body["consistent"] is False, body["conflicts"]
+	# The register reports the known finding as an `out_of_range` conflict on
+	# the nadir itself. Pinned as an exact set, not as a subset: a second
+	# conflict of any kind fails this, which is the only thing that makes the
+	# assertion a gate rather than a description.
+	assert {(c["kind"], c["subject"]) for c in body["conflicts"]} == {
+		("out_of_range", "frequency_nadir_hz")
+	}, body["conflicts"]
 	assert body["checked"], "the report does not say what it examined"
 
 
@@ -315,8 +350,14 @@ def test_the_cross_validation_route_serves_every_rule_and_its_verdict(
 	assert response.status_code == 200, response.text
 	body = response.json()
 	assert body["rules"], "the shipped graph declares rules, so this is not vacuous"
-	assert body["violations"] == 0, body["summary"]
-	assert body["blocks"] is False
+	# One rule fires at the shipped defaults, and it is the documented nadir
+	# finding (`KNOWN_DEFAULT_RULES`). `rules` is the declaration register and
+	# carries no verdict, so the fired set comes from `findings` -- and it is
+	# pinned by id rather than by count, because a count cannot see one rule
+	# stop firing while another starts.
+	fired = {f["rule_id"] for f in body["findings"]}
+	assert fired == KNOWN_DEFAULT_RULES, (fired, body["violations"], body["summary"])
+	assert body["violations"] == len(fired)
 	assert all(rule["condition"] for rule in body["rules"])
 	assert all("parameters" in rule for rule in body["rules"])
 
@@ -503,7 +544,15 @@ def test_the_summary_serves_the_endogenous_layer(
 	# count was already 704, so those two are not this batch's. Batch 62 itself
 	# moved nothing here -- `energy_burden_limit` was `exogenous`, so it left
 	# the exogenous register and never appeared in this one.
-	assert len(free) == 704, len(free)
+	# Batch 70 took it 705 to 708. Deprecating a node does not remove it from
+	# this register -- the partition counts every declared parameter, tombstones
+	# included -- and the three `employment_attainment_*` ratios had been
+	# `derived`, held up by the equations batch 70 deleted. With no equation
+	# left they fall back to the role their declarations carry, `free`, so the
+	# count rises by three and `derived` falls by the same. The three
+	# `*_employment_targets` tombstoned alongside them were already `free` and
+	# moved nothing here.
+	assert len(free) == 708, len(free)
 
 
 # ---------------------------------------------------------------------------
@@ -728,8 +777,14 @@ def test_the_consistency_route_checks_a_set_it_was_handed(
 		"/api/v1/prg/consistency/check", json={"set": {}}, headers=analyst_key
 	)
 	assert clean.status_code == 200, clean.text
-	assert clean.json()["consistent"] is True
-	assert clean.json()["violations"] == []
+	# The empty set is the shipped defaults, and those carry the documented
+	# nadir finding (`KNOWN_DEFAULT_FINDINGS`) -- so the honest assertion is the
+	# exact set, not emptiness. Emptiness passed here only because the nadir
+	# was not yet computed; see the note on `KNOWN_DEFAULT_FINDINGS`.
+	assert clean.json()["consistent"] is False
+	assert _violation_ids(clean.json()) == KNOWN_DEFAULT_FINDINGS, clean.json()[
+		"violations"
+	]
 	assert clean.json()["checked"] > 0
 
 	# A five-year asset life cannot carry the debt schedule: the DSCR the
@@ -774,7 +829,11 @@ def test_the_consistency_report_is_the_shipped_default_scenario(
 	baseline = prg_client.get("/api/v1/prg/consistency/report", headers=analyst_key)
 	assert baseline.status_code == 200, baseline.text
 	body = baseline.json()
-	assert body["consistent"] is True
+	# Not clean: the shipped defaults carry the documented nadir finding, and
+	# this route exists precisely so a client can tell a finding it caused from
+	# one that was already there.
+	assert body["consistent"] is False
+	assert _violation_ids(body) == KNOWN_DEFAULT_FINDINGS, body["violations"]
 	assert body["checked"] > 0
 
 	empty_set = prg_client.post(
@@ -869,13 +928,20 @@ def test_the_resolve_route_applies_a_correction_and_rechecks(
 	assert first["values_after"]["fuel_price_usd_per_mwh"] != pytest.approx(40.0)
 	assert first["values_after"]["marginal_cost_usd_per_mwh"] == pytest.approx(70.0)
 
-	# A consistent set has nothing to resolve, and an empty list is the honest
-	# answer rather than a manufactured conflict.
+	# An empty set is the shipped defaults, which carry the documented nadir
+	# finding -- so the register is not empty, and the honest answer is the
+	# exact conflict it holds rather than a manufactured one. What the assertion
+	# is *for* is that a conflict nobody supplied is not invented: the nadir
+	# entry is a real `out_of_range` with no correction available, which is why
+	# `applied` is null and the list is not padded with a fabricated move.
 	clean = prg_client.post(
 		"/api/v1/prg/conflicts/resolve", json={"set": {}}, headers=analyst_key
 	)
 	assert clean.status_code == 200, clean.text
-	assert clean.json() == []
+	assert [(r["conflict"]["kind"], r["conflict"]["subject"]) for r in clean.json()] == [
+		("out_of_range", "frequency_nadir_hz")
+	], clean.json()
+	assert all(r["applied"] is None for r in clean.json())
 
 
 def test_the_feedback_route_solves_every_loop_and_reports_the_iteration(
