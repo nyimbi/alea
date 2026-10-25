@@ -1603,7 +1603,20 @@ def build_batch13(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 			# constraint exists for -- and their values are already built into
 			# the members they aggregate, so they must not enter this sum.
 			"thermal_capacity_mw", "dispatchable_re_capacity_mw",
-			"storage_capacity_mw", "solar_pv_capacity", "firm_capacity_mw",
+			"storage_capacity_mw", "firm_capacity_mw",
+			# `solar_pv_capacity` is NOT an aggregate, and listing it here as
+			# one was wrong. Nothing reads it as a sum; its readers are the
+			# generation, diversity, employment and LCOE identities, which read
+			# it as a build. It is excluded because including it puts the
+			# reference build at 19,700 MW against the 15,000 MW ceiling, and
+			# that excess is a real inconsistency in the reference scenario --
+			# solar's 10,000 MW default equals `total_capacity_mw`'s placeholder
+			# and is absent from `REFERENCE_BUILDS`, so it was copied rather
+			# than modelled. The exclusion hides the inconsistency rather than
+			# resolving it; the equation's shipped description records that, and
+			# removing the exclusion is the fix once the reference fleet's size
+			# is decided from a source rather than a placeholder.
+			"solar_pv_capacity",
 		)
 	)
 	nodes["firm_build_fleet_mw"] = {

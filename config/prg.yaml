@@ -38286,13 +38286,25 @@ equations:
     tolerance: 1.0e-06
     unit_check: true
   fleet_build_balance:
-    description: The optimiser's per-technology builds must not exceed the fleet size the plan declares
-      for them. This is a *constraint* coupling -- the equation the LP carries, not an identity the evaluator
-      solves -- because the builds are decision variables with no single value until the solve settles
-      them. Batch 30 added the six conversion-plant capacities, so a scenario that builds anaerobic digestion,
-      landfill gas, gasification, pyrolysis, waste-to-energy or salinity-gradient capacity is counted
-      against the same ceiling instead of silently exceeding it. All six are zero at defaults, so the
-      balance sums to 9,700 MW against a 15,000 MW right-hand side exactly as it did before the rewrite.
+    description: 'The optimiser''s per-technology builds must not exceed the fleet size the plan declares
+      for them -- the eighteen leaf builds are bounded by `total_capacity_mw` plus the storage allowance.
+      Three properties a reader should not have to infer. It routes `unbound` and never reaches the LP:
+      every endogenous leaf is a decision variable the network carries no column for, so `add_constraints`
+      skips it and this is a post-solve audit check. The earlier text claiming it was "the equation the
+      LP carries" was wrong about the code. The leaves are not filled from a solve either -- `parameters_from_result`
+      writes `total_capacity_mw` from the result''s capacity mix but none of the eighteen members, so
+      on the audit path the left side is the reference build while the right side is the solved total,
+      which compares a constant to a solve rather than checking it. And `solar_pv_capacity` is excluded,
+      which is what keeps the reference build inside the ceiling. It is a leaf and not an aggregate --
+      nothing reads it as a sum, whereas `thermal_capacity_mw`, `dispatchable_re_capacity_mw` and `storage_capacity_mw`
+      each aggregate their own members -- and including its 10,000 MW would put the reference build at
+      19,700 MW against a 15,000 MW ceiling. That excess is a real inconsistency in the reference scenario,
+      not a reason to omit the largest single build. Solar''s 10,000 MW default is absent from `REFERENCE_BUILDS`
+      and equals `total_capacity_mw`''s own placeholder, so it was copied rather than modelled. The declared
+      total is 10,000 MW while the full reference build is 19,700 MW, and the balance does not see that
+      gap because the largest build is not a member. The eighteen members sum to 9,700 MW and hold at
+      the shipped defaults. `solar_thermal_capacity` is left out for a different reason: it is the CSP
+      build under the catalog''s second spelling, and `csp_capacity` is already a member.'
     determined_variables: []
     free_variables:
     - total_capacity_mw

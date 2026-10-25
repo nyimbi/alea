@@ -5107,6 +5107,65 @@ could not tell 4.5 from 40.5 would have passed on the defect. Canaried by
 reverting the equation in `config/prg.yaml` and re-running: it fails with
 `assert 40.5 == (0.1 * 45.0)`.
 
+## The fleet balance excluded the fleet's largest build (2026-10-25)
+
+`fleet_build_balance` sums eighteen leaf builds against
+`total_capacity_mw + storage_headroom_mw`. It excluded `solar_pv_capacity`, and
+the exclusion was described in the builder as an aggregate -- one of "the
+fleet's own aggregates: the solve's chosen groups", listed beside
+`thermal_capacity_mw`, `dispatchable_re_capacity_mw` and `storage_capacity_mw`.
+It is not an aggregate. Nothing reads it as a sum: its seventeen readers are
+the generation, diversity, employment and LCOE identities, which read it as a
+build. The three genuine aggregates each read their own members back
+(`firm_capacity_definition` adds thermal to dispatchable renewable; the storage
+bound names storage), and solar has no such identity. At 10,000 MW it is the
+largest single build in the graph, and it was the one build the fleet ceiling
+could not see.
+
+*Why it was excluded, measured rather than inferred.* The eighteen members sum
+to 9,700 MW against a 15,000 MW ceiling at the shipped defaults. Adding solar
+gives 19,700 MW, which **exceeds** the ceiling by 4,700. Including the largest
+build would have turned the reference scenario red, so it was left out -- a
+number bent to keep the other number green, which is the failure mode this
+document's own rule names ("bending either number to make the other fit would
+be manufacturing agreement").
+
+*The excess is real, and it is the reference build that is wrong.*
+`solar_pv_capacity` is absent from the builder's `REFERENCE_BUILDS` table --
+the one place the reference fleet is set from a modelling decision -- and its
+10,000 MW default is exactly `total_capacity_mw`'s placeholder. It was copied
+from the total, not chosen, so the reference scenario claims a 10,000 MW total
+and a 10,000 MW solar build with 9,700 MW of everything else: two fleets of
+different sizes under one name. The exclusion did not resolve that; it hid it.
+
+*Two further defects in the same equation, both found by reading the route
+rather than the text.* The shipped description claimed the equation is "the
+constraint the LP carries". It is not: every endogenous leaf is a decision
+variable the network has no column for, so `add_constraints` routes it
+`unbound` and it never reaches the model. And the leaves are not filled from a
+solve either -- `parameters_from_result` writes `total_capacity_mw` from the
+result's capacity mix but none of the eighteen members -- so on the audit path
+the left side is the reference build and the right side is the solved total.
+That is a constant compared to a solve, not a check on it. Measured: a
+90,000 MW solve leaves the left side at 9,700 and the equation silent.
+
+*What shipped.* The equation's membership is unchanged, because the fix is a
+decision about the reference fleet's size and no archived source states one --
+inventing 19,700 as the total would have replaced one placeholder with another.
+What changed is that the equation now says all four things: that it routes
+unbound, that its members are not filled from a solve, that solar is excluded
+and why, and that the exclusion hides a 9,700 MW disagreement between the
+declared total and the build. The builder's exclusion comment was corrected to
+stop calling solar an aggregate and to record the real reason. The fix, when
+the fleet size is decided, is to remove the exclusion and reconcile
+`total_capacity_mw` against the build -- and the description says so, so the
+next reader inherits the question rather than the silence.
+
+*Verified at defaults.* The eighteen members sum to 9,700 MW, the ceiling is
+15,000 MW, the equation holds, and the shipped defaults still report exactly
+one finding (`frequency_nadir_hz_out_of_range`). `prg_from_catalog.py --check`
+reports the file current.
+
 ## Evaluation of the design docs against the code (2026-10-17)
 
 **`docs/how_prg_works.md` (read-only; a teaching narrative, not read as spec).**

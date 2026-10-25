@@ -82,7 +82,15 @@ change a proposal.
    members exclude solar, solar thermal and the two aggregates. Any sum written
    from the balance's membership therefore excludes the 10,000 MW solar build,
    which is why the `firm_build_fleet_mw` row below uses the twelve
-   `REFERENCE_BUILDS` technologies and states the exclusion.
+   `REFERENCE_BUILDS` technologies and states the exclusion. The exclusion is
+   not neutral, and a later measurement (2026-10-25) settled why it is there:
+   the 18 members sum to 9,700 MW against a 15,000 MW ceiling, and adding solar
+   gives 19,700 MW, which exceeds it. The largest build in the graph was left
+   out to keep the reference build green. It is a leaf, not an aggregate --
+   nothing reads it as a sum -- and its 10,000 MW default is `total_capacity_mw`'s
+   placeholder copied, since it is absent from `REFERENCE_BUILDS`. The excess is
+   a real disagreement between the declared total and the build, not a reason
+   for the omission; `docs/prg-status.md` records the full finding.
 
 Every proposed right-hand side was run through the BRIEF's symbol check in one
 pass over the table as written: **26 checked, zero unresolved symbols**, once
