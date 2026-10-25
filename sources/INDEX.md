@@ -108,6 +108,7 @@ citing or a row added and never wired.
 | damodaran_ctryprem_2026 | Country Default Spreads and Risk Premiums (table last updated 2026-01-05) | Aswath Damodaran, NYU Stern | 2026 | https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/ctryprem.html | Author terms (free) | sources/archive/damodaran_ctryprem_2026-01.html | Damodaran (2026), Country Default Spreads and Risk Premiums |
 
 | shams_2017_frequency_low_inertia | Analysis and Response Management of Frequency Events in Low Inertia Power Systems (PhD thesis) | Negar Shams, University of Manchester | 2017 | https://pure.manchester.ac.uk/ws/files/87763588/FULL_TEXT.PDF | Author thesis, institutional repository (open access) | sources/archive/shams_2017_frequency_low_inertia.pdf | Shams 2017, time to nadir in low-inertia systems; fast frequency response defined as response within 0.5 s of triggering |
+| sharif_2019_wds_energy | Water Energy Nexus for Water Distribution Systems: A Literature Review | Sharif, Haider, Farahat & Hewage, *Environmental Reviews* | 2019 | https://utoronto.scholaris.ca/bitstreams/ee38eb33-caeb-42de-9ba5-6756c312538e/download | Author accepted manuscript, institutional repository (open access) | sources/archive/sharif_2019_water_distribution_energy.pdf | Sharif et al. (2019), energy intensity of water distribution systems |
 
 ## Digests of the archived copies
 
@@ -147,6 +148,7 @@ the row evidence rather than a pointer.
 | sources/archive/shams_2017_frequency_low_inertia.pdf | 1abfcb4bbf785f39a0290013ca46a08d72dfb9b0ee934d4999378beb2a49693a |
 | sources/archive/verra_afolu_npt_v42.pdf | 8cc1e20543b0f37a59ce195fb890c2852d6818d057a2aafb6e4307d1abab29d8 |
 | sources/archive/cambridge_buffer_pool_workshop_2024.pdf | 237809102fe2ea6fee1b22d229118d9f69683a61bccd9b2f9e912995259e6d8c |
+| sources/archive/sharif_2019_water_distribution_energy.pdf | d0bf1f4c362cc0c89696a5bb42ee8c375b7794819cd67986741c81bced0f08ba |
 
 ## Why some rows are `n/a`
 

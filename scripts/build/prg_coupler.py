@@ -17995,10 +17995,20 @@ _BATCH54_QUANTITIES: tuple[tuple[str, str, tuple[float, float], float, str], ...
 		(0.0, 1e6),
 		0.0,
 		"Electricity the water utility's pumping draws in the year, in "
-		"megawatt-hours. The volume base exists (`total_water_demand_m3`, 93.2 "
-		"M m3/year at defaults) and the specific energy does not: the standard "
-		"0.3-1.0 kWh/m3 band is not in this repository's archive, so the "
-		"product waits rather than inventing the coefficient.",
+		"megawatt-hours. The catalog's quantity is municipal supply -- "
+		"'Water utility pumping', delivered to households -- and the graph's "
+		"only water volume is not that object: `total_water_demand_m3` is the "
+		"plant's own process withdrawal, cooling plus electrolysis, 93.2 M "
+		"m3/year at defaults. Pumping that against a distribution intensity "
+		"would charge the utility's auxiliary load to water the plant consumes "
+		"and never distributes, which is the wrong base and not merely a "
+		"missing coefficient. The intensity itself is no longer the gap: "
+		"Sharif et al. (2019) review it at 0.026 kWh/m3 for the source, 0.066 "
+		"for treatment and 0.3 for distribution in flat terrain (76.9% of a "
+		"0.40 kWh/m3 total, from EPA 2013), with operating systems spanning "
+		"0.16-0.55 and mountain terrain reaching 2.28. What the equation waits "
+		"on is a municipal water volume: a population and a per-capita "
+		"withdrawal, neither of which the graph carries.",
 	),
 	(
 		"water_pollution_load",

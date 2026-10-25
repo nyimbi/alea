@@ -66,7 +66,7 @@ in the rows; the verification script is reproduced under *Verification*.
 | `tourism_load` | BASE-NEEDED | defer | `MW` | `[0, 500]` | `free` / `fixed` | `--` | — | — | Needs tourist-nights. No tourist, bed-night, or visitor node exists, and `commercial_demand_twh` is the whole service sector's electricity — a share of it would be a guess about the tourism share of the economy. |
 | `transport_logistics` | PRODUCT | read | `tonne*km/year` | `[0, 1e12]` — 1e12 tonne-km is twenty times the shipped 45 bn and well above any single country's freight task; the lower bound is zero | `free` / `fixed` | `--` (operand of `freight_electric_tonne_km`) | Freight tonne-kilometres moved in the year: the base the batch-20 freight share was deferred for. Retyped from `None` to `tonne*km/year`. 45 bn tonne-km at 45 M people is about 1,000 tonne-km per person, the low end of the middle-income band. | `None` — a scenario input | Making it a *derived* product of a new `freight_tonne_km` base would add a node that is this node under another name; the classification pack's own row has `freight_tonne_km` as the operand and the logistics energy as the product, which reverses which of the two the graph actually needs. |
 | `wastewater_treatment_load` | BASE-NEEDED | defer | `MWh/year` | `[0, 1e7]` | `free` / `fixed` | `--` | — | — | `total_water_demand_m3` is water *withdrawn*, not effluent returned, and the treatment intensity (kWh/m³) does not exist. Using the withdrawal as the effluent volume assumes every litre withdrawn is treated, which is the assumption the water balance exists to test. |
-| `water_pumping_load` | BASE-NEEDED | defer | `MWh/year` | `[0, 1e7]` | `free` / `fixed` | `--` | — | — | The demand base exists (`total_water_demand_m3`, 93.2 M m³/year at defaults); the pumping intensity does not. A 0.3–1.0 kWh/m³ coefficient is the standard range and is not in this repository's archive, so the product waits rather than inventing the number. See *Sources to fetch*. |
+| `water_pumping_load` | BASE-NEEDED | defer | `MWh/year` | `[0, 1e7]` | `free` / `fixed` | `--` | — | — | **The base does not exist.** The catalog's quantity is municipal supply ("Water utility pumping", delivered to households); `total_water_demand_m3` is the *plant's* process withdrawal, cooling plus electrolysis, 93.2 M m³/year at defaults, and charging a distribution intensity to it bills the utility's auxiliary load to water the plant consumes and never distributes. The intensity is no longer the gap: Sharif et al. (2019), `sources/archive/sharif_2019_water_distribution_energy.pdf`, gives 0.026 kWh/m³ source, 0.066 treatment, 0.3 distribution (76.9% of a 0.40 total, from EPA 2013), 0.16–0.55 operating, 2.28 mountain. What is missing is a municipal water volume: a population and a per-capita withdrawal. |
 
 ### New nodes this pack declares
 
@@ -156,9 +156,13 @@ heat-pump saving, which is a `Pow`.
   `industrial_heat_electrification`, `hydrogen_export_volume`, `load_factor`,
   `agricultural_demand_twh`, `demand_twh`** are read here and are already
   declared and coupled. No change is asked of them.
-- **`total_water_demand_m3`** is the base `water_pumping_load` and
-  `wastewater_treatment_load` both need and cannot use without an intensity.
-  When the intensity nodes land, both close in one batch against this base.
+- **`total_water_demand_m3`** is the plant's own process withdrawal, not the
+  municipal supply `water_pumping_load` measures and not the treated volume
+  `wastewater_treatment_load` measures. Neither closes against it: the pumping
+  node needs a municipal volume (population × per-capita withdrawal) that the
+  graph does not carry, and the wastewater node needs an effluent return
+  fraction. The pumping intensity itself is archived (Sharif et al. 2019) and
+  is no longer the blocker.
 - **`temperature_increase`** is the operand `heat_pump_cop` would need for the
   temperature curve. It is `None`-unit with the 500,000 placeholder. Repairing
   it would let the COP become `f(ΔT)`; until then the COP is a constant and the
@@ -230,13 +234,13 @@ heat-pump saving, which is a `Pow`.
 
 ## Sources to fetch
 
-The four intensities the deferred loads need. None is archived; each is a
-standard figure with a published range, and the equation should not ship until
-the work is on disk and the range in the node cites it.
+The intensities the deferred loads need. One is now archived (water pumping);
+the rest are standard figures with a published range, and the equation should
+not ship until the work is on disk and the range in the node cites it.
 
 | quantity | node it unblocks | what is needed | where to look |
 |---|---|---|---|
-| Water pumping specific energy, kWh/m³ | `water_pumping_load` | A stated range covering source lift and distribution pressure (roughly 0.3–1.0 kWh/m³) | IEA or World Bank water-energy nexus reports; US DOE pumping-system sourcebooks |
+| ~~Water pumping specific energy, kWh/m³~~ | `water_pumping_load` | **Fetched** — no longer a gap. Sharif et al. (2019): 0.026 source, 0.066 treatment, 0.3 distribution, 0.40 total; 0.16–0.55 operating; 2.28 mountain | `sources/archive/sharif_2019_water_distribution_energy.pdf` (archived 2026-10-25). The remaining gap is the *base*: a municipal water volume, not an intensity. |
 | Wastewater treatment specific energy, kWh/m³ | `wastewater_treatment_load` | A range by treatment level (primary/secondary/tertiary) | IEA *Water-Energy Nexus*; national utility benchmarks |
 | Cold-chain specific energy, kWh/m³/year or kWh/t | `cold_storage_load` | A per-volume or per-tonne intensity and a capacity factor | FAO cold-chain assessments; IIR cold-chain reports |
 | Post-harvest processing energy, kWh/t | `post_harvest_processing_load` | Per-crop or per-process intensity | FAO agricultural energy handbooks; IRENA bioenergy assessments |
