@@ -339,15 +339,23 @@ async def test_detect_and_resolve_conflicts(prg: PRGClient) -> None:
 	assert applied, "the over-determined conflict was not reported"
 	assert applied[0]["applied"] is not None, "no in-range correction was found"
 	assert applied[0]["applied"]["within_range"] is True
-	# `resolved` is scenario-wide -- `not consistency(values_after)` -- so it is
-	# False here even though the correction closed the conflict it targeted:
-	# the shipped defaults carry the nadir finding (see `KNOWN_DEFAULT_FINDINGS`
-	# in test_prg.py) and no move on `marginal_cost` reaches it. The claim this
-	# test makes is that the *targeted* conflict is gone, so that is what it
-	# asserts, plus the exact reason `resolved` is not True.
-	assert applied[0]["resolved"] is False, (
-		"a scenario-wide clean verdict would mean the nadir finding vanished"
-	)
+	# `resolved` asks whether *this* conflict's equation still fails, not
+	# whether the whole set is clean. The distinction is the fix of 2026-10-25:
+	# the scenario-wide reading (`not consistency(values_after)`) was False for
+	# every correction, because the shipped defaults carry the nadir finding
+	# (see `KNOWN_DEFAULT_FINDINGS` in test_prg.py) and no move on
+	# `marginal_cost` reaches it. A verdict that never reads True is not a
+	# verdict.
+	assert applied[0]["resolved"] is True, applied[0]
+	# And the scenario is still not clean, which is the whole reason the two
+	# questions had to be separated: the targeted conflict is gone and the
+	# unrelated finding remains. Asserting both is what makes this a test of
+	# the distinction rather than of one side of it.
+	after = await prg.check_consistency(applied[0]["values_after"])
+	assert after["consistent"] is False
+	assert {
+		v["equation_id"] for v in after["violations"]
+	} == {"frequency_nadir_hz_out_of_range"}, after["violations"]
 	assert applied[0]["values_after"], "the resolved set was not carried"
 	# The set after the correction is carried, and the corrected parameter is
 	# in it -- a resolution reporting ``values_after`` without the move would
