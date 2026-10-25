@@ -782,8 +782,8 @@
 | 19.23 | `early_retirement_packages` | Early retirement | Employment | → `pension_security`; ← `coal_retirement_schedule` |
 | 19.24 | `redeployment_options` | Redeployment | Employment | → `direct_jobs`; ← `skills_gap_assessment` |
 | 19.25 | `local_content_employment` | Local employment | Employment | → `direct_jobs`; ← `local_content_requirement` |
-| 19.26 | `women_employment_targets` | Women employment | Employment | → `gender_impact`; ← `local_employment_targets` |
-| 19.27 | `youth_employment_targets` | Youth employment | Employment | → `direct_jobs`; ← `local_employment_targets` |
+| 19.26 | `women_employment_targets` | Women employment | Employment | **DEPRECATED (batch 70)** — a second id for `women_employment_share`; the attainment ratio that divided one by the other is removed, and both nodes are tombstones |
+| 19.27 | `youth_employment_targets` | Youth employment | Employment | **DEPRECATED (batch 70)** — a second id for `youth_employment_share`; see 19.26 |
 | 19.28 | `disability_inclusion` | Disability inclusion | Employment | → `direct_jobs`; ← `labour_standards` |
 
 ---
@@ -1016,9 +1016,9 @@
 | 28.5 | `land_acquisition_costs` | Land costs | Land, Cost | → `capex_solar_pv`; ← `land_use_conflicts` |
 | 28.6 | `resettlement_costs` | Resettlement | Land, Cost | → `total_cost`; ← `resettlement_requirements` |
 | 28.7 | `compensation_rates` | Compensation | Land, Cost | → `resettlement_costs`; ← `land_acquisition_costs` |
-| 28.8 | `community_benefit_sharing` | Benefit sharing | Land, Financial | → `local_employment_targets`; ← `community_development_funds` |
+| 28.8 | `community_benefit_sharing` | Benefit sharing | Land, Financial | ← `community_benefit_share_of_revenue`; its former `local_employment_targets` edge was removed in batch 70 with that tombstone |
 | 28.9 | `local_content_requirements` | Local content | Land, Policy | → `local_content_employment`; ← `regulatory_predictability` |
-| 28.10 | `local_employment_targets` | Local employment | Land, Employment | → `local_content_employment`; ← `community_benefit_sharing` |
+| 28.10 | `local_employment_targets` | Local employment | Land, Employment | **DEPRECATED (batch 70)** — the catalog's second "Local employment" row (19.25 is the first); `local_employment_share` is canonical |
 | 28.11 | `community_development_funds` | Community funds | Land, Financial | → `community_benefit_sharing`; ← `local_content_requirements` |
 | 28.12 | `fpic_requirements` | FPIC | Land, Compliance | → `land_acquisition_costs`; ← `undrip_compliance` |
 | 28.13 | `traditional_land_use` | Traditional use | Land | → `land_use_conflicts`; ← `land_tenure` |

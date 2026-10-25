@@ -1874,6 +1874,57 @@ per-start cost and no count of starts, stated in their own descriptions) and
 `capex_gravity_storage` (needs `gravity_storage_capacity` in MWh, still a
 placeholder). Each needs a source or a base node, not an equation.
 
+### Three attainment ratios divided one policy dial by another (batch 70, 2026-10-25)
+
+`employment_attainment_local` was defined as
+`local_employment_share / local_employment_targets`, and its two operands were
+both free `policy` dials. The shipped descriptions say so in their opening
+words: the share reads "Target share of project employment filled from the
+host community" and the target reads "Target share of project employment to be
+filled from the host community". One quantity, two ids, and an "attainment
+index" that is the ratio of a dial to itself.
+
+The defaults make the defect arithmetic rather than rhetorical. Local reads
+0.30 / 0.30 = **1.0000**, women 0.20 / 0.15 = **1.3333**, youth 0.30 / 0.25 =
+**1.2000**. A monitoring index is 1 exactly where the two dials agree and
+1.33 or 1.20 where they do not, so it reports the graph's own internal
+disagreement as the project's performance. The women and youth pairs disagree
+because batch 24 gave the share and the target different defaults for the same
+target — 0.2 against 0.15 and 0.3 against 0.25 — and the ratio turned that
+slip into a performance finding of 33% and 20% over-target.
+
+Batch 24's own table comment is the confession. It sits above the three
+`*_employment_targets` and reads
+`# --- the duplicates the catalog resolves by equality ---`, and the batch
+then emitted them as independent dials and divided one into the other. The
+catalog lists "Local employment" twice, at 19.25 (`local_content_employment`)
+and 28.10 (`local_employment_targets`), which is where the second id came
+from; `docs/param_eqn.md` already read 28.10 as "→ `local_content_employment`",
+so the catalog's two rows described one quantity and the graph carried three
+ids for it.
+
+**Which id is canonical was measured, not chosen.** Each `*_employment_share`
+has readers — `local_employment_share` feeds `locally_sourced_jobs` and
+`local_content_employment`, the women and youth shares feed their group job
+counts — while each `*_employment_targets` and each `employment_attainment_*`
+has none beyond the ratio that was being removed. The shares are what the
+graph actually computes with; the targets were a second name for them and the
+attainment nodes were arithmetic over the pair.
+
+Six tombstones, three equations and six edges removed. `_deprecated_reach`
+again made the deletions mandatory: it refuses to load an equation or an edge
+naming a deprecated node, so the attainment equations had to go with the
+targets they read. Each tombstone keeps a `default` (`1.0` for the three
+index nodes, their prior share values for the targets) because a deprecated
+node with no default cannot propagate, and each carries `deprecated_by` at the
+canonical share. The builder entries were removed in the same commit, so a
+rebake cannot reintroduce a node the loader would then refuse.
+
+Three registers moved: equations 605 → 602, edges 1407 → 1401, uncoupled
+238 → 244, deprecated 10 → 16. The hard-tier count fell 3, not 6, because
+`strength_counts()` counts equations rather than edges and each removed
+equation carried two hard edges.
+
 ### The permanence family had one number under two ids (batch 69, 2026-10-25)
 
 Batch 33 coupled `buffer_pool_contribution` with the equation

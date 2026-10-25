@@ -734,7 +734,7 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 		'line_outage_probability: the graph says existing and the catalog says to_build',
 		'line_upgrade_budget: the graph says existing and the catalog says to_build',
 		'local_content_requirements: the graph says deprecated and the catalog says to_build',
-		'local_employment_targets: the graph says existing and the catalog says to_build',
+		'local_employment_targets: the graph says deprecated and the catalog says to_build',
 		'maintenance_duration: the graph says existing and the catalog says to_build',
 		'maladaptation_risk: the graph says existing and the catalog says to_build',
 		'margin_requirements: the graph says existing and the catalog says to_build',
@@ -789,8 +789,8 @@ def test_the_report_carries_all_three_claims_together(graph: ParameterGraph):
 		'voltage_support_requirement: the graph says existing and the catalog says to_build',
 		'voluntary_carbon_market: the graph says existing and the catalog says to_build',
 		'wind_degradation: the graph says existing and the catalog says to_build',
-		'women_employment_targets: the graph says existing and the catalog says to_build',
-		'youth_employment_targets: the graph says existing and the catalog says to_build',
+		'women_employment_targets: the graph says deprecated and the catalog says to_build',
+		'youth_employment_targets: the graph says deprecated and the catalog says to_build',
 	]
 
 	assert len(report["status_join"]) == 787

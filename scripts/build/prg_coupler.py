@@ -5224,16 +5224,14 @@ BATCH24_RETYPES: tuple[tuple[str, str, list[float], float, str, str, str], ...] 
 	 "the voluntary-market clearing price, distinct from the compliance "
 	 "price `carbon_price_usd_per_tco2`. A price per tonne."),
 	# --- the duplicates the catalog resolves by equality ---
-	("local_employment_targets", "1", [0.0, 1.0], 0.3, "Land", "policy",
-	 "Target share of project employment to be filled from the host "
-	 "community. A share of the workforce, so the attainment ratio against "
-	 "it is a ratio and not a division by the catalog's 500000.0 "
-	 "placeholder."),
-	("women_employment_targets", "1", [0.0, 1.0], 0.15, "JustTrans", "policy",
-	 "Target share of project employment to be filled by women. A share."),
-	("youth_employment_targets", "1", [0.0, 1.0], 0.25, "JustTrans", "policy",
-	 "Target share of project employment to be filled by people under 35. A "
-	 "share."),
+	# Batch 70 removed the three `*_employment_targets` that used to open this
+	# group. They were emitted as independent policy dials while their
+	# descriptions called them the same target as the `*_employment_share`
+	# nodes the graph already carried, and the attainment equations then
+	# divided one id by the other -- so the "attainment index" was the ratio
+	# of two dials, 1.0 where they agreed and 1.33/1.20 where they did not.
+	# The catalog lists "Local employment" twice (19.25, 28.10), which is
+	# where the second id came from.
 	("carbon_tax_coverage", "1", [0.0, 1.0], 0.5, "Policy", "policy",
 	 "Share of emissions the carbon tax applies to. Already a share; this "
 	 "batch makes it an identity on `carbon_price_coverage`, the two being "
@@ -5673,29 +5671,13 @@ BATCH24_EQUATIONS: tuple[
 	 "lives on the same share with the opposite sign.",
 	 "financial", "linear", "USD million/year", [0.0, 1.0e6],
 	 "World Bank Regulation of Utilities handbook, revenue caps"),
-	("employment_attainment_local_definition",
-	 "The local-employment attainment ratio",
-	 "employment_attainment_local",
-	 "local_employment_share / local_employment_targets",
-	 "The share achieved over the share targeted. Both sides are shares of "
-	 "the same workforce, so the ratio is the attainment index a monitoring "
-	 "report quotes -- and a target left at the catalog's 500000.0 "
-	 "placeholder reads as an attainment of essentially zero, which is the "
-	 "placeholder surfacing rather than a performance finding.",
-	 "employment", "linear", "1", [0.0, 10.0], None),
-	("employment_attainment_women_definition",
-	 "The women's-employment attainment ratio",
-	 "employment_attainment_women",
-	 "women_employment_share / women_employment_targets",
-	 "Achieved over targeted female share of the workforce. The ratio is "
-	 "the index the programme's own reporting uses.",
-	 "employment", "linear", "1", [0.0, 10.0], None),
-	("employment_attainment_youth_definition",
-	 "The youth-employment attainment ratio",
-	 "employment_attainment_youth",
-	 "youth_employment_share / youth_employment_targets",
-	 "Achieved over targeted youth share of the workforce.",
-	 "employment", "linear", "1", [0.0, 10.0], None),
+	# The three `employment_attainment_*` ratios are no longer emitted: batch 70
+	# deprecated them along with the `*_employment_targets` they divided by.
+	# Each ratio was one policy dial over another, both describing the same
+	# target, so it read 1.0 wherever the two dials agreed and 1.33 or 1.20
+	# wherever they did not -- an index that is 1 by construction. A deprecated
+	# node may not be reached by an equation (`_deprecated_reach`), so
+	# re-emitting these would make the graph fail to load.
 )
 
 

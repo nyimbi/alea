@@ -1032,6 +1032,17 @@ def test_the_summary_reports_the_registers(graph: ParameterGraph):
 		# one number under two ids -- so both the equation and its edge are
 		# gone, and it is `free` now that nothing determines it.
 		"buffer_pool_contribution",
+		# Batch 70 retired six nodes at once, and the reason is one defect:
+		# three employment shares each had a second id describing the same
+		# target, and an "attainment" equation divided one id by the other.
+		# The three `*_employment_targets` were the duplicate dials and the
+		# three `employment_attainment_*` were the ratios built on them, so
+		# removing the ratios left the index nodes derived by nothing. All six
+		# are `free` tombstones now.
+		"local_employment_targets", "women_employment_targets",
+		"youth_employment_targets",
+		"employment_attainment_local", "employment_attainment_women",
+		"employment_attainment_youth",
 	}, deprecated_uncoupled
 	uncoupled_roles = {
 		graph.role(name).value for name in graph.uncoupled()
@@ -1824,8 +1835,9 @@ def test_every_equality_declares_an_edge_from_each_symbol_it_reads(
 	# 534 until batch 69 removed `buffer_pool_contribution_definition`, an
 	# equality whose rhs was the bare share it determined -- a rename rather
 	# than a relation. The rule itself is unchanged and still has no
-	# exceptions; the count falls with the equation.
-	assert len(determined) == 533, len(determined)
+	# exceptions; the count falls with the equation. Batch 70 removed three
+	# more equalities -- the attainment ratios -- so 533 -> 530.
+	assert len(determined) == 530, len(determined)
 
 	sourced: dict[str, set[str]] = {}
 	for edge in graph.edges:
@@ -3313,8 +3325,9 @@ def test_the_audit_reports_what_it_did_not_check():
 	# same reason as the two before it: `tsam_segment_hours` is not on the
 	# solve result either. The audit's coverage is unchanged; it is the
 	# computed set that grew. Batch 69 removed `buffer_pool_contribution`'s
-	# alias equation, so it leaves the computed set and 337 -> 336.
-	assert len(audit.skipped) == 336, audit.skipped
+	# alias equation, so it leaves the computed set and 337 -> 336. Batch 70
+	# removed three more equations from the computed set: 336 -> 333.
+	assert len(audit.skipped) == 333, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -3376,8 +3389,9 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# requirement 532 -> 533, and batch 54's temporal-resolution definition
 	# 533 -> 534. Batch 69 takes it 534 -> 533: `buffer_pool_contribution`
 	# stops being derived when its alias equation is removed, so the computed
-	# set shrinks by one and the unexamined set with it.
-	assert len(audit.skipped) == 533, audit.skipped
+	# set shrinks by one and the unexamined set with it. Batch 70 removes
+	# three attainment ratios, taking it 533 -> 530.
+	assert len(audit.skipped) == 530, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -5462,7 +5476,12 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# Batch 69 deleted `buffer_pool_contribution_definition`, an alias whose one
 	# hard edge went with it: 603 -> 602. The two tiers it did not touch stay
 	# flat, which is the claim the equality makes.
-	assert counts == {"hard": 602, "informational": 1, "soft": 2}, counts
+	# Batch 70 deleted the three attainment ratios, and the register counts
+	# equations rather than edges: 602 -> 599. Each carried two hard edges, so
+	# the edge count fell by six while this fell by three -- the distinction
+	# the batch-63 note above makes, and the reason this number is not the
+	# edge total.
+	assert counts == {"hard": 599, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -6202,8 +6221,9 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 	# 531 -> 532, and batch 53's reserve requirement 532 -> 533, and batch 54's
 	# temporal-resolution definition 533 -> 534. Batch 69 takes it back to 533:
 	# `buffer_pool_contribution` stops being derived when its alias equation is
-	# removed, so one fewer equation is compared.
-	assert compared == 533, (
+	# removed, so one fewer equation is compared. Batch 70 removes three more
+	# (the attainment ratios), taking it 533 -> 530.
+	assert compared == 530, (
 		f"expected 481 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "

@@ -11223,52 +11223,58 @@ parameters:
     source: docs/params.md
   employment_attainment_local:
     category: Carbon
+    deprecated_by: local_employment_share
     description: The share achieved over the share targeted. Both sides are shares of the same workforce,
       so the ratio is the attainment index a monitoring report quotes -- and a target left at the catalog's
       500000.0 placeholder reads as an attainment of essentially zero, which is the placeholder surfacing
       rather than a performance finding.
+    default: 1.0
     determinism: policy
     name: Employment attainment local
     priority: P1
     range:
     - 0.0
     - 10.0
-    role: derived
+    role: free
     source: The carbon-market coupling (batch 24)
-    status: existing
+    status: deprecated
     type: float
     unit: '1'
     users:
     - Regulators
   employment_attainment_women:
     category: Carbon
+    deprecated_by: women_employment_share
     description: Achieved over targeted female share of the workforce. The ratio is the index the programme's
       own reporting uses.
+    default: 1.0
     determinism: policy
     name: Employment attainment women
     priority: P1
     range:
     - 0.0
     - 10.0
-    role: derived
+    role: free
     source: The carbon-market coupling (batch 24)
-    status: existing
+    status: deprecated
     type: float
     unit: '1'
     users:
     - Regulators
   employment_attainment_youth:
     category: Carbon
+    deprecated_by: youth_employment_share
     description: Achieved over targeted youth share of the workforce.
+    default: 1.0
     determinism: policy
     name: Employment attainment youth
     priority: P1
     range:
     - 0.0
     - 10.0
-    role: derived
+    role: free
     source: The carbon-market coupling (batch 24)
-    status: existing
+    status: deprecated
     type: float
     unit: '1'
     users:
@@ -19521,13 +19527,18 @@ parameters:
     categories: []
     category: Land
     default: 0.3
-    deprecated_by: null
-    description: Target share of project employment to be filled from the host community. A share of the
-      workforce, so the attainment ratio against it is a ratio and not a division by the catalog's 500000.0
-      placeholder.
+    deprecated_by: local_employment_share
+    description: DEPRECATED. Duplicate of `local_employment_share`. Both nodes are described as the target
+      share of project employment filled from the host community, both are `policy` determinism, and both
+      are free dials, so the catalog states one quantity under two ids. Batch 24 emitted this one as an
+      independent dial and divided it into `local_employment_share` to form `employment_attainment_local`,
+      which makes the "attainment" the ratio of two policy dials rather than a realised share over a target
+      -- 1.0 exactly where the two dials agree, and 1.3333 or 1.2000 for the other two groups wherever
+      they disagree. The catalog itself lists "Local employment" twice, at 19.25 and 28.10, which is the
+      duplicate the two ids came from.
     determinism: policy
     initial: null
-    name: Local employment targets
+    name: Local employment targets (deprecated)
     priority: P1
     range:
     - 0.0
@@ -19535,7 +19546,7 @@ parameters:
     role: free
     source: The carbon-market coupling (batch 24)
     source_url: null
-    status: existing
+    status: deprecated
     subcategory: null
     type: float
     unit: '1'
@@ -32929,11 +32940,15 @@ parameters:
     categories: []
     category: JustTrans
     default: 0.15
-    deprecated_by: null
-    description: Target share of project employment to be filled by women. A share.
+    deprecated_by: women_employment_share
+    description: 'DEPRECATED. Duplicate of `women_employment_share`: both are the target share of project
+      employment filled by women, both `policy` determinism and both free dials. The two defaults disagree
+      (0.15 against 0.2), which is what `employment_attainment_women` was reporting as an attainment of
+      1.3333 -- the gap between two dials, not a programme beating its target. The catalog row this came
+      from (19.26, "Women employment") is the same row the share was read from.'
     determinism: policy
     initial: null
-    name: Women employment targets
+    name: Women employment targets (deprecated)
     priority: P1
     range:
     - 0.0
@@ -32941,7 +32956,7 @@ parameters:
     role: free
     source: The carbon-market coupling (batch 24)
     source_url: null
-    status: existing
+    status: deprecated
     subcategory: null
     type: float
     unit: '1'
@@ -33260,11 +33275,14 @@ parameters:
     categories: []
     category: JustTrans
     default: 0.25
-    deprecated_by: null
-    description: Target share of project employment to be filled by people under 35. A share.
+    deprecated_by: youth_employment_share
+    description: 'DEPRECATED. Duplicate of `youth_employment_share`: both are the target share of project
+      employment filled by people under 35, both `policy` determinism and both free dials. The defaults
+      disagree (0.25 against 0.3), which is what `employment_attainment_youth` reported as 1.2000. The
+      catalog row this came from (19.27, "Youth employment") is the same row the share was read from.'
     determinism: policy
     initial: null
-    name: Youth employment targets
+    name: Youth employment targets (deprecated)
     priority: P1
     range:
     - 0.0
@@ -33272,7 +33290,7 @@ parameters:
     role: free
     source: The carbon-market coupling (batch 24)
     source_url: null
-    status: existing
+    status: deprecated
     subcategory: null
     type: float
     unit: '1'
@@ -37745,73 +37763,6 @@ equations:
       make. It states the identity for a single fuel, and averaging over the fleet is what makes it apply
       to a generation total that does not name its fuels.
     latex: \mathrm{emissions}_{mtco2\_per\_year} = \mathrm{generation}_{twh} \mathrm{fleet}_{emission\_intensity\_t\_per\_mwh}
-  employment_attainment_local_definition:
-    description: The share achieved over the share targeted. Both sides are shares of the same workforce,
-      so the ratio is the attainment index a monitoring report quotes -- and a target left at the catalog's
-      500000.0 placeholder reads as an attainment of essentially zero, which is the placeholder surfacing
-      rather than a performance finding.
-    determined_variables:
-    - employment_attainment_local
-    free_variables: []
-    latex: \mathrm{employment}_{attainment\_local} = \frac{\mathrm{local}_{employment\_share}}{\mathrm{local}_{employment\_targets}}
-    lhs: employment_attainment_local
-    linearity: linear
-    name: The local-employment attainment ratio
-    parameters:
-    - employment_attainment_local
-    - local_employment_share
-    - local_employment_targets
-    priority: P1
-    reference: null
-    relation: eq
-    rhs: local_employment_share / local_employment_targets
-    solution_method: direct
-    system: employment
-    tolerance: 1.0e-09
-    unit_check: true
-  employment_attainment_women_definition:
-    description: Achieved over targeted female share of the workforce. The ratio is the index the programme's
-      own reporting uses.
-    determined_variables:
-    - employment_attainment_women
-    free_variables: []
-    latex: \mathrm{employment}_{attainment\_women} = \frac{\mathrm{women}_{employment\_share}}{\mathrm{women}_{employment\_targets}}
-    lhs: employment_attainment_women
-    linearity: linear
-    name: The women's-employment attainment ratio
-    parameters:
-    - employment_attainment_women
-    - women_employment_share
-    - women_employment_targets
-    priority: P1
-    reference: null
-    relation: eq
-    rhs: women_employment_share / women_employment_targets
-    solution_method: direct
-    system: employment
-    tolerance: 1.0e-09
-    unit_check: true
-  employment_attainment_youth_definition:
-    description: Achieved over targeted youth share of the workforce.
-    determined_variables:
-    - employment_attainment_youth
-    free_variables: []
-    latex: \mathrm{employment}_{attainment\_youth} = \frac{\mathrm{youth}_{employment\_share}}{\mathrm{youth}_{employment\_targets}}
-    lhs: employment_attainment_youth
-    linearity: linear
-    name: The youth-employment attainment ratio
-    parameters:
-    - employment_attainment_youth
-    - youth_employment_share
-    - youth_employment_targets
-    priority: P1
-    reference: null
-    relation: eq
-    rhs: youth_employment_share / youth_employment_targets
-    solution_method: direct
-    system: employment
-    tolerance: 1.0e-09
-    unit_check: true
   energy_balance:
     description: 'What is generated, less what the wires lose, plus what is imported, is what is served.
       A scenario that misses this is a scenario that does not clear, however cheap it is.
@@ -53991,42 +53942,6 @@ relationships:
   source: service_quality_reward
   strength: hard
   target: service_quality_reward_usd
-- description: Enters the product.
-  equation_id: employment_attainment_local_definition
-  relationship: functional
-  source: local_employment_share
-  strength: hard
-  target: employment_attainment_local
-- description: Enters the product.
-  equation_id: employment_attainment_local_definition
-  relationship: functional
-  source: local_employment_targets
-  strength: hard
-  target: employment_attainment_local
-- description: Enters the product.
-  equation_id: employment_attainment_women_definition
-  relationship: functional
-  source: women_employment_share
-  strength: hard
-  target: employment_attainment_women
-- description: Enters the product.
-  equation_id: employment_attainment_women_definition
-  relationship: functional
-  source: women_employment_targets
-  strength: hard
-  target: employment_attainment_women
-- description: Enters the product.
-  equation_id: employment_attainment_youth_definition
-  relationship: functional
-  source: youth_employment_share
-  strength: hard
-  target: employment_attainment_youth
-- description: Enters the product.
-  equation_id: employment_attainment_youth_definition
-  relationship: functional
-  source: youth_employment_targets
-  strength: hard
-  target: employment_attainment_youth
 - description: Gates the base.
   direction: forward
   equation_id: gated_carbon_volume_definition
