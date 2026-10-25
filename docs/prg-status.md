@@ -1756,6 +1756,42 @@ the one carrying a finding -- was the one that stopped reporting how much of
 the graph it never looked at. Both branches now carry it. The partition is a
 property of the result, not of the verdict.
 
+#### A fourth: the retired fragment directory now subtracts from the graph
+
+Found while checking the tree was clean, not by any gate. `config/prg_ingest/`
+was baked into `config/prg.yaml` and the directory retired in `b0fe572`. Later
+batches kept emitting into the same path, so 31 files are on disk again and
+untracked. `load_ingested()` has no production caller, so this is not a
+serving defect -- but applying that directory does not reproduce the shipped
+graph. It removes from it:
+
+| | shipped | ingested |
+|---|---|---|
+| nodes | 1429 | 1429 |
+| equations | 606 | 606 |
+| edges | **1408** | **1396** |
+| rules | 57 | 57 |
+| `uncoupled()` | 237 | 237 |
+
+18 merge refusals, 15 edges lost, every one of them an input to
+`fleet_emission_intensity_definition`: the ten `emission_factor_*_t_per_mwh`
+nodes, the per-fuel `*_generation_twh` nodes and `fleet_generation_twh`.
+Batches 42 and 47 both declare that equation with different bodies. The merge
+keeps the first sorted declaration -- batch 42, the older one -- so the newer
+body and its edges are dropped in silence.
+
+That is the documented merge rule working as specified, and it is why the
+directory is not a source of truth: a stale fragment does not fail to add, it
+overrides a later correction. Nothing gates it, because `load_ingested()` is
+called by no production path and the ingest suite builds its own fixtures in a
+temp directory. The suite passes with the directory present and absent (22
+passed both ways), so no gate can see the difference.
+
+Recorded, not repaired. Which is right -- the baked body or batch 47's -- is
+the same class of question as the 10 s response time above, and the answer is
+to bake the intended body and delete the scratch, not to reconcile a merge
+that no production reader consults.
+
 ### Six node names that resolved to nothing (batch 66, 2026-10-25)
 
 Batch 65 read node descriptions against their equations. This reads equation
