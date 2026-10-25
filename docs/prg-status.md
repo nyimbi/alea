@@ -1708,13 +1708,40 @@ at response onset at 43.62 Hz. A nadir at or above 48 Hz needs a response time
 of 3.14 s or less; at or above the 45 Hz floor, 7.84 s.
 
 **Neither number was changed.** `frequency_response_time_s` is 10 s and
-carries no archived citation -- `sources/INDEX.md` row 66 cites the swing
-equation with no URL and no local copy, and no archived document in the repo
-states an FCR activation or dead time. The 45 Hz floor is the UFLS setting the
-node claims to be. Which one is wrong is a modelling question that needs a
-source, and bending either to make the other fit is the manufacturing
-agreement this section already names as the failure mode. It is recorded here
-and left open.
+carries no citation at all -- no archived document in the repo states an FCR
+activation or dead time, and the node's own `reference` names none. That is
+the gap, and it is the ordinary kind: `sources/INDEX.md` exempts a standard
+derivation from archiving (`n/a`), which is why row 66 for the swing equation
+is not a failure -- `citation_report()` reports 0 failures and does not list
+it as a gap. The response time is not a standard derivation. It is a
+technology parameter with a real value somewhere, and nothing here states
+which. The 45 Hz floor is the UFLS setting the node claims to be. Which one is
+wrong is a modelling question that needs a source, and bending either to make
+the other fit is the manufacturing agreement this section already names as the
+failure mode. It is recorded here and left open.
+
+Batch 68 closed part of that gap and, in doing so, found the mechanism that had
+hidden it. `frequency_nadir_definition` had no `reference` at all, and
+`citation_report()` joins *equation* references only -- a node's own `source`
+field is invisible to it. So `frequency_response_time_s` was an uncited number
+multiplied inside an uncited equation, and no register counted either. The
+equation now cites Shams (2017), archived at
+`sources/archive/shams_2017_frequency_low_inertia.pdf`, which states what the
+equation is about: time to nadir in a low-inertia system is "in the order of 2
+to 3s", and fast frequency response is defined as response within 0.5 s of
+triggering. It does **not** state the 10 s default -- it measures against
+services far faster -- so the default remains uncited and the question of
+whether 10 s or 45 Hz is wrong remains open. The register moves 300 -> 301.
+
+Two things about that search are worth recording because they cost time and
+would cost it again. `WebSearch` in this environment returns a model summary
+rather than results; it produced plausible NERC dead-band figures with no
+source behind them, and citing it would have been fabrication with a citation's
+shape. OpenAlex's API is what actually resolves open-access works. And the
+obvious hits are the wrong mechanism: del Giudice et al. (2021) on dead-bands
+concerns governor dead-band width, not activation delay, and the Manchester
+thesis that answered the question was found only after searching for *time to
+nadir* rather than *response time*.
 
 The gates now compare against `KNOWN_DEFAULT_FINDINGS` in `tests/ci/test_prg.py`
 *exactly* rather than asserting an empty set, so a second unrelated finding

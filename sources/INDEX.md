@@ -105,6 +105,8 @@ citing or a row added and never wired.
 | gep_review_2017 | Generation expansion planning optimisation with renewable energy integration: a review | Oree, Sayed Hassen & Fleming | 2017 | https://eprints.whiterose.ac.uk/id/eprint/111487/1/Generation%20expansion%20planning%20optimisation%20with%20renewable%20energy%20integration%20a%20review-1.pdf | Author accepted MS | sources/archive/whiterose_gep_review_2017.pdf | Oree et al. (2017), RSER 69:790-803 |
 | damodaran_ctryprem_2026 | Country Default Spreads and Risk Premiums (table last updated 2026-01-05) | Aswath Damodaran, NYU Stern | 2026 | https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/ctryprem.html | Author terms (free) | sources/archive/damodaran_ctryprem_2026-01.html | Damodaran (2026), Country Default Spreads and Risk Premiums |
 
+| shams_2017_frequency_low_inertia | Analysis and Response Management of Frequency Events in Low Inertia Power Systems (PhD thesis) | Negar Shams, University of Manchester | 2017 | https://pure.manchester.ac.uk/ws/files/87763588/FULL_TEXT.PDF | Author thesis, institutional repository (open access) | sources/archive/shams_2017_frequency_low_inertia.pdf | Shams 2017, time to nadir in low-inertia systems; fast frequency response defined as response within 0.5 s of triggering |
+
 ## Digests of the archived copies
 
 A re-download of the same URL is not necessarily the same bytes — a publisher
@@ -140,6 +142,7 @@ the row evidence rather than a pointer.
 | sources/archive/mtf_energy_access.pdf | 9d23881ad861edf38f409cb3ed4a600c6b295b3ffb78261c6ed42ee278d1c26b |
 | sources/archive/ipcc_ar5_wg3_annex3.pdf | dec39383e03caf843f833ad8f4b373f72be3b86ada6d826bd172e8955ffe24c2 |
 | sources/archive/ipcc_srren_2011_excerpt.pdf | bd3803f18574eba68eb32980df1a63fe7de2cb7307725134980bf6fece500dfe |
+| sources/archive/shams_2017_frequency_low_inertia.pdf | 1abfcb4bbf785f39a0290013ca46a08d72dfb9b0ee934d4999378beb2a49693a |
 
 ## Why some rows are `n/a`
 

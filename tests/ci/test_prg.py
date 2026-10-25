@@ -5889,7 +5889,18 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# therefore `None` and the register goes 301 -> 300. That is coverage
 	# falling because an unsupported citation left, not a citation being lost:
 	# the batch-34 note records the same judgement for the buffer rate.
-	assert len(declared) == 300, f"the citation register moved: {sorted(declared)}"
+	#
+	# Batch 68 moves it *up*, 300 -> 301, and the new citation is the first one
+	# attached to `frequency_nadir_definition`. That equation had no reference
+	# at all, which is why the 10 s `frequency_response_time_s` it multiplies
+	# was an uncited number sitting inside a cited equation: the register joins
+	# *equation* references, so a node's own `source` field is invisible to it.
+	# Shams (2017) is the source for the quantity the equation is about -- time
+	# to nadir in a low-inertia system, "in the order of 2 to 3s", and fast
+	# frequency response defined as response within 0.5 s of triggering. It does
+	# not state the 10 s default; that gap stays open and is recorded in
+	# `docs/prg-status.md`.
+	assert len(declared) == 301, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (

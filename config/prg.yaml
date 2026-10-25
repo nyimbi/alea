@@ -38842,7 +38842,8 @@ equations:
     - rocof_df_dt_hz_per_s
     - frequency_response_time_s
     priority: P1
-    reference: null
+    reference: Shams 2017, time to nadir in low-inertia systems; fast frequency response defined as response
+      within 0.5 s of triggering
     relation: eq
     rhs: nominal_frequency_hz - rocof_df_dt_hz_per_s * frequency_response_time_s
     solution_method: direct
