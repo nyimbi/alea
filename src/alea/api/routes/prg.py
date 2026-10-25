@@ -293,6 +293,7 @@ def _violation_out(graph: Any, violation: Any) -> ViolationOut:
 		strength=violation.strength,
 		blocks=violation.blocks,
 		detail=str(violation),
+		unevaluable=getattr(violation, "unevaluable", ""),
 	)
 
 

@@ -1874,6 +1874,64 @@ per-start cost and no count of starts, stated in their own descriptions) and
 `capex_gravity_storage` (needs `gravity_storage_capacity` in MWh, still a
 placeholder). Each needs a source or a base node, not an equation.
 
+### Twelve denominators admit zero, and the arithmetic raised a traceback (2026-10-25)
+
+Twenty settable nodes admit 0 at the floor of their declared range and are
+divided by in some equation: the fifteen capacity factors (`capacity_factor_*`
+and `solar_pv_capacity_factor`, all `[0, 1]`), `air_quality_standards`,
+`carbon_budget_mtco2`, `coal_retirement_rate`, `distribution_network_km`,
+`electrolyser_efficiency`, `ets_cap_reduction_rate`, `grid_extension_rate`,
+`phs_duration` and `water_availability_m3`. Every one of those zeros is a value
+the graph itself declares admissible, so a scenario setting it is describing
+something the schema permits. The count is measured by scanning every equation
+rhs for a divisor and keeping those whose declared range contains zero; the
+earlier figure of twelve came from a narrower scan and is not used.
+
+Division in the DSL is lowered to a negative power, so the evaluation raises
+`ZeroDivisionError`. That is an `ArithmeticError`: not a `DslError`, not a
+`ValueError`. Every handler in the package catches one or both of those, and
+nothing catches this, so the fault escaped both entry points:
+
+* `propagate` died with `ZeroDivisionError: zero to a negative power` and
+  named no equation, no parameter and no scenario. The route wrapped
+  `ValueError` into a 422, so the client got a 500.
+* `consistency`, whose entire contract is to *return* every equation that
+  fails, raised instead. A check that cannot report is worse than a check that
+  reports the wrong thing: the caller asked which equations fail and got an
+  exception.
+
+**The fix is at the seam, not at the twelve sites.** `Pow._eval` now raises a
+`DslError` naming the base and the exponent when the base is zero and the
+exponent negative, and `Func._eval` does the same for the `ValueError` and
+`OverflowError` that `sqrt(-1)`, `log(0)` and `exp(1e9)` raise — all four are
+the same class of fact, "this expression has no value at these parameters",
+and the package already has one error type for it. The `except DslError`
+handlers that existed then work, which is the point: they were protecting
+against one arithmetic fault out of four.
+
+The existing `except DslError` handlers inherit the fix without being
+touched — seventeen of them across `graph`, `crossval`, `conflicts`,
+`sensitivity`, `feedback` and `constraints` — and one of them now covers a case
+it never did: `cross_validate` reports an unevaluable rule as a finding, so a
+declared rule dividing by a parameter a scenario set to zero was a traceback
+and is now a reported rule.
+
+Both callers were then made to say what they mean. `_derive` wraps the exact
+solve, so the message reads `cannot derive phs_energy_capex_usd_per_kwh from
+'phs_energy_capex_usd_per_kwh_definition': 0 ** -1.0 is a division by zero`.
+`consistency` catches and returns a `Violation` with a new `unevaluable`
+field carrying the reason, because a residual of infinity is not
+distinguishable from a very large error and the two have different fixes.
+`ViolationOut` carries the field to the API for the same reason.
+
+**Canaries.** Removing the `Pow` guard fails both new tests with
+`ZeroDivisionError`. Making the `consistency` catch re-raise instead of
+returning fails the report test alone — the two predicates are independent.
+The first attempt at the second canary deleted the whole `except` block and
+produced `SyntaxError: expected 'except' or 'finally' block`, which is a
+canary that tested nothing; it was redone as a `raise` so the module still
+parsed.
+
 ### Three attainment ratios divided one policy dial by another (batch 70, 2026-10-25)
 
 `employment_attainment_local` was defined as

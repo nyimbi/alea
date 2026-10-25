@@ -160,6 +160,13 @@ class Violation:
 	relative: float
 	priority: str
 	strength: str = "hard"
+	#: Why the equation has no value at these parameters, when it does not.
+	#: Empty for an ordinary residual failure. A division by zero, a square
+	#: root of a negative and an overflow are all "the equation does not hold
+	#: here", but a reader who sees only a residual of infinity cannot tell
+	#: that from a huge number, and the fix is different: this is a parameter
+	#: the caller set to an edge of its own admissible range.
+	unevaluable: str = ""
 
 	@property
 	def blocks(self) -> bool:
@@ -172,6 +179,11 @@ class Violation:
 
 	def __str__(self) -> str:
 		tier = "" if self.strength == "hard" else f" [{self.strength}]"
+		if self.unevaluable:
+			return (
+				f"{self.equation_id} ({self.priority}{tier}): cannot be "
+				f"evaluated at these values -- {self.unevaluable}"
+			)
 		return (
 			f"{self.equation_id} ({self.priority}{tier}): residual "
 			f"{self.residual:.6g}, relative {self.relative:.3g} > tolerance "
@@ -1541,7 +1553,19 @@ class ParameterGraph:
 				f"{parameter} is derived but declares no range, so the solver "
 				f"has no bracket; declare the physical range on the node"
 			)
-		exact = self._solve_affine(residual, parameter, values)
+		# A denominator the caller set to zero is a *finding about the
+		# scenario*, and the arithmetic raises `DslError` for it -- which the
+		# two branches below catch only after the exact solve has already
+		# raised. The affine path is tried first and it is the one a division
+		# fails on, so the wrap belongs around it: without this, the
+		# `solve_for` handler below never sees the fault and the message names
+		# no equation.
+		try:
+			exact = self._solve_affine(residual, parameter, values)
+		except DslError as exc:
+			raise GraphError(
+				f"cannot derive {parameter} from {equation.id!r}: {exc}"
+			) from exc
 		if exact is not None:
 			# An affine residual has one root and it is arithmetic, so there is
 			# no bracket to miss and no second root to land on. Every equation
@@ -1831,26 +1855,43 @@ class ParameterGraph:
 			if only is not None and equation.system != only:
 				continue
 			strength = self._strength.get(equation.id, "hard")
-			if equation.relation != "eq":
-				# An inequality is a boundary. Reporting its residual as a
-				# violation would flag a parameter sitting correctly inside its
-				# bound, so the sign is what matters, not the magnitude.
-				if not self._inequality_holds(equation, values):
-					violations.append(
-						Violation(
-							equation_id=equation.id,
-							residual=self._residual(equation, values),
-							tolerance=equation.tolerance,
-							relative=float("inf"),
-							priority=equation.priority.value,
-							strength=strength,
-						)
+			# An equation with no value at these parameters does not hold, and
+			# this method's contract is to *return* every equation that fails
+			# rather than to raise. A denominator a caller set to the floor of
+			# its own declared range used to escape from here as a
+			# `ZeroDivisionError` -- an `ArithmeticError`, so not caught by any
+			# of this package's `except DslError` handlers -- which turned a
+			# reportable scenario into a traceback. `relative` is infinite
+			# because the fault is a domain error and not a magnitude: there is
+			# no residual to compare against a tolerance.
+			try:
+				if equation.relation != "eq":
+					# An inequality is a boundary. Reporting its residual as a
+					# violation would flag a parameter sitting correctly inside its
+					# bound, so the sign is what matters, not the magnitude.
+					holds = self._inequality_holds(equation, values)
+					residual = 0.0 if holds else self._residual(equation, values)
+					relative = float("inf")
+					failed = not holds
+				else:
+					residual = self._residual(equation, values)
+					scale = self._scale(equation, values)
+					relative = abs(residual) / scale if scale > 0 else abs(residual)
+					failed = relative > equation.tolerance
+			except DslError as exc:
+				violations.append(
+					Violation(
+						equation_id=equation.id,
+						residual=float("inf"),
+						tolerance=equation.tolerance,
+						relative=float("inf"),
+						priority=equation.priority.value,
+						strength=strength,
+						unevaluable=str(exc),
 					)
+				)
 				continue
-			residual = self._residual(equation, values)
-			scale = self._scale(equation, values)
-			relative = abs(residual) / scale if scale > 0 else abs(residual)
-			if relative > equation.tolerance:
+			if failed:
 				violations.append(
 					Violation(
 						equation_id=equation.id,

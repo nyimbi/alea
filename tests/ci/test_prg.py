@@ -1332,6 +1332,84 @@ def test_a_settable_value_outside_its_range_is_refused(graph: ParameterGraph, de
 		assert graph.propagate(scoped).values["capacity_factor"] == on_bound
 
 
+def test_a_zero_denominator_is_reported_rather_than_raised(
+	graph: ParameterGraph, defaults: dict
+):
+	"""A declared-admissible zero in a denominator is a finding, not a traceback.
+
+	Twelve settable nodes admit 0 at the floor of their declared range and are
+	divided by somewhere downstream, so a scenario is allowed to set the exact
+	value the arithmetic cannot evaluate. The division is lowered to a negative
+	power, so Python raised ``ZeroDivisionError`` -- an ``ArithmeticError``, not
+	a ``ValueError`` and not a ``DslError``, so *no* handler in this package
+	caught it. `propagate` died with a raw traceback naming no equation, and
+	`consistency` -- whose contract is to return every equation that fails --
+	raised instead of returning.
+
+	`phs_duration` is the case: ``phs_energy_capex_usd_per_kwh = capex /
+	(duration * cycles)``, and duration 0 is admissible at its own floor. The
+	two entry points answer differently and both answers are correct:
+	`propagate` cannot compute a derived value and raises a `GraphError` naming
+	the equation, while `consistency` reports the two equations it cannot
+	evaluate.
+	"""
+	node = graph.node("phs_duration")
+	assert node.range == (0.0, 48.0), node.range
+	assert graph.is_settable("phs_duration")
+
+	scoped = dict(defaults)
+	scoped["phs_duration"] = 0.0
+	with pytest.raises(GraphError, match="phs_energy_capex_usd_per_kwh"):
+		graph.propagate(scoped)
+
+	# The consistent path: a set that already carries every derived value, so
+	# nothing has to be derived, and the check reports what it cannot evaluate.
+	values = dict(graph.propagate(defaults).values)
+	values["phs_duration"] = 0.0
+	violations = graph.consistency(values)
+	broken = {v.equation_id for v in violations if v.unevaluable}
+	assert broken == {
+		"phs_energy_capex_usd_per_kwh_definition",
+		"thermal_phs_duration_ratio_definition",
+	}, broken
+	for violation in violations:
+		if violation.unevaluable:
+			assert "division by zero" in violation.unevaluable
+			assert "cannot be evaluated" in str(violation)
+
+	# The register must not have moved for a set that never sets the zero: the
+	# fix is a wrap, and a wrap that swallowed a legitimate failure would show
+	# up here as an unevaluable violation at the defaults.
+	clean = graph.propagate(defaults)
+	assert not [
+		v for v in graph.consistency(clean.values) if v.unevaluable
+	], "the defaults have an equation with no value at its own defaults"
+
+
+def test_a_domain_fault_in_the_dsl_is_a_dsl_error():
+	"""`sqrt(-1)`, `log(0)` and overflow are the same class as division by zero.
+
+	All four are "this expression has no value at these parameters", and all
+	four used to escape as a bare `ValueError`, `OverflowError` or
+	`ZeroDivisionError` that no handler in this package catches -- so the
+	callers that do catch `DslError` were protected against one arithmetic
+	fault and not the rest.
+	"""
+	for source, values in (
+		("a / b", {"a": 1.0, "b": 0.0}),
+		("a / (b - 1.0)", {"a": 1.0, "b": 1.0}),
+		("sqrt(a)", {"a": -1.0}),
+		("log(a)", {"a": 0.0}),
+		("exp(a)", {"a": 1e9}),
+	):
+		with pytest.raises(DslError):
+			evaluate(parse(source), values)
+	# And the same expressions evaluate where they are defined, so the wrap is
+	# not a blanket refusal.
+	assert evaluate(parse("a / b"), {"a": 6.0, "b": 2.0}) == 3.0
+	assert evaluate(parse("sqrt(a)"), {"a": 4.0}) == 2.0
+
+
 def test_a_bool_retyped_from_a_placeholder_refuses_a_magnitude(graph: ParameterGraph, defaults: dict):
 	"""The 55 bools batch 50 retyped, tested on one of them.
 

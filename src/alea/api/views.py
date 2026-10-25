@@ -1572,6 +1572,12 @@ class ViolationOut(ApiModel):
 	strength: str
 	blocks: bool
 	detail: str
+	#: Why the equation has no value at these parameters, when it does not --
+	#: a division by zero or a domain fault rather than a large residual. Empty
+	#: for an ordinary failure, and carried beside ``detail`` because a client
+	#: rendering ``residual`` alone reads an unevaluable equation as one with a
+	#: very large error, which is a different finding with a different fix.
+	unevaluable: str = ""
 
 
 class ConsistencyReportOut(ApiModel):

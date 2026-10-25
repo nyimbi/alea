@@ -752,7 +752,33 @@ class Pow(Expr):
 				f"({base}) ** {exponent} is not real; a fractional power of a "
 				f"negative base has no real value"
 			)
-		return base**exponent
+		# Division is a negative power, so a zero denominator arrives here as
+		# `0 ** -1` and Python raises `ZeroDivisionError` -- an
+		# `ArithmeticError`, which none of this package's `except DslError` or
+		# `except ValueError` sites catch. A scenario setting a denominator to
+		# the floor of its own declared range therefore escaped `propagate` as
+		# a traceback rather than as the finding it is: the graph says the value
+		# is admissible and the arithmetic says the equation has no value there.
+		# Naming the base and the exponent turns that into a `DslError` the
+		# existing handlers already report.
+		if (
+			not isinstance(base, np.ndarray)
+			and not isinstance(exponent, np.ndarray)
+			and base == 0
+			and float(exponent) < 0
+		):
+			raise DslError(
+				f"0 ** {exponent} is a division by zero; the denominator "
+				f"evaluates to zero at these values, so the expression has no "
+				f"value here"
+			)
+		try:
+			return base**exponent
+		except OverflowError as exc:
+			raise DslError(
+				f"({base}) ** {exponent} overflows a float; the expression has "
+				f"no representable value at these values"
+			) from exc
 
 	def _latex(self, parent: int) -> str:
 		# The base is rendered one precedence tighter than a power, so a nested
@@ -876,7 +902,19 @@ class Func(Expr):
 					f"array rather than broadcasting"
 				)
 			return spec.vectorised(*evaluated)
-		return spec.impl(*evaluated)
+		try:
+			return spec.impl(*evaluated)
+		except (ValueError, OverflowError) as exc:
+			# `sqrt(-1)`, `log(0)` and `exp(1e9)` raise `ValueError` or
+			# `OverflowError` from `math`, neither of which is a `DslError` and
+			# so neither of which any caller in this package reports: they
+			# reached the top as a traceback. The domain fault is the same class
+			# as a division by zero -- the equation has no value at these
+			# parameters -- and belongs in the same error type.
+			raise DslError(
+				f"{self.name}({', '.join(repr(v) for v in evaluated)}) has no "
+				f"real value: {exc}"
+			) from exc
 
 	def _latex(self, parent: int) -> str:
 		if self.name == "exp":
