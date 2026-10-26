@@ -92,6 +92,16 @@ change a proposal.
    a real disagreement between the declared total and the build, not a reason
    for the omission; `docs/prg-status.md` records the full finding.
 
+   Follow-on (2026-10-26): the audit's `fleet_parameters` had the same shape one
+   layer down. It filled the three fleet *aggregates* from a solve and left the
+   eighteen per-technology build leaves at their reference defaults, so a
+   result building 8,000 MW of coal was audited against `coal_capacity` 3,000.
+   A `_CARRIER_BUILDS` table now fills the leaves from the same mix, resolved
+   through the registry's alias table. Filling them made `coal_new_build_bound`
+   (5,000 MW) and `gas_new_build_bound` (3,000 MW) live for the first time --
+   they read the leaves, which had never moved. Full record in
+   `docs/prg-status.md`.
+
 Every proposed right-hand side was run through the BRIEF's symbol check in one
 pass over the table as written: **26 checked, zero unresolved symbols**, once
 the six new left-hand-side ids are allowed for. The six new ids were also

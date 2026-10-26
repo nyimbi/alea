@@ -36,6 +36,7 @@ from alea.prg.graph import (
 	Violation,
 	load_graph,
 )
+from alea.registry.technologies import Carrier, CarrierClass, get_technology
 
 __all__ = [
 	"ScenarioAudit",
@@ -66,6 +67,63 @@ _FLEET_GROUPS: tuple[tuple[str, str], ...] = (
 	("storage", "storage_capacity_mw"),
 )
 
+#: The registry's carriers, mapped onto the graph's per-technology build nodes.
+#:
+#: WHY this exists, and why it is a separate table from ``_FLEET_GROUPS``. The
+#: three aggregates above were filled from a solve and the *leaves they
+#: aggregate* were not, so a solve that built 8,000 MW of coal and 2,000 of
+#: solar was audited against the reference build's 3,000 and 10,000. Every
+#: number the audit then reports -- generation, emissions, jobs, water, the
+#: regulatory asset base -- is a function of the leaves, so all of them
+#: described a fleet the solve did not choose. The aggregate was right and the
+#: members it claims to summarise were stale, which is the "declared is not
+#: produced" defect one level below the layer that was added to fix it.
+#:
+#: The mapping is by carrier, not by class, because a class aggregates several
+#: technologies into one node while these nodes are per-technology. ``ror`` maps
+#: to ``hydro_capacity`` because the graph carries one hydro build and the
+#: registry splits run-of-river from reservoir; that understates nothing, it
+#: records that the graph's hydro node is the union.
+#:
+#: Five carriers are absent, and each is absent for a reason rather than by
+#: omission. ``h2``, ``electrolysis``, ``heat pump`` and ``load shedding`` are
+#: the registry's coupling class -- they are not generation, and the graph's
+#: coupling nodes (``electrolyser_capacity``, ``hydrogen_fuel_cell_capacity``)
+#: are keyed by what they consume rather than by a carrier name, so a mapping
+#: here would be a guess. ``thermal storage`` is a ``MWh`` node in the graph
+#: (``thermal_storage_capacity``) and the network reports ``MW``, so writing the
+#: megawatts into it would put a power rating in an energy slot -- a unit error
+#: the loader's own dimensional check cannot see, because the value arrives as a
+#: plain float rather than through an equation.
+#:
+#: Keyed by ``Carrier``, not by the string. The engine emits upstream
+#: vocabulary -- ``"wind"``, ``"hard coal"``, ``"Natural Gas"`` -- and a table
+#: keyed on the canonical spelling drops every alias in silence. That is the
+#: defect this table exists to fix, one layer along: a fleet whose rows fail to
+#: map is a fleet whose capacity disappears while the total still looks
+#: plausible. ``get_technology`` already owns that mapping, so the mix is
+#: resolved through it and this table only has to name the canonical carrier.
+_CARRIER_BUILDS: tuple[tuple[Carrier, str], ...] = (
+	(Carrier.COAL, "coal_capacity"),
+	(Carrier.GAS, "gas_capacity"),
+	(Carrier.OIL, "oil_capacity"),
+	(Carrier.NUCLEAR, "nuclear_capacity"),
+	(Carrier.BIOMASS, "biomass_capacity"),
+	(Carrier.WASTE, "waste_to_energy_capacity"),
+	(Carrier.SOLAR, "solar_pv_capacity"),
+	(Carrier.SOLAR_CSP, "csp_capacity"),
+	(Carrier.ONWIND, "wind_onshore_capacity"),
+	(Carrier.OFFWIND, "wind_offshore_capacity"),
+	(Carrier.HYDRO, "hydro_capacity"),
+	(Carrier.ROR, "hydro_capacity"),
+	(Carrier.GEOTHERMAL, "geothermal_capacity"),
+	(Carrier.PHS, "phs_capacity"),
+	(Carrier.BATTERY, "battery_capacity"),
+	(Carrier.WAVE, "marine_wave_capacity"),
+	(Carrier.TIDAL, "marine_tidal_capacity"),
+	(Carrier.OTEC, "marine_otec_capacity"),
+)
+
 
 def fleet_parameters(
 	capacity_mix_mw: dict[str, float], graph: ParameterGraph
@@ -84,7 +142,7 @@ def fleet_parameters(
 	registry cannot classify is dropped from every group, which understates
 	the firm fleet rather than overstating the margin.
 	"""
-	from alea.registry.technologies import CarrierClass, get_technology, is_known_carrier
+	from alea.registry.technologies import is_known_carrier
 
 	assert graph is not None, "a fleet is read against a graph"
 	by_class: dict[CarrierClass, float] = {}
@@ -110,6 +168,44 @@ def fleet_parameters(
 		# the same "declared is not produced" defect one level down, and the
 		# harder one to see, because the number looks plausible.
 		out[node_name] = by_class.get(CarrierClass(klass_name), 0.0)
+
+	# The leaves the three aggregates summarise, from the same mix. Without
+	# this the aggregate says 8,000 MW of coal and the node the emissions,
+	# generation and employment identities actually read still says 3,000.
+	#
+	# A carrier absent from the mix is written as zero, not skipped: the solve
+	# built nothing of it, and leaving the node at its reference default would
+	# keep a build the solve did not choose. That is the same argument as the
+	# class loop above, and it is the one that matters most here, because the
+	# reference defaults are non-zero for coal, gas, oil, biomass, solar, wind
+	# and hydro.
+	#
+	# ``ror`` and ``hydro`` share a node, so the mix is *summed* per node rather
+	# than assigned per carrier. Assigning would let whichever carrier the dict
+	# iterated last overwrite the other, which is a bug that reads as a value.
+	#
+	# The mix is walked once, resolving each key to its canonical carrier
+	# through the registry, so ``"wind"`` and ``"onwind"`` reach the same node
+	# and a fleet reported in upstream vocabulary is not silently a fleet of
+	# nothing. A carrier absent from the mix writes zero: the solve built none
+	# of it, and leaving the reference default would keep a build the solve did
+	# not choose.
+	per_node: dict[str, float] = {node: 0.0 for _, node in _CARRIER_BUILDS}
+	by_carrier: dict[Carrier, float] = {}
+	for raw_carrier, megawatts in capacity_mix_mw.items():
+		if not is_known_carrier(raw_carrier):
+			continue
+		resolved = get_technology(raw_carrier).carrier
+		by_carrier[resolved] = by_carrier.get(resolved, 0.0) + float(megawatts)
+	for carrier, node_name in _CARRIER_BUILDS:
+		if node_name not in graph.nodes:
+			continue
+		per_node[node_name] = per_node.get(node_name, 0.0) + by_carrier.get(
+			carrier, 0.0
+		)
+	for node_name, megawatts in per_node.items():
+		if node_name in graph.nodes:
+			out[node_name] = megawatts
 	return out
 
 

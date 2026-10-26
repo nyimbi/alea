@@ -5166,6 +5166,69 @@ next reader inherits the question rather than the silence.
 one finding (`frequency_nadir_hz_out_of_range`). `prg_from_catalog.py --check`
 reports the file current.
 
+## The fleet aggregates were filled from the solve and their members were not (2026-10-26)
+
+`fleet_parameters` was written to fix "declared is not produced" on the three
+endogenous fleet nodes, and it reintroduced the defect one level down. It
+filled `thermal_capacity_mw`, `dispatchable_re_capacity_mw` and
+`storage_capacity_mw` from `capacity_mix_mw` and left the eighteen
+per-technology nodes those aggregates summarise at their reference defaults.
+
+*Measured, before the fix.* A solve building `{"coal": 8000, "solar": 2000,
+"onwind": 4000}` audited as `coal_capacity 3000` (its default),
+`solar_pv_capacity 10000` (also a default) and `wind_onshore_capacity 2000`.
+The aggregate said 8,000 MW of coal while the node that
+`coal_generation_definition`, `fleet_employment_intensity_definition`,
+`fuel_diversity_definition` and the emissions identities actually read still
+said 3,000. Every number the audit reports -- generation, emissions, jobs,
+water, the regulatory asset base -- is a function of those leaves, so all of
+them described the reference build while the result reported a different one.
+
+*The fix.* A `_CARRIER_BUILDS` table maps each registry carrier onto its graph
+node; `fleet_parameters` walks the mix once and writes each carrier's
+megawatts into its leaf, summing where two carriers share a node. A carrier
+the solve did not build writes zero rather than keeping its default -- the
+reference defaults are non-zero for coal, gas, oil, biomass, solar, wind and
+hydro, so a skipped write would audit a fleet the solve did not choose.
+
+*Four things the table had to get right, each found by a probe.*
+
+1. **Keyed by `Carrier`, not by string.** The engine emits upstream
+   vocabulary -- `"wind"`, `"hard coal"`, `"Natural Gas"` -- and `wind`
+   resolves to `onwind` through `_ALIASES`. A table keyed on the canonical
+   spelling dropped every alias in silence: a fleet whose rows fail to map is
+   a fleet whose capacity disappears while the total still looks plausible.
+   The mix is resolved through `get_technology`, so the table only names the
+   canonical carrier.
+2. **`ror` and `hydro` share `hydro_capacity`.** Assigning per carrier lets
+   whichever the dict iterated last overwrite the other; the two are summed.
+3. **Five carriers are absent on purpose.** `h2`, `electrolysis`, `heat pump`
+   and `load shedding` are the coupling class, and the graph's coupling nodes
+   are keyed by what they consume rather than by a carrier name.
+   `thermal storage` is a `MWh` node and the network reports `MW`, so writing
+   megawatts into it would be a unit error the loader cannot see, because the
+   value arrives as a plain float rather than through an equation.
+4. **Two policy bounds became live.** `coal_new_build_bound` (`coal_capacity
+   <= coal_new_build`, 5,000 MW) and `gas_new_build_bound` (3,000 MW) read the
+   leaves, which never left their 3,000 and 1,500 MW defaults, so neither
+   bound could fire no matter what a fixture built. The test fixture's
+   6,000 MW of coal and 4,000 of gas breached both -- a scenario no solve
+   would return, which the fixture had been free to be because nothing read
+   the build. The fixture was corrected to a feasible 14,000 MW mix that
+   stays under both caps and still spans all three fleet classes.
+
+*Coverage widened, which is the direction that matters.* `checked` went 197 to
+236 and `skipped` 333 to 294: thirty-nine equations that read a build leaf
+became reachable from the result instead of waiting on a default.
+
+*The regression pin.* `test_a_divergent_solve_moves_the_leaves_the_aggregates_summarise`
+is differential: two results differing only in the mix must move the leaves in
+both directions, and the carrier they share must not move. An absolute test
+against a literal agrees with a broken implementation whose default happens to
+match. Canaried by disabling the leaf write in `fleet_parameters` and
+re-running: both it and `test_the_fleet_nodes_are_filled_from_the_solve_not_from_their_defaults`
+fail with `KeyError: 'coal_capacity'`.
+
 ## Evaluation of the design docs against the code (2026-10-17)
 
 **`docs/how_prg_works.md` (read-only; a teaching narrative, not read as spec).**

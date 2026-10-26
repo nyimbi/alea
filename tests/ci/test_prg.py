@@ -3205,6 +3205,16 @@ def _solved(carbon_price: float = 50.0):
 	mix is 6,000 MW of firm capacity against an 8,500 MW peak at a 15% margin,
 	which is a scenario no solve would return -- and it passed this fixture
 	until the fleet was wired, precisely because nothing read the mix.
+
+	WHY the mix respects the policy caps. Filling the per-technology leaves as
+	well as the aggregates made ``coal_new_build_bound`` and
+	``gas_new_build_bound`` live for the first time: they read ``coal_capacity``
+	and ``gas_capacity``, which never left their 3,000 and 1,500 MW reference
+	defaults, so a bound at 5,000 and 3,000 could not fire no matter what the
+	fixture built. The fixture's 6,000 MW of coal and 4,000 of gas breached both
+	-- and a fixture that breaches a policy bound is not a solved result, since
+	the engine would not have returned it. The four carriers here are all under
+	their caps, span all three fleet classes, and still total 14,000 MW.
 	"""
 	import uuid
 
@@ -3218,7 +3228,20 @@ def _solved(carbon_price: float = 50.0):
 		code_version="test",
 		total_cost_usd=1.0e9,
 		total_emissions_tco2=25.0e6,
-		capacity_mix_mw={"coal": 6000.0, "gas": 4000.0, "wind": 4000.0},
+		capacity_mix_mw={
+			# Thermal, 7,300 MW: 4,500 of coal under the 5,000 cap and 2,800 of
+			# gas under the 3,000.
+			"coal": 4500.0,
+			"gas": 2800.0,
+			# Dispatchable renewable, 2,400 MW.
+			"hydro": 1500.0,
+			"geothermal": 900.0,
+			# Storage, 300 MW.
+			"battery": 300.0,
+			# VRE, 4,000 MW: in no fleet node, because VRE capacity is
+			# `vre_capacity_mw`, the capture-price loop's fixed point.
+			"wind": 4000.0,
+		},
 		generation_mwh={"coal": 30.0e6, "wind": 20.0e6},
 	)
 
@@ -3397,7 +3420,7 @@ def test_the_audit_reports_what_it_did_not_check():
 	# Batch 52 added `debt_fraction_definition`, whose `debt_equity_ratio` is
 	# not on the solve result either, so `skipped` moves 334 -> 335 for the
 	# same reason.
-	assert len(audit.checked) == 197, audit.checked
+	assert len(audit.checked) == 236, audit.checked
 	# Batch 53's reserve-requirement definition takes it 335 -> 336.
 	# Batch 54's temporal-resolution definition takes it 336 -> 337, for the
 	# same reason as the two before it: `tsam_segment_hours` is not on the
@@ -3405,7 +3428,15 @@ def test_the_audit_reports_what_it_did_not_check():
 	# computed set that grew. Batch 69 removed `buffer_pool_contribution`'s
 	# alias equation, so it leaves the computed set and 337 -> 336. Batch 70
 	# removed three more equations from the computed set: 336 -> 333.
-	assert len(audit.skipped) == 333, audit.skipped
+	#
+	# Filling the per-technology build leaves took it 333 -> 294. The eighteen
+	# nodes are supplied now, so every equation that reads one -- the
+	# generation, diversity, employment, land and build-bound identities --
+	# is reachable from the result instead of waiting on a default. That is
+	# thirty-nine equations moving from `skipped` to `checked`, which is the
+	# audit's coverage widening, and the direction is the point: the leaves
+	# were the inputs the fleet aggregates were silently standing in for.
+	assert len(audit.skipped) == 294, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -3669,12 +3700,26 @@ def test_the_audit_does_not_compare_the_graph_against_itself():
 	# about is *which* parameters the extraction takes, not the fleet's size.
 	assert supplied["total_capacity_mw"] == pytest.approx(14000.0)
 	# The optimiser's own decisions, read off the mix through the registry's
-	# carrier classes: coal and gas are thermal, and wind is neither thermal
-	# nor dispatchable renewable, so it lands in no fleet node -- VRE capacity
-	# is `vre_capacity_mw`, the capture-price loop's fixed point.
-	assert supplied["thermal_capacity_mw"] == pytest.approx(10000.0)
-	assert supplied["dispatchable_re_capacity_mw"] == pytest.approx(0.0)
-	assert supplied["storage_capacity_mw"] == pytest.approx(0.0)
+	# carrier classes: coal and gas are thermal, hydro and geothermal are
+	# dispatchable renewable, battery is storage, and wind is neither -- VRE
+	# capacity is `vre_capacity_mw`, the capture-price loop's fixed point.
+	assert supplied["thermal_capacity_mw"] == pytest.approx(7300.0)
+	assert supplied["dispatchable_re_capacity_mw"] == pytest.approx(2400.0)
+	assert supplied["storage_capacity_mw"] == pytest.approx(300.0)
+	# The leaves the aggregates summarise, from the same mix. Asserted here
+	# because supplying the aggregate and not the members is what made the
+	# aggregate a claim about a fleet no identity read.
+	assert supplied["coal_capacity"] == pytest.approx(4500.0)
+	assert supplied["gas_capacity"] == pytest.approx(2800.0)
+	assert supplied["hydro_capacity"] == pytest.approx(1500.0)
+	assert supplied["geothermal_capacity"] == pytest.approx(900.0)
+	assert supplied["battery_capacity"] == pytest.approx(300.0)
+	assert supplied["wind_onshore_capacity"] == pytest.approx(4000.0)
+	# The three aggregates are the sum of the leaves they name, so the audit
+	# cannot report a fleet whose total disagrees with its parts.
+	assert supplied["thermal_capacity_mw"] == pytest.approx(
+		supplied["coal_capacity"] + supplied["gas_capacity"]
+	)
 
 
 def test_the_fleet_nodes_are_filled_from_the_solve_not_from_their_defaults(
@@ -3714,15 +3759,116 @@ def test_the_fleet_nodes_are_filled_from_the_solve_not_from_their_defaults(
 	assert fleet["thermal_capacity_mw"] == pytest.approx(11000.0)
 	assert fleet["dispatchable_re_capacity_mw"] == pytest.approx(500.0)
 	assert fleet["storage_capacity_mw"] == pytest.approx(250.0)
+	# The leaves, which is what the three above are supposed to summarise. A
+	# table that filled only the aggregates left the node `solar_pv_generation_
+	# definition` and the emissions identities read at its 10,000 MW reference
+	# default while the aggregate claimed a different fleet.
+	assert fleet["coal_capacity"] == pytest.approx(9000.0)
+	assert fleet["gas_capacity"] == pytest.approx(2000.0)
+	assert fleet["hydro_capacity"] == pytest.approx(400.0)
+	assert fleet["geothermal_capacity"] == pytest.approx(100.0)
+	assert fleet["battery_capacity"] == pytest.approx(250.0)
+	assert fleet["wind_onshore_capacity"] == pytest.approx(3000.0)
+	# A carrier the solve did not build is written as zero, not left at its
+	# reference default: 10,000 MW of solar is the reference build, and a
+	# result that built none of it must not be audited against it.
+	assert fleet["solar_pv_capacity"] == 0.0
+	assert fleet["oil_capacity"] == 0.0
+	# `hydro` and `ror` share a node, so the two are summed rather than one
+	# overwriting the other -- a bug that would read as a plausible value.
+	assert fleet_parameters({"hydro": 100.0, "ror": 50.0}, graph)[
+		"hydro_capacity"
+	] == pytest.approx(150.0)
+	# The engine emits upstream vocabulary. A table keyed on the canonical
+	# spelling drops every alias in silence, which is the same "capacity
+	# disappears while the total looks plausible" defect one layer along.
+	assert fleet_parameters({"wind": 700.0}, graph)["wind_onshore_capacity"] == (
+		pytest.approx(700.0)
+	)
+	assert fleet_parameters({"hard coal": 60.0, "Natural Gas": 40.0}, graph)[
+		"coal_capacity"
+	] == pytest.approx(60.0)
 	# Wind is VRE, which is `vre_capacity_mw` -- the loop's fixed point -- so it
-	# is in no fleet node. Asserted rather than left implicit: a mapping that
+	# is in no *aggregate*. Asserted rather than left implicit: a mapping that
 	# swept every known carrier into one group would double-count the fleet.
-	assert sum(fleet.values()) == pytest.approx(11750.0)
+	aggregates = (
+		fleet["thermal_capacity_mw"]
+		+ fleet["dispatchable_re_capacity_mw"]
+		+ fleet["storage_capacity_mw"]
+	)
+	assert aggregates == pytest.approx(11750.0)
 
 	# An empty mix is a result that did not record a fleet, not a fleet of
 	# zero. Returning zeros would overwrite whatever the caller supplied with a
 	# claim about a network the result says nothing about.
 	assert fleet_parameters({}, graph) == {}
+
+
+def test_a_divergent_solve_moves_the_leaves_the_aggregates_summarise(
+	graph: ParameterGraph,
+):
+	"""The differential form, and the one that would have caught the defect.
+
+	WHY a differential test and not another absolute one. The leaves and the
+	aggregates were both filled from the same mix, so a test that asserts both
+	against a literal agrees with a broken implementation that fills one from
+	the mix and leaves the other at a default that happens to match. The claim
+	here is about *movement*: two results that differ only in the mix must
+	produce fleet parameters that differ in the leaves, and the aggregate must
+	stay the sum of its own members.
+
+	The defect this pins, measured before the fix: a solve building
+	``{"coal": 8000, "solar": 2000, "onwind": 4000}`` audited as
+	``coal_capacity 3000`` (its reference default), ``solar_pv_capacity
+	10000`` (also a default) and ``wind_onshore_capacity 2000``. Every
+	downstream number -- generation, emissions, jobs, water, the regulatory
+	asset base -- is a function of those leaves, so all of them described the
+	reference build while the result reported a different one.
+	"""
+	import uuid
+
+	from alea.prg.audit import parameters_from_result
+	from alea.whatif.params import ScenarioParameters
+	from alea.whatif.views import ScenarioResult
+
+	def supplied(mix: dict[str, float]) -> dict[str, float]:
+		result = ScenarioResult(
+			scenario_id=str(uuid.uuid4()),
+			params=ScenarioParameters(carbon_price_usd_per_tco2=50.0),
+			network_checksum="sha256:" + "c" * 64,
+			code_version="test",
+			total_cost_usd=1.0e9,
+			total_emissions_tco2=25.0e6,
+			capacity_mix_mw=mix,
+			generation_mwh={"coal": 30.0e6, "wind": 20.0e6},
+		)
+		return parameters_from_result(result, graph)
+
+	coal_heavy = supplied({"coal": 8000.0, "solar": 2000.0, "onwind": 4000.0})
+	solar_heavy = supplied({"coal": 1000.0, "solar": 9000.0, "onwind": 4000.0})
+
+	# The leaves move with the mix, in both directions, and neither sits on a
+	# default: the reference build is 3,000 MW of coal and 10,000 of solar, so
+	# an implementation reading a default would return those two numbers for
+	# both scenarios and pass an equality assertion written against either.
+	assert coal_heavy["coal_capacity"] == pytest.approx(8000.0)
+	assert solar_heavy["coal_capacity"] == pytest.approx(1000.0)
+	assert coal_heavy["solar_pv_capacity"] == pytest.approx(2000.0)
+	assert solar_heavy["solar_pv_capacity"] == pytest.approx(9000.0)
+	assert coal_heavy["coal_capacity"] > solar_heavy["coal_capacity"]
+	assert coal_heavy["solar_pv_capacity"] < solar_heavy["solar_pv_capacity"]
+	# The carrier the two scenarios share does not move. Asserted so a test
+	# that moved every leaf would not pass by accident.
+	assert coal_heavy["wind_onshore_capacity"] == solar_heavy[
+		"wind_onshore_capacity"
+	] == pytest.approx(4000.0)
+	# The aggregate is the sum of the members in the same dict, both times, so
+	# an audit cannot report a fleet whose total contradicts its parts.
+	for fleet in (coal_heavy, solar_heavy):
+		assert fleet["thermal_capacity_mw"] == pytest.approx(
+			fleet["coal_capacity"] + fleet["gas_capacity"]
+		)
+		assert fleet["total_capacity_mw"] == pytest.approx(14000.0)
 
 
 def test_the_audit_checks_the_fleet_the_solve_reported(
