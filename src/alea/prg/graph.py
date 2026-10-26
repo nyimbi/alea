@@ -727,12 +727,12 @@ class ParameterGraph:
 		and ``_NON_SCALAR_TYPES`` refuses a numeric default on one -- so all 41
 		are here and none can leave. A *tombstone* must not be wired into an
 		equation, since the point of retiring an id is that nothing computes
-		from it. On the shipped graph that is 41 + 6 = 47 of 235.
+		from it. On the shipped graph that is 41 + 16 = 57 of 244.
 
 		So "drive ``uncoupled()`` to zero" is not a reachable goal and a batch
 		that states it as one will report failure forever. The reachable target
-		is the numeric, live remainder -- 119 on the shipped graph -- and this
-		paragraph exists because the count alone does not say which 47 are
+		is the numeric, live remainder -- 187 on the shipped graph -- and this
+		paragraph exists because the count alone does not say which 57 are
 		permanent. No figure here is load-bearing: they are the shipped graph's
 		values and the classes are the claim.
 		"""
