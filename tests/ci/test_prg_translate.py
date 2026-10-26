@@ -295,9 +295,13 @@ the current membership is the `deprecated_uncoupled` set in
 	# is not settable, so 871 -> 870. Batch 59's `remittance_dependency`
 	# tombstone is the same: 870 -> 869. Batch 61's
 	# `local_content_requirements` tombstone likewise: 869 -> 868. Batch 62's
-	# `energy_burden_limit` tombstone is the same again: 868 -> 867.
+	# `energy_burden_limit` tombstone is the same again: 868 -> 867. Batch 70
+	# deprecated three more -- the attainment ratios
+	# `employment_attainment_local`, `employment_attainment_women` and
+	# `employment_attainment_youth` -- because each divided one policy dial by
+	# another and the quotient was not a quantity. Three tombstones, 867 -> 864.
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 867, cov
+	assert cov["total"] == 864, cov
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -398,9 +402,10 @@ the only difference between the two sets.
 	# `opex_fixed_wind` tombstone is not settable either: 868 -> 867. Batch 59's
 	# `remittance_dependency` tombstone is the same: 867 -> 866. Batch 61's
 	# `local_content_requirements` tombstone is the same: 866 -> 865. Batch 62's
-	# `energy_burden_limit` tombstone is the same: 865 -> 864.
+	# `energy_burden_limit` tombstone is the same: 865 -> 864. Batch 70's three
+	# attainment-ratio tombstones are the same: 864 -> 861.
 	missing = untranslated(graph)
-	assert len(missing) == 864, missing
+	assert len(missing) == 861, missing
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact
