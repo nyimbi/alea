@@ -4725,7 +4725,15 @@ def test_the_uncertainty_register_reads_the_declarations(graph: ParameterGraph):
 	# `scenario_visibility`, `fuel_price_scenario`) and leave the input
 	# register with the retype. The derived side is untouched: none of the 88
 	# is read by an equation, so nothing entered or left the closure.
-	assert len(reg.inputs) == 71, reg.inputs
+	# Batch 74 moves the input side 71 -> 72 and leaves the derived count at
+	# 48. `peak_demand_multiplier` shipped `fixed` and is now `stochastic`: it
+	# is a scenario dial, and the band this batch gives it is a distribution
+	# over demand years rather than a measured value. The derived side is
+	# untouched because none of the four repointed adequacy equations is
+	# stochastic by its own relation -- they are ratios and products of
+	# physical quantities, and an uncertain input upstream does not make a
+	# physical identity uncertain.
+	assert len(reg.inputs) == 72, reg.inputs
 	assert len(reg.derived_stochastic) == 48, reg.derived_stochastic
 	assert len(reg.stochastic_edges) == 1, reg.stochastic_edges
 	# 122 nodes are declared stochastic in total: 74 settable, 48 derived.
@@ -4747,7 +4755,9 @@ def test_the_uncertainty_register_reads_the_declarations(graph: ParameterGraph):
 	# the density and share bases they read, while the four demand
 	# products that also entered the computed set read fixed process
 	# parameters and stay deterministic. 39 to 42.
-	assert len(reg.inputs) + len(reg.derived_stochastic) == 119
+	# Batch 74 takes the total to 120: the input side gains
+	# `peak_demand_multiplier` and the derived side is unchanged.
+	assert len(reg.inputs) + len(reg.derived_stochastic) == 120
 	# The declarations sum is taken over *live* nodes, and the deprecated ones
 	# are named rather than filtered silently. This assertion is what catches
 	# the register losing a declaration, so it must count the same object the
@@ -4994,8 +5004,15 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	# reachability and determinism.
 	# Anchored to the tokens the sentence puts them in, not substrings: `"71" in
 	# text` would also pass on 171, 471 or a date.
-	assert re.search(r"\b71 uncertain input", text), text
-	assert re.search(r"reach \b199 derived", text), text
+	# Batch 74 moves it 71 -> 72 and 199 -> 202. The input is
+	# `peak_demand_multiplier`, retyped from `fixed` to `stochastic` because it
+	# is a scenario dial. The three arrivals are the adequacy quantities the
+	# repoint puts downstream of it -- `reserve_margin_required_mw`,
+	# `reserve_margin_actual` and `spare_capacity` -- each of which was reading
+	# the forecast peak and now reads the scenario peak. Measured as a set
+	# difference against the pre-batch document.
+	assert re.search(r"\b72 uncertain input", text), text
+	assert re.search(r"reach \b202 derived", text), text
 
 
 # ---------------------------------------------------------------------------
@@ -6389,7 +6406,11 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# (Jafari, Korpas & Botterud 2019 for solar and wind; Gotske & Victoria
 	# 2021 for hydro), so the register moved by three for a batch that adds no
 	# equation -- the same shape as batch 72's third citation.
-	assert len(declared) == 310, f"the citation register moved: {sorted(declared)}"
+	# Batch 74 moves it 310 -> 311, one citation added to an existing
+	# equation: `peak_demand_shifted_definition` is the equation the sourced
+	# peak-demand band belongs to, and it shipped uncited while carrying a
+	# worked example at a default this batch moves.
+	assert len(declared) == 311, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (

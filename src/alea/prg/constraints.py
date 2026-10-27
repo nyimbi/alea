@@ -180,6 +180,28 @@ SOURCES: tuple[NetworkSource, ...] = (
 		),
 	),
 	NetworkSource(
+		symbol="peak_demand_shifted_mw",
+		kind="peak_demand_shifted",
+		note=(
+			"The same coincident peak scaled by ``1 + peak_demand_multiplier``, "
+			"the scenario dial, which is read here exactly as ``_credit`` reads "
+			"``vre_capacity_credit``: settable, so from the parameter set when "
+			"a caller supplies one and from its shipped default otherwise, and "
+			"recorded as assumed either way. Without this source the adequacy "
+			"margin's peak term would be a derived symbol the network has no "
+			"column for, the route would classify unbound, and the margin "
+			"would stop constraining the build -- the whole point of a "
+			"scenario demand year is that the fleet is sized against it. The "
+			"arithmetic is the graph's ``peak_demand_shifted_definition`` "
+			"restated: the same product, written once where a reviewer of the "
+			"physics can read it and once in the equation library. Nothing "
+			"asserts the two equal today -- the same gap the "
+			"``vre_capacity_credit`` reader has carried since batch 43 -- so a "
+			"solve that read one and reported the other would disagree "
+			"silently."
+		),
+	),
+	NetworkSource(
 		symbol="emissions_mtco2_per_year",
 		kind="annual_emissions",
 		note=(
@@ -516,6 +538,29 @@ def _peak_demand(network: Any) -> float:
 	return 0.0
 
 
+def _peak_demand_shifted(ctx: _Context) -> float:
+	"""The scenario peak: the network's coincident peak times ``1 + m``.
+
+	``peak_demand_multiplier`` is additive, so its neutral is 0.0 and the
+	product is the peak unchanged. Read from the parameter set when a caller
+	supplies one, from the node's default otherwise, and recorded as assumed
+	in both cases -- a margin computed at a default scenario is a weaker claim
+	than one computed at a scenario the caller chose, and the register is
+	where a reader sees which.
+	"""
+	node = ctx.graph.nodes.get("peak_demand_multiplier")
+	value = ctx.params.get("peak_demand_multiplier")
+	if value is None and node is not None:
+		value = node.default
+	if value is None or isinstance(value, str):
+		ctx.unresolved.add("peak_demand_multiplier")
+		multiplier = 0.0
+	else:
+		ctx.assumed.add("peak_demand_multiplier")
+		multiplier = float(value)
+	return _peak_demand(ctx.network) * (1.0 + multiplier)
+
+
 def _annual_emissions(network: Any, model: Any) -> Any:
 	"""Dispatch times intensity, summed over the horizon and annualised to Mt/yr.
 
@@ -564,6 +609,7 @@ _READERS = {
 		_credit(ctx),
 	),
 	"peak_demand": lambda ctx, _src: _peak_demand(ctx.network),
+	"peak_demand_shifted": lambda ctx, _src: _peak_demand_shifted(ctx),
 	"annual_emissions": lambda ctx, _src: _annual_emissions(ctx.network, ctx.model),
 }
 

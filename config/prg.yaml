@@ -23106,21 +23106,38 @@ parameters:
     - Researchers
   peak_demand_multiplier:
     name: Peak demand multiplier
-    description: Scaling factor for peak demand
+    description: 'Scaling factor for peak demand, as a share of the forecast peak. Entered as `(1 + m)`,
+      so its neutral value is 0.0 -- a multiplier''s neutral is whatever makes its own equation the identity,
+      and this one is additive, not multiplicative. The shipped 0.5 therefore asserted a +50% peak scenario
+      that no scenario chose and no equation read. The band is two-directional because both directions
+      are real states: demand response and efficiency lower the peak, electrification and heat raise it.
+      Maheshwari, Murari & Jayaraman (2019) measure the residential response in Pune -- a sub-tropical
+      humid developing-grid setting, which is this graph''s -- at 1.5-2% change in average electricity
+      demand per 1 degC of apparent temperature. That is an *average* demand elasticity, not a peak one;
+      the paper''s peak statement is qualitative (peak demand is ''significantly influenced'' under a
+      non-stationary GEV). The band applies it across the warming range this graph already carries, `temperature_increase`
+      over [0, 6] degC: -0.15 is a demand-response and efficiency case, +0.30 is the upper bound of 2%/degC
+      across that warming range, so the upside is the sourced figure and the downside is the programme
+      the graph''s own `interruptible_load_share` already describes.'
     category: Demand
+    subcategory: null
     type: float
     unit: '1'
     range:
-    - 0.0
-    - 1.0
-    default: 0.5
+    - -0.15
+    - 0.3
+    default: 0.0
+    initial: null
     role: exogenous
-    determinism: fixed
-    priority: P1
-    status: existing
+    determinism: stochastic
+    categories: []
+    source: The peak-demand scenario coupling (batch 74)
+    source_url: null
     users:
     - Utilities
-    source: docs/params.md
+    priority: P1
+    status: existing
+    deprecated_by: null
   peak_demand_mw:
     categories: []
     category: Demand
@@ -44122,29 +44139,32 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   peak_demand_shifted_definition:
-    description: 'Peak demand under a scaling factor: one plus the multiplier, times the base peak. 1.5
-      x 8,500 MW is 12,750 MW. The `(1 + m)` form is the only one whose zero is a no-op; a bare product
-      at the shipped 0.5 would halve peak demand, which is a derating and not the scaling factor the node''s
-      name asserts.'
-    determined_variables:
-    - peak_demand_shifted_mw
-    free_variables: []
-    latex: \mathrm{peak}_{demand\_shifted\_mw} = \left(1 + \mathrm{peak}_{demand\_multiplier}\right) \mathrm{peak}_{demand\_mw}
-    lhs: peak_demand_shifted_mw
-    linearity: linear
     name: Peak demand under a scaling factor
+    description: 'Peak demand under a scenario scaling factor: one plus the multiplier, times the forecast
+      peak. At the neutral 0.0 the two peaks are equal, which is the point of the `(1 + m)` form -- its
+      zero is the no-op. A -0.15 demand-response year gives 0.85 x 8,500 MW is 7,225 MW; a +0.30 electrification
+      year gives 1.30 x 8,500 MW is 11,050 MW. The multiplier is additive because the scenario is a change
+      to the forecast, not a rescaling of it.'
+    system: demand_supply
+    lhs: peak_demand_shifted_mw
+    rhs: (1 + peak_demand_multiplier) * peak_demand_mw
+    relation: eq
     parameters:
     - peak_demand_shifted_mw
     - peak_demand_multiplier
     - peak_demand_mw
-    priority: P1
-    reference: null
-    relation: eq
-    rhs: (1 + peak_demand_multiplier) * peak_demand_mw
-    solution_method: direct
-    system: demand_supply
+    free_variables: []
+    determined_variables:
+    - peak_demand_shifted_mw
     tolerance: 1.0e-09
     unit_check: true
+    reference: 'Maheshwari, Murari & Jayaraman (2019), Peak Electricity Demand and Global Warming in the
+      Industrial and Residential areas of Pune: An Extreme Value Approach (arXiv:1908.08570) -- 1.5-2%
+      change in average residential demand per 1 degC'
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{peak}_{demand\_shifted\_mw} = \left(1 + \mathrm{peak}_{demand\_multiplier}\right) \mathrm{peak}_{demand\_mw}
   pension_coverage_definition:
     description: 'Jobs covered by a pension: the coverage share times the direct workforce. Coverage,
       not adequacy -- the graph carries no benefit-level quantity, and a share is what a labour-standard
@@ -45605,7 +45625,6 @@ equations:
     tolerance: 1.0e-06
     unit_check: true
   reserve_margin_actual_definition:
-    id: reserve_margin_actual_definition
     name: Actual reserve margin
     description: 'The reserve margin the built fleet delivers: firm capacity plus the firm contribution
       from VRE, less peak demand, over peak demand. The shipped body re-spelled the VRE term as `vre_capacity_mw
@@ -45613,51 +45632,58 @@ equations:
       they were the same quantity computed twice, which is why the node reported a margin that met its
       own requirement on every scenario: the comparison was between two copies of one number. Both sides
       now read `vre_firm_capacity_mw`, the capacity credit, and the comparison is between the standard
-      and the fleet.'
+      and the fleet. Sized against the *scenario* peak, not the forecast one: `peak_demand_shifted_mw`
+      is `peak_demand_mw` under the scenario multiplier, so a year that changes demand changes the reserve
+      this asks for. At the neutral multiplier the two peaks are equal and this equation computes what
+      it always did.'
     system: reserve_margin
     lhs: reserve_margin_actual
-    rhs: (firm_capacity_mw + vre_firm_capacity_mw - peak_demand_mw) / peak_demand_mw
+    rhs: (firm_capacity_mw + vre_firm_capacity_mw - peak_demand_shifted_mw) / peak_demand_shifted_mw
     relation: eq
     parameters:
-    - reserve_margin_actual
     - firm_capacity_mw
-    - peak_demand_mw
+    - peak_demand_shifted_mw
+    - reserve_margin_actual
     - vre_firm_capacity_mw
     free_variables: []
     determined_variables:
     - reserve_margin_actual
     tolerance: 1.0e-09
     unit_check: true
-    priority: P1
-    solution_method: direct
-    linearity: nonlinear
     reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
       IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt);
       US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (sources/archive/eia_lcoe_methodology.txt),
-      capacity credit at 1 for dispatchable units and derated for intermittent renewables'
+      capacity credit at 1 for dispatchable units and derated for intermittent renewables; the scenario
+      peak from `peak_demand_shifted_definition`'
+    priority: P1
+    solution_method: direct
+    linearity: nonlinear
     latex: \mathrm{reserve}_{margin\_actual} = \frac{\mathrm{firm}_{capacity\_mw} + \mathrm{vre}_{firm\_capacity\_mw}
-      - \mathrm{peak}_{demand\_mw}}{\mathrm{peak}_{demand\_mw}}
+      - \mathrm{peak}_{demand\_shifted\_mw}}{\mathrm{peak}_{demand\_shifted\_mw}}
   reserve_margin_required_mw_definition:
-    description: 'The planning margin''s face value in MW: the margin share times peak demand.'
+    name: The reserve margin's MW face value
+    description: 'The planning margin''s face value in MW: the margin share times peak demand. Sized against
+      the *scenario* peak, not the forecast one: `peak_demand_shifted_mw` is `peak_demand_mw` under the
+      scenario multiplier, so a year that changes demand changes the reserve this asks for. At the neutral
+      multiplier the two peaks are equal and this equation computes what it always did.'
+    system: reserve_margin
+    lhs: reserve_margin_required_mw
+    rhs: reserve_margin_requirement * peak_demand_shifted_mw
+    relation: eq
+    parameters:
+    - peak_demand_shifted_mw
+    - reserve_margin_required_mw
+    - reserve_margin_requirement
+    free_variables: []
     determined_variables:
     - reserve_margin_required_mw
-    free_variables: []
-    latex: \mathrm{reserve}_{margin\_required\_mw} = \mathrm{reserve}_{margin\_requirement} \mathrm{peak}_{demand\_mw}
-    lhs: reserve_margin_required_mw
-    linearity: linear
-    name: The reserve margin's MW face value
-    parameters:
-    - reserve_margin_required_mw
-    - peak_demand_mw
-    - reserve_margin_requirement
-    priority: P1
-    reference: Stoft 2002, Power System Economics, ch. 5
-    relation: eq
-    rhs: reserve_margin_requirement * peak_demand_mw
-    solution_method: direct
-    system: reserve_margin
     tolerance: 1.0e-09
     unit_check: true
+    reference: Stoft 2002, Power System Economics, ch. 5; the scenario peak from `peak_demand_shifted_definition`
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{reserve}_{margin\_required\_mw} = \mathrm{reserve}_{margin\_requirement} \mathrm{peak}_{demand\_shifted\_mw}
   reserve_margin_requirement_definition:
     id: reserve_margin_requirement_definition
     name: Reserve margin requirement
@@ -45686,39 +45712,41 @@ equations:
     unit_check: true
     latex: \mathrm{reserve}_{margin\_requirement} = \mathrm{reserve}_{margin\_min}
   reserve_margin_with_firm_vre:
-    id: reserve_margin_with_firm_vre
     name: Reserve margin with firm VRE
-    description: Firm capacity plus the renewable fleet's firm contribution must cover peak demand with
+    description: 'Firm capacity plus the renewable fleet''s firm contribution must cover peak demand with
       the required margin. The shipped body wrote the renewable term as `vre_capacity_mw * capacity_factor`,
-      which is the fleet's *annual energy* ratio and not its peak contribution -- the two differ, always
+      which is the fleet''s *annual energy* ratio and not its peak contribution -- the two differ, always
       in the same direction, and using the first overstates the margin. It also made this equation byte-identical
       to `reserve_margin`, so the graph carried two constraints where one was intended and the one named
       for the firm-VRE term was the copy. Reading `vre_firm_capacity_mw` is what the name says and what
-      that node's own description claims the constraint already does.
+      that node''s own description claims the constraint already does. Sized against the *scenario* peak,
+      not the forecast one: `peak_demand_shifted_mw` is `peak_demand_mw` under the scenario multiplier,
+      so a year that changes demand changes the reserve this asks for. At the neutral multiplier the two
+      peaks are equal and this equation computes what it always did.'
     system: reserve_margin
     lhs: firm_capacity_mw + vre_firm_capacity_mw
-    rhs: peak_demand_mw * (1 + reserve_margin_min)
+    rhs: peak_demand_shifted_mw * (1 + reserve_margin_min)
     relation: geq
     parameters:
     - firm_capacity_mw
-    - vre_firm_capacity_mw
-    - peak_demand_mw
+    - peak_demand_shifted_mw
     - reserve_margin_min
+    - vre_firm_capacity_mw
     free_variables: []
     determined_variables: []
     tolerance: 1.0e-06
     unit_check: true
-    priority: P1
-    solution_method: numeric
-    linearity: linear
     reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
       IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt:
       "Capacity credit reflects the portion of installed capacity that can be reliably expected to be
       available during times of peak demand"); cf. US EIA, Levelized Cost and Levelized Avoided Cost of
       New Generation Resources (sources/archive/eia_lcoe_methodology.txt), which derates intermittent
       renewables'' capacity credit "as a function of the availability of the resource during peak load
-      periods" and puts wind at 15% in its worked example'
-    latex: \mathrm{firm}_{capacity\_mw} + \mathrm{vre}_{firm\_capacity\_mw} \geq \mathrm{peak}_{demand\_mw}
+      periods" and puts wind at 15% in its worked example; the scenario peak from `peak_demand_shifted_definition`'
+    priority: P1
+    solution_method: numeric
+    linearity: linear
+    latex: \mathrm{firm}_{capacity\_mw} + \mathrm{vre}_{firm\_capacity\_mw} \geq \mathrm{peak}_{demand\_shifted\_mw}
       \left(1 + \mathrm{reserve}_{margin\_min}\right)
   resettlement_cost_total_definition:
     description: 'The total cost of resettlement, from the population share, the exposed population and
@@ -46843,28 +46871,31 @@ equations:
       + \mathrm{gas}_{fuel\_energy\_gj} \mathrm{sox}_{factor\_gas\_g\_per\_gj} + \mathrm{oil}_{fuel\_energy\_gj}
       \mathrm{sox}_{factor\_oil\_g\_per\_gj}}{\mathrm{g}_{per\_kt}}
   spare_capacity_definition:
+    name: The spare capacity
     description: 'Installed capacity less peak demand: the headroom the fleet carries. The catalog names
       this node''s formula as a bare symbol, which is the absence of a formula; the headroom is the only
-      reading of the name that the graph''s own capacity and demand nodes can support.'
+      reading of the name that the graph''s own capacity and demand nodes can support. Sized against the
+      *scenario* peak, not the forecast one: `peak_demand_shifted_mw` is `peak_demand_mw` under the scenario
+      multiplier, so a year that changes demand changes the reserve this asks for. At the neutral multiplier
+      the two peaks are equal and this equation computes what it always did.'
+    system: reserve_margin
+    lhs: spare_capacity
+    rhs: total_capacity_mw - peak_demand_shifted_mw
+    relation: eq
+    parameters:
+    - peak_demand_shifted_mw
+    - spare_capacity
+    - total_capacity_mw
+    free_variables: []
     determined_variables:
     - spare_capacity
-    free_variables: []
-    latex: \mathrm{spare}_{capacity} = \mathrm{total}_{capacity\_mw} - \mathrm{peak}_{demand\_mw}
-    lhs: spare_capacity
-    linearity: linear
-    name: The spare capacity
-    parameters:
-    - spare_capacity
-    - peak_demand_mw
-    - total_capacity_mw
-    priority: P1
-    reference: Standard N-1 planning criterion; cf. ENTSO-E adequacy studies
-    relation: eq
-    rhs: total_capacity_mw - peak_demand_mw
-    solution_method: direct
-    system: reserve_margin
     tolerance: 1.0e-09
     unit_check: true
+    reference: Standard N-1 planning criterion; cf. ENTSO-E adequacy studies; the scenario peak from `peak_demand_shifted_definition`
+    priority: P1
+    solution_method: direct
+    linearity: linear
+    latex: \mathrm{spare}_{capacity} = \mathrm{total}_{capacity\_mw} - \mathrm{peak}_{demand\_shifted\_mw}
   spare_parts_carrying_cost_definition:
     description: 'The annual carrying cost of the spares inventory: its value times the discount rate,
       25.1 USD million/year at defaults. The rate is the graph''s own WACC because capital held in a warehouse
@@ -50246,7 +50277,7 @@ relationships:
   relationship: constraint
   source: firm_capacity_mw
   strength: hard
-  target: peak_demand_mw
+  target: peak_demand_shifted_mw
 - description: The margin is the margin.
   direction: forward
   equation_id: reserve_margin_with_firm_vre
@@ -50255,7 +50286,7 @@ relationships:
   relationship: constraint
   source: reserve_margin_min
   strength: hard
-  target: peak_demand_mw
+  target: peak_demand_shifted_mw
 - description: Revenue scales with generation.
   direction: forward
   equation_id: benefit_sharing_from_revenue_definition
@@ -53487,15 +53518,6 @@ relationships:
   priority: P1
   reference: null
   relationship: functional
-  source: peak_demand_mw
-  strength: hard
-  target: reserve_margin_required_mw
-- description: Enters the product.
-  direction: forward
-  equation_id: reserve_margin_required_mw_definition
-  priority: P1
-  reference: null
-  relationship: functional
   source: reserve_margin_requirement
   strength: hard
   target: reserve_margin_required_mw
@@ -54774,15 +54796,6 @@ relationships:
   source: voltage_support_share
   strength: hard
   target: voltage_support_requirement
-- description: Determines the reserve or its alias.
-  direction: forward
-  equation_id: spare_capacity_definition
-  priority: P1
-  reference: Standard N-1 planning criterion; cf. ENTSO-E adequacy studies
-  relationship: functional
-  source: peak_demand_mw
-  strength: hard
-  target: spare_capacity
 - description: Determines the reserve or its alias.
   direction: forward
   equation_id: spare_capacity_definition
@@ -58805,21 +58818,6 @@ relationships:
     credit "as a function of the availability of the resource during peak load periods" and puts wind
     at 15% in its worked example'
   priority: P1
-- source: peak_demand_mw
-  target: firm_capacity_mw
-  equation_id: reserve_margin_with_firm_vre
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: Enters the corrected body.
-  reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
-    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt:
-    "Capacity credit reflects the portion of installed capacity that can be reliably expected to be available
-    during times of peak demand"); cf. US EIA, Levelized Cost and Levelized Avoided Cost of New Generation
-    Resources (sources/archive/eia_lcoe_methodology.txt), which derates intermittent renewables'' capacity
-    credit "as a function of the availability of the resource during peak load periods" and puts wind
-    at 15% in its worked example'
-  priority: P1
 - source: reserve_margin_min
   target: firm_capacity_mw
   equation_id: reserve_margin_with_firm_vre
@@ -58860,18 +58858,6 @@ relationships:
     capacity credit at 1 for dispatchable units and derated for intermittent renewables'
   priority: P1
 - source: firm_capacity_mw
-  target: reserve_margin_actual
-  equation_id: reserve_margin_actual_definition
-  relationship: functional
-  direction: forward
-  strength: hard
-  description: Enters the corrected body.
-  reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
-    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt);
-    US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (sources/archive/eia_lcoe_methodology.txt),
-    capacity credit at 1 for dispatchable units and derated for intermittent renewables'
-  priority: P1
-- source: peak_demand_mw
   target: reserve_margin_actual
   equation_id: reserve_margin_actual_definition
   relationship: functional
@@ -61920,6 +61906,56 @@ relationships:
   source: hydro_effective_capacity_factor
   strength: hard
   target: hydro_generation_twh
+- source: peak_demand_shifted_mw
+  target: firm_capacity_mw
+  equation_id: reserve_margin_with_firm_vre
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters firm_capacity_mw: `reserve_margin_with_firm_vre` now sizes against the scenario
+    peak rather than the forecast one.'
+  reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
+    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt:
+    "Capacity credit reflects the portion of installed capacity that can be reliably expected to be available
+    during times of peak demand"); cf. US EIA, Levelized Cost and Levelized Avoided Cost of New Generation
+    Resources (sources/archive/eia_lcoe_methodology.txt), which derates intermittent renewables'' capacity
+    credit "as a function of the availability of the resource during peak load periods" and puts wind
+    at 15% in its worked example; the scenario peak from `peak_demand_shifted_definition`'
+  priority: P1
+- source: peak_demand_shifted_mw
+  target: reserve_margin_required_mw
+  equation_id: reserve_margin_required_mw_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters reserve_margin_required_mw: `reserve_margin_required_mw_definition` now sizes against
+    the scenario peak rather than the forecast one.'
+  reference: Stoft 2002, Power System Economics, ch. 5; the scenario peak from `peak_demand_shifted_definition`
+  priority: P1
+- source: peak_demand_shifted_mw
+  target: reserve_margin_actual
+  equation_id: reserve_margin_actual_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters reserve_margin_actual: `reserve_margin_actual_definition` now sizes against the
+    scenario peak rather than the forecast one.'
+  reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
+    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt);
+    US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (sources/archive/eia_lcoe_methodology.txt),
+    capacity credit at 1 for dispatchable units and derated for intermittent renewables; the scenario
+    peak from `peak_demand_shifted_definition`'
+  priority: P1
+- source: peak_demand_shifted_mw
+  target: spare_capacity
+  equation_id: spare_capacity_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: 'Enters spare_capacity: `spare_capacity_definition` now sizes against the scenario peak
+    rather than the forecast one.'
+  reference: Standard N-1 planning criterion; cf. ENTSO-E adequacy studies; the scenario peak from `peak_demand_shifted_definition`
+  priority: P1
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0
   id: carbon_price_budget_alignment

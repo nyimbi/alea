@@ -21910,3 +21910,340 @@ def build_batch73(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	for name, _lo, _hi, default, _prose in _BATCH73_MULTIPLIERS:
 		print(f"  {name}: {default} (neutral) on {nodes[name]['range']}")
 	return nodes, equations, edges, []
+
+
+_BATCH74_SOURCE = "The peak-demand scenario coupling (batch 74)"
+
+#: The dial, its band, its neutral, and the paper the band is read from.
+#:
+#: `peak_demand_multiplier` enters its equation as `(1 + m)`, so its neutral is
+#: **0.0**, not 1.0 -- the opposite of the three batch 73 fixed. At the shipped
+#: 0.5 the equation asserted a +50% peak-demand scenario that nobody chose and
+#: nothing read.
+_BATCH74_MULTIPLIER = "peak_demand_multiplier"
+_BATCH74_BAND = (-0.15, 0.30)
+_BATCH74_NEUTRAL = 0.0
+_BATCH74_PROSE = (
+	"Scaling factor for peak demand, as a share of the forecast peak. Entered "
+	"as `(1 + m)`, so its neutral value is 0.0 -- a multiplier's neutral is "
+	"whatever makes its own equation the identity, and this one is additive, "
+	"not multiplicative. The shipped 0.5 therefore asserted a +50% peak "
+	"scenario that no scenario chose and no equation read. The band is "
+	"two-directional because both directions are real states: demand response "
+	"and efficiency lower the peak, electrification and heat raise it. "
+	"Maheshwari, Murari & Jayaraman (2019) measure the residential response in "
+	"Pune -- a sub-tropical humid developing-grid setting, which is this "
+	"graph's -- at 1.5-2% change in average electricity demand per 1 degC of "
+	"apparent temperature. That is an *average* demand elasticity, not a peak "
+	"one; the paper's peak statement is qualitative (peak demand is "
+	"'significantly influenced' under a non-stationary GEV). The band applies "
+	"it across the warming range this graph already carries, "
+	"`temperature_increase` over [0, 6] degC: -0.15 is a demand-response and "
+	"efficiency case, +0.30 is the upper bound of 2%/degC across that warming "
+	"range, so the upside is the sourced figure and the downside is the "
+	"programme the graph's own `interruptible_load_share` already describes."
+)
+
+#: The adequacy equations that size against the *scenario* peak.
+#:
+#: Each names `peak_demand_mw` in its arithmetic and already carries an edge
+#: from it, so the repoint moves an edge the document recorded rather than
+#: inventing one.
+_BATCH74_REPOINTS: tuple[str, ...] = (
+	"reserve_margin_with_firm_vre",
+	"reserve_margin_required_mw_definition",
+	"reserve_margin_actual_definition",
+	"spare_capacity_definition",
+)
+
+#: Equations that name `peak_demand_mw` but whose edge register never recorded
+#: it, and which this batch therefore leaves alone.
+#:
+#: `reserve_margin` carries exactly one edge (`vre_capacity_mw ->
+#: firm_capacity_mw`, a constraint) although its `rhs` is
+#: `peak_demand_mw * (1 + reserve_margin_min)`. Repointing it would mean
+#: inventing the edge the repoint is supposed to move, which would write a
+#: coupling the document never recorded and hide the gap it was standing on.
+#: The gap is pre-existing and is recorded in the status document instead.
+_BATCH74_NO_EDGE: tuple[str, ...] = ("reserve_margin",)
+
+
+def build_batch74(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Route the peak-demand scenario into the adequacy it changes.
+
+	*The defect.* `peak_demand_multiplier` enters
+	`peak_demand_shifted_definition` as `(1 + m) * peak_demand_mw`, and
+	`peak_demand_shifted_mw` is read by nothing. Meanwhile the reserve and
+	adequacy equations size against the *base* peak, so a scenario that moved
+	demand would move a derived node nobody consults and leave every reserve
+	requirement at its pre-scenario value. This is batch 73's defect exactly:
+	the scenario product was correct and unreachable.
+
+	*The second defect, and the mirror of batch 73's.* The `(1 + m)` form makes
+	the neutral value 0.0, not 1.0 -- a multiplier's neutral is whatever makes
+	its own equation the identity. The shipped default was 0.5, which asserted
+	a +50% peak scenario, and the shipped band [0, 1] could only express
+	increases, so a demand-response year was refused at set time.
+
+	*Why the base peak keeps its other readers.* `peak_demand_mw` is the
+	pre-scenario forecast, and the load factor, the distribution asset value,
+	the interruptible load and the reactive and regulation requirements are
+	properties of that forecast rather than of a scenario applied to it. Only
+	the quantities that ask "can the fleet serve this peak" read the scenario
+	peak. Repointing all fourteen would make a scenario dial rewrite the
+	forecast it is a scenario against.
+
+	*The gate.* At the neutral 0.0 every repointed equation must evaluate to
+	what it evaluated before, so the batch moves no shipped value; and at a
+	non-neutral multiplier each must move. The second check is what
+	distinguishes a live repoint from an inert one, and the first is what keeps
+	a correctness fix from being a recalibration.
+	"""
+	from alea.prg.dsl import evaluate as evaluate_expr
+	from alea.prg.dsl import parse as parse_expr
+	from alea.prg.views import ParameterNode
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+
+	# -- the premises, measured on the shipped graph -------------------------
+	name = _BATCH74_MULTIPLIER
+	node = graph.nodes[name]
+	assert node.unit == "1", (name, node.unit)
+	assert node.default == 0.5, (
+		name,
+		node.default,
+		"the shipped default is not the 0.5 this batch is correcting; the "
+		"batch is already applied or was written against a different graph",
+	)
+	assert tuple(node.range) == (0.0, 1.0), (name, tuple(node.range))
+
+	shifted = "peak_demand_shifted_mw"
+	assert graph.affects(name) == (shifted,), (
+		name,
+		graph.affects(name),
+		"the dial's reader is not the shifted peak this batch routes",
+	)
+	assert graph.affects(shifted) == (), (
+		shifted,
+		"the shifted peak already reaches something, so this batch is not the "
+		"first to give it a consumer",
+	)
+	# The forecast peak must keep readers of its own, or the distinction this
+	# batch draws (forecast vs scenario) has no other side.
+	base_readers = set(graph.affects("peak_demand_mw"))
+	assert shifted in base_readers, sorted(base_readers)
+	assert len(base_readers) > 1, (
+		"peak_demand_mw reaches only the shifted-peak definition, so there is "
+		"no forecast-side consumer to preserve",
+	)
+	assert graph.nodes["peak_demand_mw"].unit == "MW"
+
+	lo, hi = _BATCH74_BAND
+	assert lo < _BATCH74_NEUTRAL < hi, (lo, hi)
+
+	# -- the retype ----------------------------------------------------------
+	body = dict(node.model_dump(exclude={"id"}, mode="json"))
+	body.update({
+		"range": [lo, hi],
+		"default": _BATCH74_NEUTRAL,
+		"determinism": "stochastic",
+		"source": _BATCH74_SOURCE,
+		"source_url": None,
+		"description": _BATCH74_PROSE,
+	})
+	ParameterNode(**{"id": name, **body})
+	nodes[name] = body
+
+	# -- the repoints --------------------------------------------------------
+	for equation_id in _BATCH74_REPOINTS:
+		shipped = graph.equations[equation_id]
+		assert "peak_demand_mw" in shipped.rhs, (equation_id, shipped.rhs)
+		new_rhs = shipped.rhs.replace("peak_demand_mw", shifted)
+		# The substitution must be total: nothing left naming the forecast
+		# peak, and the result must name the scenario peak.
+		assert "peak_demand_mw" not in new_rhs.replace(shifted, ""), (
+			equation_id,
+			new_rhs,
+		)
+		assert shifted in new_rhs, (equation_id, new_rhs)
+		old_symbols = set(parse_expr(shipped.rhs).symbols)
+		new_symbols = set(parse_expr(new_rhs).symbols)
+		assert old_symbols - {"peak_demand_mw"} <= new_symbols, (
+			equation_id,
+			old_symbols - new_symbols,
+		)
+		assert new_symbols - old_symbols <= {shifted}, (
+			equation_id,
+			new_symbols - old_symbols,
+		)
+
+		# `parameters` is every symbol the equation names, on *either* side:
+		# for an inequality the `lhs` is an expression, so its own symbols have
+		# to be parsed rather than taken as one id. `free_variables` stays as
+		# shipped -- empty for these -- because it is the caller-supplied set,
+		# not the set of names in the arithmetic.
+		lhs_symbols = set(parse_expr(shipped.lhs).symbols)
+		eq_body = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		# The rendering is a second statement of the same relation and
+		# `check_latex` compares it operand-by-operand against the arithmetic.
+		# Carrying the shipped one forward would leave the LaTeX naming the
+		# forecast peak while the rhs names the scenario one -- the equation
+		# rendering to a researcher as something the graph does not compute.
+		if eq_body.get("latex"):
+			old_operand = parse_expr("peak_demand_mw").latex()
+			new_operand = parse_expr(shifted).latex()
+			assert old_operand in eq_body["latex"], (
+				equation_id,
+				eq_body["latex"],
+				"the shipped rendering does not name the operand being replaced",
+			)
+			eq_body["latex"] = eq_body["latex"].replace(old_operand, new_operand)
+			assert new_operand in eq_body["latex"], (equation_id, eq_body["latex"])
+			assert old_operand not in eq_body["latex"], (
+				equation_id,
+				eq_body["latex"],
+			)
+		eq_body.update({
+			"rhs": new_rhs,
+			"parameters": sorted(new_symbols | lhs_symbols),
+			"description": (
+				(shipped.description or "")
+				+ " Sized against the *scenario* peak, not the forecast one: "
+				"`peak_demand_shifted_mw` is `peak_demand_mw` under the "
+				"scenario multiplier, so a year that changes demand changes "
+				"the reserve this asks for. At the neutral multiplier the two "
+				"peaks are equal and this equation computes what it always did."
+			),
+			"reference": (
+				f"{shipped.reference}; the scenario peak from "
+				f"`peak_demand_shifted_definition`"
+				if shipped.reference
+				else "Peak-demand scenario from `peak_demand_shifted_definition`"
+			),
+		})
+		equations[equation_id] = eq_body
+
+		# The operand moves, so its *edge* moves with it. Each shipped edge
+		# from `peak_demand_mw` into this equation is replaced by one from the
+		# scenario peak to the same target, keeping the target and the
+		# relationship the document already chose -- a repoint that invented
+		# its own target would silently drop that distinction.
+		moved = [
+			item for item in graph.edges
+			if item.equation_id == equation_id and item.source == "peak_demand_mw"
+		]
+		assert moved, (
+			equation_id,
+			"the equation names `peak_demand_mw` but has no edge from it, so "
+			"the edge register and the arithmetic already disagree; this batch "
+			"will not paper over that by inventing the edge it should move",
+		)
+		for item in moved:
+			edges.append({
+				"source": shifted,
+				"target": item.target,
+				"equation_id": equation_id,
+				"relationship": item.relationship.value,
+				"direction": "forward",
+				"strength": (
+					item.strength.value
+					if hasattr(item.strength, "value") else str(item.strength)
+				),
+				"description": (
+					f"Enters {item.target}: `{equation_id}` now sizes against "
+					f"the scenario peak rather than the forecast one."
+				),
+				"reference": eq_body["reference"],
+				"priority": "P1",
+			})
+
+	# -- the shifted-peak definition, which is where the dial is read --------
+	#
+	# Its own description carries a worked example at the old 0.5 default
+	# ("1.5 x 8,500 MW is 12,750 MW"), which is a claim about a value the
+	# batch moves, and it carries no citation although it is the equation the
+	# sourced band belongs to.
+	shifted_definition = "peak_demand_shifted_definition"
+	shifted_eq = graph.equations[shifted_definition]
+	assert shifted_eq.reference is None, (
+		shifted_definition,
+		shifted_eq.reference,
+		"the equation already cites a work, so this batch is not the first to",
+	)
+	shifted_body = dict(shifted_eq.model_dump(exclude={"id"}, mode="json"))
+	shifted_body.update({
+		"description": (
+			"Peak demand under a scenario scaling factor: one plus the "
+			"multiplier, times the forecast peak. At the neutral 0.0 the two "
+			"peaks are equal, which is the point of the `(1 + m)` form -- its "
+			"zero is the no-op. A -0.15 demand-response year gives 0.85 x "
+			"8,500 MW is 7,225 MW; a +0.30 electrification year gives 1.30 x "
+			"8,500 MW is 11,050 MW. The multiplier is additive because the "
+			"scenario is a change to the forecast, not a rescaling of it."
+		),
+		"reference": (
+			"Maheshwari, Murari & Jayaraman (2019), Peak Electricity Demand "
+			"and Global Warming in the Industrial and Residential areas of "
+			"Pune: An Extreme Value Approach (arXiv:1908.08570) -- 1.5-2% "
+			"change in average residential demand per 1 degC"
+		),
+	})
+	equations[shifted_definition] = shifted_body
+
+	# -- the gate ------------------------------------------------------------
+	#
+	# The value map has to be the *propagated* one: several of these equations
+	# name derived parameters (`reserve_margin_requirement` among them) that
+	# carry no default, so a map built from defaults alone is missing exactly
+	# the operands the equations are made of.
+	base = graph.nodes["peak_demand_mw"].default
+	probe = dict(graph.propagate(
+		{n.id: n.default for n in graph.nodes.values() if n.default is not None}
+	).values)
+	probe[name] = _BATCH74_NEUTRAL
+	shifted_neutral = (1.0 + _BATCH74_NEUTRAL) * base
+	assert abs(shifted_neutral - base) < 1e-12, (shifted_neutral, base)
+
+	for equation_id in _BATCH74_REPOINTS:
+		shipped = graph.equations[equation_id]
+		values = dict(probe)
+		values[shifted] = shifted_neutral
+		before = evaluate_expr(parse_expr(shipped.rhs), values)
+		after = evaluate_expr(parse_expr(equations[equation_id]["rhs"]), values)
+		assert abs(before - after) < 1e-9 * max(1.0, abs(before)), (
+			equation_id,
+			before,
+			after,
+			"the repoint is not value-preserving at the neutral multiplier, so "
+			"this correctness fix would move a shipped reserve value",
+		)
+		# And it must respond when the scenario moves: a repoint that left the
+		# equation reading the forecast peak passes the invariance check.
+		moved_values = dict(values)
+		moved_values[shifted] = (1.0 + 0.10) * base
+		responded = evaluate_expr(
+			parse_expr(equations[equation_id]["rhs"]), moved_values
+		)
+		unchanged = evaluate_expr(parse_expr(shipped.rhs), moved_values)
+		assert responded != unchanged, (
+			equation_id,
+			"a 10% peak scenario moves this equation by nothing, so it is not "
+			"reading the scenario peak",
+		)
+
+	# The batch's claim is that the dial now reaches the adequacy family.
+	reached = {edge["source"] for edge in edges}
+	assert shifted in reached, (
+		"the scenario peak does not reach an adequacy equation, so the batch "
+		"would leave the dial inert and the product unread"
+	)
+
+	print(f"  {name}: {_BATCH74_NEUTRAL} (neutral) on {nodes[name]['range']}")
+	print(
+		f"  repointed {len(_BATCH74_REPOINTS)} adequacy equation(s) onto "
+		f"{shifted}, plus its own definition"
+	)
+	print(f"  left alone (no edge to move): {', '.join(_BATCH74_NO_EDGE)}")
+	return nodes, equations, edges, []

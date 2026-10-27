@@ -1971,6 +1971,143 @@ produced `SyntaxError: expected 'except' or 'finally' block`, which is a
 canary that tested nothing; it was redone as a `raise` so the module still
 parsed.
 
+### The peak-demand dial was the mirror image of batch 73 (batch 74, 2026-10-28)
+
+Batch 73 closed with `peak_demand_multiplier` named as the next target, on the
+ground that it carried the same 0.5 default and the same unread product. It
+carries something worse, and something different.
+
+**The neutral value is 0.0, not 1.0.** The dial enters its equation as
+`(1 + peak_demand_multiplier) * peak_demand_mw`, so the value that makes the
+equation the identity is zero. A multiplier's neutral is whatever its own
+equation says it is, and this one is additive. The shipped 0.5 therefore
+asserted a **+50% peak-demand scenario** that no scenario chose, on a node
+whose shipped description reads "Scaling factor for peak demand". Batch 73's
+three dials were multiplicative and wanted 1.0; this one is additive and wanted
+0.0. The shape of the defect is the same and the arithmetic is not.
+
+**The band could not express the other direction.** It shipped `[0, 1]`, so a
+demand-response year -- the case the graph's own `interruptible_load_share`
+already describes -- was refused at set time.
+
+**The product was read by nothing, and the adequacy family read the wrong
+peak.** `peak_demand_shifted_mw` was the dial's only reader and had no reader
+of its own, while four equations sized reserves against the *forecast* peak.
+This is batch 73's defect exactly: a correct scenario product, unreachable.
+
+| equation | read before | reads now |
+|---|---|---|
+| `reserve_margin_with_firm_vre` | `peak_demand_mw` | `peak_demand_shifted_mw` |
+| `reserve_margin_required_mw_definition` | `peak_demand_mw` | `peak_demand_shifted_mw` |
+| `reserve_margin_actual_definition` | `peak_demand_mw` | `peak_demand_shifted_mw` |
+| `spare_capacity_definition` | `peak_demand_mw` | `peak_demand_shifted_mw` |
+
+The other nine equations naming `peak_demand_mw` are deliberately left alone:
+seven derive a forecast-side quantity -- the load factor, the distribution
+asset value, the interruptible load, the reactive capability and the
+regulation up and down requirements -- and two are inequalities
+(`spinning_reserve_definition`, `non_spinning_reserve_inside_margin`). All are
+properties of the *forecast*, and repointing them would let a scenario dial
+rewrite the forecast it is a scenario against. Only the quantities that ask
+"can the fleet serve this peak" take the scenario peak. Nine is the measured
+count of equations naming the symbol after the repoint, not an estimate: ten
+named it before, and `peak_demand_shifted_definition` is the one that moved.
+
+**The band, and what the source actually says.** Maheshwari, Murari & Jayaraman
+(2019) measure the residential response in Pune -- sub-tropical humid, a
+developing grid, which is this graph's setting -- at **1.5-2% change in average
+electricity demand per 1 degC** of apparent temperature (arXiv:1908.08570,
+archived). Two caveats are load-bearing and are stated rather than smoothed
+over: it is an *average* demand elasticity, not a peak one, and the paper's
+peak statement is qualitative. The band `[-0.15, 0.30]` applies the figure
+across the warming range this graph already carries, `temperature_increase` on
+`[0, 6]` degC: +0.30 is the upper bound of 2%/degC across that range, and -0.15
+is the demand-response and efficiency case.
+
+**The sweep, measured on the shipped graph.**
+
+```
+m = -0.15:  shifted 7,225.0 MW   required 1,083.75 MW   actual 0.4125   spare 2,775.0 MW
+m =  0.00:  shifted 8,500.0 MW   required 1,275.00 MW   actual 0.2006   spare 1,500.0 MW
+m = +0.10:  shifted 9,350.0 MW   required 1,402.50 MW   actual 0.0915   spare   650.0 MW
+m = +0.30:  shifted 11,050.0 MW  required 1,657.50 MW   actual -0.0764  spare -1,050.0 MW
+```
+
+The signs are the physics: a demand-response year raises the delivered reserve
+margin from 0.201 to 0.413, and a +30% electrification year drives spare
+capacity negative, which the range admits because a fleet that cannot serve its
+peak is a real state and not a range excursion.
+
+**The canary.** Reverting `spare_capacity_definition` to `total_capacity_mw -
+peak_demand_mw`, with its `parameters` list and its edge reverted to match,
+gives `spare_capacity` = 1,500.0 MW at both m = 0.00 and m = +0.10 -- a 10%
+demand scenario moving the headroom by exactly nothing, which is the inertness
+this batch removes. Restored, the same sweep gives 1,500.0 then 650.0.
+
+**A pre-existing gap this batch refused to paper over.**
+`reserve_margin` names `peak_demand_mw` in its arithmetic
+(`peak_demand_mw * (1 + reserve_margin_min)`) and carries exactly **one** edge,
+`vre_capacity_mw -> firm_capacity_mw`. There is no `peak_demand_mw` edge to
+move, so repointing it would have meant inventing the coupling the repoint is
+supposed to relocate. It is left on the forecast peak and named here instead.
+The edge register and the arithmetic already disagree for that equation, and
+that is a separate finding.
+
+**The rendering, again.** `reserve_margin_actual_definition` carries a `latex`
+field, and repointing its `rhs` without repointing the rendering left the
+equation rendering to a researcher as the relation it used to be --
+`check_latex` caught it, exactly as it did in batch 73. The builder now
+repoints the rendering through the DSL's own `parse(...).latex()` and asserts
+both that the shipped rendering names the operand and that the substitution
+happened.
+
+**Counts.** Nodes 1436, equations 606, relationships 1411 -- all unchanged.
+One node retyped, five equations rewritten (four adequacy repoints plus the
+shifted-peak definition), four edges moved, two `constraint` edges retargeted.
+`uncoupled()` stays at 242 and `structure_issues()` is empty.
+
+**The registers moved, and by what.** Uncertain inputs 71 -> 72: the dial was
+`fixed` and is now `stochastic`, because a band over demand years is a
+distribution. Reach 199 -> 202: `reserve_margin_required_mw`,
+`reserve_margin_actual` and `spare_capacity` entered the closure. Citations
+310 -> 311: `peak_demand_shifted_definition` shipped uncited while carrying a
+worked example at a default this batch moves, and it is the equation the
+sourced band belongs to.
+
+**The repoint silently removed the margin from the solve, and the constraint
+tests caught it.** `constraints._classify` binds an inequality only when every
+term is a declared network source or a settable scalar. `peak_demand_mw`
+carries a `NetworkSource`; `peak_demand_shifted_mw` carried none, so on the
+repoint the adequacy route classified `unbound` -- "stated over
+['peak_demand_shifted_mw'], which the graph derives from a solved result" -- and
+`reserve_margin_with_firm_vre` stopped constraining the build entirely. The
+equation stayed correct and the solve stopped reading it. That is the failure
+mode a register of *routes* exists to catch and a register of *edges* cannot:
+the graph said the coupling was there, and the optimiser had no column for the
+term.
+
+The fix is a `NetworkSource` for the scenario peak, read as the network's
+coincident peak times `1 + peak_demand_multiplier` with the dial pulled from
+the parameter set exactly as `_credit` pulls `vre_capacity_credit` -- the
+precedent already in the module for a scalar that is a modelling choice rather
+than a network column. Both the credit and the dial are recorded `assumed`, so
+a margin computed at a default scenario is visible as one.
+
+**The canary.** Renaming the new source's `symbol` leaves the equation
+untouched and makes the reader unreachable; four tests fail -- the bound-set
+pin, the unbound-route register, the "every declared source names a real
+symbol" check, and the solve test that asserts the margin moves the build to
+115/0.15 = 766.67 MW. The fourth is the one that matters: it is the only one
+that would have noticed the constraint leaving the model. Restored, all ten
+pass.
+
+This is a **third** reader of the same product and it is worth saying plainly:
+`peak_demand_shifted_mw` is now stated in the equation library, computed again
+inside `constraints._peak_demand_shifted`, and asserted equal by nothing. The
+`vre_capacity_credit` reader has the same shape and the same gap. A solve that
+read one and reported the other would disagree silently; the agreement is
+currently a convention, not a check.
+
 ### The resource multipliers were 0.5 and read by nothing (batch 73, 2026-10-27)
 
 Three scenario dials — `solar_irradiance_multiplier`,

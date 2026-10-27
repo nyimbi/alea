@@ -20,7 +20,7 @@
 | 1.2 | `demand_growth_profile` | Shape of growth curve | Demand-Side | Determines functional form of → `demand_t`; interacts with `demand_growth_start_year`, `demand_growth_end_year` |
 | 1.3 | `demand_growth_start_year` | Year growth trajectory begins | Demand-Side | Temporal anchor for → `demand_t`; ↔ `scenario_start_year` |
 | 1.4 | `demand_growth_end_year` | Year growth trajectory ends | Demand-Side | Temporal anchor for → `demand_t`; ↔ `planning_horizon` |
-| 1.5 | `peak_demand_multiplier` | Scaling factor for peak demand | Demand-Side, Reserve Margin | → `peak_demand`; ← `load_factor`; ↔ `reserve_margin` |
+| 1.5 | `peak_demand_multiplier` | Scaling factor for peak demand (enters as `1 + m`, neutral 0.0) | Demand-Side, Reserve Margin | → `peak_demand_shifted_mw` |
 | 1.6 | `load_factor_override` | Override default load factor | Demand-Side | → `peak_demand` via load_shape; ↔ `demand_t` shape |
 | 1.7 | `industrial_demand_share` | Share of demand from industry | Demand-Side, Sector Coupling | → `industrial_demand`; ← `industrialisation_rate`; ↔ `mining_demand_growth`, `data_centre_demand` |
 | 1.8 | `residential_demand_share` | Share of demand from households | Demand-Side | → `residential_demand`; ← `population_growth_rate`; ↔ `electrification_rate_target` |
