@@ -32094,6 +32094,35 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  water_access_share:
+    id: water_access_share
+    name: Share with basic water access
+    description: 'The fraction of the population using at least basic drinking water services. Sub-Saharan
+      Africa read 66.67% in 2023 (World Bank SH.H2O.BASW.ZS; the archived series rises 59.22 -> 66.67
+      over 2015-2023), which is the default; the range admits a country near universal coverage and one
+      where the utility serves a minority. Basic access is the right tier for a pumping load, not safely-managed:
+      a basic service is an improved source within a 30-minute round trip, and a utility pumping against
+      a standpipe is delivering at exactly that tier.'
+    category: Demand
+    subcategory: null
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.6667
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: World Bank World Development Indicators, SH.H2O.BASW.ZS (Sub-Saharan Africa, 2022)
+    source_url: https://data.worldbank.org/indicator/SH.H2O.BASW.ZS
+    users:
+    - Water
+    - Planners
+    priority: P2
+    status: to_build
+    deprecated_by: null
   water_availability:
     categories: []
     category: Sector
@@ -32176,37 +32205,60 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  water_pumping_intensity_kwh_per_m3:
+    id: water_pumping_intensity_kwh_per_m3
+    name: Water system energy intensity
+    description: Electricity a drinking-water system spends per cubic metre delivered to the end user.
+      Sharif et al. (2019) review the components on a flat North American system -- 0.026 kWh/m3 at the
+      source, 0.066 through treatment, 0.3 in distribution, a 0.40 total of which distribution is 76.9%
+      (their Figure 3, from EPA 2013) -- and report operating systems spanning 0.16 to 0.55 kWh/m3, with
+      mountain terrain reaching 2.28. The default 0.40 is that flat-terrain total, which is the one complete
+      breakdown the paper gives; the range is the operating band, because a topography that is not flat
+      is the single largest multiplier in the review and a scenario that models one should move this dial
+      rather than accept the flat-terrain figure.
+    category: Demand
+    subcategory: null
+    type: float
+    unit: kWh/m3
+    range:
+    - 0.16
+    - 2.28
+    default: 0.4
+    initial: null
+    role: free
+    determinism: physical
+    categories: []
+    source: Sharif, Haider, Farahat & Hewage (2019), Environmental Reviews, Figure 3 and the operating-range
+      survey
+    source_url: https://utoronto.scholaris.ca/bitstreams/ee38eb33-caeb-42de-9ba5-6756c312538e/download
+    users:
+    - Water
+    - Planners
+    priority: P2
+    status: to_build
+    deprecated_by: null
   water_pumping_load:
     name: Water pumping load
-    description: 'Electricity the water utility''s pumping draws in the year, in megawatt-hours. The catalog''s
-      quantity is municipal supply -- ''Water utility pumping'', delivered to households -- and the graph''s
-      only water volume is not that object: `total_water_demand_m3` is the plant''s own process withdrawal,
-      cooling plus electrolysis, 93.2 M m3/year at defaults. Pumping that against a distribution intensity
-      would charge the utility''s auxiliary load to water the plant consumes and never distributes, which
-      is the wrong base and not merely a missing coefficient. The intensity itself is no longer the gap:
-      Sharif et al. (2019) review it at 0.026 kWh/m3 for the source, 0.066 for treatment and 0.3 for distribution
-      in flat terrain (76.9% of a 0.40 kWh/m3 total, from EPA 2013), with operating systems spanning 0.16-0.55
-      and mountain terrain reaching 2.28. What the equation waits on is a municipal water volume: a population
-      and a per-capita withdrawal, neither of which the graph carries.'
+    description: 'Electricity the water utility''s pumping draws in the year, in megawatt-hours, determined
+      by `water_pumping_load_definition` as served population times per-capita use times the system''s
+      energy intensity. The catalog''s quantity is municipal supply -- ''Water utility pumping'', delivered
+      to households -- and this is now that object. It previously deferred on a missing base and named
+      `total_water_demand_m3`, the plant''s own process withdrawal (cooling plus electrolysis, 93.2 M
+      m3/year at defaults): charging a distribution intensity to it would have billed the utility''s auxiliary
+      load to water the plant consumes and never distributes. At defaults 45 M people x 0.6667 served
+      x 100 L/person/day x 0.40 kWh/m3 x 365 / 1e6 is 438,022 MWh/year.'
     category: Demand
     subcategory: null
     type: float
     unit: MWh/year
     range:
     - 0.0
-    - 1000000.0
-    default: 0.0
+    - 34000000.0
     initial: null
-    role: free
-    determinism: fixed
+    role: derived
+    determinism: physical
     categories: []
-    source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
-      each of the 181 placeholder rows by what the catalog's own description and algorithm cells in docs/params.md
-      say it is. Each of these 41 is a physical or economic quantity with a discoverable unit; the unit,
-      range and default below were re-verified against the pint registry (`alea.prg.units.ureg`) and against
-      the graph's own spelling convention before being written, because the survey's 'verified' claim
-      covers only the parse and not the convention. Where a coupling pack (docs/research/coupling-packs/)
-      had already reasoned about the node, its reasoning is quoted in the node's description.
+    source: The water utility coupling (batch 71)
     source_url: null
     users:
     - Water
@@ -32258,6 +32310,32 @@ parameters:
     unit: '1'
     users:
     - DFIs
+  water_served_population:
+    id: water_served_population
+    name: Water-served population
+    description: 'The population the utility actually delivers to: the country''s population times the
+      share with at least basic drinking water service. The share is a free dial because it is the one
+      number a scenario can move on its own -- a connection programme raises it and nothing else in the
+      graph moves.'
+    category: Demand
+    subcategory: null
+    type: float
+    unit: people
+    range:
+    - 0.0
+    - 200000000.0
+    initial: null
+    role: derived
+    determinism: physical
+    categories: []
+    source: The water utility coupling (batch 71)
+    source_url: null
+    users:
+    - Water
+    - Planners
+    priority: P2
+    status: to_build
+    deprecated_by: null
   water_stress_index:
     categories: []
     category: Water
@@ -32284,6 +32362,37 @@ parameters:
     users:
     - Planners
     - Regulators
+  water_use_per_capita_lpd:
+    id: water_use_per_capita_lpd
+    name: Municipal water use per capita
+    description: 'Litres a served person draws from the utility''s supply each day. Jacobs et al. (2022),
+      Water SA 48(2) 171-179, tabulate it by level of service: a standpipe shared by many households uses
+      20-24 L/person/day across climate regions (LOS1), a yard connection 46-58 (LOS3), and a full indoor
+      house connection 135-196 (LOS5). The default of 100 is a yard-to-indoor mix and sits between the
+      LOS3 and LOS5 columns rather than on a cell: the country this library is calibrated for is mostly
+      LOS1-LOS3, so the range spans LOS1''s floor to LOS5''s ceiling and the default is a scenario''s
+      own service-level choice, not a measurement. The paper''s South African benchmark is the closest
+      published service-level ladder to a sub-Saharan utility; it is not a country-specific measurement.'
+    category: Demand
+    subcategory: null
+    type: float
+    unit: L/person/day
+    range:
+    - 20.0
+    - 200.0
+    default: 100.0
+    initial: null
+    role: free
+    determinism: policy
+    categories: []
+    source: Jacobs, Crouch, Ilemobade & du Plessis (2022), Water SA 48(2) 171-179, Table 4
+    source_url: https://doi.org/10.17159/wsa/2022.v48.i2.3917
+    users:
+    - Water
+    - Planners
+    priority: P2
+    status: to_build
+    deprecated_by: null
   wave_energy_converter_cost:
     categories: []
     category: Cost
@@ -48153,6 +48262,45 @@ equations:
     system: water_energy
     tolerance: 1.0e-06
     unit_check: true
+  water_pumping_load_definition:
+    id: water_pumping_load_definition
+    name: Water pumping load
+    description: 'The utility''s pumping energy for the year: served population times per-capita use times
+      the system''s energy intensity, over 365 days. Dimensional check: person x L/(person day) x kWh/m3
+      x day/year is kWh/year. The 1e6 is TWO scales the walker cannot see: 1000 litres to the cubic metre,
+      and 1000 kilowatt-hours to the megawatt-hour the node is declared in. One factor alone leaves the
+      answer in kWh/year, which the dimension check passes because kWh and MWh are the same dimension
+      -- the trap this equation''s first draft fell into, reading 438,022,000 where the object is 438,022.
+      At defaults 45 M people x 0.6667 served x 100 L/person/day x 0.40 kWh/m3 x 365 / 1e6 is 438,022
+      MWh/year, or 0.438 TWh/year. The base is `water_served_population`, not `population_total`: charging
+      a utility''s per-capita delivery to everyone in the country asserts universal service, which the
+      access data contradicts, and that is the error this node shipped with when it named `total_water_demand_m3`
+      -- the plant''s own process withdrawal -- as its base.'
+    lhs: water_pumping_load
+    rhs: water_served_population * water_use_per_capita_lpd * water_pumping_intensity_kwh_per_m3 * 365
+      / 1000000
+    latex: \mathrm{water}_{pumping\_load} = \mathrm{water}_{served\_population}\, \mathrm{water}_{use\_per\_capita\_lpd}\,
+      \mathrm{water}_{pumping\_intensity\_kwh\_per\_m3}\, \frac{365}{10^{6}}
+    parameters:
+    - water_served_population
+    - water_use_per_capita_lpd
+    - water_pumping_intensity_kwh_per_m3
+    - water_pumping_load
+    determined_variables:
+    - water_pumping_load
+    free_variables:
+    - water_served_population
+    - water_use_per_capita_lpd
+    - water_pumping_intensity_kwh_per_m3
+    relation: eq
+    system: water_energy
+    tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    unit_check: true
+    reference: Jacobs et al. (2022), Water SA 48(2), per-capita water use by service level; Sharif et
+      al. (2019), energy intensity of water distribution systems
   water_quality_impact_definition:
     description: 'The water quality impact: one less the quality index. An index of 1 is pristine water
       and an impact of 0, so the complement is what a scenario reads as the damage -- and the `1.0` is
@@ -48175,6 +48323,33 @@ equations:
     system: water_energy
     tolerance: 1.0e-09
     unit_check: true
+  water_served_population_definition:
+    id: water_served_population_definition
+    name: Water-served population
+    description: 'The population a utility delivers to: the country''s population times the share with
+      basic water access. Dimensional check: person x 1 is person. At defaults 45 M x 0.6667 is 30.0015
+      M people, against a `population_total` of 45 M -- the difference is the third the utility does not
+      serve, and charging it pumping energy would bill the utility for water it never delivered.'
+    lhs: water_served_population
+    rhs: population_total * water_access_share
+    latex: \mathrm{water}_{served\_population} = \mathrm{population}_{total}\, \mathrm{water}_{access\_share}
+    parameters:
+    - population_total
+    - water_access_share
+    - water_served_population
+    determined_variables:
+    - water_served_population
+    free_variables:
+    - population_total
+    - water_access_share
+    relation: eq
+    system: water_energy
+    tolerance: 1.0e-09
+    priority: P2
+    solution_method: direct
+    linearity: linear
+    unit_check: true
+    reference: World Bank World Development Indicators, SH.H2O.BASW.ZS
   water_stress_index_definition:
     description: 'Demand over availability: 93.25e6 m3/year over 200e6 is 0.466. A ratio of two graph
       nodes and therefore derived, which is why its shipped 0.4 default has to go: a derived node carries
@@ -61396,6 +61571,54 @@ relationships:
   direction: forward
   strength: hard
   description: 'Enters vre_share: an input of `vre_share = vre_capacity_mw / total_capacity_mw`.'
+- source: population_total
+  target: water_served_population
+  equation_id: water_served_population_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The country's population is the base the access share is applied to.
+  reference: World Bank World Development Indicators, SH.H2O.BASW.ZS
+  priority: P2
+- source: water_access_share
+  target: water_served_population
+  equation_id: water_served_population_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The share with basic access is what converts a national population into a served one.
+  reference: World Bank World Development Indicators, SH.H2O.BASW.ZS
+  priority: P2
+- source: water_served_population
+  target: water_pumping_load
+  equation_id: water_pumping_load_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Served population is the base the utility's per-capita delivery multiplies; the unserved
+    remainder draws no utility pumping.
+  reference: Jacobs et al. (2022), Water SA 48(2)
+  priority: P2
+- source: water_use_per_capita_lpd
+  target: water_pumping_load
+  equation_id: water_pumping_load_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: Per-capita use sets the cubic metres the system moves, which is the volume the intensity
+    is charged against.
+  reference: Jacobs et al. (2022), Water SA 48(2), Table 4
+  priority: P2
+- source: water_pumping_intensity_kwh_per_m3
+  target: water_pumping_load
+  equation_id: water_pumping_load_definition
+  relationship: functional
+  direction: forward
+  strength: hard
+  description: The system's energy per cubic metre is the conversion from delivered volume to electricity
+    drawn.
+  reference: Sharif et al. (2019), Figure 3
+  priority: P2
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0
   id: carbon_price_budget_alignment

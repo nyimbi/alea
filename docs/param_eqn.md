@@ -57,7 +57,7 @@
 | 1.39 | `construction_load` | Temporary construction load | Demand-Side | → `construction_demand`; ← `industrialisation_rate` |
 | 1.40 | `temporary_camp_load` | Refugee camp load | Demand-Side, Humanitarian | → `camp_demand`; ← `population_growth_rate` |
 | 1.41 | `emergency_shelter_load` | Emergency shelter load | Demand-Side | → `shelter_demand` |
-| 1.42 | `water_pumping_load` | Water utility pumping | Demand-Side, Water-Energy Nexus | → `water_pumping_demand`; ↔ `irrigation_pumping_demand` |
+| 1.42 | `water_pumping_load` | Water utility pumping | Demand-Side, Water-Energy Nexus | = `water_served_population` × `water_use_per_capita_lpd` × `water_pumping_intensity_kwh_per_m3` × 365 / 1e6; ← `water_access_share`; ↔ `irrigation_pumping_demand` |
 | 1.43 | `wastewater_treatment_load` | Wastewater treatment energy | Demand-Side, Water-Energy Nexus | → `treatment_demand`; ← `water_pollution_load` |
 
 ---

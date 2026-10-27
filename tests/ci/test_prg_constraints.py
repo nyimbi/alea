@@ -265,8 +265,16 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	# stale in an earlier batch and is corrected here rather than attributed to
 	# this one.
 	assert cov["constraint_shaped"] == 72
-	assert cov["identities"] == 534
-	assert cov["total"] == 606
+	# The 534 this pin carried was stale by four and had been since batch 70.
+	# Measured on `HEAD:config/prg.yaml` the identity count is 530 and the
+	# total 602: batch 69 deleted `buffer_pool_contribution_definition` and
+	# batch 70 deleted the three attainment ratios, and the shaped count moved
+	# with neither because all four were equalities. Batch 71 adds two
+	# identities -- the served-population product and the pumping-load
+	# product, each with a derived left-hand side -- taking 530 -> 532 and the
+	# total 602 -> 604. The shaped count stays at 72: neither is a bound.
+	assert cov["identities"] == 532
+	assert cov["total"] == 604
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):

@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "71":
+		b71_nodes, b71_equations, b71_edges, b71_rules = build_batch71(graph)
+		rules.extend(b71_rules)
+		nodes.update(b71_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b71_equations)
+		edges = list(BATCH12_EDGES) + b71_edges
 	elif batch == "67":
 		b67_nodes, b67_equations, b67_edges, b67_rules = build_batch67(graph)
 		rules.extend(b67_rules)
@@ -20764,3 +20771,353 @@ def build_batch60(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 
 if __name__ == "__main__":
 	sys.exit(main())
+
+# ---------------------------------------------------------------------------
+# Batch 71 -- the pumping load's base was the plant's water, and the intensity
+# it waited on had been archived sixty batches ago.
+#
+# *The finding.* `water_pumping_load` shipped as a free dial pinned at zero,
+# deferred on a missing intensity, and named `total_water_demand_m3` as the
+# base it would multiply. That base is the *plant's* process withdrawal --
+# cooling plus electrolysis, 93.2 M m3/year at defaults -- so a distribution
+# intensity charged to it would bill the utility's auxiliary load to water the
+# plant consumes and never distributes. The batch-68/70 commits each recorded
+# the deferral as "needs a municipal water volume"; the intensity was never
+# the gap, and the volume is two operands the graph can carry.
+#
+# *The sources.* Both archived with their digests.
+#
+#   - Jacobs, Crouch, Ilemobade & du Plessis (2022), *Water SA* 48(2) 171-179,
+#     CC BY 4.0, `sources/archive/watersa_jacobs_2022_percapita.pdf`. It
+#     tabulates per-capita use by level of service: LOS1 standpipe 20-24
+#     L/person/day across climate regions, LOS3 yard connection 46-58, LOS5
+#     full indoor connection 135-196 (Table 4 for a 1-4 person household,
+#     Table 5 across five climate regions).
+#   - Sharif, Haider, Farahat & Hewage (2019), *Environmental Reviews*,
+#     `sources/archive/sharif_2019_water_distribution_energy.pdf`. Figure 3
+#     breaks a flat-terrain North American system into 0.026 source / 0.066
+#     treatment / 0.3 distribution, a 0.40 total; the surrounding survey gives
+#     an operating band of 0.16-0.55 kWh/m3 and 2.28 in mountain terrain.
+#   - World Bank WDI `SH.H2O.BASW.ZS`, archived as the API's JSON response at
+#     `sources/archive/worldbank_sh_h2o_basw_zs_ssf.json`: Sub-Saharan Africa
+#     rose 59.22% (2015) to 66.67% (2023) using at least basic drinking water
+#     services.
+#
+# *Why the base is a second node rather than `population_total`.* Charging a
+# utility's per-capita delivery to everyone in the country asserts universal
+# service, and the archived series says a third of the population is not
+# served. `water_served_population` = population x access share, and the
+# pumping equation reads that.
+#
+# *The trap this batch fell into and then fixed.* The first draft divided by
+# 1000 -- litres to cubic metres -- and stopped. The answer was in kWh/year
+# and `units.check_graph` was green, because kilowatt_hour and megawatt_hour
+# share one dimension. The node is declared in MWh/year, so the divisor is
+# 1e6: 1000 for the litre and 1000 for the kWh. No unit gate in this suite
+# can see that error, which is why the test asserts the magnitude.
+#
+# *The range is the driver's image.* 200 M people x 1.0 access x 200 L/person
+# /day x 2.28 kWh/m3 x 365 / 1e6 is 33.29 M MWh/year at every operand's
+# ceiling. The shipped `[0, 1e6]` was the placeholder survey's guess and would
+# have refused a scenario the graph's own ranges admit.
+# ---------------------------------------------------------------------------
+
+_BATCH71_SOURCE = "The water utility coupling (batch 71)"
+
+#: (node id, name, unit, range, default, role, determinism, description,
+#: source, source_url)
+_BATCH71_NODES: tuple[tuple[str, str, str, tuple[float, float], float | None, str, str, str, str, str | None], ...] = (
+	(
+		"water_access_share",
+		"Share with basic water access",
+		"1",
+		(0.0, 1.0),
+		0.6667,
+		"free",
+		"policy",
+		"The fraction of the population using at least basic drinking water "
+		"services. Sub-Saharan Africa read 66.67% in 2023 (World Bank "
+		"SH.H2O.BASW.ZS; the archived series rises 59.22 -> 66.67 over "
+		"2015-2023), which is the default; the range admits a country near "
+		"universal coverage and one where the utility serves a minority. Basic "
+		"access is the right tier for a pumping load, not safely-managed: a "
+		"basic service is an improved source within a 30-minute round trip, and "
+		"a utility pumping against a standpipe is delivering at exactly that "
+		"tier.",
+		"World Bank World Development Indicators, SH.H2O.BASW.ZS (Sub-Saharan Africa, 2023)",
+		"https://data.worldbank.org/indicator/SH.H2O.BASW.ZS",
+	),
+	(
+		"water_use_per_capita_lpd",
+		"Municipal water use per capita",
+		"L/person/day",
+		(20.0, 200.0),
+		100.0,
+		"free",
+		"policy",
+		"Litres a served person draws from the utility's supply each day. "
+		"Jacobs et al. (2022), Water SA 48(2) 171-179, tabulate it by level of "
+		"service: a standpipe shared by many households uses 20-24 L/person/day "
+		"across climate regions (LOS1), a yard connection 46-58 (LOS3), and a "
+		"full indoor house connection 135-196 (LOS5). The default of 100 is a "
+		"yard-to-indoor mix and sits between the LOS3 and LOS5 columns rather "
+		"than on a cell: the country this library is calibrated for is mostly "
+		"LOS1-LOS3, so the range spans LOS1's floor to LOS5's ceiling and the "
+		"default is a scenario's own service-level choice, not a measurement. "
+		"The paper's South African benchmark is the closest published "
+		"service-level ladder to a sub-Saharan utility; it is not a "
+		"country-specific measurement.",
+		"Jacobs, Crouch, Ilemobade & du Plessis (2022), Water SA 48(2) 171-179, Table 4",
+		"https://doi.org/10.17159/wsa/2022.v48.i2.3917",
+	),
+	(
+		"water_pumping_intensity_kwh_per_m3",
+		"Water system energy intensity",
+		"kWh/m3",
+		(0.16, 2.28),
+		0.4,
+		"free",
+		"physical",
+		"Electricity a drinking-water system spends per cubic metre delivered "
+		"to the end user. Sharif et al. (2019) review the components on a flat "
+		"North American system -- 0.026 kWh/m3 at the source, 0.066 through "
+		"treatment, 0.3 in distribution, a 0.40 total of which distribution is "
+		"76.9% (their Figure 3, from EPA 2013) -- and report operating systems "
+		"spanning 0.16 to 0.55 kWh/m3, with mountain terrain reaching 2.28. The "
+		"default 0.40 is that flat-terrain total, which is the one complete "
+		"breakdown the paper gives; the range is the operating band, because a "
+		"topography that is not flat is the single largest multiplier in the "
+		"review and a scenario that models one should move this dial rather "
+		"than accept the flat-terrain figure.",
+		"Sharif, Haider, Farahat & Hewage (2019), Environmental Reviews, Figure 3 and the operating-range survey",
+		"https://utoronto.scholaris.ca/bitstreams/ee38eb33-caeb-42de-9ba5-6756c312538e/download",
+	),
+	(
+		"water_served_population",
+		"Water-served population",
+		"people",
+		(0.0, 2.0e8),
+		None,
+		"derived",
+		"physical",
+		"The population the utility actually delivers to: the country's "
+		"population times the share with at least basic drinking water "
+		"service. The share is a free dial because it is the one number a "
+		"scenario can move on its own -- a connection programme raises it and "
+		"nothing else in the graph moves.",
+		_BATCH71_SOURCE,
+		None,
+	),
+)
+
+_BATCH71_EQUATIONS: tuple[tuple[str, str, str, str, str, str], ...] = (
+	# (id, name, lhs, rhs, latex, reference)
+	(
+		"water_served_population_definition",
+		"Water-served population",
+		"water_served_population",
+		"population_total * water_access_share",
+		r"\mathrm{water}_{served\_population} = \mathrm{population}_{total}"
+		r"\, \mathrm{water}_{access\_share}",
+		"World Bank World Development Indicators, SH.H2O.BASW.ZS",
+	),
+	(
+		"water_pumping_load_definition",
+		"Water pumping load",
+		"water_pumping_load",
+		"water_served_population * water_use_per_capita_lpd "
+		"* water_pumping_intensity_kwh_per_m3 * 365 / 1000000",
+		r"\mathrm{water}_{pumping\_load} = \mathrm{water}_{served\_population}"
+		r"\, \mathrm{water}_{use\_per\_capita\_lpd}"
+		r"\, \mathrm{water}_{pumping\_intensity\_kwh\_per\_m3}"
+		r"\, \frac{365}{10^{6}}",
+		"Jacobs et al. (2022), Water SA 48(2), per-capita water use by service "
+		"level; Sharif et al. (2019), energy intensity of water distribution "
+		"systems",
+	),
+)
+
+
+def build_batch71(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Couple the utility's pumping load to a served population and an intensity.
+
+	*The gate.* The builder re-derives the value from the operands and asserts
+	it against the magnitude band a utility's pumping load sits in, because the
+	dimension check cannot see the factor-of-1000 this batch exists to avoid.
+	It also asserts the pumping node was uncoupled before the batch, so a rebake
+	onto an already-coupled graph fails instead of silently restating.
+	"""
+	from alea.prg.dsl import parse_side
+	from alea.prg.views import ParameterNode
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+
+	# -- the premises, measured on the shipped graph -------------------------
+	pumping = graph.nodes["water_pumping_load"]
+	assert pumping.unit == "MWh/year", pumping.unit
+	assert pumping.role.value == "free", (
+		f"water_pumping_load is already {pumping.role.value}; this batch is what "
+		f"makes it derived, and running it twice would restate a solved node"
+	)
+	assert "water_pumping_load" in graph.uncoupled(), (
+		"water_pumping_load is already reached by an equation; the coupling this "
+		"batch adds is not missing"
+	)
+	population = graph.nodes["population_total"]
+	assert population.unit == "people", population.unit
+	assert population.role.value == "free", population.role.value
+
+	# -- emit: four nodes, two equations, five edges -------------------------
+	for name, label, unit, rng, default, role, determinism, prose, source, url in _BATCH71_NODES:
+		body = {
+			"id": name,
+			"name": label,
+			"description": prose,
+			"category": "Demand",
+			"subcategory": None,
+			"type": "float",
+			"unit": unit,
+			"range": list(rng),
+			"default": default,
+			"initial": None,
+			"role": role,
+			"determinism": determinism,
+			"categories": [],
+			"source": source,
+			"source_url": url,
+			"users": ["Water", "Planners"],
+			"priority": "P2",
+			"status": "to_build",
+			"deprecated_by": None,
+		}
+		ParameterNode(**body)
+		nodes[name] = body
+
+	# `water_pumping_load` becomes derived and loses its default: a derived node
+	# with a default is the shipped-value-vs-equation disagreement this tree
+	# keeps recording.
+	shipped = graph.nodes["water_pumping_load"]
+	load_body = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+	load_body.update({
+		"role": "derived",
+		"default": None,
+		"unit": "MWh/year",
+		# The range is the operands' image, not a guess: the ceiling at every
+		# operand's maximum is 33.29 M MWh/year.
+		"range": [0.0, 3.4e7],
+		"determinism": "physical",
+		"source": _BATCH71_SOURCE,
+		"source_url": None,
+	})
+	load_body["description"] = (
+		"Electricity the water utility's pumping draws in the year, in "
+		"megawatt-hours, determined by `water_pumping_load_definition` as served "
+		"population times per-capita use times the system's energy intensity. The "
+		"catalog's quantity is municipal supply -- 'Water utility pumping', "
+		"delivered to households -- and this is now that object. It previously "
+		"deferred on a missing base and named `total_water_demand_m3`, the plant's "
+		"own process withdrawal (cooling plus electrolysis, 93.2 M m3/year at "
+		"defaults): charging a distribution intensity to it would have billed the "
+		"utility's auxiliary load to water the plant consumes and never "
+		"distributes. At defaults 45 M people x 0.6667 served x 100 L/person/day x "
+		"0.40 kWh/m3 x 365 / 1e6 is 438,022 MWh/year."
+	)
+	ParameterNode(**{"id": "water_pumping_load", **load_body})
+	nodes["water_pumping_load"] = load_body
+
+	for equation_id, label, lhs, rhs, latex, reference in _BATCH71_EQUATIONS:
+		symbols = set(parse_side(rhs).symbols)
+		assert lhs in symbols or lhs == "water_pumping_load", (equation_id, lhs)
+		named = sorted(symbols | {lhs})
+		body = {
+			"id": equation_id,
+			"name": label,
+			"description": (
+				"The population a utility delivers to: the country's population "
+				"times the share with basic water access. Dimensional check: "
+				"person x 1 is person. At defaults 45 M x 0.6667 is 30.0015 M "
+				"people, against a `population_total` of 45 M -- the difference "
+				"is the third the utility does not serve, and charging it "
+				"pumping energy would bill the utility for water it never "
+				"delivered."
+				if equation_id == "water_served_population_definition"
+				else (
+					"The utility's pumping energy for the year: served "
+					"population times per-capita use times the system's energy "
+					"intensity, over 365 days. Dimensional check: person x "
+					"L/(person day) x kWh/m3 x day/year is kWh/year. The 1e6 is "
+					"TWO scales the walker cannot see: 1000 litres to the cubic "
+					"metre, and 1000 kilowatt-hours to the megawatt-hour the "
+					"node is declared in. One factor alone leaves the answer in "
+					"kWh/year, which the dimension check passes because kWh and "
+					"MWh are the same dimension -- the trap this equation's "
+					"first draft fell into, reading 438,022,000 where the "
+					"object is 438,022. At defaults 45 M people x 0.6667 served "
+					"x 100 L/person/day x 0.40 kWh/m3 x 365 / 1e6 is 438,022 "
+					"MWh/year, or 0.438 TWh/year. The base is "
+					"`water_served_population`, not `population_total`: "
+					"charging a utility's per-capita delivery to everyone in "
+					"the country asserts universal service, which the access "
+					"data contradicts, and that is the error this node shipped "
+					"with when it named `total_water_demand_m3` -- the plant's "
+					"own process withdrawal -- as its base."
+				)
+			),
+			"lhs": lhs,
+			"rhs": rhs,
+			"latex": latex,
+			"parameters": named,
+			"determined_variables": [lhs],
+			"free_variables": sorted(symbols - {lhs}),
+			"relation": "eq",
+			"system": "water_energy",
+			"tolerance": 1e-09,
+			"priority": "P2",
+			"solution_method": "direct",
+			"linearity": "linear",
+			"unit_check": True,
+			"reference": reference,
+		}
+		equations[equation_id] = body
+		for source in sorted(symbols):
+			assert source in graph.nodes or source in nodes, (equation_id, source)
+			edges.append({
+				"source": source,
+				"target": lhs,
+				"equation_id": equation_id,
+				"relationship": "functional",
+				"direction": "forward",
+				"strength": "hard",
+				"description": (
+					f"Enters {lhs}: an input of `{lhs} = {rhs}`."
+				),
+				"reference": reference,
+				"priority": "P2",
+			})
+
+	# -- the gate: the value is in the band the dimension check cannot see ---
+	#
+	# Computed from the emitted operands, not read off a constant, so a rebake
+	# after a default moves fails here rather than shipping a wrong magnitude.
+	access = nodes["water_access_share"]["default"]
+	per_capita = nodes["water_use_per_capita_lpd"]["default"]
+	intensity = nodes["water_pumping_intensity_kwh_per_m3"]["default"]
+	served = population.default * access
+	load = served * per_capita * intensity * 365 / 1e6
+	assert 1e5 < load < 1e6, (
+		f"the emitted operands give {load} MWh/year, which is not in the "
+		f"100-1,000 GWh/year band; a factor-of-1000 slip is dimensionally "
+		f"invisible and would read 1,000x this"
+	)
+	# And the ceiling the range claims, recomputed from the operands' ranges.
+	ceiling = 2.0e8 * 1.0 * 200.0 * 2.28 * 365 / 1e6
+	assert load_body["range"][1] >= ceiling, (
+		f"the range ceiling {load_body['range'][1]} is below the operands' own "
+		f"image {ceiling}, so a scenario the graph admits would be refused"
+	)
+
+	print(f"  water_pumping_load: {load:,.0f} MWh/year at defaults")
+	return nodes, equations, edges, []
+

@@ -1971,6 +1971,69 @@ produced `SyntaxError: expected 'except' or 'finally' block`, which is a
 canary that tested nothing; it was redone as a `raise` so the module still
 parsed.
 
+### The pumping node's base was the plant's water, not the utility's (batch 71, 2026-10-27)
+
+`water_pumping_load` shipped as a free dial pinned at zero, and its
+description named two works — Jacobs et al. (2022) for per-capita water use by
+service level and Sharif et al. (2019) for the energy intensity of
+distribution — that no equation carried. The citation register's reverse join
+found the consequence before a reader did: `sharif_2019_wds_energy` was
+registered in `sources/INDEX.md` and reached by no `Equation.reference`, so
+`test_every_registered_work_is_reached_by_a_citation` was red at `HEAD`. A
+prose citation on an uncoupled node is a citation the register cannot see.
+
+**The base was the defect.** The node was first written against
+`total_water_demand_m3`, which is the *plant's* own withdrawal — cooling plus
+electrolysis, 93.2 M m3/year at defaults. A utility's distribution energy is
+proportional to the water it *delivers*, and the plant is a customer, not the
+system. Charging a distribution intensity to the plant's process water would
+have billed the utility's auxiliary load to water it consumes and never
+distributes. The correct base is the served population, so the batch adds
+`water_served_population = population_total * water_access_share`, 45 M people
+times 0.6667 against the World Bank's basic-water-access indicator for
+Sub-Saharan Africa, giving 30.0015 M served — the third of the country the
+utility does not reach, and the reason the two bases are not interchangeable.
+
+The full definition is
+
+    water_pumping_load = water_served_population
+                       * water_use_per_capita_lpd
+                       * water_pumping_intensity_kwh_per_m3
+                       * 365 / 1e6
+
+reading 45e6 × 0.6667 × 100 L/person/day × 0.40 kWh/m3 × 365 / 1e6 =
+**438,021.9 MWh/year**, or 0.438 TWh against a national demand near 180 TWh —
+0.24%, which is the right order for a water utility's pumping against a
+country's electricity.
+
+**The 1e6 is two scales and the dimensional check cannot see either.** The
+first draft divided by 1000, converting litres to the cubic metre and stopping
+there, which leaves the answer in kWh/year while the node is declared
+`MWh/year`. `check_graph` reported the equation decidable and consistent,
+because kWh and MWh share a dimension and `check_graph` compares dimensions,
+not magnitudes. The reading was 438,022,000 against an object of 438,022. The
+canary is the reason this is written down: reverting `/1000000` to `/1000`
+leaves `check_graph` **green** and fails two of the three tests — the
+magnitude band fires and the differential test does not, because a scale
+factor does not break proportionality. A differential test alone would have
+called the 1000× error correct.
+
+**The range is the driver's image, not a round number.** The node first
+declared `[0, 1e6]` while its operands' own ranges allow 2e8 people × 200
+L/person/day × 2.28 kWh/m3 × 365 / 1e6 = 3.33e7. A range that is not the
+image of its drivers refuses scenarios the drivers admit. It now reads
+`[0, 3.4e7]`.
+
+Five nodes added or retyped, two equations, five edges. `water_pumping_load`
+leaves the dead-knob register (221 → 220) because `is_settable` refuses a
+derived node; the three new free dials enter the untranslated register, which
+moves 861 → 863 by three in and one out; the audit's `skipped` moves 294 → 296
+because neither new equation reads a column the solve result carries. The
+constraint register's identity pin was **already stale by four** before this
+batch — measured on `HEAD:config/prg.yaml` it read 530/602 against a pin of
+534/606, which batches 69 and 70 had moved without correcting — and is
+re-pinned at 532/604 here.
+
 ### Three attainment ratios divided one policy dial by another (batch 70, 2026-10-25)
 
 `employment_attainment_local` was defined as

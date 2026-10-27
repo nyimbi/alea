@@ -1914,8 +1914,9 @@ def test_every_equality_declares_an_edge_from_each_symbol_it_reads(
 	# equality whose rhs was the bare share it determined -- a rename rather
 	# than a relation. The rule itself is unchanged and still has no
 	# exceptions; the count falls with the equation. Batch 70 removed three
-	# more equalities -- the attainment ratios -- so 533 -> 530.
-	assert len(determined) == 530, len(determined)
+	# more equalities -- the attainment ratios -- so 533 -> 530. Batch 71 added
+	# two -- the water-served population and the pumping load -- so 530 -> 532.
+	assert len(determined) == 532, len(determined)
 
 	sourced: dict[str, set[str]] = {}
 	for edge in graph.edges:
@@ -2983,7 +2984,14 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# batch also *deleted* that equation, so the tombstone it left behind now
 	# names nothing -- the count rises by one for a retirement that removed a
 	# duplicate rather than for one that uncovered an orphan.
-	assert len(dead) == 221, len(dead)
+	# Batch 71 took it 221 to 220, and the movement is the same kind batch 54
+	# made with `temporal_resolution`: `water_pumping_load` stopped being a
+	# settable dial pinned at zero and became derived from the served
+	# population and the system's energy intensity. `is_settable` refuses a
+	# derived node, so the placeholder left this register because the quantity
+	# it stood for is now computed. Its three new operands are all read by the
+	# two equations that batch added, so none of them enters it.
+	assert len(dead) == 220, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
@@ -3436,7 +3444,14 @@ def test_the_audit_reports_what_it_did_not_check():
 	# thirty-nine equations moving from `skipped` to `checked`, which is the
 	# audit's coverage widening, and the direction is the point: the leaves
 	# were the inputs the fleet aggregates were silently standing in for.
-	assert len(audit.skipped) == 294, audit.skipped
+	#
+	# Batch 71 took it 294 -> 296 with the two derived nodes it added.
+	# `water_served_population` reads `water_access_share`, which the solve
+	# result does not carry, and `water_pumping_load` reads the served
+	# population, so it is no more reachable than its operand. `checked` is
+	# flat at 236: the batch widened the computed set without widening the
+	# audit's coverage, which is the same direction batches 51 and 52 moved.
+	assert len(audit.skipped) == 296, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -3499,8 +3514,10 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# 533 -> 534. Batch 69 takes it 534 -> 533: `buffer_pool_contribution`
 	# stops being derived when its alias equation is removed, so the computed
 	# set shrinks by one and the unexamined set with it. Batch 70 removes
-	# three attainment ratios, taking it 533 -> 530.
-	assert len(audit.skipped) == 530, audit.skipped
+	# three attainment ratios, taking it 533 -> 530. Batch 71 adds two derived
+	# nodes -- `water_served_population` and `water_pumping_load`, the latter
+	# ceasing to be a free dial -- so 530 -> 532.
+	assert len(audit.skipped) == 532, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -3720,6 +3737,129 @@ def test_the_audit_does_not_compare_the_graph_against_itself():
 	assert supplied["thermal_capacity_mw"] == pytest.approx(
 		supplied["coal_capacity"] + supplied["gas_capacity"]
 	)
+
+
+def test_the_water_pumping_load_is_the_utilitys_water_not_the_plants(
+	graph: ParameterGraph, defaults: dict
+):
+	"""The base was the wrong object, and the intensity was never the gap.
+
+	WHY THIS TEST EXISTS. `water_pumping_load` deferred for sixty batches on a
+	missing intensity and named `total_water_demand_m3` as the base it would
+	multiply. That base is the *plant's* process withdrawal -- cooling plus
+	electrolysis, 93.2 M m3/year at defaults -- so a distribution intensity
+	charged to it bills the utility's auxiliary load to water the plant
+	consumes and never distributes. Wrong object, not a missing coefficient.
+
+	The intensity was closed by Sharif et al. (2019) and the base by Jacobs et
+	al. (2022) plus the World Bank access series, so the node is now derived
+	rather than a free dial sitting at zero.
+
+	**The value is asserted against an independent computation, not against the
+	equation.** A test that recomputes the rhs with the same operands proves the
+	equation is written as written. The arithmetic below is the physical
+	estimate -- people, then cubic metres, then kilowatt-hours -- derived in a
+	different order from the equation's single product, which is what makes it
+	a check rather than a restatement.
+	"""
+	values = graph.propagate(defaults).values
+
+	served = 45e6 * 0.6667
+	# `ParameterValue` is `float | str` because a categorical node propagates
+	# its level name; these four are numeric, and the cast says so once rather
+	# than at every comparison.
+	load = float(values["water_pumping_load"])  # type: ignore[arg-type]
+	served_population = float(values["water_served_population"])  # type: ignore[arg-type]
+	assert served_population == pytest.approx(served, rel=1e-6)
+	# The plant's withdrawal is a different quantity and must not be the base.
+	assert served_population != pytest.approx(
+		float(values["total_water_demand_m3"]), rel=1e-3  # type: ignore[arg-type]
+	)
+
+	m3_per_day = served * 100.0 / 1000.0
+	kwh_per_year = m3_per_day * 0.40 * 365.0
+	assert load == pytest.approx(kwh_per_year / 1000.0, rel=1e-6)
+	# 438,022 MWh/year is 0.438 TWh against a national demand of 180 TWh: a
+	# quarter of a percent, which is the order a utility's pumping load is.
+	assert 400_000.0 < load < 500_000.0
+
+
+def test_the_pumping_load_divides_by_a_million_and_the_dimension_check_cannot_see_it(
+	graph: ParameterGraph, defaults: dict
+):
+	"""kWh and MWh are the same dimension, so a 1000x error passes the walker.
+
+	WHY THIS IS ITS OWN GATE. `check_graph` compares `.dimensionality`, and
+	`kilowatt_hour` and `megawatt_hour` share one. An equation that converted
+	litres to cubic metres and stopped -- reading 438,022,000 where the node is
+	declared in MWh/year -- is *dimensionally consistent* and would sail
+	through every unit gate in this suite. The first draft of this equation did
+	exactly that.
+
+	So the assertion is on the magnitude, and it is stated as a band around the
+	physical estimate rather than as an equality: the point is that the answer
+	is in megawatt-hours, and any factor-of-1000 slip leaves that band by three
+	orders of magnitude.
+	"""
+	values = graph.propagate(defaults).values
+	load = float(values["water_pumping_load"])  # type: ignore[arg-type]
+
+	# The node's own unit is the claim being tested.
+	assert graph.nodes["water_pumping_load"].unit == "MWh/year"
+	# A one-factor equation reads 1,000x this. A missing 365 reads 365x less.
+	assert 1e5 < load < 1e6, (
+		f"water_pumping_load is {load}, which is not in the 100-1,000 GWh/year "
+		f"band a 45 M-person utility's pumping sits in; a factor-of-1000 slip "
+		f"is dimensionally invisible and reads as 4.38e8"
+	)
+	# The dimensional check is green either way -- stated so a reader does not
+	# mistake it for the guard that catches this.
+	from alea.prg.units import check_graph
+
+	report = check_graph(graph)
+	check = next(
+		c for c in report.checks
+		if c.equation_id == "water_pumping_load_definition"
+	)
+	assert check.decidable and check.consistent, check
+
+
+def test_the_water_pumping_load_follows_its_drivers(graph: ParameterGraph, defaults: dict):
+	"""A derived node that does not move with its operands is a relabelled dial.
+
+	The differential form: raise the access share and the intensity, and the
+	load must rise by the product of the two factors. A node that read a
+	default, or an equation that dropped a symbol, would leave the value where
+	it was -- and `uncoupled()` would still call it coupled, because an edge
+	exists whether or not the arithmetic uses it.
+	"""
+	base = float(graph.propagate(defaults).values["water_pumping_load"])  # type: ignore[arg-type]
+
+	# Halve the served population, hold the rest. The share is bounded above
+	# by 1, so the differential moves it down: a test that doubled it would be
+	# refused by the range guard rather than by the equation.
+	served_halved = float(  # type: ignore[arg-type]
+		graph.propagate(
+			{**defaults, "water_access_share": defaults["water_access_share"] / 2}
+		).values["water_pumping_load"]
+	)
+	assert served_halved == pytest.approx(base / 2.0, rel=1e-6)
+
+	# Double the intensity, hold the rest.
+	intensity_doubled = float(  # type: ignore[arg-type]
+		graph.propagate(
+			{**defaults, "water_pumping_intensity_kwh_per_m3": 2 * 0.40}
+		).values["water_pumping_load"]
+	)
+	assert intensity_doubled == pytest.approx(2.0 * base, rel=1e-6)
+
+	# And the per-capita dial, which is the one a service-level scenario moves.
+	use_doubled = float(  # type: ignore[arg-type]
+		graph.propagate(
+			{**defaults, "water_use_per_capita_lpd": 2 * 100.0}
+		).values["water_pumping_load"]
+	)
+	assert use_doubled == pytest.approx(2.0 * base, rel=1e-6)
 
 
 def test_the_fleet_nodes_are_filled_from_the_solve_not_from_their_defaults(
@@ -5705,7 +5845,11 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# the edge count fell by six while this fell by three -- the distinction
 	# the batch-63 note above makes, and the reason this number is not the
 	# edge total.
-	assert counts == {"hard": 599, "informational": 1, "soft": 2}, counts
+	# Batch 71 added two equalities -- the served-population product and the
+	# pumping-load product -- and each declares hard edges only, so the hard
+	# tier moves 599 -> 601 while the two tiers the batch did not touch stay
+	# flat. The equality is what checks that.
+	assert counts == {"hard": 601, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -6182,7 +6326,17 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# `buffer_pool_contribution` and removes its equation, which is why the
 	# equation count falls; a deprecated node may not be reached by an
 	# equation (`_deprecated_reach`), so the alias's coupling is its deletion.
-	assert len(declared) == 302, f"the citation register moved: {sorted(declared)}"
+	#
+	# Batch 71 moves it 302 -> 304, and both movements are the register
+	# closing a node that was cited only in prose. `water_pumping_load` had
+	# named Jacobs et al. (2022) and Sharif et al. (2019) in its description
+	# while it carried no equation, so the register's reverse join found the
+	# Sharif row cited by nothing. The two equations the batch adds carry the
+	# works their forms come from -- the served-population product the World
+	# Bank basic-water-access indicator, the pumping load both the per-capita
+	# service-level table and the distribution energy intensity -- and the
+	# row the reverse join was missing now has a door.
+	assert len(declared) == 304, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -6446,8 +6600,9 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 	# temporal-resolution definition 533 -> 534. Batch 69 takes it back to 533:
 	# `buffer_pool_contribution` stops being derived when its alias equation is
 	# removed, so one fewer equation is compared. Batch 70 removes three more
-	# (the attainment ratios), taking it 533 -> 530.
-	assert compared == 530, (
+	# (the attainment ratios), taking it 533 -> 530, and batch 71 adds two
+	# (the water-served population and the pumping load), 530 -> 532.
+	assert compared == 532, (
 		f"expected 481 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "

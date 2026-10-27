@@ -300,8 +300,16 @@ the current membership is the `deprecated_uncoupled` set in
 	# `employment_attainment_local`, `employment_attainment_women` and
 	# `employment_attainment_youth` -- because each divided one policy dial by
 	# another and the quotient was not a quantity. Three tombstones, 867 -> 864.
+	#
+	# Batch 71 moves it 864 -> 866, and the movement is two directions at
+	# once. `water_pumping_load` was a free dial pinned at zero and is now
+	# derived from the served population and the distribution energy
+	# intensity, so `is_settable` refuses it and it leaves the register. The
+	# batch's three new free nodes -- the access share, the per-capita use and
+	# the pumping intensity -- all enter it, none with a translation. Three in
+	# and one out is +2.
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 864, cov
+	assert cov["total"] == 866, cov
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -403,9 +411,12 @@ the only difference between the two sets.
 	# `remittance_dependency` tombstone is the same: 867 -> 866. Batch 61's
 	# `local_content_requirements` tombstone is the same: 866 -> 865. Batch 62's
 	# `energy_burden_limit` tombstone is the same: 865 -> 864. Batch 70's three
-	# attainment-ratio tombstones are the same: 864 -> 861.
+	# attainment-ratio tombstones are the same: 864 -> 861. Batch 71's derived
+	# `water_pumping_load` is the reverse: 861 -> 863 for the same arithmetic,
+	# since a derived node is not settable and the batch's three new free
+	# nodes all join the register.
 	missing = untranslated(graph)
-	assert len(missing) == 861, missing
+	assert len(missing) == 863, missing
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact

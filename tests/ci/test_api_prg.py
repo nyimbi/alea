@@ -552,7 +552,12 @@ def test_the_summary_serves_the_endogenous_layer(
 	# count rises by three and `derived` falls by the same. The three
 	# `*_employment_targets` tombstoned alongside them were already `free` and
 	# moved nothing here.
-	assert len(free) == 708, len(free)
+	#
+	# Batch 71 moves it 708 -> 710, net of two directions: three new free
+	# dials (the access share, the per-capita use and the pumping intensity)
+	# enter, and `water_pumping_load` leaves for `derived` because the batch
+	# gave it an equation. Three in, one out.
+	assert len(free) == 710, len(free)
 
 
 # ---------------------------------------------------------------------------
