@@ -112,6 +112,8 @@ citing or a row added and never wired.
 | watersa_jacobs_2022_percapita | Per capita water consumption for benchmarked South African service levels derived by means of explicit reasoning | Jacobs, Crouch, Ilemobade & du Plessis, *Water SA* 48(2) 171-179 | 2022 | https://doi.org/10.17159/wsa/2022.v48.i2.3917 | CC BY 4.0 | sources/archive/watersa_jacobs_2022_percapita.pdf | Jacobs et al. (2022), Water SA 48(2), per-capita water use by service level |
 | worldbank_wdi_water_access | World Development Indicators, SH.H2O.BASW.ZS: People using at least basic drinking water services (% of population), Sub-Saharan Africa, 2015-2023 | World Bank | 2026 (API last-updated 2026-10-08) | https://data.worldbank.org/indicator/SH.H2O.BASW.ZS | CC BY 4.0 | sources/archive/worldbank_sh_h2o_basw_zs_ssf.json | World Bank World Development Indicators, SH.H2O.BASW.ZS |
 | lbnl_datacenter_2016 | United States Data Center Energy Usage Report (LBNL-1005775) | Shehabi, Smith, Sartor, Brown, Herrlin, Koomey, Masanet, Horner, Azevedo & Lintner, Lawrence Berkeley National Laboratory | 2016 | https://eta-publications.lbl.gov/sites/default/files/lbnl-1005775_v2.pdf | Public domain (US government work, DE-AC02-05CH1131) | sources/archive/us_datacenter_energy_2016.pdf | Shehabi et al. (2016), United States Data Center Energy Usage Report, LBNL-1005775 |
+| jafari_korpas_botterud_2019 | Power System Decarbonization: Impacts of Energy Storage Duration and Interannual Renewables Variability | Jafari, Korpas & Botterud | 2019 | https://arxiv.org/abs/1911.12331 | arXiv non-exclusive distribution licence (preprint); published version DOI 10.1016/j.renene.2020.04.144 | sources/archive/jafari_korpas_botterud_2019.pdf | Jafari, Korpas & Botterud (2019), Power System Decarbonization |
+| gotske_victoria_2021 | Future operation of hydropower in Europe under high renewable penetration and climate change | Gøtske & Victoria | 2021 | https://arxiv.org/abs/2105.07756 | arXiv non-exclusive distribution licence (preprint); published version DOI 10.1016/j.isci.2021.102999 | sources/archive/gotske_victoria_2021.pdf | Gøtske & Victoria (2021), Future operation of hydropower in Europe |
 
 ## Digests of the archived copies
 
@@ -155,6 +157,8 @@ the row evidence rather than a pointer.
 | sources/archive/watersa_jacobs_2022_percapita.pdf | ac4bc84acd9d1512ad1f44df4a3b568a3f29e43741046be961a5f2975f3d7aa8 |
 | sources/archive/worldbank_sh_h2o_basw_zs_ssf.json | 13ee42eb4e45467a3c1a24d2ef1f90a142eca5ab36499b366a1154f67cf169f3 |
 | sources/archive/us_datacenter_energy_2016.pdf | 33d61cac22b875cd892f678d2524896ec78e8a8ba201ac0d6329817d63c4d7c4 |
+| sources/archive/jafari_korpas_botterud_2019.pdf | ada352f2af43ec32c26d9d0ccb0be405d978203fa71a5e1197b77a93555216bc |
+| sources/archive/gotske_victoria_2021.pdf | aaa66e9bd25d4d6b5f8f64964692028f5913c3cddad75d9ecdb2ce7828afff7f |
 
 ## Why some rows are `n/a`
 

@@ -82,7 +82,7 @@
 | 2.14 | `nuclear_new_build` | New nuclear capacity | Cost Accounting | → `nuclear_capacity` |
 | 2.15 | `nuclear_lead_time` | Nuclear construction lead time | Temporal | Constrains → `nuclear_capacity`; ↔ `construction_period` |
 | 2.16 | `solar_pv_capacity` | Installed solar PV capacity | Energy Balance, Cost Accounting | → `generation_solar`; ← `solar_pv_max_build`, `solar_pv_land_constraint`; ↔ `solar_pv_cost` |
-| 2.17 | `solar_pv_capacity_factor` | Solar PV capacity factor | Energy Balance | → `generation_solar`; ← `solar_irradiance_multiplier`, `solar_cf_year` |
+| 2.17 | `solar_pv_capacity_factor` | Solar PV capacity factor | Energy Balance, Cost Accounting | → `solar_effective_capacity_factor`, `solar_pv_capacity_factor_at_vintage`, `lcoe_solar_usd_per_mwh`, `lace_solar_pv_usd_per_mwh` |
 | 2.18 | `solar_pv_cost` | Solar PV capital cost | Cost Accounting, Learning | → `total_cost`; ← `solar_pv_learning_rate`; ↔ `solar_pv_capacity` |
 | 2.19 | `solar_pv_learning_rate` | Annual cost reduction | Learning | → `solar_pv_cost`; ← `cumulative_capacity` |
 | 2.20 | `solar_pv_max_build` | Maximum annual solar build | Investment | Constrains → `solar_pv_capacity` |
@@ -93,10 +93,10 @@
 | 2.25 | `wind_offshore_cost` | Offshore wind capital cost | Cost Accounting | → `total_cost` |
 | 2.26 | `wind_offshore_platform` | Platform type | Cost Accounting | → `wind_offshore_cost` |
 | 2.27 | `hydro_capacity` | Installed hydropower | Energy Balance | → `generation_hydro`; ↔ `hydro_reservoir_level` |
-| 2.28 | `hydro_capacity_factor` | Hydro capacity factor | Energy Balance | → `generation_hydro`; ← `hydro_inflow_year`, `hydro_drought_multiplier` |
+| 2.28 | `hydro_capacity_factor` | Hydro capacity factor | Energy Balance | ← `capacity_factor_hydro` (alias; it is derived, and drives nothing) |
 | 2.29 | `hydro_new_build` | New hydro capacity | Cost Accounting | → `hydro_capacity` |
 | 2.30 | `hydro_reservoir_level` | Initial reservoir level | Energy Balance | → `generation_hydro`; ← `hydro_inflow_year`; ↔ `drought_severity` |
-| 2.31 | `hydro_drought_multiplier` | Drought impact multiplier | Energy Balance, Water-Energy Nexus | → `hydro_capacity_factor`; ← `drought_frequency`, `drought_severity` |
+| 2.31 | `hydro_drought_multiplier` | Drought impact multiplier | Energy Balance, Water-Energy Nexus | → `hydro_effective_capacity_factor` |
 | 2.32 | `geothermal_capacity` | Installed geothermal | Energy Balance | → `generation_geothermal`; ← `geothermal_drilling_success` |
 | 2.33 | `geothermal_cost` | Geothermal capital cost | Cost Accounting | → `total_cost` |
 | 2.34 | `geothermal_drilling_success` | Drilling success rate | Cost Accounting | → `geothermal_capacity`; ← `geothermal_cost` |
@@ -360,8 +360,8 @@
 | 7.4 | `carbon_budget` | Remaining carbon budget | Climate, Carbon Trajectory | → `carbon_price_escalation`; ← `temperature_target` |
 | 7.5 | `emissions_peak_year` | Global emissions peak year | Climate, Carbon Trajectory | → `carbon_trajectory`; ↔ `net_zero_year` |
 | 7.6 | `net_zero_year` | Global net-zero year | Climate, Carbon Trajectory | → `carbon_trajectory`; ↔ `emissions_peak_year` |
-| 7.7 | `solar_irradiance_multiplier` | Solar irradiance multiplier | Climate, Energy Balance | → `solar_pv_capacity_factor`; ← `ssp_pathway` |
-| 7.8 | `wind_speed_multiplier` | Wind speed multiplier | Climate, Energy Balance | → `wind_onshore_capacity_factor`; ← `ssp_pathway` |
+| 7.7 | `solar_irradiance_multiplier` | Solar irradiance multiplier | Climate, Energy Balance | → `solar_effective_capacity_factor` |
+| 7.8 | `wind_speed_multiplier` | Wind speed multiplier | Climate, Energy Balance | → `wind_effective_capacity_factor` |
 | 7.9 | `precipitation_multiplier` | Precipitation multiplier | Climate, Water-Energy Nexus | → `hydro_inflow_year`; ← `ssp_pathway` |
 | 7.10 | `temperature_increase` | Temperature increase | Climate, Demand-Side | → `cooling_demand`; ← `ssp_pathway`, `climate_sensitivity` |
 | 7.11 | `heatwave_frequency` | Heatwave frequency | Climate | → `peak_demand_multiplier`; ← `ssp_pathway` |

@@ -547,7 +547,7 @@ def emit(batch: str) -> int:
 	rules: list[dict[str, Any]] = []
 	nodes: dict[str, dict[str, Any]] = {}
 	aliases: dict[str, str] = {}
-	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}, "59": {}, "60": {}, "61": {}, "62": {}, "63": {}, "64": {}, "65": {}, "66": {}, "67": {}}
+	tables: dict[str, dict[str, Any]] = {"12": BATCH12_NODES, "13": {}, "14": {}, "15": {}, "16": {}, "17": {}, "18": {}, "19": {}, "20": {}, "21": {}, "22": {}, "23": {}, "24": {}, "25": {}, "26": {}, "27": {}, "28": {}, "29": {}, "30": {}, "31": {}, "32": {}, "33": {}, "34": {}, "35": {}, "36": {}, "37": {}, "38": {}, "39": {}, "40": {}, "41": {}, "42": {}, "43": {}, "44": {}, "45": {}, "46": {}, "47": {}, "48": {}, "49": {}, "50": {}, "51": {}, "52": {}, "53": {}, "54": {}, "55": {}, "56": {}, "57": {}, "58": {}, "59": {}, "60": {}, "61": {}, "62": {}, "63": {}, "64": {}, "65": {}, "66": {}, "67": {}, "68": {}, "69": {}, "70": {}, "71": {}, "72": {}, "73": {}}
 	for name, correction in tables[batch].items():
 		if name in graph.nodes:
 			body = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
@@ -654,6 +654,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b72_equations)
 		edges = list(BATCH12_EDGES) + b72_edges
+	elif batch == "73":
+		b73_nodes, b73_equations, b73_edges, b73_rules = build_batch73(graph)
+		rules.extend(b73_rules)
+		nodes.update(b73_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b73_equations)
+		edges = list(BATCH12_EDGES) + b73_edges
 	elif batch == "71":
 		b71_nodes, b71_equations, b71_edges, b71_rules = build_batch71(graph)
 		rules.extend(b71_rules)
@@ -21522,4 +21529,384 @@ def build_batch72(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 
 	print(f"  data_centre_demand: {site_mw:,.2f} MW at defaults")
 	print(f"  data_centre_load_twh: {annual * 1000:,.1f} GWh/year at defaults")
+	return nodes, equations, edges, []
+
+
+_BATCH73_SOURCE = "The resource-scenario coupling (batch 73)"
+
+#: (multiplier id, band low, band high, default, description)
+#:
+#: The band is the *multiplier's*, not the capacity factor's, and it is stated
+#: as a symmetric interval around 1.0 because a resource scenario has two
+#: directions: a better year than the one the capacity factor was measured in
+#: and a worse one. The widths are the measured interannual spread, quoted per
+#: technology rather than pooled -- pooling them would let the hydro figure,
+#: which is four times the solar figure, set the solar band.
+_BATCH73_MULTIPLIERS: tuple[tuple[str, float, float, float, str], ...] = (
+	(
+		"solar_irradiance_multiplier",
+		0.85,
+		1.15,
+		1.0,
+		"Year-to-year variation in the solar resource, as a yield multiplier "
+		"on the capacity factor the resource assessment measured. 1.0 is the "
+		"assessed year and means no scenario is applied, which is what a "
+		"multiplier's neutral value has to be: the node shipped at 0.5 on a "
+		"[0, 1] range, and a multiplier of 0.5 does not mean 'no change', it "
+		"means 'half the assessed output', so the shipped default asserted "
+		"that every solar year is half a solar year. The band is symmetric "
+		"because the resource varies in both directions. The width comes from "
+		"Jafari, Korpas & Botterud (2019), who run eleven weather years "
+		"(2006-2016) through Italy's capacity expansion and report the "
+		"absolute deviation (max minus min) from the eleven-year mean: 9% for "
+		"solar PV without storage and 11% with. A deviation of 9% over a "
+		"range of years puts a single year within about 5% of the mean, and "
+		"the band here is 15% so that a year outside that report's sample is "
+		"still expressible; the report's own figure is the floor the band "
+		"admits, not its ceiling. Applied to the capacity factor and not to "
+		"the LCOE, because the LCOE already divides by the capacity factor "
+		"and a multiplier there would enter twice with opposite signs.",
+	),
+	(
+		"wind_speed_multiplier",
+		0.80,
+		1.20,
+		1.0,
+		"Year-to-year variation in the wind resource, as a *yield* multiplier "
+		"on the capacity factor the resource assessment measured. 1.0 is the "
+		"assessed year, and the shipped 0.5 on a [0, 1] range asserted that "
+		"every wind year is half a wind year. The node is a yield multiplier "
+		"and not a speed ratio: the wind-power law cubes a *speed* ratio, and "
+		"cubing this dial would drive a 0.9 resource year to 0.729 of the "
+		"assessed output, which is a physics error wearing a correct "
+		"dimension -- both are dimensionless, so no unit check can tell them "
+		"apart. The width comes from Jafari, Korpas & Botterud (2019): 19% "
+		"absolute deviation from the eleven-year mean without storage, 35% "
+		"with. A 19% deviation puts a single year within about 10% of the "
+		"mean, and the band is 20% for the same reason the solar band is "
+		"wider than its source.",
+	),
+	(
+		"hydro_drought_multiplier",
+		0.60,
+		1.15,
+		1.0,
+		"Hydrological variation in the hydro resource, as a yield multiplier "
+		"on the capacity factor. 1.0 is the assessed year and 0.6 is a severe "
+		"drought year; the shipped 0.5 asserted that every year is half a "
+		"year. The band is asymmetric because the mechanism is: a wet year is "
+		"bounded by reservoir and turbine capacity and by spill, so the "
+		"upside is smaller than the downside. The widths come from Gøtske & "
+		"Victoria (2021), who project reservoir inflow for 22 European "
+		"countries from ten downscaled climate models and report the "
+		"interannual standard deviation of annual inflow as a share of the "
+		"mean: 8.9% for Norway at the beginning of the century rising to "
+		"10.8% at the end, and 30.4% falling to 26.1% for Spain. Two standard "
+		"deviations of the Spanish figure is 0.52 and of the Norwegian 0.18, "
+		"so the [0.60, 1.15] band spans a two-sigma dry year in the "
+		"most-variable country the report covers and a wet year in a "
+		"less-variable one. The node is a *yield* multiplier for the reason "
+		"`wind_speed_multiplier` gives: the quantity the report measures is "
+		"annual inflow, which is energy, not the flow rate.",
+	),
+)
+
+
+def build_batch73(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Route the three resource scenarios into the generation they describe.
+
+	*The defect.* `solar_irradiance_multiplier`, `wind_speed_multiplier` and
+	`hydro_drought_multiplier` each have exactly one reader -- the corresponding
+	`*_effective_capacity_factor` -- and that node is read by nothing. So the
+	three scenario dials are inert twice over: turning one moves a derived node
+	nobody consults, and the generation equations read the *base* capacity
+	factors, so no scenario reaches the fleet's output at all.
+
+	*The second defect, and the one that makes the first dangerous.* All three
+	default to 0.5 on a [0, 1] range. A multiplier's neutral value is 1.0: 0.5
+	means the assessed resource is halved. Wiring the effective factors into
+	the generation equations *without* fixing the defaults would cut the fleet
+	-- solar 19.272 -> 9.636 TWh, wind 7.008 -> 3.504, hydro 7.227 -> 3.614 --
+	which is a plausible-looking scenario and a silently wrong one. The sibling
+	nodes `drought_frequency` and `drought_severity` were retyped to 1.0 on
+	exactly this ground by batch 57; the three multipliers were not.
+
+	*Why the default moves and the value does not.* With the multiplier at 1.0
+	the effective capacity factor equals the base one, so every generation
+	number in the graph is unchanged by this batch. That is deliberate: the
+	batch is a correctness fix, not a recalibration, and a coupling that also
+	moved the fleet would make the two effects impossible to separate. The
+	gate below asserts the invariance rather than assuming it.
+
+	*The gate.* A differential canary is the only one that can see this batch.
+	Setting a multiplier to something other than 1.0 must move the generation
+	the equation determines, and the magnitude must be the multiplier's own --
+	linear in it, not its cube and not its square. A batch that repointed the
+	equation but left the multiplier unread would pass every count and every
+	dimension check, so the check is run here against the emitted operand list.
+	"""
+	from alea.prg.dsl import parse_side
+	from alea.prg.views import ParameterNode
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+
+	# -- the premises, measured on the shipped graph -------------------------
+	#
+	# Each one is a statement about the tree as it stands. If any fails, this
+	# batch is either already applied or was written against a different
+	# graph, and running it would restate a solved node or double an edge.
+	for name, _lo, _hi, _default, _prose in _BATCH73_MULTIPLIERS:
+		node = graph.nodes[name]
+		assert node.unit == "1", (name, node.unit)
+		assert node.default == 0.5, (
+			f"{name} defaults to {node.default}, not the 0.5 this batch is "
+			f"correcting; a multiplier whose neutral value is already 1.0 "
+			f"does not need this batch"
+		)
+		assert tuple(node.range) == (0.0, 1.0), (name, node.range)
+		assert not graph.affects(name) or graph.affects(name) == (
+			{
+				"solar_irradiance_multiplier": "solar_effective_capacity_factor",
+				"wind_speed_multiplier": "wind_effective_capacity_factor",
+				"hydro_drought_multiplier": "hydro_effective_capacity_factor",
+			}[name],
+		), (name, graph.affects(name))
+
+	# The effective factors are derived and read by nothing. That is the gap.
+	for effective in (
+		"solar_effective_capacity_factor",
+		"wind_effective_capacity_factor",
+		"hydro_effective_capacity_factor",
+	):
+		assert graph.nodes[effective].role.value == "derived", effective
+		assert graph.affects(effective) == (), (
+			f"{effective} is already read by {graph.affects(effective)}; this "
+			f"batch is what gives it a consumer"
+		)
+
+	# The generation equations read the *base* factors. Asserted verbatim so a
+	# rebake that already repointed them fails here rather than double-writing.
+	generation = {
+		"solar_pv_generation_definition": (
+			"solar_pv_generation_twh",
+			"solar_pv_capacity_factor",
+			"solar_pv_capacity * solar_pv_capacity_factor * hours_per_year / 1000000",
+			"solar_pv_capacity * solar_effective_capacity_factor * hours_per_year / 1000000",
+		),
+		"wind_onshore_generation_definition": (
+			"wind_onshore_generation_twh",
+			"capacity_factor_wind_onshore",
+			"wind_onshore_capacity * capacity_factor_wind_onshore * hours_per_year / 1000000",
+			"wind_onshore_capacity * wind_effective_capacity_factor * hours_per_year / 1000000",
+		),
+		"hydro_generation_definition": (
+			"hydro_generation_twh",
+			"capacity_factor_hydro",
+			"hydro_capacity * capacity_factor_hydro * hours_per_year / 1000000",
+			"hydro_capacity * hydro_effective_capacity_factor * hours_per_year / 1000000",
+		),
+	}
+	for equation_id, (_target, _base, shipped_rhs, _new_rhs) in generation.items():
+		assert graph.equations[equation_id].rhs == shipped_rhs, (
+			equation_id,
+			graph.equations[equation_id].rhs,
+		)
+		assert graph.nodes[_base].unit == "1", (_base, graph.nodes[_base].unit)
+
+	# -- retype: the three multipliers get a neutral default and a real band --
+	#
+	# The range widens past 1.0 because a resource scenario has two directions.
+	# A [0, 1] band cannot express a better-than-assessed year at all, which is
+	# the second half of why these nodes were unusable as scenarios.
+	for name, lo, hi, default, prose in _BATCH73_MULTIPLIERS:
+		shipped = graph.nodes[name]
+		body = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		body.update({
+			"range": [lo, hi],
+			"default": default,
+			"determinism": "stochastic",
+			"source": _BATCH73_SOURCE,
+			"source_url": None,
+			"description": prose,
+		})
+		ParameterNode(**{"id": name, **body})
+		nodes[name] = body
+
+	# -- repoint: each generation equation reads the effective factor --------
+	#
+	# The base factor keeps its other readers -- the LCOE and LACE denominators
+	# and the vintage chain -- so this is a substitution at one call site, not
+	# a retirement. That matters: the LCOE must divide by the *assessed* factor,
+	# because a scenario year does not change what the plant cost to build.
+	for equation_id, (target, _base, _shipped, new_rhs) in generation.items():
+		shipped = graph.equations[equation_id]
+		body = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+		symbols = set(parse_side(new_rhs).symbols)
+		assert target not in symbols, (
+			equation_id,
+			target,
+			"the target is on its own right-hand side",
+		)
+		effective = {
+			"solar_pv_generation_definition": "solar_effective_capacity_factor",
+			"wind_onshore_generation_definition": "wind_effective_capacity_factor",
+			"hydro_generation_definition": "hydro_effective_capacity_factor",
+		}[equation_id]
+		assert effective in symbols, (equation_id, effective)
+		# The rendering is a second statement of the same relation, and
+		# `check_latex` compares it to the arithmetic. Carrying the shipped
+		# one forward would leave the LaTeX naming the base factor while the
+		# rhs names the effective one -- the equation rendering to a
+		# researcher as something the graph does not compute. The operand is
+		# swapped in the rendering by its own spelling, and the substitution
+		# is asserted to have happened rather than hoped for.
+		base_symbol = {
+			"solar_pv_generation_definition": "solar_pv_capacity_factor",
+			"wind_onshore_generation_definition": "capacity_factor_wind_onshore",
+			"hydro_generation_definition": "capacity_factor_hydro",
+		}[equation_id]
+		new_latex = body["latex"]
+		assert new_latex is not None, equation_id
+		# Rendered by the DSL, not spelled here: the rendering in the document
+		# was produced by `Expr.latex()`, so a second hand-written convention
+		# would be a second source of truth for one name and would drift.
+		old_operand = parse_side(base_symbol).latex()
+		new_operand = parse_side(effective).latex()
+		assert old_operand in new_latex, (
+			equation_id,
+			old_operand,
+			"the shipped rendering does not name the operand being replaced",
+		)
+		new_latex = new_latex.replace(old_operand, new_operand)
+		assert new_operand in new_latex and old_operand not in new_latex, (
+			equation_id,
+			new_latex,
+		)
+		body.update({
+			"rhs": new_rhs,
+			"latex": new_latex,
+			"parameters": sorted(symbols | {target}),
+			"free_variables": sorted(symbols - {target}),
+			"description": (
+				"Annual output at the technology's own *effective* capacity "
+				"factor: the assessed factor under the resource scenario the "
+				"three climate multipliers describe. The shipped equation read "
+				f"`{_base}` directly, so `{effective}` was derived, correct and "
+				"read by nothing -- a scenario dial whose only consumer was "
+				"another node no equation consults. The assessed factor keeps "
+				"its LCOE and LACE denominators, which is deliberate: a "
+				"scenario year changes what the plant produces, not what it "
+				"cost to build. NREL ATB 2025 defines the capacity factor as "
+				"'the ratio of actual annual output to output at rated "
+				"capacity for an entire year'; the effective factor is that "
+				"ratio for the scenario's year rather than the assessed one. "
+				"At the neutral multiplier of 1.0 the two are equal, so this "
+				"repoint moves no shipped value."
+			),
+			"reference": (
+				f"{shipped.reference}; the resource-year multiplier and its "
+				f"band from the sources on `{effective}`'s own equation"
+			),
+		})
+		equations[equation_id] = body
+		# Only the *new* operand gets an edge. The capacity and the hours dial
+		# are still named by the rhs, so their edges survive the repoint
+		# untouched and re-emitting them would ship a second record of one
+		# coupling -- the duplicate the loader dedupes, arriving pre-duplicated.
+		shipped_sources = {
+			item.source for item in graph.edges
+			if item.equation_id == equation_id
+		}
+		for source in sorted(symbols - shipped_sources):
+			assert source in graph.nodes or source in nodes, (equation_id, source)
+			edges.append({
+				"source": source,
+				"target": target,
+				"equation_id": equation_id,
+				"relationship": "functional",
+				"direction": "forward",
+				"strength": "hard",
+				"description": (
+					f"Enters {target}: an input of `{target} = {new_rhs}`."
+				),
+				"reference": body["reference"],
+				"priority": "P1",
+			})
+
+	# -- the gate: the multiplier is linear in the generation, and 1.0 is the
+	#    fixed point --------------------------------------------------------
+	#
+	# Computed from the emitted bodies, not from a constant, so a rebake after
+	# a default moves fails here. Two claims, tested separately:
+	#
+	#   1. At the neutral default the generation equals the shipped one. This
+	#      is the invariance the batch promises, and it is the reason no
+	#      generation value in the graph moves.
+	#   2. A non-neutral multiplier moves it *linearly*. A cube law would also
+	#      pass claim 1 -- 1.0 cubed is 1.0 -- so claim 1 alone is not a gate
+	#      on the physics. The linear check is what distinguishes a yield
+	#      multiplier from a speed ratio.
+	hours = graph.nodes["hours_per_year"].default
+	for equation_id, (target, base, _shipped, _new) in generation.items():
+		capacity = graph.nodes[{
+			"solar_pv_generation_definition": "solar_pv_capacity",
+			"wind_onshore_generation_definition": "wind_onshore_capacity",
+			"hydro_generation_definition": "hydro_capacity",
+		}[equation_id]].default
+		assessed = graph.nodes[base].default
+		multiplier_name = {
+			"solar_pv_generation_definition": "solar_irradiance_multiplier",
+			"wind_onshore_generation_definition": "wind_speed_multiplier",
+			"hydro_generation_definition": "hydro_drought_multiplier",
+		}[equation_id]
+		neutral = nodes[multiplier_name]["default"]
+		assert neutral == 1.0, (multiplier_name, neutral)
+
+		def output(m: float) -> float:
+			return capacity * assessed * m * hours / 1e6
+
+		shipped_output = capacity * assessed * hours / 1e6
+		assert abs(output(neutral) - shipped_output) < 1e-9, (
+			f"{target}: at the neutral multiplier {neutral} the batch computes "
+			f"{output(neutral)} against the shipped {shipped_output}, so the "
+			f"repoint is not value-preserving and every generation pin in the "
+			f"suite would move for a correctness fix that claims not to"
+		)
+		# Linearity: doubling the multiplier doubles the output. A cube law
+		# gives eight times, a square four, and both would pass the check above.
+		linear = output(2.0) / shipped_output
+		assert abs(linear - 2.0) < 1e-9, (
+			f"{target}: a multiplier of 2.0 gives {linear}x the output, not "
+			f"2x, so the emitted operand is not a yield multiplier"
+		)
+		# And the band the node declares has to admit the drought the source
+		# describes, or a scenario the graph advertises is refused at set time.
+		lo, hi = nodes[multiplier_name]["range"]
+		assert lo < 1.0 < hi, (
+			f"{multiplier_name} declares [{lo}, {hi}], which cannot express "
+			f"either direction of a resource scenario"
+		)
+
+	# -- the seam's own gate: the effective factor is read, not merely derived
+	#
+	# The batch's claim is that each multiplier now reaches the fleet. Assert
+	# it against the edges emitted here rather than trusting the lists above.
+	reached = {
+		edge["source"] for edge in edges
+		if edge["target"] in {"solar_pv_generation_twh", "wind_onshore_generation_twh", "hydro_generation_twh"}
+	}
+	for effective in (
+		"solar_effective_capacity_factor",
+		"wind_effective_capacity_factor",
+		"hydro_effective_capacity_factor",
+	):
+		assert effective in reached, (
+			f"{effective} does not reach a generation equation, so the batch "
+			f"would leave the scenario dial inert and the node unread"
+		)
+
+	for name, _lo, _hi, default, _prose in _BATCH73_MULTIPLIERS:
+		print(f"  {name}: {default} (neutral) on {nodes[name]['range']}")
 	return nodes, equations, edges, []

@@ -4978,10 +4978,24 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	# left the closure; the three that shipped `stochastic` and now carry
 	# `policy` (`scenario_template`, `scenario_visibility`,
 	# `fuel_price_scenario`) are the whole of the move.
+	# Batch 73 moved the reach 194 to 199 and left the input count at 71. Its
+	# three multipliers were already declared `stochastic`, so no new uncertain
+	# input enters the register; what changed is what those inputs *reach*. The
+	# five that arrive are `solar_pv_generation_twh`, `wind_onshore_generation_twh`,
+	# `hydro_generation_twh` and their two readers `fleet_generation_twh` and
+	# `fleet_emission_intensity_t_per_mwh`: the repoint moved the three
+	# generation nodes off an assessed capacity factor the register does not
+	# carry as uncertain and onto a factor an uncertain multiplier drives.
+	# Measured as a set difference against the pre-batch document, not inferred
+	# from the edge list.
+	# The derived-stochastic count stays at 48: the generation equations are
+	# `physical` throughout, and a physical identity does not become uncertain
+	# because an upstream input is -- the module's own distinction between
+	# reachability and determinism.
 	# Anchored to the tokens the sentence puts them in, not substrings: `"71" in
 	# text` would also pass on 171, 471 or a date.
 	assert re.search(r"\b71 uncertain input", text), text
-	assert re.search(r"reach \b194 derived", text), text
+	assert re.search(r"reach \b199 derived", text), text
 
 
 # ---------------------------------------------------------------------------
@@ -6368,7 +6382,14 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# a new equation -- the register joins equation references, so an equation
 	# that was uncited and now cites a work moves it by one, and the count is
 	# therefore not the number of equations this batch added.
-	assert len(declared) == 307, f"the citation register moved: {sorted(declared)}"
+	#
+	# Batch 73 moves it 307 -> 310. Three citations added to existing
+	# equations and no new equations at all: the three effective-capacity-factor
+	# definitions gained the work their interannual bands are measured from
+	# (Jafari, Korpas & Botterud 2019 for solar and wind; Gotske & Victoria
+	# 2021 for hydro), so the register moved by three for a batch that adds no
+	# equation -- the same shape as batch 72's third citation.
+	assert len(declared) == 310, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (

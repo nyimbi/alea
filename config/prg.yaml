@@ -15455,22 +15455,38 @@ parameters:
     users:
     - All
   hydro_drought_multiplier:
-    name: Hydro drought multiplier
-    description: Drought impact multiplier
+    categories: []
     category: Supply
+    default: 1.0
+    deprecated_by: null
+    description: 'Hydrological variation in the hydro resource, as a yield multiplier on the capacity
+      factor. 1.0 is the assessed year and 0.6 is a severe drought year; the shipped 0.5 asserted that
+      every year is half a year. The band is asymmetric because the mechanism is: a wet year is bounded
+      by reservoir and turbine capacity and by spill, so the upside is smaller than the downside. The
+      widths come from Gøtske & Victoria (2021), who project reservoir inflow for 22 European countries
+      from ten downscaled climate models and report the interannual standard deviation of annual inflow
+      as a share of the mean: 8.9% for Norway at the beginning of the century rising to 10.8% at the end,
+      and 30.4% falling to 26.1% for Spain. Two standard deviations of the Spanish figure is 0.52 and
+      of the Norwegian 0.18, so the [0.60, 1.15] band spans a two-sigma dry year in the most-variable
+      country the report covers and a wet year in a less-variable one. The node is a *yield* multiplier
+      for the reason `wind_speed_multiplier` gives: the quantity the report measures is annual inflow,
+      which is energy, not the flow rate.'
+    determinism: stochastic
+    initial: null
+    name: Hydro drought multiplier
+    priority: P2
+    range:
+    - 0.6
+    - 1.15
+    role: exogenous
+    source: The resource-scenario coupling (batch 73)
+    source_url: null
+    status: to_build
+    subcategory: null
     type: float
     unit: '1'
-    range:
-    - 0.0
-    - 1.0
-    default: 0.5
-    role: exogenous
-    determinism: stochastic
-    priority: P2
-    status: to_build
     users:
     - Planners
-    source: docs/params.md
   hydro_effective_capacity_factor:
     category: Generation
     description: 'The drought-adjusted hydro output share: the base capacity factor times the drought
@@ -28303,22 +28319,39 @@ parameters:
     - Planners
     - Financial analysts
   solar_irradiance_multiplier:
-    name: Solar irradiance multiplier
-    description: Solar irradiance multiplier
+    categories: []
     category: Climate
+    default: 1.0
+    deprecated_by: null
+    description: 'Year-to-year variation in the solar resource, as a yield multiplier on the capacity
+      factor the resource assessment measured. 1.0 is the assessed year and means no scenario is applied,
+      which is what a multiplier''s neutral value has to be: the node shipped at 0.5 on a [0, 1] range,
+      and a multiplier of 0.5 does not mean ''no change'', it means ''half the assessed output'', so the
+      shipped default asserted that every solar year is half a solar year. The band is symmetric because
+      the resource varies in both directions. The width comes from Jafari, Korpas & Botterud (2019), who
+      run eleven weather years (2006-2016) through Italy''s capacity expansion and report the absolute
+      deviation (max minus min) from the eleven-year mean: 9% for solar PV without storage and 11% with.
+      A deviation of 9% over a range of years puts a single year within about 5% of the mean, and the
+      band here is 15% so that a year outside that report''s sample is still expressible; the report''s
+      own figure is the floor the band admits, not its ceiling. Applied to the capacity factor and not
+      to the LCOE, because the LCOE already divides by the capacity factor and a multiplier there would
+      enter twice with opposite signs.'
+    determinism: stochastic
+    initial: null
+    name: Solar irradiance multiplier
+    priority: P2
+    range:
+    - 0.85
+    - 1.15
+    role: exogenous
+    source: The resource-scenario coupling (batch 73)
+    source_url: null
+    status: to_build
+    subcategory: null
     type: float
     unit: '1'
-    range:
-    - 0.0
-    - 1.0
-    default: 0.5
-    role: exogenous
-    determinism: stochastic
-    priority: P2
-    status: to_build
     users:
     - Planners
-    source: docs/params.md
   solar_pv_capacity:
     categories: []
     category: Supply-Side
@@ -33016,22 +33049,35 @@ parameters:
     status: to_build
     deprecated_by: null
   wind_speed_multiplier:
-    name: Wind speed multiplier
-    description: Wind speed multiplier
+    categories: []
     category: Climate
+    default: 1.0
+    deprecated_by: null
+    description: 'Year-to-year variation in the wind resource, as a *yield* multiplier on the capacity
+      factor the resource assessment measured. 1.0 is the assessed year, and the shipped 0.5 on a [0,
+      1] range asserted that every wind year is half a wind year. The node is a yield multiplier and not
+      a speed ratio: the wind-power law cubes a *speed* ratio, and cubing this dial would drive a 0.9
+      resource year to 0.729 of the assessed output, which is a physics error wearing a correct dimension
+      -- both are dimensionless, so no unit check can tell them apart. The width comes from Jafari, Korpas
+      & Botterud (2019): 19% absolute deviation from the eleven-year mean without storage, 35% with. A
+      19% deviation puts a single year within about 10% of the mean, and the band is 20% for the same
+      reason the solar band is wider than its source.'
+    determinism: stochastic
+    initial: null
+    name: Wind speed multiplier
+    priority: P2
+    range:
+    - 0.8
+    - 1.2
+    role: exogenous
+    source: The resource-scenario coupling (batch 73)
+    source_url: null
+    status: to_build
+    subcategory: null
     type: float
     unit: '1'
-    range:
-    - 0.0
-    - 1.0
-    default: 0.5
-    role: exogenous
-    determinism: stochastic
-    priority: P2
-    status: to_build
     users:
     - Planners
-    source: docs/params.md
   withholding_tax_dividends:
     categories: []
     category: Tax & Fiscal
@@ -40129,8 +40175,11 @@ equations:
     unit_check: true
   hydro_effective_capacity_factor_definition:
     description: 'The drought-adjusted hydro output share: the base capacity factor times the drought
-      multiplier. 0.55 x 0.5 is 0.275. Read against `capacity_factor_hydro` and not the `hydro_capacity_factor`
-      alias, so the product does not depend on another batch''s alias resolving first.'
+      multiplier. At the neutral multiplier of 1.0 the product is the assessed 0.55; a severe drought
+      at the band''s floor (0.60) gives 0.33 and a wet year at the ceiling (1.15) gives 0.6325. The band
+      is asymmetric because the mechanism is -- a wet year is bounded by reservoir and turbine capacity
+      and by spill. Read against `capacity_factor_hydro` and not the `hydro_capacity_factor` alias, so
+      the product does not depend on another batch''s alias resolving first.'
     determined_variables:
     - hydro_effective_capacity_factor
     free_variables: []
@@ -40143,7 +40192,8 @@ equations:
     - capacity_factor_hydro
     - hydro_drought_multiplier
     priority: P1
-    reference: null
+    reference: Gøtske & Victoria (2021), Future operation of hydropower in Europe, arXiv:2105.07756, for
+      the interannual band on `hydro_drought_multiplier`
     relation: eq
     rhs: capacity_factor_hydro * hydro_drought_multiplier
     solution_method: direct
@@ -40151,40 +40201,43 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   hydro_generation_definition:
-    id: hydro_generation_definition
-    name: Hydro annual generation
-    description: Annual output at the technology's own capacity factor. NREL ATB 2025 defines the capacity
-      factor as 'the ratio of actual annual output to output at rated capacity for an entire year' and
-      writes the per-MW output as `CF x 8,760`; EIA's LCOE methodology works the arithmetic for a 1 MW
-      turbine -- 'Generating hours = 30% x 8,760 hours/year = 2,628 hours/year' -- and reports the result
-      as '2,628 MWh/MW (2,628 equivalent operating hours)'; Short, Packey & Holt define the ratio the
-      identity inverts. The identity is stated in three parts across the three sources rather than once,
-      which is why this equation cites all three.
-    system: energy_balance
-    lhs: hydro_generation_twh
-    rhs: hydro_capacity * capacity_factor_hydro * hours_per_year / 1000000
-    relation: eq
-    parameters:
-    - capacity_factor_hydro
-    - hours_per_year
-    - hydro_capacity
-    - hydro_generation_twh
-    free_variables:
-    - capacity_factor_hydro
-    - hours_per_year
-    - hydro_capacity
+    description: 'Annual output at the technology''s own *effective* capacity factor: the assessed factor
+      under the resource scenario the three climate multipliers describe. The shipped equation read `capacity_factor_hydro`
+      directly, so `hydro_effective_capacity_factor` was derived, correct and read by nothing -- a scenario
+      dial whose only consumer was another node no equation consults. The assessed factor keeps its LCOE
+      and LACE denominators, which is deliberate: a scenario year changes what the plant produces, not
+      what it cost to build. NREL ATB 2025 defines the capacity factor as ''the ratio of actual annual
+      output to output at rated capacity for an entire year''; the effective factor is that ratio for
+      the scenario''s year rather than the assessed one. At the neutral multiplier of 1.0 the two are
+      equal, so this repoint moves no shipped value.'
     determined_variables:
     - hydro_generation_twh
-    tolerance: 1.0e-09
-    unit_check: true
-    solution_method: direct
+    free_variables:
+    - hours_per_year
+    - hydro_capacity
+    - hydro_effective_capacity_factor
+    id: hydro_generation_definition
+    latex: \mathrm{hydro}_{generation\_twh} = \frac{\mathrm{hydro}_{capacity} \mathrm{hydro}_{effective\_capacity\_factor}
+      \mathrm{hours}_{per\_year}}{1000000}
+    lhs: hydro_generation_twh
     linearity: linear
+    name: Hydro annual generation
+    parameters:
+    - hours_per_year
+    - hydro_capacity
+    - hydro_effective_capacity_factor
+    - hydro_generation_twh
     priority: P1
     reference: NREL ATB 2025, Equations and Variables (capacity factor and the CF x 8,760 denominator);
       EIA AEO LCOE Methodology, generating-hours arithmetic; Short, Packey & Holt (1995) NREL/TP-462-5173,
-      capacity factor definition
-    latex: \mathrm{hydro}_{generation\_twh} = \frac{\mathrm{hydro}_{capacity} \mathrm{capacity}_{factor\_hydro}
-      \mathrm{hours}_{per\_year}}{1000000}
+      capacity factor definition; the resource-year multiplier and its band from the sources on `hydro_effective_capacity_factor`'s
+      own equation
+    relation: eq
+    rhs: hydro_capacity * hydro_effective_capacity_factor * hours_per_year / 1000000
+    solution_method: direct
+    system: energy_balance
+    tolerance: 1.0e-09
+    unit_check: true
   hydro_inflow_vintage_offset_definition:
     description: How much the hydro inflow record's design year leads or trails the PV data's vintage.
       The vintage selectors are set independently, and this offset is the check a scenario author runs
@@ -46521,8 +46574,11 @@ equations:
     unit_check: true
   solar_effective_capacity_factor_definition:
     description: 'The PV output share under an irradiance scenario: the base capacity factor times the
-      multiplier. 0.22 x 0.5 is 0.11. Applied to the capacity factor and not to the LCOE: the LCOE already
-      divides by the capacity factor, so a multiplier there would enter twice with opposite signs.'
+      multiplier. At the neutral multiplier of 1.0 the product is the assessed 0.22, which is the point
+      -- the multiplier''s neutral value is 1.0 and a scenario departs from the assessed year in either
+      direction. A dry-of-sun year at the band''s floor (0.85) gives 0.187 and a good one at the ceiling
+      (1.15) gives 0.253. Applied to the capacity factor and not to the LCOE: the LCOE already divides
+      by the capacity factor, so a multiplier there would enter twice with opposite signs.'
     determined_variables:
     - solar_effective_capacity_factor
     free_variables: []
@@ -46535,7 +46591,8 @@ equations:
     - solar_irradiance_multiplier
     - solar_pv_capacity_factor
     priority: P1
-    reference: null
+    reference: Jafari, Korpas & Botterud (2019), Power System Decarbonization, arXiv:1911.12331, for the
+      interannual band on `solar_irradiance_multiplier`
     relation: eq
     rhs: solar_pv_capacity_factor * solar_irradiance_multiplier
     solution_method: direct
@@ -46591,40 +46648,43 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   solar_pv_generation_definition:
-    id: solar_pv_generation_definition
-    name: Solar pv annual generation
-    description: Annual output at the technology's own capacity factor. NREL ATB 2025 defines the capacity
-      factor as 'the ratio of actual annual output to output at rated capacity for an entire year' and
-      writes the per-MW output as `CF x 8,760`; EIA's LCOE methodology works the arithmetic for a 1 MW
-      turbine -- 'Generating hours = 30% x 8,760 hours/year = 2,628 hours/year' -- and reports the result
-      as '2,628 MWh/MW (2,628 equivalent operating hours)'; Short, Packey & Holt define the ratio the
-      identity inverts. The identity is stated in three parts across the three sources rather than once,
-      which is why this equation cites all three.
-    system: energy_balance
-    lhs: solar_pv_generation_twh
-    rhs: solar_pv_capacity * solar_pv_capacity_factor * hours_per_year / 1000000
-    relation: eq
-    parameters:
-    - hours_per_year
-    - solar_pv_capacity
-    - solar_pv_capacity_factor
+    description: 'Annual output at the technology''s own *effective* capacity factor: the assessed factor
+      under the resource scenario the three climate multipliers describe. The shipped equation read `solar_pv_capacity_factor`
+      directly, so `solar_effective_capacity_factor` was derived, correct and read by nothing -- a scenario
+      dial whose only consumer was another node no equation consults. The assessed factor keeps its LCOE
+      and LACE denominators, which is deliberate: a scenario year changes what the plant produces, not
+      what it cost to build. NREL ATB 2025 defines the capacity factor as ''the ratio of actual annual
+      output to output at rated capacity for an entire year''; the effective factor is that ratio for
+      the scenario''s year rather than the assessed one. At the neutral multiplier of 1.0 the two are
+      equal, so this repoint moves no shipped value.'
+    determined_variables:
     - solar_pv_generation_twh
     free_variables:
     - hours_per_year
+    - solar_effective_capacity_factor
     - solar_pv_capacity
-    - solar_pv_capacity_factor
-    determined_variables:
-    - solar_pv_generation_twh
-    tolerance: 1.0e-09
-    unit_check: true
-    solution_method: direct
+    id: solar_pv_generation_definition
+    latex: \mathrm{solar}_{pv\_generation\_twh} = \frac{\mathrm{solar}_{pv\_capacity} \mathrm{solar}_{effective\_capacity\_factor}
+      \mathrm{hours}_{per\_year}}{1000000}
+    lhs: solar_pv_generation_twh
     linearity: linear
+    name: Solar pv annual generation
+    parameters:
+    - hours_per_year
+    - solar_effective_capacity_factor
+    - solar_pv_capacity
+    - solar_pv_generation_twh
     priority: P1
     reference: NREL ATB 2025, Equations and Variables (capacity factor and the CF x 8,760 denominator);
       EIA AEO LCOE Methodology, generating-hours arithmetic; Short, Packey & Holt (1995) NREL/TP-462-5173,
-      capacity factor definition
-    latex: \mathrm{solar}_{pv\_generation\_twh} = \frac{\mathrm{solar}_{pv\_capacity} \mathrm{solar}_{pv\_capacity\_factor}
-      \mathrm{hours}_{per\_year}}{1000000}
+      capacity factor definition; the resource-year multiplier and its band from the sources on `solar_effective_capacity_factor`'s
+      own equation
+    relation: eq
+    rhs: solar_pv_capacity * solar_effective_capacity_factor * hours_per_year / 1000000
+    solution_method: direct
+    system: energy_balance
+    tolerance: 1.0e-09
+    unit_check: true
   solar_pv_land_constraint_bound:
     description: 'The land ceiling expressed as the PV nameplate the available land supports: 10000 MW
       at the reference build under a 20000 MW ceiling. The node is a *converted* land ceiling and its
@@ -48663,9 +48723,11 @@ equations:
     unit_check: true
   wind_effective_capacity_factor_definition:
     description: 'The onshore wind output share under a resource scenario: the base capacity factor times
-      the multiplier. 0.4 x 0.5 is 0.20. The node is a *yield* multiplier and not a speed ratio: the wind-power
-      law would cube it, and cubing a [0, 1] dial drives every scenario to zero. The prose carries the
-      distinction because the linear form is otherwise a physics error wearing a correct dimension.'
+      the multiplier. At the neutral multiplier of 1.0 the product is the assessed 0.40. The node is a
+      *yield* multiplier and not a speed ratio: the wind-power law would cube it, so a 0.9 resource year
+      would read 0.729 of the assessed output instead of 0.90. The prose carries the distinction because
+      the linear form is otherwise a physics error wearing a correct dimension -- both are dimensionless,
+      so no unit check can separate them.'
     determined_variables:
     - wind_effective_capacity_factor
     free_variables: []
@@ -48678,7 +48740,8 @@ equations:
     - capacity_factor_wind_onshore
     - wind_speed_multiplier
     priority: P1
-    reference: null
+    reference: Jafari, Korpas & Botterud (2019), Power System Decarbonization, arXiv:1911.12331, for the
+      interannual band on `wind_speed_multiplier`
     relation: eq
     rhs: capacity_factor_wind_onshore * wind_speed_multiplier
     solution_method: direct
@@ -48769,40 +48832,43 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   wind_onshore_generation_definition:
-    id: wind_onshore_generation_definition
-    name: Wind onshore annual generation
-    description: Annual output at the technology's own capacity factor. NREL ATB 2025 defines the capacity
-      factor as 'the ratio of actual annual output to output at rated capacity for an entire year' and
-      writes the per-MW output as `CF x 8,760`; EIA's LCOE methodology works the arithmetic for a 1 MW
-      turbine -- 'Generating hours = 30% x 8,760 hours/year = 2,628 hours/year' -- and reports the result
-      as '2,628 MWh/MW (2,628 equivalent operating hours)'; Short, Packey & Holt define the ratio the
-      identity inverts. The identity is stated in three parts across the three sources rather than once,
-      which is why this equation cites all three.
-    system: energy_balance
-    lhs: wind_onshore_generation_twh
-    rhs: wind_onshore_capacity * capacity_factor_wind_onshore * hours_per_year / 1000000
-    relation: eq
-    parameters:
-    - capacity_factor_wind_onshore
-    - hours_per_year
-    - wind_onshore_capacity
-    - wind_onshore_generation_twh
-    free_variables:
-    - capacity_factor_wind_onshore
-    - hours_per_year
-    - wind_onshore_capacity
+    description: 'Annual output at the technology''s own *effective* capacity factor: the assessed factor
+      under the resource scenario the three climate multipliers describe. The shipped equation read `capacity_factor_wind_onshore`
+      directly, so `wind_effective_capacity_factor` was derived, correct and read by nothing -- a scenario
+      dial whose only consumer was another node no equation consults. The assessed factor keeps its LCOE
+      and LACE denominators, which is deliberate: a scenario year changes what the plant produces, not
+      what it cost to build. NREL ATB 2025 defines the capacity factor as ''the ratio of actual annual
+      output to output at rated capacity for an entire year''; the effective factor is that ratio for
+      the scenario''s year rather than the assessed one. At the neutral multiplier of 1.0 the two are
+      equal, so this repoint moves no shipped value.'
     determined_variables:
     - wind_onshore_generation_twh
-    tolerance: 1.0e-09
-    unit_check: true
-    solution_method: direct
+    free_variables:
+    - hours_per_year
+    - wind_effective_capacity_factor
+    - wind_onshore_capacity
+    id: wind_onshore_generation_definition
+    latex: \mathrm{wind}_{onshore\_generation\_twh} = \frac{\mathrm{wind}_{onshore\_capacity} \mathrm{wind}_{effective\_capacity\_factor}
+      \mathrm{hours}_{per\_year}}{1000000}
+    lhs: wind_onshore_generation_twh
     linearity: linear
+    name: Wind onshore annual generation
+    parameters:
+    - hours_per_year
+    - wind_effective_capacity_factor
+    - wind_onshore_capacity
+    - wind_onshore_generation_twh
     priority: P1
     reference: NREL ATB 2025, Equations and Variables (capacity factor and the CF x 8,760 denominator);
       EIA AEO LCOE Methodology, generating-hours arithmetic; Short, Packey & Holt (1995) NREL/TP-462-5173,
-      capacity factor definition
-    latex: \mathrm{wind}_{onshore\_generation\_twh} = \frac{\mathrm{wind}_{onshore\_capacity} \mathrm{capacity}_{factor\_wind\_onshore}
-      \mathrm{hours}_{per\_year}}{1000000}
+      capacity factor definition; the resource-year multiplier and its band from the sources on `wind_effective_capacity_factor`'s
+      own equation
+    relation: eq
+    rhs: wind_onshore_capacity * wind_effective_capacity_factor * hours_per_year / 1000000
+    solution_method: direct
+    system: energy_balance
+    tolerance: 1.0e-09
+    unit_check: true
   withholding_tax_dividends_cost_definition:
     description: 'Withholding tax on distributed cash: the rate times cash available for debt service
       net of debt service. The base is the distributable residual, so a project whose debt service exceeds
@@ -59768,15 +59834,6 @@ relationships:
     the hours in the year are what turn a nameplate rating into energy.'
   reference: The capacity-to-energy repair (batch 46)
   priority: P1
-- source: capacity_factor_hydro
-  target: hydro_generation_twh
-  equation_id: hydro_generation_definition
-  relationship: functional
-  strength: hard
-  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
-    the hours in the year are what turn a nameplate rating into energy.'
-  reference: The capacity-to-energy repair (batch 46)
-  priority: P1
 - source: hours_per_year
   target: hydro_generation_twh
   equation_id: hydro_generation_definition
@@ -59795,15 +59852,6 @@ relationships:
     the hours in the year are what turn a nameplate rating into energy.'
   reference: The capacity-to-energy repair (batch 46)
   priority: P1
-- source: solar_pv_capacity_factor
-  target: solar_pv_generation_twh
-  equation_id: solar_pv_generation_definition
-  relationship: functional
-  strength: hard
-  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
-    the hours in the year are what turn a nameplate rating into energy.'
-  reference: The capacity-to-energy repair (batch 46)
-  priority: P1
 - source: hours_per_year
   target: solar_pv_generation_twh
   equation_id: solar_pv_generation_definition
@@ -59814,15 +59862,6 @@ relationships:
   reference: The capacity-to-energy repair (batch 46)
   priority: P1
 - source: wind_onshore_capacity
-  target: wind_onshore_generation_twh
-  equation_id: wind_onshore_generation_definition
-  relationship: functional
-  strength: hard
-  description: 'Enters the annual-output identity: a plant''s size, the share of the year it runs, and
-    the hours in the year are what turn a nameplate rating into energy.'
-  reference: The capacity-to-energy repair (batch 46)
-  priority: P1
-- source: capacity_factor_wind_onshore
   target: wind_onshore_generation_twh
   equation_id: wind_onshore_generation_definition
   relationship: functional
@@ -61842,6 +61881,45 @@ relationships:
   reference: Shehabi et al. (2016), United States Data Center Energy Usage Report, LBNL-1005775, for the
     data centre term
   priority: P1
+- description: 'Enters solar_pv_generation_twh: an input of `solar_pv_generation_twh = solar_pv_capacity
+    * solar_effective_capacity_factor * hours_per_year / 1000000`.'
+  direction: forward
+  equation_id: solar_pv_generation_definition
+  priority: P1
+  reference: NREL ATB 2025, Equations and Variables (capacity factor and the CF x 8,760 denominator);
+    EIA AEO LCOE Methodology, generating-hours arithmetic; Short, Packey & Holt (1995) NREL/TP-462-5173,
+    capacity factor definition; the resource-year multiplier and its band from the sources on `solar_effective_capacity_factor`'s
+    own equation
+  relationship: functional
+  source: solar_effective_capacity_factor
+  strength: hard
+  target: solar_pv_generation_twh
+- description: 'Enters wind_onshore_generation_twh: an input of `wind_onshore_generation_twh = wind_onshore_capacity
+    * wind_effective_capacity_factor * hours_per_year / 1000000`.'
+  direction: forward
+  equation_id: wind_onshore_generation_definition
+  priority: P1
+  reference: NREL ATB 2025, Equations and Variables (capacity factor and the CF x 8,760 denominator);
+    EIA AEO LCOE Methodology, generating-hours arithmetic; Short, Packey & Holt (1995) NREL/TP-462-5173,
+    capacity factor definition; the resource-year multiplier and its band from the sources on `wind_effective_capacity_factor`'s
+    own equation
+  relationship: functional
+  source: wind_effective_capacity_factor
+  strength: hard
+  target: wind_onshore_generation_twh
+- description: 'Enters hydro_generation_twh: an input of `hydro_generation_twh = hydro_capacity * hydro_effective_capacity_factor
+    * hours_per_year / 1000000`.'
+  direction: forward
+  equation_id: hydro_generation_definition
+  priority: P1
+  reference: NREL ATB 2025, Equations and Variables (capacity factor and the CF x 8,760 denominator);
+    EIA AEO LCOE Methodology, generating-hours arithmetic; Short, Packey & Holt (1995) NREL/TP-462-5173,
+    capacity factor definition; the resource-year multiplier and its band from the sources on `hydro_effective_capacity_factor`'s
+    own equation
+  relationship: functional
+  source: hydro_effective_capacity_factor
+  strength: hard
+  target: hydro_generation_twh
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0
   id: carbon_price_budget_alignment

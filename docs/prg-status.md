@@ -1971,6 +1971,122 @@ produced `SyntaxError: expected 'except' or 'finally' block`, which is a
 canary that tested nothing; it was redone as a `raise` so the module still
 parsed.
 
+### The resource multipliers were 0.5 and read by nothing (batch 73, 2026-10-27)
+
+Three scenario dials — `solar_irradiance_multiplier`,
+`wind_speed_multiplier`, `hydro_drought_multiplier` — each had exactly one
+reader, the corresponding `*_effective_capacity_factor`, and that node was read
+by nothing at all. The generation equations read the *base* capacity factors,
+so a resource scenario reached neither the derived node nor the fleet:
+
+| multiplier | default | its only reader | readers of that |
+|---|---|---|---|
+| `solar_irradiance_multiplier` | 0.5 | `solar_effective_capacity_factor` | — |
+| `wind_speed_multiplier` | 0.5 | `wind_effective_capacity_factor` | — |
+| `hydro_drought_multiplier` | 0.5 | `hydro_effective_capacity_factor` | — |
+
+The inertness was hiding a second, worse defect: **0.5 is not a multiplier's
+neutral value.** At 0.5 the products read 0.11, 0.20 and 0.275 — half the
+assessed resource. Wiring the effective factors into the generation equations
+*without* moving the defaults would have cut the fleet from 68.065 to 51.312
+TWh/year — the three VRE technologies fall from 33.507 to 16.753, so the loss is
+16.753 TWh — which is a plausible-looking scenario and a silently wrong one. The
+sibling nodes `drought_frequency` and `drought_severity` were retyped to 1.0 on
+exactly this ground by batch 57; these three were missed.
+
+**What changed.** Each multiplier is retyped to a neutral default of 1.0 with a
+symmetric-or-near-symmetric band around it, and each generation equation now
+reads the effective factor:
+
+```
+solar_pv_generation_twh    = solar_pv_capacity    * solar_effective_capacity_factor    * hours_per_year / 1e6
+wind_onshore_generation_twh = wind_onshore_capacity * wind_effective_capacity_factor    * hours_per_year / 1e6
+hydro_generation_twh       = hydro_capacity       * hydro_effective_capacity_factor    * hours_per_year / 1e6
+```
+
+The assessed factors keep their LCOE and LACE denominators deliberately: a
+scenario year changes what a plant produces, not what it cost to build.
+
+**The bands, and where they come from.** All three shipped on a `[0, 1]` range,
+which cannot express a better-than-assessed year at all. The bands are the
+measured interannual spread, quoted per technology rather than pooled:
+
+| multiplier | band | source figure |
+|---|---|---|
+| `solar_irradiance_multiplier` | [0.85, 1.15] | Jafari, Korpas & Botterud (2019): 9% absolute deviation (max − min) from the 11-year mean, solar PV, no storage; 11% with |
+| `wind_speed_multiplier` | [0.80, 1.20] | same, 19% without storage, 35% with |
+| `hydro_drought_multiplier` | [0.60, 1.15] | Gøtske & Victoria (2021): interannual σ of annual inflow 8.9→10.8% (Norway), 30.4→26.1% (Spain); two σ of the Spanish figure is 0.52 |
+
+The hydro band is asymmetric because the mechanism is: a wet year is bounded by
+reservoir and turbine capacity and by spill, so the upside is smaller than the
+downside. The wind node is a *yield* multiplier, not a speed ratio — cubing it,
+as the wind-power law would cube a speed ratio, drives a 0.9 year to 0.729. Both
+are dimensionless, so no unit check can tell the two apart; the prose carries it.
+
+**Two gates.** The first is invariance: at the neutral default the generation
+must equal the shipped value, so this batch moves no number in the graph —
+measured, solar 19.2720, wind 7.0080, hydro 7.2270, fleet 68.0652 TWh/year
+before and after. The second is linearity, because a cube law passes the first
+(1.0 cubed is 1.0). The differential sweep, run against the emitted bodies:
+
+```
+solar_irradiance_multiplier 0.9 -> 1.1:  solar 19.2720 -> 17.3448 / 21.1992   ratio 0.9000 / 1.1000
+wind_speed_multiplier       0.9 -> 1.1:  wind   7.0080 ->  6.3072 /  7.7088   ratio 0.9000 / 1.1000
+hydro_drought_multiplier    0.9 -> 1.1:  hydro  7.2270 ->  6.5043 /  7.9497   ratio 0.9000 / 1.1000
+```
+
+**The canary.** Reverting the solar equation to its shipped rhs, in a temporary
+copy, gives ratio 1.0000 for the same sweep — the multiplier becomes inert
+again, exactly as the batch claims it was. A second, independent gate fired
+first: the graph refused to load the reverted document with `edge
+solar_effective_capacity_factor -> solar_pv_generation_twh names ... as its
+source, and 'solar_pv_generation_definition' does not hold it`. The edge
+register is a check on the arithmetic, not a decoration.
+
+**The rendering was a second copy of the equation, and it went stale.** The
+repoint above rewrites `rhs`; each of the three equations also carries a
+`latex` field, which `check_latex` compares operand-by-operand against the
+arithmetic. The first attempt changed the `rhs` and left the renderings naming
+the base factors, so all three equations *rendered to a researcher as the
+equation they used to be*. `check_latex` caught it — four tests in
+`test_prg_latex.py`, including the integration assertion over the shipped
+library — and the renderings are now repointed in the same substitution.
+
+The builder was fixed at the source rather than in the document, because
+`body = dict(shipped.model_dump(...))` carries the old `latex` forward: a rebake
+would have reintroduced the stale renderings. It now renders the operand with
+the DSL's own `parse_side(symbol).latex()` rather than a second hand-written
+spelling, asserts the shipped rendering names the operand being replaced, and
+asserts the substitution happened. Both assertions canary: pointing the
+lookup at a symbol that is not there fails the first, and suppressing the
+`replace` fails the second.
+
+**`docs/param_eqn.md` disagrees with the graph on most of its rows, and that is
+not this batch's finding.** While correcting the five rows this batch touched,
+the `←` column was checked against the edge register across the whole file:
+824 rows name a node in the graph, 185 match the edges exactly and 639 do not.
+Examples — `peak_demand_multiplier` claims `load_factor` as an input and the
+graph has no such edge; `industrial_demand_share` claims `industrialisation_rate`
+and actually receives the other three demand shares. The five rows corrected
+here now match the graph exactly; the other 639 are a pre-existing drift this
+batch did not cause and does not fix. Recorded so the next reader does not
+mistake the file for an edge inventory.
+
+**Counts.** Nodes 1436, equations 606, relationships 1411 — all unchanged. This
+is a repoint, not an addition: three nodes retyped, three equations rewritten,
+three edges swapped. `uncoupled()` stays at 242 and `structure_issues()` is
+empty, because no declared `affects`/`depends_on` list on the touched nodes
+carried a stale entry.
+
+**Found while measuring, not fixed here.** Two other multipliers carry the same
+0.5 default and the same inert product: `precipitation_multiplier` →
+`precipitation_adjusted_flow_m3_per_s` and `peak_demand_multiplier` →
+`peak_demand_shifted_mw`. Both products are read by nothing, and — unlike the
+three fixed here — neither has a live consumer to route into: the water chain
+dead-ends at `environmental_flow_m3_per_s` (also unread) and the peak branch at
+`peak_demand_shifted_mw`. Fixing their defaults without giving them a consumer
+would correct a number nothing computes. Recorded as the next target.
+
 ### The data centre load was a dial standing in for its own method (batch 72, 2026-10-27)
 
 `data_centre_demand` shipped as a free dial pinned at zero, and its own
