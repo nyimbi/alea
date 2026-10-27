@@ -1916,7 +1916,9 @@ def test_every_equality_declares_an_edge_from_each_symbol_it_reads(
 	# exceptions; the count falls with the equation. Batch 70 removed three
 	# more equalities -- the attainment ratios -- so 533 -> 530. Batch 71 added
 	# two -- the water-served population and the pumping load -- so 530 -> 532.
-	assert len(determined) == 532, len(determined)
+	# Batch 72 adds two more -- the IT-load-times-PUE product and the
+	# megawatt-hour conversion -- taking 532 -> 534.
+	assert len(determined) == 534, len(determined)
 
 	sourced: dict[str, set[str]] = {}
 	for edge in graph.edges:
@@ -2991,7 +2993,13 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# derived node, so the placeholder left this register because the quantity
 	# it stood for is now computed. Its three new operands are all read by the
 	# two equations that batch added, so none of them enters it.
-	assert len(dead) == 220, len(dead)
+	# Batch 72 took it 220 to 219 for the same reason a third time:
+	# `data_centre_demand` stopped being a free dial pinned at zero and became
+	# the IT-load-times-PUE product, so `is_settable` refuses it and it leaves
+	# this register. Its two new operands are both read by the two equations
+	# the batch added, and `data_centre_load_twh` is read by `energy_demand`,
+	# so none of the three enters it.
+	assert len(dead) == 219, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
@@ -3451,7 +3459,15 @@ def test_the_audit_reports_what_it_did_not_check():
 	# population, so it is no more reachable than its operand. `checked` is
 	# flat at 236: the batch widened the computed set without widening the
 	# audit's coverage, which is the same direction batches 51 and 52 moved.
-	assert len(audit.skipped) == 296, audit.skipped
+	# Batch 72 takes it 296 -> 298 with the two derived nodes it added.
+	# `data_centre_demand` reads `data_centre_it_load_mw`, which the solve
+	# result does not carry, and `data_centre_load_twh` reads the site draw,
+	# so it is no more reachable than its operand. `checked` is flat at 236
+	# again: the batch widened the computed set without widening the audit's
+	# coverage. `energy_demand` stays checked -- it now reads a skipped node,
+	# but the audit asks whether the *operands it names* are on the result,
+	# and `base_demand_twh` and `demand_growth_factor` are.
+	assert len(audit.skipped) == 298, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -3516,8 +3532,10 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# set shrinks by one and the unexamined set with it. Batch 70 removes
 	# three attainment ratios, taking it 533 -> 530. Batch 71 adds two derived
 	# nodes -- `water_served_population` and `water_pumping_load`, the latter
-	# ceasing to be a free dial -- so 530 -> 532.
-	assert len(audit.skipped) == 532, audit.skipped
+	# ceasing to be a free dial -- so 530 -> 532. Batch 72 adds two more --
+	# `data_centre_demand`, ceasing to be a free dial, and
+	# `data_centre_load_twh` -- so 532 -> 534.
+	assert len(audit.skipped) == 534, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -5849,7 +5867,12 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# pumping-load product -- and each declares hard edges only, so the hard
 	# tier moves 599 -> 601 while the two tiers the batch did not touch stay
 	# flat. The equality is what checks that.
-	assert counts == {"hard": 601, "informational": 1, "soft": 2}, counts
+	# Batch 72 adds two more equalities -- the IT-load-times-PUE product and
+	# the megawatt-hour conversion -- and each declares hard edges only, so the
+	# hard tier moves 601 -> 603. `energy_demand` is an existing equation that
+	# gains one hard edge, which moves the edge count but not this one: the
+	# register counts equations, the distinction the batch-70 note above makes.
+	assert counts == {"hard": 603, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -6336,7 +6359,16 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# Bank basic-water-access indicator, the pumping load both the per-capita
 	# service-level table and the distribution energy intensity -- and the
 	# row the reverse join was missing now has a door.
-	assert len(declared) == 304, f"the citation register moved: {sorted(declared)}"
+	#
+	# Batch 72 moves it 304 -> 307, three new cited equations and no
+	# replacements: the IT-load-times-PUE product and the megawatt-hour
+	# conversion both cite the LBNL report the operands come from, and
+	# `energy_demand` gains a reference because it now carries the data centre
+	# term. That third one is a *citation added to an existing equation*, not
+	# a new equation -- the register joins equation references, so an equation
+	# that was uncited and now cites a work moves it by one, and the count is
+	# therefore not the number of equations this batch added.
+	assert len(declared) == 307, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -6601,8 +6633,10 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 	# `buffer_pool_contribution` stops being derived when its alias equation is
 	# removed, so one fewer equation is compared. Batch 70 removes three more
 	# (the attainment ratios), taking it 533 -> 530, and batch 71 adds two
-	# (the water-served population and the pumping load), 530 -> 532.
-	assert compared == 532, (
+	# (the water-served population and the pumping load), 530 -> 532. Batch 72
+	# adds two more (the IT-load-times-PUE product and the megawatt-hour
+	# conversion), 532 -> 534.
+	assert compared == 534, (
 		f"expected 481 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "

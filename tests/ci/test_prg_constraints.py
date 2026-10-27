@@ -273,8 +273,12 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	# identities -- the served-population product and the pumping-load
 	# product, each with a derived left-hand side -- taking 530 -> 532 and the
 	# total 602 -> 604. The shaped count stays at 72: neither is a bound.
-	assert cov["identities"] == 532
-	assert cov["total"] == 604
+	# Batch 72 adds two identities -- the IT-load-times-PUE product and the
+	# megawatt-hour conversion, each with a derived left-hand side -- taking
+	# 532 -> 534 and the total 604 -> 606. The shaped count stays at 72:
+	# neither is a bound, and `energy_demand` was already an identity.
+	assert cov["identities"] == 534
+	assert cov["total"] == 606
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):

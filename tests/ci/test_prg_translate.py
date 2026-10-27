@@ -308,8 +308,14 @@ the current membership is the `deprecated_uncoupled` set in
 	# batch's three new free nodes -- the access share, the per-capita use and
 	# the pumping intensity -- all enter it, none with a translation. Three in
 	# and one out is +2.
+	#
+	# Batch 72 moves it 866 -> 867 for the same shape a third time.
+	# `data_centre_demand` was a free dial pinned at zero and is now derived
+	# from the IT load and the PUE, so `is_settable` refuses it and it leaves
+	# the register. The batch's two new free nodes -- the IT load and the PUE
+	# -- both enter it, neither with a translation. Two in and one out is +1.
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 866, cov
+	assert cov["total"] == 867, cov
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -414,9 +420,11 @@ the only difference between the two sets.
 	# attainment-ratio tombstones are the same: 864 -> 861. Batch 71's derived
 	# `water_pumping_load` is the reverse: 861 -> 863 for the same arithmetic,
 	# since a derived node is not settable and the batch's three new free
-	# nodes all join the register.
+	# nodes all join the register. Batch 72 is the same arithmetic again:
+	# 863 -> 864 for two new free dials and one node leaving the settable
+	# surface.
 	missing = untranslated(graph)
-	assert len(missing) == 863, missing
+	assert len(missing) == 864, missing
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact

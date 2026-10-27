@@ -27,7 +27,7 @@
 | 1.9 | `commercial_demand_share` | Share of demand from commercial | Demand-Side | → `commercial_demand`; ← `gdp_growth_rate` |
 | 1.10 | `agricultural_demand_share` | Share of demand from agriculture | Demand-Side | → `agricultural_demand`; ↔ `irrigation_pumping_demand` |
 | 1.11 | `mining_demand_growth` | Additional mining load growth | Demand-Side, Sector Coupling | → `mining_load`; ↔ `mining_electrification`, `mining_haulage` |
-| 1.12 | `data_centre_demand` | New data centre load | Demand-Side | → `data_centre_load`; ← `internet_penetration` |
+| 1.12 | `data_centre_demand` | New data centre load | Demand-Side | = `data_centre_it_load_mw` × `data_centre_pue`; → `data_centre_load_twh`; ↔ `industrial_demand_share` |
 | 1.13 | `desalination_demand` | Desalination electricity demand | Demand-Side, Water-Energy Nexus | → `desalination_load`; ↔ `desalination_capacity`, `desalination_energy` |
 | 1.14 | `hydrogen_production_demand` | Electricity for hydrogen production | Demand-Side, Sector Coupling | → `hydrogen_electricity_demand`; ↔ `electrolyser_capacity`, `hydrogen_export_volume` |
 | 1.15 | `demand_response_potential` | Share of demand that is flexible | Demand-Side, Demand-Supply Equilibrium | → `flexible_demand`; ↔ `demand_response_capacity`, `time_of_use_tariff_adoption` |
@@ -829,7 +829,7 @@
 | 21.6 | `interoperability_standards` | Interoperability | Digital | → `communication_protocols`; ← `gis_requirements` |
 | 21.7 | `digital_divide_metrics` | Digital divide | Digital | → `internet_penetration`; ← `mobile_coverage` |
 | 21.8 | `mobile_coverage` | Mobile coverage | Digital | → `digital_divide_metrics`; ← `population_growth_rate` |
-| 21.9 | `internet_penetration` | Internet penetration | Digital | → `data_centre_demand`; ← `digital_divide_metrics` |
+| 21.9 | `internet_penetration` | Internet penetration | Digital | → `internet_users`; ← `digital_divide_metrics` |
 | 21.10 | `smart_metering_rollout` | Smart meter rollout | Digital | → `smart_metering_penetration`; ← `ami_infrastructure` |
 | 21.11 | `ami_infrastructure` | AMI infrastructure | Digital | → `smart_metering_rollout`; ← `scada_ems_requirements` |
 | 21.12 | `der_management_systems` | DERMS | Digital | → `distributed_generation_capacity`; ← `adms_requirements` |

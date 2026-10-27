@@ -557,7 +557,11 @@ def test_the_summary_serves_the_endogenous_layer(
 	# dials (the access share, the per-capita use and the pumping intensity)
 	# enter, and `water_pumping_load` leaves for `derived` because the batch
 	# gave it an equation. Three in, one out.
-	assert len(free) == 710, len(free)
+	#
+	# Batch 72 moves it 710 -> 711 the same way: two new free dials (the IT
+	# load and the PUE) enter, and `data_centre_demand` leaves for `derived`
+	# because the batch gave it the product its catalog method describes.
+	assert len(free) == 711, len(free)
 
 
 # ---------------------------------------------------------------------------

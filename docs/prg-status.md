@@ -1971,6 +1971,90 @@ produced `SyntaxError: expected 'except' or 'finally' block`, which is a
 canary that tested nothing; it was redone as a `raise` so the module still
 parsed.
 
+### The data centre load was a dial standing in for its own method (batch 72, 2026-10-27)
+
+`data_centre_demand` shipped as a free dial pinned at zero, and its own
+description said why: the catalog's method for the row is "an IT load times a
+power-usage effectiveness", neither operand existed, so the node was "the
+site's draw at the meter" and a scenario set it by hand. The placeholder
+register recorded the same gap in the same words — *a PUE and an IT load in
+MW* — and listed it as the dependency blocking the row.
+
+**Both operands are now nodes, and the default is a measurement.** Shehabi et
+al. (2016), the LBNL report behind the Department of Energy's data centre
+accounting, gives the IT rating in its worked example — "data centers that have
+15 MW of IT capacity consuming between 80-130 million gallons annually" — and
+tabulates PUE by facility class for 2014 in Table 4:
+
+| Space type | IT | Transformer | UPS | Cooling | Lighting | Total PUE |
+|---|---|---|---|---|---|---|
+| Closet | 1 | 0.05 | — | 0.93 | 0.02 | 2.0 |
+| Room | 1 | 0.05 | 0.2 | 1.23 | 0.02 | 2.5 |
+| Localized | 1 | 0.05 | 0.2 | 0.73 | 0.02 | 2.0 |
+| Midtier | 1 | 0.05 | 0.2 | 0.63 | 0.02 | 1.9 |
+| High-end | 1 | 0.03 | 0.1 | 0.55 | 0.02 | 1.7 |
+| Hyperscale | 1 | 0.02 | — | 0.16 | 0.02 | 1.2 |
+
+The default is the report's own industry-wide weighted average, 1.89, and the
+range spans the table: 1.05 is above the "1.1 or less" the report attributes to
+hyperscale cloud facilities and below 1.0 would have a site using less energy
+than its own IT equipment; the 3.0 ceiling is the report's statement that
+earlier studies "showed many data centers with PUE values greater than 3.0".
+
+**The defect the seam existed to prevent.** Making the node derived alone would
+have lowered the uncoupled register while leaving it read by nothing — the
+declared-is-not-produced class this tree keeps a register for. So the chain
+continues: `data_centre_load_twh = data_centre_demand * hours_per_year / 1e6`,
+and `energy_demand` gains the term. It is **additive**, not folded into
+`demand_growth_factor`, because the catalog's row is a *new* facility and a
+growth rate fitted to history cannot express a build history does not contain.
+At defaults:
+
+```
+data_centre_it_load_mw   15.0 MW
+data_centre_pue          1.89
+data_centre_demand       28.35 MW        (13.35 MW of it is not computing)
+data_centre_load_twh     0.24835 TWh/year
+demand_twh               46.53902747054532 -> 46.78737347054532 TWh/year
+```
+
+0.53% of national demand for one large facility. The shipped `demand_twh`
+therefore moves, and every pin that held a demand value moved with it — that is
+the measurement, not a side effect.
+
+**The two gates.** The first is the magnitude band: 28.35 MW × 8760 h / 1e6 is
+248.3 GWh/year, asserted into the 50–2,000 GWh band. A missing `1e6` reads
+248,300 TWh/year and `check_graph` stays green on it, because MWh and TWh are
+the same `[energy]` — the same two-scales trap batch 71's `/1e6` canary
+recorded, in the opposite direction. The second is the seam's own: the builder
+asserts against the *emitted edge list* that `data_centre_load_twh` reaches
+`demand_twh`, so a seam written and then dropped cannot pass.
+
+**One drift the batch had to repair.** `hours_per_year` carries a declared
+`affects` list the loader strips into `_declared` and `structure_issues()`
+compares against what the equations read. The new edge made the two disagree —
+`assert graph.structure_issues() == []` caught it, and the builder now writes
+the list back with `data_centre_load_twh` appended, the same shape the
+per-technology LCOE builder uses for the efficiency nodes.
+
+**A stale fragment, again.** The untracked `config/prg_ingest/param_batch54.yaml`
+still carried the pre-batch free body, and the merge re-applied it over the
+baked derived node: five ingest tests failed with `data_centre_demand is
+determined by 'data_centre_demand_definition' but its role is 'free'`. This is
+the identical failure batch 71 hit on `water_pumping_load` — first-sorted
+fragment wins, and an untracked fragment is not in `git status` where a reader
+would see it. The fragment's body is synced to the shipped one; the structural
+problem (a working directory that can silently override a bake) is unchanged and
+still recorded.
+
+**Pins moved.** `identities` 532 → 534 and `total` 604 → 606 (two new
+equalities, neither a bound, so `constraint_shaped` stays 72); the equality
+count 532 → 534; `compared` 532 → 534; `skipped` 296 → 298 and the whole-computed
+set 532 → 534; hard edges 601 → 603 (two equalities, one hard edge each; the
+`energy_demand` edge moves the edge count but not this register, which counts
+equations); free 710 → 711; dead knobs 220 → 219; translate total 866 → 867 and
+untranslated 863 → 864; the citation register 304 → 307.
+
 ### The pumping node's base was the plant's water, not the utility's (batch 71, 2026-10-27)
 
 `water_pumping_load` shipped as a free dial pinned at zero, and its

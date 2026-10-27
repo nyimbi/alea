@@ -647,6 +647,13 @@ def emit(batch: str) -> int:
 		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
 		equations.update(b34_equations)
 		edges = list(BATCH12_EDGES) + b34_edges
+	elif batch == "72":
+		b72_nodes, b72_equations, b72_edges, b72_rules = build_batch72(graph)
+		rules.extend(b72_rules)
+		nodes.update(b72_nodes)
+		equations = {eq["id"]: eq for eq in BATCH12_EQUATIONS}
+		equations.update(b72_equations)
+		edges = list(BATCH12_EDGES) + b72_edges
 	elif batch == "71":
 		b71_nodes, b71_equations, b71_edges, b71_rules = build_batch71(graph)
 		rules.extend(b71_rules)
@@ -21121,3 +21128,398 @@ def build_batch71(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	print(f"  water_pumping_load: {load:,.0f} MWh/year at defaults")
 	return nodes, equations, edges, []
 
+
+
+_BATCH72_SOURCE = "The data centre coupling (batch 72)"
+
+#: (node id, name, unit, range, default, role, determinism, description,
+#: source, source_url)
+_BATCH72_NODES: tuple[tuple[str, str, str, tuple[float, float], float | None, str, str, str, str, str | None], ...] = (
+	(
+		"data_centre_it_load_mw",
+		"Data centre IT load",
+		"MW",
+		(0.0, 1000.0),
+		15.0,
+		"free",
+		"policy",
+		"Power drawn by the servers, storage and network equipment a new data "
+		"centre houses, before any cooling or conversion loss. Shehabi et al. "
+		"(2016) use 15 MW of IT capacity as their worked example of a large "
+		"facility -- it is the size at which they quantify on-site water "
+		"consumption, 'data centers that have 15 MW of IT capacity consuming "
+		"between 80-130 million gallons annually' -- so 15 is the default: one "
+		"large new facility, which is the object the catalog's row names. The "
+		"range runs from a single closet to a hyperscale campus; the report "
+		"puts hyperscale at up to 400,000 sq ft in up to eight 50,000 sq ft "
+		"modules and gives no MW figure for it, so the ceiling is a scenario's "
+		"own build size rather than a measured maximum. Zero states that no "
+		"data centre is built, which is why the floor is 0.",
+		"Shehabi, Smith, Sartor, Brown, Herrlin, Koomey, Masanet, Horner, "
+		"Azevedo & Lintner (2016), United States Data Center Energy Usage "
+		"Report, LBNL-1005775, p. 27",
+		"https://eta-publications.lbl.gov/sites/default/files/lbnl-1005775_v2.pdf",
+	),
+	(
+		"data_centre_pue",
+		"Power usage effectiveness",
+		"1",
+		(1.05, 3.0),
+		1.89,
+		"free",
+		"physical",
+		"How much total site electricity a data centre draws per unit of IT "
+		"electricity: 1.0 means the facility uses nothing but the IT equipment, "
+		"so the excess is cooling, uninterruptible supplies, transformers and "
+		"lighting. Shehabi et al. (2016) give the industry-wide weighted "
+		"average as 1.89 and tabulate the value by facility class for 2014 -- "
+		"closet 2.0, room 2.5, localized 2.0, midtier 1.9, high-end 1.7, "
+		"hyperscale 1.2 (their Table 4) -- so 1.89 is the default and the "
+		"classes are what the range spans. The floor is 1.05 rather than 1.0 "
+		"because the report records hyperscale cloud facilities 'beginning to "
+		"record PUE value of 1.1 or less' and a PUE below 1 would have the "
+		"site using less energy than its own IT equipment consumes. The "
+		"ceiling of 3.0 is the report's statement that earlier studies 'showed "
+		"many data centers with PUE values greater than 3.0', and that small "
+		"facilities are 'still being measured with PUE values greater than "
+		"2.0'. A closet is held at 2.0 throughout the report's horizon because "
+		"it has no dedicated cooling to improve.",
+		"Shehabi, Smith, Sartor, Brown, Herrlin, Koomey, Masanet, Horner, "
+		"Azevedo & Lintner (2016), United States Data Center Energy Usage "
+		"Report, LBNL-1005775, Table 4 and p. 23",
+		"https://eta-publications.lbl.gov/sites/default/files/lbnl-1005775_v2.pdf",
+	),
+	(
+		"data_centre_load_twh",
+		"Data centre annual energy",
+		"TWh/year",
+		(0.0, 30.0),
+		None,
+		"derived",
+		"physical",
+		"Electricity a new data centre draws over the year, converted from the "
+		"site's megawatt rating so it can enter the demand balance, which is "
+		"declared in terawatt-hours per year. The conversion assumes the "
+		"facility runs continuously, which is what makes a single PUE "
+		"meaningful: the catalog's own method cell for this row is 'constant + "
+		"burst' load profiling, a constant base with a compute-driven "
+		"excursion, and a facility with that profile is on all year. A "
+		"facility that idles for part of the year needs the hours dial moved, "
+		"not this equation changed.",
+		_BATCH72_SOURCE,
+		None,
+	),
+)
+
+_BATCH72_EQUATIONS: tuple[tuple[str, str, str, str, str, str], ...] = (
+	# (id, name, lhs, rhs, latex, reference)
+	(
+		"data_centre_demand_definition",
+		"Data centre demand",
+		"data_centre_demand",
+		"data_centre_it_load_mw * data_centre_pue",
+		r"\mathrm{data}_{centre\_demand} = \mathrm{data}_{centre\_it\_load\_mw}"
+		r"\, \mathrm{data}_{centre\_pue}",
+		"Shehabi et al. (2016), United States Data Center Energy Usage Report, "
+		"LBNL-1005775, Table 4 (PUE by space type)",
+	),
+	(
+		"data_centre_load_definition",
+		"Data centre annual energy",
+		"data_centre_load_twh",
+		"data_centre_demand * hours_per_year / 1000000",
+		r"\mathrm{data}_{centre\_load\_twh} = \mathrm{data}_{centre\_demand}"
+		r"\, \frac{\mathrm{hours}_{per\_year}}{10^{6}}",
+		"Shehabi et al. (2016), United States Data Center Energy Usage Report, "
+		"LBNL-1005775, the constant-plus-burst load profile",
+	),
+)
+
+
+def build_batch72(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+	"""Couple the data centre load to an IT rating, a PUE and the demand balance.
+
+	*The gate.* The builder re-derives the annual energy from the emitted
+	operands and asserts it against the band a single large facility sits in,
+	because a megawatt-to-terawatt-hour slip is dimensionally invisible: the
+	walker sees MW x h as MWh and MWh as the same [energy] as TWh, so a missing
+	1e6 passes the dimension check and reads a million times too large.
+
+	The second gate is the one this batch exists for. A coupling that made
+	`data_centre_demand` derived and stopped there would lower the uncoupled
+	register while leaving the node read by nothing -- the declared-is-not-
+	produced defect in its cleanest form. So the chain continues into
+	`energy_demand`, and the builder asserts that the node it started from is
+	reached from `demand_twh` when it finishes.
+	"""
+	from alea.prg.dsl import parse_side
+	from alea.prg.views import ParameterNode
+
+	nodes: dict[str, Any] = {}
+	equations: dict[str, Any] = {}
+	edges: list[dict[str, Any]] = []
+
+	# -- the premises, measured on the shipped graph -------------------------
+	demand_node = graph.nodes["data_centre_demand"]
+	assert demand_node.unit == "MW", demand_node.unit
+	assert demand_node.role.value == "free", (
+		f"data_centre_demand is already {demand_node.role.value}; this batch is "
+		f"what makes it derived, and running it twice would restate a solved node"
+	)
+	assert "data_centre_demand" in graph.uncoupled(), (
+		"data_centre_demand is already reached by an equation; the coupling this "
+		"batch adds is not missing"
+	)
+	assert demand_node.default == 0.0, demand_node.default
+	hours = graph.nodes["hours_per_year"]
+	assert hours.unit == "h/year", hours.unit
+	assert hours.default == 8760.0, hours.default
+	balance = graph.equations["energy_demand"]
+	assert balance.rhs == "base_demand_twh * demand_growth_factor", balance.rhs
+	assert graph.nodes["demand_twh"].unit == "TWh/year", graph.nodes["demand_twh"].unit
+
+	# -- emit: three new nodes -----------------------------------------------
+	for name, label, unit, rng, default, role, determinism, prose, source, url in _BATCH72_NODES:
+		body = {
+			"id": name,
+			"name": label,
+			"description": prose,
+			"category": "Demand",
+			"subcategory": None,
+			"type": "float",
+			"unit": unit,
+			"range": list(rng),
+			"default": default,
+			"initial": None,
+			"role": role,
+			"determinism": determinism,
+			"categories": [],
+			"source": source,
+			"source_url": url,
+			"users": ["Telecom", "Planners"],
+			"priority": "P2",
+			"status": "to_build",
+			"deprecated_by": None,
+		}
+		ParameterNode(**body)
+		nodes[name] = body
+
+	# -- retype: `data_centre_demand` becomes the site draw the PUE gives ----
+	#
+	# The catalog's own method cell for this row is "an IT load times a
+	# power-usage effectiveness", and the node's shipped description says the
+	# product could not be written because neither operand existed. Both exist
+	# now, so the node is the product and its default goes: a derived node with
+	# a default is the shipped-value-vs-equation disagreement this tree keeps
+	# recording.
+	shipped = graph.nodes["data_centre_demand"]
+	demand_body = dict(shipped.model_dump(exclude={"id"}, mode="json"))
+	it_load = nodes["data_centre_it_load_mw"]["range"]
+	pue = nodes["data_centre_pue"]["range"]
+	demand_body.update({
+		"role": "derived",
+		"default": None,
+		"range": [0.0, it_load[1] * pue[1]],
+		"determinism": "physical",
+		"source": _BATCH72_SOURCE,
+		"source_url": None,
+	})
+	demand_body["description"] = (
+		"Power a new data centre draws at the meter, in megawatts: the IT load "
+		"the facility houses times the power usage effectiveness that converts "
+		"it to site draw. This is the catalog's own method for the row -- 'an "
+		"IT load times a power-usage effectiveness' -- which the node could not "
+		"evaluate when it shipped, because neither operand existed and the "
+		"placeholder register recorded exactly that gap. At defaults 15 MW of "
+		"IT equipment at a weighted-average PUE of 1.89 is 28.35 MW at the "
+		"meter, of which 13.35 MW is cooling, uninterruptible supplies, "
+		"transformers and lighting rather than computing. The node previously "
+		"shipped as a free dial at zero, which stated that no data centre is "
+		"built and made the row a knob standing in for a calculation."
+	)
+	ParameterNode(**{"id": "data_centre_demand", **demand_body})
+	nodes["data_centre_demand"] = demand_body
+
+	for equation_id, label, lhs, rhs, latex, reference in _BATCH72_EQUATIONS:
+		symbols = set(parse_side(rhs).symbols)
+		assert lhs in symbols or lhs in nodes, (equation_id, lhs)
+		named = sorted(symbols | {lhs})
+		body = {
+			"id": equation_id,
+			"name": label,
+			"description": (
+				"The facility's draw at the meter: the IT equipment's rating "
+				"times the PUE. Dimensional check: MW x 1 is MW. The PUE is a "
+				"pure ratio by construction -- total site energy over IT energy, "
+				"both in the same unit -- so it carries no dimension and the "
+				"product inherits the IT load's. At defaults 15 MW x 1.89 is "
+				"28.35 MW. The operand that matters is the PUE: at the "
+				"hyperscale end of the report's Table 4 (1.2) the same IT load "
+				"draws 18 MW, and at the room end (2.5) it draws 37.5 MW, so "
+				"the facility class moves the site draw by more than a factor "
+				"of two on an unchanged compute rating."
+				if equation_id == "data_centre_demand_definition"
+				else (
+					"The site's energy over the year, converted from megawatts "
+					"so it can enter the demand balance, which is declared in "
+					"terawatt-hours per year. Dimensional check: MW x h/year is "
+					"MWh/year, and the 1e6 is the megawatt-hour to "
+					"terawatt-hour step the dimension check cannot see -- MWh "
+					"and TWh are the same [energy], so a missing 1e6 passes the "
+					"walker and reads a million times too large. At defaults "
+					"28.35 MW x 8760 h / 1e6 is 248.3 GWh/year, or 0.248 "
+					"TWh/year: against a `demand_twh` of 46.54 TWh/year that is "
+					"0.53% of national demand, which is what one large facility "
+					"is. The hours dial is `hours_per_year`, the same 8760 the "
+					"generation side uses, so a leap year moves both together "
+					"rather than only one."
+				)
+			),
+			"lhs": lhs,
+			"rhs": rhs,
+			"latex": latex,
+			"parameters": named,
+			"determined_variables": [lhs],
+			"free_variables": sorted(symbols - {lhs}),
+			"relation": "eq",
+			"system": "demand_supply",
+			"tolerance": 1e-09,
+			"priority": "P2",
+			"solution_method": "direct",
+			"linearity": "linear",
+			"unit_check": True,
+			"reference": reference,
+		}
+		equations[equation_id] = body
+		for source in sorted(symbols):
+			assert source in graph.nodes or source in nodes, (equation_id, source)
+			edges.append({
+				"source": source,
+				"target": lhs,
+				"equation_id": equation_id,
+				"relationship": "functional",
+				"direction": "forward",
+				"strength": "hard",
+				"description": (
+					f"Enters {lhs}: an input of `{lhs} = {rhs}`."
+				),
+				"reference": reference,
+				"priority": "P2",
+			})
+
+	# -- the seam: the chain reaches the demand balance ----------------------
+	#
+	# Without this the batch would lower the uncoupled register and leave the
+	# node it started from read by nothing. `energy_demand` gains the term, so
+	# a facility the scenario builds is *additional* demand on top of the
+	# forecast rather than a dial the forecast's own growth rate was silently
+	# standing in for.
+	balance_body = dict(balance.model_dump(exclude={"id"}, mode="json"))
+	balance_body.update({
+		"rhs": "base_demand_twh * demand_growth_factor + data_centre_load_twh",
+		"latex": (
+			r"\mathrm{demand}_{twh} = \mathrm{base}_{demand\_twh}"
+			r"\, \mathrm{demand}_{growth\_factor}"
+			r" + \mathrm{data}_{centre\_load\_twh}"
+		),
+		"parameters": sorted(
+			set(balance.parameters) | {"data_centre_load_twh"}
+		),
+		"free_variables": sorted(
+			set(balance.free_variables) | {"data_centre_load_twh"}
+		),
+	})
+	balance_body["description"] = (
+		"Demand at the horizon: the base demand compounded by the growth "
+		"factor, plus the load a new data centre adds. Written as the base "
+		"times the factor the graph derives -- the shipped body compounded "
+		"`(1 + demand_growth) ** horizon_years` inline, the same arithmetic "
+		"whenever the window equals the horizon, and it does by construction. "
+		"The data centre term is additive rather than folded into the growth "
+		"factor because the catalog's row is a *new* facility: a growth rate "
+		"fitted to history cannot express a build that history does not "
+		"contain, and a scenario that turns the facility on must move demand "
+		"by exactly the facility's own energy and nothing else. At defaults "
+		"the term is 0.248 TWh/year against 46.539 TWh/year from the "
+		"forecast, so the shipped value moves 46.539 -> 46.787 TWh/year -- "
+		"measured, and the reason every test that pins a demand value moved "
+		"with this batch. Before batch 72 the node read two operands and the "
+		"data centre chain ended at `data_centre_load_twh`, unread: the "
+		"declared-is-not-produced defect this seam closes."
+	)
+	balance_body["reference"] = (
+		"Shehabi et al. (2016), United States Data Center Energy Usage Report, "
+		"LBNL-1005775, for the data centre term"
+	)
+	equations["energy_demand"] = balance_body
+	edges.append({
+		"source": "data_centre_load_twh",
+		"target": "demand_twh",
+		"equation_id": "energy_demand",
+		"relationship": "functional",
+		"direction": "forward",
+		"strength": "hard",
+		"description": (
+			"Enters demand_twh: the new facility's energy, added to the "
+			"forecast rather than inside it."
+		),
+		"reference": balance_body["reference"],
+		"priority": "P1",
+	})
+
+	# -- `hours_per_year`'s declared reader list ---------------------------
+	#
+	# The loader strips a node's `affects` into `_declared` and
+	# `structure_issues()` compares it to what the equations read, so an edge
+	# added without the matching entry is drift. `hours_per_year` is the one
+	# operand this batch reads that carries a declared list.
+	declared = graph._declared.get("hours_per_year", ((), ()))
+	affects = list(declared[1])
+	if "data_centre_load_twh" not in affects:
+		affects.append("data_centre_load_twh")
+	hours_body = dict(hours.model_dump(exclude={"id"}, mode="json"))
+	hours_body["depends_on"] = list(declared[0])
+	hours_body["affects"] = sorted(affects)
+	nodes["hours_per_year"] = hours_body
+
+	# -- the gate: the value is in the band the dimension check cannot see ---
+	#
+	# Computed from the emitted operands, not read off a constant, so a rebake
+	# after a default moves fails here rather than shipping a wrong magnitude.
+	it = nodes["data_centre_it_load_mw"]["default"]
+	pue_value = nodes["data_centre_pue"]["default"]
+	site_mw = it * pue_value
+	annual = site_mw * hours.default / 1e6
+	assert 0.05 < annual < 2.0, (
+		f"the emitted operands give {annual} TWh/year for one large facility, "
+		f"which is not in the 50-2,000 GWh/year band; a missing 1e6 is "
+		f"dimensionally invisible and would read a million times this"
+	)
+	assert site_mw > it, (
+		f"the site draw {site_mw} MW is not above the IT load {it} MW, so the "
+		f"PUE is not multiplying anything"
+	)
+	# And the ceiling the range claims, recomputed from the operands' ranges.
+	ceiling = it_load[1] * pue[1]
+	assert demand_body["range"][1] == ceiling, (
+		f"the range ceiling {demand_body['range'][1]} is not the operands' own "
+		f"image {ceiling}, so a scenario the graph admits would be refused"
+	)
+
+	# -- the seam's own gate: the node is read, not merely derived -----------
+	#
+	# The batch's claim is that the chain reaches the demand balance. Assert it
+	# against the edges emitted here rather than trusting the list above: a
+	# seam that was written and then dropped from `edges` would pass every
+	# other check in this builder.
+	reached = {
+		edge["source"] for edge in edges if edge["target"] == "demand_twh"
+	}
+	assert "data_centre_load_twh" in reached, (
+		"the data centre chain does not reach demand_twh, so the batch would "
+		"lower the uncoupled register and leave the node unread"
+	)
+
+	print(f"  data_centre_demand: {site_mw:,.2f} MW at defaults")
+	print(f"  data_centre_load_twh: {annual * 1000:,.1f} GWh/year at defaults")
+	return nodes, equations, edges, []
