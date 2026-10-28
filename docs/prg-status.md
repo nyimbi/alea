@@ -1971,7 +1971,70 @@ produced `SyntaxError: expected 'except' or 'finally' block`, which is a
 canary that tested nothing; it was redone as a `raise` so the module still
 parsed.
 
-### One water constraint was shipped twice for forty-five batches (batch 75, 2026-10-28)
+### Six bounds stated an operand they drew no edge from (batch 76, 2026-10-28)
+
+Batch 75 recorded a gate weaker than its own claim: the batch-63 bound test
+says "a bound against a symbolic rhs carries one edge per rhs operand" and its
+code asserted only that *some* edge existed. Measured, seven bounds stated an
+rhs operand that appeared in no edge of their own equation:
+
+```
+carbon_budget_constraint        horizon_years
+fleet_build_balance             total_capacity_mw
+fleet_energy_adequacy           generation_twh
+reserve_margin                  peak_demand_mw, reserve_margin_min
+storage_capacity_mw_bound       total_capacity_mw
+thermal_storage_capacity_bound  thermal_storage_duration
+workshop_capacity_workload_bound number_of_generators
+```
+
+Six edges were added and the operand set is now covered with no register. The
+seventh, `fleet_build_balance`'s `total_capacity_mw`, was never missing -- it is
+drawn as the edge's *target*, which is the direction question and not a
+missing coupling.
+
+**Why the rule was restated rather than just tightened.** "One edge per rhs
+operand" and "every edge runs rhs to lhs" are two claims, and the code was
+asserting a third, weaker thing (at least one edge exists) under prose that
+claimed the first. Batch 76 splits them:
+
+- **Participation** is now universal and unconditional: every rhs operand takes
+  part in some edge of its own equation, as either endpoint. Zero exceptions.
+- **Direction** keeps five named deviations: `fleet_build_balance`,
+  `fleet_energy_adequacy`, `reserve_margin`, `reserve_margin_with_firm_vre` and
+  `water_availability_constraint`. Each draws an edge the natural way round --
+  `fleet_build_balance` runs its eighteen leaf builds *into* `total_capacity_mw`,
+  because the parts bound the total, and reversing it would tell every reader of
+  the drawing that the total bounds its own parts.
+
+The register shrank 9 -> 5 and the rule it guards got stronger, not weaker.
+
+**The canary.** Removing the added `horizon_years` edge fails the test naming
+`('carbon_budget_constraint', ['horizon_years'])`. Restored, it passes.
+
+**A finding this batch did not fix, recorded in full.**
+`fleet_build_balance`'s own description documents it as broken three ways: it
+routes `unbound` and never reaches the LP; `parameters_from_result` writes
+`total_capacity_mw` from the solved mix but none of the eighteen leaf builds, so
+the audit compares a constant to a solve; and `solar_pv_capacity` is excluded
+from the sum, leaving the reference build at 9,700 MW against a 10,000 MW
+declared total while the full build is 19,700 MW. Adding an edge does not make
+that equation true. It is a separate unit and is named here rather than folded
+in.
+
+**Counts.** Relationships 1411 -> 1417, six added, none removed. Equations 605,
+nodes 1436, constraint-shaped 71, bound routes 42, unbound 29 all unchanged --
+the added edges are `hard` couplings, and the uncertainty register reads
+equations rather than edges, so it stays at 72/48/202. `structure_issues()` is
+empty. The strength register is unchanged too: it counts equations.
+
+**The edges survive a rebake.** `prg_from_catalog.build` carries
+`"relationships": old_edges` through verbatim, so a regenerated document keeps
+hand-added edges. That is also why the batch builders and the bake are separate
+paths: the builders are the record of what a batch did, and the document is
+what ships.
+
+
 
 Batch 74 closed with `reserve_margin` named as carrying no edge from one of its
 own operands. Auditing that class across the library found nine equations whose

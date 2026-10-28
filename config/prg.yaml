@@ -61931,6 +61931,63 @@ relationships:
     rather than the forecast one.'
   reference: Standard N-1 planning criterion; cf. ENTSO-E adequacy studies; the scenario peak from `peak_demand_shifted_definition`
   priority: P1
+- description: The emissions identity is a rate; the budget is a stock, and the horizon converts one to
+    the other.
+  direction: forward
+  equation_id: carbon_budget_constraint
+  priority: P2
+  reference: IPCC AR6 WGIII, cumulative emissions and the carbon budget
+  relationship: constraint
+  source: horizon_years
+  strength: hard
+  target: carbon_budget_mtco2
+- description: Storage power sits inside the fleet total; the bound states that share rather than adding
+    to it.
+  direction: forward
+  equation_id: storage_capacity_mw_bound
+  priority: P2
+  reference: null
+  relationship: constraint
+  source: total_capacity_mw
+  strength: hard
+  target: storage_capacity_mw
+- description: A thermal store's energy is its power times how long it holds it.
+  direction: forward
+  equation_id: thermal_storage_capacity_bound
+  priority: P2
+  reference: null
+  relationship: constraint
+  source: thermal_storage_duration
+  strength: hard
+  target: thermal_storage_capacity
+- description: The workshop's throughput is per unit and the fleet's size is what multiplies it.
+  direction: forward
+  equation_id: workshop_capacity_workload_bound
+  priority: P2
+  reference: ENTSO-E adequacy studies, maintenance scheduling
+  relationship: constraint
+  source: number_of_generators
+  strength: hard
+  target: workshop_capacity
+- description: The peak the margin is stated against. Missing until batch 76, the equation named it and
+    drew no edge from it.
+  direction: forward
+  equation_id: reserve_margin
+  priority: P2
+  reference: Standard N-1 planning criterion
+  relationship: constraint
+  source: peak_demand_mw
+  strength: hard
+  target: firm_capacity_mw
+- description: The margin itself, applied to the peak. Missing until batch 76, the same gap.
+  direction: forward
+  equation_id: reserve_margin
+  priority: P2
+  reference: Standard N-1 planning criterion
+  relationship: constraint
+  source: reserve_margin_min
+  strength: hard
+  target: firm_capacity_mw
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0
   id: carbon_price_budget_alignment

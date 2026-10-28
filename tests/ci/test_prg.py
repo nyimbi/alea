@@ -1793,27 +1793,48 @@ def test_every_bound_states_its_coupling_or_declares_that_it_cannot(
 	# every target an lhs subject. An edge pointing the other way would draw
 	# the constraint backwards, which is worse than drawing nothing.
 	#
-	# Nine bounds shipped before batch 63 drawing against this convention --
-	# some reversed (`fleet_build_balance` runs its nineteen edges from the lhs
-	# summands to `total_capacity_mw`, so the drawing says the parts bound the
-	# total rather than the reverse), some omitting an rhs symbol, one pointing
-	# at a node its rhs does not name at all (`reserve_margin` sources
-	# `vre_capacity_mw` against a rhs of `peak_demand_mw` and
-	# `reserve_margin_min`). They are named here rather than repaired: each is
-	# a separate judgement about what its equation means, and rewriting nine
-	# pre-existing edges inside a batch about twenty-three edgeless ones would
-	# hide the change in a set nobody was reviewing. A bound that is not on
-	# this list must draw its edges the bound's way.
+	# Two rules live here, and batch 76 separated them because they are
+	# asserted at different strengths.
+	#
+	# RULE 1, PARTICIPATION: every rhs operand takes part in some edge of its
+	# own equation, as either endpoint. This is the claim the docstring always
+	# made ("a bound against a symbolic rhs carries one edge per rhs operand")
+	# and the code never asserted -- it checked only that *some* edge existed.
+	# Seven bounds stated an operand that appeared in no edge at all. Batch 76
+	# added six; the seventh, `fleet_build_balance`'s `total_capacity_mw`, was
+	# already drawn as a *target*, which is the direction question below and
+	# not a missing coupling. Stated over both endpoints, the rule is now
+	# universal with no register: zero operands are absent from their own
+	# equation's drawing.
+	#
+	# RULE 2, DIRECTION: every edge runs from an rhs operand to an lhs
+	# subject. Five bounds still draw at least one edge against this, and
+	# every one is a case where the natural edge is the one the graph already
+	# draws in reverse -- `fleet_build_balance` draws its eighteen leaf builds
+	# into `total_capacity_mw` (the parts bound the total) and
+	# `fleet_energy_adequacy` draws the fleet's capability into the dispatch
+	# (capability bounds generation). Reversing those would say the opposite
+	# of what the equation means to every reader of the drawing. They stay
+	# named rather than repaired: the direction of a bound is a judgement
+	# about what the equation says, and a batch about missing edges is not
+	# where to make five of them.
+	for equation_id in sorted(symbolic):
+		equation = graph.equations[equation_id]
+		rhs = set(parse_side(equation.rhs).symbols)
+		participating = {
+			end
+			for pair in declared.get(equation_id, set())
+			for end in pair
+		}
+		absent_operands = sorted(rhs - participating)
+		assert absent_operands == [], (equation_id, absent_operands)
+
 	_DEVIATING = {
-		"carbon_budget_constraint",
 		"fleet_build_balance",
 		"fleet_energy_adequacy",
 		"reserve_margin",
 		"reserve_margin_with_firm_vre",
-		"storage_capacity_mw_bound",
-		"thermal_storage_capacity_bound",
 		"water_availability_constraint",
-		"workshop_capacity_workload_bound",
 	}
 	assert _DEVIATING <= symbolic, _DEVIATING - symbolic
 	for equation_id in sorted(symbolic - _DEVIATING):
