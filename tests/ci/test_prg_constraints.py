@@ -137,9 +137,9 @@ def _solve(
 def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	graph: ParameterGraph,
 ):
-	"""Seventy-three of the library's 601 equations can constrain a solve.
+	"""Seventy-one of the library's 605 equations can constrain a solve.
 
-	The denominator is the finding: 528 equations are identities, and folding
+	The denominator is the finding: 534 equations are identities, and folding
 	them into the register would under-report what a solve is actually
 	bound by. Pinned as a literal so a new inequality has to change this line
 	to land. The counts moved 15/153/168 -> 24/182/206 when batch 20 landed:
@@ -264,7 +264,13 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	# `HEAD:config/prg.yaml` it was already 534, so that six is a pin that went
 	# stale in an earlier batch and is corrected here rather than attributed to
 	# this one.
-	assert cov["constraint_shaped"] == 72
+	# Batch 75 deletes `water_availability_bound`, a duplicate of
+	# `water_availability_constraint`: batch 30 both added the bound and
+	# rewrote the constraint to the identical relation, and the two shipped
+	# side by side with the same lhs, rhs, parameters, system and priority.
+	# One constraint, stated twice, so the shaped count moves 72 -> 71 and
+	# the total 606 -> 605. `identities` is untouched: both were `geq`.
+	assert cov["constraint_shaped"] == 71
 	# The 534 this pin carried was stale by four and had been since batch 70.
 	# Measured on `HEAD:config/prg.yaml` the identity count is 530 and the
 	# total 602: batch 69 deleted `buffer_pool_contribution_definition` and
@@ -278,7 +284,7 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	# 532 -> 534 and the total 604 -> 606. The shaped count stays at 72:
 	# neither is a bound, and `energy_demand` was already an identity.
 	assert cov["identities"] == 534
-	assert cov["total"] == 606
+	assert cov["total"] == 605
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
@@ -447,7 +453,13 @@ def test_every_unbound_route_names_the_derived_quantity_it_cannot_read(
 	# 31 -> 30 with batch 62, which deleted `affordability_constraint` -- one
 	# unbound route -- and kept the surviving bound, which is already in the
 	# set. The deletion removed a route; it did not resolve one.
-	assert len(unbound) == 30, [route.equation_id for route in unbound]
+	# 31 -> 30 with batch 62, and 30 -> 29 with batch 75, which deleted the
+	# duplicate `water_availability_bound` -- an unbound route in its own
+	# right, since it was stated over the same derived demand. Deleting a
+	# duplicate removes a route; it does not resolve one, and the surviving
+	# `water_availability_constraint` stays in the set naming the same
+	# unresolved symbol.
+	assert len(unbound) == 29, [route.equation_id for route in unbound]
 	for route in unbound:
 		assert route.unresolved, route.equation_id
 		for name in route.unresolved:

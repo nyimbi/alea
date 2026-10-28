@@ -1971,7 +1971,99 @@ produced `SyntaxError: expected 'except' or 'finally' block`, which is a
 canary that tested nothing; it was redone as a `raise` so the module still
 parsed.
 
-### The peak-demand dial was the mirror image of batch 73 (batch 74, 2026-10-28)
+### One water constraint was shipped twice for forty-five batches (batch 75, 2026-10-28)
+
+Batch 74 closed with `reserve_margin` named as carrying no edge from one of its
+own operands. Auditing that class across the library found nine equations whose
+arithmetic names a symbol their edge set does not carry. Eight of the nine are
+accounted for -- two are the deliberate literal-rhs exemptions batch 63
+declared, six are on its `_DEVIATING` register -- and the ninth,
+`water_availability_bound`, was on neither register for a different reason.
+
+**Batch 30 rewrote one constraint twice.** It added `water_availability_bound`
+with lhs `water_availability * water_availability_m3` and rhs
+`total_water_demand_m3`, and in the same function it rewrote
+`water_availability_constraint` from its old body
+(`water_availability_m3 >= cooling_water_demand_m3 + hydrogen_water_demand_m3`)
+to *the identical new relation*. Both survived. Measured across every field,
+they agree in `lhs`, `rhs`, `relation`, `parameters`, `system` and `priority`,
+and differ only in `id`, `name`, `description`, `latex`, `free_variables` and
+`solution_method`.
+
+**Nothing could have caught it, and that is the finding.** Each equation is
+individually well formed: each names its parameters, each passes the
+`parameters`-must-match-arithmetic gate, each has correctly directed edges.
+Every gate in the loader reads one equation at a time, and the defect is a
+relation between two. A scan of all 605 equations by
+`(relation, lhs, rhs)` finds exactly one duplicate, this one.
+
+**The duplicate was not merely redundant.** It doubled one constraint's weight
+in every register that sums over equations -- `coverage`, the constraint routes,
+the uncertainty walk -- and the `/graph` route served two couplings where the
+library states one. It also cost the survivor its rhs coupling: the duplicate
+carried the edge from `total_water_demand_m3`, so deleting it without
+transferring that edge would have left the surviving constraint drawing only
+half of what it states.
+
+**Which survived, and why.** `water_availability_constraint`, because it is the
+id the constraint routes and the tests name, and because it is the one batch 20
+shipped rather than the one batch 30 added. Its `latex` field was `null`; that
+is recorded as a separate gap rather than repaired here.
+
+**The gate.** `test_no_two_equations_state_the_same_relation` asserts the
+`(relation, lhs, rhs)` triples are injective, with no register of exceptions
+because the tree now has none. It is stated over the whole library rather than
+over the one that was wrong. Canaried both ways: planting the duplicate back
+fails it, removing it passes.
+
+The comparison is text, not parsed form, and the docstring says so: `a + b`
+against `b + a` is a real duplicate this would miss, but normalising the parse
+tree would also collapse an identity and a bound over the same two operands,
+which state different claims about them.
+
+**A gate weaker than its own claim, recorded not fixed.** The batch-63 test
+`test_every_bound_states_its_coupling_or_declares_that_it_cannot` says in its
+docstring that "a bound against a symbolic rhs carries one edge per rhs
+operand", and its code asserts only that at least one edge exists. Seven bounds
+state an rhs operand they draw no edge from:
+`carbon_budget_constraint` (`horizon_years`), `fleet_build_balance`
+(`total_capacity_mw`), `fleet_energy_adequacy` (`generation_twh`),
+`reserve_margin` (`peak_demand_mw`, `reserve_margin_min`),
+`storage_capacity_mw_bound` (`total_capacity_mw`),
+`thermal_storage_capacity_bound` (`thermal_storage_duration`) and
+`workshop_capacity_workload_bound` (`number_of_generators`). Tightening that
+assertion is its own unit: each missing operand is a judgement about what the
+bound means, and six of the seven are on the `_DEVIATING` register precisely
+because nobody has made it yet.
+
+**Counts.** Equations 606 -> 605. Nodes 1436 and relationships 1411 unchanged:
+the duplicate's edge was transferred, not deleted. Constraint-shaped 72 -> 71,
+unbound routes 30 -> 29, identities unchanged at 534. Bound routes stay at 42 --
+both equations were unbound, so neither carried the set. The strength register
+moves hard 603 -> 602, because it counts equations and both were uncited `geq`s
+that `strength_of` reads as hard; the edge count does not move, which is the
+same distinction batch 70's note draws. `structure_issues()` is empty and
+`uncoupled()` stays at 242.
+
+**Two water rows in `param_eqn.md` were wrong, and one names a node that does
+not exist.** Row 6.43 said `water_availability` constrains
+`total_water_demand` -- no such node; the graph has `total_water_demand_m3` --
+and that `drought_frequency` drives it. Row 6.44 said `drought_frequency`
+drives `water_availability` and is driven by `ssp_pathway`. Measured:
+`water_availability` has exactly one out-edge, into `water_availability_m3`
+via the constraint this batch touched, and `drought_frequency` has **no edges
+at all** and is named by no equation. Both rows now state the measured
+relation, with the absence written as an absence rather than left as a
+plausible-looking arrow.
+
+`drought_frequency` is a genuinely floating node, not a documentation error --
+it is one of the 242 `uncoupled()` reports, and `docs/param_eqn.md` had been
+describing it as coupled. That is the register-prose failure this project keeps
+finding: a doc string asserting a coupling no edge carries reads exactly like
+one that does.
+
+
+
 
 Batch 73 closed with `peak_demand_multiplier` named as the next target, on the
 ground that it carried the same 0.5 default and the same unread product. It

@@ -8671,7 +8671,6 @@ BATCH30_EQUATIONS: tuple[
 #: the pair is stated rather than derived.
 _BOUND_EDGE: dict[str, tuple[str, str]] = {
 	"biomass_sustainability_bound": ("biomass_sustainability_limit", "biomass_capacity"),
-	"water_availability_bound": ("total_water_demand_m3", "water_availability_m3"),
 }
 
 
@@ -8691,18 +8690,16 @@ BATCH30_BOUNDS: tuple[tuple[str, str, str, str, str, str, str | None], ...] = (
 	 "energy_balance",
 	 "IEA/NEA Projected Costs of Generating Electricity; sustainable-biomass "
 	 "supply as a build limit"),
-	("water_availability_bound", "water_availability * water_availability_m3",
-	 "geq", "total_water_demand_m3",
-	 "The water the project may withdraw, after the availability "
-	 "multiplier, must cover the thermal fleet's cooling draw and the "
-	 "hydrogen programme's feed. The multiplier is the scenario lever on a "
-	 "flow the graph already ships: at its default of 1.0 the constraint "
-	 "reads 200e6 >= 93.2e6 m3/year, and a dry year set below 0.47 makes "
-	 "it bind. The rewrite replaces a constraint that compared the flow to "
-	 "its own two components with one that compares the *available* flow "
-	 "to demand, which is the question a water-stressed siting decision "
-	 "actually asks.",
-	 "water_energy", None),
+	# `water_availability_bound` was emitted here and is deliberately gone.
+	# The same function rewrites `water_availability_constraint` to the
+	# identical relation below, so batch 30 shipped one constraint twice:
+	# two equations agreeing in lhs, rhs, relation, parameters, system and
+	# priority, differing only in id, name, description, latex and
+	# solution_method. Nothing refused it -- each is well formed on its own
+	# and each is correctly directed -- because the defect is a relation
+	# between two equations and every loader gate reads one at a time. The
+	# rewrite is the survivor because it is the id the constraint routes and
+	# the tests name.
 )
 
 
@@ -10037,8 +10034,8 @@ BATCH32_BOUNDS: tuple[
 	 "The basin's allocation caps total water demand: 93.2e6 m3/year under "
 	 "a 200e6 ceiling at defaults. Routes as a post-solve check because "
 	 "the demand is derived. The bound overlaps the shipped "
-	 "`water_availability_bound`, which compares the availability *flow* "
-	 "to the same demand; the two are kept distinct because they are "
+	 "`water_availability_constraint`, which compares the availability "
+	 "*flow* to the same demand; the two are kept distinct because they are "
 	 "different instruments -- one is a physical flow the basin provides, "
 	 "the other an allocation a treaty or regulator grants -- and a "
 	 "scenario can be inside the physical flow and outside the "

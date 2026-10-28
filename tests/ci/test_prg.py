@@ -1876,6 +1876,42 @@ def test_every_bound_states_its_coupling_or_declares_that_it_cannot(
 	assert "debt_mix_bound" in violated, violated
 
 
+def test_no_two_equations_state_the_same_relation(graph: ParameterGraph):
+	"""One constraint, one equation. The tree has no duplicates; this keeps it so.
+
+	Batch 30 both added ``water_availability_bound`` and rewrote
+	``water_availability_constraint`` to the identical relation, and the two
+	shipped side by side for forty-five batches. They agreed in ``lhs``,
+	``rhs``, ``relation``, ``parameters``, ``system`` and ``priority``, and
+	differed only in id and prose, so every gate in the loader passed both:
+	each was well formed, each named its own parameters, each was correctly
+	directed. The defect is invisible to a check that reads one equation at a
+	time, which is why it is asserted across the whole library here.
+
+	The comparison is structural on the two sides as *text*, not on the parsed
+	form, and that is deliberate: two spellings of one relation
+	(``a + b`` versus ``b + a``) are a real duplicate this would miss, but
+	normalising the parse tree to catch them would also collapse equations
+	that are distinct by construction -- an identity and a bound over the same
+	two operands state different claims about them. The text comparison is the
+	weaker check, so the sharper question is asked separately: the set of
+	``(relation, lhs, rhs)`` triples is what must be injective.
+
+	A duplicate is not merely redundant. It doubles the equation's weight in
+	every count that sums over equations -- ``coverage``, the uncertainty
+	register, the citation register -- and a reader who trusts the drawing
+	sees two couplings where the library states one.
+	"""
+	seen: dict[tuple[str, str, str], list[str]] = {}
+	for equation_id, equation in graph.equations.items():
+		key = (equation.relation, equation.lhs.strip(), equation.rhs.strip())
+		seen.setdefault(key, []).append(equation_id)
+	duplicates = {
+		key: sorted(ids) for key, ids in seen.items() if len(ids) > 1
+	}
+	assert duplicates == {}, duplicates
+
+
 def test_every_equality_declares_an_edge_from_each_symbol_it_reads(
 	graph: ParameterGraph,
 ):
@@ -5903,7 +5939,14 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# hard tier moves 601 -> 603. `energy_demand` is an existing equation that
 	# gains one hard edge, which moves the edge count but not this one: the
 	# register counts equations, the distinction the batch-70 note above makes.
-	assert counts == {"hard": 603, "informational": 1, "soft": 2}, counts
+	# Batch 75 deleted `water_availability_bound`, a duplicate of
+	# `water_availability_constraint`. Both were uncited `geq`s that
+	# `strength_of` counted as hard, so the register moves 603 -> 602 for the
+	# same reason batch 62's deletion did. The surviving equation keeps its
+	# tier and gains the transferred edge at the same `hard` strength, which
+	# moves the edge count by nothing -- again the distinction this register
+	# makes.
+	assert counts == {"hard": 602, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.

@@ -330,8 +330,8 @@
 | 6.40 | `mining_hydrogen_haulage` | Hydrogen haulage in mining | Sector Coupling | → `hydrogen_demand_domestic`; ← `hydrogen_price` |
 | 6.41 | `industrial_ccus_share` | Industrial CCUS adoption | Sector Coupling, Emissions | → `industrial_emissions_reduction`; ← `carbon_price` |
 | 6.42 | `cooling_water_demand` | Cooling water demand | Water-Energy Nexus | → `total_water_demand`; ← `generation_coal`, `generation_gas` |
-| 6.43 | `water_availability` | Water availability multiplier | Water-Energy Nexus | Constrains → `total_water_demand`; ← `drought_frequency` |
-| 6.44 | `drought_frequency` | Drought frequency multiplier | Water-Energy Nexus | → `water_availability`; ← `ssp_pathway` |
+| 6.43 | `water_availability` | Water availability multiplier | Water-Energy Nexus | Constrains → `water_availability_m3` (the `water_availability_constraint` bound); `drought_frequency` drives nothing |
+| 6.44 | `drought_frequency` | Drought frequency multiplier | Water-Energy Nexus | → nothing: it carries no edge, and no equation names it |
 | 6.45 | `drought_severity` | Drought severity multiplier | Water-Energy Nexus | → `hydro_reservoir_level`; ← `ssp_pathway` |
 | 6.46 | `desalination_capacity` | Desalination capacity | Water-Energy Nexus | → `desalination_demand`; ← `desalination_energy` |
 | 6.47 | `desalination_energy` | Desalination energy intensity | Water-Energy Nexus | → `desalination_demand`; ↔ `desalination_capacity` |

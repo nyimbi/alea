@@ -48471,31 +48471,6 @@ equations:
     system: employment
     tolerance: 1.0e-09
     unit_check: true
-  water_availability_bound:
-    description: 'The water the project may withdraw, after the availability multiplier, must cover the
-      thermal fleet''s cooling draw and the hydrogen programme''s feed. The multiplier is the scenario
-      lever on a flow the graph already ships: at its default of 1.0 the constraint reads 200e6 >= 93.2e6
-      m3/year, and a dry year set below 0.47 makes it bind. The rewrite replaces a constraint that compared
-      the flow to its own two components with one that compares the *available* flow to demand, which
-      is the question a water-stressed siting decision actually asks.'
-    determined_variables: []
-    free_variables: &id056
-    - total_water_demand_m3
-    - water_availability
-    - water_availability_m3
-    latex: \mathrm{water}_{availability} \mathrm{water}_{availability\_m3} \geq \mathrm{total}_{water\_demand\_m3}
-    lhs: water_availability * water_availability_m3
-    linearity: linear
-    name: Water availability bound
-    parameters: *id056
-    priority: P2
-    reference: null
-    relation: geq
-    rhs: total_water_demand_m3
-    solution_method: direct
-    system: water_energy
-    tolerance: 1.0e-06
-    unit_check: true
   water_availability_constraint:
     description: 'The water the project may withdraw, after the availability multiplier, must cover the
       thermal fleet''s cooling draw and the hydrogen programme''s feed. The multiplier is the scenario
@@ -49009,7 +48984,7 @@ equations:
       an equality would size the workshop exactly to the fleet, which is a policy statement the graph
       has no basis for, and it would take `workshop_capacity` off the dial path.'
     determined_variables: []
-    free_variables: &id057
+    free_variables: &id056
     - maintenance_frequency
     - number_of_generators
     - workshop_capacity
@@ -49017,7 +48992,7 @@ equations:
     lhs: workshop_capacity
     linearity: linear
     name: Workshop capacity workload bound
-    parameters: *id057
+    parameters: *id056
     priority: P2
     reference: entsoe_adequacy
     relation: geq
@@ -56860,7 +56835,7 @@ relationships:
   target: biomass_capacity
 - description: Bounds water_availability_m3; a plan can clear the physics and fail this.
   direction: forward
-  equation_id: water_availability_bound
+  equation_id: water_availability_constraint
   priority: P2
   reference: null
   relationship: constraint
