@@ -270,7 +270,16 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	# side by side with the same lhs, rhs, parameters, system and priority.
 	# One constraint, stated twice, so the shaped count moves 72 -> 71 and
 	# the total 606 -> 605. `identities` is untouched: both were `geq`.
-	assert cov["constraint_shaped"] == 71
+	# Batch 77 adds `storage_build_balance`: the two storage leaves had to leave
+	# `fleet_build_balance`, whose ceiling was generation plus the storage
+	# allowance, and a sum of generation *and* storage against that ceiling let
+	# generation spend an allowance that belongs to storage. Measured before the
+	# split: 14,500 MW of generation against a 10,000 MW declared total, at zero
+	# storage, satisfied the bound and reported nothing. The new equation states
+	# the same relation the four other storage bounds already state -- bounded by
+	# `storage_headroom_mw` alone -- so the shaped count moves 71 -> 72 and the
+	# total 605 -> 606. `identities` is untouched: the new one is `leq`.
+	assert cov["constraint_shaped"] == 72
 	# The 534 this pin carried was stale by four and had been since batch 70.
 	# Measured on `HEAD:config/prg.yaml` the identity count is 530 and the
 	# total 602: batch 69 deleted `buffer_pool_contribution_definition` and
@@ -284,7 +293,8 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	# 532 -> 534 and the total 604 -> 606. The shaped count stays at 72:
 	# neither is a bound, and `energy_demand` was already an identity.
 	assert cov["identities"] == 534
-	assert cov["total"] == 605
+	# Batch 77 adds the one `leq` above, so the total moves 605 -> 606.
+	assert cov["total"] == 606
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
@@ -458,8 +468,11 @@ def test_every_unbound_route_names_the_derived_quantity_it_cannot_read(
 	# right, since it was stated over the same derived demand. Deleting a
 	# duplicate removes a route; it does not resolve one, and the surviving
 	# `water_availability_constraint` stays in the set naming the same
-	# unresolved symbol.
-	assert len(unbound) == 29, [route.equation_id for route in unbound]
+	# unresolved symbol. Batch 77 adds one, 29 -> 30: `storage_build_balance`
+	# is stated over `battery_capacity` and `phs_capacity`, which are
+	# endogenous, so it is a post-solve check like the other storage bounds and
+	# not a constraint on the solve.
+	assert len(unbound) == 30, [route.equation_id for route in unbound]
 	for route in unbound:
 		assert route.unresolved, route.equation_id
 		for name in route.unresolved:

@@ -38626,43 +38626,44 @@ equations:
     tolerance: 1.0e-06
     unit_check: true
   fleet_build_balance:
-    description: 'The optimiser''s per-technology builds must not exceed the fleet size the plan declares
-      for them -- the eighteen leaf builds are bounded by `total_capacity_mw` plus the storage allowance.
-      Three properties a reader should not have to infer. It routes `unbound` and never reaches the LP:
-      every endogenous leaf is a decision variable the network carries no column for, so `add_constraints`
-      skips it and this is a post-solve audit check. The earlier text claiming it was "the equation the
-      LP carries" was wrong about the code. The leaves are not filled from a solve either -- `parameters_from_result`
-      writes `total_capacity_mw` from the result''s capacity mix but none of the eighteen members, so
-      on the audit path the left side is the reference build while the right side is the solved total,
-      which compares a constant to a solve rather than checking it. And `solar_pv_capacity` is excluded,
-      which is what keeps the reference build inside the ceiling. It is a leaf and not an aggregate --
-      nothing reads it as a sum, whereas `thermal_capacity_mw`, `dispatchable_re_capacity_mw` and `storage_capacity_mw`
-      each aggregate their own members -- and including its 10,000 MW would put the reference build at
-      19,700 MW against a 15,000 MW ceiling. That excess is a real inconsistency in the reference scenario,
-      not a reason to omit the largest single build. Solar''s 10,000 MW default is absent from `REFERENCE_BUILDS`
-      and equals `total_capacity_mw`''s own placeholder, so it was copied rather than modelled. The declared
-      total is 10,000 MW while the full reference build is 19,700 MW, and the balance does not see that
-      gap because the largest build is not a member. The eighteen members sum to 9,700 MW and hold at
-      the shipped defaults. `solar_thermal_capacity` is left out for a different reason: it is the CSP
-      build under the catalog''s second spelling, and `csp_capacity` is already a member.'
+    description: 'The optimiser''s generation builds must not exceed the fleet size the plan declares.
+      Sixteen generation leaves are bounded by `total_capacity_mw`. Storage is not among them and the
+      storage allowance is not on the right-hand side: `storage_headroom_mw` exists so that battery and
+      pumped hydro can sit *above* the generation ceiling, and while both storage leaves were summands
+      here and the headroom was added to the ceiling, generation could spend an allowance that belongs
+      to storage. Measured before the split: 14,500 MW of generation against a 10,000 MW declared total,
+      with storage at zero, satisfied this bound (14,500 <= 10,000 + 5,000) and reported nothing. Storage''s
+      own allowance is `storage_build_balance`, stated over the two storage leaves. Three properties a
+      reader should not have to infer. It routes `unbound` and never reaches the LP: every leaf is a decision
+      variable the network carries no column for, so `add_constraints` skips it and this is a post-solve
+      audit check. On the *audit* path the check is still vacuous, and the cause is not this equation:
+      `parameters_from_result` overwrites `total_capacity_mw` with the sum of the result''s capacity mix,
+      so the ceiling becomes the build it is meant to bound. Measured after this split: a 90,000 MW coal
+      solve raises eighteen violations and not this one. One node cannot be both the solved build -- which
+      the thirty-four cost identities need -- and the declared plan these bounds test, so the repair is
+      a separate declared-ceiling node, and it is recorded in `docs/prg-status.md` rather than improvised
+      here. And `solar_pv_capacity` is excluded -- it is a leaf, not an aggregate, and its 10,000 MW default
+      is `total_capacity_mw`''s own placeholder rather than a modelled build, so including it would put
+      the reference build at 19,700 MW against a 10,000 MW ceiling. That disagreement between the declared
+      total and the reference build is a real defect in the reference scenario, recorded here rather than
+      hidden by the exclusion. The sixteen members sum to 9,200 MW and hold at the shipped defaults. `solar_thermal_capacity`
+      is left out for a different reason: it is the CSP build under the catalog''s second spelling, and
+      `csp_capacity` is already a member.'
     determined_variables: []
     free_variables:
     - total_capacity_mw
-    - storage_headroom_mw
-    latex: \mathrm{battery}_{capacity} + \mathrm{biomass}_{capacity} + \mathrm{coal}_{capacity} + \mathrm{csp}_{capacity}
-      + \mathrm{gas}_{capacity} + \mathrm{geothermal}_{capacity} + \mathrm{hydro}_{capacity} + \mathrm{nuclear}_{capacity}
-      + \mathrm{oil}_{capacity} + \mathrm{phs}_{capacity} + \mathrm{wind}_{offshore\_capacity} + \mathrm{wind}_{onshore\_capacity}
-      + \mathrm{biogas}_{capacity} + \mathrm{landfill}_{gas\_capacity} + \mathrm{gasification}_{capacity}
-      + \mathrm{pyrolysis}_{capacity} + \mathrm{waste}_{to\_energy\_capacity} + \mathrm{salinity}_{gradient\_capacity}
-      \leq \mathrm{total}_{capacity\_mw} + \mathrm{storage}_{headroom\_mw}
-    lhs: battery_capacity + biomass_capacity + coal_capacity + csp_capacity + gas_capacity + geothermal_capacity
-      + hydro_capacity + nuclear_capacity + oil_capacity + phs_capacity + wind_offshore_capacity + wind_onshore_capacity
-      + biogas_capacity + landfill_gas_capacity + gasification_capacity + pyrolysis_capacity + waste_to_energy_capacity
+    latex: \mathrm{biomass}_{capacity} + \mathrm{coal}_{capacity} + \mathrm{csp}_{capacity} + \mathrm{gas}_{capacity}
+      + \mathrm{geothermal}_{capacity} + \mathrm{hydro}_{capacity} + \mathrm{nuclear}_{capacity} + \mathrm{oil}_{capacity}
+      + \mathrm{wind}_{offshore\_capacity} + \mathrm{wind}_{onshore\_capacity} + \mathrm{biogas}_{capacity}
+      + \mathrm{landfill}_{gas\_capacity} + \mathrm{gasification}_{capacity} + \mathrm{pyrolysis}_{capacity}
+      + \mathrm{waste}_{to\_energy\_capacity} + \mathrm{salinity}_{gradient\_capacity} \leq \mathrm{total}_{capacity\_mw}
+    lhs: biomass_capacity + coal_capacity + csp_capacity + gas_capacity + geothermal_capacity + hydro_capacity
+      + nuclear_capacity + oil_capacity + wind_offshore_capacity + wind_onshore_capacity + biogas_capacity
+      + landfill_gas_capacity + gasification_capacity + pyrolysis_capacity + waste_to_energy_capacity
       + salinity_gradient_capacity
     linearity: linear
     name: The build set within the fleet
     parameters:
-    - battery_capacity
     - biogas_capacity
     - biomass_capacity
     - coal_capacity
@@ -38674,10 +38675,8 @@ equations:
     - landfill_gas_capacity
     - nuclear_capacity
     - oil_capacity
-    - phs_capacity
     - pyrolysis_capacity
     - salinity_gradient_capacity
-    - storage_headroom_mw
     - total_capacity_mw
     - waste_to_energy_capacity
     - wind_offshore_capacity
@@ -38686,7 +38685,7 @@ equations:
     reference: 'Least-cost generation expansion: Koltsaklis & Dagoumas (2018), Applied Energy 230:563-589;
       Tejada-Arango (2023), arXiv:2307.16842; Oree et al. (2017), RSER 69:790-803'
     relation: leq
-    rhs: total_capacity_mw + storage_headroom_mw
+    rhs: total_capacity_mw
     solution_method: direct
     system: reserve_margin
     tolerance: 1.0e-06
@@ -47103,6 +47102,38 @@ equations:
     system: price_demand
     tolerance: 1.0e-06
     unit_check: true
+  storage_build_balance:
+    description: 'The storage builds must not exceed the storage envelope. `battery_capacity` and `phs_capacity`
+      are energy-shifting plant: they add no nameplate generation, so the generation ceiling `total_capacity_mw`
+      is the wrong envelope for them and `storage_headroom_mw` is the right one. This is the same relation
+      the four other storage bounds state -- compressed air, flywheel, gravity and thermal storage are
+      each bounded by `storage_headroom_mw` alone -- applied to the two storage leaves that shipped inside
+      `fleet_build_balance`. They were removed from that equation because a sum of generation plus storage
+      against generation plus headroom let generation spend storage''s allowance: 14,500 MW of generation
+      under a 10,000 MW declared total satisfied it at zero storage. Holds at defaults (500 MW against
+      5,000) and fails once a scenario builds storage past the envelope. The headroom is a policy dial,
+      so this is a planning bound and not a physics one.'
+    determined_variables: []
+    free_variables:
+    - battery_capacity
+    - phs_capacity
+    - storage_headroom_mw
+    latex: \mathrm{battery}_{capacity} + \mathrm{phs}_{capacity} \leq \mathrm{storage}_{headroom\_mw}
+    lhs: battery_capacity + phs_capacity
+    linearity: linear
+    name: The storage build within its envelope
+    parameters:
+    - battery_capacity
+    - phs_capacity
+    - storage_headroom_mw
+    priority: P2
+    reference: null
+    relation: leq
+    rhs: storage_headroom_mw
+    solution_method: direct
+    system: energy_balance
+    tolerance: 1.0e-06
+    unit_check: true
   storage_capacity_mw_bound:
     description: 'The storage build is bounded by generation plus the storage envelope: 800 MW under 15000
       MW at defaults. Routes as a post-solve check -- the left-hand side is itself endogenous. An equality
@@ -51880,16 +51911,6 @@ relationships:
   priority: P1
   reference: null
   relationship: constraint
-  source: battery_capacity
-  strength: hard
-  target: total_capacity_mw
-- description: The build is one term the fleet size governs; the build set may not exceed it plus storage
-    headroom.
-  direction: forward
-  equation_id: fleet_build_balance
-  priority: P1
-  reference: null
-  relationship: constraint
   source: biomass_capacity
   strength: hard
   target: total_capacity_mw
@@ -51970,16 +51991,6 @@ relationships:
   priority: P1
   reference: null
   relationship: constraint
-  source: phs_capacity
-  strength: hard
-  target: total_capacity_mw
-- description: The build is one term the fleet size governs; the build set may not exceed it plus storage
-    headroom.
-  direction: forward
-  equation_id: fleet_build_balance
-  priority: P1
-  reference: null
-  relationship: constraint
   source: wind_offshore_capacity
   strength: hard
   target: total_capacity_mw
@@ -51991,15 +52002,6 @@ relationships:
   reference: null
   relationship: constraint
   source: wind_onshore_capacity
-  strength: hard
-  target: total_capacity_mw
-- description: The storage allowance widens the fleet ceiling for energy-shifting builds.
-  direction: forward
-  equation_id: fleet_build_balance
-  priority: P1
-  reference: null
-  relationship: constraint
-  source: storage_headroom_mw
   strength: hard
   target: total_capacity_mw
 - description: The canonical rate; the duplicate derives.
@@ -61988,6 +61990,26 @@ relationships:
   source: reserve_margin_min
   strength: hard
   target: firm_capacity_mw
+- description: Storage is energy-shifting plant, so its envelope is the storage allowance and not the
+    generation ceiling.
+  direction: forward
+  equation_id: storage_build_balance
+  priority: P2
+  reference: null
+  relationship: constraint
+  source: storage_headroom_mw
+  strength: hard
+  target: battery_capacity
+- description: Storage is energy-shifting plant, so its envelope is the storage allowance and not the
+    generation ceiling.
+  direction: forward
+  equation_id: storage_build_balance
+  priority: P2
+  reference: null
+  relationship: constraint
+  source: storage_headroom_mw
+  strength: hard
+  target: phs_capacity
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0
   id: carbon_price_budget_alignment

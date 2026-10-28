@@ -5966,8 +5966,11 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# same reason batch 62's deletion did. The surviving equation keeps its
 	# tier and gains the transferred edge at the same `hard` strength, which
 	# moves the edge count by nothing -- again the distinction this register
-	# makes.
-	assert counts == {"hard": 602, "informational": 1, "soft": 2}, counts
+	# makes. Batch 77 adds `storage_build_balance`, an uncited `leq`, which
+	# `strength_of` counts as hard: 602 -> 603. The three edges it and the
+	# reshaped `fleet_build_balance` moved are all `hard`, so they change the
+	# edge count and not this one.
+	assert counts == {"hard": 603, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.

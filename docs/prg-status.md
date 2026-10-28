@@ -2036,6 +2036,73 @@ what ships.
 
 
 
+### The fleet ceiling was granted to generation and storage alike (batch 77, 2026-10-28)
+
+`fleet_build_balance` summed eighteen leaf builds -- sixteen generation, two
+storage -- against `total_capacity_mw + storage_headroom_mw`.
+`storage_headroom_mw` is the allowance that lets battery and pumped hydro sit
+*above* the generation ceiling: "storage is energy-shifting, not generation, so
+a plan can carry battery plus pumped hydro without the fleet's nameplate
+growing by the same amount." Adding it to the right-hand side while also
+summing the storage leaves on the left gave that allowance to the whole build
+set, and the two effects did not cancel -- they added. Measured on the shipped
+defaults: 14,500 MW of generation against a 10,000 MW declared total, with
+storage at zero, satisfied the bound (14,500 <= 10,000 + 5,000) and reported
+nothing. Generation was 4,500 MW over the fleet size the plan declares, and the
+constraint written to catch exactly that was silent.
+
+**The repair is a split, not a retype.** Storage's envelope is not the
+generation ceiling, and the graph already said so in four places:
+`compressed_air_capacity_bound`, `flywheel_capacity_bound`,
+`gravity_storage_capacity_bound` and `thermal_storage_capacity_bound` each bound
+their technology by `storage_headroom_mw` alone, and one of them records that
+membership in the fleet balance "was rejected as a tautology". The two storage
+leaves that had shipped inside the balance were the exception, not the rule.
+
+- `fleet_build_balance` now sums the sixteen generation leaves against
+  `total_capacity_mw`.
+- `storage_build_balance` bounds `battery_capacity + phs_capacity` by
+  `storage_headroom_mw`, the same relation its four siblings state.
+
+**Canaried both ways.** With the old form restored in a scratch copy, the
+14,500 MW scenario reports only `frequency_nadir_hz_out_of_range` -- the defect
+reproduces. With the shipped form, it reports `fleet_build_balance`. A 6,000 MW
+storage build against the 5,000 MW envelope reports `storage_build_balance`,
+and the shipped defaults still report exactly one finding.
+
+**Counts.** Equations 605 -> 606, constraint-shaped 71 -> 72, total 606,
+unbound 29 -> 30 (the new equation is stated over two endogenous leaves, so it
+is a post-solve check), bound routes 42 unchanged, identities 534 unchanged.
+Edges 1417 -> 1416: three removed (`battery_capacity`, `phs_capacity` and
+`storage_headroom_mw` into `total_capacity_mw`), two added
+(`storage_headroom_mw` into each storage leaf). The strength register moves
+602 -> 603, because it counts equations and the new one is an uncited `leq`.
+`structure_issues()` is empty.
+
+**The same equation is still vacuous on the audit path, and that is a
+different defect.** `parameters_from_result` overwrites `total_capacity_mw`
+with the sum of the result's capacity mix, so on that path the ceiling becomes
+the build it is meant to bound. Measured after the split: a 90,000 MW coal
+solve raises eighteen violations and not this one. The cause is not the
+equation's shape but one node carrying two roles -- `total_capacity_mw` is the
+solved build for the thirty-four cost, jobs and tax identities, and the
+declared plan for the nine capacity bounds that test against it. Splitting
+those roles needs a declared-ceiling node with its own value, which is a
+decision about the reference scenario and not a change to an equation. It is
+recorded in the equation's description so the next reader inherits the
+question, and it is the next unit.
+
+**Two claims in the old description were stale and are corrected.** It said
+`parameters_from_result` "writes `total_capacity_mw` from the result's capacity
+mix but none of the eighteen members". `_CARRIER_BUILDS` landed on 2026-10-26
+and writes thirteen of them; the other five are carriers the registry has no
+name for and default to zero, which is the value a solve that built none of
+them should write. It also described `solar_pv_capacity`'s exclusion as
+something the excess justified; the exclusion is right -- solar's 10,000 MW
+default is `total_capacity_mw`'s own placeholder, copied rather than modelled
+-- and the disagreement it hides is a defect in the reference scenario, which
+the new description states rather than explains away.
+
 Batch 74 closed with `reserve_margin` named as carrying no edge from one of its
 own operands. Auditing that class across the library found nine equations whose
 arithmetic names a symbol their edge set does not carry. Eight of the nine are
