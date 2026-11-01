@@ -86,7 +86,29 @@ up/down requirements are now slices of peak demand rather than waiting on a
 
 `ancillary_services_market`, `balancing_market`, `contract_for_difference`, `cross_border_trading`, `day_ahead_market`, `dg_placement_enabled`, `intraday_market`, `life_extension_possible`, `phase_shifting_enabled`, `real_time_market`, `security_constrained_dispatch`, `storage_dispatch_enabled`, `topology_switching_enabled`, `unit_commitment`, `voltage_optimisation_enabled`
 
-These are **gates, not quantities**, and the GATE-PRODUCT half is now closed: all fifteen such switches are coupled, thirteen of them in batch 25 and the other two earlier. What is left are the scene switches: `unit_commitment`, `security_constrained_dispatch`, `topology_switching_enabled`, `dg_placement_enabled`, `storage_dispatch_enabled`, `phase_shifting_enabled`, `voltage_optimisation_enabled` and the market-design flags configure the run, and no equation should pretend otherwise. Recording that distinction is the coupling for this kind.
+These are **gates, not quantities**, and the GATE-PRODUCT half is closed for a
+*different* set of nodes than the fifteen listed above. Batch 25 coupled
+thirteen switch-gated products -- a share node times the quantity it gates, a
+switch at zero returning zero rather than branching -- and the node ids it
+touched are disjoint from this list.
+
+Measured against the graph as it stands, **zero of these fifteen are coupled**:
+none appears as an edge endpoint, and none is named as a parameter by any
+equation. The sentence that stood here before batch 79 -- "all fifteen such
+switches are coupled, thirteen of them in batch 25 and the other two earlier" --
+was false in both halves, and no gate checked it: batch 25's thirteen are other
+node ids, and these fifteen were never coupled at all. That measurement is now
+`test_the_scene_switches_stay_out_of_the_arithmetic`, so this claim cannot
+drift again.
+
+What is left is a decision rather than a defect. The scene switches --
+`unit_commitment`, `security_constrained_dispatch`, `topology_switching_enabled`,
+`dg_placement_enabled`, `storage_dispatch_enabled`, `phase_shifting_enabled`,
+`voltage_optimisation_enabled` -- and the market-design flags configure the run,
+and no equation should pretend otherwise. Recording that distinction is the
+coupling for this kind; `line_outage_start` carries the same record ("an
+hours-of-year index, not a timestamp, and not an operand of any equation"), and
+that is the model to follow.
 
 ## rate family (0)
 

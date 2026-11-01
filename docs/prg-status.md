@@ -2103,6 +2103,110 @@ default is `total_capacity_mw`'s own placeholder, copied rather than modelled
 -- and the disagreement it hides is a defect in the reference scenario, which
 the new description states rather than explains away.
 
+### The register that claimed coupling it never had (batch 79, 2026-11-01)
+
+Batch 78 split one node into two; batch 79 went looking for the next cluster and
+came back with a measurement instead of equations. Every candidate large enough
+to be worth a batch stopped at a stated reason, and one document was found
+asserting a progress claim that is false against the graph.
+
+**The claim.** `docs/param_coupling_worklist.md` said: "all fifteen such
+switches are coupled, thirteen of them in batch 25 and the other two earlier."
+Measured -- none of the fifteen (`ancillary_services_market`,
+`balancing_market`, `contract_for_difference`, `cross_border_trading`,
+`day_ahead_market`, `dg_placement_enabled`, `intraday_market`,
+`life_extension_possible`, `phase_shifting_enabled`, `real_time_market`,
+`security_constrained_dispatch`, `storage_dispatch_enabled`,
+`topology_switching_enabled`, `unit_commitment`,
+`voltage_optimisation_enabled`) is an edge endpoint or an equation parameter:
+**0 of 15**. Whatever batch 25 coupled, none of it was these. The genuinely
+coupled switches are other ids -- `carbon_border_adjustment`,
+`cross_border_trade_allowed`, `outage_coordination`, `ppa_guarantees`,
+`smart_metering_rollout`, `transmission_expansion_allowed`, `capacity_market`,
+the N-1/N-2 criteria -- and none of those appears on the list either, so the
+two sets are disjoint. The sentence was wrong in both halves, and nothing
+checked it: a progress claim in a document has no gate, so it reads as fact
+while the graph says otherwise.
+
+One of the fifteen, `cross_border_trading`, is `status: deprecated` in favour
+of `cross_border_trade_allowed`, so for that one the non-coupling is enforced by
+`_deprecated_reach` rather than by the scene-switch decision -- the register
+lists a retired duplicate under the same heading as live configuration inputs.
+
+**The correction, and what the fifteen actually are.** The second half of that
+sentence -- that the scene switches and market-design flags "configure the run,
+and no equation should pretend otherwise" -- is right and stays. A boolean
+holding `unit_commitment * x` would claim the dispatch model's structure is a
+term of the objective; it is the choice of model, not a quantity in it. The
+worklist now records the measurement beside the decision.
+`test_the_scene_switches_stay_out_of_the_arithmetic` pins it, with an existence
+check first so a misspelled id cannot pass by never resolving, and
+`test_the_scene_switch_predicate_read_the_graph_not_the_list` canaries the
+predicate both ways -- `capacity_market` must be reported, the uncoupled
+`local_employment_targets` must not -- because a predicate that returned `[]`
+unconditionally would keep the gate green forever.
+
+**The four clusters that stopped, and why -- so the next reader does not
+re-derive them.**
+
+*Startup costs (`startup_cost_coal`, `startup_cost_gas`).* The instinct was
+`unit_commitment * startup_cost_coal * coal_cycling_ceiling_per_year`, since
+`coal_cycling_ceiling_definition` already computes 8760/(6+4) = 876 cycles/year
+at defaults. `docs/research/coupling-packs/operational-supply.md` had already
+deferred these: "No starts count, no archived per-start cost." The ceiling is an
+upper bound, not an expected count, and multiplying a per-start price by the
+maximum number of starts yields the cost of a year spent cycling at the physical
+limit -- a number nothing in the scenario asserts. The archived ENTSO-E MAF 2019
+methodology defines Minimum Up Time and Minimum Down Time and places them in a
+cost-minimising MILP, but never names a startup cost, so citing it for the
+product would claim past where it carries. Both deferred, as the pack says.
+
+*The CVaR trio (`cvar_alpha`, `cvar_omega`, `probability_weight`).* These are
+the components of Rockafellar--Uryasev -- alpha the tail level, omega the
+risk-aversion weight, the weight a scenario probability -- but a scalar graph
+carries no loss distribution to take a tail of. Under the only two-point model
+that fits, alpha 0.95 and probability 0.5 put the tail wholly on the bad state
+and CVaR collapses to that state's loss: both interesting operands drop out of
+the result at the shipped defaults. The degenerate form is the tell, so the
+trio stays until the graph carries a distribution.
+
+*The outage indices (`line_outage_start`, `line_outage_end`).* Both are
+hours-of-year, and their own descriptions record the decoupling. The obvious
+`line_outage_duration eq line_outage_end - line_outage_start` fits the numbers
+(6.0 - 0.0 = 6.0) and is wrong: `line_outage_duration` is the *mean* hours per
+event across a population of outages, while start and end bound one sampled
+window. Equating them would turn an instance into a population mean, and the
+defaults agreeing is coincidence, not evidence.
+
+*The employment attainment trio.* Their descriptions define "the share achieved
+over the share targeted", which looks computable: `women_jobs`, `youth_jobs`,
+`local_jobs` and `locally_sourced_jobs` are all derived. The three all read
+0.34483 at shipped defaults, and the reason is not the same for all three --
+measured by doubling the target and re-propagating:
+
+* `women_jobs eq direct_jobs * women_employment_share` and the same shape for
+  youth, so the target share appears on both sides and cancels: attainment is
+  identically `direct_jobs/total_jobs`. Doubling the target moves it
+  **0.344828 -> 0.344828**. An index that cannot move when the target moves is
+  batch 78's tautology in another register -- a ratio that cannot fail.
+* `local_jobs eq direct_jobs * local_content_requirement`, and
+  `local_content_requirement` is the share of project *inputs* sourced locally,
+  not the workforce share. Nothing cancels: doubling the employment target moves
+  it **0.344828 -> 0.172414** and doubling the content share moves it
+  **-> 0.689655**. So it is not degenerate -- it is mislabelled. The numerator
+  is a supply-chain quantity and the denominator a workforce one, and their
+  ratio is not attainment.
+
+Two different reasons for the same resting place. All three are already
+`status: deprecated`; what a real attainment index needs is a *solved-actual*
+employment node on the achieved side, not an equation over targets.
+
+**Also measured.** All 41 categoricals are uncoupled and none has ever been an
+equation parameter: selectors do not enter arithmetic in this graph. 16 of the
+242 uncoupled nodes are `deprecated`, which `_deprecated_reach` requires them to
+be. Of the rest, the `500000.0 / unit: -` placeholder register holds 38 and is a
+sourcing problem rather than a coupling one.
+
 ### The ceiling the solve overwrote (batch 78, 2026-10-28)
 
 Batch 77 recorded a second defect in the same equation and deferred it as the

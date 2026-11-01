@@ -7054,3 +7054,110 @@ def test_the_door_coverage_gate_notices_a_key_no_door_renders():
 			"it is not crossing the keys against the doors"
 		)
 	assert probe_exit_code(program) == 0, "the gate did not recover"
+
+
+#: The scene and market-design switches: inputs that configure which run is
+#: performed rather than quantities the model's arithmetic reads.
+#:
+#: WHY THE LIST IS A CONSTANT AND NOT A QUERY. The worklist records these as
+#: configuration on purpose -- an equation holding `unit_commitment * x` would
+#: claim the dispatch model's structure is a term of the objective, and it is
+#: not; it is the choice of model. The graph already has the honest form for a
+#: switch that *does* gate a quantity (`capacity_market * capacity_price * ...`),
+#: and those live elsewhere: batch 25's thirteen are a disjoint set of node ids.
+#: So the assertion is the negative one -- that none of these has been coupled
+#: by mistake -- and a positive coupling of a genuine gate is not a failure.
+SCENE_SWITCHES = (
+	"ancillary_services_market",
+	"balancing_market",
+	"contract_for_difference",
+	"cross_border_trading",
+	"day_ahead_market",
+	"dg_placement_enabled",
+	"intraday_market",
+	"life_extension_possible",
+	"phase_shifting_enabled",
+	"real_time_market",
+	"security_constrained_dispatch",
+	"storage_dispatch_enabled",
+	"topology_switching_enabled",
+	"unit_commitment",
+	"voltage_optimisation_enabled",
+)
+
+
+def switches_in_arithmetic(graph: ParameterGraph, names: tuple[str, ...]) -> list[str]:
+	"""The named switches that carry an edge or are named by an equation."""
+	edged = set()
+	for edge in graph.edges:
+		edged.add(edge.source)
+		edged.add(edge.target)
+	named = set()
+	for equation in graph.equations.values():
+		named.update(equation.parameters)
+	return sorted(n for n in names if n in edged or n in named)
+
+
+def test_the_scene_switches_stay_out_of_the_arithmetic():
+	"""The register's own claim, measured rather than repeated.
+
+	`docs/param_coupling_worklist.md` said "all fifteen such switches are
+	coupled, thirteen of them in batch 25". Measured against the graph, zero of
+	these fifteen are coupled -- none is an edge endpoint and none is an equation
+	parameter -- and batch 25's thirteen are other node ids entirely. The prose
+	was false in both halves and nothing checked it: a progress claim in a
+	document has no gate by default, so it drifts while reading as fact.
+
+	What this pins is the *decision* the worklist states: these are configuration,
+	not arithmetic, so they should carry no edge. The gate fails if a later batch
+	wires one in without first changing the decision here, which is the point at
+	which someone must ask whether a scene switch has become a quantity.
+
+	The predicate is a plain function over (graph, names) so its canary can feed
+	it a known-coupled name rather than mutating the shipped tree.
+	"""
+	graph = load_graph(PRG_PATH)
+
+	# Every name must exist. A misspelled id is never an edge endpoint and never
+	# an equation parameter, so an entry that fails to resolve would satisfy the
+	# assertion below while standing for a switch nothing looked at -- the
+	# predicate would be a subset of the claim it makes.
+	missing = [n for n in SCENE_SWITCHES if n not in graph.nodes]
+	assert missing == [], f"{missing} is in the register but not in the graph"
+
+	offenders = switches_in_arithmetic(graph, SCENE_SWITCHES)
+	assert offenders == [], (
+		f"{offenders} now carries an edge or is named by an equation; the "
+		f"worklist records these as scene switches that configure the run, so "
+		f"either the coupling is wrong or the record is, and they cannot both stand"
+	)
+
+
+def test_the_scene_switch_predicate_read_the_graph_not_the_list():
+	"""The canary: the predicate must notice a switch that *is* coupled.
+
+	A predicate that returned `[]` unconditionally -- indexing nothing, or
+	reading a set it had already emptied -- would pass the gate above forever,
+	which is how a register claim outlives the fact it describes. The control is
+	a name known to be coupled by the shipped graph (`capacity_market` gates
+	`capacity_price`), disjoint from anything the gate's list contains, so a pass
+	here and a fail there together show the predicate discriminates.
+	"""
+	graph = load_graph(PRG_PATH)
+
+	# Known positive: a switch the shipped graph genuinely couples.
+	known_coupled = "capacity_market"
+	assert switches_in_arithmetic(graph, (known_coupled,)) == [known_coupled], (
+		"a switch the graph genuinely couples was not reported; the predicate is "
+		"not reading the edges"
+	)
+
+	# Known negative: an uncoupled node, so the predicate can also return the
+	# other answer -- otherwise a predicate returning every name would pass the
+	# gate above by failing it, and one returning none would pass vacuously.
+	known_uncoupled = "local_employment_targets"
+	assert known_uncoupled not in SCENE_SWITCHES
+	assert switches_in_arithmetic(graph, (known_uncoupled,)) == [], (
+		"an uncoupled node was reported as coupled; the predicate is reading "
+		"something other than the edges and the equations"
+	)
