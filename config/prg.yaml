@@ -9089,6 +9089,41 @@ parameters:
     users:
     - Financiers
     - Regulators
+  declared_capacity_mw:
+    categories: []
+    category: Technical
+    default: 10000.0
+    deprecated_by: null
+    description: 'The capacity the plan declares the system will carry, before any solve. This
+      is the quantity every capacity bound reads, and it is the one node whose value the
+      optimiser must not touch: a bound that tests a build against the build it is part of
+      cannot fail. `total_capacity_mw` is the solved build, and `parameters_from_result`
+      writes it from the result''s capacity mix so that the thirty-four cost, jobs and tax
+      identities divide by the fleet the solve actually chose; when the nine capacity bounds
+      read the same node, every one of them compared the sum to one of its own addends.
+      Measured before the split: a 97,300 MW fusion solve fired none of the nine. The two
+      roles are now two nodes -- the solved build for the identities, this declared plan for
+      the bounds, the same separation `storage_headroom_mw` makes for storage. The value is
+      a reference-scenario decision, and no archived source states the fleet size, which is
+      why it ships at the 10,000 MW the plan has always been described with rather than at a
+      number invented to make the reference build fit.'
+    determinism: policy
+    initial: null
+    name: Declared system capacity
+    priority: P2
+    range:
+    - 1.0
+    - 1000000.0
+    role: exogenous
+    source: Planning policy; the capacity a plan declares the system will carry
+    source_url: null
+    status: existing
+    subcategory: null
+    type: float
+    unit: MW
+    users:
+    - Planners
+    - Regulators
   deductible_levels:
     categories: []
     category: Insurance & Catastrophe
@@ -30600,7 +30635,15 @@ parameters:
     category: Technical
     default: 10000.0
     deprecated_by: null
-    description: Nameplate capacity on the system, all carriers.
+    description: 'Nameplate capacity on the system, all carriers, as the *solve*
+      reports it. Thirty-four cost, jobs, tax and tariff identities divide by this node, so
+      it must carry the fleet the result actually chose: `parameters_from_result` writes the
+      sum of the capacity mix into it, and that write is correct. It is no longer a
+      capacity *bound* -- nine inequalities read it as a ceiling until batch 78, and because
+      the same function overwrote it with the build, each one compared a sum to one of its
+      own addends and could not fail. A 90,000 MW fusion solve inside a 97,300 MW mix fired
+      none of the nine. The bounds now read `declared_capacity_mw`, the plan a scenario
+      states, and this node is the solved total those identities need.'
     determinism: fixed
     initial: null
     name: Total installed capacity
@@ -38627,7 +38670,7 @@ equations:
     unit_check: true
   fleet_build_balance:
     description: 'The optimiser''s generation builds must not exceed the fleet size the plan declares.
-      Sixteen generation leaves are bounded by `total_capacity_mw`. Storage is not among them and the
+      Sixteen generation leaves are bounded by `declared_capacity_mw`. Storage is not among them and the
       storage allowance is not on the right-hand side: `storage_headroom_mw` exists so that battery and
       pumped hydro can sit *above* the generation ceiling, and while both storage leaves were summands
       here and the headroom was added to the ceiling, generation could spend an allowance that belongs
@@ -38637,13 +38680,13 @@ equations:
       reader should not have to infer. It routes `unbound` and never reaches the LP: every leaf is a decision
       variable the network carries no column for, so `add_constraints` skips it and this is a post-solve
       audit check. On the *audit* path the check is still vacuous, and the cause is not this equation:
-      `parameters_from_result` overwrites `total_capacity_mw` with the sum of the result''s capacity mix,
+      `parameters_from_result` overwrites `declared_capacity_mw` with the sum of the result''s capacity mix,
       so the ceiling becomes the build it is meant to bound. Measured after this split: a 90,000 MW coal
       solve raises eighteen violations and not this one. One node cannot be both the solved build -- which
       the thirty-four cost identities need -- and the declared plan these bounds test, so the repair is
       a separate declared-ceiling node, and it is recorded in `docs/prg-status.md` rather than improvised
       here. And `solar_pv_capacity` is excluded -- it is a leaf, not an aggregate, and its 10,000 MW default
-      is `total_capacity_mw`''s own placeholder rather than a modelled build, so including it would put
+      is `declared_capacity_mw`''s own placeholder rather than a modelled build, so including it would put
       the reference build at 19,700 MW against a 10,000 MW ceiling. That disagreement between the declared
       total and the reference build is a real defect in the reference scenario, recorded here rather than
       hidden by the exclusion. The sixteen members sum to 9,200 MW and hold at the shipped defaults. `solar_thermal_capacity`
@@ -38651,12 +38694,12 @@ equations:
       `csp_capacity` is already a member.'
     determined_variables: []
     free_variables:
-    - total_capacity_mw
+    - declared_capacity_mw
     latex: \mathrm{biomass}_{capacity} + \mathrm{coal}_{capacity} + \mathrm{csp}_{capacity} + \mathrm{gas}_{capacity}
       + \mathrm{geothermal}_{capacity} + \mathrm{hydro}_{capacity} + \mathrm{nuclear}_{capacity} + \mathrm{oil}_{capacity}
       + \mathrm{wind}_{offshore\_capacity} + \mathrm{wind}_{onshore\_capacity} + \mathrm{biogas}_{capacity}
       + \mathrm{landfill}_{gas\_capacity} + \mathrm{gasification}_{capacity} + \mathrm{pyrolysis}_{capacity}
-      + \mathrm{waste}_{to\_energy\_capacity} + \mathrm{salinity}_{gradient\_capacity} \leq \mathrm{total}_{capacity\_mw}
+      + \mathrm{waste}_{to\_energy\_capacity} + \mathrm{salinity}_{gradient\_capacity} \leq \mathrm{declared}_{capacity\_mw}
     lhs: biomass_capacity + coal_capacity + csp_capacity + gas_capacity + geothermal_capacity + hydro_capacity
       + nuclear_capacity + oil_capacity + wind_offshore_capacity + wind_onshore_capacity + biogas_capacity
       + landfill_gas_capacity + gasification_capacity + pyrolysis_capacity + waste_to_energy_capacity
@@ -38677,7 +38720,7 @@ equations:
     - oil_capacity
     - pyrolysis_capacity
     - salinity_gradient_capacity
-    - total_capacity_mw
+    - declared_capacity_mw
     - waste_to_energy_capacity
     - wind_offshore_capacity
     - wind_onshore_capacity
@@ -38685,7 +38728,7 @@ equations:
     reference: 'Least-cost generation expansion: Koltsaklis & Dagoumas (2018), Applied Energy 230:563-589;
       Tejada-Arango (2023), arXiv:2307.16842; Oree et al. (2017), RSER 69:790-803'
     relation: leq
-    rhs: total_capacity_mw
+    rhs: declared_capacity_mw
     solution_method: direct
     system: reserve_margin
     tolerance: 1.0e-06
@@ -39373,8 +39416,8 @@ equations:
     determined_variables: []
     free_variables: &id016
     - fusion_capacity
-    - total_capacity_mw
-    latex: \mathrm{fusion}_{capacity} \leq \mathrm{total}_{capacity\_mw}
+    - declared_capacity_mw
+    latex: \mathrm{fusion}_{capacity} \leq \mathrm{declared}_{capacity\_mw}
     lhs: fusion_capacity
     linearity: linear
     name: Fusion capacity bound
@@ -39382,7 +39425,7 @@ equations:
     priority: P2
     reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
     relation: leq
-    rhs: total_capacity_mw
+    rhs: declared_capacity_mw
     solution_method: direct
     system: energy_balance
     tolerance: 1.0e-06
@@ -40378,8 +40421,8 @@ equations:
     determined_variables: []
     free_variables: &id022
     - hydrogen_fuel_cell_capacity
-    - total_capacity_mw
-    latex: \mathrm{hydrogen}_{fuel\_cell\_capacity} \leq \mathrm{total}_{capacity\_mw}
+    - declared_capacity_mw
+    latex: \mathrm{hydrogen}_{fuel\_cell\_capacity} \leq \mathrm{declared}_{capacity\_mw}
     lhs: hydrogen_fuel_cell_capacity
     linearity: linear
     name: Hydrogen fuel cell capacity bound
@@ -40387,7 +40430,7 @@ equations:
     priority: P2
     reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
     relation: leq
-    rhs: total_capacity_mw
+    rhs: declared_capacity_mw
     solution_method: direct
     system: energy_balance
     tolerance: 1.0e-06
@@ -43328,8 +43371,8 @@ equations:
     determined_variables: []
     free_variables: &id028
     - marine_otec_capacity
-    - total_capacity_mw
-    latex: \mathrm{marine}_{otec\_capacity} \leq \mathrm{total}_{capacity\_mw}
+    - declared_capacity_mw
+    latex: \mathrm{marine}_{otec\_capacity} \leq \mathrm{declared}_{capacity\_mw}
     lhs: marine_otec_capacity
     linearity: linear
     name: Marine otec capacity bound
@@ -43337,7 +43380,7 @@ equations:
     priority: P2
     reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
     relation: leq
-    rhs: total_capacity_mw
+    rhs: declared_capacity_mw
     solution_method: direct
     system: energy_balance
     tolerance: 1.0e-06
@@ -43374,8 +43417,8 @@ equations:
     determined_variables: []
     free_variables: &id029
     - marine_tidal_capacity
-    - total_capacity_mw
-    latex: \mathrm{marine}_{tidal\_capacity} \leq \mathrm{total}_{capacity\_mw}
+    - declared_capacity_mw
+    latex: \mathrm{marine}_{tidal\_capacity} \leq \mathrm{declared}_{capacity\_mw}
     lhs: marine_tidal_capacity
     linearity: linear
     name: Marine tidal capacity bound
@@ -43383,7 +43426,7 @@ equations:
     priority: P2
     reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
     relation: leq
-    rhs: total_capacity_mw
+    rhs: declared_capacity_mw
     solution_method: direct
     system: energy_balance
     tolerance: 1.0e-06
@@ -43416,8 +43459,8 @@ equations:
     determined_variables: []
     free_variables: &id030
     - marine_wave_capacity
-    - total_capacity_mw
-    latex: \mathrm{marine}_{wave\_capacity} \leq \mathrm{total}_{capacity\_mw}
+    - declared_capacity_mw
+    latex: \mathrm{marine}_{wave\_capacity} \leq \mathrm{declared}_{capacity\_mw}
     lhs: marine_wave_capacity
     linearity: linear
     name: Marine wave capacity bound
@@ -43425,7 +43468,7 @@ equations:
     priority: P2
     reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
     relation: leq
-    rhs: total_capacity_mw
+    rhs: declared_capacity_mw
     solution_method: direct
     system: energy_balance
     tolerance: 1.0e-06
@@ -46449,8 +46492,8 @@ equations:
     determined_variables: []
     free_variables: &id043
     - small_modular_reactor_capacity
-    - total_capacity_mw
-    latex: \mathrm{small}_{modular\_reactor\_capacity} \leq \mathrm{total}_{capacity\_mw}
+    - declared_capacity_mw
+    latex: \mathrm{small}_{modular\_reactor\_capacity} \leq \mathrm{declared}_{capacity\_mw}
     lhs: small_modular_reactor_capacity
     linearity: linear
     name: Small modular reactor capacity bound
@@ -46458,7 +46501,7 @@ equations:
     priority: P2
     reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
     relation: leq
-    rhs: total_capacity_mw
+    rhs: declared_capacity_mw
     solution_method: direct
     system: energy_balance
     tolerance: 1.0e-06
@@ -47145,8 +47188,8 @@ equations:
     free_variables: &id049
     - storage_capacity_mw
     - storage_headroom_mw
-    - total_capacity_mw
-    latex: \mathrm{storage}_{capacity\_mw} \leq \mathrm{total}_{capacity\_mw} + \mathrm{storage}_{headroom\_mw}
+    - declared_capacity_mw
+    latex: \mathrm{storage}_{capacity\_mw} \leq \mathrm{declared}_{capacity\_mw} + \mathrm{storage}_{headroom\_mw}
     lhs: storage_capacity_mw
     linearity: linear
     name: Storage capacity mw bound
@@ -47154,7 +47197,7 @@ equations:
     priority: P2
     reference: null
     relation: leq
-    rhs: total_capacity_mw + storage_headroom_mw
+    rhs: declared_capacity_mw + storage_headroom_mw
     solution_method: direct
     system: energy_balance
     tolerance: 1.0e-06
@@ -47646,8 +47689,8 @@ equations:
     determined_variables: []
     free_variables: &id052
     - tidal_range_capacity
-    - total_capacity_mw
-    latex: \mathrm{tidal}_{range\_capacity} \leq \mathrm{total}_{capacity\_mw}
+    - declared_capacity_mw
+    latex: \mathrm{tidal}_{range\_capacity} \leq \mathrm{declared}_{capacity\_mw}
     lhs: tidal_range_capacity
     linearity: linear
     name: Tidal range capacity bound
@@ -47655,7 +47698,7 @@ equations:
     priority: P2
     reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
     relation: leq
-    rhs: total_capacity_mw
+    rhs: declared_capacity_mw
     solution_method: direct
     system: energy_balance
     tolerance: 1.0e-06
@@ -51913,7 +51956,7 @@ relationships:
   relationship: constraint
   source: biomass_capacity
   strength: hard
-  target: total_capacity_mw
+  target: declared_capacity_mw
 - description: The build is one term the fleet size governs; the build set may not exceed it plus storage
     headroom.
   direction: forward
@@ -51923,7 +51966,7 @@ relationships:
   relationship: constraint
   source: coal_capacity
   strength: hard
-  target: total_capacity_mw
+  target: declared_capacity_mw
 - description: The build is one term the fleet size governs; the build set may not exceed it plus storage
     headroom.
   direction: forward
@@ -51933,7 +51976,7 @@ relationships:
   relationship: constraint
   source: csp_capacity
   strength: hard
-  target: total_capacity_mw
+  target: declared_capacity_mw
 - description: The build is one term the fleet size governs; the build set may not exceed it plus storage
     headroom.
   direction: forward
@@ -51943,7 +51986,7 @@ relationships:
   relationship: constraint
   source: gas_capacity
   strength: hard
-  target: total_capacity_mw
+  target: declared_capacity_mw
 - description: The build is one term the fleet size governs; the build set may not exceed it plus storage
     headroom.
   direction: forward
@@ -51953,7 +51996,7 @@ relationships:
   relationship: constraint
   source: geothermal_capacity
   strength: hard
-  target: total_capacity_mw
+  target: declared_capacity_mw
 - description: The build is one term the fleet size governs; the build set may not exceed it plus storage
     headroom.
   direction: forward
@@ -51963,7 +52006,7 @@ relationships:
   relationship: constraint
   source: hydro_capacity
   strength: hard
-  target: total_capacity_mw
+  target: declared_capacity_mw
 - description: The build is one term the fleet size governs; the build set may not exceed it plus storage
     headroom.
   direction: forward
@@ -51973,7 +52016,7 @@ relationships:
   relationship: constraint
   source: nuclear_capacity
   strength: hard
-  target: total_capacity_mw
+  target: declared_capacity_mw
 - description: The build is one term the fleet size governs; the build set may not exceed it plus storage
     headroom.
   direction: forward
@@ -51983,7 +52026,7 @@ relationships:
   relationship: constraint
   source: oil_capacity
   strength: hard
-  target: total_capacity_mw
+  target: declared_capacity_mw
 - description: The build is one term the fleet size governs; the build set may not exceed it plus storage
     headroom.
   direction: forward
@@ -51993,7 +52036,7 @@ relationships:
   relationship: constraint
   source: wind_offshore_capacity
   strength: hard
-  target: total_capacity_mw
+  target: declared_capacity_mw
 - description: The build is one term the fleet size governs; the build set may not exceed it plus storage
     headroom.
   direction: forward
@@ -52003,7 +52046,7 @@ relationships:
   relationship: constraint
   source: wind_onshore_capacity
   strength: hard
-  target: total_capacity_mw
+  target: declared_capacity_mw
 - description: The canonical rate; the duplicate derives.
   direction: forward
   equation_id: gdp_growth_rate_alias
@@ -56853,7 +56896,7 @@ relationships:
   relationship: constraint
   source: biogas_capacity
   strength: hard
-  target: total_capacity_mw
+  target: declared_capacity_mw
 - description: The conversion-plant build is one term the fleet size governs; the build set may not exceed
     it plus storage headroom.
   direction: forward
@@ -56863,7 +56906,7 @@ relationships:
   relationship: constraint
   source: landfill_gas_capacity
   strength: hard
-  target: total_capacity_mw
+  target: declared_capacity_mw
 - description: The conversion-plant build is one term the fleet size governs; the build set may not exceed
     it plus storage headroom.
   direction: forward
@@ -56873,7 +56916,7 @@ relationships:
   relationship: constraint
   source: gasification_capacity
   strength: hard
-  target: total_capacity_mw
+  target: declared_capacity_mw
 - description: The conversion-plant build is one term the fleet size governs; the build set may not exceed
     it plus storage headroom.
   direction: forward
@@ -56883,7 +56926,7 @@ relationships:
   relationship: constraint
   source: pyrolysis_capacity
   strength: hard
-  target: total_capacity_mw
+  target: declared_capacity_mw
 - description: The conversion-plant build is one term the fleet size governs; the build set may not exceed
     it plus storage headroom.
   direction: forward
@@ -56893,7 +56936,7 @@ relationships:
   relationship: constraint
   source: waste_to_energy_capacity
   strength: hard
-  target: total_capacity_mw
+  target: declared_capacity_mw
 - description: The conversion-plant build is one term the fleet size governs; the build set may not exceed
     it plus storage headroom.
   direction: forward
@@ -56903,7 +56946,7 @@ relationships:
   relationship: constraint
   source: salinity_gradient_capacity
   strength: hard
-  target: total_capacity_mw
+  target: declared_capacity_mw
 - description: The availability multiplier scales the flow the demand is tested against.
   direction: forward
   equation_id: water_availability_constraint
@@ -57616,7 +57659,7 @@ relationships:
   priority: P2
   reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
   relationship: constraint
-  source: total_capacity_mw
+  source: declared_capacity_mw
   strength: hard
   target: fusion_capacity
 - description: Bounds hydrogen_fuel_cell_capacity against total_capacity_mw; a plan can clear the physics
@@ -57626,7 +57669,7 @@ relationships:
   priority: P2
   reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
   relationship: constraint
-  source: total_capacity_mw
+  source: declared_capacity_mw
   strength: hard
   target: hydrogen_fuel_cell_capacity
 - description: Bounds marine_otec_capacity against total_capacity_mw; a plan can clear the physics and
@@ -57636,7 +57679,7 @@ relationships:
   priority: P2
   reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
   relationship: constraint
-  source: total_capacity_mw
+  source: declared_capacity_mw
   strength: hard
   target: marine_otec_capacity
 - description: Bounds marine_tidal_capacity against total_capacity_mw; a plan can clear the physics and
@@ -57646,7 +57689,7 @@ relationships:
   priority: P2
   reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
   relationship: constraint
-  source: total_capacity_mw
+  source: declared_capacity_mw
   strength: hard
   target: marine_tidal_capacity
 - description: Bounds marine_wave_capacity against total_capacity_mw; a plan can clear the physics and
@@ -57656,7 +57699,7 @@ relationships:
   priority: P2
   reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
   relationship: constraint
-  source: total_capacity_mw
+  source: declared_capacity_mw
   strength: hard
   target: marine_wave_capacity
 - description: Bounds tidal_range_capacity against total_capacity_mw; a plan can clear the physics and
@@ -57666,7 +57709,7 @@ relationships:
   priority: P2
   reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
   relationship: constraint
-  source: total_capacity_mw
+  source: declared_capacity_mw
   strength: hard
   target: tidal_range_capacity
 - description: Bounds small_modular_reactor_capacity against total_capacity_mw; a plan can clear the physics
@@ -57676,7 +57719,7 @@ relationships:
   priority: P2
   reference: 'Oree et al. (2017), RSER 69:790-803, Sec. 2.1 (GEP constraint inventory: capacity limits)'
   relationship: constraint
-  source: total_capacity_mw
+  source: declared_capacity_mw
   strength: hard
   target: small_modular_reactor_capacity
 - description: Bounds spare_parts_lead_time against mean_time_between_failures; a plan can clear the physics
@@ -61950,7 +61993,7 @@ relationships:
   priority: P2
   reference: null
   relationship: constraint
-  source: total_capacity_mw
+  source: declared_capacity_mw
   strength: hard
   target: storage_capacity_mw
 - description: A thermal store's energy is its power times how long it holds it.

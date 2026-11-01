@@ -911,3 +911,66 @@ def test_a_corrected_equation_disposes_of_its_own_stale_edges():
 		for x in merged.edges
 	)
 
+
+def test_the_stale_edge_disposal_tests_both_ends_not_only_the_source():
+	"""The arm the source-only disposal left standing, and the error it handed on.
+
+	`_merge_fragments` disposes of a corrected equation's stale edges so that a
+	symbol-changing correction can load at all. Until batch 78 it judged each
+	edge against the *source* end alone, while the gate it stands in for --
+	`_validate`'s edge rule -- tests source and target alike. A fragment that
+	corrects an equation's right-hand operand therefore disposed of nothing: the
+	graph kept the edge, and the build raised on the very claim the disposal
+	existed to remove. The narrower predicate does not fail safe; it converts a
+	disposal into an error at a later stage, which is why both ends must be read
+	by the same test.
+
+	The probe corrects `lhs` -- the *target* end of every edge citing the
+	equation -- and renames the subject so no arithmetic names it. The source
+	`annualised_capex_usd_per_kw` stays in the corrected rhs, so a source-only
+	disposal keeps all four edges and the build refuses; a two-end disposal drops
+	them and reports each. The sibling test above corrects the rhs instead, which
+	is exactly the case the source-only form happened to cover.
+	"""
+	import tempfile
+
+	graph = load_graph()
+	equation = graph.equations["tariff_cost_recovery"]
+	assert equation.lhs == "regulated_tariff_usd_per_mwh"
+	assert "annualised_capex_usd_per_kw" in equation.rhs
+	probe_name = "probe_tariff_subject"
+	probe_node = dict(
+		graph.nodes["opex_fixed_coal"].model_dump(exclude={"id"}, mode="json")
+	)
+	probe_node.update({
+		"name": "Probe tariff subject", "unit": "USD/MWh",
+		"range": [0.0, 500.0], "default": 42.0,
+		"description": "A probe the corrected equation's lhs names.",
+	})
+	corrected = equation.model_dump(mode="json")
+	corrected["lhs"] = probe_name
+	corrected["parameters"] = [
+		n for n in equation.parameters if n != "regulated_tariff_usd_per_mwh"
+	] + [probe_name]
+	corrected["determined_variables"] = [probe_name]
+
+	with tempfile.TemporaryDirectory() as tmp:
+		(Path(tmp) / "param_target_probe.yaml").write_text(
+			yaml.safe_dump(
+				{
+					"equations": {"tariff_cost_recovery": corrected},
+					"parameters": {probe_name: probe_node},
+					"relationships": [],
+					"cross_validation": [],
+				},
+				sort_keys=False,
+			)
+		)
+		merged, report = load_ingested(tmp)
+
+	stale = [d for d in report.dropped if d[0] == "<stale-edge>"]
+	assert [d for d in stale if d[1] == "tariff_cost_recovery"], stale
+	assert not any(
+		x.equation_id == "tariff_cost_recovery" for x in merged.edges
+	), [x for x in merged.edges if x.equation_id == "tariff_cost_recovery"]
+

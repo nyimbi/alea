@@ -2203,14 +2203,22 @@ def _merge_fragments(
 				(old, "<alias register>", f"deprecated_by={body.get('deprecated_by')!r}")
 			)
 
-	# An edge whose equation no longer holds its source is a stale claim. The
-	# loader used to refuse such an edge outright, which was right for the
+	# An edge whose equation no longer holds one of its ends is a stale claim.
+	# The loader used to refuse such an edge outright, which was right for the
 	# shipped document -- a self-contradiction a reader should be told about
 	# -- but wrong after a fragment *corrects* the equation: the correction
 	# is the very thing that makes the shipped edge stale, and refusing it
 	# would make symbol-changing equation corrections impossible to load.
 	# A corrected equation's stale edges are therefore dropped here, and
 	# named, so the disappearance is counted rather than silent.
+	#
+	# BOTH ENDS, because the gate this disposes for tests both. The disposal
+	# stood on the edge's *source* end alone until batch 78, while the
+	# graph-level check at `from_mapping` tests source and target alike -- so
+	# a correction that drops a symbol an edge carries only as its *target*
+	# disposed of nothing, and the build then raised on the edge the disposal
+	# had left standing. The two must read one predicate: a disposal narrower
+	# than its gate does not fail safe, it postpones the same error.
 	corrected_equations = {
 		key for register, key, _file in corrected if register == "equations"
 	}
@@ -2228,8 +2236,8 @@ def _merge_fragments(
 			# have touched, and an edge judged against them would stay live
 			# while every reader of the rhs would call it gone.
 			named = set(_parse_side_for_stale(equation))  # type: ignore[name-defined]
-			source = str(item.get("source") or "")
-			if source in named:
+			ends = (item.get("source"), item.get("target"))
+			if all(str(end) in named for end in ends):
 				kept.append(item)
 			else:
 				stale_edges.append(

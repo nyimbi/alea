@@ -2103,6 +2103,113 @@ default is `total_capacity_mw`'s own placeholder, copied rather than modelled
 -- and the disagreement it hides is a defect in the reference scenario, which
 the new description states rather than explains away.
 
+### The ceiling the solve overwrote (batch 78, 2026-10-28)
+
+Batch 77 recorded a second defect in the same equation and deferred it as the
+next unit: "the same equation is still vacuous on the audit path... It is
+recorded in the equation's description so the next reader inherits the
+question." This is that unit, and the defect was larger than the one equation.
+
+**One node did two jobs, and only one of them was the plan.**
+`total_capacity_mw` is `role: exogenous` -- "the nameplate capacity on the
+system, all carriers" -- and nine inequalities read it as a ceiling:
+`fleet_build_balance`, `storage_capacity_mw_bound`, and the seven per-technology
+bounds (`fusion`, `hydrogen_fuel_cell`, `marine_otec`, `marine_tidal`,
+`marine_wave`, `tidal_range`, `small_modular_reactor`). It is also the divisor
+of thirty-four cost, jobs, tax and tariff identities. On the audit path
+`parameters_from_result` writes the solve's own sum into it, which the
+identities need: they must divide by the fleet the result actually chose. The
+bounds must not have it, and that is the tautology. Each bound tested a sum
+against one of its own addends: `fusion_capacity <= total_capacity_mw` where
+`total_capacity_mw` *contains* `fusion_capacity`.
+
+**Measured, before the change.** A solve building 90,000 MW of fusion inside a
+97,300 MW mix fired **zero** of the nine bounds -- the ceiling had become
+97,300, so 97,300 <= 97,300 held. The same for SMR and OTEC. The bounds were not
+weak checks; they were the absence of one, reporting green over the exact
+overbuild they exist to catch. This is the failure mode the batch-77 description
+recorded as "a constant compared to a solve", and it applies to nine equations,
+not one.
+
+**The repair is the split batch 77 made for storage, applied to the ceiling.**
+`declared_capacity_mw` joins the graph: `role: exogenous`, 10,000 MW, "the
+capacity the plan declares the system will carry, before any solve", with
+nothing in `parameters_from_result` writing to it. The nine bounds read it. The
+identities keep `total_capacity_mw` and its producer, untouched. The two roles
+are now two nodes -- solved build for the identities, declared plan for the
+bounds -- which is exactly the separation `storage_headroom_mw` already makes:
+four sibling storage bounds read the headroom alone, and one of them records
+that membership in the fleet balance "was rejected as a tautology".
+
+**Canaried both ways.** With `fusion_capacity_bound`'s `rhs`, parameters and
+edge reverted to `total_capacity_mw`, a 90,000 MW fusion build inside a
+97,300 MW mix is **silent**. With the shipped form it fires
+`fusion_capacity_bound`. The canary's first draft drove the carrier through
+`capacity_mix_mw`, which tested nothing -- `fusion` is not in the registry, so
+`fleet_parameters` never writes the leaf and the bound had no operand to
+violate. The working canary sets the node directly, so it is the bound's own
+arithmetic under test.
+
+**The `checked` count exposed a second-order error in my own first attempt.** I
+first removed the `total_capacity_mw` write outright, on the reasoning that an
+exogenous node should not be overwritten by a solve. That is wrong: the
+thirty-four identities divide by the *solved* fleet, and dropping the write took
+`checked` from 236 to 167 -- the audit stopped reaching two-thirds of the
+graph. The roles had to be separated, not the write deleted.
+
+**Verified.** `structure_issues() == []` over 1,437 nodes, 606 equations, 1,416
+edges. Coverage is unchanged -- 42 bound / 30 unbound / 72 constraint-shaped /
+534 identities -- because a bound swapping one settable scalar for another keeps
+its route, and the fixture's `checked` count is back at 236. The shipped
+defaults still report exactly one finding (`frequency_nadir_hz_out_of_range`).
+
+**The fixtures had to declare a plan, and that is the honest consequence.** The
+six solved-result fixtures build 14,000 MW. Against `declared_capacity_mw`'s
+10,000 MW reference value the audit now reports `fleet_build_balance`, correctly:
+a solve that builds 14,000 MW under a 10,000 MW plan is an overbuild. A solve
+builds what a plan permits, so the plan is part of the scenario, and the audits
+pass `SOLVED_PLAN_MW = 14000.0`. Before this batch the fixture passed without
+stating a plan only because the audit silently overwrote the plan with the
+build -- the plainest statement of the defect: the fixture never had to say
+what it planned because nothing read it.
+
+**The repoint exposed a loader defect, and the disposal was narrower than its
+gate.** Five `test_prg_ingest.py` tests went red after the nine equations were
+repointed, all on the same message: `edge biomass_capacity ->
+declared_capacity_mw names 'declared_capacity_mw' as its target, and
+'fleet_build_balance' does not hold it`. The cause was not the repo tree but the
+loader. `_merge_fragments` disposes of a corrected equation's stale edges so
+that a symbol-changing correction can load at all, and it judged each edge
+against the **source** end alone:
+
+```python
+source = str(item.get("source") or "")
+if source in named:
+```
+
+The gate it stands in for -- `_validate`'s edge rule -- tests **both** ends
+(`for end, label in ((edge.source, "source"), (edge.target, "target"))`). A
+fragment correcting an equation's right-hand operand therefore disposed of
+nothing: the graph kept the edge, and the build raised on the claim the disposal
+existed to remove. `config/prg_ingest/param_batch35.yaml` -- a retired scratch
+fragment still carrying a full-body copy of `fleet_build_balance` -- is exactly
+that case, and it had been latent since the fragment was written; the repoint
+moved the equation's target to a symbol the stale copy does not hold and the
+asymmetry surfaced. At HEAD the five tests were green and the defect invisible,
+because a stale fragment whose arithmetic happened to still hold the *source*
+end disposed and loaded.
+
+**The repair reads both ends.** `if all(str(end) in named for end in
+(source, target))`, so the disposal and the gate apply one predicate. Canaried
+on the target end specifically: the probe corrects `tariff_cost_recovery`'s
+`lhs` -- the target of every edge citing it -- while leaving
+`annualised_capex_usd_per_kw` in the rhs, so a source-only disposal keeps all
+four edges and the build refuses with the same `does not hold it` error. On the
+shipped form the four are dropped and each reported in `report.dropped` as
+`<stale-edge>`. The sibling test corrects the rhs instead, which is the case
+the one-end form happened to cover; the new one is its mirror.
+`test_the_stale_edge_disposal_tests_both_ends_not_only_the_source` pins it.
+
 Batch 74 closed with `reserve_margin` named as carrying no edge from one of its
 own operands. Auditing that class across the library found nine equations whose
 arithmetic names a symbol their edge set does not carry. Eight of the nine are

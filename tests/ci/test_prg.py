@@ -89,6 +89,20 @@ PRG_PATH = repo_root() / "config" / "prg.yaml"
 KNOWN_DEFAULT_FINDINGS = frozenset({"frequency_nadir_hz_out_of_range"})
 KNOWN_DEFAULT_RULES = frozenset({"frequency_nadir_below_protection"})
 
+#: The plan the solved-result fixtures build under, in MW.
+#:
+#: WHY every audit call names it. ``declared_capacity_mw`` is the capacity a
+#: scenario *declares*, and since batch 78 the audit no longer writes the
+#: solve's own sum into it. Before the split every capacity bound read
+#: ``total_capacity_mw``, which ``parameters_from_result`` overwrote with the
+#: result's capacity mix -- so each bound compared a sum to one of its own
+#: addends, and a 97,300 MW fusion solve fired none of the nine. The plan is
+#: now a scenario input that nothing computes. The fixtures build 14,000 MW,
+#: and a solve builds what a plan permits, so the plan is part of the
+#: scenario; leaving the graph's 10,000 MW reference value to stand would
+#: report the fixture as a fleet that overran a plan nobody set.
+SOLVED_PLAN_MW = 14000.0
+
 
 def _default_violation_ids(graph: ParameterGraph, values) -> set[str]:
 	"""The equation ids ``consistency`` reports, as a set for comparison."""
@@ -3288,6 +3302,16 @@ def _solved(carbon_price: float = 50.0):
 	-- and a fixture that breaches a policy bound is not a solved result, since
 	the engine would not have returned it. The four carriers here are all under
 	their caps, span all three fleet classes, and still total 14,000 MW.
+
+	WHY the scenario declares a plan the build fits. ``declared_capacity_mw``
+	is the plan a scenario states, and the audit no longer overwrites it with
+	the solve's own sum: that overwrite made every capacity bound compare a
+	sum to one of its addends, so a 97,300 MW fusion solve fired none of them.
+	The fixture builds 14,000 MW, which is 4,000 over the graph's 10,000 MW
+	reference plan -- a real inconsistency, and the audit now reports it. A
+	solve builds what a plan permits, so the plan is part of the scenario and
+	the fixture states it here rather than leaving the graph's reference value
+	to stand for a policy nobody chose.
 	"""
 	import uuid
 
@@ -3409,7 +3433,9 @@ def test_the_audit_reports_what_it_did_not_check():
 	from alea.prg.audit import audit_scenario_result
 	from alea.prg.graph import load_graph
 
-	audit = audit_scenario_result(_solved())
+	audit = audit_scenario_result(
+		_solved(), overrides={"declared_capacity_mw": SOLVED_PLAN_MW}
+	)
 	# The audit's own partition, not the scenario's cleanliness: the fixture
 	# carries the graph's defaults and so inherits the nadir finding (see
 	# `KNOWN_DEFAULT_FINDINGS`). What this test is about is that the audit
@@ -3557,9 +3583,15 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	from alea.prg.audit import audit_scenario_result
 
 	# At the fleet's own capacity the loop still has a root.
-	assert audit_scenario_result(_solved(), overrides={"vre_capacity_mw": 10000.0}).ran
+	assert audit_scenario_result(
+		_solved(),
+		overrides={"vre_capacity_mw": 10000.0, "declared_capacity_mw": SOLVED_PLAN_MW},
+	).ran
 
-	audit = audit_scenario_result(_solved(), overrides={"vre_capacity_mw": 40000.0})
+	audit = audit_scenario_result(
+		_solved(),
+		overrides={"vre_capacity_mw": 40000.0, "declared_capacity_mw": SOLVED_PLAN_MW},
+	)
 	assert not audit.ran, "the loop found a root it should not have"
 	assert audit.failure, "a check that did not run must say why"
 	assert not audit.consistent, "an audit that could not run read as a pass"
@@ -3625,11 +3657,15 @@ def test_the_audit_finds_an_unfinanceable_scenario_the_engine_solved():
 	# nadir finding (see `KNOWN_DEFAULT_FINDINGS`). The claim under test is the
 	# *difference*: the finance covenant refuses 200 and not 50, which is what
 	# the optimiser alone would not tell you.
-	accepted = audit_scenario_result(_solved(50.0))
+	accepted = audit_scenario_result(
+		_solved(50.0), overrides={"declared_capacity_mw": SOLVED_PLAN_MW}
+	)
 	assert {v.equation_id for v in accepted.violations} == KNOWN_DEFAULT_FINDINGS, (
 		[str(v) for v in accepted.violations]
 	)
-	refused = audit_scenario_result(_solved(200.0))
+	refused = audit_scenario_result(
+		_solved(200.0), overrides={"declared_capacity_mw": SOLVED_PLAN_MW}
+	)
 	assert not refused.consistent
 	assert any(v.equation_id == "dscr_requirement" for v in refused.violations), [
 		str(v) for v in refused.violations

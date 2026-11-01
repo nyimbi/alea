@@ -330,12 +330,26 @@ def parameters_from_result(
 	# declared factor instead of pretending they are an input.
 	_ = emissions_tco2
 
-	if capacity_mix and "total_capacity_mw" in graph.nodes:
+	if capacity_mix:
 		total = float(sum(capacity_mix.values()))
 		if total > 0.0:
+			# The solve's own build, into the node the thirty-four cost, jobs,
+			# tax and tariff identities divide by. They must see the fleet the
+			# result actually chose, so this write stays.
+			#
+			# It is *not* what the capacity bounds read, and that is the fix
+			# that stood here until batch 78. Every one of the nine bounds used
+			# to read this node, so on this path each tested a sum against one
+			# of its own addends: measured, a 97,300 MW fusion solve fired none
+			# of them, because the ceiling had become 97,300. A bound that
+			# cannot fail is not a weak check, it is the absence of one, and it
+			# reports as green. The bounds now read `declared_capacity_mw`,
+			# which is the plan a scenario states and which nothing here
+			# overwrites -- the same separation `storage_headroom_mw` makes for
+			# storage. Two roles, two nodes.
 			scoped["total_capacity_mw"] = total
 			# `firm_build_fleet_mw` is the same quantity under a second name, and
-			# it needs the same producer. It is `endogenous` -- "the sum of the
+			# it needs the producer. It is `endogenous` -- "the sum of the
 			# optimiser's per-technology builds" -- so nothing in the graph
 			# computes it, and leaving it out of this dict left it at its 10,000
 			# MW reference default while the solve built 15,000. `firm_build_
