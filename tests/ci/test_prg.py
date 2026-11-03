@@ -1988,8 +1988,10 @@ def test_every_equality_declares_an_edge_from_each_symbol_it_reads(
 	# more equalities -- the attainment ratios -- so 533 -> 530. Batch 71 added
 	# two -- the water-served population and the pumping load -- so 530 -> 532.
 	# Batch 72 adds two more -- the IT-load-times-PUE product and the
-	# megawatt-hour conversion -- taking 532 -> 534.
-	assert len(determined) == 534, len(determined)
+	# megawatt-hour conversion -- taking 532 -> 534. Batch 80 adds seven more,
+	# the megawatt-to-terawatt conversion for each sector `_load` dial, so
+	# 534 -> 541.
+	assert len(determined) == 541, len(determined)
 
 	sourced: dict[str, set[str]] = {}
 	for edge in graph.edges:
@@ -3550,7 +3552,11 @@ def test_the_audit_reports_what_it_did_not_check():
 	# coverage. `energy_demand` stays checked -- it now reads a skipped node,
 	# but the audit asks whether the *operands it names* are on the result,
 	# and `base_demand_twh` and `demand_growth_factor` are.
-	assert len(audit.skipped) == 298, audit.skipped
+	# Batch 80 adds seven terawatt-year conversions whose only operand is a
+	# megawatt dial the result does not carry as a column, so all seven join
+	# `skipped` and `checked` stays at 236: 298 -> 305, with the partition
+	# below moving 534 -> 541 to follow `computed()`.
+	assert len(audit.skipped) == 305, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -3623,8 +3629,10 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# nodes -- `water_served_population` and `water_pumping_load`, the latter
 	# ceasing to be a free dial -- so 530 -> 532. Batch 72 adds two more --
 	# `data_centre_demand`, ceasing to be a free dial, and
-	# `data_centre_load_twh` -- so 532 -> 534.
-	assert len(audit.skipped) == 534, audit.skipped
+	# `data_centre_load_twh` -- so 532 -> 534. Batch 80 adds seven derived
+	# nodes, the terawatt-year side of each sector load's conversion, so
+	# 534 -> 541.
+	assert len(audit.skipped) == 541, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -6780,8 +6788,9 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 	# (the attainment ratios), taking it 533 -> 530, and batch 71 adds two
 	# (the water-served population and the pumping load), 530 -> 532. Batch 72
 	# adds two more (the IT-load-times-PUE product and the megawatt-hour
-	# conversion), 532 -> 534.
-	assert compared == 534, (
+	# conversion), 532 -> 534, and batch 80 adds seven (the sector-load
+	# conversions), 534 -> 541.
+	assert compared == 541, (
 		f"expected 481 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "

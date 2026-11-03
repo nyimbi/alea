@@ -5766,6 +5766,28 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  cold_storage_load_twh:
+    categories: []
+    category: Demand
+    deprecated_by: null
+    description: 'The cold chain''s annual energy: the load in megawatts times the hours in a year, divided by the megawatt-hours in a terawatt-hour. The conversion gives a scenario''s megawatt dial a figure in the unit the demand registers carry, and it assumes the load runs continuously -- what an average power rating means over a year.'
+    determinism: fixed
+    initial: null
+    name: Cold Storage Load twh
+    priority: P1
+    range:
+    - 0.0
+    - 4.38
+    role: derived
+    source: The MW-to-energy conversion (batch 80)
+    source_url: null
+    status: existing
+    subcategory: null
+    type: float
+    unit: TWh/year
+    users:
+    - Agriculture
+    - Health
   collateral_posted_usd_per_year:
     category: Regulatory
     description: 'collateral posted usd per year: the compliance register''s derived quantity. The security
@@ -6578,6 +6600,27 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  construction_load_twh:
+    categories: []
+    category: Demand
+    deprecated_by: null
+    description: 'The construction site''s annual energy: the load in megawatts times the hours in a year, divided by the megawatt-hours in a terawatt-hour. The conversion gives a scenario''s megawatt dial a figure in the unit the demand registers carry, and it assumes the load runs continuously -- what an average power rating means over a year.'
+    determinism: fixed
+    initial: null
+    name: Construction Load twh
+    priority: P1
+    range:
+    - 0.0
+    - 8.76
+    role: derived
+    source: The MW-to-energy conversion (batch 80)
+    source_url: null
+    status: existing
+    subcategory: null
+    type: float
+    unit: TWh/year
+    users:
+    - Construction
   construction_machinery:
     categories: []
     category: Sector Coupling
@@ -11042,6 +11085,27 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  emergency_shelter_load_twh:
+    categories: []
+    category: Demand
+    deprecated_by: null
+    description: 'An emergency shelter''s annual energy: the load in megawatts times the hours in a year, divided by the megawatt-hours in a terawatt-hour. The conversion gives a scenario''s megawatt dial a figure in the unit the demand registers carry, and it assumes the load runs continuously -- what an average power rating means over a year.'
+    determinism: fixed
+    initial: null
+    name: Emergency Shelter Load twh
+    priority: P1
+    range:
+    - 0.0
+    - 4.38
+    role: derived
+    source: The MW-to-energy conversion (batch 80)
+    source_url: null
+    status: existing
+    subcategory: null
+    type: float
+    unit: TWh/year
+    users:
+    - Humanitarian
   emission_factor_biomass_t_per_mwh:
     name: Emission factor biomass t per mwh
     description: 'Lifecycle CO2eq per megawatt-hour for dedicated biomass, on a stated basis: the median
@@ -20838,6 +20902,27 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  military_energy_demand_twh:
+    categories: []
+    category: Sector
+    deprecated_by: null
+    description: 'Defence installations'' annual energy: the load in megawatts times the hours in a year, divided by the megawatt-hours in a terawatt-hour. The conversion gives a scenario''s megawatt dial a figure in the unit the demand registers carry, and it assumes the load runs continuously -- what an average power rating means over a year.'
+    determinism: fixed
+    initial: null
+    name: Military Energy Demand twh
+    priority: P1
+    range:
+    - 0.0
+    - 4.38
+    role: derived
+    source: The MW-to-energy conversion (batch 80)
+    source_url: null
+    status: existing
+    subcategory: null
+    type: float
+    unit: TWh/year
+    users:
+    - Defence
   min_down_time_coal:
     categories: []
     category: Supply
@@ -24225,6 +24310,27 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  post_harvest_processing_load_twh:
+    categories: []
+    category: Demand
+    deprecated_by: null
+    description: 'Post-harvest processing''s annual energy: the load in megawatts times the hours in a year, divided by the megawatt-hours in a terawatt-hour. The conversion gives a scenario''s megawatt dial a figure in the unit the demand registers carry, and it assumes the load runs continuously -- what an average power rating means over a year.'
+    determinism: fixed
+    initial: null
+    name: Post Harvest Processing Load twh
+    priority: P1
+    range:
+    - 0.0
+    - 4.38
+    role: derived
+    source: The MW-to-energy conversion (batch 80)
+    source_url: null
+    status: existing
+    subcategory: null
+    type: float
+    unit: TWh/year
+    users:
+    - Agriculture
   ppa_annual_revenue_usd_per_kw_year:
     categories: []
     category: Contract & Legal
@@ -30774,6 +30880,27 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  tourism_load_twh:
+    categories: []
+    category: Demand
+    deprecated_by: null
+    description: 'The tourism sector''s annual energy: the load in megawatts times the hours in a year, divided by the megawatt-hours in a terawatt-hour. The conversion gives a scenario''s megawatt dial a figure in the unit the demand registers carry, and it assumes the load runs continuously -- what an average power rating means over a year.'
+    determinism: fixed
+    initial: null
+    name: Tourism Load twh
+    priority: P1
+    range:
+    - 0.0
+    - 4.38
+    role: derived
+    source: The MW-to-energy conversion (batch 80)
+    source_url: null
+    status: existing
+    subcategory: null
+    type: float
+    unit: TWh/year
+    users:
+    - Tourism
   trade_agreement:
     name: Trade agreement
     description: Which trade agreement the zone trades under. Catalog 'Trade agreement type'; the prior
@@ -32287,6 +32414,27 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  wastewater_treatment_load_twh:
+    categories: []
+    category: Demand
+    deprecated_by: null
+    description: 'Wastewater treatment''s annual energy: the load in megawatts times the hours in a year, divided by the megawatt-hours in a terawatt-hour. The conversion gives a scenario''s megawatt dial a figure in the unit the demand registers carry, and it assumes the load runs continuously -- what an average power rating means over a year.'
+    determinism: fixed
+    initial: null
+    name: Wastewater Treatment Load twh
+    priority: P1
+    range:
+    - 0.0
+    - 4.38
+    role: derived
+    source: The MW-to-energy conversion (batch 80)
+    source_url: null
+    status: existing
+    subcategory: null
+    type: float
+    unit: TWh/year
+    users:
+    - Water
   water_access_share:
     id: water_access_share
     name: Share with basic water access
@@ -35665,6 +35813,26 @@ equations:
     system: carbon_trajectory
     tolerance: 1.0e-09
     unit_check: true
+  cold_storage_load_definition:
+    description: 'Annual energy of the cold chain''s: the load in megawatts times the hours in a year, divided by the megawatt-hours in a terawatt-hour. The same conversion the graph already applies to `fishing_community_load`, so each megawatt dial is stated in the unit the demand side is declared in.'
+    determined_variables:
+    - cold_storage_load_twh
+    free_variables: []
+    latex: \mathrm{cold}_{storage\_load\_twh} = \frac{8760 \mathrm{cold}_{storage\_load}}{1000000}
+    lhs: cold_storage_load_twh
+    linearity: linear
+    name: The annual energy of the cold chain's
+    parameters:
+    - cold_storage_load_twh
+    - cold_storage_load
+    priority: P1
+    reference: null
+    relation: eq
+    rhs: cold_storage_load * 8760 / 1000000
+    solution_method: direct
+    system: demand_supply
+    tolerance: 1.0e-09
+    unit_check: true
   collateral_posted_definition:
     description: 'The security provisioned annually: the share of the revenue requirement the regulator''s
       accounts state.'
@@ -35982,6 +36150,26 @@ equations:
     rhs: capex_caes
     solution_method: direct
     system: employment
+    tolerance: 1.0e-09
+    unit_check: true
+  construction_load_definition:
+    description: 'Annual energy of the construction site''s: the load in megawatts times the hours in a year, divided by the megawatt-hours in a terawatt-hour. The same conversion the graph already applies to `fishing_community_load`, so each megawatt dial is stated in the unit the demand side is declared in.'
+    determined_variables:
+    - construction_load_twh
+    free_variables: []
+    latex: \mathrm{construction}_{load\_twh} = \frac{8760 \mathrm{construction}_{load}}{1000000}
+    lhs: construction_load_twh
+    linearity: linear
+    name: The annual energy of the construction site's
+    parameters:
+    - construction_load_twh
+    - construction_load
+    priority: P1
+    reference: null
+    relation: eq
+    rhs: construction_load * 8760 / 1000000
+    solution_method: direct
+    system: demand_supply
     tolerance: 1.0e-09
     unit_check: true
   construction_share_of_concession_definition:
@@ -38016,6 +38204,26 @@ equations:
     rhs: solvency_capital_ratio * solvency_capital
     solution_method: direct
     system: financial
+    tolerance: 1.0e-09
+    unit_check: true
+  emergency_shelter_load_definition:
+    description: 'Annual energy of an emergency shelter''s: the load in megawatts times the hours in a year, divided by the megawatt-hours in a terawatt-hour. The same conversion the graph already applies to `fishing_community_load`, so each megawatt dial is stated in the unit the demand side is declared in.'
+    determined_variables:
+    - emergency_shelter_load_twh
+    free_variables: []
+    latex: \mathrm{emergency}_{shelter\_load\_twh} = \frac{8760 \mathrm{emergency}_{shelter\_load}}{1000000}
+    lhs: emergency_shelter_load_twh
+    linearity: linear
+    name: The annual energy of an emergency shelter's
+    parameters:
+    - emergency_shelter_load_twh
+    - emergency_shelter_load
+    priority: P1
+    reference: null
+    relation: eq
+    rhs: emergency_shelter_load * 8760 / 1000000
+    solution_method: direct
+    system: demand_supply
     tolerance: 1.0e-09
     unit_check: true
   emission_factor_coal_definition:
@@ -43599,6 +43807,26 @@ equations:
     system: financial
     tolerance: 1.0e-09
     unit_check: true
+  military_energy_demand_definition:
+    description: 'Annual energy of defence installations'': the load in megawatts times the hours in a year, divided by the megawatt-hours in a terawatt-hour. The same conversion the graph already applies to `fishing_community_load`, so each megawatt dial is stated in the unit the demand side is declared in.'
+    determined_variables:
+    - military_energy_demand_twh
+    free_variables: []
+    latex: \mathrm{military}_{energy\_demand\_twh} = \frac{8760 \mathrm{military}_{energy\_demand}}{1000000}
+    lhs: military_energy_demand_twh
+    linearity: linear
+    name: The annual energy of defence installations'
+    parameters:
+    - military_energy_demand_twh
+    - military_energy_demand
+    priority: P1
+    reference: null
+    relation: eq
+    rhs: military_energy_demand * 8760 / 1000000
+    solution_method: direct
+    system: demand_supply
+    tolerance: 1.0e-09
+    unit_check: true
   mini_grid_programme_spend_definition:
     description: 'The mini-grid programme''s spend per year: the per-connection installed cost times the
       connections served per year.'
@@ -44663,6 +44891,26 @@ equations:
     rhs: position_limits * ets_cap
     solution_method: direct
     system: carbon_trajectory
+    tolerance: 1.0e-09
+    unit_check: true
+  post_harvest_processing_load_definition:
+    description: 'Annual energy of post-harvest processing''s: the load in megawatts times the hours in a year, divided by the megawatt-hours in a terawatt-hour. The same conversion the graph already applies to `fishing_community_load`, so each megawatt dial is stated in the unit the demand side is declared in.'
+    determined_variables:
+    - post_harvest_processing_load_twh
+    free_variables: []
+    latex: \mathrm{post}_{harvest\_processing\_load\_twh} = \frac{8760 \mathrm{post}_{harvest\_processing\_load}}{1000000}
+    lhs: post_harvest_processing_load_twh
+    linearity: linear
+    name: The annual energy of post-harvest processing's
+    parameters:
+    - post_harvest_processing_load_twh
+    - post_harvest_processing_load
+    priority: P1
+    reference: null
+    relation: eq
+    rhs: post_harvest_processing_load * 8760 / 1000000
+    solution_method: direct
+    system: demand_supply
     tolerance: 1.0e-09
     unit_check: true
   powertrain_stock_bound:
@@ -47851,6 +48099,26 @@ equations:
     system: water_energy
     tolerance: 1.0e-09
     unit_check: true
+  tourism_load_definition:
+    description: 'Annual energy of the tourism sector''s: the load in megawatts times the hours in a year, divided by the megawatt-hours in a terawatt-hour. The same conversion the graph already applies to `fishing_community_load`, so each megawatt dial is stated in the unit the demand side is declared in.'
+    determined_variables:
+    - tourism_load_twh
+    free_variables: []
+    latex: \mathrm{tourism}_{load\_twh} = \frac{8760 \mathrm{tourism}_{load}}{1000000}
+    lhs: tourism_load_twh
+    linearity: linear
+    name: The annual energy of the tourism sector's
+    parameters:
+    - tourism_load_twh
+    - tourism_load
+    priority: P1
+    reference: null
+    relation: eq
+    rhs: tourism_load * 8760 / 1000000
+    solution_method: direct
+    system: demand_supply
+    tolerance: 1.0e-09
+    unit_check: true
   transaction_cost_definition:
     description: 'Transaction costs as a share of gross revenue: arranging, legal, and disbursement. Charged
       on revenue rather than on capital because the cost recurs with the revenue it is incurred to collect.'
@@ -48543,6 +48811,26 @@ equations:
     rhs: capex_waste_to_energy
     solution_method: direct
     system: employment
+    tolerance: 1.0e-09
+    unit_check: true
+  wastewater_treatment_load_definition:
+    description: 'Annual energy of wastewater treatment''s: the load in megawatts times the hours in a year, divided by the megawatt-hours in a terawatt-hour. The same conversion the graph already applies to `fishing_community_load`, so each megawatt dial is stated in the unit the demand side is declared in.'
+    determined_variables:
+    - wastewater_treatment_load_twh
+    free_variables: []
+    latex: \mathrm{wastewater}_{treatment\_load\_twh} = \frac{8760 \mathrm{wastewater}_{treatment\_load}}{1000000}
+    lhs: wastewater_treatment_load_twh
+    linearity: linear
+    name: The annual energy of wastewater treatment's
+    parameters:
+    - wastewater_treatment_load_twh
+    - wastewater_treatment_load
+    priority: P1
+    reference: null
+    relation: eq
+    rhs: wastewater_treatment_load * 8760 / 1000000
+    solution_method: direct
+    system: demand_supply
     tolerance: 1.0e-09
     unit_check: true
   water_availability_constraint:
@@ -62053,6 +62341,69 @@ relationships:
   source: storage_headroom_mw
   strength: hard
   target: phs_capacity
+- description: Enters the product identity.
+  direction: forward
+  equation_id: cold_storage_load_definition
+  priority: P1
+  reference: null
+  relationship: functional
+  source: cold_storage_load
+  strength: hard
+  target: cold_storage_load_twh
+- description: Enters the product identity.
+  direction: forward
+  equation_id: construction_load_definition
+  priority: P1
+  reference: null
+  relationship: functional
+  source: construction_load
+  strength: hard
+  target: construction_load_twh
+- description: Enters the product identity.
+  direction: forward
+  equation_id: emergency_shelter_load_definition
+  priority: P1
+  reference: null
+  relationship: functional
+  source: emergency_shelter_load
+  strength: hard
+  target: emergency_shelter_load_twh
+- description: Enters the product identity.
+  direction: forward
+  equation_id: military_energy_demand_definition
+  priority: P1
+  reference: null
+  relationship: functional
+  source: military_energy_demand
+  strength: hard
+  target: military_energy_demand_twh
+- description: Enters the product identity.
+  direction: forward
+  equation_id: post_harvest_processing_load_definition
+  priority: P1
+  reference: null
+  relationship: functional
+  source: post_harvest_processing_load
+  strength: hard
+  target: post_harvest_processing_load_twh
+- description: Enters the product identity.
+  direction: forward
+  equation_id: tourism_load_definition
+  priority: P1
+  reference: null
+  relationship: functional
+  source: tourism_load
+  strength: hard
+  target: tourism_load_twh
+- description: Enters the product identity.
+  direction: forward
+  equation_id: wastewater_treatment_load_definition
+  priority: P1
+  reference: null
+  relationship: functional
+  source: wastewater_treatment_load
+  strength: hard
+  target: wastewater_treatment_load_twh
 cross_validation:
 - condition: carbon_price_usd_per_tco2 > 150 and carbon_budget_ratio > 1.0
   id: carbon_price_budget_alignment

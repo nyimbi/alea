@@ -2103,6 +2103,67 @@ default is `total_capacity_mw`'s own placeholder, copied rather than modelled
 -- and the disagreement it hides is a defect in the reference scenario, which
 the new description states rather than explains away.
 
+### Seven megawatt dials with no energy stated (batch 80, 2026-11-01)
+
+`cold_storage_load`, `construction_load`, `emergency_shelter_load`,
+`military_energy_demand`, `post_harvest_processing_load`, `tourism_load` and
+`wastewater_treatment_load` are each typed `MW` and named by no equation. Every
+one describes itself as average power -- "average power the cold chain draws",
+"power a construction site draws", "power defence installations draw" -- and
+each records why it cannot be derived: the catalog wants shelter occupancy, crop
+tonnage, an installation count, tourist-nights, and none of those bases is in the
+graph. They are `BASE-NEEDED` for their *value*.
+
+**What this batch adds is the other half: their energy.** The graph already
+carries exactly this conversion over one megawatt dial --
+`fishing_community_load_twh eq fishing_community_load * 8760 / 1000000`, whose
+prose calls it "the conversion the catalog states, with the unit that makes it
+dimensional". Each of the seven gets the same identity, so a scenario's megawatt
+dial has a figure in the unit the demand side is declared in. Power times hours
+is energy; nothing else is claimed. The prose states the assumption the
+conversion carries -- that the load runs continuously, which is what an average
+power rating means over a year -- the same assumption `data_centre_load_twh`
+records.
+
+**What it deliberately does not do: feed `demand_twh`.** `energy_demand` reads
+`base_demand_twh * demand_growth_factor + data_centre_load_twh`, and its
+description gives the rule for the additive term: the data-centre row is a *new*
+facility, and "a growth rate fitted to history cannot express a build that
+history does not contain". Whether these seven are incremental in the same sense
+is a question about the catalog's model, not about algebra, and this batch does
+not answer it. Adding them would move every demand-pinning test on a premise
+nobody has established, so they convert and stop.
+
+**Rejected.** (a) *One aggregate over the seven* -- membership would be defined
+by "these are the ones lacking bases", a defect grouping rather than a physical
+one, and a reader asking why these seven and not `fishing_community_load` or
+`data_centre_load` would find no answer in the physics. Each conversion stands on
+its own instead. (b) *Adding the sum to `demand_twh`* -- same unresolved premise,
+with the double-count risk on top: if `base_demand_twh` already carries these
+sectors the term counts them twice. (c) *Deriving each from its catalog base* --
+the bases are what is missing; that is the `BASE-NEEDED` classification and it
+still holds.
+
+**One gap this makes visible rather than closes.** `fishing_community_load_twh`
+has no readers either, so the precedent being followed is itself a conversion
+nobody consumes. The justification for shipping one comes from
+`settlement_intervals_per_hour`, whose description says it exists "so a
+scenario's dial has a number the reports can name" -- a rendered figure is the
+consumer. Whether `demand_twh` should eventually take these terms is the open
+question, and it now has seven nodes waiting on an answer rather than seven
+dials with no stated energy.
+
+**Verified.** `structure_issues() == []` over 1,444 nodes, 613 equations, 1,423
+edges. Uncoupled moves 242 -> 235. Coverage: identities 534 -> 541, total
+606 -> 613, bound/unbound/constraint-shaped unchanged at 42/30/72 -- none of the
+seven is an inequality. `check_graph` reports 0 undecidable units, and each new
+equation's latex names exactly the operands its arithmetic does. At shipped
+defaults all seven evaluate to 0.0 inside [0, 4.38] (or [0, 8.76] for
+construction), and `check_scenario` still reports the single pre-existing
+finding, `frequency_nadir_hz_out_of_range`. Five count pins moved and each says
+so: `identities` and `total` in `test_prg_constraints.py`; `determined`,
+`audit.skipped` and `compared` in `test_prg.py`.
+
 ### The register that claimed coupling it never had (batch 79, 2026-11-01)
 
 Batch 78 split one node into two; batch 79 went looking for the next cluster and

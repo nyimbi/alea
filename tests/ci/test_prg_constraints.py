@@ -292,9 +292,15 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	# megawatt-hour conversion, each with a derived left-hand side -- taking
 	# 532 -> 534 and the total 604 -> 606. The shaped count stays at 72:
 	# neither is a bound, and `energy_demand` was already an identity.
-	assert cov["identities"] == 534
-	# Batch 77 adds the one `leq` above, so the total moves 605 -> 606.
-	assert cov["total"] == 606
+	# Batch 80 adds seven identities -- the megawatt-to-terawatt conversion for
+	# each of the seven sector `_load` dials the catalog types as power and gives
+	# no base, each with a derived left-hand side -- taking 534 -> 541 and the
+	# total 606 -> 613. The shaped count stays at 72: none is a bound. The
+	# conversions mirror `fishing_community_load_definition`, which is the same
+	# 8760-hours-and-1e6-MWh-per-TWh identity over a megawatt dial.
+	assert cov["identities"] == 541
+	# Batch 80 adds the seven above, so the total moves 606 -> 613.
+	assert cov["total"] == 613
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
