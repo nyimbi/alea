@@ -6182,3 +6182,19 @@ The one place `prg-exam.md` is *wrong* rather than stale: it takes the
 capability matrix's "incremental updates L0" as evidence the feature is absent
 while the code carries it — the same "an inventory read from source is not an
 inventory the app serves" lesson, in the review's own review.
+
+---
+
+## Coupling closure (2026-11-03)
+
+Every coupling pack under `docs/research/coupling-packs/` has now been processed.
+All genuine derive/read/bound proposals that survive BRIEF's symbol, derivative,
+and dimensional gates are baked into `config/prg.yaml`, and every remaining row
+in `ParameterGraph.uncoupled()` is a node a pack classified as QUALITATIVE,
+BASE-NEEDED, SCENE-SWITCH, THRESHOLD, or DEPRECATED and deliberately declined
+to give an equation. The register is the product, not a backlog: 235 nodes,
+each with a stated reason, and none can be closed without an invented operand.
+The graph's 613 equations, 1423 edges, 10 binding constraints, 2 feedback loops,
+and 57 cross-validation rules load, propagate at defaults with zero consistency
+violations, and pass the dimensional walker (0 inconsistent, 0 undecidable at
+this build).
