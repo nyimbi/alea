@@ -34,10 +34,9 @@ grows -- which is the failure mode of every gate that reports only a pass.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-
-import re
 
 import pint
 from pint.facets.plain.unit import PlainUnit

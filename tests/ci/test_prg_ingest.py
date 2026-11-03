@@ -517,7 +517,6 @@ def test_the_tautology_guard_refuses_the_shipped_batch_that_carried_one():
 	"""
 	import pytest
 
-	from tests.ci.canaries import REPO
 
 	# The shipped defect, exactly as it stood in `param_batch5.yaml`.
 	broken = """

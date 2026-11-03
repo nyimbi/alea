@@ -1850,7 +1850,7 @@ def test_every_bound_states_its_coupling_or_declares_that_it_cannot(
 		"reserve_margin_with_firm_vre",
 		"water_availability_constraint",
 	}
-	assert _DEVIATING <= symbolic, _DEVIATING - symbolic
+	assert symbolic >= _DEVIATING, _DEVIATING - symbolic
 	for equation_id in sorted(symbolic - _DEVIATING):
 		equation = graph.equations[equation_id]
 		rhs = set(parse_side(equation.rhs).symbols)

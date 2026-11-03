@@ -984,10 +984,10 @@ def emit(batch: str) -> int:
 	# the analytic statement; the alternative, a hand form in some other
 	# spelling, fails the operand-set comparison unless it names every
 	# parameter in the renderer's own subscripted style.
-	from alea.prg.views import Equation as _Equation
 	from alea.prg.service import generated_latex as _generated_latex
+	from alea.prg.views import Equation as _Equation
 
-	for eq_id, eq_body in equations.items():
+	for _eq_id, eq_body in equations.items():
 		try:
 			eq_obj = _Equation(**{k: v for k, v in eq_body.items()})  # type: ignore[arg-type]
 		except Exception:
@@ -1163,9 +1163,7 @@ def build_batch13(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		if name in graph.nodes:
 			full = dict(graph.nodes[name].model_dump(exclude={"id"}, mode="json"))
 			for key, value in body.items():
-				if value is not None and key != "default":
-					full[key] = value
-				elif value is not None and key == "default" and full.get("role") != "derived":
+				if value is not None and key != "default" or value is not None and key == "default" and full.get("role") != "derived":
 					full[key] = value
 			if full.get("role") == "derived":
 				full.pop("default", None)
@@ -1291,9 +1289,8 @@ def build_batch13(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 			# resolutions exist to close, not to create. The technology's own
 			# capacity factor IS the shipped node, corrected at its default.
 			cf_name = "solar_pv_capacity_factor"
-			techs_with_shipped_cf = {"solar_pv"}
 		else:
-			techs_with_shipped_cf = set()
+			pass
 		declare_node(cf_name, {
 			"description": (
 				f"Annual net output over rated capacity for {tech_prose}, in the "
@@ -1583,7 +1580,7 @@ def build_batch13(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		"gasification_capacity": ("MW", "unbuilt", "0.0"),
 		"pyrolysis_capacity": ("MW", "unbuilt", "0.0"),
 	}
-	for tech_name, (unit, _why, default) in UNBUILT_TECHS.items():
+	for tech_name, (unit, _why, _default) in UNBUILT_TECHS.items():
 		node = graph.nodes.get(tech_name)
 		if node is None:
 			continue
@@ -1617,7 +1614,7 @@ def build_batch13(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		and name.endswith(("_capacity", "_capacity_mw"))
 		and not graph.affected_by(name)
 		and graph.nodes[name].unit == "MW"
-		and not name in (
+		and name not in (
 			# The fleet's own aggregates: the solve's chosen groups. They are
 			# read by the fleet's identities (firm_capacity reads
 			# thermal_capacity_mw), so they are not the floating leaves this
@@ -1824,7 +1821,7 @@ def build_batch14(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		"property_tax": ("property_tax_rate", "regulatory_asset_base", "Regulatory Finance"),
 		"investment_allowance": ("investment_allowance_rate", "capex_usd_per_kw", "Tax & Fiscal"),
 	}
-	for target, (rate, base, category) in rate_nodes.items():
+	for target, (rate, base, _category) in rate_nodes.items():
 		full = dict(graph.nodes[target].model_dump(exclude={"id"}, mode="json"))
 		full.update({
 			"role": "derived",
@@ -1842,7 +1839,7 @@ def build_batch14(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 			"id": eq_id,
 			"name": graph.nodes[target].name + " (computed)",
 			"description": (
-				f"The rate times its base: property tax is the annual charge on "
+				"The rate times its base: property tax is the annual charge on "
 				"the regulated asset base; the investment allowance is the "
 				"fiscal credit against capital expenditure. Both are rates with "
 				"no arithmetic beyond the product, so the definition is the "
@@ -2039,13 +2036,13 @@ def build_batch15(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	rules: list[dict[str, Any]] = []
 
 	for share, target in SECTOR_DEMANDS:
-		share_node = graph.nodes[share]
+		graph.nodes[share]
 		sector = target.split("_")[0]
 		nodes[target] = {
 			"name": f"{sector.replace('_', ' ')} demand",
 			"description": (
-				f"Sector demand at the bottom-up synthesis the catalog states: "
-				f"the sector's share of the fleet-served demand, over the "
+				"Sector demand at the bottom-up synthesis the catalog states: "
+				"the sector's share of the fleet-served demand, over the "
 				"total. The share is a policy and settlement dial; the demand "
 				"is what the sector's own metering would report."
 			),
@@ -3850,7 +3847,7 @@ def build_batch20(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		equations[eq_id] = body
 
 	# --- the product equations ---
-	for eq_id, name, lhs, rhs, prose, system, linearity, unit, cite in (
+	for eq_id, name, lhs, rhs, prose, system, linearity, _unit, cite in (
 		BATCH20_EQUATIONS
 	):
 		rhs_params = []
@@ -4309,7 +4306,7 @@ def build_batch21(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	for name, body in BATCH21_CONSTANT_NODES.items():
 		nodes[name] = dict(body)
 
-	for eq_id, name, lhs, rhs, prose, system, linearity, unit, cite in (
+	for eq_id, name, lhs, rhs, prose, system, linearity, _unit, cite in (
 		BATCH21_EQUATIONS
 	):
 		rhs_params = []
@@ -5797,7 +5794,7 @@ def build_batch24(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	edges: list[dict[str, str]] = []
 	rules: list[dict[str, Any]] = []
 
-	for name, unit, rng, default, category, determinism, prose in BATCH24_RETYPES:
+	for name, _unit, rng, default, _category, determinism, prose in BATCH24_RETYPES:
 		shipped = graph.nodes[name]
 		full = dict(shipped.model_dump(exclude={"id"}, mode="json"))
 		# The retype repairs the *unit*, not the role. A node an equation
@@ -5805,7 +5802,7 @@ def build_batch24(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		# starts from); a node a scenario sets keeps the role it had, and the
 		# table's default replaces the catalog placeholder it shipped with.
 		full.update({
-			"unit": unit, "range": rng, "description": prose,
+			"unit": _unit, "range": rng, "description": prose,
 			"determinism": determinism,
 			"priority": "P1", "status": "existing",
 			"source": "The carbon-market coupling (batch 24)",
@@ -6075,11 +6072,11 @@ def build_batch25(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	equations: dict[str, Any] = {}
 	edges: list[dict[str, Any]] = []
 
-	for name, unit, rng, default, category, prose in BATCH25_RETYPES:
+	for name, _unit, rng, default, _category, prose in BATCH25_RETYPES:
 		shipped = graph.nodes[name]
 		full = dict(shipped.model_dump(exclude={"id"}, mode="json"))
 		full.update({
-			"unit": unit, "range": rng, "default": default,
+			"unit": _unit, "range": rng, "default": default,
 			"description": prose, "determinism": "policy",
 			"priority": "P1", "status": "existing",
 			"source": "The gate-family coupling (batch 25)",
@@ -12147,8 +12144,8 @@ def build_batch45(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		)
 		body["latex"] = (
 			body["latex"].replace(
-				rf"\mathrm{{fuel}}_t",
-				rf"\mathrm{{fuel}}_t / \eta_t",
+				r"\mathrm{fuel}_t",
+				r"\mathrm{fuel}_t / \eta_t",
 			)
 			if "fuel" in (body.get("latex") or "")
 			else body.get("latex")
@@ -13933,7 +13930,7 @@ def build_batch49(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	# what makes "value-neutral at the defaults" a measured claim; the canary
 	# below is what makes it a claim about the defaults rather than about the
 	# arithmetic.
-	for tech, crf_node, life_node in _BATCH49_CRF:
+	for _tech, crf_node, life_node in _BATCH49_CRF:
 		assert measured[life_node] == measured["asset_life"], (
 			f"{life_node} is {measured[life_node]!r}, not the fleet asset_life "
 			f"{measured['asset_life']!r}; the defaults would already separate the "
@@ -14730,7 +14727,7 @@ def build_batch44(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		}
 	determined_by: dict[str, list[str]] = {}
 	feeds: dict[str, list[str]] = {}
-	for eq_id, body in live.items():
+	for _eq_id, body in live.items():
 		relation = body["relation"]
 		relation = getattr(relation, "value", relation)
 		if relation != "eq":
@@ -20312,7 +20309,7 @@ def build_batch66(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	assert derived == set(_BATCH66_DANGLING), sorted(derived ^ set(_BATCH66_DANGLING))
 	assert len({e for e, _, _ in _BATCH66_DANGLING}) == 2, "a third equation appeared"
 
-	for equation_id, old_name, new_name in _BATCH66_DANGLING:
+	for _equation_id, _old_name, new_name in _BATCH66_DANGLING:
 		assert new_name in graph.nodes, new_name
 
 	for equation_id, _, factor, description in _BATCH66_DESCRIPTIONS:
@@ -20504,7 +20501,6 @@ def build_batch62(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	(`total_households`) and numerator (`households_burden`) are not nodes, and
 	inventing them is a different batch with its own sources.
 	"""
-	from alea.prg.dsl import parse_side
 	from alea.prg.views import ParameterNode
 
 	victim, successor = _BATCH62_DUPLICATE
@@ -21861,7 +21857,7 @@ def build_batch73(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 		neutral = nodes[multiplier_name]["default"]
 		assert neutral == 1.0, (multiplier_name, neutral)
 
-		def output(m: float) -> float:
+		def output(m: float, capacity=capacity, assessed=assessed, hours=hours) -> float:
 			return capacity * assessed * m * hours / 1e6
 
 		shipped_output = capacity * assessed * hours / 1e6

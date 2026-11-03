@@ -67,7 +67,6 @@ from alea.prg.dsl import (
 	Mul,
 	Symbol,
 	evaluate,
-	parse,
 	parse_side,
 )
 from alea.registry.technologies import get_technology, is_known_carrier
