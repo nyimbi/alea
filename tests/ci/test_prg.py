@@ -3072,7 +3072,7 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# this register. Its two new operands are both read by the two equations
 	# the batch added, and `data_centre_load_twh` is read by `energy_demand`,
 	# so none of the three enters it.
-	assert len(dead) == 219, len(dead)
+	assert len(dead) == 212, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
