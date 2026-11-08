@@ -10443,7 +10443,7 @@ parameters:
   drought_risk:
     categories: []
     category: Adapt
-    default: 0.5
+    default: null
     deprecated_by: null
     description: Drought hazard intensity. One of the eight `exposure_index` hazards.
     determinism: fixed
@@ -10453,7 +10453,7 @@ parameters:
     range:
     - 0.0
     - 1.0
-    role: free
+    role: derived
     source: The macro and climate pack (batch 37)
     source_url: null
     status: to_build
@@ -49520,6 +49520,30 @@ equations:
     system: employment
     tolerance: 1.0e-09
     unit_check: true
+  drought_risk_definition:
+    name: Drought risk definition
+    description: 'Drought risk is the joint probability of a drought event at severity sufficient to stress the system: the product of the drought frequency multiplier and the drought severity multiplier. Both operands are normalized [0, 1] shares of the hazard measure, so the product is the probability-weighted severity. Source: IPCC AR6 WGI (2021), Ch. 11 "Weather and Climate Extreme Events in a Changing Climate", §11.2 drought definition and the frequency-severity framing of projected changes; and NOAA/NIDIS drought-monitor terminology.'
+    system: water_energy
+    priority: P1
+    lhs: drought_risk
+    rhs: drought_frequency * drought_severity
+    relation: eq
+    linearity: linear
+    tolerance: 1.0e-09
+    unit_check: true
+    reference: 'IPCC AR6 WGI, Ch. 11 (2021), drought frequency-severity framing; NOAA NIDIS drought-monitor terminology. Local copy: sources/archive/ipcc_ar6_wgi_ch11.pdf.'
+    solution_method: direct
+    latex: \mathrm{drought\_risk} = \mathrm{drought\_frequency} \times \mathrm{drought\_severity}
+    parameters:
+    - drought_frequency
+    - drought_risk
+    - drought_severity
+    free_variables:
+    - drought_frequency
+    - drought_severity
+    determined_variables:
+    - drought_risk
+  
 relationships:
 - description: A higher discount rate raises the annual charge on capex.
   direction: forward

@@ -3072,7 +3072,7 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# this register. Its two new operands are both read by the two equations
 	# the batch added, and `data_centre_load_twh` is read by `energy_demand`,
 	# so none of the three enters it.
-	assert len(dead) == 212, len(dead)
+	assert len(dead) == 210, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
@@ -6014,7 +6014,7 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# `strength_of` counts as hard: 602 -> 603. The three edges it and the
 	# reshaped `fleet_build_balance` moved are all `hard`, so they change the
 	# edge count and not this one.
-	assert counts == {"hard": 610, "informational": 1, "soft": 2}, counts
+	assert counts == {"hard": 611, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
