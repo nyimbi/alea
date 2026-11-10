@@ -111,3 +111,10 @@ models/
 # config. They are the previous state of a file that is already in the tree;
 # committing one puts a whole duplicate of `config/prg.yaml` in history.
 *.bak.[0-9]*-[0-9]*
+
+# Retired scratch. config/prg_ingest/ held the generated batches before they were
+# baked into config/prg.yaml; a copy left in the tree shadows the shipped graph
+# (the loader reads it if present). data/prg-backup-*.yaml are dated snapshots of
+# the PRG; git history is the backup.
+/config/prg_ingest/
+/data/prg-backup-*.yaml
