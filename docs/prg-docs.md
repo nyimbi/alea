@@ -29,13 +29,9 @@ The PRG is Alea’s parameter- and equation-bound research graph. It maps every 
 
 ## 4. Coupling graph status
 
-Coupling batches 75–79 have shipped. Approximately 702 uncoupled nodes remain, fully classified in `docs/param_coupling_worklist.md`.
+Measured with `load_graph().uncoupled()` on 2026-11-10 after batch 84: **233** uncoupled nodes. The 702 and 422/488 figures in older notes and in `docs/param_coupling_worklist.md` are stale.
 
-Next batches by scope:
-
-1. Share products (18): `share × base`, multiple bases; base per equation.
-2. Time-index family (24): cyclic/lag indexing; modulo, not naive difference.
-3. Unassignable mass (remainder): definition products, threshold gates, and the DAQ register for genuinely qualitative nodes. Not opened yet.
+Share products: only `ev_share_new_sales` remains, and its base (new vehicle sales) is not a node, so it cannot be coupled yet. The rest of the 233 are qualitative or contractual (PPA terms, market structure, scenario metadata, methodology registers) or quantitative with no base node (`ev_battery_size`, `ev_efficiency`, `startup_cost_*`, hazard frequencies).
 
 ## 5. Coupling classes
 
@@ -57,12 +53,9 @@ Name, stable id, role (primary / auxiliary / derived / gate), unit, physical/eco
 - Numbers in prose come only from an actual run.
 - Every paper, theorem, or doc a claim rests on is archived locally under `sources/` or `docs/research/<slug>/`, recorded in `sources/INDEX.md`. URLs alone are not proof.
 
-## 9. Site of the current blocking (prior run, ScenarioAudit)
+## 9. Pinned registers
 
-- skipped gate: 298 expected, 305 observed.
-- strength tier: expected `{'hard': 603, 'info': 1, 'soft': 2}`, observed `{'hard': 610, 'info': 1, 'soft': 2}`.
-
-Interpretation unresolved (uncoupled coupling symptom vs tier logic defect); cannot assert either direction without canaries.
+The ScenarioAudit skipped count, the determined-variable count (542), the citation register (312), the dead-knob count and the strength tiers are pinned in `tests/ci/test_prg.py`. Each coupling batch that adds an equation moves them; the earlier 298/305 and 603/610 mismatches were pins that lagged the committed batches 82-84, not a tier-logic defect. Edges for a new equation must be declared in `relationships:` (`test_every_equality_declares_an_edge_from_each_symbol_it_reads`).
 
 ## 10. Outstanding work before "fully documented"
 

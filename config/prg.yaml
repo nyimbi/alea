@@ -60317,6 +60317,22 @@ relationships:
     the hours in the year are what turn a nameplate rating into energy.'
   reference: The capacity-to-energy repair (batch 46)
   priority: P1
+- source: drought_frequency
+  target: drought_risk
+  equation_id: drought_risk_definition
+  relationship: functional
+  strength: hard
+  description: 'A factor of the drought risk product; risk is frequency times severity.'
+  reference: IPCC AR6 WGI, Ch. 11 (2021). Local copy sources/archive/ipcc_ar6_wgi_ch11.pdf.
+  priority: P1
+- source: drought_severity
+  target: drought_risk
+  equation_id: drought_risk_definition
+  relationship: functional
+  strength: hard
+  description: 'A factor of the drought risk product; risk is frequency times severity.'
+  reference: IPCC AR6 WGI, Ch. 11 (2021). Local copy sources/archive/ipcc_ar6_wgi_ch11.pdf.
+  priority: P1
 - source: biomass_generation_twh
   target: fleet_generation_twh
   equation_id: fleet_generation_definition
