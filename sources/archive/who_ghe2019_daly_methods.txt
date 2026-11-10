@@ -1,0 +1,7738 @@
+WHO methods and data sources
+for global burden of disease estimates
+2000-2019
+Department of Data and Analytics
+Division of Data, Analytics and Delivery for Impact
+WHO, Geneva
+December 2020
+
+Global Health Estimates Technical Paper WHO/ DDI/DNA/GHE/2020.3
+
+WHO/DDI/DNA
+
+GHE/2020.3
+
+Acknowledgements
+This Technical Report was updated by Bochen Cao , with inputs and assistance from Jessica Ho. Estimates
+of deaths and YLL by cause for years 2000-2016 were primarily prepared by Bochen Cao, Gretchen
+Stevens, Jessica Ho and Doris Ma Fat, of the Monitoring, Forecasting and Inequality Unit in the WHO
+Department of Data Analytics, in the Division of Data, Analytics and Delivery for Impact of the World
+Health Organization (WHO), Geneva, drawing heavily on advice and inputs from other WHO Departments,
+collaborating United Nations (UN) Agencies, and WHO expert advisory groups and academic
+collaborators.
+The YLD estimates draw heavily from the work of the Institute of Health Metrics and Evaluation (IHME) at
+the University of Washington, and their many collaborators in the Global Burden of Disease 2019 Study.
+Other inputs to these estimates result from collaborations with Interagency Groups, expert advisory
+groups and academic groups. The most important of these include the Interagency Group on Child
+Mortality Estimation (UN-IGME), the UN Population Division, the the Maternal and Child Epidemiology
+Estimation Group (MCEE),, the Maternal Mortality Expert and Interagency Group (MMEIG), the
+International Agency for Research on Cancer, and UNAIDS.
+Estimates and analysis are available at:
+http://www.who.int/gho/mortality_burden_disease/en/index.html
+For further information about the estimates and methods, please contact healthstat@who.int
+
+Recent papers in this series
+1. WHO methods and data sources for life tables 1990-2019 (Global Health Estimates Technical Paper
+WHO/DDI/DNA/GHE/2020.1)
+2. WHO methods and data sources for country-level causes of death 2000-2019(Global Health Estimates Technical
+Paper WHO/DDI/DNA/GHE/2020.2)
+
+WHO/DDI/DNA
+
+i
+
+GHE/2020.3
+
+Table of Contents
+Acknowledgements ...................................................................................................................................... i
+Table of Contents .......................................................................................................................................... ii
+1 Introduction 3
+1.1 Background ...................................................................................................................................... 3
+1.2 Cause of death categories................................................................................................................ 4
+1.3 Other analysis categories ................................................................................................................. 4
+1.4 What is new in this update for years 2000-2019 ............................................................................. 4
+2 The disability-adjusted life year ............................................................................................................... 6
+2.1 Simplified DALY ................................................................................................................................ 7
+2.2 Standard expected years of life lost for calculation of YLLs ............................................................ 7
+2.3 Age weighting and time discounting ............................................................................................... 8
+2.4 Prevalence versus incidence YLDs ................................................................................................... 9
+2.5 Comorbidity adjustment ................................................................................................................ 11
+3 Disability weights for calculation of YLDs .............................................................................................. 12
+3.1 Evolution of methods for estimation of disability weights ............................................................ 12
+3.2 Disability weights revisions for GBD 2016 and GHE 2016 ............................................................. 12
+4 YLD estimates for diseases and injuries ................................................................................................. 14
+4.2 Uncertainty in YLD estimates ......................................................................................................... 15
+5.5 Conclusions .................................................................................................................................... 19
+References
+
+…………………………………………………………………………………………………………………………………….20
+
+Annex Table A GHE cause categories and ICD-10 codes........................................................................... 23
+Annex Table B Health states and lay descriptions used in the GBD study................................................ 29
+Annex Table C Health state weights used in WHO Global Health Estimates ........................................... 41
+
+WHO/DDI/DNA
+
+ii
+
+GHE/2020.3
+
+1
+
+Introduction
+
+1.1
+
+Background
+
+A consistent and comparative description of the burden of diseases and injuries, and the risk factors that
+cause them, is an important input to health decision-making and planning processes. Information that is
+available on mortality and health in populations in all regions of the world is fragmentary and sometimes
+inconsistent. Thus, a framework for integrating, validating, analyzing and disseminating such information
+is useful to assess the comparative importance of diseases and injuries in causing premature death, loss
+of health, and disability in different populations.
+The World Bank commissioned the first Global Burden of Disease (GBD) study for its World Development
+Report 1993 (World Bank, 1993) and the study was carried out in a collaboration between the Harvard
+School of Public Health and the World Health Organization. This first GBD study quantified the health
+effects of more than 100 diseases and injuries for eight regions of the world in 1990 (Murray & Lopez,
+1996). It generated comprehensive and internally consistent estimates of mortality and morbidity by age,
+sex and region. The study also introduced a new metric – the disability-adjusted life year (DALY) – as a
+single measure to quantify the burden of diseases, injuries and risk factors (Murray, 1996). The DALY is
+based on years of life lost from premature death and years of life lived in less than full health; it is
+described in more detail in Section 2.
+Drawing on extensive databases and information provided by Member States, WHO produced annually
+updated GBD estimates for years 2000 to 2002. These were published in the WHO’s annual World Health
+Reports, followed by two stand-alone reports for the year 2004 (WHO, 2008; WHO, 2009a). The new
+estimates reflected an overhaul of methods for mortality estimation in the setting of sparse data,
+improved approaches for dealing with problems in cause of death certification, new cause of death
+modelling strategies, and use of improved tools for ensuring internal consistency of mortality and
+epidemiological estimates (Mathers, Lopez & Murray, 2006; WHO, 2008). The GBD results for the year
+2001 also provided a framework for cost-effectiveness and priority setting analyses carried out for the
+Disease Control Priorities Project (DCPP), a joint project of the World Bank, WHO, and the National
+Institutes of Health, funded by the Bill & Melinda Gates Foundation (Jamison et al, 2006a). The GBD results
+were documented in detail, with information on data sources and methods, and analyses of uncertainty
+and sensitivity, in a book published as part of the DCPP (Lopez et al, 2006). The GBD cause list was
+expanded to 136 causes (giving a total of 160 cause categories, including group totals). The WHO GBD
+updates incrementally revised and updated estimates of incidence, prevalence and years of healthy life
+lost due to disability (YLDs) for non-fatal health outcomes. By the time of the GBD 2004 study, 97 of the
+136 causes had been updated, including all causes of public health importance or with significant YLD
+contribution to DALYs.
+In 2007, the Bill & Melinda Gates Foundation provided funding for a new GBD 2010 study, led by the
+Institute for Health Metrics and Evaluation at the University of Washington, with key collaborating
+institutions including WHO, Harvard University, Johns Hopkins University, and the University of
+Queensland. This study also drew on wider epidemiological expertise through a network of about 40
+expert working groups, comprising hundreds of disease and injury subject-matter experts including many
+working in WHO programs. The GBD 2010 study developed new methods for assessing causes of death
+and for synthesizing epidemiological data to produce estimates of incidence and prevalence of conditions
+for 21 regions of the world.
+To meet WHO’s need for comprehensive global health statistics, which brings together WHO and
+interagency estimates for all-cause mortality and priority diseases and injuries, as well as drawing on the
+World Health Organization
+
+Page 3
+
+work of academic collaborators, including IHME, updated Global Health Estimates (GHE) for mortality,
+causes of death, and disease burden, are being progressively released. This commenced with the release
+in mid-2013 of updated regional-level estimates of deaths by cause, age and sex for years 2000-2011
+(WHO, 2013), followed by country-specific estimates for the years 2000-2012 (WHO, 2014), later updated
+to years 2000-2015 (WHO, 2016), and years 2000-2016 (WHO, 2018).
+To meet the need for DALY estimates consistent with the GHE for cause-specific mortality, WHO also
+released regional- and country-level estimates of DALYs by cause, age and sex for years 2000-2016 at
+http://www.who.int/healthinfo/global_health_estimates/en/ (WHO, 2018).
+WHO has now released updated estimates of deaths and DALYs by cause, age, and sex for years 20002019 as part of it update of Global Health Estimates 2019 (GHE2019). This technical paper documents the
+data sources and methods used for preparation of the burden of disease estimates for years 2000-2016.
+
+1.2
+
+Cause of death categories
+
+The cause of death categories remain the same as those used in the previous WHO burden of disease
+estimates. Annex Table A lists the cause categories and their definitions in terms of the International
+Classification of Diseases, Tenth Revision (ICD-10). The cause categories are grouped into three broad
+cause groups: Group I (communicable, maternal, perinatal and nutritional conditions), Group II
+(noncommunicable diseases); and Group III (injuries). The cause list has a hierarchical structure so that
+different levels of aggregation are included. At each cause level, the list provides a set of mutually
+exclusive and collectively exhaustive categories.
+
+1.3
+
+Other analysis categories
+
+Estimates are made for 183 WHO Member States with populations greater than 90,000 in 2019. The 11
+Member States excluded are: Andorra, Cook Islands, Dominica, Marshall Islands, Monaco, Nauru, Niue,
+Palau, Saint Kitts and Nevis, San Marino, and Tuvalu. Additionally, estimates are made for the three largest
+populations in non-Member State territories: Puerto Rico; Taiwan, China; West Bank and Gaza Strip. These
+are not released at country level, but are included in the relevant regional and global totals.
+Estimates are disaggregated by sex and age for the following age groups: neonatal (<28 days), 1-59
+months, 5-14, 15-29, 30-49, 50-69, 70 years and older.
+YLL, YLD and DALY estimates are available on the WHO website for years 2000, 2010, 2015 and -2019 for
+countries and for a number of regional groupings as defined in Annex B to Technical Paper 2020.3 (WHO
+2018).
+
+1.4
+
+What is new in this update for years 2000-2019
+
+These WHO GHE provide a comprehensive and comparable set of DALY estimates from year 2000
+onwards, consistent with and incorporating estimates for the WHO all-cause mortality and cause of deaths
+in the same GHE update, as well as GBD 2019 analyses for YLDs, with some revisions and methodological
+differences as summarized below:
+o
+
+A simpler form of DALY, used by the GBD 2010 study (Murray et al, 2012b), has been adopted.
+This form is easier to explain and use (see Section 2). Age-weighting and time discounting are
+dropped, and the YLDs are calculated from prevalence estimates rather than incidence estimates.
+YLDs are also adjusted for independent comorbidity.
+
+World Health Organization
+
+Page 4
+
+o
+
+The standard life table used for calculation of years of life lost for a death at a given age is based
+on the projected frontier life expectancy for 2050, with a life expectancy at birth of 90 years (see
+Section 2.2)
+
+o
+
+The years of life lost from mortality (YLLs) are calculated using WHO estimates of deaths by region,
+cause, age and sex for years 2000-2019 being released in the same GHE update(WHO 2018).
+
+o
+
+Estimates of YLD draw on the GBD 2019 analyses (GBD 2019 Diseases and Injuries Collaborators,
+2020), with selected revisions to disability weights and prevalence estimates as noted below.
+
+o
+
+Limited revisions have been made to disability weights for infertility, intellectual disability, vision
+loss, hearing loss, dementia, drug use disorders, skin diseases and low back pain as previously
+documented (WHO 2013b).
+
+Because these estimates draw on new data and on the results of the GBD 2019 study, and there have
+been substantial revisions to methods for many causes, these estimates for the years 2000-2019 are not
+directly comparable with previous WHO estimates of DALYs.
+
+World Health Organization
+
+Page 5
+
+2
+
+The disability-adjusted life year
+
+The DALY is a summary measure which combines time lost through premature death and time lived in
+states of less than optimal health, loosely referred to as “disability”. The DALY is a generalization of the
+well-known Potential Years of Life Lost measure (PYLLs) to include lost good health. One DALY can be
+thought of as one lost year of ‘healthy’ life and the measured disease burden is the gap between a
+population’s health status and that of a normative reference population. DALYs for a specific cause are
+calculated as the sum of the YLLs from that cause and the YLDs for people living in states of less than good
+health resulting from the specific cause:
+DALY(c,s,a,t) = YLL(c,s,a,t) + YLD(c,s,a,t)
+
+for given cause c, age a, sex s and year t
+
+The YLLs for a cause are essentially calculated as the number of cause-specific deaths multiplied by a loss
+function specifying the years lost for deaths as a function of the age at which death occurs. The basic
+formula for YLLs is the following for a given cause c, age a, sex s and year t:
+YLL(c,s,a,t) = N(c,s,a,t) x L(s,a)
+
+where:
+N(c,s,a,t) is the number of deaths due to the cause c for the given age a and sex s in year t
+L(s,a) is a standard loss function specifying years of life lost for a death at age a for sex s
+
+The GBD 1990 study chose not to use an arbitrary age cut-off such as 70 years for the loss function used
+in the calculation of YLLs, but rather specified the loss function in terms of the life expectancies at various
+ages in standard life tables with life expectancy at birth fixed at 82.5 years for females and 80.0 years for
+males. These represented approximately the highest observed life expectancies for females in the mid1990s, together with an assumed biologically-determined minimum male-female difference.
+The GBD 1990 and subsequent WHO updates used an incidence perspective for the calculation of YLDs.
+To estimate YLDs for a particular cause in a particular time period, the number of incident cases in that
+period is multiplied by the average duration of the disease and a weight factor that reflects the severity
+of the disease on a scale from 0 (perfect health) to 1 (dead):
+YLD(c,s,a,t) = I(c,s,a,t) x DW(c,s,a) x L(c,s,a,t)
+
+where:
+I(c,s,a,t) = number of incident cases for cause c, age a and sex s
+DW(c,s,a) = disability weight for cause c, age a and sex s
+L(c,s,a,t) = average duration of the case until remission or death (years)
+
+The ‘valuation’ of time lived in non-fatal health states formalises and quantifies the loss of health for
+different states of health as disability weights.
+In the standard DALYs reported by the original GBD study and in subsequent WHO updates, calculations
+of YLDs and YLLs used an additional 3% time discounting and non-uniform age weights that give less
+weight to years lost at young and older ages (Murray, 1996). Using discounting and age weights, a death
+in infancy corresponds to 33 DALYs, and deaths at ages 5–20 years to around 36 DALYs.
+
+World Health Organization
+
+Page 6
+
+2.1
+
+Simplified DALY
+
+Following the publication of the GBD 1990, there has been extensive debate on all the key value choices
+incorporated into the DALY – the years lost on death, the disability weights, age weights and time
+discounting (Anand & Hanson, 1997; Williams, 1999; Murray et al, 2002; Lyttkens, 2003; Arnesen &
+Kapiriri, 2004; Bognar, 2008). Additionally, the incidence-based perspective required substantial modelling
+of incidence and average durations for many diseases where the available data mainly related to
+prevalence. The GBD 2010 study held a consultation in July 2011 with 21 philosophers, ethicists, and
+economists to advise on the value choices that should be incorporated into the DALY summary measure
+used for the GBD 2010. An earlier expert consultation in 2008 addressed the conceptual, ethical and
+measurement issues in undertaking a comprehensive revision of disability weights (Salomon, 2008).
+Following these consultations, the GBD 2010 and subsequent studies chose to simplify the calculation of
+DALYs (Murray et al, 2012b; Murray et al, 2012c) as follows:
+•
+
+Use of a new normative standard life table for the loss function used to compute YLLs;
+
+•
+
+Calculation of YLDs simply as the prevalence of each sequela multiplied by the relevant disability
+weight
+
+•
+
+Adjustment for comorbidity in the calculation of YLDs
+
+•
+
+No discounting for time or unequal age weights
+
+Following informal consultations with relevant WHO programs, collaborators and expert advisory groups
+in late 2012, WHO decided to adopt the simplified calculation methods for DALYs as described in more
+detail in the following sections, albeit with an updated loss function for the computation of YLLs.
+
+2.2
+
+Standard expected years of life lost for calculation of YLLs
+
+The standard reference life table for the GBD 1990 was based on the highest observed life expectancy at
+the time, Japanese females with a life expectancy at birth close to 82.5 years. Based on the observed malefemale gap in life expectancy in the best-off communities within high-income countries, the standard
+reference life expectancy was set to 80·0 years at birth for males. The standard reference life table is
+intended to represent the potential maximum life span of an individual in good health at a given age. For
+the GBD 2010 study, it was decided to use the same reference standard for males and females and to use
+a life table based on the lowest observed death rate for each age group in countries of more than 5 million
+in population. The new GBD 2010 reference life table has a life expectancy at birth of 86·0 years for males
+and females.
+However, some of the experts consulted by WHO argued that it was not appropriate to set the normative
+loss of years of life in terms of currently observed death rates, since even for the lowest observed death
+rates there are a proportion of deaths which are preventable or avertable. In fact, Japanese females have
+already exceeded the GBD 2010 reference life expectancy at birth, with a life expectancy at birth in 2013
+of 87.1 years. Since the loss function is intended to represent the maximum life span of an individual in
+good health, who is not exposed to avoidable health risks, or severe injuries, and receives appropriate
+health services, we chose to base this on the frontier national life expectancy derived from the lowest
+projected age-specific mortality rates for the year 2045-2050 by the World Population Prospects 2019 (UN
+Population Division, 2019).
+The highest projected life expectancies for the year 2050 are projected to be achieved with a life
+expectancy at birth of 90 years. While this may still not represent the ultimate achievable human life
+spans, it does represent a set of life spans which are thought likely to be achieved by a substantial number
+
+World Health Organization
+
+Page 7
+
+of people who are alive today (Kontis et al 2017). Table 2.1 summarizes the loss function used for the
+calculation of YLLs in the WHO GHE.
+
+Table 2.1 Standard loss functions used in Global Burden of Disease studies and for
+WHO Global Health Estimates
+
+Age range
+
+GBD 1990 ageweighted, discounted
+Male
+Female
+
+Neonatal
+Postneonatal
+1-4
+5-9
+10-14
+15-19
+20-24
+25-29
+30-34
+35-39
+40-44
+45-49
+50-54
+55-59
+60-64
+65-69
+70-74
+75-79
+80-84
+85+
+
+2.3
+
+33.27
+34.22
+35.17
+37.22
+37.31
+36.02
+33.84
+31.11
+28.08
+24.91
+21.74
+18.63
+15.65
+12.82
+10.19
+7.80
+5.71
+4.00
+2.68
+1.37
+
+33.38
+34.34
+35.29
+37.36
+37.47
+36.22
+34.08
+31.39
+28.40
+25.30
+22.19
+19.16
+16.26
+13.52
+10.96
+8.60
+6.45
+4.59
+3.09
+1.23
+
+GBD 1990 no ageweights or discounting
+Male
+Female
+79.94
+78.85
+77.77
+72.89
+67.91
+62.93
+57.95
+52.99
+48.04
+43.10
+38.20
+33.38
+28.66
+24.07
+19.65
+15.54
+11.87
+8.81
+6.34
+3.82
+
+82.43
+81.36
+80.28
+75.47
+70.51
+65.55
+60.63
+55.72
+50.83
+45.96
+41.13
+36.36
+31.68
+27.10
+22.64
+18.32
+14.24
+10.59
+7.56
+3.59
+
+GBD
+2010
+Persons
+
+WHO
+GHE
+Persons
+
+86.01
+85.68
+83.63
+78.76
+73.79
+68.83
+63.88
+58.94
+54.00
+49.09
+44.23
+39.43
+34.72
+30.10
+25.55
+21.12
+16.78
+12.85
+9.34
+5.05
+
+89.99
+89.55
+87.07
+82.58
+77.58
+72.60
+67.62
+62.66
+57.71
+52.76
+47.83
+42.94
+38.10
+33.33
+28.66
+24.12
+19.76
+15.65
+11.96
+7.05
+
+Age weighting and time discounting
+
+The GBD 1990 study and subsequent WHO updates published DALYs computed with a 3% discount rate
+for future lost years of healthy life and an alternative set with a 0% discount rate. The arguments for
+discounting future health were couched mainly in terms of avoiding various decision-making paradoxes
+when future costs of health interventions are discounted (Murray & Acharya, 2002). Critics have argued
+that there is no intrinsic reason to value a year of health as less important simply because it is in the future
+(Tsuchiya, 2002) and the experts consulted for the GBD 2010 study also advised against discounting,
+particularly in the context where the DALY has been more explicitly defined as quantifying loss of health,
+rather than the social value of loss of health. This also avoids the inconsistency in the original DALY
+method, where the start time for discounting future stream of YLDs was the year of incidence, whereas
+that for YLLs was the year of death.
+The original GBD 1990 study and subsequent WHO updates also incorporated age-weighting in the
+standard DALYs used in most publications and analyses. The standard age weights gave less weight to
+years of healthy life lost at young ages and older ages (Murray, 1996). With the clearer conceptualization
+of DALYs as purely a measure of population health loss rather than broader aspects of social welfare, it is
+difficult to justify the inclusion of age weights, and the GBD 2010 study dropped them (Murray et al,
+World Health Organization
+
+Page 8
+
+2012b; Jamison et al, 2006b) has argued for an alternate form of age-weighting, for incorporating
+stillbirths and deaths around the time of birth into the DALY. This modifies the loss function for years of
+life lost for a death at a given age (or gestational age) to reflect “acquired life potential”, by which the
+fetus or infant only gradually acquires the full life potential reflected in the standard loss function. Murray
+et al (2012c) have argued that such considerations should be reflected in social priorities rather than in
+the basic health measure itself.
+Following informal consultations in 2012, WHO decided to adopt the same approach as GBD 2010 in
+computing DALYs with a time discount rate of 0% and no age-weighting. This change results in a
+substantial increase in the absolute number of DALYs lost and a relative increase in the share of DALYs at
+younger and older ages (WHO 2018).
+
+2.4
+
+Prevalence versus incidence YLDs
+
+DALYs were calculated in the GBD 1990 and subsequent WHO updates using an incidence perspective for
+YLDs. Incident YLDs were computed as the stream of future health loss associated with disease sequelae
+incident in the reference year. This was done to ensure consistency with the YLL calculation, which takes
+an inherently incidence perspective, although prevalence-based YLDs were also calculated for other
+purposes, such as the calculation of period healthy life expectancy.
+The incidence-based YLD approach has three major disadvantages. First, it will not reflect the current
+prevalent burden of disabling sequelae for a condition for which incidence has been substantially reduced.
+Secondly, the YLD calculation requires estimates of both incidence and average duration of disease
+sequelae, whereas for many health conditions it is primarily prevalence data that are collected. Third, in
+an incidence perspective, all YLDs for a condition are assigned to the age-groups at which the condition is
+incident, whereas the policy-maker is often more interested in the ages at which the loss of health is
+experienced. Finally, incorporation of comorbidity is more straightforward in a prevalence approach than
+an incidence approach.
+Given these advantages of a prevalence approach, both the GBD 2010 and WHO have decided to switch
+to a prevalence-based approach to calculation of YLDs. The major impact of this is to shift the age
+distribution of YLDs significantly (Figure 2.1). Thus for example YLDs for congenital hearing loss will be
+spread relatively evenly across all age groups in the prevalence perspective, whereas they will all fall at
+age 0 in an incidence perspective.
+
+World Health Organization
+
+Page 9
+
+x.
+Figure 2.1 Age distribution of global YLD for the year 2004 (WHO 2008). Classic YLD are
+incidence-based with age-weighting and 3% time discounting; incidence and prevalence
+YLD are not age-weighted or discounted.
+
+World Health Organization
+
+Page 10
+
+2.5
+
+Comorbidity adjustment
+
+Earlier versions of the GBD reported YLDs calculated separately for individual disease and injury causes
+without adjustment for comorbidity. These were added across causes to obtain total all-cause YLDs. Some
+limited adjustments for comorbidity were incorporated into subsequent WHO updates. For example,
+prevalence estimates for depression, substance use disorders and anxiety disorders were adjusted to take
+into account quite substantial levels of comorbidity between these conditions, so that double or triple
+counting did not occur for DALYs for these individuals. More comprehensive adjustments for comorbidity
+across all conditions was required for the calculation of healthy life expectancy. The first WHO estimates
+for HALE adjusted for YLD comorbidity assuming independence of conditions (the probability of having
+two comorbid conditions is the product of the individual probabilities of the two conditions). Later, a
+method for taking dependent comorbidity into account was applied (Mathers, Iburg & Begg, 2006).
+Because many people have more than one disease or injury, particularly at older ages, addition of YLDs
+across causes may result in overestimation of the total loss of health. This is particularly important at the
+oldest ages, where summed YLDs may approach or exceed 100% of person-years. Following expert
+consultations, the GBD 2010 and subsequent revisions implemented adjustments for independent
+comorbidity so that summed YLDs across causes reflect the sum of the overall lost health at the individual.
+Individuals with the same functional health loss are then treated as like regardless of whether that
+functional health loss came from one or several contributing conditions.
+The GBD 2010 study estimated comorbidities using the assumption of independence within age-sex
+groups:
+p1+2 = p1 + p2 – p1 x p2 = 1 – (1 – p1) x (1 – p2)
+
+(1)
+
+where p1+2 is the prevalence of the two comorbid diseases 1 and 2, p1 is the prevalence of disease 1 and
+p2 the prevalence of disease 2.
+It tested this assumption using UW Medical Expenditure Panel Survey data and concluded that the error
+in magnitude of YLDs from using the independence assumption was minimal. The combined disability
+weight for individuals with multiple conditions is estimated assuming a multiplicative model as follows:
+DW1+2 = 1 – (1 – DW1) x (1 – DW2)
+
+Since prevalence YLDs are calculated for each individual cause as:
+YLDi = DWi x pi
+
+(2)
+
+the two preceding equations can be combined into a single calculation resulting in:
+YLD1+2 = 1 – (1-YLD1) x (1 – YLD2)
+
+(3)
+
+Using the GBD 2004 estimates for non-age-weighted, undiscounted YLDs as an example, adjustment for
+independent comorbidity reduces global all-age YLDs by 6% and YLDs for ages 60 and over by 11%.
+
+World Health Organization
+
+Page 11
+
+3
+
+Disability weights for calculation of YLDs
+
+3.1
+
+Evolution of methods for estimation of disability weights
+
+In order to use time as a common currency for non-fatal health states and for years of life lost due to
+mortality, we must define, measure and numerically value time lived in non-fatal health states. While
+death is not difficult to define, non-fatal health states are. They involve multiple domains of health which
+relate to different functions, capacities or aspects of living. In the GBD studies, the numerical valuation of
+time lived in non-fatal health states is through the so-called disability weights, which quantify loss of
+functioning on a scale where 1 represents perfect health and 0 represents a state equivalent to death.
+Depending on how these weights are derived and what they are attempting to quantify, they are variously
+referred to as disability weights, quality-adjusted life year (QALY) weights, health state valuations, utilities
+or health state preferences.
+In the earliest version of the GBD 1990 study, the burden of disease was defined as loss of
+welfare/subjective well-being/quality of life (World Bank, 1993). Murray (1996) subsequently argued that
+the health state values should reflect societal judgements of the value of averting different diseases rather
+than individual judgments of the disutility of the diseases. As a result, the 1996 version of the GBD 1990
+used two forms of the person-trade-off (PTO) method to assess social preferences for health states and
+asked small groups of health professionals in weighting exercises to make a composite judgment on the
+severity distribution of the condition and the social preference for time spent in each severity level
+(Murray, 1996). Dutch researchers subsequently used the same methods to estimate disability weights
+for the Netherlands (Stouthard et al, 1997; Stouthard, Essink-Bot & Bonsel, 2000). The version of PTO used
+by the GBD study was criticized as unethical by a number of commentators (Arnesen & Nord, 1999) and
+rejected for the same reason by project participants in a European multi-country study following on from
+the Dutch study (Schwarzinger et al, 2003). Other criticism of the GBD 1990 approach to valuation of
+health states related to the use of judgements from health professionals rather than the general
+population, or those with the conditions, and to the use of universal weights rather than weights that
+varied with social and cultural environment.
+During the period 2000-2008 in which WHO was carrying out updates of the GBD using the original
+disability weights, with some revisions and additions (Mathers, Lopez & Murray, 2006), the conceptual
+thinking behind the GBD made explicit the aspiration to quantify loss of health, rather than the social
+value of the loss of health, or of wellbeing (Murray & Acharya, 2002; Salomon et al, 2003). In this
+conceptualization, health state valuations formalize the intuitive notions that health levels lie on a
+continuum and that we may characterize an individual as being more or less healthy than another at a
+particular moment in time. Health state valuations quantify departures from perfect health, i.e., the
+reductions in health associated with particular health states. Thus in the GBD terminology, the term
+disability is used broadly to refer to departures from optimal health in any of the important domains of
+health and disability weights should reflect the general population judgments about the ‘healthfulness’ of
+defined states, not any judgments of quality of life or the worth of persons or the social undesirability or
+stigma of health states.
+
+3.2
+
+Disability weights revisions for GBD 2016 and GHE 2016
+
+The GBD 2010 study undertook a comprehensive re-estimation of disability weights through a large-scale
+empirical investigation with a major emphasis on surveying respondents from the general population, in
+which judgments about health losses associated with many causes of disease and injury were elicited
+through a new standardized approach. The GBD 2010 study estimated disability weights for 220 health
+states using a method involving discrete choice comparisons of “health” for pairs of health states
+World Health Organization
+
+Page 12
+
+described using lay descriptions consisting of a brief summary of the health state of an average or modal
+case in 30 words or less (see Salomon et al 2012 for details of lay descriptions, survey and statistical
+methods). Paired comparisons data were collected from 13,902 individuals in household surveys in five
+countries, supplemented by an open-access web-based survey of 16,328 people. This study represents
+the most extensive empirical effort to date to measure disability weights. Salomon et al (2012) also
+concluded that they found strong evidence of highly consistent results across the samples from different
+cultural environments.
+In the GBD 2010 disability weights paper, Salomon et al (2012a). note that the new disability weights are
+much higher for some health states (such as heroin addiction, acute low back pain) and much lower for a
+larger number of health states, including infertility (0.01, previously 0.18), moderate to profound hearing
+loss (0.02-0.03, previously 0.12-0.33), blindness (0.20, previously 0.60) and intellectual disability (for
+severe intellectual disability 0.126, previously 0.82). Experts from the GBD Vision Loss Expert Group noted
+the surprisingly low disability weights for severe vision disorders and suggested that the cause was
+inadequate descriptions of the consequences of vision disorders (Taylor et al, 2013).
+Nord (2013) argued that these problems result from the explicit framing the discrete choice comparisons
+of sequelae in terms of “who is healthier”. Even if blindness is significantly limits functioning, blind people
+are – in everyday language – not ‘sick’ or ‘ill’. Given this, many respondents may not have thought of blind
+people as being in poor health. Other states with which this semantic and conceptual point may have led
+to unreasonably low weights are for example ‘deafness’ (dw = 0.03), ‘amputations of legs and two artificial
+legs’ (0.05) and ‘paralysed below the waist, moves about with a wheelchair’ (0.05). Alternatively, it is also
+possible that the “lay descriptions of these health states” were inadequate in some way.
+WHO’s earlier estimates of DALYs for years 2000-2011 made adjustments were made to a number of the
+GBD 2010 disability weights for permanent long-term disabilities as described in a previous Technical
+Paper (WHO 2013b). IHME also recognized that there were problems with these weights, and a number
+of others with implausible face validity, and carried out an additional valuation exercise using revised
+health state descriptions (Salomon et al 2015).
+Salomon et al (2015) carried out new web-based surveys in 2013 of 30,660 respondents in four European
+countries (Hungary, Italy, the Netherlands, and Sweden). These surveys included 183 health states; of
+which 30 were revised descriptions and 18 were for new health states. Health state descriptions were
+revised for most of the health states revised by WHO for the previous GHE2013 YLD estimates. In
+particular, descriptions were revised for spinal cord injury, hearing loss, and cognitive impairments.
+Valuations were also obtained for new health state descriptions relating to five mild health states for
+alcohol and drug dependence outcomes, which are now also used in the GHE 2016.
+Annex Table D lists the health states and health state descriptions used in the GBD 2015 study (Salomon
+et al 2015, GBD 2015 Disease and Injury Incidence and Prevalence Collaborators 2016). Annex Table E
+tabulates the various revisions of GBD disability weights for 234 health states and lists the weights used
+for the GHE 2019 and GBD 2019 estimates.
+
+World Health Organization
+
+Page 13
+
+4
+
+YLD estimates for diseases and injuries
+
+For most disease and injury causes, we have drawn on GBD 2019 estimates by country for the years 2000,
+2005, 2010, 2015 and 2019 (GBD 2019 Diseases and Injuries Collaborators, 2020). The GBD 2019 study
+computed YLD as the prevalence of a sequela multiplied by the disability weight for that sequela without
+age weighting or discounting. The YLDs arising from a disease or injury are the sum of the YLDs for each
+of the sequelae associated with that disease.
+For most sequelae, the GBD 2019 study used a Bayesian meta-regression method, DisMod-MR 2.1,
+designed to address key limitations in descriptive epidemiological data, including missing data,
+inconsistency, and large methodological variation between data sources. For some disorders, natural
+history models, back calculation from mortality rates, or other methods were used. YLDs by cause at age,
+sex, country, and year levels were adjusted for comorbidity with simulation methods.
+For selected impairments, WHO and other collaborators have estimated the overall prevalence of the
+impairment (WHO 2013b). These “envelope” prevalences constrained the estimates for sequelae related
+to that impairment to sum to estimates of the overall impairment prevalence. For example, nine disorders
+have blindness as a sequela. The prevalence of all blindness sequelae was constrained to sum to blindness
+prevalence.
+The WHO GHE draws on the GBD 2019 analyses for YLDs with some caveats. Selected disability weights
+are revised as described in Section 3 above. Other revisions for prevalence estimates, cause distributions
+and severity distributions were carried out for vision loss, hearing loss, intellectual disability, infertility,
+anaemia, back and neck pain, migraine, alcohol problem use, and skin diseases. These are documented in
+the previous Technical Paper (WHO 2013b).
+In 2007, WHO established the Foodborne Disease Burden Epidemiology Reference Group (FERG) to
+estimate global and regional burdens of foodborne disease. Included among the parasitic foodborne
+diseases analysed were cysticercosis, echinococcis, and food-borne trematodosis. In 2015, the FERG
+published regional and global estimates of deaths and DALYs for these diseases for the year 2010 (WHO
+2015, Torgerson et al 2015). The GBD2019 time series estimates of YLD for these three diseases were
+scaled to match the underlying FERG estimates of deaths for 14 WHO sub-regions in 2010.
+
+World Health Organization
+
+Page 14
+
+4.2
+
+Uncertainty in YLD estimates
+
+The GBD 2016 study estimated 95% uncertainty ranges for YLD estimates. Global uncertainty ranges for
+each cause category are summarized in the following Table, in terms of average relative uncertainty (all
+ages, both sexes) calculated as 0.5*(upper bound – lower bound)/median value.
+Table 4.1 Average global relative uncertainty (%) for YLD by cause. Source: GBD 2016.
+cause
+
+Cause name
+
+Av.
+uncertainty
+(±%)
+
+cause
+
+Cause name
+
+Av.
+uncertainty
+(±%)
+
+0
+
+All Causes
+
+30.0
+
+820
+
+Mentaldisorders
+
+53.1
+
+10
+
+Group I
+
+60.3
+
+830
+
+Depression
+
+54.8
+
+20
+
+Infectious
+
+57.4
+
+831
+
+Major depression
+
+52.7
+
+30
+
+TB
+
+74.5
+
+832
+
+Dysthymia
+
+64.4
+
+40
+
+STDs
+
+100.9
+
+840
+
+Bipolar disorder
+
+59.3
+
+50
+
+Syphilis
+
+90.0
+
+850
+
+Schizophrenia
+
+47.8
+
+60
+
+Chlamydia
+
+89.6
+
+860
+
+Alcohol abuse
+
+58.5
+
+70
+
+Gonorrhoea
+
+123.9
+
+870
+
+Drug abuse
+
+69.5
+
+80
+
+Trichomoniasis
+
+111.7
+
+871
+
+Opioid abuse
+
+65.9
+
+85
+
+Genital herpes
+
+108.5
+
+872
+
+Cocaine abuse
+
+77.8
+
+90
+
+Other STDs
+
+94.3
+
+873
+
+Amphetamine abuse
+
+78.5
+
+100
+
+HIV/AIDS
+
+96.7
+
+874
+
+Cannabis abuse
+
+78.9
+
+110
+
+Diarrhoeal
+
+41.1
+
+875
+
+Other drug abuse
+
+66.2
+
+120
+
+Childhood-cluster
+
+84.5
+
+880
+
+Anxiety disorders
+
+51.3
+
+130
+
+Pertussis
+
+55.3
+
+890
+
+Eating disorders
+
+66.6
+
+140
+
+Diphtheria
+
+124.2
+
+900
+
+Autism
+
+47.1
+
+150
+
+Measles
+
+113.3
+
+910
+
+Child behavioural
+
+103.3
+
+160
+
+Tetanus
+
+115.9
+
+911
+
+ADD
+
+104.0
+
+170
+
+Meningitis
+
+42.6
+
+912
+
+Conduct disorder
+
+60.8
+
+180
+
+Encephalitis
+
+38.0
+
+920
+
+ID
+
+79.1
+
+185
+
+Hepatitis
+
+84.6
+
+930
+
+Other mental
+
+49.4
+
+186
+
+Acute hepatitis A
+
+101.8
+
+940
+
+Neurological
+
+93.6
+
+190
+
+Acute hepatitis B
+
+84.1
+
+950
+
+Dementias
+
+50.1
+
+200
+
+Acute hepatitis C
+
+92.2
+
+960
+
+Parkinson disease
+
+68.8
+
+205
+
+Acute hepatitis E
+
+77.9
+
+970
+
+Epilepsy
+
+90.7
+
+210
+
+Parasitic
+
+87.6
+
+980
+
+Multiple sclerosis
+
+52.5
+
+220
+
+Malaria
+
+55.7
+
+990
+
+Migraine
+
+105.6
+
+230
+
+Trypanosomiasis
+
+241.5
+
+1000
+
+Other headache
+
+180.2
+
+240
+
+Chagas disease
+
+88.6
+
+1010
+
+Other neurological
+
+69.0
+
+250
+
+Schistosomiasis
+
+108.5
+
+1020
+
+Sense organ
+
+53.7
+
+260
+
+Leishmaniasis
+
+108.6
+
+1030
+
+Glaucoma
+
+58.2
+
+270
+
+lymphatic filariasis
+
+52.8
+
+1040
+
+Cataracts
+
+52.1
+
+280
+
+Onchocerciasis
+
+60.4
+
+1050
+
+Refractive errors
+
+53.4
+
+World Health Organization
+
+Page 15
+
+Table 4.1 (continued) Average global relative uncertainty (%) for YLD by cause. Source: GBD 2016.
+
+cause2015
+
+Cause name
+
+Av.
+uncertainty
+(±%)
+
+285
+
+Cysticercosis
+
+295
+
+Av.
+uncertainty
+(±%)
+
+cause2015
+
+Cause name
+
+98.0
+
+1060
+
+Macular degen
+
+56.6
+
+Echinococcosis
+
+99.3
+
+1070
+
+Other vision loss
+
+63.4
+
+300
+
+Dengue
+
+125.5
+
+1080
+
+Other hearing loss
+
+49.3
+
+310
+
+Trachoma
+
+81.4
+
+1090
+
+Other sense
+
+74.6
+
+315
+
+Yellow fever
+
+156.2
+
+1100
+
+CVD
+
+54.4
+
+320
+
+Rabies
+
+152.7
+
+1110
+
+RHD
+
+58.2
+
+330
+
+Worms
+
+74.7
+
+1120
+
+HHD
+
+79.1
+
+340
+
+Ascariasis
+
+79.2
+
+1130
+
+IHD
+
+56.1
+
+350
+
+Trichuriasis
+
+76.7
+
+1140
+
+Stroke
+
+37.5
+
+360
+
+Hookworm disease
+
+72.5
+
+1141
+
+Ischameic stroke
+
+37.5
+
+362
+
+Trematodes
+
+99.3
+
+1142
+
+Haem stroke
+
+37.5
+
+365
+
+Leprosy
+
+67.5
+
+1150
+
+Inflammatory HD
+
+67.8
+
+370
+
+Other infectious
+
+81.0
+
+1160
+
+Other circulatory
+
+78.9
+
+380
+
+Resp infections
+
+58.6
+
+1170
+
+Chronic resp
+
+41.3
+
+390
+
+LRI
+
+54.6
+
+1180
+
+COPD
+
+37.4
+
+400
+
+URI
+
+58.5
+
+1190
+
+Asthma
+
+50.4
+
+410
+
+Otitis media
+
+68.6
+
+1200
+
+Other resp
+
+50.3
+
+420
+
+Maternal
+
+65.2
+
+1210
+
+Digestive diseases
+
+64.6
+
+490
+
+Neonata
+
+48.1
+
+1220
+
+Peptic ulcer disease
+
+67.0
+
+500
+
+Preterm
+
+38.2
+
+1230
+
+Cirrhosis
+
+84.6
+
+510
+
+Birth asphyxia
+
+87.9
+
+1231
+
+Cirrhosis hep B
+
+91.9
+
+520
+
+Neonatal sepsis
+
+81.4
+
+1232
+
+Cirrhosis heps C
+
+91.8
+
+530
+
+Other neonatal
+
+33.2
+
+1233
+
+Cirrhosis alcohol
+
+90.7
+
+540
+
+Nutritional
+
+81.9
+
+1234
+
+Other cirrhosis
+
+87.6
+
+550
+
+PEM
+
+70.1
+
+1240
+
+Appendicitis
+
+69.6
+
+560
+
+Iodine deficiency
+
+75.0
+
+1241
+
+Gastritis
+
+69.6
+
+570
+
+Vit A deficiency
+
+81.0
+
+1242
+
+Intestinal obstruction
+
+54.8
+
+580
+
+ID anaemia
+
+96.4
+
+1244
+
+Inflam. bowel
+
+53.7
+
+590
+
+Other nutritional
+
+71.6
+
+1246
+
+Gallbladder disease
+
+62.9
+
+600
+
+Group II
+
+56.7
+
+1248
+
+Pancreatitis
+
+58.9
+
+610
+
+Cancers
+
+70.8
+
+1250
+
+Other digestive
+
+68.0
+
+620
+
+Oral cancers
+
+62.8
+
+1260
+
+GU diseases
+
+66.3
+
+621
+
+Lip and oral cavity
+
+61.6
+
+1270
+
+Kidney diseases
+
+68.6
+
+622
+
+Nasopharynx
+
+63.8
+
+1271
+
+Acute glom.
+
+74.4
+
+623
+
+Other pharynx
+
+57.2
+
+1272
+
+CKD diabetes
+
+86.4
+
+630
+
+Oesophagus ca
+
+59.2
+
+1273
+
+Other CKD
+
+67.5
+
+640
+
+Stomach cancer
+
+54.9
+
+1280
+
+Prostatic hyperplasia
+
+65.7
+
+650
+
+Colorectaql cancers
+
+55.0
+
+1290
+
+Urolithiasis
+
+72.9
+
+World Health Organization
+
+Page 16
+
+Table 4.1 (continued) Average global relative uncertainty (%) for YLD by cause. Source: GBD 2016.
+
+cause2015
+
+Cause name
+
+Av.
+uncertainty
+(±%)
+
+cause2015
+
+Cause name
+
+Av.
+uncertainty
+(±%)
+
+660
+
+Liver cancer
+
+76.4
+
+1300
+
+Other urinary
+
+72.8
+
+661
+
+Liver cancer hep B
+
+71.0
+
+1310
+
+Infertility
+
+140.6
+
+662
+
+Liver cancer hep C
+
+82.9
+
+1320
+
+Gynecological
+
+46.1
+
+663
+
+Liver cancer alc
+
+80.3
+
+1330
+
+63.5
+
+664
+
+Other liver cancer
+
+81.8
+
+1340
+
+Skin diseases
+Musculoskeletal
+diseases
+
+670
+
+Pancreas cancer
+
+54.1
+
+1350
+
+Rheumatoid arthritis
+
+56.2
+
+680
+
+Lung cancers
+
+60.4
+
+1360
+
+Osteoarthritis
+
+77.3
+
+690
+
+Skin cancers
+
+81.0
+
+1370
+
+Gout
+
+71.4
+
+691
+
+Melanoma
+
+82.3
+
+1380
+
+Back and neck pain
+
+50.5
+
+692
+
+NMSC
+
+57.1
+
+1390
+
+Other musc.
+
+97.3
+
+700
+
+Breast cancer
+
+64.1
+
+1400
+
+Congenital
+
+63.1
+
+710
+
+Cervix cancer
+
+66.9
+
+1410
+
+Neural tube defects
+
+43.1
+
+720
+
+Uterus cancer
+
+68.2
+
+1420
+
+CL/CP
+
+70.1
+
+730
+
+Ovary cancer
+
+76.5
+
+1430
+
+Down syndrome
+
+52.5
+
+740
+
+Prostate cancer
+
+57.2
+
+1440
+
+Congenital heart
+
+79.2
+
+742
+
+Testicular cancer
+
+122.1
+
+1450
+
+Other chromosomal
+
+56.7
+
+745
+
+Kidney cancer
+
+71.4
+
+1460
+
+Other congenital
+
+63.7
+
+750
+
+Bladder cancer
+
+58.2
+
+1470
+
+Oral conditions
+
+64.7
+
+751
+
+Brain cancers
+
+74.9
+
+1480
+
+Dental caries
+
+84.2
+
+752
+
+Gallbladder cancer
+
+57.2
+
+1490
+
+Periodontal disease
+
+94.9
+
+753
+
+Larynx cancer
+
+53.3
+
+1500
+
+Edentulism
+
+55.1
+
+754
+
+Thyroid cancer
+
+74.2
+
+1502
+
+Other oral disorders
+
+46.6
+
+755
+
+Mesothelioma
+
+98.9
+
+1505
+
+SIDS
+
+NA
+
+760
+
+Lymphomas MM
+
+69.3
+
+1510
+
+Group III
+
+41.6
+
+761
+
+Hodgkin lymphoma
+
+73.0
+
+1520
+
+Unintentional
+
+40.6
+
+762
+
+Non-H lymphoma
+
+63.7
+
+1530
+
+Road injury
+
+38.0
+
+763
+
+Multiple myeloma
+
+70.7
+
+1540
+
+Poisonings
+
+55.3
+
+770
+
+Leukaemia
+
+68.9
+
+1550
+
+Falls
+
+38.2
+
+780
+
+Other cancers
+
+63.8
+
+1560
+
+Fire
+
+50.3
+
+790
+
+Other neoplasms
+
+80.9
+
+1570
+
+Drowning
+
+37.4
+
+800
+
+Diabetes mellitus
+
+49.0
+
+1575
+
+Mechanical
+
+44.0
+
+810
+
+Endocrine blood
+
+60.2
+
+1580
+
+Disasters
+
+46.4
+
+811
+
+Thalassaemias
+
+88.1
+
+1590
+
+Other unintentional
+
+42.9
+
+812
+
+Sickle cell
+
+90.7
+
+1600
+
+Intentional
+
+40.3
+
+813
+
+Other haemo
+
+96.2
+
+1610
+
+Suicide
+
+36.9
+
+814
+
+Other endocrine
+
+55.2
+
+1620
+
+Homicide
+
+34.9
+
+1630
+
+Conflict
+
+60.0
+
+World Health Organization
+
+57.2
+
+Page 17
+
+For YLD, the following guidance by cause is provided in the downloadable YLD spreadsheets for countries
+and regions:
+Global average uncertainty range ≤25th percentile (6% to 30.7%)
+Global average uncertainty range >25th percentile and ≤50th percentile (30.8% to 35.4%)
+Global average uncertainty range >50th percentile and ≤50th percentile (35.5% to 42.0%)
+Global average uncertainty range >75th percentile (>42%)
+
+For DALYs, colour coded guidance on uncertainty is also provided in the downloadable DALY spreadsheets
+for countries and regions. This colour coding by country and cause combines information on the YLL
+uncertainty (by country data type) and YLD uncertainty (by cause) as follows:
+Global YLD/YLL <0.4 and multiple years of high quality death registration data are
+available.
+Global YLD/YLL <0.4 and multiple years of moderate quality death registration data are
+available; OR
+Global YLD/YLL in range 0.4-2.4. Multiple years of high quality death registration data are
+available, or multiple years of moderate quality death registration data are available and
+average YLD uncertainty less than 30.9%; OR
+Global YLD/YLL > 2.4 and YLD uncertainty less than 30.9%.
+Global YLD/YLL <0.4 and multiple years of low quality death registration data are
+available; OR
+Global YLD/YLL in range 0.4-2.4. Multiple years of moderate quality death registration
+data are available, or multiple years of low quality death registration data are available.
+and average YLD uncertainty less than 30.9%; OR
+Global YLD/YLL > 2.4 and YLD uncertainty in range 30.9% to 35.5%.
+Global YLD/YLL <0.4 and country is low HIV country without useable death registration
+data; OR
+Global YLD/YLL in range 0.4-2.4. Multiple years of low quality death registration data are
+available and average YLD uncertainty > 42.4%, or death registration data are not
+
+World Health Organization
+
+Page 18
+
+available, country is low HIV country and average YLD uncertainty in range 35.5% to 42%;
+OR
+Global YLD/YLL > 2.4 and YLD uncertainty in range 35.5% to 42%.
+Global YLD/YLL <0.4 and country is high HIV country without useable death registration;
+OR
+Global YLD/YLL in range 0.4-2.4, country is low HIV country without useable death
+registration data and average YLD uncertainty > 42%, or country is high HIV country
+without useable death registration data; OR
+Global YLD/YLL > 2.4 and YLD uncertainty > 42%.
+
+5.5
+
+Conclusions
+
+WHO’s adoption of health estimates is affected by a number of factors, including a country consultation
+process for country-level health estimates, existing multi-agency and expert group collaborative
+mechanisms, and compliance with minimum standards around data transparency, data and methods
+sharing. More detailed information on quality of data sources and methods, as well as estimated
+uncertainty intervals, is provided in referenced sources for specific causes.
+Calculated uncertainty ranges depend on the assumptions and methods used. In practice, estimating
+uncertainty in a consistent way across health indicators has had limited success (i.e., estimates with
+uncertainty typically reflect some, but not all, source of uncertainty). The type and complexity of models
+used for global health estimates varies widely by research/institutional group and health estimate. Where
+data are available and of high quality, estimates from different institutions are generally in agreement.
+Discrepancies are more likely to arise for countries where data are poor and for conditions where data
+are sparse and potentially biased. This is best addressed through improving the primary data.
+Although the GHE estimates for years 2000-2015 have large uncertainty ranges for some causes and some
+regions, they provide useful information on broad relativities of disease burden, on the relative
+importance of different causes of death and disability, and on regional patterns and inequalities. The data
+gaps and limitations in high-mortality regions reinforces the need for caution when interpreting global
+comparative burden of disease assessments and the need for increased investment in population health
+measurement systems. The use of verbal autopsy methods in sample registration systems, demographic
+surveillance systems and household surveys provides some information on causes of death in populations
+without well-functioning death registration systems, but there remain considerable challenges in the
+validation and interpretation of such data.
+
+World Health Organization
+
+Page 19
+
+References
+Anand S, Hanson K (1997). Disability-adjusted life years: a critical review. Journal of Health Economics.16:685–702.
+Arnesen T, Nord E (1999). The value of DALY life. British Medical Journal.319:1423-5.
+Arnesen T, Kapiriri L (2004). Can the value choices in DALYs influence global priority-setting? Health Policy.70:137–
+149.
+Bognar G (2008). Age-weighting. Economics and Philosophy.24:167–189.
+GBD 2015 Disease and Injury Incidence and Prevalence Collaborators (2016). Global, regional, and national
+incidence, prevalence, and years lived with disability for 310 diseases and injuries, 1990–2015: a systematic analysis
+for the Global Burden of Disease Study 2015. The Lancet. 2016 Oct 7; 388:1545–1602.
+GBD 2019 Diseases and Injuries Collaborators. Global burden of 369 diseases and injuries in 204 countries and
+territories, 1990–2019: a systematic analysis for the Global Burden of Disease Study 2019. Lancet. 2020;396(10258).
+Jamison DT, Breman JG, Measham AR, Alleyne G, Evans D, Claeson M et al (2006a). Disease control priorities in
+developing countries, 2nd edition. New York, NY: Oxford University Press.
+Jamison DT, Shahid-Salles SA, Jamison J, Lawn JE, Zupan J (2006b). Incorporating deaths near the time of birth into
+estimates of the global burden of disease. In: Lopez AD, Mathers CD, Ezzati M, Jamison DT, Murray CJL, editors .
+Global burden of disease and risk factors. Washington DC: World Bank and New York: Oxford University Press.
+p427-463.
+Kontis V Bennett JE, Mathers CD, Li G, Foreman K, Ezzati M. Future life expectancy in 35 industrialised countries:
+projections with a Bayesian model ensemble. The Lancet 2017, Apr 1; 389(10076): 1323-1335.
+Lopez AD, Mathers CD, Ezzati M, Jamison DT, Murray CJL, editors (2006). Global burden of disease and risk factors.
+Washington DC: World Bank and New York: Oxford University Press.
+(http://www.ncbi.nlm.nih.gov/books/NBK11812/, accessed on 7 November 2013)
+Lozano R, Naghavi M, Foreman K, Lim S, Shibuya K, Aboyans V et al (2012). Global and regional mortality from 235
+causes of death for 20 age groups in 1990 and 2010: a systematic analysis for the Global Burden of Disease Study
+2010. Lancet.380(9859):2095–128.
+Lyttkens C (2003). Time to disable DALYs? The European Journal of Health Economics.4:195–202.
+Mathers CD, Iburg KM, Begg S (2006). Adjusting for dependent comorbidity in the calculation of healthy life
+expectancy. Population Health Metrics.4:4.
+Mathers CD, Lopez AD, Murray CJL (2006). The burden of disease and mortality by condition: data, methods and
+results for 2001. In: Lopez AD, Mathers CD, Ezzati M, Jamison DT, Murray CJL, editors. Global burden of disease and
+risk factors. Washington DC: World Bank and New York: Oxford University Press. p45–240.
+Murray CJL (1996). Rethinking DALYs. In: Murray CJL, Lopez AD, editors (1996). The global burden of disease: a
+comprehensive assessment of mortality and disability from diseases, injuries and risk factors in 1990 and projected
+to 2020. Cambridge: Harvard University Press.
+Murray CJL, Lopez AD, editors (1996). The global burden of disease: a comprehensive assessment of mortality and
+disability from diseases, injuries and risk factors in 1990 and projected to 2020. Cambridge: Harvard University
+Press.
+Murray C, Acharya A (2002). Age weights and discounting in health gaps reconsidered. In: Summary measures of
+population health: concepts, ethics, measurement and applications. Geneva: World Health Organization. p. 677–
+684.
+Murray CJL, Ezzati M, Flaxman AD, Lim S, Lozano R, Michaud C et al (2012a). GBD 2010: a multi-investigator
+collaboration for global comparative descriptive epidemiology. Lancet.380(9859): 2055–8.
+
+World Health Organization
+
+Page 20
+
+Murray CJL, Ezzati M, Flaxman AD, Lim S, Lozano R, Michaud C et al (2012b). GBD 2010: design, definitions, and
+metrics. Lancet;380: 2063-2066.
+Murray CJL, Ezzati M, Flaxman AD, Lim S, Lozano R, Michaud C et al (2012c). GBD 2010: design, definitions, and
+metrics [Supplementary appendix]. Lancet.380.
+(http://download.thelancet.com/mmcs/journals/lancet/PIIS0140673612618996/mmc1.pdf?id=a02f57d1811fcb77:
+-1b44796c:142333b8265:-259e1383841102443, accessed 7 November 2013).
+Murray CJL, Vos T, Lozano R, Naghavi M, Flaxman AD, Michaud C et al (2012d). Disability-adjusted life years
+(DALYs) for 291 diseases and injuries in 21 regions, 1990-2010: a systematic analysis for the Global Burden of
+Disease Study 2010. Lancet.380:2197–2223.
+Nord E (2013). Disability weights in the Global Burden of Disease 2010: unclear meaning and overstatement of
+international agreement. Health Policy.111(1):99–104.
+Salomon JA, Murray CJL, Ustun TB, Chatterji S (2003). Health State Valuations in Summary Measures of Population
+Health. In: Murray CJL, Evans D, editors. Health systems performance assessment: debate, methods and empiricism.
+Geneva: World Health Organisation.
+Salomon J (2008). Measurement of disability weights in the Global Burden of Disease 2005. GBD Disability Weights
+Expert Consultation, Seattle, 4-5 September 2008. Seattle: Institute for Health Metrics and Evaluation, University
+of Washington.
+Salomon J (2013). Disability weights measurement in the Global Burden of Disease Study 2010 [slides]. Global
+Health Metrics and Evaluation Conference, Seattle, 18 June 2013. Seattle: Institute for Health Metrics and
+Evaluation, University of Washington. Available at http://www.slideshare.net/IHME/disability-weightsmeasurement-in-the-global-burden-of-disease-study-2010
+Salomon JA, Vos T, Hogan DR, Gagnon M, Naghavi M, Mokdad A et al (2012a). Common values in assessing health
+outcomes from disease and injury: disability weights measurement study for the Global Burden of Disease Study
+2010. Lancet.380:2129–2143.
+Salomon JA, Vos T, Hogan DR, Gagnon M, Naghavi M, Mokdad A et al (2012b). Common values in assessing health
+outcomes from disease and injury [Supplementary appendix]. Lancet.380.
+(http://download.thelancet.com/mmcs/journals/lancet/PIIS0140673612616808/mmc1.pdf?id=a02f57d1811fcb77:
+-1b44796c:142333b8265:-259e1383841102443, accessed 7 November 2013).
+Salomon JA, Wang H, Freeman MK, Vos T, Flaxman AD, Lopez AD et al (2012c). Healthy life expectancy for 187
+countries, 1990–2010: a systematic analysis for the Global Burden Disease Study 2010. 380: 2144–2162.
+Salomon JA, Haagsma JA, Davis A, Maertens de Noordhout C, Polinder S, Havelaar AH, Cassini A, Devleesschauwer
+B, Kretzschmar M, Speybroeck N, Murray CJL, Vos T (2015). Disability weights for the Global Burden of Disease 2013
+study. The Lancet. 2015 Oct 19. doi:10.1016/S2214-109X(15)00069-8.
+Schwarzinger M, Marlies EA Stouthard MEA, Burström K, Nord E (2003). Cross-national agreement on disability
+weights: the European Disability Weights Project. Population Health Metrics.1:9.
+Stouthard, ME, Essink-Bot M, Bonsel G, Barendregt J, Kramers P (1997). Disability weights for diseases in the
+Netherlands. Rotterdam: Department of Public Health, Erasmus University.
+Stouthard ME, Essink-Bot ML, Bonsel GL, on Behalf of the Dutch Disability Weights Group (2000). Disability weights
+for diseases—A modified protocol and results for a Western European Region. European Journal of Public
+Health.10: 24–30
+Taylor HR, Jonas JB, Keeffe J, Leasher J, Naidoo Kovin, Pesudovs K et al (2013). Disability weights for vision
+disorders in Global Burden of Disease Study. Lancet.381:23–24.
+Torgerson PR, Devleesschauwer B, Praet N, Speybroeck N, Willingham AL, et al. (2015) World Health Organization
+Estimates of the Global and Regional Disease Burden of 11 Foodborne Parasitic Diseases, 2010: A Data Synthesis.
+PLoS Med 12(12): e1001920. doi: 10.1371/journal.pmed.1001920
+
+World Health Organization
+
+Page 21
+
+Tsuchiya A (2002). Age weighting and time discounting: technical imperative versus social choice. In: Summary
+measures of population health: concepts, ethics, measurement and applications. Geneva: World Health
+Organization.
+United Nations Population Division (2019). World population prospects - the 2019 revision. New York: United
+Nations.
+Vos T, Flaxman AD, Naghavi M, Lozano R, Michaud C, Ezzati M et al (2012a). Years lived with disability (YLDs) for
+1160 sequelae of 289 diseases and injuries, 1990–2010: a systematic analysis for the Global Burden of Disease
+Study 2010. Lancet.380:2163–2196.
+Vos et al (2015). Supplement to: GBD 2015 Disease and Injury Incidence and Prevalence Collaborators. Global,
+regional, and national incidence, prevalence, and years lived with disability for 310 diseases and injuries, 1990–2015:
+a systematic analysis for the Global Burden of Disease Study 2015. Lancet 2016; 388: 1545–602.
+Williams, A (1999). Calculating the global burden of disease: time for a strategic reapprisal. Health Economics.8:18.
+World Bank (1993). World Development Report 1993. Washington: World Bank.
+World Health Organization (2008). The global burden of disease: 2004 update. Geneva: World Health Organization.
+World Health Organization (2009a). Global health risks. Geneva: World Health Organization.
+World Health Organization (2009b). World Health Statistics 2009. Geneva: World Health Organization.
+World Health Organization (2012). Measurement of healthy life expectancy and wellbeing: report of a technical
+meeting, Geneva 10-11 December 2012. Geneva: World Health Organization. Available at
+http://www.who.int/healthinfo/sage/meeting_reports/en/
+World Health Organization (2013a). Global health estimates for deaths by cause, age, and sex for years 2000-2011.
+Geneva: World Health Organization. Available at http://www.who.int/healthinfo/global_health_estimates/en/
+World Health Organization (2013b). WHO methods and data sources for global burden of disease estimates 20002011. Global Health Estimates Technical Paper WHO/HIS/HSI/GHE/2013.4. Available at:
+http://www.who.int/healthinfo/mortality_data/en/index.html
+World Health Organization (2014). Global health estimates for deaths by cause, age, and sex for years 2000-2012.
+Geneva: World Health Organization. Available at http://www.who.int/healthinfo/global_health_estimates/en/
+WHO 2015. WHO Estimates of the Global Burden of Foodborne Diseases. Geneva, World Health Organization; 2015.
+WHO 2016. WHO methods and data sources for country-level causes of death 2000-2015 (Global Health Estimates
+Technical Paper WHO/HIS/HSI/GHE/2016.3)
+WHO 2018. WHO methods and data sources for global burden of disease estimates 2000-2016 (Global Health
+Estimates Technical Paper WHO/HIS/IER/GHE/2018.4)
+WHO 2018. WHO methods and data sources for country-level causes of death 2000-2016 (Global Health Estimates
+Technical Paper WHO/HIS/IER/GHE/2018.3)
+World Health Organization (2020). Mortality database [online database]. Available at:
+http://www.who.int/healthinfo/mortality_data/en/index.html
+
+World Health Organization
+
+Page 22
+
+Annex Table A
+GHE
+code
+10
+
+20
+
+GHE cause categories and ICD-10 codes
+
+GHE cause name
+I.
+
+Communicable,
+conditionsa
+
+A.
+
+ICD-10 codes
+maternal,
+
+perinatal
+
+and
+
+nutritional
+
+A00-B99, D50-D53, D64.9, E00-E02, E40-E46, E50-E64,
+G00-G04, G14, H65-H66, J00-J22, N70-N73, O00-O99, P00P96, U04
+
+Infectious and parasitic diseases
+
+A00-B99, G00-G04, G14, N70-N73, P37.3, P37.4
+
+30
+
+1.
+
+Tuberculosis
+
+A15-A19, B90
+
+40
+
+2.
+
+STDs excluding HIV
+
+A50-A64, N70-N73
+
+50
+
+a.
+
+Syphilis
+
+A50-A53
+
+60
+
+b.
+
+Chlamydia
+
+A55-A56
+
+70
+
+c.
+
+Gonorrhoea
+
+A54
+
+80
+
+d.
+
+Trichomoniasis
+
+A59
+
+85
+
+e.
+
+Genital herpes
+
+A60
+
+f.
+
+Other STDs
+
+A57-A58, A63-A64, N70-N73
+
+90
+100
+
+3.
+
+HIV/AIDS
+
+B20-B24
+
+101
+
+a.
+
+HIV resulting in TB
+
+B20.0
+
+102
+
+b.
+
+HIV resulting in other diseases
+
+B20-B24 (minus B20.0)
+
+110
+
+4.
+
+Diarrhoeal diseasesb
+
+A00, A01, A03, A04, A06-A09
+
+120
+
+5.
+
+Childhood-cluster diseases
+
+A33-A37, B05
+
+130
+
+a.
+
+Whooping cough
+
+A37
+
+140
+
+b.
+
+Diphtheria
+
+A36
+
+150
+
+c.
+
+Measles
+
+B05
+
+160
+
+d.
+
+Tetanus
+
+A33-A35
+
+170
+
+6.
+
+Meningitisb
+
+A39, G00, G03
+b
+
+180
+
+7.
+
+Encephalitis
+
+185
+
+8.
+
+Hepatitis
+
+B15-B19 (minus B17.8)
+
+186
+
+a.
+
+Acute hepatitis A
+
+B15
+
+190
+
+b.
+
+Acute hepatitis B
+
+B16-B19 (minus B17.1, B17.2, B18.2, B18.8)
+
+200
+
+c.
+
+Acute hepatitis C
+
+B17.1, B18.2
+
+d.
+
+Acute hepatitis E
+
+B17.2, B18.8
+
+205
+210
+
+9.
+
+A83-A86, B94.1, G04
+
+Parasitic and vector diseases
+
+A71, A82, A90-A91, A95, B50-B57, B65, B67, B69, B73,
+B74.0-B74.2, P37.3-P37.4
+
+220
+
+a.
+
+Malaria
+
+B50-B54, P37.3, P37.4
+
+230
+
+b.
+
+Trypanosomiasis
+
+B56
+
+240
+
+c.
+
+Chagas disease
+
+B57
+
+250
+
+d.
+
+Schistosomiasis
+
+B65
+
+260
+
+e.
+
+Leishmaniasis
+
+B55
+
+270
+
+f.
+
+Lymphatic filariasis
+
+B74.0-B74.2
+
+280
+
+g.
+
+Onchocerciasis
+
+B73
+
+285
+
+h.
+
+Cysticercosis
+
+B69
+
+295
+
+i.
+
+Echinococcosis
+
+B67
+
+300
+
+j.
+
+Dengue
+
+A90-A91
+
+310
+
+k.
+
+Trachoma
+
+A71
+
+315
+
+l.
+
+Yellow fever
+
+A95
+
+m.
+
+Rabies
+
+A82
+
+320
+330
+
+10.
+
+Intestinal nematode infections
+
+B76-B81
+
+340
+
+a.
+
+Ascariasis
+
+B77
+
+350
+
+b.
+
+Trichuriasis
+
+B79
+
+360
+
+c.
+
+Hookworm disease
+
+B76
+
+World Health Organization
+
+Page 23
+
+GHE
+code
+
+GHE cause name
+
+362
+
+d.
+
+ICD-10 codes
+Food-bourne trematodes
+
+B78, B80, B81
+
+365
+
+11.
+
+Leprosy
+
+A30
+
+370
+
+12.
+
+Other infectious diseases
+
+A02, A05, A20-A28, A31, A32, A38, A40-A49, A65-A70, A74A79, A80-A81, A87-A89, A92-A99, B00-B04, B06-B09, B17.8,
+B25-B49, B58-B60, B64, B66, B68, B70-B72, B74.3-B74.9,
+B75, B82-B89, B91-B99 (minus B94.1), G14
+
+Respiratory infectiousb
+
+H65-H66, J00-J22, P23, U04
+
+390
+
+1.
+
+Lower respiratory infections
+
+J09-J22, P23, U04
+
+400
+
+2.
+
+Upper respiratory infections
+
+J00-J06
+
+3.
+
+Otitis media
+
+H65-H66
+
+380
+
+B.
+
+410
+420
+
+C.
+
+Maternal conditions
+
+O00-O99
+
+490
+
+D.
+
+Neonatal conditions
+
+P00-P96 (minus P23, P37.3, P37.4)
+
+500
+
+1.
+
+Preterm birth complicationsb
+
+P05, P07, P22, P27-P28
+
+510
+
+2.
+
+Birth asphyxia and birth traumab
+
+P03, P10-P15, P20-P21, P24-P26, P29
+
+520
+
+3.
+
+Neonatal sepsis and infections
+
+P35-P39 (minus P37.3, P37.4)
+
+530
+
+4.
+
+Other neonatal conditions
+
+P00-P02, P04, P08, P50-P96
+
+540
+
+Nutritional deficiencies
+
+D50-D53, D64.9, E00-E02, E40-E46, E50-E64
+
+550
+
+1.
+
+Protein-energy malnutrition
+
+E40-E46
+
+560
+
+2.
+
+Iodine deficiency
+
+E00-E02
+
+570
+
+3.
+
+Vitamin A deficiency
+
+E50
+
+580
+
+4.
+
+Iron-deficiency anaemia
+
+D50, D64.9
+
+590
+
+5.
+
+Other nutritional deficiencies
+
+D51-D53, E51-E64
+
+600
+
+E.
+
+II.
+
+Noncommunicable diseasesa
+
+C00-C97, D00-D48, D55-D64 (minus D 64.9), D65-D89, E03E07, E10-E34, E65-E88, F01-F99, G06-G98 (minus G14),
+H00-H61, H68-H93, I00-I99, J30-J98, K00-K92, L00-L98,
+M00-M99, N00-N64, N75-N98, Q00-Q99, X41-X42, X44, X45,
+R95
+
+Malignant neoplasmsc
+
+C00-C97
+
+1.
+
+Mouth and oropharynx cancers
+
+C00-C14
+
+621
+
+a.
+
+Lip and oral cavity
+
+C00-C08
+
+622
+
+b.
+
+Nasopharynx
+
+C11
+
+623
+
+c.
+
+Other pharynx
+
+C09-C10, C12-C14
+
+610
+620
+
+A.
+
+630
+
+2.
+
+Oesophagus cancer
+
+C15
+
+640
+
+3.
+
+Stomach cancer
+
+C16
+
+650
+
+4.
+
+Colon and rectum cancers
+
+C18-C21
+
+660
+
+5.
+
+Liver cancer
+
+C22
+
+670
+
+6.
+
+Pancreas cancer
+
+C25
+
+680
+
+7.
+
+Trachea, bronchus, lung cancers
+
+C33-C34
+
+690
+
+8.
+
+Melanoma and other skin cancers
+
+C43-C44
+
+691
+
+a.
+
+Malignant skin melanoma
+
+C43
+
+692
+
+b.
+
+Non-melanoma skin cancer
+
+C44
+
+700
+
+9.
+
+Breast cancer
+
+C50
+
+710
+
+10.
+
+Cervix uteri cancerd
+
+C53
+
+720
+
+11.
+
+Corpus uteri cancerd
+
+C54
+
+730
+
+12.
+
+Ovary cancer
+
+C56
+
+740
+
+13.
+
+Prostate cancer
+
+C61
+
+742
+
+14.
+
+Testicular cancer
+
+C62
+
+745
+
+15.
+
+Kidney, renal pelvis and ureter cancer
+
+C64-C66
+
+750
+
+16.
+
+Bladder cancer
+
+C67
+
+751
+
+17.
+
+Brain and nervous system cancers
+
+C70-C72
+
+World Health Organization
+
+Page 24
+
+GHE
+code
+
+GHE cause name
+
+ICD-10 codes
+
+752
+
+18.
+
+Gallbladder and biliary tract cancer
+
+C23-C24
+
+753
+
+19.
+
+Larynx cancer
+
+C32
+
+754
+
+20.
+
+Thyroid cancer
+
+C73
+
+755
+
+21.
+
+Mesothelioma
+
+C45
+
+760
+
+22.
+
+Lymphomas, multiple myeloma
+
+C81-C90, C96
+
+761
+
+a.
+
+Hodgkin lymphoma
+
+C81
+
+762
+
+b.
+
+Non-Hodgkin lymphoma
+
+C82-C86, C96
+
+763
+
+c.
+
+Multiple myeloma
+
+C88, C90
+
+770
+
+23.
+
+Leukaemia
+
+C91-C95
+
+780
+
+24.
+
+Other malignant neoplasms
+
+C17, C26-C31, C37-C41, C46-C49, C51, C52, C57-C60, C63,
+C68, C69, C74-C75, C77-C79
+
+790
+
+B.
+
+Other neoplasms
+
+D00-D48
+
+800
+
+C.
+
+Diabetes mellitus
+
+E10-E14 (minus E10.2, E11.2, E12.2, E13.2, E14.2)
+
+810
+
+D.
+
+Endocrine, blood, immune disorders
+
+D55-D64 (minus D64.9), D65-D89, E03-E07, E15-E34, E65E88
+
+811
+
+1.
+
+Thalassaemias
+
+D56
+
+812
+
+2.
+
+Sickle cell disorders and trait
+
+813
+
+3.
+
+Other haemoglobinopathies
+anaemias
+
+814
+
+4.
+
+Other endocrine, blood and immune disorders
+
+820
+
+E.
+
+830
+
+D57
+and
+
+haemolytic
+
+D55, D58-D59
+D60-D64 (minus D64.9), D65-D89, E03-E07, E15-E34, E65E88
+
+Mental and substance use disorders
+
+F04-F99, G72.1, Q86.0, X41-X42, X44, X45
+
+1.
+
+Depressive disorders
+
+F32-F33, F34.1
+
+a.
+
+Major depressive disorder
+
+F32-F33
+
+b.
+
+Dysthymia
+
+F34.1
+
+831
+832
+840
+
+2.
+
+Bipolar disorder
+
+F30-F31
+
+850
+
+3.
+
+Schizophrenia
+
+F20-F29
+
+860
+
+4.
+
+Alcohol use disorders
+
+F10, G72.1, Q86.0, X45
+
+870
+
+5.
+
+Drug use disorderse
+
+F11-F16, F18-F19d, X41-X42, X44d
+
+871
+
+a.
+
+Opioid use disorders
+
+F11, X42
+
+872
+
+b.
+
+Cocaine use disorders
+
+F14
+
+873
+
+c.
+
+Amphetamine use disorders
+
+F15
+
+874
+
+d.
+
+Cannabis use disorders
+
+F12
+
+875
+
+e.
+
+Other drug use disorders
+
+F13, F16, F18, X41
+
+880
+
+6.
+
+Anxiety disorders
+
+F40-F44
+
+890
+
+7.
+
+Eating disorders
+
+F50
+
+900
+
+8.
+
+Autism and Asperger syndrome
+
+F84
+
+910
+
+9.
+
+Childhood behavioural disorders
+
+F90-F92
+
+a.
+
+Attention deficit/hyperactivity syndrome
+
+F90
+
+b.
+
+911
+912
+
+Conduct disorder
+
+F91-F92
+
+920
+
+10.
+
+Idiopathic intellectual disability
+
+F70-F79
+
+930
+
+11.
+
+Other mental and behavioural disorders
+
+F04-F09, F17, F34-F39 (minus F34.1), F45-F48, F51-F69,
+F80-F83, F88-F89, F93-F99
+
+940
+
+Neurological conditions
+
+F01-F03, G06-G98 (minus G14, G72.1)
+
+950
+
+F.
+
+1.
+
+Alzheimer disease and other dementias
+
+F01-F03, G30-G31
+
+960
+
+2.
+
+Parkinson disease
+
+G20-G21
+
+970
+
+3.
+
+Epilepsy
+
+G40-G41
+
+980
+
+4.
+
+Multiple sclerosis
+
+G35
+
+World Health Organization
+
+Page 25
+
+GHE
+code
+
+GHE cause name
+
+ICD-10 codes
+
+990
+
+5.
+
+Migraine
+
+G43
+
+1000
+
+6.
+
+Non-migraine headache
+
+G44
+
+1010
+
+7.
+
+Other neurological conditions
+
+G06-G12, G23-G25, G36-G37, G45-G98 (minus G72.1)
+
+1020
+
+G.
+
+Sense organ diseases
+
+H00-H61, H68-H93
+
+1030
+
+1.
+
+Glaucoma
+
+H40
+
+1040
+
+2.
+
+Cataracts
+
+H25-H26
+
+1050
+
+3.
+
+Uncorrected refractive errors
+
+H49-H52
+
+1060
+
+4.
+
+Macular degeneration
+
+H35.3
+
+1070
+
+5.
+
+Other vision loss
+
+H30-H35 (minus H35.3), H53-H54
+
+1080
+
+6.
+
+Other hearing loss
+
+H90-H91
+
+1090
+
+7.
+
+Other sense organ disorders
+
+H00-H21, H27, H43-H47, H55-H61, H68-H83, H92-H93
+
+Cardiovascular diseasesf,g
+
+I00-I99
+
+1110
+
+1.
+
+Rheumatic heart disease
+
+I01-I09
+
+1120
+
+2.
+
+Hypertensive heart disease
+
+I11-I15
+
+1130
+
+3.
+
+Ischaemic heart diseasef,g
+
+I20-I25
+
+1140
+
+4.
+
+Strokeg
+
+I60-I69
+
+1150
+
+5.
+
+Cardiomyopathy, myocarditis, endocarditis
+
+I30-I33, I38, I40, I42
+
+6.
+
+Other circulatory diseases
+
+I00, I26-I28, I34-I37, I44-I51, I70-I99
+
+1100
+
+H.
+
+1160
+1170
+
+I.
+
+Respiratory diseases
+
+J30-J98
+
+1180
+
+1.
+
+Chronic obstructive pulmonary diseasef
+
+J40-J44
+
+1190
+
+2.
+
+Asthma
+
+J45-J46
+
+1200
+
+3.
+
+Other respiratory diseases
+
+J30-J39, J47-J98
+
+1210
+
+Digestive diseases
+
+K20-K92
+
+1220
+
+1.
+
+Peptic ulcer disease
+
+K25-K27
+
+1230
+
+2.
+
+Cirrhosis of the liver
+
+K70, K74
+
+1240
+
+3.
+
+Appendicitis
+
+K35-K37
+
+1241
+
+4.
+
+Gastritis and duodenitis
+
+K29
+
+1242
+
+5.
+
+Paralytic ileus and intestinal obstruction
+
+K56
+
+1244
+
+6.
+
+Inflammatory bowel disease
+
+K50-K52, K58.0
+
+1246
+
+7.
+
+Gallbladder and biliary diseases
+
+K80-K83
+
+1248
+
+8.
+
+Pancreatitis
+
+K85-K86
+
+1250
+
+9.
+
+Other digestive diseases
+
+K20-K22, K28, K30-K31, K38, K40-K46, K55, K57, K58.9,
+K59-K66, K71-K73, K75-K76, K90-K92
+
+1260
+
+J.
+
+K.
+
+Genitourinary diseases
+
+E10.2-E10.29,E11.2-E11.29,E12.2,E13.2-E13.29,E14.2,
+N00-N64, N75-N76, N80-N98
+
+Kidney diseasesg
+
+N00-N19, E10.2,E11.2,E12.2,E13.2,E14.2
+
+1271
+
+a.
+
+Acute glomerulonephritis
+
+N00-N01
+
+1272
+
+b.
+
+Chronic kidney disease due to diabetes
+
+E10.2, E11.2, E12.2, E13.2, E14.2
+
+c.
+
+Other chronic kidney disease
+
+N02-N19
+
+1270
+
+1.
+
+1273
+1280
+
+2.
+
+Benign prostatic hyperplasia
+
+N40
+
+1290
+
+3.
+
+Urolithiasis
+
+N20-N23
+
+1300
+
+4.
+
+Other urinary diseases
+
+N25-N39, N41-N45, N47-N51
+
+1310
+
+5.
+
+Infertility
+
+N46, N97
+
+1320
+
+6.
+
+Gynecological diseases
+
+N60-N64, N75-N76, N80-N96, N98
+
+1330
+
+L.
+
+Skin diseases
+
+L00-L98
+
+1340
+
+M.
+
+Musculoskeletal diseases
+
+M00-M99
+
+1.
+
+M05-M06
+
+1350
+
+Rheumatoid arthritis
+
+World Health Organization
+
+Page 26
+
+GHE
+code
+
+GHE cause name
+
+ICD-10 codes
+
+1360
+
+2.
+
+Osteoarthritis
+
+M15-M19
+
+1370
+
+3.
+
+Gout
+
+M10
+
+1380
+
+4.
+
+Back and neck pain
+
+M45-M48, M50-M54
+
+1390
+
+5.
+
+Other musculoskeletal disorders
+
+M00, M02, M08, M11-M13, M20-M43, M60-M99
+
+1400
+
+N.
+
+Congenital anomalies
+
+Q00-Q99 (minus Q86.0)
+
+1410
+
+1.
+
+Neural tube defects
+
+Q00, Q05
+
+1420
+
+2.
+
+Cleft lip and cleft palate
+
+Q35-Q37
+
+1430
+
+3.
+
+Down syndrome
+
+Q90
+
+1440
+
+4.
+
+Congenital heart anomaliesf
+
+Q20-Q28
+
+1450
+
+5.
+
+Other chromosomal anomalies
+
+Q91-Q99
+
+1460
+
+6.
+
+Other congenital anomalies
+
+Q01-Q04, Q06-Q18, Q30-Q34, Q38-Q89 (excluding Q86.0)
+
+1470
+
+O.
+
+Oral conditions
+
+K00-K14
+
+1480
+
+1.
+
+Dental caries
+
+K02
+
+1490
+
+2.
+
+Periodontal disease
+
+K05
+
+1500
+
+3.
+
+Edentulism
+
+-
+
+1502
+
+4.
+
+Other oral disorders
+
+K00, K01, K03, K04, K06-K14
+
+1505
+
+P.
+
+1510
+
+Injuriesh
+
+1520
+
+III.
+
+A.
+
+Sudden infant death syndrome
+
+R95
+V01-Y89 (minus X41-X42, X44, X45)
+
+Unintentional injuries
+
+V01-X40, X43, X46-59, Y40-Y86, Y88, Y89
+
+1530
+
+1.
+
+Road injuryj
+
+V01-V04, V06, V09-V80, V87, V89, V99
+
+1540
+
+2.
+
+Poisonings
+
+X40, X43, X46-X48, X49
+
+1550
+
+3.
+
+Falls
+
+W00-W19
+
+1560
+
+4.
+
+Fire, heat and hot substances
+
+X00-X19
+
+1570
+
+5.
+
+Drowning
+
+W65-W74
+
+1575
+
+6.
+
+Exposure to mechanical forces
+
+W20-W38, W40-W43, W45, W46, W49-W52, W75, W76
+
+1580
+
+7.
+
+Natural disasters
+
+X33-X39
+
+1590
+
+8.
+
+Other unintentional injuries
+
+Rest of V, W39, W44, W53-W64, W77-W99, X20-X32, X50X59, Y40-Y86, Y88, Y89
+
+1600
+
+Intentional injuries
+
+X60-Y09, Y35-Y36, Y870, Y871
+
+1610
+
+B.
+
+1.
+
+Self-harm
+
+X60-X84, Y870
+
+1620
+
+2.
+
+Interpersonal violence
+
+X85-Y09, Y871
+
+1630
+
+3.
+
+Collective violence and legal intervention
+
+Y35-Y36
+
+—, not available
+Deaths coded to “Symptoms, signs and ill-defined conditions” (R00-R94, R96-R99) are distributed proportionately to all causes within
+Group I and Group II.
+a
+
+b
+
+For deaths under age 5, refer to classification in Annex Tables B.
+
+c
+
+Cancer deaths coded to ICD categories for malignant neoplasms of other and unspecified sites including those whose point of origin
+cannot be determined, and secondary and unspecified neoplasms (C76, C80, C97) were redistributed pro-rata across malignant
+neoplasm categories within each age–sex group, so that the category “Other malignant neoplasms” includes only malignant
+neoplasms of other specified sites.
+d
+
+Deaths assigned to ICD code C55, cancer of the uterus, part unspecified, and distributed pro-rata to cervix uteri cancer and corpus
+uteri cancer.
+e
+
+Deaths coded to F19 (Multiple and other drug use) and X44 (Accidental poisoning by other and unspecified drugs and medicines)
+have been redistributed to the GHE drug categories as described in Section 8.
+
+World Health Organization
+
+Page 27
+
+Deaths assigned to a number of so-called cardiovascular “garbage” codes are reassigned to other underlying causes of death. These
+include heart failure, ventricular dysrhythmias, generalized atherosclerosis and ill-defined descriptions and complications of heart
+disease. Relevant ICD-10 codes are I46, I47.2, I49.0, I50, I51.4, I51.5, I51.6, I51.9 and I70.9. These are reassigned mainly to ischemic
+heart disease, but also to cardiomyopathy, myocarditis, endocarditis, chronic obstructive pulmonary disease, congenital heart
+anomalies, as described in Section 4.
+f
+
+g
+
+Deaths assigned to essential hypertension (I10) were redistributed to ischemic heart disease, stroke, and kidney diseases.
+
+h
+
+Injury deaths where the intent is not determined (Y10-Y34, Y87.2) are distributed proportionately to all causes below the group level
+for injuries.
+For countries with 3-digit ICD10 data, for “Road injury” use: V01-V04, V06, V09-V80, V87, V89 and V99. For countries with 4-digit
+ICD10 data, for “Road injury” use:
+j
+
+V01.1-V01.9, V02.1-V02.9, V03.1-V03.9, V04.1-V04.9, V06.1-V06.9, V09.2, V09.3, V10.3-V10.9, V11.3-V11.9, V12.3-V12.9, V13.3V13.9, V14.3-V14.9, V15.4-V15.9, V16.4-V16.9, V17.4-V17.9, V18.4-V18.9, V19.4-V19.9, V20.3-V20.9, V21.3-V21.9, V22.3-V22.9,
+V23.3-V23.9, V24.3-V24.9, V25.3-V25.9, V26.3-V26.9, V27.3-V27.9, V28.3-V28.9, V29.4-V29.9, V30.4-V30.9, V31.4-V31.9, V32.4V32.9, V33.4-V33.9, V34.4-V34.9, V35.4-V35.9, V36.4-V36.9, V37.4-V37.9, V38.4-V38.9, V39.4-V39.9, V40.4-V40.9, V41.4-V41.9,
+V42.4-V42.9, V43.4-V43.9, V44.4-V44.9, V45.4-V45.9, V46.4-V46.9, V47.4-V47.9, V48.4-V48.9, V49.4-V49.9, V50.4-V50.9, V51.4V51.9, V52.4-V52.9, V53.4-V53.9, V54.4-V54.9, V55.4-V55.9, V56.4-V56.9, V57.4-V57.9, V58.4-V58.9, V59.4-V59.9, V60.4-V60.9,
+V61.4-V61.9, V62.4-V62.9, V63.4-V63.9, V64.4-V64.9, V65.4-V65.9, V66.4-V66.9, V67.4-V67.9, V68.4-V68.9, V69.4-V69.9, V70.4V70.9, V71.4-V71.9, V72.4-V72.9, V73.4-V73.9, V74.4-V74.9, V75.4-V75.9, V76.4-V76.9, V77.4-V77.9, V78.4-V78.9, V79.4-V79.9,
+V80.3-V80.5, V81.1, V82.1, V82.8-V82.9, V83.0-V83.3, V84.0-V84.3, V85.0-V85.3, V86.0-V86.3, V87.0-V87.9, V89.2-V89.3, V89.9,
+V99 and Y850.
+
+World Health Organization
+
+Page 28
+
+Annex Table B Health states and lay descriptions used in the GBD study.
+Health state
+
+Lay description
+
+Infectious disease
+Infectious disease, acute episode, mild
+
+has a low fever and mild discomfort , but no difficulty with daily activities.
+
+Infectious disease, acute episode,
+moderate
+
+has a fever and aches, and feels weak, which causes some difficulty with daily
+activities.
+
+Infectious disease, acute episode, severe
+
+has a high fever and pain, and feels very weak, which causes great difficulty with
+daily activities.
+
+Infectious disease, post-acute
+consequences (fatigue, emotional lability,
+insomnia)
+
+is always tired and easily upset. The person feels pain all over the body and is
+depressed.
+
+Diarrhea, mild
+
+has diarrhea three or more times a day with occasional discomfort in the belly.
+
+Diarrhea, moderate
+
+has diarrhea three or more times a day, with painful cramps in the belly and feeling
+thirsty
+
+Diarrhea, severe
+
+has diarrhea three or more times a day with severe belly cramps. The person is
+very thirsty and feels nauseous and tired.
+
+Epididymo-orchitis
+
+has swelling and tenderness in the testicles and pain during urination.
+
+Herpes zoster
+
+has a blistering skin rash that causes pain, with some burning and itching.
+
+HIV cases, symptomatic, pre-AIDS
+
+has weight loss, fatigue, and frequent infections.
+
+HIV/AIDS cases, receiving ARV treatment
+
+has occasional fevers and infections. The person takes daily medication that
+sometimes causes diarrhea.
+
+AIDS cases, not receiving ARV treatment
+
+has severe weight loss, weakness, fatigue, cough and fever, and frequent
+infections, skin rashes and diarrhea.
+
+Intestinal nematode infections,
+symptomatic
+
+has cramping pain and a bloated feeling in the belly.
+
+Lymphatic filariasis, symptomatic
+
+has swollen legs with hard and thick skin, which causes difficulty in moving around.
+
+Ear pain
+
+has an ear-ache that causes some difficulty with daily activities.
+
+Tuberculosis, not HIV infected
+
+has a persistent cough and fever, is short of breath, feels weak, and has lost a lot
+of weight.
+
+Tuberculosis, HIV infected
+
+has a persistent cough and fever, shortness of breath, night sweats, weakness and
+fatigue and severe weight loss.
+
+Cancer
+Cancer, diagnosis and primary therapy
+
+has pain, nausea, fatigue, weight loss and high anxiety.
+
+Cancer, metastatic
+
+has severe pain, extreme fatigue, weight loss and high anxiety.
+
+Mastectomy
+
+had one of her breasts removed and sometimes has pain or swelling in the arms.
+
+Stoma
+
+has a pouch attached to an opening in the belly to collect and empty stools.
+
+Terminal phase, with medication (for
+cancers, end-stage kidney/liver disease)
+
+has lost a lot of weight and regularly uses strong medication to avoid constant pain.
+The person has no appetite, feels nauseous, and needs to spend most of the day in
+bed.
+
+World Health Organization
+
+Page 29
+
+Health state
+
+Lay description
+
+Terminal phase, without medication (for
+cancers, end-stage kidney/liver disease)
+
+has lost a lot of weight and has constant pain. The person has no appetite, feels
+nauseous, and needs to spend most of the day in bed.
+
+Cardiovascular and circulatory disease
+Acute myocardial infarction, days 1-2
+
+has severe chest pain that becomes worse with any physical activity,. The person
+feels nauseous, short of breath, and very anxious.
+
+Acute myocardial infarction, days 3-28
+
+gets short of breath after heavy physical activity, and tires easily, but has no
+problems when at rest. The person has to take medication every day and has some
+anxiety.
+
+Angina pectoris, mild
+
+has chest pain that occurs with strenuous physical activity, such as running or lifting
+heavy objects. After a brief rest, the pain goes away.
+
+Angina pectoris, moderate
+
+has chest pain that occurs with moderate physical activity, such as walking uphill or
+more than half a kilometer (around a quarter-mile) on level ground. After a brief
+rest, the pain goes away.
+
+Angina pectoris, severe
+
+has chest pain that occurs with minimal physical activity, such as walking only a
+short distance. After a brief rest, the pain goes away. The person avoids most
+physical activities because of the pain.
+
+Cardiac conduction disorders and cardiac
+dysrhythmias
+
+has periods of rapid and irregular heartbeats and occasional fainting.
+
+Claudication
+
+has cramping pains in the legs after walking a medium distance. The pain goes
+away after a short rest.
+
+Heart failure, mild
+
+is short of breath and easily tires with moderate physical activity, such as walking
+uphill or more than a quarter-mile on level ground. The person feels comfortable at
+rest or during activities requiring less effort.
+
+Heart failure, moderate
+
+is short of breath and easily tires with minimal physical activity, such as walking
+only a short distance. The person feels comfortable at rest but avoids moderate
+activity.
+
+Heart failure, severe
+
+is short of breath and feels tired when at rest. The person avoids any physical
+activity, for fear of worsening the breathing problems.
+
+Stroke, long-term consequences, mild
+
+has some difficulty in moving around and some weakness in one hand, but is able
+to walk without help.
+
+Stroke, long-term consequences,
+moderate
+
+has some difficulty in moving around, and in using the hands for lifting and holding
+things, dressing and grooming.
+
+Stroke, long-term consequences,
+moderate plus cognition problems
+
+has some difficulty in moving around, in using the hands for lifting and holding
+things, dressing and grooming, and in speaking. The person is often forgetful and
+confused.
+
+Stroke, long-term consequences, severe
+
+is confined to bed or a wheelchair, has difficulty speaking and depends on others
+for feeding, toileting and dressing.
+
+Stroke, long-term consequences, severe
+plus cognition problems
+
+is confined to bed or a wheelchair, depends on others for feeding, toileting and
+dressing, and has difficulty speaking, thinking clearly and remembering things.
+
+Diabetes, digestive and genitourinary disease
+Diabetic neuropathy
+
+has pain, tingling and numbness in the arms, legs, hands and feet. The person
+sometimes gets cramps and muscle weakness.
+
+Chronic kidney disease (stage IV)
+
+tires easily, has nausea, reduced appetite and difficulty sleeping.
+
+World Health Organization
+
+Page 30
+
+Health state
+
+Lay description
+
+End-stage renal disease, with kidney
+transplant
+
+sometimes feels tired and down, and has some difficulty with daily activities.
+
+End-stage renal disease, on dialysis
+
+is tired and has itching, cramps, headache, joint pains and shortness of breath. The
+person needs intensive medical care every other day lasting about half a day.
+
+Decompensated cirrhosis of the liver
+
+has a swollen belly and swollen legs. The person feels weakness, fatigue and loss
+of appetite.
+
+Gastric bleeding
+
+vomits blood and feels nauseous.
+
+Crohn disease or ulcerative colitis
+
+has cramping abdominal pain, has diarrhea several times a day, and feels very
+tired for two months every year. When the person does not have symptoms, there
+is anxiety about them returning.
+
+Benign prostatic hypertrophy,
+symptomatic cases
+
+feels the urge to urinate frequently, but when passing urine it comes out slowly and
+sometimes is painful.
+
+Impotence
+
+has difficulty in obtaining or maintaining an erection.
+
+Stress incontinence
+
+loses small amounts of urine without meaning to when coughing, sneezing,
+laughing or during physical exercise.
+
+Urinary incontinence
+
+cannot control urinating.
+
+Infertility, primary
+
+wants to have a child and has a fertile partner, but the couple cannot conceive.
+
+Infertility, secondary
+
+has at least one child, and wants to have more children. The person has a fertile
+partner, but the couple cannot conceive.
+
+Chronic respiratory diseases
+Asthma, controlled
+
+has wheezing and cough once a month, which does not cause difficulty with daily
+activities.
+
+Asthma, partially controlled
+
+has wheezing and cough once a week, which causes some difficulty with daily
+activities.
+
+Asthma, uncontrolled
+
+has wheezing, cough and shortness of breath more than twice a week, which
+causes difficulty with daily activities and sometimes wakes the person at night.
+
+COPD and other chronic respiratory
+problems, mild
+
+has cough and shortness of breath after heavy physical activity, but is able to walk
+long distances and climb stairs.
+
+COPD and other chronic respiratory
+problems, moderate
+
+has cough, wheezing and shortness of breath, even after light physical activity. The
+person feels tired and can walk only short distances or climb only a few stairs.
+
+COPD and other chronic respiratory
+problems, severe
+
+has cough, wheezing and shortness of breath all the time. The person has great
+difficulty walking even short distances or climbing any stairs, feels tired when at
+rest, and is anxious.
+
+Neurological conditions
+Dementia, mild
+
+has some trouble remembering recent events, and finds it hard to concentrate and
+make decisions and plans.
+
+Dementia, moderate
+
+has memory problems and confusion, feels disoriented, at times hears voices that
+are not real, and needs help with some daily activities.
+
+Dementia, severe
+
+has complete memory loss; no longer recognizes close family members; and
+requires help with all daily activities.
+
+World Health Organization
+
+Page 31
+
+Health state
+
+Lay description
+
+Headache, migraine
+
+has severe, throbbing head pain and nausea that cause great difficulty in daily
+activities and sometimes confine the person to bed. Moving around, light, and noise
+make it worse.
+
+Back pain, severe, without leg pain
+
+has severe back pain, which causes difficulty dressing, sitting, standing, walking,
+and lifting things. The person sleeps poorly and feels worried.
+
+Headache, tension-type
+
+has a moderate headache that also affects the neck, which causes difficulty in daily
+activities.
+
+Headache, medication overuse
+
+has daily headaches, felt as dull pain and often lasting all day, with poor sleep,
+nausea and fatigue. The person takes medicine for the headaches, which provides
+little relief but is needed to avoid having worse symptoms.
+
+Multiple sclerosis, mild
+
+has mild loss of feeling in one hand, is a little unsteady while walking, has slight
+loss of vision in one eye, and often needs to urinate urgently.
+
+Multiple sclerosis, moderate
+
+needs help walking, has difficulty with writing and arm coordination, has loss of
+vision in one eye and cannot control urinating.
+
+Multiple sclerosis, severe
+
+has slurred speech and difficulty swallowing. The person has weak arms and
+hands, very limited and stiff leg movement, has loss of vision in both eyes and
+cannot control urinating.
+
+Epilepsy, less severe (seizures < once per
+month)
+
+has sudden seizures two to five times a year, with violent muscle contractions and
+stiffness, loss of consciousness, and loss of urine or bowel control.
+
+Epilepsy, severe (seizures >= once per
+month)
+
+has sudden seizures one or more times each month, with violent muscle
+contractions and stiffness, loss of consciousness, and loss of urine or bowel
+control. Between seizures the person has memory loss and difficulty concentrating.
+
+Parkinson disease, mild
+
+has mild tremors and moves a little slowly, but is able to walk and do daily activities
+without assistance.
+
+Parkinson disease, moderate
+
+has moderate tremors and moves slowly, which causes some difficulty in walking
+and daily activities. The person has some trouble swallowing, talking, sleeping, and
+remembering things.
+
+Parkinson disease, severe
+
+has severe tremors and moves very slowly, which causes great difficulty in walking
+and daily activities. The person falls easily and has a lot of difficulty talking,
+swallowing, sleeping, and remembering things.
+
+Mental, behavioral and substance use disorders
+Alcohol use disorder, very mild
+
+drinks alcohol daily and has difficulty controlling the urge to drink. When sober, the
+person functions normally.
+
+Alcohol use disorder, mild
+
+drinks a lot of alcohol and sometimes has difficulty controlling the urge to drink.
+While intoxicated, the person has difficulty performing daily activities.
+
+Alcohol use disorder, moderate
+
+drinks a lot, gets drunk almost every week and has great difficulty controlling the
+urge to drink. Drinking and recovering cause great difficulty in daily activities, sleep
+loss, and fatigue.
+
+Alcohol use disorder, severe
+
+gets drunk almost every day and is unable to control the urge to drink. Drinking and
+recovering replace most daily activities. The person has difficulty thinking,
+remembering and communicating, and feels constant pain and fatigue.
+
+Fetal alcohol syndrome, mild
+
+is a little slow in developing physically and mentally, which causes some difficulty in
+learning but no other difficulties in daily activities.
+
+Fetal alcohol syndrome, moderate
+
+is slow in developing physically and mentally, which causes some difficulty in daily
+activities.
+
+World Health Organization
+
+Page 32
+
+Health state
+
+Lay description
+
+Fetal alcohol syndrome, severe
+
+is very slow in developing physically and mentally, which causes great difficulty in
+daily activities.
+
+Cannabis dependence
+
+uses marijuana daily and has difficulty controlling the habit. The person sometimes
+has mood swings, anxiety and hallucinations, and has some difficulty in daily
+activities.
+
+Cannabis dependence, mild
+
+uses marijuana at least once a week and has some difficulty controlling the habit.
+When not using, the person functions normally.
+
+Amphetamine dependence
+
+uses stimulants (drugs) and has difficulty controlling the habit. The person
+sometimes has depression, hallucinations and mood swings, and has difficulty in
+daily activities.
+
+Amphetamine dependence, mild
+
+uses stimulants (drugs) at least once a week and has some difficulty controlling the
+habit. When not using, the person functions normally.
+
+Cocaine dependence
+
+uses cocaine and has difficulty controlling the habit. The person sometimes has
+mood swings, anxiety, paranoia, hallucinations and sleep problems, and has some
+difficulty in daily activities.
+
+Cocaine dependence, mild
+
+uses cocaine at least once a week and has some difficulty controlling the habit.
+When not using, the person functions normally.
+
+Heroin and other opioid dependence
+
+uses heroin daily and has difficulty controlling the habit. When the effects wear off,
+the person feels severe nausea, agitation, vomiting and fever. The person has a lot
+of difficulty in daily activities.
+
+Heroin and other opioid dependence, mild
+
+uses heroin (or methadone) daily and has difficulty controlling the habit. When not
+using, the person functions normally.
+
+Anxiety disorders, mild
+
+feels mildly anxious and worried, which makes it slightly difficult to concentrate,
+remember things, and sleep. The person tires easily but is able to perform daily
+activities.
+
+Anxiety disorders, moderate
+
+feels anxious and worried, which makes it difficult to concentrate, remember things,
+and sleep. The person tires easily and finds it difficult to perform daily activities.
+
+Anxiety disorders, severe
+
+constantly feels very anxious and worried, which makes it difficult to concentrate,
+remember things and sleep. The person has lost pleasure in life and thinks about
+suicide.
+
+Major depressive disorder, mild episode
+
+feels persistent sadness and has lost interest in usual activities. The person
+sometimes sleeps badly, feels tired, or has trouble concentrating but still manages
+to function in daily life with extra effort.
+
+Major depressive disorder, moderate
+episode
+
+has constant sadness and has lost interest in usual activities. The person has some
+difficulty in daily life, sleeps badly, has trouble concentrating, and sometimes thinks
+about harming himself (or herself).
+
+Major depressive disorder, severe
+episode
+
+has overwhelming, constant sadness and cannot function in daily life. The person
+sometimes loses touch with reality and wants to harm or kill himself (or herself).
+
+Bipolar disorder, manic episode
+
+is hyperactive, hears and believes things that are not real, and engages in
+impulsive and aggressive behavior that endanger the person and others.
+
+Bipolar disorder, residual state
+
+has mild mood swings, irritability and some difficulty with daily activities.
+
+Schizophrenia, acute state
+
+hears and sees things that are not real and is afraid, confused, and sometimes
+violent. The person has great difficulty with communication and daily activities, and
+sometimes wants to harm or kill himself (or herself).
+
+Anorexia nervosa
+
+feels an overwhelming need to starve and exercises excessively to lose weight.
+The person is very thin, weak and anxious.
+
+World Health Organization
+
+Page 33
+
+Health state
+
+Lay description
+
+Bulimia nervosa
+
+has uncontrolled overeating followed by guilt, starving, and vomiting to lose weight.
+
+Attention deficit hyperactivity disorder
+
+is hyperactive and has difficulty concentrating, remembering things, and completing
+tasks.
+
+Conduct disorder
+
+has frequent behavior problems, which are sometimes violent. The person often
+has difficulty interacting with other people and feels irritable.
+
+Asperger syndrome
+
+has difficulty interacting with other people, and is slow to understand or respond to
+questions. The person is often preoccupied with one thing and has some difficulty
+with basic daily activities.
+
+Autism
+
+has severe problems interacting with others and difficulty understanding simple
+questions or directions. The person has great difficulty with basic daily activities
+and becomes distressed by any change in routine.
+
+Borderline intellectual functioning
+
+is slow in learning at school. As an adult, the person has some difficulty doing
+complex or unfamiliar tasks but otherwise functions independently.
+
+Intellectual disability / mental retardation,
+mild
+
+has low intelligence and is slow in learning at school. As an adult, the person can
+live independently, but often needs help to raise children and can only work at
+simple supervised jobs.
+
+Intellectual disability / mental retardation,
+moderate
+
+has low intelligence, and is slow in learning to speak and to do even simple tasks.
+As an adult, the person requires a lot of support to live independently and raise
+children. The person can only work at the simplest supervised jobs.
+
+Intellectual disability / mental retardation,
+severe
+
+has very low intelligence and cannot speak more than a few words, needs constant
+supervision and help with most daily activities, and can do only the simplest tasks.
+
+Intellectual disability / mental retardation,
+profound
+
+has very low intelligence, has almost no language, and does not understand even
+the most basic requests or instructions. The person requires constant supervision
+and help for all activities.
+
+Hearing and vision loss
+Hearing loss, mild
+
+has great difficulty hearing and understanding another person talking in a noisy
+place (for example, on an urban street).
+
+Hearing loss, moderate
+
+is unable to hear and understand another person talking in a noisy place (for
+example, on an urban street), and has difficulty hearing another person talking
+even in a quiet place or on the phone.
+
+Hearing loss, severe
+
+is unable to hear and understand another person talking, even in a quiet place, and
+unable to take part in a phone conversation. Difficulties with communicating and
+relating to others cause emotional impact at times (for example worry or
+depression).
+
+Hearing loss, profound
+
+is unable to hear and understand another person talking, even in a quiet place, is
+unable to take part in a phone conversation, and has great difficulty hearing
+anything in any other situation. Difficulties with communicating and relating to
+others often cause worry, depression or loneliness.
+
+Hearing loss, complete
+
+cannot hear at all in any situation, including even the loudest sounds, and cannot
+communicate verbally or use a phone. Difficulties with communicating and relating
+to others often cause worry, depression or loneliness.
+
+Hearing loss, mild, with ringing
+
+has great difficulty hearing and understanding another person talking in a noisy
+place (for example, on an urban street), and sometimes has annoying ringing in the
+ears.
+
+Hearing loss, moderate, with ringing
+
+is unable to hear and understand another person talking in a noisy place (for
+example, on an urban street), has difficulty hearing another person talking even in a
+quiet place or on the phone, and has annoying ringing in the ears for 5 minutes at a
+time, almost every day.
+
+World Health Organization
+
+Page 34
+
+Health state
+
+Lay description
+
+Hearing loss, severe, with ringing
+
+is unable to hear and understand another person talking, even in a quiet place, is
+unable to take part in a phone conversation, and has annoying ringing in the ears
+for more than 5 minutes at a time, almost every day. Difficulties with communicating
+and relating to others cause emotional impact at times (for example worry or
+depression).
+
+Hearing loss, profound, with ringing
+
+is unable to hear and understand another person talking, even in a quiet place, is
+unable to take part in a phone conversation, has great difficulty hearing anything in
+any other situation, and has annoying ringing in the ears for more than 5 minutes at
+a time, several times a day. Difficulties with communicating and relating to others
+often cause worry, depression, or loneliness.
+
+Hearing loss, complete, with ringing
+
+cannot hear at all in any situation, including even the loudest sounds, and cannot
+communicate verbally or use a phone, and has very annoying ringing in the ears for
+more than half of the day. Difficulties with communicating and relating to others
+often cause worry, depression or loneliness.
+
+Distance vision, monocular
+
+is blind in one eye and has difficulty judging distances
+
+Distance vision, mild impairment
+
+has some difficulty with distance vision, for example reading signs, but no other
+problems with eyesight.
+
+Distance vision, moderate impairment
+
+has vision problems that make it difficult to recognize faces or objects across a
+room.
+
+Distance vision, severe impairment
+
+has severe vision loss, which causes difficulty in daily activities, some emotional
+impact (for example worry), and some difficulty going outside the home without
+assistance.
+
+Distance vision blindness
+
+is completely blind, which causes great difficulty in some daily activities, worry and
+anxiety, and great difficulty going outside the home without assistance.
+
+Presbyopia
+
+has difficulty seeing things that are nearer than 3 feet, but has no difficulty with
+seeing things at a distance.
+
+Musculoskeletal disorders
+Low back pain, mild
+
+has mild back pain, which causes some difficulty dressing, standing, and lifting
+things.
+
+Low back pain, moderate
+
+has moderate back pain, which causes difficulty dressing, sitting, standing, walking,
+and lifting things.
+
+Back pain, severe, with leg pain
+
+has severe back and leg pain, which causes difficulty dressing, sitting, standing,
+walking, and lifting things. The person sleeps poorly and feels worried.
+
+Neck pain, mild
+
+has neck pain, and has difficulty turning the head and lifting things.
+
+Back pain, most severe, with leg pain
+
+has constant back and leg pain, which causes difficulty dressing, sitting, standing,
+walking, and lifting things. The person sleeps poorly, is worried, and has lost some
+enjoyment in life.
+
+Neck pain, moderate
+
+has constant neck pain, and has difficulty turning the head, holding arms up, and
+lifting things
+
+Neck pain, severe
+
+has severe neck pain, and difficulty turning the head and lifting things. The person
+gets headaches and arm pain, sleeps poorly, and feels tired and worried.
+
+Neck pain, most severe
+
+has constant neck pain and arm pain, and difficulty turning the head, holding arms
+up, and lifting things. The person gets headaches, sleeps poorly, and feels tired
+and worried.
+
+Musculoskeletal problems, lower limbs,
+mild
+
+has pain in the leg, which causes some difficulty running, walking long distances,
+and getting up and down.
+
+World Health Organization
+
+Page 35
+
+Health state
+
+Lay description
+
+Musculoskeletal problems, lower limbs,
+moderate
+
+has moderate pain in the leg, which makes the person limp, and causes some
+difficulty walking, standing, lifting and carrying heavy things, getting up and down
+and sleeping.
+
+Musculoskeletal problems, lower limbs,
+severe
+
+has severe pain in the leg, which makes the person limp and causes a lot of
+difficulty walking, standing, lifting and carrying heavy things, getting up and down,
+and sleeping.
+
+Musculoskeletal problems, upper limbs,
+mild
+
+has mild pain and stiffness in the arms and hands. The person has some difficulty
+lifting, carrying and holding things.
+
+Musculoskeletal problems, upper limbs,
+moderate
+
+has moderate pain and stiffness in the arms and hands, which causes difficulty
+lifting, carrying, and holding things, and trouble sleeping because of the pain.
+
+Musculoskeletal problems, generalized,
+moderate
+
+has pain and deformity in most joints, causing difficulty moving around, getting up
+and down, and using the hands for lifting and carrying. The person often feels
+fatigue.
+
+Musculoskeletal problems, generalized,
+severe
+
+has severe, constant pain and deformity in most joints, causing difficulty moving
+around, getting up and down, eating, dressing, lifting, carrying and using the hands.
+The person often feels sadness, anxiety and extreme fatigue.
+
+Gout, acute
+
+has severe pain and swelling in the leg, making it very difficult to get up and down,
+stand, walk, lift, and carry heavy things. The person has trouble sleeping because
+of the pain.
+
+Injuries
+Amputation of finger(s), excluding thumb
+(long term, with treatment)
+
+has lost part of the fingers of one hand, causing difficulties in using the hand, pain,
+and tingling in the stumps.
+
+Amputation of thumb (long term)
+
+has lost one thumb, causing some difficulty in using the hand, pain, and tingling in
+the stump.
+
+Amputation of one upper limb (long term,
+with or without treatment)
+
+has lost one hand and part of the arm, leaving pain and tingling in the stump and
+flashbacks from the injury. The person requires help lifting objects and in daily
+activities such as cooking.
+
+Amputation of both upper limbs (long
+term, with treatment)
+
+has lost part of both arms, leaving pain and tingling in the stumps and flashbacks
+from the injury. The person has comfortable artificial arms and is mostly
+independent.
+
+Amputation of both upper limbs (long
+term, without treatment)
+
+has lost part of both arms, leaving pain and tingling in the stumps and flashbacks
+from the injury. The person needs help with basic daily activities such as eating
+and using the toilet.
+
+Amputation of toe
+
+has lost one toe, leaving occasional pain and tingling in the stump.
+
+Amputation of one lower limb (long term,
+with treatment)
+
+has lost part of one leg, leaving pain and tingling in the stump. The person has a
+comfortable artificial leg and only slight difficulties moving around.
+
+Amputation of one lower limb (long term,
+without treatment)
+
+has lost part of one leg, leaving pain and tingling in the stump. The person does not
+have an artificial leg, has frequent sores, and uses crutches.
+
+Amputation of both lower limbs (long term,
+with treatment)
+
+has lost part of both legs, leaving pain and tingling in the stumps. The person has
+two comfortable artificial legs, which allow for movement.
+
+Amputation of both lower limbs (long term,
+without treatment)
+
+has lost part of both legs, leaving pain, tingling, and frequent sores in the stumps.
+The person has great difficulty moving around and has episodes of depression,
+anxiety and flashbacks to the injury.
+
+Burns, <20% total burned surface area
+without lower airway burns (short term,
+with or without treatment)
+
+has a burn on part of the body. Parts of the burned area are painful, and other parts
+have lost feeling.
+
+World Health Organization
+
+Page 36
+
+Health state
+
+Lay description
+
+Burns, <20% total burned surface area or
+<10% total burned surface area if
+head/neck or hands/wrist involved (long
+term, with or without treatment)
+
+has scars caused by a burn. The scars are sometimes painful and itchy.
+
+Burns, ≥20% total burned surface area
+(short term, with or without treatment)
+
+has a painful burn over a large part of the body. Parts of the burned area have lost
+feeling, and the person feels anxious and unwell.
+
+Burns, ≥20% total burned surface area or
+≥10% total burned surface area if
+head/neck or hands/wrist involved (long
+term, with treatment)
+
+has scars caused by burns over a large part of the body. The scars are frequently
+painful and itchy, and the person is often sad.
+
+Burns, ≥20% total burned surface area or
+≥10% total burned surface area if
+head/neck or hands/wrist involved (long
+term, without treatment)
+
+has severe, disfiguring and itchy scars caused by burns over a large part of the
+body. The person cannot move some joints, feels sad, and has great difficulty with
+self-care such as dressing and toileting.
+
+Lower airway burns (with or without
+treatment)
+
+has a burn in the throat and lungs, which causes great difficulty breathing and a lot
+of anxiety.
+
+Crush injury (short or long term, with or
+without treatment)
+
+had part of the body crushed, leaving pain, swelling, tingling and limited feeling in
+the affected area.
+
+Dislocation of hip (long term, with or
+without treatment)
+
+walks with a limp and feels discomfort when walking.
+
+Dislocation of knee (long term, with or
+without treatment)
+
+has a knee out of joint, causing pain and difficulty moving the knee, which
+sometimes gives way. The person needs crutches for walking and help with selfcare such as dressing.
+
+Dislocation of shoulder (long term, with or
+without treatment)
+
+has a shoulder that is out of joint, causing pain and difficulty moving. The person
+has difficulty with daily activities such as dressing and cooking.
+
+Other injuries of muscle and tendon
+(includes sprains, strains and dislocations
+other than shoulder, knee, hip)
+
+has a strained muscle that causes pain and swelling.
+
+Drowning and nonfatal submersion (short
+or long term, with or without treatment)
+
+has breathlessness, anxiety, cough, and vomiting.
+
+Fracture of clavicle, scapula or humerus
+(short or long term, with or without
+treatment)
+
+has a broken shoulder bone, which is painful and swollen. The person cannot use
+the affected arm and has difficulty with getting dressed.
+
+Fracture of face bone (short or long term,
+with or without treatment)
+
+has a broken cheek bone, broken nose, and chipped teeth, with swelling and
+severe pain.
+
+Fracture of foot bones (short term, with or
+without treatment)
+
+has a broken foot bone, which causes pain, swelling, and difficulty walking.
+
+Fracture of foot bones (long term, without
+treatment)
+
+had a broken foot in the past that did not heal properly. The person now has pain in
+the foot and has some difficulty walking.
+
+Fracture of hand (short term, with or
+without treatment)
+
+has a broken hand, causing pain and swelling.
+
+Fracture of hand (long term, without
+treatment)
+
+has stiffness in the hand and a weak grip.
+
+Fracture of neck of femur (short term, with
+or without treatment)
+
+has broken a hip and is in pain. The person cannot stand or walk, and needs help
+washing, dressing, and going to the toilet.
+
+World Health Organization
+
+Page 37
+
+Health state
+
+Lay description
+
+Fracture of neck of femur (long term, with
+treatment)
+
+had a broken hip in the past, which was fixed with treatment. The person can only
+walk short distances, has discomfort when moving around, and has some difficulty
+in daily activities.
+
+Fracture of neck of femur (long term,
+without treatment)
+
+had a broken hip bone in the past, which was never treated and did not heal
+properly. The person cannot get out of bed and needs help washing and going to
+the toilet.
+
+Fracture, other than femoral neck (short
+term, with or without treatment)
+
+has a broken thigh bone. The person has severe pain and swelling and cannot
+walk.
+
+Fracture, other than femoral neck (long
+term, without treatment)
+
+had a broken thigh bone in the past, which was never treated and did not heal
+properly. The person now has a limp and discomfort when walking.
+
+Fracture of patella, tibia or fibula or ankle
+(short term, with or without treatment)
+
+has a broken shin bone, which causes severe pain, swelling, and difficulty walking.
+
+Fracture of patella, tibia or fibula or ankle
+(long term, with or without treatment)
+
+had a broken shin bone in the past that did not heal properly. The person has pain
+in the knee and ankle, and has difficulty walking.
+
+Fracture of pelvis (short term)
+
+has a broken pelvis bone, with swelling and bruising. The person has severe pain,
+and cannot walk or do daily activities.
+
+Fracture of pelvis (long term)
+
+had a broken pelvis in the past and now walks with a limp. There is often pain in the
+back and groin, and when urinating and sitting for a long time.
+
+Fracture of radius or ulna (short term, with
+or without treatment)
+
+has a broken forearm, which causes severe pain, swelling, and limited movement.
+
+Fracture of radius or ulna (long term,
+without treatment)
+
+had a broken forearm in the past that did not heal properly, causing some pain and
+limited movement in the elbow and wrist. The person has difficulty with daily
+activities such as dressing.
+
+Fracture of skull (short or long term, with
+or without treatment)
+
+has a broken skull, but does not have brain damage. The broken area is painful
+and swollen.
+
+Fracture of sternum and/or fracture of one
+or two ribs (short term, with or without
+treatment)
+
+has a broken rib that causes severe pain in the chest, especially when breathing in.
+The person has difficulty with daily activities such as dressing.
+
+Fracture of vertebral column (short or long
+term, with or without treatment)
+
+has broken back bones and is in pain, but still has full use of arms and legs.
+
+Fractures, treated (long term)
+
+has slight pain in a bone that was broken in the past.
+
+Injured nerves (short term)
+
+has a nerve injury, which causes difficulty moving and some loss of feeling in the
+affected area.
+
+Injured nerves (long term)
+
+had a nerve injury in the past, which continues to cause some difficulty moving. The
+person often injures the affected part because it is numb.
+
+Injury to eyes (short term)
+
+has an injury to one eye, which causes pain and difficulty seeing.
+
+Severe traumatic brain injury, short term
+(with or without treatment)
+
+cannot concentrate and has headaches, memory problems, dizziness, and feels
+angry.
+
+Concussion
+
+has headaches, dizziness, nausea and difficulty concentrating.
+
+Traumatic brain injury, long-term
+consequences, minor (with or without
+treatment)
+
+has episodes of headaches, memory problems, and difficulty concentrating.
+
+Traumatic brain injury, long-term
+consequences, moderate (with or without
+treatment)
+
+has frequent headaches, memory problems, difficulty concentrating, and dizziness.
+The person is often anxious and moody.
+
+World Health Organization
+
+Page 38
+
+Health state
+
+Lay description
+
+Traumatic brain injury, long-term
+consequences, severe (with or without
+treatment)
+
+cannot think clearly and has frequent headaches, memory problems, difficulty
+concentrating and dizziness. The person is often anxious and moody, and depends
+on others for feeding, toileting, dressing and walking.
+
+Open wound (short term, with or without
+treatment)
+
+has a cut in the skin, which causes pain and numbness around the cut.
+
+Poisoning (short term with or without
+treatment)
+
+has drowsiness, stomach pain and vomiting.
+
+Severe chest injury (long term, with or
+without treatment)
+
+had a severe chest injury in the past that has now healed. The person still gets
+breathless when walking and feels discomfort in the chest.
+
+Severe chest injury (short term, with or
+without treatment)
+
+has a serious chest injury, which causes severe pain, shortness of breath and
+anxiety.
+
+Spinal cord lesion below neck level
+(treated)
+
+is paralyzed from the waist down, cannot feel or move the legs and has difficulties
+with urine and bowel control. The person uses a wheelchair to move around.
+
+Spinal cord lesion below neck level
+(untreated)
+
+is paralyzed from the waist down and cannot feel or move the legs. Legs are in
+fixed, bent positions, and the person gets frequent infections and pressure sores.
+
+Spinal cord lesion at neck level (treated)
+
+is paralyzed from the neck down and cannot feel or move the arms and legs.
+
+Spinal cord lesion at neck level
+(untreated)
+
+is paralyzed from the neck down and cannot feel or move the arms and legs. Arms
+and legs are in fixed, bent positions, and the person gets frequent infections and
+pressure sores.
+
+Other
+Abdominopelvic problem, mild
+
+has some pain in the belly that causes nausea but does not interfere with daily
+activities.
+
+Abdominopelvic problem, moderate
+
+has pain in the belly and feels nauseous. The person has difficulties with daily
+activities.
+
+Abdominopelvic problem, severe
+
+has severe pain in the belly and feels nauseous. The person is anxious and unable
+to carry out daily activities.
+
+Anemia, mild
+
+feels slightly tired and weak at times, but this does not interfere with normal daily
+activities.
+
+Anemia, moderate
+
+feels moderate fatigue, weakness, and shortness of breath after exercise, making
+daily activities more difficult.
+
+Anemia, severe
+
+feels very weak, tired and short of breath, and has problems with activities that
+require physical effort or deep concentration.
+
+Thrombocytopenic purpura
+
+easily bruises and sometimes bleeds from the gums and nose; feels weak and has
+some difficulty with daily activities.
+
+Periodontitis
+
+has minor bleeding of the gums from time to time, with mild discomfort.
+
+Dental caries, symptomatic
+
+has a toothache, which causes some difficulty in eating.
+
+Severe tooth loss
+
+has lost more than 20 teeth including front and back, and has great difficulty in
+eating meat, fruits, and vegetables.
+
+Disfigurement, level 1
+
+has a slight, visible physical deformity that others notice, which causes some worry
+and discomfort.
+
+Disfigurement, level 2
+
+has a visible physical deformity that causes others to stare and comment. As a
+result, the person is worried and has trouble sleeping and concentrating.
+
+World Health Organization
+
+Page 39
+
+Health state
+
+Lay description
+
+Disfigurement, level 3
+
+has an obvious physical deformity that makes others uncomfortable, which causes
+the person to avoid social contact, feel worried, sleep poorly, and think about
+suicide.
+
+Disfigurement, level 1 with itch/pain
+
+has a slight, visible physical deformity that is sometimes sore or itchy. Others notice
+the deformity, which causes some worry and discomfort.
+
+Disfigurement, level 2, with itch/pain
+
+has a visible physical deformity that is sore and itchy. Other people stare and
+comment, which causes the person to worry. The person has trouble sleeping and
+concentrating.
+
+Disfigurement, level 3, with itch/pain
+
+has an obvious physical deformity that is very painful and itchy. The physical
+deformity makes others uncomfortable, which causes the person to avoid social
+contact, feel worried, sleep poorly, and think about suicide.
+
+Generic uncomplicated disease: worry
+and daily medication
+
+has a chronic disease that requires medication every day and causes some worry
+but minimal interference with daily activities.
+
+Generic uncomplicated disease: anxiety
+about diagnosis
+
+has a disease diagnosis that causes some worry but minimal interference with daily
+activities.
+
+Hyperthyroidism
+
+feels nervous, has palpitations, sweats a lot and has difficulty sleeping.
+
+Hypothyroidism
+
+has low energy and feels cold.
+
+Iodine-deficiency goiter
+
+has a large mass in the front of the neck. The person sometimes has weakness
+and fatigue, constipation and weight gain.
+
+Kwashiorkor
+
+is very tired and irritable and has diarrhea.
+
+Severe wasting
+
+is extremely skinny and has no energy.
+
+Speech problems
+
+has difficulty speaking, and others find it difficult to understand.
+
+Motor impairment, mild
+
+has some difficulty in moving around but is able to walk without help.
+
+Motor impairment, moderate
+
+has some difficulty in moving around, and difficulty in lifting and holding objects,
+dressing and sitting upright, but is able to walk without help.
+
+Motor impairment, severe
+
+is unable to move around without help, and is not able to lift or hold objects, get
+dressed or sit upright.
+
+Motor plus cognitive impairments, mild
+
+has some difficulty in moving around but is able to walk without help. The person is
+slow in learning at school. As an adult, the person has some difficulty doing
+complex or unfamiliar tasks but otherwise functions independently.
+
+Motor plus cognitive impairments,
+moderate
+
+has some difficulty in moving around, holding objects, dressing and sitting upright,
+but can walk without help. The person has low intelligence and is slow in learning to
+speak and to do simple tasks.
+
+Motor plus cognitive impairments, severe
+
+cannot move around without help, and cannot lift or hold objects, get dressed or sit
+upright. The person also has very low intelligence, speaks few words, and needs
+constant supervision and help with all daily activities.
+
+Rectovaginal fistula
+
+has an abnormal opening between her vagina and rectum causing flatulence and
+feces to escape through the vagina. The person gets infections in her vagina, and
+has pain when urinating.
+
+Vesicovaginal fistula
+
+has an abnormal opening between the bladder and the vagina, which makes her
+unable to control urinating. The woman is anxious and depressed.
+
+World Health Organization
+
+Page 40
+
+Annex Table C
+
+Health state weights used in WHO Global Health Estimates
+
+Health state
+
+GHE2019
+
+GBD 2019
+
+GBD 2010 GBD 2004
+
+Infectious disease: acute episode, mild
+
+0.006
+
+0.006
+
+0.005
+
+0.005
+
+Infectious disease: acute episode, moderate
+
+0.051
+
+0.051
+
+0.053
+
+0.137
+
+Infectious disease: acute episode, severe
+
+0.133
+
+0.133
+
+0.210
+
+0.615
+
+Infectious disease: post-acute consequences (fatigue, emotional lability, insomnia)
+
+0.219
+
+0.219
+
+0.254
+
+Diarrhoea: mild
+
+0.074
+
+0.074
+
+0.061
+
+Diarrhoea: moderate
+
+0.188
+
+0.188
+
+0.202
+
+Diarrhoea: severe
+
+0.247
+
+0.247
+
+0.281
+
+Epididymo-orchitis
+
+0.128
+
+0.128
+
+0.097
+
+Herpes zoster
+
+0.058
+
+0.058
+
+0.061
+
+HIV: symptomatic, pre-AIDS
+
+0.078
+
+0.078
+
+0.221
+
+0.167
+
+HIV/AIDS cases, receiving ARV treatment
+
+0.274
+
+0.274
+
+0.053
+
+0.135
+
+AIDS cases, not receiving ARV treatment
+
+0.582
+
+0.582
+
+0.547
+
+0.505
+
+Intestinal nematode infections: symptomatic
+
+0.027
+
+0.027
+
+0.030
+
+0.024
+
+Lymphatic filariasis: symptomatic
+
+0.109
+
+0.109
+
+0.110
+
+0.106
+
+Ear pain
+
+0.013
+
+0.013
+
+0.018
+
+0.023
+
+Tuberculosis, not HIV infected
+
+0.333
+
+0.333
+
+0.331
+
+0.271
+
+Tuberculosis, HIV infected
+
+0.408
+
+0.408
+
+0.399
+
+0.505
+
+Cancer: diagnosis and primary therapy
+
+0.288
+
+0.288
+
+0.294
+
+0.095
+
+Cancer: metastatic
+
+0.451
+
+0.451
+
+0.484
+
+0.750
+
+Mastectomy
+
+0.083
+
+0.083
+
+0.038
+
+0.055
+
+Stoma
+
+0.139
+
+0.139
+
+0.086
+
+0.075
+
+Terminal phase: with medication (for cancers, end-stage kidney or liver disease)
+
+0.540
+
+0.540
+
+0.508
+
+0.810
+
+Terminal phase: without medication (for cancers, end-stage kidney or liver disease)
+
+0.569
+
+0.569
+
+0.519
+
+0.810
+
+Acute myocardial infarction: days 1-2
+
+0.432
+
+0.432
+
+0.422
+
+Acute myocardial infarction: days 3-28
+
+0.074
+
+0.074
+
+0.056
+
+Angina pectoris: mild
+
+0.033
+
+0.033
+
+0.037
+
+Angina pectoris: moderate
+
+0.080
+
+0.080
+
+0.066
+
+0.095
+
+Angina pectoris: severe
+
+0.167
+
+0.167
+
+0.167
+
+0.227
+
+Cardiac conduction disorders and cardiac dysrhythmias
+
+0.224
+
+0.224
+
+0.145
+
+0.193
+
+Claudication
+
+0.014
+
+0.014
+
+0.016
+
+Heart failure: mild
+
+0.041
+
+0.041
+
+0.037
+
+0.006
+
+Heart failure: moderate
+
+0.072
+
+0.072
+
+0.070
+
+0.171
+
+Heart failure: severe
+
+0.179
+
+0.179
+
+0.186
+
+0.323
+
+Stroke: long-term consequences, mild
+
+0.019
+
+0.019
+
+0.021
+
+Stroke: long-term consequences, moderate
+
+0.070
+
+0.070
+
+0.076
+
+Stroke: long-term consequences, moderate plus cognition problems
+
+0.316
+
+0.316
+
+0.312
+
+Stroke: long-term consequences, severe
+
+0.552
+
+0.552
+
+0.539
+
+Stroke: long-term consequences, severe plus cognition problems
+
+0.588
+
+0.588
+
+0.567
+
+Infectious disease
+
+0.105
+
+0.167
+
+Cancer
+
+Cardiovascular diseases
+
+0.439
+
+0.266
+
+0.920
+
+Diabetes, digestive, and genitourinary disease
+
+World Health Organization
+
+Page 41
+
+Health state
+
+GHE2019
+
+GBD 2019
+
+GBD 2010 GBD 2004
+
+Diabetic neuropathy
+
+0.133
+
+0.133
+
+0.099
+
+0.072
+
+Chronic kidney disease (stage IV)
+
+0.104
+
+0.104
+
+0.105
+
+0.104
+
+End-stage renal disease: with kidney transplant
+
+0.024
+
+0.024
+
+0.027
+
+End-stage renal disease: on dialysis
+
+0.571
+
+0.571
+
+0.573
+
+0.101
+
+Decompensated cirrhosis of the liver
+
+0.178
+
+0.178
+
+0.194
+
+0.330
+
+Gastric bleeding
+
+0.325
+
+0.325
+
+0.323
+
+Crohn’s disease or ulcerative colitis
+
+0.231
+
+0.231
+
+0.225
+
+0.042
+
+Benign prostatic hypertrophy: symptomatic
+
+0.067
+
+0.067
+
+0.070
+
+0.038
+
+Impotence
+
+0.017
+
+0.017
+
+0.019
+
+0.060
+
+Stress incontinence
+
+0.020
+
+0.020
+
+Urinary incontinence
+
+0.139
+
+0.139
+
+0.142
+
+0.060
+
+Infertility: primary
+
+0.056
+
+0.008
+
+0.011
+
+0.180
+
+Infertility: secondary
+
+0.026
+
+0.005
+
+0.006
+
+0.180
+
+Asthma: controlled
+
+0.015
+
+0.015
+
+0.009
+
+Asthma: partially controlled
+
+0.036
+
+0.036
+
+0.027
+
+Asthma: uncontrolled
+
+0.133
+
+0.133
+
+0.132
+
+COPD and other chronic respiratory problems, mild
+
+0.019
+
+0.019
+
+0.015
+
+0.170
+
+COPD and other chronic respiratory problems, moderate
+
+0.225
+
+0.225
+
+0.192
+
+0.170
+
+COPD and other chronic respiratory problems, severe
+
+0.408
+
+0.408
+
+0.383
+
+0.530
+
+Dementia: mild
+
+0.165
+
+0.069
+
+0.082
+
+Dementia: moderate
+
+0.388
+
+0.377
+
+0.346
+
+0.666
+
+Dementia: severe
+
+0.545
+
+0.449
+
+0.438
+
+0.940
+
+Headache: migraine
+
+0.441
+
+0.441
+
+0.433
+
+0.288
+
+Migraine headache: moderate
+
+0.267
+
+0.267
+
+Headache: tension-type
+
+0.037
+
+0.037
+
+Headache, medication overuse
+
+0.223
+
+0.223
+
+Multiple sclerosis: mild
+
+0.183
+
+0.183
+
+0.198
+
+Multiple sclerosis: moderate
+
+0.463
+
+0.463
+
+0.445
+
+0.411
+
+Multiple sclerosis: severe
+
+0.719
+
+0.719
+
+0.707
+
+0.670
+
+Epilepsy: treated, seizure free
+
+0.072
+
+0.065
+
+Epilepsy: treated, with recent seizures
+
+0.319
+
+Epilepsy: severe
+
+0.657
+
+Epilepsy: untreated
+
+0.420
+
+Chronic respiratory diseases
+
+0.043
+
+Neurological disorders
+
+0.040
+
+0.150
+
+Epilepsy, less severe (seizures < once per month)
+
+0.263
+
+0.263
+
+Epilepsy, severe (seizures >= once per month)
+
+0.552
+
+0.552
+
+Parkinson’s disease: mild
+
+0.010
+
+0.010
+
+0.011
+
+Parkinson’s disease: moderate
+
+0.267
+
+0.267
+
+0.263
+
+0.316
+
+Parkinson’s disease: severe
+
+0.575
+
+0.575
+
+0.549
+
+0.392
+
+Mental, behavioural, and substance use disorders
+Alcohol problem use
+
+0.115
+
+Alcohol use disorder, very mild
+
+0.123
+
+0.123
+
+Alcohol use disorder: mild
+
+0.235
+
+0.235
+
+World Health Organization
+
+0.134
+
+0.259
+
+0.134
+
+Page 42
+
+Health state
+
+GHE2019
+
+GBD 2019
+
+GBD 2010 GBD 2004
+
+Alcohol use disorder: moderate
+
+0.373
+
+0.373
+
+0.388
+
+Alcohol use disorder: severe
+
+0.570
+
+0.570
+
+0.549
+
+Fetal alcohol syndrome: mild
+
+0.016
+
+0.016
+
+0.017
+
+Fetal alcohol syndrome: moderate
+
+0.056
+
+0.056
+
+0.057
+
+Fetal alcohol syndrome: severe
+
+0.179
+
+0.179
+
+0.177
+
+Cannabis dependence
+
+0.266
+
+0.266
+
+0.329
+
+0.252
+
+Cannabis dependence, mild
+
+0.039
+
+0.039
+
+Amphetamine dependence
+
+0.486
+
+0.486
+
+0.353
+
+0.252
+
+Amphetamine dependence, mild
+
+0.079
+
+0.079
+
+Cocaine dependence
+
+0.479
+
+0.479
+
+0.376
+
+0.252
+
+Cocaine dependence, mild
+
+0.116
+
+0.116
+
+Heroin and other opioid dependence
+
+0.697
+
+0.697
+
+0.641
+
+0.252
+
+Heroin and other opioid dependence, mild
+
+0.335
+
+0.335
+
+Anxiety disorders: mild
+
+0.030
+
+0.030
+
+0.030
+
+0.091
+
+Anxiety disorders: moderate
+
+0.133
+
+0.133
+
+0.149
+
+0.173
+
+Anxiety disorders: severe
+
+0.523
+
+0.523
+
+0.523
+
+0.560
+
+Major depressive disorder: mild episode
+
+0.145
+
+0.145
+
+0.159
+
+0.140
+
+Major depressive disorder: moderate episode
+
+0.396
+
+0.396
+
+0.406
+
+0.350
+
+Major depressive disorder: severe episode
+
+0.658
+
+0.658
+
+0.655
+
+0.760
+
+Bipolar disorder: manic episode
+
+0.492
+
+0.492
+
+0.480
+
+0.400
+
+Bipolar disorder: residual state
+
+0.032
+
+0.032
+
+0.035
+
+0.140
+
+Schizophrenia: acute state
+
+0.778
+
+0.778
+
+0.756
+
+0.627
+
+Schizophrenia: residual state
+
+0.588
+
+0.588
+
+0.576
+
+0.351
+
+Anorexia nervosa
+
+0.224
+
+0.224
+
+0.223
+
+0.280
+
+Bulimia nervosa
+
+0.223
+
+0.223
+
+0.223
+
+0.280
+
+Attention-deficit hyperactivity disorder
+
+0.045
+
+0.045
+
+0.049
+
+0.020
+
+Conduct disorder
+
+0.241
+
+0.241
+
+0.236
+
+0.150
+
+Asperger’s syndrome
+
+0.104
+
+0.104
+
+0.110
+
+Autism
+
+0.262
+
+0.262
+
+0.259
+
+Borderline intellectual functioning
+
+0.011
+
+0.011
+
+0.0034
+
+Intellectual disability / mental retardation, mild
+
+0.127
+
+0.043
+
+0.031
+
+0.290
+
+Intellectual disability / mental retardation, moderate
+
+0.293
+
+0.100
+
+0.080
+
+0.430
+
+Intellectual disability / mental retardation, severe
+
+0.383
+
+0.160
+
+0.126
+
+0.820
+
+Intellectual disability / mental retardation, profound
+
+0.444
+
+0.200
+
+0.157
+
+0.760
+
+Hearing loss: mild
+
+0.010
+
+0.010
+
+0.005
+
+0.040
+
+Hearing loss: moderate
+
+0.050
+
+0.027
+
+0.023
+
+0.120
+
+Hearing loss: severe
+
+0.167
+
+0.158
+
+0.031
+
+0.333
+
+Hearing loss: profound
+
+0.281
+
+0.204
+
+0.032
+
+0.333
+
+Hearing loss: complete
+
+0.281
+
+0.215
+
+0.033
+
+Hearing loss: mild, with ringing
+
+0.038
+
+0.021
+
+0.038
+
+Hearing loss: moderate, with ringing
+
+0.095
+
+0.074
+
+0.058
+
+Hearing loss: severe, with ringing
+
+0.220
+
+0.261
+
+0.065
+
+Hearing loss: profound, with ringing
+
+0.320
+
+0.277
+
+0.092
+
+0.180
+
+0.550
+
+Hearing and vision loss
+
+World Health Organization
+
+Page 43
+
+Health state
+
+GHE2019
+
+GBD 2019
+
+GBD 2010 GBD 2004
+
+Hearing loss: complete, with ringing
+
+0.327
+
+0.327
+
+Distance vision, monocular
+
+0.017
+
+0.017
+
+Distance vision: mild impairment
+
+0.005
+
+0.005
+
+0.004
+
+Distance vision: moderate impairment
+
+0.089
+
+0.089
+
+0.033
+
+0.170
+
+Distance vision: severe impairment
+
+0.314
+
+0.314
+
+0.191
+
+0.430
+
+Distance vision blindness
+
+0.338
+
+0.338
+
+0.195
+
+0.600
+
+Musculoskeletal disorders
+
+0.022
+
+0.022
+
+Back pain, most severe, without leg pain
+
+0.372
+
+0.372
+
+0.269
+
+0.061
+
+Back pain, most severe, with leg pain
+
+0.384
+
+0.384
+
+0.322
+
+0.061
+
+Back pain, severe, without leg pain
+
+0.272
+
+0.272
+
+0.366
+
+Back pain, severe, with leg pain
+
+0.325
+
+0.325
+
+0.374
+
+Low back pain, moderate
+
+0.054
+
+0.054
+
+Low back pain, mild
+
+0.020
+
+0.020
+
+0.088
+
+Neck pain: acute, mild
+
+0.040
+
+Neck pain: acute, severe
+
+0.221
+
+Neck pain: chronic, mild
+
+0.101
+
+Neck pain: chronic, severe
+
+0.286
+
+0.125
+
+Neck pain, mild
+
+0.053
+
+0.053
+
+Neck pain, moderate
+
+0.114
+
+0.114
+
+Neck pain, severe
+
+0.229
+
+0.229
+
+Neck pain, most severe
+
+0.304
+
+0.304
+
+Musculoskeletal problems, lower limbs, mild
+
+0.023
+
+0.023
+
+0.023
+
+Musculoskeletal problems, lower limbs, moderate
+
+0.079
+
+0.079
+
+0.079
+
+0.108
+
+Musculoskeletal problems, lower limbs, severe
+
+0.165
+
+0.165
+
+0.171
+
+0.156
+
+Musculoskeletal problems, upper limbs, mild
+
+0.028
+
+0.028
+
+0.024
+
+Musculoskeletal problems, upper limbs, moderate
+
+0.117
+
+0.117
+
+0.114
+
+0.174
+
+Musculoskeletal problems, generalized, moderate
+
+0.317
+
+0.317
+
+0.292
+
+0.233
+
+Musculoskeletal problems, generalized, severe
+
+0.581
+
+0.581
+
+0.606
+
+Gout: acute
+
+0.295
+
+0.295
+
+0.293
+
+0.132
+
+Amputation of finger(s), excluding thumb: long term, with treatment
+
+0.005
+
+0.005
+
+0.030
+
+0.102
+
+Amputation of thumb: long term
+
+0.011
+
+0.011
+
+0.013
+
+0.165
+
+Amputation of one arm: long term, with or without treatment
+
+0.118
+
+0.118
+
+0.130
+
+0.102
+
+Amputation of both arms: long term, with treatment
+
+0.123
+
+0.123
+
+0.044
+
+Amputation of both arms: long term, without treatment
+
+0.383
+
+0.383
+
+0.359
+
+Amputation of toe
+
+0.006
+
+0.006
+
+0.008
+
+0.064
+
+Amputation of one leg: long term, with treatment
+
+0.039
+
+0.039
+
+0.021
+
+0.300
+
+Amputation of one leg: long term, without treatment
+
+0.173
+
+0.173
+
+0.164
+
+0.300
+
+Amputation of both legs: long term, with treatment
+
+0.088
+
+0.088
+
+0.051
+
+Amputation of both legs: long term, without treatment
+
+0.443
+0.141
+
+0.443
+0.141
+
+0.494
+
+0.016
+
+0.016
+
+0.314
+
+0.314
+
+Injuries
+
+Burns of <20% total surface area without lower airway burns: short term, with or
+without treatment
+Burns of <20% total surface area or <10% total surface area if head or neck, or
+hands or wrist involved: long term, with or without treatment
+Burns of ≥20% total surface area: short term, with or without treatment
+
+World Health Organization
+
+0.096
+
+0.157
+
+0.018
+
+0.002
+
+0.333
+
+0.455
+
+Page 44
+
+Health state
+
+GHE2019
+
+GBD 2019
+
+GBD 2010 GBD 2004
+
+Burns of ≥20% total surface area or ≥10% total surface area if head or neck, or
+hands or wrist involved: long term, with treatment
+
+0.135
+
+0.135
+
+0.127
+
+0.255
+
+Burns of ≥20% total surface area or ≥10% total surface area if head or neck, or
+hands or wrist involved: long term, without treatment
+
+0.455
+
+0.455
+
+0.438
+
+0.255
+
+Lower airway burns: with or without treatment
+
+0.376
+
+0.376
+
+0.373
+
+Crush injury: short or long term, with or without treatment
+
+0.132
+
+0.132
+
+0.145
+
+Dislocation of hip: long term, with or without treatment
+
+0.016
+
+0.016
+
+0.017
+
+Dislocation of knee: long term, with or without treatment
+
+0.113
+
+0.113
+
+0.129
+
+0.074
+
+Dislocation of shoulder: long term, with or without treatment
+
+0.062
+
+0.062
+
+0.080
+
+0.074
+
+Other injuries of muscle and tendon (includes sprains, strains, and dislocations other
+than shoulder, knee, or hip)
+
+0.008
+
+0.008
+
+0.009
+
+Drowning and non-fatal submersion: short or long term, with or without treatment
+
+0.247
+
+0.247
+
+0.288
+
+Fracture of clavicle, scapula, or humerus: short or long term, with or without
+treatment
+
+0.035
+
+0.035
+
+0.053
+
+0.153
+
+Fracture of face bone: short or long term, with or without treatment
+
+0.067
+
+0.067
+
+0.173
+
+0.223
+
+Fracture of foot bones: short term, with or without treatment
+
+0.026
+
+0.026
+
+0.033
+
+0.077
+
+Fracture of foot bones: long term, without treatment
+
+0.026
+
+0.026
+
+0.033
+
+Fracture of hand: short term, with or without treatment
+
+0.010
+
+0.010
+
+0.025
+
+Fracture of hand: long term, without treatment
+
+0.014
+
+0.014
+
+0.016
+
+Fracture of neck of femur: short term, with or without treatment
+
+0.258
+
+0.258
+
+0.308
+
+0.372
+
+Fracture of neck of femur: long term, with treatment
+
+0.058
+
+0.058
+
+0.072
+
+0.272
+
+Fracture of neck of femur: long term, without treatment
+
+0.402
+
+0.402
+
+0.388
+
+0.272
+
+Fracture other than neck of femur: short term, with or without treatment
+
+0.111
+
+0.111
+
+0.192
+
+Fracture other than neck of femur: long term, without treatment
+
+0.042
+
+0.042
+
+0.053
+
+Fracture of patella, tibia or fibula, or ankle: short term,with or without treatment
+
+0.050
+
+0.050
+
+0.087
+
+Fracture of patella, tibia or fibula, or ankle: long term, with or without treatment
+
+0.055
+
+0.055
+
+0.070
+
+Fracture of pelvis: short term
+
+0.279
+
+0.279
+
+0.390
+
+Fracture of pelvis: long term
+
+0.182
+
+0.182
+
+0.194
+
+Fracture of radius or ulna: short term, with or without treatment
+
+0.028
+
+0.028
+
+0.065
+
+Fracture of radius or ulna: long term, without treatment
+
+0.043
+
+0.043
+
+0.050
+
+Fracture of skull: short or long term, with or without treatment
+
+0.071
+
+0.071
+
+0.073
+
+0.431
+
+Fracture of sternum or fracture of one or two ribs: short term, with or without
+treatment
+
+0.103
+
+0.103
+
+0.150
+
+0.199
+
+Fracture of vertebral column: short or long term, with or without treatment
+
+0.111
+
+0.111
+
+0.132
+
+0.266
+
+Fractures: treated, long term
+
+0.005
+
+0.005
+
+0.003
+
+Injured nerves: short term
+
+0.100
+
+0.100
+
+0.065
+
+0.071
+
+Injured nerves: long term
+
+0.113
+
+0.113
+
+0.136
+
+0.071
+
+Injury to eyes: short term
+
+0.054
+
+0.054
+
+0.079
+
+0.108
+
+Severe traumatic brain injury: short term, with or without treatment
+
+0.110
+
+0.110
+
+0.235
+
+0.359
+
+Concussion
+
+0.214
+
+0.214
+
+Traumatic brain injury: long-term consequences, minor, with or without treatment
+
+0.094
+
+0.094
+
+0.106
+
+0.370
+
+Traumatic brain injury: long-term consequences, moderate, with or without treatment
+
+0.231
+
+0.231
+
+0.224
+
+0.396
+
+Traumatic brain injury: long-term consequences, severe,with or without treatment
+
+0.637
+
+0.637
+
+0.625
+
+0.730
+
+Open wound: short term, with or without treatment
+
+0.006
+
+0.006
+
+0.005
+
+0.105
+
+Poisoning: short term, with or without treatment
+
+0.163
+
+0.163
+
+0.171
+
+0.608
+
+Severe chest injury: long term, with or without treatment
+
+0.047
+
+0.047
+
+0.056
+
+World Health Organization
+
+0.218
+
+0.100
+
+0.271
+
+0.247
+
+0.180
+
+Page 45
+
+Health state
+
+GHE2019
+
+GBD 2019
+
+GBD 2010 GBD 2004
+
+Severe chest injury: short term, with or without treatment
+
+0.369
+
+0.369
+
+0.352
+
+Spinal cord lesion below neck: treated
+
+0.296
+
+0.296
+
+0.047
+
+0.570
+
+Spinal cord lesion below neck: untreated
+
+0.623
+
+0.623
+
+0.440
+
+0.672
+
+Spinal cord lesion at neck: treated
+
+0.589
+
+0.589
+
+0.369
+
+Spinal cord lesion at neck: untreated
+
+0.732
+
+0.732
+
+0.673
+
+0.725
+
+Abdominopelvic problem: mild
+
+0.011
+
+0.011
+
+0.012
+
+0.000
+
+Abdominopelvic problem: moderate
+
+0.114
+
+0.114
+
+0.123
+
+0.122
+
+Abdominopelvic problem: severe
+
+0.324
+
+0.324
+
+0.326
+
+0.463
+
+Anaemia: mild
+
+0.004
+
+0.004
+
+0.005
+
+0.000
+
+Anaemia: moderate
+
+0.052
+
+0.052
+
+0.058
+
+0.011
+
+Anaemia: severe
+
+0.149
+
+0.149
+
+0.164
+
+0.090
+
+Thrombocytopenic purpura
+
+0.159
+
+0.159
+
+Periodontitis
+
+0.007
+
+0.007
+
+0.008
+
+0.001
+
+Dental caries:symptomatic
+
+0.010
+
+0.010
+
+0.012
+
+0.081
+
+Severe toothloss
+
+0.067
+
+0.067
+
+0.072
+
+0.061
+
+Disfigurement: level 1
+
+0.011
+
+0.011
+
+0.013
+
+0.023
+
+Disfigurement: level 2
+
+0.067
+
+0.067
+
+0.072
+
+0.056
+
+Disfigurement: level 3
+
+0.405
+
+0.405
+
+0.398
+
+0.074
+
+Disfigurement: level 1 with itch or pain
+
+0.027
+
+0.027
+
+0.029
+
+Disfigurement: level 2, with itch or pain
+
+0.188
+
+0.188
+
+0.187
+
+Disfigurement: level 3, with itch or pain
+
+0.576
+
+0.576
+
+0.562
+
+Generic uncomplicated disease: worry and daily medication
+
+0.049
+
+0.049
+
+0.031
+
+Generic uncomplicated disease: anxiety about diagnosis
+
+0.012
+
+0.012
+
+0.054
+
+Hyperthyroidism
+
+0.145
+
+0.145
+
+Hypothyroidism
+
+0.019
+
+0.019
+
+Iodine-deficiency goitre
+
+0.199
+
+0.199
+
+0.200
+
+Kwashiorkor
+
+0.051
+
+0.051
+
+0.055
+
+Severe wasting
+
+0.128
+
+0.128
+
+0.127
+
+Speech problems
+
+0.051
+
+0.051
+
+0.054
+
+Motor impairment: mild
+
+0.010
+
+0.010
+
+0.012
+
+0.010
+
+Motor impairment: moderate
+
+0.061
+
+0.061
+
+0.076
+
+0.381
+
+Motor impairment: severe
+
+0.402
+
+0.402
+
+0.377
+
+Motor plus cognitive impairments: mild
+
+0.031
+
+0.031
+
+0.054
+
+0.024
+
+Motor plus cognitive impairments: moderate
+
+0.203
+
+0.203
+
+0.221
+
+0.283
+
+Motor plus cognitive impairments: severe
+
+0.542
+
+0.542
+
+0.425
+
+0.804
+
+Rectovaginal fistula
+
+0.501
+
+0.501
+
+0.492
+
+0.430
+
+Vesicovaginal fistula
+
+0.342
+
+0.342
+
+0.338
+
+Other
+
+World Health Organization
+
+0.068
+
+0.033
+
+0.025
+
+0.053
+
+Page 46
+
+

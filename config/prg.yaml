@@ -15070,20 +15070,60 @@ parameters:
     - Regulators
   health_impact_morbidity:
     name: Health impact morbidity
-    description: Illness cases
+    description: 'Incident cases of illness attributable to the fleet''s emissions in the year, in cases
+      per year. Zero is the shipped state: the graph carries no incidence function for non-fatal outcomes,
+      so a scenario states the count. Multiplied by a disability weight and an episode duration it gives
+      the years lived with disability that join the years of life lost in a DALY.'
     category: EnvSoc
     type: float
+    unit: cases/year
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
+    - 100000000.0
+    default: 0.0
     role: free
     determinism: fixed
     priority: P2
     status: integrate
     users:
     - Health
-    source: docs/params.md
+    source: 'The placeholder survey (docs/research/placeholder-survey.md): a real quantity in cases per year; WHO (2020) GHE technical paper, incident-case basis.'
+  morbidity_disability_weight:
+    name: Morbidity disability weight
+    description: 'Severity of a non-fatal illness episode on the scale from 0 (perfect health) to 1 (dead).
+      0.05 is a mild respiratory episode. WHO (2020), Global Health Estimates technical paper, Sec. 3.'
+    category: EnvSoc
+    type: float
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.05
+    role: free
+    determinism: fixed
+    priority: P2
+    status: existing
+    users:
+    - Health
+    source: 'WHO (2020) GHE technical paper WHO/DDI/DNA/GHE/2020.3. Local copy: sources/archive/who_ghe2019_daly_methods.pdf. The default is a stated assumption, not a measured figure.'
+  morbidity_episode_duration:
+    name: Morbidity episode duration
+    description: 'Average duration of one illness episode until remission, in years. 0.02 years is about a
+      week. WHO (2020), Global Health Estimates technical paper, Sec. 2.'
+    category: EnvSoc
+    type: float
+    unit: years
+    range:
+    - 0.0
+    - 50.0
+    default: 0.02
+    role: free
+    determinism: fixed
+    priority: P2
+    status: existing
+    users:
+    - Health
+    source: 'WHO (2020) GHE technical paper WHO/DDI/DNA/GHE/2020.3. Local copy: sources/archive/who_ghe2019_daly_methods.pdf. The default is a stated assumption, not a measured figure.'
   health_impact_mortality:
     categories: []
     category: EnvSoc
@@ -37307,22 +37347,27 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
   dalys_definition:
-    description: Years of life lost per premature death, which is the burden the emissions cost in health.
+    description: 'The burden the emissions cost in health: years of life lost to premature death plus years
+      lived with disability, DALY = YLL + YLD. The YLD term is incident cases times disability weight
+      times episode duration; it is zero while health_impact_morbidity is zero.'
     determined_variables:
     - dalys_per_year
     free_variables: []
-    latex: null
+    latex: \mathrm{dalys\_per\_year} = \mathrm{premature\_deaths\_per\_year} \times \mathrm{years\_of\_life\_lost} + \mathrm{health\_impact\_morbidity} \times \mathrm{morbidity\_disability\_weight} \times \mathrm{morbidity\_episode\_duration}
     lhs: dalys_per_year
     linearity: linear
     name: DALYs
     parameters:
     - dalys_per_year
+    - health_impact_morbidity
+    - morbidity_disability_weight
+    - morbidity_episode_duration
     - premature_deaths_per_year
     - years_of_life_lost
     priority: P2
-    reference: null
+    reference: 'WHO (2020), Global Health Estimates technical paper WHO/DDI/DNA/GHE/2020.3, YLD = I x DW x L and DALY = YLL + YLD. Local copy: sources/archive/who_ghe2019_daly_methods.pdf.'
     relation: eq
-    rhs: premature_deaths_per_year * years_of_life_lost
+    rhs: premature_deaths_per_year * years_of_life_lost + health_impact_morbidity * morbidity_disability_weight * morbidity_episode_duration
     solution_method: direct
     system: health
     tolerance: 1.0e-09
@@ -50278,6 +50323,33 @@ relationships:
   reference: null
   relationship: equality
   source: premature_deaths_per_year
+  strength: hard
+  target: dalys_per_year
+- description: Incident cases enter the YLD half of a DALY.
+  direction: forward
+  equation_id: dalys_definition
+  priority: P2
+  reference: null
+  relationship: functional
+  source: health_impact_morbidity
+  strength: hard
+  target: dalys_per_year
+- description: Severity weight of the YLD half of a DALY.
+  direction: forward
+  equation_id: dalys_definition
+  priority: P2
+  reference: null
+  relationship: functional
+  source: morbidity_disability_weight
+  strength: hard
+  target: dalys_per_year
+- description: Episode duration of the YLD half of a DALY.
+  direction: forward
+  equation_id: dalys_definition
+  priority: P2
+  reference: null
+  relationship: functional
+  source: morbidity_episode_duration
   strength: hard
   target: dalys_per_year
 - description: The YLL half of a DALY.

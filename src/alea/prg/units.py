@@ -115,6 +115,8 @@ def _registry() -> pint.UnitRegistry:
 		"people = person",
 		"death = person",
 		"deaths = death",
+		"case = person",
+		"cases = case",
 		"job = [job]",
 		"jobs = job",
 		"tCO2 = tonne",

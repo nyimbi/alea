@@ -3072,7 +3072,7 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# this register. Its two new operands are both read by the two equations
 	# the batch added, and `data_centre_load_twh` is read by `energy_demand`,
 	# so none of the three enters it.
-	assert len(dead) == 204, len(dead)
+	assert len(dead) == 203, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
@@ -6521,7 +6521,7 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# equation: `peak_demand_shifted_definition` is the equation the sourced
 	# peak-demand band belongs to, and it shipped uncited while carrying a
 	# worked example at a default this batch moves.
-	assert len(declared) == 315, f"the citation register moved: {sorted(declared)}"
+	assert len(declared) == 316, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
