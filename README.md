@@ -260,6 +260,17 @@ no secrets. Downloads land under `docs/research/milestone-data/`, also
 git-ignored, and total tens of gigabytes. Targets whose data is absent are
 recorded as skipped by `scripts/quality/milestone_artefacts.py`, never as passed.
 
+Where each key comes from (all free, none stored in the repository):
+
+| Variable | Service | How to get it |
+|---|---|---|
+| `NLINE_API_KEY` | nLine GridWatch, Ghana | Request a key on <https://nline.io/public-data> (name, organisation, email, intended use). nLine's own client, [nline-data-api](https://github.com/nline/nline-data-api), prompts for the same details on first use and prints the key. The key is checked against nline.io; the data itself is read from a public bucket. |
+| `CDSAPI_URL`, `CDSAPI_KEY` | Copernicus Climate Data Store (ERA5) | Register at <https://cds.climate.copernicus.eu>, log in, and copy the URL and personal access token from <https://cds.climate.copernicus.eu/how-to-api>. Then open the dataset page (`reanalysis-era5-single-levels`) and accept its terms of use at the bottom of the download form; until you do, requests fail. ERA5 requests queue and can take hours. |
+| `EARTHDATA_TOKEN` | NASA Earthdata (VIIRS VNP46, served by LAADS DAAC) | Register at <https://urs.earthdata.nasa.gov>, sign in, and use "Generate Token" in your profile. The token expires (about 60 days); generate a new one when downloads return HTTP 401. |
+
+Disk: GridWatch 2019-2023 is about 19 GB, one year of VNP46A2 over Ghana about
+35 GB, ERA5 for 2019-2024 a few GB.
+
 ---
 
 ## Quick start
