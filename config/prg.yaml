@@ -2411,6 +2411,24 @@ parameters:
     unit: '1'
     users:
     - Investors
+  buffer_excluded_area_km2:
+    category: Macro
+    description: 'Area barred to siting by the buffer: perimeter times buffer width, with 1000 m per km.
+      500 km x 500 m = 250 km2 at defaults.'
+    determinism: physical
+    name: Buffer exclusion area
+    priority: P2
+    range:
+    - 0.0
+    - 10000000.0
+    role: derived
+    source: The coupling build (batch 92)
+    status: existing
+    type: float
+    unit: km**2
+    users:
+    - Planners
+    - Regulators
   buffer_pool_contribution:
     categories: []
     category: Carbon
@@ -4126,6 +4144,23 @@ parameters:
     type: float
     unit: USD/MWh
     users: []
+  carbon_credit_age_years:
+    category: Macro
+    description: Years between the credit vintage and the scenario year.
+    determinism: physical
+    name: Carbon credit age
+    priority: P2
+    range:
+    - -300.0
+    - 400.0
+    role: derived
+    source: The coupling build (batch 92)
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   carbon_credit_insurance:
     categories: []
     category: Carbon
@@ -5231,6 +5266,26 @@ parameters:
     users:
     - Regulators
     - Planners
+  climate_exposure_index:
+    category: Macro
+    default: 0.6
+    description: Degree to which the system is exposed to climate hazards, normalised to 0 to 1. 0.6 at
+      defaults.
+    determinism: fixed
+    name: Climate exposure index
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    source: IPCC AR4 WGII ch. 19 vulnerability framework; assumption for the default; the default is a
+      stated assumption
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   climate_proofed_capex_mm_usd:
     category: Regulatory
     description: 'climate proofed capex mm usd: the compliance register''s derived quantity. The fleet''s
@@ -5330,6 +5385,44 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  climate_sensitivity_index:
+    category: Macro
+    default: 0.5
+    description: Degree to which the system is harmed by a given exposure, normalised to 0 to 1. 0.5 at
+      defaults.
+    determinism: fixed
+    name: Climate sensitivity index
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    source: IPCC AR4 WGII ch. 19 vulnerability framework; assumption for the default; the default is a
+      stated assumption
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
+  climate_vulnerability_index:
+    category: Macro
+    description: 'Residual vulnerability: exposure times sensitivity times the share of impact adaptation
+      does not absorb, 1 - adaptive capacity. 0.15 at defaults.'
+    determinism: physical
+    name: Climate vulnerability index
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: derived
+    source: The coupling build (batch 92)
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   clustering_method:
     name: Clustering method
     description: Which algorithm reduces the network to clusters. Catalog 'Clustering method selection';
@@ -10863,6 +10956,23 @@ parameters:
     unit: '1'
     users:
     - DFIs
+  effective_supplier_count:
+    category: Macro
+    description: 'Number of equal-share suppliers that would give the same HHI: 10000 / HHI. 4 at defaults.'
+    determinism: physical
+    name: Effective supplier count
+    priority: P2
+    range:
+    - 1.0
+    - 1000000.0
+    role: derived
+    source: The coupling build (batch 92)
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   efficiency_benchmarking:
     categories: []
     category: Regulatory Finance
@@ -12672,6 +12782,25 @@ parameters:
     source: 'The placeholder survey decision (docs/research/placeholder-survey.md, batch 87): a defensible
       reading chosen where the catalog names none; the default is a stated assumption, not a measured
       figure.'
+  exchange_rate_usd_local_next:
+    category: Macro
+    description: 'Local currency per US dollar after the horizon under relative purchasing power parity:
+      the rate times one plus the inflation differential times the horizon. 130 x (1 + 0.025 x 1) = 133.25
+      at defaults.'
+    determinism: physical
+    name: Exchange rate after the horizon
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000.0
+    role: derived
+    source: The coupling build (batch 92)
+    status: existing
+    type: float
+    unit: LCU/USD
+    users:
+    - Planners
+    - Regulators
   exchange_rate_volatility:
     name: Exchange rate volatility
     description: 'The volatility of the exchange rate''s return, in inverse years: the scale of a GARCH
@@ -14476,6 +14605,24 @@ parameters:
     unit: USD/kW
     users:
     - Planners
+  fx_horizon_years:
+    category: Macro
+    default: 1.0
+    description: Horizon over which the exchange rate drifts, in years. 1 at defaults.
+    determinism: fixed
+    name: Exchange-rate horizon
+    priority: P2
+    range:
+    - 0.0
+    - 100.0
+    role: exogenous
+    source: Model step; the default is a stated assumption
+    status: existing
+    type: float
+    unit: years
+    users:
+    - Planners
+    - Regulators
   g_per_kt:
     id: g_per_kt
     name: G per kt
@@ -20108,6 +20255,43 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  line_surge_impedance_loading_mw:
+    category: Macro
+    description: 'Power a line delivers into its own characteristic impedance, V squared over Zc: the
+      natural loading that scales line transfer capability. 160000 / 300 = 533 MW at 400 kV.'
+    determinism: physical
+    name: Surge impedance loading
+    priority: P2
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    source: The coupling build (batch 92)
+    status: existing
+    type: float
+    unit: MW
+    users:
+    - Planners
+    - Regulators
+  line_surge_impedance_ohm:
+    category: Macro
+    default: 300.0
+    description: Characteristic impedance of an overhead line, in ohms. 300 at defaults, typical of a
+      single-conductor line (Grainger and Stevenson).
+    determinism: fixed
+    name: Line surge impedance
+    priority: P2
+    range:
+    - 100.0
+    - 600.0
+    role: exogenous
+    source: Grainger and Stevenson, Power System Analysis, 1994, ch. 5; the default is a stated assumption
+    status: existing
+    type: float
+    unit: ohm
+    users:
+    - Planners
+    - Regulators
   line_upgrade_budget:
     categories: []
     category: Outage
@@ -21877,6 +22061,24 @@ parameters:
     unit: USD/year
     users:
     - Regulators
+  mining_added_energy_twh:
+    category: Macro
+    description: 'Annual energy of the added mining load: megawatts times load factor times hours in a
+      year, over the megawatt-hours in a terawatt-hour.'
+    determinism: physical
+    name: Added mining energy
+    priority: P2
+    range:
+    - 0.0
+    - 10000.0
+    role: derived
+    source: The coupling build (batch 92)
+    status: existing
+    type: float
+    unit: TWh/year
+    users:
+    - Planners
+    - Regulators
   mining_demand_growth:
     name: Mining demand growth
     description: 'Added electrical load from mining expansion over the horizon, in megawatts: a level,
@@ -22015,6 +22217,25 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  mining_load_factor:
+    category: Macro
+    default: 0.8
+    description: Average load over peak load of the added mining demand. 0.8 at defaults, typical of continuous
+      process loads.
+    determinism: fixed
+    name: Mining load factor
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    source: Mining load profile; assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   mobile_coverage:
     categories: []
     category: Digital
@@ -23918,6 +24139,42 @@ parameters:
     users:
     - Insurance
     - DFIs
+  parametric_notional_hazard:
+    category: Macro
+    default: 100.0
+    description: Hazard level the policy is written against, in the index unit of the trigger. 100 at
+      defaults.
+    determinism: fixed
+    name: Parametric notional hazard
+    priority: P2
+    range:
+    - 0.0
+    - 1000000.0
+    role: exogenous
+    source: Policy terms; assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
+  parametric_trigger_level:
+    category: Macro
+    description: 'Hazard level at which the policy pays: trigger share times notional hazard. 90 at defaults.'
+    determinism: physical
+    name: Parametric trigger level
+    priority: P2
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    source: The coupling build (batch 92)
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   parametric_trigger_threshold:
     categories: []
     category: Insurance & Catastrophe
@@ -26106,6 +26363,25 @@ parameters:
     users:
     - Planners
     - Regulators
+  protected_area_perimeter_km:
+    category: Macro
+    default: 500.0
+    description: Total perimeter of the protected or sensitive areas near the build, in kilometres. 500
+      at defaults.
+    determinism: fixed
+    name: Protected area perimeter
+    priority: P2
+    range:
+    - 0.0
+    - 1000000.0
+    role: exogenous
+    source: Protected-area register; assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: km
+    users:
+    - Planners
+    - Regulators
   protected_areas:
     categories: []
     category: Environmental
@@ -27274,6 +27550,24 @@ parameters:
     users:
     - Policymakers
     source: docs/params.md
+  renewable_yield_p90_factor:
+    category: Macro
+    description: 'Annual yield in a bad year (exceeded in 90 percent of years) as a share of the mean,
+      under a normal approximation: 1 - 1.2816 x CV. 0.872 at defaults.'
+    determinism: physical
+    name: Renewable yield P90 factor
+    priority: P2
+    range:
+    - -10.0
+    - 1.0
+    role: derived
+    source: The coupling build (batch 92)
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   reporting_compliance_usd_per_year:
     category: Regulatory
     description: 'reporting compliance usd per year: the compliance register''s derived quantity. The
@@ -27694,6 +27988,43 @@ parameters:
     - Regulators
     - Policymakers
     - Carbon
+  resilience_avoided_loss_usd:
+    category: Macro
+    description: 'Loss avoided by the investment over its life: spend times benefit-cost ratio.'
+    determinism: physical
+    name: Resilience avoided loss
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: derived
+    source: The coupling build (batch 92)
+    status: existing
+    type: float
+    unit: USD
+    users:
+    - Planners
+    - Regulators
+  resilience_benefit_cost_ratio:
+    category: Macro
+    default: 4.0
+    description: Avoided loss per dollar of resilience investment. 4 at defaults, the overall ratio for
+      hazard mitigation in the NIBS study.
+    determinism: fixed
+    name: Resilience benefit-cost ratio
+    priority: P2
+    range:
+    - 0.0
+    - 100.0
+    role: exogenous
+    source: National Institute of Building Sciences (2019), Natural Hazard Mitigation Saves, 2019 Report;
+      the default is a stated assumption
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   resilience_investment:
     name: Resilience investment
     description: 'Capital spent on resilience measures, as a stock in currency rather than a flow. It
@@ -28616,6 +28947,24 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  scenario_year:
+    category: Macro
+    default: 2030.0
+    description: Calendar year the scenario is evaluated in. 2030 at defaults.
+    determinism: fixed
+    name: Scenario year
+    priority: P2
+    range:
+    - 1900.0
+    - 2300.0
+    role: exogenous
+    source: Scenario definition; the default is a stated assumption
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   sea_level_rise:
     name: Sea level rise
     description: Sea-level rise above the scenario's baseline, in metres. 0.5 m is the middle of the CMIP6
@@ -32804,6 +33153,24 @@ parameters:
     unit: 1/year
     users:
     - Planners
+  us_inflation_rate:
+    category: Macro
+    default: 0.025
+    description: Annual US consumer price inflation, per year. 2.5 percent at defaults.
+    determinism: fixed
+    name: US inflation rate
+    priority: P2
+    range:
+    - -0.2
+    - 1.0
+    role: exogenous
+    source: US BLS CPI; assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: 1/year
+    users:
+    - Planners
+    - Regulators
   v2g_adoption:
     name: V2g adoption
     description: V2G-capable EV share
@@ -35834,6 +36201,29 @@ equations:
     system: financial
     tolerance: 1.0e-06
     unit_check: true
+  buffer_excluded_area_definition:
+    description: A strip of the buffer width along the perimeter. The 1000 converts metres to kilometres;
+      one factor alone leaves a length product the dimension check cannot tell from an area.
+    determined_variables:
+    - buffer_excluded_area_km2
+    free_variables: []
+    latex: \mathrm{buffer\_excluded\_area\_km2} = \mathrm{protected\_area\_perimeter\_km} \times \mathrm{buffer\_zones}
+      / 1000
+    lhs: buffer_excluded_area_km2
+    linearity: linear
+    name: Buffer exclusion area
+    parameters:
+    - buffer_excluded_area_km2
+    - protected_area_perimeter_km
+    - buffer_zones
+    priority: P2
+    reference: Geometry of a buffer strip (perimeter x width, ignoring corner overlap)
+    relation: eq
+    rhs: protected_area_perimeter_km * buffer_zones / 1000
+    solution_method: direct
+    system: demand_supply
+    tolerance: 1.0e-09
+    unit_check: true
   business_interruption_cover_definition:
     description: 'The revenue indemnified: the cover share times gross revenue. A switch at zero returns
       zero, which is the gated quantity rather than a scenario branch.'
@@ -36213,6 +36603,28 @@ equations:
     reference: null
     relation: eq
     rhs: carbon_price_usd_per_tco2 * emission_factor_t_per_mwh
+    solution_method: direct
+    system: emissions
+    tolerance: 1.0e-09
+    unit_check: true
+  carbon_credit_age_definition:
+    description: Scenario year less vintage year. Both are calendar-year labels (dimensionless); the difference
+      is a count of years.
+    determined_variables:
+    - carbon_credit_age_years
+    free_variables: []
+    latex: \mathrm{carbon\_credit\_age\_years} = \mathrm{scenario\_year} - \mathrm{carbon\_credit\_vintage}
+    lhs: carbon_credit_age_years
+    linearity: linear
+    name: Carbon credit age
+    parameters:
+    - carbon_credit_age_years
+    - scenario_year
+    - carbon_credit_vintage
+    priority: P2
+    reference: 'Verra VCS Standard v4.x: vintage is the year of the emission reduction'
+    relation: eq
+    rhs: scenario_year - carbon_credit_vintage
     solution_method: direct
     system: emissions
     tolerance: 1.0e-09
@@ -36767,6 +37179,31 @@ equations:
     rhs: climate_proofing_requirements * capex_usd_per_kw * total_capacity_mw * 1000.0 / 1000000.0
     solution_method: direct
     system: cost_accounting
+    tolerance: 1.0e-09
+    unit_check: true
+  climate_vulnerability_definition:
+    description: Vulnerability as a function of exposure, sensitivity and adaptive capacity (IPCC TAR/AR4
+      framework), in its multiplicative form.
+    determined_variables:
+    - climate_vulnerability_index
+    free_variables: []
+    latex: \mathrm{climate\_vulnerability\_index} = \mathrm{climate\_exposure\_index} \times \mathrm{climate\_sensitivity\_index}
+      \times (1 - \mathrm{adaptive\_capacity})
+    lhs: climate_vulnerability_index
+    linearity: linear
+    name: Climate vulnerability index
+    parameters:
+    - climate_vulnerability_index
+    - climate_exposure_index
+    - climate_sensitivity_index
+    - adaptive_capacity
+    priority: P2
+    reference: 'IPCC (2007), AR4 WGII, Chapter 19 and Glossary: vulnerability is a function of exposure,
+      sensitivity and adaptive capacity'
+    relation: eq
+    rhs: climate_exposure_index * climate_sensitivity_index * (1 - adaptive_capacity)
+    solution_method: direct
+    system: financial
     tolerance: 1.0e-09
     unit_check: true
   co2_captured_cement_tonnes_definition:
@@ -39381,6 +39818,27 @@ equations:
     system: employment
     tolerance: 1.0e-09
     unit_check: true
+  effective_supplier_count_definition:
+    description: 'The numbers-equivalent of the Herfindahl index: for N equal shares HHI = 10000/N.'
+    determined_variables:
+    - effective_supplier_count
+    free_variables: []
+    latex: \mathrm{effective\_supplier\_count} = \frac{10000}{\mathrm{supply\_chain\_concentration}}
+    lhs: effective_supplier_count
+    linearity: nonlinear
+    name: Effective supplier count
+    parameters:
+    - effective_supplier_count
+    - supply_chain_concentration
+    priority: P2
+    reference: Adelman, M.A. (1969), Comment on the H Concentration Measure as a Numbers-Equivalent, Review
+      of Economics and Statistics 51(1), 99-101
+    relation: eq
+    rhs: 10000 / supply_chain_concentration
+    solution_method: direct
+    system: demand_supply
+    tolerance: 1.0e-09
+    unit_check: true
   effluent_concentration_definition:
     description: 'Mass load divided by discharge volume. Dimensional check: kg/year over m3/year is kg/m3.'
     determined_variables:
@@ -40182,6 +40640,32 @@ equations:
     rhs: ev_battery_size / ev_efficiency
     solution_method: direct
     system: demand_supply
+    tolerance: 1.0e-09
+    unit_check: true
+  exchange_rate_next_definition:
+    description: 'Relative PPP: the currency with higher inflation depreciates by the inflation differential
+      (first-order, Rogoff 1996).'
+    determined_variables:
+    - exchange_rate_usd_local_next
+    free_variables: []
+    latex: \mathrm{exchange\_rate\_usd\_local\_next} = \mathrm{exchange\_rate\_usd\_local}\left(1 + \left(\mathrm{inflation\_rate}
+      - \mathrm{us\_inflation\_rate}\right) \mathrm{fx\_horizon\_years}\right)
+    lhs: exchange_rate_usd_local_next
+    linearity: linear
+    name: Exchange rate after the horizon
+    parameters:
+    - exchange_rate_usd_local_next
+    - exchange_rate_usd_local
+    - inflation_rate
+    - us_inflation_rate
+    - fx_horizon_years
+    priority: P2
+    reference: Rogoff, K. (1996), The Purchasing Power Parity Puzzle, Journal of Economic Literature 34(2),
+      647-668. No archived copy.
+    relation: eq
+    rhs: exchange_rate_usd_local * (1 + (inflation_rate - us_inflation_rate) * fx_horizon_years)
+    solution_method: direct
+    system: financial
     tolerance: 1.0e-09
     unit_check: true
   export_duty_cost_definition:
@@ -44840,6 +45324,28 @@ equations:
     system: reliability
     tolerance: 1.0e-09
     unit_check: true
+  line_surge_impedance_loading_definition:
+    description: 'SIL = V^2 / Zc. Dimensional check: kV squared over ohm is megawatts.'
+    determined_variables:
+    - line_surge_impedance_loading_mw
+    free_variables: []
+    latex: \mathrm{line\_surge\_impedance\_loading\_mw} = \frac{\mathrm{ac\_voltage\_limit}^{2}}{\mathrm{line\_surge\_impedance\_ohm}}
+    lhs: line_surge_impedance_loading_mw
+    linearity: nonlinear
+    name: Surge impedance loading
+    parameters:
+    - line_surge_impedance_loading_mw
+    - ac_voltage_limit
+    - line_surge_impedance_ohm
+    priority: P2
+    reference: Grainger, J.J. and Stevenson, W.D. (1994), Power System Analysis, McGraw-Hill, section
+      5.6; Kundur (1994), Power System Stability and Control, section 6.2.3
+    relation: eq
+    rhs: ac_voltage_limit ** 2 / line_surge_impedance_ohm
+    solution_method: direct
+    system: energy_balance
+    tolerance: 1.0e-09
+    unit_check: true
   llcr_definition:
     description: 'Cash available over the loan life, discounted, against debt outstanding. Dimensional
       check: (USD/kW/year) / (USD/kW) is 1/year, times years is dimensionless -- which is what a coverage
@@ -45624,6 +46130,29 @@ equations:
     system: financial
     tolerance: 1.0e-09
     unit_check: true
+  mining_added_energy_definition:
+    description: Level times load factor times 8760 h, over 1e6 MWh per TWh. The same conversion construction_load_definition
+      applies.
+    determined_variables:
+    - mining_added_energy_twh
+    free_variables: []
+    latex: \mathrm{mining\_added\_energy\_twh} = \mathrm{mining\_demand\_growth} \times \mathrm{mining\_load\_factor}
+      \times 8760 / 1000000
+    lhs: mining_added_energy_twh
+    linearity: linear
+    name: Added mining energy
+    parameters:
+    - mining_added_energy_twh
+    - mining_demand_growth
+    - mining_load_factor
+    priority: P2
+    reference: Definition of energy as average power times time
+    relation: eq
+    rhs: mining_demand_growth * mining_load_factor * 8760 / 1000000
+    solution_method: direct
+    system: energy_balance
+    tolerance: 1.0e-09
+    unit_check: true
   mining_electric_energy_twh_definition:
     description: 'Share times total. Dimensional check: a fraction times TWh/year is TWh/year.'
     determined_variables:
@@ -46125,6 +46654,27 @@ equations:
     reference: null
     relation: eq
     rhs: parametric_insurance_coverage * aal_usd_million
+    solution_method: direct
+    system: financial
+    tolerance: 1.0e-09
+    unit_check: true
+  parametric_trigger_level_definition:
+    description: Share times notional.
+    determined_variables:
+    - parametric_trigger_level
+    free_variables: []
+    latex: \mathrm{parametric\_trigger\_level} = \mathrm{parametric\_trigger\_threshold} \times \mathrm{parametric\_notional\_hazard}
+    lhs: parametric_trigger_level
+    linearity: linear
+    name: Parametric trigger level
+    parameters:
+    - parametric_trigger_level
+    - parametric_trigger_threshold
+    - parametric_notional_hazard
+    priority: P2
+    reference: Definition of a parametric trigger as a share of the notional hazard
+    relation: eq
+    rhs: parametric_trigger_threshold * parametric_notional_hazard
     solution_method: direct
     system: financial
     tolerance: 1.0e-09
@@ -47690,6 +48240,28 @@ equations:
     system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
+  renewable_yield_p90_definition:
+    description: The 10th percentile of a normal distribution is the mean minus 1.2816 standard deviations;
+      divided by the mean that is 1 - 1.2816 CV.
+    determined_variables:
+    - renewable_yield_p90_factor
+    free_variables: []
+    latex: \mathrm{renewable\_yield\_p90\_factor} = 1 - 1.2816\, \mathrm{interannual\_variability}
+    lhs: renewable_yield_p90_factor
+    linearity: linear
+    name: Renewable yield P90 factor
+    parameters:
+    - renewable_yield_p90_factor
+    - interannual_variability
+    priority: P2
+    reference: Standard normal quantile z(0.90) = 1.2816; resource assessment practice, e.g. IEC 61400-15
+      P-values
+    relation: eq
+    rhs: 1 - 1.2816 * interannual_variability
+    solution_method: direct
+    system: reliability
+    tolerance: 1.0e-09
+    unit_check: true
   reporting_compliance_definition:
     description: 'The quarterly-filing systems'' spend: the mandated share of the revenue requirement.'
     determined_variables:
@@ -47985,6 +48557,27 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{residential}_{demand\_twh} = \mathrm{residential}_{demand\_share} \mathrm{demand}_{twh}
+  resilience_avoided_loss_definition:
+    description: Spend times benefit-cost ratio.
+    determined_variables:
+    - resilience_avoided_loss_usd
+    free_variables: []
+    latex: \mathrm{resilience\_avoided\_loss\_usd} = \mathrm{resilience\_investment} \times \mathrm{resilience\_benefit\_cost\_ratio}
+    lhs: resilience_avoided_loss_usd
+    linearity: linear
+    name: Resilience avoided loss
+    parameters:
+    - resilience_avoided_loss_usd
+    - resilience_investment
+    - resilience_benefit_cost_ratio
+    priority: P2
+    reference: National Institute of Building Sciences (2019), Natural Hazard Mitigation Saves, 2019 Report
+    relation: eq
+    rhs: resilience_investment * resilience_benefit_cost_ratio
+    solution_method: direct
+    system: financial
+    tolerance: 1.0e-09
+    unit_check: true
   retail_competition_definition:
     description: 'One minus the normalised HHI: 0 for a monopoly, approaching 1 as the market fragments.'
     determined_variables:
@@ -62900,6 +63493,174 @@ relationships:
   strength: hard
   description: Enters the identity.
   reference: The coupling build (batch 91)
+  priority: P2
+- source: exchange_rate_usd_local
+  target: exchange_rate_usd_local_next
+  equation_id: exchange_rate_next_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: inflation_rate
+  target: exchange_rate_usd_local_next
+  equation_id: exchange_rate_next_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: us_inflation_rate
+  target: exchange_rate_usd_local_next
+  equation_id: exchange_rate_next_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: fx_horizon_years
+  target: exchange_rate_usd_local_next
+  equation_id: exchange_rate_next_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: mining_demand_growth
+  target: mining_added_energy_twh
+  equation_id: mining_added_energy_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: mining_load_factor
+  target: mining_added_energy_twh
+  equation_id: mining_added_energy_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: ac_voltage_limit
+  target: line_surge_impedance_loading_mw
+  equation_id: line_surge_impedance_loading_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: line_surge_impedance_ohm
+  target: line_surge_impedance_loading_mw
+  equation_id: line_surge_impedance_loading_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: protected_area_perimeter_km
+  target: buffer_excluded_area_km2
+  equation_id: buffer_excluded_area_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: buffer_zones
+  target: buffer_excluded_area_km2
+  equation_id: buffer_excluded_area_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: resilience_investment
+  target: resilience_avoided_loss_usd
+  equation_id: resilience_avoided_loss_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: resilience_benefit_cost_ratio
+  target: resilience_avoided_loss_usd
+  equation_id: resilience_avoided_loss_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: parametric_trigger_threshold
+  target: parametric_trigger_level
+  equation_id: parametric_trigger_level_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: parametric_notional_hazard
+  target: parametric_trigger_level
+  equation_id: parametric_trigger_level_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: supply_chain_concentration
+  target: effective_supplier_count
+  equation_id: effective_supplier_count_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: interannual_variability
+  target: renewable_yield_p90_factor
+  equation_id: renewable_yield_p90_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: climate_exposure_index
+  target: climate_vulnerability_index
+  equation_id: climate_vulnerability_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: climate_sensitivity_index
+  target: climate_vulnerability_index
+  equation_id: climate_vulnerability_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: adaptive_capacity
+  target: climate_vulnerability_index
+  equation_id: climate_vulnerability_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: scenario_year
+  target: carbon_credit_age_years
+  equation_id: carbon_credit_age_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
+  priority: P2
+- source: carbon_credit_vintage
+  target: carbon_credit_age_years
+  equation_id: carbon_credit_age_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 92)
   priority: P2
 - source: biomass_generation_twh
   target: fleet_generation_twh

@@ -1991,7 +1991,7 @@ def test_every_equality_declares_an_edge_from_each_symbol_it_reads(
 	# megawatt-hour conversion -- taking 532 -> 534. Batch 80 adds seven more,
 	# the megawatt-to-terawatt conversion for each sector `_load` dial, so
 	# 534 -> 549.
-	assert len(determined) == 577, len(determined)
+	assert len(determined) == 587, len(determined)
 
 	sourced: dict[str, set[str]] = {}
 	for edge in graph.edges:
@@ -3072,7 +3072,7 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# this register. Its two new operands are both read by the two equations
 	# the batch added, and `data_centre_load_twh` is read by `energy_demand`,
 	# so none of the three enters it.
-	assert len(dead) == 168, len(dead)
+	assert len(dead) == 160, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
@@ -3080,7 +3080,10 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# failure points at a node rather than a count. It was `coal_capacity`
 	# until the endogenous fleet layer made that node derived, then
 	# `ac_voltage_limit` from the batch-12 coupling; batch 20 left it uncoupled.
-	assert "ac_voltage_limit" in dead
+	# Batch 92 coupled it through surge impedance loading, so the anchor is now
+	# `line_outage_start`, left open on purpose (a window equation would bind a
+	# knob to a field the solver ignores).
+	assert "line_outage_start" in dead
 
 
 def test_a_loop_variable_is_reported_as_moved(graph: ParameterGraph):
@@ -3556,7 +3559,7 @@ def test_the_audit_reports_what_it_did_not_check():
 	# megawatt dial the result does not carry as a column, so all seven join
 	# `skipped` and `checked` stays at 236: 298 -> 305, with the partition
 	# below moving 534 -> 549 to follow `computed()`.
-	assert len(audit.skipped) == 340, audit.skipped
+	assert len(audit.skipped) == 350, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -3632,7 +3635,7 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# `data_centre_load_twh` -- so 532 -> 534. Batch 80 adds seven derived
 	# nodes, the terawatt-year side of each sector load's conversion, so
 	# 534 -> 549.
-	assert len(audit.skipped) == 577, audit.skipped
+	assert len(audit.skipped) == 587, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -6014,7 +6017,7 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# `strength_of` counts as hard: 602 -> 603. The three edges it and the
 	# reshaped `fleet_build_balance` moved are all `hard`, so they change the
 	# edge count and not this one.
-	assert counts == {"hard": 648, "informational": 1, "soft": 2}, counts
+	assert counts == {"hard": 658, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -6521,7 +6524,7 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# equation: `peak_demand_shifted_definition` is the equation the sourced
 	# peak-demand band belongs to, and it shipped uncited while carrying a
 	# worked example at a default this batch moves.
-	assert len(declared) == 350, f"the citation register moved: {sorted(declared)}"
+	assert len(declared) == 360, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -6790,7 +6793,7 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 	# adds two more (the IT-load-times-PUE product and the megawatt-hour
 	# conversion), 532 -> 534, and batch 80 adds seven (the sector-load
 	# conversions), 534 -> 549.
-	assert compared == 577, (
+	assert compared == 587, (
 		f"expected 481 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "
