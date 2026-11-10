@@ -298,6 +298,40 @@ parameters:
     users:
     - Regulators
     - Planners
+  ev_range_km:
+    category: Demand
+    description: 'Distance an average new electric vehicle drives on one full charge: the battery energy divided by the energy it uses per kilometre. 333 km at defaults (60 kWh at 0.18 kWh/km).'
+    determinism: physical
+    name: Electric vehicle range
+    priority: P1
+    range:
+    - 0.0
+    - 10000.0
+    role: derived
+    source: The coupling build (batch 85)
+    status: existing
+    type: float
+    unit: km
+    users:
+    - Planners
+    - Regulators
+  adaptation_net_benefit:
+    category: Climate
+    description: 'Net annual benefit of the adaptation programme: the damage it avoids less what it costs. Signed, since a programme that costs more than it saves is negative. Zero at defaults.'
+    determinism: policy
+    name: Adaptation net benefit
+    priority: P1
+    range:
+    - -10000000000.0
+    - 10000000000.0
+    role: derived
+    source: The coupling build (batch 85)
+    status: existing
+    type: float
+    unit: USD/year
+    users:
+    - Planners
+    - Regulators
   adms_requirements:
     categories: []
     category: Digital
@@ -49544,6 +49578,69 @@ equations:
     determined_variables:
     - drought_risk
   
+  ev_range_definition:
+    description: 'Range is usable battery energy over consumption per kilometre. Dimensional check: kWh divided by kWh/km is km.'
+    determined_variables:
+    - ev_range_km
+    free_variables: []
+    latex: \mathrm{ev\_range\_km} = \mathrm{ev\_battery\_size} / \mathrm{ev\_efficiency}
+    lhs: ev_range_km
+    linearity: linear
+    name: Electric vehicle range
+    parameters:
+    - ev_battery_size
+    - ev_efficiency
+    - ev_range_km
+    priority: P1
+    reference: 'Larminie, J. and Lowry, J., Electric Vehicle Technology Explained, 2nd ed., Wiley (2012), Ch. 7 (range as stored energy over specific consumption). Unit identity; no archived copy.'
+    relation: eq
+    rhs: 'ev_battery_size / ev_efficiency'
+    solution_method: direct
+    system: demand_supply
+    tolerance: 1.0e-09
+    unit_check: true
+  mining_hydrogen_haulage_bound:
+    description: 'The hydrogen-powered haulage is a part of the mining fleet haulage, so it cannot exceed the total.'
+    determined_variables: []
+    free_variables:
+    - mining_haulage
+    - mining_hydrogen_haulage
+    latex: \mathrm{mining\_hydrogen\_haulage} \leq \mathrm{mining\_haulage}
+    lhs: mining_hydrogen_haulage
+    linearity: linear
+    name: Hydrogen haulage bound
+    parameters:
+    - mining_haulage
+    - mining_hydrogen_haulage
+    priority: P1
+    reference: 'A part of a total does not exceed the total (both in tonne-km per year); no external source is needed.'
+    relation: leq
+    rhs: 'mining_haulage'
+    solution_method: direct
+    system: demand_supply
+    tolerance: 1.0e-09
+    unit_check: true
+  adaptation_net_benefit_definition:
+    description: 'Net benefit is avoided damage less programme cost, both in USD per year.'
+    determined_variables:
+    - adaptation_net_benefit
+    free_variables: []
+    latex: \mathrm{adaptation\_net\_benefit} = \mathrm{adaptation\_benefits} - \mathrm{adaptation\_costs}
+    lhs: adaptation_net_benefit
+    linearity: linear
+    name: Adaptation net benefit
+    parameters:
+    - adaptation_benefits
+    - adaptation_costs
+    - adaptation_net_benefit
+    priority: P1
+    reference: 'Boardman, A.E., Greenberg, D.H., Vining, A.R. and Weimer, D.L., Cost-Benefit Analysis: Concepts and Practice, 5th ed., Cambridge University Press (2018), Ch. 1 (net benefit as benefits less costs). Definition; no archived copy.'
+    relation: eq
+    rhs: 'adaptation_benefits - adaptation_costs'
+    solution_method: direct
+    system: financial
+    tolerance: 1.0e-09
+    unit_check: true
 relationships:
 - description: A higher discount rate raises the annual charge on capex.
   direction: forward
@@ -60332,6 +60429,47 @@ relationships:
   strength: hard
   description: 'A factor of the drought risk product; risk is frequency times severity.'
   reference: IPCC AR6 WGI, Ch. 11 (2021). Local copy sources/archive/ipcc_ar6_wgi_ch11.pdf.
+  priority: P1
+- source: ev_battery_size
+  target: ev_range_km
+  equation_id: ev_range_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the range quotient.'
+  reference: 'The coupling build (batch 85)'
+  priority: P1
+- source: ev_efficiency
+  target: ev_range_km
+  equation_id: ev_range_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the range quotient.'
+  reference: 'The coupling build (batch 85)'
+  priority: P1
+- source: mining_haulage
+  target: mining_hydrogen_haulage
+  equation_id: mining_hydrogen_haulage_bound
+  relationship: constraint
+  direction: forward
+  strength: hard
+  description: 'Part of a total: hydrogen haulage must not exceed total haulage.'
+  reference: 'The coupling build (batch 85)'
+  priority: P1
+- source: adaptation_benefits
+  target: adaptation_net_benefit
+  equation_id: adaptation_net_benefit_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the net benefit difference.'
+  reference: 'The coupling build (batch 85)'
+  priority: P1
+- source: adaptation_costs
+  target: adaptation_net_benefit
+  equation_id: adaptation_net_benefit_definition
+  relationship: functional
+  strength: hard
+  description: 'Enters the net benefit difference.'
+  reference: 'The coupling build (batch 85)'
   priority: P1
 - source: biomass_generation_twh
   target: fleet_generation_twh

@@ -29,9 +29,13 @@ The PRG is Alea’s parameter- and equation-bound research graph. It maps every 
 
 ## 4. Coupling graph status
 
-Measured with `load_graph().uncoupled()` on 2026-11-10 after batch 84: **233** uncoupled nodes. The 702 and 422/488 figures in older notes and in `docs/param_coupling_worklist.md` are stale.
+Measured with `load_graph().uncoupled()` after batch 85: **227** uncoupled nodes. The 702 and 422/488 figures in older notes and in `docs/param_coupling_worklist.md` are stale.
 
-Share products: only `ev_share_new_sales` remains, and its base (new vehicle sales) is not a node, so it cannot be coupled yet. The rest of the 233 are qualitative or contractual (PPA terms, market structure, scenario metadata, methodology registers) or quantitative with no base node (`ev_battery_size`, `ev_efficiency`, `startup_cost_*`, hazard frequencies).
+Zero is not reachable. `uncoupled()` documents a structural floor: categorical nodes carry a level name with no arithmetic, and retired ids must not be wired into equations. Of the 227, 110 are categorical or placeholder-typed (unit `None`, default 500000) and 16 are tombstones, so the numeric live remainder is about 101.
+
+Batch 85 coupled `ev_battery_size` and `ev_efficiency` into the new derived `ev_range_km` (km), `mining_haulage` and `mining_hydrogen_haulage` through a part-of-total bound, and `adaptation_benefits` and `adaptation_costs` into the new derived `adaptation_net_benefit` (USD/year).
+
+Left alone on purpose: `line_outage_start` and `line_outage_end` (their descriptions record that a window equation would couple a knob to a field the solver ignores) and the hazard frequencies (`extreme_weather_events` is a sibling rate, not a stated superset of heatwaves and cold snaps). The remaining numeric nodes have no base node to attach to, such as `startup_cost_*`, `external_debt` and `sea_level_rise`.
 
 ## 5. Coupling classes
 
@@ -55,7 +59,7 @@ Name, stable id, role (primary / auxiliary / derived / gate), unit, physical/eco
 
 ## 9. Pinned registers
 
-The ScenarioAudit skipped count, the determined-variable count (542), the citation register (312), the dead-knob count and the strength tiers are pinned in `tests/ci/test_prg.py`. Each coupling batch that adds an equation moves them; the earlier 298/305 and 603/610 mismatches were pins that lagged the committed batches 82-84, not a tier-logic defect. Edges for a new equation must be declared in `relationships:` (`test_every_equality_declares_an_edge_from_each_symbol_it_reads`).
+The ScenarioAudit skipped count, the determined-variable count (544), the citation register (315), the dead-knob count and the strength tiers are pinned in `tests/ci/test_prg.py`. Each coupling batch that adds an equation moves them; the earlier 298/305 and 603/610 mismatches were pins that lagged the committed batches 82-84, not a tier-logic defect. Edges for a new equation must be declared in `relationships:` (`test_every_equality_declares_an_edge_from_each_symbol_it_reads`).
 
 ## 10. Outstanding work before "fully documented"
 
