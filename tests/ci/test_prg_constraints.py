@@ -298,9 +298,9 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	# total 606 -> 613. The shaped count stays at 72: none is a bound. The
 	# conversions mirror `fishing_community_load_definition`, which is the same
 	# 8760-hours-and-1e6-MWh-per-TWh identity over a megawatt dial.
-	assert cov["identities"] == 587
+	assert cov["identities"] == 593
 	# Batch 80 adds the seven above, so the total moves 606 -> 613.
-	assert cov["total"] == 661
+	assert cov["total"] == 667
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):

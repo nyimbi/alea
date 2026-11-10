@@ -806,6 +806,24 @@ parameters:
     priority: P2
     status: integrate
     deprecated_by: null
+  annual_debt_service_usd:
+    category: Macro
+    default: 20000000.0
+    description: Scheduled principal and interest due in a year, in US dollars. 2e7 at defaults.
+    determinism: fixed
+    name: Annual debt service
+    priority: P2
+    range:
+    - 1.0
+    - 1000000000000000.0
+    role: exogenous
+    source: Loan agreement; assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: USD/year
+    users:
+    - Planners
+    - Regulators
   annualised_capex_usd_per_kw:
     categories: []
     category: Costs
@@ -5740,6 +5758,25 @@ parameters:
     unit: '1'
     users:
     - Utilities
+  coal_fleet_remaining_fraction:
+    category: Macro
+    description: 'Share of the base-year coal fleet still operating at the retirement-schedule offset,
+      under exponential retirement at the graph retirement rate: exp(-rate x offset). 0.47 at 3 percent
+      and 25 years.'
+    determinism: physical
+    name: Coal fleet remaining
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: derived
+    source: The coupling build (batch 93)
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   coal_fuel_energy_gj:
     id: coal_fuel_energy_gj
     name: Coal fuel energy gj
@@ -6808,6 +6845,25 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  congestion_rent_usd_per_year:
+    category: Macro
+    default: 50000000.0
+    description: Annual congestion rent the system operator collects on the constrained paths, in US dollars.
+      5e7 at defaults.
+    determinism: fixed
+    name: Congestion rent
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: exogenous
+    source: System operator settlement data; assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: USD/year
+    users:
+    - Planners
+    - Regulators
   connections_per_year:
     category: Grid
     default: 250000.0
@@ -9407,6 +9463,24 @@ parameters:
     unit: '1'
     users:
     - Financiers
+    - Regulators
+  debt_service_reserve_cover_years:
+    category: Macro
+    description: 'Years of scheduled debt service the reserve accounts hold: reserve in dollars over annual
+      debt service. 0 at defaults since the reserve is zero.'
+    determinism: physical
+    name: Debt service reserve cover
+    priority: P2
+    range:
+    - 0.0
+    - 1000.0
+    role: derived
+    source: The coupling build (batch 93)
+    status: existing
+    type: float
+    unit: years
+    users:
+    - Planners
     - Regulators
   debt_service_usd_per_kw_year:
     categories: []
@@ -14194,6 +14268,24 @@ parameters:
     unit: s
     users:
     - Utilities
+  ftr_revenue_usd_per_year:
+    category: Macro
+    description: 'Rent paid to financial transmission right holders: with rights traded (switch 1) the
+      rent is passed to holders, otherwise it stays with the operator.'
+    determinism: physical
+    name: Transmission right revenue
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: derived
+    source: The coupling build (batch 93)
+    status: existing
+    type: float
+    unit: USD/year
+    users:
+    - Planners
+    - Regulators
   fuel_cost_biomass:
     categories: []
     category: Cost
@@ -15144,6 +15236,43 @@ parameters:
     - Regulators
     - Policymakers
     - Carbon
+  generator_bid_price_usd_per_mwh:
+    category: Macro
+    description: 'Offer price: marginal cost, plus the markup when strategic bidding is allowed (switch
+      0 or 1). 50 at defaults with the switch off.'
+    determinism: physical
+    name: Generator bid price
+    priority: P2
+    range:
+    - 0.0
+    - 100000.0
+    role: derived
+    source: The coupling build (batch 93)
+    status: existing
+    type: float
+    unit: USD/MWh
+    users:
+    - Planners
+    - Regulators
+  generator_marginal_cost_usd_per_mwh:
+    category: Macro
+    default: 50.0
+    description: Short-run marginal cost of the bidding generator, in dollars per megawatt-hour. 50 at
+      defaults.
+    determinism: fixed
+    name: Generator marginal cost
+    priority: P2
+    range:
+    - 0.0
+    - 10000.0
+    role: exogenous
+    source: Plant cost data; assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: USD/MWh
+    users:
+    - Planners
+    - Regulators
   geopolitical_risk_index:
     categories: []
     category: Geopolitical & Strategic
@@ -20929,6 +21058,42 @@ parameters:
     users:
     - Planners
     - Regulators
+  maintenance_baseline_downtime_hours:
+    category: Macro
+    default: 400.0
+    description: Annual planned-outage hours under a fixed maintenance calendar. 400 at defaults.
+    determinism: fixed
+    name: Baseline maintenance downtime
+    priority: P2
+    range:
+    - 0.0
+    - 8760.0
+    role: exogenous
+    source: Plant maintenance records; assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: hours
+    users:
+    - Planners
+    - Regulators
+  maintenance_downtime_hours:
+    category: Macro
+    description: 'Annual planned-outage hours after the schedule choice: baseline times one minus the
+      saving when optimisation is on (switch 1).'
+    determinism: physical
+    name: Maintenance downtime
+    priority: P2
+    range:
+    - 0.0
+    - 8760.0
+    role: derived
+    source: The coupling build (batch 93)
+    status: existing
+    type: float
+    unit: hours
+    users:
+    - Planners
+    - Regulators
   maintenance_duration:
     categories: []
     category: Operational
@@ -20992,6 +21157,25 @@ parameters:
     users:
     - Utilities
     source: docs/params.md
+  maintenance_optimisation_saving:
+    category: Macro
+    default: 0.2
+    description: Fractional cut in downtime that an optimised schedule delivers. 0.2 at defaults.
+    determinism: fixed
+    name: Maintenance optimisation saving
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    source: Assumption; schedule-optimisation studies report 10 to 30 percent; the default is a stated
+      assumption
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   maintenance_schedule:
     name: Maintenance schedule
     description: Planned maintenance timing
@@ -31042,6 +31226,24 @@ parameters:
     - Planners
     - Regulators
     - Researchers
+  strategic_bid_markup:
+    category: Macro
+    default: 0.15
+    description: Fractional markup over marginal cost a strategic generator adds. 0.15 at defaults.
+    determinism: fixed
+    name: Strategic bid markup
+    priority: P2
+    range:
+    - 0.0
+    - 10.0
+    role: exogenous
+    source: Lerner (1934) index; assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   strategic_bidding:
     categories: []
     category: Market
@@ -33291,6 +33493,25 @@ parameters:
     users:
     - Carbon
     source: docs/params.md
+  virtual_bid_volume_mw:
+    category: Macro
+    default: 100.0
+    description: Volume virtual traders offer in the day-ahead market if admitted, in megawatts. 100 at
+      defaults.
+    determinism: fixed
+    name: Virtual bid volume
+    priority: P2
+    range:
+    - 0.0
+    - 1000000.0
+    role: exogenous
+    source: Market data; assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: MW
+    users:
+    - Planners
+    - Regulators
   virtual_bidding:
     categories: []
     category: Market
@@ -33309,6 +33530,23 @@ parameters:
     subcategory: null
     type: float
     unit: '1'
+    users:
+    - Planners
+    - Regulators
+  virtual_volume_admitted_mw:
+    category: Macro
+    description: 'Virtual volume in the day-ahead market: the admission switch times the offered volume.'
+    determinism: physical
+    name: Virtual volume admitted
+    priority: P2
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    source: The coupling build (batch 93)
+    status: existing
+    type: float
+    unit: MW
     users:
     - Planners
     - Regulators
@@ -37362,6 +37600,28 @@ equations:
     system: reliability
     tolerance: 1.0e-06
     unit_check: true
+  coal_fleet_remaining_definition:
+    description: 'Constant-hazard retirement: the surviving fraction after t years is exp(-lambda t).'
+    determined_variables:
+    - coal_fleet_remaining_fraction
+    free_variables: []
+    latex: \mathrm{coal\_fleet\_remaining\_fraction} = e^{-\mathrm{coal\_retirement\_rate}\, \mathrm{coal\_retirement\_schedule}}
+    lhs: coal_fleet_remaining_fraction
+    linearity: nonlinear
+    name: Coal fleet remaining
+    parameters:
+    - coal_fleet_remaining_fraction
+    - coal_retirement_rate
+    - coal_retirement_schedule
+    priority: P2
+    reference: Survival function of a constant-hazard process, e.g. Ross, Introduction to Probability
+      Models, ch. 5; fleet retirement modelling per IEA WEO methodology
+    relation: eq
+    rhs: exp(-coal_retirement_rate * coal_retirement_schedule)
+    solution_method: direct
+    system: demand_supply
+    tolerance: 1.0e-09
+    unit_check: true
   coal_fuel_energy_definition:
     id: coal_fuel_energy_definition
     description: Fuel energy burned by the coal fleet in a year. Capacity times capacity factor times
@@ -39262,6 +39522,29 @@ equations:
     relation: eq
     rhs: debt_fraction * capex_usd_per_kw * cost_of_debt * (1 + cost_of_debt) ** asset_life / ((1 + cost_of_debt)
       ** asset_life - 1)
+    solution_method: direct
+    system: financial
+    tolerance: 1.0e-09
+    unit_check: true
+  debt_service_reserve_cover_years_definition:
+    description: Reserve (USD million x 1e6 to dollars) divided by annual debt service, in years of cover;
+      multiply by 12 for months. Project-finance lenders typically require 6 months, 0.5 years.
+    determined_variables:
+    - debt_service_reserve_cover_years
+    free_variables: []
+    latex: \mathrm{debt\_service\_reserve\_cover\_years} = \frac{10^{6}\, \mathrm{reserve\_accounts}}{\mathrm{annual\_debt\_service\_usd}}
+    lhs: debt_service_reserve_cover_years
+    linearity: linear
+    name: Debt service reserve cover
+    parameters:
+    - debt_service_reserve_cover_years
+    - reserve_accounts
+    - annual_debt_service_usd
+    priority: P2
+    reference: Yescombe, E.R. (2014), Principles of Project Finance, 2nd ed., Academic Press, ch. 13 (reserve
+      accounts). No archived copy.
+    relation: eq
+    rhs: reserve_accounts * 1000000 / annual_debt_service_usd
     solution_method: direct
     system: financial
     tolerance: 1.0e-09
@@ -41483,6 +41766,28 @@ equations:
     system: inertia
     tolerance: 1.0e-09
     unit_check: true
+  ftr_revenue_definition:
+    description: 'Switch times rent: rights fully fund from the congestion rent (revenue adequacy).'
+    determined_variables:
+    - ftr_revenue_usd_per_year
+    free_variables: []
+    latex: \mathrm{ftr\_revenue\_usd\_per\_year} = \mathrm{financial\_transmission\_rights} \times \mathrm{congestion\_rent\_usd\_per\_year}
+    lhs: ftr_revenue_usd_per_year
+    linearity: linear
+    name: Transmission right revenue
+    parameters:
+    - ftr_revenue_usd_per_year
+    - financial_transmission_rights
+    - congestion_rent_usd_per_year
+    priority: P2
+    reference: Hogan, W.W. (1992), Contract networks for electric power transmission, Journal of Regulatory
+      Economics 4(3), 211-242
+    relation: eq
+    rhs: financial_transmission_rights * congestion_rent_usd_per_year
+    solution_method: direct
+    system: price_demand
+    tolerance: 1.0e-09
+    unit_check: true
   fuel_ccs_adoption_bound:
     description: Coal and gas carbon capture are competing claims on the same capture capability, so their
       adoption shares cannot together exceed one. A ceiling rather than an equality because a fleet may
@@ -42038,6 +42343,31 @@ equations:
     rhs: gender_action_plan * community_development_fund_usd_per_year
     solution_method: direct
     system: employment
+    tolerance: 1.0e-09
+    unit_check: true
+  generator_bid_price_definition:
+    description: Cost-based offer at switch 0; cost times (1 + markup) at switch 1, the Lerner markup
+      rule.
+    determined_variables:
+    - generator_bid_price_usd_per_mwh
+    free_variables: []
+    latex: \mathrm{generator\_bid\_price\_usd\_per\_mwh} = \mathrm{generator\_marginal\_cost\_usd\_per\_mwh}
+      \times (1 + \mathrm{strategic\_bidding} \times \mathrm{strategic\_bid\_markup})
+    lhs: generator_bid_price_usd_per_mwh
+    linearity: linear
+    name: Generator bid price
+    parameters:
+    - generator_bid_price_usd_per_mwh
+    - generator_marginal_cost_usd_per_mwh
+    - strategic_bidding
+    - strategic_bid_markup
+    priority: P2
+    reference: Lerner, A.P. (1934), The Concept of Monopoly and the Measurement of Monopoly Power, Review
+      of Economic Studies 1(3), 157-175
+    relation: eq
+    rhs: generator_marginal_cost_usd_per_mwh * (1 + strategic_bidding * strategic_bid_markup)
+    solution_method: direct
+    system: price_demand
     tolerance: 1.0e-09
     unit_check: true
   geopolitical_risk_index_definition:
@@ -45716,6 +46046,29 @@ equations:
     rhs: lpg_subsidies * cooking_lpg_penetration * households_total * lpg_use_kg_per_household_year
     solution_method: direct
     system: financial
+    tolerance: 1.0e-09
+    unit_check: true
+  maintenance_downtime_definition:
+    description: Baseline downtime reduced by the saving when the switch is on.
+    determined_variables:
+    - maintenance_downtime_hours
+    free_variables: []
+    latex: \mathrm{maintenance\_downtime\_hours} = \mathrm{maintenance\_baseline\_downtime\_hours} \times
+      (1 - \mathrm{maintenance\_schedule\_optimisation} \times \mathrm{maintenance\_optimisation\_saving})
+    lhs: maintenance_downtime_hours
+    linearity: linear
+    name: Maintenance downtime
+    parameters:
+    - maintenance_downtime_hours
+    - maintenance_baseline_downtime_hours
+    - maintenance_schedule_optimisation
+    - maintenance_optimisation_saving
+    priority: P2
+    reference: Definition of a switch-gated saving; the 0.2 default is a stated assumption
+    relation: eq
+    rhs: maintenance_baseline_downtime_hours * (1 - maintenance_schedule_optimisation * maintenance_optimisation_saving)
+    solution_method: direct
+    system: reliability
     tolerance: 1.0e-09
     unit_check: true
   maladaptation_risk_alias:
@@ -51102,6 +51455,28 @@ equations:
     rhs: fuel_price_usd_per_mwh + carbon_cost_usd_per_mwh
     solution_method: direct
     system: cost_accounting
+    tolerance: 1.0e-09
+    unit_check: true
+  virtual_volume_admitted_definition:
+    description: Switch (0 or 1) times offered volume.
+    determined_variables:
+    - virtual_volume_admitted_mw
+    free_variables: []
+    latex: \mathrm{virtual\_volume\_admitted\_mw} = \mathrm{virtual\_bidding} \times \mathrm{virtual\_bid\_volume\_mw}
+    lhs: virtual_volume_admitted_mw
+    linearity: linear
+    name: Virtual volume admitted
+    parameters:
+    - virtual_volume_admitted_mw
+    - virtual_bidding
+    - virtual_bid_volume_mw
+    priority: P2
+    reference: Definition of a gating switch; Hogan (2016) on virtual bidding and convergence, Electricity
+      Journal
+    relation: eq
+    rhs: virtual_bidding * virtual_bid_volume_mw
+    solution_method: direct
+    system: price_demand
     tolerance: 1.0e-09
     unit_check: true
   voc_emissions_definition:
@@ -63661,6 +64036,118 @@ relationships:
   strength: hard
   description: Enters the identity.
   reference: The coupling build (batch 92)
+  priority: P2
+- source: reserve_accounts
+  target: debt_service_reserve_cover_years
+  equation_id: debt_service_reserve_cover_years_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 93)
+  priority: P2
+- source: annual_debt_service_usd
+  target: debt_service_reserve_cover_years
+  equation_id: debt_service_reserve_cover_years_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 93)
+  priority: P2
+- source: coal_retirement_rate
+  target: coal_fleet_remaining_fraction
+  equation_id: coal_fleet_remaining_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 93)
+  priority: P2
+- source: coal_retirement_schedule
+  target: coal_fleet_remaining_fraction
+  equation_id: coal_fleet_remaining_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 93)
+  priority: P2
+- source: generator_marginal_cost_usd_per_mwh
+  target: generator_bid_price_usd_per_mwh
+  equation_id: generator_bid_price_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 93)
+  priority: P2
+- source: strategic_bidding
+  target: generator_bid_price_usd_per_mwh
+  equation_id: generator_bid_price_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 93)
+  priority: P2
+- source: strategic_bid_markup
+  target: generator_bid_price_usd_per_mwh
+  equation_id: generator_bid_price_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 93)
+  priority: P2
+- source: virtual_bidding
+  target: virtual_volume_admitted_mw
+  equation_id: virtual_volume_admitted_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 93)
+  priority: P2
+- source: virtual_bid_volume_mw
+  target: virtual_volume_admitted_mw
+  equation_id: virtual_volume_admitted_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 93)
+  priority: P2
+- source: financial_transmission_rights
+  target: ftr_revenue_usd_per_year
+  equation_id: ftr_revenue_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 93)
+  priority: P2
+- source: congestion_rent_usd_per_year
+  target: ftr_revenue_usd_per_year
+  equation_id: ftr_revenue_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 93)
+  priority: P2
+- source: maintenance_baseline_downtime_hours
+  target: maintenance_downtime_hours
+  equation_id: maintenance_downtime_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 93)
+  priority: P2
+- source: maintenance_schedule_optimisation
+  target: maintenance_downtime_hours
+  equation_id: maintenance_downtime_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 93)
+  priority: P2
+- source: maintenance_optimisation_saving
+  target: maintenance_downtime_hours
+  equation_id: maintenance_downtime_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 93)
   priority: P2
 - source: biomass_generation_twh
   target: fleet_generation_twh

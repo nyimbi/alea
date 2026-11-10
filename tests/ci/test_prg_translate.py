@@ -315,7 +315,7 @@ the current membership is the `deprecated_uncoupled` set in
 	# the register. The batch's two new free nodes -- the IT load and the PUE
 	# -- both enter it, neither with a translation. Two in and one out is +1.
 	assert cov["count"] == 3, cov
-	assert cov["total"] == 901, cov
+	assert cov["total"] == 908, cov
 	assert cov["count"] + len(cov["untranslated"]) == cov["total"]
 	assert set(cov["translated"]) | set(cov["untranslated"]) == {
 		name for name in graph.nodes if graph.is_settable(name)
@@ -424,7 +424,7 @@ the only difference between the two sets.
 	# 863 -> 864 for two new free dials and one node leaving the settable
 	# surface.
 	missing = untranslated(graph)
-	assert len(missing) == 898, missing
+	assert len(missing) == 905, missing
 	assert "voll_usd_per_mwh" in missing
 	assert "capacity_factor" in missing
 	# The fleet nodes are not in this register, and their absence is a fact
