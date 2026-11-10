@@ -1,0 +1,1774 @@
+                                                               Chapter 1: Introduction
+
+
+
+
+CHAPTER 1
+
+
+
+INTRODUCTION
+
+
+
+
+2006 IPCC Guidelines for National Greenhouse Gas Inventories                      1.1
+Volume 2: Energy
+
+
+
+
+Authors
+Amit Garg (India), Kainou Kazunari (Japan), and Tinus Pulles (Netherlands),
+
+
+
+
+1.2                                            2006 IPCC Guidelines for National Greenhouse Gas Inventories
+                                                                                                                                        Chapter 1: Introduction
+
+
+
+
+                                                                       Contents
+
+1     Introduction
+    1.1     Introduction ...........................................................................................................................................1.5
+    1.2     Source categories...................................................................................................................................1.5
+    1.3     Methodological approaches...................................................................................................................1.6
+      1.3.1         Emissions from fossil fuel combustion .........................................................................................1.6
+          1.3.1.1        Tiers .........................................................................................................................................1.6
+          1.3.1.2        Selecting tiers: a general decision tree.....................................................................................1.8
+          1.3.1.3        Relation to other inventory approaches .................................................................................1.10
+      1.3.2         Fugitive emissions.......................................................................................................................1.10
+      1.3.3         CO2 capture and storage ..............................................................................................................1.11
+    1.4     Data collection issues ..........................................................................................................................1.11
+      1.4.1         Activity data ................................................................................................................................1.11
+          1.4.1.1        Fuel definitions ......................................................................................................................1.11
+          1.4.1.2        Conversion of energy units ....................................................................................................1.16
+          1.4.1.3        Activity data sources..............................................................................................................1.17
+          1.4.1.4        Time series consistency .........................................................................................................1.20
+      1.4.2         Emission factors ..........................................................................................................................1.20
+          1.4.2.1        CO2 emission factors .............................................................................................................1.20
+          1.4.2.2        Other greenhouse gases .........................................................................................................1.24
+          1.4.2.3        Indirect greenhouse gases ......................................................................................................1.24
+    1.5     Uncertainty in inventory estimates......................................................................................................1.25
+      1.5.1         General ........................................................................................................................................1.25
+      1.5.2         Activity data uncertainties...........................................................................................................1.25
+      1.5.3         Emission factor uncertainties ......................................................................................................1.25
+    1.6     QA/QC and completeness ...................................................................................................................1.27
+      1.6.1         Reference Approach ....................................................................................................................1.27
+      1.6.2         Potential double counting between sectors..................................................................................1.28
+          1.6.2.1        Non-energy use of fuels.........................................................................................................1.28
+          1.6.2.2        Waste as a fuel .......................................................................................................................1.28
+      1.6.3         Mobile versus stationary combustion ..........................................................................................1.28
+      1.6.4         National boundaries.....................................................................................................................1.28
+      1.6.5         New sources ................................................................................................................................1.29
+References          .....................................................................................................................................................1.29
+
+
+
+
+2006 IPCC Guidelines for National Greenhouse Gas Inventories                                                                                                            1.3
+Volume 2: Energy
+
+
+
+
+                                                            Figures
+
+      Figure 1.1   Activity and source structure in the energy sector.................................................................1.7
+      Figure 1.2   Generalised decision tree for estimating emissions from fuel combustion............................1.9
+      Figure 1.3   Some typical examples of probability distribution functions (PDFs) for the
+                   effective CO2 emission factors for the combustion of fuels.................................................1.26
+
+
+
+
+                                                              Tables
+
+      Table 1.1    Definitions of fuel types used in the 2006 IPCC Guidelines...............................................1.12
+      Table 1.2    Default net calorific values (NCVs) and lower and upper limits of the 95 percent
+                   confidence intervals ............................................................................................................1.18
+      Table 1.3    Default values of carbon content ........................................................................................1.21
+      Table 1.4    Default CO2 emission factors for combustion ....................................................................1.23
+
+
+
+
+                                                                  Box
+
+      Box 1.1      Conversion between gross and net calorific values .............................................................1.17
+
+
+
+
+1.4                                                         2006 IPCC Guidelines for National Greenhouse Gas Inventories
+                                                                                                  Chapter 1: Introduction
+
+
+
+
+1 INTRODUCTION
+1.1               INTRODUCTION
+Energy systems are for most economies largely driven by the combustion of fossil fuels. During combustion the
+carbon and hydrogen of the fossil fuels are converted mainly into carbon dioxide (CO2) and water (H2O),
+releasing the chemical energy in the fuel as heat. This heat is generally either used directly or used (with some
+conversion losses) to produce mechanical energy, often to generate electricity or for transportation. The energy
+sector is usually the most important sector in greenhouse gas emission inventories, and typically contributes over
+90 percent of the CO2 emissions and 75 percent of the total greenhouse gas emissions in developed countries.
+CO2 accounts typically for 95 percent of energy sector emissions with methane and nitrous oxide responsible for
+the balance. Stationary combustion is usually responsible for about 70 percent of the greenhouse gas emissions
+from the energy sector. About half of these emissions are associated with combustion in energy industries mainly
+power plants and refineries. Mobile combustion (road and other traffic) causes about one quarter of the
+emissions in the energy sector.
+
+1.2               SOURCE CATEGORIES
+The energy sector mainly comprises:
+•     exploration and exploitation of primary energy sources,
+•     conversion of primary energy sources into more useable energy forms in refineries and power plants
+•     transmission and distribution of fuels
+•     use of fuels in stationary and mobile applications.
+Emissions arise from these activities by combustion and as fugitive emissions, or escape without combustion.
+For inventory purposes, fuel combustion may be defined as the intentional oxidation of materials within an
+apparatus that is designed to provide heat or mechanical work to a process, or for use away from the apparatus.
+This definition aims to separate the combustion of fuels for distinct and productive energy use from the heat
+released from the use of hydrocarbons in chemical reactions in industrial processes, or from the use of
+hydrocarbons as industrial products. It is good practice to apply this definition as fully as possible but there are
+cases where demarcation with the industrial processes and product use (IPPU) sector is needed. The following
+principle has been adopted for this:
+Combustion emissions from fuels obtained directly or indirectly from the feedstock for an IPPU process will
+normally be allocated to the part of the source category in which the process occurs. These source categories
+are normally 2B and 2C. However, if the derived fuels are transferred for combustion in another source
+category, the emissions should be reported in the appropriate part of Energy Sector source categories (normally
+1A1 or 1A2). Please refer to Box 1.1 and section 1.3.2 in chapter 1 of the IPPU Volume for examples and further
+details.
+When the total emissions from the gases are calculated, the quantity transferred to the energy sector should be
+noted as an information item under IPPU source category and reported in the relevant energy sector source
+category to avoid double counting.
+Typically, only a few percent of the emissions in the energy sector arise as fugitive emissions from extraction,
+transformation and transportation of primary energy carriers. Examples are leakage of natural gas and the
+emissions of methane during coal mining and flaring during oil/gas extraction and refining1. In some cases where
+countries produce or transport significant quantities of fossil fuels, fugitive emissions can make a much larger
+contribution to the national total. Combustion and fugitive emissions from production, processing and handling
+of oil and gas should be allocated according to the national territory of the facilities including offshore areas (see
+Chapter 8 - section 8.2.1 in Vol. 1). These offshore areas may be an economic zone agreed upon with other
+countries.
+
+
+
+
+1
+    Note that the combustion emissions due to transport of energy carriers by ship, rail and road are included in the mobile
+    combustion processes.
+
+
+
+
+2006 IPCC Guidelines for National Greenhouse Gas Inventories                                                            1.5
+Volume 2: Energy
+
+
+Figure 1.1 shows the structure of activities and source categories within the energy sector. This structure is
+based on the coding and naming as defined in the 1996 IPCC Guidelines and the Common Reporting Format
+(CRF) used by the UNFCCC. The technical chapters of this Volume follow this source category structure.
+
+1.3            METHODOLOGICAL APPROACHES
+
+1.3.1          Emissions from fossil fuel combustion
+There are three Tiers presented in the 2006 IPCC Guidelines for estimating emissions from fossil fuel
+combustion. In addition a Reference Approach is presented. It can be used as an independent check of the
+sectoral approach and to produce a first-order estimate of national greenhouse gas emissions if only very limited
+resources and data structures are available to the inventory compiler.
+The 2006 IPCC Guidelines estimate carbon emissions in terms of the species which are emitted. During the
+combustion process, most carbon is immediately emitted as CO2. However, some carbon is released as carbon
+monoxide (CO), methane (CH4) or non-methane volatile organic compounds (NMVOCs). Most of the carbon
+emitted as these non-CO2 species eventually oxidises to CO2 in the atmosphere. This amount can be estimated
+from the emissions estimates of the non-CO2 gases (See Volume 1, Chapter 7).
+In the case of fuel combustion, the emissions of these non-CO2 gases contain very small amounts of carbon
+compared to the CO2 estimate and, at Tier 1, it is more accurate to base the CO2 estimate on the total carbon in
+the fuel. This is because the total carbon in the fuel depends on the fuel alone, while the emissions of the non-
+CO2 gases depend on many factors such as technologies, maintenance etc which, in general, are not well known.
+At higher tiers, the amount of carbon in these non-CO2 gases can be accounted for.
+Since CO2 emissions are independent of combustion technology whilst CH4 and N2O emissions are strongly
+dependent on the technology, this chapter only provides default emission factors for CO2 that are applicable to
+all combustion processes, both stationary and mobile. Default emission factors for the other gases are provided
+in subsequent chapters of this volume, since combustion technologies differ widely between source categories
+within the source sector “Combustion” and hence will vary between these subsectors.
+
+1.3.1.1           T IERS
+TIER 1
+The Tier 1 method is fuel-based, since emissions from all sources of combustion can be estimated on the basis of
+the quantities of fuel combusted (usually from national energy statistics) and average emission factors. Tier 1
+emission factors are available for all relevant direct greenhouse gases.
+The quality of these emission factors differs between gases. For CO2, emission factors mainly depend upon the
+carbon content of the fuel. Combustion conditions (combustion efficiency, carbon retained in slag and ashes etc.)
+are relatively unimportant. Therefore, CO2 emissions can be estimated fairly accurately based on the total
+amount of fuels combusted and the averaged carbon content of the fuels.
+However, emission factors for methane and nitrous oxide depend on the combustion technology and operating
+conditions and vary significantly, both between individual combustion installations and over time. Due to this
+variability, use of averaged emission factors for these gases, that must account for a large variability in
+technological conditions, will introduce relatively large uncertainties.
+TIER 2
+In the Tier 2 method for energy, emissions from combustion are estimated from similar fuel statistics, as used in
+the Tier 1 method, but country-specific emission factors are used in place of the Tier 1 defaults. Since available
+country-specific emission factors might differ for different specific fuels, combustion technologies or even
+individual plants, activity data could be further disaggregated to properly reflect such disaggregated sources. If
+these country-specific emission factors indeed are derived from detailed data on carbon contents in different
+batches of fuels used or from more detailed information on the combustion technologies applied in the country,
+the uncertainties of the estimate should decrease, and the trends over time can be better estimated.
+If an inventory compiler has well documented measurements of the amount of carbon emitted in non-CO2 gases
+or otherwise not oxidised, it can be taken into account in this tier in the country-specific emission factors. It is
+good practice to document how this has been done.
+
+
+
+
+1.6                                               2006 IPCC Guidelines for National Greenhouse Gas Inventories
+                                                                        Chapter 1: Introduction
+
+
+
+Figure 1.1         Activity and source structure in the Energy Sector
+
+
+
+.
+
+
+
+
+2006 IPCC Guidelines for National Greenhouse Gas Inventories                               1.7
+Volume 2: Energy
+
+
+
+TIER 3
+In the Tier 3 methods for energy, either detailed emission models or measurements and data at individual plant
+level are used where appropriate. Properly applied, these models and measurements should provide better
+estimates primarily for non-CO2 greenhouse gases, though at the cost of more detailed information and effort.
+Continuous emissions monitoring (CEM) of flue gases is generally not justified for accurate measurement of
+CO2 emissions only (because of the comparatively high cost) but could be undertaken particularly when
+monitors are installed for measurement of other pollutants such as SO2 or NOx. Continuous emissions
+monitoring is particularly useful for combustion of solid fuels where it is more difficult to measure fuel flow
+rates, or when fuels are highly variable, or fuel analysis is otherwise expensive. Direct measurement of fuel flow,
+especially for gaseous or liquid fuels, using quality assured fuel flow meters may improve the accuracy of CO2
+emission calculations for sectors using these fuel flow meters. When considering using measurement data, it is
+good practice to assess the representativeness of the sample and suitability of measurement method. The best
+measurement methods are those that have been developed by official standards organisations and field-tested to
+determine their operational characteristics. For further information on the usage of measured data, check Chapter
+2, Approaches to Data Collection in Volume 1.
+It should be noted that additional types of uncertainties are introduced through the use of such models and
+measurements should therefore be well validated, including a comparison of calculated fuel consumption with
+energy statistics, thorough assessments of their uncertainties and systematic errors, as described in Volume 1,
+Chapter 6.
+If an inventory compiler has well documented measurements of the amount of carbon emitted in non-CO2 gases
+or otherwise not oxidised, it can be taken into account in this tier in the country-specific emission factors. It is
+good practice to document how this has been done. If emission estimates are based on measurements then they
+will already include the direct emissions of CO2 only.
+
+1.3.1.2           S ELECTING TIERS : A GENERAL DECISION TREE
+For each source category and greenhouse gas, the inventory compiler has a choice of applying different methods,
+as described in the Tiers for the source category and gas. The inventory compiler could use different tiers for
+different source categories, depending on the importance of the source category within the national total (cf. key
+categories Chapter 4 of Volume 1) and the availability of resources in terms of time, work force, sophisticated
+models, and budget. To perform a key category analysis, data on the relative importance of each source category
+already calculated is required. This knowledge could be derived from an earlier inventory, and updated if
+necessary.
+Figure 1.2 presents a generalized decision tree for selecting Tiers for fuel combustion. This decision tree applies
+in general for each of the fuel combustion activities and for each of the gases.
+The measurements referred to in this decision tree should be considered as continuous measurements.
+Continuous measurements are becoming more widely available and this increase in availability is in part driven
+by regulatory pressure and emissions trading. The decision tree allows available emission measurements to be
+used (Tier 3) in combination with a Tier 2 or Tier 1 estimate within the same activity. Measurements will
+typically be available only for larger industrial sources and hence only occur in stationary combustion. For CO2,
+particularly for gaseous and liquid fuels, such measurements should in most cases preferably be used to
+determine the carbon content of the fuel before combustion, whereas for other gases stack measurements could
+be applied. For some inhomogeneous solid fuels, stack measurements might provide more precise emission data.
+Particularly for road transport, using a Tier 2 or Tier 3 technology-specific method for estimating N2O and CH4
+emissions will usually bring large benefits. However, for CO2 in general, a Tier 1 method based on fuel carbon
+and fuel amount used will often suffice. This means that the generalized decision tree might result in different
+approaches for different gases for the same source category. Since emission models and technology-specific
+methods for road transport might be based on vehicle kilometres travelled rather than on fuel used, it is good
+practice to show that the activity data applied in such models and higher tier methods are consistent with the fuel
+sales data. These fuel sales data are likely to be used to estimate CO2 emissions from road transport. The
+decision tree allows the inventory compiler to use sophisticated models in combination with any other Tier
+methodology, including measurements, provided that the model is consistent with the fuel combustion statistics.
+In cases where a discrepancy between fuel sales and vehicle kilometres travelled is detected, the activity data,
+used in the technology-specific method should be adjusted to match fuel sales statistics, unless it can be shown
+that the fuel sales statistics are inaccurate.
+
+
+
+
+1.8                                               2006 IPCC Guidelines for National Greenhouse Gas Inventories
+                                                                                                          Chapter 1: Introduction
+
+
+
+Figure 1.2                Generalised decision tree for estimating emissions from fuel combustion
+
+
+              Start
+
+
+
+              Are
+           emissions                              Are all
+                                                                                                                        Use
+         measurements                        single sources in
+                               Yes                                                     Yes                         measurements
+         available with                    the source category
+                                                                                                                  Tier 3 approach.
+          satisfactory                          measured?
+              QC?
+
+                                                    No
+
+                                                                                      Are
+                                                                                                                        Use
+                                                    Is                             country-
+                                                                                                                   measurements
+                                                 specific                        specific EFs
+                                                                                                                  Tier 3 approach
+                                                 fuel use                      available for the
+                                                                      Yes                                Yes     and combine with
+                                             available for the                unmeasured part of
+                                                                                                                 AD and country-
+                                                category?                           the key
+                                                                                                                    specific EFs
+                                                                                  category?
+                                                                                                                  Tier 2 approach.
+
+               No
+                                                                                       No
+
+
+                                                                                      Does
+                                           No                                   the unmeasured
+                                                                                                                   Get Country-
+                                                                              part belong to a key        Yes
+                                                                                                                   Specific Data
+                                                                                   category?
+
+
+                                                                                                                        Use
+                                                                                                                   measurements
+                                                             Can the fuel                                         Tier 3 approach
+                                                        consumption estimated                No                  and combine with
+           Is a detailed
+                                                   by the model be reconciled with                                AD and default
+        estimation model             Yes
+                                                     national fuel statistics or be                                 EFs Tier 1
+            available?
+                                                       verified by independent                                       approach.
+                                                               sources?
+
+               No
+                                        No                                                                           Use model
+                                                                                          Yes
+                                                                                                                  Tier 3 approach.
+              Are
+      country-specific EFs
+           available?                                                                                              Use country-
+                                                                                                                    specific EFs
+                                                                      Yes
+               No                                                                                                 and suitable AD
+                                                                                                                  Tier 2 approach.
+             Is this
+                                                            Get country-
+        a key category?                      Yes
+                                                            specific data.
+                                                                                                                  Use default EFs
+                                                                 No                                               and suitable AD
+                                                                                                                  Tier 1 approach.
+
+Note: See Volume 1 Chapter 4, “Methodological Choice and Key Categories” (noting section 4.1.2 on limited resources) for discussion of
+key categories and use of decision trees.
+
+
+
+
+2006 IPCC Guidelines for National Greenhouse Gas Inventories                                                                       1.9
+Volume 2: Energy
+
+
+
+
+1.3.1.3             R ELATION TO OTHER INVENTORY APPROACHES
+The IPCC Guidelines for National Greenhouse Gas Inventories are specifically designed for countries to prepare
+and report inventories of greenhouse gases. Some countries may also be required to submit emission inventories
+of various gases from the Energy Sector to United Nations Economic Commission for Europe (UNECE) Long
+Range Transboundary Air Pollution (LRTAP) Convention 2 . The UNECE has adopted the joint European
+Monitoring Evaluation Programme (EMEP)/CORINAIR Emission Inventory Guidebook 3 for inventory
+reporting.
+Countries which are Parties to different Conventions have to use the appropriate reporting procedures when
+reporting to a specific Convention. The IPCC approach meets UNFCCC needs for calculating national totals
+(without further spatial resolution) and identifying sectors within which emissions occur, whereas the
+EMEP/CORINAIR approach is technology based and includes spatial allocation of emissions (point and area
+sources).
+Both systems follow the same basic principles:
+•      complete coverage of anthropogenic emissions (CORINAIR also considers natural emissions);
+•      annual source category totals of national emissions;
+•      clear distinction between energy and non-energy related emissions;
+•      transparency and full documentation permitting detailed verification of activity data and emission factors.
+Considerable progress has been made in the harmonisation of the IPCC and EMEP/CORINAIR approaches.
+UNECE LRTAP reporting now has accepted a source category split that is fully compatible with the UNFCCC
+split as defined in the Common Reporting Framework (CRF). Differences only occur in the level of aggregation
+for some specific sources. Such differences only occur in the energy sector in the transport source categories,
+where UNECE LRTAP requires further detail in the emissions from road transport.
+The CORINAIR programme has developed its approach further to include additional sectors and sub-divisions
+so that a complete CORINAIR inventory, including emission estimates, can be used to produce reports in both
+the UNFCCC/IPCC or EMEP/CORINAIR reporting formats for submission to their respective Conventions.
+Minor adjustments based on additional local knowledge may be necessary to complete such reports for
+submission.
+One significant difference between the approaches that remain is the spatial allocation of road transport
+emissions: while CORINAIR, with a view to the input requirements of atmospheric dispersion models, applies
+the principle of territoriality (emission allocation according to fuel consumption), the 2006 IPCC Guidelines
+follow what is usually the most accurate data: fuel sales (usually fuel sales are more accurate than vehicle
+kilometres). In the context of these IPCC Guidelines, countries with a substantial disparity between emissions as
+calculated from fuel sales and from fuel consumption have the option of estimating true consumption and
+reporting the emissions from consumption and trade separately using appropriate higher tier methods. National
+totals must be consistent with fuel sales.
+Since both approaches are now generally well harmonised, the 2006 IPCC Guidelines will concentrate on
+emissions of direct greenhouse gases, CO2, CH4 and N2O with some advice on NMVOCs where these are closely
+linked to emissions of direct greenhouse gases (non-energy use of fuels, CO2 inputs to the atmosphere from
+oxidation of NMVOCs). Users are referred to the EMEP/CORINAIR Emission Inventory Guidebook for
+emission estimation methods for indirect greenhouse gases and other air pollutants.
+
+
+1.3.2            Fugitive emissions
+This volume provides methodologies for the estimation of fugitive emissions of CO2, CH4 and N2O.
+Methodologies for estimating fugitive emissions from the Energy Sector are very different from those used for
+fossil fuel combustion. Fugitive emissions tend to be diffuse and may be difficult to monitor directly. In addition,
+the methods are quite specific to the type of emission release. For example, methods for coal mining are linked
+
+
+
+2
+    There are 49 parties to the UNECE Convention on Long-range Transboundary Air Pollution including USA, Canada, most
+    of Europe including Russia, Armenia and Georgia and some central Asian countries such as Kazakhstan and Kyrgyzstan.
+3
+    See EEA 2005.
+
+
+
+
+1.10                                                2006 IPCC Guidelines for National Greenhouse Gas Inventories
+                                                                                           Chapter 1: Introduction
+
+
+to the geological characteristics of the coal seams, whereas methods for fugitive leaks from oil and gas facilities
+are linked to common types of equipment.
+There can be anthropogenic emissions associated with the use of geothermal power. At this stage no
+methodology to estimate these emissions is available. However if these emissions can be measured, they should
+be reported in source category 1.B.3 “Other emissions from energy production”.
+
+
+1.3.3            CO 2 capture and storage
+According to the IPCC Third Assessment Report, over the 21st century substantial amounts of CO2 emissions
+need to be avoided to achieve stabilization of atmospheric greenhouse gas concentrations. CO2 capture and
+storage (CCS) will be one of the options in the portfolio of measures for stabilization of greenhouse gas
+concentrations while the use of fossil fuels continues. Chapter 5 of this volume presents an overview of the CCS
+system and provides emission estimation methods for CO2 capture, CO2 transport, CO2 injection and
+underground CO2 storage. It is good practice for inventory compilers to ensure that the CCS system is handled in
+a complete and consistent manner across the entire Energy Sector.
+
+1.4              DATA COLLECTION ISSUES
+
+1.4.1            Activity data
+In the Energy sector, the activity data are typically the amounts of fuels combusted. Such data are sufficient to
+perform a Tier 1 analysis. In higher Tier approaches additional data are required on fuel characteristics and the
+combustion technologies applied.
+In order to ensure transparency and comparability, a consistent classification scheme for fuel types need to be
+used. This section provides:
+1.    definitions of the different fuels
+2.    the units in which to express the activity data
+3.    guidance on possible sources of activity data and
+4.    guidance on time series consistency
+A clear explanation of energy statistics and energy balances is provided in the “Energy Statistics Manual” of the
+International Energy Agency (IEA)4.
+
+1.4.1.1             F UEL DEFINITIONS
+Common terms and definitions of fuels are necessary for countries to describe emissions from fuel combustion
+activities, consistently. A list of fuel types based primarily on the definitions of the International Energy Agency
+(IEA) is provided below. These definitions are used in the 2006 IPCC Guidelines.
+
+
+
+
+4
+    OECD/IEA Energy Statistics Manual (2004), OECD/IEA, Paris. This publication can be downloaded for free at
+    www.iea.org .
+
+
+
+
+2006 IPCC Guidelines for National Greenhouse Gas Inventories                                                   1.11
+Volume 2: Energy
+
+
+
+                                                     TABLE 1.1
+                              DEFINITIONS OF FUEL TYPES USED IN THE 2006 IPCC GUIDELINES
+  English Description                                                    Comments
+  LIQUID (Crude oil and petroleum products)
+                             Crude oil is a mineral oil consisting of a mixture of hydrocarbons of natural origin, being
+                             yellow to black in colour, of variable density and viscosity. It also includes lease condensate
+  Crude Oil
+                             (separator liquids) which are recovered from gaseous hydrocarbons in lease separation
+                             facilities.
+                             A tar-like substance that occurs naturally in Venezuela. It can be burned directly or refined
+  Orimulsion
+                             into light petroleum products.
+                             NGLs are the liquid or liquefied hydrocarbons produced in the manufacture, purification and
+                             stabilisation of natural gas. These are those portions of natural gas which are recovered as
+  Natural Gas Liquids
+                             liquids in separators, field facilities, or gas processing plants. NGLs include but are not limited
+  (NGLs)
+                             to ethane, propane, butane, pentane, natural gasoline and condensate. They may also include
+                             small quantities of non-hydrocarbons.
+                             This is light hydrocarbon oil for use in internal combustion engines such as motor vehicles,
+                             excluding aircraft. Motor gasoline is distilled between 35ºC and 215ºC and is used as a fuel for
+              Motor
+                             land based spark ignition engines. Motor gasoline may include additives, oxygenates and
+              Gasoline
+                             octane enhancers, including lead compounds such as TEL (Tetraethyl lead) and TML
+                             (Tetramethyl lead).
+
+
+   Gasoline
+                             Aviation gasoline is motor spirit prepared especially for aviation piston engines, with an
+              Aviation
+                             octane number suited to the engine, a freezing point of -60ºC, and a distillation range usually
+              Gasoline
+                             within the limits of 30ºC and 180ºC.
+                             This includes all light hydrocarbon oils for use in aviation turbine power units. They distil
+                             between 100ºC and 250ºC. It is obtained by blending kerosenes and gasoline or naphthas in
+              Jet Gasoline   such a way that the aromatic content does not exceed 25 percent in volume, and the vapour
+                             pressure is between 13.7 kPa and 20.6 kPa. Additives can be included to improve fuel stability
+                             and combustibility.
+                             This is medium distillate used for aviation turbine power units. It has the same distillation
+                             characteristics and flash point as kerosene (between 150ºC and 300ºC but not generally above
+  Jet Kerosene
+                             250ºC). In addition, it has particular specifications (such as freezing point) which are
+                             established by the International Air Transport Association (IATA).
+                             Kerosene comprises refined petroleum distillate intermediate in volatility between gasoline
+  Other Kerosene
+                             and gas/diesel oil. It is a medium oil distilling between 150ºC and 300ºC.
+  Shale Oil                  A mineral oil extracted from oil shale.
+                             Gas/diesel oil includes heavy gas oils. Gas oils are obtained from the lowest fraction from
+                             atmospheric distillation of crude oil, while heavy gas oils are obtained by vacuum
+                             redistillation of the residual from atmospheric distillation. Gas/diesel oil distils between 180ºC
+  Gas/Diesel Oil             and 380ºC. Several grades are available depending on uses: diesel oil for diesel compression
+                             ignition (cars, trucks, marine, etc.), light heating oil for industrial and commercial uses, and
+                             other gas oil including heavy gas oils which distil between 380ºC and 540ºC and are used as
+                             petrochemical feedstocks.
+                             This heading defines oils that make up the distillation residue. It comprises all residual fuel
+  Residual Fuel Oil          oils, including those obtained by blending. Its kinematic viscosity is above 0.1cm2 (10 cSt) at
+                             80ºC. The flash point is always above 50ºC and the density is always more than 0.90 kg/l.
+                             These are the light hydrocarbons fraction of the paraffin series, derived from refinery
+  Liquefied Petroleum        processes, crude oil stabilisation plants and natural gas processing plants comprising propane
+  Gases                      (C3H8) and butane (C4H10) or a combination of the two. They are normally liquefied under
+                             pressure for transportation and storage.
+
+
+
+
+1.12                                                   2006 IPCC Guidelines for National Greenhouse Gas Inventories
+                                                                                                      Chapter 1: Introduction
+
+
+
+                                               TABLE 1.1 (CONTINUED)
+                              DEFINITIONS OF FUEL TYPES USED IN THE 2006 IPCC GUIDELINES
+  English Description                                                    Comments
+  LIQUID (Crude oil and petroleum products)
+                              Ethane is a naturally gaseous straight-chain hydrocarbon (C2H6). It is a colourless paraffinic
+  Ethane
+                              gas which is extracted from natural gas and refinery gas streams.
+                              Naphtha is a feedstock destined either for the petrochemical industry (e.g. ethylene
+                              manufacture or aromatics production) or for gasoline production by reforming or
+  Naphtha
+                              isomerisation within the refinery. Naphtha comprises material in the 30ºC and 210ºC
+                              distillation range or part of this range.
+                              Solid, semi-solid or viscous hydrocarbon with a colloidal structure, being brown to black in
+                              colour, obtained as a residue in the distillation of crude oil, vacuum distillation of oil
+  Bitumen                     residues from atmospheric distillation. Bitumen is often referred to as asphalt and is
+                              primarily used for surfacing of roads and for roofing material. This category includes
+                              fluidised and cut back bitumen.
+                              Lubricants are hydrocarbons produced from distillate or residue; they are mainly used to
+                              reduce friction between bearing surfaces. This category includes all finished grades of
+  Lubricants
+                              lubricating oil, from spindle oil to cylinder oil, and those used in greases, including motor
+                              oils and all grades of lubricating oil base stocks.
+                              Petroleum coke is defined as a black solid residue, obtained mainly by cracking and
+                              carbonising of petroleum derived feedstocks, vacuum bottoms, tar and pitches in processes
+                              such as delayed coking or fluid coking. It consists mainly of carbon (90 to 95 percent) and
+                              has a low ash content. It is used as a feedstock in coke ovens for the steel industry, for
+  Petroleum Coke
+                              heating purposes, for electrode manufacture and for production of chemicals. The two most
+                              important qualities are "green coke" and "calcinated coke". This category also includes
+                              "catalyst coke" deposited on the catalyst during refining processes: this coke is not
+                              recoverable and is usually burned as refinery fuel.
+                              A refinery feedstock is a product or a combination of products derived from crude oil and
+                              destined for further processing other than blending in the refining industry. It is transformed
+  Refinery Feedstocks         into one or more components and/or finished products. This definition covers those finished
+                              products imported for refinery intake and those returned from the petrochemical industry to
+                              the refining industry.
+                              Refinery gas is defined as non-condensable gas obtained during distillation of crude oil or
+               Refinery       treatment of oil products (e.g. cracking) in refineries. It consists mainly of hydrogen,
+               Gas            methane, ethane and olefins. It also includes gases which are returned from the
+                              petrochemical industry.
+                              Saturated aliphatic hydrocarbons (with the general formula CnH2n+2). These waxes are
+                              residues extracted when dewaxing lubricant oils, and they have a crystalline structure with
+               Waxes
+                              carbon number greater than 12. Their main characteristics are that they are colourless,
+                              odourless and translucent, with a melting point above 45ºC.
+
+
+   Other Oil
+                              White spirit and SBP are refined distillate intermediates with a distillation in the
+                              naphtha/kerosene range. They are sub-divided as: i) Industrial Spirit (SBP): Light oils
+                              distilling between 30ºC and 200ºC, with a temperature difference between 5 percent volume
+               White Spirit   and 90 percent volume distillation points, including losses, of not more than 60ºC. In other
+               & SBP          words, SBP is a light oil of narrower cut than motor spirit. There are 7 or 8 grades of
+                              industrial spirit, depending on the position of the cut in the distillation range defined above.
+                              ii) White Spirit: Industrial spirit with a flash point above 30ºC. The distillation range of
+                              white spirit is 135ºC to 200ºC.
+               Other          Includes the petroleum products not classified above, for example: tar, sulphur, and grease.
+               Petroleum      This category also includes aromatics (e.g. BTX or benzene, toluene and xylene) and olefins
+               Products       (e.g. propylene) produced within refineries.
+
+
+
+
+2006 IPCC Guidelines for National Greenhouse Gas Inventories                                                                  1.13
+Volume 2: Energy
+
+
+
+                                                   TABLE 1.1 (CONTINUED)
+                                  DEFINITIONS OF FUEL TYPES USED IN THE 2006 IPCC GUIDELINES
+  English Description                                                        Comments
+  SOLID (Coal and coal products)
+                                 Anthracite is a high rank coal used for industrial and residential applications. It has generally
+                                 less than 10 percent volatile matter and a high carbon content (about 90 percent fixed carbon).
+  Anthracite
+                                 Its gross calorific value is greater than 23 865 kJ/kg (5 700 kcal/kg) on an ash-free but moist
+                                 basis.
+                                 Coking coal refers to bituminous coal with a quality that allows the production of a coke
+  Coking Coal                    suitable to support a blast furnace charge. Its gross calorific value is greater than 23 865 kJ/kg
+                                 (5 700 kcal/kg) on an ash-free but moist basis.
+                                 Other bituminous coal is used for steam raising purposes and includes all bituminous coal that
+  Other Bituminous               is not included under coking coal. It is characterized by higher volatile matter than anthracite
+  Coal                           (more than 10 percent) and lower carbon content (less than 90 percent fixed carbon). Its gross
+                                 calorific value is greater than 23 865 kJ/kg (5 700 kcal/kg) on an ash-free but moist basis.
+                                 Non-agglomerating coals with a gross calorific value between 17 435 kJ/kg (4 165 kcal/kg)
+  Sub-Bituminous Coal            and 23 865 kJ/kg (5 700 kcal/kg) containing more than 31 percent volatile matter on a dry
+                                 mineral matter free basis.
+                                 Lignite/brown coal is a non-agglomerating coal with a gross calorific value of less than 17 435
+  Lignite                        kJ/kg (4 165 kcal/kg), and greater than 31 percent volatile matter on a dry mineral matter free
+                                 basis.
+                                 Oil shale is an inorganic, non-porous rock containing various amounts of solid organic
+                                 material that yields hydrocarbons, along with a variety of solid products, when subjected to
+  Oil Shale and Tar              pyrolysis (a treatment that consists of heating the rock at high temperature). Tar sands refers to
+  Sands                          sand (or porous carbonate rocks) that are naturally mixed with a viscous form of heavy crude
+                                 oil sometimes referred to as bitumen. Due to its high viscosity this oil cannot be recovered
+                                 through conventional recovery methods.
+                                 Brown coal briquettes (BKB) are composition fuels manufactured from lignite/brown coal,
+  Brown Coal
+                                 produced by briquetting under high pressure. These figures include dried lignite fines and
+  Briquettes
+                                 dust.
+                                 Patent fuel is a composition fuel manufactured from hard coal fines with the addition of a
+  Patent Fuel                    binding agent. The amount of patent fuel produced may, therefore, be slightly higher than the
+                                 actual amount of coal consumed in the transformation process.
+                                 Coke oven coke is the solid product obtained from the carbonisation of coal, principally
+                   Coke Oven
+                                 coking coal, at high temperature. It is low in moisture content and volatile matter. Also
+                   Coke and
+                                 included are semi-coke, a solid product obtained from the carbonisation of coal at a low
+                   Lignite
+   Coke
+                                 temperature, lignite coke, semi-coke made from lignite/brown coal, coke breeze and foundry
+                   Coke
+                                 coke. Coke oven coke is also known as metallurgical coke.
+                   Gas Coke      Gas coke is a by-product of hard coal used for the production of town gas in gas works. Gas
+                                 coke is used for heating purposes.
+                                 The result of the destructive distillation of bituminous coal. Coal tar is the liquid by-product of
+                                 the distillation of coal to make coke in the coke oven process. Coal tar can be further distilled
+  Coal Tar
+                                 into different organic products (e.g. benzene, toluene, naphthalene) which normally would be
+                                 reported as a feedstock to the petrochemical industry.
+                                 Gas works gas covers all types of gases produced in public utility or private plants, whose
+                                 main purpose is manufacture, transport and distribution of gas. It includes gas produced by
+                   Gas Works     carbonization (including gas produced by coke ovens and transferred to gas works gas), by
+                   Gas           total gasification with or without enrichment with oil products (LPG, residual fuel oil, etc.),
+                                 and by reforming and simple mixing of gases and/or air. It excludes blended natural gas,
+                                 which is usually distributed through the natural gas grid.
+
+
+
+   Derived Gases
+                   Coke Oven     Coke oven gas is obtained as a by-product of the manufacture of coke oven coke for the
+                   Gas           production of iron and steel.
+                                 Blast furnace gas is produced during the combustion of coke in blast furnaces in the iron and
+                   Blast
+                                 steel industry. It is recovered and used as a fuel partly within the plant and partly in other steel
+                   Furnace Gas
+                                 industry processes or in power stations equipped to burn it.
+                   Oxygen        Oxygen steel furnace gas is obtained as a by-product of the production of steel in an oxygen
+                   Steel         furnace and is recovered on leaving the furnace. The gas is also known as converter gas, LD
+                   Furnace Gas   gas or BOS gas.
+
+
+
+
+1.14                                                       2006 IPCC Guidelines for National Greenhouse Gas Inventories
+                                                                                                                 Chapter 1: Introduction
+
+
+
+                                                      TABLE 1.1 (CONTINUED)
+                                     DEFINITIONS OF FUEL TYPES USED IN THE 2006 IPCC GUIDELINES
+    English Description                                                           Comments
+    GAS (Natural Gas)
+                                    Natural gas should include blended natural gas (sometimes also referred to as Town Gas or
+                                    City Gas), a high calorific value gas obtained as a blend of natural gas with other gases
+                                    derived from other primary products, and usually distributed through the natural gas grid (eg
+    Natural Gas
+                                    coal seam methane). Blended natural gas should include substitute natural gas, a high calorific
+                                    value gas, manufactured by chemical conversion of a hydrocarbon fossil fuel, where the main
+                                    raw materials are: natural gas, coal, oil and oil shale.
+    OTHER FOSSIL FUELS
+                                    Non-biomass fraction of municipal waste includes waste produced by households, industry,
+    Municipal Wastes
+                                    hospitals and the tertiary sector which are incinerated at specific installations and used for
+    (non-biomass
+                                    energy purposes. Only the fraction of the fuel that is non-biodegradable should be included
+    fraction)
+                                    here.
+                                    Industrial waste consists of solid and liquid products (e.g. tyres) combusted directly, usually in
+    Industrial Wastes
+                                    specialised plants, to produce heat and/or power and that are not reported as biomass.
+    Waste Oils                      Waste oils are used oils (e.g. waste lubricants) that are combusted for heat production.
+    PEAT
+                                    Combustible soft, porous or compressed, sedimentary deposit of plant origin including woody
+    Peat 5                          material with high water content (up to 90 percent in the raw state), easily cut, can contain
+                                    harder pieces of light to dark brown colour. Peat used for non-energy purposes is not included.
+    BIOMASS
+                                    Wood and wood waste combusted directly for energy. This category also includes wood for charcoal
+                      Wood/Wood
+                                    production but not the actual production of charcoal (this would be double counting since charcoal is a
+                      Waste
+                                    secondary product).
+                      Sulphite      Sulphite lyes is an alkaline spent liquor from the digesters in the production of sulphate or
+                      Lyes (Black   soda pulp during the manufacture of paper where the energy content derives from the lignin
+
+
+
+     Solid Biofuels
+                      Liquor)       removed from the wood pulp. This fuel in its concentrated form is usually 65-70 percent solid.
+                                    Other primary solid biomass includes plant matter used directly as fuel that is not already
+                      Other
+                                    included in wood/wood waste or in sulphite lyes. Included are vegetal waste, animal
+                      Primary
+                                    materials/wastes and other solid biomass. This category includes non-wood inputs to charcoal
+                      Solid
+                                    production (e.g. coconut shells) but all other feedstocks for production of biofuels should be
+                      Biomass
+                                    excluded.
+                                    Charcoal combusted as energy covers the solid residue of the destructive distillation and
+                      Charcoal
+                                    pyrolysis of wood and other vegetal material.
+
+
+
+
+5
+    Although peat is not strictly speaking a fossil fuel, its greenhouse gas emission characteristics have been shown in life cycle
+    studies to be comparable to that of fossil fuels (Nilsson and Nilsson, 2004; Uppenberg et al., 2001; Savolainen et al., 1994).
+    Therefore, the CO2 emissions from combustion of peat are included in the national emissions as for fossil fuels.
+
+
+
+
+2006 IPCC Guidelines for National Greenhouse Gas Inventories                                                                            1.15
+Volume 2: Energy
+
+
+
+                                                         TABLE 1.1 (CONTINUED)
+                                        DEFINITIONS OF FUEL TYPES USED IN THE 2006 IPCC GUIDELINES
+    English Description                                                             Comments
+                          Biogasoline      Biogasoline should only contain that part of the fuel that relates to the quantities of
+                                           biofuel and not to the total volume of liquids into which the biofuels are blended. This
+                                           category includes bioethanol (ethanol produced from biomass and/or the biodegradable
+                                           fraction of waste), biomethanol (methanol produced from biomass and/or the
+                                           biodegradable fraction of waste), bioETBE (ethyl-tertio-butyl-ether produced on the
+                                           basis of bioethanol: the percentage by volume of bioETBE that is calculated as biofuel is
+                                           47 percent) and bioMTBE (methyl-tertio-butyl-ether produced on the basis of
+                                           biomethanol: the percentage by volume of bioMTBE that is calculated as biofuel is 36
+
+
+
+        Liquid Biofuels
+                                           percent).
+                          Biodiesels       Biodiesels should only contain that part of the fuel that relates to the quantities of biofuel
+                                           and not to the total volume of liquids into which the biofuels are blended. This category
+                                           includes biodiesel (a methyl-ester produced from vegetable or animal oil, of diesel
+                                           quality), biodimethylether (dimethylether produced from biomass), fischer tropsh
+                                           (fischer tropsh produced from biomass), cold pressed bio oil (oil produced from oil seed
+                                           through mechanical processing only) and all other liquid biofuels which are added to,
+                                           blended with or used straight as transport diesel.
+                          Other            Other liquid biofuels not included in biogasoline or biodiesels.
+                          Liquid
+                          Biofuels
+                          Landfill Gas     Landfill gas is derived from the anaerobic fermentation of biomass and solid wastes in
+                                           landfills and combusted to produce heat and/or power.
+                          Sludge Gas       Sludge gas is derived from the anaerobic fermentation of biomass and solid wastes from
+
+
+        Gas Biomass
+                                           sewage and animal slurries and combusted to produce heat and/or power.
+                          Other            Other biogas not included in landfill gas or sludge gas.
+                          Biogas
+
+      Other               Municipal        Biomass fraction of municipal waste includes waste produced by households, industry,
+                          Wastes           hospitals and the tertiary sector which are incinerated at specific installations and used
+     non-fossil
+                          (biomass         for energy purposes. Only the fraction of the fuel that is biodegradable should be
+       fuels              fraction)        included here.
+
+
+
+1.4.1.2                    C ONVERSION OF ENERGY UNITS
+In energy statistics and other energy data compilations, production and consumption of solid, liquid and gaseous
+fuels are specified in physical units, e.g. in tonnes or cubic metres. To convert these data to common energy units,
+eg joules, requires calorific values. To convert tonnes to energy units, in this case terajoules, requires calorific
+values. These Guidelines use net calorific values (NCVs), expressed in SI units or multiples of SI units (for
+example TJ/Mg). Some statistical offices use gross calorific values (GCV). The difference between NCV and
+GCV is the latent heat of vaporisation of the water produced during combustion of the fuel. As a consequence
+for coal and oil, the NCV is about 5 percent less than the GCV For most forms of natural and manufactured gas,
+the NCV is about 10 percent less. The Box 1.1 below provides an algorithm for the conversion if fuel
+characteristics (moisture, hydrogen and oxygen contents) are known. For common biomass fuels default
+conversion from NCV to GCV especially bark, wood and wood waste are derived in the Pulp and Paper
+Greenhouse Gas Calculation Tools available via the WRI/WBCSD Greenhouse Gas Protocol web site6.
+If countries use GCV, they should identify them as such. For further explanations of this issue and how to
+convert from the one into the other, please consult the IEA’s Energy Statistics Manual (OECD/IEA, 2004).
+
+
+
+
+6
+    See page 9 of "Calculation Tools for Estimating Greenhouse Gas Emissions from Pulp and Paper Mills, Version 1.1, July 8,
+    2005" page 9 available at http://www.ghgprotocol.org/includes/getTarget.asp?type=d&id=MTYwNjQ
+
+
+
+
+1.16                                                           2006 IPCC Guidelines for National Greenhouse Gas Inventories
+                                                                                                 Chapter 1: Introduction
+
+
+
+                                                     BOX 1.1
+                                 CONVERSION BETWEEN GROSS AND NET CALORIFIC VALUES
+          Units: MJ/kg - Megajoules per kilogram; 1 MJ/kg = 1 Gigajoule/tonne (GJ/tonne)
+         Gross CV (GCV) or ‘higher heating value’ (HHV) is the calorific value under laboratory
+         conditions.
+         Net CV (NCV) or 'lower heating value' (LHV) is the useful calorific value in boiler plant. The
+         difference is essentially the latent heat of the water vapour produced.
+         Conversions - Gross/Net (per ISO, for As Received* figures) in MJ/kg:
+                                   Net CV = Gross CV − 0.212 H − 0.0245M − 0.008Y
+
+         where M is percent Moisture, H is percent Hydrogen, Y is percent Oxygen (from ultimate analysis
+         which determines the amount of carbon, hydrogen, oxygen, nitrogen and sulphur) As Received
+         (i.e. includes Total Moisture (TM)).
+         Source: World Coal Institute (http://www.worldcoal.org/pages/content/index.asp?PageID=190),
+         which provides more details.
+
+
+
+Default NCV values to convert from units of 103 tonnes to units of terajoules are in Table 1.2. These values are
+based on a statistical analysis of three data sources:
+1.    Annual greenhouse gas inventory submissions of Annex I Parties: UNFCCC Annex-1 countries’
+      national submissions in 2004 on 2002 emissions (Table-1A(b) of the CRF). This dataset contains Net
+      Calorific Values (NCVs), Carbon Emission Factor (CEF) and Carbon Oxidation Factor (COF) for individual
+      fuels for more than 33 Annex 1 countries.
+2.    Emission Factor Database: The IPCC Emission Factor Database (EFDB), version-1, as of December 2003
+      contains all default values included in the 1996 IPCC Guidelines and additional data accepted by the EFDB
+      editorial board. The EFDB contains country-specific data for NCV and CEF including developing countries.
+3.    IEA Database: International Energy Agency NCV database for all fuels, as of November 2004. The IEA
+      database contains country-specific NCV data for many countries, including developing countries.
+The statistical analysis performed on these datasets has been described in detail in a separate document (Kainou,
+2005). The same data set was used to compile a table of default values and uncertainty ranges.
+
+1.4.1.3              A CTIVITY DATA SOURCES
+Fuel statistics collected by an officially recognised national body are usually the most appropriate and accessible
+activity data. In some countries, however, those charged with the task of compiling inventory information may
+not have ready access to the entire range of data available within their country and may wish to use data
+specially provided by their country to the international organisations.
+There are currently two main sources of international energy statistics: the International Energy Agency (IEA),
+and the United Nations (UN). Both international organisations collect energy data from the national
+administrations of their member countries through systems of questionnaires. The data gathered are therefore
+“official” data. To avoid duplication of reporting, where countries are members of both organisations, the UN
+receives copies of the IEA questionnaires for the OECD member countries rather than requiring these countries
+to complete the UN questionnaires. When compiling its statistics of non-OECD member countries, the IEA, for
+certain countries, uses UN data to which it may add additional information obtained from the national
+administration, consultants or energy companies operating within the countries. Statistics for other countries are
+obtained directly from national sources. The number of countries covered by the IEA publications is fewer than
+that of the UN. 7
+
+
+
+
+7
+    Approximately 130 countries (of about 170 UN Member countries) are included in the IEA data, and represent about 98 per
+    cent of worldwide energy consumption and nearly all energy production.
+
+
+
+
+2006 IPCC Guidelines for National Greenhouse Gas Inventories                                                          1.17
+Volume 2: Energy
+
+
+
+                                                  TABLE 1.2
+       DEFAULT NET CALORIFIC VALUES (NCVs) AND LOWER AND UPPER LIMITS OF THE 95% CONFIDENCE INTERVALS 1
+                                                                 Net calorific
+  Fuel type English description                                                        Lower             Upper
+                                                                 value (TJ/Gg)
+  Crude Oil                                                           42.3              40.1              44.8
+  Orimulsion                                                          27.5              27.5              28.3
+  Natural Gas Liquids                                                 44.2              40.9              46.9
+                       Motor Gasoline                                 44.3              42.5              44.8
+
+       Gasoline
+                       Aviation Gasoline                              44.3              42.5              44.8
+                       Jet Gasoline                                   44.3              42.5              44.8
+  Jet Kerosene                                                        44.1              42.0              45.0
+  Other Kerosene                                                      43.8              42.4              45.2
+  Shale Oil                                                           38.1              32.1              45.2
+  Gas/Diesel Oil                                                      43.0              41.4              43.3
+  Residual Fuel Oil                                                   40.4              39.8              41.7
+  Liquefied Petroleum Gases                                           47.3              44.8              52.2
+  Ethane                                                              46.4              44.9              48.8
+  Naphtha                                                             44.5              41.8              46.5
+  Bitumen                                                             40.2              33.5              41.2
+  Lubricants                                                          40.2              33.5              42.3
+  Petroleum Coke                                                      32.5              29.7              41.9
+  Refinery Feedstocks                                                 43.0              36.3              46.4
+                                      2
+                       Refinery Gas                                   49.5              47.5              50.6
+
+
+       Other Oil
+                       Paraffin Waxes                                 40.2              33.7              48.2
+                       White Spirit and SBP                           40.2              33.7              48.2
+                       Other Petroleum Products                       40.2              33.7              48.2
+  Anthracite                                                          26.7              21.6              32.2
+  Coking Coal                                                         28.2              24.0              31.0
+  Other Bituminous Coal                                               25.8              19.9              30.5
+  Sub-Bituminous Coal                                                 18.9              11.5              26.0
+  Lignite                                                             11.9              5.50              21.6
+  Oil Shale and Tar Sands                                              8.9               7.1              11.1
+  Brown Coal Briquettes                                               20.7              15.1              32.0
+  Patent Fuel                                                         20.7              15.1              32.0
+                       Coke Oven Coke and Lignite Coke                28.2              25.1              30.2
+       Coke            Gas Coke                                       28.2              25.1              30.2
+  Coal Tar 3                                                          28.0              14.1              55.0
+                                          4
+                       Gas Works Gas                                  38.7              19.6              77.0
+                                          5
+  Derived              Coke Oven Gas                                  38.7              19.6              77.0
+  Gases                Blast Furnace Gas 6                            2.47              1.20              5.00
+                       Oxygen Steel Furnace Gas 7                     7.06              3.80              15.0
+  Natural Gas                                                         48.0              46.5              50.4
+  Municipal Wastes (non-biomass fraction)                              10                7                18
+  Industrial Wastes                                                    NA               NA                NA
+                   ８
+  Waste Oil                                                           40.2              20.3              80.0
+  Peat                                                                9.76              7.80              12.5
+
+
+
+
+1.18                                                     2006 IPCC Guidelines for National Greenhouse Gas Inventories
+                                                                                                                   Chapter 1: Introduction
+
+
+
+                                                TABLE 1.2 (CONTINUED)
+          DEFAULT NET CALORIFIC VALUES (NCVs) AND LOWER AND UPPER LIMITS OF THE 95% CONFIDENCE INTERVALS 1
+                                                                              Net calorific
+     Fuel type English description                                                                       Lower                   Upper
+                                                                             value (TJ/Gg)
+                            Wood/Wood Waste 9                                     15.6                    7.90                    31.0
+
+
+           Solid Biofuels
+                            Sulphite lyes (black liquor) 10                       11.8                    5.90                    23.0
+                                                              11
+                            Other Primary Solid Biomass                           11.6                    5.90                    23.0
+                                       12
+                            Charcoal                                              29.5                    14.9                    58.0
+                            Biogasoline 13                                        27.0                    13.6                    54.0
+     Liquid                 Biodiesels 14                                         27.0                    13.6                    54.0
+     Biofuels
+                            Other Liquid Biofuels 15
+                                                                                  27.4                    13.8                    54.0
+                                             16
+                            Landfill Gas                                          50.4                    25.4                    100
+         Gas                Sludge Gas      17
+                                                                                  50.4                    25.4                    100
+         Biomass            Other Biogas 18                                       50.4                    25.4                    100
+     Other non-
+                            Municipal Wastes (biomass fraction)                    11.6                   6.80                    18.0
+     fossil fuels
+ Notes:
+ 1
+      The lower and upper limits of the 95 percent confidence intervals, assuming lognormal distributions, fitted to a dataset, based on
+      national inventory reports, IEA data and available national data. A more detailed description is given in section 1.5.
+ 2
+      Japanese data; uncertainty range: expert judgement
+ 3
+      EFDB; uncertainty range: expert judgement
+ 4
+      Coke Oven Gas; uncertainty range: expert judgement
+ 5-7
+       Japan and UK small number data; uncertainty range: expert judgement
+ 8
+      For waste oils the values of "Lubricants" are taken
+ 9
+      EFDB; uncertainty range: expert judgement
+ 10
+      Japanese data ; uncertainty range: expert judgement
+ 11
+      Solid Biomass; uncertainty range: expert judgement
+ 12
+      EFDB; uncertainty range: expert judgement
+ 13-14
+         Ethanol theoretical number; uncertainty range: expert judgement;
+ 15
+      Liquid Biomass; uncertainty range: expert judgement
+ 16 -18
+          Methane theoretical number uncertainty range: expert judgement;
+
+
+
+In general, the IEA and UN data for a country can be obtained free of charge by that country’s national inventory
+agencies by contacting stats@iea.org or energy_stat@un.org.
+Two types of fuels deserve special attention:
+Biomass:
+Biomass data are generally more uncertain than other data in national energy statistics. A large fraction of the
+biomass, used for energy, may be part of the informal economy, and the trade in these type of fuels (fuel wood,
+agricultural residues, dung cakes, etc.) is frequently not registered in the national energy statistics and balances.
+The AFOLU Volume 4 Chapter 4 (Forest Land) provides an alternative method to estimate activity data for fuel
+wood use.
+Where data from energy statistics and AFOLU statistics are both available, the inventory compiler should take
+care to avoid any double counting, and should indicate how data from both sources have been integrated to
+obtain the best possible estimate of fuel wood use in the country. CO2 emissions from biomass combustion are
+not included in national totals, but are recorded as an information item for cross-checking purposes as well as
+avoiding double counting. Note that peat is not treated as biomass in these guidelines, therefore CO2 emissions
+from peat are estimated.
+Waste:
+Waste incineration may occur in installations where the combustion heat is used as energy in other processes. In
+such cases, this waste must be treated as a fuel and the emissions should be reported in the energy sector. When
+waste is incinerated without using the combustion heat as energy, emissions should be reported under waste
+incineration. Methodologies in both cases are provided in Volume 5 Chapter 5. CO2 emissions from combustion
+
+
+
+
+2006 IPCC Guidelines for National Greenhouse Gas Inventories                                                                               1.19
+Volume 2: Energy
+
+
+of biomass in waste used for energy are not included in national totals, but are recorded as an information item
+for cross-checking purposes.
+
+1.4.1.4             T IME SERIES CONSISTENCY
+Many countries have long time series of energy statistics that can be used to derive time series of energy sector
+greenhouse gas emissions. However, in many cases statistical practices (including definitions of fuels, of fuel use
+by sectors) will have changed over time and recalculations of the energy data in the latest set of definitions is not
+always feasible. In compiling time series of emissions from fuel combustion, these changes might give rise to
+time series inconsistencies, which should be dealt with using the methods provided in Time Series Consistency
+Chapter 5 of Volume 1 of the 2006 IPCC Guidelines.
+
+
+1.4.2            Emission factors
+1.4.2.1             CO 2 EMISSION FACTORS
+Combustion processes are optimized to derive the maximum amount of energy per unit of fuel consumed, hence
+delivering the maximum amount of CO2. Efficient fuel combustion ensures oxidation of the maximum amount of
+carbon available in the fuel. CO2 emission factors for fuel combustion are therefore relatively insensitive to the
+combustion process itself and hence are primarily dependent only on the carbon content of the fuel.
+The carbon content may vary considerably both among and within primary fuel types on a per mass or per
+volume basis:
+•      For natural gas, the carbon content depends on the composition of the gas which, in its delivered state, is
+       primarily methane, but can include small quantities of ethane, propane, butane, and heavier hydrocarbons.
+       Natural gas flared at the production site will usually contain far larger amounts of non-methane
+       hydrocarbons. The carbon content will be correspondingly different.
+•      Carbon content per unit of energy is usually less for light refined products such as gasoline than for heavier
+       products such as residual fuel oil.
+•      For coal, carbon emissions per tonne vary considerably depending on the coal's composition of carbon,
+       hydrogen, sulphur, ash, oxygen, and nitrogen.
+By converting to energy units this variability is reduced.
+A small part of the fuel carbon entering the combustion process escapes oxidation. This fraction is usually small
+(99 to 100 percent of the carbon is oxidized) and so the default emission factors in Table 1.4 are derived on the
+assumption of 100 percent oxidation. For some fuels, this fraction may in practice not be negligible and where
+representative country-specific values, based on measurements are available, they should be used. In other words:
+the fraction of carbon oxidised is assumed to be 1 in deriving default CO2 emission factors.
+Table 1.3 gives carbon contents of fuels from which emission factors on a full molecular weight basis can be
+calculated (Table 1.4). These emission factors are default values that are suggested only if country-specific
+factors are not available. More detailed and up-to-date emission factors may be available at the IPCC EFDB.
+Note that CO2 emissions from biomass fuels are not included in the national total but are reported as an
+information item. Net emissions or removals of CO2 are estimated in the AFOLU sector and take account of
+these emissions. Note that peat is treated as a fossil fuel and not a biofuel and emissions from its combustion are
+therefore included in the national total.
+The data presented in Table 1.3 is used to calculate default emission factors for each fuel on a per energy basis.
+If activity data are available on a per mass basis, a similar approach can be applied to these activity data directly.
+Obviously the carbon content then should be known on a per mass basis.
+
+
+
+
+1.20                                               2006 IPCC Guidelines for National Greenhouse Gas Inventories
+                                                                                Chapter 1: Introduction
+
+
+
+                                               TABLE 1.3
+                                    DEFAULT VALUES OF CARBON CONTENT
+                                                         Default carbon
+  Fuel type English description                             content 1     Lower            Upper
+                                                             (kg/GJ)
+  Crude Oil                                                    20.0       19.4              20.6
+  Orimulsion                                                   21.0       18.9              23.3
+  Natural Gas Liquids                                          17.5       15.9              19.2
+  Motor Gasoline                                               18.9       18.4              19.9
+  Aviation Gasoline                                            19.1       18.4              19.9
+  Jet Gasoline                                                 19.1       18.4              19.9
+  Jet Kerosene                                                 19.5        19               20.3
+  Other Kerosene                                               19.6       19.3              20.1
+  Shale Oil                                                    20.0       18.5              21.6
+  Gas/Diesel Oil                                               20.2       19.8              20.4
+  Residual Fuel Oil                                            21.1       20.6              21.5
+  Liquefied Petroleum Gases                                    17.2       16.8              17.9
+  Ethane                                                       16.8       15.4              18.7
+  Naphtha                                                      20.0       18.9              20.8
+  Bitumen                                                      22.0       19.9              24.5
+  Lubricants                                                   20.0       19.6              20.5
+  Petroleum Coke                                               26.6       22.6              31.3
+  Refinery Feedstocks                                          20.0       18.8              20.9
+                  2
+  Refinery Gas                                                 15.7       13.3              19.0
+  Paraffin Waxes                                               20.0       19.7              20.3
+  White Spirit & SBP                                           20.0       19.7              20.3
+  Other Petroleum Products                                     20.0       19.7              20.3
+  Anthracite                                                   26.8       25.8              27.5
+  Coking Coal                                                  25.8       23.8              27.6
+  Other Bituminous Coal                                        25.8       24.4              27.2
+  Sub-Bituminous Coal                                          26.2       25.3              27.3
+  Lignite                                                      27.6       24.8              31.3
+  Oil Shale and Tar Sands                                      29.1       24.6               34
+  Brown Coal Briquettes                                        26.6       23.8              29.6
+  Patent Fuel                                                  26.6       23.8              29.6
+  Coke Oven Coke and Lignite Coke                              29.2       26.1              32.4
+  Gas Coke                                                     29.2       26.1              32.4
+              3
+  Coal Tar                                                     22.0       18.6              26.0
+                      4
+  Gas Works Gas                                                12.1       10.3              15.0
+  Coke Oven Gas 5                                              12.1       10.3              15.0
+                          6
+  Blast Furnace Gas                                            70.8       59.7              84.0
+                              7
+  Oxygen Steel Furnace Gas                                     49.6       39.5              55.0
+  Natural Gas                                                  15.3       14.8              15.9
+
+
+
+
+2006 IPCC Guidelines for National Greenhouse Gas Inventories                                       1.21
+Volume 2: Energy
+
+
+
+
+                                                        TABLE 1.3 (CONTINUED)
+                                                  DEFAULT VALUES OF CARBON CONTENT
+                                                                                Default carbon
+     Fuel type English description                                                 content 1                 Lower                Upper
+                                                                                    (kg/GJ)
+     Municipal Wastes (non-biomass fraction)8                                         25.0                    20.0                 33.0
+     Industrial Wastes                                                                39.0                    30.0                 50.0
+     Waste Oils 9                                                                     20.0                    19.7                 20.3
+     Peat                                                                             28.9                    28.4                 29.5
+     Wood/Wood Waste 10                                                               30.5                    25.9                 36.0
+     Sulphite lyes (black liquor) 11                                                  26.0                    22.0                 30.0
+     Other Primary Solid Biomass 12                                                   27.3                    23.1                 32.0
+     Charcoal 13                                                                      30.5                    25.9                 36.0
+     Biogasoline 14                                                                   19.3                    16.3                 23.0
+     Biodiesels 15                                                                    19.3                    16.3                 23.0
+     Other Liquid Biofuels 16                                                         21.7                    18.3                 26.0
+     Landfill Gas 17                                                                  14.9                    12.6                 18.0
+     Sludge Gas 18                                                                    14.9                    12.6                 18.0
+     Other Biogas 19                                                                  14.9                    12.6                 18.0
+     Municipal Wastes (biomass fraction) 20                                           27.3                    23.1                 32.0
+ Notes:
+ 1
+      The lower and upper limits of the 95 percent confidence intervals, assuming lognormal distributions, fitted to a dataset, based on
+      national inventory reports, IEA data and available national data. A more detailed description is given in section 1.5
+ 2
+      Japanese data; uncertainty range: expert judgement;
+ 3
+      EFDB; uncertainty range: expert judgement
+ 4
+      Coke Oven Gas; uncertainty range: expert judgement
+ 5
+      Japan & UK small number data; uncertainty range: expert judgement
+ 6
+      7. Japan & UK small number data; uncertainty range: expert judgement
+ 8
+      Solid Biomass; uncertainty range: expert judgement
+ 9
+      Lubricants ; uncertainty range: expert judgement
+ 10
+      EFDB; uncertainty range: expert judgement
+ 11
+      Japanese data; uncertainty range: expert judgement
+ 12
+      Solid Biomass; uncertainty range: expert judgement
+ 13
+      EFDB; uncertainty range: expert judgement
+ 14
+      Ethanol theoretical number; uncertainty range: expert judgement
+ 15
+      Ethanol theoretical number; uncertainty range: expert judgement
+ 16
+      Liquid Biomass; uncertainty range: expert judgement
+ 17-19
+         Methane theoretical number; uncertainty range: expert judgement
+ 20
+      Solid Biomass; uncertainty range: expert judgement
+
+
+
+
+1.22                                                            2006 IPCC Guidelines for National Greenhouse Gas Inventories
+                                                                                                       Chapter 1: Introduction
+
+
+
+                                                                    TABLE 1.4
+                                                  DEFAULT CO2 EMISSION FACTORS FOR COMBUSTION 1
+
+                                                                             Default         Effective CO2 emission factor
+                                                         Default carbon
+                                                                             carbon                     (kg/TJ) 2
+  Fuel type English description                             content
+                                                                            oxidation
+                                                            (kg/GJ)                        Default
+                                                                             factor                     95% confidence interval
+                                                                                           value 3
+                                                                                         C=A*B*44/
+                                                              A                B                         Lower         Upper
+                                                                                          12*1000
+  Crude Oil                                                  20.0              1           73 300        71 100       75 500
+  Orimulsion                                                 21.0              1           77 000        69 300       85 400
+  Natural Gas Liquids                                        17.5              1           64 200        58 300       70 400
+                    Motor Gasoline                           18.9              1           69 300        67 500       73 000
+
+  Gasoline
+                    Aviation Gasoline                        19.1              1           70 000        67 500       73 000
+                    Jet Gasoline                             19.1              1           70 000        67 500       73 000
+  Jet Kerosene                                               19.5              1           71 500        69 700       74 400
+  Other Kerosene                                             19.6              1           71 900        70 800       73 700
+  Shale Oil                                                  20.0              1           73 300        67 800       79 200
+  Gas/Diesel Oil                                             20.2              1           74 100        72 600       74 800
+  Residual Fuel Oil                                          21.1              1           77 400        75 500       78 800
+  Liquefied Petroleum Gases                                  17.2              1           63 100        61 600       65 600
+  Ethane                                                     16.8              1           61 600        56 500       68 600
+  Naphtha                                                    20.0              1           73 300        69 300       76 300
+  Bitumen                                                    22.0              1           80 700        73 000       89 900
+  Lubricants                                                 20.0              1           73 300        71 900       75 200
+  Petroleum Coke                                             26.6              1           97 500        82 900       115 000
+  Refinery Feedstocks                                        20.0              1           73 300        68 900       76 600
+                    Refinery Gas                             15.7              1           57 600        48 200       69 000
+
+   Other Oil
+                    Paraffin Waxes                           20.0              1           73 300        72 200       74 400
+                    White Spirit & SBP                       20.0              1           73 300        72 200       74 400
+  Other Petroleum Products                                   20.0              1           73 300        72 200       74 400
+  Anthracite                                                 26.8              1           98 300        94 600       101 000
+  Coking Coal                                                25.8              1           94 600        87 300       101 000
+  Other Bituminous Coal                                      25.8              1           94 600        89 500       99 700
+  Sub-Bituminous Coal                                        26.2              1           96 100        92 800       100 000
+  Lignite                                                    27.6              1           101 000       90 900       115 000
+  Oil Shale and Tar Sands                                    29.1              1           107 000       90 200       125 000
+  Brown Coal Briquettes                                      26.6              1           97 500        87 300       109 000
+  Patent Fuel                                                26.6              1           97 500        87 300       109 000
+                   Coke oven coke and lignite Coke           29.2              1           107 000       95 700       119 000
+   Coke
+                   Gas Coke                                  29.2              1           107 000       95 700       119 000
+  Coal Tar                                                   22.0              1           80 700        68 200       95 300
+                   Gas Works Gas                             12.1              1           44 400        37 300       54 100
+
+
+   Derived Gases
+                   Coke Oven Gas                             12.1              1           44 400        37 300       54 100
+                                       4
+                   Blast Furnace Gas                         70.8              1           260 000      219 000       308 000
+                                              5
+                   Oxygen Steel Furnace Gas                  49.6              1           182 000      145 000       202 000
+
+
+
+
+2006 IPCC Guidelines for National Greenhouse Gas Inventories                                                                 1.23
+Volume 2: Energy
+
+
+
+                                                                 TABLE 1.4 (CONTINUED)
+                                                     DEFAULT CO2 EMISSION FACTORS FOR COMBUSTION 1
+
+                                                                                   Default              Effective CO2 emission factor
+                                                            Default carbon
+                                                                                   carbon                          (kg/TJ) 2
+     Fuel type English description                             content
+                                                                                  oxidation
+                                                               (kg/GJ)                               Default
+                                                                                   Factor                             95% confidence interval
+                                                                                                      value
+                                                                 A                   B             C=A*B*44/           Lower           Upper
+                                                                                                    12*1000
+     Natural Gas                                                15.3                 1                56 100           54 300          58 300
+     Municipal Wastes (non-biomass
+     fraction)
+                                                                25.0                 1                91 700           73 300         121 000
+
+     Industrial Wastes                                          39.0                 1               143 000          110 000         183 000
+     Waste Oil                                                  20.0                 1                73 300           72 200          74 400
+     Peat                                                       28.9                 1               106 000          100 000         108 000
+                      Wood/Wood Waste                           30.5                 1               112 000           95 000         132 000
+
+
+     Solid Biofuels
+                                                 5
+                      Sulphite lyes (black liquor)              26.0                 1                95 300           80 700         110 000
+                      Other Primary Solid Biomass               27.3                 1               100 000           84 700         117 000
+                      Charcoal                                  30.5                 1               112 000           95 000         132 000
+                      Biogasoline                               19.3                 1                70 800           59 800          84 300
+      Liquid
+                      Biodiesels                                19.3                 1                70 800           59 800          84 300
+     Biofuels
+                      Other Liquid Biofuels                     21.7                 1                79 600           67 100          95 300
+                                                                14.9                 1                54 600           46 200          66 000
+
+     Gas biomass
+                      Landfill Gas
+                      Sludge Gas                                14.9                 1                54 600           46 200          66 000
+                      Other Biogas                              14.9                 1                54 600           46 200          66 000
+                      Municipal Wastes (biomass
+     Other non-       fraction)
+                                                                27.3                 1               100 000           84 700         117 000
+     fossil fuels
+
+ Notes:
+ 1
+        The lower and upper limits of the 95 percent confidence intervals, assuming lognormal distributions, fitted to a dataset, based on
+        national inventory reports, IEA data and available national data. A more detailed description is given in section 1.5
+ 2
+        TJ = 1000GJ
+ 3
+        The emission factor values for BFG includes carbon dioxide originally contained in this gas as well as that formed due to combustion
+        of this gas.
+ 4
+        The emission factor values for OSF includes carbon dioxide originally contained in this gas as well as that formed due to combustion
+        of this gas
+ 5
+        Includes the biomass-derived CO2 emitted from the black liquor combustion unit and the biomass-derived CO2 emitted from the kraft
+        mill lime kiln.
+
+
+
+1.4.2.2                          O THER GREENHOUSE GASES
+Emission factors for non-CO2 gases from fuel combustion are strongly dependent on the technology used. Since
+the set of technologies, applied in each sector varies considerably, so do the emission factors. Therefore it is not
+useful to provide default emission factors for these gases on the basis of fuels only. Tier 1 default emission
+factors are therefore provided in the subsequent chapters for each subsector separately.
+
+1.4.2.3                          I NDIRECT GREENHOUSE GASES
+This volume will not present guidance on the estimation of emissions of indirect greenhouse gases. For
+information on these gases, the user is referred to guidance provided under other conventions (see also section
+1.3.1.3 Relation to other inventory approaches). Default methods for estimating these emissions are provided in
+the EMEP/CORINAIR Guidebook. Chapter 7 of Volume 1 provides full details on how to link to this
+information.
+
+
+
+
+1.24                                                                   2006 IPCC Guidelines for National Greenhouse Gas Inventories
+                                                                                              Chapter 1: Introduction
+
+
+
+1.5            UNCERTAINTY IN INVENTORY ESTIMATES
+
+1.5.1          General
+A general treatment of uncertainties in emission inventories is provided in Chapter 3 of Volume 1 of the 2006
+IPCC Guidelines. A quantitative analysis of the uncertainties in the inventory need quantitative input values for
+both activity data and emission factors. This chapter will provide recommended default uncertainty ranges (95
+percent confidence interval limits) to be used if further information is not available. The lower limit (marked as
+“lower” in the tables) is set at the 2.5 percent percentile of the probability distribution function and the upper
+limit (marked “upper” in the tables) at the 97.5 percentile.
+All default values in this chapter are rounded to three significant digits, both for the default emission factor itself
+and for the lower and upper limits of the 95 percent confidence intervals. Although applying exact arithmetic
+could provide more digits, these are not considered as significant.
+
+
+1.5.2          Activity data uncertainties
+Activity data needed for emission estimates in the Energy Sector are largely derived from national and
+international energy balances and energy statistics. Such data are generally seen as quite accurate. Uncertainty
+information on the fuel combustion statistics or the energy balances could be obtained from the national or
+international institutions responsible.
+If no further data are available, the recommended default uncertainty range for fossil fuel combustion data
+should be assumed to be plus or minus 5 percent. In other words:
+•   The value in the energy statistics or energy balance is interpreted as the point estimate for the activity data
+•   The lower limit value of the 95 percent confidence interval is 0.95 times the point estimate;
+•   The upper limit value of the 95 percent confidence interval is 1.05 times this value.
+The "statistical difference", frequently given in energy balances, could also be used to obtain a feeling for the
+uncertainty in the data. The “statistical difference” is calculated from the difference between data derived from
+the supply of fuels and data derived from the demand of fuels. The year-to-year variation in its value reflects the
+aggregated uncertainty in all underlying fuel data including their inter relationships. Hence, the variation of the
+“statistical difference” will be an indication of the combined uncertainty of all supply and demand data for a
+specific fuel. Recalling that the uncertainties are expressed in percentage terms, the uncertainties in the fuel
+combustion data for specific sectors or applications will usually be higher than the uncertainty suggested by the
+“statistical difference”. The recommended default uncertainty range is based on this line of thought. However, if
+a “statistical difference” is zero, the balance is immediately suspect and should be treated as though a “statistical
+difference” had not been given. In these instances, the data quality should be examined for QA/QC purposes and
+subsequent improvements made if appropriate.
+Since data on biomass as fuel are not as well developed as for fossil fuels, the uncertainty range for biomass
+fuels will be significantly higher. A value of plus or minus 50 percent is recommended.
+
+
+1.5.3          Emission factor uncertainties
+The default emission factors, derived in this chapter are based on a statistical analysis of available data on fuel
+characteristics. The analysis provides lower and upper limits of the 95 percent confidence intervals as provided
+in Table 1.2 for net calorific values and Table 1.3 for carbon contents of fuels.
+The uncertainty ranges, provided in Table 1.4 are calculated from this information, using a Monte Carlo analysis
+(5 000 iterations). In this analysis, lognormal distributions, fitted to the provided lower and upper limits of the
+95 percent confidence intervals were applied for the probability distribution functions.
+For a few typical examples, the resulting probability distribution functions for the default final effective CO2
+emission factors are given below in Figure 1.3.
+
+
+
+
+2006 IPCC Guidelines for National Greenhouse Gas Inventories                                                      1.25
+Volume 2: Energy
+
+
+
+Figure 1.3                                Some typical examples of probability distribution functions (PDFs) for the
+                                          effective CO 2 emission factors for the combustion of fuels.
+
+                                                       Natural Gas                                                                             Landfill Gas
+                           40%                                                                                   9%
+
+                           35%                                                                                   8%
+
+                                                                                                                 7%
+                           30%
+                                                                                                                 6%
+
+
+
+
+           Frequency (%)                                                                         Frequency (%)
+                           25%
+                                                                                                                 5%
+
+
+
+ Gaseous
+                           20%
+                                                                                                                 4%
+                           15%
+                                                                                                                 3%
+                           10%
+                                                                                                                 2%
+
+                           5%                                                                                    1%
+
+                           0%                                                                                    0%
+
+                                 35 000     45 000           55 000      65 000   75 000                               30 000     40 000             50 000     60 000    70 000
+                                                     Emission factor (kg/TJ)                                                               Emission factor (kg/TJ)
+
+
+
+                                                     Motor Gasoline                                                                           Gas/Diesel Oil
+                           35%                                                                                   60%
+
+
+                           30%
+                                                                                                                 50%
+
+                           25%
+                                                                                                                 40%
+
+
+
+
+           Frequency (%)                                                                         Frequency (%)
+                           20%
+
+
+
+ Liquid
+                                                                                                                 30%
+                           15%
+
+                                                                                                                 20%
+                           10%
+
+
+                           5%                                                                                    10%
+
+
+                           0%                                                                                    0%
+
+                                 45 000     55 000           65 000      75 000   85 000                                 45 000     55 000            65 000     75 000   85 000
+                                                     Emission factor (kg/TJ)                                                                 Emission factor (kg/TJ)
+
+
+
+                                                      Jet Kerosene                                                                         Residual Fuel Oil
+                           30%                                                                                   35%
+
+
+                           25%                                                                                   30%
+
+
+                                                                                                                 25%
+                           20%
+
+
+
+
+           Frequency (%)                                                                         Frequency (%)
+                                                                                                                 20%
+                           15%
+                                                                                                                 15%
+
+                           10%
+                                                                                                                 10%
+
+                           5%
+                                                                                                                 5%
+
+
+                           0%                                                                                    0%
+
+                                 45 000     55 000           65 000      75 000   85 000                                 55 000     65 000            75 000     85 000   95 000
+                                                     Emission factor (kg/TJ)                                                                 Emission factor (kg/TJ)
+
+
+
+
+1.26                                                                                2006 IPCC Guidelines for National Greenhouse Gas Inventories
+                                                                                                                                                                Chapter 1: Introduction
+
+
+
+                                                             Anthracite                                                            Other Bituminous Coal
+                         30%                                                                                      12%
+
+
+                         25%                                                                                      10%
+
+
+                         20%                                                                                      8%
+
+
+
+
+         Frequency (%)                                                                            Frequency (%)
+                         15%                                                                                      6%
+
+ Solid                   10%                                                                                      4%
+
+
+                         5%                                                                                       2%
+
+
+                         0%                                                                                       0%
+
+                                 75 000          85 000            95 000     105 000   115 000                           65 000     75 000            85 000       95 000    105 000
+                                                          Emission factor (kg/TJ)                                                             Emission factor (kg/TJ)
+
+
+
+                                          Coke Oven Coke and Lignite Coke                                                             Wood/Wood Waste
+                         6%                                                                                       5%
+
+                                                                                                                  5%
+                         5%
+                                                                                                                  4%
+
+                                                                                                                  4%
+                         4%
+
+
+
+
+         Frequency (%)                                                                            Frequency (%)
+                                                                                                                  3%
+
+                         3%                                                                                       3%
+
+                                                                                                                  2%
+                         2%
+                                                                                                                  2%
+
+                                                                                                                  1%
+                         1%
+                                                                                                                  1%
+
+                         0%                                                                                       0%
+
+                               80 000          90 000             100 000    110 000    120 000                         80 000     90 000             100 000       110 000   120 000
+                                                        Emission factor (kg/TJ)                                                             Emission factor (kg/TJ)
+
+
+
+
+The uncertainty information as presented in Table 1.4 can also be used when comparing country-specific
+emission factors with the default ones. Whenever a national specific emission factor falls within the 95 percent
+confidence interval, it could be regarded as consistent with the default value. In addition, one would expect the
+uncertainty range of country-specific values for application in that country to be smaller than the range provided
+in Figure 1.3. Uncertainties in emission factors for non-CO2 emission factors are treated in the subsequent
+chapters for the different source categories separately.
+
+1.6                        QA/QC AND COMPLETENESS
+
+1.6.1                      Reference Approach
+As carbon dioxide emissions from fuel combustion dominate greenhouse gas emissions in many countries, it is
+worthwhile to use an independent check providing a quick and easy alternative estimate of these emissions. The
+Reference Approach provides a methodology for producing a first-order estimate of national greenhouse gas
+emissions based on the energy supplied to a country, even if only very limited resources and data structures are
+available to the inventory compiler. Since the Reference Approach is a top-down approach and in that respect is
+relatively independent of the bottom-up approach as described in the Tier 1, 2 and 3 methods of this chapter, the
+Reference Approach can be seen as a verification cross-check. As such it is part of the required QA/QC for the
+energy sector. The Reference Approach is described in full detail in Chapter 6 of this Volume.
+The Reference Approach requires statistics on the production of fuels, on their external trade, as well as on
+changes in their stocks. It also requires a limited amount of data on the consumption of fuels used for non-energy
+purposes where carbon may need to be excluded.
+The Reference Approach is based on the assumption that, once carbon is brought into a national economy in the
+form of a fuel, it is either released into the atmosphere in the form of a greenhouse gas, or it is diverted (e.g., in
+increases of fuel stocks, stored in products, left unutilised in ash) and does not enter the atmosphere as a
+
+
+
+
+2006 IPCC Guidelines for National Greenhouse Gas Inventories                                                                                                                            1.27
+Volume 2: Energy
+
+
+greenhouse gas. In order to calculate the amount of carbon released into the atmosphere, it is not necessary to
+know exactly how the fuel was used or what intermediate transformations it underwent. In view of this, the
+methodology may be described as top-down in contrast to the bottom-up methodologies applied in a sectoral
+approach.
+
+
+1.6.2              Potential double counting between sectors
+1.6.2.1               N ON - ENERGY USE OF FUELS
+For a number of applications, mainly in larger industrial processes, fossil hydrocarbons are not only used as
+energy sources, but also have other uses e.g. feedstocks, lubricants, solvents, etc. The sectoral approaches (Tier
+1, 2 and 3) are therefore based on fuel combustion statistics.
+Hence, the use of fuel combustion statistics rather than fuel delivery statistics is key to avoid double counting in
+emission estimates. When activity data are not quantities of fuel combusted but are instead deliveries to
+enterprises or main subcategories, there is a risk of double counting emissions from the IPPU (Chapter 5) or
+Waste Sectors.
+In some types of non-energy use of fossil hydrocarbons, emissions of fossil carbon containing substances might
+occur. Such emissions should be reported under the IPPU sector where they occur. Methods to estimate these
+emissions are provided in Volume 3, Industrial Processes and Product Use.
+
+1.6.2.2               W ASTE AS A FUEL
+Some waste incinerators also produce heat or power. In such cases the waste stream will show up in national
+energy statistics and it is good practice to report these emissions under the energy sector. This could lead to
+double counting when in the waste sector the total volume of waste is used to estimate emissions. Only the fossil
+fuel derived fraction of CO2 from waste is included in national total emissions. For details please see Volume 5
+(Waste)-Chapter 5 (Incineration and Open Burning of Waste) where methodological issues to estimate emissions
+are discussed.
+
+
+1.6.3              Mobile versus stationary combustion
+For most sources the distinction between mobile and stationary combustion is quite clear. In energy statistics,
+this however is not always the case. In some industries it might occur that fuels are in part used for stationary
+equipment and in part for mobile equipment. This could for example occur in agriculture, forestry, construction
+industry etc. When this occurs and a split between mobile and stationary is not feasible, the emissions could be
+reported in the source category that is expected to have the largest part of the emissions. In such cases, care must
+be taken to properly document the method and choices.
+
+
+1.6.4              National boundaries
+Mobile sources, while moving across national borders, might carry part of the fuel sold in one country for use in
+a second country. To estimate these emissions, however, the principle of using fuel sold to estimate the
+emissions should prevail over a strict application of the national territory for several reasons:
+•     data on fuels moving across borders in vehicle fuel tanks is unlikely to be available at all, and if it were it is
+      likely to be much less accurate than national fuel sales data
+•     it is important that emissions from fuel sold appear in only one county’s inventory. It would be nearly
+      impossible to ensure consistency between neighbouring countries
+•     in most cases the net effect of trans-boundary traffic will be small since most vehicles will in the end return
+      to their own country with fuel in their tanks. Only in cases of “fuel tourism8” this might not be the case.
+
+
+
+8
+    People living near national borders might have an incentive to buy gasoline in one country for use in the other country if
+    gasoline prices differ between these countries. In some regions this effect is substantial. See: Fuel tourism in border regions,
+    Silvia Banfi, Massimo Filippini, Lester C. Hunt, CEPE, Centre for Energy Policy and Economics, Swiss Federal Institutes
+    of Technology, 2003, http://e-collection.ethbib.ethz.ch/show?type=incoll&nr=888
+
+
+
+
+1.28                                                     2006 IPCC Guidelines for National Greenhouse Gas Inventories
+                                                                                          Chapter 1: Introduction
+
+
+Other advice on boundary issues associated with bunker fuels and carbon capture and storage is provided in
+subsequent chapters, consistent with the principles set out in Volume 1, Chapter 8.
+
+
+1.6.5          New sources
+The 2006 IPCC Guidelines include, for the first time, methods for estimating emissions from carbon dioxide
+capture and storage (Chapter 5) so that the effect of these technologies on reducing emissions overall can be
+properly reflected in national inventories. The Guidelines also include new methods for estimation emissions
+from abandoned coal mines (Section 4.1), to complement the methods for working mines which were already
+included in the 1996 IPCC Guidelines and GPG2000.
+
+
+References
+Kainou, K (2005). ‘Revision of default net calorific values, carbon content factors, carbon oxidization factors
+      and carbon dioxide emission factors for various fuels in 2006 IPCC GHG Inventory Guidelines’. RIETI,
+      IAI, Govt of Japan.
+Nilsson, K and. Nilsson, M (2004). ‘The climate impact of energy peat utilization in Sweden - the effect of
+       former land use and after-treatment’. Report IVL B1606.
+OECD/IEA, (2004). Energy Statistics Manual
+Savolainen, I., Hillebrand, K., Nousiainen, I. and Sinisalo, J. (1994). ‘Greenhouse gas impacts of the use of peat
+      and wood for energy.’ Espoo, Finland’. VTT Research Notes 1559. 65p.+app.
+Uppenberg, S. Zetterberg, L. and Åhman, M. (2001). ‘Climate impact from peat utilisation in Sweden’. (2001).
+     Report IVL B1423.
+
+
+
+
+2006 IPCC Guidelines for National Greenhouse Gas Inventories                                                 1.29
+

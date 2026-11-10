@@ -9901,6 +9901,26 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  diesel_energy_content_mwh_per_litre:
+    category: Cost
+    default: 0.01003
+    description: 'Energy in one litre of diesel on a net calorific basis: 43.0 MJ/kg (IPCC 2006, Vol.
+      2 Ch. 1 Table 1.2) times an assumed density of 0.84 kg/L, over 3600 MJ per MWh. 0.01003 MWh/L.'
+    determinism: physical
+    name: Diesel energy content
+    priority: P2
+    range:
+    - 0.005
+    - 0.02
+    role: exogenous
+    source: 'IPCC 2006 Guidelines Vol. 2 Ch. 1 Table 1.2. Local copy: sources/archive/ipcc_2006_gl_vol2_ch1.pdf.
+      The density 0.84 kg/L is a stated assumption (grades run 0.82 to 0.86).'
+    status: existing
+    type: float
+    unit: MWh/litre
+    users:
+    - Planners
+    - Regulators
   digital_divide_metrics:
     categories: []
     category: Digital
@@ -10799,6 +10819,24 @@ parameters:
     type: float
     unit: USD/year
     users:
+    - Regulators
+  electrification_adoption_rate:
+    category: Demand
+    description: Logistic growth rate implied by the electrification timeline, r = ln(81)/T on the same
+      10 to 90 percent definition as ev_adoption_rate. 0.22 per year at the 20-year default.
+    determinism: policy
+    name: Electrification adoption rate
+    priority: P2
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    source: The coupling build (batch 88)
+    status: existing
+    type: float
+    unit: 1/year
+    users:
+    - Planners
     - Regulators
   electrification_rate_target:
     categories: []
@@ -12160,6 +12198,24 @@ parameters:
     users:
     - Financiers
     - Regulators
+  ev_adoption_rate:
+    category: Demand
+    description: 'Logistic growth rate implied by the adoption timeline: the 10 to 90 percent rise time
+      of a logistic curve is ln(81)/r, so r = ln(81)/T. 0.22 per year at the 20-year default.'
+    determinism: policy
+    name: EV adoption rate
+    priority: P2
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    source: The coupling build (batch 88)
+    status: existing
+    type: float
+    unit: 1/year
+    users:
+    - Planners
+    - Regulators
   ev_adoption_timeline:
     name: Ev adoption timeline
     description: 'The time electric vehicles take to reach their target share, in years: the span of the
@@ -12849,6 +12905,24 @@ parameters:
     subcategory: null
     type: float
     unit: TWh/year
+    users:
+    - Planners
+    - Regulators
+  fishing_fleet_fuel_energy:
+    category: Cost
+    description: 'Energy content of the diesel the fishing fleet burns in the year: litres times energy
+      per litre. 0 at defaults, since the fleet is stated as zero litres.'
+    determinism: physical
+    name: Fishing fleet fuel energy
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000.0
+    role: derived
+    source: The coupling build (batch 88)
+    status: existing
+    type: float
+    unit: MWh/year
     users:
     - Planners
     - Regulators
@@ -38203,6 +38277,29 @@ equations:
     system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
+  electrification_adoption_rate_definition:
+    description: Logistic growth rate from the 10 to 90 percent electrification span, r = ln(81)/T. ln(81)
+      = 4.39445.
+    determined_variables:
+    - electrification_adoption_rate
+    free_variables: []
+    latex: \mathrm{electrification\_adoption\_rate} = \ln(81) / \mathrm{electrification\_timeline}
+    lhs: electrification_adoption_rate
+    linearity: nonlinear
+    name: Electrification adoption rate
+    parameters:
+    - electrification_adoption_rate
+    - electrification_timeline
+    priority: P2
+    reference: Logistic p(t) = 1/(1+exp(-r(t-t0))) reaches 10 percent and 90 percent at t0 -/+ ln(9)/r,
+      so the rise time is 2 ln(9)/r = ln(81)/r (Marchetti 1977; Grubler 1990, Technology and Global Change,
+      Ch. 2). Derivation; no archived copy.
+    relation: eq
+    rhs: 4.39445 / electrification_timeline
+    solution_method: direct
+    system: demand_supply
+    tolerance: 1.0e-09
+    unit_check: true
   electrified_industrial_heat_twh_definition:
     description: 'Electrified industrial process heat: the electrification share times total process heat
       demand. 2.0 TWh of 20 TWh at defaults. The heat demand is on a thermal basis and the product is
@@ -38846,6 +38943,29 @@ equations:
     system: carbon_trajectory
     tolerance: 1.0e-09
     unit_check: true
+  ev_adoption_rate_definition:
+    description: 'Logistic growth rate from the 10 to 90 percent adoption span, r = ln(81)/T. ln(81) =
+      4.39445. Dimensional check: a pure number over years is 1/year.'
+    determined_variables:
+    - ev_adoption_rate
+    free_variables: []
+    latex: \mathrm{ev\_adoption\_rate} = \ln(81) / \mathrm{ev\_adoption\_timeline}
+    lhs: ev_adoption_rate
+    linearity: nonlinear
+    name: EV adoption rate
+    parameters:
+    - ev_adoption_rate
+    - ev_adoption_timeline
+    priority: P2
+    reference: Logistic p(t) = 1/(1+exp(-r(t-t0))) reaches 10 percent and 90 percent at t0 -/+ ln(9)/r,
+      so the rise time is 2 ln(9)/r = ln(81)/r (Marchetti 1977; Grubler 1990, Technology and Global Change,
+      Ch. 2). Derivation; no archived copy.
+    relation: eq
+    rhs: 4.39445 / ev_adoption_timeline
+    solution_method: direct
+    system: demand_supply
+    tolerance: 1.0e-09
+    unit_check: true
   ev_range_definition:
     description: 'Range is usable battery energy over consumption per kilometre. Dimensional check: kWh
       divided by kWh/km is km.'
@@ -39042,6 +39162,28 @@ equations:
     rhs: fishing_community_load * 8760 / 1000000
     solution_method: direct
     system: demand_supply
+    tolerance: 1.0e-09
+    unit_check: true
+  fishing_fleet_fuel_energy_definition:
+    description: 'Diesel burned times energy per litre. Dimensional check: litre/year times MWh/litre
+      is MWh/year.'
+    determined_variables:
+    - fishing_fleet_fuel_energy
+    free_variables: []
+    latex: \mathrm{fishing\_fleet\_fuel\_energy} = \mathrm{fishing\_vessel\_fuel} \times \mathrm{diesel\_energy\_content\_mwh\_per\_litre}
+    lhs: fishing_fleet_fuel_energy
+    linearity: linear
+    name: Fishing fleet fuel energy
+    parameters:
+    - diesel_energy_content_mwh_per_litre
+    - fishing_fleet_fuel_energy
+    - fishing_vessel_fuel
+    priority: P2
+    reference: 'IPCC 2006 Guidelines Vol. 2 Ch. 1 Table 1.2 (diesel NCV 43.0 TJ/Gg). Local copy: sources/archive/ipcc_2006_gl_vol2_ch1.pdf.'
+    relation: eq
+    rhs: fishing_vessel_fuel * diesel_energy_content_mwh_per_litre
+    solution_method: direct
+    system: energy_balance
     tolerance: 1.0e-09
     unit_check: true
   fit_annuity_factor_definition:
@@ -60586,6 +60728,38 @@ relationships:
   description: Enters the net benefit difference.
   reference: The coupling build (batch 85)
   priority: P1
+- source: fishing_vessel_fuel
+  target: fishing_fleet_fuel_energy
+  equation_id: fishing_fleet_fuel_energy_definition
+  relationship: functional
+  strength: hard
+  description: Enters the fuel energy product.
+  reference: The coupling build (batch 88)
+  priority: P2
+- source: diesel_energy_content_mwh_per_litre
+  target: fishing_fleet_fuel_energy
+  equation_id: fishing_fleet_fuel_energy_definition
+  relationship: functional
+  strength: hard
+  description: Enters the fuel energy product.
+  reference: The coupling build (batch 88)
+  priority: P2
+- source: ev_adoption_timeline
+  target: ev_adoption_rate
+  equation_id: ev_adoption_rate_definition
+  relationship: functional
+  strength: hard
+  description: Rise time sets the logistic rate.
+  reference: The coupling build (batch 88)
+  priority: P2
+- source: electrification_timeline
+  target: electrification_adoption_rate
+  equation_id: electrification_adoption_rate_definition
+  relationship: functional
+  strength: hard
+  description: Rise time sets the logistic rate.
+  reference: The coupling build (batch 88)
+  priority: P2
 - source: biomass_generation_twh
   target: fleet_generation_twh
   equation_id: fleet_generation_definition
