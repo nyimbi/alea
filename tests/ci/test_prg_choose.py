@@ -104,3 +104,70 @@ def test_a_covering_choose_propagates_and_a_level_change_moves_the_result():
 	moved = graph.propagate({"mode": "b", "x": 3.0})
 	assert moved.values["out"] == 15.0
 	assert "out" in moved.changed
+
+
+def _tomb_doc(rhs: str, determined=("old",), free=(), edge_target="old", lhs="old") -> dict:
+	base = {"category": "demand_supply", "determinism": "fixed"}
+	node = lambda i, **kw: {**base, "id": i, "name": i, "type": "float", "unit": "1", "range": [0.0, 10.0], **kw}  # noqa: E731
+	return {
+		"parameters": {
+			"new": node("new", default=2.0, role="exogenous"),
+			"old": node("old", role="derived", status="deprecated", deprecated_by="new"),
+		},
+		"equations": {
+			"old_fwd": {
+				"id": "old_fwd", "name": "old", "system": "demand_supply", "lhs": lhs, "rhs": rhs,
+				"parameters": ["new"], "determined_variables": list(determined),
+				"free_variables": list(free),
+			}
+		},
+		"relationships": [],
+	}
+
+
+def test_a_tombstone_forwarded_to_its_successor_reports_the_successor():
+	graph = ParameterGraph.from_mapping(_tomb_doc("new"))
+	assert graph.uncoupled() == ()
+	assert graph.propagate({"new": 7.0}).values["old"] == 7.0
+
+
+def test_a_tombstone_read_by_another_equation_is_still_refused():
+	doc = _tomb_doc("new")
+	doc["parameters"]["z"] = {
+		"category": "demand_supply", "determinism": "fixed", "id": "z", "name": "z",
+		"type": "float", "unit": "1", "range": [0.0, 10.0], "role": "derived",
+	}
+	doc["equations"]["z_eq"] = {
+		"id": "z_eq", "name": "z", "system": "demand_supply", "lhs": "z", "rhs": "old * 2.0",
+		"parameters": ["old"], "determined_variables": ["z"],
+	}
+	with pytest.raises(GraphError, match="deprecated"):
+		ParameterGraph.from_mapping(doc)
+
+
+def test_a_tombstone_that_is_its_own_operand_is_not_a_forwarding_equation():
+	with pytest.raises(GraphError, match="deprecated"):
+		ParameterGraph.from_mapping(_tomb_doc("old + new"))
+
+
+def test_an_inequality_on_a_tombstone_is_not_a_forwarding_equation():
+	# The schema already refuses an inequality that *determines* a value, so the
+	# only way an inequality reaches a tombstone is by reading it.
+	doc = _tomb_doc("new", determined=())
+	doc["equations"]["old_fwd"]["relation"] = "leq"
+	doc["equations"]["old_fwd"]["parameters"] = ["new", "old"]
+	doc["parameters"]["old"]["role"] = "free"
+	with pytest.raises(GraphError, match="deprecated"):
+		ParameterGraph.from_mapping(doc)
+
+
+def test_a_tombstone_off_the_left_side_is_not_a_forwarding_equation():
+	doc = _tomb_doc("new", lhs="2.0 * old")
+	with pytest.raises(GraphError, match="deprecated"):
+		ParameterGraph.from_mapping(doc)
+
+
+def test_a_forwarding_equation_with_a_free_variable_is_refused():
+	doc = _tomb_doc("new", free=("new",))
+	with pytest.raises(GraphError, match="deprecated"):
+		ParameterGraph.from_mapping(doc)

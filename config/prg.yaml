@@ -3084,7 +3084,6 @@ parameters:
   buffer_pool_contribution:
     categories: []
     category: Carbon
-    default: 0.1
     description: DEPRECATED. Duplicate of `permanence_parameters`. This node was declared `derived` with
       an equation setting it equal to that share, so the graph carried one number under two ids -- the
       two-names-for-one-quantity defect, not a second quantity. Its unit `1`, range [0, 1] and default
@@ -3099,7 +3098,7 @@ parameters:
     range:
     - 0.0
     - 1.0
-    role: free
+    role: derived
     source: null
     source_url: null
     status: deprecated
@@ -9704,7 +9703,6 @@ parameters:
   cross_border_trading:
     categories: []
     category: Market Design
-    default: 1.0
     deprecated_by: cross_border_trade_allowed
     description: DEPRECATED. Duplicate of `cross_border_trade_allowed`. The shipped node was typed float;
       the canonical is boolean.
@@ -9715,7 +9713,7 @@ parameters:
     range:
     - 0.0
     - 1.0
-    role: free
+    role: derived
     source: null
     source_url: null
     status: deprecated
@@ -11744,7 +11742,6 @@ parameters:
   demand_growth_rate:
     categories: []
     category: Demand-Side
-    default: 0.04
     deprecated_by: demand_growth
     description: DEPRECATED. Duplicate of `demand_growth`. The shipped node declared unit "1" and range
       [0, 1] and a placeholder default; the canonical id carries the correct unit `1/year` and the correct
@@ -11756,7 +11753,7 @@ parameters:
     range:
     - -0.05
     - 0.15
-    role: free
+    role: derived
     source: null
     source_url: null
     status: deprecated
@@ -14295,14 +14292,13 @@ parameters:
       so the ratio is the attainment index a monitoring report quotes -- and a target left at the catalog's
       500000.0 placeholder reads as an attainment of essentially zero, which is the placeholder surfacing
       rather than a performance finding.
-    default: 1.0
     determinism: policy
     name: Employment attainment local
     priority: P1
     range:
     - 0.0
     - 10.0
-    role: free
+    role: derived
     source: The carbon-market coupling (batch 24)
     status: deprecated
     type: float
@@ -14314,14 +14310,13 @@ parameters:
     deprecated_by: women_employment_share
     description: Achieved over targeted female share of the workforce. The ratio is the index the programme's
       own reporting uses.
-    default: 1.0
     determinism: policy
     name: Employment attainment women
     priority: P1
     range:
     - 0.0
     - 10.0
-    role: free
+    role: derived
     source: The carbon-market coupling (batch 24)
     status: deprecated
     type: float
@@ -14332,14 +14327,13 @@ parameters:
     category: Carbon
     deprecated_by: youth_employment_share
     description: Achieved over targeted youth share of the workforce.
-    default: 1.0
     determinism: policy
     name: Employment attainment youth
     priority: P1
     range:
     - 0.0
     - 10.0
-    role: free
+    role: derived
     source: The carbon-market coupling (batch 24)
     status: deprecated
     type: float
@@ -14568,7 +14562,6 @@ parameters:
   energy_burden_limit:
     categories: []
     category: Affordability
-    default: 0.1
     deprecated_by: affordability_threshold
     description: 'Retired: a second id for the 10% energy-poverty line, which `affordability_threshold`
       already carries. Both are the share of household income above which a tariff is unaffordable, both
@@ -14584,7 +14577,7 @@ parameters:
     range:
     - 0.01
     - 0.5
-    role: exogenous
+    role: derived
     source: 'The unsourced energy-burden limit retired (batch 62). `energy_burden_limit` and `affordability_threshold`
       are one statistic -- the 10% energy-poverty line -- and the graph carried both. The threshold is
       canonical: catalog row 20.1, a row in `docs/param_eqn.md`, the `affordability_threshold` inequality
@@ -20545,9 +20538,8 @@ parameters:
     range:
     - 0.0
     - 5.0
-    default: 1.4
     initial: null
-    role: exogenous
+    role: derived
     determinism: fixed
     categories: []
     source: 'The annuity-factor coupling (batch 49): the capital recovery factor formula is the standard
@@ -20615,9 +20607,8 @@ parameters:
     range:
     - 0.0
     - 5.0
-    default: 0.8
     initial: null
-    role: exogenous
+    role: derived
     determinism: fixed
     categories: []
     source: 'The annuity-factor coupling (batch 49): the capital recovery factor formula is the standard
@@ -24237,9 +24228,8 @@ parameters:
     range:
     - 0.0
     - 1.0
-    default: 0.3
     initial: null
-    role: free
+    role: derived
     determinism: policy
     categories: []
     source: 'The duplicate local-content share retired (batch 61). `local_content_requirements` is the
@@ -24276,10 +24266,28 @@ parameters:
     unit: '1'
     users:
     - Developers
+  local_employment_target_share:
+    category: Macro
+    default: 0.3
+    description: Targeted share of the workforce that is local. Default 0.3, the value the retired targets
+      node carried.
+    determinism: fixed
+    name: Local employment target share
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    source: Carried from the retired targets node; the default is a stated assumption (batch 101)
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   local_employment_targets:
     categories: []
     category: Land
-    default: 0.3
     deprecated_by: local_employment_share
     description: DEPRECATED. Duplicate of `local_employment_share`. Both nodes are described as the target
       share of project employment filled from the host community, both are `policy` determinism, and both
@@ -24296,7 +24304,7 @@ parameters:
     range:
     - 0.0
     - 1.0
-    role: free
+    role: derived
     source: The carbon-market coupling (batch 24)
     source_url: null
     status: deprecated
@@ -27597,9 +27605,8 @@ parameters:
     range:
     - 10.0
     - 80.0
-    default: 40.0
     initial: null
-    role: free
+    role: derived
     determinism: fixed
     categories: []
     source: 'The coupling pack for the digital, sector-coupling and instrument nodes (docs/research/coupling-packs/digital-sector.md),
@@ -27614,7 +27621,8 @@ parameters:
     priority: P1
     status: deprecated
     deprecated_by: opex_fixed_wind_onshore
-    depends_on: []
+    depends_on:
+    - opex_fixed_wind_onshore
     affects: []
   opex_fixed_wind_offshore:
     categories: []
@@ -29191,6 +29199,7 @@ parameters:
     depends_on: []
     affects:
     - pm25_fleet_contribution_ug_per_m3
+    - pm25_relative_risk_per_kt
   pm25_emissions:
     categories: []
     category: EnvSoc
@@ -29361,9 +29370,8 @@ parameters:
     range:
     - 0.0
     - 0.1
-    default: 0.006
     initial: null
-    role: exogenous
+    role: derived
     determinism: stochastic
     categories: []
     source: The co-pollutant chain (batch 44)
@@ -29372,7 +29380,9 @@ parameters:
     priority: P2
     status: deprecated
     deprecated_by: pm25_relative_risk_per_ug_per_m3
-    depends_on: []
+    depends_on:
+    - pm25_dispersion_factor
+    - pm25_relative_risk_per_ug_per_m3
     affects: []
   pm25_relative_risk_per_ug_per_m3:
     name: Pm25 relative risk per ug per m3
@@ -29403,6 +29413,7 @@ parameters:
     id: pm25_relative_risk_per_ug_per_m3
     depends_on: []
     affects:
+    - pm25_relative_risk_per_kt
     - premature_deaths_per_year
   pml_99_5_usd_million:
     category: Insurance & Catastrophe
@@ -32109,9 +32120,8 @@ parameters:
     range:
     - 0.0
     - 0.5
-    default: 0.05
     initial: null
-    role: free
+    role: derived
     determinism: fixed
     categories: []
     source: The duplicate remittance share retired (batch 59). `remittance_dependency` is the same quantity
@@ -41266,10 +41276,28 @@ parameters:
     unit: '1'
     users:
     - Developers
+  women_employment_target_share:
+    category: Macro
+    default: 0.15
+    description: Targeted share of the workforce that is women. Default 0.15, the value the retired targets
+      node carried.
+    determinism: fixed
+    name: Women employment target share
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    source: Carried from the retired targets node; the default is a stated assumption (batch 101)
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   women_employment_targets:
     categories: []
     category: JustTrans
-    default: 0.15
     deprecated_by: women_employment_share
     description: 'DEPRECATED. Duplicate of `women_employment_share`: both are the target share of project
       employment filled by women, both `policy` determinism and both free dials. The two defaults disagree
@@ -41283,7 +41311,7 @@ parameters:
     range:
     - 0.0
     - 1.0
-    role: free
+    role: derived
     source: The carbon-market coupling (batch 24)
     source_url: null
     status: deprecated
@@ -41637,10 +41665,28 @@ parameters:
     unit: '1'
     users:
     - Developers
+  youth_employment_target_share:
+    category: Macro
+    default: 0.25
+    description: Targeted share of the workforce that is youth. Default 0.25, the value the retired targets
+      node carried.
+    determinism: fixed
+    name: Youth employment target share
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    source: Carried from the retired targets node; the default is a stated assumption (batch 101)
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   youth_employment_targets:
     categories: []
     category: JustTrans
-    default: 0.25
     deprecated_by: youth_employment_share
     description: 'DEPRECATED. Duplicate of `youth_employment_share`: both are the target share of project
       employment filled by people under 35, both `policy` determinism and both free dials. The defaults
@@ -41653,7 +41699,7 @@ parameters:
     range:
     - 0.0
     - 1.0
-    role: free
+    role: derived
     source: The carbon-market coupling (batch 24)
     source_url: null
     status: deprecated
@@ -42998,6 +43044,27 @@ equations:
     rhs: protected_area_perimeter_km * buffer_zones / 1000
     solution_method: direct
     system: demand_supply
+    tolerance: 1.0e-09
+    unit_check: true
+  buffer_pool_contribution_forwarding:
+    description: Retired id forwarded to its replacement. The old id reports the replacement value.
+    determined_variables:
+    - buffer_pool_contribution
+    free_variables: []
+    lhs: buffer_pool_contribution
+    linearity: linear
+    name: buffer_pool_contribution forwarded
+    parameters:
+    - buffer_pool_contribution
+    - permanence_parameters
+    priority: P2
+    reference: 'Forwarding identity: the retired id reports the value of the node that replaced it, so
+      a scenario written against the old id still reads a live quantity. Reference: the deprecation record
+      (deprecated_by).'
+    relation: eq
+    rhs: permanence_parameters
+    solution_method: direct
+    system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
   business_interruption_cover_definition:
@@ -45984,6 +46051,27 @@ equations:
     system: energy_balance
     tolerance: 1.0e-09
     unit_check: true
+  cross_border_trading_forwarding:
+    description: Retired id forwarded to its replacement. The old id reports the replacement value.
+    determined_variables:
+    - cross_border_trading
+    free_variables: []
+    lhs: cross_border_trading
+    linearity: linear
+    name: cross_border_trading forwarded
+    parameters:
+    - cross_border_trading
+    - cross_border_trade_allowed
+    priority: P2
+    reference: 'Forwarding identity: the retired id reports the value of the node that replaced it, so
+      a scenario written against the old id still reads a live quantity. Reference: the deprecation record
+      (deprecated_by).'
+    relation: eq
+    rhs: cross_border_trade_allowed
+    solution_method: direct
+    system: cost_accounting
+    tolerance: 1.0e-09
+    unit_check: true
   cross_border_wheeling_cost_definition:
     description: 'The charge on the cross-border flow, at the same rate in both directions: an importing
       year pays and an exporting year is credited, which is what a symmetric wheeling schedule does to
@@ -46865,6 +46953,27 @@ equations:
       * demand_growth_window_years / ln(demand_saturation_ratio))))
     solution_method: direct
     system: price_demand
+    tolerance: 1.0e-09
+    unit_check: true
+  demand_growth_rate_forwarding:
+    description: Retired id forwarded to its replacement. The old id reports the replacement value.
+    determined_variables:
+    - demand_growth_rate
+    free_variables: []
+    lhs: demand_growth_rate
+    linearity: linear
+    name: demand_growth_rate forwarded
+    parameters:
+    - demand_growth_rate
+    - demand_growth
+    priority: P2
+    reference: 'Forwarding identity: the retired id reports the value of the node that replaced it, so
+      a scenario written against the old id still reads a live quantity. Reference: the deprecation record
+      (deprecated_by).'
+    relation: eq
+    rhs: demand_growth
+    solution_method: direct
+    system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
   demand_growth_window_definition:
@@ -47962,6 +48071,66 @@ equations:
       make. It states the identity for a single fuel, and averaging over the fleet is what makes it apply
       to a generation total that does not name its fuels.
     latex: \mathrm{emissions}_{mtco2\_per\_year} = \mathrm{generation}_{twh} \mathrm{fleet}_{emission\_intensity\_t\_per\_mwh}
+  employment_attainment_local_definition:
+    description: Achieved share over targeted share.
+    determined_variables:
+    - employment_attainment_local
+    free_variables: []
+    lhs: employment_attainment_local
+    linearity: nonlinear
+    name: Local employment attainment
+    parameters:
+    - employment_attainment_local
+    - local_employment_share
+    - local_employment_target_share
+    priority: P2
+    reference: 'Definition of an attainment ratio: achieved over targeted'
+    relation: eq
+    rhs: local_employment_share / local_employment_target_share
+    solution_method: direct
+    system: cost_accounting
+    tolerance: 1.0e-09
+    unit_check: true
+  employment_attainment_women_definition:
+    description: Achieved share over targeted share.
+    determined_variables:
+    - employment_attainment_women
+    free_variables: []
+    lhs: employment_attainment_women
+    linearity: nonlinear
+    name: Women employment attainment
+    parameters:
+    - employment_attainment_women
+    - women_employment_share
+    - women_employment_target_share
+    priority: P2
+    reference: 'Definition of an attainment ratio: achieved over targeted'
+    relation: eq
+    rhs: women_employment_share / women_employment_target_share
+    solution_method: direct
+    system: cost_accounting
+    tolerance: 1.0e-09
+    unit_check: true
+  employment_attainment_youth_definition:
+    description: Achieved share over targeted share.
+    determined_variables:
+    - employment_attainment_youth
+    free_variables: []
+    lhs: employment_attainment_youth
+    linearity: nonlinear
+    name: Youth employment attainment
+    parameters:
+    - employment_attainment_youth
+    - youth_employment_share
+    - youth_employment_target_share
+    priority: P2
+    reference: 'Definition of an attainment ratio: achieved over targeted'
+    relation: eq
+    rhs: youth_employment_share / youth_employment_target_share
+    solution_method: direct
+    system: cost_accounting
+    tolerance: 1.0e-09
+    unit_check: true
   energy_balance:
     description: 'What is generated, less what the wires lose, plus what is imported, is what is served.
       A scenario that misses this is a scenario that does not clear, however cheap it is.
@@ -48032,6 +48201,27 @@ equations:
     rhs: tariff_usd_per_mwh * household_consumption_mwh_per_year / household_income_usd_per_year
     solution_method: direct
     system: affordability
+    tolerance: 1.0e-09
+    unit_check: true
+  energy_burden_limit_forwarding:
+    description: Retired id forwarded to its replacement. The old id reports the replacement value.
+    determined_variables:
+    - energy_burden_limit
+    free_variables: []
+    lhs: energy_burden_limit
+    linearity: linear
+    name: energy_burden_limit forwarded
+    parameters:
+    - energy_burden_limit
+    - affordability_threshold
+    priority: P2
+    reference: 'Forwarding identity: the retired id reports the value of the node that replaced it, so
+      a scenario written against the old id still reads a live quantity. Reference: the deprecation record
+      (deprecated_by).'
+    relation: eq
+    rhs: affordability_threshold
+    solution_method: direct
+    system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
   energy_demand:
@@ -51283,6 +51473,27 @@ equations:
     system: employment
     tolerance: 1.0e-09
     unit_check: true
+  indirect_jobs_multiplier_forwarding:
+    description: Retired id forwarded to its replacement. The old id reports the replacement value.
+    determined_variables:
+    - indirect_jobs_multiplier
+    free_variables: []
+    lhs: indirect_jobs_multiplier
+    linearity: linear
+    name: indirect_jobs_multiplier forwarded
+    parameters:
+    - indirect_jobs_multiplier
+    - indirect_employment_multiplier
+    priority: P2
+    reference: 'Forwarding identity: the retired id reports the value of the node that replaced it, so
+      a scenario written against the old id still reads a live quantity. Reference: the deprecation record
+      (deprecated_by).'
+    relation: eq
+    rhs: indirect_employment_multiplier
+    solution_method: direct
+    system: cost_accounting
+    tolerance: 1.0e-09
+    unit_check: true
   induced_jobs_derivation:
     description: 'The multiplier form of the input-output employment method: direct jobs computed by the
       kernel''s own definition, times the supply-chain or consumption multiplier the method states.'
@@ -51304,6 +51515,27 @@ equations:
     rhs: direct_jobs * induced_employment_multiplier
     solution_method: direct
     system: employment
+    tolerance: 1.0e-09
+    unit_check: true
+  induced_jobs_multiplier_forwarding:
+    description: Retired id forwarded to its replacement. The old id reports the replacement value.
+    determined_variables:
+    - induced_jobs_multiplier
+    free_variables: []
+    lhs: induced_jobs_multiplier
+    linearity: linear
+    name: induced_jobs_multiplier forwarded
+    parameters:
+    - induced_jobs_multiplier
+    - induced_employment_multiplier
+    priority: P2
+    reference: 'Forwarding identity: the retired id reports the value of the node that replaced it, so
+      a scenario written against the old id still reads a live quantity. Reference: the deprecation record
+      (deprecated_by).'
+    relation: eq
+    rhs: induced_employment_multiplier
+    solution_method: direct
+    system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
   industrial_demand_definition:
@@ -54006,6 +54238,27 @@ equations:
     system: employment
     tolerance: 1.0e-09
     unit_check: true
+  local_content_requirements_forwarding:
+    description: Retired id forwarded to its replacement. The old id reports the replacement value.
+    determined_variables:
+    - local_content_requirements
+    free_variables: []
+    lhs: local_content_requirements
+    linearity: linear
+    name: local_content_requirements forwarded
+    parameters:
+    - local_content_requirements
+    - local_content_requirement
+    priority: P2
+    reference: 'Forwarding identity: the retired id reports the value of the node that replaced it, so
+      a scenario written against the old id still reads a live quantity. Reference: the deprecation record
+      (deprecated_by).'
+    relation: eq
+    rhs: local_content_requirement
+    solution_method: direct
+    system: cost_accounting
+    tolerance: 1.0e-09
+    unit_check: true
   local_employment_targets_bound:
     description: 'The three employment shares are overlapping measures over one workforce: a woman employed
       locally who is also young is counted in all three. Their sum is therefore bounded at 2.0 rather
@@ -54029,6 +54282,27 @@ equations:
     solution_method: numeric
     system: employment
     tolerance: 1.0e-06
+    unit_check: true
+  local_employment_targets_forwarding:
+    description: Retired id forwarded to its replacement. The old id reports the replacement value.
+    determined_variables:
+    - local_employment_targets
+    free_variables: []
+    lhs: local_employment_targets
+    linearity: linear
+    name: local_employment_targets forwarded
+    parameters:
+    - local_employment_targets
+    - local_employment_share
+    priority: P2
+    reference: 'Forwarding identity: the retired id reports the value of the node that replaced it, so
+      a scenario written against the old id still reads a live quantity. Reference: the deprecation record
+      (deprecated_by).'
+    relation: eq
+    rhs: local_employment_share
+    solution_method: direct
+    system: cost_accounting
+    tolerance: 1.0e-09
     unit_check: true
   local_jobs_definition:
     description: 'Direct employment at the local-content share. Dimensional check: jobs times a dimensionless
@@ -55307,6 +55581,27 @@ equations:
     system: reserve_margin
     tolerance: 1.0e-09
     unit_check: true
+  opex_fixed_wind_forwarding:
+    description: Retired id forwarded to its replacement. The old id reports the replacement value.
+    determined_variables:
+    - opex_fixed_wind
+    free_variables: []
+    lhs: opex_fixed_wind
+    linearity: linear
+    name: opex_fixed_wind forwarded
+    parameters:
+    - opex_fixed_wind
+    - opex_fixed_wind_onshore
+    priority: P2
+    reference: 'Forwarding identity: the retired id reports the value of the node that replaced it, so
+      a scenario written against the old id still reads a live quantity. Reference: the deprecation record
+      (deprecated_by).'
+    relation: eq
+    rhs: opex_fixed_wind_onshore
+    solution_method: direct
+    system: cost_accounting
+    tolerance: 1.0e-09
+    unit_check: true
   opex_maturity_definition:
     description: A categorical selects one branch of a table of stated values (the choose form). Maturity
       multiplies the fixed O&M.
@@ -56005,6 +56300,28 @@ equations:
     latex: \mathrm{pm25}_{kt\_per\_year} = \frac{\mathrm{coal}_{fuel\_energy\_gj} \mathrm{pm25}_{factor\_coal\_g\_per\_gj}
       + \mathrm{gas}_{fuel\_energy\_gj} \mathrm{pm25}_{factor\_gas\_g\_per\_gj} + \mathrm{oil}_{fuel\_energy\_gj}
       \mathrm{pm25}_{factor\_oil\_g\_per\_gj}}{\mathrm{g}_{per\_kt}}
+  pm25_relative_risk_per_kt_forwarding:
+    description: Retired per-kt risk is the per-concentration risk times the dispersion factor, which
+      converts ug/m3 to kt/year.
+    determined_variables:
+    - pm25_relative_risk_per_kt
+    free_variables: []
+    lhs: pm25_relative_risk_per_kt
+    linearity: nonlinear
+    name: PM2.5 relative risk per kt forwarded
+    parameters:
+    - pm25_relative_risk_per_kt
+    - pm25_relative_risk_per_ug_per_m3
+    - pm25_dispersion_factor
+    priority: P2
+    reference: 'Definition: relative risk per unit emission = relative risk per unit concentration x concentration
+      per unit emission'
+    relation: eq
+    rhs: pm25_relative_risk_per_ug_per_m3 * pm25_dispersion_factor
+    solution_method: direct
+    system: cost_accounting
+    tolerance: 1.0e-09
+    unit_check: true
   political_risk_cover_definition:
     description: 'The asset value insured against political events: the insured share of the fleet''s
       capital.'
@@ -57291,6 +57608,27 @@ equations:
     solution_method: direct
     system: financial
     tolerance: 1.0e-06
+    unit_check: true
+  remittance_dependency_forwarding:
+    description: Retired id forwarded to its replacement. The old id reports the replacement value.
+    determined_variables:
+    - remittance_dependency
+    free_variables: []
+    lhs: remittance_dependency
+    linearity: linear
+    name: remittance_dependency forwarded
+    parameters:
+    - remittance_dependency
+    - remittance_income_share
+    priority: P2
+    reference: 'Forwarding identity: the retired id reports the value of the node that replaced it, so
+      a scenario written against the old id still reads a live quantity. Reference: the deprecation record
+      (deprecated_by).'
+    relation: eq
+    rhs: remittance_income_share
+    solution_method: direct
+    system: cost_accounting
+    tolerance: 1.0e-09
     unit_check: true
   remittance_flows_definition:
     description: 'Remittances received per year: the share of household income arriving as transfers,
@@ -62126,6 +62464,27 @@ equations:
     system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
+  women_employment_targets_forwarding:
+    description: Retired id forwarded to its replacement. The old id reports the replacement value.
+    determined_variables:
+    - women_employment_targets
+    free_variables: []
+    lhs: women_employment_targets
+    linearity: linear
+    name: women_employment_targets forwarded
+    parameters:
+    - women_employment_targets
+    - women_employment_share
+    priority: P2
+    reference: 'Forwarding identity: the retired id reports the value of the node that replaced it, so
+      a scenario written against the old id still reads a live quantity. Reference: the deprecation record
+      (deprecated_by).'
+    relation: eq
+    rhs: women_employment_share
+    solution_method: direct
+    system: cost_accounting
+    tolerance: 1.0e-09
+    unit_check: true
   women_jobs_definition:
     description: 'The composition share applied to the direct jobs: jobs by group equal the share times
       the count the equation is a member of. Nothing deeper -- the share''s whole content is who the jobs
@@ -62313,6 +62672,27 @@ equations:
     rhs: net_zero_year - renewable_target_year
     solution_method: direct
     system: carbon_trajectory
+    tolerance: 1.0e-09
+    unit_check: true
+  youth_employment_targets_forwarding:
+    description: Retired id forwarded to its replacement. The old id reports the replacement value.
+    determined_variables:
+    - youth_employment_targets
+    free_variables: []
+    lhs: youth_employment_targets
+    linearity: linear
+    name: youth_employment_targets forwarded
+    parameters:
+    - youth_employment_targets
+    - youth_employment_share
+    priority: P2
+    reference: 'Forwarding identity: the retired id reports the value of the node that replaced it, so
+      a scenario written against the old id still reads a live quantity. Reference: the deprecation record
+      (deprecated_by).'
+    relation: eq
+    rhs: youth_employment_share
+    solution_method: direct
+    system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
   youth_jobs_definition:
@@ -77539,6 +77919,166 @@ relationships:
   strength: hard
   description: Enters the definition.
   reference: The coupling build (batch 100)
+  priority: P2
+- source: permanence_parameters
+  target: buffer_pool_contribution
+  equation_id: buffer_pool_contribution_forwarding
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
+  priority: P2
+- source: cross_border_trade_allowed
+  target: cross_border_trading
+  equation_id: cross_border_trading_forwarding
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
+  priority: P2
+- source: demand_growth
+  target: demand_growth_rate
+  equation_id: demand_growth_rate_forwarding
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
+  priority: P2
+- source: affordability_threshold
+  target: energy_burden_limit
+  equation_id: energy_burden_limit_forwarding
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
+  priority: P2
+- source: indirect_employment_multiplier
+  target: indirect_jobs_multiplier
+  equation_id: indirect_jobs_multiplier_forwarding
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
+  priority: P2
+- source: induced_employment_multiplier
+  target: induced_jobs_multiplier
+  equation_id: induced_jobs_multiplier_forwarding
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
+  priority: P2
+- source: local_content_requirement
+  target: local_content_requirements
+  equation_id: local_content_requirements_forwarding
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
+  priority: P2
+- source: local_employment_share
+  target: local_employment_targets
+  equation_id: local_employment_targets_forwarding
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
+  priority: P2
+- source: opex_fixed_wind_onshore
+  target: opex_fixed_wind
+  equation_id: opex_fixed_wind_forwarding
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
+  priority: P2
+- source: remittance_income_share
+  target: remittance_dependency
+  equation_id: remittance_dependency_forwarding
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
+  priority: P2
+- source: women_employment_share
+  target: women_employment_targets
+  equation_id: women_employment_targets_forwarding
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
+  priority: P2
+- source: youth_employment_share
+  target: youth_employment_targets
+  equation_id: youth_employment_targets_forwarding
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
+  priority: P2
+- source: local_employment_share
+  target: employment_attainment_local
+  equation_id: employment_attainment_local_definition
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
+  priority: P2
+- source: local_employment_target_share
+  target: employment_attainment_local
+  equation_id: employment_attainment_local_definition
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
+  priority: P2
+- source: women_employment_share
+  target: employment_attainment_women
+  equation_id: employment_attainment_women_definition
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
+  priority: P2
+- source: women_employment_target_share
+  target: employment_attainment_women
+  equation_id: employment_attainment_women_definition
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
+  priority: P2
+- source: youth_employment_share
+  target: employment_attainment_youth
+  equation_id: employment_attainment_youth_definition
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
+  priority: P2
+- source: youth_employment_target_share
+  target: employment_attainment_youth
+  equation_id: employment_attainment_youth_definition
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
+  priority: P2
+- source: pm25_relative_risk_per_ug_per_m3
+  target: pm25_relative_risk_per_kt
+  equation_id: pm25_relative_risk_per_kt_forwarding
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
+  priority: P2
+- source: pm25_dispersion_factor
+  target: pm25_relative_risk_per_kt
+  equation_id: pm25_relative_risk_per_kt_forwarding
+  relationship: functional
+  strength: hard
+  description: Enters the definition.
+  reference: The coupling build (batch 101)
   priority: P2
 - source: biomass_generation_twh
   target: fleet_generation_twh

@@ -606,8 +606,9 @@ def test_a_deprecated_node_cannot_be_set(graph: ParameterGraph):
 		# A value the node does not already hold. Setting it to its own default
 		# is a no-op whatever the node's status, so the refusal is written
 		# against a *change* and this test must make one.
-		assert node.default is not None, f"{name} has no default to perturb"
-		values[name] = node.default * 2 + 1
+		# A tombstone coupled by a forwarding equality has no default (it is
+		# derived), so any number is a change.
+		values[name] = 0.123456 if node.default is None else node.default * 2 + 1
 		with pytest.raises(GraphError, match="deprecated"):
 			graph.propagate(values)
 		# The replacement is the thing the message names, and it has to be

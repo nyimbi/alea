@@ -62,7 +62,7 @@ def main() -> None:
 		"numeric": "Typed, with a real unit and value. Coupling needs a base node or a physical identity the graph does not hold yet.",
 		"non-scalar": "Registers, record sets, procedures and free text that the catalog shipped as `float` with the 500000 stub. None is a quantity, and `ParameterType` has no text or mapping type, so each is recorded and left (decision, batch 87); retyping would assert a number that does not exist.",
 		"categorical": "A level name. A level has no arithmetic, so it can never be an equation operand; it belongs in a register.",
-		"tombstone": "Retired id. Must not be wired into an equation.",
+		"tombstone": "Retired id. Coupled only as the determined side of a forwarding equality.",
 	}
 	lines = [
 		"# Coupling worklist", "",

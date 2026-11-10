@@ -496,12 +496,20 @@ class ParameterGraph:
 			return
 		for edge in self._edges:
 			for end, label in ((edge.source, "source"), (edge.target, "target")):
-				if end in dead:
-					raise GraphError(
-						f"edge {edge.source} -> {edge.target} has a deprecated "
-						f"{label} ({end}); the node's replacement is "
-						f"{self._nodes[end].deprecated_by!r}"
-					)
+				if end not in dead:
+					continue
+				owner = self._equations.get(edge.equation_id or "")
+				if (
+					label == "target"
+					and owner is not None
+					and self._is_forwarding(owner, end)
+				):
+					continue
+				raise GraphError(
+					f"edge {edge.source} -> {edge.target} has a deprecated "
+					f"{label} ({end}); the node's replacement is "
+					f"{self._nodes[end].deprecated_by!r}"
+				)
 		for equation in self._equations.values():
 			named = (
 				*equation.parameters,
@@ -509,12 +517,50 @@ class ParameterGraph:
 				*equation.determined_variables,
 			)
 			for name in named:
-				if name in dead:
+				if name in dead and not self._is_forwarding(equation, name):
 					raise GraphError(
 						f"equation {equation.id!r} names the deprecated "
 						f"parameter {name!r}; its replacement is "
 						f"{self._nodes[name].deprecated_by!r}"
 					)
+
+	def _forwarding_holds(self, name: str, values: Mapping[str, ParameterValue]) -> bool:
+		"""Whether the tombstone's value in ``values`` is what its equality gives.
+
+		False when the right side reads a symbol ``values`` does not carry, so a
+		sparse set that names only the retired id is still refused: nothing
+		shows the number came from the graph rather than from the caller.
+		"""
+		equation = self._determiner[name]
+		if not self._is_forwarding(equation, name):
+			return False
+		expression = parse_side(equation.rhs)
+		if not expression.symbols <= set(values):
+			return False
+		try:
+			expected = float(expression.eval({k: values[k] for k in expression.symbols}))
+		except Exception:
+			return False
+		given = values[name]
+		return isinstance(given, (int, float)) and abs(float(given) - expected) <= 1e-9 * max(1.0, abs(expected))
+
+	def _is_forwarding(self, equation: Equation, name: str) -> bool:
+		"""Whether ``equation`` is the one that carries a tombstone's value.
+
+		A retired id is not dropped from the document, and a node nothing
+		computes is a node nobody can read the value of. The one admitted use is
+		a *forwarding* equality: the tombstone is the only variable the equation
+		determines, it stands alone on the left, and it is not read by the right,
+		so the old id reports the value of whatever replaced it. Nothing can
+		read the tombstone through this -- it is never an operand of another
+		equation, and an edge may reach it only as the target of this equation.
+		"""
+		return (
+			tuple(equation.determined_variables) == (name,)
+			and equation.lhs == name
+			and name not in parse_side(equation.rhs).symbols
+			and not equation.free_variables
+		)
 
 	# -- accessors ------------------------------------------------------
 
@@ -673,21 +719,6 @@ class ParameterGraph:
 		"""
 		return tuple(
 			sorted(name for name in self._nodes if self._nodes[name].role is Role.ENDOGENOUS)
-		)
-
-	def live_uncoupled(self) -> tuple[str, ...]:
-		"""The uncoupled nodes that are not tombstones, in name order.
-
-		A tombstone is a retired id kept so a caller migrating a scenario can
-		find its replacement through ``deprecated_by``; ``_deprecated_reach``
-		refuses any equation that names one, so it can never be coupled and
-		should not be. Its coupling is its successor's. This is the register that
-		means "a live node nothing reads", and it is empty when every live node
-		sits in an equation.
-		"""
-		return tuple(
-			name for name in self.uncoupled()
-			if self._nodes[name].status != "deprecated"
 		)
 
 	def uncoupled(self) -> tuple[str, ...]:
@@ -1761,6 +1792,11 @@ class ParameterGraph:
 			if node is None:
 				continue
 			if node.status == "deprecated":
+				if name in self._determiner and self._forwarding_holds(name, values):
+					# A propagated map fed back in: the retired id carries
+					# the value its forwarding equality gives, so it sets
+					# nothing.
+					continue
 				if value != node.default:
 					raise GraphError(
 						f"{name} is deprecated and was replaced by "

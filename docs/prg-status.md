@@ -34,7 +34,7 @@ the code and `config/prg.yaml` are the authority, and this says where to look.
 | API | `src/alea/api/routes/prg.py` | The §43 surface: `GET /prg/summary`, `/graph`, `/graph/export`, `/parameters`, `/parameters/{id}`, `/parameters/{id}/dependents`, `/equations`, `/equations/{id}`, `/consistency/check`, `/consistency/report`; `POST /prg/propagate`, `/conflicts` (`/conflicts/detect`), `/conflicts/resolve`, `/feedback/solve`, `/translate`, `/sensitivity`, `/cross-validation`. The two reads and the two `/consistency` routes are public; the rest are analyst-tier |
 | Python SDK | `src/alea/prg/sdk.py` | The §45 `PRGClient`: async, one method per §43 operation, returning the JSON the service served rather than re-modelling it. Transport failures and service errors both raise `PrgClientError`, so a caller writes one `except` and does not import `httpx` |
 | Load cache | `src/alea/prg/graph.py` | `load_graph` memoised on the document's *identity* -- resolved path, mtime and size. Measured: a propagation is 6.5 ms and an incremental one 6.1 ms, while parsing the YAML is 73.0 ms of a 73.4 ms load, so §30's propagation cache targets the cheap half and the parse is what the workload asks for |
-| The graph | `config/prg.yaml` | 869 parameters, 39 equations, 88 edges, 2 feedback loops (5 loop variables between them); 833 settable, 3 endogenous (the optimiser's fleet), 33 derived. The 781 with no equation carry `role: free` — the schema's word for "unconstrained within its range" — and `ParameterGraph.uncoupled()` names them, so the register is countable rather than implied |
+| The graph | `config/prg.yaml` | 1881 parameters, 841 equations, 1993 edges, 57 cross-validation rules (count read off `load_graph()` after batch 101). `ParameterGraph.uncoupled()` is **empty**: every node, the 16 retired ids included, is named by an equation. Retired ids are coupled as the determined side of a forwarding equality (`old = successor`); none may be read by another equation. Categoricals enter through `choose()`, record stubs as 0/1 presence flags. See `docs/prg-docs.md` section 4 |
 | The catalog join | `scripts/build/prg_from_catalog.py` | The generator that joins `docs/params.md`'s 787 distinct names to the 88 shipped nodes, assigns each a system from the catalog's own category column, and writes `config/prg.yaml`. `--check` re-derives the file and diffs it, so the document and the graph cannot drift apart silently. It carries `cross_validation` through verbatim — a key it dropped once, which is the "declared is not produced" defect committed by the tool written to avoid it |
 
 Commands: `alea prg summary|equations|check|propagate|conflicts|sensitivity|units|constraints|audit`,
@@ -6198,3 +6198,17 @@ The graph's 613 equations, 1423 edges, 10 binding constraints, 2 feedback loops,
 and 57 cross-validation rules load, propagate at defaults with zero consistency
 violations, and pass the dimensional walker (0 inconsistent, 0 undecidable at
 this build).
+
+## Batches 98-101: the uncoupled count reaches zero
+
+`uncoupled()` went 76 -> 58 (batch 98) -> 35 (batch 99) -> 16 (batch 100) -> 0
+(batch 101). Batches 98-99 added `choose(selector, level=expr, ...)` so the 41
+categoricals could be operands; batch 100 retyped the 19 non-scalar record stubs
+as presence flags gating stated quantities; batch 101 coupled the 16 tombstones
+by forwarding equalities. An earlier cut of batch 101 narrowed the claim with a
+`live_uncoupled()` predicate that excluded tombstones; that method is removed,
+because a count that skips the nodes it cannot reach is a narrower claim than the
+goal. `ParameterGraph._is_forwarding` is the only way a deprecated id appears in
+an equation, and its four conditions (sole determined variable, alone on the
+left, not read on the right, no free variables) are each canaried in
+`tests/ci/test_prg_choose.py`.

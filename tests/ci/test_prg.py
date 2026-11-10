@@ -1018,46 +1018,17 @@ def test_the_summary_reports_the_registers(graph: ParameterGraph):
 		name for name in graph.uncoupled()
 		if graph.nodes[name].status == "deprecated"
 	}
-	assert deprecated_uncoupled == {
-		"cross_border_trading", "demand_growth_rate", "pm25_relative_risk_per_kt",
-		# Batch 49 retired the duplicate jobs multipliers once `total_jobs`
-		# stopped reading them. They are `exogenous` tombstones and would
-		# otherwise break the `{"free"}` claim below, which is why they are
-		# named here rather than filtered silently.
-		"indirect_jobs_multiplier", "induced_jobs_multiplier",
-		# Batch 55 retired the generic wind O&M duplicate. It is `free` rather
-		# than `exogenous`, so it does not threaten the `{"free"}` claim, but
-		# it belongs in this set for the reason the set exists: a fifth
-		# deprecation should have to be written down.
-		"opex_fixed_wind",
-		# Batch 59 retired the duplicate remittance share. Also `free`.
-		"remittance_dependency",
-		# Batch 61 retired the plural local-content share, keeping the
-		# singular. Also `free`, and the retirement repointed its one reader
-		# (`local_content_capex_definition`) so no equation names it now.
-		"local_content_requirements",
-		# Batch 62 retired the unsourced burden limit, keeping the threshold.
-		# It is `exogenous`, not `free`, so it also had to be named here for
-		# the `{"free"}` claim below -- and unlike batches 55/59/61 its one
-		# reader was *deleted* rather than repointed, so nothing names it.
-		"energy_burden_limit",
-		# Batch 69 retired the buffer-pool alias of `permanence_parameters`.
-		# It was `derived` with an equation setting it equal to that share --
-		# one number under two ids -- so both the equation and its edge are
-		# gone, and it is `free` now that nothing determines it.
-		"buffer_pool_contribution",
-		# Batch 70 retired six nodes at once, and the reason is one defect:
-		# three employment shares each had a second id describing the same
-		# target, and an "attainment" equation divided one id by the other.
-		# The three `*_employment_targets` were the duplicate dials and the
-		# three `employment_attainment_*` were the ratios built on them, so
-		# removing the ratios left the index nodes derived by nothing. All six
-		# are `free` tombstones now.
-		"local_employment_targets", "women_employment_targets",
-		"youth_employment_targets",
-		"employment_attainment_local", "employment_attainment_women",
-		"employment_attainment_youth",
-	}, deprecated_uncoupled
+	# Batch 101 coupled all sixteen retired ids (cross_border_trading,
+	# demand_growth_rate, pm25_relative_risk_per_kt, the jobs multipliers,
+	# opex_fixed_wind, remittance_dependency, local_content_requirements,
+	# energy_burden_limit, buffer_pool_contribution and the six employment
+	# targets and attainment ratios) as the determined side of one forwarding
+	# equality each, so none is uncoupled. The claim that replaces the list is
+	# that every deprecated node is computed, and by nothing else.
+	assert deprecated_uncoupled == set(), deprecated_uncoupled
+	retired = sorted(n for n, node in graph.nodes.items() if node.status == "deprecated")
+	assert len(retired) == 16, retired
+	assert all(name in graph.computed() for name in retired), retired
 	uncoupled_roles = {
 		graph.role(name).value for name in graph.uncoupled()
 		if name not in deprecated_uncoupled
@@ -1075,10 +1046,10 @@ def test_the_summary_reports_the_registers(graph: ParameterGraph):
 	# the node is coupled and uncomputed at once. That is the distinction the
 	# register and `computed()` draw between them, and it is what the
 	# witness below now pins.
-	# Batch 100 coupled the last live node, so no live node is uncoupled and the
-	# set is empty; the tombstones are what `uncoupled()` still names.
+	# Batch 101 coupled the last nodes, the 16 tombstones, through forwarding
+	# equalities, so `uncoupled()` itself is empty.
 	assert uncoupled_roles == set(), uncoupled_roles
-	assert graph.live_uncoupled() == ()
+	assert graph.uncoupled() == ()
 	assert graph.role("firm_build_fleet_mw").value == "endogenous"
 	assert "firm_build_fleet_mw" not in graph.uncoupled()
 	assert "firm_build_fleet_mw" not in graph.computed()
@@ -1143,17 +1114,18 @@ def test_the_reversal_allowance_is_the_share_and_not_its_complement(
 	# `buffer_pool_contribution` used to be asserted equal to the share here.
 	# Batch 69 deprecated it instead: the equation setting it equal to
 	# `permanence_parameters` made it a second id for one number, which is the
-	# defect class this batch exists to remove, not a coupling. A tombstone
-	# carries its old default so it still propagates, and the assertion is that
-	# it is *not* reachable by any equation -- the alias's coupling is its
-	# deletion, and a graph that quietly re-coupled it would fail here.
+	# defect class this batch exists to remove, not a coupling. Batch 101 gave the
+	# tombstone one forwarding equality and nothing else: no equation may *read*
+	# it, so the retired id reports the share and cannot feed anything.
 	node = graph.node("buffer_pool_contribution")
 	assert node.status == "deprecated", node.status
 	assert node.deprecated_by == "permanence_parameters", node.deprecated_by
 	assert not any(
 		"buffer_pool_contribution" in (equation.parameters or [])
+		and "buffer_pool_contribution" not in equation.determined_variables
 		for equation in graph.equations.values()
-	), "a deprecated node is reached by an equation; `_deprecated_reach` should refuse this at load"
+	), "a deprecated node is read by an equation; `_deprecated_reach` should refuse this at load"
+	assert values["buffer_pool_contribution"] == share
 
 
 def test_the_unreached_engine_knobs_are_computed_not_transcribed(monkeypatch):
@@ -1532,18 +1504,15 @@ def test_every_boolean_refuses_a_magnitude(graph: ParameterGraph, defaults: dict
 def test_the_retired_remittance_share_points_at_a_value_it_could_not_have_carried(
 	graph: ParameterGraph, defaults: dict
 ):
-	"""A tombstone's default is the migration path, so it has to be a real one.
+	"""A retired id reports its successor's value, not the placeholder it shipped.
 
 	`remittance_dependency` shipped the 500,000 sentinel with no unit and no
 	reader, as a second id for the share `remittance_income_share` already
 	carries. Retiring it is the survey's own classification (row 135, DEAD).
 
-	The claim this test makes is narrower than "it is deprecated": a
-	deprecation that leaves the sentinel in place hands every scenario that
-	still names the old id a default of 500,000 for a share that cannot exceed
-	1, and `propagate` refuses a parameter set that omits a non-derived node --
-	so the tombstone *must* carry a value and that value is what a migrating
-	caller inherits. Copying the successor's is the only honest choice.
+	Batch 101 made the tombstone a derived node: it carries no default, and one
+	forwarding equality gives it the successor's value, so a caller who reads
+	the old id inherits the live number.
 	"""
 	victim = graph.node("remittance_dependency")
 	successor = graph.node("remittance_income_share")
@@ -1552,16 +1521,17 @@ def test_the_retired_remittance_share_points_at_a_value_it_could_not_have_carrie
 	assert victim.deprecated_by == "remittance_income_share", victim.deprecated_by
 	assert successor.status != "deprecated", successor.status
 
-	# The tombstone states the quantity it was, at the value the graph now
-	# computes it at -- not the placeholder it shipped.
 	assert victim.unit == successor.unit == "1", (victim.unit, successor.unit)
 	assert victim.range == successor.range, (victim.range, successor.range)
-	assert victim.default == successor.default, (victim.default, successor.default)
 	assert victim.range != (0.0, 1000000.0), victim.range
-	assert victim.default != 500000.0, victim.default
+	assert victim.default is None, victim.default
+	values = graph.propagate(defaults).values
+	assert values["remittance_dependency"] == successor.default, values[
+		"remittance_dependency"
+	]
 
 	# A tombstone is not a knob: setting it is refused rather than silently
-	# accepted, and the refusal names the successor so the caller can migrate.
+	# overruled, and the refusal names the successor so the caller can migrate.
 	scoped = dict(defaults)
 	scoped["remittance_dependency"] = 0.25
 	with pytest.raises(GraphError, match="remittance_income_share"):
@@ -1637,7 +1607,8 @@ def test_the_two_local_content_consumers_now_move_together(
 	# The tombstone states the quantity it was, at the type it was.
 	assert victim.unit == successor.unit == "1", (victim.unit, successor.unit)
 	assert victim.range == successor.range, (victim.range, successor.range)
-	assert victim.default == successor.default, (victim.default, successor.default)
+	assert victim.default is None, victim.default
+	assert graph.propagate(defaults).values[victim.id] == successor.default
 
 	# The equation that used to read the plural now reads the singular, and
 	# the edge register agrees with the arithmetic rather than the old body.
@@ -1712,7 +1683,8 @@ def test_one_affordability_line_is_one_dial_and_one_inequality(
 	# are *not* equal and that is a fact about the two ids rather than an
 	# oversight: the threshold admits a 0% line, the limit's floor was 0.01.
 	assert victim.unit == successor.unit == "1", (victim.unit, successor.unit)
-	assert victim.default == successor.default == 0.1, (victim.default, successor.default)
+	assert victim.default is None and successor.default == 0.1
+	assert graph.propagate(defaults).values[victim.id] == 0.1
 	assert successor.range == (0.0, 0.5), successor.range
 
 	# The restatement is gone, and the survivor is the only equation either
@@ -1750,7 +1722,9 @@ def test_one_affordability_line_is_one_dial_and_one_inequality(
 	burden = float(full["energy_burden"])
 	assert burden < 0.1, burden
 	for probe in (0.05, 0.02):
-		scoped = {**full, "affordability_threshold": probe}
+		# The retired id forwards to the threshold, so a caller moving the
+		# threshold carries the forwarded value with it.
+		scoped = {**full, "affordability_threshold": probe, "energy_burden_limit": probe}
 		# The nadir finding is present in every scenario here (see
 		# `KNOWN_DEFAULT_FINDINGS`); what this asserts is that tightening the
 		# threshold adds exactly one violation and it is the affordability
@@ -1994,7 +1968,7 @@ def test_every_equality_declares_an_edge_from_each_symbol_it_reads(
 	# megawatt-hour conversion -- taking 532 -> 534. Batch 80 adds seven more,
 	# the megawatt-to-terawatt conversion for each sector `_load` dial, so
 	# 534 -> 549.
-	assert len(determined) == 751, len(determined)
+	assert len(determined) == 767, len(determined)
 
 	sourced: dict[str, set[str]] = {}
 	for edge in graph.edges:
@@ -3530,7 +3504,7 @@ def test_the_audit_reports_what_it_did_not_check():
 	# Batch 52 added `debt_fraction_definition`, whose `debt_equity_ratio` is
 	# not on the solve result either, so `skipped` moves 334 -> 335 for the
 	# same reason.
-	assert len(audit.checked) == 246, audit.checked
+	assert len(audit.checked) == 247, audit.checked
 	# Batch 53's reserve-requirement definition takes it 335 -> 336.
 	# Batch 54's temporal-resolution definition takes it 336 -> 337, for the
 	# same reason as the two before it: `tsam_segment_hours` is not on the
@@ -3565,7 +3539,7 @@ def test_the_audit_reports_what_it_did_not_check():
 	# megawatt dial the result does not carry as a column, so all seven join
 	# `skipped` and `checked` stays at 236: 298 -> 305, with the partition
 	# below moving 534 -> 549 to follow `computed()`.
-	assert len(audit.skipped) == 505, audit.skipped
+	assert len(audit.skipped) == 520, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -3641,7 +3615,7 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# `data_centre_load_twh` -- so 532 -> 534. Batch 80 adds seven derived
 	# nodes, the terawatt-year side of each sector load's conversion, so
 	# 534 -> 549.
-	assert len(audit.skipped) == 751, audit.skipped
+	assert len(audit.skipped) == 767, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -5122,7 +5096,7 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	# the forecast peak and now reads the scenario peak. Measured as a set
 	# difference against the pre-batch document.
 	assert re.search(r"\b72 uncertain input", text), text
-	assert re.search(r"reach \b218 derived", text), text
+	assert re.search(r"reach \b220 derived", text), text
 
 
 # ---------------------------------------------------------------------------
@@ -5466,7 +5440,12 @@ def test_incremental_propagation_equals_a_full_one(graph: ParameterGraph, defaul
 		# contract is "this result, plus a delta". Resetting every other knob
 		# to its default each turn would hand the incremental path a base its
 		# `previous` does not describe -- a caller error, not a graph one.
-		values = dict(previous.values)
+		# A retired id's forwarded value is dropped from the carried map: moving
+		# its successor leaves the carried copy stale, and a caller editing one
+		# knob does not re-submit another id's output.
+		values = {
+			k: v for k, v in previous.values.items() if graph.nodes[k].status != "deprecated"
+		}
 		if isinstance(node.default, str):
 			# A categorical's value is a level *name*, so there is no delta to
 			# take and no "25% of the span" to move it by: the perturbation is
@@ -6023,7 +6002,7 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# `strength_of` counts as hard: 602 -> 603. The three edges it and the
 	# reshaped `fleet_build_balance` moved are all `hard`, so they change the
 	# edge count and not this one.
-	assert counts == {"hard": 822, "informational": 1, "soft": 2}, counts
+	assert counts == {"hard": 838, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -6530,7 +6509,7 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# equation: `peak_demand_shifted_definition` is the equation the sourced
 	# peak-demand band belongs to, and it shipped uncited while carrying a
 	# worked example at a default this batch moves.
-	assert len(declared) == 524, f"the citation register moved: {sorted(declared)}"
+	assert len(declared) == 540, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -6799,7 +6778,7 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 	# adds two more (the IT-load-times-PUE product and the megawatt-hour
 	# conversion), 532 -> 534, and batch 80 adds seven (the sector-load
 	# conversions), 534 -> 549.
-	assert compared == 751, (
+	assert compared == 767, (
 		f"expected 481 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "
@@ -7100,12 +7079,24 @@ SCENE_SWITCHES = (
 
 def switches_in_arithmetic(graph: ParameterGraph, names: tuple[str, ...]) -> list[str]:
 	"""The named switches that carry an edge or are named by an equation."""
+	# A retired id's forwarding equality (batch 101) names it as the thing it
+	# determines; that is the tombstone being reported, not the switch being
+	# used, so the equation and its edge do not count as arithmetic.
+	forwarding = {
+		eq_id
+		for eq_id, equation in graph.equations.items()
+		if graph._is_forwarding(equation, next(iter(equation.determined_variables), ""))
+	}
 	edged = set()
 	for edge in graph.edges:
+		if edge.equation_id in forwarding:
+			continue
 		edged.add(edge.source)
 		edged.add(edge.target)
 	named = set()
-	for equation in graph.equations.values():
+	for eq_id, equation in graph.equations.items():
+		if eq_id in forwarding:
+			continue
 		named.update(equation.parameters)
 	return sorted(n for n in names if n in edged or n in named)
 
@@ -7164,7 +7155,7 @@ def test_the_scene_switch_predicate_read_the_graph_not_the_list():
 		"not reading the edges"
 	)
 
-	# Known negative: an uncoupled node, so the predicate can also return the
+	# Known negative: a node only a forwarding equality names, so the predicate can also return the
 	# other answer -- otherwise a predicate returning every name would pass the
 	# gate above by failing it, and one returning none would pass vacuously.
 	known_uncoupled = "local_employment_targets"
