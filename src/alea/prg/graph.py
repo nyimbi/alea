@@ -39,6 +39,7 @@ from alea.prg.crossval import (
 from alea.prg.dsl import (
 	DslError,
 	Expr,
+	choices_in,
 	evaluate,
 	linearity_in,
 	parse,
@@ -674,6 +675,21 @@ class ParameterGraph:
 			sorted(name for name in self._nodes if self._nodes[name].role is Role.ENDOGENOUS)
 		)
 
+	def live_uncoupled(self) -> tuple[str, ...]:
+		"""The uncoupled nodes that are not tombstones, in name order.
+
+		A tombstone is a retired id kept so a caller migrating a scenario can
+		find its replacement through ``deprecated_by``; ``_deprecated_reach``
+		refuses any equation that names one, so it can never be coupled and
+		should not be. Its coupling is its successor's. This is the register that
+		means "a live node nothing reads", and it is empty when every live node
+		sits in an equation.
+		"""
+		return tuple(
+			name for name in self.uncoupled()
+			if self._nodes[name].status != "deprecated"
+		)
+
 	def uncoupled(self) -> tuple[str, ...]:
 		"""The parameters no equation names, in name order.
 
@@ -1027,6 +1043,22 @@ class ParameterGraph:
 			except DslError as exc:
 				raise GraphError(f"equation {equation.id!r}: {exc}") from exc
 			named = lhs.symbols | rhs.symbols
+			for choice in choices_in(lhs) + choices_in(rhs):
+				selector = self._nodes.get(choice.selector)
+				if selector is None or selector.type is not ParameterType.CATEGORICAL:
+					raise GraphError(
+						f"equation {equation.id!r}: choose() selects on "
+						f"{choice.selector!r}, which is not a categorical "
+						f"parameter; only a level name can pick a branch"
+					)
+				if set(choice.levels) != set(selector.categories):
+					raise GraphError(
+						f"equation {equation.id!r}: choose({choice.selector}) "
+						f"covers {sorted(choice.levels)} but the node declares "
+						f"{sorted(selector.categories)}; a missing branch is a "
+						f"level that would raise at run time and an extra one "
+						f"is a level that does not exist"
+					)
 			if not named:
 				raise GraphError(
 					f"equation {equation.id!r} is constant on both sides "

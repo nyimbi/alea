@@ -57,6 +57,7 @@ from scipy.optimize import brentq
 
 __all__ = [
 	"Add",
+	"Choose",
 	"Const",
 	"DslError",
 	"Expr",
@@ -69,6 +70,7 @@ __all__ = [
 	"Subscript",
 	"Sum",
 	"Symbol",
+	"choices_in",
 	"const",
 	"evaluate",
 	"evaluate_array",
@@ -1016,8 +1018,125 @@ class Sum(Expr):
 		)
 
 
+@dataclass(frozen=True)
+class Choose(Expr):
+	"""A categorical selects one of several expressions:
+	``choose(ssp_pathway, ssp1_2_6=0.8, ssp5_8_5=1.4)``.
+
+	WHY A FORM AND NOT A FUNCTION. A categorical's value is a level *name*, and
+	every other construct here is arithmetic over numbers, so a level could never
+	reach an equation. The first argument must be a bare parameter name (the
+	selector); each keyword is a level and its value is the expression that
+	level contributes. The level names are not symbols -- they are the selector's
+	categories -- so they appear in no ``symbols`` set and need no edge.
+
+	The selector is not differentiable and not an operand, which is the point:
+	it picks a branch, so the derivative of the result is the derivative of the
+	chosen branch with the selector held fixed. ``graph`` checks the level list
+	against the selector's ``categories`` (every level covered, none invented),
+	so a missing branch is a load error rather than a ``DslError`` at run time.
+	"""
+
+	selector: str
+	cases: tuple[tuple[str, Expr], ...]
+
+	def __post_init__(self) -> None:
+		if not self.cases:
+			raise DslError(f"choose({self.selector}) needs at least one level")
+		names = [name for name, _ in self.cases]
+		if len(set(names)) != len(names):
+			raise DslError(
+				f"choose({self.selector}) names a level twice: "
+				f"{sorted(n for n in set(names) if names.count(n) > 1)}"
+			)
+		if self.selector in _RESERVED:
+			raise DslError(f"{self.selector!r} is a reserved name and cannot select")
+
+	@property
+	def levels(self) -> tuple[str, ...]:
+		return tuple(name for name, _ in self.cases)
+
+	@property
+	def precedence(self) -> int:
+		return _PRECEDENCE["func"]
+
+	@property
+	def symbols(self) -> frozenset[str]:
+		out: frozenset[str] = frozenset({self.selector})
+		for _, branch in self.cases:
+			out |= branch.symbols
+		return out
+
+	def _eval(self, values: Mapping[str, Any]) -> Any:
+		level = values[self.selector]
+		if not isinstance(level, str):
+			raise DslError(
+				f"choose({self.selector}) needs a level name and {self.selector} "
+				f"holds {level!r}; only a categorical parameter selects"
+			)
+		for name, branch in self.cases:
+			if name == level:
+				return branch._eval(values)
+		raise DslError(
+			f"choose({self.selector}) has no branch for {level!r}; it covers "
+			f"{list(self.levels)}"
+		)
+
+	def _latex(self, parent: int) -> str:
+		rows = r" \\ ".join(
+			f"{branch._latex(0)} & \\text{{if }} \\mathrm{{{_tex_name(self.selector)}}}"
+			f" = \\text{{{_tex_name(name)}}}"
+			for name, branch in self.cases
+		)
+		return f"\\begin{{cases}} {rows} \\end{{cases}}"
+
+	def _unicode(self, parent: int) -> str:
+		rows = "; ".join(f"{name}: {branch._unicode(0)}" for name, branch in self.cases)
+		return f"{self.selector}⟨{rows}⟩"
+
+	def _source(self, parent: int) -> str:
+		rows = ", ".join(f"{name}={branch._source(0)}" for name, branch in self.cases)
+		return f"choose({self.selector}, {rows})"
+
+	def _mathml(self) -> str:
+		rows = "".join(
+			f"<mtr><mtd>{branch._mathml()}</mtd><mtd><mtext>if {self.selector} = "
+			f"{name}</mtext></mtd></mtr>"
+			for name, branch in self.cases
+		)
+		return f"<mrow><mo>{{</mo><mtable>{rows}</mtable></mrow>"
+
+
+def choices_in(expression: Expr) -> list[Choose]:
+	"""Every :class:`Choose` in ``expression``, outermost first."""
+	found: list[Choose] = []
+	if isinstance(expression, Choose):
+		found.append(expression)
+		for _, branch in expression.cases:
+			found.extend(choices_in(branch))
+	elif isinstance(expression, Add):
+		for term in expression.terms:
+			found.extend(choices_in(term))
+	elif isinstance(expression, Mul):
+		for factor in expression.factors:
+			found.extend(choices_in(factor))
+	elif isinstance(expression, Pow):
+		found.extend(choices_in(expression.base))
+		found.extend(choices_in(expression.exponent))
+	elif isinstance(expression, Func):
+		for arg in expression.args:
+			found.extend(choices_in(arg))
+	elif isinstance(expression, Sum):
+		found.extend(choices_in(expression.body))
+	return found
+
+
+def _tex_name(name: str) -> str:
+	return name.replace("_", r"\_")
+
+
 #: Names the DSL reserves: the function set and the summation keyword.
-_RESERVED = frozenset(_FUNCTIONS) | {"sum", "for", "in", "range", "and", "or", "not"}
+_RESERVED = frozenset(_FUNCTIONS) | {"sum", "choose", "for", "in", "range", "and", "or", "not"}
 
 
 # ---------------------------------------------------------------------------
@@ -1078,6 +1197,17 @@ def _subs(expression: Expr, mapping: Mapping[str, Expr]) -> Expr:
 		)
 	if isinstance(expression, Func):
 		return Func(expression.name, tuple(_subs(arg, mapping) for arg in expression.args))
+	if isinstance(expression, Choose):
+		if expression.selector in mapping:
+			raise DslError(
+				f"{expression.selector!r} selects a branch of "
+				f"{expression.source()!r}; it is a level name and cannot be "
+				f"replaced by an expression"
+			)
+		return Choose(
+			expression.selector,
+			tuple((name, _subs(branch, mapping)) for name, branch in expression.cases),
+		)
 	if isinstance(expression, Sum):
 		# The index is bound: substituting it would capture. Removing it from
 		# the mapping is the difference between `sum(i for i in 0..3)` and
@@ -1148,6 +1278,11 @@ def simplify(expression: Expr) -> Expr:
 				# formula that evaluates fine over the range it is used on.
 				pass
 		return Func(expression.name, args)
+	if isinstance(expression, Choose):
+		return Choose(
+			expression.selector,
+			tuple((name, simplify(branch)) for name, branch in expression.cases),
+		)
 	if isinstance(expression, Sum):
 		body = simplify(expression.body)
 		if isinstance(body, Const):
@@ -1288,6 +1423,16 @@ def diff(expression: Expr, symbol: str) -> Expr:
 		inner = expression.args[0]
 		outer = spec.derivative(inner)
 		return Mul.of(outer, diff(inner, symbol))
+	if isinstance(expression, Choose):
+		if symbol == expression.selector:
+			raise DslError(
+				f"{symbol!r} selects a branch of {expression.source()!r}; a level "
+				f"name has no derivative"
+			)
+		return Choose(
+			expression.selector,
+			tuple((name, diff(branch, symbol)) for name, branch in expression.cases),
+		)
 	if isinstance(expression, Sum):
 		if expression.index == symbol:
 			raise DslError(
@@ -1428,6 +1573,13 @@ def _severity(expression: Expr, symbol: str) -> int:
 		return _AFFINE if getattr(expression, "name", None) == symbol else _ABSENT
 	if isinstance(expression, Add):
 		return max((_severity(term, symbol) for term in expression.terms), default=_ABSENT)
+	if isinstance(expression, Choose):
+		# One branch is live at a time, so the worst branch is the answer a
+		# solver must be ready for; the selector itself is not a value.
+		return max(
+			(_severity(branch, symbol) for _, branch in expression.cases),
+			default=_ABSENT,
+		)
 	if isinstance(expression, Sum):
 		# The body is summed over an index, so a symbol entering it linearly
 		# enters the sum linearly.
@@ -1717,6 +1869,8 @@ def _from_ast(node: ast.AST) -> Expr:
 			raise DslError("only a direct call to a named function is allowed")
 		if node.func.id == "sum":
 			return _from_sum(node)
+		if node.func.id == "choose":
+			return _from_choose(node)
 		if node.keywords:
 			raise DslError("DSL functions take positional arguments only")
 		return Func(node.func.id, tuple(_from_ast(arg) for arg in node.args))
@@ -1732,6 +1886,20 @@ def _from_ast(node: ast.AST) -> Expr:
 			"sum(expr for i in range(a, b))"
 		)
 	raise DslError(f"cannot parse {type(node).__name__}")
+
+
+def _from_choose(node: ast.Call) -> Choose:
+	if len(node.args) != 1 or not isinstance(node.args[0], ast.Name):
+		raise DslError(
+			"choose takes a categorical parameter and one keyword per level: "
+			"choose(selector, level_a=expr, level_b=expr)"
+		)
+	if not node.keywords or any(kw.arg is None for kw in node.keywords):
+		raise DslError("choose needs a keyword per level, e.g. level_a=1.0")
+	return Choose(
+		node.args[0].id,
+		tuple((str(kw.arg), _from_ast(kw.value)) for kw in node.keywords),
+	)
 
 
 def _from_sum(node: ast.Call) -> Sum:

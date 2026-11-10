@@ -43,6 +43,7 @@ from pint.facets.plain.unit import PlainUnit
 
 from alea.prg.dsl import (
 	Add,
+	Choose,
 	Const,
 	Expr,
 	Func,
@@ -339,6 +340,28 @@ def unit_of(expression: Expr, graph: ParameterGraph) -> Unit | None:
 		return None
 	if isinstance(expression, Func):
 		return _unit_of_func(expression, graph)
+	if isinstance(expression, Choose):
+		# One branch is live at a time, so every branch must share a dimension;
+		# the selector is a level name and contributes none.
+		# A literal zero is the one constant with no dimension of its own (zero
+		# metres is zero seconds), so a branch that is exactly `0` adopts its
+		# siblings' dimension instead of forcing a mismatch; any other literal is
+		# dimensionless and must agree.
+		live = [
+			branch for _, branch in expression.cases
+			if not (isinstance(branch, Const) and branch.value == 0.0)
+		]
+		if not live:
+			return ureg.dimensionless
+		branches = [unit_of(branch, graph) for branch in live]
+		decided = [unit for unit in branches if unit is not None]
+		if len(decided) != len(branches):
+			return None
+		first = decided[0]
+		for unit in decided[1:]:
+			if unit.dimensionality != first.dimensionality:
+				raise DimensionalMismatch(expression.source(), first, unit)
+		return first
 	if isinstance(expression, (Sum, Subscript)):
 		# An indexed sum reduces to the dimension of its body; a subscript
 		# names an element of a vector, which carries the vector's unit.
@@ -362,6 +385,13 @@ def _unit_of_func(expression: Func, graph: ParameterGraph) -> Unit | None:
 		return None
 	first = decided[0]
 	if expression.name == "abs":
+		return first
+	if expression.name in {"min", "max"}:
+		# The extremum of values is one of them, so they must share a dimension
+		# and the result has it.
+		for unit in decided[1:]:
+			if unit.dimensionality != first.dimensionality:
+				raise DimensionalMismatch(expression.source(), first, unit)
 		return first
 	if expression.name == "sqrt":
 		return first ** 0.5

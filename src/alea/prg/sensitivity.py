@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 
@@ -133,7 +133,7 @@ def _residual(equation: Any) -> Expr:
 	return parse_side(equation.lhs) - parse_side(equation.rhs)
 
 
-def _partials(expression: Expr, values: Mapping[str, float]) -> dict[str, float]:
+def _partials(expression: Expr, values: Mapping[str, float | str]) -> dict[str, float]:
 	"""Every partial derivative of ``expression`` at ``values``.
 
 	A partial that cannot be taken -- a ``min`` or a ``max`` in the equation --
@@ -142,6 +142,9 @@ def _partials(expression: Expr, values: Mapping[str, float]) -> dict[str, float]
 	"""
 	out: dict[str, float] = {}
 	for name in sorted(expression.symbols):
+		if isinstance(values.get(name), str):
+			# A categorical selects a branch of a `choose`; it has no derivative.
+			continue
 		try:
 			out[name] = float(expression.diff(name)._eval(values))
 		except DslError as exc:
@@ -153,7 +156,7 @@ def _partials(expression: Expr, values: Mapping[str, float]) -> dict[str, float]
 
 
 def gradients(
-	graph: ParameterGraph, values: Mapping[str, float]
+	graph: ParameterGraph, values: Mapping[str, float | str]
 ) -> GradientTable:
 	"""``d(parameter)/d(input)`` for every derived parameter, in one pass.
 
@@ -198,7 +201,7 @@ def gradients(
 	# loop variable; the rest were computed in the second phase with the loop
 	# rows already present, so nothing is left dangling.
 	return GradientTable(
-		values=dict(values),
+		values=cast("dict[str, float]", dict(values)),
 		table=table,
 		inputs=settable,
 		loops=loop_variables,
@@ -216,7 +219,7 @@ def _chain(
 	equation: Any,
 	parameter: str,
 	table: dict[str, dict[str, float]],
-	values: Mapping[str, float],
+	values: Mapping[str, float | str],
 	settable: tuple[str, ...],
 ) -> dict[str, float]:
 	"""One derived parameter's gradient, from the equation that fixes it.
@@ -254,7 +257,7 @@ def _chain(
 
 def _loop_gradients(
 	loop: Any,
-	values: Mapping[str, float],
+	values: Mapping[str, float | str],
 	settable: tuple[str, ...],
 ) -> dict[str, dict[str, float]]:
 	"""``dz/dx`` for a loop's variables, by the implicit function theorem.
@@ -323,22 +326,19 @@ def sensitivity(
 	one here returned a row that dropped the zeros the table carries.
 	"""
 	# A derivative is arithmetic, so a level name has none and no equation can
-	# be differentiated with respect to a categorical. The set the graph hands
-	# over is the whole graph's, so the numeric half is selected here rather
-	# than promised by the caller.
+	# be differentiated with respect to a categorical. The levels stay in the
+	# values because a `choose` reads its selector there; `_partials` skips them.
 	gradient_table = (
 		table
 		if table is not None
-		else gradients(
-			graph, {k: v for k, v in values.items() if not isinstance(v, str)}
-		)
+		else gradients(graph, values)
 	)
 	return gradient_table.of(parameter)
 
 
 def sensitivity_table(
 	graph: ParameterGraph,
-	values: Mapping[str, float],
+	values: Mapping[str, float | str],
 	*,
 	outputs: tuple[str, ...] | None = None,
 ) -> dict[str, dict[str, float]]:
@@ -370,7 +370,7 @@ def elasticity(
 	numeric: dict[str, float] = {
 		k: v for k, v in values.items() if not isinstance(v, str)
 	}
-	gradient_table = table if table is not None else gradients(graph, numeric)
+	gradient_table = table if table is not None else gradients(graph, values)
 	row = sensitivity(graph, parameter, values, table=gradient_table)
 	level = numeric.get(parameter)
 	if level in (None, 0.0):

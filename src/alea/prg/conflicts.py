@@ -38,7 +38,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from alea.prg.dsl import DslError
 from alea.prg.graph import Violation
@@ -246,9 +246,9 @@ class ConflictReport:
 
 def detect_conflicts(
 	graph: ParameterGraph,
-	values: Mapping[str, float | str],
+	values: Mapping[str, float],
 	*,
-	supplied: Mapping[str, float | str] | None = None,
+	supplied: Mapping[str, float] | None = None,
 	rank: int = 5,
 ) -> ConflictReport:
 	"""Every inconsistency in ``values``, with ranked corrections.
@@ -280,13 +280,19 @@ def detect_conflicts(
 	numeric: dict[str, float] = {
 		k: v for k, v in values.items() if not isinstance(v, str)
 	}
+	# Typed as numbers for the arithmetic below; the level names ride along at
+	# runtime because a `choose` reads its selector from this mapping.
+	values = cast("Mapping[str, float]", dict(values))
 	supplied_names: set[str] = set(supplied) if supplied is not None else set()
 	supplied_numeric: dict[str, float] | None = (
 		None
 		if supplied is None
 		else {k: v for k, v in supplied.items() if not isinstance(v, str)}
 	)
-	values = numeric
+	# The level names stay in `values`: a `choose` reads its selector there, and
+	# an equation without one never looks them up. `supplied` is narrowed because
+	# its values are subtracted from computed numbers.
+	del numeric
 	supplied = supplied_numeric
 
 	conflicts: list[Conflict] = []
@@ -408,7 +414,7 @@ def detect_conflicts(
 		# not a participant of the synthesised equation -- so it is corrected the
 		# way an over-determination is, against the parameter's own gradient.
 		if kind is ConflictKind.OUT_OF_RANGE:
-			computed = values.get(subject, 0.0)
+			computed = float(values.get(subject, 0.0))
 			corrections = _corrections_for(
 				graph, subject, values, computed + violation.residual, rank
 			)
