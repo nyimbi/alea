@@ -464,6 +464,42 @@ parameters:
     unit: '1'
     users:
     - Agriculture
+  agricultural_machinery_electric_twh:
+    category: Macro
+    description: 'Energy the sector draws as electricity: electrification share times final energy demand.
+      0.15 TWh per year at defaults.'
+    determinism: physical
+    name: Agricultural machinery electric energy
+    priority: P2
+    range:
+    - 0.0
+    - 10000.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: TWh/year
+    users:
+    - Planners
+    - Regulators
+  agricultural_machinery_energy_twh:
+    category: Macro
+    default: 3.0
+    description: Final energy the sector uses in the year, all carriers, in terawatt-hours. 3.0 at defaults.
+    determinism: fixed
+    name: Agricultural machinery final energy demand
+    priority: P2
+    range:
+    - 0.0
+    - 10000.0
+    role: exogenous
+    source: Sector energy balance; IEA World Energy Balances methodology; the default is a stated assumption
+    status: existing
+    type: float
+    unit: TWh/year
+    users:
+    - Planners
+    - Regulators
   air_quality_standards:
     categories: []
     category: EnvSoc
@@ -488,6 +524,24 @@ parameters:
     users:
     - Regulators
     - Planners
+  airport_electric_energy_twh:
+    category: Macro
+    description: 'Energy the sector draws as electricity: electrification share times final energy demand.
+      0.05 TWh per year at defaults.'
+    determinism: physical
+    name: Airport ground operations electric energy
+    priority: P2
+    range:
+    - 0.0
+    - 10000.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: TWh/year
+    users:
+    - Planners
+    - Regulators
   airport_electrification:
     categories: []
     category: Sector Coupling
@@ -510,6 +564,24 @@ parameters:
     unit: '1'
     users:
     - Aviation
+  airport_ground_operations_energy_twh:
+    category: Macro
+    default: 0.5
+    description: Final energy the sector uses in the year, all carriers, in terawatt-hours. 0.5 at defaults.
+    determinism: fixed
+    name: Airport ground operations final energy demand
+    priority: P2
+    range:
+    - 0.0
+    - 10000.0
+    role: exogenous
+    source: Sector energy balance; IEA World Energy Balances methodology; the default is a stated assumption
+    status: existing
+    type: float
+    unit: TWh/year
+    users:
+    - Planners
+    - Regulators
   allowed_return_on_debt:
     categories: []
     category: Regulatory Finance
@@ -818,6 +890,24 @@ parameters:
     type: float
     unit: USD/MWh
     users:
+    - Regulators
+  arable_land_km2:
+    category: Macro
+    default: 58000.0
+    description: Arable land area, in square kilometres. 58000 at defaults, about the order of Kenya.
+    determinism: fixed
+    name: Arable land
+    priority: P2
+    range:
+    - 0.0
+    - 10000000.0
+    role: exogenous
+    source: FAO land use statistics; the default is a stated assumption
+    status: existing
+    type: float
+    unit: km**2
+    users:
+    - Planners
     - Regulators
   archaeological_sites:
     categories: []
@@ -1353,6 +1443,24 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  atmospheric_co2_ppm:
+    category: Macro
+    default: 420.0
+    description: Atmospheric CO2 concentration, in parts per million. 420 at defaults.
+    determinism: fixed
+    name: Atmospheric CO2
+    priority: P2
+    range:
+    - 100.0
+    - 5000.0
+    role: exogenous
+    source: NOAA Global Monitoring Laboratory annual mean; the default is a stated assumption
+    status: existing
+    type: float
+    unit: ppm
+    users:
+    - Planners
+    - Regulators
   auction_frequency:
     categories: []
     category: MktOps
@@ -3387,6 +3495,23 @@ parameters:
     unit: USD/kW
     users:
     - Planners
+  capex_nuclear_with_idc_usd_per_kw:
+    category: Cost
+    description: Overnight capital cost times the interest-during-construction factor.
+    determinism: physical
+    name: Nuclear capital cost with IDC
+    priority: P2
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: USD/kW
+    users:
+    - Planners
+    - Regulators
   capex_oil:
     categories: []
     category: Cost
@@ -3709,6 +3834,23 @@ parameters:
     unit: '1'
     users:
     - Investors
+  capital_gains_tax_revenue_usd_per_year:
+    category: Macro
+    description: 'Revenue from the capital gains tax: rate times realised gains. 2e8 USD per year at defaults.'
+    determinism: physical
+    name: Capital gains tax revenue
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: USD/year
+    users:
+    - Planners
+    - Regulators
   capital_loading:
     category: Insurance & Catastrophe
     default: 0.15
@@ -6018,6 +6160,24 @@ parameters:
     - Regulators
     - Policymakers
     - Carbon
+  committed_sea_level_rise_m:
+    category: Climate
+    description: Sea level the equilibrium warming commits the world to, in metres. About 4 m at defaults,
+      over millennia.
+    determinism: physical
+    name: Committed sea-level rise
+    priority: P2
+    range:
+    - -100.0
+    - 500.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: m
+    users:
+    - Planners
+    - Regulators
   communication_protocols:
     name: Communication protocols
     description: Which field protocol the digital layer speaks. Catalog 'Protocols' -- a closed set of
@@ -6699,6 +6859,42 @@ parameters:
     unit: '1'
     users:
     - Construction
+  construction_machinery_electric_twh:
+    category: Macro
+    description: 'Energy the sector draws as electricity: electrification share times final energy demand.
+      0.075 TWh per year at defaults.'
+    determinism: physical
+    name: Construction machinery electric energy
+    priority: P2
+    range:
+    - 0.0
+    - 10000.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: TWh/year
+    users:
+    - Planners
+    - Regulators
+  construction_machinery_energy_twh:
+    category: Macro
+    default: 1.5
+    description: Final energy the sector uses in the year, all carriers, in terawatt-hours. 1.5 at defaults.
+    determinism: fixed
+    name: Construction machinery final energy demand
+    priority: P2
+    range:
+    - 0.0
+    - 10000.0
+    role: exogenous
+    source: Sector energy balance; IEA World Energy Balances methodology; the default is a stated assumption
+    status: existing
+    type: float
+    unit: TWh/year
+    users:
+    - Planners
+    - Regulators
   construction_period:
     categories: []
     category: Macro
@@ -8540,6 +8736,24 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  cvar_loss_usd:
+    category: Macro
+    description: 'Mean loss in the worst (1 - alpha) tail: VaR plus the expected excess over VaR divided
+      by (1 - alpha). 4e8 USD at defaults with alpha 0.95.'
+    determinism: physical
+    name: Conditional value at risk
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: USD
+    users:
+    - Planners
+    - Regulators
   cvar_omega:
     name: Cvar omega
     description: Risk-aversion weight. Retyped from the untyped 500,000 sentinel to unit `1`, range [0.0,
@@ -10779,6 +10993,43 @@ parameters:
     users:
     - All
     source: docs/params.md
+  effluent_discharge_m3_per_year:
+    category: Macro
+    default: 100000000.0
+    description: Volume of water discharged with the pollutant load, in cubic metres per year. 1e8 at
+      defaults.
+    determinism: fixed
+    name: Effluent discharge
+    priority: P2
+    range:
+    - 1.0
+    - 1000000000000.0
+    role: exogenous
+    source: Discharge permit; the default is a stated assumption
+    status: existing
+    type: float
+    unit: m3/year
+    users:
+    - Planners
+    - Regulators
+  effluent_pollutant_concentration_kg_per_m3:
+    category: Macro
+    description: 'Mean pollutant concentration of the discharge: mass load over volume, in kilograms per
+      cubic metre.'
+    determinism: physical
+    name: Effluent concentration
+    priority: P2
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: kg/m**3
+    users:
+    - Planners
+    - Regulators
   electric_vehicle_adoption:
     name: Electric vehicle adoption
     description: EV share of vehicle stock
@@ -12060,6 +12311,24 @@ parameters:
     - Regulators
     - Policymakers
     - Carbon
+  equilibrium_warming_degc:
+    category: Climate
+    description: 'Equilibrium warming at the given CO2: climate sensitivity per doubling times log2 of
+      the concentration ratio. 1.75 degC at 420 ppm and sensitivity 3.'
+    determinism: physical
+    name: Equilibrium warming
+    priority: P2
+    range:
+    - -50.0
+    - 50.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: delta_degC
+    users:
+    - Planners
+    - Regulators
   equity_irr_estimate:
     categories: []
     category: Financial
@@ -12324,6 +12593,24 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  ev_new_sales_per_year:
+    category: Macro
+    description: 'New electric vehicles sold in the year: the electric share of new sales times all new
+      sales. 20000 per year at defaults.'
+    determinism: physical
+    name: Electric vehicle sales
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: 1/year
+    users:
+    - Planners
+    - Regulators
   ev_range_km:
     category: Demand
     description: 'Distance an average new electric vehicle drives on one full charge: the battery energy
@@ -12437,6 +12724,42 @@ parameters:
     unit: '1'
     users:
     - Utilities
+  expected_excess_loss_usd:
+    category: Macro
+    default: 20000000.0
+    description: Expected loss beyond the VaR quantile, E[(L-VaR)+], in US dollars. 2e7 at defaults.
+    determinism: fixed
+    name: Expected excess over VaR
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: exogenous
+    source: Portfolio loss model; the default is a stated assumption
+    status: existing
+    type: float
+    unit: USD
+    users:
+    - Planners
+    - Regulators
+  expected_loss_usd:
+    category: Macro
+    default: 50000000.0
+    description: Mean loss across scenarios, in US dollars. 5e7 at defaults.
+    determinism: fixed
+    name: Expected loss
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: exogenous
+    source: Portfolio loss model; the default is a stated assumption
+    status: existing
+    type: float
+    unit: USD
+    users:
+    - Planners
+    - Regulators
   expected_unserved_fraction:
     categories: []
     category: Reliability
@@ -15993,6 +16316,23 @@ parameters:
     users:
     - Planners
     source: docs/params.md
+  hydro_initial_storage_mwh:
+    category: Macro
+    description: 'Energy in the reservoirs at the start: level times full capacity. 1e6 MWh at defaults.'
+    determinism: physical
+    name: Hydro initial storage
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: MWh
+    users:
+    - Planners
+    - Regulators
   hydro_new_build:
     categories: []
     category: Supply
@@ -16014,6 +16354,24 @@ parameters:
     subcategory: null
     type: float
     unit: MW
+    users:
+    - Planners
+    - Regulators
+  hydro_reservoir_energy_capacity_mwh:
+    category: Macro
+    default: 2000000.0
+    description: Energy stored in the hydro reservoirs when full, in megawatt-hours. 2000000 at defaults.
+    determinism: fixed
+    name: Hydro reservoir energy capacity
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000.0
+    role: exogenous
+    source: Reservoir survey; the default is a stated assumption
+    status: existing
+    type: float
+    unit: MWh
     users:
     - Planners
     - Regulators
@@ -17675,6 +18033,23 @@ parameters:
     subcategory: null
     type: float
     unit: '1'
+    users:
+    - Planners
+    - Regulators
+  irrigated_area_km2:
+    category: Macro
+    description: 'Land under irrigation: coverage share times arable area. 8700 km2 at defaults.'
+    determinism: physical
+    name: Irrigated area
+    priority: P2
+    range:
+    - 0.0
+    - 10000000.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: km**2
     users:
     - Planners
     - Regulators
@@ -20895,6 +21270,23 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  max_curtailed_energy_twh:
+    category: Macro
+    description: 'The most renewable energy the system may curtail: the limit share times renewable generation.'
+    determinism: physical
+    name: Maximum curtailed energy
+    priority: P2
+    range:
+    - 0.0
+    - 10000.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: TWh/year
+    users:
+    - Planners
+    - Regulators
   max_remedy_period_days:
     category: Contract
     default: 90.0
@@ -21082,6 +21474,24 @@ parameters:
     depends_on: []
     affects:
     - mercury_emissions
+  microgrid_connection_share:
+    category: Macro
+    description: Microgrid connections per year as a share of all new connections per year. 0 at defaults
+      since the programme is off.
+    determinism: physical
+    name: Microgrid share of connections
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   microgrid_deployment:
     name: Microgrid deployment
     description: Connections a microgrid programme serves per year. The unit follows `mini_grid_deployment`,
@@ -21487,6 +21897,24 @@ parameters:
     source: 'The placeholder survey decision (docs/research/placeholder-survey.md, batch 87): a defensible
       reading chosen where the catalog names none; the default is a stated assumption, not a measured
       figure.'
+  mining_electric_energy_twh:
+    category: Macro
+    description: 'Energy the sector draws as electricity: electrification share times final energy demand.
+      0.8 TWh per year at defaults.'
+    determinism: physical
+    name: Mining electric energy
+    priority: P2
+    range:
+    - 0.0
+    - 10000.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: TWh/year
+    users:
+    - Planners
+    - Regulators
   mining_electrification:
     categories: []
     category: Sector Coupling
@@ -21509,6 +21937,24 @@ parameters:
     unit: '1'
     users:
     - Mining
+  mining_energy_demand_twh:
+    category: Macro
+    default: 8.0
+    description: Final energy the sector uses in the year, all carriers, in terawatt-hours. 8.0 at defaults.
+    determinism: fixed
+    name: Mining final energy demand
+    priority: P2
+    range:
+    - 0.0
+    - 10000.0
+    role: exogenous
+    source: Sector energy balance; IEA World Energy Balances methodology; the default is a stated assumption
+    status: existing
+    type: float
+    unit: TWh/year
+    users:
+    - Planners
+    - Regulators
   mining_haulage:
     name: Mining haulage
     description: 'Ore hauled by the mining fleet in the year, in tonne-kilometres. It is not a share of
@@ -21978,6 +22424,24 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  new_vehicle_sales_per_year:
+    category: Macro
+    default: 100000.0
+    description: New light vehicles sold in the year, as a count per year. 100000 at defaults.
+    determinism: fixed
+    name: New vehicle sales
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000.0
+    role: exogenous
+    source: National vehicle registration statistics; the default is a stated assumption
+    status: existing
+    type: float
+    unit: 1/year
+    users:
+    - Planners
+    - Regulators
   nominal_frequency_hz:
     categories: []
     category: Technical
@@ -22219,6 +22683,25 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
+  nuclear_idc_factor:
+    category: Macro
+    description: 'Ratio of capital cost including interest during construction to overnight cost, for
+      spending spread evenly over the lead time: mean of exp(r t) over the build, (exp(rT) - 1) / (rT).
+      1.1 to 1.3 for 7 years at 3 to 8 percent.'
+    determinism: physical
+    name: Nuclear interest during construction factor
+    priority: P2
+    range:
+    - 1.0
+    - 100.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   nuclear_lead_time:
     name: Nuclear lead time
     description: How long a nuclear plant takes to build, in years. Seven is a single-reactor build at
@@ -24606,6 +25089,24 @@ parameters:
     users:
     - Regulators
     - Planners
+  port_electric_energy_twh:
+    category: Macro
+    description: 'Energy the sector draws as electricity: electrification share times final energy demand.
+      0.1 TWh per year at defaults.'
+    determinism: physical
+    name: Port operations electric energy
+    priority: P2
+    range:
+    - 0.0
+    - 10000.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: TWh/year
+    users:
+    - Planners
+    - Regulators
   port_electrification:
     categories: []
     category: Sector Coupling
@@ -24628,6 +25129,24 @@ parameters:
     unit: '1'
     users:
     - Ports
+  port_operations_energy_twh:
+    category: Macro
+    default: 1.0
+    description: Final energy the sector uses in the year, all carriers, in terawatt-hours. 1.0 at defaults.
+    determinism: fixed
+    name: Port operations final energy demand
+    priority: P2
+    range:
+    - 0.0
+    - 10000.0
+    role: exogenous
+    source: Sector energy balance; IEA World Energy Balances methodology; the default is a stated assumption
+    status: existing
+    type: float
+    unit: TWh/year
+    users:
+    - Planners
+    - Regulators
   position_limit_mtco2:
     category: Carbon
     description: 'A position limit as a share of the cap, not an absolute tonnage: the limit a market
@@ -25198,6 +25717,24 @@ parameters:
     status: existing
     type: float
     unit: hours/year
+    users:
+    - Planners
+    - Regulators
+  preindustrial_co2_ppm:
+    category: Macro
+    default: 280.0
+    description: Reference preindustrial CO2 concentration, in parts per million. 280 per IPCC AR6.
+    determinism: fixed
+    name: Preindustrial CO2
+    priority: P2
+    range:
+    - 100.0
+    - 1000.0
+    role: exogenous
+    source: IPCC AR6 WGI; the default is a stated assumption
+    status: existing
+    type: float
+    unit: ppm
     users:
     - Planners
     - Regulators
@@ -25950,6 +26487,24 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  realised_capital_gains_usd_per_year:
+    category: Macro
+    default: 1000000000.0
+    description: Capital gains realised in the year, in US dollars. 1e9 at defaults.
+    determinism: fixed
+    name: Realised capital gains
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: exogenous
+    source: National tax statistics; the default is a stated assumption
+    status: existing
+    type: float
+    unit: USD/year
+    users:
+    - Planners
+    - Regulators
   redeployed_jobs:
     categories: []
     category: JustTrans
@@ -27221,9 +27776,8 @@ parameters:
     range:
     - 0.0
     - 1.0
-    default: 0.5
     initial: null
-    role: free
+    role: derived
     determinism: fixed
     categories: []
     source: The placeholder retype (batch 57). The classification, unit, range and default are `docs/research/placeholder-survey.md`,
@@ -27235,6 +27789,24 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  retail_hhi:
+    category: Macro
+    description: 'Herfindahl-Hirschman index of the retail market with equal shares: 10000 / N. 2000 at
+      defaults with 5 retailers.'
+    determinism: physical
+    name: Retail concentration
+    priority: P2
+    range:
+    - 0.0
+    - 10000.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   retention_share:
     categories: []
     category: Insurance & Catastrophe
@@ -27457,6 +28029,24 @@ parameters:
     type: float
     unit: USD/tonne
     users:
+    - Regulators
+  risk_adjusted_loss_usd:
+    category: Macro
+    description: 'Mixture objective: (1 - omega) times expected loss plus omega times CVaR. omega = 1
+      at defaults, so it equals CVaR.'
+    determinism: physical
+    name: Risk-adjusted loss
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: USD
+    users:
+    - Planners
     - Regulators
   risk_based_maintenance:
     name: Risk based maintenance
@@ -27884,6 +28474,24 @@ parameters:
     users:
     - Regulators
     - Planners
+  scenario_cost_usd:
+    category: Macro
+    default: 100000000.0
+    description: Cost if this scenario occurs, in US dollars. 1e8 at defaults.
+    determinism: fixed
+    name: Scenario cost
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: exogenous
+    source: Scenario analysis; the default is a stated assumption
+    status: existing
+    type: float
+    unit: USD
+    users:
+    - Planners
+    - Regulators
   scenario_description:
     name: Scenario description
     description: Scenario description
@@ -27900,6 +28508,24 @@ parameters:
     users:
     - All
     source: docs/params.md
+  scenario_expected_cost_usd:
+    category: Macro
+    description: 'This scenario contribution to expected cost: probability weight times its cost. 5e7
+      USD at defaults.'
+    determinism: physical
+    name: Scenario expected cost
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: derived
+    source: The coupling build (batch 91)
+    status: existing
+    type: float
+    unit: USD
+    users:
+    - Planners
+    - Regulators
   scenario_owner:
     name: Scenario owner
     description: Scenario owner
@@ -28519,6 +29145,25 @@ parameters:
     subcategory: null
     type: float
     unit: jobs
+    users:
+    - Planners
+    - Regulators
+  slr_commitment_m_per_degc:
+    category: Macro
+    default: 2.3
+    description: Equilibrium sea-level commitment per degree of warming, in metres per degree Celsius.
+      2.3 per Levermann et al. 2013, a multi-millennial commitment, not a century projection.
+    determinism: fixed
+    name: Committed sea-level rise per degree
+    priority: P2
+    range:
+    - 0.0
+    - 20.0
+    role: exogenous
+    source: Levermann et al. (2013), PNAS 110(34), 13745-13750; the default is a stated assumption
+    status: existing
+    type: float
+    unit: m/delta_degC
     users:
     - Planners
     - Regulators
@@ -32200,6 +32845,24 @@ parameters:
     users:
     - Planners
     - Regulators
+  var_loss_usd:
+    category: Macro
+    default: 100000000.0
+    description: Loss quantile at the CVaR tail level, in US dollars. 1e8 at defaults.
+    determinism: fixed
+    name: Value at risk
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: exogenous
+    source: Portfolio loss model; the default is a stated assumption
+    status: existing
+    type: float
+    unit: USD
+    users:
+    - Planners
+    - Regulators
   variable_stack_usd_per_mwh:
     categories: []
     category: Cost
@@ -34413,6 +35076,50 @@ equations:
     system: demand_supply
     tolerance: 1.0e-09
     unit_check: true
+  agricultural_machinery_electric_twh_definition:
+    description: 'Share times total. Dimensional check: a fraction times TWh/year is TWh/year.'
+    determined_variables:
+    - agricultural_machinery_electric_twh
+    free_variables: []
+    latex: \mathrm{agricultural\_machinery\_electric\_twh} = \mathrm{agricultural\_machinery} \times \mathrm{agricultural\_machinery\_energy\_twh}
+    lhs: agricultural_machinery_electric_twh
+    linearity: linear
+    name: Agricultural machinery electric energy
+    parameters:
+    - agricultural_machinery_electric_twh
+    - agricultural_machinery
+    - agricultural_machinery_energy_twh
+    priority: P2
+    reference: IEA, Energy Technology Perspectives 2023, electrification metrics; a definition, no archived
+      copy
+    relation: eq
+    rhs: agricultural_machinery * agricultural_machinery_energy_twh
+    solution_method: direct
+    system: energy_balance
+    tolerance: 1.0e-09
+    unit_check: true
+  airport_electric_energy_twh_definition:
+    description: 'Share times total. Dimensional check: a fraction times TWh/year is TWh/year.'
+    determined_variables:
+    - airport_electric_energy_twh
+    free_variables: []
+    latex: \mathrm{airport\_electric\_energy\_twh} = \mathrm{airport\_electrification} \times \mathrm{airport\_ground\_operations\_energy\_twh}
+    lhs: airport_electric_energy_twh
+    linearity: linear
+    name: Airport ground operations electric energy
+    parameters:
+    - airport_electric_energy_twh
+    - airport_electrification
+    - airport_ground_operations_energy_twh
+    priority: P2
+    reference: IEA, Energy Technology Perspectives 2023, electrification metrics; a definition, no archived
+      copy
+    relation: eq
+    rhs: airport_electrification * airport_ground_operations_energy_twh
+    solution_method: direct
+    system: energy_balance
+    tolerance: 1.0e-09
+    unit_check: true
   allowed_revenue_requirement_definition:
     id: allowed_revenue_requirement_definition
     name: Allowed revenue requirement
@@ -35302,6 +36009,27 @@ equations:
     system: learning
     tolerance: 1.0e-09
     unit_check: true
+  capex_nuclear_with_idc_definition:
+    description: Overnight cost times the factor.
+    determined_variables:
+    - capex_nuclear_with_idc_usd_per_kw
+    free_variables: []
+    latex: \mathrm{capex\_nuclear\_with\_idc\_usd\_per\_kw} = \mathrm{capex\_nuclear} \times \mathrm{nuclear\_idc\_factor}
+    lhs: capex_nuclear_with_idc_usd_per_kw
+    linearity: linear
+    name: Nuclear capital cost with IDC
+    parameters:
+    - capex_nuclear_with_idc_usd_per_kw
+    - capex_nuclear
+    - nuclear_idc_factor
+    priority: P2
+    reference: 'IEA and NEA, Projected Costs of Generating Electricity 2020. Local copy: sources/archive/iea_nea_egc_2020.pdf'
+    relation: eq
+    rhs: capex_nuclear * nuclear_idc_factor
+    solution_method: direct
+    system: cost_accounting
+    tolerance: 1.0e-09
+    unit_check: true
   capex_solar_pv_learning_definition:
     description: 'Wright''s law applied to the solar stock: the shipped capex scaled by the cumulative-deployment
       ratio raised to the learning exponent, where a 20% rate halves cost per doubling of the stock. The
@@ -35328,6 +36056,28 @@ equations:
       - solar_pv_learning_rate) / log(2))
     solution_method: direct
     system: learning
+    tolerance: 1.0e-09
+    unit_check: true
+  capital_gains_tax_revenue_definition:
+    description: Rate times base.
+    determined_variables:
+    - capital_gains_tax_revenue_usd_per_year
+    free_variables: []
+    latex: \mathrm{capital\_gains\_tax\_revenue\_usd\_per\_year} = \mathrm{capital\_gains\_tax} \times
+      \mathrm{realised\_capital\_gains\_usd\_per\_year}
+    lhs: capital_gains_tax_revenue_usd_per_year
+    linearity: linear
+    name: Capital gains tax revenue
+    parameters:
+    - capital_gains_tax_revenue_usd_per_year
+    - capital_gains_tax
+    - realised_capital_gains_usd_per_year
+    priority: P2
+    reference: 'Definition of an ad valorem tax: revenue = rate x base'
+    relation: eq
+    rhs: capital_gains_tax * realised_capital_gains_usd_per_year
+    solution_method: direct
+    system: financial
     tolerance: 1.0e-09
     unit_check: true
   capture_price_equation:
@@ -36394,6 +37144,27 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{commercial}_{demand\_twh} = \mathrm{commercial}_{demand\_share} \mathrm{demand}_{twh}
+  committed_sea_level_rise_definition:
+    description: Linear commitment per degree of equilibrium warming.
+    determined_variables:
+    - committed_sea_level_rise_m
+    free_variables: []
+    latex: \mathrm{committed\_sea\_level\_rise\_m} = \mathrm{slr\_commitment\_m\_per\_degc} \times \mathrm{equilibrium\_warming\_degc}
+    lhs: committed_sea_level_rise_m
+    linearity: linear
+    name: Committed sea-level rise
+    parameters:
+    - committed_sea_level_rise_m
+    - slr_commitment_m_per_degc
+    - equilibrium_warming_degc
+    priority: P2
+    reference: Levermann, A. et al. (2013), PNAS 110(34), 13745-13750. No archived copy.
+    relation: eq
+    rhs: slr_commitment_m_per_degc * equilibrium_warming_degc
+    solution_method: direct
+    system: emissions
+    tolerance: 1.0e-09
+    unit_check: true
   community_benefit_sharing_alias:
     description: The benefit-sharing share under the catalog's second id. The revenue identity `benefit_sharing_from_revenue_definition`
       reads `community_benefit_share_of_revenue`; this equality makes the two names one number.
@@ -36678,6 +37449,28 @@ equations:
     rhs: construction_load * 8760 / 1000000
     solution_method: direct
     system: demand_supply
+    tolerance: 1.0e-09
+    unit_check: true
+  construction_machinery_electric_twh_definition:
+    description: 'Share times total. Dimensional check: a fraction times TWh/year is TWh/year.'
+    determined_variables:
+    - construction_machinery_electric_twh
+    free_variables: []
+    latex: \mathrm{construction\_machinery\_electric\_twh} = \mathrm{construction\_machinery} \times \mathrm{construction\_machinery\_energy\_twh}
+    lhs: construction_machinery_electric_twh
+    linearity: linear
+    name: Construction machinery electric energy
+    parameters:
+    - construction_machinery_electric_twh
+    - construction_machinery
+    - construction_machinery_energy_twh
+    priority: P2
+    reference: IEA, Energy Technology Perspectives 2023, electrification metrics; a definition, no archived
+      copy
+    relation: eq
+    rhs: construction_machinery * construction_machinery_energy_twh
+    solution_method: direct
+    system: energy_balance
     tolerance: 1.0e-09
     unit_check: true
   construction_share_of_concession_definition:
@@ -37740,6 +38533,30 @@ equations:
     system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
+  cvar_loss_definition:
+    description: Rockafellar-Uryasev representation. 1e8 + 2e7 / 0.05 = 5e8 USD at defaults.
+    determined_variables:
+    - cvar_loss_usd
+    free_variables: []
+    latex: \mathrm{cvar\_loss\_usd} = \mathrm{var\_loss\_usd} + \frac{\mathrm{expected\_excess\_loss\_usd}}{1
+      - \mathrm{cvar\_alpha}}
+    lhs: cvar_loss_usd
+    linearity: linear
+    name: Conditional value at risk
+    parameters:
+    - cvar_loss_usd
+    - var_loss_usd
+    - expected_excess_loss_usd
+    - cvar_alpha
+    priority: P2
+    reference: 'Rockafellar, R.T. and Uryasev, S. (2000), Optimization of conditional value-at-risk, Journal
+      of Risk 2(3), 21-41, eq. (3.x): CVaR = VaR + E[(L-VaR)+]/(1-alpha). No archived copy.'
+    relation: eq
+    rhs: var_loss_usd + expected_excess_loss_usd / (1 - cvar_alpha)
+    solution_method: direct
+    system: financial
+    tolerance: 1.0e-09
+    unit_check: true
   cyber_cover_definition:
     description: 'The revenue indemnified against cyber loss: the cover share times gross revenue.'
     determined_variables:
@@ -38564,6 +39381,28 @@ equations:
     system: employment
     tolerance: 1.0e-09
     unit_check: true
+  effluent_concentration_definition:
+    description: 'Mass load divided by discharge volume. Dimensional check: kg/year over m3/year is kg/m3.'
+    determined_variables:
+    - effluent_pollutant_concentration_kg_per_m3
+    free_variables: []
+    latex: \mathrm{effluent\_pollutant\_concentration\_kg\_per\_m3} = \mathrm{water\_pollution\_load}
+      / \mathrm{effluent\_discharge\_m3\_per\_year}
+    lhs: effluent_pollutant_concentration_kg_per_m3
+    linearity: linear
+    name: Effluent concentration
+    parameters:
+    - effluent_pollutant_concentration_kg_per_m3
+    - water_pollution_load
+    - effluent_discharge_m3_per_year
+    priority: P2
+    reference: Definition of concentration; mass balance
+    relation: eq
+    rhs: water_pollution_load / effluent_discharge_m3_per_year
+    solution_method: direct
+    system: water_energy
+    tolerance: 1.0e-09
+    unit_check: true
   electricity_subsidy_cost_definition:
     description: The per-MWh subsidy the budget pays so the tariff can sit below cost. Stated against
       demand because the subsidy follows the consumption, not the connection.
@@ -39156,6 +39995,31 @@ equations:
     system: demand_supply
     tolerance: 1.0e-08
     unit_check: true
+  equilibrium_warming_definition:
+    description: Forcing is logarithmic in concentration (Myhre et al. 1998, 5.35 ln(C/C0) W/m2), so warming
+      is sensitivity times the number of doublings.
+    determined_variables:
+    - equilibrium_warming_degc
+    free_variables: []
+    latex: \mathrm{equilibrium\_warming\_degc} = \mathrm{climate\_sensitivity}\, \frac{\ln\left(\mathrm{atmospheric\_co2\_ppm}
+      / \mathrm{preindustrial\_co2\_ppm}\right)}{\ln 2}
+    lhs: equilibrium_warming_degc
+    linearity: nonlinear
+    name: Equilibrium warming
+    parameters:
+    - equilibrium_warming_degc
+    - climate_sensitivity
+    - atmospheric_co2_ppm
+    - preindustrial_co2_ppm
+    priority: P2
+    reference: Myhre, G. et al. (1998), Geophysical Research Letters 25(14), 2715-2718; IPCC AR6 WGI Ch.
+      7 for sensitivity. No archived copy.
+    relation: eq
+    rhs: climate_sensitivity * log(atmospheric_co2_ppm / preindustrial_co2_ppm) / log(2)
+    solution_method: direct
+    system: emissions
+    tolerance: 1.0e-09
+    unit_check: true
   equity_irr_definition:
     name: Equity IRR estimate
     description: 'A first-year ratio: the return the sponsor earns on equity after debt service. Dimensional
@@ -39272,6 +40136,27 @@ equations:
       Ch. 2). Derivation; no archived copy.
     relation: eq
     rhs: 4.39445 / ev_adoption_timeline
+    solution_method: direct
+    system: demand_supply
+    tolerance: 1.0e-09
+    unit_check: true
+  ev_new_sales_definition:
+    description: Share times total sales.
+    determined_variables:
+    - ev_new_sales_per_year
+    free_variables: []
+    latex: \mathrm{ev\_new\_sales\_per\_year} = \mathrm{ev\_share\_new\_sales} \times \mathrm{new\_vehicle\_sales\_per\_year}
+    lhs: ev_new_sales_per_year
+    linearity: linear
+    name: Electric vehicle sales
+    parameters:
+    - ev_new_sales_per_year
+    - ev_share_new_sales
+    - new_vehicle_sales_per_year
+    priority: P2
+    reference: Definition of a sales share; IEA Global EV Outlook methodology
+    relation: eq
+    rhs: ev_share_new_sales * new_vehicle_sales_per_year
     solution_method: direct
     system: demand_supply
     tolerance: 1.0e-09
@@ -41308,6 +42193,27 @@ equations:
     system: demand_supply
     tolerance: 1.0e-09
     unit_check: true
+  hydro_initial_storage_definition:
+    description: Fraction of full times full.
+    determined_variables:
+    - hydro_initial_storage_mwh
+    free_variables: []
+    latex: \mathrm{hydro\_initial\_storage\_mwh} = \mathrm{hydro\_reservoir\_level} \times \mathrm{hydro\_reservoir\_energy\_capacity\_mwh}
+    lhs: hydro_initial_storage_mwh
+    linearity: linear
+    name: Hydro initial storage
+    parameters:
+    - hydro_initial_storage_mwh
+    - hydro_reservoir_level
+    - hydro_reservoir_energy_capacity_mwh
+    priority: P2
+    reference: Definition of state of charge
+    relation: eq
+    rhs: hydro_reservoir_level * hydro_reservoir_energy_capacity_mwh
+    solution_method: direct
+    system: energy_balance
+    tolerance: 1.0e-09
+    unit_check: true
   hydro_new_build_bound:
     description: 'New hydro capped at 3000 MW against the 1500 MW reference fleet. Routes as a post-solve
       check: the capacity is endogenous. A bound against the transboundary water ceiling was rejected
@@ -42124,6 +43030,27 @@ equations:
     rhs: time_horizon / investment_periods
     solution_method: direct
     system: energy_balance
+    tolerance: 1.0e-09
+    unit_check: true
+  irrigated_area_definition:
+    description: Share times area.
+    determined_variables:
+    - irrigated_area_km2
+    free_variables: []
+    latex: \mathrm{irrigated\_area\_km2} = \mathrm{irrigation\_coverage} \times \mathrm{arable\_land\_km2}
+    lhs: irrigated_area_km2
+    linearity: linear
+    name: Irrigated area
+    parameters:
+    - irrigated_area_km2
+    - irrigation_coverage
+    - arable_land_km2
+    priority: P2
+    reference: FAO AQUASTAT definition of area equipped for irrigation as a share of cultivated land
+    relation: eq
+    rhs: irrigation_coverage * arable_land_km2
+    solution_method: direct
+    system: water_energy
     tolerance: 1.0e-09
     unit_check: true
   islanding_capable_feeders_definition:
@@ -44507,6 +45434,27 @@ equations:
     system: price_demand
     tolerance: 1.0e-09
     unit_check: true
+  max_curtailed_energy_definition:
+    description: Share times total.
+    determined_variables:
+    - max_curtailed_energy_twh
+    free_variables: []
+    latex: \mathrm{max\_curtailed\_energy\_twh} = \mathrm{renewable\_curtailment\_limit} \times \mathrm{renewable\_generation\_twh}
+    lhs: max_curtailed_energy_twh
+    linearity: linear
+    name: Maximum curtailed energy
+    parameters:
+    - max_curtailed_energy_twh
+    - renewable_curtailment_limit
+    - renewable_generation_twh
+    priority: P2
+    reference: Definition of a curtailment limit as a share of available renewable generation
+    relation: eq
+    rhs: renewable_curtailment_limit * renewable_generation_twh
+    solution_method: direct
+    system: energy_balance
+    tolerance: 1.0e-09
+    unit_check: true
   mercury_emissions_definition:
     id: mercury_emissions_definition
     description: 'Annual mercury emitted by the fossil fleet, in tonnes. Mercury is the one pollutant
@@ -44540,6 +45488,27 @@ equations:
     latex: \mathrm{mercury}_{emissions} = \frac{\mathrm{coal}_{fuel\_energy\_gj} \mathrm{mercury}_{factor\_coal\_mg\_per\_gj}
       + \mathrm{gas}_{fuel\_energy\_gj} \mathrm{mercury}_{factor\_gas\_mg\_per\_gj} + \mathrm{oil}_{fuel\_energy\_gj}
       \mathrm{mercury}_{factor\_oil\_mg\_per\_gj}}{\mathrm{mg}_{per\_tonne}}
+  microgrid_connection_share_definition:
+    description: Ratio of two rates in the same unit.
+    determined_variables:
+    - microgrid_connection_share
+    free_variables: []
+    latex: \mathrm{microgrid\_connection\_share} = \mathrm{microgrid\_deployment} / \mathrm{connections\_per\_year}
+    lhs: microgrid_connection_share
+    linearity: linear
+    name: Microgrid share of connections
+    parameters:
+    - microgrid_connection_share
+    - microgrid_deployment
+    - connections_per_year
+    priority: P2
+    reference: Definition of a share
+    relation: eq
+    rhs: microgrid_deployment / connections_per_year
+    solution_method: direct
+    system: demand_supply
+    tolerance: 1.0e-09
+    unit_check: true
   microinsurance_premium_definition:
     description: 'The premium a covered household pays: the share of income the product is priced at,
       times household income. Priced off income rather than off asset value because the product is an
@@ -44653,6 +45622,28 @@ equations:
     rhs: mini_grid_subsidies * mini_grid_programme_spend_usd_per_year
     solution_method: direct
     system: financial
+    tolerance: 1.0e-09
+    unit_check: true
+  mining_electric_energy_twh_definition:
+    description: 'Share times total. Dimensional check: a fraction times TWh/year is TWh/year.'
+    determined_variables:
+    - mining_electric_energy_twh
+    free_variables: []
+    latex: \mathrm{mining\_electric\_energy\_twh} = \mathrm{mining\_electrification} \times \mathrm{mining\_energy\_demand\_twh}
+    lhs: mining_electric_energy_twh
+    linearity: linear
+    name: Mining electric energy
+    parameters:
+    - mining_electric_energy_twh
+    - mining_electrification
+    - mining_energy_demand_twh
+    priority: P2
+    reference: IEA, Energy Technology Perspectives 2023, electrification metrics; a definition, no archived
+      copy
+    relation: eq
+    rhs: mining_electrification * mining_energy_demand_twh
+    solution_method: direct
+    system: energy_balance
     tolerance: 1.0e-09
     unit_check: true
   mining_hydrogen_haulage_bound:
@@ -44836,6 +45827,31 @@ equations:
       capacity factor definition
     latex: \mathrm{nuclear}_{generation\_twh} = \frac{\mathrm{nuclear}_{capacity} \mathrm{capacity}_{factor\_nuclear}
       \mathrm{hours}_{per\_year}}{1000000}
+  nuclear_idc_factor_definition:
+    description: Uniform-spend average of the compounding factor over the construction period, with the
+      rate taken as continuously compounded, (e^(rT) - 1)/(rT). Annual compounding would give a slightly
+      smaller IDC, by about 2.5 percent of the interest amount at a 5 percent rate.
+    determined_variables:
+    - nuclear_idc_factor
+    free_variables: []
+    latex: \mathrm{nuclear\_idc\_factor} = \frac{e^{\mathrm{real\_discount\_rate}\, \mathrm{nuclear\_lead\_time}}
+      - 1}{\mathrm{real\_discount\_rate}\, \mathrm{nuclear\_lead\_time}}
+    lhs: nuclear_idc_factor
+    linearity: nonlinear
+    name: Nuclear interest during construction factor
+    parameters:
+    - nuclear_idc_factor
+    - real_discount_rate
+    - nuclear_lead_time
+    priority: P2
+    reference: 'IEA and NEA, Projected Costs of Generating Electricity 2020, treatment of interest during
+      construction. Local copy: sources/archive/iea_nea_egc_2020.pdf'
+    relation: eq
+    rhs: (exp(real_discount_rate * nuclear_lead_time) - 1) / (real_discount_rate * nuclear_lead_time)
+    solution_method: direct
+    system: financial
+    tolerance: 1.0e-09
+    unit_check: true
   nuclear_new_build_bound:
     description: 'New nuclear capped at 5000 MW -- a single large unit or two SMR modules -- against a
       0 MW reference fleet, so the bound holds vacuously today and bites the moment a scenario builds
@@ -45674,6 +46690,28 @@ equations:
     rhs: (1.0 + population_growth_rate) ** horizon_years
     solution_method: direct
     system: price_demand
+    tolerance: 1.0e-09
+    unit_check: true
+  port_electric_energy_twh_definition:
+    description: 'Share times total. Dimensional check: a fraction times TWh/year is TWh/year.'
+    determined_variables:
+    - port_electric_energy_twh
+    free_variables: []
+    latex: \mathrm{port\_electric\_energy\_twh} = \mathrm{port\_electrification} \times \mathrm{port\_operations\_energy\_twh}
+    lhs: port_electric_energy_twh
+    linearity: linear
+    name: Port operations electric energy
+    parameters:
+    - port_electric_energy_twh
+    - port_electrification
+    - port_operations_energy_twh
+    priority: P2
+    reference: IEA, Energy Technology Perspectives 2023, electrification metrics; a definition, no archived
+      copy
+    relation: eq
+    rhs: port_electrification * port_operations_energy_twh
+    solution_method: direct
+    system: energy_balance
     tolerance: 1.0e-09
     unit_check: true
   position_limit_definition:
@@ -46947,6 +47985,47 @@ equations:
     solution_method: direct
     linearity: linear
     latex: \mathrm{residential}_{demand\_twh} = \mathrm{residential}_{demand\_share} \mathrm{demand}_{twh}
+  retail_competition_definition:
+    description: 'One minus the normalised HHI: 0 for a monopoly, approaching 1 as the market fragments.'
+    determined_variables:
+    - retail_competition
+    free_variables: []
+    latex: \mathrm{retail\_competition} = 1 - \mathrm{retail\_hhi} / 10000
+    lhs: retail_competition
+    linearity: linear
+    name: Retail competition index
+    parameters:
+    - retail_competition
+    - retail_hhi
+    priority: P2
+    reference: US DOJ Horizontal Merger Guidelines (2010) section 5.3, normalisation by the 10000 maximum
+    relation: eq
+    rhs: 1 - retail_hhi / 10000
+    solution_method: direct
+    system: price_demand
+    tolerance: 1.0e-09
+    unit_check: true
+  retail_hhi_definition:
+    description: With N retailers of equal share 1/N, HHI = sum of (100/N)^2 over N firms = 10000/N.
+    determined_variables:
+    - retail_hhi
+    free_variables: []
+    latex: \mathrm{retail\_hhi} = \frac{10000}{\mathrm{number\_of\_retailers}}
+    lhs: retail_hhi
+    linearity: nonlinear
+    name: Retail concentration
+    parameters:
+    - retail_hhi
+    - number_of_retailers
+    priority: P2
+    reference: Hirschman-Herfindahl index definition, US DOJ Horizontal Merger Guidelines (2010) section
+      5.3
+    relation: eq
+    rhs: 10000 / number_of_retailers
+    solution_method: direct
+    system: price_demand
+    tolerance: 1.0e-09
+    unit_check: true
   retention_and_deductible_bound:
     description: A risk-retention share and a deductible share are both fractions of the same insured
       loss kept by the insured party, so together they cannot exceed the whole loss. A ceiling because
@@ -47081,6 +48160,30 @@ equations:
     rhs: (1 + carbon_price_risk) * carbon_price_escalated_usd_per_tco2
     solution_method: direct
     system: carbon_trajectory
+    tolerance: 1.0e-09
+    unit_check: true
+  risk_adjusted_loss_definition:
+    description: Convex mixture of mean and tail loss, the standard mean-CVaR objective.
+    determined_variables:
+    - risk_adjusted_loss_usd
+    free_variables: []
+    latex: \mathrm{risk\_adjusted\_loss\_usd} = \left(1 - \mathrm{cvar\_omega}\right) \mathrm{expected\_loss\_usd}
+      + \mathrm{cvar\_omega}\, \mathrm{cvar\_loss\_usd}
+    lhs: risk_adjusted_loss_usd
+    linearity: linear
+    name: Risk-adjusted loss
+    parameters:
+    - risk_adjusted_loss_usd
+    - cvar_omega
+    - expected_loss_usd
+    - cvar_loss_usd
+    priority: P2
+    reference: 'Rockafellar, R.T. and Uryasev, S. (2000), Optimization of conditional value-at-risk, Journal
+      of Risk 2(3), 21-41, eq. (3.x): CVaR = VaR + E[(L-VaR)+]/(1-alpha). No archived copy.'
+    relation: eq
+    rhs: (1 - cvar_omega) * expected_loss_usd + cvar_omega * cvar_loss_usd
+    solution_method: direct
+    system: financial
     tolerance: 1.0e-09
     unit_check: true
   rocof_definition:
@@ -47338,6 +48441,49 @@ equations:
     solution_method: direct
     system: reliability
     tolerance: 1.0e-09
+    unit_check: true
+  scenario_expected_cost_definition:
+    description: 'Expectation over a discrete scenario set: the sum of p_s c_s, one term per scenario.'
+    determined_variables:
+    - scenario_expected_cost_usd
+    free_variables: []
+    latex: \mathrm{scenario\_expected\_cost\_usd} = \mathrm{probability\_weight} \times \mathrm{scenario\_cost\_usd}
+    lhs: scenario_expected_cost_usd
+    linearity: linear
+    name: Scenario expected cost
+    parameters:
+    - scenario_expected_cost_usd
+    - probability_weight
+    - scenario_cost_usd
+    priority: P2
+    reference: Definition of expectation over a discrete distribution
+    relation: eq
+    rhs: probability_weight * scenario_cost_usd
+    solution_method: direct
+    system: financial
+    tolerance: 1.0e-09
+    unit_check: true
+  sea_level_rise_bound:
+    description: A scenario sea-level rise above baseline cannot exceed the equilibrium commitment of
+      its own warming; a scenario above it asserts more ice loss than the warming supports.
+    determined_variables: []
+    free_variables:
+    - committed_sea_level_rise_m
+    - sea_level_rise
+    latex: \mathrm{sea\_level\_rise} \leq \mathrm{committed\_sea\_level\_rise\_m}
+    lhs: sea_level_rise
+    linearity: linear
+    name: Sea-level rise bound
+    parameters:
+    - committed_sea_level_rise_m
+    - sea_level_rise
+    priority: P2
+    reference: Levermann, A. et al. (2013), PNAS 110(34), 13745-13750
+    relation: leq
+    rhs: committed_sea_level_rise_m
+    solution_method: direct
+    system: emissions
+    tolerance: 1.0e-06
     unit_check: true
   security_package_definition:
     description: 'The capital a sponsor and its parent put behind the project: the performance bond held
@@ -61402,6 +62548,358 @@ relationships:
   strength: hard
   description: Enters the identity.
   reference: The coupling build (batch 90)
+  priority: P2
+- source: agricultural_machinery
+  target: agricultural_machinery_electric_twh
+  equation_id: agricultural_machinery_electric_twh_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: agricultural_machinery_energy_twh
+  target: agricultural_machinery_electric_twh
+  equation_id: agricultural_machinery_electric_twh_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: construction_machinery
+  target: construction_machinery_electric_twh
+  equation_id: construction_machinery_electric_twh_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: construction_machinery_energy_twh
+  target: construction_machinery_electric_twh
+  equation_id: construction_machinery_electric_twh_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: port_electrification
+  target: port_electric_energy_twh
+  equation_id: port_electric_energy_twh_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: port_operations_energy_twh
+  target: port_electric_energy_twh
+  equation_id: port_electric_energy_twh_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: airport_electrification
+  target: airport_electric_energy_twh
+  equation_id: airport_electric_energy_twh_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: airport_ground_operations_energy_twh
+  target: airport_electric_energy_twh
+  equation_id: airport_electric_energy_twh_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: mining_electrification
+  target: mining_electric_energy_twh
+  equation_id: mining_electric_energy_twh_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: mining_energy_demand_twh
+  target: mining_electric_energy_twh
+  equation_id: mining_electric_energy_twh_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: ev_share_new_sales
+  target: ev_new_sales_per_year
+  equation_id: ev_new_sales_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: new_vehicle_sales_per_year
+  target: ev_new_sales_per_year
+  equation_id: ev_new_sales_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: irrigation_coverage
+  target: irrigated_area_km2
+  equation_id: irrigated_area_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: arable_land_km2
+  target: irrigated_area_km2
+  equation_id: irrigated_area_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: capital_gains_tax
+  target: capital_gains_tax_revenue_usd_per_year
+  equation_id: capital_gains_tax_revenue_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: realised_capital_gains_usd_per_year
+  target: capital_gains_tax_revenue_usd_per_year
+  equation_id: capital_gains_tax_revenue_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: var_loss_usd
+  target: cvar_loss_usd
+  equation_id: cvar_loss_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: expected_excess_loss_usd
+  target: cvar_loss_usd
+  equation_id: cvar_loss_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: cvar_alpha
+  target: cvar_loss_usd
+  equation_id: cvar_loss_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: cvar_omega
+  target: risk_adjusted_loss_usd
+  equation_id: risk_adjusted_loss_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: expected_loss_usd
+  target: risk_adjusted_loss_usd
+  equation_id: risk_adjusted_loss_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: cvar_loss_usd
+  target: risk_adjusted_loss_usd
+  equation_id: risk_adjusted_loss_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: probability_weight
+  target: scenario_expected_cost_usd
+  equation_id: scenario_expected_cost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: scenario_cost_usd
+  target: scenario_expected_cost_usd
+  equation_id: scenario_expected_cost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: real_discount_rate
+  target: nuclear_idc_factor
+  equation_id: nuclear_idc_factor_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: nuclear_lead_time
+  target: nuclear_idc_factor
+  equation_id: nuclear_idc_factor_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: capex_nuclear
+  target: capex_nuclear_with_idc_usd_per_kw
+  equation_id: capex_nuclear_with_idc_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: nuclear_idc_factor
+  target: capex_nuclear_with_idc_usd_per_kw
+  equation_id: capex_nuclear_with_idc_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: climate_sensitivity
+  target: equilibrium_warming_degc
+  equation_id: equilibrium_warming_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: atmospheric_co2_ppm
+  target: equilibrium_warming_degc
+  equation_id: equilibrium_warming_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: preindustrial_co2_ppm
+  target: equilibrium_warming_degc
+  equation_id: equilibrium_warming_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: slr_commitment_m_per_degc
+  target: committed_sea_level_rise_m
+  equation_id: committed_sea_level_rise_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: equilibrium_warming_degc
+  target: committed_sea_level_rise_m
+  equation_id: committed_sea_level_rise_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: committed_sea_level_rise_m
+  target: sea_level_rise
+  equation_id: sea_level_rise_bound
+  relationship: constraint
+  strength: hard
+  description: Bounds sea_level_rise against committed_sea_level_rise_m.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: number_of_retailers
+  target: retail_hhi
+  equation_id: retail_hhi_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: retail_hhi
+  target: retail_competition
+  equation_id: retail_competition_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: microgrid_deployment
+  target: microgrid_connection_share
+  equation_id: microgrid_connection_share_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: connections_per_year
+  target: microgrid_connection_share
+  equation_id: microgrid_connection_share_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: hydro_reservoir_level
+  target: hydro_initial_storage_mwh
+  equation_id: hydro_initial_storage_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: hydro_reservoir_energy_capacity_mwh
+  target: hydro_initial_storage_mwh
+  equation_id: hydro_initial_storage_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: renewable_curtailment_limit
+  target: max_curtailed_energy_twh
+  equation_id: max_curtailed_energy_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: renewable_generation_twh
+  target: max_curtailed_energy_twh
+  equation_id: max_curtailed_energy_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: water_pollution_load
+  target: effluent_pollutant_concentration_kg_per_m3
+  equation_id: effluent_concentration_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
+  priority: P2
+- source: effluent_discharge_m3_per_year
+  target: effluent_pollutant_concentration_kg_per_m3
+  equation_id: effluent_concentration_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 91)
   priority: P2
 - source: biomass_generation_twh
   target: fleet_generation_twh

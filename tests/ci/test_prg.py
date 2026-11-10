@@ -1991,7 +1991,7 @@ def test_every_equality_declares_an_edge_from_each_symbol_it_reads(
 	# megawatt-hour conversion -- taking 532 -> 534. Batch 80 adds seven more,
 	# the megawatt-to-terawatt conversion for each sector `_load` dial, so
 	# 534 -> 549.
-	assert len(determined) == 556, len(determined)
+	assert len(determined) == 577, len(determined)
 
 	sourced: dict[str, set[str]] = {}
 	for edge in graph.edges:
@@ -2410,7 +2410,7 @@ def test_the_survey_keep_rows_no_longer_carry_the_sentinel(graph: ParameterGraph
 		"export_competitiveness": ((0.0, 1.0), 0.5),
 		"rare_earth_dependencies": ((0.0, 1.0), 0.3),
 		"number_of_retailers": ((1.0, 1000.0), 5.0),
-		"retail_competition": ((0.0, 1.0), 0.5),
+		# `retail_competition` left this table in batch 91: it is derived from `number_of_retailers` and carries no default.
 		"drought_frequency": ((0.0, 5.0), 1.0),
 		"drought_severity": ((0.0, 5.0), 1.0),
 		"hydro_reservoir_level": ((0.0, 1.0), 0.5),
@@ -3072,7 +3072,7 @@ def test_every_settable_parameter_affects_or_constrains_something(graph: Paramet
 	# this register. Its two new operands are both read by the two equations
 	# the batch added, and `data_centre_load_twh` is read by `energy_demand`,
 	# so none of the three enters it.
-	assert len(dead) == 188, len(dead)
+	assert len(dead) == 168, len(dead)
 	assert dead <= (set(graph.uncoupled()) - rule_read), sorted(
 		dead - (set(graph.uncoupled()) - rule_read)
 	)
@@ -3521,7 +3521,7 @@ def test_the_audit_reports_what_it_did_not_check():
 	# Batch 52 added `debt_fraction_definition`, whose `debt_equity_ratio` is
 	# not on the solve result either, so `skipped` moves 334 -> 335 for the
 	# same reason.
-	assert len(audit.checked) == 236, audit.checked
+	assert len(audit.checked) == 237, audit.checked
 	# Batch 53's reserve-requirement definition takes it 335 -> 336.
 	# Batch 54's temporal-resolution definition takes it 336 -> 337, for the
 	# same reason as the two before it: `tsam_segment_hours` is not on the
@@ -3556,7 +3556,7 @@ def test_the_audit_reports_what_it_did_not_check():
 	# megawatt dial the result does not carry as a column, so all seven join
 	# `skipped` and `checked` stays at 236: 298 -> 305, with the partition
 	# below moving 534 -> 549 to follow `computed()`.
-	assert len(audit.skipped) == 320, audit.skipped
+	assert len(audit.skipped) == 340, audit.skipped
 	# The partition is exhaustive: every derived parameter is either checked or
 	# named as not carried, so the two counts are the whole of the graph's
 	# derived set and neither can shrink unnoticed.
@@ -3632,7 +3632,7 @@ def test_an_audit_that_cannot_run_is_not_a_pass():
 	# `data_centre_load_twh` -- so 532 -> 534. Batch 80 adds seven derived
 	# nodes, the terawatt-year side of each sector load's conversion, so
 	# 534 -> 549.
-	assert len(audit.skipped) == 556, audit.skipped
+	assert len(audit.skipped) == 577, audit.skipped
 
 	# A second way to reach the same contract, and the one that escaped when
 	# the range gate was added. `GraphError` is a `ValueError` and neither a
@@ -5113,7 +5113,7 @@ def test_the_register_states_the_gap_rather_than_implying_a_distribution(
 	# the forecast peak and now reads the scenario peak. Measured as a set
 	# difference against the pre-batch document.
 	assert re.search(r"\b72 uncertain input", text), text
-	assert re.search(r"reach \b203 derived", text), text
+	assert re.search(r"reach \b206 derived", text), text
 
 
 # ---------------------------------------------------------------------------
@@ -6014,7 +6014,7 @@ def test_the_declared_strengths_are_counted_by_tier(graph: ParameterGraph):
 	# `strength_of` counts as hard: 602 -> 603. The three edges it and the
 	# reshaped `fleet_build_balance` moved are all `hard`, so they change the
 	# edge count and not this one.
-	assert counts == {"hard": 626, "informational": 1, "soft": 2}, counts
+	assert counts == {"hard": 648, "informational": 1, "soft": 2}, counts
 	# Every equation the count puts in a non-hard tier is one some edge
 	# declares that way -- the tier is read off the edges, so a `soft` equation
 	# with no `soft` edge would mean the register invented it.
@@ -6521,7 +6521,7 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# equation: `peak_demand_shifted_definition` is the equation the sourced
 	# peak-demand band belongs to, and it shipped uncited while carrying a
 	# worked example at a default this batch moves.
-	assert len(declared) == 328, f"the citation register moved: {sorted(declared)}"
+	assert len(declared) == 350, f"the citation register moved: {sorted(declared)}"
 
 	carried = {row.equation_id: row.reference for row in rows if row.reference}
 	assert carried == declared, (
@@ -6790,7 +6790,7 @@ def test_the_affine_solve_agrees_with_the_bracket_search(graph: ParameterGraph):
 	# adds two more (the IT-load-times-PUE product and the megawatt-hour
 	# conversion), 532 -> 534, and batch 80 adds seven (the sector-load
 	# conversions), 534 -> 549.
-	assert compared == 556, (
+	assert compared == 577, (
 		f"expected 481 determined variables in the shipped library, compared "
 		f"{compared}; a change to the equation count is a change to this "
 		f"check's coverage. It was 153 after the generated batches were "
