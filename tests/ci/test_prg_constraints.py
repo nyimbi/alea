@@ -279,7 +279,7 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	# the same relation the four other storage bounds already state -- bounded by
 	# `storage_headroom_mw` alone -- so the shaped count moves 71 -> 72 and the
 	# total 605 -> 606. `identities` is untouched: the new one is `leq`.
-	assert cov["constraint_shaped"] == 72
+	assert cov["constraint_shaped"] == 73
 	# The 534 this pin carried was stale by four and had been since batch 70.
 	# Measured on `HEAD:config/prg.yaml` the identity count is 530 and the
 	# total 602: batch 69 deleted `buffer_pool_contribution_definition` and
@@ -298,9 +298,9 @@ def test_the_constraint_shaped_equations_are_exactly_the_inequalities(
 	# total 606 -> 613. The shaped count stays at 72: none is a bound. The
 	# conversions mirror `fishing_community_load_definition`, which is the same
 	# 8760-hours-and-1e6-MWh-per-TWh identity over a megawatt dial.
-	assert cov["identities"] == 541
+	assert cov["identities"] == 544
 	# Batch 80 adds the seven above, so the total moves 606 -> 613.
-	assert cov["total"] == 613
+	assert cov["total"] == 617
 
 
 def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
@@ -388,6 +388,7 @@ def test_the_bound_set_is_pinned_by_name(graph: ParameterGraph):
 		"marine_otec_capacity_bound",
 		"marine_tidal_capacity_bound",
 		"marine_wave_capacity_bound",
+		"mining_hydrogen_haulage_bound",
 		"non_spinning_reserve_inside_margin",
 		"ocgt_capex_ordering_bound",
 		"powertrain_stock_bound",

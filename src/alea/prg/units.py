@@ -111,6 +111,7 @@ def _registry() -> pint.UnitRegistry:
 	registry._units.pop("knot", None)
 	for definition in (
 		"USD = [currency]",
+		"LCU = [local_currency]",
 		"person = [count]",
 		"people = person",
 		"death = person",

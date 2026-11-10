@@ -42,7 +42,7 @@ def main() -> None:
 	graph = load_graph()
 	reasons = _survey_reasons()
 	rows: dict[str, list[tuple[str, str, str, str, str]]] = {
-		"tombstone": [], "categorical": [], "placeholder": [], "numeric": [],
+		"tombstone": [], "categorical": [], "non-scalar": [], "numeric": [],
 	}
 	for name in graph.uncoupled():
 		node = graph.node(name)
@@ -52,7 +52,7 @@ def main() -> None:
 		elif str(node.type) in CATEGORICAL:
 			cls = "categorical"
 		elif node.unit in (None, "None") and node.default == 500000.0:
-			cls = "placeholder"
+			cls = "non-scalar"
 		else:
 			cls = "numeric"
 		rows[cls].append((name, str(node.unit), str(node.default), _first_sentence(desc), reasons.get(name, "")))
@@ -60,7 +60,7 @@ def main() -> None:
 	assert total == len(graph.uncoupled()), (total, len(graph.uncoupled()))
 	meaning = {
 		"numeric": "Typed, with a real unit and value. Coupling needs a base node or a physical identity the graph does not hold yet.",
-		"placeholder": "Declared `float` with no unit and the 500000 stub default. Needs a unit and a meaning before any equation can name it.",
+		"non-scalar": "Registers, record sets, procedures and free text that the catalog shipped as `float` with the 500000 stub. None is a quantity, and `ParameterType` has no text or mapping type, so each is recorded and left (decision, batch 87); retyping would assert a number that does not exist.",
 		"categorical": "A level name. A level has no arithmetic, so it can never be an equation operand; it belongs in a register.",
 		"tombstone": "Retired id. Must not be wired into an equation.",
 	}
