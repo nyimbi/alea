@@ -14869,6 +14869,61 @@ parameters:
     users:
     - Planners
     - Regulators
+  gravity_storage_capex_usd_per_kw:
+    category: Cost
+    description: 'The gravity store energy cost expressed per kW of power rating: per-energy cost times
+      duration, the same power-energy split capex_battery_power_usd_per_kw applies. 6,400 USD/kW at defaults.'
+    determinism: physical
+    name: Gravity storage cost per kW
+    priority: P2
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    source: NREL ATB 2025 power-energy cost split; the coupling build (batch 89)
+    status: existing
+    type: float
+    unit: USD/kW
+    users:
+    - Planners
+    - Regulators
+  gravity_storage_duration:
+    category: Supply
+    default: 8.0
+    description: Hours of full-power discharge the gravity store holds. 8 hours at defaults, the 100 MW
+      over 8 h pairing the storage classification pack proposed. A stated assumption.
+    determinism: fixed
+    name: Gravity storage duration
+    priority: P2
+    range:
+    - 0.0
+    - 100.0
+    role: exogenous
+    source: Storage classification pack (batch 31); assumption
+    status: existing
+    type: float
+    unit: hours
+    users:
+    - Planners
+    - Regulators
+  gravity_storage_energy_mwh:
+    category: Supply
+    description: 'Energy the gravity store holds: nameplate power times duration. 0 MWh at defaults since
+      the nameplate is zero.'
+    determinism: physical
+    name: Gravity storage energy
+    priority: P2
+    range:
+    - 0.0
+    - 100000000.0
+    role: derived
+    source: The coupling build (batch 89)
+    status: existing
+    type: float
+    unit: MWh
+    users:
+    - Planners
+    - Regulators
   green_bond_share:
     categories: []
     category: Macro
@@ -40477,6 +40532,49 @@ equations:
     system: energy_balance
     tolerance: 1.0e-06
     unit_check: true
+  gravity_storage_capex_per_kw_definition:
+    description: 'Per-energy cost times duration. Dimensional check: USD/kWh times hours is USD/kW, since
+      kWh per kW is hours.'
+    determined_variables:
+    - gravity_storage_capex_usd_per_kw
+    free_variables: []
+    latex: \mathrm{gravity\_storage\_capex\_usd\_per\_kw} = \mathrm{capex\_gravity\_storage} \times \mathrm{gravity\_storage\_duration}
+    lhs: gravity_storage_capex_usd_per_kw
+    linearity: linear
+    name: Gravity storage cost per kW
+    parameters:
+    - gravity_storage_capex_usd_per_kw
+    - capex_gravity_storage
+    - gravity_storage_duration
+    priority: P2
+    reference: NREL ATB 2025 Equations & Variables (power-energy cost split)
+    relation: eq
+    rhs: capex_gravity_storage * gravity_storage_duration
+    solution_method: direct
+    system: cost_accounting
+    tolerance: 1.0e-09
+    unit_check: true
+  gravity_storage_energy_definition:
+    description: 'Power times discharge duration. Dimensional check: MW times hours is MWh.'
+    determined_variables:
+    - gravity_storage_energy_mwh
+    free_variables: []
+    latex: \mathrm{gravity\_storage\_energy\_mwh} = \mathrm{gravity\_storage\_capacity} \times \mathrm{gravity\_storage\_duration}
+    lhs: gravity_storage_energy_mwh
+    linearity: linear
+    name: Gravity storage energy
+    parameters:
+    - gravity_storage_energy_mwh
+    - gravity_storage_capacity
+    - gravity_storage_duration
+    priority: P2
+    reference: Definition of storage energy capacity as power x duration
+    relation: eq
+    rhs: gravity_storage_capacity * gravity_storage_duration
+    solution_method: direct
+    system: energy_balance
+    tolerance: 1.0e-09
+    unit_check: true
   green_bond_bound:
     description: Green bonds are a subset of bond issuance -- the same tranche funded under a use-of-proceeds
       label -- so their share is bounded by the bond market's own share.
@@ -60759,6 +60857,38 @@ relationships:
   strength: hard
   description: Rise time sets the logistic rate.
   reference: The coupling build (batch 88)
+  priority: P2
+- source: gravity_storage_capacity
+  target: gravity_storage_energy_mwh
+  equation_id: gravity_storage_energy_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+  reference: The coupling build (batch 89)
+  priority: P2
+- source: gravity_storage_duration
+  target: gravity_storage_energy_mwh
+  equation_id: gravity_storage_energy_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+  reference: The coupling build (batch 89)
+  priority: P2
+- source: capex_gravity_storage
+  target: gravity_storage_capex_usd_per_kw
+  equation_id: gravity_storage_capex_per_kw_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+  reference: The coupling build (batch 89)
+  priority: P2
+- source: gravity_storage_duration
+  target: gravity_storage_capex_usd_per_kw
+  equation_id: gravity_storage_capex_per_kw_definition
+  relationship: functional
+  strength: hard
+  description: Enters the product.
+  reference: The coupling build (batch 89)
   priority: P2
 - source: biomass_generation_twh
   target: fleet_generation_twh
