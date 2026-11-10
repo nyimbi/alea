@@ -94,6 +94,18 @@ safe. This constant is the pinned answer and a synthetic-flag test locks it.
 """
 ```
 
+**Correction, 2026-11-11: the bit positions above are wrong for the real product.**
+Read from the `Description` attribute of `QF_Cloud_Mask` in VNP46A2 v2 granules:
+bit 0 is day/night, bits 1-3 land/water, bits 4-5 cloud-mask quality, **bits 6-7
+cloud confidence** (00 confident clear .. 11 confident cloudy), bit 8 shadow,
+bit 9 cirrus, bit 10 snow/ice. Testing bits 0-1 flags every "land, no desert"
+pixel (bit 1 set) as cloudy, so the detector goes blind over most of Ghana.
+`alea.outages.viirs_h5.decode_cloud_confidence` reads bits 6-7, folds shadow,
+cirrus, snow, day and fill into the blind value, and hands the kernel the
+two-bit field it already expects. The layer names are `DNB_BRDF-Corrected_NTL`
+(hyphen) and `Gap_Filled_DNB_BRDF-Corrected_NTL`; VNP46A2 carries no
+`Sensor_Zenith`, which comes from VNP46A1.
+
 ### 2.3 Band selection
 
 Use `DNB_BRDF_Corrected_NTL` — the observed, BRDF-corrected band. **Never** the

@@ -6,7 +6,7 @@ DAAC with the Earthdata bearer token in EARTHDATA_TOKEN (source `.env`).
 Existing files at the listed size are skipped. Ghana's box (-3.3, 4.7, 1.2, 11.2)
 spans tiles h17-h18 x v07-v08.
 
-Usage: viirs_vnp46_ghana.py OUT_DIR YEAR [SHORT_NAME]
+Usage: viirs_vnp46_ghana.py OUT_DIR YEAR [SHORT_NAME [TILE]]  (TILE like h17v08 keeps one tile)
 """
 
 from __future__ import annotations
@@ -66,10 +66,11 @@ def _fetch(args: tuple[str, Path, str]) -> int:
 def main(argv: list[str]) -> int:
 	out, year = Path(argv[0]), int(argv[1])
 	short = argv[2] if len(argv) > 2 else "VNP46A2"
+	tile = argv[3] if len(argv) > 3 else ""
 	token = os.environ.get("EARTHDATA_TOKEN", "")
 	assert token, "EARTHDATA_TOKEN is not set; source .env first"
 	out.mkdir(parents=True, exist_ok=True)
-	granules = _list(short, year)
+	granules = [g for g in _list(short, year) if tile in g[0]]
 	print(f"{len(granules)} granules, ~{sum(s for _, s in granules) / 1e3:.1f} GB", flush=True)
 	jobs = [(u, out / u.rsplit("/", 1)[1], token) for u, _ in granules]
 	done = 0

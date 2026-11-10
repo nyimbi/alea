@@ -19,7 +19,7 @@ Three specification defects are fixed here rather than inherited:
    detector report outages wherever it is cloudy. The kernel returns NaN and
    ``stream_zones`` treats a zone-hour with no clear pixels as NaN, not zero.
 
-3. **The gap-filled band.** Detection reads ``DNB_BRDF_Corrected_NTL``, the
+3. **The gap-filled band.** Detection reads ``DNB_BRDF-Corrected_NTL``, the
    observed band. The gap-filled band interpolates across cloudy observations,
    so a cloud becomes a plausible radiance and the detector sees "no outage"
    exactly where it is blind. ``extract_tile`` refuses the gap-filled band and
@@ -47,10 +47,10 @@ from alea.outages.views import PredictiveConfig, ViirsConfig
 logger = get_logger(__name__)
 
 # Band names, pinned. VNP46A2 variable names.
-RADIANCE_BAND = "DNB_BRDF_Corrected_NTL"
+RADIANCE_BAND = "DNB_BRDF-Corrected_NTL"
 """The observed, BRDF-corrected nighttime radiance, nW cm^-2 sr^-1."""
 
-GAP_FILLED_BAND = "DNB_BRDF_Corrected_NTL_Gap_Filled"
+GAP_FILLED_BAND = "Gap_Filled_DNB_BRDF-Corrected_NTL"
 """Interpolated across cloudy observations. **Never** used for detection."""
 
 CLOUD_MASK_BAND = "QF_Cloud_Mask"

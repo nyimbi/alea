@@ -82,7 +82,7 @@ _GAPFILLED_PROGRAM = (
 	"shape = (1, 2, 2)\n"
 	"ds = xr.Dataset(\n"
 	"  {RADIANCE_BAND: (('time', 'y', 'x'), np.ones(shape, np.float32)),\n"
-	"   'DNB_BRDF_Corrected_NTL_Gap_Filled': (('time', 'y', 'x'), np.ones(shape, np.float32)),\n"
+	"   'Gap_Filled_DNB_BRDF-Corrected_NTL': (('time', 'y', 'x'), np.ones(shape, np.float32)),\n"
 	"   'QF_Cloud_Mask': (('time', 'y', 'x'), np.zeros(shape, np.uint8)),\n"
 	"   'Sensor_Zenith': (('time', 'y', 'x'), np.zeros(shape, np.float32))},\n"
 	"  coords={'time': np.array(['2030-01-01T00:00:00'], dtype='datetime64[ns]')})\n"

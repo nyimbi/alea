@@ -70,7 +70,7 @@ class ViirsConfig(AleaConfig):
 	because NaN and 0 aggregate differently. See 07-layer4 §2.2.
 	"""
 
-	radiance_band: str = "DNB_BRDF_Corrected_NTL"
+	radiance_band: str = "DNB_BRDF-Corrected_NTL"
 	"""The observed, BRDF-corrected band. Never the gap-filled band, which
 	interpolates across cloudy observations so a cloud reads as "no outage"."""
 
