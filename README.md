@@ -251,6 +251,15 @@ dependency, so it comes with the planning core and needs no licence or extra.
 Gurobi or CPLEX is required above ~5M variables, where the continental
 capacity-expansion problem sits.
 
+**Validation data and credentials.** The milestone validation targets need data
+that is not in the repository and sits behind free accounts: GridWatch Ghana
+(nLine), ERA5 (Copernicus CDS) and VIIRS VNP46 (NASA Earthdata). Copy
+`.env.example` to `.env`, fill in the keys, and run the scripts in
+`scripts/download/`. `.env` is git-ignored; `.env.example` is tracked and holds
+no secrets. Downloads land under `docs/research/milestone-data/`, also
+git-ignored, and total tens of gigabytes. Targets whose data is absent are
+recorded as skipped by `scripts/quality/milestone_artefacts.py`, never as passed.
+
 ---
 
 ## Quick start

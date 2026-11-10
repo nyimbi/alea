@@ -125,3 +125,5 @@ models/
 
 # Mirrored GridWatch parquet (~19 GB); regenerate with scripts/download/gridwatch_ghana.py
 /docs/research/milestone-data/gridwatch-ghana/
+/docs/research/milestone-data/era5/
+/docs/research/milestone-data/viirs-vnp46a2/
