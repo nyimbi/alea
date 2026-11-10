@@ -14,3 +14,5 @@ archived, so treat the pointers as leads, not citations.
 Leads: https://nline-7adlglt9b-nline.vercel.app/public-data (a Vercel preview, not the canonical host), https://mcc.icpsr.umich.edu/evaluations/index.php/catalog/28952, https://github.com/pypsa-meets-earth/pypsa-earth.
 
 Credentials needed from the account owner: nLine API key, Copernicus CDS key, NASA Earthdata login. Decision needed: what COMPASS is.
+
+Saved pages: `downloads/` (SHA256SUMS inside). Fetched 2026-11-11; the nLine preview-host and Zenodo API URLs failed (410/403) and were replaced by nline.io/public-data and the Zenodo record page. nLine says the API key is issued on first `fetch_data()` run via a signup prompt.
