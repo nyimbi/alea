@@ -5,6 +5,7 @@ The document is a register of load_graph().uncoupled(); never hand-edit it.
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from alea.prg.graph import load_graph
@@ -21,9 +22,26 @@ def _first_sentence(text: str, limit: int = 170) -> str:
 	return text.replace("|", "/")
 
 
+SURVEY = Path(__file__).resolve().parent.parent / "docs" / "research" / "placeholder-survey.md"
+
+
+def _survey_reasons() -> dict[str, str]:
+	"""Per-node reason a placeholder stayed open, from the survey's `- `node` — reason` bullets."""
+	reasons: dict[str, str] = {}
+	for line in SURVEY.read_text().splitlines():
+		hit = re.match(r"^- `([a-z0-9_]+)` — (.+)$", line)
+		if hit:
+			reasons.setdefault(hit.group(1), _first_sentence(hit.group(2), 230))
+	for name in ("scenario_description", "scenario_owner", "scenario_tag", "parameter_overrides"):
+		# The survey's NAME-blocked four are described in prose, not bullets.
+		reasons.setdefault(name, "Free text or a mapping; `ParameterType` has no text or mapping type, so it is recorded and left.")
+	return reasons
+
+
 def main() -> None:
 	graph = load_graph()
-	rows: dict[str, list[tuple[str, str, str, str]]] = {
+	reasons = _survey_reasons()
+	rows: dict[str, list[tuple[str, str, str, str, str]]] = {
 		"tombstone": [], "categorical": [], "placeholder": [], "numeric": [],
 	}
 	for name in graph.uncoupled():
@@ -37,7 +55,7 @@ def main() -> None:
 			cls = "placeholder"
 		else:
 			cls = "numeric"
-		rows[cls].append((name, str(node.unit), str(node.default), _first_sentence(desc)))
+		rows[cls].append((name, str(node.unit), str(node.default), _first_sentence(desc), reasons.get(name, "")))
 	total = sum(len(v) for v in rows.values())
 	assert total == len(graph.uncoupled()), (total, len(graph.uncoupled()))
 	meaning = {
@@ -54,8 +72,8 @@ def main() -> None:
 	lines += [f"| {c} | {len(rows[c])} |" for c in rows]
 	for cls, items in rows.items():
 		lines += ["", f"## {cls.capitalize()} ({len(items)})", "", meaning[cls], "",
-			"| Node | Unit | Default | Meaning |", "|---|---|---|---|"]
-		lines += [f"| `{n}` | {u} | {d} | {t} |" for n, u, d, t in items]
+			"| Node | Unit | Default | Meaning | Why open (placeholder survey) |", "|---|---|---|---|---|"]
+		lines += [f"| `{n}` | {u} | {d} | {t} | {r.replace('|', '/')} |" for n, u, d, t, r in items]
 	OUT.write_text("\n".join(lines) + "\n")
 	print({c: len(v) for c, v in rows.items()})
 
