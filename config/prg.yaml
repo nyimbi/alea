@@ -177,6 +177,24 @@ parameters:
     - Planners
     - Regulators
     - Researchers
+  adaptation_avoided_share:
+    category: Macro
+    default: 0.3
+    description: Share of the loss avoided by the measures.
+    determinism: fixed
+    name: Adaptation avoided share
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   adaptation_benefits:
     name: Adaptation benefits
     description: The damage a year's adaptation programme avoids, in currency per year. A benefit is the
@@ -238,22 +256,61 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
-  adaptation_measures:
-    name: Adaptation measures
-    description: Adaptation measures
-    category: Adapt
-    type: float
+  adaptation_exposure_usd_per_year:
+    category: Macro
+    default: 20000000.0
+    description: Annual climate loss without adaptation, in US dollars.
+    determinism: fixed
+    name: Adaptation exposure
+    priority: P2
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 1000000000000000.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: USD/year
+    users:
+    - Planners
+    - Regulators
+  adaptation_loss_avoided_usd_per_year:
+    category: Macro
+    description: 'Loss avoided: the flag times exposure times the avoided share'
+    determinism: physical
+    name: Adaptation loss avoided
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: derived
+    source: The coupling build (batch 97)
+    status: existing
+    type: float
+    unit: USD/year
+    users:
+    - Planners
+    - Regulators
+  adaptation_measures:
+    name: Adaptation measures
+    description: 'Whether adaptation measures are adopted. Retyped in batch 97 from the 500000 placeholder
+      to a 0/1 flag: whether this module or instrument is in use. The catalog row named a parameter set,
+      not a quantity; the flag is its presence, and it gates one stated-assumption quantity.'
+    category: Adapt
+    type: bool
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    role: exogenous
     determinism: fixed
     priority: P2
     status: to_build
     users:
     - DFIs
-    source: docs/params.md
+    source: Batch 97 retype of a catalog placeholder to a 0/1 presence flag; docs/params.md row kept as
+      the name.
   adaptation_net_benefit:
     category: Climate
     description: 'Net annual benefit of the adaptation programme: the damage it avoids less what it costs.
@@ -1200,36 +1257,78 @@ parameters:
     - Regulators
   article_6_2_parameters:
     name: Article 6 2 parameters
-    description: Article 6.2
+    description: 'Whether Article 6.2 bilateral transfers are used. Retyped in batch 97 from the 500000
+      placeholder to a 0/1 flag: whether this module or instrument is in use. The catalog row named a
+      parameter set, not a quantity; the flag is its presence, and it gates one stated-assumption quantity.'
     category: Carbon
-    type: float
+    type: bool
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 1.0
+    default: 0.0
+    role: exogenous
     determinism: fixed
     priority: P1
     status: to_build
     users:
     - Carbon
-    source: docs/params.md
+    source: Batch 97 retype of a catalog placeholder to a 0/1 presence flag; docs/params.md row kept as
+      the name.
+  article_6_2_revenue_usd_per_year:
+    category: Macro
+    description: 'Revenue from bilateral transfers: the flag times volume times price'
+    determinism: physical
+    name: Article 6.2 revenue
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: derived
+    source: The coupling build (batch 97)
+    status: existing
+    type: float
+    unit: USD/year
+    users:
+    - Planners
+    - Regulators
+  article_6_4_levy_usd_per_year:
+    category: Macro
+    description: 'Proceeds withheld: the flag times credit revenue times the levy share'
+    determinism: physical
+    name: Article 6.4 levy
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: derived
+    source: The coupling build (batch 97)
+    status: existing
+    type: float
+    unit: USD/year
+    users:
+    - Planners
+    - Regulators
   article_6_4_parameters:
     name: Article 6 4 parameters
-    description: Article 6.4
+    description: 'Whether the Article 6.4 mechanism is used. Retyped in batch 97 from the 500000 placeholder
+      to a 0/1 flag: whether this module or instrument is in use. The catalog row named a parameter set,
+      not a quantity; the flag is its presence, and it gates one stated-assumption quantity.'
     category: Carbon
-    type: float
+    type: bool
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 1.0
+    default: 0.0
+    role: exogenous
     determinism: fixed
     priority: P1
     status: to_build
     users:
     - Carbon
-    source: docs/params.md
+    source: Batch 97 retype of a catalog placeholder to a 0/1 presence flag; docs/params.md row kept as
+      the name.
   article_6_credits:
     category: Policy
     description: 'The volume transferred bilaterally under Article 6.2, which is the share carrying a
@@ -1275,6 +1374,24 @@ parameters:
     - Planners
     - Regulators
     - Researchers
+  asset_age_years:
+    category: Macro
+    default: 12.0
+    description: Age of the asset at which the hazard is evaluated, in years. 12 at defaults.
+    determinism: fixed
+    name: Asset age
+    priority: P2
+    range:
+    - 0.0
+    - 200.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: years
+    users:
+    - Planners
+    - Regulators
   asset_condition_index:
     categories: []
     category: Asset Condition & Lifecycle
@@ -1903,6 +2020,24 @@ parameters:
     subcategory: null
     type: float
     unit: MWh/year
+    users:
+    - Planners
+    - Regulators
+  aviation_offset_demand_mtco2_per_year:
+    category: Macro
+    default: 1.0
+    description: Annual CORSIA offsetting requirement, in MtCO2.
+    determinism: fixed
+    name: Aviation offset demand
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: MtCO2/year
     users:
     - Planners
     - Regulators
@@ -2885,7 +3020,7 @@ parameters:
     status: to_build
     subcategory: null
     type: float
-    unit: '1'
+    unit: USD
     users:
     - Insurance
   business_interruption_cover_usd_per_year:
@@ -5163,22 +5298,61 @@ parameters:
     users:
     - Planners
     - Regulators
-  cat_bond_parameters:
-    name: Cat bond parameters
-    description: Cat bonds
-    category: Insurance
-    type: float
+  cat_bond_expected_transfer_usd:
+    category: Macro
+    description: 'Expected annual loss transferred: the flag times the limit times the trigger probability'
+    determinism: physical
+    name: Cat bond expected loss transferred
+    priority: P2
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 1000000000000000.0
+    role: derived
+    source: The coupling build (batch 97)
+    status: existing
+    type: float
+    unit: USD
+    users:
+    - Planners
+    - Regulators
+  cat_bond_limit_usd:
+    category: Macro
+    default: 100000000.0
+    description: Principal at risk under the catastrophe bond, in US dollars.
+    determinism: fixed
+    name: Cat bond limit
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: USD
+    users:
+    - Planners
+    - Regulators
+  cat_bond_parameters:
+    name: Cat bond parameters
+    description: 'Whether a catastrophe bond is in the structure. Retyped in batch 97 from the 500000
+      placeholder to a 0/1 flag: whether this module or instrument is in use. The catalog row named a
+      parameter set, not a quantity; the flag is its presence, and it gates one stated-assumption quantity.'
+    category: Insurance
+    type: bool
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    role: exogenous
     determinism: fixed
     priority: P3
     status: to_build
     users:
     - Insurance
-    source: docs/params.md
+    source: Batch 97 retype of a catalog placeholder to a 0/1 presence flag; docs/params.md row kept as
+      the name.
   cat_bond_spread:
     categories: []
     category: Insurance & Catastrophe
@@ -5205,6 +5379,24 @@ parameters:
     users:
     - Planners
     - Regulators
+  cat_bond_trigger_probability:
+    category: Macro
+    default: 0.01
+    description: Annual probability the bond triggers.
+    determinism: fixed
+    name: Cat bond trigger probability
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   catastrophe_modelling:
     categories: []
     category: Insurance & Catastrophe
@@ -5226,7 +5418,7 @@ parameters:
     status: to_build
     subcategory: null
     type: float
-    unit: '1'
+    unit: USD
     users:
     - Insurance
   cbam_price:
@@ -5335,22 +5527,61 @@ parameters:
     depends_on: []
     affects:
     - fleet_emission_intensity_t_per_mwh
-  cdm_methodologies:
-    name: Cdm methodologies
-    description: CDM
-    category: Carbon
-    type: float
+  cdm_eligible_credits_mtco2_per_year:
+    category: Macro
+    description: 'Credits issuable under CDM: the flag times abatement times the eligible share'
+    determinism: physical
+    name: CDM eligible credits
+    priority: P2
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
-    role: free
+    role: derived
+    source: The coupling build (batch 97)
+    status: existing
+    type: float
+    unit: MtCO2/year
+    users:
+    - Planners
+    - Regulators
+  cdm_eligible_share:
+    category: Macro
+    default: 0.9
+    description: Share of project abatement that meets the CDM methodology.
+    determinism: fixed
+    name: CDM eligible share
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
+  cdm_methodologies:
+    name: Cdm methodologies
+    description: 'Whether a CDM methodology applies. Retyped in batch 97 from the 500000 placeholder to
+      a 0/1 flag: whether this module or instrument is in use. The catalog row named a parameter set,
+      not a quantity; the flag is its presence, and it gates one stated-assumption quantity.'
+    category: Carbon
+    type: bool
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    role: exogenous
     determinism: fixed
     priority: P2
     status: to_build
     users:
     - Carbon
-    source: docs/params.md
+    source: Batch 97 retype of a catalog placeholder to a 0/1 presence flag; docs/params.md row kept as
+      the name.
   cement_ccus_share:
     name: Cement ccus share
     description: Cement with CCUS
@@ -6735,6 +6966,41 @@ parameters:
     users:
     - Agriculture
     - Health
+  collateral_haircut:
+    category: Macro
+    default: 0.2
+    description: Fractional haircut applied to collateral value.
+    determinism: fixed
+    name: Collateral haircut
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
+  collateral_haircut_usd:
+    category: Macro
+    description: 'Value deducted: the flag times collateral value times the haircut'
+    determinism: physical
+    name: Collateral haircut
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: derived
+    source: The coupling build (batch 97)
+    status: existing
+    type: float
+    unit: USD
+    users:
+    - Planners
+    - Regulators
   collateral_posted_usd_per_year:
     category: Regulatory
     description: 'collateral posted usd per year: the compliance register''s derived quantity. The security
@@ -6779,20 +7045,42 @@ parameters:
     - Planners
   collateral_valuation:
     name: Collateral valuation
-    description: Collateral valuation
+    description: 'Whether collateral is valued and haircut. Retyped in batch 97 from the 500000 placeholder
+      to a 0/1 flag: whether this module or instrument is in use. The catalog row named a parameter set,
+      not a quantity; the flag is its presence, and it gates one stated-assumption quantity.'
     category: MktOps
-    type: float
+    type: bool
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 1.0
+    default: 0.0
+    role: exogenous
     determinism: fixed
     priority: P2
     status: to_build
     users:
     - Banks
-    source: docs/params.md
+    source: Batch 97 retype of a catalog placeholder to a 0/1 presence flag; docs/params.md row kept as
+      the name.
+  collateral_value_usd:
+    category: Macro
+    default: 100000000.0
+    description: Market value of collateral posted, in US dollars.
+    determinism: fixed
+    name: Collateral value
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: USD
+    users:
+    - Planners
+    - Regulators
   collusion:
     name: Collusion
     description: Whether collusive behaviour is detected in the market model. Catalog 'Collusion detection'
@@ -7350,6 +7638,23 @@ parameters:
     status: existing
     type: float
     unit: USD/year
+    users:
+    - Planners
+    - Regulators
+  competitiveness_composite:
+    category: Macro
+    description: Equal-weight mean of export competitiveness, efficiency benchmarking and resilience score.
+    determinism: physical
+    name: Competitiveness composite
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: derived
+    source: The coupling build (batch 96)
+    status: existing
+    type: float
+    unit: '1'
     users:
     - Planners
     - Regulators
@@ -8288,22 +8593,43 @@ parameters:
     unit: '1'
     users:
     - Investors
-  corsia_parameters:
-    name: Corsia parameters
-    description: CORSIA
-    category: Carbon
-    type: float
+  corsia_eligible_demand_mtco2_per_year:
+    category: Macro
+    description: 'Offset demand the project can serve: the flag times the requirement'
+    determinism: physical
+    name: CORSIA eligible demand
+    priority: P2
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
-    role: free
+    role: derived
+    source: The coupling build (batch 97)
+    status: existing
+    type: float
+    unit: MtCO2/year
+    users:
+    - Planners
+    - Regulators
+  corsia_parameters:
+    name: Corsia parameters
+    description: 'Whether CORSIA offsetting is in scope. Retyped in batch 97 from the 500000 placeholder
+      to a 0/1 flag: whether this module or instrument is in use. The catalog row named a parameter set,
+      not a quantity; the flag is its presence, and it gates one stated-assumption quantity.'
+    category: Carbon
+    type: bool
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    role: exogenous
     determinism: fixed
     priority: P2
     status: to_build
     users:
     - Carbon
-    source: docs/params.md
+    source: Batch 97 retype of a catalog placeholder to a 0/1 presence flag; docs/params.md row kept as
+      the name.
   cost_allocation_methodology:
     categories: []
     category: RegFin
@@ -9644,6 +9970,23 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  curtailment_compensation_usd_per_year:
+    category: Macro
+    description: 'Compensation paid: the flag times curtailed energy times the contract price'
+    determinism: physical
+    name: Curtailment compensation
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: derived
+    source: The coupling build (batch 97)
+    status: existing
+    type: float
+    unit: USD/year
+    users:
+    - Planners
+    - Regulators
   custom_gis_boundary:
     name: Custom gis boundary
     description: Custom GIS boundary
@@ -14366,6 +14709,26 @@ parameters:
     unit: '1'
     users:
     - Transport
+  exchange_rate_stress_usd_local:
+    category: Macro
+    description: 'Local currency per dollar at the one-sided 95 percent depreciation over the horizon
+      under a lognormal rate with the volatility scaled linearly in the horizon: rate x exp(z sigma T).
+      Exact at the default one-year horizon and conservative beyond it, since a diffusion scales as sqrt(T);
+      drift is ignored.'
+    determinism: physical
+    name: Stressed exchange rate
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000.0
+    role: derived
+    source: The coupling build (batch 96)
+    status: existing
+    type: float
+    unit: LCU/USD
+    users:
+    - Planners
+    - Regulators
   exchange_rate_usd_local:
     name: Exchange rate usd local
     description: Units of local currency per US dollar. 130 is the order of magnitude of a mid-income
@@ -16370,6 +16733,24 @@ parameters:
     users:
     - Planners
     - Regulators
+  fx_quantile_95:
+    category: Macro
+    default: 1.645
+    description: Standard normal quantile for a one-sided 95 percent bound. 1.645.
+    determinism: fixed
+    name: Normal 95 percent quantile
+    priority: P2
+    range:
+    - 0.0
+    - 5.0
+    role: exogenous
+    source: Standard normal table; the default is a stated assumption
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   g_per_kt:
     id: g_per_kt
     name: G per kt
@@ -17178,20 +17559,24 @@ parameters:
     - Researchers
   gold_standard_methodologies:
     name: Gold standard methodologies
-    description: Gold Standard
+    description: 'Whether a Gold Standard methodology applies. Retyped in batch 97 from the 500000 placeholder
+      to a 0/1 flag: whether this module or instrument is in use. The catalog row named a parameter set,
+      not a quantity; the flag is its presence, and it gates one stated-assumption quantity.'
     category: Carbon
-    type: float
+    type: bool
+    unit: '1'
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 1.0
+    default: 0.0
+    role: exogenous
     determinism: policy
     priority: P2
     status: to_build
     users:
     - Carbon
-    source: docs/params.md
+    source: Batch 97 retype of a catalog placeholder to a 0/1 presence flag; docs/params.md row kept as
+      the name.
   goods_services_balance:
     category: Macro
     default: 0.0
@@ -17516,6 +17901,41 @@ parameters:
     description: Share of delay cost avoided.
     determinism: fixed
     name: Grievance mechanism effect
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
+  gs_eligible_credits_mtco2_per_year:
+    category: Macro
+    description: 'Credits issuable under Gold Standard: the flag times abatement times the eligible share'
+    determinism: physical
+    name: Gold Standard eligible credits
+    priority: P2
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    source: The coupling build (batch 97)
+    status: existing
+    type: float
+    unit: MtCO2/year
+    users:
+    - Planners
+    - Regulators
+  gs_eligible_share:
+    category: Macro
+    default: 0.9
+    description: Share of project abatement that meets the Gold Standard methodology.
+    determinism: fixed
+    name: Gold Standard eligible share
     priority: P2
     range:
     - 0.0
@@ -19148,6 +19568,24 @@ parameters:
     users:
     - Regulators
     - Planners
+  inclusion_composite_index:
+    category: Macro
+    description: Equal-weight mean of the digital divide, gender impact, grievance redress effectiveness
+      and ecosystem services indices.
+    determinism: physical
+    name: Inclusion composite
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: derived
+    source: The coupling build (batch 96)
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   income_elasticity:
     categories: []
     category: Macro
@@ -19688,6 +20126,42 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  insurance_cover_ratio:
+    category: Macro
+    description: Total cover over insured asset value; at defaults 0.3.
+    determinism: physical
+    name: Insurance cover ratio
+    priority: P2
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    source: The coupling build (batch 96)
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
+  insurance_cover_total_usd:
+    category: Macro
+    description: Sum of the cover limits for business interruption, liability and catastrophe cover, in
+      US dollars. The three nodes were firm-specific stubs at 500000 with no unit; read here as policy
+      limits.
+    determinism: physical
+    name: Total insurance cover
+    priority: P2
+    range:
+    - 0.0
+    - 3000000.0
+    role: derived
+    source: The coupling build (batch 96)
+    status: existing
+    type: float
+    unit: USD
+    users:
+    - Planners
+    - Regulators
   insurance_loss_share_of_cost:
     categories: []
     category: Insurance & Catastrophe
@@ -19774,6 +20248,24 @@ parameters:
     unit: USD million
     users:
     - Financiers
+    - Regulators
+  insured_asset_value_usd:
+    category: Macro
+    default: 5000000.0
+    description: Replacement value of the insured assets, in US dollars. 5e6 at defaults.
+    determinism: fixed
+    name: Insured asset value
+    priority: P2
+    range:
+    - 1.0
+    - 1000000000000000.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: USD
+    users:
+    - Planners
     - Regulators
   interannual_variability:
     name: Interannual variability
@@ -20356,6 +20848,42 @@ parameters:
     status: existing
     type: float
     unit: USD/year
+    users:
+    - Planners
+    - Regulators
+  itmo_price_usd_per_mtco2:
+    category: Macro
+    default: 15000000.0
+    description: Price of a transferred outcome, in USD per MtCO2.
+    determinism: fixed
+    name: ITMO price
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: USD/MtCO2
+    users:
+    - Planners
+    - Regulators
+  itmo_volume_mtco2_per_year:
+    category: Macro
+    default: 0.5
+    description: Annual internationally transferred mitigation outcomes sold, in MtCO2.
+    determinism: fixed
+    name: ITMO volume
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: MtCO2/year
     users:
     - Planners
     - Regulators
@@ -22013,7 +22541,7 @@ parameters:
     status: to_build
     subcategory: null
     type: float
-    unit: '1'
+    unit: USD
     users:
     - Insurance
   licence_conditions:
@@ -22268,6 +22796,24 @@ parameters:
     users:
     - Planners
     - Regulators
+  line_outage_capacity_mw:
+    category: Macro
+    default: 100.0
+    description: Transfer capacity lost while the line is out, in MW. 100 at defaults.
+    determinism: fixed
+    name: Line capacity out
+    priority: P2
+    range:
+    - 0.0
+    - 100000.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: MW
+    users:
+    - Planners
+    - Regulators
   line_outage_duration:
     categories: []
     category: Outage
@@ -22292,6 +22838,24 @@ parameters:
     users:
     - Planners
     - Financial analysts
+  line_outage_duration_hours:
+    category: Macro
+    description: 'Hours the line is out: end minus start of the window. An identity on the two hours-of-year
+      indices; it does not drive the solver, which ignores a dynamic active flag.'
+    determinism: physical
+    name: Line outage duration
+    priority: P2
+    range:
+    - -8760.0
+    - 8760.0
+    role: derived
+    source: The coupling build (batch 96)
+    status: existing
+    type: float
+    unit: hours
+    users:
+    - Planners
+    - Regulators
   line_outage_end:
     name: Line outage end
     description: 'When a line outage ends, as an hour of the year. Declared as a number of hours rather
@@ -22323,6 +22887,24 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  line_outage_energy_lost_mwh:
+    category: Macro
+    description: 'Capacity-hours not available over the outage window: capacity out times duration, an
+      upper bound on energy not carried.'
+    determinism: physical
+    name: Transfer capacity-hours lost
+    priority: P2
+    range:
+    - -1000000000.0
+    - 1000000000.0
+    role: derived
+    source: The coupling build (batch 96)
+    status: existing
+    type: float
+    unit: MWh
+    users:
+    - Planners
+    - Regulators
   line_outage_hours_per_year:
     category: Reliability
     description: 'line outage hours per year: the coupling''s derived quantity, so a scenario''s dial
@@ -23811,6 +24393,42 @@ parameters:
     unit: hours
     users:
     - Utilities
+  mechanism_credit_revenue_usd_per_year:
+    category: Macro
+    default: 5000000.0
+    description: Annual revenue from Article 6.4 credits, in US dollars.
+    determinism: fixed
+    name: Mechanism credit revenue
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: USD/year
+    users:
+    - Planners
+    - Regulators
+  mechanism_levy_share:
+    category: Macro
+    default: 0.07
+    description: Share of proceeds withheld by the mechanism (adaptation share and cancellation).
+    determinism: fixed
+    name: Mechanism levy share
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   merchant_volume_mwh_per_year:
     category: Macro
     default: 2000000.0
@@ -24617,22 +25235,62 @@ parameters:
     - Health
     source: 'WHO (2020) GHE technical paper WHO/DDI/DNA/GHE/2020.3. Local copy: sources/archive/who_ghe2019_daly_methods.pdf.
       The default is a stated assumption, not a measured figure.'
-  mrv_parameters:
-    name: Mrv parameters
-    description: MRV
-    category: Carbon
-    type: float
+  mrv_cost_usd_per_mtco2:
+    category: Macro
+    default: 500000.0
+    description: Cost of monitoring and verifying one MtCO2, in USD.
+    determinism: fixed
+    name: MRV cost
+    priority: P2
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 1000000000000000.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: USD/MtCO2
+    users:
+    - Planners
+    - Regulators
+  mrv_cost_usd_per_year:
+    category: Macro
+    description: 'Annual monitoring and verification cost: the flag times abatement times the unit cost'
+    determinism: physical
+    name: MRV cost
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: derived
+    source: The coupling build (batch 97)
+    status: existing
+    type: float
+    unit: USD/year
+    users:
+    - Planners
+    - Regulators
+  mrv_parameters:
+    name: Mrv parameters
+    description: 'Whether a monitoring, reporting and verification system is in place. Retyped in batch
+      97 from the 500000 placeholder to a 0/1 flag: whether this module or instrument is in use. The catalog
+      row named a parameter set, not a quantity; the flag is its presence, and it gates one stated-assumption
+      quantity.'
+    category: Carbon
+    type: bool
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    role: exogenous
     determinism: fixed
     priority: P1
     status: to_build
     users:
     - Carbon
-    source: docs/params.md
+    source: Batch 97 retype of a catalog placeholder to a 0/1 presence flag; docs/params.md row kept as
+      the name.
   mwh_per_ammonia_unit:
     categories: []
     category: Cost
@@ -27996,22 +28654,44 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
-  ppa_curtailment_compensation:
-    name: Ppa curtailment compensation
-    description: Curtailment compensation
-    category: Contract
-    type: float
+  ppa_curtailed_energy_mwh_per_year:
+    category: Macro
+    default: 50000.0
+    description: Annual energy curtailed at the offtaker request, in MWh.
+    determinism: fixed
+    name: PPA curtailed energy
+    priority: P2
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 1000000000000000.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: MWh/year
+    users:
+    - Planners
+    - Regulators
+  ppa_curtailment_compensation:
+    name: Ppa curtailment compensation
+    description: 'Whether the offtaker compensates curtailment. Retyped in batch 97 from the 500000 placeholder
+      to a 0/1 flag: whether this module or instrument is in use. The catalog row named a parameter set,
+      not a quantity; the flag is its presence, and it gates one stated-assumption quantity.'
+    category: Contract
+    type: bool
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    role: exogenous
     determinism: fixed
     priority: P2
     status: to_build
     users:
     - Developers
-    source: docs/params.md
+    source: Batch 97 retype of a catalog placeholder to a 0/1 presence flag; docs/params.md row kept as
+      the name.
   ppa_dispute_resolution:
     name: Ppa dispute resolution
     description: 'Which forum resolves a PPA dispute. The sibling of `dispute_resolution_mechanism` with
@@ -28063,6 +28743,24 @@ parameters:
     unit: years
     users:
     - Developers
+  ppa_energy_price_usd_per_mwh:
+    category: Macro
+    default: 60.0
+    description: Contract price paid on compensated energy, USD/MWh.
+    determinism: fixed
+    name: PPA energy price
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: USD/MWh
+    users:
+    - Planners
+    - Regulators
   ppa_force_majeure:
     name: Ppa force majeure
     description: Whether the PPA carries a force-majeure clause. Catalog 'Force majeure' -- a clause.
@@ -28703,6 +29401,24 @@ parameters:
     users:
     - Financiers
     - Insurers
+  project_abatement_mtco2_per_year:
+    category: Macro
+    default: 0.5
+    description: Annual emission reduction of the project, in MtCO2.
+    determinism: fixed
+    name: Project abatement
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: MtCO2/year
+    users:
+    - Planners
+    - Regulators
   project_delay_cost_usd_per_year:
     category: Macro
     default: 10000000.0
@@ -29470,22 +30186,61 @@ parameters:
     type: float
     unit: USD/MWh
     users: []
-  refinancing_terms:
-    name: Refinancing terms
-    description: Refinancing
-    category: Contract
-    type: float
+  refinancing_saving_share:
+    category: Macro
+    default: 0.1
+    description: Share of interest saved by refinancing.
+    determinism: fixed
+    name: Refinancing saving
+    priority: P2
     range:
     - 0.0
-    - 1000000.0
-    default: 500000.0
-    role: free
+    - 1.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
+  refinancing_saving_usd_per_year:
+    category: Macro
+    description: 'Interest saved: the flag times interest expense times the saving share'
+    determinism: physical
+    name: Refinancing saving
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000000.0
+    role: derived
+    source: The coupling build (batch 97)
+    status: existing
+    type: float
+    unit: USD/year
+    users:
+    - Planners
+    - Regulators
+  refinancing_terms:
+    name: Refinancing terms
+    description: 'Whether the debt is refinanced. Retyped in batch 97 from the 500000 placeholder to a
+      0/1 flag: whether this module or instrument is in use. The catalog row named a parameter set, not
+      a quantity; the flag is its presence, and it gates one stated-assumption quantity.'
+    category: Contract
+    type: bool
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    role: exogenous
     determinism: fixed
     priority: P2
     status: to_build
     users:
     - Banks
-    source: docs/params.md
+    source: Batch 97 retype of a catalog placeholder to a 0/1 presence flag; docs/params.md row kept as
+      the name.
   regulated_tariff_rate:
     category: Cost
     description: 'regulated tariff rate: the extensive-base coupling''s derived quantity. The regulated
@@ -34040,6 +34795,24 @@ parameters:
     unit: '1'
     users:
     - Policymakers
+  supply_security_composite:
+    category: Macro
+    description: Equal-weight mean of the energy security index and the complements of critical mineral
+      dependence, rare earth dependence and physical risk.
+    determinism: physical
+    name: Supply security composite
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: derived
+    source: The coupling build (batch 96)
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
   switching_relief_share:
     category: Macro
     default: 0.05
@@ -36486,22 +37259,61 @@ parameters:
     unit: '1'
     users:
     - Developers
-  vcs_methodologies:
-    name: Vcs methodologies
-    description: VCS
-    category: Carbon
-    type: float
+  vcs_eligible_credits_mtco2_per_year:
+    category: Macro
+    description: 'Credits issuable under VCS: the flag times abatement times the eligible share'
+    determinism: physical
+    name: VCS eligible credits
+    priority: P2
     range:
     - 0.0
     - 1000000.0
-    default: 500000.0
-    role: free
+    role: derived
+    source: The coupling build (batch 97)
+    status: existing
+    type: float
+    unit: MtCO2/year
+    users:
+    - Planners
+    - Regulators
+  vcs_eligible_share:
+    category: Macro
+    default: 0.9
+    description: Share of project abatement that meets the VCS methodology.
+    determinism: fixed
+    name: VCS eligible share
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    source: Stated assumption for the default; the default is a stated assumption
+    status: existing
+    type: float
+    unit: '1'
+    users:
+    - Planners
+    - Regulators
+  vcs_methodologies:
+    name: Vcs methodologies
+    description: 'Whether a VCS methodology applies. Retyped in batch 97 from the 500000 placeholder to
+      a 0/1 flag: whether this module or instrument is in use. The catalog row named a parameter set,
+      not a quantity; the flag is its presence, and it gates one stated-assumption quantity.'
+    category: Carbon
+    type: bool
+    unit: '1'
+    range:
+    - 0.0
+    - 1.0
+    default: 0.0
+    role: exogenous
     determinism: fixed
     priority: P2
     status: to_build
     users:
     - Carbon
-    source: docs/params.md
+    source: Batch 97 retype of a catalog placeholder to a 0/1 presence flag; docs/params.md row kept as
+      the name.
   virtual_bid_volume_mw:
     category: Macro
     default: 100.0
@@ -37575,6 +38387,61 @@ parameters:
     subcategory: null
     type: float
     unit: USD/year
+    users:
+    - Planners
+    - Regulators
+  weibull_hazard_per_year:
+    category: Macro
+    description: 'Failure hazard at the asset age: (beta/eta)(t/eta)^(beta-1).'
+    determinism: physical
+    name: Weibull hazard rate
+    priority: P2
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    source: The coupling build (batch 96)
+    status: existing
+    type: float
+    unit: 1/year
+    users:
+    - Planners
+    - Regulators
+  weibull_scale_years:
+    category: Macro
+    default: 25.0
+    description: 'Characteristic life of the asset, in years: the age by which 63.2 percent have failed.
+      25 at defaults.'
+    determinism: fixed
+    name: Weibull scale life
+    priority: P2
+    range:
+    - 0.1
+    - 200.0
+    role: exogenous
+    source: Stated assumption; Weibull (1951) scale parameter; the default is a stated assumption
+    status: existing
+    type: float
+    unit: years
+    users:
+    - Planners
+    - Regulators
+  weibull_shape_beta:
+    category: Macro
+    description: 'Weibull shape parameter from the shape index: 1 + failure_rate_curve / 2, so 0 gives
+      the exponential (beta 1) and 2 gives beta 2, the wear-out Rayleigh case. The bathtub index 1 gives
+      1.5, a convention, since a single Weibull cannot be a bathtub.'
+    determinism: physical
+    name: Weibull shape
+    priority: P2
+    range:
+    - 1.0
+    - 3.0
+    role: derived
+    source: The coupling build (batch 96)
+    status: existing
+    type: float
+    unit: '1'
     users:
     - Planners
     - Regulators
@@ -38734,6 +39601,30 @@ equations:
     system: financial
     tolerance: 1.0e-06
     unit_check: true
+  adaptation_loss_avoided_usd_per_year_definition:
+    description: Loss avoided. Zero when the flag is off.
+    determined_variables:
+    - adaptation_loss_avoided_usd_per_year
+    free_variables: []
+    latex: \mathrm{adaptation\_loss\_avoided\_usd\_per\_year} = \mathrm{adaptation\_measures} \times \mathrm{adaptation\_exposure\_usd\_per\_year}
+      \times \mathrm{adaptation\_avoided\_share}
+    lhs: adaptation_loss_avoided_usd_per_year
+    linearity: linear
+    name: Adaptation loss avoided
+    parameters:
+    - adaptation_loss_avoided_usd_per_year
+    - adaptation_measures
+    - adaptation_exposure_usd_per_year
+    - adaptation_avoided_share
+    priority: P2
+    reference: Definition of a gating switch (0 or 1) on an exposure; the exposure and the share are stated
+      assumptions, not measurements
+    relation: eq
+    rhs: adaptation_measures * adaptation_exposure_usd_per_year * adaptation_avoided_share
+    solution_method: direct
+    system: financial
+    tolerance: 1.0e-09
+    unit_check: true
   adaptation_net_benefit_definition:
     description: Net benefit is avoided damage less programme cost, both in USD per year.
     determined_variables:
@@ -39219,6 +40110,54 @@ equations:
     rhs: arrears_management * arrears_balance_usd * arrears_recovery_share
     solution_method: direct
     system: financial
+    tolerance: 1.0e-09
+    unit_check: true
+  article_6_2_revenue_usd_per_year_definition:
+    description: Revenue from bilateral transfers. Zero when the flag is off.
+    determined_variables:
+    - article_6_2_revenue_usd_per_year
+    free_variables: []
+    latex: \mathrm{article\_6\_2\_revenue\_usd\_per\_year} = \mathrm{article\_6\_2\_parameters} \times
+      \mathrm{itmo\_volume\_mtco2\_per\_year} \times \mathrm{itmo\_price\_usd\_per\_mtco2}
+    lhs: article_6_2_revenue_usd_per_year
+    linearity: linear
+    name: Article 6.2 revenue
+    parameters:
+    - article_6_2_revenue_usd_per_year
+    - article_6_2_parameters
+    - itmo_volume_mtco2_per_year
+    - itmo_price_usd_per_mtco2
+    priority: P2
+    reference: Definition of a gating switch (0 or 1) on an exposure; the exposure and the share are stated
+      assumptions, not measurements
+    relation: eq
+    rhs: article_6_2_parameters * itmo_volume_mtco2_per_year * itmo_price_usd_per_mtco2
+    solution_method: direct
+    system: carbon_trajectory
+    tolerance: 1.0e-09
+    unit_check: true
+  article_6_4_levy_usd_per_year_definition:
+    description: Proceeds withheld. Zero when the flag is off.
+    determined_variables:
+    - article_6_4_levy_usd_per_year
+    free_variables: []
+    latex: \mathrm{article\_6\_4\_levy\_usd\_per\_year} = \mathrm{article\_6\_4\_parameters} \times \mathrm{mechanism\_credit\_revenue\_usd\_per\_year}
+      \times \mathrm{mechanism\_levy\_share}
+    lhs: article_6_4_levy_usd_per_year
+    linearity: linear
+    name: Article 6.4 levy
+    parameters:
+    - article_6_4_levy_usd_per_year
+    - article_6_4_parameters
+    - mechanism_credit_revenue_usd_per_year
+    - mechanism_levy_share
+    priority: P2
+    reference: Definition of a gating switch (0 or 1) on an exposure; the exposure and the share are stated
+      assumptions, not measurements
+    relation: eq
+    rhs: article_6_4_parameters * mechanism_credit_revenue_usd_per_year * mechanism_levy_share
+    solution_method: direct
+    system: carbon_trajectory
     tolerance: 1.0e-09
     unit_check: true
   article_6_credits_definition:
@@ -40593,6 +41532,30 @@ equations:
     system: financial
     tolerance: 1.0e-09
     unit_check: true
+  cat_bond_expected_transfer_usd_definition:
+    description: Expected annual loss transferred. Zero when the flag is off.
+    determined_variables:
+    - cat_bond_expected_transfer_usd
+    free_variables: []
+    latex: \mathrm{cat\_bond\_expected\_transfer\_usd} = \mathrm{cat\_bond\_parameters} \times \mathrm{cat\_bond\_limit\_usd}
+      \times \mathrm{cat\_bond\_trigger\_probability}
+    lhs: cat_bond_expected_transfer_usd
+    linearity: linear
+    name: Cat bond expected loss transferred
+    parameters:
+    - cat_bond_expected_transfer_usd
+    - cat_bond_parameters
+    - cat_bond_limit_usd
+    - cat_bond_trigger_probability
+    priority: P2
+    reference: Definition of a gating switch (0 or 1) on an exposure; the exposure and the share are stated
+      assumptions, not measurements
+    relation: eq
+    rhs: cat_bond_parameters * cat_bond_limit_usd * cat_bond_trigger_probability
+    solution_method: direct
+    system: financial
+    tolerance: 1.0e-09
+    unit_check: true
   cbam_price_applied_definition:
     description: 'The applied border price: the mechanism''s switch times the price it charges. Zero flag
       means the export''s carbon carries no border cost; one means the full allowance price.'
@@ -40639,6 +41602,30 @@ equations:
     rhs: condition_based_maintenance * scheduled_maintenance_cost_usd_per_year * cbm_saving_share
     solution_method: direct
     system: cost_accounting
+    tolerance: 1.0e-09
+    unit_check: true
+  cdm_eligible_credits_mtco2_per_year_definition:
+    description: Credits issuable under CDM. Zero when the flag is off.
+    determined_variables:
+    - cdm_eligible_credits_mtco2_per_year
+    free_variables: []
+    latex: \mathrm{cdm\_eligible\_credits\_mtco2\_per\_year} = \mathrm{cdm\_methodologies} \times \mathrm{project\_abatement\_mtco2\_per\_year}
+      \times \mathrm{cdm\_eligible\_share}
+    lhs: cdm_eligible_credits_mtco2_per_year
+    linearity: linear
+    name: CDM eligible credits
+    parameters:
+    - cdm_eligible_credits_mtco2_per_year
+    - cdm_methodologies
+    - project_abatement_mtco2_per_year
+    - cdm_eligible_share
+    priority: P2
+    reference: Definition of a gating switch (0 or 1) on an exposure; the exposure and the share are stated
+      assumptions, not measurements
+    relation: eq
+    rhs: cdm_methodologies * project_abatement_mtco2_per_year * cdm_eligible_share
+    solution_method: direct
+    system: carbon_trajectory
     tolerance: 1.0e-09
     unit_check: true
   cfads_definition:
@@ -41294,6 +42281,30 @@ equations:
     system: demand_supply
     tolerance: 1.0e-09
     unit_check: true
+  collateral_haircut_usd_definition:
+    description: Value deducted. Zero when the flag is off.
+    determined_variables:
+    - collateral_haircut_usd
+    free_variables: []
+    latex: \mathrm{collateral\_haircut\_usd} = \mathrm{collateral\_valuation} \times \mathrm{collateral\_value\_usd}
+      \times \mathrm{collateral\_haircut}
+    lhs: collateral_haircut_usd
+    linearity: linear
+    name: Collateral haircut
+    parameters:
+    - collateral_haircut_usd
+    - collateral_valuation
+    - collateral_value_usd
+    - collateral_haircut
+    priority: P2
+    reference: Definition of a gating switch (0 or 1) on an exposure; the exposure and the share are stated
+      assumptions, not measurements
+    relation: eq
+    rhs: collateral_valuation * collateral_value_usd * collateral_haircut
+    solution_method: direct
+    system: financial
+    tolerance: 1.0e-09
+    unit_check: true
   collateral_posted_definition:
     description: 'The security provisioned annually: the share of the revenue requirement the regulator''s
       accounts state.'
@@ -41555,6 +42566,31 @@ equations:
     rhs: compensation_share_of_market * land_acquisition_cost_per_hectare
     solution_method: direct
     system: cost_accounting
+    tolerance: 1.0e-09
+    unit_check: true
+  competitiveness_composite_definition:
+    description: Equal-weight arithmetic mean of three [0, 1] indices.
+    determined_variables:
+    - competitiveness_composite
+    free_variables: []
+    latex: \mathrm{competitiveness\_composite} = (\mathrm{export\_competitiveness} + \mathrm{efficiency\_benchmarking}
+      + \mathrm{resilience\_score}) / 3
+    lhs: competitiveness_composite
+    linearity: linear
+    name: Competitiveness composite
+    parameters:
+    - competitiveness_composite
+    - export_competitiveness
+    - efficiency_benchmarking
+    - resilience_score
+    priority: P2
+    reference: 'OECD and JRC (2008), Handbook on Constructing Composite Indicators: Methodology and User
+      Guide, section 6.3 (equal weighting as the default absent evidence for weights). Weights here are
+      equal by that convention, not estimated.'
+    relation: eq
+    rhs: (export_competitiveness + efficiency_benchmarking + resilience_score) / 3
+    solution_method: direct
+    system: price_demand
     tolerance: 1.0e-09
     unit_check: true
   complaint_handling_spend_definition:
@@ -42003,6 +43039,28 @@ equations:
     rhs: tax_rate
     solution_method: direct
     system: financial
+    tolerance: 1.0e-09
+    unit_check: true
+  corsia_eligible_demand_mtco2_per_year_definition:
+    description: Offset demand the project can serve. Zero when the flag is off.
+    determined_variables:
+    - corsia_eligible_demand_mtco2_per_year
+    free_variables: []
+    latex: \mathrm{corsia\_eligible\_demand\_mtco2\_per\_year} = \mathrm{corsia\_parameters} \times \mathrm{aviation\_offset\_demand\_mtco2\_per\_year}
+    lhs: corsia_eligible_demand_mtco2_per_year
+    linearity: linear
+    name: CORSIA eligible demand
+    parameters:
+    - corsia_eligible_demand_mtco2_per_year
+    - corsia_parameters
+    - aviation_offset_demand_mtco2_per_year
+    priority: P2
+    reference: Definition of a gating switch (0 or 1) on an exposure; the exposure and the share are stated
+      assumptions, not measurements
+    relation: eq
+    rhs: corsia_parameters * aviation_offset_demand_mtco2_per_year
+    solution_method: direct
+    system: carbon_trajectory
     tolerance: 1.0e-09
     unit_check: true
   cost_of_debt_capped:
@@ -42785,6 +43843,30 @@ equations:
     rhs: goods_services_balance - external_debt_interest_usd + official_development_assistance
     solution_method: direct
     system: financial
+    tolerance: 1.0e-09
+    unit_check: true
+  curtailment_compensation_usd_per_year_definition:
+    description: Compensation paid. Zero when the flag is off.
+    determined_variables:
+    - curtailment_compensation_usd_per_year
+    free_variables: []
+    latex: \mathrm{curtailment\_compensation\_usd\_per\_year} = \mathrm{ppa\_curtailment\_compensation}
+      \times \mathrm{ppa\_curtailed\_energy\_mwh\_per\_year} \times \mathrm{ppa\_energy\_price\_usd\_per\_mwh}
+    lhs: curtailment_compensation_usd_per_year
+    linearity: linear
+    name: Curtailment compensation
+    parameters:
+    - curtailment_compensation_usd_per_year
+    - ppa_curtailment_compensation
+    - ppa_curtailed_energy_mwh_per_year
+    - ppa_energy_price_usd_per_mwh
+    priority: P2
+    reference: Definition of a gating switch (0 or 1) on an exposure; the exposure and the share are stated
+      assumptions, not measurements
+    relation: eq
+    rhs: ppa_curtailment_compensation * ppa_curtailed_energy_mwh_per_year * ppa_energy_price_usd_per_mwh
+    solution_method: direct
+    system: ppa_pricing
     tolerance: 1.0e-09
     unit_check: true
   customs_duty_alias:
@@ -44886,6 +45968,34 @@ equations:
     system: financial
     tolerance: 1.0e-09
     unit_check: true
+  exchange_rate_stress_definition:
+    description: Lognormal quantile S_q = S_0 exp(z_q sigma T) at a horizon of one year the zero-drift
+      quantile of geometric Brownian motion. The unit checker cannot carry the sqrt(T) of a diffusion
+      with sigma in year^-1/2, so the horizon enters linearly, which overstates the bound for T above
+      one year.
+    determined_variables:
+    - exchange_rate_stress_usd_local
+    free_variables: []
+    latex: \mathrm{exchange\_rate\_stress\_usd\_local} = \mathrm{exchange\_rate\_usd\_local} \times \exp(\mathrm{fx\_quantile\_95}
+      \times \mathrm{exchange\_rate\_volatility} \times \mathrm{fx\_horizon\_years})
+    lhs: exchange_rate_stress_usd_local
+    linearity: nonlinear
+    name: Stressed exchange rate
+    parameters:
+    - exchange_rate_stress_usd_local
+    - exchange_rate_usd_local
+    - fx_quantile_95
+    - exchange_rate_volatility
+    - fx_horizon_years
+    priority: P2
+    reference: Hull, J.C. (2018), Options, Futures, and Other Derivatives, 10th ed., Pearson, section
+      15.3 (lognormal property of stock prices); applied here to an exchange rate
+    relation: eq
+    rhs: exchange_rate_usd_local * exp(fx_quantile_95 * exchange_rate_volatility * fx_horizon_years)
+    solution_method: direct
+    system: financial
+    tolerance: 1.0e-09
+    unit_check: true
   expected_default_acceleration_usd_definition:
     description: Expected debt accelerated by a default event. Zero when the flag is off.
     determined_variables:
@@ -46645,6 +47755,30 @@ equations:
     system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
+  gs_eligible_credits_mtco2_per_year_definition:
+    description: Credits issuable under Gold Standard. Zero when the flag is off.
+    determined_variables:
+    - gs_eligible_credits_mtco2_per_year
+    free_variables: []
+    latex: \mathrm{gs\_eligible\_credits\_mtco2\_per\_year} = \mathrm{gold\_standard\_methodologies} \times
+      \mathrm{project\_abatement\_mtco2\_per\_year} \times \mathrm{gs\_eligible\_share}
+    lhs: gs_eligible_credits_mtco2_per_year
+    linearity: linear
+    name: Gold Standard eligible credits
+    parameters:
+    - gs_eligible_credits_mtco2_per_year
+    - gold_standard_methodologies
+    - project_abatement_mtco2_per_year
+    - gs_eligible_share
+    priority: P2
+    reference: Definition of a gating switch (0 or 1) on an exposure; the exposure and the share are stated
+      assumptions, not measurements
+    relation: eq
+    rhs: gold_standard_methodologies * project_abatement_mtco2_per_year * gs_eligible_share
+    solution_method: direct
+    system: carbon_trajectory
+    tolerance: 1.0e-09
+    unit_check: true
   habitat_loss_alias:
     description: 'The habitat lost, in hectares: the extensive node under the catalog''s second id. A
       second id for one survey is a second id, not a second measurement.'
@@ -47411,6 +48545,33 @@ equations:
     system: reliability
     tolerance: 1.0e-09
     unit_check: true
+  inclusion_composite_definition:
+    description: Equal-weight arithmetic mean of four [0, 1] indices.
+    determined_variables:
+    - inclusion_composite_index
+    free_variables: []
+    latex: \mathrm{inclusion\_composite\_index} = (\mathrm{digital\_divide\_metrics} + \mathrm{gender\_impact}
+      + \mathrm{grievance\_redress\_effectiveness} + \mathrm{ecosystem\_services\_index}) / 4
+    lhs: inclusion_composite_index
+    linearity: linear
+    name: Inclusion composite
+    parameters:
+    - inclusion_composite_index
+    - digital_divide_metrics
+    - gender_impact
+    - grievance_redress_effectiveness
+    - ecosystem_services_index
+    priority: P2
+    reference: 'OECD and JRC (2008), Handbook on Constructing Composite Indicators: Methodology and User
+      Guide, section 6.3 (equal weighting as the default absent evidence for weights). Weights here are
+      equal by that convention, not estimated.'
+    relation: eq
+    rhs: (digital_divide_metrics + gender_impact + grievance_redress_effectiveness + ecosystem_services_index)
+      / 4
+    solution_method: direct
+    system: employment
+    tolerance: 1.0e-09
+    unit_check: true
   independently_verified_accounts_definition:
     description: 'The audited accounts the regulator requires independently verified: the share times
       the annual audit sample.'
@@ -47689,6 +48850,50 @@ equations:
     solution_method: direct
     system: financial
     tolerance: 1.0e-06
+    unit_check: true
+  insurance_cover_ratio_definition:
+    description: Total limit over asset value.
+    determined_variables:
+    - insurance_cover_ratio
+    free_variables: []
+    latex: \mathrm{insurance\_cover\_ratio} = \mathrm{insurance\_cover\_total\_usd} / \mathrm{insured\_asset\_value\_usd}
+    lhs: insurance_cover_ratio
+    linearity: linear
+    name: Insurance cover ratio
+    parameters:
+    - insurance_cover_ratio
+    - insurance_cover_total_usd
+    - insured_asset_value_usd
+    priority: P2
+    reference: Definition of a coverage ratio
+    relation: eq
+    rhs: insurance_cover_total_usd / insured_asset_value_usd
+    solution_method: direct
+    system: financial
+    tolerance: 1.0e-09
+    unit_check: true
+  insurance_cover_total_definition:
+    description: Cover limits add across policies.
+    determined_variables:
+    - insurance_cover_total_usd
+    free_variables: []
+    latex: \mathrm{insurance\_cover\_total\_usd} = \mathrm{business\_interruption} + \mathrm{liability\_exposure}
+      + \mathrm{catastrophe\_modelling}
+    lhs: insurance_cover_total_usd
+    linearity: linear
+    name: Total insurance cover
+    parameters:
+    - insurance_cover_total_usd
+    - business_interruption
+    - liability_exposure
+    - catastrophe_modelling
+    priority: P2
+    reference: Definition of aggregate limits across policies
+    relation: eq
+    rhs: business_interruption + liability_exposure + catastrophe_modelling
+    solution_method: direct
+    system: financial
+    tolerance: 1.0e-09
     unit_check: true
   insurance_premium_definition:
     description: 'The premium the fleet carries per kW-year, on the share-of-cost basis the insurance
@@ -49807,6 +51012,48 @@ equations:
     system: affordability
     tolerance: 1.0e-09
     unit_check: true
+  line_outage_duration_definition:
+    description: Window length is end minus start.
+    determined_variables:
+    - line_outage_duration_hours
+    free_variables: []
+    latex: \mathrm{line\_outage\_duration\_hours} = \mathrm{line\_outage\_end} - \mathrm{line\_outage\_start}
+    lhs: line_outage_duration_hours
+    linearity: linear
+    name: Line outage duration
+    parameters:
+    - line_outage_duration_hours
+    - line_outage_end
+    - line_outage_start
+    priority: P2
+    reference: Definition of an interval length
+    relation: eq
+    rhs: line_outage_end - line_outage_start
+    solution_method: direct
+    system: reliability
+    tolerance: 1.0e-09
+    unit_check: true
+  line_outage_energy_lost_definition:
+    description: Capacity times duration.
+    determined_variables:
+    - line_outage_energy_lost_mwh
+    free_variables: []
+    latex: \mathrm{line\_outage\_energy\_lost\_mwh} = \mathrm{line\_outage\_capacity\_mw} \times \mathrm{line\_outage\_duration\_hours}
+    lhs: line_outage_energy_lost_mwh
+    linearity: linear
+    name: Transfer capacity-hours lost
+    parameters:
+    - line_outage_energy_lost_mwh
+    - line_outage_capacity_mw
+    - line_outage_duration_hours
+    priority: P2
+    reference: Definition of energy as power times time
+    relation: eq
+    rhs: line_outage_capacity_mw * line_outage_duration_hours
+    solution_method: direct
+    system: reliability
+    tolerance: 1.0e-09
+    unit_check: true
   line_outage_hours_per_year_definition:
     description: 'Hours per year the line spends out: expected events times the mean event duration, the
       line-level figure of the same form the SAIDI sum takes at system level.'
@@ -50796,6 +52043,30 @@ equations:
     rhs: mobile_coverage * population_total
     solution_method: direct
     system: financial
+    tolerance: 1.0e-09
+    unit_check: true
+  mrv_cost_usd_per_year_definition:
+    description: Annual monitoring and verification cost. Zero when the flag is off.
+    determined_variables:
+    - mrv_cost_usd_per_year
+    free_variables: []
+    latex: \mathrm{mrv\_cost\_usd\_per\_year} = \mathrm{mrv\_parameters} \times \mathrm{project\_abatement\_mtco2\_per\_year}
+      \times \mathrm{mrv\_cost\_usd\_per\_mtco2}
+    lhs: mrv_cost_usd_per_year
+    linearity: linear
+    name: MRV cost
+    parameters:
+    - mrv_cost_usd_per_year
+    - mrv_parameters
+    - project_abatement_mtco2_per_year
+    - mrv_cost_usd_per_mtco2
+    priority: P2
+    reference: Definition of a gating switch (0 or 1) on an exposure; the exposure and the share are stated
+      assumptions, not measurements
+    relation: eq
+    rhs: mrv_parameters * project_abatement_mtco2_per_year * mrv_cost_usd_per_mtco2
+    solution_method: direct
+    system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
   netting_shortfall_definition:
@@ -52595,6 +53866,30 @@ equations:
     rhs: redeployment_options * direct_jobs
     solution_method: direct
     system: employment
+    tolerance: 1.0e-09
+    unit_check: true
+  refinancing_saving_usd_per_year_definition:
+    description: Interest saved. Zero when the flag is off.
+    determined_variables:
+    - refinancing_saving_usd_per_year
+    free_variables: []
+    latex: \mathrm{refinancing\_saving\_usd\_per\_year} = \mathrm{refinancing\_terms} \times \mathrm{interest\_expense\_usd\_per\_year}
+      \times \mathrm{refinancing\_saving\_share}
+    lhs: refinancing_saving_usd_per_year
+    linearity: linear
+    name: Refinancing saving
+    parameters:
+    - refinancing_saving_usd_per_year
+    - refinancing_terms
+    - interest_expense_usd_per_year
+    - refinancing_saving_share
+    priority: P2
+    reference: Definition of a gating switch (0 or 1) on an exposure; the exposure and the share are stated
+      assumptions, not measurements
+    relation: eq
+    rhs: refinancing_terms * interest_expense_usd_per_year * refinancing_saving_share
+    solution_method: direct
+    system: financial
     tolerance: 1.0e-09
     unit_check: true
   regulated_tariff_rate_definition:
@@ -54953,6 +56248,34 @@ equations:
     system: energy_balance
     tolerance: 1.0e-09
     unit_check: true
+  supply_security_composite_definition:
+    description: Equal-weight mean; dependence and risk enter as 1 minus the score so that higher is better
+      throughout.
+    determined_variables:
+    - supply_security_composite
+    free_variables: []
+    latex: \mathrm{supply\_security\_composite} = (\mathrm{energy\_security\_index} + (1 - \mathrm{critical\_mineral\_dependencies})
+      + (1 - \mathrm{rare\_earth\_dependencies}) + (1 - \mathrm{physical\_risk\_score})) / 4
+    lhs: supply_security_composite
+    linearity: linear
+    name: Supply security composite
+    parameters:
+    - supply_security_composite
+    - energy_security_index
+    - critical_mineral_dependencies
+    - rare_earth_dependencies
+    - physical_risk_score
+    priority: P2
+    reference: 'OECD and JRC (2008), Handbook on Constructing Composite Indicators: Methodology and User
+      Guide, section 6.3 (equal weighting as the default absent evidence for weights). Weights here are
+      equal by that convention, not estimated.'
+    relation: eq
+    rhs: (energy_security_index + (1 - critical_mineral_dependencies) + (1 - rare_earth_dependencies)
+      + (1 - physical_risk_score)) / 4
+    solution_method: direct
+    system: reliability
+    tolerance: 1.0e-09
+    unit_check: true
   synthetic_aviation_fuel_mwh_definition:
     description: 'Synthetic aviation fuel loaded in the year: the SAF share times aviation fuel demand.
       150,000 MWh at defaults, 5% of a 3 TWh market.'
@@ -56161,6 +57484,30 @@ equations:
     system: cost_accounting
     tolerance: 1.0e-09
     unit_check: true
+  vcs_eligible_credits_mtco2_per_year_definition:
+    description: Credits issuable under VCS. Zero when the flag is off.
+    determined_variables:
+    - vcs_eligible_credits_mtco2_per_year
+    free_variables: []
+    latex: \mathrm{vcs\_eligible\_credits\_mtco2\_per\_year} = \mathrm{vcs\_methodologies} \times \mathrm{project\_abatement\_mtco2\_per\_year}
+      \times \mathrm{vcs\_eligible\_share}
+    lhs: vcs_eligible_credits_mtco2_per_year
+    linearity: linear
+    name: VCS eligible credits
+    parameters:
+    - vcs_eligible_credits_mtco2_per_year
+    - vcs_methodologies
+    - project_abatement_mtco2_per_year
+    - vcs_eligible_share
+    priority: P2
+    reference: Definition of a gating switch (0 or 1) on an exposure; the exposure and the share are stated
+      assumptions, not measurements
+    relation: eq
+    rhs: vcs_methodologies * project_abatement_mtco2_per_year * vcs_eligible_share
+    solution_method: direct
+    system: carbon_trajectory
+    tolerance: 1.0e-09
+    unit_check: true
   virtual_volume_admitted_definition:
     description: Switch (0 or 1) times offered volume.
     determined_variables:
@@ -56713,6 +58060,53 @@ equations:
     rhs: weather_derivative_notional_share * total_revenue_usd_per_year
     solution_method: direct
     system: financial
+    tolerance: 1.0e-09
+    unit_check: true
+  weibull_hazard_definition:
+    description: Hazard of the two-parameter Weibull distribution.
+    determined_variables:
+    - weibull_hazard_per_year
+    free_variables: []
+    latex: \mathrm{weibull\_hazard\_per\_year} = \mathrm{weibull\_shape\_beta} / \mathrm{weibull\_scale\_years}
+      \times (\mathrm{asset\_age\_years} / \mathrm{weibull\_scale\_years}) \times\times (\mathrm{weibull\_shape\_beta}
+      - 1)
+    lhs: weibull_hazard_per_year
+    linearity: nonlinear
+    name: Weibull hazard rate
+    parameters:
+    - weibull_hazard_per_year
+    - weibull_shape_beta
+    - weibull_scale_years
+    - asset_age_years
+    priority: P2
+    reference: Weibull, W. (1951), Journal of Applied Mechanics 18, 293-297; Rausand, M. and Hoyland,
+      A. (2004), System Reliability Theory, 2nd ed., Wiley, section 2.3
+    relation: eq
+    rhs: weibull_shape_beta / weibull_scale_years * (asset_age_years / weibull_scale_years) ** (weibull_shape_beta
+      - 1)
+    solution_method: direct
+    system: reliability
+    tolerance: 1.0e-09
+    unit_check: true
+  weibull_shape_definition:
+    description: Linear map of the 0 to 2 shape index to beta between 1 and 2; a convention stated here.
+    determined_variables:
+    - weibull_shape_beta
+    free_variables: []
+    latex: \mathrm{weibull\_shape\_beta} = 1 + \mathrm{failure\_rate\_curve} / 2
+    lhs: weibull_shape_beta
+    linearity: linear
+    name: Weibull shape
+    parameters:
+    - weibull_shape_beta
+    - failure_rate_curve
+    priority: P2
+    reference: Weibull, W. (1951), A statistical distribution function of wide applicability, Journal
+      of Applied Mechanics 18, 293-297; the index mapping is a stated convention
+    relation: eq
+    rhs: 1 + failure_rate_curve / 2
+    solution_method: direct
+    system: reliability
     tolerance: 1.0e-09
     unit_check: true
   wheeling_charge_cost_definition:
@@ -70556,6 +71950,510 @@ relationships:
   strength: hard
   description: Enters the identity.
   reference: The coupling build (batch 95)
+  priority: P2
+- source: exchange_rate_usd_local
+  target: exchange_rate_stress_usd_local
+  equation_id: exchange_rate_stress_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: fx_quantile_95
+  target: exchange_rate_stress_usd_local
+  equation_id: exchange_rate_stress_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: exchange_rate_volatility
+  target: exchange_rate_stress_usd_local
+  equation_id: exchange_rate_stress_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: fx_horizon_years
+  target: exchange_rate_stress_usd_local
+  equation_id: exchange_rate_stress_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: business_interruption
+  target: insurance_cover_total_usd
+  equation_id: insurance_cover_total_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: liability_exposure
+  target: insurance_cover_total_usd
+  equation_id: insurance_cover_total_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: catastrophe_modelling
+  target: insurance_cover_total_usd
+  equation_id: insurance_cover_total_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: insurance_cover_total_usd
+  target: insurance_cover_ratio
+  equation_id: insurance_cover_ratio_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: insured_asset_value_usd
+  target: insurance_cover_ratio
+  equation_id: insurance_cover_ratio_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: failure_rate_curve
+  target: weibull_shape_beta
+  equation_id: weibull_shape_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: weibull_shape_beta
+  target: weibull_hazard_per_year
+  equation_id: weibull_hazard_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: weibull_scale_years
+  target: weibull_hazard_per_year
+  equation_id: weibull_hazard_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: asset_age_years
+  target: weibull_hazard_per_year
+  equation_id: weibull_hazard_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: line_outage_end
+  target: line_outage_duration_hours
+  equation_id: line_outage_duration_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: line_outage_start
+  target: line_outage_duration_hours
+  equation_id: line_outage_duration_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: line_outage_capacity_mw
+  target: line_outage_energy_lost_mwh
+  equation_id: line_outage_energy_lost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: line_outage_duration_hours
+  target: line_outage_energy_lost_mwh
+  equation_id: line_outage_energy_lost_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: digital_divide_metrics
+  target: inclusion_composite_index
+  equation_id: inclusion_composite_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: gender_impact
+  target: inclusion_composite_index
+  equation_id: inclusion_composite_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: grievance_redress_effectiveness
+  target: inclusion_composite_index
+  equation_id: inclusion_composite_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: ecosystem_services_index
+  target: inclusion_composite_index
+  equation_id: inclusion_composite_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: energy_security_index
+  target: supply_security_composite
+  equation_id: supply_security_composite_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: critical_mineral_dependencies
+  target: supply_security_composite
+  equation_id: supply_security_composite_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: rare_earth_dependencies
+  target: supply_security_composite
+  equation_id: supply_security_composite_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: physical_risk_score
+  target: supply_security_composite
+  equation_id: supply_security_composite_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: export_competitiveness
+  target: competitiveness_composite
+  equation_id: competitiveness_composite_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: efficiency_benchmarking
+  target: competitiveness_composite
+  equation_id: competitiveness_composite_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: resilience_score
+  target: competitiveness_composite
+  equation_id: competitiveness_composite_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 96)
+  priority: P2
+- source: article_6_2_parameters
+  target: article_6_2_revenue_usd_per_year
+  equation_id: article_6_2_revenue_usd_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: itmo_volume_mtco2_per_year
+  target: article_6_2_revenue_usd_per_year
+  equation_id: article_6_2_revenue_usd_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: itmo_price_usd_per_mtco2
+  target: article_6_2_revenue_usd_per_year
+  equation_id: article_6_2_revenue_usd_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: article_6_4_parameters
+  target: article_6_4_levy_usd_per_year
+  equation_id: article_6_4_levy_usd_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: mechanism_credit_revenue_usd_per_year
+  target: article_6_4_levy_usd_per_year
+  equation_id: article_6_4_levy_usd_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: mechanism_levy_share
+  target: article_6_4_levy_usd_per_year
+  equation_id: article_6_4_levy_usd_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: cat_bond_parameters
+  target: cat_bond_expected_transfer_usd
+  equation_id: cat_bond_expected_transfer_usd_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: cat_bond_limit_usd
+  target: cat_bond_expected_transfer_usd
+  equation_id: cat_bond_expected_transfer_usd_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: cat_bond_trigger_probability
+  target: cat_bond_expected_transfer_usd
+  equation_id: cat_bond_expected_transfer_usd_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: corsia_parameters
+  target: corsia_eligible_demand_mtco2_per_year
+  equation_id: corsia_eligible_demand_mtco2_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: aviation_offset_demand_mtco2_per_year
+  target: corsia_eligible_demand_mtco2_per_year
+  equation_id: corsia_eligible_demand_mtco2_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: cdm_methodologies
+  target: cdm_eligible_credits_mtco2_per_year
+  equation_id: cdm_eligible_credits_mtco2_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: project_abatement_mtco2_per_year
+  target: cdm_eligible_credits_mtco2_per_year
+  equation_id: cdm_eligible_credits_mtco2_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: cdm_eligible_share
+  target: cdm_eligible_credits_mtco2_per_year
+  equation_id: cdm_eligible_credits_mtco2_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: gold_standard_methodologies
+  target: gs_eligible_credits_mtco2_per_year
+  equation_id: gs_eligible_credits_mtco2_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: project_abatement_mtco2_per_year
+  target: gs_eligible_credits_mtco2_per_year
+  equation_id: gs_eligible_credits_mtco2_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: gs_eligible_share
+  target: gs_eligible_credits_mtco2_per_year
+  equation_id: gs_eligible_credits_mtco2_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: vcs_methodologies
+  target: vcs_eligible_credits_mtco2_per_year
+  equation_id: vcs_eligible_credits_mtco2_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: project_abatement_mtco2_per_year
+  target: vcs_eligible_credits_mtco2_per_year
+  equation_id: vcs_eligible_credits_mtco2_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: vcs_eligible_share
+  target: vcs_eligible_credits_mtco2_per_year
+  equation_id: vcs_eligible_credits_mtco2_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: mrv_parameters
+  target: mrv_cost_usd_per_year
+  equation_id: mrv_cost_usd_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: project_abatement_mtco2_per_year
+  target: mrv_cost_usd_per_year
+  equation_id: mrv_cost_usd_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: mrv_cost_usd_per_mtco2
+  target: mrv_cost_usd_per_year
+  equation_id: mrv_cost_usd_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: refinancing_terms
+  target: refinancing_saving_usd_per_year
+  equation_id: refinancing_saving_usd_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: interest_expense_usd_per_year
+  target: refinancing_saving_usd_per_year
+  equation_id: refinancing_saving_usd_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: refinancing_saving_share
+  target: refinancing_saving_usd_per_year
+  equation_id: refinancing_saving_usd_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: ppa_curtailment_compensation
+  target: curtailment_compensation_usd_per_year
+  equation_id: curtailment_compensation_usd_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: ppa_curtailed_energy_mwh_per_year
+  target: curtailment_compensation_usd_per_year
+  equation_id: curtailment_compensation_usd_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: ppa_energy_price_usd_per_mwh
+  target: curtailment_compensation_usd_per_year
+  equation_id: curtailment_compensation_usd_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: collateral_valuation
+  target: collateral_haircut_usd
+  equation_id: collateral_haircut_usd_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: collateral_value_usd
+  target: collateral_haircut_usd
+  equation_id: collateral_haircut_usd_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: collateral_haircut
+  target: collateral_haircut_usd
+  equation_id: collateral_haircut_usd_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: adaptation_measures
+  target: adaptation_loss_avoided_usd_per_year
+  equation_id: adaptation_loss_avoided_usd_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: adaptation_exposure_usd_per_year
+  target: adaptation_loss_avoided_usd_per_year
+  equation_id: adaptation_loss_avoided_usd_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
+  priority: P2
+- source: adaptation_avoided_share
+  target: adaptation_loss_avoided_usd_per_year
+  equation_id: adaptation_loss_avoided_usd_per_year_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 97)
   priority: P2
 - source: biomass_generation_twh
   target: fleet_generation_twh
