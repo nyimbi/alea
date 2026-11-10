@@ -118,3 +118,10 @@ models/
 # the PRG; git history is the backup.
 /config/prg_ingest/
 /data/prg-backup-*.yaml
+
+# Credentials. Never commit.
+.env
+.access_token
+
+# Mirrored GridWatch parquet (~19 GB); regenerate with scripts/download/gridwatch_ghana.py
+/docs/research/milestone-data/gridwatch-ghana/
