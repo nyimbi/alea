@@ -1570,9 +1570,8 @@ parameters:
     range:
     - -1000000000000.0
     - 1000000000000.0
-    default: 0.0
     initial: null
-    role: free
+    role: derived
     determinism: fixed
     categories: []
     source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
@@ -5711,6 +5710,26 @@ parameters:
     priority: P1
     status: to_build
     deprecated_by: null
+  coal_starts_per_year:
+    category: Supply
+    default: 50.0
+    description: Cold, warm and hot starts a coal unit makes in a year. 50 at defaults, a stated assumption
+      for a mid-merit unit.
+    determinism: fixed
+    name: Coal starts per year
+    priority: P2
+    range:
+    - 0.0
+    - 1000.0
+    role: exogenous
+    source: Assumption; Kumar et al., Power Plant Cycling Costs, NREL/SR-5500-55433 (2012) for per-start
+      costs
+    status: existing
+    type: float
+    unit: 1/year
+    users:
+    - Planners
+    - Regulators
   coastal_erosion:
     categories: []
     category: Adapt
@@ -8410,9 +8429,8 @@ parameters:
     range:
     - -1000000000000.0
     - 1000000000000.0
-    default: 0.0
     initial: null
-    role: free
+    role: derived
     determinism: fixed
     categories: []
     source: The placeholder survey (docs/research/placeholder-survey.md), section 2, which classifies
@@ -12634,6 +12652,43 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  external_debt_interest_rate:
+    category: Macro
+    default: 0.04
+    description: Average interest rate the sovereign pays on its external debt stock, per year. 4 percent
+      at defaults, a stated assumption.
+    determinism: fixed
+    name: External debt interest rate
+    priority: P2
+    range:
+    - 0.0
+    - 1.0
+    role: exogenous
+    source: Assumption; World Bank International Debt Statistics reports effective rates of 2 to 6 percent
+    status: existing
+    type: float
+    unit: 1/year
+    users:
+    - Planners
+    - Regulators
+  external_debt_interest_usd:
+    category: Macro
+    description: 'Interest paid on the external debt stock in the year: stock times rate. Primary income
+      debit in the current account.'
+    determinism: physical
+    name: External debt interest
+    priority: P2
+    range:
+    - 0.0
+    - 10000000000000.0
+    role: derived
+    source: The coupling build (batch 90)
+    status: existing
+    type: float
+    unit: USD/year
+    users:
+    - Planners
+    - Regulators
   extreme_weather_events:
     name: Extreme weather events
     description: 'Extreme weather events per year: the rate the extreme-weather generator draws from,
@@ -13398,6 +13453,24 @@ parameters:
     priority: P3
     status: to_build
     deprecated_by: null
+  foreign_exchange_reserves_end:
+    category: Macro
+    description: 'Reserves after the year: opening stock plus the overall balance of payments, the reserve-accumulation
+      identity under a managed float.'
+    determinism: physical
+    name: Foreign exchange reserves, end of year
+    priority: P2
+    range:
+    - -10000000000000.0
+    - 100000000000000.0
+    role: derived
+    source: The coupling build (batch 90)
+    status: existing
+    type: float
+    unit: USD
+    users:
+    - Planners
+    - Regulators
   foresight:
     name: Foresight
     description: Whether the model sees the whole horizon or one period at a time. Catalog 'Foresight
@@ -14302,6 +14375,25 @@ parameters:
     type: float
     unit: USD/MWh
     users: []
+  gas_starts_per_year:
+    category: Supply
+    default: 200.0
+    description: Starts a gas unit makes in a year. 200 at defaults, a stated assumption for a peaking
+      or cycling unit.
+    determinism: fixed
+    name: Gas starts per year
+    priority: P2
+    range:
+    - 0.0
+    - 1000.0
+    role: exogenous
+    source: Assumption; Kumar et al., Power Plant Cycling Costs, NREL/SR-5500-55433 (2012)
+    status: existing
+    type: float
+    unit: 1/year
+    users:
+    - Planners
+    - Regulators
   gasification_capacity:
     categories: []
     category: Supply
@@ -14846,6 +14938,26 @@ parameters:
     users:
     - Carbon
     source: docs/params.md
+  goods_services_balance:
+    category: Macro
+    default: 0.0
+    description: Exports less imports of goods and services in the year, in US dollars, signed. A scenario
+      input. 0 at defaults.
+    determinism: fixed
+    name: Goods and services balance
+    priority: P2
+    range:
+    - -10000000000000.0
+    - 10000000000000.0
+    role: exogenous
+    source: IMF Balance of Payments and International Investment Position Manual, 6th ed. (BPM6), 2009,
+      ch. 10; assumption for the default
+    status: existing
+    type: float
+    unit: USD/year
+    users:
+    - Planners
+    - Regulators
   gravity_storage_capacity:
     categories: []
     category: Supply
@@ -15171,6 +15283,24 @@ parameters:
     unit: hectares
     users:
     - DFIs
+  hazard_event_rate_total:
+    category: Risk
+    description: Expected hazard events per year across heatwaves, cold snaps and extreme weather. The
+      sum of independent Poisson rates is the Poisson rate of the merged process. 17 per year at defaults.
+    determinism: physical
+    name: Total hazard event rate
+    priority: P2
+    range:
+    - 0.0
+    - 1000000.0
+    role: derived
+    source: The coupling build (batch 90)
+    status: existing
+    type: float
+    unit: events/year
+    users:
+    - Planners
+    - Regulators
   health_cost_usd_per_year:
     categories: []
     category: Health
@@ -23073,6 +23203,26 @@ parameters:
     unit: USD/MWh
     users:
     - Operators
+  other_capital_flows:
+    category: Macro
+    default: 0.0
+    description: Net portfolio, loan and other financial-account inflows in the year, in US dollars, signed.
+      FDI is carried separately. 0 at defaults.
+    determinism: fixed
+    name: Other capital flows
+    priority: P2
+    range:
+    - -10000000000000.0
+    - 10000000000000.0
+    role: exogenous
+    source: IMF Balance of Payments and International Investment Position Manual, 6th ed. (BPM6), 2009,
+      ch. 8; assumption for the default
+    status: existing
+    type: float
+    unit: USD/year
+    users:
+    - Planners
+    - Regulators
   outage_cause_distribution:
     categories: []
     category: Outage
@@ -26694,6 +26844,25 @@ parameters:
     priority: P2
     status: to_build
     deprecated_by: null
+  reserve_accumulation_period:
+    category: Macro
+    default: 1.0
+    description: Length of the step over which the balance of payments accrues to reserves, in years.
+      1 at defaults, the annual step.
+    determinism: fixed
+    name: Reserve accumulation period
+    priority: P2
+    range:
+    - 0.0
+    - 100.0
+    role: exogenous
+    source: Model step; the coupling build (batch 90)
+    status: existing
+    type: float
+    unit: years
+    users:
+    - Planners
+    - Regulators
   reserve_margin:
     category: Outage
     description: The catalog's 'Operating reserve margin' is the margin the built fleet actually delivers,
@@ -29521,6 +29690,23 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  startup_cost_coal_usd_per_year:
+    category: Cost
+    description: 'Annual start-up spend for a coal unit: cost per start times starts per year.'
+    determinism: physical
+    name: Coal start-up cost per year
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000.0
+    role: derived
+    source: The coupling build (batch 90)
+    status: existing
+    type: float
+    unit: USD/year
+    users:
+    - Planners
+    - Regulators
   startup_cost_gas:
     name: Startup cost gas
     description: 'The cost of starting a gas unit, in US dollars per start: the same pypsa attribute as
@@ -29551,6 +29737,23 @@ parameters:
     priority: P1
     status: existing
     deprecated_by: null
+  startup_cost_gas_usd_per_year:
+    category: Cost
+    description: 'Annual start-up spend for a gas unit: cost per start times starts per year.'
+    determinism: physical
+    name: Gas start-up cost per year
+    priority: P2
+    range:
+    - 0.0
+    - 1000000000000.0
+    role: derived
+    source: The coupling build (batch 90)
+    status: existing
+    type: float
+    unit: USD/year
+    users:
+    - Planners
+    - Regulators
   steel_eaf_route_mt:
     category: Industry
     description: 'steel eaf route mt: the coupling''s derived quantity, so a scenario''s dial has a number
@@ -34604,6 +34807,32 @@ equations:
     system: financial
     tolerance: 1.0e-09
     unit_check: true
+  balance_of_payments_definition:
+    description: 'Overall balance: current account plus foreign direct investment plus other capital flows,
+      all signed as net inflows. Positive means the central bank accumulates reserves. Errors and omissions
+      are zero.'
+    determined_variables:
+    - balance_of_payments
+    free_variables: []
+    latex: \mathrm{balance\_of\_payments} = \mathrm{current\_account\_balance} + \mathrm{foreign\_direct\_investment}
+      + \mathrm{other\_capital\_flows}
+    lhs: balance_of_payments
+    linearity: linear
+    name: Balance of payments
+    parameters:
+    - balance_of_payments
+    - current_account_balance
+    - foreign_direct_investment
+    - other_capital_flows
+    priority: P2
+    reference: IMF Balance of Payments and International Investment Position Manual, 6th ed. (BPM6), 2009,
+      ch. 2 (the accounts sum to the change in reserve assets)
+    relation: eq
+    rhs: current_account_balance + foreign_direct_investment + other_capital_flows
+    solution_method: direct
+    system: financial
+    tolerance: 1.0e-09
+    unit_check: true
   baseline_emissions_definition:
     description: 'The emissions the fleet would have produced without the abatement this project delivers:
       what it does emit plus what the abatement avoids. This is the FRM''s `reductions = baseline - project
@@ -37463,6 +37692,32 @@ equations:
     system: financial
     tolerance: 1.0e-09
     unit_check: true
+  current_account_balance_definition:
+    description: Goods and services balance, less primary income paid on external debt, plus official
+      development assistance received as secondary income. A simplification of BPM6 that keeps the three
+      terms the graph carries; other primary and secondary income items are zero.
+    determined_variables:
+    - current_account_balance
+    free_variables: []
+    latex: \mathrm{current\_account\_balance} = \mathrm{goods\_services\_balance} - \mathrm{external\_debt\_interest\_usd}
+      + \mathrm{official\_development\_assistance}
+    lhs: current_account_balance
+    linearity: linear
+    name: Current account balance
+    parameters:
+    - current_account_balance
+    - goods_services_balance
+    - external_debt_interest_usd
+    - official_development_assistance
+    priority: P2
+    reference: IMF Balance of Payments and International Investment Position Manual, 6th ed. (BPM6), 2009,
+      ch. 10-12
+    relation: eq
+    rhs: goods_services_balance - external_debt_interest_usd + official_development_assistance
+    solution_method: direct
+    system: financial
+    tolerance: 1.0e-09
+    unit_check: true
   customs_duty_alias:
     description: 'The catalog carries the equipment duty twice, as `customs_duty` and as `import_duty_equipment`,
       at the same 10%. One rate, so one equality: the import-duty cost identity already reads `import_duty_equipment`,
@@ -39100,6 +39355,28 @@ equations:
     system: demand_supply
     tolerance: 1.0e-09
     unit_check: true
+  external_debt_interest_definition:
+    description: 'Stock times rate. Dimensional check: USD times 1/year is USD/year.'
+    determined_variables:
+    - external_debt_interest_usd
+    free_variables: []
+    latex: \mathrm{external\_debt\_interest\_usd} = \mathrm{external\_debt} \times \mathrm{external\_debt\_interest\_rate}
+    lhs: external_debt_interest_usd
+    linearity: linear
+    name: External debt interest
+    parameters:
+    - external_debt_interest_usd
+    - external_debt
+    - external_debt_interest_rate
+    priority: P2
+    reference: IMF Balance of Payments and International Investment Position Manual, 6th ed. (BPM6), 2009,
+      ch. 11 (investment income)
+    relation: eq
+    rhs: external_debt * external_debt_interest_rate
+    solution_method: direct
+    system: financial
+    tolerance: 1.0e-09
+    unit_check: true
   feed_in_tariff_cost_definition:
     description: 'The purchase obligation at the feed-in tariff, over the renewable volume the balance
       already computes. The obligation is a cost of the programme and not of the plant: the utility buys
@@ -39688,6 +39965,31 @@ equations:
     rhs: demand_forecast_methodology * demand_twh
     solution_method: direct
     system: price_demand
+    tolerance: 1.0e-09
+    unit_check: true
+  foreign_exchange_reserves_end_definition:
+    description: 'Opening reserves plus the overall balance. Dimensional check: USD plus USD/year times
+      the accumulation period in years is USD. The period is the model step, 1 year at defaults.'
+    determined_variables:
+    - foreign_exchange_reserves_end
+    free_variables: []
+    latex: \mathrm{foreign\_exchange\_reserves\_end} = \mathrm{foreign\_exchange\_reserves} + \mathrm{balance\_of\_payments}
+      \times \mathrm{reserve\_accumulation\_period}
+    lhs: foreign_exchange_reserves_end
+    linearity: linear
+    name: Foreign exchange reserves, end of year
+    parameters:
+    - foreign_exchange_reserves_end
+    - foreign_exchange_reserves
+    - balance_of_payments
+    - reserve_accumulation_period
+    priority: P2
+    reference: IMF Balance of Payments and International Investment Position Manual, 6th ed. (BPM6), 2009,
+      ch. 6 (reserve assets)
+    relation: eq
+    rhs: foreign_exchange_reserves + balance_of_payments * reserve_accumulation_period
+    solution_method: direct
+    system: financial
     tolerance: 1.0e-09
     unit_check: true
   fossil_fuel_subsidy_cost_definition:
@@ -40656,6 +40958,31 @@ equations:
     rhs: habitat_loss_hectares
     solution_method: direct
     system: employment
+    tolerance: 1.0e-09
+    unit_check: true
+  hazard_event_rate_total_definition:
+    description: 'Superposition of independent Poisson processes: the merged rate is the sum of the rates.
+      Dimensional check: events/year throughout.'
+    determined_variables:
+    - hazard_event_rate_total
+    free_variables: []
+    latex: \mathrm{hazard\_event\_rate\_total} = \mathrm{heatwave\_frequency} + \mathrm{cold\_snap\_frequency}
+      + \mathrm{extreme\_weather\_events}
+    lhs: hazard_event_rate_total
+    linearity: linear
+    name: Total hazard event rate
+    parameters:
+    - hazard_event_rate_total
+    - heatwave_frequency
+    - cold_snap_frequency
+    - extreme_weather_events
+    priority: P2
+    reference: Ross, Stochastic Processes, 2nd ed., Wiley 1996, sec. 5.3 (superposition of Poisson processes).
+      Textbook result; no archived copy.
+    relation: eq
+    rhs: heatwave_frequency + cold_snap_frequency + extreme_weather_events
+    solution_method: direct
+    system: reliability
     tolerance: 1.0e-09
     unit_check: true
   health_cost_definition:
@@ -47805,6 +48132,48 @@ equations:
     reference: Rate-based levy and allowance definitions (standard fiscal accounting)
     relation: eq
     rhs: stamp_duty * capex_usd_per_kw * total_capacity_mw * 1000
+    solution_method: direct
+    system: cost_accounting
+    tolerance: 1.0e-09
+    unit_check: true
+  startup_cost_coal_annual_definition:
+    description: 'Cost per start times starts per year. Dimensional check: USD times 1/year is USD/year.'
+    determined_variables:
+    - startup_cost_coal_usd_per_year
+    free_variables: []
+    latex: \mathrm{startup\_cost\_coal\_usd\_per\_year} = \mathrm{startup\_cost\_coal} \times \mathrm{coal\_starts\_per\_year}
+    lhs: startup_cost_coal_usd_per_year
+    linearity: linear
+    name: Coal start-up cost per year
+    parameters:
+    - startup_cost_coal_usd_per_year
+    - startup_cost_coal
+    - coal_starts_per_year
+    priority: P2
+    reference: Kumar et al., Power Plant Cycling Costs, NREL/SR-5500-55433 (2012)
+    relation: eq
+    rhs: startup_cost_coal * coal_starts_per_year
+    solution_method: direct
+    system: cost_accounting
+    tolerance: 1.0e-09
+    unit_check: true
+  startup_cost_gas_annual_definition:
+    description: Cost per start times starts per year.
+    determined_variables:
+    - startup_cost_gas_usd_per_year
+    free_variables: []
+    latex: \mathrm{startup\_cost\_gas\_usd\_per\_year} = \mathrm{startup\_cost\_gas} \times \mathrm{gas\_starts\_per\_year}
+    lhs: startup_cost_gas_usd_per_year
+    linearity: linear
+    name: Gas start-up cost per year
+    parameters:
+    - startup_cost_gas_usd_per_year
+    - startup_cost_gas
+    - gas_starts_per_year
+    priority: P2
+    reference: Kumar et al., Power Plant Cycling Costs, NREL/SR-5500-55433 (2012)
+    relation: eq
+    rhs: startup_cost_gas * gas_starts_per_year
     solution_method: direct
     system: cost_accounting
     tolerance: 1.0e-09
@@ -60889,6 +61258,150 @@ relationships:
   strength: hard
   description: Enters the product.
   reference: The coupling build (batch 89)
+  priority: P2
+- source: external_debt
+  target: external_debt_interest_usd
+  equation_id: external_debt_interest_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 90)
+  priority: P2
+- source: external_debt_interest_rate
+  target: external_debt_interest_usd
+  equation_id: external_debt_interest_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 90)
+  priority: P2
+- source: goods_services_balance
+  target: current_account_balance
+  equation_id: current_account_balance_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 90)
+  priority: P2
+- source: external_debt_interest_usd
+  target: current_account_balance
+  equation_id: current_account_balance_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 90)
+  priority: P2
+- source: official_development_assistance
+  target: current_account_balance
+  equation_id: current_account_balance_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 90)
+  priority: P2
+- source: current_account_balance
+  target: balance_of_payments
+  equation_id: balance_of_payments_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 90)
+  priority: P2
+- source: foreign_direct_investment
+  target: balance_of_payments
+  equation_id: balance_of_payments_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 90)
+  priority: P2
+- source: other_capital_flows
+  target: balance_of_payments
+  equation_id: balance_of_payments_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 90)
+  priority: P2
+- source: foreign_exchange_reserves
+  target: foreign_exchange_reserves_end
+  equation_id: foreign_exchange_reserves_end_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 90)
+  priority: P2
+- source: balance_of_payments
+  target: foreign_exchange_reserves_end
+  equation_id: foreign_exchange_reserves_end_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 90)
+  priority: P2
+- source: startup_cost_coal
+  target: startup_cost_coal_usd_per_year
+  equation_id: startup_cost_coal_annual_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 90)
+  priority: P2
+- source: coal_starts_per_year
+  target: startup_cost_coal_usd_per_year
+  equation_id: startup_cost_coal_annual_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 90)
+  priority: P2
+- source: startup_cost_gas
+  target: startup_cost_gas_usd_per_year
+  equation_id: startup_cost_gas_annual_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 90)
+  priority: P2
+- source: gas_starts_per_year
+  target: startup_cost_gas_usd_per_year
+  equation_id: startup_cost_gas_annual_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 90)
+  priority: P2
+- source: heatwave_frequency
+  target: hazard_event_rate_total
+  equation_id: hazard_event_rate_total_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 90)
+  priority: P2
+- source: cold_snap_frequency
+  target: hazard_event_rate_total
+  equation_id: hazard_event_rate_total_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 90)
+  priority: P2
+- source: extreme_weather_events
+  target: hazard_event_rate_total
+  equation_id: hazard_event_rate_total_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 90)
+  priority: P2
+- source: reserve_accumulation_period
+  target: foreign_exchange_reserves_end
+  equation_id: foreign_exchange_reserves_end_definition
+  relationship: functional
+  strength: hard
+  description: Enters the identity.
+  reference: The coupling build (batch 90)
   priority: P2
 - source: biomass_generation_twh
   target: fleet_generation_twh
