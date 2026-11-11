@@ -37,8 +37,18 @@ def main(argv: list[str]) -> int:
 	# then infeasible, so dispatchable gas candidates sit at every bus.
 	attach_extendable_candidates(net, ["gas"], capital_cost_usd_per_mw=costs)
 	print("built", len(net.buses), "buses", len(net.generators), "generators", len(net.snapshots), "snapshots")
-	runs = [solve_expansion(net.copy(), cfg, multi_period=False) for _ in range(2)]
+	n_solves = int(argv[2]) if len(argv) > 2 else 2
+	runs = [solve_expansion(net.copy(), cfg, multi_period=False) for _ in range(n_solves)]
+	if n_solves == 1:
+		runs = runs * 2
 	a, b = runs
+	solved = a.network
+	g = solved.generators
+	w = solved.snapshot_weightings.objective
+	dispatch = float((solved.generators_t.p.mul(w, axis=0) * g.marginal_cost).sum().sum())
+	capex = float((g.p_nom_opt.sub(g.p_nom).clip(lower=0) * g.capital_cost)[g.p_nom_extendable].sum())
+	print("recomputed", round(dispatch + capex), "= dispatch", round(dispatch), "+ new capex", round(capex), "vs objective", round(a.objective))
+	print("load_mwh", round(float(solved.loads_t.p_set.sum().sum())), "weights_sum", float(w.sum()))
 	print("status", a.status, b.status)
 	print("objective", a.objective, b.objective, "diff", abs(a.objective - b.objective))
 	print("losses_mwh", getattr(a, "losses_mwh", None))
