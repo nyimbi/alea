@@ -35,7 +35,8 @@ Built by `scripts/build/kenya_{topology,inputs,profiles}.py`; checked by `script
 |---|---|---|---|---|---|
 | 14 days, no gas candidates | 336 | optimal | 0.0 | 10 s | 0.003 |
 | 91 days, gas candidates at every bus | 2,184 | optimal | 0.0 | 370 s | 0.103 |
-| 365 days | 8,760 | not finished after more than 1 h in simplex | | | |
+| 365 days, dual simplex | 8,760 | stopped at the 3,600 s time limit; not optimal (reported objective 140,899 against 17,561,408 recomputed from dispatch) | n/a | 3,672 s | 1.02 (not a solution) |
+| 365 days, interior point | 8,760 | stopped by hand after 6 iterations in 2,400 s (about 300 s each) | n/a | | |
 
 The 14-day run balanced dispatch against load plus losses (losses 32,961 MWh against 405,380 MWh load, 8.1 %).
 The first full-year attempt was infeasible: 2,007 MW firm capacity against a peak of about 1,920 MW with losses, and only variable candidates.
@@ -58,3 +59,6 @@ Nodal `marginal_price` from the solved expansion network, capture rate per gener
 Price range: min -5.06, median 7.17, mean 26.6, max 47,091.6 USD/MWh.
 
 Two findings. (1) M4 as worded ("capture rate in (0, 1] for every generator") cannot hold: peakers and firm plant sell into scarcity hours, so their capture rate exceeds 1 by construction. The defensible clause is a VRE-only one, capture rate at most 1 (revenue-weighted below time-weighted). (2) The VRE rates here are exactly 1.000, not below 1: those plants sit at buses whose price is flat while they run, so the model shows no cannibalisation yet. A strict "below" clause would fail on this network. The 47,091 USD/MWh maximum is a shadow price on a binding capacity or line constraint with no load-shedding cost to cap it; it is a model artefact, not a market price, and it dominates the mean.
+
+The full-year clause of M1 is open. On one thread, HiGHS does not reach optimality on 8,760 snapshots within the 1 h limit, by simplex or interior point. The remaining routes are the AD-9 time aggregation (needs its validation artefact for Kenya) or the Rust core on more cores; the plan's 6 h target assumes 128 cores and this machine has 12.
+The earlier 'M1 PASS' lines for the full year were wrong: `solve_expansion` accepted a time-limit stop as optimal until commit 6f2d576.
