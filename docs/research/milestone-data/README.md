@@ -28,3 +28,16 @@ Built by `scripts/build/kenya_{topology,inputs,profiles}.py`; checked by `script
 | Demand | KNBS 2024 Economic Survey, 10,320.6 GWh (2023), read from a press summary | not archived | Publisher | Town populations are from memory and unverified; the hourly shape is stylised |
 | Costs | PyPSA technology-data 2030/2040/2050 | `technology-data/` | per file | EUR to USD at 1.14; no geothermal-electricity capex row, so no geothermal candidate |
 | Profiles | Open-Meteo archive (ERA5-derived), 95 points, 2023 | regenerable, git-ignored | CC BY 4.0 | Stand-in for the atlite cutout, which the CDS queue blocks; generic cubic wind curve and temperature-derated solar |
+
+### Kenya M1 result (`scripts/quality/kenya_m1.py`)
+
+| Window | Snapshots | Status | Two-run objective diff | Solve | Core-hours |
+|---|---|---|---|---|---|
+| 14 days, no gas candidates | 336 | optimal | 0.0 | 10 s | 0.003 |
+| 91 days, gas candidates at every bus | 2,184 | optimal | 0.0 | 370 s | 0.103 |
+| 365 days | 8,760 | not finished after more than 1 h in simplex | | | |
+
+The 14-day run balanced dispatch against load plus losses (losses 32,961 MWh against 405,380 MWh load, 8.1 %).
+The first full-year attempt was infeasible: 2,007 MW firm capacity against a peak of about 1,920 MW with losses, and only variable candidates.
+Caveats: annualised capex is charged against a sub-year window, so the objective is not an annual cost; hydro has no energy limit; fleet coverage is 77 %, below the plan's 90 %.
+M1 is met on a 91-day window; the full-year clause stays open until that solve returns.
