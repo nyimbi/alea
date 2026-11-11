@@ -51,6 +51,13 @@ class SolveResult:
 	seconds: float
 	network: pypsa.Network
 	investments: dict[str, float] = field(default_factory=dict)
+	threads: int = 1
+
+	@property
+	def core_hours(self) -> float:
+		"""Solver wall time x threads. The spec's 6 h target assumes 128 cores, so
+		core-hours, not wall-clock, is the comparison that survives a hardware change."""
+		return self.seconds * self.threads / 3600.0
 
 	def as_dict(self) -> dict[str, Any]:
 		return {
@@ -58,6 +65,8 @@ class SolveResult:
 			"solver": self.solver,
 			"status": self.status,
 			"seconds": self.seconds,
+			"threads": self.threads,
+			"core_hours": self.core_hours,
 			"n_investments": len(self.investments),
 		}
 
@@ -320,6 +329,7 @@ def solve_expansion(
 		seconds=seconds,
 		network=network,
 		investments=optimal_investments(network),
+		threads=int(options.get("threads", 1)),
 	)
 	log.info(
 		"expansion_solved",
