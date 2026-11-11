@@ -16,3 +16,15 @@ Leads: https://nline-7adlglt9b-nline.vercel.app/public-data (a Vercel preview, n
 Credentials needed from the account owner: nLine API key, Copernicus CDS key, NASA Earthdata login. Decision needed: what COMPASS is.
 
 Saved pages: `downloads/` (SHA256SUMS inside). Fetched 2026-11-11; the nLine preview-host and Zenodo API URLs failed (410/403) and were replaced by nline.io/public-data and the Zenodo record page. nLine says the API key is issued on first `fetch_data()` run via a signup prompt.
+
+## Kenya input lake (M1)
+
+Built by `scripts/build/kenya_{topology,inputs,profiles}.py`; checked by `scripts/quality/kenya_m1.py`.
+
+| Input | Source | Archived at | Licence | Caveat |
+|---|---|---|---|---|
+| Topology | OSM `power=line` ways via Overpass, 66 kV and up, largest component | `osm-kenya/lines.json` | ODbL | OSM completeness; 110 lines, 6,944 km |
+| Fleet | WRI GPPD v1.3, KEN rows | `gppd/` | CC BY 4.0 | 23 plants, 2,486 MW = 77 % of the 3,243.6 MW KNBS 2023 installed capacity; the plan asks for over 90 % |
+| Demand | KNBS 2024 Economic Survey, 10,320.6 GWh (2023), read from a press summary | not archived | Publisher | Town populations are from memory and unverified; the hourly shape is stylised |
+| Costs | PyPSA technology-data 2030/2040/2050 | `technology-data/` | per file | EUR to USD at 1.14; no geothermal-electricity capex row, so no geothermal candidate |
+| Profiles | Open-Meteo archive (ERA5-derived), 95 points, 2023 | regenerable, git-ignored | CC BY 4.0 | Stand-in for the atlite cutout, which the CDS queue blocks; generic cubic wind curve and temperature-derated solar |
