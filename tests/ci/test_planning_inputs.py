@@ -43,6 +43,7 @@ from alea.planning.inputs import (
 	DEMAND_ARTEFACT,
 	RENEWABLE_ARTEFACT,
 	InputError,
+	capital_recovery_factor,
 	load_capital_costs,
 	load_demand_profiles,
 	load_renewable_profiles,
@@ -380,9 +381,10 @@ def test_capital_costs_are_per_megawatt(tmp_path: Path):
 	"""
 	_write_costs(tmp_path)
 	costs = load_capital_costs(_config(tmp_path))
-	assert costs["solar"] == pytest.approx(600_000.0)
-	assert costs["onwind"] == pytest.approx(1_400_000.0)
-	assert costs["coal"] == pytest.approx(2_000_000.0)
+	# Per MW (the x1000) and per year (the annuity): lifetimes are 25, 25, 40.
+	assert costs["solar"] == pytest.approx(600_000.0 * capital_recovery_factor(25.0))
+	assert costs["onwind"] == pytest.approx(1_400_000.0 * capital_recovery_factor(25.0))
+	assert costs["coal"] == pytest.approx(2_000_000.0 * capital_recovery_factor(40.0))
 
 
 def test_the_cost_year_is_the_nearest_at_or_before_the_request(tmp_path: Path):
@@ -406,7 +408,7 @@ def test_the_cost_year_is_the_nearest_at_or_before_the_request(tmp_path: Path):
 		format="parquet",
 	)
 	costs = load_capital_costs(_config(tmp_path), year=2030)
-	assert costs["solar"] == pytest.approx(700_000.0)
+	assert costs["solar"] == pytest.approx(700_000.0 * capital_recovery_factor(25.0))
 
 
 def test_a_year_before_the_table_falls_back_to_the_earliest(tmp_path: Path):
@@ -415,7 +417,7 @@ def test_a_year_before_the_table_falls_back_to_the_earliest(tmp_path: Path):
 	cannot act on -- the table simply does not reach back that far."""
 	_write_costs(tmp_path, year=2030)
 	costs = load_capital_costs(_config(tmp_path), year=2020)
-	assert costs["solar"] == pytest.approx(600_000.0)
+	assert costs["solar"] == pytest.approx(600_000.0 * capital_recovery_factor(25.0))
 
 
 def test_a_non_positive_cost_row_is_dropped(tmp_path: Path):
@@ -1198,3 +1200,22 @@ def test_multi_period_repeats_the_network_series_rather_than_inventing_one(
 			f"not the profile's own; a 1.0 here is a period with no weather"
 		)
 
+
+
+def _costs_frame(tmp_path: Path, **columns: list) -> None:
+	write_artefact(
+		tmp_path / COSTS_ARTEFACT, pd.DataFrame(columns), _provenance("costs"), format="parquet"
+	)
+
+
+def test_costs_with_a_lifetime_are_annualised_not_overnight(tmp_path: Path):
+	"""pypsa's capital_cost is per MW-year; 1000 USD/kW over 20 years at 5 % is ~80.24 USD/kW-yr."""
+	_costs_frame(tmp_path, technology=["solar"], year=[2030], capex_usd_per_kw=[1000.0], lifetime_years=[20.0])
+	assert load_capital_costs(_config(tmp_path))["solar"] == pytest.approx(80_242.59, abs=1.0)
+	assert capital_recovery_factor(20.0, 0.0) == 0.05
+
+
+def test_a_cost_row_with_no_lifetime_is_refused_when_the_column_exists(tmp_path: Path):
+	_costs_frame(tmp_path, technology=["solar"], year=[2030], capex_usd_per_kw=[1000.0], lifetime_years=[np.nan])
+	with pytest.raises(InputError, match="lifetime"):
+		load_capital_costs(_config(tmp_path))

@@ -267,6 +267,19 @@ def load_renewable_profiles(
 	return profiles
 
 
+def capital_recovery_factor(lifetime_years: float, rate: float | None = None) -> float:
+	"""Annuity factor ``r(1+r)^n / ((1+r)^n - 1)``; 1/n at a zero rate."""
+	assert lifetime_years > 0.0, "lifetime must be positive"
+	if rate is None:
+		from alea.planning.expansion import DISCOUNT_RATE
+
+		rate = DISCOUNT_RATE
+	if rate == 0.0:
+		return 1.0 / lifetime_years
+	growth = (1.0 + rate) ** lifetime_years
+	return rate * growth / (growth - 1.0)
+
+
 def load_capital_costs(
 	config: Config,
 	*,
@@ -314,11 +327,29 @@ def load_capital_costs(
 	rows: pd.DataFrame = frame.loc[frame["year"] == selected]
 	technologies = [str(t) for t in rows["technology"].tolist()]
 	capex_values = [_as_float(v) for v in rows["capex_usd_per_kw"].tolist()]
-	costs = {
-		technology: capex * 1000.0
-		for technology, capex in zip(technologies, capex_values, strict=True)
-		if capex == capex and capex > 0.0  # NaN is not equal to itself
-	}
+	# pypsa's `capital_cost` is a cost per MW *per year*: the objective adds
+	# capital_cost * p_nom_opt once, and snapshot weightings sum to a year. An
+	# overnight cost fed in here is charged in full against one year of
+	# operation, overstating expansion by about the asset lifetime and biasing
+	# the model against every extendable technology. When the table carries
+	# `lifetime_years` the cost is therefore turned into an annuity at the
+	# social discount rate; a table without it is returned overnight, as before.
+	lifetimes: list[float] | None = None
+	if "lifetime_years" in rows.columns:
+		lifetimes = [_as_float(v) for v in rows["lifetime_years"].tolist()]
+	else:
+		logger.warning("costs.overnight_not_annualised", path=str(path))
+	costs: dict[str, float] = {}
+	for position, (technology, capex) in enumerate(zip(technologies, capex_values, strict=True)):
+		if not (capex == capex and capex > 0.0):  # NaN is not equal to itself
+			continue
+		per_mw = capex * 1000.0
+		if lifetimes is not None:
+			life = lifetimes[position]
+			if not (life == life and life > 0.0):
+				raise InputError(f"{path}: {technology!r} has no positive lifetime_years")
+			per_mw *= capital_recovery_factor(life)
+		costs[technology] = per_mw
 	if not costs:
 		raise InputError(
 			f"{path} has no positive capital cost for {selected}; the years it "
