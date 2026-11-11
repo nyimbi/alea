@@ -122,3 +122,7 @@ Do not hand-edit `config/prg.yaml`. Bake via the generator; confirm only intende
 ## 13. References
 
 `config/prg.yaml`, `docs/prg-status.md`, `docs/param_coupling_worklist.md`, `prg/`, `docs/research/`. Cited proofs live under `sources/`.
+
+## Explorer UI
+
+`uv run alea prg ui [--port 8765]` serves a local page on 127.0.0.1 (stdlib server, no install). It lists and searches the nodes, shows a node's definition, the equations that determine it and read it, a neighbourhood graph, and a what-if panel. The what-if calls `propagate_change`, the function behind `alea prg propagate`, and shows a step-by-step cascade with each equation and its operand values. It never writes `config/prg.yaml`. The toolbar prints the open node or every equation. Only settable nodes accept a value; a computed node is refused with the graph's own reason.

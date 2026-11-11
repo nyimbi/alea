@@ -376,6 +376,16 @@ def prg_summary() -> None:
 			typer.secho(f"  status drift: {drift}", fg=typer.colors.YELLOW)
 
 
+@prg_app.command("ui")
+def prg_ui(
+	port: Annotated[int, typer.Option("--port", help="Local port; 0 picks a free one.")] = 8765,
+) -> None:
+	"""Open the local PRG explorer (127.0.0.1 only): search, inspect, what-if, print."""
+	from alea.prg.ui.server import serve
+
+	serve(port)
+
+
 @prg_app.command("equations")
 def prg_equations(
 	system: Annotated[

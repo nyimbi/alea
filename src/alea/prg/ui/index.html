@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRG explorer</title>
+<style>
+:root{--bg:#fafaf8;--panel:#fff;--ink:#1d1f21;--mute:#6b7075;--line:#dcdcd6;--acc:#1f5f8b;--hot:#b4531a;--ok:#2f7d4f}
+@media (prefers-color-scheme:dark){:root{--bg:#16181a;--panel:#1e2124;--ink:#e6e6e3;--mute:#9aa0a6;--line:#33373b;--acc:#6fb1de;--hot:#e0915a;--ok:#6cc08f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,sans-serif;height:100vh;display:flex;flex-direction:column}
+header{display:flex;gap:10px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+header h1{font-size:15px;margin:0 8px 0 0}
+input,select,button{font:inherit;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:4px 8px}
+button{cursor:pointer}button.primary{background:var(--acc);color:#fff;border-color:var(--acc)}
+#q{width:260px}
+main{flex:1;display:grid;grid-template-columns:300px 1fr 360px;min-height:0}
+section{overflow:auto;padding:12px 14px;border-right:1px solid var(--line)}
+section:last-child{border-right:0}
+.item{padding:5px 8px;border-radius:4px;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
+.item:hover{background:var(--bg)}.item.sel{background:var(--acc);color:#fff}
+.item small{color:var(--mute)}.item.sel small{color:#dde}
+h2{font-size:17px;margin:0 0 2px}h3{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);margin:18px 0 6px}
+code,.mono{font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
+.eq{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin:6px 0}
+.eq .rhs{margin-top:4px;word-break:break-word}
+a.n{color:var(--acc);cursor:pointer;text-decoration:none}a.n:hover{text-decoration:underline}
+table{border-collapse:collapse;width:100%}td,th{padding:3px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--mute);font-weight:500}td.num{text-align:right;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;border:1px solid var(--line);border-radius:10px;padding:0 7px;font-size:12px;color:var(--mute);margin-right:4px}
+.err{color:var(--hot);white-space:pre-wrap}.good{color:var(--ok)}
+svg text{font:12px system-ui,sans-serif;fill:var(--ink)}svg .link{stroke:var(--line);stroke-width:1.2;fill:none}
+svg .nd{fill:var(--panel);stroke:var(--acc);stroke-width:1.2;cursor:pointer}svg .nd.c{fill:var(--acc)}svg .nd.c+text{fill:#fff}
+svg .nd:hover{stroke-width:2.4}
+.row{display:flex;gap:6px;align-items:center;margin:4px 0}.row input{flex:1;min-width:0}
+.mute{color:var(--mute)}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:8px 12px;margin:8px 0}
+.def .sub{margin-top:6px;color:var(--mute)}
+.lvl{margin:8px 0}.lvl>b{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.05em}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 10px;margin:4px 0}
+.step .calc{color:var(--mute);word-break:break-word}.up{color:var(--hot)}.dn{color:var(--acc)}
+@media print{
+ header,section#list,section#adjust,.noprint{display:none!important}
+ body{height:auto;display:block;background:#fff;color:#000}main{display:block}
+ section{overflow:visible;border:0;padding:0}.eq{break-inside:avoid;border-color:#999}
+ a.n{color:#000}svg text{fill:#000}
+}
+@media (max-width:1000px){main{grid-template-columns:1fr}section{border-right:0;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<header>
+ <h1>PRG explorer</h1>
+ <input id="q" placeholder="Search id, name, unit, text" autofocus>
+ <select id="cat"><option value="">All categories</option></select>
+ <select id="role"><option value="">All roles</option></select>
+ <span id="count" class="mute"></span>
+ <span style="flex:1"></span>
+ <button id="print" title="Print the open node">Print node</button>
+ <button id="printall" title="Print every equation">Print equations</button>
+</header>
+<main>
+ <section id="list"></section>
+ <section id="detail"><p class="mute">Loading graph…</p></section>
+ <section id="adjust"></section>
+</main>
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let G=null,nodes=new Map(),eqs=new Map(),up=new Map(),down=new Map(),eqOf=new Map(),eqUses=new Map();
+let changes={},result=null,shown=200,cur=null,allEq=false;
+
+function fmt(v){if(v===null||v===undefined)return"–";if(typeof v==="string")return esc(v);
+ const a=Math.abs(v);if(a!==0&&(a>=1e7||a<1e-4))return v.toExponential(4);return String(+v.toPrecision(7));}
+function link(id){return nodes.has(id)?`<a class="n" data-n="${esc(id)}">${esc(id)}</a>`:`<code>${esc(id)}</code>`;}
+
+async function init(){
+ G=await (await fetch("/api/graph")).json();
+ for(const n of G.nodes)nodes.set(n.id,n);
+ for(const e of G.equations){eqs.set(e.id,e);
+  for(const d of e.determined){(eqOf.get(d)||eqOf.set(d,[]).get(d)).push(e);}
+  for(const p of e.parameters){(eqUses.get(p)||eqUses.set(p,[]).get(p)).push(e);}}
+ for(const ed of G.edges){(up.get(ed.target)||up.set(ed.target,[]).get(ed.target)).push(ed);
+  (down.get(ed.source)||down.set(ed.source,[]).get(ed.source)).push(ed);}
+ for(const c of [...new Set(G.nodes.map(n=>n.category))].sort())$("#cat").add(new Option(c,c));
+ for(const r of [...new Set(G.nodes.map(n=>n.role))].sort())$("#role").add(new Option(r,r));
+ renderList();route();renderAdjust();
+}
+function filtered(){
+ const q=$("#q").value.trim().toLowerCase(),c=$("#cat").value,r=$("#role").value;
+ return G.nodes.filter(n=>(!c||n.category===c)&&(!r||n.role===r)&&
+  (!q||n.id.includes(q)||(n.name||"").toLowerCase().includes(q)||(n.unit||"").toLowerCase().includes(q)||(n.description||"").toLowerCase().includes(q)));
+}
+function renderList(){
+ const f=filtered();$("#count").textContent=`${f.length} of ${G.nodes.length} nodes · ${G.equations.length} equations`;
+ const part=f.slice(0,shown);
+ $("#list").innerHTML=part.map(n=>`<div class="item${n.id===cur?" sel":""}" data-n="${esc(n.id)}"><span>${esc(n.id)}</span><small>${esc(n.unit||"")}</small></div>`).join("")+
+  (f.length>shown?`<p><button id="more">Show ${Math.min(200,f.length-shown)} more</button></p>`:"");
+}
+function neighbourSvg(id){
+ const u=[...new Set((up.get(id)||[]).map(e=>e.source))].filter(x=>x!==id),d=[...new Set((down.get(id)||[]).map(e=>e.target))].filter(x=>x!==id);
+ const cap=22,us=u.slice(0,cap),ds=d.slice(0,cap),rows=Math.max(us.length,ds.length,1),h=Math.max(120,rows*22+30),w=760,cx=w/2;
+ const y=(i,n)=>n<=1?h/2:30+i*((h-50)/(n-1));
+ let s=`<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="Neighbours of ${esc(id)}">`;
+ us.forEach((x,i)=>{s+=`<path class="link" d="M 190 ${y(i,us.length)} C 280 ${y(i,us.length)}, ${cx-120} ${h/2}, ${cx-70} ${h/2}"/>`});
+ ds.forEach((x,i)=>{s+=`<path class="link" d="M ${cx+70} ${h/2} C ${cx+120} ${h/2}, ${w-280} ${y(i,ds.length)}, ${w-190} ${y(i,ds.length)}"/>`});
+ us.forEach((x,i)=>{s+=`<g><rect class="nd" data-n="${esc(x)}" x="4" y="${y(i,us.length)-10}" width="186" height="20" rx="4"/><text x="10" y="${y(i,us.length)+4}">${esc(x.length>26?x.slice(0,25)+"…":x)}</text></g>`});
+ ds.forEach((x,i)=>{s+=`<g><rect class="nd" data-n="${esc(x)}" x="${w-190}" y="${y(i,ds.length)-10}" width="186" height="20" rx="4"/><text x="${w-184}" y="${y(i,ds.length)+4}">${esc(x.length>26?x.slice(0,25)+"…":x)}</text></g>`});
+ s+=`<rect class="nd c" x="${cx-70}" y="${h/2-12}" width="140" height="24" rx="5"/><text x="${cx}" text-anchor="middle" y="${h/2+4}">${esc(id.length>20?id.slice(0,19)+"…":id)}</text></svg>`;
+ const more=(u.length>cap?`${u.length-cap} more inputs. `:"")+(d.length>cap?`${d.length-cap} more dependents.`:"");
+ return `<div class="mute" style="display:flex;justify-content:space-between"><span>inputs (${u.length})</span><span>dependents (${d.length})</span></div>${s}${more?`<p class="mute">${more}</p>`:""}`;
+}
+function eqHtml(e){
+ return `<div class="eq"><b>${esc(e.name)}</b> <span class="tag">${esc(e.system)}</span><span class="tag">${esc(e.relation)}</span>
+ <div class="mono rhs">${esc(e.lhs)} ${e.relation==="eq"?"=":e.relation==="leq"?"≤":e.relation==="geq"?"≥":esc(e.relation)} ${esc(e.rhs)}</div>
+ ${e.description?`<div class="mute">${esc(e.description)}</div>`:""}
+ <div class="mute">operands: ${e.parameters.map(link).join(", ")}</div>
+ ${e.reference?`<div class="mute">reference: ${esc(e.reference)}</div>`:""}<div class="mute mono">${esc(e.id)}</div></div>`;
+}
+function defHtml(n,own){
+ if(!own.length)return `<div class="def"><b>${esc(n.id)}</b> is ${n.settable?"an input you set":"not determined by any equation"}: default ${fmt(n.default)} ${esc(n.unit||"")}.</div>`;
+ return own.map(e=>{const vals=e.parameters.filter(p=>p!==n.id).map(p=>`${esc(p)} = ${fmt(nodes.get(p)?.default)}`).join(", ");
+  return `<div class="def"><span class="mono">${esc(e.lhs)} ${e.relation==="eq"?"=":esc(e.relation)} ${esc(e.rhs)}</span><div class="sub">at defaults: ${vals||"–"}</div></div>`;}).join("");
+}
+function renderNode(id){
+ const n=nodes.get(id);if(!n){$("#detail").innerHTML=`<p class="err">No node ${esc(id)}</p>`;return;}
+ cur=id;allEq=false;
+ const own=eqOf.get(id)||[],uses=(eqUses.get(id)||[]).filter(e=>!own.includes(e));
+ $("#detail").innerHTML=`<h2>${esc(n.name)}</h2><div class="mono mute">${esc(n.id)}</div>
+ <p>${esc(n.description)}</p>
+ <span class="tag">${esc(n.category)}</span><span class="tag">${esc(n.role)}</span><span class="tag">${esc(n.type)}</span><span class="tag">${esc(n.determinism)}</span>${n.settable?'<span class="tag good">settable</span>':'<span class="tag">computed</span>'}${n.status?`<span class="tag">${esc(n.status)}</span>`:""}
+ <table style="margin-top:10px"><tr><th>unit</th><td>${esc(n.unit||"–")}</td><th>default</th><td>${fmt(n.default)}</td></tr>
+ <tr><th>range</th><td colspan="3">${n.categories.length?esc(n.categories.join(" | ")):n.range?`${fmt(n.range[0])} … ${fmt(n.range[1])}`:"–"}</td></tr></table>
+ ${n.source?`<h3>Source</h3><div>${esc(n.source)}</div>`:""}
+ <h3>Definition</h3>${defHtml(n,own)}
+ <h3>Neighbourhood</h3>${neighbourSvg(id)}
+ <h3>Determined by (${own.length})</h3>${own.map(eqHtml).join("")||'<p class="mute">An input: nothing in the graph determines it.</p>'}
+ <h3>Read by (${uses.length})</h3>${uses.slice(0,40).map(eqHtml).join("")||'<p class="mute">No other equation reads it.</p>'}${uses.length>40?`<p class="mute">${uses.length-40} more not shown.</p>`:""}`;
+ renderList();
+}
+function renderAllEq(){
+ allEq=true;cur=null;
+ $("#detail").innerHTML=`<h2>All equations</h2><p class="mute">${G.equations.length} equations, grouped by system.</p>`+
+  [...new Set(G.equations.map(e=>e.system))].sort().map(s=>`<h3>${esc(s)}</h3>`+G.equations.filter(e=>e.system===s).map(eqHtml).join("")).join("");
+}
+function route(){
+ const m=location.hash.match(/^#n=(.+)$/);if(m){renderNode(decodeURIComponent(m[1]));}
+ else if(!cur&&!allEq){$("#detail").innerHTML='<h2>PRG explorer</h2><p class="mute">Pick a node on the left, or search. Click any underlined name to move through the graph. The right panel runs a what-if through the same propagation the CLI uses; it never edits the graph.</p>';}
+}
+function renderAdjust(){
+ const n=cur?nodes.get(cur):null;
+ let h="<h3 style='margin-top:0'>What-if</h3>";
+ if(n){
+  if(!n.settable)h+=`<p class="mute">${esc(n.id)} is computed by the graph; set one of its inputs instead.</p>`;
+  else{
+   const cat=n.categories.length;
+   h+=`<div class="row"><code>${esc(n.id)}</code>${cat?`<select id="val">${n.categories.map(c=>`<option>${esc(c)}</option>`).join("")}</select>`:`<input id="val" type="number" step="any" value="${n.default??""}">`}<button id="add">Set</button></div><div class="mute">default ${fmt(n.default)} ${esc(n.unit||"")}</div>`;
+  }
+ }
+ const keys=Object.keys(changes);
+ h+=`<h3>Changes (${keys.length})</h3>`+(keys.map(k=>`<div class="row"><a class="n" data-n="${esc(k)}">${esc(k)}</a><code>${fmt(changes[k])}</code><button data-rm="${esc(k)}">×</button></div>`).join("")||'<p class="mute">None yet.</p>');
+ h+=`<div class="row"><button class="primary" id="run"${keys.length?"":" disabled"}>Propagate</button><button id="clear"${keys.length?"":" disabled"}>Clear</button></div>`;
+ if(result){
+  if(result.error)h+=`<p class="err">${esc(result.error)}</p>`;
+  else{
+   const rows=Object.entries(result.changed).map(([k,d])=>{const b=result.baseline[k],a=result.values[k];
+    const rel=(typeof a==="number"&&typeof b==="number"&&b!==0)?(a-b)/Math.abs(b):null;return{k,a,b,d,rel};})
+    .sort((x,y)=>Math.abs(y.rel??Infinity)-Math.abs(x.rel??Infinity));
+   h+=cascade()+`<h3>Moved (${rows.length})</h3><table><tr><th>node</th><th class="num">before</th><th class="num">after</th><th class="num">Δ%</th></tr>`+
+    rows.slice(0,150).map(r=>`<tr><td><a class="n" data-n="${esc(r.k)}">${esc(r.k)}</a></td><td class="num">${fmt(r.b)}</td><td class="num">${fmt(r.a)}</td><td class="num">${r.rel===null?"–":(100*r.rel).toFixed(2)}</td></tr>`).join("")+"</table>"+
+    (rows.length>150?`<p class="mute">${rows.length-150} more not shown.</p>`:"")+
+    (result.loops.length?`<p class="mute">${result.loops.map(l=>`loop ${esc(l.loop)}: ${l.iterations} turns${l.converged?"":" (did not converge)"}`).join("; ")}</p>`:"");
+  }
+ }
+ $("#adjust").innerHTML=h;
+}
+function cascade(){
+ const moved=new Set(Object.keys(result.changed)),roots=Object.keys(changes),depth=new Map(roots.map(r=>[r,0]));
+ const q=[...roots];
+ while(q.length){const x=q.shift();for(const ed of down.get(x)||[]){const t=ed.target;
+  if(moved.has(t)&&(!depth.has(t)||depth.get(t)<depth.get(x)+1)&&depth.get(x)<60){depth.set(t,depth.get(x)+1);q.push(t);}}}
+ const lv=new Map();for(const[k,d]of depth){(lv.get(d)||lv.set(d,[]).get(d)).push(k);}
+ const rel=k=>{const b=result.baseline[k],a=result.values[k];return typeof a==="number"&&typeof b==="number"&&b!==0?(a-b)/Math.abs(b):0;};
+ let h=`<h3>Propagation (${depth.size-roots.length} derived, ${lv.size-1} steps)</h3><p class="mute">Each step shows the equation that produced the value, with the operands after the change. Order by distance from your change.</p>`;
+ for(const d of [...lv.keys()].sort((a,b)=>a-b)){
+  h+=`<div class="lvl"><b>${d===0?"You set":"Step "+d}</b>`;
+  for(const k of lv.get(d).sort((a,b)=>Math.abs(rel(b))-Math.abs(rel(a))).slice(0,25)){
+   const b=result.baseline[k],a=result.values[k],e=(eqOf.get(k)||[])[0],r=rel(k);
+   const ops=e?e.parameters.filter(p=>p!==k).map(p=>`${esc(p)}=${fmt(result.values[p])}`).join(", "):"";
+   h+=`<div class="step"><a class="n" data-n="${esc(k)}">${esc(k)}</a>: ${fmt(b)} → <b>${fmt(d===0?changes[k]:a)}</b> <span class="${r>0?"up":"dn"}">${r?(100*r).toFixed(2)+"%":""}</span>${e&&d?`<div class="calc mono">${esc(e.lhs)} = ${esc(e.rhs)}</div><div class="calc">${ops}</div>`:""}</div>`;}
+  if(lv.get(d).length>25)h+=`<p class="mute">${lv.get(d).length-25} more at this step.</p>`;
+  h+="</div>";}
+ return h;
+}
+async function run(){
+ try{const r=await fetch("/api/propagate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({changes})});
+  result=await r.json();}catch(e){result={error:String(e)};}
+ renderAdjust();
+}
+document.addEventListener("click",ev=>{
+ const t=ev.target.closest("[data-n]");
+ if(t){location.hash="#n="+encodeURIComponent(t.dataset.n);return;}
+ if(ev.target.id==="more"){shown+=200;renderList();}
+ if(ev.target.id==="add"){const n=nodes.get(cur),v=$("#val").value;
+  if(n.categories.length)changes[cur]=v;else if(v!==""&&isFinite(+v))changes[cur]=+v;renderAdjust();}
+ if(ev.target.dataset.rm){delete changes[ev.target.dataset.rm];result=null;renderAdjust();}
+ if(ev.target.id==="run")run();
+ if(ev.target.id==="clear"){changes={};result=null;renderAdjust();}
+});
+$("#q").addEventListener("input",()=>{shown=200;renderList();});
+$("#cat").addEventListener("change",()=>{shown=200;renderList();});
+$("#role").addEventListener("change",()=>{shown=200;renderList();});
+$("#print").addEventListener("click",()=>window.print());
+$("#printall").addEventListener("click",()=>{renderAllEq();setTimeout(()=>window.print(),50);});
+window.addEventListener("hashchange",()=>{route();renderAdjust();});
+init();
+</script>
+</body>
+</html>
