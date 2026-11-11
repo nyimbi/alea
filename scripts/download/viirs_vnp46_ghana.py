@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import time
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -48,7 +49,7 @@ def _fetch(args: tuple[str, Path, str]) -> int:
 	if dest.exists() and dest.stat().st_size > 1_000_000:
 		return 0
 	tmp = dest.with_suffix(".part")
-	for _ in range(4):
+	for attempt in range(6):
 		try:
 			req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
 			with urllib.request.urlopen(req, timeout=180) as r, open(tmp, "wb") as f:
@@ -59,8 +60,9 @@ def _fetch(args: tuple[str, Path, str]) -> int:
 			tmp.replace(dest)
 			return dest.stat().st_size
 		except Exception:
-			continue
-	raise RuntimeError(f"failed after 4 attempts: {url}")
+			time.sleep(5 * (attempt + 1))
+	print(f"FAILED after 6 attempts: {url}", flush=True)
+	return -1
 
 
 def main(argv: list[str]) -> int:
@@ -73,14 +75,17 @@ def main(argv: list[str]) -> int:
 	granules = [g for g in _list(short, year) if tile in g[0]]
 	print(f"{len(granules)} granules, ~{sum(s for _, s in granules) / 1e3:.1f} GB", flush=True)
 	jobs = [(u, out / u.rsplit("/", 1)[1], token) for u, _ in granules]
-	done = 0
+	done = failed = 0
 	with ThreadPoolExecutor(8) as pool:
 		for i, n in enumerate(pool.map(_fetch, jobs), 1):
+			if n < 0:
+				failed += 1
+				continue
 			done += n
 			if i % 100 == 0:
 				print(f"{i}/{len(jobs)} {done / 1e9:.2f} GB", flush=True)
-	print(f"done: {len(jobs)} granules", flush=True)
-	return 0
+	print(f"done: {len(jobs) - failed} of {len(jobs)} granules, {failed} failed", flush=True)
+	return 1 if failed else 0
 
 
 if __name__ == "__main__":
