@@ -80,7 +80,7 @@ td input.cell,td select.cell{width:100%;min-width:90px;padding:2px 5px}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let G=null,nodes=new Map(),eqs=new Map(),up=new Map(),down=new Map(),eqOf=new Map(),eqUses=new Map();
-let view="node",openCats=new Set(),onlySet=false,TG=new Map();
+let groupBy="category",view="node",openCats=new Set(),onlySet=false,TG=new Map();
 let changes={},result=null,shown=200,cur=null,allEq=false;
 
 function fmt(v){if(v===null||v===undefined)return"–";if(typeof v==="string")return esc(v);
@@ -186,15 +186,26 @@ function rowsHtml(list){
  return `<table><tr><th>id</th><th>name</th><th>unit</th><th class="num">default</th><th>set</th><th>range</th><th>role</th></tr>`+
  list.map(n=>`<tr data-row="${esc(n.id)}"${changes[n.id]!==undefined?' class="mod"':""}><td><a class="n" data-n="${esc(n.id)}">${esc(n.id)}</a></td><td>${esc(n.name)}</td><td>${esc(n.unit||"")}</td><td class="num">${fmt(n.default)}</td><td>${cell(n)}</td><td class="mute">${n.categories.length?esc(n.categories.join(" | ")):n.range?fmt(n.range[0])+" … "+fmt(n.range[1]):""}</td><td>${esc(n.role)}</td></tr>`).join("")+"</table>";
 }
+const INPUTS="(inputs: no determining equation)";
+const sysOf=n=>((eqOf.get(n.id)||[])[0]||{}).system||INPUTS;
+const SEP="\u0001";
 function renderTable(){
  setView("table");allEq=false;
  let f=filtered();if(onlySet)f=f.filter(n=>n.settable);
- TG=new Map();for(const n of f)(TG.get(n.category)||TG.set(n.category,[]).get(n.category)).push(n);
+ const keyOf=n=>groupBy==="category"?n.category:groupBy==="system"?sysOf(n):n.category+SEP+sysOf(n);
+ TG=new Map();for(const n of f)(TG.get(keyOf(n))||TG.set(keyOf(n),[]).get(keyOf(n))).push(n);
  const auto=($("#q").value.trim()||$("#cat").value||$("#role").value)&&f.length<=600;
- $("#detail").innerHTML=`<div class="row noprint"><label><input type="checkbox" id="onlyset"${onlySet?" checked":""}> only settable</label><span class="mute">${f.length} parameters in ${TG.size} categories. Type a value to set it; blank leaves the default.</span></div>`+
-  [...TG.keys()].sort().map(c=>{const l=TG.get(c),k=l.filter(n=>n.settable).length,open=auto||openCats.has(c);
-   l.sort((a,b)=>(a.subcategory||"").localeCompare(b.subcategory||"")||a.id.localeCompare(b.id));
-   return `<details class="cat" data-cat="${esc(c)}"${open?" open":""}><summary>${esc(c)} <small>${l.length} · ${k} settable</small></summary><div class="rows">${open?rowsHtml(l):""}</div></details>`;}).join("");
+ const sum=l=>`${l.length} · ${l.filter(n=>n.settable).length} settable`;
+ const leaf=(k,label)=>{const l=TG.get(k),open=auto||openCats.has(k);
+  l.sort((a,b)=>(a.subcategory||"").localeCompare(b.subcategory||"")||a.id.localeCompare(b.id));
+  return `<details class="cat" data-cat="${esc(k)}"${open?" open":""}><summary>${esc(label)} <small>${sum(l)}</small></summary><div class="rows">${open?rowsHtml(l):""}</div></details>`;};
+ let body;
+ if(groupBy==="both"){
+  const outer=new Map();for(const k of TG.keys()){const[c,sy]=k.split(SEP);(outer.get(c)||outer.set(c,[]).get(c)).push([k,sy]);}
+  body=[...outer.keys()].sort().map(c=>{const kids=outer.get(c).sort((a,b)=>a[1].localeCompare(b[1])),all=kids.flatMap(([k])=>TG.get(k)),ok="outer"+SEP+c,open=auto||openCats.has(ok);
+   return `<details class="cat" data-cat="${esc(ok)}"${open?" open":""}><summary>${esc(c)} <small>${kids.length} system(s) · ${sum(all)}</small></summary><div style="padding:0 8px 6px">${kids.map(([k,sy])=>leaf(k,sy)).join("")}</div></details>`;}).join("");
+ }else body=[...TG.keys()].sort().map(k=>leaf(k,k)).join("");
+ $("#detail").innerHTML=`<div class="row noprint"><label>Group by <select id="groupby">${[["category","Category"],["system","System"],["both","Category, then system"]].map(([v,t])=>`<option value="${v}"${v===groupBy?" selected":""}>${t}</option>`).join("")}</select></label><label><input type="checkbox" id="onlyset"${onlySet?" checked":""}> only settable</label></div><div class="mute">${f.length} parameters in ${TG.size} group${TG.size===1?"":"s"}. Type a value to set it; blank leaves the default. "System" is that of the equation that determines the node.</div>`+body;
 }
 function refresh(){renderAdjust();if(view==="table")renderTable();}
 function renderAdjust(){
@@ -276,6 +287,7 @@ $("#vtable").addEventListener("click",renderTable);
 $("#vnode").addEventListener("click",()=>{setView("node");cur?renderNode(cur):(allEq?renderAllEq():route());});
 document.addEventListener("change",ev=>{
  if(ev.target.id==="onlyset"){onlySet=ev.target.checked;renderTable();}
+ if(ev.target.id==="groupby"){groupBy=ev.target.value;renderTable();}
 });
 /* Commit on `input`, not `change`: `change` fires on blur, between mousedown and
    mouseup of the Propagate click, and rebuilding the panel there swallows the click. */
@@ -285,7 +297,7 @@ document.addEventListener("input",ev=>{
  else if(v===""||!isFinite(+v))delete changes[id];else changes[id]=+v;
  result=null;el.closest("tr").classList.toggle("mod",changes[id]!==undefined);renderAdjust();});
 document.addEventListener("toggle",ev=>{const d=ev.target;if(!d.matches||!d.matches("details.cat"))return;
- const c=d.dataset.cat;if(d.open){openCats.add(c);const box=d.querySelector(".rows");if(!box.firstChild)box.innerHTML=rowsHtml(TG.get(c)||[]);}else openCats.delete(c);},true);
+ const c=d.dataset.cat;if(d.open){openCats.add(c);const box=d.querySelector(":scope > .rows");if(box&&!box.firstChild)box.innerHTML=rowsHtml(TG.get(c)||[]);}else openCats.delete(c);},true);
 $("#print").addEventListener("click",()=>window.print());
 $("#printall").addEventListener("click",()=>{renderAllEq();setTimeout(()=>window.print(),50);});
 window.addEventListener("hashchange",()=>{route();renderAdjust();});
