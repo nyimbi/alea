@@ -14,6 +14,8 @@ change to the graph.
 from __future__ import annotations
 
 import json
+import os
+import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
@@ -23,6 +25,48 @@ from alea.prg.service import propagate_change
 
 PAGE = Path(__file__).with_name("index.html")
 MAX_BODY = 1_000_000
+DEFAULT_STORE = Path("data/processed/prg_whatifs.json")
+NAME = re.compile(r"^[\w .,+()-]{1,80}$")
+
+
+def read_sets(store: Path) -> dict[str, dict[str, Any]]:
+	if not store.exists():
+		return {}
+	data = json.loads(store.read_text())
+	assert isinstance(data, dict), f"{store} is not a JSON object"
+	return data
+
+
+def save_set(store: Path, name: str, changes: dict[str, Any]) -> None:
+	"""Validate against the graph, then write atomically. Refuses what propagate refuses."""
+	if not NAME.match(name):
+		raise ValueError("name must be 1-80 letters, digits, spaces or .,+()-_")
+	graph = load_graph()
+	unknown = sorted(set(changes) - set(graph.nodes))
+	if unknown:
+		raise ValueError(f"{unknown} are not parameters in the graph")
+	computed = sorted(k for k in changes if not graph.is_settable(k))
+	if computed:
+		raise ValueError(f"{computed} are computed by the graph and cannot be saved as settings")
+	if not changes:
+		raise ValueError("a set with no changes is not worth saving")
+	sets = read_sets(store)
+	sets[name] = changes
+	store.parent.mkdir(parents=True, exist_ok=True)
+	tmp = store.with_suffix(".tmp")
+	tmp.write_text(json.dumps(sets, indent=1, sort_keys=True))
+	os.replace(tmp, store)
+
+
+def delete_set(store: Path, name: str) -> bool:
+	sets = read_sets(store)
+	if name not in sets:
+		return False
+	del sets[name]
+	tmp = store.with_suffix(".tmp")
+	tmp.write_text(json.dumps(sets, indent=1, sort_keys=True))
+	os.replace(tmp, store)
+	return True
 
 
 def _plain(value: Any) -> Any:
@@ -114,12 +158,35 @@ class _Handler(BaseHTTPRequestHandler):
 	def do_GET(self) -> None:  # noqa: N802
 		if self.path in ("/", "/index.html"):
 			self._send(200, PAGE.read_bytes(), "text/html; charset=utf-8")
+		elif self.path == "/api/sets":
+			self._json(200, read_sets(self.server.store))  # type: ignore[attr-defined]
 		elif self.path == "/api/graph":
 			self._json(200, self.server.payload)  # type: ignore[attr-defined]
 		else:
 			self._json(404, {"error": "not found"})
 
+	def do_DELETE(self) -> None:  # noqa: N802
+		from urllib.parse import unquote
+
+		if not self.path.startswith("/api/sets/"):
+			self._json(404, {"error": "not found"})
+			return
+		found = delete_set(self.server.store, unquote(self.path[len("/api/sets/") :]))  # type: ignore[attr-defined]
+		self._json(200 if found else 404, {"deleted": found})
+
 	def do_POST(self) -> None:  # noqa: N802
+		if self.path == "/api/sets":
+			length = int(self.headers.get("Content-Length", "0"))
+			if length <= 0 or length > MAX_BODY:
+				self._json(400, {"error": "body missing or too large"})
+				return
+			try:
+				body = json.loads(self.rfile.read(length))
+				save_set(self.server.store, body["name"], body["changes"])  # type: ignore[attr-defined]
+				self._json(200, read_sets(self.server.store))  # type: ignore[attr-defined]
+			except Exception as exc:  # noqa: BLE001
+				self._json(400, {"error": f"{type(exc).__name__}: {exc}"})
+			return
 		if self.path != "/api/propagate":
 			self._json(404, {"error": "not found"})
 			return
@@ -140,8 +207,9 @@ class _Handler(BaseHTTPRequestHandler):
 		return
 
 
-def make_server(port: int = 8765) -> ThreadingHTTPServer:
+def make_server(port: int = 8765, store: Path = DEFAULT_STORE) -> ThreadingHTTPServer:
 	server = ThreadingHTTPServer(("127.0.0.1", port), _Handler)
+	server.store = store  # type: ignore[attr-defined]
 	server.payload = graph_payload()  # type: ignore[attr-defined]
 	return server
 

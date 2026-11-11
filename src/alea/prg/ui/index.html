@@ -34,6 +34,16 @@ svg .nd{fill:var(--panel);stroke:var(--acc);stroke-width:1.2;cursor:pointer}svg 
 svg .nd:hover{stroke-width:2.4}
 .row{display:flex;gap:6px;align-items:center;margin:4px 0}.row input{flex:1;min-width:0}
 .mute{color:var(--mute)}
+main.tbl{grid-template-columns:1fr 360px}main.tbl #list{display:none}
+details.cat{background:var(--panel);border:1px solid var(--line);border-radius:6px;margin:6px 0}
+details.cat>summary{cursor:pointer;padding:6px 10px;font-weight:600}details.cat>summary small{font-weight:400;color:var(--mute)}
+details.cat .rows{padding:0 6px 6px;overflow-x:auto}
+tr.mod td{background:color-mix(in srgb,var(--hot) 14%,transparent)}
+td input.cell,td select.cell{width:100%;min-width:90px;padding:2px 5px}
+.seg button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.zoom{display:flex;gap:4px;align-items:center;margin:4px 0}.zoom button{padding:0 8px}
+#nbwrap{border:1px solid var(--line);border-radius:6px;background:var(--panel);overflow:hidden}
+#nbwrap svg{display:block;cursor:grab;touch-action:none}
 .def{background:var(--panel);border-left:3px solid var(--acc);padding:8px 12px;margin:8px 0}
 .def .sub{margin-top:6px;color:var(--mute)}
 .lvl{margin:8px 0}.lvl>b{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.05em}
@@ -54,6 +64,7 @@ svg .nd:hover{stroke-width:2.4}
  <input id="q" placeholder="Search id, name, unit, text" autofocus>
  <select id="cat"><option value="">All categories</option></select>
  <select id="role"><option value="">All roles</option></select>
+ <span class="seg"><button id="vnode" class="on">Graph</button><button id="vtable">Table</button></span>
  <span id="count" class="mute"></span>
  <span style="flex:1"></span>
  <button id="print" title="Print the open node">Print node</button>
@@ -69,6 +80,7 @@ svg .nd:hover{stroke-width:2.4}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let G=null,nodes=new Map(),eqs=new Map(),up=new Map(),down=new Map(),eqOf=new Map(),eqUses=new Map();
+let view="node",openCats=new Set(),onlySet=false,TG=new Map();
 let changes={},result=null,shown=200,cur=null,allEq=false;
 
 function fmt(v){if(v===null||v===undefined)return"–";if(typeof v==="string")return esc(v);
@@ -85,7 +97,7 @@ async function init(){
   (down.get(ed.source)||down.set(ed.source,[]).get(ed.source)).push(ed);}
  for(const c of [...new Set(G.nodes.map(n=>n.category))].sort())$("#cat").add(new Option(c,c));
  for(const r of [...new Set(G.nodes.map(n=>n.role))].sort())$("#role").add(new Option(r,r));
- renderList();route();renderAdjust();
+ renderList();route();await loadSets();
 }
 function filtered(){
  const q=$("#q").value.trim().toLowerCase(),c=$("#cat").value,r=$("#role").value;
@@ -102,14 +114,14 @@ function neighbourSvg(id){
  const u=[...new Set((up.get(id)||[]).map(e=>e.source))].filter(x=>x!==id),d=[...new Set((down.get(id)||[]).map(e=>e.target))].filter(x=>x!==id);
  const cap=22,us=u.slice(0,cap),ds=d.slice(0,cap),rows=Math.max(us.length,ds.length,1),h=Math.max(120,rows*22+30),w=760,cx=w/2;
  const y=(i,n)=>n<=1?h/2:30+i*((h-50)/(n-1));
- let s=`<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="Neighbours of ${esc(id)}">`;
+ let s=`<svg id="nb" data-w="${w}" data-h="${h}" viewBox="0 0 ${w} ${h}" width="100%" height="${Math.min(h,420)}" role="img" aria-label="Neighbours of ${esc(id)}">`;
  us.forEach((x,i)=>{s+=`<path class="link" d="M 190 ${y(i,us.length)} C 280 ${y(i,us.length)}, ${cx-120} ${h/2}, ${cx-70} ${h/2}"/>`});
  ds.forEach((x,i)=>{s+=`<path class="link" d="M ${cx+70} ${h/2} C ${cx+120} ${h/2}, ${w-280} ${y(i,ds.length)}, ${w-190} ${y(i,ds.length)}"/>`});
  us.forEach((x,i)=>{s+=`<g><rect class="nd" data-n="${esc(x)}" x="4" y="${y(i,us.length)-10}" width="186" height="20" rx="4"/><text x="10" y="${y(i,us.length)+4}">${esc(x.length>26?x.slice(0,25)+"…":x)}</text></g>`});
  ds.forEach((x,i)=>{s+=`<g><rect class="nd" data-n="${esc(x)}" x="${w-190}" y="${y(i,ds.length)-10}" width="186" height="20" rx="4"/><text x="${w-184}" y="${y(i,ds.length)+4}">${esc(x.length>26?x.slice(0,25)+"…":x)}</text></g>`});
  s+=`<rect class="nd c" x="${cx-70}" y="${h/2-12}" width="140" height="24" rx="5"/><text x="${cx}" text-anchor="middle" y="${h/2+4}">${esc(id.length>20?id.slice(0,19)+"…":id)}</text></svg>`;
  const more=(u.length>cap?`${u.length-cap} more inputs. `:"")+(d.length>cap?`${d.length-cap} more dependents.`:"");
- return `<div class="mute" style="display:flex;justify-content:space-between"><span>inputs (${u.length})</span><span>dependents (${d.length})</span></div>${s}${more?`<p class="mute">${more}</p>`:""}`;
+ return `<div class="mute" style="display:flex;justify-content:space-between"><span>inputs (${u.length})</span><span>dependents (${d.length})</span></div><div class="zoom noprint"><button data-z="in" title="Zoom in">+</button><button data-z="out" title="Zoom out">−</button><button data-z="fit" title="Reset view">Reset</button><span class="mute">wheel to zoom, drag to pan</span></div><div id="nbwrap">${s}</div>${more?`<p class="mute">${more}</p>`:""}`;
 }
 function eqHtml(e){
  return `<div class="eq"><b>${esc(e.name)}</b> <span class="tag">${esc(e.system)}</span><span class="tag">${esc(e.relation)}</span>
@@ -137,17 +149,54 @@ function renderNode(id){
  <h3>Neighbourhood</h3>${neighbourSvg(id)}
  <h3>Determined by (${own.length})</h3>${own.map(eqHtml).join("")||'<p class="mute">An input: nothing in the graph determines it.</p>'}
  <h3>Read by (${uses.length})</h3>${uses.slice(0,40).map(eqHtml).join("")||'<p class="mute">No other equation reads it.</p>'}${uses.length>40?`<p class="mute">${uses.length-40} more not shown.</p>`:""}`;
- renderList();
+renderList();wireZoom();
 }
+let VB=null;
+function setVB(){const s=$("#nb");if(s&&VB)s.setAttribute("viewBox",`${VB.x} ${VB.y} ${VB.w} ${VB.h}`);}
+function zoomBy(f,cx,cy){const s=$("#nb");if(!s||!VB)return;const W=+s.dataset.w,nw=Math.min(W*4,Math.max(W/12,VB.w*f)),k=nw/VB.w;
+ VB={x:cx-(cx-VB.x)*k,y:cy-(cy-VB.y)*k,w:nw,h:VB.h*k};setVB();}
+function wireZoom(){const s=$("#nb");if(!s)return;const W=+s.dataset.w,H=+s.dataset.h;VB={x:0,y:0,w:W,h:H};
+ const pt=e=>{const r=s.getBoundingClientRect();return{x:VB.x+(e.clientX-r.left)/r.width*VB.w,y:VB.y+(e.clientY-r.top)/r.height*VB.h};};
+ s.addEventListener("wheel",e=>{e.preventDefault();const p=pt(e);zoomBy(e.deltaY<0?0.85:1/0.85,p.x,p.y);},{passive:false});
+ let drag=null;
+ s.addEventListener("pointerdown",e=>{if(e.target.closest("[data-n]"))return;drag={x:e.clientX,y:e.clientY};s.setPointerCapture(e.pointerId);s.style.cursor="grabbing";});
+ s.addEventListener("pointermove",e=>{if(!drag)return;const r=s.getBoundingClientRect();
+  VB.x-=(e.clientX-drag.x)/r.width*VB.w;VB.y-=(e.clientY-drag.y)/r.height*VB.h;drag={x:e.clientX,y:e.clientY};setVB();});
+ const end=()=>{drag=null;s.style.cursor="grab";};s.addEventListener("pointerup",end);s.addEventListener("pointercancel",end);}
+function zoomBtn(k){const s=$("#nb");if(!s)return;const W=+s.dataset.w,H=+s.dataset.h;
+ if(k==="fit"){VB={x:0,y:0,w:W,h:H};setVB();}else zoomBy(k==="in"?0.7:1/0.7,VB.x+VB.w/2,VB.y+VB.h/2);}
 function renderAllEq(){
  allEq=true;cur=null;
  $("#detail").innerHTML=`<h2>All equations</h2><p class="mute">${G.equations.length} equations, grouped by system.</p>`+
   [...new Set(G.equations.map(e=>e.system))].sort().map(s=>`<h3>${esc(s)}</h3>`+G.equations.filter(e=>e.system===s).map(eqHtml).join("")).join("");
 }
 function route(){
- const m=location.hash.match(/^#n=(.+)$/);if(m){renderNode(decodeURIComponent(m[1]));}
+ const m=location.hash.match(/^#n=(.+)$/);if(m){setView("node");renderNode(decodeURIComponent(m[1]));}
  else if(!cur&&!allEq){$("#detail").innerHTML='<h2>PRG explorer</h2><p class="mute">Pick a node on the left, or search. Click any underlined name to move through the graph. The right panel runs a what-if through the same propagation the CLI uses; it never edits the graph.</p>';}
 }
+function setView(v){view=v;$("main").classList.toggle("tbl",v==="table");
+ $("#vnode").classList.toggle("on",v==="node");$("#vtable").classList.toggle("on",v==="table");}
+function cell(n){
+ if(!n.settable)return '<span class="mute">computed</span>';
+ const cur_=changes[n.id];
+ if(n.categories.length)return `<select class="cell" data-set="${esc(n.id)}">${n.categories.map(c=>`<option${c===(cur_??n.default)?" selected":""}>${esc(c)}</option>`).join("")}</select>`;
+ return `<input class="cell" type="number" step="any" data-set="${esc(n.id)}" placeholder="${n.default===null?"":esc(String(n.default))}" value="${cur_===undefined?"":esc(String(cur_))}">`;
+}
+function rowsHtml(list){
+ return `<table><tr><th>id</th><th>name</th><th>unit</th><th class="num">default</th><th>set</th><th>range</th><th>role</th></tr>`+
+ list.map(n=>`<tr data-row="${esc(n.id)}"${changes[n.id]!==undefined?' class="mod"':""}><td><a class="n" data-n="${esc(n.id)}">${esc(n.id)}</a></td><td>${esc(n.name)}</td><td>${esc(n.unit||"")}</td><td class="num">${fmt(n.default)}</td><td>${cell(n)}</td><td class="mute">${n.categories.length?esc(n.categories.join(" | ")):n.range?fmt(n.range[0])+" … "+fmt(n.range[1]):""}</td><td>${esc(n.role)}</td></tr>`).join("")+"</table>";
+}
+function renderTable(){
+ setView("table");allEq=false;
+ let f=filtered();if(onlySet)f=f.filter(n=>n.settable);
+ TG=new Map();for(const n of f)(TG.get(n.category)||TG.set(n.category,[]).get(n.category)).push(n);
+ const auto=($("#q").value.trim()||$("#cat").value||$("#role").value)&&f.length<=600;
+ $("#detail").innerHTML=`<div class="row noprint"><label><input type="checkbox" id="onlyset"${onlySet?" checked":""}> only settable</label><span class="mute">${f.length} parameters in ${TG.size} categories. Type a value to set it; blank leaves the default.</span></div>`+
+  [...TG.keys()].sort().map(c=>{const l=TG.get(c),k=l.filter(n=>n.settable).length,open=auto||openCats.has(c);
+   l.sort((a,b)=>(a.subcategory||"").localeCompare(b.subcategory||"")||a.id.localeCompare(b.id));
+   return `<details class="cat" data-cat="${esc(c)}"${open?" open":""}><summary>${esc(c)} <small>${l.length} · ${k} settable</small></summary><div class="rows">${open?rowsHtml(l):""}</div></details>`;}).join("");
+}
+function refresh(){renderAdjust();if(view==="table")renderTable();}
 function renderAdjust(){
  const n=cur?nodes.get(cur):null;
  let h="<h3 style='margin-top:0'>What-if</h3>";
@@ -173,8 +222,17 @@ function renderAdjust(){
     (result.loops.length?`<p class="mute">${result.loops.map(l=>`loop ${esc(l.loop)}: ${l.iterations} turns${l.converged?"":" (did not converge)"}`).join("; ")}</p>`:"");
   }
  }
+ h+=`<h3>Saved sets</h3><div class="row"><input id="sname" placeholder="Name this set" value="${esc(setName)}"><button id="save"${keys.length?"":" disabled"}>Save</button></div>`+
+  (setMsg?`<p class="err">${esc(setMsg)}</p>`:"")+
+  (Object.keys(SETS).sort().map(k=>`<div class="row"><span style="flex:1"><b>${esc(k)}</b> <span class="mute">${Object.keys(SETS[k]).length} change(s)</span></span><button data-load="${esc(k)}">Load</button><button data-del="${esc(k)}">×</button></div>`).join("")||'<p class="mute">None saved.</p>');
  $("#adjust").innerHTML=h;
 }
+let SETS={},setName="",setMsg="";
+async function loadSets(){try{SETS=await (await fetch("/api/sets")).json();}catch(e){SETS={};}renderAdjust();}
+async function saveSet(){const name=$("#sname").value.trim();setName=name;
+ const r=await fetch("/api/sets",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,changes})});
+ const j=await r.json();if(r.ok){SETS=j;setMsg="";}else setMsg=j.error;renderAdjust();}
+async function delSet(name){await fetch("/api/sets/"+encodeURIComponent(name),{method:"DELETE"});await loadSets();}
 function cascade(){
  const moved=new Set(Object.keys(result.changed)),roots=Object.keys(changes),depth=new Map(roots.map(r=>[r,0]));
  const q=[...roots];
@@ -199,18 +257,35 @@ async function run(){
  renderAdjust();
 }
 document.addEventListener("click",ev=>{
+ const zb=ev.target.closest("[data-z]");if(zb){zoomBtn(zb.dataset.z);return;}
+ const ld=ev.target.closest("[data-load]");if(ld){changes={...SETS[ld.dataset.load]};result=null;refresh();run();return;}
+ const dl=ev.target.closest("[data-del]");if(dl){delSet(dl.dataset.del);return;}
+ if(ev.target.id==="save"){saveSet();return;}
  const t=ev.target.closest("[data-n]");
  if(t){location.hash="#n="+encodeURIComponent(t.dataset.n);return;}
  if(ev.target.id==="more"){shown+=200;renderList();}
  if(ev.target.id==="add"){const n=nodes.get(cur),v=$("#val").value;
   if(n.categories.length)changes[cur]=v;else if(v!==""&&isFinite(+v))changes[cur]=+v;renderAdjust();}
- if(ev.target.dataset.rm){delete changes[ev.target.dataset.rm];result=null;renderAdjust();}
+ if(ev.target.dataset.rm){delete changes[ev.target.dataset.rm];result=null;refresh();}
  if(ev.target.id==="run")run();
- if(ev.target.id==="clear"){changes={};result=null;renderAdjust();}
+ if(ev.target.id==="clear"){changes={};result=null;refresh();}
 });
-$("#q").addEventListener("input",()=>{shown=200;renderList();});
-$("#cat").addEventListener("change",()=>{shown=200;renderList();});
-$("#role").addEventListener("change",()=>{shown=200;renderList();});
+const filt=()=>{shown=200;renderList();if(view==="table")renderTable();};
+$("#q").addEventListener("input",filt);$("#cat").addEventListener("change",filt);$("#role").addEventListener("change",filt);
+$("#vtable").addEventListener("click",renderTable);
+$("#vnode").addEventListener("click",()=>{setView("node");cur?renderNode(cur):(allEq?renderAllEq():route());});
+document.addEventListener("change",ev=>{
+ if(ev.target.id==="onlyset"){onlySet=ev.target.checked;renderTable();}
+});
+/* Commit on `input`, not `change`: `change` fires on blur, between mousedown and
+   mouseup of the Propagate click, and rebuilding the panel there swallows the click. */
+document.addEventListener("input",ev=>{
+ const el=ev.target.closest("[data-set]");if(!el)return;const id=el.dataset.set,n=nodes.get(id),v=el.value;
+ if(n.categories.length){if(v===n.default)delete changes[id];else changes[id]=v;}
+ else if(v===""||!isFinite(+v))delete changes[id];else changes[id]=+v;
+ result=null;el.closest("tr").classList.toggle("mod",changes[id]!==undefined);renderAdjust();});
+document.addEventListener("toggle",ev=>{const d=ev.target;if(!d.matches||!d.matches("details.cat"))return;
+ const c=d.dataset.cat;if(d.open){openCats.add(c);const box=d.querySelector(".rows");if(!box.firstChild)box.innerHTML=rowsHtml(TG.get(c)||[]);}else openCats.delete(c);},true);
 $("#print").addEventListener("click",()=>window.print());
 $("#printall").addEventListener("click",()=>{renderAllEq();setTimeout(()=>window.print(),50);});
 window.addEventListener("hashchange",()=>{route();renderAdjust();});
