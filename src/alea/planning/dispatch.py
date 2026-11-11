@@ -184,7 +184,10 @@ def solve_dispatch(
 	except Exception as exc:  # noqa: BLE001
 		raise DispatchError(f"{solver} failed to dispatch: {exc}") from exc
 	seconds = time.perf_counter() - start
-	if status not in ("ok", "optimal", "Optimal"):
+	# pypsa reports status "ok" for a run HiGHS stopped at its time limit, with
+	# the dual bound as the objective and a point that is not a solution. The
+	# termination condition is what says the solve finished.
+	if status not in ("ok", "optimal", "Optimal") or str(condition).lower() != "optimal":
 		raise DispatchError(f"{solver} returned status={status!r} ({condition})")
 
 	# `status` above is optimal, so a solution exists and the objective is set.

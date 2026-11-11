@@ -49,3 +49,20 @@ def test_core_hours_is_wall_time_times_threads():
 	assert r.as_dict()["core_hours"] == r.core_hours
 	r.threads = 12
 	assert r.core_hours == r.seconds * 12 / 3600.0
+
+
+def test_a_solve_stopped_at_the_time_limit_is_refused_not_reported_optimal():
+	"""pypsa says status 'ok' for a HiGHS run that hit its time limit; the objective is then a dual bound."""
+	import pytest
+
+	from alea.planning.expansion import ExpansionError
+
+	n = _expandable(True)
+	n.set_snapshots(list(pd.date_range("2030-01-01", periods=8760, freq="h")))
+	n.loads_t.p_set = pd.DataFrame({"load": 50.0 + 20.0 * (n.snapshots.hour.to_numpy() >= 18)}, index=n.snapshots)
+	config = Config(
+		scenario=ScenarioConfig(countries=["KE"]),
+		solve=SolveConfig(solver_options={"time_limit": 0.001}),
+	)
+	with pytest.raises(ExpansionError, match="time_limit|Time limit|status"):
+		solve_expansion(n, config)

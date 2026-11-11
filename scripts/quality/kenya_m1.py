@@ -23,7 +23,7 @@ def main(argv: list[str]) -> int:
 
 	days = int(argv[0]) if argv else 14
 	year = int(argv[1]) if len(argv) > 1 else 2030
-	cfg = Config(scenario=ScenarioConfig(countries=["KE"]), solve=SolveConfig(transmission_losses=True))
+	cfg = Config(scenario=ScenarioConfig(countries=["KE"]), solve=SolveConfig(transmission_losses=True, solver_options={"solver": argv[3]} if len(argv) > 3 else {}))
 	demand, profiles, costs = network_inputs(cfg, year=year)
 	if days:
 		keep = demand.index[: 24 * days]
@@ -55,7 +55,9 @@ def main(argv: list[str]) -> int:
 	print("seconds", round(a.seconds, 1), "core_hours", round(a.core_hours, 4))
 	print("investments", {k: round(v, 1) for k, v in a.investments.items() if v > 1e-6})
 	ok = (
-		str(a.status).lower().startswith(("ok", "optimal")) and abs(a.objective - b.objective) <= 1e-6 * max(1.0, abs(a.objective))
+		str(a.status).lower().startswith(("ok", "optimal"))
+		and abs(a.objective - b.objective) <= 1e-6 * max(1.0, abs(a.objective))
+		and abs(dispatch + capex - a.objective) <= 1e-6 * max(1.0, abs(a.objective))
 	)
 	print("M1", "PASS" if ok else "FAIL")
 	return 0 if ok else 1

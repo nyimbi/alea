@@ -310,7 +310,10 @@ def solve_expansion(
 		raise ExpansionError(f"{solver} failed to solve: {exc}") from exc
 	seconds = time.perf_counter() - start
 
-	if status not in ("ok", "optimal", "Optimal"):
+	# pypsa reports status "ok" for a run HiGHS stopped at its time limit, with
+	# the dual bound as the objective and a point that is not a solution. The
+	# termination condition is what says the solve finished.
+	if status not in ("ok", "optimal", "Optimal") or str(condition).lower() != "optimal":
 		raise ExpansionError(
 			f"{solver} returned status={status!r} ({condition}); an infeasible or "
 			f"unbounded expansion is a modelling result, not a crash, and the "
