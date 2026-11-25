@@ -31,12 +31,31 @@ No open call today is a clean fit. Everything realistic needs an institutional p
 - Rejected for now: NLnet and Sovereign Tech Fund, on scope. Revisit STF only if the PRG kernel is extracted as a standalone, documented library.
 - Rejected as closed: CCAI, Schmidt, Energy Catalyst R11, UNDP.
 
-## Not searched
+## Second sweep (same day): philanthropy, bilateral, Kenya, open-source funds
 
-Gates Foundation, Open Philanthropy, Bloomberg Philanthropies, Breakthrough Energy, ClimateWorks, Wellcome-style trusts, GIZ, FCDO calls, and national funds in Kenya (NRF Kenya hosts the LEAP-SE call text). One search returned nothing named from these. A follow-up per funder is the next step.
+Ten more searches plus primary pages. Result: still no open call for ALEA. Two things to watch.
+
+| Funder / call | Amount | Status | Fit | Evidence |
+|---|---|---|---|---|
+| AFD Digital Energy Challenge | EUR 150k (Tech Accelerator), EUR 400k (Partnership) | 2026 round closed 17 Jun 2026. Themes included "optimizing planning and investments". Open to SMEs, startups and software developers | **Best watch item.** Closest thematic match found. Likely recurs yearly (my inference, not stated). Needs a registered company | archived, `afd-digital-energy-challenge-2026.html` |
+| AECF REACT 2.0 DIFEC (Sida) | SEK 50M programme, 2026 to 2028 | Both windows closed 17 Apr 2026. Gives priority to open-source and digital-public-goods alignment | Watch for later windows. Enterprises only | **snippet** (programme page 404 on fetch) |
+| CCG-TWAS Catalyst Research Group Grants | research assistants, MSc scholarships, hardware | "Proposed, subject to funding secured" (Oct 2025). No call found | Universities in developing countries only. A route if a Kenyan university hosts ALEA | archived, `ccg-twas-catalyst.html` |
+| UK PACT Kenya | clean energy round had an integrated-planning theme | Last energy round closed 29 Jan 2025. 2025 call was nature-based. No 2026 energy round found | Needs a partner. Strathmore and Practical Action already hold the planning awards | **snippet** |
+| Open Source for Science Fund (Renaissance Philanthropy, Biohub, Wellcome) | up to US$250k or US$1M | First call life sciences only; applications closed 21 Jul 2026 per a listing | Wrong domain. Check whether a later call opens energy | archived, `os4science-renaissance.html` |
+| EEP Africa 2026 | n/a | EOI deadline 16 Mar 2026, closed | Project finance, not software | **snippet** |
+| Eni Award 2027 | EUR 200k Energy Transition prize | Main deadline 20 Nov 2026, closed. "Eni for Innovation" recognitions 31 Jan 2027 | Prize for researchers and ventures. Unclear fit | **snippet** |
+| Gates, Open Philanthropy, Bloomberg, Breakthrough, ClimateWorks, IKEA, Rockefeller | n/a | No relevant open call or committed grant found. Gates committed-grants listings surfaced a 2024 Global Energy Alliance grant only | None. Approach funders, no open route | **snippet** |
+| Mitigation Action Facility 2026, GCF readiness, GEF, UNDP, AfDB | n/a | No call for energy planning tools found | Government-facing. No fit | **snippet** |
+| Sovereign Tech, SSI Research Software Maintenance Fund, NSF PESOSE, Digital Research Alliance of Canada | various | UK, US and Canada institutions only, or closed | No | **snippet** |
+| Terra Viva category pages 4 and 5 | n/a | All deadlines passed (latest 31 Dec 2026, a conference award). Pages are ordered by post date, so pages 6 to 81 are older | None | archived, `terraviva-category-energy-climate-p4.html`, `p5.html` |
+
+## Still not covered
+
+GIZ, Norad and Sida's own portals (only reached through aggregators), the World Bank direct trust funds, Kenyan ministries, and Terra Viva pages 6 to 81 (older by post date). Each of those was a single aggregator hit or unread. Treat "nothing found" for them as "not checked well".
 
 ## Next actions
 
+0. Calendar the AFD Digital Energy Challenge: look for the 2027 call around April to June. It needs a registered company, so decide which entity would apply.
 1. Fill the placeholders in `../alea-funding/enaccess-email.md` and send it.
 2. Open the Horizon Funding & Tenders portal and search the exact topic title to confirm status and deadline.
 3. Ask one of the partner organisations whether it plans a LEAP-SE or Horizon bid that needs an open planning model.
