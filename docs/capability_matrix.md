@@ -544,7 +544,7 @@ This matrix shows coverage across the major data source categories.
 **Highest validation**: Outage prediction (validated against Ghana and Johannesburg studies), planning core (validated against multiple African case studies).
 **Lowest validation**: PRG, intelligence scanning, reporting — all of which lack peer-reviewed or independent validation.
 
-**Note**: The PRG's low external validation reflects its novel nature. No comparable system exists in the energy modelling ecosystem, so validation will require novel methodologies (e.g., differential testing against manually-derived scenarios).
+**Note**: The PRG has little external validation. Related structures exist (system dynamics, Modelica, the Open Energy Ontology; see `docs/research/alea-prior-art/`), but none was found that pairs cited equations with a CI gate at this scale. Validation needs differential testing against manually derived scenarios.
 
 ---
 

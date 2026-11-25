@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" lang="en-us" xml:lang="en-us" data-mc-search-type="Stem" data-mc-help-system-file-name="Default.xml" data-mc-path-to-help-system="../../../" data-mc-target-type="WebHelp2" data-mc-runtime-file-type="Topic" data-mc-preload-images="false" data-mc-in-preview-mode="false" data-mc-medium="non-print" data-mc-toc-path="Building models|Working with units" data-mc-ignored-words="leakage_fraction;slat_contents;submodule;normal_service_quality;Service_Quality;Circularities;circularities;draggable" data-mc-file-tags="StatusTags.Update for new UI">
+    <!-- saved from url=(0016)http://localhost -->
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <link href="../../../Skins/Default/Stylesheets/Slideshow.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../../../Skins/Default/Stylesheets/TextEffects.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../../../Skins/Default/Stylesheets/Topic.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../../../Skins/Default/Stylesheets/Components/Styles.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../../../Skins/Default/Stylesheets/Components/Tablet.css" rel="stylesheet" type="text/css" data-mc-generated="True" />
+        <link href="../../../Skins/Default/Stylesheets/Components/Mobile.css" rel="stylesheet" type="text/css" data-mc-generated="True" /><title>Checking Unit Consistency</title>
+        <link href="../../Resources/Stylesheets/isee_Help.css" rel="stylesheet" type="text/css" />
+        <script src="../../../Resources/Scripts/custom.modernizr.js" type="text/javascript">
+        </script>
+        <script src="../../../Resources/Scripts/jquery.min.js" type="text/javascript">
+        </script>
+        <script src="../../../Resources/Scripts/require.min.js" type="text/javascript">
+        </script>
+        <script src="../../../Resources/Scripts/require.config.js" type="text/javascript">
+        </script>
+        <script src="../../../Resources/Scripts/foundation.min.js" type="text/javascript">
+        </script>
+        <script src="../../../Resources/Scripts/plugins.min.js" type="text/javascript">
+        </script>
+        <script src="../../../Resources/Scripts/MadCapAll.js" type="text/javascript">
+        </script>
+    </head>
+    <body>
+        <h1><a name="aanchor40"></a>
+            <MadCap:concept term="units" /><a name="kanchor474"></a>Checking Unit Consistency</h1>
+        <p>Checking unit consistency allows you to ensure that the  left- and right-hand sides of all equations have consistent units, and that stocks in conserved flow chains all have the same units of measure.</p>
+        <p>When you check unit consistency, if any assigned units are incorrectly defined, the software will display a warning message, but you can still run the model.</p>
+        <h3>To Check Unit Consistency for a Single Variable:</h3>
+        <ol>
+            <li value="1">
+                <p>In the model diagram, select the variable whose units you want to check. </p>
+                <p class="Note"><b class="NoteHeading">Note</b>: You have to have an equation defined  in order to check its units.</p>
+            </li>
+            <li value="2">
+                <p>On the <a href="../../08-Reference/01-ObjectsAndProperties/01-BuildingBlocks/07-SharedProperties/Equation_tab.htm">Equation tab of the Properties panel</a>, click <img src="../../Resources/images/icons/icon-dropdown.png" /> next to the Units box, and then choose <b class="Selection">Check units</b><a name="kanchor475"></a>.</p>
+                <p>If the units are inconsistent the message that appears will indicate where in the equation the problem was detected. For example, the equation IF&#160;apples &lt;&#160;oranges THEN&#160;apples ELSE&#160;oranges would report:</p>
+                <p>
+                    <img src="../../Resources/images/unit-error-message.png" />
+                </p>
+            </li>
+        </ol>
+        <h3>To Check Unit Consistency for the Entire Model<a name="kanchor476"></a></h3>
+        <p>To check unit consistency for the entire model, you have to first finish all the equations in the model. Once this happens, the message on the Run toolbar will change from providing the number of errors to providing the number of variables for which units have not been defined, or for which there are unit inconsistencies. </p>
+        <p style="border-top-style: solid;border-top-width: 1px;border-top-color: #000000;border-bottom-style: solid;border-bottom-width: 1px;border-bottom-color: #000000;"><b class="NoteHeading">Note</b>: The list of model errors and unit warnings is only available in Model&#160;<img src="../../Resources/images/icons/icon-model.png" /> mode, not in Map <img src="../../Resources/images/icons/icon-map.png" />&#160;mode.</p>
+        <ol>
+            <li value="1">If no problems are found, the Run toolbar won't display any message. Double check you're in Model mode if you have doubts.</li>
+            <li value="2">
+                <p>For each units issue, the dropdown listing the number of warning errors displays the name of the variable with the problem. Click on a name to open the Properties panel on the equation for that variable.</p>
+            </li>
+            <li value="3">To troubleshoot the inconsistencies, select each variable, and then check its units of measure. Using the Check Units entry in the menu next to the units will provide additional information on the nature of the inconsistency.</li>
+        </ol>
+        <p><a class="MCHelpControl MCHelpControl-Concept conceptLink" data-mc-concepts="units" href="javascript:void(0);" data-mc-topics="Assigning Units to Variables|Assigning_units_to_entities.htm#aanchor27||Checking Unit Consistency|#aanchor40||Creating and Deleting Units|Creating_and_deleting_units.htm#aanchor37||Creating Equations for Units|Creating_equations_for_units.htm#aanchor110||Working with Units|Overview_Working_with_Units.htm#aanchor118"><span class="MCHelpControl-ConceptHotSpot_"><img class="MCHelpControl_Image_Icon" src="../../../Skins/Default/Stylesheets/Images/transparent.gif" height="16" width="16" alt="Concept Link Icon" />See Also</span></a>
+        </p>
+    </body>
+</html>

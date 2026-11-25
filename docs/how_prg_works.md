@@ -82,7 +82,7 @@ Here are four example edges:
 | `total_emissions_2035` | `carbon_cost_2035` | functional | hard | `carbon_cost_equation` |
 | `carbon_price` | `coal_retirement_schedule` | inequality | soft | `carbon_price_coal_retirement_consistency` |
 
-The first three are **causal**: change the carbon price, and the coal capacity changes; change the coal capacity, and emissions change; change the emissions, and the carbon cost changes.
+The first three are **dependencies** (not identified causal effects): change the carbon price, and the coal capacity changes; change the coal capacity, and emissions change; change the emissions, and the carbon cost changes.
 
 The fourth is a **consistency rule**: if the carbon price is high, the coal retirement must be early. It's not a physical law, but it's a policy coherence requirement.
 

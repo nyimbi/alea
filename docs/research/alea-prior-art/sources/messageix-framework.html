@@ -1,0 +1,428 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>The MESSAGEix framework &mdash; MESSAGEix 1.2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="getting_started.html" /> 
+
+<!-- RTD Extra Head -->
+
+<!-- 
+Always link to the latest version, as canonical.
+http://docs.readthedocs.org/en/latest/canonical.html
+-->
+<link rel="canonical" href="https://message-ix-khaeru.readthedocs.io/en/latest/" />
+
+
+
+<script type="text/javascript" src="_static/readthedocs-data.js"></script>
+
+<!-- Add page-specific data, which must exist in the page js, not global -->
+<script type="text/javascript">
+READTHEDOCS_DATA['page'] = "index"
+READTHEDOCS_DATA['source_suffix'] = ".rst"
+</script>
+
+
+
+<!-- end RTD <extrahead> -->
+<script async type="text/javascript" src="/_/static/javascript/readthedocs-addons.js"></script><meta name="readthedocs-project-slug" content="message-ix-khaeru" /><meta name="readthedocs-version-slug" content="feature-ixmp-backend" /><meta name="readthedocs-resolver-filename" content="/" /><meta name="readthedocs-http-status" content="200" /></head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="#" class="icon icon-home"> MESSAGEix
+          
+
+          
+            
+            <img src="_static/logo_white.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+            
+              <div class="version">
+                feature/ixmp-backend
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="framework.html">MESSAGE<em>ix</em> framework overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Python &amp; R API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.html">Mathematical specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide.html">Developing MESSAGE<em>ix</em> models</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="notice.html">User guidelines and notice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to MESSAGE<em>ix</em> development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html#contributor-license-agreement">Contributor License Agreement</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="bibliography.html">References</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">MESSAGEix</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#">Docs</a> &raquo;</li>
+        
+      <li>The MESSAGE<em>ix</em> framework</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+              <a href="https://github.com/khaeru/message_ix/blob/feature/ixmp-backend/doc/source/index.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="the-messageix-framework">
+<h1>The MESSAGE<em>ix</em> framework<a class="headerlink" href="#the-messageix-framework" title="Permalink to this headline">¶</a></h1>
+<div class="figure align-right" id="id4">
+<a class="reference internal image-reference" href="_images/ix_features.png"><img alt="_images/ix_features.png" src="_images/ix_features.png" style="width: 320px;" /></a>
+<p class="caption"><span class="caption-text">The <em>ix modeling platform</em> (source: <a class="reference internal" href="bibliography.html#huppmann-messageix-2018" id="id1">[huppmann_messageix_2018]</a>)</span></p>
+</div>
+<div class="section" id="overview-and-scope">
+<h2>Overview and scope<a class="headerlink" href="#overview-and-scope" title="Permalink to this headline">¶</a></h2>
+<p>MESSAGE<em>ix</em> is a versatile, open-source, dynamic systems-optimization modelling framework.
+It was developed for strategic energy planning and integrated assessment of energy-engineering-economy-environment systems (E4).
+The framework can be applied to analyse scenarios of the energy system transformation under technical-engineering constraints and political-societal considerations.
+The optimization model can be linked to the general-economy MACRO model to incorporate feedback between prices and demand levels for energy and commodities.
+The equations are implemented in the mathematical programming system <a class="reference external" href="http://www.gams.com">GAMS</a> for numerical solution of a model instance.</p>
+<p>The MESSAGE<em>ix</em> framework is fully integrated with <abbr title="International Institute for Applied Systems Analysis">IIASA</abbr>’s <em>ix modeling platform</em> (ixmp), a data warehouse for high-powered numerical scenario analysis.
+The platform supports an efficient workflow between original input data sources, the implementation of the mathematical model formulation, and the analysis of numerical results.
+The platform can be accessed via a web-based user interface and application programming interfaces (API) to the scientific programming languages Python and R.
+The platform also includes a generic data exchange API to <a class="reference external" href="http://www.gams.com">GAMS</a> for numerical computation.</p>
+<p>This documentation provides an introduction and the mathematical formulation of the MESSAGE<em>ix</em> equations and auxiliary functions.
+For the scientific reference of the framework, see Huppmann et al. (2019) <a class="reference internal" href="bibliography.html#huppmann-messageix-2018" id="id2">[huppmann_messageix_2018]</a>.
+The formulation of MESSAGE<em>ix</em> is a re-implementation and extension of <cite>‘MESSAGE V’</cite> (Messner and Strubegger, 1995 <a class="reference internal" href="bibliography.html#messner-users-1995" id="id3">[messner_users_1995]</a>), the Integrated Assessment model developed at the International Institute for Applied Systems Analysis (IIASA) since the 1980s.
+For an overview of the MESSAGE<em>ix</em> model used at the IIASA Energy Program and a list of recent publications, please refer to the <a class="reference external" href="http://data.ene.iiasa.ac.at/message-globiom/">MESSAGE-GLOBIOM documentation website</a>.</p>
+</div>
+<div class="section" id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#install-gams">Install GAMS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#install-messageix-via-anaconda">Install MESSAGE<em>ix</em> via Anaconda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#install-messageix-from-source">Install MESSAGE<em>ix</em> from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#configure-model-files">Configure model files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials.html#preparation">Preparation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials.html#westeros-electrified">Westeros Electrified</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials.html#austrian-energy-system">Austrian energy system</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<p id="help">Have a question? First, check the <a class="reference internal" href="faq.html"><span class="doc">Frequently asked questions</span></a>, then try the community Google group:</p>
+<ul class="simple">
+<li>on the Web at <a class="reference external" href="https://groups.google.com/d/forum/message_ix">https://groups.google.com/d/forum/message_ix</a>, or</li>
+<li>via e-mail at &lt;<a class="reference external" href="mailto:message_ix&#37;&#52;&#48;googlegroups&#46;com">message_ix<span>&#64;</span>googlegroups<span>&#46;</span>com</a>&gt;.</li>
+</ul>
+</div>
+<div class="section" id="detailed-documentation">
+<h2>Detailed documentation<a class="headerlink" href="#detailed-documentation" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="framework.html">MESSAGE<em>ix</em> framework overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="framework.html#supported-features">Supported features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="framework.html#running-a-model">Running a model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE_run.html">Run script for MESSAGE<em>ix</em> (stand-alone)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE-MACRO_run.html">Run script for MESSAGE<em>ix</em> and MACRO</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Python &amp; R API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#ixmp-package"><code class="docutils literal notranslate"><span class="pre">ixmp</span></code> package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#message-ix-package"><code class="docutils literal notranslate"><span class="pre">message_ix</span></code> package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#module-message_ix.models">Model classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#module-message_ix.utils">Utility methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#module-message_ix.testing">Testing utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="core.html">Mathematical specification</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="model/MESSAGE/sets_maps_def.html">Sets and mappings definition</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/sets_maps_def.html#sets-in-the-messageix-implementation">Sets in the MESSAGE<em>ix</em> implementation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/sets_maps_def.html#category-types-and-mappings">Category types and mappings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/sets_maps_def.html#mappings-sets">Mappings sets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/sets_maps_def.html#mapping-sets-flags-for-bounds">Mapping sets (flags) for bounds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/sets_maps_def.html#mapping-sets-flags-for-fixed-variables">Mapping sets (flags) for fixed variables</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="model/MESSAGE/parameter_def.html">Parameter definition</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/parameter_def.html#general-parameters-of-the-messageix-implementation">General parameters of the MESSAGE<em>ix</em> implementation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/parameter_def.html#parameters-of-the-resources-section">Parameters of the <cite>Resources</cite> section</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/parameter_def.html#parameters-of-the-demand-section">Parameters of the <cite>Demand</cite> section</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/parameter_def.html#parameters-of-the-technology-section">Parameters of the <cite>Technology</cite> section</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/parameter_def.html#parameters-of-the-emission-section">Parameters of the <cite>Emission</cite> section</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/parameter_def.html#parameters-of-the-land-use-model-emulator-section">Parameters of the <cite>Land-Use model emulator</cite> section</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/parameter_def.html#parameters-of-the-share-constraints-section">Parameters of the <cite>Share Constraints</cite> section</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/parameter_def.html#parameters-of-the-relations-section">Parameters of the <cite>Relations</cite> section</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/parameter_def.html#fixed-variable-values">Fixed variable values</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="model/MESSAGE/model_core.html">Mathematical formulation (core model)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/model_core.html#notation-declaration">Notation declaration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/model_core.html#objective-function">Objective function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/model_core.html#regional-system-cost-accounting-function">Regional system cost accounting function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/model_core.html#resource-and-commodity-section">Resource and commodity section</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/model_core.html#technology-section">Technology section</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/model_core.html#system-reliability-and-flexibility-requirements">System reliability and flexibility requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/model_core.html#constraints-on-shares-of-technologies-and-commodities">Constraints on shares of technologies and commodities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/model_core.html#emission-section">Emission section</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/model_core.html#land-use-model-emulator-section">Land-use model emulator section</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/model_core.html#section-of-generic-relations-linear-constraints">Section of generic relations (linear constraints)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="model/MESSAGE/model_solve.html">Solve statement workflow</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/model_solve.html#perfect-foresight-model">Perfect-foresight model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/model_solve.html#recursive-dynamic-and-myopic-model">Recursive-dynamic and myopic model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="model/MESSAGE/reporting.html">Standard output reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model/MESSAGE/scaling_investment_costs.html">Auxiliary investment parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/scaling_investment_costs.html#levelized-capital-costs">Levelized capital costs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/scaling_investment_costs.html#construction-time-accounting">Construction time accounting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/scaling_investment_costs.html#investment-costs-beyond-the-model-horizon">Investment costs beyond the model horizon</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MESSAGE/scaling_investment_costs.html#remaining-installed-capacity">Remaining installed capacity</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="model/MACRO/macro_core.html">MACRO - Mathematical formulation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="model/MACRO/macro_core.html#notation-declaration">Notation declaration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model/MACRO/macro_core.html#decision-variables">Decision variables</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="guide.html">Developing MESSAGE<em>ix</em> models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="efficiency.html">Efficiency - output- vs. input defined technologies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="efficiency.html#example-1-power-plants">Example 1 - Power plants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="efficiency.html#example-2-refineries">Example 2 - Refineries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="efficiency.html#example-3-combined-power-and-heat-plants">Example 3 - Combined power- and heat plants</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html">Debugging and data validation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="debugging.html#pre-processing-data-validation">Pre-processing data validation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="debugging.html#identification-of-infeasibilities">Identification of infeasibilities</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reporting.html">Postprocessing and reporting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reporting.html#terminology">Terminology</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reporting.html#basic-usage">Basic usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reporting.html#customization">Customization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reporting.html#reporters">Reporters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reporting.html#module-message_ix.reporting.computations">Computations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reporting.html#configuration">Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reporting.html#utilities">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="guide.html#model-building-tools">Model-building tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tools/add_year.html">Add model years to an existing Scenario</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="using-and-contributing-to-messageix">
+<h2>Using and contributing to MESSAGE<em>ix</em><a class="headerlink" href="#using-and-contributing-to-messageix" title="Permalink to this headline">¶</a></h2>
+<p>MESSAGE<em>ix</em> and the <em>ix modeling platform</em> are licensed under the <a class="reference external" href="https://github.com/iiasa/message_ix/blob/master/LICENSE">APACHE 2.0 open-source license</a>.</p>
+<p>Anyone is encouraged to use the framework to develop energy system and integrated assessment models! Please see the <a class="reference internal" href="notice.html"><span class="doc">User guidelines and notice</span></a> for using the framework in scientific research. Contributions to the framework itself, which enable new features across all models, are also welcome.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="notice.html">User guidelines and notice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to MESSAGE<em>ix</em> development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html#contributor-license-agreement">Contributor License Agreement</a></li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="bibliography.html">References</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="getting_started.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, IIASA, Energy Program
+      
+        <span class="commit">
+          Revision <code>d18f6f69</code>.
+        </span>
+      
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  
+
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+   
+
+</body>
+</html>

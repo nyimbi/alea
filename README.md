@@ -51,10 +51,10 @@ summary`, `alea registry export` and `make test` each reproduce a row.
 |---|---|
 | Python | 64,561 lines across 20 packages |
 | Rust | 7 crates behind a PyO3 boundary (`alea._core`) |
-| Tests | 1,394 collected, run by `make test` |
+| Tests | 1,656 collected, run by `make test` |
 | CLI | 17 command groups |
 | Registry | 55 countries, 23 technologies |
-| Parameter graph | 1,075 parameters, 163 equations, 54 cross-validation rules, 10 constraint routes, 2 feedback loops |
+| Parameter graph | 1,881 parameters, 841 equations, 57 cross-validation rules, 43 bound inequality routes, 2 feedback loops |
 
 `make check` is the gate — Rust, workflow, lint, types, tests, canaries,
 determinism — and CI calls the same runner rather than reimplementing it.
@@ -195,7 +195,7 @@ graph TD
         API[REST API] --> AD[Adapters<br/>dashboard · WhatsApp · USSD · SMS]
     end
 
-    PRG[Parameter Graph<br/>1,075 params · 163 equations] -.validates.-> WI
+    PRG[Parameter Graph<br/>1,881 params · 841 equations] -.validates.-> WI
     PRG -.validates.-> PC
     MI -.feeds downward.-> PC
     MI -.feeds downward.-> PRED
@@ -236,7 +236,7 @@ Verify the install:
 
 ```sh
 uv run alea --help         # the CLI is the entry point
-make check-quick           # lint, types, 1,394 tests, canaries
+make check-quick           # lint, types, 1,656 tests, canaries
 ```
 
 > **On TensorFlow.** The specification lists `tensorflow` as a dependency for
@@ -400,19 +400,25 @@ instruments, and feedback, and a scenario that sets two coupled parameters
 independently is a scenario that solves and returns a contradiction.
 
 The Parameter Relationship Graph (PRG) is the structure that knows the
-couplings. It is served from `config/prg.yaml`, which the generator in
-`scripts/build/prg_from_catalog.py` builds from the catalog (`docs/params.md`)
-and the coupling batches preserve:
+couplings: an open, cited, dimension-checked parameter graph spanning
+technical, economic and social systems. It is a dependency graph, not a
+validated causal model: most edges are accounting identities or cited fits,
+and setting a derived parameter by hand is discarded, not treated as an
+intervention. Related ideas exist (system dynamics, Modelica, the Open Energy
+Ontology); the survey is in `docs/research/alea-prior-art/`. It is served from
+`config/prg.yaml`, which the generator in `scripts/build/prg_from_catalog.py`
+builds from the catalog (`docs/params.md`):
 
 | | |
 |---|---|
-| Parameters | 1,083 — 800 free, 111 exogenous, 153 derived, 19 endogenous (the optimiser's fleet) |
-| Equations | 168, across 18 systems — every one dimensionally decidable (157 consistent; the 11 flagged are recorded, not passed silently) |
-| Edges | 396, every one a declared relationship citing the equation that governs it |
-| Cross-validation rules | 54; all quiet at the default scenario, each able to fire on a scenario that violates it |
-| Constraint routes | 10 inequalities bind the LP solve; 5 further inequality-shaped equations are post-solve checks |
-| Feedback loops | 2 (5 loop variables), solved by Tarjan SCC detection + damped Gauss–Seidel; the incremental propagation equals a full walk exactly |
-| Uncoupled register | 702 nodes still carry no equation, each named with its coupling class in `docs/param_coupling_worklist.md` — the coupling batches (12+) are closing it |
+| Parameters | 1,881: 685 free, 410 exogenous, 767 derived, 19 endogenous (the optimiser's fleet) |
+| Equations | 841, across 17 systems |
+| Edges | 1,993, each a declared relationship citing the equation that governs it |
+| Cross-validation rules | 57 |
+| Constraint routes | 43 inequality routes marked bound; 78 parameters are their terms |
+| Feedback loops | 2, solved by Tarjan SCC detection and damped Gauss-Seidel |
+| Uncoupled | 0 nodes carry no equation or edge |
+| Reaches the solver | 81 of 1,095 settable parameters (3 engine knobs, 78 constraint terms); the other 1,014 propagate through the graph and its audit but do not move the optimiser. `uv run python scripts/measure_prg_engine_coupling.py` |
 
 ```sh
 uv run alea prg summary       # the graph's shape
