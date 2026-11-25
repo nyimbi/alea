@@ -48,3 +48,4 @@ Snippet-only (no copy): Horizon topic deadlines, Energy Catalyst R11 terms, LEAP
 | `third-sweep/mozilla-fellowship-loi.html` (+ `.txt`) | https://mzl.la/fellowshipsLOI | Letter-of-intent form, read in full. Dates, tracks, issue areas, questions |
 | `third-sweep/mozilla-fellowship-2027-b.html` | mozillafoundation.org call page | 403 error page. Not evidence |
 | `third-sweep/rsc-fund-faq.html`, `rsc-fund-what-we-fund.html`, `rsc-fund-why.html`, `rsc-fund-home.html`, `rsc-fund-apply.md` (+ `.txt`) | researchsoftwarecatalyst.fund | Eligibility, exclusions, licences, budget rules |
+| `seforall-phc-innovation-fund.html` | https://www.seforall.org/programmes/powering-healthcare-hub/powering-healthcare-innovation-fund | Round 2 page, fetched 2026-11-25. Deadline 8 Sep 2025, closed |
