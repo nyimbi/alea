@@ -127,7 +127,7 @@ def groups() -> list[Group]:
 			"citations",
 			_uv("pytest", "-q", "tests/ci/test_citation_register.py"),
 			"every citation the library makes resolves to an archived source "
-			"(00-architecture §6, sources/INDEX.md)",
+			"(00-architecture §6, docs/sources/INDEX.md)",
 		),
 		Group(
 			"determinism",

@@ -214,7 +214,7 @@ none — the LPG spend identity is its first use.
 ## Sources to fetch
 
 The nine identities above need no paper. The *bases* do, and none of the works
-below is archived — `sources/INDEX.md` carries nothing on national accounts,
+below is archived — `docs/sources/INDEX.md` carries nothing on national accounts,
 remittance measurement, emergency stockholding, protected-area extent, FX
 hedging, or parametric insurance design. Each must be fetched and archived before
 a batch cites it; until then the equations ship `reference: None` and this

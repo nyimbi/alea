@@ -369,7 +369,7 @@ class Config(AleaConfig):
 	The one market parameter no layer produces. `market.clearing` prices a
 	shortfall at this rate, so it decides the clearing price of every hour the
 	system sheds load -- and it had no home at all: no config key, no field on
-	any model, and no value in `spec/` or `docs/plans/`. The only figure in the
+	any model, and no value in `docs/spec/` or `docs/plans/`. The only figure in the
 	tree was the determinism job's, which is where the default comes from.
 	Without this field a `market:` block in YAML is a load error under
 	``extra="forbid"``, so the rate a run cleared at could not be set, recorded

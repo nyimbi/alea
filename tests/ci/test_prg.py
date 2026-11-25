@@ -6446,7 +6446,7 @@ def test_every_declared_citation_reaches_a_door(graph: ParameterGraph):
 	# Batch 60 is the first batch to move this register *down*, and the movement
 	# is the point. `x_factor_revenue_reduction_definition` cited the World Bank
 	# *Regulation of Utilities* handbook, which is archived at
-	# `sources/archive/world_bank_regulating_utilities_handbook.txt`. The
+	# `docs/sources/archive/world_bank_regulating_utilities_handbook.txt`. The
 	# handbook discusses price-cap and revenue-cap regulation and states the
 	# RPI-X arithmetic nowhere -- "RPI" and "X factor" appear in no formula
 	# context in the archived text -- so the citation was a label for a family

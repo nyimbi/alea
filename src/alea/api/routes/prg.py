@@ -321,7 +321,7 @@ async def citations(principal: PublicDep) -> CitationReportOut:
 	cannot tell a citation naming a real work from one naming a work nobody
 	archived. ``gaps`` is that difference.
 
-	Does not 404 when the register is absent: ``sources/INDEX.md`` is a document
+	Does not 404 when the register is absent: ``docs/sources/INDEX.md`` is a document
 	a deployment may not ship, and an empty register with every citation
 	reported unregistered is the honest answer -- the alternative is a route
 	that fails for a reason the client cannot act on.

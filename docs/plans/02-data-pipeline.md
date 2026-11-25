@@ -141,7 +141,7 @@ not silently report a model as unvalidated.
 The Sterl et al. atlas gives seasonal averages. Hourly profiles require
 downscaling against ERA5 runoff. The downscaling method is a modelling choice
 that must be recorded: use the same method as the atlas's own published
-approach, cite it, and store the citation in `sources/INDEX.md`.
+approach, cite it, and store the citation in `docs/sources/INDEX.md`.
 
 ### 1.2 Placeholder links in the spec
 
@@ -343,7 +343,7 @@ the published capacity total and fails below 90%, naming the missing capacity.
 
 **The yardstick is RePP, not AFREC.** AFREC's registered target is
 ``demand_national`` (§1's table, and the register's own entry): it publishes
-consumption, and no version of it carries installed capacity. `spec/spec3.md`
+consumption, and no version of it carries installed capacity. `docs/spec/spec3.md`
 §17 names EIA and IRENA for capacity validation; of those, only RePP is
 registered against `planning/fleet` here, and its fetcher is the one fleet
 source with a stable DOI. RePP covers renewables only and ends in 2023, so it

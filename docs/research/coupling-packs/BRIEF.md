@@ -53,9 +53,9 @@ the equation undecidable, and undecidable is a finding, not a pass.
 ## The citation rule
 
 Every equation carries a `reference`. It is prose, and it must match a row in
-`sources/INDEX.md` by case-insensitive substring **in both directions**. A
+`docs/sources/INDEX.md` by case-insensitive substring **in both directions**. A
 citation whose work is not archived locally is a link that will rot: check
-`sources/archive/` and, if the work is not there, either (a) find a work already
+`docs/sources/archive/` and, if the work is not there, either (a) find a work already
 archived that states the identity, or (b) say in the pack that the source must be
 fetched and archived before the equation ships. Do not cite a label you cannot
 point at a file for.

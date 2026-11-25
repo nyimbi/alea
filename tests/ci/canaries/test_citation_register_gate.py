@@ -2,7 +2,7 @@
 """Canary: the citation register must notice a citation resolving to nothing.
 
 `tests/ci/test_citation_register.py` is the gate. It asserts that every
-citation the tree makes resolves to a row in `sources/INDEX.md` and that every
+citation the tree makes resolves to a row in `docs/sources/INDEX.md` and that every
 row is reached by a citation, which is the join `alea.provenance.citations`
 exists to make. A join is the easiest kind of gate to write as a no-op -- a
 report that returns no gaps satisfies every "no gaps" assertion in the file --
@@ -87,10 +87,10 @@ def test_the_digest_gate_fails_when_a_recorded_digest_is_wrong():
 	one line would leave half the gate unexercised, which is the "gate scoped to
 	the bug you found, not the class it belongs to" failure.
 
-	The mutation is to `sources/INDEX.md`, a different file from the join
+	The mutation is to `docs/sources/INDEX.md`, a different file from the join
 	canary's, so the two cannot interfere if they ever run concurrently.
 	"""
-	index = REPO / "sources" / "INDEX.md"
+	index = REPO / "docs" / "sources" / "INDEX.md"
 	assert index.is_file(), f"canary target is not a file: {index}"
 	before = index.read_text()
 	# The shipped digest's first eight hex characters. Mutating the *recorded*

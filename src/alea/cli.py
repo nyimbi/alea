@@ -1962,7 +1962,7 @@ def prg_citations() -> None:
 
 	The library's nine equation citations were prose and nothing else -- parsed,
 	validated, served at four doors, joined to nothing. This is the join: each
-	citation must resolve to a row in `sources/INDEX.md`, and each row must be
+	citation must resolve to a row in `docs/sources/INDEX.md`, and each row must be
 	reached by a citation.
 
 	Exits non-zero on a defect -- an unresolvable citation, a row cited by

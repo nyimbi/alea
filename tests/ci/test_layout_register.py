@@ -78,7 +78,7 @@ def test_the_parser_reads_the_tree_the_document_draws():
 		"reports/annual",
 		"docs/plans",
 		"docs/research",
-		"spec",
+		"docs/spec",
 	):
 		assert expected in paths, f"the parser lost {expected!r} from §6"
 
@@ -177,10 +177,10 @@ def test_the_gate_notices_a_path_the_document_declares_and_the_tree_lacks():
 	mutation changes the document. A canary that added an `ABSENT` entry instead
 	would be testing the register's spelling, not the gate's reading.
 	"""
-	shipped = "└── spec/                       # the specification (authoritative for intent)"
+	shipped = "└── docs/spec/                       # the specification (authoritative for intent)"
 	broken = (
 		"├── phantom/                    # canary: declared, never built\n"
-		"└── spec/                       # the specification (authoritative for intent)"
+		"└── docs/spec/                       # the specification (authoritative for intent)"
 	)
 	node = "tests/ci/test_layout_register.py::test_every_declared_path_exists_or_is_a_named_gap"
 	program = (
@@ -230,7 +230,7 @@ def test_a_nested_entry_composes_its_path_from_its_ancestors():
 		"│   ├── ci/          # autodiscovery path\n"
 		"│   │   └── canaries/   # AD-10\n"
 		"│   └── data/        # fixtures\n"
-		"└── spec/\n"
+		"└── docs/spec/\n"
 		"```\n"
 	)
 	assert [p for p, _ in parse_layout(text)] == [
@@ -238,5 +238,5 @@ def test_a_nested_entry_composes_its_path_from_its_ancestors():
 		"tests/ci",
 		"tests/ci/canaries",
 		"tests/data",
-		"spec",
+		"docs/spec",
 	]

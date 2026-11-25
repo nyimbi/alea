@@ -3,7 +3,7 @@
 
 This is the report that gets cited, so it carries the fullest provenance and
 the most prominent handling of unconfirmed figures. Every literature benchmark
-inherited from ``spec/`` that is still unverified at this point is either
+inherited from ``docs/spec/`` that is still unverified at this point is either
 resolved against a source or printed with its status and the milestone at
 which it will be resolved. It is never printed as though it were established.
 
@@ -86,7 +86,7 @@ SECTIONS: tuple[SectionSpec, ...] = (
 	),
 )
 
-# Literature benchmarks inherited from spec/ and not confirmed at planning
+# Literature benchmarks inherited from docs/spec/ and not confirmed at planning
 # time (web search was unavailable). Each carries the milestone at which it
 # must be confirmed. An unresolved entry is printed in the report's unverified
 # block; it is never printed as an established result.

@@ -549,7 +549,7 @@ solves numerically.
 ## The signal contract
 
 `alea.signals.models.Signal` is the interface between the scanning layer and
-everything else, and it is deliberately narrow. `spec/spec4-data-collection.md`
+everything else, and it is deliberately narrow. `docs/spec/spec4-data-collection.md`
 defines it, and `spec4-ext.md`'s story detector consumes the same `signal_type`
 values — so the taxonomy is load-bearing for both. Adding a member means
 updating the story detector's newsworthiness rules as well as the table below.
@@ -669,7 +669,7 @@ alea/
 ├── results/              # solved networks and model outputs
 ├── reports/              # generated reports
 ├── docs/                 # platform documentation and the plans
-└── spec/                 # the specification (authoritative)
+└── docs/spec/                 # the specification (authoritative)
 ```
 
 ---
@@ -727,7 +727,7 @@ blindness is a test failure rather than a discovery made in production.
 
 ## Data sources
 
-Alea is built on open data. The full inventory is in `spec/data3.md`; this is
+Alea is built on open data. The full inventory is in `docs/spec/data3.md`; this is
 the shape of it.
 
 | Category | Primary sources |
@@ -763,7 +763,7 @@ rather than approximated away.
 
 ## Data completeness
 
-Per-country completeness is assessed in `spec/data-completeness.md` against
+Per-country completeness is assessed in `docs/spec/data-completeness.md` against
 seven independent sources (OASES/LEAP-RE, PyPSA-Earth continental validation,
 GEP 3.0, DRE Atlas, AFREC, World Bank Grid Map, national portals).
 
@@ -775,7 +775,7 @@ GEP 3.0, DRE Atlas, AFREC, World Bank Grid Map, national portals).
 | **CRITICAL** | 7 | Absent from continental datasets; proxy data required |
 
 These counts are derived from the per-country tables in
-`spec/data-completeness.md`, deduplicated by ISO code, and sum to 55 — one row
+`docs/spec/data-completeness.md`, deduplicated by ISO code, and sum to 55 — one row
 per AU member state. The summary table at the end of that document disagrees
 with its own body in three ways: it states 5 HIGH where 6 rows say HIGH, states
 32 MEDIUM where 34 rows do, and lists Eritrea and Equatorial Guinea as MEDIUM
@@ -900,21 +900,21 @@ proving each against the benchmark the specification set for it, which is what
 
 ## Specifications
 
-`spec/` is the authority for what Alea is meant to do. Where this README and a
+`docs/spec/` is the authority for what Alea is meant to do. Where this README and a
 specification disagree, the specification wins.
 
 | File | Contents |
 |---|---|
-| `spec/spec4-base.md` | The platform: six analytical layers, data pipeline, API, hardware, roadmap |
-| `spec/spec4-data-collection.md` | Layer 7 in detail — connectors, extraction, review, integration |
-| `spec/spec4-ext.md` | Strategy: 20 archetypes, 18 delivery channels, 30 capabilities, commercial model |
-| `spec/data3.md` | Data source inventory with verified links (**current**) |
-| `spec/data2.md`, `spec/data1.md` | Earlier revisions of the same inventory |
-| `spec/data-completeness.md` | Per-country completeness tiers and mitigation |
-| `spec/base4-intf.md` | Interface specification — REST, SDKs, channels, governance |
-| `spec/users.md` | The user archetypes, and how the open platform differs from a subscription report |
-| `spec/analytics.md`, `spec/competition-eval.md`, `spec/best1.md`, `spec/best1-renew.md` | Supporting analysis |
-| `spec/spec.md` → `spec3.md` | Superseded specification versions |
+| `docs/spec/spec4-base.md` | The platform: six analytical layers, data pipeline, API, hardware, roadmap |
+| `docs/spec/spec4-data-collection.md` | Layer 7 in detail — connectors, extraction, review, integration |
+| `docs/spec/spec4-ext.md` | Strategy: 20 archetypes, 18 delivery channels, 30 capabilities, commercial model |
+| `docs/spec/data3.md` | Data source inventory with verified links (**current**) |
+| `docs/spec/data2.md`, `docs/spec/data1.md` | Earlier revisions of the same inventory |
+| `docs/spec/data-completeness.md` | Per-country completeness tiers and mitigation |
+| `docs/spec/base4-intf.md` | Interface specification — REST, SDKs, channels, governance |
+| `docs/spec/users.md` | The user archetypes, and how the open platform differs from a subscription report |
+| `docs/spec/analytics.md`, `docs/spec/competition-eval.md`, `docs/spec/best1.md`, `docs/spec/best1-renew.md` | Supporting analysis |
+| `docs/spec/spec.md` → `spec3.md` | Superseded specification versions |
 
 Alongside the specification, `docs/` holds the engineering record:
 
@@ -929,11 +929,11 @@ Alongside the specification, `docs/` holds the engineering record:
 
 ### Reading order for new contributors
 
-1. `spec/spec4-base.md` Parts I–III — what the platform is, and the data it needs.
-2. `spec/spec4-data-collection.md` — Layer 7, the only layer with no dependencies.
-3. `spec/data-completeness.md` — where the data is thin, and what that costs.
+1. `docs/spec/spec4-base.md` Parts I–III — what the platform is, and the data it needs.
+2. `docs/spec/spec4-data-collection.md` — Layer 7, the only layer with no dependencies.
+3. `docs/spec/data-completeness.md` — where the data is thin, and what that costs.
 4. `docs/prg-status.md` — what is actually built, and the defects found building it.
-5. `spec/spec4-base.md` Parts IV–IX — the analytical layers you will build on.
+5. `docs/spec/spec4-base.md` Parts IV–IX — the analytical layers you will build on.
 
 ---
 

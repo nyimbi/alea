@@ -365,10 +365,10 @@ were checked on disk; four are not.
 
 | work | archive file | would back |
 |---|---|---|
-| ENTSO-E MAF 2019, Appendix 2 — Methodology | `sources/archive/entsoe_maf_2019_methodology.pdf` | `maintenance_schedule` as explicit unavailability periods; `outage_management_systems` against adequacy practice |
-| IEEE Guide for Electric Power Distribution Reliability Indices (1366) | `sources/archive/ieee_1366_reliability_tutorial.pdf` | `failure_history`, `degradation_model` against the reliability indices the graph already derives |
-| Brown, Stern & Tenenbaum, *Handbook for Evaluating Infrastructure Regulatory Systems* | `sources/archive/world_bank_regulating_utilities_handbook.pdf` | `regulatory_accounts` as a reporting structure; `regulatory_asset_valuation_method` as a regulatory convention |
-| UKRN, *Guidance for regulators on the methodology for setting the cost of capital* (2023) | `sources/archive/ukrn_cost_of_capital_2023.pdf` | the RAB and depreciation family that `regulatory_accounts` and the valuation method sit beside |
+| ENTSO-E MAF 2019, Appendix 2 — Methodology | `docs/sources/archive/entsoe_maf_2019_methodology.pdf` | `maintenance_schedule` as explicit unavailability periods; `outage_management_systems` against adequacy practice |
+| IEEE Guide for Electric Power Distribution Reliability Indices (1366) | `docs/sources/archive/ieee_1366_reliability_tutorial.pdf` | `failure_history`, `degradation_model` against the reliability indices the graph already derives |
+| Brown, Stern & Tenenbaum, *Handbook for Evaluating Infrastructure Regulatory Systems* | `docs/sources/archive/world_bank_regulating_utilities_handbook.pdf` | `regulatory_accounts` as a reporting structure; `regulatory_asset_valuation_method` as a regulatory convention |
+| UKRN, *Guidance for regulators on the methodology for setting the cost of capital* (2023) | `docs/sources/archive/ukrn_cost_of_capital_2023.pdf` | the RAB and depreciation family that `regulatory_accounts` and the valuation method sit beside |
 
 **Not archived — must be fetched and archived before an equation ships:**
 

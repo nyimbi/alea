@@ -36,11 +36,11 @@ low-carbon four. The question is whether the numbers match the sentence.
 ## The per-fuel table
 
 Lifecycle ranges are from IPCC AR5 WG3 (2014) Annex III, Table A.III.2
-(`sources/archive/ipcc_ar5_wg3_annex3.pdf`, printed p. 1335), and IPCC SRREN
-(2011) Annex II, Table A.II.4 (`sources/archive/ipcc_srren_2011_excerpt.pdf`,
+(`docs/sources/archive/ipcc_ar5_wg3_annex3.pdf`, printed p. 1335), and IPCC SRREN
+(2011) Annex II, Table A.II.4 (`docs/sources/archive/ipcc_srren_2011_excerpt.pdf`,
 printed p. 982). Combustion ranges are computed from the IPCC 2006 default
 carbon contents already archived at
-`sources/archive/ipcc_2006_gl_vol2_ch2.txt` (Table 2.2: coal 94 600, natural gas
+`docs/sources/archive/ipcc_2006_gl_vol2_ch2.txt` (Table 2.2: coal 94 600, natural gas
 56 100, residual fuel oil 77 400, wood/wood waste 112 000 kg CO2/TJ), divided by
 a plausible net efficiency. The graph's own `efficiency_coal` = 0.40,
 `efficiency_gas` = 0.58, `efficiency_oil` = 0.38 are the heat rates it already
@@ -149,7 +149,7 @@ also immaterial to the headline.
 ## The citation gap, confirmed
 
 The seven nodes cite "IPCC lifecycle emission factors, 2014". Before this audit
-`sources/INDEX.md` held no row for any IPCC 2014 lifecycle document -- the only
+`docs/sources/INDEX.md` held no row for any IPCC 2014 lifecycle document -- the only
 IPCC row was `ipcc_2006_gl_vol2` (2006 Guidelines Vol. 2), whose `cites`
 spellings ("IPCC Guidelines for National Greenhouse Gas Inventories", "IPCC 2006
 Guidelines, Volume 2") do not match the string on these nodes. The citation
@@ -158,9 +158,9 @@ row. **Confirmed.**
 
 The source has now been archived:
 
-- `sources/archive/ipcc_ar5_wg3_annex3.pdf` (+ `.txt`) -- AR5 WG3 Annex III,
+- `docs/sources/archive/ipcc_ar5_wg3_annex3.pdf` (+ `.txt`) -- AR5 WG3 Annex III,
   the document carrying Table A.III.2.
-- `sources/archive/ipcc_srren_2011_excerpt.pdf` (+ `.txt`) -- the SRREN pages
+- `docs/sources/archive/ipcc_srren_2011_excerpt.pdf` (+ `.txt`) -- the SRREN pages
   carrying Figure SPM.8 and Annex II Table A.II.4. An excerpt rather than the
   46 MB full report: the cited pages are the evidence, and a labelled five-page
   extract is checkable where a blob is not.
@@ -273,7 +273,7 @@ graph.
    **APPLIED (batch 51).** Both the three carbon-content nodes and the three
    derived factors now carry that string, and the three values (94 600,
    56 100, 77 400 kg CO2/TJ) were verified against the archived
-   `sources/archive/ipcc_2006_gl_vol2_ch2.txt` rather than quoted from memory.
+   `docs/sources/archive/ipcc_2006_gl_vol2_ch2.txt` rather than quoted from memory.
 3. **Restate biomass.** Choose a published value with a stated basis and cite
    the table it comes from (AR5 Table A.III.2 median 0.23, or SRREN A.II.4
    median 0.018, or state the feedstock assumption). 0.04 should not remain an
@@ -330,16 +330,16 @@ graph.
 
 ## Sources
 
-Archived in this repository, digests in `sources/INDEX.md`:
+Archived in this repository, digests in `docs/sources/INDEX.md`:
 
 - IPCC AR5 WG3 (2014), *Annex III: Technology-specific cost and performance
   parameters*, Table A.III.2, printed p. 1335 --
-  `sources/archive/ipcc_ar5_wg3_annex3.pdf`.
+  `docs/sources/archive/ipcc_ar5_wg3_annex3.pdf`.
 - IPCC SRREN (2011), Figure SPM.8 (pp. 18-19) and Annex II Table A.II.4
-  (pp. 981-983) -- `sources/archive/ipcc_srren_2011_excerpt.pdf`.
+  (pp. 981-983) -- `docs/sources/archive/ipcc_srren_2011_excerpt.pdf`.
 - IPCC (2006), *Guidelines for National Greenhouse Gas Inventories*, Vol. 2
   Ch. 2, Tables 2.2 and 2.4 -- already held at
-  `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+  `docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
 
 Two caveats on the evidence. First, AR5 Table A.III.2 has **no oil row**; the
 oil lifecycle range above is SRREN's only. Second, SRREN Table A.II.4's

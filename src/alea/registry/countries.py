@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Country and power-pool registry.
 
-Generated from the *per-country tables* in ``spec/data-completeness.md``, not
+Generated from the *per-country tables* in ``docs/spec/data-completeness.md``, not
 from that file's summary table. The summary contradicts the body: it reports
 HIGH 5 / MEDIUM 32 / LOW 7 while its own tables hold HIGH 6 / MEDIUM 34 /
 LOW 8, and it lists Equatorial Guinea under MEDIUM where the table puts it in

@@ -6,7 +6,7 @@ country and says nothing. The count is the gate; the first canary plants a
 missing member and asserts the count notices.
 
 The second canary is the one this registry exists for. The registry is generated
-from the *per-country tables* of ``spec/data-completeness.md`` because that
+from the *per-country tables* of ``docs/spec/data-completeness.md`` because that
 file's summary table contradicts its own body -- it reports HIGH 5 / MEDIUM 32 /
 LOW 7 against tables holding 6/34/8, and places Equatorial Guinea in MEDIUM where
 its own tables put it in LOW. Every one of those defects preserves the total, so

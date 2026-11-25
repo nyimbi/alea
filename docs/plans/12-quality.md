@@ -195,7 +195,7 @@ a log line is a validation nobody can re-check.
 ### 6.1 The `[UNVERIFIED]` register
 
 Web search was unavailable during planning. Every literature figure inherited
-from `spec/` is unverified and marked. The register, with its resolution point:
+from `docs/spec/` is unverified and marked. The register, with its resolution point:
 
 | # | Claim | Milestone | Resolution |
 |---|---|---|---|

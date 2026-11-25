@@ -4753,7 +4753,7 @@ parameters:
     status: existing
     source: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
       Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
-      -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+      -- the default carbon content by fuel, in kg CO2/TJ. Archived at `docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
       The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
       `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
       (2020).
@@ -4779,7 +4779,7 @@ parameters:
     status: existing
     source: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
       Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
-      -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+      -- the default carbon content by fuel, in kg CO2/TJ. Archived at `docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
       The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
       `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
       (2020).
@@ -4805,7 +4805,7 @@ parameters:
     status: existing
     source: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
       Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
-      -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+      -- the default carbon content by fuel, in kg CO2/TJ. Archived at `docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
       The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
       `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
       (2020).
@@ -11156,7 +11156,7 @@ parameters:
     source: 'The capital structure is one number with several faces. The dial is the debt-to-equity ratio,
       the catalog''s row 3.38 ''Optimal capital structure'', and the UKRN (2023) Cost of Capital review
       treats notional gearing as the regulator''s own policy assumption rather than a fixed fact (Recommendation
-      9, `sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard conversions:
+      9, `docs/sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard conversions:
       D/(D+E) = r/(1+r), gearing = r, and equity''s share is 1 - D/(D+E), for r the debt-to-equity ratio.'
     source_url: null
     users: []
@@ -12328,7 +12328,7 @@ parameters:
     - 0.005
     - 0.02
     role: exogenous
-    source: 'IPCC 2006 Guidelines Vol. 2 Ch. 1 Table 1.2. Local copy: sources/archive/ipcc_2006_gl_vol2_ch1.pdf.
+    source: 'IPCC 2006 Guidelines Vol. 2 Ch. 1 Table 1.2. Local copy: docs/sources/archive/ipcc_2006_gl_vol2_ch1.pdf.
       The density 0.84 kg/L is a stated assumption (grades run 0.82 to 0.86).'
     status: existing
     type: float
@@ -13413,7 +13413,7 @@ parameters:
     name: Efficiency coal
     description: 'Net electrical efficiency of the coal fleet, fuel energy in to electricity out. 0.40
       is the median of the supercritical pulverised entries in the IEA/NEA cost study, whose country rows
-      run 36% to 43% (sources/archive/iea_nea_egc_2020.txt, Table 3.10, the supercritical-pulverised rows).
+      run 36% to 43% (docs/sources/archive/iea_nea_egc_2020.txt, Table 3.10, the supercritical-pulverised rows).
       It is the divisor that turns a capacity into a fuel burn: a 3000 MW coal fleet at a 0.75 capacity
       factor generates 19,710 GWh/yr, which at 0.40 efficiency is 177,390 TJ of coal, and it is that number
       the g/GJ factors are applied to.'
@@ -13444,7 +13444,7 @@ parameters:
     name: Efficiency gas
     description: Net electrical efficiency of the gas fleet. 0.58 is the median of the CCGT rows in the
       same IEA/NEA table (0.41 to 0.64 across countries); the guidebook's own text puts a modern CCGT
-      "in excess of 50%" (sources/archive/emep_eea_guidebook_2023_1a1a.txt, section 3.2). The gas factor
+      "in excess of 50%" (docs/sources/archive/emep_eea_guidebook_2023_1a1a.txt, section 3.2). The gas factor
       matters more than the coal one because the gas NOx factor is already the low one -- 89 against coal's
       209 g/GJ -- so the efficiency is doing most of the work in the fleet's NOx total.
     category: environment
@@ -14003,8 +14003,8 @@ parameters:
     source: 'IPCC (2014) Climate Change 2014: Mitigation of Climate Change, Annex III ''Technology-specific
       cost and performance parameters'', Table A.III.2 ''Emissions of selected electricity supply technologies
       (gCO2eq/kWh)'', p. 1335 -- the lifecycle column, which is the min / median / max of the reviewed
-      LCA literature rather than a stack measurement. Archived at `sources/archive/ipcc_ar5_wg3_annex3.pdf`.
-      The alternative source, IPCC-SRREN (2011) Table A.II.4, is archived alongside it at `sources/archive/ipcc_srren_2011_excerpt.pdf`
+      LCA literature rather than a stack measurement. Archived at `docs/sources/archive/ipcc_ar5_wg3_annex3.pdf`.
+      The alternative source, IPCC-SRREN (2011) Table A.II.4, is archived alongside it at `docs/sources/archive/ipcc_srren_2011_excerpt.pdf`
       and was rejected for a reason this batch records rather than leaves implicit.'
     source_url: null
     users:
@@ -14034,7 +14034,7 @@ parameters:
     categories: []
     source: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
       Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
-      -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+      -- the default carbon content by fuel, in kg CO2/TJ. Archived at `docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
       The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
       `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
       (2020).
@@ -14073,7 +14073,7 @@ parameters:
     categories: []
     source: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
       Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
-      -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+      -- the default carbon content by fuel, in kg CO2/TJ. Archived at `docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
       The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
       `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
       (2020).
@@ -14114,8 +14114,8 @@ parameters:
     source: 'IPCC (2014) Climate Change 2014: Mitigation of Climate Change, Annex III ''Technology-specific
       cost and performance parameters'', Table A.III.2 ''Emissions of selected electricity supply technologies
       (gCO2eq/kWh)'', p. 1335 -- the lifecycle column, which is the min / median / max of the reviewed
-      LCA literature rather than a stack measurement. Archived at `sources/archive/ipcc_ar5_wg3_annex3.pdf`.
-      The alternative source, IPCC-SRREN (2011) Table A.II.4, is archived alongside it at `sources/archive/ipcc_srren_2011_excerpt.pdf`
+      LCA literature rather than a stack measurement. Archived at `docs/sources/archive/ipcc_ar5_wg3_annex3.pdf`.
+      The alternative source, IPCC-SRREN (2011) Table A.II.4, is archived alongside it at `docs/sources/archive/ipcc_srren_2011_excerpt.pdf`
       and was rejected for a reason this batch records rather than leaves implicit.'
     source_url: null
     users:
@@ -14147,8 +14147,8 @@ parameters:
     source: 'IPCC (2014) Climate Change 2014: Mitigation of Climate Change, Annex III ''Technology-specific
       cost and performance parameters'', Table A.III.2 ''Emissions of selected electricity supply technologies
       (gCO2eq/kWh)'', p. 1335 -- the lifecycle column, which is the min / median / max of the reviewed
-      LCA literature rather than a stack measurement. Archived at `sources/archive/ipcc_ar5_wg3_annex3.pdf`.
-      The alternative source, IPCC-SRREN (2011) Table A.II.4, is archived alongside it at `sources/archive/ipcc_srren_2011_excerpt.pdf`
+      LCA literature rather than a stack measurement. Archived at `docs/sources/archive/ipcc_ar5_wg3_annex3.pdf`.
+      The alternative source, IPCC-SRREN (2011) Table A.II.4, is archived alongside it at `docs/sources/archive/ipcc_srren_2011_excerpt.pdf`
       and was rejected for a reason this batch records rather than leaves implicit.'
     source_url: null
     users:
@@ -14179,8 +14179,8 @@ parameters:
     source: 'IPCC (2014) Climate Change 2014: Mitigation of Climate Change, Annex III ''Technology-specific
       cost and performance parameters'', Table A.III.2 ''Emissions of selected electricity supply technologies
       (gCO2eq/kWh)'', p. 1335 -- the lifecycle column, which is the min / median / max of the reviewed
-      LCA literature rather than a stack measurement. Archived at `sources/archive/ipcc_ar5_wg3_annex3.pdf`.
-      The alternative source, IPCC-SRREN (2011) Table A.II.4, is archived alongside it at `sources/archive/ipcc_srren_2011_excerpt.pdf`
+      LCA literature rather than a stack measurement. Archived at `docs/sources/archive/ipcc_ar5_wg3_annex3.pdf`.
+      The alternative source, IPCC-SRREN (2011) Table A.II.4, is archived alongside it at `docs/sources/archive/ipcc_srren_2011_excerpt.pdf`
       and was rejected for a reason this batch records rather than leaves implicit.'
     source_url: null
     users:
@@ -14210,7 +14210,7 @@ parameters:
     categories: []
     source: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
       Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
-      -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+      -- the default carbon content by fuel, in kg CO2/TJ. Archived at `docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
       The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
       `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
       (2020).
@@ -26250,7 +26250,7 @@ parameters:
     status: existing
     users:
     - Health
-    source: 'WHO (2020) GHE technical paper WHO/DDI/DNA/GHE/2020.3. Local copy: sources/archive/who_ghe2019_daly_methods.pdf.
+    source: 'WHO (2020) GHE technical paper WHO/DDI/DNA/GHE/2020.3. Local copy: docs/sources/archive/who_ghe2019_daly_methods.pdf.
       The default is a stated assumption, not a measured figure.'
   morbidity_episode_duration:
     name: Morbidity episode duration
@@ -26269,7 +26269,7 @@ parameters:
     status: existing
     users:
     - Health
-    source: 'WHO (2020) GHE technical paper WHO/DDI/DNA/GHE/2020.3. Local copy: sources/archive/who_ghe2019_daly_methods.pdf.
+    source: 'WHO (2020) GHE technical paper WHO/DDI/DNA/GHE/2020.3. Local copy: docs/sources/archive/who_ghe2019_daly_methods.pdf.
       The default is a stated assumption, not a measured figure.'
   mrv_cost_usd_per_mtco2:
     category: Macro
@@ -39773,9 +39773,9 @@ parameters:
       The quantity is the capacity credit (ELCC) the adequacy literature computes by re-running the system
       with and without the VRE fleet; the graph had no node for it and used the energy ratio instead,
       which overstates every reserve margin it reports. 0.15 is the value the US EIA uses for wind in
-      its own worked example (sources/archive/eia_lcoe_methodology.txt: "In the region used in this example,
+      its own worked example (docs/sources/archive/eia_lcoe_methodology.txt: "In the region used in this example,
       wind has a capacity credit of 15%"), and it sits inside the range the IEA/NEA reports across technologies
-      and regions (sources/archive/iea_nea_egc_2020.txt, Figure 4.4). The range admits the near-zero of
+      and regions (docs/sources/archive/iea_nea_egc_2020.txt, Figure 4.4). The range admits the near-zero of
       a solar-heavy winter-peaking fleet and the 0.4+ of offshore wind in a summer-peaking one.'
     category: supply
     subcategory: adequacy
@@ -43114,8 +43114,8 @@ equations:
     solution_method: direct
     linearity: linear
     reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
-      IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt);
-      US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (sources/archive/eia_lcoe_methodology.txt),
+      IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (docs/sources/archive/iea_nea_egc_2020.txt);
+      US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (docs/sources/archive/eia_lcoe_methodology.txt),
       capacity credit at 1 for dispatchable units and derated for intermittent renewables'
     latex: \mathrm{vre}_{firm\_capacity\_mw} = \mathrm{vre}_{capacity\_mw} \mathrm{vre}_{capacity\_credit}
   capacity_revenue_usd_per_year_definition:
@@ -43256,7 +43256,7 @@ equations:
     - capex_nuclear
     - nuclear_idc_factor
     priority: P2
-    reference: 'IEA and NEA, Projected Costs of Generating Electricity 2020. Local copy: sources/archive/iea_nea_egc_2020.pdf'
+    reference: 'IEA and NEA, Projected Costs of Generating Electricity 2020. Local copy: docs/sources/archive/iea_nea_egc_2020.pdf'
     relation: eq
     rhs: capex_nuclear * nuclear_idc_factor
     solution_method: direct
@@ -43565,9 +43565,9 @@ equations:
     priority: P1
     reference: Verra, AFOLU Non-Permanence Risk Tool v4.2 (2023), 2.5.4 (risk rating converted to a percentage
       and multiplied by the net change in carbon stocks) and 2.5.2 (the minimum rating of 12), archived
-      at sources/archive/verra_afolu_npt_v42.txt; Cambridge Permanence and Durability Workshop 2024, Current
+      at docs/sources/archive/verra_afolu_npt_v42.txt; Cambridge Permanence and Durability Workshop 2024, Current
       Practice Among Carbon Crediting Programs, for the programs that set the share directly rather than
-      deriving it, archived at sources/archive/cambridge_buffer_pool_workshop_2024.txt
+      deriving it, archived at docs/sources/archive/cambridge_buffer_pool_workshop_2024.txt
     relation: eq
     rhs: permanence_parameters * carbon_credit_volumes
     solution_method: direct
@@ -44493,7 +44493,7 @@ equations:
     determined_variables:
     - coal_fuel_energy_gj
     unit_check: true
-    reference: 'EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a (sources/archive/emep_eea_guidebook_2023_1a1a.txt):
+    reference: 'EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a (docs/sources/archive/emep_eea_guidebook_2023_1a1a.txt):
       factors are given per GJ of fuel input on a net calorific value basis. Net efficiency per IEA/NEA
       Projected Costs of Generating Electricity (2020), Table 3.10.'
     latex: \mathrm{coal}_{fuel\_energy\_gj} = \frac{\mathrm{coal}_{capacity} \mathrm{capacity}_{factor\_coal}
@@ -45707,7 +45707,7 @@ equations:
     unit_check: true
   crf_biomass_definition:
     description: 'The standard annuity: a constant annual charge whose present value equals one unit of
-      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in docs/sources/INDEX.md;
       NREL ATB 2025 states the same form.'
     determined_variables:
     - crf_biomass
@@ -45734,7 +45734,7 @@ equations:
     unit_check: true
   crf_coal_definition:
     description: 'The standard annuity: a constant annual charge whose present value equals one unit of
-      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in docs/sources/INDEX.md;
       NREL ATB 2025 states the same form.'
     determined_variables:
     - crf_coal
@@ -45761,7 +45761,7 @@ equations:
     unit_check: true
   crf_csp_definition:
     description: 'The standard annuity: a constant annual charge whose present value equals one unit of
-      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in docs/sources/INDEX.md;
       NREL ATB 2025 states the same form.'
     determined_variables:
     - crf_csp
@@ -45813,7 +45813,7 @@ equations:
     unit_check: true
   crf_gas_definition:
     description: 'The standard annuity: a constant annual charge whose present value equals one unit of
-      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in docs/sources/INDEX.md;
       NREL ATB 2025 states the same form.'
     determined_variables:
     - crf_gas
@@ -45840,7 +45840,7 @@ equations:
     unit_check: true
   crf_geothermal_definition:
     description: 'The standard annuity: a constant annual charge whose present value equals one unit of
-      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in docs/sources/INDEX.md;
       NREL ATB 2025 states the same form.'
     determined_variables:
     - crf_geothermal
@@ -45867,7 +45867,7 @@ equations:
     unit_check: true
   crf_hydro_definition:
     description: 'The standard annuity: a constant annual charge whose present value equals one unit of
-      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in docs/sources/INDEX.md;
       NREL ATB 2025 states the same form.'
     determined_variables:
     - crf_hydro
@@ -45894,7 +45894,7 @@ equations:
     unit_check: true
   crf_nuclear_definition:
     description: 'The standard annuity: a constant annual charge whose present value equals one unit of
-      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in docs/sources/INDEX.md;
       NREL ATB 2025 states the same form.'
     determined_variables:
     - crf_nuclear
@@ -45921,7 +45921,7 @@ equations:
     unit_check: true
   crf_oil_definition:
     description: 'The standard annuity: a constant annual charge whose present value equals one unit of
-      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in docs/sources/INDEX.md;
       NREL ATB 2025 states the same form.'
     determined_variables:
     - crf_oil
@@ -45948,7 +45948,7 @@ equations:
     unit_check: true
   crf_solar_pv_definition:
     description: 'The standard annuity: a constant annual charge whose present value equals one unit of
-      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in docs/sources/INDEX.md;
       NREL ATB 2025 states the same form.'
     determined_variables:
     - crf_solar_pv
@@ -45975,7 +45975,7 @@ equations:
     unit_check: true
   crf_wind_offshore_definition:
     description: 'The standard annuity: a constant annual charge whose present value equals one unit of
-      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in docs/sources/INDEX.md;
       NREL ATB 2025 states the same form.'
     determined_variables:
     - crf_wind_offshore
@@ -46002,7 +46002,7 @@ equations:
     unit_check: true
   crf_wind_onshore_definition:
     description: 'The standard annuity: a constant annual charge whose present value equals one unit of
-      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in sources/INDEX.md;
+      capital over this technology''s life, at the fleet discount rate. Reference: the CRF row in docs/sources/INDEX.md;
       NREL ATB 2025 states the same form.'
     determined_variables:
     - crf_wind_onshore
@@ -46504,7 +46504,7 @@ equations:
     - years_of_life_lost
     priority: P2
     reference: 'WHO (2020), Global Health Estimates technical paper WHO/DDI/DNA/GHE/2020.3, YLD = I x
-      DW x L and DALY = YLL + YLD. Local copy: sources/archive/who_ghe2019_daly_methods.pdf.'
+      DW x L and DALY = YLL + YLD. Local copy: docs/sources/archive/who_ghe2019_daly_methods.pdf.'
     relation: eq
     rhs: premature_deaths_per_year * years_of_life_lost + health_impact_morbidity * morbidity_disability_weight
       * morbidity_episode_duration
@@ -46686,7 +46686,7 @@ equations:
     reference: 'The capital structure is one number with several faces. The dial is the debt-to-equity
       ratio, the catalog''s row 3.38 ''Optimal capital structure'', and the UKRN (2023) Cost of Capital
       review treats notional gearing as the regulator''s own policy assumption rather than a fixed fact
-      (Recommendation 9, `sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard
+      (Recommendation 9, `docs/sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard
       conversions: D/(D+E) = r/(1+r), gearing = r, and equity''s share is 1 - D/(D+E), for r the debt-to-equity
       ratio.'
     unit_check: true
@@ -47520,7 +47520,7 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
     reference: 'IPCC AR6 WGI, Ch. 11 (2021), drought frequency-severity framing; NOAA NIDIS drought-monitor
-      terminology. Local copy: sources/archive/ipcc_ar6_wgi_ch11.pdf.'
+      terminology. Local copy: docs/sources/archive/ipcc_ar6_wgi_ch11.pdf.'
     solution_method: direct
     latex: \mathrm{drought\_risk} = \mathrm{drought\_frequency} \times \mathrm{drought\_severity}
     parameters:
@@ -47967,7 +47967,7 @@ equations:
     description: The coal fleet's CO2 per MWh from the fuel's carbon content and the fleet's net efficiency.
     reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2
       (Stationary Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy
-      industries' -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+      industries' -- the default carbon content by fuel, in kg CO2/TJ. Archived at `docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
       The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
       `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
       (2020).
@@ -47999,7 +47999,7 @@ equations:
     description: The gas fleet's CO2 per MWh from the fuel's carbon content and the fleet's net efficiency.
     reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2
       (Stationary Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy
-      industries' -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+      industries' -- the default carbon content by fuel, in kg CO2/TJ. Archived at `docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
       The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
       `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
       (2020).
@@ -48031,7 +48031,7 @@ equations:
     description: The oil fleet's CO2 per MWh from the fuel's carbon content and the fleet's net efficiency.
     reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2
       (Stationary Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy
-      industries' -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+      industries' -- the default carbon content by fuel, in kg CO2/TJ. Archived at `docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
       The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
       `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
       (2020).
@@ -48063,7 +48063,7 @@ equations:
     solution_method: direct
     linearity: linear
     reference: IPCC Guidelines for National Greenhouse Gas Inventories, Volume 2 (Energy), Chapter 2,
-      Equation 2.1 on printed p. 2.11 (sources/archive/ipcc_2006_gl_vol2_ch2.pdf), which states the emission
+      Equation 2.1 on printed p. 2.11 (docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf), which states the emission
       as fuel consumption in TJ multiplied by an emission factor per TJ. The graph's construction is that
       same product with the fleet average in place of the per-fuel factor, generation in TWh times `fleet_emission_intensity_t_per_mwh`,
       and the fleet average is the graph's own, computed by `fleet_emission_intensity_definition` from
@@ -48976,7 +48976,7 @@ equations:
     - fishing_fleet_fuel_energy
     - fishing_vessel_fuel
     priority: P2
-    reference: 'IPCC 2006 Guidelines Vol. 2 Ch. 1 Table 1.2 (diesel NCV 43.0 TJ/Gg). Local copy: sources/archive/ipcc_2006_gl_vol2_ch1.pdf.'
+    reference: 'IPCC 2006 Guidelines Vol. 2 Ch. 1 Table 1.2 (diesel NCV 43.0 TJ/Gg). Local copy: docs/sources/archive/ipcc_2006_gl_vol2_ch1.pdf.'
     relation: eq
     rhs: fishing_vessel_fuel * diesel_energy_content_mwh_per_litre
     solution_method: direct
@@ -49174,8 +49174,8 @@ equations:
       and the generation weights are the batch-46 generation identity. The lifecycle factors -- biomass,
       nuclear, hydro and geothermal -- take their basis from IPCC (2014) Climate Change 2014: Mitigation
       of Climate Change, Annex III, Table A.III.2 ''Emissions of selected electricity supply technologies'',
-      p. 1335, archived at `sources/archive/ipcc_ar5_wg3_annex3.pdf`. The alternative lifecycle table,
-      IPCC-SRREN (2011) Table A.II.4, is archived at `sources/archive/ipcc_srren_2011_excerpt.pdf` and
+      p. 1335, archived at `docs/sources/archive/ipcc_ar5_wg3_annex3.pdf`. The alternative lifecycle table,
+      IPCC-SRREN (2011) Table A.II.4, is archived at `docs/sources/archive/ipcc_srren_2011_excerpt.pdf` and
       is not used: its biopower row is non-monotonic (minimum -633, 25th percentile 360, 50th 18, 75th
       37, maximum 75 gCO2eq/kWh), so a percentile read off it is not a quantity.'
     priority: P1
@@ -55343,7 +55343,7 @@ equations:
     - nuclear_lead_time
     priority: P2
     reference: 'IEA and NEA, Projected Costs of Generating Electricity 2020, treatment of interest during
-      construction. Local copy: sources/archive/iea_nea_egc_2020.pdf'
+      construction. Local copy: docs/sources/archive/iea_nea_egc_2020.pdf'
     relation: eq
     rhs: (exp(real_discount_rate * nuclear_lead_time) - 1) / (real_discount_rate * nuclear_lead_time)
     solution_method: direct
@@ -56176,7 +56176,7 @@ equations:
     determined_variables:
     - pm25_annual_mean_ug_per_m3
     unit_check: true
-    reference: 'WHO global air quality guidelines (2021), Table 0.1 and Table 3.24 (sources/archive/who_aqg_2021.pdf):
+    reference: 'WHO global air quality guidelines (2021), Table 0.1 and Table 3.24 (docs/sources/archive/who_aqg_2021.pdf):
       the PM2.5 annual-mean AQG level is 5 ug/m3, with interim targets of 35, 25, 15 and 10. The default
       `background_pm25_ug_per_m3` is set to the AQG level, which is a choice of counterfactual rather
       than a measurement: it is the concentration below which WHO states the evidence for an effect is
@@ -56255,7 +56255,7 @@ equations:
     - pm25_fleet_contribution_ug_per_m3
     unit_check: true
     reference: 'Box model: Hanna, Briggs & Hosker (1982), Handbook on Atmospheric Diffusion, DOE/TIC-11223,
-      section 9-2, printed pp. 57-58 (sources/archive/hanna_briggs_hosker_1982.pdf). The continuity equation
+      section 9-2, printed pp. 57-58 (docs/sources/archive/hanna_briggs_hosker_1982.pdf). The continuity equation
       for a volume of width Ax, mixing depth z_i and unit depth is Ax z_i dC/dt = Ax Q_a + u z_i (C_b
       - C) + Ax (dZ_i/dt)(C_a - C); at steady state with zero background the solution is the well-known
       box model, C = Q_a Ax / (u z_i), where Q_a is emission per unit area per unit time. The graph writes
@@ -56732,14 +56732,14 @@ equations:
     unit_check: true
     reference: 'WHO Regional Office for Europe, Health risks of air pollution in Europe -- HRAPIE project:
       recommendations for concentration-response functions for cost-benefit analysis of particulate matter,
-      ozone and nitrogen dioxide (2013), Table 1, PM long-term exposure, first row (sources/archive/who_hrapie_2013.pdf):
+      ozone and nitrogen dioxide (2013), Table 1, PM long-term exposure, first row (docs/sources/archive/who_hrapie_2013.pdf):
       PM2.5 annual mean, mortality all-cause (natural) age 30+, group A*, RR = 1.062 per 10 ug/m3 with
       a 95% CI of 1.040 to 1.083, from a meta-analysis of thirteen European cohorts (Hoek et al. 2013).
       Linearised as log(1.062)/10 = 0.006015 per ug/m3, which is the coefficient this node carries. The
       AirQ+ manual was the previous citation here and does not state this figure: it describes the software
       that applies the coefficients, not the coefficients themselves. The construction -- attributable
       burden as the population-attributable fraction times the health outcome -- is the one the WHO AirQ+
-      manual states on printed p. 2 (sources/archive/who_airq_manual.pdf): ''The attributable burden is
+      manual states on printed p. 2 (docs/sources/archive/who_airq_manual.pdf): ''The attributable burden is
       calculated by multiplying the population-attributable fraction by the health outcome''. AirQ+ applies
       IER functions rather than HRAPIE coefficients, so it is cited for the form of the calculation and
       not for the number: the linearised excess here is PAF = beta * deltaC for small beta * deltaC, which
@@ -57866,8 +57866,8 @@ equations:
     tolerance: 1.0e-09
     unit_check: true
     reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
-      IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt);
-      US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (sources/archive/eia_lcoe_methodology.txt),
+      IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (docs/sources/archive/iea_nea_egc_2020.txt);
+      US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (docs/sources/archive/eia_lcoe_methodology.txt),
       capacity credit at 1 for dispatchable units and derated for intermittent renewables; the scenario
       peak from `peak_demand_shifted_definition`'
     priority: P1
@@ -57952,10 +57952,10 @@ equations:
     tolerance: 1.0e-06
     unit_check: true
     reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
-      IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt:
+      IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (docs/sources/archive/iea_nea_egc_2020.txt:
       "Capacity credit reflects the portion of installed capacity that can be reliably expected to be
       available during times of peak demand"); cf. US EIA, Levelized Cost and Levelized Avoided Cost of
-      New Generation Resources (sources/archive/eia_lcoe_methodology.txt), which derates intermittent
+      New Generation Resources (docs/sources/archive/eia_lcoe_methodology.txt), which derates intermittent
       renewables'' capacity credit "as a function of the availability of the resource during peak load
       periods" and puts wind at 15% in its worked example; the scenario peak from `peak_demand_shifted_definition`'
     priority: P1
@@ -72408,10 +72408,10 @@ relationships:
   strength: hard
   description: Enters the corrected body.
   reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
-    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt:
+    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (docs/sources/archive/iea_nea_egc_2020.txt:
     "Capacity credit reflects the portion of installed capacity that can be reliably expected to be available
     during times of peak demand"); cf. US EIA, Levelized Cost and Levelized Avoided Cost of New Generation
-    Resources (sources/archive/eia_lcoe_methodology.txt), which derates intermittent renewables'' capacity
+    Resources (docs/sources/archive/eia_lcoe_methodology.txt), which derates intermittent renewables'' capacity
     credit "as a function of the availability of the resource during peak load periods" and puts wind
     at 15% in its worked example'
   priority: P1
@@ -72423,10 +72423,10 @@ relationships:
   strength: hard
   description: Enters the corrected body.
   reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
-    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt:
+    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (docs/sources/archive/iea_nea_egc_2020.txt:
     "Capacity credit reflects the portion of installed capacity that can be reliably expected to be available
     during times of peak demand"); cf. US EIA, Levelized Cost and Levelized Avoided Cost of New Generation
-    Resources (sources/archive/eia_lcoe_methodology.txt), which derates intermittent renewables'' capacity
+    Resources (docs/sources/archive/eia_lcoe_methodology.txt), which derates intermittent renewables'' capacity
     credit "as a function of the availability of the resource during peak load periods" and puts wind
     at 15% in its worked example'
   priority: P1
@@ -72438,8 +72438,8 @@ relationships:
   strength: hard
   description: Enters the corrected body.
   reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
-    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt);
-    US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (sources/archive/eia_lcoe_methodology.txt),
+    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (docs/sources/archive/iea_nea_egc_2020.txt);
+    US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (docs/sources/archive/eia_lcoe_methodology.txt),
     capacity credit at 1 for dispatchable units and derated for intermittent renewables'
   priority: P1
 - source: vre_capacity_mw
@@ -72450,8 +72450,8 @@ relationships:
   strength: hard
   description: Enters the corrected body.
   reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
-    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt);
-    US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (sources/archive/eia_lcoe_methodology.txt),
+    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (docs/sources/archive/iea_nea_egc_2020.txt);
+    US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (docs/sources/archive/eia_lcoe_methodology.txt),
     capacity credit at 1 for dispatchable units and derated for intermittent renewables'
   priority: P1
 - source: firm_capacity_mw
@@ -72462,8 +72462,8 @@ relationships:
   strength: hard
   description: Enters the corrected body.
   reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
-    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt);
-    US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (sources/archive/eia_lcoe_methodology.txt),
+    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (docs/sources/archive/iea_nea_egc_2020.txt);
+    US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (docs/sources/archive/eia_lcoe_methodology.txt),
     capacity credit at 1 for dispatchable units and derated for intermittent renewables'
   priority: P1
 - source: vre_firm_capacity_mw
@@ -72474,8 +72474,8 @@ relationships:
   strength: hard
   description: Enters the corrected body.
   reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
-    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt);
-    US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (sources/archive/eia_lcoe_methodology.txt),
+    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (docs/sources/archive/iea_nea_egc_2020.txt);
+    US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (docs/sources/archive/eia_lcoe_methodology.txt),
     capacity credit at 1 for dispatchable units and derated for intermittent renewables'
   priority: P1
 - source: capacity_factor_coal
@@ -72485,7 +72485,7 @@ relationships:
   direction: forward
   strength: hard
   description: Enters the pollutant chain.
-  reference: 'EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a (sources/archive/emep_eea_guidebook_2023_1a1a.txt):
+  reference: 'EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a (docs/sources/archive/emep_eea_guidebook_2023_1a1a.txt):
     factors are given per GJ of fuel input on a net calorific value basis. Net efficiency per IEA/NEA
     Projected Costs of Generating Electricity (2020), Table 3.10.'
   priority: P2
@@ -72496,7 +72496,7 @@ relationships:
   direction: forward
   strength: hard
   description: Enters the pollutant chain.
-  reference: 'EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a (sources/archive/emep_eea_guidebook_2023_1a1a.txt):
+  reference: 'EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a (docs/sources/archive/emep_eea_guidebook_2023_1a1a.txt):
     factors are given per GJ of fuel input on a net calorific value basis. Net efficiency per IEA/NEA
     Projected Costs of Generating Electricity (2020), Table 3.10.'
   priority: P2
@@ -72507,7 +72507,7 @@ relationships:
   direction: forward
   strength: hard
   description: Enters the pollutant chain.
-  reference: 'EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a (sources/archive/emep_eea_guidebook_2023_1a1a.txt):
+  reference: 'EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a (docs/sources/archive/emep_eea_guidebook_2023_1a1a.txt):
     factors are given per GJ of fuel input on a net calorific value basis. Net efficiency per IEA/NEA
     Projected Costs of Generating Electricity (2020), Table 3.10.'
   priority: P2
@@ -72518,7 +72518,7 @@ relationships:
   direction: forward
   strength: hard
   description: Enters the pollutant chain.
-  reference: 'EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a (sources/archive/emep_eea_guidebook_2023_1a1a.txt):
+  reference: 'EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a (docs/sources/archive/emep_eea_guidebook_2023_1a1a.txt):
     factors are given per GJ of fuel input on a net calorific value basis. Net efficiency per IEA/NEA
     Projected Costs of Generating Electricity (2020), Table 3.10.'
   priority: P2
@@ -72529,7 +72529,7 @@ relationships:
   direction: forward
   strength: hard
   description: Enters the pollutant chain.
-  reference: 'EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a (sources/archive/emep_eea_guidebook_2023_1a1a.txt):
+  reference: 'EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a (docs/sources/archive/emep_eea_guidebook_2023_1a1a.txt):
     factors are given per GJ of fuel input on a net calorific value basis. Net efficiency per IEA/NEA
     Projected Costs of Generating Electricity (2020), Table 3.10.'
   priority: P2
@@ -73098,7 +73098,7 @@ relationships:
   strength: hard
   description: Enters the pollutant chain.
   reference: 'Box model: Hanna, Briggs & Hosker (1982), Handbook on Atmospheric Diffusion, DOE/TIC-11223,
-    section 9-2, printed pp. 57-58 (sources/archive/hanna_briggs_hosker_1982.pdf). The continuity equation
+    section 9-2, printed pp. 57-58 (docs/sources/archive/hanna_briggs_hosker_1982.pdf). The continuity equation
     for a volume of width Ax, mixing depth z_i and unit depth is Ax z_i dC/dt = Ax Q_a + u z_i (C_b -
     C) + Ax (dZ_i/dt)(C_a - C); at steady state with zero background the solution is the well-known box
     model, C = Q_a Ax / (u z_i), where Q_a is emission per unit area per unit time. The graph writes it
@@ -73118,7 +73118,7 @@ relationships:
   strength: hard
   description: Enters the pollutant chain.
   reference: 'Box model: Hanna, Briggs & Hosker (1982), Handbook on Atmospheric Diffusion, DOE/TIC-11223,
-    section 9-2, printed pp. 57-58 (sources/archive/hanna_briggs_hosker_1982.pdf). The continuity equation
+    section 9-2, printed pp. 57-58 (docs/sources/archive/hanna_briggs_hosker_1982.pdf). The continuity equation
     for a volume of width Ax, mixing depth z_i and unit depth is Ax z_i dC/dt = Ax Q_a + u z_i (C_b -
     C) + Ax (dZ_i/dt)(C_a - C); at steady state with zero background the solution is the well-known box
     model, C = Q_a Ax / (u z_i), where Q_a is emission per unit area per unit time. The graph writes it
@@ -73137,7 +73137,7 @@ relationships:
   direction: forward
   strength: hard
   description: Enters the pollutant chain.
-  reference: 'WHO global air quality guidelines (2021), Table 0.1 and Table 3.24 (sources/archive/who_aqg_2021.pdf):
+  reference: 'WHO global air quality guidelines (2021), Table 0.1 and Table 3.24 (docs/sources/archive/who_aqg_2021.pdf):
     the PM2.5 annual-mean AQG level is 5 ug/m3, with interim targets of 35, 25, 15 and 10. The default
     `background_pm25_ug_per_m3` is set to the AQG level, which is a choice of counterfactual rather than
     a measurement: it is the concentration below which WHO states the evidence for an effect is insufficient
@@ -73153,7 +73153,7 @@ relationships:
   direction: forward
   strength: hard
   description: Enters the pollutant chain.
-  reference: 'WHO global air quality guidelines (2021), Table 0.1 and Table 3.24 (sources/archive/who_aqg_2021.pdf):
+  reference: 'WHO global air quality guidelines (2021), Table 0.1 and Table 3.24 (docs/sources/archive/who_aqg_2021.pdf):
     the PM2.5 annual-mean AQG level is 5 ug/m3, with interim targets of 35, 25, 15 and 10. The default
     `background_pm25_ug_per_m3` is set to the AQG level, which is a choice of counterfactual rather than
     a measurement: it is the concentration below which WHO states the evidence for an effect is insufficient
@@ -73171,14 +73171,14 @@ relationships:
   description: Enters the pollutant chain.
   reference: 'WHO Regional Office for Europe, Health risks of air pollution in Europe -- HRAPIE project:
     recommendations for concentration-response functions for cost-benefit analysis of particulate matter,
-    ozone and nitrogen dioxide (2013), Table 1, PM long-term exposure, first row (sources/archive/who_hrapie_2013.pdf):
+    ozone and nitrogen dioxide (2013), Table 1, PM long-term exposure, first row (docs/sources/archive/who_hrapie_2013.pdf):
     PM2.5 annual mean, mortality all-cause (natural) age 30+, group A*, RR = 1.062 per 10 ug/m3 with a
     95% CI of 1.040 to 1.083, from a meta-analysis of thirteen European cohorts (Hoek et al. 2013). Linearised
     as log(1.062)/10 = 0.006015 per ug/m3, which is the coefficient this node carries. The AirQ+ manual
     was the previous citation here and does not state this figure: it describes the software that applies
     the coefficients, not the coefficients themselves. The construction -- attributable burden as the
     population-attributable fraction times the health outcome -- is the one the WHO AirQ+ manual states
-    on printed p. 2 (sources/archive/who_airq_manual.pdf): ''The attributable burden is calculated by
+    on printed p. 2 (docs/sources/archive/who_airq_manual.pdf): ''The attributable burden is calculated by
     multiplying the population-attributable fraction by the health outcome''. AirQ+ applies IER functions
     rather than HRAPIE coefficients, so it is cited for the form of the calculation and not for the number:
     the linearised excess here is PAF = beta * deltaC for small beta * deltaC, which is that product.'
@@ -73192,14 +73192,14 @@ relationships:
   description: Enters the pollutant chain.
   reference: 'WHO Regional Office for Europe, Health risks of air pollution in Europe -- HRAPIE project:
     recommendations for concentration-response functions for cost-benefit analysis of particulate matter,
-    ozone and nitrogen dioxide (2013), Table 1, PM long-term exposure, first row (sources/archive/who_hrapie_2013.pdf):
+    ozone and nitrogen dioxide (2013), Table 1, PM long-term exposure, first row (docs/sources/archive/who_hrapie_2013.pdf):
     PM2.5 annual mean, mortality all-cause (natural) age 30+, group A*, RR = 1.062 per 10 ug/m3 with a
     95% CI of 1.040 to 1.083, from a meta-analysis of thirteen European cohorts (Hoek et al. 2013). Linearised
     as log(1.062)/10 = 0.006015 per ug/m3, which is the coefficient this node carries. The AirQ+ manual
     was the previous citation here and does not state this figure: it describes the software that applies
     the coefficients, not the coefficients themselves. The construction -- attributable burden as the
     population-attributable fraction times the health outcome -- is the one the WHO AirQ+ manual states
-    on printed p. 2 (sources/archive/who_airq_manual.pdf): ''The attributable burden is calculated by
+    on printed p. 2 (docs/sources/archive/who_airq_manual.pdf): ''The attributable burden is calculated by
     multiplying the population-attributable fraction by the health outcome''. AirQ+ applies IER functions
     rather than HRAPIE coefficients, so it is cited for the form of the calculation and not for the number:
     the linearised excess here is PAF = beta * deltaC for small beta * deltaC, which is that product.'
@@ -73213,14 +73213,14 @@ relationships:
   description: Enters the pollutant chain.
   reference: 'WHO Regional Office for Europe, Health risks of air pollution in Europe -- HRAPIE project:
     recommendations for concentration-response functions for cost-benefit analysis of particulate matter,
-    ozone and nitrogen dioxide (2013), Table 1, PM long-term exposure, first row (sources/archive/who_hrapie_2013.pdf):
+    ozone and nitrogen dioxide (2013), Table 1, PM long-term exposure, first row (docs/sources/archive/who_hrapie_2013.pdf):
     PM2.5 annual mean, mortality all-cause (natural) age 30+, group A*, RR = 1.062 per 10 ug/m3 with a
     95% CI of 1.040 to 1.083, from a meta-analysis of thirteen European cohorts (Hoek et al. 2013). Linearised
     as log(1.062)/10 = 0.006015 per ug/m3, which is the coefficient this node carries. The AirQ+ manual
     was the previous citation here and does not state this figure: it describes the software that applies
     the coefficients, not the coefficients themselves. The construction -- attributable burden as the
     population-attributable fraction times the health outcome -- is the one the WHO AirQ+ manual states
-    on printed p. 2 (sources/archive/who_airq_manual.pdf): ''The attributable burden is calculated by
+    on printed p. 2 (docs/sources/archive/who_airq_manual.pdf): ''The attributable burden is calculated by
     multiplying the population-attributable fraction by the health outcome''. AirQ+ applies IER functions
     rather than HRAPIE coefficients, so it is cited for the form of the calculation and not for the number:
     the linearised excess here is PAF = beta * deltaC for small beta * deltaC, which is that product.'
@@ -73234,14 +73234,14 @@ relationships:
   description: Enters the pollutant chain.
   reference: 'WHO Regional Office for Europe, Health risks of air pollution in Europe -- HRAPIE project:
     recommendations for concentration-response functions for cost-benefit analysis of particulate matter,
-    ozone and nitrogen dioxide (2013), Table 1, PM long-term exposure, first row (sources/archive/who_hrapie_2013.pdf):
+    ozone and nitrogen dioxide (2013), Table 1, PM long-term exposure, first row (docs/sources/archive/who_hrapie_2013.pdf):
     PM2.5 annual mean, mortality all-cause (natural) age 30+, group A*, RR = 1.062 per 10 ug/m3 with a
     95% CI of 1.040 to 1.083, from a meta-analysis of thirteen European cohorts (Hoek et al. 2013). Linearised
     as log(1.062)/10 = 0.006015 per ug/m3, which is the coefficient this node carries. The AirQ+ manual
     was the previous citation here and does not state this figure: it describes the software that applies
     the coefficients, not the coefficients themselves. The construction -- attributable burden as the
     population-attributable fraction times the health outcome -- is the one the WHO AirQ+ manual states
-    on printed p. 2 (sources/archive/who_airq_manual.pdf): ''The attributable burden is calculated by
+    on printed p. 2 (docs/sources/archive/who_airq_manual.pdf): ''The attributable burden is calculated by
     multiplying the population-attributable fraction by the health outcome''. AirQ+ applies IER functions
     rather than HRAPIE coefficients, so it is cited for the form of the calculation and not for the number:
     the linearised excess here is PAF = beta * deltaC for small beta * deltaC, which is that product.'
@@ -73549,7 +73549,7 @@ relationships:
   relationship: functional
   strength: hard
   description: A factor of the drought risk product; risk is frequency times severity.
-  reference: IPCC AR6 WGI, Ch. 11 (2021). Local copy sources/archive/ipcc_ar6_wgi_ch11.pdf.
+  reference: IPCC AR6 WGI, Ch. 11 (2021). Local copy docs/sources/archive/ipcc_ar6_wgi_ch11.pdf.
   priority: P1
 - source: drought_severity
   target: drought_risk
@@ -73557,7 +73557,7 @@ relationships:
   relationship: functional
   strength: hard
   description: A factor of the drought risk product; risk is frequency times severity.
-  reference: IPCC AR6 WGI, Ch. 11 (2021). Local copy sources/archive/ipcc_ar6_wgi_ch11.pdf.
+  reference: IPCC AR6 WGI, Ch. 11 (2021). Local copy docs/sources/archive/ipcc_ar6_wgi_ch11.pdf.
   priority: P1
 - source: ev_battery_size
   target: ev_range_km
@@ -79348,7 +79348,7 @@ relationships:
   description: Carbon content of the coal the fleet burns, per GJ.
   reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
     Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
-    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
     The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
     `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
     (2020).
@@ -79362,7 +79362,7 @@ relationships:
   description: Gigajoules in a megawatt-hour; converts the per-GJ content to a per-MWh one.
   reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
     Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
-    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
     The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
     `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
     (2020).
@@ -79377,7 +79377,7 @@ relationships:
     MWh.'
   reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
     Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
-    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
     The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
     `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
     (2020).
@@ -79391,7 +79391,7 @@ relationships:
   description: Carbon content of the gas the fleet burns, per GJ.
   reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
     Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
-    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
     The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
     `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
     (2020).
@@ -79405,7 +79405,7 @@ relationships:
   description: Gigajoules in a megawatt-hour; converts the per-GJ content to a per-MWh one.
   reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
     Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
-    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
     The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
     `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
     (2020).
@@ -79420,7 +79420,7 @@ relationships:
     MWh.'
   reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
     Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
-    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
     The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
     `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
     (2020).
@@ -79434,7 +79434,7 @@ relationships:
   description: Carbon content of the oil the fleet burns, per GJ.
   reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
     Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
-    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
     The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
     `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
     (2020).
@@ -79448,7 +79448,7 @@ relationships:
   description: Gigajoules in a megawatt-hour; converts the per-GJ content to a per-MWh one.
   reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
     Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
-    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
     The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
     `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
     (2020).
@@ -79463,7 +79463,7 @@ relationships:
     MWh.'
   reference: IPCC (2006) Guidelines for National Greenhouse Gas Inventories, Vol. 2 (Energy), Ch. 2 (Stationary
     Combustion), Table 2.2 'Default emission factors for stationary combustion in the energy industries'
-    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
+    -- the default carbon content by fuel, in kg CO2/TJ. Archived at `docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`.
     The conversion to t/MWh is the fuel's carbon content divided by the fleet's net electrical efficiency,
     `efficiency_<tech>`, which the graph carries from IEA/NEA Projected Costs of Generating Electricity
     (2020).
@@ -79479,7 +79479,7 @@ relationships:
   reference: 'The capital structure is one number with several faces. The dial is the debt-to-equity ratio,
     the catalog''s row 3.38 ''Optimal capital structure'', and the UKRN (2023) Cost of Capital review
     treats notional gearing as the regulator''s own policy assumption rather than a fixed fact (Recommendation
-    9, `sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard conversions:
+    9, `docs/sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard conversions:
     D/(D+E) = r/(1+r), gearing = r, and equity''s share is 1 - D/(D+E), for r the debt-to-equity ratio.'
   priority: P2
 - source: debt_equity_ratio
@@ -79492,7 +79492,7 @@ relationships:
   reference: 'The capital structure is one number with several faces. The dial is the debt-to-equity ratio,
     the catalog''s row 3.38 ''Optimal capital structure'', and the UKRN (2023) Cost of Capital review
     treats notional gearing as the regulator''s own policy assumption rather than a fixed fact (Recommendation
-    9, `sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard conversions:
+    9, `docs/sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard conversions:
     D/(D+E) = r/(1+r), gearing = r, and equity''s share is 1 - D/(D+E), for r the debt-to-equity ratio.'
   priority: P2
 - source: equity_share
@@ -79506,7 +79506,7 @@ relationships:
   reference: 'The capital structure is one number with several faces. The dial is the debt-to-equity ratio,
     the catalog''s row 3.38 ''Optimal capital structure'', and the UKRN (2023) Cost of Capital review
     treats notional gearing as the regulator''s own policy assumption rather than a fixed fact (Recommendation
-    9, `sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard conversions:
+    9, `docs/sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard conversions:
     D/(D+E) = r/(1+r), gearing = r, and equity''s share is 1 - D/(D+E), for r the debt-to-equity ratio.'
   priority: P2
 - source: equity_share
@@ -79520,7 +79520,7 @@ relationships:
   reference: 'The capital structure is one number with several faces. The dial is the debt-to-equity ratio,
     the catalog''s row 3.38 ''Optimal capital structure'', and the UKRN (2023) Cost of Capital review
     treats notional gearing as the regulator''s own policy assumption rather than a fixed fact (Recommendation
-    9, `sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard conversions:
+    9, `docs/sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard conversions:
     D/(D+E) = r/(1+r), gearing = r, and equity''s share is 1 - D/(D+E), for r the debt-to-equity ratio.'
   priority: P2
 - source: equity_share
@@ -79534,7 +79534,7 @@ relationships:
   reference: 'The capital structure is one number with several faces. The dial is the debt-to-equity ratio,
     the catalog''s row 3.38 ''Optimal capital structure'', and the UKRN (2023) Cost of Capital review
     treats notional gearing as the regulator''s own policy assumption rather than a fixed fact (Recommendation
-    9, `sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard conversions:
+    9, `docs/sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are the standard conversions:
     D/(D+E) = r/(1+r), gearing = r, and equity''s share is 1 - D/(D+E), for r the debt-to-equity ratio.'
   priority: P2
 - source: reserve_margin_min
@@ -80049,10 +80049,10 @@ relationships:
   description: 'Enters firm_capacity_mw: `reserve_margin_with_firm_vre` now sizes against the scenario
     peak rather than the forecast one.'
   reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
-    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt:
+    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (docs/sources/archive/iea_nea_egc_2020.txt:
     "Capacity credit reflects the portion of installed capacity that can be reliably expected to be available
     during times of peak demand"); cf. US EIA, Levelized Cost and Levelized Avoided Cost of New Generation
-    Resources (sources/archive/eia_lcoe_methodology.txt), which derates intermittent renewables'' capacity
+    Resources (docs/sources/archive/eia_lcoe_methodology.txt), which derates intermittent renewables'' capacity
     credit "as a function of the availability of the resource during peak load periods" and puts wind
     at 15% in its worked example; the scenario peak from `peak_demand_shifted_definition`'
   priority: P1
@@ -80075,8 +80075,8 @@ relationships:
   description: 'Enters reserve_margin_actual: `reserve_margin_actual_definition` now sizes against the
     scenario peak rather than the forecast one.'
   reference: 'Capacity credit as the portion of installed capacity reliably available at peak demand:
-    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt);
-    US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (sources/archive/eia_lcoe_methodology.txt),
+    IEA/NEA, Projected Costs of Generating Electricity 2020, section 4 (docs/sources/archive/iea_nea_egc_2020.txt);
+    US EIA, Levelized Cost and Levelized Avoided Cost of New Generation Resources (docs/sources/archive/eia_lcoe_methodology.txt),
     capacity credit at 1 for dispatchable units and derated for intermittent renewables; the scenario
     peak from `peak_demand_shifted_definition`'
   priority: P1

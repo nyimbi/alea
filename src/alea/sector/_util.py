@@ -23,7 +23,7 @@ H2_LHV_MWH_PER_KG = 0.03333
 33.33 kWh/kg. This is the unit every electrolyser efficiency in the plan is
 expressed against (``efficiency_lhv``), so the constant appears wherever a mass
 and an energy are reconciled. Source: IEA Global Hydrogen Review 2026, Annex
-(spec/data2.md §10.1.1).
+(docs/spec/data2.md §10.1.1).
 """
 
 HOURS_PER_YEAR = 8760.0

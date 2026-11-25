@@ -1,7 +1,7 @@
 # Alea Implementation Plan
 
 **Status**: Draft for execution
-**Companion to**: `spec/spec4-base.md`, `spec/spec4-data-collection.md`
+**Companion to**: `docs/spec/spec4-base.md`, `docs/spec/spec4-data-collection.md`
 **Verified against**: the working tree at `b3f43dc`, 2026-10-11
 
 This plan turns the specification into a build order. It is deliberately
@@ -164,7 +164,7 @@ is cheaper to build now than to retrofit.
 |---|---|---|---|
 | 0.1 | Config system | Pydantic models over `config/*.yaml`; `extra="forbid"`; scenario overlays in `config/scenarios/` | A typo in a config key fails at load, not at hour 5 of a solve |
 | 0.2 | Provenance | `Provenance` model: source, url, retrieved_at, checksum, licence, uncertainty | Every artefact on disk round-trips its provenance |
-| 0.3 | Data lake layout | `data/{raw,interim,processed}/<source>/<version>/`; content-addressed; `sources/INDEX.md` | Re-running a download is a no-op when the checksum matches |
+| 0.3 | Data lake layout | `data/{raw,interim,processed}/<source>/<version>/`; content-addressed; `docs/sources/INDEX.md` | Re-running a download is a no-op when the checksum matches |
 | 0.4 | Country registry | ISO-3166 alpha-2 → name, power pool, completeness tier, currency, timezone | Registry count is asserted to equal 55 in a test |
 | 0.5 | CI | pytest + ruff + pyright on push; the three gates already pass locally | CI runs the same three commands, and a canary proves the workflow executes |
 | 0.6 | DVC | Version `data/` and `resources/`; remotes configured | `dvc repro` on a clean clone reproduces a fixture network |
@@ -438,7 +438,7 @@ fail.
 and content-addressed; nothing writes to `data/raw/` twice.
 
 **Provenance.** Every artefact carries source, retrieval timestamp, checksum,
-licence, and uncertainty. `sources/INDEX.md` records citations, per the project
+licence, and uncertainty. `docs/sources/INDEX.md` records citations, per the project
 convention that a load-bearing citation gets an archived local copy — the
 specification's own data inventory contains several placeholder links
 (`zenodo.org/records/` with "search for AfREP-Hydro") that will rot.

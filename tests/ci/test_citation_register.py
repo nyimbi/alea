@@ -57,7 +57,7 @@ def test_a_row_claiming_a_copy_holds_one():
 	"""``missing_file``: a register claiming a copy it does not hold.
 
 	This is the one gap kind that is always a defect rather than a state of the
-	world. A row saying ``sources/archive/x.pdf`` is a claim that a clean clone
+	world. A row saying ``docs/sources/archive/x.pdf`` is a claim that a clean clone
 	carries the evidence; if the file is absent the claim is false, and a false
 	claim is worse than an honest ``""``.
 	"""
@@ -110,7 +110,7 @@ def test_every_archived_copy_has_a_recorded_digest():
 	text = INDEX_PATH.read_text()
 	digests: dict[str, str] = {}
 	for line in text.splitlines():
-		if not line.startswith("| sources/archive/"):
+		if not line.startswith("| docs/sources/archive/"):
 			continue
 		cells = [cell.strip() for cell in line.strip("|").split("|")]
 		if len(cells) == 2:
@@ -222,7 +222,7 @@ def test_a_claimed_copy_that_is_absent_is_reported(tmp_path: Path):
 		"|---|---|---|---|---|---|---|---|\n"
 		"| ghost | A Work Whose Copy Is Not Here | Nobody | 2000 | "
 		"https://example.invalid/ | unknown | "
-		"sources/archive/definitely-not-a-file.pdf | Ghost |\n"
+		"docs/sources/archive/definitely-not-a-file.pdf | Ghost |\n"
 	)
 	report = citation_report(path=index, references=(("planted", "cf. Ghost"),))
 	missing = [g for g in report.gaps if g.kind == "missing_file"]
@@ -234,7 +234,7 @@ def test_a_claimed_copy_that_is_absent_is_reported(tmp_path: Path):
 	# And the same row with an honest empty cell is *not* a missing file, so the
 	# branch is discriminating rather than firing on every unarchived row.
 	index.write_text(index.read_text().replace(
-		"sources/archive/definitely-not-a-file.pdf", ""
+		"docs/sources/archive/definitely-not-a-file.pdf", ""
 	))
 	honest = citation_report(path=index, references=(("planted", "cf. Ghost"),))
 	assert not [g for g in honest.gaps if g.kind == "missing_file"], (

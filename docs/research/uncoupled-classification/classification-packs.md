@@ -470,13 +470,13 @@ employment_factor_hydro | BASE-NEEDED | -- | jobs/MW | (0,50) | 4.3 | IRENA empl
 employment_factor_solar | BASE-NEEDED | -- | jobs/MW | (0,50) | 4.3 | IRENA employment factors | Same intensity basis; consumed by jobs_from_solar.
 employment_factor_transmission | BASE-NEEDED | -- | jobs/km | (0,50) | 3.0 | IRENA employment factors | Line-km intensity; 3.0 x 12,000 km = 36,000 jobs. Planning figure, not extracted from the archive.
 employment_factor_wind | BASE-NEEDED | -- | jobs/MW | (0,50) | 4.3 | IRENA employment factors | Same intensity basis; consumed by jobs_from_wind.
-equator_principles | QUALITATIVE | -- | 1 | (0,1e6) | 500000.0 | null | An adoption flag for a lender standard; no row in sources/INDEX.md, so no reference.
+equator_principles | QUALITATIVE | -- | 1 | (0,1e6) | 500000.0 | null | An adoption flag for a lender standard; no row in docs/sources/INDEX.md, so no reference.
 fishing_community_load | PRODUCT | fishing_community_load_twh = fishing_community_load * 8760 / 1000000 | TWh/year | (0,30000) | derived | null | Retype to MW, then the graph's own MW x 8760 / 1e6 conversion; 0.0438 TWh/year.
 gender_impact | QUALITATIVE | -- | 1 | (0,1e6) | 500000.0 | null | An assessment artefact; the numeric reading is gender_action_plan_spend_usd_per_year.
 grievance_redress_effectiveness | PRODUCT | grievances_resolved_per_year = grievance_redress_effectiveness * grievances_received_per_year | events/year | (0,1e5) | derived | null | Effectiveness applied to received grievances; 0.75 x 1000 = 750.
 grievance_redress_mechanism | QUALITATIVE | -- | 1 | (0,1e6) | 500000.0 | null | A mechanism design (enum); effectiveness already carries the numeric reading.
 human_review | GATE-SCENE | -- | 1 | (0,1) | 0.5 | null | Queue-backed review stage: it gates whether an automated decision is released, so it is a switch.
-ilo_conventions | QUALITATIVE | -- | 1 | (0,1e6) | 500000.0 | null | A convention-adoption set; no ILO row in sources/INDEX.md, so no reference.
+ilo_conventions | QUALITATIVE | -- | 1 | (0,1e6) | 500000.0 | null | A convention-adoption set; no ILO row in docs/sources/INDEX.md, so no reference.
 indigenous_peoples_rights | PRODUCT | indigenous_peoples_rights = fpic_compliance_score | 1 | (0,1) | derived (0.7) | The catalog's own duplicate rows, resolved | Duplicate of fpic_compliance_score; UNDRIP has no index row, so the reference is the alias register.
 internet_penetration | PRODUCT | internet_users = internet_penetration * population_total | people | (0,2e8) | derived | null | Penetration share x population; 22.5e6 at defaults.
 iso_55000_compliance | QUALITATIVE | -- | 1 | (0,1e6) | 500000.0 | null | A compliance level, not a quantity; asset_management_maturity is its ordinal form.
@@ -512,7 +512,7 @@ spare_parts_lead_time | THRESHOLD | spare_parts_lead_time leq 365 / maintenance_
 stakeholder_engagement_plan | QUALITATIVE | -- | 1 | (0,1e6) | 500000.0 | null | A plan document; its numeric siblings are the spend and grievance nodes.
 tariff_transparency | PRODUCT | tariff_transparency_spend_usd_per_year = tariff_transparency * allowed_revenue_requirement | USD million/year | (0,20) | derived | null | Transparency programme cost as a share of ARR; 0.634.
 unbundling_status | QUALITATIVE | -- | 1 | (0,1e6) | 500000.0 | null | A policy status enum; the accounting split it implies lives in the regulatory equations.
-undrip_compliance | PRODUCT | undrip_compliance = fpic_compliance_score | 1 | (0,1) | derived (0.7) | The catalog's own duplicate rows, resolved | Duplicate of fpic_compliance_score; UNDRIP itself has no row in sources/INDEX.md.
+undrip_compliance | PRODUCT | undrip_compliance = fpic_compliance_score | 1 | (0,1) | derived (0.7) | The catalog's own duplicate rows, resolved | Duplicate of fpic_compliance_score; UNDRIP itself has no row in docs/sources/INDEX.md.
 union_agreements | PRODUCT | unionised_jobs = union_agreements * direct_jobs | jobs | (0,1e7) | derived | null | Retype to a coverage share; 0.3 x 43,000 = 12,900.
 vulnerability_index | PRODUCT | vulnerable_customers = vulnerability_index * population_total | people | (0,2e8) | derived | null | Vulnerability share x population; 22.5e6 at defaults.
 vulnerable_customer_protection | PRODUCT | vulnerable_customer_protection_spend_usd_per_year = vulnerable_customer_protection * allowed_revenue_requirement | USD million/year | (0,20) | derived | null | Protection programme spend as a share of ARR; 1.268.
@@ -520,7 +520,7 @@ wage_levels_by_sector | PRODUCT | wage_bill_usd_per_year = wage_levels_by_sector
 women_employment_targets | PRODUCT | women_employment_targets = women_employment_share | 1 | (0,0.6) | derived (0.2) | Composition-target shares (planning policy) | Duplicate share; women_jobs already computes the count.
 work_management_systems | QUALITATIVE | -- | 1 | (0,1e6) | 500000.0 | null | A systems capability set (scheduling/work management), not a quantity.
 worker_grievance_mechanism | QUALITATIVE | -- | 1 | (0,1e6) | 500000.0 | null | A mechanism design (enum); effectiveness is the numeric sibling.
-world_bank_esf | QUALITATIVE | -- | 1 | (0,1e6) | 500000.0 | null | An adoption flag for a framework; no ESF row in sources/INDEX.md, so no reference.
+world_bank_esf | QUALITATIVE | -- | 1 | (0,1e6) | 500000.0 | null | An adoption flag for a framework; no ESF row in docs/sources/INDEX.md, so no reference.
 youth_employment_targets | PRODUCT | youth_employment_targets = youth_employment_share | 1 | (0,0.8) | derived (0.3) | Composition-target shares (planning policy) | Duplicate share; youth_jobs already computes the count.
 ```
 
@@ -544,7 +544,7 @@ Retypes required by the PRODUCT rows (unit, default): `employment_factor_*` jobs
 - **D. Community funds, wages and retraining (6).** `just_transition_fund` and `community_transition_funding` as shares of revenue and of the community fund; `wage_levels_by_sector` and `retraining_costs` as rates over `direct_jobs`; plus the two alias rows `community_benefit_sharing`, `community_development_funds`. Method: share/rate x an existing aggregate. Reference `Benefit-sharing programmes`.
 - **E. Coverage and population (5).** `internet_penetration`, `mobile_coverage`, `vulnerability_index`, `coal_community_dependencies` x `population_total`/`exposed_population`, plus `fishing_community_load` -> TWh/year. Method: share x population, and the graph's own MW x 8760 / 1e6 conversion.
 - **F. Asset and maintenance availability (10).** `(1 - availability) * planned_maintenance_hours_per_year` for crew (14.4 h) and spares (19.2 h); `predictive_maintenance_adoption * planned hours` (48 h); `ring_fencing_rules * ring_fencing_provisions` (50); the two thresholds (`remedy_periods` is in batch H); `spare_parts_inventory` carrying cost; and the five scene switches (`condition_based`, `reliability_centred`, `risk_based`, `maintenance_schedule_optimisation`, `human_review`). Method: availability shortfall and regime selection.
-- **G. Alias register (10).** The ten equality rows: `community_benefit_sharing`, `community_development_funds`, `local_content_employment`, `local_employment_targets`, `women_employment_targets`, `youth_employment_targets`, `undrip_compliance`, `indigenous_peoples_rights`, `resettlement_costs`, `social_tariff`. Method: equality to the canonical twin; reference `The catalog's own duplicate rows, resolved`. Do not cite UNDRIP, IFC, Equator or ILO for these — none resolves in `sources/INDEX.md` (checked with `read_index()`).
+- **G. Alias register (10).** The ten equality rows: `community_benefit_sharing`, `community_development_funds`, `local_content_employment`, `local_employment_targets`, `women_employment_targets`, `youth_employment_targets`, `undrip_compliance`, `indigenous_peoples_rights`, `resettlement_costs`, `social_tariff`. Method: equality to the canonical twin; reference `The catalog's own duplicate rows, resolved`. Do not cite UNDRIP, IFC, Equator or ILO for these — none resolves in `docs/sources/INDEX.md` (checked with `read_index()`).
 - **H. Grievance, remedy, licence and load (5).** `grievances_resolved_per_year` (750), `remedy_periods leq max_remedy_period_days` (60 leq 90 HOLDS), `licence_fee_spend_usd_per_year` (5.0e6), `spare_parts_lead_time leq 365 / maintenance_frequency` (45 leq 182.5 HOLDS), and `human_review` if it is kept out of F.
 
 The 22 QUALITATIVE rows need no batch: they are document/enum rows whose numeric readings already exist under other names, and the honest fix is to leave them free rather than manufacture an equation.
@@ -747,7 +747,7 @@ NEW BASES NEEDED
 | regulation_down_share | 1 | 0.5 | Symmetric split. |
 | spinning_reserve_share | 1 | 0.03 | Three-percent spinning band. |
 | reserve_account_share | 1 | 0.02 | Two-percent licence reserve account. |
-| strategic_reserve_days | days | unknown | No stockholding norm is held in sources/. |
+| strategic_reserve_days | days | unknown | No stockholding norm is held in docs/sources/. |
 | coal_starts_per_year | starts/year | 60 | 3000 MW cycling roughly weekly. |
 | gas_starts_per_year | starts/year | 200 | 1500 MW, half the fleet daily. |
 | breakers_per_feeder | 1 | unknown | No density figure in the graph. |

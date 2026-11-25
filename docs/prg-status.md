@@ -326,7 +326,7 @@ fraction of its carbon is not emitted". The repair is an arrow plus a weight:
 `emissions` reads the fleet intensity, and the intensity is a
 capacity-weighted average over the two capture-capable fuels times
 `ccs_capture_rate` (0.90, the rate the IEA's technology tables use; archived as
-`sources/archive/iea_nea_egc_2020.txt`).
+`docs/sources/archive/iea_nea_egc_2020.txt`).
 
 **The third defect was the arrow's own precondition.** Both shares shipped
 `0.5` — `_default_for`'s blanket value for every unitless fraction, on catalog
@@ -388,10 +388,10 @@ of nameplate reliable *at the peak*. Capacity credit is smaller than the
 capacity factor in every system, because the peak is when the fleet is least
 likely to be producing. The IEA/NEA states it plainly — capacity credit "is the
 portion of installed capacity that can be reliably expected to be available
-during times of peak demand" (`sources/archive/iea_nea_egc_2020.txt`, §4) — and
+during times of peak demand" (`docs/sources/archive/iea_nea_egc_2020.txt`, §4) — and
 the EIA derates intermittent renewables' credit "as a function of the
 availability of the resource during peak load periods"
-(`sources/archive/eia_lcoe_methodology.txt`), putting wind at 15% in its worked
+(`docs/sources/archive/eia_lcoe_methodology.txt`), putting wind at 15% in its worked
 example. The graph had no node for it.
 
 **What the wrong term did, in the direction that reads as a pass.** At the
@@ -504,7 +504,7 @@ named sat in the register. The key is a row's primary identifier and is now one
 of the spellings. The ninth was real: `emissions_definition` cited the IPCC
 Guidelines, which had no row. Equation 2.1 (printed p. 2.11) states
 `Emissions = Fuel Consumption × Emission Factor`; the chapter is archived at
-`sources/archive/ipcc_2006_gl_vol2_ch2.pdf` and the citation now names the
+`docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf` and the citation now names the
 equation and records the step IPCC does not make — replacing the per-fuel factor
 with the graph's own fleet average.
 
@@ -797,9 +797,9 @@ inconsistent (`rocof_definition`, pre-existing), 0 undecidable.
 
 **Citation gap, recorded rather than papered over.** The seven
 `emission_factor_{tech}_t_per_mwh` nodes name "IPCC lifecycle emission factors,
-2014" in their own `source` field, and `sources/INDEX.md` carries no row for
+2014" in their own `source` field, and `docs/sources/INDEX.md` carries no row for
 that work — its only IPCC entry is the 2006 *Guidelines*, Volume 2, a different
-document. The edges therefore cite IEA/NEA (registered at `sources/INDEX.md:50`
+document. The edges therefore cite IEA/NEA (registered at `docs/sources/INDEX.md:50`
 and archived) for the capture rate and point at the factor nodes for the
 factors. Registering the lifecycle basis is a new index row plus an archived
 copy, and it is the honest follow-on.
@@ -895,7 +895,7 @@ consistent with the one pre-existing `rocof_definition` failure.
   is a larger edit to a layer plan than a layout fix.
 
   **`docs/research` was a real absence and has been built**, with a `README.md`
-  stating the distinction from `sources/`: a citation archive is not a research
+  stating the distinction from `docs/sources/`: a citation archive is not a research
   note, and the tree declares both.
 
   **`data/interim` is registered as a deliberate gap.** Declared in §6, in
@@ -1054,7 +1054,7 @@ consistent with the one pre-existing `rocof_definition` failure.
     readable; the external half is still one row in a spec example.
 
     **The external half now has a referent, and it is not the spec's example.**
-    `sources/INDEX.md` — the directory `00-architecture.md` §6 declares and the
+    `docs/sources/INDEX.md` — the directory `00-architecture.md` §6 declares and the
     tree did not have — registers every work the library leans on, and
     `alea.provenance.citations` joins those rows to the citations the equations
     make. So `source_url` has something to point at, and the finding narrows
@@ -1074,7 +1074,7 @@ consistent with the one pre-existing `rocof_definition` failure.
     with no single work behind them, and recording them as unattributed works
     would have read as five missing citations; they are marked `n/a` so the
     register says what they are. Of the four with a custodian, **one is
-    archived** (IRENA's executive summary, 3 MB, `sources/archive/`) and three
+    archived** (IRENA's executive summary, 3 MB, `docs/sources/archive/`) and three
     are not — IEA/NEA and the *Journal of the Aeronautical Sciences* are behind
     paywalls, and WHO's AirQ+ landing page is a JavaScript shell that archives
     as 755 bytes of nothing. The gate reports those three and does not fail
@@ -1501,7 +1501,7 @@ because the shipped form is also positive — this is the case where the wrong
 answer is a perfectly plausible number.
 
 **What the reference does and does not carry.** The equation named the World
-Bank *Regulation of Utilities* handbook, and `sources/archive/` holds it. The
+Bank *Regulation of Utilities* handbook, and `docs/sources/archive/` holds it. The
 handbook discusses price-cap and revenue-cap regulation at length and states
 the RPI-X arithmetic nowhere: searching the archived text for "RPI", "X
 factor" and "productivity offset" turns up no formula. The corrected equation
@@ -1710,7 +1710,7 @@ of 3.14 s or less; at or above the 45 Hz floor, 7.84 s.
 **Neither number was changed.** `frequency_response_time_s` is 10 s and
 carries no citation at all -- no archived document in the repo states an FCR
 activation or dead time, and the node's own `reference` names none. That is
-the gap, and it is the ordinary kind: `sources/INDEX.md` exempts a standard
+the gap, and it is the ordinary kind: `docs/sources/INDEX.md` exempts a standard
 derivation from archiving (`n/a`), which is why row 66 for the swing equation
 is not a failure -- `citation_report()` reports 0 failures and does not list
 it as a gap. The response time is not a standard derivation. It is a
@@ -1726,7 +1726,7 @@ hidden it. `frequency_nadir_definition` had no `reference` at all, and
 field is invisible to it. So `frequency_response_time_s` was an uncited number
 multiplied inside an uncited equation, and no register counted either. The
 equation now cites Shams (2017), archived at
-`sources/archive/shams_2017_frequency_low_inertia.pdf`, which states what the
+`docs/sources/archive/shams_2017_frequency_low_inertia.pdf`, which states what the
 equation is about: time to nadir in a low-inertia system is "in the order of 2
 to 3s", and fast frequency response is defined as response within 0.5 s of
 triggering. It does **not** state the 10 s default -- it measures against
@@ -2809,7 +2809,7 @@ description named two works — Jacobs et al. (2022) for per-capita water use by
 service level and Sharif et al. (2019) for the energy intensity of
 distribution — that no equation carried. The citation register's reverse join
 found the consequence before a reader did: `sharif_2019_wds_energy` was
-registered in `sources/INDEX.md` and reached by no `Equation.reference`, so
+registered in `docs/sources/INDEX.md` and reached by no `Equation.reference`, so
 `test_every_registered_work_is_reached_by_a_citation` was red at `HEAD`. A
 prose citation on an uncoupled node is a citation the register cannot see.
 
@@ -3582,7 +3582,7 @@ of the parameter.
 
 **Measured on HEAD.** The audit's own recommendation 3 asked for the factor to
 be restated on a table it names. AR5 WG3 Annex III Table A.III.2 (p. 1335,
-`sources/archive/ipcc_ar5_wg3_annex3.txt` line 453) gives dedicated biomass as
+`docs/sources/archive/ipcc_ar5_wg3_annex3.txt` line 453) gives dedicated biomass as
 lifecycle **min 130 / median 230 / max 420** gCO2eq/kWh. The shipped 40 is
 below even the minimum: it is not any percentile of this table. The same table
 is where the other three factors' ranges come from, and reading it confirms
@@ -3606,7 +3606,7 @@ were not sorted by value, so "the median of the SRREN biopower row" is a
 statement about row order, not about biopower. Taking the 50th entry of an
 unsorted column and calling it a median would have produced a number that
 looks like a percentile and is not one. The excerpt is archived at
-`sources/archive/ipcc_srren_2011_excerpt.pdf` and the equation's `reference`
+`docs/sources/archive/ipcc_srren_2011_excerpt.pdf` and the equation's `reference`
 says in the shipped tree that it is not used and why, so the next reader does
 not repeat the investigation.
 
@@ -3639,7 +3639,7 @@ are `{'unarchived': 7}` -- every gap kind the tests fail on is clean for the
 first time.
 
 **A register row's `archived` cell has one meaning.** It is a path under
-`sources/archive/` with a recorded digest, or the literal `n/a` for a
+`docs/sources/archive/` with a recorded digest, or the literal `n/a` for a
 derivation. The first version of the placeholder-survey row put
 `docs/research/placeholder-survey.md` there, which failed two gates in
 sequence: the digest test read it as an archive path and found no digest, and
@@ -3863,7 +3863,7 @@ derived from `debt_fraction` — `gearing_ratio`, `equity_share` and
 **Which side became the dial.** The ratio, on the catalog's own evidence: row
 3.38 is "Optimal capital structure" and names the debt-to-equity ratio, and the
 UKRN (2023) Cost of Capital review treats notional gearing as the regulator's
-policy assumption (Recommendation 9, `sources/archive/ukrn_cost_of_capital_2023.txt`).
+policy assumption (Recommendation 9, `docs/sources/archive/ukrn_cost_of_capital_2023.txt`).
 A share is a conversion of that, not a fact about the world. `debt_fraction`
 is now `debt_equity_ratio / (1 + debt_equity_ratio)`.
 
@@ -4885,8 +4885,8 @@ the 12 flagged are the same vocabulary class the earlier pin recorded — annual
 quantities declared without a per-year divisor, and two compounding slips — each
 with a measured trade documented in `test_the_flagged_equations_are_a_known_set`.
 
-**Provenance discipline.** Ten works are archived under `sources/` with sha256
-digests recorded in `sources/INDEX.md` (NREL ATB 2025; EIA LCOE methodology;
+**Provenance discipline.** Ten works are archived under `docs/sources/` with sha256
+digests recorded in `docs/sources/INDEX.md` (NREL ATB 2025; EIA LCOE methodology;
 Short, Packey & Holt 1995 via the Stanford mirror; UKRN cost-of-capital
 guidance; EIA/Stanford EMF demand elasticities; Burke & Csereklyei 2016; IRENA
 jobs 2024; the IEEE 1366 reliability tutorial; Tejada-Arango 2023 arXiv; the
@@ -5120,7 +5120,7 @@ audit checked/skipped 88/155 → 109/177, computed 243 → 286, constraint-shape
 34/243/277 → 34/286/320 (no new inequality — the batch is all identities),
 affine coverage 243 → 286, edge strength hard 274 → 317, citation doors
 115 → 138 (twenty-three new references, every spelling resolving to a
-`sources/INDEX.md` row),
+`docs/sources/INDEX.md` row),
 translate coverage 935 → 926 (nine former free knobs became derived, none
 settable), uncertainty inputs unchanged at 72 (the retype preserves a node's
 determinism; the units moved, the uncertainty did not), catalog disagreements
@@ -5298,8 +5298,8 @@ out rather than shipping a misnamed quantity.
 register as the source for the country spread: South Africa's Ba2 rating gives
 a 2.56% default spread on a 4.23% mature-market ERP, and that spread is the
 `currency_risk_premium` default. The copy is archived at
-`sources/archive/damodaran_ctryprem_2026-01.html` with its digest in
-`sources/INDEX.md`.
+`docs/sources/archive/damodaran_ctryprem_2026-01.html` with its digest in
+`docs/sources/INDEX.md`.
 
 State after batch 27: **1261 parameters, 359 equations, 762 edges, 55 rules,
 488 uncoupled** (694 at batch 20 → 649 → 631 → 591 → 575 → 532 → 516 → 504 →
@@ -5964,7 +5964,7 @@ the share inverted. Batch 34 corrects it to
 *The argument stops at the graph.* Registry practice -- the buffer rates
 programmes actually withhold -- would corroborate the 10% and is the obvious
 place to look next. It is not cited here because no copy of the standards that
-state it is archived in `sources/`: Verra serves the AFOLU Non-Permanence Risk
+state it is archived in `docs/sources/`: Verra serves the AFOLU Non-Permanence Risk
 Tool and the VCS Standard behind a 404 or a JavaScript shell, probed on
 2026-10-21, and the repository's rule is that a load-bearing citation points at
 a file it holds. The correction therefore rests on the graph's own two

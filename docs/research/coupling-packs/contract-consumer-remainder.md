@@ -230,7 +230,7 @@ If a reviewer wants the cure-period convention cited rather than left as
 practice, the work to fetch is a standard project-finance facility agreement or
 its commentary — **Loan Market Association recommended form of facility
 agreement, or a project-finance textbook stating the customary cure period**.
-`sources/INDEX.md` has no row for either, and the archived World Bank handbook
+`docs/sources/INDEX.md` has no row for either, and the archived World Bank handbook
 does not mention cure, remedy or grace periods at all:
 
 ```

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 """The `[UNVERIFIED]` register, and the milestone review that closes it.
 
-`12-quality.md` §6.1 lists ten literature figures inherited from `spec/` when
+`12-quality.md` §6.1 lists ten literature figures inherited from `docs/spec/` when
 web search was unavailable, each with the milestone at which it must be
 reproduced or withdrawn. §9 criterion 5 asks that "the `[UNVERIFIED]` register
 is reviewed at every milestone", and the plan states the cost of not doing it:

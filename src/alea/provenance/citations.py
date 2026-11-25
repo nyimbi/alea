@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 """The citation register: which load-bearing claims trace to which work.
 
-WHY this exists. ``docs/plans/00-architecture.md`` §6 declares a ``sources/``
+WHY this exists. ``docs/plans/00-architecture.md`` §6 declares a ``docs/sources/``
 directory holding "archived citations + INDEX.md", and the global rule is
 blunter: *never leave a load-bearing citation pointing at a URL you did not
 archive, because links rot*. Nine equations in ``config/prg.yaml`` cite
@@ -14,7 +14,7 @@ served at four doors, and no gate can tell a citation naming a real work from
 one naming a work that does not exist.
 
 WHY the register is a Markdown table and not YAML. The plan says
-``sources/INDEX.md``, and a person maintains this file -- adding a row is
+``docs/sources/INDEX.md``, and a person maintains this file -- adding a row is
 reading a paper, deciding its licence and writing down where the copy is. A
 table in the file the plan names is what that person will actually edit. The
 parser below is strict about the columns for the same reason a schema is: a
@@ -49,10 +49,10 @@ REPO = Path(__file__).resolve().parents[3]
 
 #: Where the register lives. Declared in `00-architecture.md` §6, and the path
 #: is fixed there rather than chosen here.
-INDEX_PATH = REPO / "sources" / "INDEX.md"
+INDEX_PATH = REPO / "docs" / "sources" / "INDEX.md"
 
 #: Where an archived copy sits, relative to the repository root.
-ARCHIVE_DIR = "sources/archive"
+ARCHIVE_DIR = "docs/sources/archive"
 
 __all__ = [
 	"ARCHIVE_DIR",

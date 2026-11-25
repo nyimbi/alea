@@ -185,7 +185,7 @@ It is **an ordinary node** — `role: derived`, with an equation. A two-hop
 connection (`thermal_capacity_mw → firm_capacity_mw → reserve margin`) is two
 edges through an ordinary node.
 
-"Intermediate variable" appears nowhere in `spec/` or in `src/alea/prg/`. There
+"Intermediate variable" appears nowhere in `docs/spec/` or in `src/alea/prg/`. There
 is no third node kind between exogenous and derived. If you want to annotate a
 mid-chain quantity, you give it a node and an equation; that *is* the annotation.
 

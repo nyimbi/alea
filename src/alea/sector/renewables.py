@@ -117,7 +117,7 @@ class GeothermalCrossCheck(BaseModel):
 	kenya_installed_mw: float
 	"""KenGen's published installed capacity, MW.
 
-	950 MW per ``spec/best1-renew.md`` §4.2 and ``spec/spec4-base.md`` §5. It is
+	950 MW per ``docs/spec/best1-renew.md`` §4.2 and ``docs/spec/spec4-base.md`` §5. It is
 	an *installed* figure and the modelled value is a *potential*, so this is a
 	floor test: a potential below what is already built is wrong.
 	"""
@@ -197,7 +197,7 @@ def crosscheck_geothermal(
 		tolerance_frac=tolerance_frac,
 		source=(
 			"KenGen published installed capacity 950 MW "
-			"(spec/best1-renew.md §4.2, spec/spec4-base.md §5); "
+			"(docs/spec/best1-renew.md §4.2, docs/spec/spec4-base.md §5); "
 			"Geothermal Atlas for Africa per-field potential"
 		),
 		notes="05-layer2 §3.1: the Kenya case study turns on this number.",

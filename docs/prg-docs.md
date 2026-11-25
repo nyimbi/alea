@@ -16,7 +16,7 @@ The PRG is Alea’s parameter- and equation-bound research graph. It maps every 
 | `docs/prg-status.md` | Short status of the last audit run. |
 | `docs/param_coupling_worklist.md` | Classified inventory of every uncoupled node and its coupling class. |
 | `docs/research/<slug>/README.md` | Per-topic research, decisions, rejected options, local sources. |
-| `sources/INDEX.md` + local copies | Archived external literature. No load-bearing URL is left unarchived. |
+| `docs/sources/INDEX.md` + local copies | Archived external literature. No load-bearing URL is left unarchived. |
 
 ## 3. Invariants
 
@@ -83,7 +83,7 @@ Left alone on purpose: `line_outage_start` and `line_outage_end` (their descript
 
 ## 6. Documentation per node / parameter
 
-Name, stable id, role (primary / auxiliary / derived / gate), unit, physical/economic meaning, governing equation (`rule_id`), DAQ, citation(s) archived under `sources/` or `docs/research/<slug>/`, valid domain/default, verification status.
+Name, stable id, role (primary / auxiliary / derived / gate), unit, physical/economic meaning, governing equation (`rule_id`), DAQ, citation(s) archived under `docs/sources/` or `docs/research/<slug>/`, valid domain/default, verification status.
 
 ## 7. Documentation per equation
 
@@ -92,7 +92,7 @@ Name, stable id, role (primary / auxiliary / derived / gate), unit, physical/eco
 ## 8. Citations and sources
 
 - Numbers in prose come only from an actual run.
-- Every paper, theorem, or doc a claim rests on is archived locally under `sources/` or `docs/research/<slug>/`, recorded in `sources/INDEX.md`. URLs alone are not proof.
+- Every paper, theorem, or doc a claim rests on is archived locally under `docs/sources/` or `docs/research/<slug>/`, recorded in `docs/sources/INDEX.md`. URLs alone are not proof.
 
 ## 9. Pinned registers
 
@@ -121,7 +121,7 @@ Do not hand-edit `config/prg.yaml`. Bake via the generator; confirm only intende
 
 ## 13. References
 
-`config/prg.yaml`, `docs/prg-status.md`, `docs/param_coupling_worklist.md`, `prg/`, `docs/research/`. Cited proofs live under `sources/`.
+`config/prg.yaml`, `docs/prg-status.md`, `docs/param_coupling_worklist.md`, `prg/`, `docs/research/`. Cited proofs live under `docs/sources/`.
 
 ## Explorer UI
 

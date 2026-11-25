@@ -1080,7 +1080,7 @@ def main(argv: list[str] | None = None) -> int:
 #: Values are the node defaults; every new node gets the unit its meaning
 #: states. The cited levels: NREL ATB 2025 baselines, IEA/NEA Projected
 #: Costs 2020 for the thermal fleet, IRENA Renewable Power Generation Costs
-#: in 2022 for the VRE/geothermal fleet (archived in sources/), adjusted
+#: in 2022 for the VRE/geothermal fleet (archived in docs/sources/), adjusted
 #: to the single-country East-African setting the product serves.
 TECHS: dict[str, dict[str, Any]] = {
 	"solar_pv": {
@@ -1336,7 +1336,7 @@ def build_batch13(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 			"description": (
 				"The standard annuity: a constant annual charge whose present value equals "
 				"one unit of capital over this technology's life, at the fleet discount "
-				"rate. Reference: the CRF row in sources/INDEX.md; NREL ATB 2025 states "
+				"rate. Reference: the CRF row in docs/sources/INDEX.md; NREL ATB 2025 states "
 				"the same form."
 			),
 			"system": "financial",
@@ -5416,11 +5416,11 @@ BATCH24_EQUATIONS: tuple[
 	 "Verra, AFOLU Non-Permanence Risk Tool v4.2 (2023), 2.5.4 (risk "
 	 "rating converted to a percentage and multiplied by the net change "
 	 "in carbon stocks) and 2.5.2 (the minimum rating of 12), archived at "
-	 "sources/archive/verra_afolu_npt_v42.txt; Cambridge Permanence and "
+	 "docs/sources/archive/verra_afolu_npt_v42.txt; Cambridge Permanence and "
 	 "Durability Workshop 2024, Current Practice Among Carbon Crediting "
 	 "Programs, for the programs that set the share directly rather than "
 	 "deriving it, archived at "
-	 "sources/archive/cambridge_buffer_pool_workshop_2024.txt"),
+	 "docs/sources/archive/cambridge_buffer_pool_workshop_2024.txt"),
 	("voluntary_market_volume_definition",
 	 "The volume sold into the voluntary market",
 	 "voluntary_market_volume_mtco2",
@@ -11029,7 +11029,7 @@ def build_batch34(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 
 	The argument stops there deliberately. Registry practice -- the buffer
 	rates programmes actually withhold -- would corroborate the 10%, and no
-	copy of the standards that state it is archived in `sources/`, so the
+	copy of the standards that state it is archived in `docs/sources/`, so the
 	correction rests on the graph's own two descriptions disagreeing rather
 	than on an external figure the repository cannot produce.
 
@@ -11327,7 +11327,7 @@ BATCH37_RETYPES: tuple[
 #: Two of the five carry `reference: None`, and the pack says why rather than
 #: inventing one: they are unweighted means of declared dials, no archived work
 #: states this aggregation, and the component provenance the catalog gives
-#: (World Bank WGI, ND-GAIN) is not in `sources/archive/`.
+#: (World Bank WGI, ND-GAIN) is not in `docs/sources/archive/`.
 BATCH37_EQUATIONS: tuple[tuple[str, str, str, str, str, str | None], ...] = (
 	("geopolitical_risk_index_definition", "geopolitical_risk_index",
 	 "(1 - political_stability + cross_border_tension + 1 - maritime_security"
@@ -11692,7 +11692,7 @@ BATCH44_NODES: tuple[tuple[str, str, list[float], float, str], ...] = (
 	 "Net electrical efficiency of the coal fleet, fuel energy in to "
 	 "electricity out. 0.40 is the median of the supercritical pulverised "
 	 "entries in the IEA/NEA cost study, whose country rows run 36% to 43% "
-	 "(sources/archive/iea_nea_egc_2020.txt, Table 3.10, the "
+	 "(docs/sources/archive/iea_nea_egc_2020.txt, Table 3.10, the "
 	 "supercritical-pulverised rows). It is the divisor that turns a "
 	 "capacity into a fuel burn: a 3000 MW coal fleet at a 0.75 capacity "
 	 "factor generates 19,710 GWh/yr, which at 0.40 efficiency is 177,390 TJ "
@@ -11701,7 +11701,7 @@ BATCH44_NODES: tuple[tuple[str, str, list[float], float, str], ...] = (
 	 "Net electrical efficiency of the gas fleet. 0.58 is the median of the "
 	 "CCGT rows in the same IEA/NEA table (0.41 to 0.64 across countries); "
 	 "the guidebook's own text puts a modern CCGT \"in excess of 50%\" "
-	 "(sources/archive/emep_eea_guidebook_2023_1a1a.txt, section 3.2). The "
+	 "(docs/sources/archive/emep_eea_guidebook_2023_1a1a.txt, section 3.2). The "
 	 "gas factor matters more than the coal one because the gas NOx factor "
 	 "is already the low one -- 89 against coal's 209 g/GJ -- so the "
 	 "efficiency is doing most of the work in the fleet's NOx total."),
@@ -11795,7 +11795,7 @@ BATCH44_EQUATIONS: tuple[tuple[str, str, str, str, str | None], ...] = (
 	 "graph had no node for it -- the pollutant factors were applied to "
 	 "nothing.",
 	 "EMEP/EEA Air Pollutant Emission Inventory Guidebook 2023, NFR 1.A.1.a "
-	 "(sources/archive/emep_eea_guidebook_2023_1a1a.txt): factors are given "
+	 "(docs/sources/archive/emep_eea_guidebook_2023_1a1a.txt): factors are given "
 	 "per GJ of fuel input on a net calorific value basis. Net efficiency "
 	 "per IEA/NEA Projected Costs of Generating Electricity (2020), Table "
 	 "3.10."),
@@ -11921,7 +11921,7 @@ BATCH44_EQUATIONS: tuple[tuple[str, str, str, str, str | None], ...] = (
 	 "background's burden as the fleet's.",
 	 "Box model: Hanna, Briggs & Hosker (1982), Handbook on Atmospheric "
 	 "Diffusion, DOE/TIC-11223, section 9-2, printed pp. 57-58 "
-	 "(sources/archive/hanna_briggs_hosker_1982.pdf). The continuity "
+	 "(docs/sources/archive/hanna_briggs_hosker_1982.pdf). The continuity "
 	 "equation for a volume of width Ax, mixing depth z_i and unit depth "
 	 "is Ax z_i dC/dt = Ax Q_a + u z_i (C_b - C) + Ax (dZ_i/dt)(C_a - C); "
 	 "at steady state with zero background the solution is the well-known "
@@ -11948,7 +11948,7 @@ BATCH44_EQUATIONS: tuple[tuple[str, str, str, str, str | None], ...] = (
 	 "reported at the WHO guideline rather than at an arbitrary dial, and it "
 	 "is what lets a clean build be clean.",
 	 "WHO global air quality guidelines (2021), Table 0.1 and Table 3.24 "
-	 "(sources/archive/who_aqg_2021.pdf): the PM2.5 annual-mean AQG level "
+	 "(docs/sources/archive/who_aqg_2021.pdf): the PM2.5 annual-mean AQG level "
 	 "is 5 ug/m3, with interim targets of 35, 25, 15 and 10. The default "
 	 "`background_pm25_ug_per_m3` is set to the AQG level, which is a "
 	 "choice of counterfactual rather than a measurement: it is the "
@@ -11977,7 +11977,7 @@ BATCH44_EQUATIONS: tuple[tuple[str, str, str, str, str | None], ...] = (
 	 "Europe -- HRAPIE project: recommendations for concentration-response "
 	 "functions for cost-benefit analysis of particulate matter, ozone and "
 	 "nitrogen dioxide (2013), Table 1, PM long-term exposure, first row "
-	 "(sources/archive/who_hrapie_2013.pdf): PM2.5 annual mean, mortality "
+	 "(docs/sources/archive/who_hrapie_2013.pdf): PM2.5 annual mean, mortality "
 	 "all-cause (natural) age 30+, group A*, RR = 1.062 per 10 ug/m3 with a "
 	 "95% CI of 1.040 to 1.083, from a meta-analysis of thirteen European "
 	 "cohorts (Hoek et al. 2013). Linearised as log(1.062)/10 = 0.006015 "
@@ -11988,7 +11988,7 @@ BATCH44_EQUATIONS: tuple[tuple[str, str, str, str, str | None], ...] = (
 	 " The construction -- attributable burden as the "
 	 "population-attributable fraction times the health outcome -- is the "
 	 "one the WHO AirQ+ manual states on printed p. 2 "
-	 "(sources/archive/who_airq_manual.pdf): 'The attributable burden is "
+	 "(docs/sources/archive/who_airq_manual.pdf): 'The attributable burden is "
 	 "calculated by multiplying the population-attributable fraction by "
 	 "the health outcome'. AirQ+ applies IER functions rather than "
 	 "HRAPIE coefficients, so it is cited for the form of the calculation "
@@ -13059,7 +13059,7 @@ def build_batch47(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	*The citation.* The capture basis is IEA/NEA's CCUS technology entry, which
 	this equation already cites. The per-fuel factors are the graph's own
 	nodes and name their basis in their own `source` field; that basis is not
-	a row in `sources/INDEX.md`, so it is not cited here.
+	a row in `docs/sources/INDEX.md`, so it is not cited here.
 	"""
 	from alea.prg.dsl import parse_side
 
@@ -14983,10 +14983,10 @@ BATCH43_NODES: tuple[tuple[str, str, list[float], float, str], ...] = (
 	 "graph had no node for it and used the energy ratio instead, which "
 	 "overstates every reserve margin it reports. 0.15 is the value the US "
 	 "EIA uses for wind in its own worked example "
-	 "(sources/archive/eia_lcoe_methodology.txt: \"In the region used in this "
+	 "(docs/sources/archive/eia_lcoe_methodology.txt: \"In the region used in this "
 	 "example, wind has a capacity credit of 15%\"), and it sits inside the "
 	 "range the IEA/NEA reports across technologies and regions "
-	 "(sources/archive/iea_nea_egc_2020.txt, Figure 4.4). The range admits "
+	 "(docs/sources/archive/iea_nea_egc_2020.txt, Figure 4.4). The range admits "
 	 "the near-zero of a solar-heavy winter-peaking fleet and the 0.4+ of "
 	 "offshore wind in a summer-peaking one."),
 )
@@ -15051,11 +15051,11 @@ BATCH43_EQUATIONS: tuple[tuple[str, str, str, str, str | None], ...] = (
 	 "description claims the constraint already does.",
 	 "Capacity credit as the portion of installed capacity reliably "
 	 "available at peak demand: IEA/NEA, Projected Costs of Generating "
-	 "Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt: "
+	 "Electricity 2020, section 4 (docs/sources/archive/iea_nea_egc_2020.txt: "
 	 "\"Capacity credit reflects the portion of installed capacity that can "
 	 "be reliably expected to be available during times of peak demand\"); "
 	 "cf. US EIA, Levelized Cost and Levelized Avoided Cost of New "
-	 "Generation Resources (sources/archive/eia_lcoe_methodology.txt), "
+	 "Generation Resources (docs/sources/archive/eia_lcoe_methodology.txt), "
 	 "which derates intermittent renewables' capacity credit \"as a function "
 	 "of the availability of the resource during peak load periods\" and "
 	 "puts wind at 15% in its worked example"),
@@ -15070,9 +15070,9 @@ BATCH43_EQUATIONS: tuple[tuple[str, str, str, str, str | None], ...] = (
 	 "reserve margin.",
 	 "Capacity credit as the portion of installed capacity reliably "
 	 "available at peak demand: IEA/NEA, Projected Costs of Generating "
-	 "Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt); "
+	 "Electricity 2020, section 4 (docs/sources/archive/iea_nea_egc_2020.txt); "
 	 "US EIA, Levelized Cost and Levelized Avoided Cost of New Generation "
-	 "Resources (sources/archive/eia_lcoe_methodology.txt), capacity credit "
+	 "Resources (docs/sources/archive/eia_lcoe_methodology.txt), capacity credit "
 	 "at 1 for dispatchable units and derated for intermittent renewables"),
 	("reserve_margin_actual_definition",
 	 "reserve_margin_actual",
@@ -15089,9 +15089,9 @@ BATCH43_EQUATIONS: tuple[tuple[str, str, str, str, str | None], ...] = (
 	 "the comparison is between the standard and the fleet.",
 	 "Capacity credit as the portion of installed capacity reliably "
 	 "available at peak demand: IEA/NEA, Projected Costs of Generating "
-	 "Electricity 2020, section 4 (sources/archive/iea_nea_egc_2020.txt); "
+	 "Electricity 2020, section 4 (docs/sources/archive/iea_nea_egc_2020.txt); "
 	 "US EIA, Levelized Cost and Levelized Avoided Cost of New Generation "
-	 "Resources (sources/archive/eia_lcoe_methodology.txt), capacity credit "
+	 "Resources (docs/sources/archive/eia_lcoe_methodology.txt), capacity credit "
 	 "at 1 for dispatchable units and derated for intermittent renewables"),
 )
 
@@ -15246,7 +15246,7 @@ _BATCH42_SOURCE = "The CCS chain repair (batch 42)"
 #: that emits nothing: the IEA's own CCUS LCOE comparison prices a captured
 #: plant as emitting some of its carbon, and every capture rate in the
 #: literature is below one. 0.90 is the rate the IEA's technology tables use
-#: for a capture plant (sources/archive/iea_nea_egc_2020.txt, the CCUS entry
+#: for a capture plant (docs/sources/archive/iea_nea_egc_2020.txt, the CCUS entry
 #: in the technology cost tables), and it is a parameter rather than a
 #: constant so a scenario can price a solvent that captures 95% or a retrofit
 #: that manages 85%.
@@ -15319,7 +15319,7 @@ BATCH42_EQUATIONS: tuple[tuple[str, str, str, str, str | None], ...] = (
 	 "was inert.",
 	 "IPCC Guidelines for National Greenhouse Gas Inventories, Volume 2 "
 	 "(Energy), Chapter 2, Equation 2.1 on printed p. 2.11 "
-	 "(sources/archive/ipcc_2006_gl_vol2_ch2.pdf), which states the emission "
+	 "(docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf), which states the emission "
 	 "as fuel consumption in TJ multiplied by an emission factor per TJ. The "
 	 "graph's construction is that same product with the fleet average in "
 	 "place of the per-fuel factor, generation in TWh times "
@@ -16631,7 +16631,7 @@ def build_batch37(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	*The two composites carry `reference: None`.* They are unweighted means of
 	declared dials; no archived work states this aggregation, and the component
 	provenance the catalog gives -- World Bank WGI for the governance dials,
-	ND-GAIN for the hazards -- is not in `sources/archive/`. The pack lists both
+	ND-GAIN for the hazards -- is not in `docs/sources/archive/`. The pack lists both
 	under **Sources to fetch**. A fabricated citation would be worse than the
 	gap, which the citation register already counts.
 	"""
@@ -16982,7 +16982,7 @@ _BATCH51_SOURCE = (
 	"(Energy), Ch. 2 (Stationary Combustion), Table 2.2 'Default emission "
 	"factors for stationary combustion in the energy industries' -- the "
 	"default carbon content by fuel, in kg CO2/TJ. Archived at "
-	 "`sources/archive/ipcc_2006_gl_vol2_ch2.pdf`. The conversion to t/MWh is "
+	 "`docs/sources/archive/ipcc_2006_gl_vol2_ch2.pdf`. The conversion to t/MWh is "
 	"the fuel's carbon content divided by the fleet's net electrical "
 	"efficiency, `efficiency_<tech>`, which the graph carries from IEA/NEA "
 	"Projected Costs of Generating Electricity (2020)."
@@ -17016,7 +17016,7 @@ def build_batch51(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	better-sourced pair: each names a table in IEA/NEA (2020) and 0.58 is the
 	CCGT median of that table. The factors named "IPCC lifecycle emission
 	factors, 2014", which is false for all three -- they are direct-combustion
-	figures, and `sources/INDEX.md` holds no 2014 lifecycle row to point at.
+	figures, and `docs/sources/INDEX.md` holds no 2014 lifecycle row to point at.
 	Making the factors derived fixes the arithmetic *and* the citation in one
 	move, because the derived node's source is the carbon-content table it
 	actually comes from.
@@ -17225,7 +17225,7 @@ _BATCH52_SOURCE = (
 	"debt-to-equity ratio, the catalog's row 3.38 'Optimal capital structure', "
 	"and the UKRN (2023) Cost of Capital review treats notional gearing as the "
 	"regulator's own policy assumption rather than a fixed fact (Recommendation "
-	"9, `sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are "
+	"9, `docs/sources/archive/ukrn_cost_of_capital_2023.txt`). The share forms are "
 	"the standard conversions: D/(D+E) = r/(1+r), gearing = r, and equity's "
 	"share is 1 - D/(D+E), for r the debt-to-equity ratio."
 )
@@ -18761,9 +18761,9 @@ _BATCH56_SOURCE = (
 	"'Emissions of selected electricity supply technologies (gCO2eq/kWh)', "
 	"p. 1335 -- the lifecycle column, which is the min / median / max of the "
 	"reviewed LCA literature rather than a stack measurement. Archived at "
-	"`sources/archive/ipcc_ar5_wg3_annex3.pdf`. The alternative source, "
+	"`docs/sources/archive/ipcc_ar5_wg3_annex3.pdf`. The alternative source, "
 	"IPCC-SRREN (2011) Table A.II.4, is archived alongside it at "
-	"`sources/archive/ipcc_srren_2011_excerpt.pdf` and was rejected for a "
+	"`docs/sources/archive/ipcc_srren_2011_excerpt.pdf` and was rejected for a "
 	"reason this batch records rather than leaves implicit."
 )
 
@@ -18783,7 +18783,7 @@ def build_batch56(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 	*The defect, in two parts.*
 
 	1. `emission_factor_biomass_t_per_mwh` ships **0.04** and cites "IPCC
-	   lifecycle emission factors, 2014". No such work exists: `sources/INDEX.md`
+	   lifecycle emission factors, 2014". No such work exists: `docs/sources/INDEX.md`
 	   holds `ipcc_2006_gl_vol2` (a different work, direct combustion) and no
 	   2014 lifecycle row, and neither archived lifecycle table gives 0.04.
 	   AR5 WG3 Annex III Table A.III.2 puts dedicated biomass at 130 / 230 / 420
@@ -18967,9 +18967,9 @@ def build_batch56(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 			"their basis from IPCC (2014) Climate Change 2014: Mitigation of "
 			"Climate Change, Annex III, Table A.III.2 'Emissions of selected "
 			"electricity supply technologies', p. 1335, archived at "
-			"`sources/archive/ipcc_ar5_wg3_annex3.pdf`. The alternative "
+			"`docs/sources/archive/ipcc_ar5_wg3_annex3.pdf`. The alternative "
 			"lifecycle table, IPCC-SRREN (2011) Table A.II.4, is archived at "
-			"`sources/archive/ipcc_srren_2011_excerpt.pdf` and is not used: its "
+			"`docs/sources/archive/ipcc_srren_2011_excerpt.pdf` and is not used: its "
 			"biopower row is non-monotonic (minimum -633, 25th percentile 360, "
 			"50th 18, 75th 37, maximum 75 gCO2eq/kWh), so a percentile read off "
 			"it is not a quantity."
@@ -20664,7 +20664,7 @@ def build_batch60(graph: Any) -> tuple[dict[str, Any], dict[str, Any], list[dict
 
 	*What the source does and does not establish.* The equation's
 	``reference`` is the World Bank *Regulation of Utilities* handbook, which
-	``sources/archive/`` holds. The handbook discusses price-cap and
+	``docs/sources/archive/`` holds. The handbook discusses price-cap and
 	revenue-cap regulation and does not state the RPI-X arithmetic anywhere --
 	checked by searching the archived text for "RPI", "X factor" and
 	"productivity offset", none of which appears in a formula context. So the
@@ -20795,18 +20795,18 @@ if __name__ == "__main__":
 # *The sources.* Both archived with their digests.
 #
 #   - Jacobs, Crouch, Ilemobade & du Plessis (2022), *Water SA* 48(2) 171-179,
-#     CC BY 4.0, `sources/archive/watersa_jacobs_2022_percapita.pdf`. It
+#     CC BY 4.0, `docs/sources/archive/watersa_jacobs_2022_percapita.pdf`. It
 #     tabulates per-capita use by level of service: LOS1 standpipe 20-24
 #     L/person/day across climate regions, LOS3 yard connection 46-58, LOS5
 #     full indoor connection 135-196 (Table 4 for a 1-4 person household,
 #     Table 5 across five climate regions).
 #   - Sharif, Haider, Farahat & Hewage (2019), *Environmental Reviews*,
-#     `sources/archive/sharif_2019_water_distribution_energy.pdf`. Figure 3
+#     `docs/sources/archive/sharif_2019_water_distribution_energy.pdf`. Figure 3
 #     breaks a flat-terrain North American system into 0.026 source / 0.066
 #     treatment / 0.3 distribution, a 0.40 total; the surrounding survey gives
 #     an operating band of 0.16-0.55 kWh/m3 and 2.28 in mountain terrain.
 #   - World Bank WDI `SH.H2O.BASW.ZS`, archived as the API's JSON response at
-#     `sources/archive/worldbank_sh_h2o_basw_zs_ssf.json`: Sub-Saharan Africa
+#     `docs/sources/archive/worldbank_sh_h2o_basw_zs_ssf.json`: Sub-Saharan Africa
 #     rose 59.22% (2015) to 66.67% (2023) using at least basic drinking water
 #     services.
 #

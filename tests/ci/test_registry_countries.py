@@ -2,7 +2,7 @@
 """`01-foundations.md` §3.3's registry gates, against the plan's own table.
 
 The registry is generated from the *per-country tables* in
-``spec/data-completeness.md``, because that file's summary table contradicts its
+``docs/spec/data-completeness.md``, because that file's summary table contradicts its
 own body: the summary reports HIGH 5 / MEDIUM 32 / LOW 7 and puts Equatorial
 Guinea in MEDIUM where the tables put it in LOW (twice, which is where the
 miscount comes from). The plan verified the tables and recorded the result:

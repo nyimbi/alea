@@ -1,6 +1,6 @@
 # Funding scan for ALEA
 
-Scanned 2026-11-25 from web search snippets plus fetched pages. Raw copies of the cited pages are in `sources/` (fetched 2026-11-25; see the table at the end). Search snippets were not archived, so a figure that rests only on a snippet is marked in the table. Re-check amounts and dates on the funder's live page before use.
+Scanned 2026-11-25 from web search snippets plus fetched pages. Raw copies of the cited pages are in `docs/sources/` (fetched 2026-11-25; see the table at the end). Search snippets were not archived, so a figure that rests only on a snippet is marked in the table. Re-check amounts and dates on the funder's live page before use.
 
 ## What ALEA offers a funder
 
@@ -21,7 +21,7 @@ MIT licence, open platform, 55 AU member states and five power pools, long-run p
 
 ## Terra Viva energy and climate category (pages 1 to 3 of 81, read 2026-11-25)
 
-Thirty listings, 10 per page. Archived as `sources/terraviva-category-energy-climate-p{1,2,3}.html`. Pages 4 to 81 were not read. Only listings with a deadline after 25 Nov 2026, or none, are worth a look, and I read the listing text for the four that looked closest.
+Thirty listings, 10 per page. Archived as `docs/sources/terraviva-category-energy-climate-p{1,2,3}.html`. Pages 4 to 81 were not read. Only listings with a deadline after 25 Nov 2026, or none, are worth a look, and I read the listing text for the four that looked closest.
 
 | Listing | Amount | Deadline | Fit for ALEA |
 |---|---|---|---|
@@ -56,7 +56,7 @@ Reading: the category shows no call for energy planning software or open models.
 2. Find EnAccess's current submission route (the old `/submit/` URL is a 404) and the CCAI calls page, and archive both.
 3. Draft a two-page concept note: problem, what is built (Kenya M1, PRG), what the money buys (full-year solve, M5 EAPP, validation against a utility), budget in three lines.
 
-## Archived sources (`sources/`, fetched 2026-11-25)
+## Archived sources (`docs/sources/`, fetched 2026-11-25)
 
 | File | URL |
 |---|---|
@@ -75,6 +75,7 @@ Reading: the category shows no call for energy planning software or open models.
 | bezos-earth-fund-ai-grand-challenge.html | https://www.bezosearthfund.org/news-and-insights/bezos-earth-fund-announces-30-million-in-ai-grand-challenge-awards |
 | terraviva-category-energy-climate-p1.html, p2, p3 | https://www.terravivagrants.org/category/energy-climate-change/ (and /page/2/, /page/3/) |
 | terraviva-iki-small-grants.html, terraviva-iki-medium-grants.html, terraviva-pfan.html, terraviva-keeling-curve-prize.html | listing pages at terravivagrants.org (slugs: international-climate-initiative-small-grants, iki-medium-grants, pfan-funding-for-climate-clean-energy-projects, keeling-curve-prize) |
+| enaccess-contact.html | https://enaccess.org/contact/ (lists info@enaccess.org) |
 | emp-a-2026.html | https://climatecompatiblegrowth.com/energy-modelling-platform-for-africa-emp-a-2026/ |
 
 Snippet-only, not archived: the Google.org LF Energy grant, Open Energy Transition background, OpenMod4Africa dates, the CCAI "15 Sep 2026" deadline from an aggregator (unverified), and the Mission 300 AfDB items. Not archived because the fetch returned an error: `enaccess.org/submit/` (404, "Page not found").

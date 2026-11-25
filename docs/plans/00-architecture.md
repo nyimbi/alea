@@ -32,7 +32,7 @@ are recorded as rejected rather than left as an exercise.
 | `13-deployment.md` | Hardware, containers, orchestration, ops | Before production |
 | `14-roadmap.md` | Sequenced milestones with checkable gates | For scheduling |
 
-**A note on honesty.** Several numbers in `spec/` are literature benchmarks the
+**A note on honesty.** Several numbers in `docs/spec/` are literature benchmarks the
 plan inherits but which were **not verified** during planning (web search was
 unavailable). Every such number is marked `[UNVERIFIED]` with the milestone at
 which it must be confirmed. Do not report a `[UNVERIFIED]` figure to a
@@ -497,12 +497,12 @@ alea/
 ├── resources/                  # intermediates
 ├── results/                    # solved networks, model outputs
 ├── reports/{daily,weekly,monthly,quarterly,annual}/
-├── sources/                    # archived citations + INDEX.md
+├── docs/sources/                    # archived citations + INDEX.md
 ├── docs/
 │   ├── plans/                  # this plan set
 │   └── research/               # research notes with sources
 ├── envs/
-└── spec/                       # the specification (authoritative for intent)
+└── docs/spec/                       # the specification (authoritative for intent)
 ```
 
 ---
@@ -552,7 +552,7 @@ expects what it expects.
 ## 9. Unverified claims and their falsification points
 
 Web search was unavailable during planning, so the following literature figures
-are inherited from `spec/` and are **not verified**. Each is marked
+are inherited from `docs/spec/` and are **not verified**. Each is marked
 `[UNVERIFIED]` throughout this plan set, and each has a milestone at which it is
 confirmed or the claim is withdrawn.
 
